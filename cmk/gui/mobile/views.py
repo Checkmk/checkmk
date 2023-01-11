@@ -10,7 +10,7 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import PainterSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.views.layout import Layout
@@ -49,11 +49,11 @@ multisite_builtin_views.update(
             "mustsearch": True,
             "datasource": "services",
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -63,17 +63,17 @@ multisite_builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_hoststatus"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
             ],
             "sorters": [
                 SorterSpec(sorter="site", negate=False),
@@ -122,17 +122,17 @@ multisite_builtin_views.update(
             "name": "mobile_svcproblems",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_hoststatus"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
             ],
             "sorters": [
                 SorterSpec(sorter="svcstate", negate=True),
@@ -175,17 +175,17 @@ multisite_builtin_views.update(
             "name": "mobile_svcproblems_unack",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_hoststatus"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
             ],
             "sorters": [
                 SorterSpec(sorter="svcstate", negate=True),
@@ -234,13 +234,13 @@ multisite_builtin_views.update(
             "name": "mobile_host",
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
             ],
             "sorters": [
                 SorterSpec(sorter="svcstate", negate=True),
@@ -279,13 +279,13 @@ multisite_builtin_views.update(
             "name": "mobile_host",
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
             ],
             "sorters": [
                 SorterSpec(sorter="svcstate", negate=True),
@@ -324,37 +324,37 @@ multisite_builtin_views.update(
             "layout": "mobiledataset",
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="sitealias"),
-                PainterSpec(
+                ColumnSpec(name="sitealias"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_host"),
                 ),
-                PainterSpec(name="alias"),
-                PainterSpec(name="host_state"),
-                PainterSpec(name="host_address"),
-                PainterSpec(name="host_parents"),
-                PainterSpec(name="host_childs"),
-                PainterSpec(name="host_contact_groups"),
-                PainterSpec(name="host_contacts"),
-                PainterSpec(name="host_plugin_output"),
-                PainterSpec(name="host_perf_data"),
-                PainterSpec(name="host_attempt"),
-                PainterSpec(name="host_check_type"),
-                PainterSpec(name="host_state_age"),
-                PainterSpec(name="host_check_age"),
-                PainterSpec(name="host_next_check"),
-                PainterSpec(name="host_next_notification"),
-                PainterSpec(name="host_last_notification"),
-                PainterSpec(name="host_check_latency"),
-                PainterSpec(name="host_check_duration"),
-                PainterSpec(name="host_in_downtime"),
-                PainterSpec(name="host_in_notifper"),
-                PainterSpec(name="host_notifper"),
-                PainterSpec(
+                ColumnSpec(name="alias"),
+                ColumnSpec(name="host_state"),
+                ColumnSpec(name="host_address"),
+                ColumnSpec(name="host_parents"),
+                ColumnSpec(name="host_childs"),
+                ColumnSpec(name="host_contact_groups"),
+                ColumnSpec(name="host_contacts"),
+                ColumnSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_perf_data"),
+                ColumnSpec(name="host_attempt"),
+                ColumnSpec(name="host_check_type"),
+                ColumnSpec(name="host_state_age"),
+                ColumnSpec(name="host_check_age"),
+                ColumnSpec(name="host_next_check"),
+                ColumnSpec(name="host_next_notification"),
+                ColumnSpec(name="host_last_notification"),
+                ColumnSpec(name="host_check_latency"),
+                ColumnSpec(name="host_check_duration"),
+                ColumnSpec(name="host_in_downtime"),
+                ColumnSpec(name="host_in_notifper"),
+                ColumnSpec(name="host_notifper"),
+                ColumnSpec(
                     name="num_services",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_host"),
                 ),
-                PainterSpec(name="host_pnpgraph"),
+                ColumnSpec(name="host_pnpgraph"),
             ],
             "sorters": [],
             "title": _l("Host status"),
@@ -386,12 +386,12 @@ multisite_builtin_views.update(
             "layout": "mobilelist",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="host_state"),
-                PainterSpec(
+                ColumnSpec(name="host_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_host"),
                 ),
-                PainterSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_plugin_output"),
             ],
             "sorters": [],
             "title": _l("Host search"),
@@ -423,17 +423,17 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "topic": "problems",
             "datasource": "hosts",
-            "group_painters": [PainterSpec(name="host_state")],
+            "group_painters": [ColumnSpec(name="host_state")],
             "layout": "mobilelist",
             "name": "mobile_hostproblems",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="host_state"),
-                PainterSpec(
+                ColumnSpec(name="host_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_host"),
                 ),
-                PainterSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_plugin_output"),
             ],
             "sorters": [],
             "title": _l("Host problems (all)"),
@@ -467,17 +467,17 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "topic": "problems",
             "datasource": "hosts",
-            "group_painters": [PainterSpec(name="host_state")],
+            "group_painters": [ColumnSpec(name="host_state")],
             "layout": "mobilelist",
             "name": "mobile_hostproblems_unack",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="host_state"),
-                PainterSpec(
+                ColumnSpec(name="host_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_host"),
                 ),
-                PainterSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_plugin_output"),
             ],
             "sorters": [],
             "title": _l("Host problems (unhandled)"),
@@ -516,17 +516,17 @@ multisite_builtin_views.update(
             "name": "mobile_events",
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_hostsvcevents"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_svcevents"),
                 ),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=False),
@@ -556,24 +556,24 @@ multisite_builtin_views.update(
             "icon": "notifications",
             "topic": "history",
             "datasource": "log",
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
             "name": "mobile_notifications",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="log_state"),
-                PainterSpec(
+                ColumnSpec(name="log_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_hostsvcnotifications"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_svcnotifications"),
                 ),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="log_type"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=True),
@@ -617,21 +617,21 @@ multisite_builtin_views.update(
             "hidden": True,
             "icon": "history",
             "datasource": "log_events",
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
             "name": "mobile_hostsvcevents",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_type"),
-                PainterSpec(name="host"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(name="host"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_svcevents"),
                 ),
-                PainterSpec(name="log_state_type"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state_type"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=False),
@@ -665,16 +665,16 @@ multisite_builtin_views.update(
             "hidden": True,
             "icon": "history",
             "datasource": "log_events",
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
             "name": "mobile_svcevents",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_type"),
-                PainterSpec(name="log_state_type"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(name="log_state_type"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=False),
@@ -707,23 +707,23 @@ multisite_builtin_views.update(
             "icon": "notifications",
             "topic": "history",
             "datasource": "log",
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
             "name": "mobile_contactnotifications",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="log_time"),
-                PainterSpec(
+                ColumnSpec(name="log_time"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_hostsvcnotifications"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_svcnotifications"),
                 ),
-                PainterSpec(name="log_type"),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=False),
@@ -767,24 +767,24 @@ multisite_builtin_views.update(
             "icon": "notifications",
             "topic": "history",
             "datasource": "log",
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
             "name": "mobile_hostsvcnotifications",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_hostsvcnotifications"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="mobile_svcnotifications"),
                 ),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=False),
@@ -828,16 +828,16 @@ multisite_builtin_views.update(
             "icon": "notifications",
             "topic": "history",
             "datasource": "log",
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "layout": "mobilelist",
             "name": "mobile_svcnotifications",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="host"),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="host"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=False),

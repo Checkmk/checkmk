@@ -6,23 +6,23 @@
 import pytest
 
 from cmk.gui.type_defs import (
+    ColumnSpec,
     PainterParameters,
-    PainterSpec,
-    RawLegacyPainterSpec,
-    RawPainterSpec,
+    RawColumnSpec,
+    RawLegacyColumnSpec,
     VisualLinkSpec,
 )
 
 
 @pytest.mark.parametrize(
-    "raw_painter_spec, expected_painter_spec",
+    "raw_column_spec, expected_column_spec",
     [
         pytest.param(
             (
                 "name",
                 "view_name",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
@@ -40,7 +40,7 @@ from cmk.gui.type_defs import (
                 "view_name",
                 "tooltip",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
@@ -59,7 +59,7 @@ from cmk.gui.type_defs import (
                 "tooltip",
                 "join index",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
@@ -79,7 +79,7 @@ from cmk.gui.type_defs import (
                 "join index",
                 "column title",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
@@ -99,7 +99,7 @@ from cmk.gui.type_defs import (
                 None,
                 None,
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(column_title="another column title"),
                 link_spec=VisualLinkSpec(
@@ -120,7 +120,7 @@ from cmk.gui.type_defs import (
                 "join_index": "join index",
                 "column_title": "column title",
             },
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(column_title="another column title"),
                 link_spec=VisualLinkSpec(
@@ -141,7 +141,7 @@ from cmk.gui.type_defs import (
                 "join_index": None,
                 "column_title": None,
             },
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
@@ -155,18 +155,18 @@ from cmk.gui.type_defs import (
         ),
     ],
 )
-def test_painter_spec_from_raw(
-    raw_painter_spec: tuple | RawLegacyPainterSpec,
-    expected_painter_spec: PainterSpec,
+def test_column_spec_from_raw(
+    raw_column_spec: tuple | RawLegacyColumnSpec,
+    expected_column_spec: ColumnSpec,
 ) -> None:
-    assert PainterSpec.from_raw(raw_painter_spec) == expected_painter_spec
+    assert ColumnSpec.from_raw(raw_column_spec) == expected_column_spec
 
 
 @pytest.mark.parametrize(
-    "painter_spec, expected_raw_painter_spec",
+    "column_spec, expected_raw_column_spec",
     [
         pytest.param(
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(column_title="another column title"),
                 link_spec=VisualLinkSpec(
@@ -188,7 +188,7 @@ def test_painter_spec_from_raw(
             },
         ),
         pytest.param(
-            PainterSpec(
+            ColumnSpec(
                 name="name",
                 parameters=PainterParameters(),
                 link_spec=None,
@@ -208,8 +208,8 @@ def test_painter_spec_from_raw(
         ),
     ],
 )
-def test_painter_spec_to_raw(
-    painter_spec: PainterSpec,
-    expected_raw_painter_spec: RawPainterSpec,
+def test_column_spec_to_raw(
+    column_spec: ColumnSpec,
+    expected_raw_column_spec: RawColumnSpec,
 ) -> None:
-    assert painter_spec.to_raw() == expected_raw_painter_spec
+    assert column_spec.to_raw() == expected_raw_column_spec

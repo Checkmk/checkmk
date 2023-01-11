@@ -19,10 +19,10 @@ from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import (
     ColumnName,
+    ColumnSpec,
     ColumnTypes,
     PainterName,
     PainterParameters,
-    PainterSpec,
     SingleInfos,
     SorterSpec,
     ViewSpec,
@@ -299,7 +299,7 @@ def _view_editor_spec(
             tuple[Literal["column"], _RawVSColumnSpec]
             | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
         )
-    ) -> PainterSpec:
+    ) -> ColumnSpec:
         column_type, inner_value = value
 
         if isinstance(name_or_parameters := inner_value["painter_spec"], tuple):
@@ -316,7 +316,7 @@ def _view_editor_spec(
         tooltip = inner_value.get("tooltip")
 
         if column_type == "column":
-            return PainterSpec(
+            return ColumnSpec(
                 _column_type=column_type,
                 name=name,
                 parameters=parameters,
@@ -329,7 +329,7 @@ def _view_editor_spec(
             and isinstance(join_value := inner_value.get("join_value"), str)
             and isinstance(column_title := inner_value.get("column_title"), str)
         ):
-            return PainterSpec(
+            return ColumnSpec(
                 _column_type=column_type,
                 name=name,
                 parameters=parameters,
@@ -342,41 +342,41 @@ def _view_editor_spec(
         raise ValueError()
 
     def _to_vs(
-        painter_spec: PainterSpec | None,
+        column_spec: ColumnSpec | None,
     ) -> (
         tuple[Literal["column"], _RawVSColumnSpec]
         | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
         | None
     ):
-        if painter_spec is None:
+        if column_spec is None:
             return None
 
-        if (column_type := painter_spec.column_type) == "column":
-            raw_vs = _RawVSColumnSpec(painter_spec=_get_painter_spec(painter_spec))
-            if painter_spec.link_spec:
-                raw_vs["link_spec"] = painter_spec.link_spec.to_raw()
-            if painter_spec.tooltip:
-                raw_vs["tooltip"] = painter_spec.tooltip
+        if (column_type := column_spec.column_type) == "column":
+            raw_vs = _RawVSColumnSpec(painter_spec=_get_painter_spec(column_spec))
+            if column_spec.link_spec:
+                raw_vs["link_spec"] = column_spec.link_spec.to_raw()
+            if column_spec.tooltip:
+                raw_vs["tooltip"] = column_spec.tooltip
             return column_type, raw_vs
 
-        if column_type == "join_column" and painter_spec.join_index:
-            raw_vs = _RawVSJoinColumnSpec(painter_spec=_get_painter_spec(painter_spec))
-            if painter_spec.link_spec:
-                raw_vs["link_spec"] = painter_spec.link_spec.to_raw()
-            if painter_spec.tooltip:
-                raw_vs["tooltip"] = painter_spec.tooltip
-            raw_vs["join_value"] = painter_spec.join_index
-            raw_vs["column_title"] = painter_spec.column_title or ""
+        if column_type == "join_column" and column_spec.join_index:
+            raw_vs = _RawVSJoinColumnSpec(painter_spec=_get_painter_spec(column_spec))
+            if column_spec.link_spec:
+                raw_vs["link_spec"] = column_spec.link_spec.to_raw()
+            if column_spec.tooltip:
+                raw_vs["tooltip"] = column_spec.tooltip
+            raw_vs["join_value"] = column_spec.join_index
+            raw_vs["column_title"] = column_spec.column_title or ""
             return column_type, raw_vs
 
         raise ValueError()
 
     def _get_painter_spec(
-        painter_spec: PainterSpec,
+        column_spec: ColumnSpec,
     ) -> PainterName | tuple[PainterName, PainterParameters]:
-        if painter_spec.parameters is None:
-            return painter_spec.name
-        return (painter_spec.name, painter_spec.parameters)
+        if column_spec.parameters is None:
+            return column_spec.name
+        return (column_spec.name, column_spec.parameters)
 
     vs_column = Transform(
         valuespec=vs_column,
@@ -425,10 +425,10 @@ def _column_link_choices() -> list[CascadingDropdownChoice]:
 
 
 def view_editor_sorter_specs(
-    ident: str, ds_name: str, painters: Sequence[PainterSpec]
+    ident: str, ds_name: str, painters: Sequence[ColumnSpec]
 ) -> Dictionary:
     def _sorter_choices(
-        ds_name: str, painters: Sequence[PainterSpec]
+        ds_name: str, painters: Sequence[ColumnSpec]
     ) -> Iterator[DropdownChoiceEntry | CascadingDropdownChoice]:
         datasource: ABCDataSource = data_source_registry[ds_name]()
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
@@ -626,12 +626,12 @@ def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[Cascad
 
 
 def _get_painter_plugin_title_for_choices(plugin: Painter) -> str:
-    dummy_cell = Cell(PainterSpec(plugin.ident), None)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None)
     return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
 
 
 def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
-    dummy_cell = Cell(PainterSpec(plugin.ident), None)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None)
     title: str
     if callable(plugin.title):
         title = plugin.title(dummy_cell)

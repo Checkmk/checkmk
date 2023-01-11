@@ -45,7 +45,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
-from cmk.gui.type_defs import PainterParameters, PainterSpec, Visual, VisualContext, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualContext, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
@@ -1005,7 +1005,7 @@ multisite_builtin_views.update(
             "name": "topology_filters",
             "num_columns": 3,
             "owner": UserId.builtin(),
-            "painters": [PainterSpec(name="host_state")],
+            "painters": [ColumnSpec(name="host_state")],
             "play_sounds": False,
             "public": True,
             "sorters": [],
@@ -1047,13 +1047,13 @@ multisite_builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     parameters=PainterParameters(color_choices=[]),
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
-                PainterSpec(name="host_state"),
-                PainterSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_state"),
+                ColumnSpec(name="host_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1083,19 +1083,19 @@ multisite_builtin_views.update(
             "name": "bi_map_hover_service",
             "num_columns": 1,
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     parameters=PainterParameters(color_choices=[]),
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="service_state"),
-                PainterSpec(name="host_check_age"),
-                PainterSpec(name="svc_acknowledged"),
-                PainterSpec(name="svc_in_downtime"),
+                ColumnSpec(name="service_state"),
+                ColumnSpec(name="host_check_age"),
+                ColumnSpec(name="svc_acknowledged"),
+                ColumnSpec(name="svc_in_downtime"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1127,15 +1127,15 @@ multisite_builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     parameters=PainterParameters(color_choices=[]),
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
-                PainterSpec(name="host_state"),
-                PainterSpec(name="host_plugin_output"),
-                PainterSpec(name="host_parents"),
-                PainterSpec(name="host_childs"),
+                ColumnSpec(name="host_state"),
+                ColumnSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_parents"),
+                ColumnSpec(name="host_childs"),
             ],
             "play_sounds": False,
             "public": True,

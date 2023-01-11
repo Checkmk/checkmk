@@ -11,8 +11,8 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (
+    ColumnSpec,
     PainterParameters,
-    PainterSpec,
     SorterSpec,
     ViewName,
     ViewSpec,
@@ -23,16 +23,16 @@ builtin_views: dict[ViewName, ViewSpec] = {}
 
 # Painters used in list of services views
 service_view_painters = [
-    PainterSpec(name="service_state"),
-    PainterSpec(
+    ColumnSpec(name="service_state"),
+    ColumnSpec(
         name="service_description",
         link_spec=VisualLinkSpec(type_name="views", name="service"),
     ),
-    PainterSpec(name="service_icons"),
-    PainterSpec(name="svc_plugin_output"),
-    PainterSpec(name="svc_state_age"),
-    PainterSpec(name="svc_check_age"),
-    PainterSpec(name="perfometer"),
+    ColumnSpec(name="service_icons"),
+    ColumnSpec(name="svc_plugin_output"),
+    ColumnSpec(name="svc_state_age"),
+    ColumnSpec(name="svc_check_age"),
+    ColumnSpec(name="perfometer"),
 ]
 
 
@@ -40,37 +40,37 @@ service_view_painters = [
 host_service_view_painters = service_view_painters[:]
 host_service_view_painters.insert(
     1,
-    PainterSpec(
+    ColumnSpec(
         name="host",
         link_spec=VisualLinkSpec(type_name="views", name="host"),
     ),
 )
 
 host_view_painters = [
-    PainterSpec(name="host_state"),
-    PainterSpec(
+    ColumnSpec(name="host_state"),
+    ColumnSpec(
         name="host",
         link_spec=VisualLinkSpec(type_name="views", name="host"),
         tooltip="host_addresses",
     ),
-    PainterSpec(name="host_icons"),
-    PainterSpec(
+    ColumnSpec(name="host_icons"),
+    ColumnSpec(
         name="num_services_ok",
         link_spec=VisualLinkSpec(type_name="views", name="host_ok"),
     ),
-    PainterSpec(
+    ColumnSpec(
         name="num_services_warn",
         link_spec=VisualLinkSpec(type_name="views", name="host_warn"),
     ),
-    PainterSpec(
+    ColumnSpec(
         name="num_services_unknown",
         link_spec=VisualLinkSpec(type_name="views", name="host_unknown"),
     ),
-    PainterSpec(
+    ColumnSpec(
         name="num_services_crit",
         link_spec=VisualLinkSpec(type_name="views", name="host_crit"),
     ),
-    PainterSpec(
+    ColumnSpec(
         name="num_services_pending",
         link_spec=VisualLinkSpec(type_name="views", name="host_pending"),
     ),
@@ -85,7 +85,7 @@ builtin_views.update(
             "description": _l(
                 "Overall state of all hosts, with counts of services in the various states."
             ),
-            "group_painters": [PainterSpec(name="sitealias")],
+            "group_painters": [ColumnSpec(name="sitealias")],
             "hidden": False,
             "hidebutton": False,
             "layout": "table",
@@ -127,8 +127,8 @@ builtin_views.update(
                 }
             },
             "group_painters": [
-                PainterSpec(name="sitealias"),
-                PainterSpec(
+                ColumnSpec(name="sitealias"),
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -141,9 +141,9 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_discovery_service"),
-                PainterSpec(name="service_discovery_check"),
-                PainterSpec(name="service_discovery_state"),
+                ColumnSpec(name="service_discovery_service"),
+                ColumnSpec(name="service_discovery_check"),
+                ColumnSpec(name="service_discovery_state"),
             ],
             "play_sounds": False,
             "public": True,
@@ -173,8 +173,8 @@ builtin_views.update(
                 }
             },
             "group_painters": [
-                PainterSpec(name="sitealias"),
-                PainterSpec(
+                ColumnSpec(name="sitealias"),
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -187,9 +187,9 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_discovery_service"),
-                PainterSpec(name="service_discovery_check"),
-                PainterSpec(name="service_discovery_state"),
+                ColumnSpec(name="service_discovery_service"),
+                ColumnSpec(name="service_discovery_check"),
+                ColumnSpec(name="service_discovery_state"),
             ],
             "play_sounds": False,
             "public": True,
@@ -212,11 +212,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services grouped by hosts."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -280,7 +280,7 @@ builtin_views.update(
             ),
             "force_checkboxes": False,
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 )
@@ -293,17 +293,17 @@ builtin_views.update(
             "name": "service_check_durations",
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="svc_check_duration"),
-                PainterSpec(name="svc_check_command"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_check_duration"),
+                ColumnSpec(name="svc_check_command"),
             ],
             "play_sounds": False,
             "public": True,
@@ -327,7 +327,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "comments",
             "description": _l("All host- and service comments"),
-            "group_painters": [PainterSpec(name="comment_what")],
+            "group_painters": [ColumnSpec(name="comment_what")],
             "hidden": False,
             "hidebutton": False,
             "icon": "comment",
@@ -337,17 +337,17 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="comment_author"),
-                PainterSpec(name="comment_time"),
-                PainterSpec(name="comment_expires"),
-                PainterSpec(name="comment_entry_type"),
-                PainterSpec(name="comment_comment"),
-                PainterSpec(name="host"),
-                PainterSpec(
+                ColumnSpec(name="comment_author"),
+                ColumnSpec(name="comment_time"),
+                ColumnSpec(name="comment_expires"),
+                ColumnSpec(name="comment_entry_type"),
+                ColumnSpec(name="comment_comment"),
+                ColumnSpec(name="host"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="comment_id"),
+                ColumnSpec(name="comment_id"),
             ],
             "public": True,
             "sorters": [
@@ -383,11 +383,11 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="comment_author"),
-                PainterSpec(name="comment_comment"),
-                PainterSpec(name="comment_time"),
-                PainterSpec(name="comment_expires"),
-                PainterSpec(name="comment_entry_type"),
+                ColumnSpec(name="comment_author"),
+                ColumnSpec(name="comment_comment"),
+                ColumnSpec(name="comment_time"),
+                ColumnSpec(name="comment_expires"),
+                ColumnSpec(name="comment_entry_type"),
             ],
             "public": True,
             "sorters": [],
@@ -416,11 +416,11 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="comment_author"),
-                PainterSpec(name="comment_comment"),
-                PainterSpec(name="comment_time"),
-                PainterSpec(name="comment_expires"),
-                PainterSpec(name="comment_entry_type"),
+                ColumnSpec(name="comment_author"),
+                ColumnSpec(name="comment_comment"),
+                ColumnSpec(name="comment_time"),
+                ColumnSpec(name="comment_expires"),
+                ColumnSpec(name="comment_entry_type"),
             ],
             "public": True,
             "sorters": [],
@@ -439,7 +439,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "downtimes",
             "description": _l("All host- and service-downtimes"),
-            "group_painters": [PainterSpec(name="downtime_what")],
+            "group_painters": [ColumnSpec(name="downtime_what")],
             "hidden": False,
             "hidebutton": False,
             "icon": "downtime",
@@ -449,23 +449,23 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="downtime_origin"),
-                PainterSpec(name="downtime_author"),
-                PainterSpec(name="downtime_entry_time"),
-                PainterSpec(name="downtime_start_time"),
-                PainterSpec(name="downtime_end_time"),
-                PainterSpec(name="downtime_fixed"),
-                PainterSpec(name="downtime_duration"),
-                PainterSpec(name="downtime_recurring"),
-                PainterSpec(name="downtime_comment"),
+                ColumnSpec(name="downtime_origin"),
+                ColumnSpec(name="downtime_author"),
+                ColumnSpec(name="downtime_entry_time"),
+                ColumnSpec(name="downtime_start_time"),
+                ColumnSpec(name="downtime_end_time"),
+                ColumnSpec(name="downtime_fixed"),
+                ColumnSpec(name="downtime_duration"),
+                ColumnSpec(name="downtime_recurring"),
+                ColumnSpec(name="downtime_comment"),
             ],
             "public": True,
             "sorters": [
@@ -492,7 +492,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log_events",
             "description": _l("All historic scheduled downtimes of hosts and services"),
-            "group_painters": [PainterSpec(name="log_what")],
+            "group_painters": [ColumnSpec(name="log_what")],
             "hidden": False,
             "hidebutton": False,
             "icon": "downtime",
@@ -500,18 +500,18 @@ builtin_views.update(
             "mustsearch": False,
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host_dt_hist"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svc_dt_hist"),
                 ),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -543,7 +543,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "downtimes",
             "description": _l("All host- and service-downtimes (including ids)"),
-            "group_painters": [PainterSpec(name="downtime_what")],
+            "group_painters": [ColumnSpec(name="downtime_what")],
             "hidden": True,
             "hidebutton": False,
             "icon": "downtime",
@@ -553,24 +553,24 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="downtime_origin"),
-                PainterSpec(name="downtime_author"),
-                PainterSpec(name="downtime_entry_time"),
-                PainterSpec(name="downtime_start_time"),
-                PainterSpec(name="downtime_end_time"),
-                PainterSpec(name="downtime_fixed"),
-                PainterSpec(name="downtime_duration"),
-                PainterSpec(name="downtime_recurring"),
-                PainterSpec(name="downtime_comment"),
-                PainterSpec(name="downtime_id"),
+                ColumnSpec(name="downtime_origin"),
+                ColumnSpec(name="downtime_author"),
+                ColumnSpec(name="downtime_entry_time"),
+                ColumnSpec(name="downtime_start_time"),
+                ColumnSpec(name="downtime_end_time"),
+                ColumnSpec(name="downtime_fixed"),
+                ColumnSpec(name="downtime_duration"),
+                ColumnSpec(name="downtime_recurring"),
+                ColumnSpec(name="downtime_comment"),
+                ColumnSpec(name="downtime_id"),
             ],
             "public": True,
             "sorters": [
@@ -607,15 +607,15 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="downtime_origin"),
-                PainterSpec(name="downtime_author"),
-                PainterSpec(name="downtime_entry_time"),
-                PainterSpec(name="downtime_start_time"),
-                PainterSpec(name="downtime_end_time"),
-                PainterSpec(name="downtime_fixed"),
-                PainterSpec(name="downtime_duration"),
-                PainterSpec(name="downtime_recurring"),
-                PainterSpec(name="downtime_comment"),
+                ColumnSpec(name="downtime_origin"),
+                ColumnSpec(name="downtime_author"),
+                ColumnSpec(name="downtime_entry_time"),
+                ColumnSpec(name="downtime_start_time"),
+                ColumnSpec(name="downtime_end_time"),
+                ColumnSpec(name="downtime_fixed"),
+                ColumnSpec(name="downtime_duration"),
+                ColumnSpec(name="downtime_recurring"),
+                ColumnSpec(name="downtime_comment"),
             ],
             "public": True,
             "sorters": [],
@@ -644,15 +644,15 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="downtime_origin"),
-                PainterSpec(name="downtime_author"),
-                PainterSpec(name="downtime_entry_time"),
-                PainterSpec(name="downtime_start_time"),
-                PainterSpec(name="downtime_end_time"),
-                PainterSpec(name="downtime_fixed"),
-                PainterSpec(name="downtime_duration"),
-                PainterSpec(name="downtime_recurring"),
-                PainterSpec(name="downtime_comment"),
+                ColumnSpec(name="downtime_origin"),
+                ColumnSpec(name="downtime_author"),
+                ColumnSpec(name="downtime_entry_time"),
+                ColumnSpec(name="downtime_start_time"),
+                ColumnSpec(name="downtime_end_time"),
+                ColumnSpec(name="downtime_fixed"),
+                ColumnSpec(name="downtime_duration"),
+                ColumnSpec(name="downtime_recurring"),
+                ColumnSpec(name="downtime_comment"),
             ],
             "public": True,
             "sorters": [],
@@ -674,7 +674,7 @@ builtin_views.update(
                 "All services of a given host. The host and site must be set via HTML variables."
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -713,7 +713,7 @@ builtin_views.update(
                 "All services of a given host. The host and site must be set via HTTP variables."
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -725,14 +725,14 @@ builtin_views.update(
             "mustsearch": False,
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_perf_data"),
-                PainterSpec(name="svc_check_command"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_perf_data"),
+                ColumnSpec(name="svc_check_command"),
             ],
             "play_sounds": False,
             "public": True,
@@ -755,11 +755,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of hosts which match a name"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -796,7 +796,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of a given host that are in state OK"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -832,7 +832,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of a given host that are in state WARN"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -868,7 +868,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of a given host that are in state CRIT"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -904,7 +904,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of a given host that are in state UNKNOWN"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -940,7 +940,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of a given host that are PENDING"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -978,7 +978,7 @@ builtin_views.update(
                 "All problem services of a given host. The host and site must be set via HTTP variables."
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -1016,8 +1016,8 @@ builtin_views.update(
                 "Lists members of a host group with the number of services in the different states."
             ),
             "group_painters": [
-                PainterSpec(name="site_icon"),
-                PainterSpec(
+                ColumnSpec(name="site_icon"),
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
@@ -1064,8 +1064,8 @@ builtin_views.update(
                 "Lists up members of a host group with the number of services in the different states."
             ),
             "group_painters": [
-                PainterSpec(name="site_icon"),
-                PainterSpec(
+                ColumnSpec(name="site_icon"),
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
@@ -1110,8 +1110,8 @@ builtin_views.update(
                 "Lists down members of a host group with the number of services in the different states."
             ),
             "group_painters": [
-                PainterSpec(name="site_icon"),
-                PainterSpec(
+                ColumnSpec(name="site_icon"),
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
@@ -1156,8 +1156,8 @@ builtin_views.update(
                 "Lists members of an unreachable host group with the number of services in the different states."
             ),
             "group_painters": [
-                PainterSpec(name="site_icon"),
-                PainterSpec(
+                ColumnSpec(name="site_icon"),
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
@@ -1202,8 +1202,8 @@ builtin_views.update(
                 "Lists members of a pending host group with the number of services in the different states."
             ),
             "group_painters": [
-                PainterSpec(name="site_icon"),
-                PainterSpec(
+                ColumnSpec(name="site_icon"),
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
@@ -1237,11 +1237,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of a certain host group"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -1254,15 +1254,15 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1303,11 +1303,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All ok services of a certain host group"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -1320,15 +1320,15 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1369,11 +1369,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All warn services of a certain host group"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -1386,15 +1386,15 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1435,11 +1435,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All crit services of a certain host group"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -1452,15 +1452,15 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1501,11 +1501,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All unknown services of a certain host group"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -1518,15 +1518,15 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1567,11 +1567,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All pending services of a certain host group"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -1584,15 +1584,15 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
             ],
             "play_sounds": False,
             "public": True,
@@ -1643,44 +1643,44 @@ builtin_views.update(
             "num_columns": 3,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="hg_name",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroup"),
                 ),
-                PainterSpec(name="hg_alias"),
-                PainterSpec(
+                ColumnSpec(name="hg_alias"),
+                ColumnSpec(
                     name="hg_num_hosts_up",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroup_up"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_hosts_down",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroup_down"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_hosts_unreach",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroup_unreach"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_hosts_pending",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroup_pend"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_services_ok",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroupservices_ok"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_services_warn",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroupservices_warn"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_services_crit",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroupservices_crit"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_services_unknown",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroupservices_unknwn"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="hg_num_services_pending",
                     link_spec=VisualLinkSpec(type_name="views", name="hostgroupservices_pend"),
                 ),
@@ -1705,7 +1705,7 @@ builtin_views.update(
             "description": _l(
                 "A complete list of all host problems with a search form for selecting handled and unhandled"
             ),
-            "group_painters": [PainterSpec(name="host_state")],
+            "group_painters": [ColumnSpec(name="host_state")],
             "hidden": False,
             "hidebutton": False,
             "layout": "boxed",
@@ -1751,68 +1751,68 @@ builtin_views.update(
             "owner": UserId.builtin(),
             "painters": [
                 # 1. Identification and icons
-                PainterSpec(name="sitealias"),
-                PainterSpec(
+                ColumnSpec(name="sitealias"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(name="host_addresses"),
-                PainterSpec(name="alias"),
-                PainterSpec(name="host_labels"),
-                PainterSpec(name="host_icons"),
+                ColumnSpec(name="host_addresses"),
+                ColumnSpec(name="alias"),
+                ColumnSpec(name="host_labels"),
+                ColumnSpec(name="host_icons"),
                 # 2. State and metrics
-                PainterSpec(name="host_state"),
-                PainterSpec(name="host_plugin_output"),
-                PainterSpec(name="host_pnpgraph"),
-                PainterSpec(name="host_perf_data"),
-                PainterSpec(name="host_in_downtime"),
+                ColumnSpec(name="host_state"),
+                ColumnSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_pnpgraph"),
+                ColumnSpec(name="host_perf_data"),
+                ColumnSpec(name="host_in_downtime"),
                 # 2b. Serivce statistics
-                PainterSpec(name="num_services"),
-                PainterSpec(
+                ColumnSpec(name="num_services"),
+                ColumnSpec(
                     name="num_services_ok",
                     link_spec=VisualLinkSpec(type_name="views", name="host_ok"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="num_services_warn",
                     link_spec=VisualLinkSpec(type_name="views", name="host_warn"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="num_services_crit",
                     link_spec=VisualLinkSpec(type_name="views", name="host_crit"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="num_services_unknown",
                     link_spec=VisualLinkSpec(type_name="views", name="host_unknown"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="num_services_pending",
                     link_spec=VisualLinkSpec(type_name="views", name="host_pending"),
                 ),
                 # 3. Runtime data, timestamps
-                PainterSpec(name="host_attempt"),
-                PainterSpec(name="host_state_age"),
-                PainterSpec(name="host_check_age"),
-                PainterSpec(name="host_next_check"),
-                PainterSpec(name="host_check_latency"),
-                PainterSpec(name="host_check_duration"),
+                ColumnSpec(name="host_attempt"),
+                ColumnSpec(name="host_state_age"),
+                ColumnSpec(name="host_check_age"),
+                ColumnSpec(name="host_next_check"),
+                ColumnSpec(name="host_check_latency"),
+                ColumnSpec(name="host_check_duration"),
                 # 4. Notification
-                PainterSpec(name="host_notifper"),
-                PainterSpec(name="host_in_notifper"),
-                PainterSpec(name="host_notification_number"),
-                PainterSpec(name="host_last_notification"),
-                PainterSpec(name="host_next_notification"),
-                PainterSpec(name="host_notification_postponement_reason"),
+                ColumnSpec(name="host_notifper"),
+                ColumnSpec(name="host_in_notifper"),
+                ColumnSpec(name="host_notification_number"),
+                ColumnSpec(name="host_last_notification"),
+                ColumnSpec(name="host_next_notification"),
+                ColumnSpec(name="host_notification_postponement_reason"),
                 # 5. Configuration
-                PainterSpec(name="host_parents"),
-                PainterSpec(name="host_childs"),
-                PainterSpec(name="host_check_interval"),
-                PainterSpec(name="host_contact_groups"),
-                PainterSpec(name="host_contacts"),
-                PainterSpec(name="host_group_memberlist"),
-                PainterSpec(name="host_servicelevel"),
-                PainterSpec(name="host_check_command"),
-                PainterSpec(name="host_custom_vars"),
-                PainterSpec(name="host_custom_notes"),
+                ColumnSpec(name="host_parents"),
+                ColumnSpec(name="host_childs"),
+                ColumnSpec(name="host_check_interval"),
+                ColumnSpec(name="host_contact_groups"),
+                ColumnSpec(name="host_contacts"),
+                ColumnSpec(name="host_group_memberlist"),
+                ColumnSpec(name="host_servicelevel"),
+                ColumnSpec(name="host_check_command"),
+                ColumnSpec(name="host_custom_vars"),
+                ColumnSpec(name="host_custom_notes"),
             ],
             "public": True,
             "sorters": [],
@@ -1832,7 +1832,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("Lists all services in state PENDING."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 )
@@ -1845,7 +1845,7 @@ builtin_views.update(
             "num_columns": 5,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 )
@@ -1869,7 +1869,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "hosts",
             "description": _l("A form for searching hosts using flexible filters"),
-            "group_painters": [PainterSpec(name="sitealias")],
+            "group_painters": [ColumnSpec(name="sitealias")],
             "hidden": False,
             "hidebutton": False,
             "layout": "table",
@@ -1907,11 +1907,11 @@ builtin_views.update(
                 "Almost all available filters, used for searching services and maybe doing actions"
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -1967,52 +1967,52 @@ builtin_views.update(
             "owner": UserId.builtin(),
             "painters": [
                 # 1. Identification and icons
-                PainterSpec(name="sitealias"),
-                PainterSpec(
+                ColumnSpec(name="sitealias"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="servicedesc"),
                 ),
-                PainterSpec(name="service_labels"),
-                PainterSpec(name="service_icons"),
+                ColumnSpec(name="service_labels"),
+                ColumnSpec(name="service_icons"),
                 # 2. State and metrics
-                PainterSpec(name="service_state"),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_long_plugin_output"),
-                PainterSpec(name="perfometer"),
-                PainterSpec(name="svc_pnpgraph"),
-                PainterSpec(name="svc_metrics"),
-                PainterSpec(name="svc_in_downtime"),
+                ColumnSpec(name="service_state"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_long_plugin_output"),
+                ColumnSpec(name="perfometer"),
+                ColumnSpec(name="svc_pnpgraph"),
+                ColumnSpec(name="svc_metrics"),
+                ColumnSpec(name="svc_in_downtime"),
                 # 3. Runtime data, timestamps
-                PainterSpec(name="svc_attempt"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="svc_check_cache_info"),
-                PainterSpec(name="svc_next_check"),
-                PainterSpec(name="svc_last_time_ok"),
-                PainterSpec(name="svc_check_latency"),
-                PainterSpec(name="svc_check_duration"),
+                ColumnSpec(name="svc_attempt"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_check_cache_info"),
+                ColumnSpec(name="svc_next_check"),
+                ColumnSpec(name="svc_last_time_ok"),
+                ColumnSpec(name="svc_check_latency"),
+                ColumnSpec(name="svc_check_duration"),
                 # 4. Notifications
-                PainterSpec(name="svc_notifper"),
-                PainterSpec(name="svc_in_notifper"),
-                PainterSpec(name="svc_notification_number"),
-                PainterSpec(name="svc_last_notification"),
-                PainterSpec(name="svc_next_notification"),
-                PainterSpec(name="svc_notification_postponement_reason"),
+                ColumnSpec(name="svc_notifper"),
+                ColumnSpec(name="svc_in_notifper"),
+                ColumnSpec(name="svc_notification_number"),
+                ColumnSpec(name="svc_last_notification"),
+                ColumnSpec(name="svc_next_notification"),
+                ColumnSpec(name="svc_notification_postponement_reason"),
                 # 5. Configuration
-                PainterSpec(name="svc_check_interval"),
-                PainterSpec(name="svc_contact_groups"),
-                PainterSpec(name="svc_contacts"),
-                PainterSpec(name="svc_group_memberlist"),
-                PainterSpec(name="svc_servicelevel"),
-                PainterSpec(name="svc_check_command"),
-                PainterSpec(name="svc_perf_data"),
-                PainterSpec(name="svc_custom_vars"),
-                PainterSpec(name="check_manpage"),
-                PainterSpec(name="svc_custom_notes"),
+                ColumnSpec(name="svc_check_interval"),
+                ColumnSpec(name="svc_contact_groups"),
+                ColumnSpec(name="svc_contacts"),
+                ColumnSpec(name="svc_group_memberlist"),
+                ColumnSpec(name="svc_servicelevel"),
+                ColumnSpec(name="svc_check_command"),
+                ColumnSpec(name="svc_perf_data"),
+                ColumnSpec(name="svc_custom_vars"),
+                ColumnSpec(name="check_manpage"),
+                ColumnSpec(name="svc_custom_notes"),
             ],
             "public": True,
             "sorters": [],
@@ -2042,14 +2042,14 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="perfometer"),
             ],
             "public": True,
             "sorters": [
@@ -2072,11 +2072,11 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("Services of a service group"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -2113,8 +2113,8 @@ builtin_views.update(
             "datasource": "hosts",
             "description": _l("Link view showing all hosts of one site"),
             "group_painters": [
-                PainterSpec(name="site_icon"),
-                PainterSpec(
+                ColumnSpec(name="site_icon"),
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitesvcs"),
                 ),
@@ -2159,16 +2159,16 @@ builtin_views.update(
             "num_columns": 3,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sg_name",
                     link_spec=VisualLinkSpec(type_name="views", name="servicegroup"),
                 ),
-                PainterSpec(name="sg_alias"),
-                PainterSpec(name="sg_num_services_ok"),
-                PainterSpec(name="sg_num_services_warn"),
-                PainterSpec(name="sg_num_services_crit"),
-                PainterSpec(name="sg_num_services_unknown"),
-                PainterSpec(name="sg_num_services_pending"),
+                ColumnSpec(name="sg_alias"),
+                ColumnSpec(name="sg_num_services_ok"),
+                ColumnSpec(name="sg_num_services_warn"),
+                ColumnSpec(name="sg_num_services_crit"),
+                ColumnSpec(name="sg_num_services_unknown"),
+                ColumnSpec(name="sg_num_services_pending"),
             ],
             "public": True,
             "sorters": [],
@@ -2232,15 +2232,15 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("Search for services and display their graphs"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
@@ -2253,7 +2253,7 @@ builtin_views.update(
             "name": "searchpnp",
             "num_columns": 1,
             "owner": UserId.builtin(),
-            "painters": [PainterSpec(name="service_graphs")],
+            "painters": [ColumnSpec(name="service_graphs")],
             "play_sounds": False,
             "public": True,
             "sorters": [
@@ -2289,7 +2289,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All graphs for a certain host."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 )
@@ -2302,7 +2302,7 @@ builtin_views.update(
             "name": "hostpnp",
             "num_columns": 1,
             "owner": UserId.builtin(),
-            "painters": [PainterSpec(name="host_graphs")],
+            "painters": [ColumnSpec(name="host_graphs")],
             "play_sounds": False,
             "public": True,
             "sorters": [
@@ -2370,7 +2370,7 @@ builtin_views.update(
                 "Services that have not been checked for too long according to their configured check intervals."
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 )
@@ -2411,7 +2411,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "hosts",
             "description": _l("Hosts that have not been checked for too long."),
-            "group_painters": [PainterSpec(name="sitealias")],
+            "group_painters": [ColumnSpec(name="sitealias")],
             "hidden": True,
             "hidebutton": False,
             "icon": None,
@@ -2446,7 +2446,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log_events",
             "description": _l("All historic events of hosts or services (alerts, downtimes, etc.)"),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": False,
             "icon": "event",
@@ -2456,19 +2456,19 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
                 ),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2502,7 +2502,7 @@ builtin_views.update(
             "description": _l(
                 "All historic events concerning the state of a certain host (without services)"
             ),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": True,
             "hidebutton": False,
             "icon": "history",
@@ -2512,11 +2512,11 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_type"),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2551,10 +2551,10 @@ builtin_views.update(
             "mustsearch": False,
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2583,7 +2583,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log_events",
             "description": _l("All historic events concerning the state of a certain service"),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": True,
             "hidebutton": False,
             "icon": "history",
@@ -2593,11 +2593,11 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_type"),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2632,10 +2632,10 @@ builtin_views.update(
             "mustsearch": False,
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2666,7 +2666,7 @@ builtin_views.update(
             "description": _l(
                 "All historic events concerning the state of a certain host (including services)"
             ),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": True,
             "hidebutton": False,
             "icon": "history",
@@ -2676,16 +2676,16 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_type"),
-                PainterSpec(name="host"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(name="host"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
                 ),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2714,7 +2714,7 @@ builtin_views.update(
             "column_headers": "off",
             "datasource": "log",
             "description": _l("Displays entries from the logfile of the monitoring core."),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": False,
             "icon": {"icon": "event", "emblem": "search"},
@@ -2724,19 +2724,19 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
                 ),
-                PainterSpec(name="log_state_info"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state_info"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2779,7 +2779,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All OK services of a given site."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -2792,16 +2792,16 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="perfometer"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2835,7 +2835,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All WARN services of a given site."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -2848,16 +2848,16 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="perfometer"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2891,7 +2891,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All CRIT services of a given site."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -2904,16 +2904,16 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="perfometer"),
             ],
             "play_sounds": False,
             "public": True,
@@ -2947,7 +2947,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All UNKNOWN services of a given site."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -2960,16 +2960,16 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="perfometer"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3003,7 +3003,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All pending services of a given site."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -3016,16 +3016,16 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="perfometer"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3059,7 +3059,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("All services of a given site."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 )
@@ -3072,16 +3072,16 @@ builtin_views.update(
             "num_columns": 2,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="perfometer"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3123,18 +3123,18 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
                 ),
-                PainterSpec(name="alert_stats_problem"),
-                PainterSpec(name="alert_stats_crit"),
-                PainterSpec(name="alert_stats_unknown"),
-                PainterSpec(name="alert_stats_warn"),
+                ColumnSpec(name="alert_stats_problem"),
+                ColumnSpec(name="alert_stats_crit"),
+                ColumnSpec(name="alert_stats_unknown"),
+                ColumnSpec(name="alert_stats_warn"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3173,7 +3173,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "hosts",
             "description": _l("The view is intended for NagStaMon as web service."),
-            "group_painters": [PainterSpec(name="host_state")],
+            "group_painters": [ColumnSpec(name="host_state")],
             "hidden": True,
             "hidebutton": True,
             "layout": "table",
@@ -3182,25 +3182,25 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
-                PainterSpec(name="host_icons"),
-                PainterSpec(name="host_check_age"),
-                PainterSpec(name="host_state_age"),
-                PainterSpec(name="host_attempt"),
-                PainterSpec(name="host_state"),
-                PainterSpec(name="host_plugin_output"),
-                PainterSpec(name="host_in_downtime"),
-                PainterSpec(name="host_acknowledged"),
-                PainterSpec(name="host_address"),
-                PainterSpec(name="host_in_downtime"),
-                PainterSpec(name="host_acknowledged"),
-                PainterSpec(name="sitename_plain"),
-                PainterSpec(name="host_flapping"),
-                PainterSpec(name="host_is_active"),
-                PainterSpec(name="host_notifications_enabled"),
+                ColumnSpec(name="host_icons"),
+                ColumnSpec(name="host_check_age"),
+                ColumnSpec(name="host_state_age"),
+                ColumnSpec(name="host_attempt"),
+                ColumnSpec(name="host_state"),
+                ColumnSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_in_downtime"),
+                ColumnSpec(name="host_acknowledged"),
+                ColumnSpec(name="host_address"),
+                ColumnSpec(name="host_in_downtime"),
+                ColumnSpec(name="host_acknowledged"),
+                ColumnSpec(name="sitename_plain"),
+                ColumnSpec(name="host_flapping"),
+                ColumnSpec(name="host_is_active"),
+                ColumnSpec(name="host_notifications_enabled"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3227,7 +3227,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "services",
             "description": _l("This view is intended for usage as web service for NagStaMon."),
-            "group_painters": [PainterSpec(name="service_state")],
+            "group_painters": [ColumnSpec(name="service_state")],
             "hidden": True,
             "hidebutton": True,
             "layout": "table",
@@ -3236,28 +3236,28 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="service_state"),
-                PainterSpec(name="svc_check_age"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_attempt"),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_flapping"),
-                PainterSpec(name="svc_notifications_enabled"),
-                PainterSpec(name="svc_is_active"),
-                PainterSpec(name="svc_in_downtime"),
-                PainterSpec(name="svc_acknowledged"),
-                PainterSpec(name="sitename_plain"),
-                PainterSpec(name="host_address"),
-                PainterSpec(name="svc_check_command"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="service_state"),
+                ColumnSpec(name="svc_check_age"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_attempt"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_flapping"),
+                ColumnSpec(name="svc_notifications_enabled"),
+                ColumnSpec(name="svc_is_active"),
+                ColumnSpec(name="svc_in_downtime"),
+                ColumnSpec(name="svc_acknowledged"),
+                ColumnSpec(name="sitename_plain"),
+                ColumnSpec(name="host_address"),
+                ColumnSpec(name="svc_check_command"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3306,7 +3306,7 @@ builtin_views.update(
                 "A Matrix of Performance data values from all hosts in a certain host group"
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 )
@@ -3317,11 +3317,11 @@ builtin_views.update(
             "layout": "matrix",
             "num_columns": 12,
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="perfometer"),
             ],
             "single_infos": ["hostgroup"],
             "sorters": [
@@ -3357,7 +3357,7 @@ builtin_views.update(
             "datasource": "services",
             "description": _l("A Matrix of performance data values, grouped by hosts and services"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 )
@@ -3368,11 +3368,11 @@ builtin_views.update(
             "layout": "matrix",
             "num_columns": 12,
             "painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="perfometer"),
+                ColumnSpec(name="perfometer"),
             ],
             "single_infos": [],
             "sorters": [
@@ -3412,7 +3412,7 @@ builtin_views.update(
             "datasource": "bi_aggregations",
             "description": _l("Displays all BI aggregations."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="aggr_group",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
                 )
@@ -3426,10 +3426,10 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_treestate"),
-                PainterSpec(name="aggr_hosts"),
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_hosts"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3490,10 +3490,10 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_treestate"),
-                PainterSpec(name="aggr_hosts"),
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_hosts"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3540,7 +3540,7 @@ builtin_views.update(
             "datasource": "bi_host_aggregations",
             "description": _l("Lists all aggregations which only rely on information of one host."),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="aggr_group",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
                 )
@@ -3554,13 +3554,13 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_host"),
                 ),
-                PainterSpec(name="host_icons"),
-                PainterSpec(name="aggr_treestate"),
+                ColumnSpec(name="host_icons"),
+                ColumnSpec(name="aggr_treestate"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3616,7 +3616,7 @@ builtin_views.update(
             "datasource": "bi_hostname_aggregations",
             "description": _l("Host related aggregations"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="aggr_group",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
                 )
@@ -3629,13 +3629,13 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_host"),
                 ),
-                PainterSpec(name="host_icons"),
-                PainterSpec(name="aggr_treestate"),
+                ColumnSpec(name="host_icons"),
+                ColumnSpec(name="aggr_treestate"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3691,7 +3691,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "bi_host_aggregations",
             "description": _l("A single host related aggregation"),
-            "group_painters": [PainterSpec(name="aggr_name")],
+            "group_painters": [ColumnSpec(name="aggr_name")],
             "hidden": True,
             "hidebutton": False,
             "icon": "aggr",
@@ -3701,9 +3701,9 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_treestate"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3725,7 +3725,7 @@ builtin_views.update(
             "datasource": "bi_aggregations",
             "description": _l("All aggregations the given host is part of"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="aggr_group",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
                 )
@@ -3739,9 +3739,9 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_treestate"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3790,7 +3790,7 @@ builtin_views.update(
             "datasource": "bi_aggregations",
             "description": _l("All aggregations affected by a certain service"),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="aggr_group",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
                 )
@@ -3804,9 +3804,9 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_treestate"),
             ],
             "play_sounds": False,
             "public": True,
@@ -3857,7 +3857,7 @@ builtin_views.update(
                 "All aggregations that have a non-OK state (honoring state assumptions)"
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="aggr_group",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
                 )
@@ -3871,10 +3871,10 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_treestate"),
-                PainterSpec(name="aggr_hosts"),
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_hosts"),
             ],
             "play_sounds": True,
             "public": True,
@@ -3928,7 +3928,7 @@ builtin_views.update(
                 "All single-host aggregations that are in non-OK state (honoring state assumptions)"
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="aggr_group",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
                 )
@@ -3942,13 +3942,13 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="aggr_host"),
                 ),
-                PainterSpec(name="host_icons"),
-                PainterSpec(name="aggr_treestate"),
+                ColumnSpec(name="host_icons"),
+                ColumnSpec(name="aggr_treestate"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4015,9 +4015,9 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_icons"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_treestate"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4052,13 +4052,13 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_group"),
-                PainterSpec(name="aggr_name"),
-                PainterSpec(name="aggr_state_num"),
-                PainterSpec(name="aggr_output"),
-                PainterSpec(name="aggr_treestate"),
-                PainterSpec(name="aggr_in_downtime"),
-                PainterSpec(name="aggr_acknowledged"),
+                ColumnSpec(name="aggr_group"),
+                ColumnSpec(name="aggr_name"),
+                ColumnSpec(name="aggr_state_num"),
+                ColumnSpec(name="aggr_output"),
+                ColumnSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_in_downtime"),
+                ColumnSpec(name="aggr_acknowledged"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4093,10 +4093,10 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="aggr_state_num"),
-                PainterSpec(name="aggr_output"),
-                PainterSpec(name="aggr_in_downtime"),
-                PainterSpec(name="aggr_acknowledged"),
+                ColumnSpec(name="aggr_state_num"),
+                ColumnSpec(name="aggr_output"),
+                ColumnSpec(name="aggr_in_downtime"),
+                ColumnSpec(name="aggr_acknowledged"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4129,9 +4129,9 @@ builtin_views.update(
             "name": "aggr_summary",
             "num_columns": 1,
             "painters": [
-                PainterSpec(name="aggr_name"),
-                PainterSpec(name="aggr_state"),
-                PainterSpec(name="aggr_output"),
+                ColumnSpec(name="aggr_name"),
+                ColumnSpec(name="aggr_state"),
+                ColumnSpec(name="aggr_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4155,8 +4155,8 @@ builtin_views.update(
             "datasource": "bi_hostnamebygroup_aggregations",
             "description": _l("Host group with boxed BIs for each host\n"),
             "group_painters": [
-                PainterSpec(name="site_icon"),
-                PainterSpec(
+                ColumnSpec(name="site_icon"),
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
@@ -4168,14 +4168,14 @@ builtin_views.update(
             "name": "aggr_hostgroup_boxed",
             "num_columns": 2,
             "painters": [
-                PainterSpec(name="host_state"),
-                PainterSpec(
+                ColumnSpec(name="host_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(name="host_icons"),
-                PainterSpec(name="alias"),
-                PainterSpec(name="aggr_treestate_boxed"),
+                ColumnSpec(name="host_icons"),
+                ColumnSpec(name="alias"),
+                ColumnSpec(name="aggr_treestate_boxed"),
             ],
             "public": True,
             "single_infos": ["hostgroup"],
@@ -4205,7 +4205,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log",
             "description": _l("Notification events of hosts."),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": True,
             "hidebutton": False,
             "icon": "notifications",
@@ -4215,12 +4215,12 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="log_command"),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="log_command"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4262,7 +4262,7 @@ builtin_views.update(
             "description": _l(
                 "All notification events concerning the state of a certain host (including services)"
             ),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": True,
             "hidebutton": False,
             "icon": "notifications",
@@ -4272,21 +4272,21 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="log_command"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="log_command"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcnotifications"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcnotifications"),
                 ),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4326,7 +4326,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log",
             "description": _l("All notification events of hosts or services."),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": False,
             "icon": "notifications",
@@ -4336,21 +4336,21 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="log_command"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="log_command"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcnotifications"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcnotifications"),
                 ),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4391,7 +4391,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log",
             "description": _l("Failed notification events of hosts and services."),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": True,
             "icon": {"icon": "notifications", "emblem": "warning"},
@@ -4401,22 +4401,22 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="log_command"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="log_command"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcnotifications"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcnotifications"),
                 ),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
-                PainterSpec(name="log_comment"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_comment"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4466,7 +4466,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log",
             "description": _l("All notification events concerning the state of a certain service."),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": True,
             "hidebutton": False,
             "icon": "notifications",
@@ -4476,13 +4476,13 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_contact_name"),
-                PainterSpec(name="log_command"),
-                PainterSpec(name="host"),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_contact_name"),
+                ColumnSpec(name="log_command"),
+                ColumnSpec(name="host"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "sorters": [
                 SorterSpec(sorter="log_time", negate=True),
@@ -4520,7 +4520,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log",
             "description": _l("All notification events sent to"),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": True,
             "hidebutton": False,
             "icon": "notifications",
@@ -4530,20 +4530,20 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_command"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_command"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcnotifications"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcnotifications"),
                 ),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4590,7 +4590,7 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "log",
             "description": _l("All alert handler executions."),
-            "group_painters": [PainterSpec(name="log_date")],
+            "group_painters": [ColumnSpec(name="log_date")],
             "hidden": False,
             "hidebutton": False,
             "icon": "alert_handlers",
@@ -4600,20 +4600,20 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(name="log_command"),
-                PainterSpec(name="log_type"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(name="log_command"),
+                ColumnSpec(name="log_type"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="log_state"),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_state"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,
@@ -4701,7 +4701,7 @@ def _simple_host_view(custom_attributes, add_context=None):
         "user_sortable": True,
         "context": context,
         "group_painters": [
-            PainterSpec(name="sitealias"),
+            ColumnSpec(name="sitealias"),
         ],
         "painters": [],
         "single_infos": [],
@@ -4731,11 +4731,11 @@ builtin_views["docker_nodes"] = _simple_host_view(
         "add_context_to_title": False,
         "painters": [
             *host_view_painters,
-            PainterSpec(name="inv_software_applications_docker_version"),
-            PainterSpec(name="inv_software_applications_docker_num_containers_total"),
-            PainterSpec(name="inv_software_applications_docker_num_containers_running"),
-            PainterSpec(name="inv_software_applications_docker_num_containers_paused"),
-            PainterSpec(name="inv_software_applications_docker_num_containers_stopped"),
+            ColumnSpec(name="inv_software_applications_docker_version"),
+            ColumnSpec(name="inv_software_applications_docker_num_containers_total"),
+            ColumnSpec(name="inv_software_applications_docker_num_containers_running"),
+            ColumnSpec(name="inv_software_applications_docker_num_containers_paused"),
+            ColumnSpec(name="inv_software_applications_docker_num_containers_stopped"),
         ],
         "name": "docker_nodes",
     },
@@ -4756,16 +4756,16 @@ builtin_views["docker_containers"] = _simple_host_view(
         "add_context_to_title": False,
         "painters": [
             *host_view_painters,
-            PainterSpec(name="host_docker_node"),
-            PainterSpec(
+            ColumnSpec(name="host_docker_node"),
+            ColumnSpec(
                 name="perfometer",
                 join_index="CPU utilization",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="perfometer",
                 join_index="Memory used",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="perfometer",
                 join_index="Uptime",
             ),
@@ -4805,20 +4805,20 @@ builtin_views["vpshere_vms"] = _simple_host_view(
         "add_context_to_title": False,
         "painters": [
             *host_view_painters,
-            PainterSpec(
+            ColumnSpec(
                 name="svc_plugin_output",
                 join_index="ESX Hostsystem",
                 column_title="Server",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="perfometer",
                 join_index="CPU utilization",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="perfometer",
                 join_index="ESX Memory",
             ),
-            PainterSpec(
+            ColumnSpec(
                 name="svc_plugin_output",
                 join_index="ESX Guest Tools",
                 column_title="Guest tools",
@@ -4840,7 +4840,7 @@ builtin_views["crash_reports"] = {
     "datasource": "crash_reports",
     "force_checkboxes": False,
     "group_painters": [
-        PainterSpec(name="sitealias"),
+        ColumnSpec(name="sitealias"),
     ],
     "hidden": False,
     "hidebutton": False,
@@ -4851,11 +4851,11 @@ builtin_views["crash_reports"] = {
     "name": "crash_reports",
     "num_columns": 1,
     "painters": [
-        PainterSpec(name="crash_ident"),
-        PainterSpec(name="crash_type"),
-        PainterSpec(name="crash_version"),
-        PainterSpec(name="crash_time"),
-        PainterSpec(name="crash_exception"),
+        ColumnSpec(name="crash_ident"),
+        ColumnSpec(name="crash_type"),
+        ColumnSpec(name="crash_version"),
+        ColumnSpec(name="crash_time"),
+        ColumnSpec(name="crash_exception"),
     ],
     "play_sounds": False,
     "single_infos": [],
@@ -4892,7 +4892,7 @@ builtin_views["cmk_servers"] = {
     "name": "cmk_servers",
     "num_columns": 1,
     "painters": [
-        PainterSpec(
+        ColumnSpec(
             name="host",
             parameters=PainterParameters(
                 color_choices=[
@@ -4906,31 +4906,31 @@ builtin_views["cmk_servers"] = {
             link_spec=VisualLinkSpec(type_name="views", name="host"),
             tooltip="host_addresses",
         ),
-        PainterSpec(
+        ColumnSpec(
             name="inv_software_os_name",
             parameters=PainterParameters(use_short=True),
         ),
-        PainterSpec(
+        ColumnSpec(
             name="inv_hardware_cpu_cores",
             parameters=PainterParameters(use_short=True),
         ),
-        PainterSpec(
+        ColumnSpec(
             name="inv_hardware_memory_total_ram_usable",
             parameters=PainterParameters(use_short=True),
         ),
-        PainterSpec(
+        ColumnSpec(
             name="perfometer",
             join_index="CPU utilization",
         ),
-        PainterSpec(
+        ColumnSpec(
             name="perfometer",
             join_index="CPU load",
         ),
-        PainterSpec(
+        ColumnSpec(
             name="perfometer",
             join_index="Memory",
         ),
-        PainterSpec(
+        ColumnSpec(
             name="perfometer",
             join_index="Disk IO SUMMARY",
         ),
@@ -4952,36 +4952,36 @@ builtin_views["cmk_servers"] = {
 }
 
 
-def cmk_sites_painters() -> Sequence[PainterSpec]:
+def cmk_sites_painters() -> Sequence[ColumnSpec]:
     service_painters: list[Any] = []
     if not cmk_version.is_raw_edition():
         service_painters += [
-            PainterSpec(name="invcmksites_cmc"),
-            PainterSpec(name="invcmksites_dcd"),
-            PainterSpec(name="invcmksites_liveproxyd"),
-            PainterSpec(name="invcmksites_mknotifyd"),
+            ColumnSpec(name="invcmksites_cmc"),
+            ColumnSpec(name="invcmksites_dcd"),
+            ColumnSpec(name="invcmksites_liveproxyd"),
+            ColumnSpec(name="invcmksites_mknotifyd"),
         ]
     else:
         service_painters += [
-            PainterSpec(name="invcmksites_nagios"),
+            ColumnSpec(name="invcmksites_nagios"),
         ]
 
     service_painters += [
-        PainterSpec(name="invcmksites_mkeventd"),
-        PainterSpec(name="invcmksites_apache"),
-        PainterSpec(name="invcmksites_rrdcached"),
-        PainterSpec(name="invcmksites_xinetd"),
-        PainterSpec(name="invcmksites_crontab"),
-        PainterSpec(name="invcmksites_stunnel"),
+        ColumnSpec(name="invcmksites_mkeventd"),
+        ColumnSpec(name="invcmksites_apache"),
+        ColumnSpec(name="invcmksites_rrdcached"),
+        ColumnSpec(name="invcmksites_xinetd"),
+        ColumnSpec(name="invcmksites_crontab"),
+        ColumnSpec(name="invcmksites_stunnel"),
     ]
 
     if cmk_version.is_raw_edition():
         service_painters += [
-            PainterSpec(name="invcmksites_npcd"),
+            ColumnSpec(name="invcmksites_npcd"),
         ]
 
     return [
-        PainterSpec(
+        ColumnSpec(
             name="host",
             parameters=PainterParameters(
                 color_choices=[
@@ -4995,14 +4995,14 @@ def cmk_sites_painters() -> Sequence[PainterSpec]:
             link_spec=VisualLinkSpec(type_name="views", name="host"),
             tooltip="host_addresses",
         ),
-        PainterSpec(name="invcmksites_site"),
-        PainterSpec(name="invcmksites_used_version"),
-        PainterSpec(name="invcmksites_num_hosts"),
-        PainterSpec(name="invcmksites_num_services"),
-        PainterSpec(name="invcmksites_check_helper_usage"),
-        PainterSpec(name="invcmksites_fetcher_helper_usage"),
-        PainterSpec(name="invcmksites_checker_helper_usage"),
-        PainterSpec(name="invcmksites_livestatus_usage"),
+        ColumnSpec(name="invcmksites_site"),
+        ColumnSpec(name="invcmksites_used_version"),
+        ColumnSpec(name="invcmksites_num_hosts"),
+        ColumnSpec(name="invcmksites_num_services"),
+        ColumnSpec(name="invcmksites_check_helper_usage"),
+        ColumnSpec(name="invcmksites_fetcher_helper_usage"),
+        ColumnSpec(name="invcmksites_checker_helper_usage"),
+        ColumnSpec(name="invcmksites_livestatus_usage"),
     ] + service_painters
 
 
@@ -5097,14 +5097,14 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="host_state"),
-                PainterSpec(
+                ColumnSpec(name="host_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(name="host_icons"),
-                PainterSpec(name="host_state_age"),
-                PainterSpec(name="host_plugin_output"),
+                ColumnSpec(name="host_icons"),
+                ColumnSpec(name="host_state_age"),
+                ColumnSpec(name="host_plugin_output"),
             ],
             "public": True,
             "sorters": [SorterSpec(sorter="hoststate", negate=True)],
@@ -5140,19 +5140,19 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_state"),
-                PainterSpec(
+                ColumnSpec(name="service_state"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
-                PainterSpec(name="service_icons"),
-                PainterSpec(name="svc_plugin_output"),
-                PainterSpec(name="svc_state_age"),
-                PainterSpec(name="svc_check_age"),
+                ColumnSpec(name="service_icons"),
+                ColumnSpec(name="svc_plugin_output"),
+                ColumnSpec(name="svc_state_age"),
+                ColumnSpec(name="svc_check_age"),
             ],
             "play_sounds": True,
             "public": True,
@@ -5192,17 +5192,17 @@ builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="log_icon"),
-                PainterSpec(name="log_time"),
-                PainterSpec(
+                ColumnSpec(name="log_icon"),
+                ColumnSpec(name="log_time"),
+                ColumnSpec(
                     name="host",
                     link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
                 ),
-                PainterSpec(name="log_plugin_output"),
+                ColumnSpec(name="log_plugin_output"),
             ],
             "play_sounds": False,
             "public": True,

@@ -19,9 +19,9 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import (
+    ColumnSpec,
     FilterName,
     HTTPVariables,
-    PainterSpec,
     SorterSpec,
     ViewProcessTracking,
     ViewSpec,
@@ -113,7 +113,7 @@ class View:
             self.user_sorters if self.user_sorters else self.spec["sorters"]
         )
 
-    def _compute_sort_url_parameter(self, painter: PainterSpec) -> str | None:
+    def _compute_sort_url_parameter(self, painter: ColumnSpec) -> str | None:
         if not self.spec.get("user_sortable", False):
             return None
 

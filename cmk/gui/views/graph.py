@@ -18,8 +18,8 @@ from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.type_defs import (
     ColumnName,
+    ColumnSpec,
     CombinedGraphSpec,
-    PainterSpec,
     Row,
     TemplateGraphSpec,
     VisualLinkSpec,
@@ -56,15 +56,15 @@ multisite_builtin_views.update(
                 "Shows all graphs including timerange selections of a collection of services."
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="service_description",
                     link_spec=VisualLinkSpec(type_name="views", name="service"),
                 ),
@@ -77,7 +77,7 @@ multisite_builtin_views.update(
             "num_columns": 1,
             "owner": UserId.builtin(),
             "painters": [
-                PainterSpec(name="service_graphs"),
+                ColumnSpec(name="service_graphs"),
             ],
             "public": True,
             "sorters": [],
@@ -100,11 +100,11 @@ multisite_builtin_views.update(
                 "Shows host graphs including timerange selections of a collection of hosts."
             ),
             "group_painters": [
-                PainterSpec(
+                ColumnSpec(
                     name="sitealias",
                     link_spec=VisualLinkSpec(type_name="views", name="sitehosts"),
                 ),
-                PainterSpec(
+                ColumnSpec(
                     name="host_with_state",
                     link_spec=VisualLinkSpec(type_name="views", name="host"),
                 ),
@@ -116,7 +116,7 @@ multisite_builtin_views.update(
             "name": "host_graphs",
             "num_columns": 1,
             "owner": UserId.builtin(),
-            "painters": [PainterSpec(name="host_graphs")],
+            "painters": [ColumnSpec(name="host_graphs")],
             "public": True,
             "sorters": [],
             "icon": "host_graph",

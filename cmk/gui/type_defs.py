@@ -276,7 +276,7 @@ def _make_default_painter_parameters() -> PainterParameters:
 ColumnTypes = Literal["column", "join_column"]
 
 
-class RawLegacyPainterSpec(TypedDict):
+class RawLegacyColumnSpec(TypedDict):
     name: PainterName
     parameters: PainterParameters | None
     link_spec: tuple[VisualTypeName, VisualName] | None
@@ -286,7 +286,7 @@ class RawLegacyPainterSpec(TypedDict):
     column_type: ColumnTypes | None
 
 
-class RawPainterSpec(TypedDict):
+class RawColumnSpec(TypedDict):
     name: PainterName
     parameters: PainterParameters
     link_spec: tuple[VisualTypeName, VisualName] | None
@@ -296,11 +296,11 @@ class RawPainterSpec(TypedDict):
     column_type: ColumnTypes | None
 
 
-# TODO Rename PainterSpec -> ColumnSpec, join_index -> join_value
+# TODO join_index -> join_value
 
 
 @dataclass(frozen=True)
-class PainterSpec:
+class ColumnSpec:
     name: PainterName
     parameters: PainterParameters = field(default_factory=_make_default_painter_parameters)
     link_spec: VisualLinkSpec | None = None
@@ -316,7 +316,7 @@ class PainterSpec:
         return "column" if self.join_index is None else "join_column"
 
     @classmethod
-    def from_raw(cls, value: tuple | RawLegacyPainterSpec) -> PainterSpec:
+    def from_raw(cls, value: tuple | RawLegacyColumnSpec) -> ColumnSpec:
         # TODO
         # 1: The params-None case can be removed with Checkmk 2.3
         # 2: The tuple-case can be removed with Checkmk 2.4.
@@ -357,7 +357,7 @@ class PainterSpec:
             _column_type=None,
         )
 
-    def to_raw(self) -> RawPainterSpec:
+    def to_raw(self) -> RawColumnSpec:
         return {
             "name": self.name,
             "parameters": self.parameters,
@@ -401,8 +401,8 @@ class SorterSpec:
 class _ViewSpecMandatory(Visual):
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
-    group_painters: Sequence[PainterSpec]
-    painters: Sequence[PainterSpec]
+    group_painters: Sequence[ColumnSpec]
+    painters: Sequence[ColumnSpec]
     browser_reload: int
     num_columns: int
     column_headers: Literal["off", "pergroup", "repeat"]

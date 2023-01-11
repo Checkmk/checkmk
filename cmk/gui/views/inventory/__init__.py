@@ -64,9 +64,9 @@ from cmk.gui.plugins.visuals.utils import (
 )
 from cmk.gui.type_defs import (
     ColumnName,
+    ColumnSpec,
     FilterName,
     Icon,
-    PainterSpec,
     Row,
     Rows,
     SingleInfos,
@@ -1555,7 +1555,7 @@ def _register_table_view(
         )
     )
 
-    painters: list[PainterSpec] = []
+    painters: list[ColumnSpec] = []
     filters = []
     for name, col_hint in hints.column_hints.items():
         column = table_view_spec.view_name + "_" + name
@@ -1567,7 +1567,7 @@ def _register_table_view(
             col_hint,
         )
 
-        painters.append(PainterSpec(column))
+        painters.append(ColumnSpec(column))
         filters.append(column)
 
     _register_views(
@@ -1679,7 +1679,7 @@ def _register_multi_table_view(
     )
 
     known_common_columns = set()
-    painters: list[PainterSpec] = []
+    painters: list[ColumnSpec] = []
     filters = []
     for this_table_view_name, this_inventory_path in info_names_and_paths:
         for name, col_hint in DISPLAY_HINTS.get_hints(
@@ -1700,7 +1700,7 @@ def _register_multi_table_view(
                 col_hint,
             )
 
-            painters.append(PainterSpec(column))
+            painters.append(ColumnSpec(column))
             filters.append(column)
 
     _register_views(
@@ -1734,7 +1734,7 @@ def _register_info_class(table_view_name: str, title_singular: str, title_plural
 def _register_views(
     table_view_name: str,
     title_plural: str,
-    painters: Sequence[PainterSpec],
+    painters: Sequence[ColumnSpec],
     filters: Iterable[FilterName],
     inventory_paths: Sequence[inventory.InventoryPath],
     icon: Icon | None = None,
@@ -1757,7 +1757,7 @@ def _register_views(
         "mustsearch": True,
         # Columns
         "painters": [
-            PainterSpec(
+            ColumnSpec(
                 name="host",
                 link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
             ),
@@ -1882,11 +1882,11 @@ multisite_builtin_views["inv_host"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        PainterSpec(
+        ColumnSpec(
             name="host",
             link_spec=VisualLinkSpec(type_name="views", name="host"),
         ),
-        PainterSpec(name="inventory_tree"),
+        ColumnSpec(name="inventory_tree"),
     ],
     "sorters": [],
     "owner": UserId.builtin(),
@@ -1923,19 +1923,19 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        PainterSpec(
+        ColumnSpec(
             name="host",
             link_spec=VisualLinkSpec(type_name="views", name="inv_host"),
         ),
-        PainterSpec(name="inv_software_os_name"),
-        PainterSpec(name="inv_hardware_cpu_cpus"),
-        PainterSpec(name="inv_hardware_cpu_cores"),
-        PainterSpec(name="inv_hardware_cpu_max_speed"),
-        PainterSpec(
+        ColumnSpec(name="inv_software_os_name"),
+        ColumnSpec(name="inv_hardware_cpu_cpus"),
+        ColumnSpec(name="inv_hardware_cpu_cores"),
+        ColumnSpec(name="inv_hardware_cpu_max_speed"),
+        ColumnSpec(
             name="perfometer",
             join_index="CPU load",
         ),
-        PainterSpec(
+        ColumnSpec(
             name="perfometer",
             join_index="CPU utilization",
         ),
@@ -1982,17 +1982,17 @@ multisite_builtin_views["inv_hosts_ports"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        PainterSpec(
+        ColumnSpec(
             name="host",
             link_spec=VisualLinkSpec(
                 type_name="views",
                 name=_make_table_view_name_of_host("invinterface"),
             ),
         ),
-        PainterSpec(name="inv_hardware_system_product"),
-        PainterSpec(name="inv_networking_total_interfaces"),
-        PainterSpec(name="inv_networking_total_ethernet_ports"),
-        PainterSpec(name="inv_networking_available_ethernet_ports"),
+        ColumnSpec(name="inv_hardware_system_product"),
+        ColumnSpec(name="inv_networking_total_interfaces"),
+        ColumnSpec(name="inv_networking_total_ethernet_ports"),
+        ColumnSpec(name="inv_networking_available_ethernet_ports"),
     ],
     "sorters": [SorterSpec(sorter="inv_networking_available_ethernet_ports", negate=True)],
     "owner": UserId.builtin(),
@@ -2256,11 +2256,11 @@ multisite_builtin_views["inv_host_history"] = {
     # Columns
     "group_painters": [],
     "painters": [
-        PainterSpec(name="invhist_time"),
-        PainterSpec(name="invhist_removed"),
-        PainterSpec(name="invhist_new"),
-        PainterSpec(name="invhist_changed"),
-        PainterSpec(name="invhist_delta"),
+        ColumnSpec(name="invhist_time"),
+        ColumnSpec(name="invhist_removed"),
+        ColumnSpec(name="invhist_new"),
+        ColumnSpec(name="invhist_changed"),
+        ColumnSpec(name="invhist_delta"),
     ],
     "sorters": [SorterSpec(sorter="invhist_time", negate=False)],
     "owner": UserId.builtin(),

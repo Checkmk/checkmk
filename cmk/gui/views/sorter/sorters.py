@@ -12,7 +12,7 @@ import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import ColumnName, PainterSpec, Row
+from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import get_labels
 
@@ -544,7 +544,7 @@ class SorterCustomHostVariable(ParameterizedSorter):
     def columns(self) -> list[str]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
-    def vs_parameters(self, painters: Sequence[PainterSpec]) -> Dictionary:
+    def vs_parameters(self, painters: Sequence[ColumnSpec]) -> Dictionary:
         choices: list[tuple[str, str]] = []
         for attr_spec in active_config.wato_host_attrs:
             choices.append((attr_spec["name"], attr_spec["title"]))

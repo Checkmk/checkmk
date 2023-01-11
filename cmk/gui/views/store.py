@@ -11,7 +11,7 @@ import cmk.gui.visuals as visuals
 from cmk.gui.hooks import request_memoize
 from cmk.gui.type_defs import (
     AllViewSpecs,
-    PainterSpec,
+    ColumnSpec,
     PermittedViewSpecs,
     SorterSpec,
     ViewName,
@@ -26,14 +26,14 @@ multisite_builtin_views: dict[ViewName, ViewSpec] = {}
 def internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
     # Need to assume that we are right for now. We will have to introduce parsing there to do a real
     # conversion in one of the following typing steps.
-    return _sorter_specs_to_runtime_format(_painter_specs_to_runtime_format(raw_view))  # type: ignore[arg-type]
+    return _sorter_specs_to_runtime_format(_column_specs_to_runtime_format(raw_view))  # type: ignore[arg-type]
 
 
-def _painter_specs_to_runtime_format(view: dict[str, Any]) -> ViewSpec:
+def _column_specs_to_runtime_format(view: dict[str, Any]) -> ViewSpec:
     if "painters" in view:
-        view["painters"] = [PainterSpec.from_raw(v) for v in view["painters"]]
+        view["painters"] = [ColumnSpec.from_raw(v) for v in view["painters"]]
     if "group_painters" in view:
-        view["group_painters"] = [PainterSpec.from_raw(v) for v in view["group_painters"]]
+        view["group_painters"] = [ColumnSpec.from_raw(v) for v in view["group_painters"]]
     # Need to assume that we are right for now. We will have to introduce parsing there to do a real
     # conversion in one of the following typing steps.
     return view  # type: ignore[return-value]

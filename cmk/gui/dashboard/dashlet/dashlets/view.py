@@ -16,10 +16,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
+    ColumnSpec,
     HTTPVariables,
     Icon,
     LinkFromSpec,
-    PainterSpec,
     SingleInfos,
     SorterSpec,
     ViewSpec,
@@ -72,8 +72,8 @@ class _ViewDashletConfigMandatory(ABCViewDashletConfig):
     # From: ViewSpec
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
-    group_painters: list[PainterSpec]
-    painters: list[PainterSpec]
+    group_painters: list[ColumnSpec]
+    painters: list[ColumnSpec]
     browser_reload: int
     num_columns: int
     column_headers: Literal["off", "pergroup", "repeat"]

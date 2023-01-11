@@ -7,7 +7,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import PainterSpec, SorterSpec, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec
 
 from .builtin_dashboards import GROW, MAX
 from .dashlet import LinkedViewDashletConfig, StatsDashletConfig, ViewDashletConfig
@@ -106,14 +106,14 @@ ProblemsDashboard = DashboardConfig(
                     "num_columns": 1,
                     "owner": UserId.builtin(),
                     "painters": [
-                        PainterSpec(name="host_state"),
-                        PainterSpec(
+                        ColumnSpec(name="host_state"),
+                        ColumnSpec(
                             name="host",
                             link_spec=VisualLinkSpec(type_name="views", name="host"),
                         ),
-                        PainterSpec(name="host_icons"),
-                        PainterSpec(name="host_state_age"),
-                        PainterSpec(name="host_plugin_output"),
+                        ColumnSpec(name="host_icons"),
+                        ColumnSpec(name="host_state_age"),
+                        ColumnSpec(name="host_plugin_output"),
                     ],
                     "public": True,
                     "sorters": [SorterSpec(sorter="hoststate", negate=True)],
@@ -159,19 +159,19 @@ ProblemsDashboard = DashboardConfig(
                     "num_columns": 1,
                     "owner": UserId.builtin(),
                     "painters": [
-                        PainterSpec(name="service_state"),
-                        PainterSpec(
+                        ColumnSpec(name="service_state"),
+                        ColumnSpec(
                             name="host",
                             link_spec=VisualLinkSpec(type_name="views", name="host"),
                         ),
-                        PainterSpec(
+                        ColumnSpec(
                             name="service_description",
                             link_spec=VisualLinkSpec(type_name="views", name="service"),
                         ),
-                        PainterSpec(name="service_icons"),
-                        PainterSpec(name="svc_plugin_output"),
-                        PainterSpec(name="svc_state_age"),
-                        PainterSpec(name="svc_check_age"),
+                        ColumnSpec(name="service_icons"),
+                        ColumnSpec(name="svc_plugin_output"),
+                        ColumnSpec(name="svc_state_age"),
+                        ColumnSpec(name="svc_check_age"),
                     ],
                     "play_sounds": True,
                     "public": True,
@@ -216,17 +216,17 @@ ProblemsDashboard = DashboardConfig(
                     "num_columns": 1,
                     "owner": UserId("admin"),
                     "painters": [
-                        PainterSpec(name="log_icon"),
-                        PainterSpec(name="log_time"),
-                        PainterSpec(
+                        ColumnSpec(name="log_icon"),
+                        ColumnSpec(name="log_time"),
+                        ColumnSpec(
                             name="host",
                             link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
                         ),
-                        PainterSpec(
+                        ColumnSpec(
                             name="service_description",
                             link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
                         ),
-                        PainterSpec(name="log_plugin_output"),
+                        ColumnSpec(name="log_plugin_output"),
                     ],
                     "play_sounds": False,
                     "public": True,
@@ -293,14 +293,14 @@ SimpleProblemsDashboard = DashboardConfig(
                     "num_columns": 1,
                     "owner": UserId.builtin(),
                     "painters": [
-                        PainterSpec(name="host_state"),
-                        PainterSpec(
+                        ColumnSpec(name="host_state"),
+                        ColumnSpec(
                             name="host",
                             link_spec=VisualLinkSpec(type_name="views", name="host"),
                         ),
-                        PainterSpec(name="host_icons"),
-                        PainterSpec(name="host_state_age"),
-                        PainterSpec(name="host_plugin_output"),
+                        ColumnSpec(name="host_icons"),
+                        ColumnSpec(name="host_state_age"),
+                        ColumnSpec(name="host_plugin_output"),
                     ],
                     "public": True,
                     "sorters": [SorterSpec(sorter="hoststate", negate=True)],
@@ -346,19 +346,19 @@ SimpleProblemsDashboard = DashboardConfig(
                     "num_columns": 1,
                     "owner": UserId.builtin(),
                     "painters": [
-                        PainterSpec(name="service_state"),
-                        PainterSpec(
+                        ColumnSpec(name="service_state"),
+                        ColumnSpec(
                             name="host",
                             link_spec=VisualLinkSpec(type_name="views", name="host"),
                         ),
-                        PainterSpec(
+                        ColumnSpec(
                             name="service_description",
                             link_spec=VisualLinkSpec(type_name="views", name="service"),
                         ),
-                        PainterSpec(name="service_icons"),
-                        PainterSpec(name="svc_plugin_output"),
-                        PainterSpec(name="svc_state_age"),
-                        PainterSpec(name="svc_check_age"),
+                        ColumnSpec(name="service_icons"),
+                        ColumnSpec(name="svc_plugin_output"),
+                        ColumnSpec(name="svc_state_age"),
+                        ColumnSpec(name="svc_check_age"),
                     ],
                     "play_sounds": True,
                     "public": True,

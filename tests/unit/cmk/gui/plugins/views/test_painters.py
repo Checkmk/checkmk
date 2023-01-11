@@ -18,7 +18,7 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
-from cmk.gui.type_defs import Literal, PainterSpec, Row
+from cmk.gui.type_defs import ColumnSpec, Literal, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
@@ -835,7 +835,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
         view_name="",
         view_spec={
             "group_painters": [],
-            "painters": [PainterSpec(name=name, parameters=params)],
+            "painters": [ColumnSpec(name=name, parameters=params)],
             "sorters": [],
             "datasource": "services",
             "browser_reload": 30,

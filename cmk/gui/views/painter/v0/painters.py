@@ -5091,7 +5091,7 @@ def _get_docker_container_status_outputs() -> dict[str, str]:
     return {row[0]: row[1] for row in sites.live().query(query)}
 
 
-class AbstractPainterSpecificMetric(Painter):
+class AbstractColumnSpecificMetric(Painter):
     @property
     def ident(self) -> str:
         raise NotImplementedError()
@@ -5159,7 +5159,7 @@ class AbstractPainterSpecificMetric(Painter):
         )
 
 
-class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
+class PainterHostSpecificMetric(AbstractColumnSpecificMetric):
     @property
     def ident(self) -> str:
         return "host_specific_metric"
@@ -5174,7 +5174,7 @@ class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
         return self._render(row, cell, perf_data_entries, check_command)
 
 
-class PainterServiceSpecificMetric(AbstractPainterSpecificMetric):
+class PainterServiceSpecificMetric(AbstractColumnSpecificMetric):
     @property
     def ident(self) -> str:
         return "service_specific_metric"

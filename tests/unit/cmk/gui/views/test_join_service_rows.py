@@ -9,7 +9,7 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.type_defs import PainterSpec
+from cmk.gui.type_defs import ColumnSpec
 from cmk.gui.view import View
 from cmk.gui.views.join_service_rows import _get_needed_join_columns
 
@@ -19,7 +19,7 @@ def test_get_needed_join_columns(view: View) -> None:
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"] = [
         *view_spec["painters"],
-        PainterSpec(name="service_description", join_index="CPU load"),
+        ColumnSpec(name="service_description", join_index="CPU load"),
     ]
     view = View(view.name, view_spec, view_spec.get("context", {}))
 

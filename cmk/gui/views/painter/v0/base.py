@@ -31,12 +31,12 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.type_defs import (
     ColumnName,
+    ColumnSpec,
     CombinedGraphSpec,
     HTTPVariables,
     LivestatusQuery,
     PainterName,
     PainterParameters,
-    PainterSpec,
     PermittedViewSpecs,
     Row,
     Rows,
@@ -304,8 +304,8 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def painter_exists(painter_spec: PainterSpec) -> bool:
-    return painter_spec.name in painter_registry
+def painter_exists(column_spec: ColumnSpec) -> bool:
+    return column_spec.name in painter_registry
 
 
 def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:
@@ -320,7 +320,7 @@ class Cell:
 
     def __init__(
         self,
-        painter_spec: PainterSpec | None,
+        column_spec: ColumnSpec | None,
         sort_url_parameter: str | None,
     ) -> None:
         self._sort_url_parameter = sort_url_parameter
@@ -330,18 +330,18 @@ class Cell:
         self._tooltip_painter_name: PainterName | None = None
         self._custom_title: str | None = None
 
-        if painter_spec:
-            self._from_view(painter_spec)
+        if column_spec:
+            self._from_view(column_spec)
 
-    def _from_view(self, painter_spec: PainterSpec) -> None:
-        self._painter_name = painter_spec.name
-        if painter_spec.parameters is not None:
-            self._painter_params = painter_spec.parameters
+    def _from_view(self, column_spec: ColumnSpec) -> None:
+        self._painter_name = column_spec.name
+        if column_spec.parameters is not None:
+            self._painter_params = column_spec.parameters
             self._custom_title = self._painter_params.get("column_title", None)
 
-        self._link_spec = painter_spec.link_spec
+        self._link_spec = column_spec.link_spec
 
-        tooltip_painter_name = painter_spec.tooltip
+        tooltip_painter_name = column_spec.tooltip
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
             self._tooltip_painter_name = tooltip_painter_name
 
@@ -493,7 +493,7 @@ class Cell:
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
             assert isinstance(content, (str, HTML))
-            tooltip_cell = Cell(PainterSpec(self.tooltip_painter_name()), None)
+            tooltip_cell = Cell(ColumnSpec(self.tooltip_painter_name()), None)
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, Mapping)
             tooltip_text = escaping.strip_tags_for_tooltip(tooltip_content)
@@ -627,19 +627,19 @@ class Cell:
 class JoinCell(Cell):
     def __init__(
         self,
-        painter_spec: PainterSpec,
+        column_spec: ColumnSpec,
         sort_url_parameter: str | None,
     ) -> None:
         self._join_service_descr: ServiceName | None = None
-        super().__init__(painter_spec, sort_url_parameter)
+        super().__init__(column_spec, sort_url_parameter)
 
-    def _from_view(self, painter_spec: PainterSpec) -> None:
-        super()._from_view(painter_spec)
+    def _from_view(self, column_spec: ColumnSpec) -> None:
+        super()._from_view(column_spec)
 
-        self._join_service_descr = painter_spec.join_index
+        self._join_service_descr = column_spec.join_index
 
-        if painter_spec.column_title and self._custom_title is None:
-            self._custom_title = painter_spec.column_title
+        if column_spec.column_title and self._custom_title is None:
+            self._custom_title = column_spec.column_title
 
     def join_service(self) -> ServiceName:
         if self._join_service_descr is None:

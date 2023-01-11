@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.gui.type_defs import PainterName, PainterParameters, PainterSpec, SorterName, SorterSpec
+from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
 
 from .painter.v0.base import painter_exists, painter_registry
 from .sorter import ParameterizedSorter, sorter_registry
@@ -15,7 +15,7 @@ def compute_sort_url_parameter(
     painter_name: PainterName,
     painter_parameters: PainterParameters | None,
     join_key: str | None,
-    group_painters: Sequence[PainterSpec],
+    group_painters: Sequence[ColumnSpec],
     config_sorters: Sequence[SorterSpec],
     user_sorters: Sequence[SorterSpec],
 ) -> str:
@@ -80,7 +80,7 @@ def compute_sort_url_parameter(
 
 
 def _get_separated_sorters(
-    group_painters: Sequence[PainterSpec],
+    group_painters: Sequence[ColumnSpec],
     config_sorters: Sequence[SorterSpec],
     user_sorters: list[SorterSpec],
 ) -> tuple[list[SorterSpec], list[SorterSpec], list[SorterSpec]]:
@@ -94,7 +94,7 @@ def _get_separated_sorters(
     return group_sort, user_sort, view_sort
 
 
-def _get_group_sorters(group_painters: Sequence[PainterSpec]) -> list[SorterSpec]:
+def _get_group_sorters(group_painters: Sequence[ColumnSpec]) -> list[SorterSpec]:
     group_sort: list[SorterSpec] = []
     for p in group_painters:
         if not painter_exists(p):
@@ -108,11 +108,11 @@ def _get_group_sorters(group_painters: Sequence[PainterSpec]) -> list[SorterSpec
 
 
 def _get_sorter_name_of_painter(
-    painter_name_or_spec: PainterName | PainterSpec,
+    painter_name_or_spec: PainterName | ColumnSpec,
 ) -> SorterName | None:
     painter_name = (
         painter_name_or_spec.name
-        if isinstance(painter_name_or_spec, PainterSpec)
+        if isinstance(painter_name_or_spec, ColumnSpec)
         else painter_name_or_spec
     )
     painter = painter_registry[painter_name]()

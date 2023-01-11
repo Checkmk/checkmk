@@ -9,7 +9,7 @@ import abc
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.gui.type_defs import ColumnName, PainterSpec, Row
+from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary
 
 
@@ -70,7 +70,7 @@ class Sorter(abc.ABC):
 
 class ParameterizedSorter(Sorter):
     @abc.abstractmethod
-    def vs_parameters(self, painters: Sequence[PainterSpec]) -> Dictionary:
+    def vs_parameters(self, painters: Sequence[ColumnSpec]) -> Dictionary:
         """Valuespec to configure optional sorter parameters
 
         This Dictionary will be visible as sorter specific parameters after selecting this sorter in

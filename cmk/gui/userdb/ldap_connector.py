@@ -67,10 +67,10 @@ from cmk.gui.plugins.userdb.utils import (
     active_connections,
     add_internal_attributes,
     CheckCredentialsResult,
+    connections_by_type,
     get_connection,
     get_user_attributes,
     load_cached_profile,
-    load_connection_config,
     load_roles,
     new_user_template,
     release_users_lock,
@@ -1694,7 +1694,7 @@ def get_connection_choices(add_this=True):
     if add_this:
         choices.append((None, _("This connection")))
 
-    for connection in load_connection_config():
+    for connection in connections_by_type("ldap"):
         descr = connection["description"]
         if not descr:
             descr = connection["id"]

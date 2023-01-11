@@ -18,7 +18,8 @@
         // add files here
         "./web/htdocs/js/modules/ajax.ts",
         "./web/htdocs/js/modules/utils.ts",
-        "./web/htdocs/js/modules/selection.ts"
+        "./web/htdocs/js/modules/selection.ts",
+        "./web/htdocs/js/modules/availability.ts"
     ],
     "exclude": [
         "./web/**/*",

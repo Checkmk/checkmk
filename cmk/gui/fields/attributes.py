@@ -306,8 +306,18 @@ class DateConverter(Converter):
     # meaning is "the last second/minute of this day", so we replace it with that.
 
     def from_checkmk(self, data):
-        if data == (24, 0):
-            data = (23, 59, 59)
+        """Converts a Checkmk date string to a datetime object
+
+        Examples:
+            >>> DateConverter().from_checkmk([24, 0])
+            datetime.time(23, 59, 59)
+
+            >>> DateConverter().from_checkmk((0, 0))
+            datetime.time(0, 0)
+        """
+        if data[0] == 24 and data[1] == 0:  # Checkmk format can be [24, 0] e.g. folder network scan
+            data = 23, 59, 59
+
         return datetime.time(*data)
 
     def to_checkmk(self, data):

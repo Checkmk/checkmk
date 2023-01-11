@@ -1,0 +1,15 @@
+Title: folder_config: fix querying a folder with invalid time in network scan option
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1673436109
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p20
+
+Prior to this werk, the REST-API raised an error when the user tried to query a folder
+config which had the network scan option configured with 24:00 in one its time ranges.
+This werk fixes this behaviour.
+

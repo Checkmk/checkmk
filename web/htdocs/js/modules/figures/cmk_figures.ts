@@ -254,9 +254,9 @@ export interface FigureData {
 
 export abstract class FigureBase<T extends FigureData> {
     _div_selector;
-    _div_selection;
+    _div_selection: d3.Selection<HTMLDivElement, unknown, any, any>;
     svg;
-    plot;
+    plot: d3.Selection<SVGElement, unknown, any, any>;
     _fixed_size: string | ElementSize | null;
     margin: ELementMargin;
     _fetch_start: number;
@@ -282,6 +282,7 @@ export abstract class FigureBase<T extends FigureData> {
         this._div_selection = d3.select(this._div_selector); // The d3-seletion of the main container
 
         this.svg = null; // The svg representing the figure
+        // @ts-ignore
         this.plot = null; // The plot representing the drawing area, is shifted by margin
 
         if (fixed_size !== null) this._fixed_size = fixed_size;
@@ -353,7 +354,9 @@ export abstract class FigureBase<T extends FigureData> {
         let new_size = this._fixed_size;
         if (new_size === null) {
             new_size = {
+                // @ts-ignore
                 width: this._div_selection.node().parentNode.offsetWidth,
+                // @ts-ignore
                 height: this._div_selection.node().parentNode.offsetHeight,
             };
         }
@@ -585,6 +588,7 @@ export abstract class FigureBase<T extends FigureData> {
 
         let title_padding_left = 0;
         const title_padding_left_raw = utils.get_computed_style(
+            // @ts-ignore
             d3.select("div.dashlet div.title").node(),
             "padding-left"
         );
@@ -681,8 +685,10 @@ export class TextFigure extends FigureBase<TitledFigureData> {
     }
 }
 
-export function calculate_domain(data) {
+export function calculate_domain(data: {value: number}): [number, number] {
+    // @ts-ignore
     const [lower, upper] = d3.extent(data, d => d.value);
+    // @ts-ignore
     return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
 }
 
@@ -698,7 +704,13 @@ export function clamp(value, domain) {
     return Math.min(Math.max(value, domain[0]), domain[1]);
 }
 
-export function make_levels(domain, bounds) {
+export type Levels = {
+    from: number;
+    to: number;
+    style: string;
+};
+
+export function make_levels(domain, bounds): [Levels, Levels, Levels] | [] {
     let [dmin, dmax] = domain;
     if (bounds.warn == null || bounds.crit == null) return [];
 
@@ -820,13 +832,16 @@ export class FigureTooltip {
 
     _mouseover(event) {
         let node_data = d3.select(event.target).datum();
+        // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
         this.activate();
     }
 
     _mousemove(event) {
         let node_data = d3.select(event.target).datum();
+        // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
+        // @ts-ignore
         this._tooltip.html(node_data.tooltip);
         this.update_position(event);
     }

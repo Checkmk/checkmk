@@ -144,6 +144,7 @@ export function update_argument_hints() {
             let rule_arguments =
                 window["bi_rule_argument_lookup"][node.property("value")];
             let rule_body = node.select(function () {
+                // @ts-ignore
                 return this.closest("tbody");
             });
             let required_inputs = rule_arguments.length;
@@ -298,7 +299,9 @@ export class BIRulePreview extends BIPreview {
     _check_update() {
         BIPreview.prototype._check_update.call(this);
         let display = this._preview_active ? null : "none";
+        // @ts-ignore
         d3.selectAll("span.title").style("display", display);
+        // @ts-ignore
         d3.selectAll("span.arguments").style("display", display);
 
         if (!this._preview_active) {
@@ -338,6 +341,7 @@ export class BIRulePreview extends BIPreview {
             .select(".vlof_content")
             .selectAll("div.node_preview")
             .data(d => [d])
+            // @ts-ignore
             .join(enter => {
                 this._create_node_preview_div(enter);
             });

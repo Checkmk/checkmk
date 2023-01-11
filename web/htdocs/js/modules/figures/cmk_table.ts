@@ -173,6 +173,7 @@ function _pie_chart_custom_renderlet(chart, d) {
     // TODO: WIP
     let labels_data: Selection[] = [];
     chart.selectAll("text.pie-label").each((d, idx, nodes) => {
+        // @ts-ignore
         labels_data.push(d3.select(nodes[idx]));
     });
 

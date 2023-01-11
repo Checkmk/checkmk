@@ -7,17 +7,17 @@ interface FigurePart {
     title: string;
     url: string;
 }
-interface FigureResponceData extends cmk_figures.FigureData{
+interface FigureResponceData extends cmk_figures.FigureData {
     parts: FigurePart[];
     total: FigurePart;
 }
 
 interface Hex_Config {
-    title: string,
-    path: [number, number][],
-    css_class,
-    tooltip: string,
-    count: number,
+    title: string;
+    path: [number, number][];
+    css_class;
+    tooltip: string;
+    count: number;
 }
 
 export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
@@ -90,8 +90,8 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
                     part.count == 0
                         ? 0
                         : (Math.pow(sum, 0.33) /
-                            Math.pow(this._data.total.count, 0.33)) *
-                        this._max_radius;
+                              Math.pow(this._data.total.count, 0.33)) *
+                          this._max_radius;
                 sum -= part.count;
 
                 hexagon_config.push({

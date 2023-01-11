@@ -335,9 +335,8 @@ class Cell:
 
     def _from_view(self, column_spec: ColumnSpec) -> None:
         self._painter_name = column_spec.name
-        if column_spec.parameters is not None:
-            self._painter_params = column_spec.parameters
-            self._custom_title = self._painter_params.get("column_title", None)
+        self._painter_params = column_spec.parameters
+        self._custom_title = self._painter_params.get("column_title", None)
 
         self._link_spec = column_spec.link_spec
 
@@ -398,14 +397,9 @@ class Cell:
         """The parameters configured in the view for this painter. In case the
         painter has params, it defaults to the valuespec default value and
         in case the painter has no params, it returns None."""
-        vs_painter_params = self.painter().parameters
-        if not vs_painter_params:
+        if not (vs_painter_params := self.painter().parameters):
             return None
-
-        if self._painter_params is None:
-            return vs_painter_params.default_value()
-
-        return self._painter_params
+        return self._painter_params if self._painter_params else vs_painter_params.default_value()
 
     def title(self, use_short: bool = True) -> str:
         if self._custom_title:

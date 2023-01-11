@@ -5,14 +5,8 @@
 """Graphs
 
 Graphs visible in the Checkmk user interface can also be retrieved via the
-REST-API. For CRE you have to specify exactly where to find the data: You have
-to specify site, host, service and finally the graph or metric name (see "Get a
-graph" endpoint).
-In a CEE site, you have access to a more complex interface that allows you to
-apply more flexible filters to specify which graph or metric you want to
-retrieve.
+REST-API. You have to specify site, host, service and finally the graph id or metric name.
 """
-# this has to be in sync with cmk/gui/cee/plugins/openapi/endpoints/graph/__init__.py
 
 from cmk.gui.plugins.metrics.graph_images import graph_spec_from_request
 from cmk.gui.plugins.openapi.endpoints.graph import request_schemas, response_schemas

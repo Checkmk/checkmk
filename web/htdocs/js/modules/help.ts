@@ -21,7 +21,7 @@ function is_help_active() {
     return helpdivs.length !== 0 && helpdivs[0].style.display === "flex";
 }
 
-export function toggle(title_show, title_hide) {
+export function toggle(title_show: string, title_hide: string) {
     if (is_help_active()) {
         switch_help(false);
         toggle_help_page_menu_entry(title_show);
@@ -31,11 +31,12 @@ export function toggle(title_show, title_hide) {
     }
 }
 
-function switch_help(how) {
+function switch_help(how: boolean) {
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName(
         "help"
     ) as HTMLCollectionOf<HTMLElement>;
+
     var i;
     for (i = 0; i < helpdivs.length; i++) {
         helpdivs[i].style.display = how ? "flex" : "none";
@@ -61,7 +62,7 @@ function switch_help(how) {
     ajax.call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
 
-function toggle_help_page_menu_entry(title) {
+function toggle_help_page_menu_entry(title: string) {
     const entry = document.getElementById("menu_entry_inline_help")!;
     const span = entry.getElementsByTagName("span")[0];
     const icon = entry.getElementsByTagName("img")[0];

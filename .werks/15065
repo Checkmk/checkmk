@@ -10,7 +10,7 @@ Version: 2.1.0p19
 
 Previous to this Werk it was possible that an authenticated user with admin rights uploads a malicious MKP leading to a file creation with an attacker controlled path.
 
-We thank Niko Wenselowsk (SVA) for reporting this issue.
+We thank Niko Wenselowski (SVA) for reporting this issue.
 
 <b>Affected versions are:</b>
 

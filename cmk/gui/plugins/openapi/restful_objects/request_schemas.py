@@ -167,15 +167,12 @@ class UpdateHost(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
         required=False,
     )
-    remove_attributes = gui_fields.attributes_field(
-        "host",
-        "update",
-        "inbound",
-        names_only=True,
+    remove_attributes = fields.List(
+        fields.String(),
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
-        load_default=list,
         required=False,
+        load_default=list,
     )
 
 
@@ -524,15 +521,12 @@ class UpdateFolder(BaseSchema):
         example={"tag_criticality": "prod"},
         required=False,
     )
-    remove_attributes = gui_fields.attributes_field(
-        "folder",
-        "update",
-        "inbound",
+    remove_attributes = fields.List(
+        fields.String(),
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
-        load_default=list,
         required=False,
-        names_only=True,
+        load_default=list,
     )
 
 

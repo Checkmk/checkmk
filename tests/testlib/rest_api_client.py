@@ -11,7 +11,7 @@ import multiprocessing
 import pprint
 import queue
 from collections.abc import Mapping
-from typing import Any, NoReturn, Union
+from typing import Any, NoReturn, Sequence, Union
 
 from pydantic import BaseModel, StrictStr
 
@@ -303,13 +303,19 @@ class RestApiClient:
     def edit_host(
         self,
         host_name: str,
-        folder: str | None = None,
+        folder: str | None = "/",
         attributes: Mapping[str, Any] | None = None,
+        update_attributes: Mapping[str, Any] | None = None,
+        remove_attributes: Sequence[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         etag = self.get_host(host_name).headers["ETag"]
-        headers = {"IF-Match": etag}
-        body = {"host_name": host_name, "folder": folder, "attributes": attributes}
+        headers = {"IF-Match": etag, "Accept": "application/json"}
+        body = {
+            "attributes": attributes,
+            "update_attributes": update_attributes,
+            "remove_attributes": remove_attributes,
+        }
         return self._request(
             "put",
             url="/objects/host_config/" + host_name,

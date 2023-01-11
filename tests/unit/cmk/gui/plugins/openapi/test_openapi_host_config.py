@@ -1138,30 +1138,26 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
 
 
 @managedtest
-def test_openapi_create_host_with_custom_attributes(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+def test_openapi_host_with_custom_attributes(  # type:ignore[no-untyped-def]
+    api_client: RestApiClient,
     custom_host_attribute_basic_topic,
 ):
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    json_data = {
-        "folder": "/",
-        "host_name": "example.com",
-        "attributes": {
+    resp = api_client.create_host(
+        host_name="example.com",
+        attributes={
             "ipaddress": "192.168.0.123",
             "foo": "abc",
         },
-    }
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params=json.dumps(json_data),
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
     )
     assert "ipaddress" in resp.json["extensions"]["attributes"]
     assert "foo" in resp.json["extensions"]["attributes"]
+
+    # remove custom attribute
+    resp = api_client.edit_host(
+        host_name="example.com",
+        remove_attributes=["foo"],
+    )
+    assert "foo" not in resp.json["extensions"]["attributes"]
 
 
 @managedtest

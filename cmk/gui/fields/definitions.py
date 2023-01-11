@@ -34,7 +34,7 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.gui import sites, watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
-from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
+from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType
 from cmk.gui.globals import user
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.sites import configured_sites
@@ -786,7 +786,6 @@ def attributes_field(
     required: bool = False,
     load_default: Any = utils.missing,
     many: bool = False,
-    names_only: bool = False,
 ) -> _fields.Field:
     """Build an Attribute Field
 
@@ -812,9 +811,6 @@ def attributes_field(
         load_default:
         many:
 
-        names_only:
-            When set to True, the field will be a List of Strings which validate the tag names only.
-
     Returns:
 
     """
@@ -823,33 +819,18 @@ def attributes_field(
         # clarify this here by force.
         raise ValueError("description is necessary.")
 
-    if not names_only:
-        return MultiNested(
-            [
-                attr_openapi_schema(object_type, object_context),
-                CustomAttributes,
-                TagGroupAttributes,
-            ],
-            metadata={"context": {"object_context": object_context, "direction": direction}},
-            merged=True,  # to unify both models
-            description=description,
-            example=example,
-            many=many,
-            load_default=dict if load_default is utils.missing else utils.missing,
-            required=required,
-        )
-
-    attrs = {attr.name for attr in collect_attributes(object_type, object_context)}
-
-    def validate(value):
-        if value not in attrs:
-            raise ValidationError(f"Unknown attribute: {value!r}")
-
-    return base.List(
-        base.String(validate=validate),
+    return MultiNested(
+        [
+            attr_openapi_schema(object_type, object_context),
+            CustomAttributes,
+            TagGroupAttributes,
+        ],
+        metadata={"context": {"object_context": object_context, "direction": direction}},
+        merged=True,  # to unify both models
         description=description,
         example=example,
-        load_default=load_default,
+        many=many,
+        load_default=dict if load_default is utils.missing else utils.missing,
         required=required,
     )
 

@@ -5,9 +5,8 @@
 
 # mypy_path in mypy.ini doesn't support relative paths, so use this wrapper to
 # tell mypy about the relevant paths using the MYPYPATH environment variable
-set -ex
+set -e
 
-echo "### start of run-mypy"
 REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 
 # --no-print-directory prevents make dir change messages in the output
@@ -41,7 +40,5 @@ $REPO_PATH/omd/packages/omd" \
     --python-version "${PYTHON_MAJOR_DOT_MINOR}" \
     --scripts-are-modules \
     --show-error-codes \
-    -v \
     ${JUNIT_XML} \
     "$@"
-echo "### end of run-mypy"

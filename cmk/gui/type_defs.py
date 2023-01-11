@@ -316,7 +316,7 @@ class ColumnSpec:
         return "column" if self.join_index is None else "join_column"
 
     @classmethod
-    def from_raw(cls, value: tuple | RawLegacyColumnSpec) -> ColumnSpec:
+    def from_raw(cls, value: RawColumnSpec | RawLegacyColumnSpec | tuple) -> ColumnSpec:
         # TODO
         # 1: The params-None case can be removed with Checkmk 2.3
         # 2: The tuple-case can be removed with Checkmk 2.4.

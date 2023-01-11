@@ -277,9 +277,15 @@ class _RawVSColumnSpec(_RawVSColumnSpecMandatory, total=False):
     tooltip: ColumnName
 
 
-class _RawVSJoinColumnSpec(_RawVSColumnSpec, total=False):
+class _RawVSJoinColumnSpecMandatory(TypedDict):
+    painter_spec: PainterName | tuple[PainterName, PainterParameters]
     join_value: ColumnName
     column_title: str
+
+
+class _RawVSJoinColumnSpec(_RawVSJoinColumnSpecMandatory, total=False):
+    link_spec: tuple[VisualTypeName, VisualName]
+    tooltip: ColumnName
 
 
 def _view_editor_spec(
@@ -360,13 +366,15 @@ def _view_editor_spec(
             return column_type, raw_vs
 
         if column_type == "join_column" and column_spec.join_index:
-            raw_vs = _RawVSJoinColumnSpec(painter_spec=_get_painter_spec(column_spec))
+            raw_vs = _RawVSJoinColumnSpec(
+                painter_spec=_get_painter_spec(column_spec),
+                join_value=column_spec.join_index,
+                column_title=column_spec.column_title or "",
+            )
             if column_spec.link_spec:
                 raw_vs["link_spec"] = column_spec.link_spec.to_raw()
             if column_spec.tooltip:
                 raw_vs["tooltip"] = column_spec.tooltip
-            raw_vs["join_value"] = column_spec.join_index
-            raw_vs["column_title"] = column_spec.column_title or ""
             return column_type, raw_vs
 
         raise ValueError()

@@ -35,6 +35,7 @@ import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 from cmk.utils.backup.config import Config
 from cmk.utils.backup.targets.aws_s3_bucket import S3Target
+from cmk.utils.backup.targets.azure_blob_storage import BlobStorageTarget
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.targets.protocol import Target
 from cmk.utils.backup.type_defs import Backup, Job, SiteBackupInfo, TargetId
@@ -530,7 +531,11 @@ def get_needed_lock_files() -> Sequence[Path]:
 ######################
 
 
-target_classes: Mapping[str, type[Target]] = {"local": LocalTarget, "aws_s3_bucket": S3Target}
+target_classes: Mapping[str, type[Target]] = {
+    "local": LocalTarget,
+    "aws_s3_bucket": S3Target,
+    "azure_blob_storage": BlobStorageTarget,
+}
 
 
 def load_target(config: Config, target_id: TargetId) -> Target:

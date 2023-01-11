@@ -243,8 +243,6 @@ CEE_UNUSED_PACKAGES = [
     "PyMySQL",
     "PyNaCl",
     "attrs",
-    "azure-identity",
-    "azure-storage-blob",
     "bcrypt",
     "cachetools",
     "certifi",

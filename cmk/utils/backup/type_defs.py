@@ -7,7 +7,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generic, IO, Literal, NewType, TypeVar
+from typing import Generic, IO, Literal, NewType, TypeVar, Union
 
 # pydantic needs TypedDict from typing_extensions for < 3.11
 from typing_extensions import NotRequired, TypedDict
@@ -59,6 +59,24 @@ class S3Params(TypedDict):
     bucket: str
 
 
+class BlobStorageADCredentials(TypedDict):
+    tenant_id: str
+    client_id: str
+    client_secret: PasswordId
+
+
+BlobStorageCredentials = Union[
+    tuple[Literal["shared_key"], PasswordId],
+    tuple[Literal["active_directory"], BlobStorageADCredentials],
+]
+
+
+class BlobStorageParams(TypedDict):
+    storage_account_name: str
+    container: str
+    credentials: BlobStorageCredentials
+
+
 # these classes are only needed to make pydantic understand TargetConfig, otherwise we could
 # simple use RemoteTargetParams[...]
 
@@ -67,13 +85,18 @@ class _S3TargetParams(RemoteTargetParams[S3Params]):
     ...
 
 
+class _BlobStorageTargetParams(RemoteTargetParams[BlobStorageParams]):
+    ...
+
+
 LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]
 S3TargetConfig = tuple[Literal["aws_s3_bucket"], _S3TargetParams]
+BlobStorageTargetConfig = tuple[Literal["azure_blob_storage"], _BlobStorageTargetParams]
 
 
 class TargetConfig(TypedDict):
     title: str
-    remote: LocalTargetConfig | S3TargetConfig
+    remote: LocalTargetConfig | S3TargetConfig | BlobStorageTargetConfig
 
 
 class CMACluster(TypedDict):

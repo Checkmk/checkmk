@@ -30,10 +30,12 @@ import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Target
+from cmk.utils.backup.targets.azure_blob_storage import BlobStorage, BlobStorageTarget
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.targets.protocol import Target as TargetProtocol
 from cmk.utils.backup.targets.remote_interface import RemoteTarget, TRemoteStorage
 from cmk.utils.backup.type_defs import (
+    BlobStorageParams,
     JobConfig,
     LocalTargetParams,
     RemoteTargetParams,
@@ -1258,6 +1260,88 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
                 title=_("Bucket name"),
                 allow_empty=False,
                 size=50,
+            ),
+        )
+
+
+@target_type_registry.register
+class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, BlobStorage]):
+    @staticmethod
+    def ident() -> str:
+        return "azure_blob_storage"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Azure Blob Storage")
+
+    @staticmethod
+    def _instantiate_target(params: RemoteTargetParams[BlobStorageParams]) -> BlobStorageTarget:
+        return BlobStorageTarget(TargetId(""), params)
+
+    @staticmethod
+    def _remote_dictionary_elements() -> DictionaryElements:
+        yield (
+            "storage_account_name",
+            TextInput(
+                title=_("Storage account name"),
+                allow_empty=False,
+                size=50,
+            ),
+        )
+        yield (
+            "container",
+            TextInput(
+                title=_("Container name"),
+                allow_empty=False,
+                size=50,
+            ),
+        )
+        yield (
+            "credentials",
+            CascadingDropdown(
+                title=_("Credentials"),
+                choices=[
+                    (
+                        "shared_key",
+                        _("Storage account shared key"),
+                        IndividualOrStoredPassword(
+                            title=_("Shared key"),
+                            allow_empty=False,
+                        ),
+                    ),
+                    (
+                        "active_directory",
+                        _("Active Directory credentials"),
+                        Dictionary(
+                            elements=[
+                                (
+                                    "client_id",
+                                    TextInput(
+                                        title=_("Application (client) ID"),
+                                        allow_empty=False,
+                                        size=50,
+                                    ),
+                                ),
+                                (
+                                    "tenant_id",
+                                    TextInput(
+                                        title=_("Directory (tenant) ID"),
+                                        allow_empty=False,
+                                        size=50,
+                                    ),
+                                ),
+                                (
+                                    "client_secret",
+                                    IndividualOrStoredPassword(
+                                        title=_("Client secret"),
+                                        allow_empty=False,
+                                    ),
+                                ),
+                            ],
+                            optional_keys=[],
+                        ),
+                    ),
+                ],
             ),
         )
 

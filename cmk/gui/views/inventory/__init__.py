@@ -23,7 +23,6 @@ from cmk.utils.structured_data import (
     SDKey,
     SDKeyColumns,
     SDPath,
-    SDRawPath,
     SDRow,
     SDValue,
     StructuredDataNode,
@@ -913,7 +912,7 @@ def _inv_filter_info():
     }
 
 
-def inv_titleinfo_long(raw_path: SDRawPath) -> str:
+def inv_titleinfo_long(raw_path: str) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
     inventory_path = inventory.InventoryPath.parse(raw_path)
     hints = DISPLAY_HINTS.get_hints(inventory_path.path)

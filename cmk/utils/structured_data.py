@@ -28,7 +28,6 @@ from cmk.utils.type_defs import HostName
 # - count_entries -> __len__?
 # TODO Improve/clarify adding Attributes/Table while deserialization/filtering/merging/...
 
-SDRawPath = str
 # TODO improve this
 SDRawTree = dict
 
@@ -1220,7 +1219,7 @@ def _identical_delta_tree_node(value: SDValue) -> tuple[SDValue, SDValue]:
     return (value, value)
 
 
-def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:
+def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(part for part in raw_path.split(".") if part)
 
 

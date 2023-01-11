@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """The rulespecs are the ruleset specifications registered to WATO."""
-
 import abc
 import re
 from collections.abc import Callable
@@ -18,7 +17,12 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_rulespec_group
+from cmk.gui.utils.urls import (
+    DocReference,
+    makeuri,
+    makeuri_contextless,
+    makeuri_contextless_rulespec_group,
+)
 from cmk.gui.valuespec import (
     DEF_VALUE,
     Dictionary,
@@ -93,6 +97,11 @@ class RulespecGroup(RulespecBaseGroup):
     def help(self) -> str:
         """Helpful description of this group"""
         raise NotImplementedError()
+
+    @property
+    def doc_references(self) -> dict[DocReference, str]:
+        """Doc references of this group and their titles"""
+        return {}
 
     @property
     def choice_title(self) -> str:

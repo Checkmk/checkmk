@@ -75,7 +75,7 @@ from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, st
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -179,10 +179,10 @@ class ABCRulesetMode(WatoMode):
 
         self._title: str = ""
         self._help: str | None = None
-        self._set_title_and_help()
+        self._set_title_help_and_doc_reference()
 
     @abc.abstractmethod
-    def _set_title_and_help(self) -> None:
+    def _set_title_help_and_doc_reference(self) -> None:
         raise NotImplementedError()
 
     def _from_vars(self) -> None:
@@ -356,7 +356,7 @@ class ModeRuleSearch(ABCRulesetMode):
             )
         return all_rulesets
 
-    def _set_title_and_help(self) -> None:
+    def _set_title_help_and_doc_reference(self) -> None:
         if self._page_type is PageType.DeprecatedRulesets:
             self._title = _("Search rules: Deprecated Rulesets")
             self._help = _(
@@ -364,20 +364,32 @@ class ModeRuleSearch(ABCRulesetMode):
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                 "refer to the release notes or context help of the rulesets for details."
             )
+            self._doc_references: dict[DocReference, str] = {
+                DocReference.WATO_RULES_DEPCRECATED: _("Obsolete rule sets"),
+            }
 
         elif self._page_type is PageType.IneffectiveRules:
             self._title = _("Search rules: Rulesets with ineffective rules")
             self._help = _(
                 "The following rulesets contain rules that do not match to any of the existing hosts."
             )
+            self._doc_references = {
+                DocReference.WATO_RULES_INEFFECTIVE: _("Ineffective rules"),
+            }
 
         elif self._page_type is PageType.UsedRulesets:
             self._title = _("Search rules: Used rulesets")
             self._help = _("Non-empty rulesets")
+            self._doc_references = {
+                DocReference.WATO_RULES_IN_USE: _("Rule sets in use"),
+            }
 
         elif self._page_type is PageType.RuleSearch:
             self._title = _("Search rules")
             self._help = None
+            self._doc_references = {
+                DocReference.WATO_RULES: _("Host and service parameters"),
+            }
 
         else:
             raise NotImplementedError()
@@ -421,6 +433,7 @@ class ModeRuleSearch(ABCRulesetMode):
             if self._page_type is not PageType.RuleSearch
             else None,
         )
+        _add_doc_references(menu, self._doc_references)
         return menu
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
@@ -437,6 +450,11 @@ class ModeRuleSearch(ABCRulesetMode):
     def action(self) -> HTTPRedirect:
         forms.remove_unused_vars("search_p_rule", _is_var_to_delete)
         return redirect(makeuri(request, []))
+
+
+def _add_doc_references(page_menu: PageMenu, doc_references: dict[DocReference, str]) -> None:
+    for reference, title in doc_references.items():
+        page_menu.add_doc_reference(title, reference)
 
 
 def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
@@ -585,12 +603,16 @@ class ModeRulesetGroup(ABCRulesetMode):
             )
         return all_rulesets
 
-    def _set_title_and_help(self) -> None:
+    def _set_title_help_and_doc_reference(self) -> None:
         if self._group_name == "static":
             rulegroup = get_rulegroup("static")
         else:
             rulegroup = get_rulegroup(self._group_name)
-        self._title, self._help = rulegroup.title, rulegroup.help
+        self._title, self._help, self._doc_references = (
+            rulegroup.title,
+            rulegroup.help,
+            rulegroup.doc_references,
+        )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -609,6 +631,7 @@ class ModeRulesetGroup(ABCRulesetMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", "")),
         )
+        _add_doc_references(menu, self._doc_references)
         return menu
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:

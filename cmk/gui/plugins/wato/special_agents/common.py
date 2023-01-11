@@ -14,6 +14,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroup,
     RulespecSubGroup,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -42,6 +43,15 @@ class RulespecGroupVMCloudContainer(RulespecGroup):
     @property
     def help(self):
         return _("Integrate with VM, cloud or container platforms")
+
+    @property
+    def doc_references(self) -> dict[DocReference, str]:
+        return {
+            DocReference.WATO_AGENTS: _("Monitoring agents"),
+            DocReference.VMWARE: _("Monitoring VMWare ESXi"),
+            DocReference.AWS: _("Monitoring Amazon Web Services (AWS)"),
+            DocReference.AZURE: _("Monitoring Microsoft Azure"),
+        }
 
 
 @rulespec_group_registry.register

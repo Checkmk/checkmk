@@ -25,7 +25,7 @@ artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 # Also this give possibility to test literally everything
 regression_data = {
     "python-3.8.zip": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
-                      b"version_info = 3.8.15\r\n"
+                      b"version_info = 3.8.16\r\n"
                       b"include-system-site-packages = false\r\n",
     "python-3.4.zip": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
                       b"version_info = 3.4.4\r\n"

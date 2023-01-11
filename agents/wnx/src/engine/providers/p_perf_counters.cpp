@@ -149,10 +149,10 @@ std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE *perf_object,
 
     std::string accu;
     for (const auto &counter : counters) {
-        auto first_column = counter->CounterNameTitleIndex;
+        auto first_column = static_cast<int>(counter->CounterNameTitleIndex);
         // this logic is strange, but this is as in LWA
         // 1. Index
-        first_column -= key_index;
+        first_column -= static_cast<int>(key_index);
         accu += std::to_string(first_column);
 
         // 2. Value(s)

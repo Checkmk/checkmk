@@ -12,7 +12,7 @@ var g_reload_pause_timer: number | null = null;
 // the user with a pause overlay icon. The icon also shows the time when
 // the pause ends. Once the user clicks on the pause icon or the time
 // is reached, the whole page is reloaded.
-export function pause(seconds) {
+export function pause(seconds: number) {
     utils.stop_reload_timer();
     draw_overlay(seconds);
     // Reset the timer if pause was used. Otherwise the page will reload even
@@ -34,13 +34,13 @@ export function stop() {
     if (counter) counter.style.display = "none";
 }
 
-function set_timer(seconds) {
+function set_timer(seconds: number) {
     g_reload_pause_timer = window.setTimeout(function () {
         update_timer(seconds);
     }, 1000);
 }
 
-function update_timer(seconds_left) {
+function update_timer(seconds_left: number) {
     seconds_left -= 1;
 
     if (seconds_left <= 0) {
@@ -49,7 +49,7 @@ function update_timer(seconds_left) {
         // update the pause counter
         var counter = document.getElementById("reload_pause_counter");
         if (counter) {
-            counter.innerHTML = seconds_left;
+            counter.innerHTML = seconds_left.toString();
         }
 
         g_reload_pause_timer = window.setTimeout(function () {
@@ -58,13 +58,12 @@ function update_timer(seconds_left) {
     }
 }
 
-function draw_overlay(seconds) {
+function draw_overlay(seconds: number) {
     var container = <HTMLAnchorElement>document.getElementById("reload_pause");
-    var counter;
     if (container) {
         // only render once. Just update the counter.
-        counter = document.getElementById("reload_pause_counter");
-        counter.innerHTML = seconds;
+        let existingCounter = document.getElementById("reload_pause_counter")!;
+        existingCounter.innerHTML = seconds.toString();
         return;
     }
 
@@ -84,7 +83,7 @@ function draw_overlay(seconds) {
 
     container.appendChild(document.createElement("br"));
 
-    counter = document.createElement("a");
+    let counter = document.createElement("a");
     counter.setAttribute("id", "reload_pause_counter");
     // FIXME: Localize
     counter.title = "Click to stop the countdown.";

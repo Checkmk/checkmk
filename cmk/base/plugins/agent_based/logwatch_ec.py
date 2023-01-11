@@ -22,6 +22,7 @@ from typing import (
     Any,
     Counter,
     Dict,
+    Generator,
     Iterable,
     List,
     Mapping,
@@ -58,6 +59,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
 ClusterSection = Dict[Optional[str], logwatch.Section]
+_MAX_SPOOL_SIZE = 1024**2
 
 
 def discover_group(
@@ -467,12 +469,30 @@ def logwatch_forward_spool_directory(
     if not syslog_messages:
         return LogwatchFordwardResult()
 
-    spool_file = get_new_spool_file(method, item)
-
-    spool_file.write_text("\n".join(map(repr, syslog_messages)) + "\n")
-    spool_file.rename(spool_file.parent / spool_file.name[1:])
+    split_files = split_file_messages((message + "\n" for message in map(repr, syslog_messages)))
+    for file_index, file_content in enumerate(split_files):
+        spool_file = get_new_spool_file(method, item)
+        with spool_file.open("w") as f:
+            for message in file_content:
+                f.write(message)
+        spool_file.rename((spool_file.parent / spool_file.name[1:]).with_suffix(f".{file_index}"))
 
     return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
+
+
+def split_file_messages(file_messages: Generator[str, None, None]) -> list[list[str]]:
+    result: list[list[str]] = [[]]
+    curr_file_index = 0
+    curr_character_count = 0
+    for file_message in file_messages:
+        if curr_character_count >= _MAX_SPOOL_SIZE:
+            result.append([])
+            curr_file_index += 1
+            curr_character_count = 0
+        result[curr_file_index].append(file_message)
+        curr_character_count += len(file_message)
+
+    return result
 
 
 def get_new_spool_file(method: str, item: Optional[str]) -> Path:

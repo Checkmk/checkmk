@@ -19,7 +19,7 @@ import time
 from collections.abc import Collection, Container, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Literal, NamedTuple
+from typing import Callable, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -639,7 +639,7 @@ def _may_update(
 
 
 class IntervalFromConfig(NamedTuple):
-    choices: Literal["all"] | tuple[str, Sequence[str]]
+    choices: tuple[str, list[str]] | str
     interval: int
 
 

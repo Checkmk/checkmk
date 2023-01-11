@@ -1434,7 +1434,7 @@ class LDAPUserConnector(UserConnector):
 
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
-    def locked_attributes(self) -> list[str]:
+    def locked_attributes(self) -> Sequence[str]:
         locked = {"password"}  # This attributes are locked in all cases!
         for _key, params, plugin in self.active_sync_plugins():
             locked.update(plugin.lock_attributes(params))

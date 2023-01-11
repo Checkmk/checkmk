@@ -5,12 +5,14 @@
 
 import ast
 import copy
+import itertools
 import os
 import traceback
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Mapping, TypeVar
+from typing import Any, TypeVar
 
 from six import ensure_str
 
@@ -429,8 +431,8 @@ def write_contacts_and_users_file(
         check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
 
-    non_contact_attributes_cache: dict[str | None, list[str]] = {}
-    multisite_attributes_cache: dict[str | None, list[str]] = {}
+    non_contact_attributes_cache: dict[str | None, Sequence[str]] = {}
+    multisite_attributes_cache: dict[str | None, Sequence[str]] = {}
     for user_settings in updated_profiles.values():
         connector = user_settings.get("connector")
         if connector not in non_contact_attributes_cache:
@@ -447,7 +449,12 @@ def write_contacts_and_users_file(
                 id,
                 split_dict(
                     user,
-                    non_contact_keys + non_contact_attributes_cache[user.get("connector")],
+                    list(
+                        itertools.chain(
+                            non_contact_keys,
+                            non_contact_attributes_cache[user.get("connector")],
+                        )
+                    ),
                     False,
                 ),
             )
@@ -461,7 +468,7 @@ def write_contacts_and_users_file(
         users[uid] = {
             p: val
             for p, val in profile.items()
-            if p in multisite_keys + multisite_attributes_cache[profile.get("connector")]
+            if p in multisite_keys or p in multisite_attributes_cache[profile.get("connector")]
         }
 
     # Checkmk's monitoring contacts
@@ -481,19 +488,19 @@ def write_contacts_and_users_file(
     )
 
 
-def non_contact_attributes(connection_id: str | None) -> list[str]:
+def non_contact_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific non contact attributes"""
     return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
 
 
-def multisite_attributes(connection_id: str | None) -> list[str]:
+def multisite_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific multisite attributes"""
     return _get_attributes(connection_id, lambda c: c.multisite_attributes())
 
 
 def _get_attributes(
-    connection_id: str | None, selector: Callable[[UserConnector], list[str]]
-) -> list[str]:
+    connection_id: str | None, selector: Callable[[UserConnector], Sequence[str]]
+) -> Sequence[str]:
     connection = get_connection(connection_id)
     return selector(connection) if connection else []
 

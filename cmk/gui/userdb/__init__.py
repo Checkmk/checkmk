@@ -10,7 +10,7 @@ import ast
 import shutil
 import time
 import traceback
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import suppress
 from datetime import datetime, timedelta
 from logging import Logger
@@ -127,24 +127,24 @@ def sync_possible() -> bool:
     return any(connection.type() == "ldap" for _connection_id, connection in active_connections())
 
 
-def locked_attributes(connection_id: str | None) -> list[str]:
+def locked_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific locked attributes"""
     return _get_attributes(connection_id, lambda c: c.locked_attributes())
 
 
-def multisite_attributes(connection_id: str | None) -> list[str]:
+def multisite_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific multisite attributes"""
     return _get_attributes(connection_id, lambda c: c.multisite_attributes())
 
 
-def non_contact_attributes(connection_id: str | None) -> list[str]:
+def non_contact_attributes(connection_id: str | None) -> Sequence[str]:
     """Returns a list of connection specific non contact attributes"""
     return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
 
 
 def _get_attributes(
-    connection_id: str | None, selector: Callable[[UserConnector], list[str]]
-) -> list[str]:
+    connection_id: str | None, selector: Callable[[UserConnector], Sequence[str]]
+) -> Sequence[str]:
     connection = get_connection(connection_id)
     return selector(connection) if connection else []
 

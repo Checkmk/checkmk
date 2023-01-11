@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Any, Literal, Union
 
@@ -400,13 +400,13 @@ class UserConnector(abc.ABC):
 
     # List of user attributes locked for all users attached to this
     # connection. Those locked attributes are read-only in WATO.
-    def locked_attributes(self) -> list[str]:
+    def locked_attributes(self) -> Sequence[str]:
         return []
 
-    def multisite_attributes(self) -> list[str]:
+    def multisite_attributes(self) -> Sequence[str]:
         return []
 
-    def non_contact_attributes(self) -> list[str]:
+    def non_contact_attributes(self) -> Sequence[str]:
         return []
 
 

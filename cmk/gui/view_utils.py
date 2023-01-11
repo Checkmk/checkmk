@@ -31,6 +31,17 @@ if TYPE_CHECKING:
     from cmk.gui.type_defs import Row
     from cmk.gui.config import LoggedInUser
 
+_URL_PATTERN = (
+    r"("  #
+    r"http[s]?://"  #
+    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]*"  # including *all* sub-delimiters
+    # In theory, URIs are allowed to end in a sub-delimitter ("!$&'()*+,;=")
+    # We exclude the ',' here, because it is used to separate our check results,
+    # and disallowing a trailing ',' hopefully breaks fewer links than allowing it.
+    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+;=%]"  #
+    r")"  #
+)
+
 
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
@@ -72,11 +83,10 @@ def format_plugin_output(output: CellContent,
     prevent_url_icons = (row.get("service_check_command", "") == "check_mk-check_mk_agent_update"
                          if row is not None else False)
     if shall_escape and not prevent_url_icons:
-        http_url = r"(http[s]?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)"
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
         output = re.sub(
-            "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
+            "(?:&lt;A HREF=&quot;)?" + _URL_PATTERN + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
                 html.render_icon_button(unescape_attributes(p.group(1).replace(
                     '&quot;', '')), unescape_attributes(p.group(1).replace('&quot;', '')), "link")),

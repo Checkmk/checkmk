@@ -51,6 +51,14 @@ Sub Run(cmd)
     Set FILE = Nothing
 End Sub
 
+Function BuildPrintDefaultsCmd(instance_cmd)
+   Dim print_defaults_cmd
+   print_defaults_cmd = Replace(instance_cmd, "mysqld.exe", "mysql.exe")
+   print_defaults_cmd = Replace(print_defaults_cmd, "mysqld-nt.exe", "mysql.exe")
+   print_defaults_cmd = Left(print_defaults_cmd, InStrRev(print_defaults_cmd, " ")) & " --print-defaults"
+   BuildPrintDefaultsCmd = print_defaults_cmd
+End Function
+
 For Each instance In instances.Keys
     ' Use either an instance specific config file named mysql_<instance-id>.ini
     ' or the default mysql.ini file.
@@ -65,11 +73,7 @@ For Each instance In instances.Keys
     ' Now detect the correct socket / port to connect to this instance. This can be done by executing
     ' mysql.exe with the --defaults-file found in the command line of the windows process together
     ' with the option --print-defaults
-    cmd = instances.Item(instance)
-    cmd = Replace(cmd, "mysqld.exe", "mysql.exe")
-    cmd = Replace(cmd, "mysqld-nt.exe", "mysql.exe")
-    cmd = Left(cmd, InStrRev(cmd, " ")) & " --print-defaults"
-    Set PROC = SHO.Exec(cmd)
+    Set PROC = SHO.Exec(BuildPrintDefaultsCmd(instances.Item(instance)))
     PROC.StdIn.Close()
     PROC.StdErr.Close()
     output = PROC.StdOut.ReadAll()

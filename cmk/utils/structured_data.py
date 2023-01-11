@@ -15,7 +15,7 @@ import pprint
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, Literal, NamedTuple
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
@@ -96,17 +96,8 @@ class SDFilter(NamedTuple):
     filter_columns: SDFilterFunc
 
 
-class _RawIntervalFromConfigMandatory(TypedDict):
-    interval: int
-    visible_raw_path: str
-
-
-class _RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
-    attributes: Literal["all"] | tuple[str, list[str]]
-    columns: Literal["all"] | tuple[str, list[str]]
-
-
-RawIntervalsFromConfig = list[_RawIntervalFromConfig]
+RawIntervalsFromConfig = list[dict]
+RawRetentionIntervals = tuple[int, int, int]
 
 
 class RetentionIntervals(NamedTuple):
@@ -122,15 +113,15 @@ class RetentionIntervals(NamedTuple):
     def keep_until(self) -> int:
         return self.cached_at + self.cache_interval + self.retention_interval
 
-    def serialize(self) -> tuple[int, int, int]:
+    def serialize(self) -> RawRetentionIntervals:
         return self.cached_at, self.cache_interval, self.retention_interval
 
     @classmethod
-    def deserialize(cls, raw_intervals: tuple[int, int, int]) -> RetentionIntervals:
+    def deserialize(cls, raw_intervals: RawRetentionIntervals) -> RetentionIntervals:
         return cls(*raw_intervals)
 
 
-RawRetentionIntervalsByKeys = dict[SDKey, tuple[int, int, int]]
+RawRetentionIntervalsByKeys = dict[SDKey, RawRetentionIntervals]
 RetentionIntervalsByKeys = dict[SDKey, RetentionIntervals]
 
 
@@ -264,18 +255,11 @@ def make_filter(entry: tuple[SDPath, SDKeys | None] | dict) -> SDFilter:
     )
 
 
-def make_filter_from_choice(
-    choice: tuple[str, Sequence[str]] | Literal["nothing"] | Literal["all"] | None
-) -> SDFilterFunc:
-    # TODO Improve:
-    # For contact groups (via make_filter)
+def make_filter_from_choice(choice: tuple[str, list[str]] | str | None) -> SDFilterFunc:
+    # choice is of the form:
     #   - ('choices', ['some', 'keys'])
-    #   - 'nothing' -> _use_nothing
-    #   - None -> _use_all
-    # For retention intervals (directly)
-    #   - ('choices', ['some', 'keys'])
-    #   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
-    #   - 'all' -> _use_all
+    #   - 'nothing'
+    #   - None means _use_all
     if isinstance(choice, tuple):
         return _make_choices_filter(choice[-1])
     if choice == "nothing":

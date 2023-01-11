@@ -92,6 +92,24 @@ class TestLinux:
     ):
         assert "postgres" == mk_postgres.helper_factory().get_default_postgres_user()
 
+    @patch("subprocess.Popen")
+    def test_postgres_binary_path_fallback(self, mock_Popen, mk_postgres):
+        process_mock = Mock()
+        attrs = {"communicate.side_effect": [("usr/mydb-12.3/bin", None)]}
+        process_mock.configure_mock(**attrs)
+        mock_Popen.return_value = process_mock
+        instance = {
+            "pg_database": "mydb",
+            "pg_port": "1234",
+            "name": "mydb",
+            "pg_user": "myuser",
+            "pg_passfile": "/home/.pgpass",
+            "pg_version": "12.3",
+        }
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+
+        assert myPostgresOnLinux.psql_binary_path == "usr/mydb-12.3/bin"
+
     def test_config_without_instance(
         self,
         mk_postgres,
@@ -149,10 +167,12 @@ class TestLinux:
         assert myPostgresOnLinux.pg_database == "postgres"
         assert myPostgresOnLinux.pg_port == "5432"
 
+    @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
     def test_factory_with_instance(
         self,
         mock_Popen,
+        mock_isfile,
         monkeypatch,
         mk_postgres,
     ):

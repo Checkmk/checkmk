@@ -655,20 +655,23 @@ class PostgresLinux(PostgresBase):
 
     def get_psql_binary_path(self):
         # type: () -> str
+        """If possible, do not use the binary from PATH directly. This could lead to a generic
+        binary that is not able to find the correct UNIX socket. See SUP-11729.
+        In case the user does not have any instances configured or if the assembled path does not
+        exist, fallback to the PATH location. See SUP-12878"""
 
         if self.pg_version is None:
-            # This is a fallback in case the user does not have any instances
-            # configured. However, it may not work (see next comment).
             return self._default_psql_binary_path()
 
-        # If possible, do not use the binary from PATH directly. This could
-        # lead to a generic binary that is not able to find the correct UNIX
-        # socket. See SUP-11729.
-        return "/{pg_database}/{pg_version}/bin/{psql_binary_name}".format(
+        binary_path = "/{pg_database}/{pg_version}/bin/{psql_binary_name}".format(
             pg_database=self.pg_database,
             pg_version=self.pg_version,
             psql_binary_name=self.psql_binary_name,
         )
+
+        if not os.path.isfile(binary_path):
+            return self._default_psql_binary_path()
+        return binary_path
 
     def _default_psql_binary_path(self):
         # type: () -> str

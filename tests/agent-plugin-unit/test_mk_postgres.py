@@ -101,6 +101,25 @@ def test_postgres_windows_config_with_instance(mk_postgres, monkeypatch, is_wind
     assert instances[0]["pg_passfile"] == "/PATH/TO/.pgpass"
 
 
+@patch("subprocess.Popen")
+def test_postgres_linux_binary_path_fallback(mock_Popen, mk_postgres, is_linux):
+    process_mock = Mock()
+    attrs = {'communicate.side_effect': [('usr/mydb-12.3/bin', None)]}
+    process_mock.configure_mock(**attrs)
+    mock_Popen.return_value = process_mock
+    instance = {
+        'pg_database': 'mydb',
+        'pg_port': '1234',
+        'name': 'mydb',
+        'pg_user': 'myuser',
+        'pg_passfile': '/home/.pgpass',
+        "pg_version": "12.3",
+    }
+    myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+
+    assert myPostgresOnLinux.psql_binary_path == "usr/mydb-12.3/bin"
+
+
 @patch('subprocess.Popen')
 def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres, is_linux):
     process_mock = Mock()
@@ -154,8 +173,10 @@ def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postg
     assert myPostgresOnWin.pg_port == "5432"
 
 
+@patch('os.path.isfile', return_value=True)
 @patch('subprocess.Popen')
-def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgres, is_linux):
+def test_postgres_factory_linux_with_instance(mock_Popen, mock_isfile, monkeypatch, mk_postgres,
+                                              is_linux):
     instance = {
         'pg_database': 'mydb',
         'pg_port': '1234',

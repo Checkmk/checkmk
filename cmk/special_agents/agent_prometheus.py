@@ -727,34 +727,6 @@ class KubeStateExporter:
             result.append(piggybacked_services)
         return result
 
-    def services_selector(self) -> list[dict[str, dict[str, Any]]]:
-        # Cluster Section
-        logging.debug("Parsing kube services selection")
-
-        service_label_translation = {
-            "label_k8s_app": "k8s-app",
-            "label_app_kubernetes_io_name": "app.kubernetes.io/name",
-        }
-        result: dict[str, dict[str, Any]] = {}
-        for service_result in self._perform_query("kube_service_labels{namespace_filter}"):
-            if not service_result.has_labels(["service"]):
-                continue
-
-            service_piggyback = result.setdefault(service_result.label_value("service"), {})
-            if len(service_result.labels) == 5:
-                service_piggyback["name"] = service_result.label_value("service")
-            else:
-                for label_key, label_value in service_result.labels.items():
-                    if (
-                        label_value == service_result.label_value("service")
-                        and label_key != "service"
-                    ):
-                        service_piggyback.update(
-                            {service_label_translation.get(label_key, label_key): label_value}
-                        )
-
-        return [result]
-
     def services_info(self) -> list[dict[str, dict[str, Any]]]:
         logging.debug("Parsing kube services info")
 
@@ -1590,7 +1562,6 @@ class ApiData:
             "pod_container": self.kube_state_exporter.pod_container_summary,
             "pod_resources": self.kube_state_exporter.pod_resources_summary,
             "daemon_pods": self.kube_state_exporter.daemon_pods_summary,
-            "services_selector": self.kube_state_exporter.services_selector,
             "services_info": self.kube_state_exporter.services_info,
         }
 
@@ -1646,19 +1617,12 @@ class ApiData:
             )
 
         if "services" in kube_state_options:
-            services_selector = {
-                "service_name": "k8s_service_selector",
-                "summary": kube_state_summaries["services_selector"],
-            }
-
             services_info = {
                 "service_name": "k8s_service_info",
                 "summary": kube_state_summaries["services_info"],
             }
 
-            yield from self._output_kube_state_summary(
-                [services_selector, services_info], piggyback_prefix="service_"
-            )
+            yield from self._output_kube_state_summary([services_info], piggyback_prefix="service_")
 
         if "daemon_sets" in kube_state_options:
             daemon_pods = {

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pydantic import BaseModel
@@ -39,7 +39,7 @@ class ConnectorConfig(BaseModel):
 
 
 class Connector(UserConnector):
-    def __init__(self, raw_config: dict[str, Any]) -> None:
+    def __init__(self, raw_config: Mapping[str, Any]) -> None:
         super().__init__(raw_config)
         self.__config = ConnectorConfig(**self._config)
         self.__interface = Interface(

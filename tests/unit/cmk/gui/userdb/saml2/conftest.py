@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +27,7 @@ def fixture_signature_certificate_paths() -> tuple[Path, Path]:
 
 
 @pytest.fixture(name="raw_config")
-def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> dict[str, Any]:
+def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> Mapping[str, Any]:
     private_keyfile_path, public_keyfile_path = signature_certificate_paths
     return {
         "type": "saml2",

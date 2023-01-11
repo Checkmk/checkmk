@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package
 
 
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Iterable, NamedTuple
+from typing import Any, NamedTuple
 
 import pytest
 
@@ -21,9 +22,9 @@ from cmk.gui.wato.pages.saml2 import ModeEditSAML2Config
 
 
 class Variables(NamedTuple):
-    http: dict[str, str]
-    valuespec: dict[str, Any]
-    serialised: dict[str, Any]
+    http: Mapping[str, str]
+    valuespec: Mapping[str, Any]
+    serialised: Mapping[str, Any]
 
 
 CERTIFICATE_DIR = Path(__file__).parent.parent.parent / "userdb/saml2/certificate_files"

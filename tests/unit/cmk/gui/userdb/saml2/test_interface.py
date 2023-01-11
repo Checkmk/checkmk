@@ -7,11 +7,12 @@ import base64
 import re
 import time
 import xml.etree.ElementTree as ET
+from collections.abc import Iterable, Mapping
 from enum import Enum
 from itertools import zip_longest
 from pathlib import Path
 from shutil import which
-from typing import Any, Iterable
+from typing import Any
 
 import lxml.html
 import pytest
@@ -122,7 +123,7 @@ class TestInterface:
 
     @pytest.fixture
     def interface(
-        self, metadata_from_idp: None, raw_config: dict[str, Any], initialised_redis: Redis
+        self, metadata_from_idp: None, raw_config: Mapping[str, Any], initialised_redis: Redis
     ) -> Interface:
         config = ConnectorConfig(**raw_config).interface_config
         interface = Interface(config=config, requests_db=initialised_redis)
@@ -350,7 +351,7 @@ class TestInterfaceSecurityFeatures:
     @pytest.fixture(scope="class", name="signature_certificate")
     def fixture_signature_certificate(
         self, signature_certificate_paths: tuple[Path, Path]
-    ) -> Iterable[dict[str, str]]:
+    ) -> Iterable[Mapping[str, str]]:
         private_keyfile_path, public_keyfile_path = signature_certificate_paths
 
         private_key_content = private_keyfile_path.read_bytes()
@@ -371,7 +372,7 @@ class TestInterfaceSecurityFeatures:
 
     @pytest.fixture(autouse=True)
     def certificates(
-        self, monkeypatch: pytest.MonkeyPatch, signature_certificate: dict[str, str]
+        self, monkeypatch: pytest.MonkeyPatch, signature_certificate: Mapping[str, str]
     ) -> None:
         monkeypatch.setattr(
             "saml2.sigver.import_rsa_key_from_file",
@@ -399,7 +400,7 @@ class TestInterfaceSecurityFeatures:
 
     @pytest.fixture
     def interface(
-        self, metadata_from_idp: None, raw_config: dict[str, Any], initialised_redis: Redis
+        self, metadata_from_idp: None, raw_config: Mapping[str, Any], initialised_redis: Redis
     ) -> Interface:
         return Interface(
             config=ConnectorConfig(**raw_config).interface_config, requests_db=initialised_redis

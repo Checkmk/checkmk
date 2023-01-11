@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import copy
-from typing import Any, Iterable
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 import pytest
 
@@ -20,7 +21,7 @@ class TestConnector:
         return metadata_from_idp
 
     @pytest.fixture
-    def saml2_connection_id(self, raw_config: dict[str, Any]) -> str:
+    def saml2_connection_id(self, raw_config: Mapping[str, Any]) -> str:
         return raw_config["id"]
 
     @pytest.fixture
@@ -49,7 +50,9 @@ class TestConnector:
         yield users
 
     @pytest.fixture
-    def get_connection(self, monkeypatch: pytest.MonkeyPatch, raw_config: dict[str, Any]) -> None:
+    def get_connection(
+        self, monkeypatch: pytest.MonkeyPatch, raw_config: Mapping[str, Any]
+    ) -> None:
         saml2_connector = Connector(raw_config)
         connections = {"htpasswd": HtpasswdUserConnector({}), saml2_connector.id: saml2_connector}
         monkeypatch.setattr(
@@ -57,7 +60,7 @@ class TestConnector:
             lambda i: connections.get(i),  # pylint: disable=unnecessary-lambda
         )
 
-    def test_connector_properties(self, raw_config: dict[str, Any]) -> None:
+    def test_connector_properties(self, raw_config: Mapping[str, Any]) -> None:
         connector = Connector(raw_config)
         assert connector.interface
         assert connector.type() == SAML2_CONNECTOR_TYPE
@@ -67,19 +70,19 @@ class TestConnector:
             == "http://localhost:8080/simplesaml/saml2/idp/metadata.php"
         )
 
-    def test_connector_is_enabled_config(self, raw_config: dict[str, Any]) -> None:
+    def test_connector_is_enabled_config(self, raw_config: Mapping[str, Any]) -> None:
         config = {**raw_config, **{"disabled": False}}
         connector = Connector(config)
         assert connector.is_enabled() is True
 
-    def test_connector_is_disabled_config(self, raw_config: dict[str, Any]) -> None:
+    def test_connector_is_disabled_config(self, raw_config: Mapping[str, Any]) -> None:
         config = {**raw_config, **{"disabled": True}}
         connector = Connector(config)
         assert connector.is_enabled() is False
 
     def test_edit_user_creates_new_user(
         self,
-        raw_config: dict[str, Any],
+        raw_config: Mapping[str, Any],
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
@@ -96,7 +99,7 @@ class TestConnector:
 
     def test_edit_user_creates_new_user_with_default_profile(
         self,
-        raw_config: dict[str, Any],
+        raw_config: Mapping[str, Any],
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
@@ -122,7 +125,7 @@ class TestConnector:
 
     def test_edit_user_does_not_overwrite_existing_user_in_different_namespace(
         self,
-        raw_config: dict[str, Any],
+        raw_config: Mapping[str, Any],
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
@@ -140,7 +143,7 @@ class TestConnector:
 
     def test_edit_user_does_not_overwrite_user_of_None_namespace(
         self,
-        raw_config: dict[str, Any],
+        raw_config: Mapping[str, Any],
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
@@ -156,7 +159,7 @@ class TestConnector:
 
     def test_edit_user_does_not_overwrite_user_of_missing_namespace(
         self,
-        raw_config: dict[str, Any],
+        raw_config: Mapping[str, Any],
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
@@ -172,7 +175,7 @@ class TestConnector:
 
     def test_edit_user_updates_user_profile(
         self,
-        raw_config: dict[str, Any],
+        raw_config: Mapping[str, Any],
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
@@ -186,7 +189,7 @@ class TestConnector:
 
         assert user_store == {**users_pre_edit, **{user_id: new_user_spec}}
 
-    def test_password_is_a_locked_attribute(self, raw_config: dict[str, Any]) -> None:
+    def test_password_is_a_locked_attribute(self, raw_config: Mapping[str, Any]) -> None:
         connector = Connector(raw_config)
 
         assert "password" in connector.locked_attributes()

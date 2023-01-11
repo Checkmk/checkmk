@@ -30305,7 +30305,7 @@ msgid "Monitoring agents"
 msgstr "Monitoringagent"
 
 msgid "Monitoring core"
-msgstr "Monitorign-Kern"
+msgstr "Monitoring-Kern"
 
 msgid "Monitoring history entries (events and availability)"
 msgstr "Monitoring-Historie (Ereignisse und Verfügbarkeit)"

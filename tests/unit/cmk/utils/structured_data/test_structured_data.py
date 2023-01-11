@@ -525,45 +525,30 @@ def test_filtering_node_mixed() -> None:
 
 # Tests with real host data
 
-TEST_DIR = "%s/tests/unit/cmk/utils/structured_data/tree_test_data" % cmk_path()
 
-TEST_DATA_STORE = TreeStore(Path(TEST_DIR))
-
-tree_name_old_addresses_arrays_memory = HostName("tree_old_addresses_arrays_memory")
-tree_name_old_addresses = HostName("tree_old_addresses")
-tree_name_old_arrays = HostName("tree_old_arrays")
-tree_name_old_interfaces = HostName("tree_old_interfaces")
-tree_name_old_memory = HostName("tree_old_memory")
-tree_name_old_heute = HostName("tree_old_heute")
-
-tree_name_new_addresses_arrays_memory = HostName("tree_new_addresses_arrays_memory")
-tree_name_new_addresses = HostName("tree_new_addresses")
-tree_name_new_arrays = HostName("tree_new_arrays")
-tree_name_new_interfaces = HostName("tree_new_interfaces")
-tree_name_new_memory = HostName("tree_new_memory")
-tree_name_new_heute = HostName("tree_new_heute")
-
-old_trees = [
-    tree_name_old_addresses_arrays_memory,
-    tree_name_old_addresses,
-    tree_name_old_arrays,
-    tree_name_old_interfaces,
-    tree_name_old_memory,
-    tree_name_old_heute,
-]
-new_trees = [
-    tree_name_new_addresses_arrays_memory,
-    tree_name_new_addresses,
-    tree_name_new_arrays,
-    tree_name_new_interfaces,
-    tree_name_new_memory,
-    tree_name_new_heute,
-]
+def _get_tree_store() -> TreeStore:
+    return TreeStore(Path("%s/tests/unit/cmk/utils/structured_data/tree_test_data" % cmk_path()))
 
 
-@pytest.mark.parametrize("tree_name", old_trees + new_trees)
+@pytest.mark.parametrize(
+    "tree_name",
+    [
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_old_heute"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_memory"),
+        HostName("tree_new_heute"),
+    ],
+)
 def test_structured_data_StructuredDataTree_load_from(tree_name: HostName) -> None:
-    TEST_DATA_STORE.load(host_name=tree_name)
+    _get_tree_store().load(host_name=tree_name)
 
 
 def test_real_save_gzip(tmp_path: Path) -> None:
@@ -588,75 +573,104 @@ def test_real_save_gzip(tmp_path: Path) -> None:
         f.read()
 
 
-tree_old_addresses_arrays_memory = TEST_DATA_STORE.load(
-    host_name=HostName("tree_old_addresses_arrays_memory")
-)
-tree_old_addresses = TEST_DATA_STORE.load(host_name=HostName("tree_old_addresses"))
-tree_old_arrays = TEST_DATA_STORE.load(host_name=HostName("tree_old_arrays"))
-tree_old_interfaces = TEST_DATA_STORE.load(host_name=HostName("tree_old_interfaces"))
-tree_old_memory = TEST_DATA_STORE.load(host_name=HostName("tree_old_memory"))
-tree_old_heute = TEST_DATA_STORE.load(host_name=HostName("tree_old_heute"))
-
-tree_new_addresses_arrays_memory = TEST_DATA_STORE.load(
-    host_name=HostName("tree_new_addresses_arrays_memory")
-)
-tree_new_addresses = TEST_DATA_STORE.load(host_name=HostName("tree_new_addresses"))
-tree_new_arrays = TEST_DATA_STORE.load(host_name=HostName("tree_new_arrays"))
-tree_new_interfaces = TEST_DATA_STORE.load(host_name=HostName("tree_new_interfaces"))
-tree_new_memory = TEST_DATA_STORE.load(host_name=HostName("tree_new_memory"))
-tree_new_heute = TEST_DATA_STORE.load(host_name=HostName("tree_new_heute"))
-
-# Must have same order as tree_new
-trees_old = [
-    tree_old_addresses_arrays_memory,
-    tree_old_addresses,
-    tree_old_arrays,
-    tree_old_interfaces,
-    tree_old_memory,
-    tree_old_heute,
-]
-
-# Must have same order as tree_old
-trees_new = [
-    tree_new_addresses_arrays_memory,
-    tree_new_addresses,
-    tree_new_arrays,
-    tree_new_interfaces,
-    tree_new_memory,
-    tree_new_heute,
-]
-
-trees = trees_old + trees_new
-
-
 def test_real_is_empty() -> None:
     assert StructuredDataNode().is_empty() is True
 
 
-@pytest.mark.parametrize("tree", trees)
-def test_real_is_empty_trees(tree: StructuredDataNode) -> None:
-    assert not tree.is_empty()
+@pytest.mark.parametrize(
+    "tree_name",
+    [
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_old_heute"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_memory"),
+        HostName("tree_new_heute"),
+    ],
+)
+def test_real_is_empty_trees(tree_name: HostName) -> None:
+    assert not _get_tree_store().load(host_name=tree_name).is_empty()
 
 
-@pytest.mark.parametrize("tree_x", trees)
-@pytest.mark.parametrize("tree_y", trees)
-def test_real_is_equal(tree_x: StructuredDataNode, tree_y: StructuredDataNode) -> None:
-    if id(tree_x) == id(tree_y):
+@pytest.mark.parametrize(
+    "tree_name_x",
+    [
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_old_heute"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_memory"),
+        HostName("tree_new_heute"),
+    ],
+)
+@pytest.mark.parametrize(
+    "tree_name_y",
+    [
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_old_heute"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_memory"),
+        HostName("tree_new_heute"),
+    ],
+)
+def test_real_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
+    tree_store = _get_tree_store()
+    tree_x = tree_store.load(host_name=tree_name_x)
+    tree_y = tree_store.load(host_name=tree_name_y)
+
+    if tree_name_x == tree_name_y:
         assert tree_x.is_equal(tree_y)
     else:
         assert not tree_x.is_equal(tree_y)
 
 
 def test_real_equal_tables() -> None:
-    tree_addresses_ordered = TEST_DATA_STORE.load(host_name=HostName("tree_addresses_ordered"))
-    tree_addresses_unordered = TEST_DATA_STORE.load(host_name=HostName("tree_addresses_unordered"))
+    tree_store = _get_tree_store()
+    tree_addresses_ordered = tree_store.load(host_name=HostName("tree_addresses_ordered"))
+    tree_addresses_unordered = tree_store.load(host_name=HostName("tree_addresses_unordered"))
 
     assert tree_addresses_ordered.is_equal(tree_addresses_unordered)
     assert tree_addresses_unordered.is_equal(tree_addresses_ordered)
 
 
-@pytest.mark.parametrize("tree", trees)
-def test_real_is_equal_save_and_load(tree: StructuredDataNode, tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "tree_name",
+    [
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_old_heute"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_memory"),
+        HostName("tree_new_heute"),
+    ],
+)
+def test_real_is_equal_save_and_load(tree_name: HostName, tmp_path: Path) -> None:
+    tree = _get_tree_store().load(host_name=tree_name)
     tree_store = TreeStore(tmp_path / "inventory")
     try:
         tree_store.save(host_name=HostName("foo"), tree=tree)
@@ -667,33 +681,45 @@ def test_real_is_equal_save_and_load(tree: StructuredDataNode, tmp_path: Path) -
 
 
 @pytest.mark.parametrize(
-    "tree,result",
-    list(
-        zip(
-            trees,
-            [
-                21,
-                9,
-                10,
-                6284,
-                2,
-                16654,
-                23,
-                8,
-                10,
-                6185,
-                2,
-                16653,
-            ],
-        )
-    ),
+    "tree_name, result",
+    [
+        (HostName("tree_old_addresses_arrays_memory"), 21),
+        (HostName("tree_old_addresses"), 9),
+        (HostName("tree_old_arrays"), 10),
+        (HostName("tree_old_interfaces"), 6284),
+        (HostName("tree_old_memory"), 2),
+        (HostName("tree_old_heute"), 16654),
+        (HostName("tree_new_addresses_arrays_memory"), 23),
+        (HostName("tree_new_addresses"), 8),
+        (HostName("tree_new_arrays"), 10),
+        (HostName("tree_new_interfaces"), 6185),
+        (HostName("tree_new_memory"), 2),
+        (HostName("tree_new_heute"), 16653),
+    ],
 )
-def test_real_count_entries(tree: StructuredDataNode, result: int) -> None:
-    assert tree.count_entries() == result
+def test_real_count_entries(tree_name: HostName, result: int) -> None:
+    assert _get_tree_store().load(host_name=tree_name).count_entries() == result
 
 
-@pytest.mark.parametrize("tree", trees)
-def test_real_compare_with_self(tree: StructuredDataNode) -> None:
+@pytest.mark.parametrize(
+    "tree_name",
+    [
+        HostName("tree_old_addresses_arrays_memory"),
+        HostName("tree_old_addresses"),
+        HostName("tree_old_arrays"),
+        HostName("tree_old_interfaces"),
+        HostName("tree_old_memory"),
+        HostName("tree_old_heute"),
+        HostName("tree_new_addresses_arrays_memory"),
+        HostName("tree_new_addresses"),
+        HostName("tree_new_arrays"),
+        HostName("tree_new_interfaces"),
+        HostName("tree_new_memory"),
+        HostName("tree_new_heute"),
+    ],
+)
+def test_real_compare_with_self(tree_name: HostName) -> None:
+    tree = _get_tree_store().load(host_name=tree_name)
     delta_result = tree.compare_with(tree)
     assert (
         delta_result.counter["new"],
@@ -703,25 +729,46 @@ def test_real_compare_with_self(tree: StructuredDataNode) -> None:
 
 
 @pytest.mark.parametrize(
-    "tree_old,tree_new,result",
-    list(
-        zip(
-            trees_old,
-            trees_new,
-            [
-                (3, 2, 1),
-                (5, 0, 6),
-                (2, 0, 2),
-                (17, 0, 116),
-                (1, 1, 1),
-                (1, 1, 2),
-            ],
-        )
-    ),
+    "tree_name_old, tree_name_new, result",
+    [
+        (
+            HostName("tree_old_addresses_arrays_memory"),
+            HostName("tree_new_addresses_arrays_memory"),
+            (3, 2, 1),
+        ),
+        (
+            HostName("tree_old_addresses"),
+            HostName("tree_new_addresses"),
+            (5, 0, 6),
+        ),
+        (
+            HostName("tree_old_arrays"),
+            HostName("tree_new_arrays"),
+            (2, 0, 2),
+        ),
+        (
+            HostName("tree_old_interfaces"),
+            HostName("tree_new_interfaces"),
+            (17, 0, 116),
+        ),
+        (
+            HostName("tree_old_memory"),
+            HostName("tree_new_memory"),
+            (1, 1, 1),
+        ),
+        (
+            HostName("tree_old_heute"),
+            HostName("tree_new_heute"),
+            (1, 1, 2),
+        ),
+    ],
 )
 def test_real_compare_with(
-    tree_old: StructuredDataNode, tree_new: StructuredDataNode, result: tuple[int, int, int]
+    tree_name_old: HostName, tree_name_new: HostName, result: tuple[int, int, int]
 ) -> None:
+    tree_store = _get_tree_store()
+    tree_old = tree_store.load(host_name=tree_name_old)
+    tree_new = tree_store.load(host_name=tree_name_new)
     delta_result = tree_new.compare_with(tree_old)
     assert (
         delta_result.counter["new"],
@@ -731,38 +778,44 @@ def test_real_compare_with(
 
 
 @pytest.mark.parametrize(
-    "tree,edges_t,edges_f",
-    list(
-        zip(
-            trees_old,
-            [
-                ["hardware", "networking"],
-                ["networking"],
-                ["hardware"],
-                ["hardware", "software", "networking"],
-                ["hardware"],
-                ["hardware", "software", "networking"],
-            ],
-            [
-                ["", "foobar", "software"],
-                ["", "foobar", "hardware", "software"],
-                ["", "foobar", "software", "networking"],
-                [
-                    "",
-                    "foobar",
-                ],
-                ["", "foobar", "software", "networking"],
-                [
-                    "",
-                    "foobar",
-                ],
-            ],
-        )
-    ),
+    "tree_name, edges_t, edges_f",
+    [
+        (
+            HostName("tree_old_addresses_arrays_memory"),
+            ["hardware", "networking"],
+            ["", "foobar", "software"],
+        ),
+        (
+            HostName("tree_old_addresses"),
+            ["networking"],
+            ["", "foobar", "hardware", "software"],
+        ),
+        (
+            HostName("tree_old_arrays"),
+            ["hardware"],
+            ["", "foobar", "software", "networking"],
+        ),
+        (
+            HostName("tree_old_interfaces"),
+            ["hardware", "software", "networking"],
+            ["", "foobar"],
+        ),
+        (
+            HostName("tree_old_memory"),
+            ["hardware"],
+            ["", "foobar", "software", "networking"],
+        ),
+        (
+            HostName("tree_old_heute"),
+            ["hardware", "software", "networking"],
+            ["", "foobar"],
+        ),
+    ],
 )
 def test_real_get_node(
-    tree: StructuredDataNode, edges_t: Iterable[SDNodeName], edges_f: Iterable[SDNodeName]
+    tree_name: HostName, edges_t: Iterable[SDNodeName], edges_f: Iterable[SDNodeName]
 ) -> None:
+    tree = _get_tree_store().load(host_name=tree_name)
     for edge_t in edges_t:
         assert tree.get_node((edge_t,)) is not None
     for edge_f in edges_f:
@@ -770,93 +823,84 @@ def test_real_get_node(
 
 
 @pytest.mark.parametrize(
-    "tree,len_children",
-    list(
-        zip(
-            trees_old,
-            [2, 1, 1, 3, 1, 3],
-        )
-    ),
+    "tree_name, len_children",
+    [
+        (HostName("tree_old_addresses_arrays_memory"), 2),
+        (HostName("tree_old_addresses"), 1),
+        (HostName("tree_old_arrays"), 1),
+        (HostName("tree_old_interfaces"), 3),
+        (HostName("tree_old_memory"), 1),
+        (HostName("tree_old_heute"), 3),
+    ],
 )
-def test_real_get_children(tree: StructuredDataNode, len_children: int) -> None:
+def test_real_get_children(tree_name: HostName, len_children: int) -> None:
+    tree = _get_tree_store().load(host_name=tree_name)
     tree_children = tree._nodes
     assert len(tree_children) == len_children
 
 
 @pytest.mark.parametrize(
-    "tree_start,tree_edges",
+    "tree_name, edges, sub_children",
     [
         (
-            tree_old_addresses,
+            HostName("tree_old_arrays"),
+            ["hardware", "networking"],
             [
-                (
-                    tree_old_arrays,
-                    ["hardware", "networking"],
-                    [
-                        ("get_attributes", ["hardware", "memory", "arrays", "0"]),
-                        ("get_table", ["hardware", "memory", "arrays", "0", "devices"]),
-                        ("get_table", ["hardware", "memory", "arrays", "1", "others"]),
-                    ],
-                ),
-                (
-                    tree_new_memory,
-                    ["hardware", "networking"],
-                    [
-                        ("get_attributes", ["hardware", "memory"]),
-                    ],
-                ),
-                (
-                    tree_new_interfaces,
-                    ["hardware", "networking", "software"],
-                    [
-                        ("get_table", ["hardware", "components", "backplanes"]),
-                        ("get_table", ["hardware", "components", "chassis"]),
-                        ("get_table", ["hardware", "components", "containers"]),
-                        ("get_table", ["hardware", "components", "fans"]),
-                        ("get_table", ["hardware", "components", "modules"]),
-                        ("get_table", ["hardware", "components", "others"]),
-                        ("get_table", ["hardware", "components", "psus"]),
-                        ("get_table", ["hardware", "components", "sensors"]),
-                        ("get_attributes", ["hardware", "system"]),
-                        ("get_attributes", ["software", "applications", "check_mk", "cluster"]),
-                        ("get_attributes", ["software", "os"]),
-                    ],
-                ),
+                ("get_attributes", ["hardware", "memory", "arrays", "0"]),
+                ("get_table", ["hardware", "memory", "arrays", "0", "devices"]),
+                ("get_table", ["hardware", "memory", "arrays", "1", "others"]),
+            ],
+        ),
+        (
+            HostName("tree_new_memory"),
+            ["hardware", "networking"],
+            [
+                ("get_attributes", ["hardware", "memory"]),
+            ],
+        ),
+        (
+            HostName("tree_new_interfaces"),
+            ["hardware", "networking", "software"],
+            [
+                ("get_table", ["hardware", "components", "backplanes"]),
+                ("get_table", ["hardware", "components", "chassis"]),
+                ("get_table", ["hardware", "components", "containers"]),
+                ("get_table", ["hardware", "components", "fans"]),
+                ("get_table", ["hardware", "components", "modules"]),
+                ("get_table", ["hardware", "components", "others"]),
+                ("get_table", ["hardware", "components", "psus"]),
+                ("get_table", ["hardware", "components", "sensors"]),
+                ("get_attributes", ["hardware", "system"]),
+                ("get_attributes", ["software", "applications", "check_mk", "cluster"]),
+                ("get_attributes", ["software", "os"]),
             ],
         ),
     ],
 )
 def test_real_merge_with_get_children(
-    tree_start: StructuredDataNode,
-    tree_edges: Iterable[
-        tuple[StructuredDataNode, Sequence[str], Sequence[tuple[str, Sequence[str]]]]
-    ],
+    tree_name: HostName, edges: Sequence[str], sub_children: Sequence[tuple[str, Sequence[str]]]
 ) -> None:
-    for tree, edges, sub_children in tree_edges:
-        the_tree = tree_start.merge_with(tree)
-        assert id(tree) == id(tree)
-        assert tree.is_equal(tree)
-        for edge in edges:
-            assert the_tree.get_node((edge,)) is not None
-        for m_name, path in sub_children:
-            m = getattr(the_tree, m_name)
-            assert m is not None
-            assert m(path) is not None
+    tree_store = _get_tree_store()
+
+    tree = tree_store.load(host_name=HostName("tree_old_addresses")).merge_with(
+        tree_store.load(host_name=tree_name)
+    )
+
+    assert id(tree) == id(tree)
+    assert tree.is_equal(tree)
+    for edge in edges:
+        assert tree.get_node((edge,)) is not None
+
+    for m_name, path in sub_children:
+        m = getattr(tree, m_name)
+        assert m is not None
+        assert m(path) is not None
 
 
-TREE_INV = TEST_DATA_STORE.load(host_name=HostName("tree_inv"))
-TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
-
-
-@pytest.mark.parametrize(
-    "tree_inv,tree_status",
-    [
-        (TREE_INV, TREE_STATUS),
-    ],
-)
-def test_real_merge_with_table(
-    tree_inv: StructuredDataNode, tree_status: StructuredDataNode
-) -> None:
+def test_real_merge_with_table() -> None:
+    tree_store = _get_tree_store()
+    tree_inv = tree_store.load(host_name=HostName("tree_inv"))
+    tree_status = tree_store.load(host_name=HostName("tree_status"))
     tree = tree_inv.merge_with(tree_status)
     assert "foobar" in tree.serialize()["Nodes"]
     table = tree.get_table(("foobar",))
@@ -865,10 +909,9 @@ def test_real_merge_with_table(
 
 
 @pytest.mark.parametrize(
-    "tree,paths,unavail",
+    "paths, unavail",
     [
         (
-            tree_new_interfaces,
             # container                   table                    attributes
             [
                 (["hardware", "components"], None),
@@ -880,10 +923,10 @@ def test_real_merge_with_table(
     ],
 )
 def test_real_filtered_tree(
-    tree: StructuredDataNode,
     paths: Sequence[tuple[Sequence[str], None]],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
+    tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
@@ -892,24 +935,21 @@ def test_real_filtered_tree(
 
 
 @pytest.mark.parametrize(
-    "tree,paths,amount_if_entries",
+    "paths, amount_if_entries",
     [
         (
-            tree_new_interfaces,
             [
                 (["networking"], None),
             ],
             3178,
         ),
         (
-            tree_new_interfaces,
             [
                 (["networking"], []),
             ],
             None,
         ),
         (
-            tree_new_interfaces,
             [
                 (
                     ["networking"],
@@ -919,42 +959,36 @@ def test_real_filtered_tree(
             None,
         ),
         (
-            tree_new_interfaces,
             [
                 (["networking", "interfaces"], None),
             ],
             3178,
         ),
         (
-            tree_new_interfaces,
             [
                 (["networking", "interfaces"], []),
             ],
             3178,
         ),
         (
-            tree_new_interfaces,
             [
                 (["networking", "interfaces"], ["admin_status"]),
             ],
             326,
         ),
         (
-            tree_new_interfaces,
             [
                 (["networking", "interfaces"], ["admin_status", "FOOBAR"]),
             ],
             326,
         ),
         (
-            tree_new_interfaces,
             [
                 (["networking", "interfaces"], ["admin_status", "oper_status"]),
             ],
             652,
         ),
         (
-            tree_new_interfaces,
             [
                 (["networking", "interfaces"], ["admin_status", "oper_status", "FOOBAR"]),
             ],
@@ -963,10 +997,10 @@ def test_real_filtered_tree(
     ],
 )
 def test_real_filtered_tree_networking(
-    tree: StructuredDataNode,
     paths: Sequence[tuple[Sequence[str], Sequence[str]]],
     amount_if_entries: int,
 ) -> None:
+    tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
     the_paths = list(paths)
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert the_paths == paths
@@ -985,14 +1019,43 @@ def test_real_filtered_tree_networking(
         assert interfaces.count_entries() == amount_if_entries
 
 
-@pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))
+@pytest.mark.parametrize(
+    "tree_name_old, tree_name_new",
+    [
+        (
+            HostName("tree_old_addresses_arrays_memory"),
+            HostName("tree_new_addresses_arrays_memory"),
+        ),
+        (
+            HostName("tree_old_addresses"),
+            HostName("tree_new_addresses"),
+        ),
+        (
+            HostName("tree_old_arrays"),
+            HostName("tree_new_arrays"),
+        ),
+        (
+            HostName("tree_old_interfaces"),
+            HostName("tree_new_interfaces"),
+        ),
+        (
+            HostName("tree_old_memory"),
+            HostName("tree_new_memory"),
+        ),
+        (
+            HostName("tree_old_heute"),
+            HostName("tree_new_heute"),
+        ),
+    ],
+)
 def test_delta_structured_data_tree_serialization(
-    zipped_trees: tuple[HostName, HostName],
+    tree_name_old: HostName,
+    tree_name_new: HostName,
 ) -> None:
-    old_filename, new_filename = zipped_trees
+    tree_store = _get_tree_store()
 
-    old_tree = TEST_DATA_STORE.load(host_name=old_filename)
-    new_tree = TEST_DATA_STORE.load(host_name=new_filename)
+    old_tree = tree_store.load(host_name=tree_name_old)
+    new_tree = tree_store.load(host_name=tree_name_new)
     delta_result = old_tree.compare_with(new_tree)
 
     delta_raw_tree = delta_result.delta.serialize()

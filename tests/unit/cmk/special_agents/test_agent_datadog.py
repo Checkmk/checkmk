@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import datetime
 import json
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
@@ -14,6 +13,8 @@ from typing import Any
 import pytest
 import requests
 from pytest import MonkeyPatch
+
+from tests.testlib import on_time
 
 from cmk.special_agents import agent_datadog
 from cmk.special_agents.agent_datadog import (
@@ -353,20 +354,13 @@ class TestLogsQuerier:
 
     def test_logs_query_time_range(
         self,
-        monkeypatch: MonkeyPatch,
         logs_querier: LogsQuerier,
     ) -> None:
-        timestamp = 1601310544
-        now = datetime.datetime.fromtimestamp(timestamp)
-        monkeypatch.setattr(
-            agent_datadog.time,
-            "time",
-            lambda: timestamp,
-        )
-        assert logs_querier._query_time_range() == (
-            now - datetime.timedelta(seconds=logs_querier.max_age),
-            now,
-        )
+        now = 1601310544
+        with on_time(now, "UTC"):
+            start, end = logs_querier._query_time_range()
+            assert start.timestamp() == now - logs_querier.max_age
+            assert end.timestamp() == now
 
     def test_query_logs_no_previous_ids(
         self,

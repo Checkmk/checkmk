@@ -562,7 +562,7 @@ class LogsQuerier:
             cursor = meta["page"].get("after")
 
     def _query_time_range(self) -> tuple[datetime.datetime, datetime.datetime]:
-        now = datetime.datetime.fromtimestamp(time.time())
+        now = datetime.datetime.now()
         return now - datetime.timedelta(seconds=self.max_age), now
 
     def _query_logs_page_in_time_window(
@@ -575,8 +575,8 @@ class LogsQuerier:
     ) -> Mapping[str, Any]:
         body: dict[str, Any] = {
             "filter": {
-                "from": start.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
-                "to": end.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                "from": self._datetime_to_api_compliant_str(start),
+                "to": self._datetime_to_api_compliant_str(end),
                 "query": query,
                 "indexes": indexes,
             },
@@ -597,6 +597,10 @@ class LogsQuerier:
             resp = self.datadog_api.post_request("logs/events/search", body, version="v2")
         resp.raise_for_status()
         return resp.json()
+
+    @staticmethod
+    def _datetime_to_api_compliant_str(d: datetime.datetime) -> str:
+        return d.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
 
 _SEVERITY_MAPPER: Mapping[str, int] = {

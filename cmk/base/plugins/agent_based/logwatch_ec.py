@@ -19,7 +19,8 @@ import errno
 import os
 import socket
 import time
-from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import (Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union,
+                    Generator)
 from pathlib import Path
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
@@ -39,6 +40,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
 ClusterSection = Dict[Optional[str], logwatch.Section]
+_MAX_SPOOL_SIZE = 1024**2
 
 
 def discover_group(section: logwatch.Section,) -> DiscoveryResult:
@@ -418,12 +420,30 @@ def logwatch_forward_spool_directory(
     if not messages:
         return LogwatchFordwardResult()
 
-    spool_file = get_new_spool_file(method, item)
-    with open(spool_file, 'w', encoding="utf-8") as f:
-        f.write('\n'.join(messages) + '\n')
-    spool_file.rename(spool_file.parent / spool_file.name[1:])
+    split_files = split_file_messages((message + "\n" for message in map(repr, messages)))
+    for file_index, file in enumerate(split_files):
+        spool_file = get_new_spool_file(method, item)
+        with spool_file.open("w") as f:
+            for message in file:
+                f.write(message)
+        spool_file.rename((spool_file.parent / spool_file.name[1:]).with_suffix(f".{file_index}"))
 
     return LogwatchFordwardResult(num_forwarded=len(messages))
+
+
+def split_file_messages(file_messages: Generator[str, None, None]) -> List[List[str]]:
+    result: list[list[str]] = [[]]
+    curr_file_index = 0
+    curr_file_size = 0
+    for file_message in file_messages:
+        if curr_file_size >= _MAX_SPOOL_SIZE:
+            result.append([])
+            curr_file_index += 1
+            curr_file_size = 0
+        result[curr_file_index].append(file_message)
+        curr_file_size += len(file_message)
+
+    return result
 
 
 def get_new_spool_file(method: str, item: Optional[str]) -> Path:

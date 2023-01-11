@@ -4,7 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
+
+import cmk.utils.paths
 
 from cmk.base.plugins.agent_based import logwatch_ec
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -25,6 +29,20 @@ INFO2 = [
     ["[[[log4:cannotopen]]]"],
     ["[[[log5]]]"],
 ]
+
+SECTION1 = logwatch_ec.logwatch.Section(
+    errors=[],
+    logfiles={
+        "log1": {
+            "attr": "ok",
+            "lines": [
+                "W This long message should be written to one spool file",
+                "C And this long message should be written to another spool file",
+                "W This last long message should be written to a third spool file",
+            ]
+        },
+    },
+)
 
 
 @pytest.mark.parametrize('info, fwd_rule, expected_result', [
@@ -176,3 +194,23 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
             Result(state=State.OK, summary="Forwarded 0 messages"),
             Metric("messages", 0.0),
         ]
+
+
+def test_check_logwatch_ec_common_spool(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    monkeypatch.setattr(logwatch_ec, "host_name", lambda: "test-host")
+    monkeypatch.setattr(logwatch_ec, "_MAX_SPOOL_SIZE", 32)
+    assert list(
+        logwatch_ec.check_logwatch_ec_common(
+            "log1",
+            {
+                "method": "spool:",
+            },
+            {
+                "node1": SECTION1,
+            },
+            service_level=10,
+        )) == [
+            Result(state=State.OK, summary="Forwarded 3 messages from log1"),
+            Metric("messages", 3.0),
+        ]
+    assert len(list(Path(cmk.utils.paths.omd_root, "var/mkeventd/spool").iterdir())) == 3

@@ -20,16 +20,20 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
-#include "User.h"
 #include "contact_fwd.h"
 #include "livestatus/Column.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/User.h"
 
 #ifdef CMC
+#include "CmcHost.h"
+#include "CmcService.h"
 #include "cmc.h"
 #else
+#include "NebHost.h"
+#include "NebService.h"
 #include "nagios.h"
 #endif
 
@@ -162,8 +166,8 @@ void TableLog::answerQuery(Query &query, const User &user) {
     auto is_authorized = [&user](const LogRow &lr) {
         // If we have an AuthUser, suppress entries for messages with hosts that
         // do not exist anymore, otherwise use the common authorization logic.
-        return user.is_authorized_for_object(lr.hst, lr.svc,
-                                             rowWithoutHost(lr));
+        return user.is_authorized_for_object(
+            ToIHost(lr.hst), ToIService(lr.svc), rowWithoutHost(lr));
     };
 
     auto process = [is_authorized, core = core(),

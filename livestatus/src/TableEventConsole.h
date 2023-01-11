@@ -16,8 +16,8 @@
 
 #include "IntColumn.h"
 #include "Table.h"
-#include "User.h"  // IWYU pragma: keep
 #include "livestatus/ListColumn.h"
+#include "nagios.h"
 
 class ColumnOffsets;
 template <class T>
@@ -28,10 +28,7 @@ template <class T>
 class StringColumn;
 template <class T>
 class TimeColumn;
-
-#ifndef CMC
-#include "nagios.h"
-#endif
+class User;
 
 class ECRow {
 public:

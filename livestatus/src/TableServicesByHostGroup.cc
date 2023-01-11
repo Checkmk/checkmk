@@ -5,12 +5,13 @@
 
 #include "TableServicesByHostGroup.h"
 
+#include "NebService.h"
 #include "Query.h"
 #include "TableHostGroups.h"
 #include "TableServices.h"
-#include "User.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
+#include "livestatus/User.h"
 #include "nagios.h"
 
 namespace {
@@ -40,7 +41,7 @@ std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByHostGroup::answerQuery(Query &query, const User &user) {
     auto process = [&](const service_and_group &sag) {
-        return !user.is_authorized_for_service(*sag.svc) ||
+        return !user.is_authorized_for_service(NebService{*sag.svc}) ||
                query.processDataset(Row{&sag});
     };
 

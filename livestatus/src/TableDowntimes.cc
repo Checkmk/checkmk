@@ -16,15 +16,17 @@
 #include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
+#include "NebHost.h"
+#include "NebService.h"
 #include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
-#include "User.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/User.h"
 #include "nagios.h"  // IWYU pragma: keep
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
@@ -96,7 +98,8 @@ std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query &query, const User &user) {
     for (const auto &[id, dt] : core()->impl<NagiosCore>()->_downtimes) {
-        if (user.is_authorized_for_object(dt->_host, dt->_service, false) &&
+        if (user.is_authorized_for_object(ToIHost(dt->_host),
+                                          ToIService(dt->_service), false) &&
             !query.processDataset(Row{dt.get()})) {
             return;
         }

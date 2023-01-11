@@ -34,12 +34,14 @@
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
+#include "NebHost.h"
+#include "NebHostGroup.h"
+#include "NebService.h"
 #include "Query.h"
 #include "RRDColumn.h"
 #include "ServiceListState.h"
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
-#include "User.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
@@ -50,6 +52,7 @@
 #include "livestatus/LogwatchList.h"
 #include "livestatus/ServiceListRenderer.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/User.h"
 #include "livestatus/mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
@@ -80,7 +83,7 @@ public:
         for (servicesmember *mem = hst.services; mem != nullptr;
              mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (user.is_authorized_for_service(*svc)) {
+            if (user.is_authorized_for_service(NebService{*svc})) {
                 entries.emplace_back(
                     svc->description,
                     static_cast<ServiceState>(svc->current_state),
@@ -783,7 +786,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             for (objectlist *list = hst.hostgroups_ptr; list != nullptr;
                  list = list->next) {
                 auto *hg = static_cast<hostgroup *>(list->object_ptr);
-                if (user.is_authorized_for_host_group(*hg)) {
+                if (user.is_authorized_for_host_group(NebHostGroup{*hg})) {
                     group_names.emplace_back(hg->group_name);
                 }
             }
@@ -870,7 +873,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
 void TableHosts::answerQuery(Query &query, const User &user) {
     auto process = [&](const host &hst) {
-        return !user.is_authorized_for_host(hst) ||
+        return !user.is_authorized_for_host(NebHost{hst}) ||
                query.processDataset(Row{&hst});
     };
 

@@ -11,9 +11,10 @@
 #include <sstream>
 #include <utility>
 
-#include "User.h"
+#include "NebContact.h"
 #include "livestatus/Logger.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/User.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
@@ -86,8 +87,8 @@ const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
 std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
     if (const auto *ctc = ::find_contact(const_cast<char *>(name.c_str()))) {
-        return std::make_unique<AuthUser>(*ctc, _authorization._service,
-                                          _authorization._group);
+        return std::make_unique<AuthUser>(
+            NebContact{*ctc}, _authorization._service, _authorization._group);
     }
     return std::make_unique<UnknownUser>();
 }

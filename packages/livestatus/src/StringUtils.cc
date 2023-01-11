@@ -166,4 +166,16 @@ std::string ipv4ToString(in_addr_t ipv4_address) {
     inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
     return addr_buf;
 }
+namespace ec {
+// The funny encoding of an Optional[Iterable[str]] is done in
+// cmk.ec.history.quote_tab().
+
+bool is_none(const std::string &str) { return str == "\002"; }
+
+std::vector<std::string> split_list(const std::string &str) {
+    return str.empty() || is_none(str) ? std::vector<std::string>()
+                                       : mk::split(str.substr(1), '\001');
+}
+}  // namespace ec
+
 }  // namespace mk

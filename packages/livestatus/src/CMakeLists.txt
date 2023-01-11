@@ -20,6 +20,7 @@ set(livestatus_headers
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
     ${header_location}/InputBuffer.h
+    ${header_location}/Interface.h
     ${header_location}/IntFilter.h
     ${header_location}/ListColumn.h
     ${header_location}/ListFilter.h
@@ -56,7 +57,8 @@ set(livestatus_headers
     ${header_location}/strutil.h
     ${header_location}/TimeAggregator.h
     ${header_location}/TimeFilter.h
-    ${header_location}/Triggers.h)
+    ${header_location}/Triggers.h
+    ${header_location}/User.h)
 set(livestatus_sources
     AndingFilter.cc
     Average.cc
@@ -96,7 +98,8 @@ set(livestatus_sources
     StringUtils.cc
     strutil.cc
     TimeFilter.cc
-    Triggers.cc)
+    Triggers.cc
+    User.cc)
 
 add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})
 

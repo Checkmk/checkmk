@@ -21,10 +21,10 @@
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
-#include "User.h"
 #include "contact_fwd.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Triggers.h"
+#include "livestatus/User.h"
 #include "nagios.h"
 class InputBuffer;
 class Logger;

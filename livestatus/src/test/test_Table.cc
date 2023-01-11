@@ -48,12 +48,13 @@
 #include "livestatus/Triggers.h"
 
 #ifdef CMC
+#include "Host.h"
 #include "TableCachedStatehist.h"
-#include "User.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
-class User;
 #endif
+class User;
 
 class DummyMonitoringCore : public MonitoringCore {
     Host *find_host(const std::string & /*name*/) override { return {}; }

@@ -19,6 +19,15 @@
 #include <variant>  // IWYU pragma: keep
 
 #include "MonitoringCore.h"
+#ifdef CMC
+#include "CmcContactGroup.h"
+#include "CmcHost.h"
+#include "CmcNebTypeDefs.h"
+#else
+#include "NebContactGroup.h"
+#include "NebHost.h"
+#endif
+
 #include "Query.h"
 #include "TimeColumn.h"
 #include "livestatus/Column.h"
@@ -29,6 +38,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/User.h"
 #include "livestatus/opids.h"
 
 using namespace std::chrono_literals;
@@ -278,9 +288,11 @@ std::function<bool(const ECRow &)> get_authorizer(const Table &table,
             return c->name() == "event_contact_groups_precedence";
         })) {
         return [&user](const ECRow &row) {
+            auto host = ToIHost(row.host());
             return user.is_authorized_for_event(
                 row.getString("event_contact_groups_precedence"),
-                row.getString("event_contact_groups"), row.host());
+                ToIContactGroups(row.getString("event_contact_groups")),
+                host.get());
         };
     }
     return [](const ECRow & /*row*/) { return true; };

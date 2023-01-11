@@ -17,14 +17,16 @@
 #include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
+#include "NebHost.h"
+#include "NebService.h"
 #include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
-#include "User.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/User.h"
 #include "nagios.h"  // IWYU pragma: keep
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
@@ -83,7 +85,8 @@ std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query &query, const User &user) {
     for (const auto &[id, co] : core()->impl<NagiosCore>()->_comments) {
-        if (user.is_authorized_for_object(co->_host, co->_service, false) &&
+        if (user.is_authorized_for_object(ToIHost(co->_host),
+                                          ToIService(co->_service), false) &&
             !query.processDataset(Row{co.get()})) {
             return;
         }

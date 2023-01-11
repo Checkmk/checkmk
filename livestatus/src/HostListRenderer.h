@@ -13,13 +13,16 @@
 #include <utility>
 #include <vector>
 
-#include "User.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/User.h"
 
 #ifdef CMC
 #include <unordered_set>
+
+#include "CmcHost.h"
 class Host;
 #else
+#include "NebHost.h"
 #include "nagios.h"
 #endif
 
@@ -48,7 +51,7 @@ public:
     std::vector<Entry> operator()(const T &t, const User &user) const {
         std::vector<Entry> entries{};
         for (const auto &hst : relatives_(t)) {
-            if (user.is_authorized_for_host(*hst)) {
+            if (user.is_authorized_for_host(CmcHost{*hst})) {
                 entries.emplace_back(
                     hst->name(),
                     static_cast<HostState>(hst->state()->current_state_),
@@ -69,7 +72,7 @@ public:
         for (const hostsmember *mem = relatives_(t); mem != nullptr;
              mem = mem->next) {
             host *hst = mem->host_ptr;
-            if (user.is_authorized_for_host(*hst)) {
+            if (user.is_authorized_for_host(NebHost{*hst})) {
                 entries.emplace_back(hst->name,
                                      static_cast<HostState>(hst->current_state),
                                      hst->has_been_checked != 0);

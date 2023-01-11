@@ -13,10 +13,10 @@
 #include <string>
 #include <vector>
 
-#include "User.h"
 #include "livestatus/Filter.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
+#include "livestatus/User.h"
 #include "livestatus/opids.h"
 class IntFilter;
 class Logger;

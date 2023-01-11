@@ -18,7 +18,6 @@
 
 #include "MonitoringCore.h"
 #include "Table.h"
-#include "User.h"
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
 #include "livestatus/ChronoUtils.h"
@@ -28,6 +27,7 @@
 #include "livestatus/OringFilter.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/User.h"
 #include "livestatus/opids.h"
 #include "livestatus/strutil.h"
 

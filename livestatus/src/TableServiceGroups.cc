@@ -10,13 +10,15 @@
 #include <vector>
 
 #include "IntColumn.h"
+#include "NebService.h"
+#include "NebServiceGroup.h"
 #include "Query.h"
 #include "ServiceListState.h"
-#include "User.h"
 #include "livestatus/Column.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/ServiceGroupMembersColumn.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/User.h"
 #include "nagios.h"
 
 namespace {
@@ -28,7 +30,7 @@ public:
         for (servicesmember *mem = sm.members; mem != nullptr;
              mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (user.is_authorized_for_service(*svc)) {
+            if (user.is_authorized_for_service(NebService{*svc})) {
                 entries.emplace_back(
                     svc->host_name, svc->description,
                     static_cast<ServiceState>(svc->current_state),
@@ -152,7 +154,7 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
 
 void TableServiceGroups::answerQuery(Query &query, const User &user) {
     auto process = [&](const servicegroup &group) {
-        return !user.is_authorized_for_service_group(group) ||
+        return !user.is_authorized_for_service_group(NebServiceGroup{group}) ||
                query.processDataset(Row{&group});
     };
 

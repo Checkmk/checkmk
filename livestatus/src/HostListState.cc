@@ -5,13 +5,16 @@
 
 #include "HostListState.h"
 
-#include "User.h"
+#include "livestatus/User.h"
 
 #ifdef CMC
 #include <memory>
 
+#include "CmcHost.h"
 #include "Host.h"
 #include "State.h"
+#else
+#include "NebHost.h"
 #endif
 
 int32_t HostListState::operator()(const value_type &hsts,
@@ -19,7 +22,7 @@ int32_t HostListState::operator()(const value_type &hsts,
     int32_t result = 0;
 #ifdef CMC
     for (const auto *hst : hsts) {
-        if (user.is_authorized_for_host(*hst)) {
+        if (user.is_authorized_for_host(CmcHost{*hst})) {
             const auto *state = hst->state();
             auto svcs = ServiceListState::value_type(hst->_services.size());
             for (const auto &s : hst->_services) {
@@ -32,7 +35,7 @@ int32_t HostListState::operator()(const value_type &hsts,
 #else
     for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
-        if (user.is_authorized_for_host(*hst)) {
+        if (user.is_authorized_for_host(NebHost{*hst})) {
             update(user, static_cast<HostState>(hst->current_state),
                    hst->has_been_checked != 0, hst->services,
                    hst->problem_has_been_acknowledged != 0 ||

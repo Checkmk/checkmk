@@ -5,11 +5,14 @@
 
 #include "ServiceListState.h"
 
-#include "User.h"
+#include "livestatus/User.h"
 
 #ifdef CMC
+#include "CmcService.h"
 #include "Service.h"
 #include "State.h"
+#else
+#include "NebService.h"
 #endif
 
 int32_t ServiceListState::operator()(const value_type &svcs,
@@ -23,7 +26,7 @@ int32_t ServiceListState::getValueFromServices(const User &user, Type logictype,
     int32_t result = 0;
 #ifdef CMC
     for (const auto &svc : svcs) {
-        if (user.is_authorized_for_service(*svc)) {
+        if (user.is_authorized_for_service(CmcService{*svc})) {
             const auto *state = svc->state();
             update(logictype, static_cast<ServiceState>(state->current_state_),
                    static_cast<ServiceState>(state->hard_state_.last_),
@@ -33,7 +36,7 @@ int32_t ServiceListState::getValueFromServices(const User &user, Type logictype,
 #else
     for (servicesmember *mem = svcs; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
-        if (user.is_authorized_for_service(*svc)) {
+        if (user.is_authorized_for_service(NebService{*svc})) {
             update(logictype, static_cast<ServiceState>(svc->current_state),
                    static_cast<ServiceState>(svc->last_hard_state),
                    svc->has_been_checked != 0,

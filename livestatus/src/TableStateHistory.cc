@@ -21,7 +21,6 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
-#include "User.h"
 #include "livestatus/Attributes.h"  // IWYU pragma: keep
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
@@ -32,8 +31,10 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/User.h"
 
 #ifdef CMC
+#include "CmcNebTypeDefs.h"
 #include "Host.h"     // IWYU pragma: keep
 #include "Service.h"  // IWYU pragma: keep
 #include "Timeperiod.h"
@@ -45,10 +46,14 @@
 #define STATE_CRITICAL 2
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_UNKNOWN 3
+#include "CmcHost.h"
+#include "CmcService.h"
 #include "cmc.h"
 #else
 #include <unordered_map>
 
+#include "NebHost.h"
+#include "NebService.h"
 #include "nagios.h"
 #endif
 
@@ -928,9 +933,10 @@ void TableStateHistory::process(
     }
 
     // if (hs_state->_duration > 0)
-    _abort_query = user.is_authorized_for_object(hs_state->_host,
-                                                 hs_state->_service, false) &&
-                   !query.processDataset(Row{hs_state});
+    _abort_query =
+        user.is_authorized_for_object(ToIHost(hs_state->_host),
+                                      ToIService(hs_state->_service), false) &&
+        !query.processDataset(Row{hs_state});
 
     hs_state->_from = hs_state->_until;
 }

@@ -78,6 +78,11 @@ std::string from_multi_line(const std::string &str);
 std::string to_multi_line(const std::string &str);
 
 std::string ipv4ToString(in_addr_t ipv4_address);
+namespace ec {
+bool is_none(const std::string &str);
+std::vector<std::string> split_list(const std::string &str);
+}  // namespace ec
+
 }  // namespace mk
 
 template <size_t N>

@@ -5,12 +5,14 @@
 
 #include "TableHostsByGroup.h"
 
+#include "NebHost.h"
+#include "NebHostGroup.h"
 #include "Query.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
-#include "User.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
+#include "livestatus/User.h"
 #include "nagios.h"
 
 namespace {
@@ -36,10 +38,10 @@ std::string TableHostsByGroup::namePrefix() const { return "host_"; }
 
 void TableHostsByGroup::answerQuery(Query &query, const User &user) {
     for (const auto *grp = hostgroup_list; grp != nullptr; grp = grp->next) {
-        if (user.is_authorized_for_host_group(*grp)) {
+        if (user.is_authorized_for_host_group(NebHostGroup{*grp})) {
             for (const auto *m = grp->members; m != nullptr; m = m->next) {
                 const auto *hst = m->host_ptr;
-                if (user.is_authorized_for_host(*hst)) {
+                if (user.is_authorized_for_host(NebHost{*hst})) {
                     host_and_group hag{hst, grp};
                     if (!query.processDataset(Row{&hag})) {
                         return;

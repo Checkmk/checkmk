@@ -117,6 +117,11 @@ liblivestatusneb_a_SOURCES = \
         MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \
+        NebContactGroup.cc \
+        NebHost.cc \
+        NebHostGroup.cc \
+        NebService.cc \
+        NebServiceGroup.cc \
         Query.cc \
         RRDColumn.cc \
         ServiceListState.cc \
@@ -147,7 +152,6 @@ liblivestatusneb_a_SOURCES = \
         TableStatus.cc \
         TableTimeperiods.cc \
         TimeperiodsCache.cc \
-        User.cc \
         mk_logwatch.cc \
         module.cc \
         pnp4nagios.cc

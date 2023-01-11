@@ -12,11 +12,12 @@
 #include "HostListRenderer.h"
 #include "HostListState.h"
 #include "IntColumn.h"
+#include "NebHostGroup.h"
 #include "Query.h"
-#include "User.h"
 #include "livestatus/Column.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/User.h"
 #include "nagios.h"
 
 TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {
@@ -169,7 +170,7 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
 
 void TableHostGroups::answerQuery(Query &query, const User &user) {
     auto process = [&](const hostgroup &group) {
-        return !user.is_authorized_for_host_group(group) ||
+        return !user.is_authorized_for_host_group(NebHostGroup(group)) ||
                query.processDataset(Row{&group});
     };
 

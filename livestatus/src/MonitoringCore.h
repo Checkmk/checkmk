@@ -15,11 +15,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "CmcNebTypeDefs.h"
 #include "Metric.h"
-#include "User.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Triggers.h"
+#include "livestatus/User.h"
 enum class Encoding;
 class Logger;
 

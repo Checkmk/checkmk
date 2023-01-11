@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-#include "User.h"
 #include "livestatus/Aggregator.h"  // IWYU pragma: keep
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
@@ -32,6 +31,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StatsColumn.h"
 #include "livestatus/Triggers.h"
+#include "livestatus/User.h"
 class Column;
 class Logger;
 class OutputBuffer;

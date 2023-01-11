@@ -16,12 +16,7 @@
 #include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
-
-#ifdef CMC
-#include "User.h"
-#else
 #include "nagios.h"
-#endif
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole{mc} {

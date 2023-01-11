@@ -32,12 +32,13 @@
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
+#include "NebService.h"
+#include "NebServiceGroup.h"
 #include "Query.h"
 #include "RRDColumn.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
-#include "User.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
@@ -46,6 +47,7 @@
 #include "livestatus/Logger.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/User.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
@@ -638,7 +640,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             for (objectlist *list = svc.servicegroups_ptr; list != nullptr;
                  list = list->next) {
                 auto *sg = static_cast<servicegroup *>(list->object_ptr);
-                if (user.is_authorized_for_service_group(*sg)) {
+                if (user.is_authorized_for_service_group(
+                        NebServiceGroup{*sg})) {
                     group_names.emplace_back(sg->group_name);
                 }
             }
@@ -721,7 +724,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
 
 void TableServices::answerQuery(Query &query, const User &user) {
     auto process = [&](const service &svc) {
-        return !user.is_authorized_for_service(svc) ||
+        return !user.is_authorized_for_service(NebService{svc}) ||
                query.processDataset(Row{&svc});
     };
 

@@ -7,15 +7,15 @@ from marshmallow_oneofschema import OneOfSchema
 from cmk.gui.fields import HostField, SiteField
 from cmk.gui.plugins.openapi.endpoints.graph.common import (
     BaseRequestSchema,
-    GraphNameField,
-    MetricNameField,
+    GraphIdField,
+    MetricIdField,
 )
 
 from cmk.fields import String
 
 
 class _BaseGetSchema(BaseRequestSchema):
-    type = String(enum=["graph", "metric"], example="metric", required=True)
+    type = String(enum=["graph", "single_metric"], example="single_metric", required=True)
     site = SiteField(description="The name of the site.", example="heute", required=True)
     host_name = HostField(
         description="The hostname to use.",
@@ -29,11 +29,11 @@ class _BaseGetSchema(BaseRequestSchema):
 
 
 class GetGraphSchema(_BaseGetSchema):
-    graph_name = GraphNameField()
+    graph_id = GraphIdField()
 
 
 class GetMetricSchema(_BaseGetSchema):
-    metric_name = MetricNameField()
+    metric_id = MetricIdField()
 
 
 class GetSchema(OneOfSchema):
@@ -41,5 +41,5 @@ class GetSchema(OneOfSchema):
     type_field_remove = False
     type_schemas = {
         "graph": GetGraphSchema,
-        "metric": GetMetricSchema,
+        "single_metric": GetMetricSchema,
     }

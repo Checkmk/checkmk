@@ -20,20 +20,20 @@ GRAPH_NAME_VALIDATOR = marshmallow.validate.Regexp(
 )
 
 
-class GraphNameField(String):
+class GraphIdField(String):
     def __init__(self):
         super().__init__(
-            description="The name of the graph.",
+            description="The ID of the graph.",
             example="cmk_cpu_time_by_phase",
             required=True,
             validate=GRAPH_NAME_VALIDATOR,
         )
 
 
-class MetricNameField(String):
+class MetricIdField(String):
     def __init__(self):
         super().__init__(
-            description="The name of the metric.",
+            description="The ID of the metric.",
             example="cmk_time_agent",
             required=True,
             validate=GRAPH_NAME_VALIDATOR,
@@ -91,11 +91,11 @@ def reorganize_response(resp: dict[str, Any]) -> dict[str, Any]:
     ...        "title": "RAM used"
     ...    }]
     ... })
-    {'time_range': {'start': 123, 'end': 456}, 'step': 60, 'curves': [{'color': '#ffffff', 'line_type': 'area', 'title': 'RAM used', 'rrd_data': [1.0, 2.0, 3.0, 1.0]}]}
+    {'time_range': {'start': 123, 'end': 456}, 'step': 60, 'metrics': [{'color': '#ffffff', 'line_type': 'area', 'title': 'RAM used', 'data_points': [1.0, 2.0, 3.0, 1.0]}]}
     """
     curves = resp["curves"]
     for curve in curves:
-        curve["rrd_data"] = curve["rrddata"]
+        curve["data_points"] = curve["rrddata"]
         curve.pop("rrddata")
 
     return {
@@ -104,7 +104,7 @@ def reorganize_response(resp: dict[str, Any]) -> dict[str, Any]:
             "end": resp["end_time"],
         },
         "step": resp["step"],
-        "curves": curves,
+        "metrics": curves,
     }
 
 
@@ -121,11 +121,11 @@ def reorganize_time_range(time_range: dict[str, Any] | None) -> dict[str, Any] |
 
 def graph_id_from_request(body: dict[str, Any]) -> str:
     """
-    >>> graph_id_from_request({"type": "metric", "metric_name": "metric"})
+    >>> graph_id_from_request({"type": "single_metric", "metric_id": "metric"})
     'METRIC_metric'
-    >>> graph_id_from_request({"type": "graph", "graph_name": "graph"})
+    >>> graph_id_from_request({"type": "graph", "graph_id": "graph"})
     'graph'
     """
-    if body["type"] == "metric":
-        return f"METRIC_{body['metric_name']}"
-    return body["graph_name"]
+    if body["type"] == "single_metric":
+        return f"METRIC_{body['metric_id']}"
+    return body["graph_id"]

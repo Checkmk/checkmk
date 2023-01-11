@@ -8,11 +8,14 @@ from cmk.gui.plugins.openapi.endpoints.graph.common import TimeRange
 from cmk.fields import Float, Integer, List, Nested, String
 
 
-class CurveSchema(BaseSchema):
-    color = String(description="The color of the graph in HTML notation.", example="#80ff40")
-    rrd_data = List(
+class MetricSchema(BaseSchema):
+    color = String(
+        description="The color of the metric as displayed in Checkmk. Color is in HTML notation.",
+        example="#80ff40",
+    )
+    data_points = List(
         Float(),
-        description="The samples of the graph.",
+        description="The samples of the metric.",
         required=True,
         example=[
             3752390000.0,
@@ -43,15 +46,15 @@ class GraphCollectionSchema(BaseSchema):
     step = Integer(
         description="The interval between two samples in seconds.", example=60, required=True
     )
-    curves = Nested(
-        CurveSchema,
+    metrics = Nested(
+        MetricSchema,
         description="The actual graph data.",
         required=True,
         many=True,
         example=[
             {
                 "color": "#ffffff",
-                "rrddata": [1.0, 2.0, 3.0, 1.0],
+                "data_points": [1.0, 2.0, 3.0, 1.0],
                 "line_type": "area",
                 "title": "RAM used",
             }

@@ -55,17 +55,17 @@ def test_openapi_get_graph_graph(
                     "host_name": "heute",
                     "service_description": "CPU load",
                     "type": "graph",
-                    "graph_name": "cpu_load",
+                    "graph_id": "cpu_load",
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
                 }
             ),
         )
     expected = {
-        "curves": [
+        "metrics": [
             {
                 "color": "#00d1ff",
                 "line_type": "area",
-                "rrd_data": [None],
+                "data_points": [None],
                 "title": "CPU load average of last minute",
             }
         ],
@@ -113,18 +113,18 @@ def test_openapi_get_graph_metric(
                     "site": "NO_SITE",
                     "host_name": "heute",
                     "service_description": "CPU load",
-                    "metric_name": "load1",
-                    "type": "metric",
+                    "metric_id": "load1",
+                    "type": "single_metric",
                     "time_range": {"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
                 }
             ),
         )
     expected = {
-        "curves": [
+        "metrics": [
             {
                 "color": "#00d1ff",
                 "line_type": "area",
-                "rrd_data": [None],
+                "data_points": [None],
                 "title": "CPU load average of last minute",
             }
         ],

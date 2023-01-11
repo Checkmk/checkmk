@@ -398,6 +398,7 @@ def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section
 
 def deployment_replicas(deployment: Deployment) -> section.DeploymentReplicas:
     return section.DeploymentReplicas(
+        available=deployment.status.replicas.available,
         desired=deployment.status.replicas.replicas,
         ready=deployment.status.replicas.ready,
         updated=deployment.status.replicas.updated,
@@ -427,6 +428,7 @@ def daemonset_replicas(
     daemonset: DaemonSet,
 ) -> section.DaemonSetReplicas:
     return section.DaemonSetReplicas(
+        available=daemonset.status.number_available,
         desired=daemonset.status.desired_number_scheduled,
         updated=daemonset.status.updated_number_scheduled,
         misscheduled=daemonset.status.number_misscheduled,

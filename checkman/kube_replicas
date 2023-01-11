@@ -12,6 +12,10 @@ description:
  if there are misscheduled Pods controlled by a DaemonSet, then the check
  will also show WARN/CRIT, after 5/10 minutes.
 
+ The check also monitors the number of replicas that are available. However, this
+ is only done if the MinReadySeconds field is non-zero. For MinReadySeconds = 0,
+ the available replicas are omitted as they are always equal to the ready replicas.
+
  It is possible to configure the grace period for each state using the
  "Kubernetes: Replicas" ruleset.
 

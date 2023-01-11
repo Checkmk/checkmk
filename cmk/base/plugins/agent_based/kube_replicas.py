@@ -19,6 +19,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.kube import (
+    ControllerSpec,
     DaemonSetReplicas,
     DeploymentReplicas,
     StatefulSetReplicas,
@@ -69,12 +70,24 @@ register.agent_section(
     parse_function=parse_kube_strategy,
 )
 
+
+def parse_kube_controller_spec(string_table: StringTable) -> ControllerSpec:
+    return ControllerSpec.parse_raw(string_table[0][0])
+
+
+register.agent_section(
+    name="kube_controller_spec_v1",
+    parsed_section_name="kube_controller_spec",
+    parse_function=parse_kube_controller_spec,
+)
+
 Replicas = Union[DeploymentReplicas, StatefulSetReplicas, DaemonSetReplicas]
 
 
 def discover_kube_replicas(
     section_kube_replicas: Optional[Replicas],
     section_kube_update_strategy: Optional[UpdateStrategy],
+    section_kube_controller_spec: Optional[ControllerSpec],
 ) -> DiscoveryResult:
     if section_kube_replicas is not None:
         yield Service()
@@ -125,11 +138,13 @@ def check_kube_replicas(
     params: Mapping[str, VSResultAge],
     section_kube_replicas: Optional[Replicas],
     section_kube_update_strategy: Optional[UpdateStrategy],
+    section_kube_controller_spec: Optional[ControllerSpec],
 ) -> CheckResult:
     yield from _check_kube_replicas(
         params,
         section_kube_replicas,
         section_kube_update_strategy,
+        section_kube_controller_spec,
         now=time.time(),
         value_store=get_value_store(),
     )
@@ -139,6 +154,7 @@ def _check_kube_replicas(
     params: Mapping[str, VSResultAge],
     section_kube_replicas: Optional[Replicas],
     section_kube_update_strategy: Optional[UpdateStrategy],
+    section_kube_controller_spec: Optional[ControllerSpec],
     *,
     now: float,
     value_store: MutableMapping[str, Any],
@@ -150,8 +166,8 @@ def _check_kube_replicas(
     metric_boundary = (0, section_kube_replicas.desired)
 
     if (
-        isinstance(section_kube_replicas, StatefulSetReplicas)
-        and section_kube_replicas.available is not None
+        section_kube_controller_spec is not None
+        and section_kube_controller_spec.min_ready_seconds > 0
     ):
         yield Result(
             state=State.OK,
@@ -182,8 +198,8 @@ def _check_kube_replicas(
         yield Metric("kube_misscheduled_replicas", section_kube_replicas.misscheduled)
 
     if (
-        isinstance(section_kube_replicas, StatefulSetReplicas)
-        and section_kube_replicas.available is not None
+        section_kube_controller_spec is not None
+        and section_kube_controller_spec.min_ready_seconds > 0
     ):
         yield from _check_duration(
             section_kube_replicas.available == section_kube_replicas.desired,
@@ -234,7 +250,7 @@ def _check_kube_replicas(
 
 register.check_plugin(
     name="kube_replicas",
-    sections=["kube_replicas", "kube_update_strategy"],
+    sections=["kube_replicas", "kube_update_strategy", "kube_controller_spec"],
     service_name="Replicas",
     discovery_function=discover_kube_replicas,
     check_function=check_kube_replicas,

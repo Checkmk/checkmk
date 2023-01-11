@@ -622,7 +622,7 @@ class StatefulSetSpec(ReplicasControllerSpec):
 class StatefulSetStatus(BaseModel):
     updated_replicas: int = Field(0, alias="updatedReplicas")
     ready_replicas: int = Field(0, alias="readyReplicas")
-    available_replicas: int | None = Field(None, alias="availableReplicas")
+    available_replicas: int = Field(0, alias="availableReplicas")
 
 
 class StatefulSet(BaseModel):

@@ -759,6 +759,7 @@ class CommonReplicas(BaseModel):
     a Pod can sometimes still be claimed, if the DaemonSet has been deleted.
     """
 
+    available: int
     desired: int
     ready: int
     updated: int
@@ -807,8 +808,6 @@ class StatefulSetReplicas(Section, CommonReplicas):
     # updated (status.updatedReplicas): the number of claimed Pods, which match updateRevision of
     # the StatefulSet. The StatefulSet only allows updating in order of the ordinals. Unlike the Pod
     # creation, this behaviour can't be configured as of v1.23.
-
-    available: int | None = None
 
 
 class DeploymentReplicas(Section, CommonReplicas):

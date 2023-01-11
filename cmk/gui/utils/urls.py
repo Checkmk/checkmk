@@ -333,6 +333,9 @@ class DocReference(Enum):
     BACKUPS = "backup"
     BI = "bi"  # Business Intelligence
     BOOKMARK_LIST = "user_interface#bookmarks"
+    COMMANDS = "commands"
+    COMMANDS_ACK = "basics_ackn"
+    COMMANDS_DOWNTIME = "basics_downtimes"
     CUSTOM_GRAPH = "graphing#custom_graphs"
     DASHBOARD_HOST_PROBLEMS = "dashboards#host_problems"
     DASHBOARDS = "dashboards"

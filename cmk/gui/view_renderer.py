@@ -50,7 +50,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.views.command import Command, do_actions, get_command_groups, should_show_command_form
 from cmk.gui.views.data_source import row_id
@@ -380,6 +380,9 @@ class GUIViewRenderer(ABCViewRenderer):
         for dropdown_name, topics in self._menu_topics.items():
             menu[dropdown_name].topics.extend(topics)
 
+        if should_show_command_form(self.view.datasource):
+            _add_command_doc_references(menu)
+
         return menu
 
     def _page_menu_dropdown_commands(self) -> list[PageMenuDropdown]:
@@ -637,3 +640,11 @@ class GUIViewRenderer(ABCViewRenderer):
         # menu.add_youtube_reference(title=_("Episode 4: Monitoring Windows in Checkmk"),
         #                           youtube_id="Nxiq7Jb9mB4")
         pass
+
+
+def _add_command_doc_references(menu: PageMenu) -> None:
+    menu.add_doc_reference(_("Commands"), DocReference.COMMANDS)
+    if user.may("action.acknowledge"):
+        menu.add_doc_reference(_("Acknowledging problems"), DocReference.COMMANDS_ACK)
+    if user.may("action.downtimes") or user.may("action.remove_all_downtimes"):
+        menu.add_doc_reference(_("Scheduled downtimes"), DocReference.COMMANDS_DOWNTIME)

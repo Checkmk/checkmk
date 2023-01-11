@@ -203,7 +203,6 @@ def discover_logwatch_ec_common(
     params: Sequence[Mapping[str, Any]],
     use_mode: str,
 ) -> DiscoveryResult:
-
     discoverable_items = logwatch.discoverable_items(section)
     forwarded_logs = logwatch.select_forwarded(discoverable_items, params)
     if not forwarded_logs:
@@ -465,10 +464,18 @@ def logwatch_forward_spool_directory(
     item: Optional[str],
     syslog_messages: Sequence[SyslogMessage],
 ) -> LogwatchFordwardResult:
-
     if not syslog_messages:
         return LogwatchFordwardResult()
 
+    spool_file = get_new_spool_file(method, item)
+
+    spool_file.write_text("\n".join(map(repr, syslog_messages)) + "\n")
+    spool_file.rename(spool_file.parent / spool_file.name[1:])
+
+    return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
+
+
+def get_new_spool_file(method: str, item: Optional[str]) -> Path:
     spool_file = Path(
         method[6:],
         ".%s_%s%d"
@@ -478,13 +485,8 @@ def logwatch_forward_spool_directory(
             time.time(),
         ),
     )
-
     spool_file.parent.mkdir(parents=True, exist_ok=True)
-
-    spool_file.write_text("\n".join(map(repr, syslog_messages)) + "\n")
-    spool_file.rename(spool_file.parent / spool_file.name[1:])
-
-    return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
+    return spool_file
 
 
 def logwatch_forward_tcp(
@@ -492,7 +494,6 @@ def logwatch_forward_tcp(
     syslog_messages: Sequence[SyslogMessage],
     spool_path: Path,
 ) -> LogwatchFordwardResult:
-
     # Transform old format: (proto, address, port)
     if not isinstance(method[1], dict):
         method = (method[0], {"address": method[1], "port": method[2]})

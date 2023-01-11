@@ -481,6 +481,47 @@ def test__filename_matches(filename, reftime, inclusion, exclusion, expected_res
             ],
             id="negative age",
         ),
+        pytest.param(
+            "my_folder/filename123",
+            {"group_patterns": [("~my_folder/file.*", "")], "negative_age_tolerance": 150},
+            Fileinfo(
+                reftime=1563288717,
+                files={
+                    "my_folder/filename456": FileinfoItem(
+                        name="my_folder/filename456",
+                        missing=False,
+                        failed=False,
+                        size=348,
+                        time=1563288817,
+                    ),
+                },
+            ),
+            [
+                Result(state=State.OK, notice="Include patterns: ~my_folder/file.*"),
+                Result(
+                    state=State.OK, notice="[my_folder/filename456] Age: 0 seconds, Size: 348 B"
+                ),
+                Result(state=State.OK, summary="Count: 1"),
+                Metric("count", 1),
+                Result(state=State.OK, summary="Size: 348 B"),
+                Metric("size", 348),
+                Result(state=State.OK, summary="Largest size: 348 B"),
+                Metric("size_largest", 348),
+                Result(state=State.OK, summary="Smallest size: 348 B"),
+                Metric("size_smallest", 348),
+                Result(
+                    state=State.OK,
+                    summary="Oldest age: 0 seconds",
+                ),
+                Metric("age_oldest", 0.0),
+                Result(
+                    state=State.OK,
+                    summary="Newest age: 0 seconds",
+                ),
+                Metric("age_newest", 0.0),
+            ],
+            id="negative age within tolerance",
+        ),
     ],
 )
 def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
@@ -507,17 +548,31 @@ def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
         ),
         pytest.param(
             [
-                MetricInfo("Age", "age", -3, get_age_human_readable),
+                MetricInfo("Age", "age", -30, get_age_human_readable),
             ],
             {},
             [
                 Result(
                     state=State.UNKNOWN,
-                    summary="Age: -3.00 s, The timestamp of the file is in the future. Please investigate your host times",
+                    summary="Age: -30.0 s, The timestamp of the file is in the future. Please investigate your host times",
                 ),
-                Metric("age", -3.0),
+                Metric("age", -30.0),
             ],
             id="negative age",
+        ),
+        pytest.param(
+            [
+                MetricInfo("Age", "age", -3, get_age_human_readable),
+            ],
+            {"negative_age_tolerance": 5},
+            [
+                Result(
+                    state=State.OK,
+                    summary="Age: 0.00 s",
+                ),
+                Metric("age", 0.0),
+            ],
+            id="negative age within tolerance",
         ),
     ],
 )

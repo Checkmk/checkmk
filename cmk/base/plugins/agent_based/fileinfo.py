@@ -51,7 +51,7 @@ register.check_plugin(
     discovery_default_parameters={},
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_fileinfo,
-    check_default_parameters={},
+    check_default_parameters={"negative_age_tolerance": 5},
     check_ruleset_name="fileinfo",
 )
 
@@ -64,6 +64,6 @@ register.check_plugin(
     discovery_default_parameters={},
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_fileinfo_groups,
-    check_default_parameters={},
+    check_default_parameters={"negative_age_tolerance": 5},
     check_ruleset_name="fileinfo-groups",
 )

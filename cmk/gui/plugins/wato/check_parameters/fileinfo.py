@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.utils import get_fileinfo_negative_age_tolerance_element
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
@@ -75,6 +76,7 @@ def _parameter_valuespec_fileinfo():
                 "state_missing",
                 MonitoringState(default_value=3, title=_("State when file is missing")),
             ),
+            get_fileinfo_negative_age_tolerance_element(),
         ],
     )
 

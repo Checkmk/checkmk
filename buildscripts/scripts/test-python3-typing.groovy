@@ -6,7 +6,7 @@ def main() {
     dir("${checkout_dir}") {
         stage("Execute Test") {
             sh("""
-                MYPY_ADDOPTS='--cobertura-xml-report=$checkout_dir/mypy_reports' \
+                MYPY_ADDOPTS='--cobertura-xml-report=$checkout_dir/mypy_reports --html-report=$checkout_dir/mypy_reports/html' \
                 make -C tests test-mypy-docker
                """);
         }
@@ -26,6 +26,19 @@ def main() {
                 ]]
             )
         }
+
+        stage("Publish coverage") {
+            publishHTML([
+                allowMissing: false,
+                alwaysLinkToLastBuild: false,
+                keepAll: true,
+                reportDir: 'mypy_reports/html',
+                reportFiles: 'index.html',
+                reportName: 'Typing coverage',
+                reportTitles: '',
+            ])
+        }
     }
 }
 return this;
+

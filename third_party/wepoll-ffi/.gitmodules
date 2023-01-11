@@ -1,3 +1,0 @@
-[submodule "vendor/wepoll"]
-	path = vendor/wepoll
-	url = https://github.com/piscisaureus/wepoll.git

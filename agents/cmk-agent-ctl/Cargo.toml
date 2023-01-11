@@ -51,9 +51,6 @@ gethostname = { version = "0.2.3" }
 mail_slot = { version = "0.1" }  # windows mailslot api
 is_elevated = { version = "0.1" }
 
-[patch.crates-io]
-wepoll-ffi = { path = "../../third_party/wepoll-ffi" }
-
 [dev-dependencies]
 assert_cmd = { version = "*" }
 predicates = { version = "*" }

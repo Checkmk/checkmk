@@ -32,6 +32,11 @@ set target=i686-pc-windows-msvc
 set exe_name=cmk-agent-ctl.exe
 set exe=target\%target%\release\%exe_name%
 
+:: Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
+:: which is not provided by libucrt. The latter is needed for static linking.
+:: https://github.com/rust-lang/cc-rs#external-configuration-via-environment-variables
+set CFLAGS=-DNDEBUG
+
 del /Q %arte%\%exe_name% 2> nul
 
 :: 1. Clippy

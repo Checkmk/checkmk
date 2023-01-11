@@ -409,7 +409,7 @@ class PainterSvcPnpgraph(Painter2):
 
     @property
     def painter_options(self) -> list[str]:
-        return ["pnp_timerange"]
+        return ["pnp_timerange", "show_internal_graph_and_metric_ids"]
 
     @property
     def parameters(self) -> Transform:

@@ -53,6 +53,7 @@ def test_registered_painter_options() -> None:
         "graph_render_options",
         "refresh",
         "num_columns",
+        "show_internal_graph_and_metric_ids",
     ]
 
     names = painter_option_registry.keys()

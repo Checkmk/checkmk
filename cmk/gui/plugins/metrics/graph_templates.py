@@ -36,6 +36,7 @@ from cmk.gui.plugins.metrics.utils import (
     UnitConverter,
 )
 from cmk.gui.type_defs import MetricDefinition, Row, TemplateGraphSpec
+from cmk.gui.views.painter_options import PainterOptions
 
 RPNAtom = tuple  # TODO: Improve this type
 
@@ -201,6 +202,10 @@ def create_graph_recipe_from_template(
     title = replace_expressions(str(graph_template.get("title", "")), translated_metrics)
     if not title:
         title = next((m["title"] for m in metrics if m["title"]), "")
+
+    painter_options = PainterOptions.get_instance()
+    if painter_options.get("show_internal_graph_and_metric_ids"):
+        title = title + f" (Graph ID: {graph_template['id']})"
 
     return {
         "title": title,

@@ -35,6 +35,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.valuespec import (
+    Checkbox,
     DateFormat,
     Dictionary,
     DictionaryElements,
@@ -44,6 +45,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListChoiceChoices,
     TextInput,
+    ValueSpec,
 )
 from cmk.gui.view_utils import (
     CellSpec,
@@ -54,7 +56,12 @@ from cmk.gui.view_utils import (
     render_labels,
     render_tag_groups,
 )
-from cmk.gui.views.painter_options import paint_age, PainterOption, PainterOptionRegistry
+from cmk.gui.views.painter_options import (
+    paint_age,
+    PainterOption,
+    PainterOptionRegistry,
+    PainterOptions,
+)
 from cmk.gui.visual_link import render_link_to_view
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
@@ -74,6 +81,7 @@ def register(
     painter_option_registry.register(PainterOptionTimestampFormat)
     painter_option_registry.register(PainterOptionTimestampDate)
     painter_option_registry.register(PainterOptionMatrixOmitUniform)
+    painter_option_registry.register(PainterOptionShowInternalGraphAndMetricIds)
     painter_registry.register(PainterSiteIcon)
     painter_registry.register(PainterSitenamePlain)
     painter_registry.register(PainterSitealias)
@@ -289,6 +297,19 @@ def register(
 #   | options are stored together with "refresh" and "columns" as "View    |
 #   | options".                                                            |
 #   '----------------------------------------------------------------------'
+
+
+class PainterOptionShowInternalGraphAndMetricIds(PainterOption):
+    @property
+    def ident(self) -> str:
+        return "show_internal_graph_and_metric_ids"
+
+    @property
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Show internal graph and metric IDs"),
+            default_value=False,
+        )
 
 
 class PainterOptionTimestampFormat(PainterOption):
@@ -648,10 +669,16 @@ class PainterSvcMetrics(Painter):
         return ["service_check_command", "service_perf_data"]
 
     @property
+    def painter_options(self):
+        return ["show_internal_graph_and_metric_ids"]
+
+    @property
     def printable(self) -> bool:
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
+        painter_options = PainterOptions.get_instance()
+
         translated_metrics = metrics.translate_perf_data(
             row["service_perf_data"], row["service_check_command"]
         )
@@ -661,18 +688,28 @@ class PainterSvcMetrics(Painter):
 
         with output_funnel.plugged():
             self._show_metrics_table(
-                translated_metrics, row["host_name"], row["service_description"]
+                translated_metrics,
+                row["host_name"],
+                row["service_description"],
+                show_metric_id=painter_options.get("show_internal_graph_and_metric_ids"),
             )
             return "", HTML(output_funnel.drain())
 
     def _show_metrics_table(
-        self, translated_metrics: TranslatedMetrics, host_name: str, service_description: str
+        self,
+        translated_metrics: TranslatedMetrics,
+        host_name: str,
+        service_description: str,
+        show_metric_id: bool,
     ) -> None:
         html.open_table(class_="metricstable")
         for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
+            optional_metric_id = ""
+            if show_metric_id:
+                optional_metric_id = f" (Metric ID: {metric_name})"
             html.open_tr()
             html.td(render_color_icon(metric["color"]), class_="color")
-            html.td("%s:" % metric["title"])
+            html.td(f'{metric["title"]}{optional_metric_id}:')
             html.td(metric["unit"]["render"](metric["value"]), class_="value")
             if not cmk_version.is_raw_edition():
                 html.td(

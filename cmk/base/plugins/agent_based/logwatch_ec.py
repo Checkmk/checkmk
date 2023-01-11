@@ -20,6 +20,7 @@ import os
 import socket
 import time
 from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
+from pathlib import Path
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -170,7 +171,6 @@ def discover_logwatch_ec_common(
     params: Sequence[Mapping[str, Any]],
     use_mode: str,
 ) -> DiscoveryResult:
-
     discoverable_items = logwatch.discoverable_items(section)
     forwarded_logs = logwatch.select_forwarded(discoverable_items, params)
     if not forwarded_logs:
@@ -418,16 +418,20 @@ def logwatch_forward_spool_directory(
     if not messages:
         return LogwatchFordwardResult()
 
-    spool_path = method[6:]
-    file_name = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or
-                              '', time.time())
-    os.makedirs(spool_path, exist_ok=True)
-
-    with open('%s/%s' % (spool_path, file_name), 'w', encoding="utf-8") as f:
+    spool_file = get_new_spool_file(method, item)
+    with open(spool_file, 'w', encoding="utf-8") as f:
         f.write('\n'.join(messages) + '\n')
-    os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
+    spool_file.rename(spool_file.parent / spool_file.name[1:])
 
     return LogwatchFordwardResult(num_forwarded=len(messages))
+
+
+def get_new_spool_file(method: str, item: Optional[str]) -> Path:
+    spool_file = Path(
+        method[6:],
+        '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or '', time.time()))
+    spool_file.parent.mkdir(parents=True, exist_ok=True)
+    return spool_file
 
 
 def logwatch_forward_tcp(method: Tuple, new_messages: List[str]) -> LogwatchFordwardResult:

@@ -176,7 +176,7 @@ class AssertionConsumerService(Page):
             raise MKUserError(message=_("Authentication failed"), varname=None) from e
 
         try:
-            connector.create_and_update_user(authn_response.user_id)
+            connector.create_and_update_user(authn_response.user_id, authn_response)
         except ValueError as e:
             LOGGER.warning("%s: %s", type(e).__name__, str(e))
             raise MKUserError(message=_("Unknown user"), varname=None) from e

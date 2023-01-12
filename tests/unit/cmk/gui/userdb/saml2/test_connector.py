@@ -12,7 +12,12 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
-from cmk.gui.userdb.saml2.connector import Connector, SAML2_CONNECTOR_TYPE
+from cmk.gui.userdb.saml2.connector import (
+    authenticated_user_to_user_spec,
+    Connector,
+    SAML2_CONNECTOR_TYPE,
+)
+from cmk.gui.userdb.saml2.interface import AuthenticatedUser
 
 
 class TestConnector:
@@ -90,12 +95,23 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Paul")
-        new_user_spec = UserSpec({"connector": connector.id})
-        new_user = {new_user_id: new_user_spec}
+        authenticated_user = AuthenticatedUser(user_id=new_user_id)
 
-        connector.create_and_update_user(new_user_id, new_user_spec)
+        connector.create_and_update_user(new_user_id, authenticated_user)
 
-        assert user_store == {**users_pre_edit, **new_user}
+        assert user_store == {
+            **users_pre_edit,
+            UserId("Paul"): UserSpec(
+                {
+                    "user_id": UserId("Paul"),
+                    "alias": "Paul",
+                    "connector": connector.id,
+                    "contactgroups": [],
+                    "force_authuser": False,
+                    "roles": ["user"],
+                }
+            ),
+        }
 
     def test_edit_user_creates_new_user_with_default_profile(
         self,
@@ -107,13 +123,15 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Paul")
+        authenticated_user = AuthenticatedUser(user_id=new_user_id)
 
-        connector.create_and_update_user(new_user_id)
+        connector.create_and_update_user(new_user_id, authenticated_user)
 
         assert user_store == {
             **users_pre_edit,
             UserId("Paul"): UserSpec(
                 {
+                    "user_id": UserId("Paul"),
                     "alias": "Paul",
                     "connector": connector.id,
                     "contactgroups": [],
@@ -135,9 +153,10 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Moss")
+        authenticated_user = AuthenticatedUser(user_id=new_user_id)
 
         with pytest.raises(ValueError):
-            connector.create_and_update_user(new_user_id)
+            connector.create_and_update_user(new_user_id, authenticated_user)
 
         assert user_store == users_pre_edit
 
@@ -151,9 +170,10 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Roy")
+        authenticated_user = AuthenticatedUser(user_id=new_user_id)
 
         with pytest.raises(ValueError):
-            connector.create_and_update_user(new_user_id)
+            connector.create_and_update_user(new_user_id, authenticated_user)
 
         assert user_store == users_pre_edit
 
@@ -167,9 +187,10 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Jen")
+        authenticated_user = AuthenticatedUser(user_id=new_user_id)
 
         with pytest.raises(ValueError):
-            connector.create_and_update_user(new_user_id)
+            connector.create_and_update_user(new_user_id, authenticated_user)
 
         assert user_store == users_pre_edit
 
@@ -183,13 +204,56 @@ class TestConnector:
         connector = Connector(raw_config)
 
         user_id = UserId("Richmond")
-        new_user_spec = UserSpec({"email": "richmond@hellonerds.com", "connector": connector.id})
+        authenticated_user = AuthenticatedUser(user_id=user_id, email="richmond@hellonerds.com")
 
-        connector.create_and_update_user(user_id, new_user_spec)
+        connector.create_and_update_user(user_id, authenticated_user)
 
-        assert user_store == {**users_pre_edit, **{user_id: new_user_spec}}
+        assert user_store == {
+            **users_pre_edit,
+            **{
+                UserId("Richmond"): UserSpec(
+                    {
+                        "user_id": UserId("Richmond"),
+                        "alias": "Richmond",
+                        "email": "richmond@hellonerds.com",
+                        "connector": connector.id,
+                        "contactgroups": [],
+                        "force_authuser": False,
+                        "roles": ["user"],
+                    }
+                ),
+            },
+        }
 
     def test_password_is_a_locked_attribute(self, raw_config: Mapping[str, Any]) -> None:
         connector = Connector(raw_config)
 
         assert "password" in connector.locked_attributes()
+
+
+def test_authenticated_user_to_user_spec() -> None:
+    authenticated_user = AuthenticatedUser(
+        user_id=UserId("banana"),
+        alias="Mr. Banana",
+        email="banana@totally-not-the-cia.com",
+    )
+    default_user_profile = UserSpec(
+        {
+            "contactgroups": [],
+            "force_authuser": False,
+            "roles": ["user"],
+        }
+    )
+
+    user_spec = authenticated_user_to_user_spec(authenticated_user, default_user_profile)
+
+    assert user_spec == UserSpec(
+        {
+            "user_id": UserId("banana"),
+            "alias": "Mr. Banana",
+            "email": "banana@totally-not-the-cia.com",
+            "roles": ["user"],
+            "contactgroups": [],
+            "force_authuser": False,
+        }
+    )

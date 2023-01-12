@@ -30,7 +30,7 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.userdb.saml2.interface import (
-    Authenticated,
+    AuthenticatedUser,
     HTMLFormString,
     Interface,
     Milliseconds,
@@ -272,8 +272,7 @@ class TestInterface:
         parsed_response = interface.parse_authentication_request_response(
             signed_authentication_request_response
         )
-        assert isinstance(parsed_response, Authenticated)
-        assert parsed_response.in_response_to_id == "id-Ex1qiCa1tiZj1nBKe"
+        assert isinstance(parsed_response, AuthenticatedUser)
         assert parsed_response.user_id == UserId("user1")
 
     @freeze_time("2022-12-28T11:11:36Z")
@@ -461,7 +460,7 @@ class TestInterfaceSecurityFeatures:
         parsed_response = interface.parse_authentication_request_response(
             signed_authentication_request_response
         )
-        assert isinstance(parsed_response, Authenticated)
+        assert isinstance(parsed_response, AuthenticatedUser)
 
     def test_reject_unsigned_authentication_request_response(
         self, interface: Interface, unsigned_authentication_request_response: str

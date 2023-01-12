@@ -17,7 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb.saml2.interface import Interface, InterfaceConfig
+from cmk.gui.userdb.saml2.interface import AuthenticatedUser, Interface, InterfaceConfig
 from cmk.gui.userdb.store import OpenFileMode, Users, UserStore
 
 # TODO (lisa): introduce enums
@@ -73,7 +73,7 @@ class Connector(UserConnector):
         return self.__config.interface_config.idp_metadata_endpoint
 
     def create_and_update_user(
-        self, user_id: UserId, updated_user_profile: UserSpec | None = None
+        self, user_id: UserId, authenticated_user: AuthenticatedUser
     ) -> None:
         """Update user profile in Checkmk users store.
 
@@ -83,8 +83,8 @@ class Connector(UserConnector):
         Args:
             user_id: The unique ID of the user that is to be created or edited
             updated_user_profile: The profile of the user that should be entered in the Checkmk user store.
-                If not specified, the default profile is used. This can be configured via the global
-                settings.
+                If the profile attributes are not specified, the default profile is used. This can
+                be configured via the global settings.
 
         Raises:
             ValueError:
@@ -92,19 +92,20 @@ class Connector(UserConnector):
                   a connection has been deleted)
                 - The user already exists for a different connection
         """
-        if updated_user_profile is None:
-            updated_user_profile = copy.deepcopy(active_config.default_user_profile)
-            updated_user_profile["connector"] = self.__config.id
-            updated_user_profile["alias"] = user_id
+        user_profile = authenticated_user_to_user_spec(
+            authenticated_user,
+            active_config.default_user_profile,
+        )
+        user_profile["connector"] = self.__config.id
 
         with UserStore(mode=OpenFileMode.WRITE) as user_store:
             if not (user_entry := user_store.get(user_id)):
-                user_store[user_id] = updated_user_profile
+                user_store[user_id] = user_profile
                 return
 
             self._update_user(
                 user_id=user_id,
-                user_profile=updated_user_profile,
+                user_profile=user_profile,
                 connection_id=user_entry.get("connector"),
                 user_store=user_store,
             )
@@ -142,7 +143,22 @@ class Connector(UserConnector):
             A list of attributes managed by the connector, always containing at least the 'password'
             attribute.
         """
-        return ["password"]
+        return ["password"] + [
+            k for k, v in self.__config.interface_config.user_attributes.dict().items() if v
+        ]
+
+
+def authenticated_user_to_user_spec(
+    authenticated_user: AuthenticatedUser, default_user_profile: UserSpec
+) -> UserSpec:
+    user_spec = copy.deepcopy(default_user_profile)
+    user_spec["user_id"] = authenticated_user.user_id
+    user_spec["alias"] = authenticated_user.alias or authenticated_user.user_id
+    if authenticated_user.email:
+        # TODO (lisa): this seems to be wrongly typed. It is possible to create users without an
+        # email
+        user_spec["email"] = authenticated_user.email
+    return user_spec
 
 
 def register(user_connector_registry: UserConnectorRegistry) -> None:

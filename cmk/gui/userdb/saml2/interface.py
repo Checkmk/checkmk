@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Mapping, NewType
+from typing import NewType
 
 import requests
 from pydantic import BaseModel
@@ -49,11 +49,17 @@ class Certificate(BaseModel):
     public: Path
 
 
+class UserAttributeNames(BaseModel):
+    user_id: str
+    alias: str | None
+    email: str | None
+
+
 class InterfaceConfig(BaseModel):
     connection_timeout: tuple[int, int]
     checkmk_server_url: str
     idp_metadata_endpoint: str
-    user_id_attribute: str
+    user_attributes: UserAttributeNames
     signature_certificate: Certificate
 
 
@@ -62,9 +68,10 @@ class HTTPPostRequest(BaseModel):
     headers: list[tuple[str, str]]
 
 
-class Authenticated(BaseModel):
+class AuthenticatedUser(BaseModel):
     user_id: UserId
-    in_response_to_id: RequestId
+    alias: str | None = None
+    email: str | None = None
 
 
 def _metadata_from_idp(url: str, timeout: tuple[int, int]) -> str | None:
@@ -120,11 +127,6 @@ def saml_config(
     return config
 
 
-def attributes_mapping(user_id_attribute: str) -> Mapping[str, str]:
-    """Map attribute fields the Identity Provider sends to fields we expect."""
-    return {"user_id_attribute": user_id_attribute}
-
-
 class Interface:
     def __init__(self, config: InterfaceConfig, requests_db: Redis[str]) -> None:
         self._config = saml_config(
@@ -134,6 +136,7 @@ class Interface:
             signature_private_keyfile=config.signature_certificate.private,
             signature_public_keyfile=config.signature_certificate.public,
         )
+        self._user_attributes = config.user_attributes
 
         if self._config.metadata is None:
             raise AttributeError("Got no metadata information from Identity Provider")
@@ -177,9 +180,6 @@ class Interface:
         self._redis_requests_db = requests_db
         self._redis_namespace = "saml2_authentication_requests"
         self._authentication_request_id_expiry = Milliseconds(5 * 60 * 1000)
-
-        self._attributes_mapping = attributes_mapping(config.user_id_attribute)
-        self._user_id_attribute = self._attributes_mapping["user_id_attribute"]
 
     @property
     def metadata(self) -> XMLData:
@@ -261,7 +261,7 @@ class Interface:
             data=HTMLFormString(http_request_params["data"]), headers=http_request_params["headers"]
         )
 
-    def parse_authentication_request_response(self, saml_response: str) -> Authenticated:
+    def parse_authentication_request_response(self, saml_response: str) -> AuthenticatedUser:
         """Parse responses received from the Identity Provider to authentication requests we made.
 
         Take into account the authentication outcome as well as any conditions the Identity Provider
@@ -319,15 +319,15 @@ class Interface:
 
         LOGGER.debug("Found user attributes: %s", ", ".join(authentication_response.ava.keys()))
 
-        LOGGER.debug("Mapping User ID to field %s", self._user_id_attribute)
-        if not (user_id := authentication_response.ava.get(self._user_id_attribute)):
+        LOGGER.debug("Mapping User ID to field %s", self._user_attributes.user_id)
+        if not (user_id := authentication_response.ava.get(self._user_attributes.user_id)):
             LOGGER.debug("User ID not found or empty, value is: %s", repr(user_id))
             raise AttributeError("User ID not found or empty")
 
-        return Authenticated(
-            in_response_to_id=RequestId(authentication_response.session_id()),
+        return AuthenticatedUser(
             user_id=UserId(user_id[0]),
-            # TODO (CMK-11868): also grab other attributes, e.g. email, ...
+            alias=authentication_response.ava.get(self._user_attributes.alias, [None])[0],
+            email=authentication_response.ava.get(self._user_attributes.email, [None])[0],
         )
 
     def validate_in_response_to_id(self, authentication_response: AuthnResponse) -> None:

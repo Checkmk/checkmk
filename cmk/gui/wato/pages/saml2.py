@@ -156,7 +156,7 @@ def _connection_properties() -> list[DictionaryEntry]:
 def _user_properties() -> list[DictionaryEntry]:
     return [
         (
-            "user_id_attribute",
+            "user_id",
             TextInput(
                 title=_("User ID attribute"),
                 help=_(
@@ -164,6 +164,28 @@ def _user_properties() -> list[DictionaryEntry]:
                 ),
                 default_value="user_id",
                 allow_empty=False,
+                size=80,
+            ),
+        ),
+        (
+            "alias",
+            TextInput(
+                title=_("Full name attribute"),
+                help=_(
+                    "The attribute used as the full name of the user. If this is not specified, the "
+                    "user ID is used."
+                ),
+                allow_empty=True,
+                size=80,
+            ),
+        ),
+        (
+            "email",
+            TextInput(
+                title=_("E-mail address attribute"),
+                help=_("The attribute used as the e-mail of the user."),
+                allow_empty=True,
+                size=80,
             ),
         ),
     ]
@@ -371,18 +393,34 @@ class ModeEditSAML2Config(WatoMode):
 
 
 def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:
-    interface_config_keys = {
-        "connection_timeout",
-        "idp_metadata_endpoint",
-        "checkmk_server_url",
-        "user_id_attribute",
-    }
     raw_user_input = copy.deepcopy(user_input)
-    interface_config = {k: raw_user_input.pop(k) for k in interface_config_keys}
-    raw_user_input["interface_config"] = interface_config
-    raw_user_input["interface_config"]["signature_certificate"] = _certificate_to_config(
+
+    interface_config = {
+        k: raw_user_input.pop(k)
+        for k in [
+            "connection_timeout",
+            "idp_metadata_endpoint",
+            "checkmk_server_url",
+        ]
+    }
+    interface_config["user_attributes"] = {
+        k: v
+        for k, v in [
+            (k, raw_user_input.pop(k))
+            for k in [
+                "user_id",
+                "alias",
+                "email",
+            ]
+        ]
+        if v
+    }
+    interface_config["signature_certificate"] = _certificate_to_config(
         raw_user_input.pop("signature_certificate"),
     )
+
+    raw_user_input["interface_config"] = interface_config
+
     return ConnectorConfig(**raw_user_input)
 
 
@@ -437,9 +475,15 @@ def _config_to_valuespec(config: ConnectorConfig) -> DictionaryModel:
     config_dict = config.dict()
     interface_config = config_dict.pop("interface_config")
     signature_certificate = interface_config.pop("signature_certificate")
+
+    user_attributes_config = {
+        k: v or "" for k, v in interface_config.pop("user_attributes").items()
+    }
+
     return {
         **config_dict,
         **interface_config,
+        **user_attributes_config,
         "signature_certificate": _certificate_from_config(signature_certificate),
     }
 

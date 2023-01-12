@@ -42,7 +42,11 @@ def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> Mappin
             "connection_timeout": [12, 12],
             "checkmk_server_url": "http://localhost",
             "idp_metadata_endpoint": "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
-            "user_id_attribute": "username",
+            "user_attributes": {
+                "user_id": "username",
+                "alias": None,
+                "email": None,
+            },
             "signature_certificate": {
                 "private": str(private_keyfile_path),
                 "public": str(public_keyfile_path),

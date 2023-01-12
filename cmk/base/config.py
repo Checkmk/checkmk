@@ -57,12 +57,17 @@ from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.ruleset_matcher import LabelManager, LabelSources, RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import (
+    LabelManager,
+    LabelSources,
+    Ruleset,
+    RulesetMatchObject,
+    RulesetName,
+)
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig
 from cmk.utils.tags import ComputedDataSources
-from cmk.utils.type_defs import RulesetName  # alias for str
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
@@ -77,7 +82,6 @@ from cmk.utils.type_defs import (
     HostName,
     IPMICredentials,
     Item,
-    Ruleset,
     RuleSetName,
     Seconds,
     SectionName,

@@ -16,7 +16,8 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.labels import HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import AgentRawData, HostName, RulesetName, ServiceName
+from cmk.utils.rulesets.ruleset_matcher import RulesetName
+from cmk.utils.type_defs import AgentRawData, HostName, ServiceName
 from cmk.utils.type_defs.result import Result
 
 from cmk.automations.results import CheckPreviewEntry

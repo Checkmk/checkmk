@@ -8,15 +8,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Generic, Literal, NewType, TypeVar, Union
-
-if sys.version_info < (3, 11):
-    # Generic typed dict
-    from typing_extensions import TypedDict
-else:
-    from typing import TypedDict
-
-T_Ruletype = TypeVar("T_Ruletype")
+from typing import Any, Literal, NewType, TypedDict, Union
 
 HostName = str
 HostAddress = str
@@ -30,44 +22,6 @@ TimeperiodName = str
 AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
 
 AgentRawData = NewType("AgentRawData", bytes)
-
-RulesetName = str
-RuleValue = Any  # TODO: Improve this type
-
-# FIXME: A lot of signatures regarding rules and rule sets are simply lying:
-# They claim to expect a RuleConditionsSpec or Ruleset (from cmk.utils.type_defs), but
-# they are silently handling a very chaotic tuple-based structure, too. We
-# really, really need to fix all those signatures! Some test cases for tuples are in
-# test_tuple_rulesets.py. They contain some horrible hand-made types...
-
-
-# TODO: Improve this type
-class RuleConditionsSpec(TypedDict, total=False):
-    host_tags: Any
-    host_labels: Any
-    host_name: HostOrServiceConditions | None
-    service_description: HostOrServiceConditions | None
-    service_labels: Any
-    host_folder: Any
-
-
-class _RuleSpecBase(TypedDict, Generic[T_Ruletype]):
-    value: T_Ruletype
-    condition: RuleConditionsSpec
-
-
-class RuleSpec(Generic[T_Ruletype], _RuleSpecBase[T_Ruletype], total=False):
-    id: str  # Should not be optional but nearly not test has that attribute set!
-    options: RuleOptionsSpec
-
-
-class RuleOptionsSpec(TypedDict, total=False):
-    disabled: bool
-    description: str
-    comment: str
-    docu_url: str
-    predefined_condition_id: str
-
 
 HostOrServiceConditionRegex = TypedDict(
     "HostOrServiceConditionRegex",
@@ -83,7 +37,6 @@ HostOrServiceConditions = (
     HostOrServiceConditionsSimple | HostOrServiceConditionsNegated
 )  # TODO: refine type
 
-Ruleset = list[RuleSpec[T_Ruletype]]
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = str | None

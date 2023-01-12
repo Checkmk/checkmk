@@ -18,14 +18,15 @@ import cmk.utils.store as store
 from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
-from cmk.utils.type_defs import (
-    HostOrServiceConditionRegex,
-    HostOrServiceConditions,
+from cmk.utils.rulesets.ruleset_matcher import (
     RuleConditionsSpec,
     RuleOptionsSpec,
     RulesetName,
     RuleSpec,
-    RuleValue,
+)
+from cmk.utils.type_defs import (
+    HostOrServiceConditionRegex,
+    HostOrServiceConditions,
     TagConditionNE,
     TaggroupIDToTagCondition,
     TagID,
@@ -62,6 +63,7 @@ register_post_config_load_hook(cmk.base.export.reset_config)
 
 FolderPath = str
 SearchOptions = dict[str, Any]
+RuleValue = Any
 
 
 # This macro is needed to make the to_config() methods be able to use native pprint/repr for the

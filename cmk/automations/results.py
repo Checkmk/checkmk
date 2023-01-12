@@ -14,7 +14,7 @@ from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.labels import HostLabelValueDict, Labels
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
 from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import (
@@ -26,7 +26,6 @@ from cmk.utils.type_defs import (
     NotifyAnalysisInfo,
     NotifyBulks,
     ParametersTypeAlias,
-    RulesetName,
     ServiceDetails,
     ServiceName,
     ServiceState,

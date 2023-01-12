@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -12,19 +13,15 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-from cmk.utils.rulesets.ruleset_matcher import matches_tag_condition, RulesetMatchObject
-from cmk.utils.tags import TagConfig
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
+from cmk.utils.rulesets.ruleset_matcher import (
+    matches_tag_condition,
     RuleConditionsSpec,
     Ruleset,
+    RulesetMatchObject,
     RuleSpec,
-    RuleValue,
-    ServiceName,
-    TagCondition,
-    TaggroupID,
 )
+from cmk.utils.tags import TagConfig
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, TagCondition, TaggroupID
 
 from cmk.base.autochecks import AutocheckEntry
 
@@ -657,7 +654,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
 def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     monkeypatch: MonkeyPatch,
     rule_spec: RuleConditionsSpec,
-    expected_result: Sequence[RuleValue],
+    expected_result: Sequence[Any],
 ) -> None:
     ts = Scenario()
     add_tag_config = TagConfig.from_config(

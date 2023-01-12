@@ -6,11 +6,11 @@
 from collections import defaultdict
 from typing import Dict, Iterable, List, Optional, Set
 
+from cmk.utils.rulesets.ruleset_matcher import Ruleset
 from cmk.utils.type_defs import (
     CheckPluginName,
     InventoryPluginName,
     ParsedSectionName,
-    Ruleset,
     RuleSetName,
     SectionName,
 )

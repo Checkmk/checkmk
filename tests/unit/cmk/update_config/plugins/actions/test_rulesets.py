@@ -5,11 +5,13 @@
 
 from collections.abc import Iterator, Mapping
 from logging import getLogger
+from typing import Any
 
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName, RulesetName, RuleValue
+from cmk.utils.rulesets.ruleset_matcher import RulesetName
+from cmk.utils.type_defs import CheckPluginName
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.watolib.timeperiods as timeperiods
@@ -20,6 +22,8 @@ from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfiguration
 from cmk.gui.watolib.rulespecs import Rulespec
 
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
+
+RuleValue = Any
 
 
 @pytest.fixture(name="ui_context", autouse=True)

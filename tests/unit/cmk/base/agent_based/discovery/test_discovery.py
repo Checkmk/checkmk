@@ -15,12 +15,12 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.rulesets.ruleset_matcher import Ruleset
 from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
     HostName,
-    Ruleset,
     RuleSetName,
     SectionName,
     ServiceID,

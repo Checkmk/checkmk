@@ -10,7 +10,8 @@ from logging import Logger
 
 from cmk.utils import debug
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import CheckPluginName, RulesetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import timeperiods

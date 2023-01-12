@@ -12,7 +12,7 @@ import pytest
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
-from cmk.utils.type_defs import RuleOptionsSpec, RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RuleSpec
 
 import cmk.gui.utils
 

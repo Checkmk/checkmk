@@ -110,6 +110,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console as _console  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec
+from cmk.utils.rulesets.ruleset_matcher import Ruleset as _Ruleset
 from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
     get_rule_options,
     hosttags_match_taglist,
@@ -120,8 +122,7 @@ from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
     EvalableFloat as as_float,
 )
-from cmk.utils.type_defs import HostName, MetricName, RuleConditionsSpec
-from cmk.utils.type_defs import Ruleset as _Ruleset
+from cmk.utils.type_defs import HostName, MetricName
 from cmk.utils.type_defs import SectionName as _SectionName
 from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState, state_markers
 

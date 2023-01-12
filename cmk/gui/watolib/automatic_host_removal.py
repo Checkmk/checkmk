@@ -11,8 +11,8 @@ from typing import Literal, TypedDict
 
 from livestatus import LocalConnection, SiteId
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.type_defs import HostName, Ruleset
+from cmk.utils.rulesets.ruleset_matcher import Ruleset, RulesetMatchObject
+from cmk.utils.type_defs import HostName
 
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
 

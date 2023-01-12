@@ -151,7 +151,9 @@ function update(handler_data, response) {
     utils.execute_javascript_by_object(page_menu_bar);
 
     // Set saved values to old value
-    document.getElementById("general_display_options")!.replaceWith(menu_display);
+    document
+        .getElementById("general_display_options")!
+        .replaceWith(menu_display);
 
     // Update fix all button
     var fixall_container = document.getElementById("fixall_container")!;

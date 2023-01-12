@@ -50,11 +50,11 @@ function get_id_of_graph(ajax_context) {
         // JSON.stringify seems to be the easiest way to compare the both dicts
         if (
             JSON.stringify(ajax_context.definition.specification) ==
-            JSON.stringify(
-                g_graphs[graph_id].ajax_context.definition.specification
-            ) &&
+                JSON.stringify(
+                    g_graphs[graph_id].ajax_context.definition.specification
+                ) &&
             JSON.stringify(ajax_context.render_options) ==
-            JSON.stringify(g_graphs[graph_id].ajax_context.render_options)
+                JSON.stringify(g_graphs[graph_id].ajax_context.render_options)
         ) {
             return graph_id;
         }

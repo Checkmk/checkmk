@@ -33,6 +33,10 @@ def _deprecate_kube_state(*value: object, **kwargs: object) -> typing.NoReturn:
     raise MKUserError(None, _("The kube-state-metrics option is deprecated - Werk 14572."))
 
 
+def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:
+    raise MKUserError(None, _("The options IP Address and Host name are deprecated - Werk 14573."))
+
+
 def _check_not_empty_exporter_dict(value, _varprefix):
     if not value:
         raise MKUserError("dict_selection", _("Please select at least one element"))
@@ -82,6 +86,7 @@ def _valuespec_connection_elements(  # pylint: disable=redefined-builtin
             help=help,
         ),
         migrate=_rename_path_prefix_key,
+        validate=_deprecate_dynamic_host_adress,
     )
 
 
@@ -112,14 +117,14 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                     choices=[
                         (
                             "ip_address",
-                            _("IP Address"),
+                            _("(deprecated) IP Address"),
                             _valuespec_connection_elements(
                                 help=_("Use IP Address of assigned host")
                             ),
                         ),
                         (
                             "host_name",
-                            _("Host name"),
+                            _("(deprecated) Host name"),
                             _valuespec_connection_elements(
                                 help=_("Use host name of assigned host")
                             ),

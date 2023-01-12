@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
@@ -20,6 +22,10 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     TextInput,
 )
+
+
+def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:
+    raise MKUserError(None, _("The options IP Address and Host name are deprecated - Werk 14573."))
 
 
 def _valuespec_generic_metrics_alertmanager():
@@ -40,7 +46,7 @@ def _valuespec_generic_metrics_alertmanager():
                     choices=[
                         (
                             "ip_address",
-                            _("IP Address"),
+                            _("(deprecated) IP Address"),
                             Dictionary(
                                 elements=api_request_connection_elements(
                                     help_text=_(
@@ -51,11 +57,12 @@ def _valuespec_generic_metrics_alertmanager():
                                     default_port=9091,
                                 ),
                                 help=_("Use IP address of assigned host"),
+                                validate=_deprecate_dynamic_host_adress,
                             ),
                         ),
                         (
                             "host_name",
-                            _("Host name"),
+                            _("(deprecated) Host name"),
                             Dictionary(
                                 elements=api_request_connection_elements(
                                     help_text=_(
@@ -66,6 +73,7 @@ def _valuespec_generic_metrics_alertmanager():
                                     default_port=9091,
                                 ),
                                 help=_("Use host name of assigned host"),
+                                validate=_deprecate_dynamic_host_adress,
                             ),
                         ),
                         (

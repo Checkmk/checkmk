@@ -3003,9 +3003,11 @@ def main_init_action(  # pylint: disable=too-many-branches
             # "stop" before shutting down the computer. Create a tmpfs dump now, just to be sure.
             save_tmpfs_dump(site)
 
-        if command == "start" and not has_instance_id(site):
-            # Existing sites may not have an instance ID yet. After an update we create a new one.
-            save_instance_id(site)
+        if command == "start":
+            if not has_instance_id(site):
+                # Existing sites may not have an instance ID yet. After an update we create a new one.
+                save_instance_id(site)
+            _update_license_usage(site)
 
         sys.exit(exit_status)
 
@@ -3135,6 +3137,13 @@ def main_init_action(  # pylint: disable=too-many-branches
         exit_status = 0  # No OMD site existing
 
     sys.exit(exit_status)
+
+
+def _update_license_usage(site: SiteContext) -> None:
+    subprocess.Popen(  # pylint: disable=consider-using-with
+        [f"/omd/sites/{site.name}/bin/cmk-update-license-usage"],
+        start_new_session=True,
+    )
 
 
 def main_config(  # pylint: disable=too-many-branches

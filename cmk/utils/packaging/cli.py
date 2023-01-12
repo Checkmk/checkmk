@@ -2,7 +2,6 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import argparse
 import json
 import logging
@@ -17,6 +16,7 @@ from . import (
     create_mkp_object,
     disable,
     disable_outdated,
+    get_classified_manifests,
     get_enabled_manifests,
     get_stored_manifests,
     get_unpackaged_files,
@@ -25,7 +25,7 @@ from . import (
     release,
     update_active_packages,
 )
-from ._manifest import extract_manifest, manifest_template, read_manifest_optionally
+from ._manifest import extract_manifest, Manifest, manifest_template, read_manifest_optionally
 from ._parts import PackagePart
 from ._reporter import files_inventory
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
@@ -143,6 +143,54 @@ def _command_files(args: argparse.Namespace, _logger: logging.Logger) -> int:
         )
     )
     return 0
+
+
+def _args_list(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("--json", action="store_true", help="format output as json")
+
+
+def _command_list(args: argparse.Namespace, logger: logging.Logger) -> int:
+
+    classified_manifests = get_classified_manifests(PackageStore(), logger)
+
+    if args.json:
+        sys.stdout.write(f"{classified_manifests.json()}\n")
+        return 0
+
+    enabled_ids = {m.id for m in classified_manifests.enabled}
+    disabled = [
+        m
+        for m in [
+            *classified_manifests.stored.local,
+            *classified_manifests.stored.shipped,
+        ]
+        if m.id not in enabled_ids
+    ]
+    tty.print_table(
+        ["Name", "Version", "Title", "Author", "Req. Version", "Until Version", "Files", "State"],
+        ["", "", "", "", "", "", "", ""],
+        [
+            *(_row(m, "Enabled (active on this site)") for m in classified_manifests.installed),
+            *(_row(m, "Enabled (inactive on this site)") for m in classified_manifests.inactive),
+            *(_row(m, "Disabled") for m in disabled),
+        ],
+    )
+    return 0
+
+
+def _row(manifest: Manifest, state: str) -> list[str]:
+    return [
+        str(manifest.name),
+        str(manifest.version),
+        str(manifest.title),
+        str(manifest.author),
+        str(manifest.version_min_required),
+        str(manifest.version_usable_until),
+        str(sum(len(f) for f in manifest.files.values())),
+        state,
+    ]
 
 
 def _args_store(
@@ -346,6 +394,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
     _add_command(subparsers, "show", _args_show, _command_show)
     _add_command(subparsers, "files", _args_package_id, _command_files)
+    _add_command(subparsers, "list", _args_list, _command_list)
     _add_command(subparsers, "store", _args_store, _command_store)
     _add_command(subparsers, "release", _args_release, _command_release)
     _add_command(subparsers, "remove", _args_package_id, _command_remove)

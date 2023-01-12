@@ -7,8 +7,7 @@ import logging
 import sys
 
 import cmk.utils.tty as tty
-from cmk.utils.log import VERBOSE
-from cmk.utils.packaging import cli, get_installed_manifests, PackageException, PACKAGES_DIR
+from cmk.utils.packaging import cli, PackageException, PACKAGES_DIR
 
 logger = logging.getLogger("cmk.base.packaging")
 
@@ -52,7 +51,7 @@ def do_packaging(args: list[str]) -> None:
         "template": lambda args: cli.main(["template", *args], logger),
         "release": lambda args: cli.main(["release", *args], logger),
         "files": lambda args: cli.main(["files", *args], logger),
-        "list": package_list,
+        "list": lambda args: cli.main(["list", *args], logger),
         "find": lambda args: cli.main(["find", *args], logger),
         "inspect": lambda args: cli.main(["inspect", *args], logger),
         "show-all": lambda args: cli.main(["show-all", *args], logger),
@@ -78,31 +77,3 @@ def do_packaging(args: list[str]) -> None:
             "Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]), allc[-1]
         )
         sys.exit(1)
-
-
-def package_list(args: list[str]) -> None:
-    if len(args) > 0:
-        raise PackageException("Usage: check_mk -P list")
-
-    table = [
-        [
-            str(manifest.name),
-            str(manifest.version),
-            str(manifest.title),
-            str(manifest.author),
-            str(manifest.version_min_required),
-            str(manifest.version_usable_until),
-            str(sum(len(f) for f in manifest.files.values())),
-        ]
-        for manifest in get_installed_manifests()
-    ]
-
-    if logger.isEnabledFor(VERBOSE):
-        tty.print_table(
-            ["Name", "Version", "Title", "Author", "Req. Version", "Until Version", "Files"],
-            [tty.bold, "", "", "", "", "", ""],
-            table,
-        )
-    else:
-        for name, *_omitted in table:
-            sys.stdout.write("%s\n" % name)

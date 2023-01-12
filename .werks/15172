@@ -1,0 +1,30 @@
+Title: Interface checks: Fix rare interface mixups
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673535310
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In rare cases, the interface checks associated multiple interfaces with a given service item.
+Depending on the exact plugin, this could lead to incorrect monitoring results (wrong data or
+misleading failures in rate computations).
+
+This happened if there was an interface where the combination of alias or description plus index
+matched the alias or description (without the index) of another interface. For example, the
+following combination lead to such as mixup:
+
+LI: Item: `Ethernet 2`
+LI: Interface 1: Index 1, Description `Ethernet 2`
+LI: Interface 2: Index 2, Description `Ethernet`
+
+In this case, Checkmk associated both interfaces with the item `Ethernet 2`, resulting in wrong
+monitoring results.
+
+Furthermore, another potential side effect of this issue was that the Perf-O-Meters of affected
+services crashed with
+C+:
+Exception: list index out of range
+C-:

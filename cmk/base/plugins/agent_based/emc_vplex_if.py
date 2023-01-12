@@ -8,7 +8,9 @@ from .agent_based_api.v1 import all_of, equals, exists, OIDEnd, register, SNMPTr
 from .utils import interfaces
 
 
-def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
+def parse_emc_vplex_if(
+    string_table: List[type_defs.StringTable],
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     directors = {}
     for director, ip in string_table[0]:
         directors[ip] = director

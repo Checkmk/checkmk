@@ -13,7 +13,7 @@ from .utils import interfaces
 def check_interfaces(
     item: str,
     params: Mapping[str, Any],
-    section: interfaces.Section,
+    section: interfaces.Section[interfaces.TInterfaceType],
 ) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item=item,

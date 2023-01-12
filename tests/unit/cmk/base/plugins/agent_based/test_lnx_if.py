@@ -185,7 +185,10 @@ from cmk.base.plugins.agent_based.utils import bonding, interfaces
         ),
     ],
 )
-def test_parse_lnx_if(string_table: StringTable, result: interfaces.Section) -> None:
+def test_parse_lnx_if(
+    string_table: StringTable,
+    result: interfaces.Section[interfaces.InterfaceWithCounters],
+) -> None:
     assert lnx_if.parse_lnx_if(string_table)[0] == result
 
 

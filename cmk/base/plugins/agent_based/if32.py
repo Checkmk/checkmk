@@ -7,7 +7,9 @@ from .agent_based_api.v1 import exists, OIDBytes, register, SNMPTree, type_defs
 from .utils import interfaces
 
 
-def parse_if(string_table: type_defs.StringByteTable) -> interfaces.Section:
+def parse_if(
+    string_table: type_defs.StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(

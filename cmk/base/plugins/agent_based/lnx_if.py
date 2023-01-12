@@ -285,7 +285,7 @@ def _fix_bonded_mac(
 def _get_fixed_bonded_if_table(
     section_lnx_if: Section,
     section_bonding: Optional[bonding.Section],
-) -> interfaces.Section:
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if not section_bonding:
         return section_lnx_if[0]
     mac_map = bonding.get_mac_map(section_bonding)

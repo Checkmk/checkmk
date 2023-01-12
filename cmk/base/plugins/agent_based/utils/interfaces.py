@@ -19,7 +19,7 @@ from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
 from typing import Any, Literal
 from typing import Mapping as TypingMapping
-from typing import TypedDict, TypeGuard
+from typing import TypedDict, TypeVar
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -436,7 +436,10 @@ class InterfaceWithRatesAndAverages:
         return rate_with_avg
 
 
-Section = Sequence[InterfaceWithCounters] | Sequence[InterfaceWithRates]
+TInterfaceType = TypeVar("TInterfaceType", InterfaceWithCounters, InterfaceWithRates)
+
+
+Section = Sequence[TInterfaceType]
 
 
 def saveint(i: Any) -> int:
@@ -522,7 +525,7 @@ def item_matches(
 # Pads port numbers with zeroes, so that items
 # nicely sort alphabetically
 def _pad_with_zeroes(
-    section: Section,
+    section: Section[TInterfaceType],
     ifIndex: str,
     pad_portnumbers: bool,
 ) -> str:
@@ -662,7 +665,7 @@ def _uses_description_and_alias(item_appearance: str) -> tuple[bool, bool]:
 def _compute_item(
     item_appearance: str,
     attributes: Attributes,
-    section: Section,
+    section: Section[TInterfaceType],
     pad_portnumbers: bool,
 ) -> str:
     uses_description, uses_alias = _uses_description_and_alias(item_appearance)
@@ -785,7 +788,7 @@ def _groups_from_params(
 
 def discover_interfaces(  # pylint: disable=too-many-branches
     params: Sequence[Mapping[str, Any]],
-    section: Section,
+    section: Section[TInterfaceType],
 ) -> type_defs.DiscoveryResult:
     if len(section) == 0:
         return
@@ -942,7 +945,7 @@ GroupMembers = dict[str | None, list[dict[str, str]]]
 def _check_ungrouped_ifs(
     item: str,
     params: Mapping[str, Any],
-    section: Section,
+    section: Section[TInterfaceType],
     timestamp: float,
     value_store: MutableMapping[str, Any],
 ) -> type_defs.CheckResult:
@@ -999,7 +1002,7 @@ def _filter_matching_interfaces(
     *,
     item: str,
     group_config: GroupConfiguration,
-    section: Section,
+    section: Section[TInterfaceType],
 ) -> Iterable[InterfaceWithCounters | InterfaceWithRates]:
     yield from (
         interface
@@ -1100,7 +1103,7 @@ def _group_members(
     matching_attributes: Iterable[Attributes],
     item: str,
     group_config: GroupConfiguration,
-    section: Section,
+    section: Section[TInterfaceType],
 ) -> GroupMembers:
     group_members: GroupMembers = {}
     for attributes in matching_attributes:
@@ -1136,7 +1139,7 @@ def _group_members(
 def _check_grouped_ifs(
     item: str,
     params: Mapping[str, Any],
-    section: Section,
+    section: Section[TInterfaceType],
     group_name: str,
     timestamp: float,
     value_store: MutableMapping[str, Any],
@@ -1186,7 +1189,7 @@ def _check_grouped_ifs(
 def check_multiple_interfaces(
     item: str,
     params: Mapping[str, Any],
-    section: Section,
+    section: Section[TInterfaceType],
     *,
     group_name: str = "Interface group",
     timestamp: float | None = None,
@@ -1972,52 +1975,23 @@ def _check_single_packet_rate(
     )
 
 
-def _counters_only(
-    ifaces: Sequence[InterfaceWithCounters | InterfaceWithRates],
-) -> TypeGuard[Sequence[InterfaceWithCounters]]:
-    return all(isinstance(iface, InterfaceWithCounters) for iface in ifaces)
-
-
-def _rates_only(
-    ifaces: Sequence[InterfaceWithCounters | InterfaceWithRates],
-) -> TypeGuard[Sequence[InterfaceWithRates]]:
-    return all(isinstance(iface, InterfaceWithRates) for iface in ifaces)
-
-
 def cluster_check(
     item: str,
     params: Mapping[str, Any],
-    section: TypingMapping[str, Section | None],
+    section: TypingMapping[str, Section[TInterfaceType] | None],
 ) -> type_defs.CheckResult:
-    ifaces = [
-        replace(
-            iface,
-            attributes=replace(
-                iface.attributes,
-                node=node,
-            ),
-        )
-        for node, node_ifaces in section.items()
-        for iface in node_ifaces or ()
-    ]
-
-    if _counters_only(ifaces):
-        yield from check_multiple_interfaces(
-            item,
-            params,
-            ifaces,
-        )
-        return
-
-    if _rates_only(ifaces):
-        yield from check_multiple_interfaces(
-            item,
-            params,
-            ifaces,
-        )
-        return
-
-    # should never happen
-    raise ValueError(
-        "Cannot cluster a mixture of interfaces with counters and interfaces with rates"
+    yield from check_multiple_interfaces(
+        item,
+        params,
+        [
+            replace(
+                iface,
+                attributes=replace(
+                    iface.attributes,
+                    node=node,
+                ),
+            )
+            for node, node_ifaces in section.items()
+            for iface in node_ifaces or ()
+        ],
     )

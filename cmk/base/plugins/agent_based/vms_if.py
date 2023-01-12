@@ -30,7 +30,9 @@ _VMS_IF_COUNTERS_ORDER = [
 ]
 
 
-def parse_vms_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_vms_if(
+    string_table: type_defs.StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(

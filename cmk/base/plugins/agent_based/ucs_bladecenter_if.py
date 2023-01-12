@@ -122,7 +122,9 @@ _UCS_FIELDS_TO_IF_FIELDS = {
 }
 
 
-def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_ucs_bladecenter_if(
+    string_table: type_defs.StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     data = ucs_bladecenter.generic_parse(string_table)
     converted = []
     last_index = 0

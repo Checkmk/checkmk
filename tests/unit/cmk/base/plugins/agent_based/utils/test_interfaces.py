@@ -25,7 +25,7 @@ CheckResults = Sequence[Result | Metric | IgnoreResults]
 def _create_interfaces_with_counters(
     bandwidth_change: int,
     **attr_kwargs: Any,
-) -> Sequence[interfaces.InterfaceWithCounters]:
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     ifaces = [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(

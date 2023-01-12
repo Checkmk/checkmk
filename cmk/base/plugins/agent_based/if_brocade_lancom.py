@@ -104,7 +104,7 @@ def parse_if_brocade_lancom(
     name_map: Mapping[str, str],
     port_map: Mapping[str, str],
     ignore_descriptions: Iterable[str],
-) -> interfaces.Section:
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     """
     >>> for result in parse_if_brocade_lancom([
     ...       ['1', 'eth0', '2', '30', '1', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -129,7 +129,9 @@ def parse_if_brocade_lancom(
     )
 
 
-def parse_if_brocade(string_table: StringByteTable) -> interfaces.Section:
+def parse_if_brocade(
+    string_table: StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return parse_if_brocade_lancom(
         if_table=string_table,
         name_map={},
@@ -138,7 +140,9 @@ def parse_if_brocade(string_table: StringByteTable) -> interfaces.Section:
     )
 
 
-def parse_if_lancom(string_table: List[StringByteTable]) -> interfaces.Section:
+def parse_if_lancom(
+    string_table: List[StringByteTable],
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if_table, ssid_table, port_mapping = string_table
     return parse_if_brocade_lancom(
         if_table,

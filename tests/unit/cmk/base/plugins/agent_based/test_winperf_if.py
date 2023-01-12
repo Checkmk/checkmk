@@ -3803,7 +3803,7 @@ def test_merge_sections(
     interfaces_in: Mapping[str, interfaces.InterfaceWithCounters],
     section_teaming: SectionTeaming | None,
     section_extended: SectionExtended | None,
-    interfaces_out: interfaces.Section,
+    interfaces_out: interfaces.Section[interfaces.InterfaceWithCounters],
 ) -> None:
     assert (
         _merge_sections(

@@ -6,6 +6,7 @@
 from typing import Dict, Sequence, Tuple, Union
 
 from cmk.base.plugins.agent_based.utils.interfaces import InterfaceWithCounters
+from cmk.base.plugins.agent_based.utils.interfaces import Section as InterfaceSection
 
 SectionInventory = Dict[str, Dict[str, Union[str, Sequence[str]]]]
-Section = Tuple[Sequence[InterfaceWithCounters], SectionInventory]
+Section = Tuple[InterfaceSection[InterfaceWithCounters], SectionInventory]

@@ -103,7 +103,9 @@ from .utils import hp_msa, interfaces
 # host-port-statistics 2 stop-sample-time-numeric 1440157920
 
 
-def parse_hp_msa_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_hp_msa_if(
+    string_table: type_defs.StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     parsed = []
     for idx, (_key, values) in enumerate(sorted(hp_msa.parse_hp_msa(string_table).items())):
         try:

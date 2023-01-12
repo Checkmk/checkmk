@@ -8,7 +8,9 @@ from .agent_based_api.v1 import register, SNMPTree, type_defs
 from .utils import hitachi_hnas, if64, interfaces
 
 
-def parse_hitachi_hnas_fc_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
+def parse_hitachi_hnas_fc_if(
+    string_table: List[type_defs.StringTable],
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(
             interfaces.Attributes(

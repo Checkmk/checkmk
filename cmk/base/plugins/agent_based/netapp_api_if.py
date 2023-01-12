@@ -20,7 +20,7 @@ class NICExtraInfo(TypedDict, total=False):
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
-Section = Tuple[interfaces.Section, ExtraInfo]
+Section = Tuple[interfaces.Section[interfaces.InterfaceWithCounters], ExtraInfo]
 
 
 def parse_netapp_api_if(  # pylint: disable=too-many-branches

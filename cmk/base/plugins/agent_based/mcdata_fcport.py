@@ -47,7 +47,9 @@ def _line_to_interface(
     )
 
 
-def parse_mcdata_fcport(string_table: type_defs.StringByteTable) -> interfaces.Section:
+def parse_mcdata_fcport(
+    string_table: type_defs.StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [_line_to_interface(line) for line in string_table]
 
 

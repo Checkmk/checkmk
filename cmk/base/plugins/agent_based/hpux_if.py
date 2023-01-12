@@ -22,7 +22,9 @@ _HPUX_FIELDS_TO_IF_FIELDS = {
 }
 
 
-def parse_hpux_if(string_table: type_defs.StringTable) -> interfaces.Section:
+def parse_hpux_if(
+    string_table: type_defs.StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     nics = []
     for line in string_table:
 

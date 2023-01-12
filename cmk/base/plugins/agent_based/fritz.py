@@ -35,7 +35,7 @@ _LINK_STATUS_MAP = {
 }
 
 
-def _section_to_interface(section: Section) -> interfaces.Section:
+def _section_to_interface(section: Section) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if not _WAN_IF_KEYS & set(section):
         return []
     return [

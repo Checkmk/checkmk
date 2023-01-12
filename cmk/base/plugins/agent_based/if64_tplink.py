@@ -7,7 +7,9 @@ from .agent_based_api.v1 import all_of, contains, OIDBytes, register, SNMPTree, 
 from .utils import if64, interfaces
 
 
-def parse_if64_tplink(string_table: type_defs.StringByteTable) -> interfaces.Section:
+def parse_if64_tplink(
+    string_table: type_defs.StringByteTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     preprocessed_lines = []
     for line in string_table:
         # if we have no special alias info we use the standard ifAlias info

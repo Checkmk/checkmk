@@ -9,7 +9,7 @@ from .utils import interfaces
 
 def parse_aix_if(  # pylint: disable=too-many-branches
     string_table: type_defs.StringTable,
-) -> interfaces.Section:
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     ifaces = {}
     flags = {}
     index = 0

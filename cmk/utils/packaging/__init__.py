@@ -10,7 +10,6 @@ import subprocess
 import tarfile
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from contextlib import suppress
 from io import BytesIO
 from itertools import groupby
 from pathlib import Path
@@ -631,6 +630,31 @@ def get_stored_manifests(
     return StoredManifests(
         local=extract_manifests(package_store.list_local_packages(), g_logger),
         shipped=extract_manifests(package_store.list_shipped_packages(), g_logger),
+    )
+
+
+class ClassifiedManifests(BaseModel):
+    stored: StoredManifests
+    installed: list[Manifest]
+    inactive: list[Manifest]
+
+    @property
+    def enabled(self) -> list[Manifest]:
+
+        return [*self.installed, *self.inactive]
+
+
+def get_classified_manifests(
+    package_store: PackageStore, logger: logging.Logger
+) -> ClassifiedManifests:
+    installed = get_installed_manifests(logger)
+    installed_ids = {m.id for m in installed}
+    return ClassifiedManifests(
+        stored=get_stored_manifests(package_store),
+        installed=list(installed),
+        inactive=[
+            m for id_, m in get_enabled_manifests(logger).items() if id_ not in installed_ids
+        ],
     )
 
 

@@ -5,13 +5,19 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 
-export function refresh_job_details(url, ident, is_site) {
+type BackupHandlerData = {url: string; ident: string; is_site: boolean};
+
+export function refresh_job_details(
+    url: string,
+    ident: string,
+    is_site: boolean
+) {
     setTimeout(function () {
         do_job_detail_refresh(url, ident, is_site);
     }, 1000);
 }
 
-function do_job_detail_refresh(url, ident, is_site) {
+function do_job_detail_refresh(url: string, ident: string, is_site: boolean) {
     ajax.call_ajax(url, {
         method: "GET",
         post_data: "job=" + encodeURIComponent(ident),
@@ -25,7 +31,10 @@ function do_job_detail_refresh(url, ident, is_site) {
     });
 }
 
-function handle_job_detail_response(handler_data, response_body) {
+function handle_job_detail_response(
+    handler_data: BackupHandlerData,
+    response_body: string
+) {
     // when a message was shown and now not anymore, assume the job has finished
     var had_message = document.getElementById("job_detail_msg") ? true : false;
 
@@ -43,7 +52,11 @@ function handle_job_detail_response(handler_data, response_body) {
     }
 }
 
-function handle_job_detail_error(handler_data, status_code, error_msg) {
+function handle_job_detail_error(
+    handler_data: BackupHandlerData,
+    status_code: number,
+    error_msg: string
+) {
     hide_job_detail_msg();
 
     if (status_code == 0) return; // ajax request aborted. Stop refresh.

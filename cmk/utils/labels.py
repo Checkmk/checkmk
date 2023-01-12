@@ -8,14 +8,14 @@ from __future__ import annotations
 
 import os
 from ast import literal_eval
-from collections.abc import Callable, Mapping
-from typing import Any, Final, NamedTuple, TypedDict
+from collections.abc import Mapping
+from typing import Any, Final, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName, Ruleset, SectionName, ServiceName
+from cmk.utils.type_defs import HostName, SectionName
 
 Labels = Mapping[str, str]
 UpdatedHostLabelsEntry = tuple[str, float, str]
@@ -105,15 +105,6 @@ class HostLabel(_Label):
 
     def __ne__(self, other: Any) -> bool:
         return not self.__eq__(other)
-
-
-class LabelManager(NamedTuple):
-    """Helper class to manage access to the host and service labels"""
-
-    explicit_host_labels: dict[str, Labels]
-    host_label_rules: Ruleset[dict[str, str]]
-    service_label_rules: Ruleset[dict[str, str]]
-    discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 
 class LabelsSerializer:

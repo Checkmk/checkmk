@@ -52,12 +52,12 @@ from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_paramete
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
-from cmk.utils.labels import LabelManager, Labels
+from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import LabelManager, LabelSources, RulesetMatchObject
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig

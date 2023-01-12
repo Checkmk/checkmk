@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from re import Pattern
-from typing import Any, cast
+from typing import Any, cast, NamedTuple
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager, Labels
+from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, Labels
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
@@ -49,6 +49,15 @@ PreprocessedPattern = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset = list[
     tuple[object, set[HostName], LabelConditions, tuple, PreprocessedPattern]
 ]
+
+
+class LabelManager(NamedTuple):
+    """Helper class to manage access to the host and service labels"""
+
+    explicit_host_labels: dict[str, Labels]
+    host_label_rules: Ruleset[dict[str, str]]
+    service_label_rules: Ruleset[dict[str, str]]
+    discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 
 class RulesetMatchObject:

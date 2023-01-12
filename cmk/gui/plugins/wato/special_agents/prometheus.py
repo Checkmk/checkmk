@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import typing
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -26,6 +27,10 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+
+
+def _deprecate_kube_state(*value: object, **kwargs: object) -> typing.NoReturn:
+    raise MKUserError(None, _("The kube-state-metrics option is deprecated - Werk 14572."))
 
 
 def _check_not_empty_exporter_dict(value, _varprefix):
@@ -220,7 +225,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                             ),
                             (
                                 "kube_state",
-                                _("Kube-state-metrics"),
+                                _("(deprecated) Kube-state-metrics"),
                                 Dictionary(
                                     elements=[
                                         (
@@ -263,8 +268,8 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                                             ),
                                         ),
                                     ],
-                                    title=_("Kube state metrics"),
                                     optional_keys=["namespace_include_patterns"],
+                                    validate=_deprecate_kube_state,
                                 ),
                             ),
                             (

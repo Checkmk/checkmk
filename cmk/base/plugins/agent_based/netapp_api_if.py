@@ -228,16 +228,8 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
         value_store=value_store,
     )
 
-    for iface in nics:
+    for iface in interfaces.matching_interfaces_for_item(item, nics):
         first_member = True
-        if not interfaces.item_matches(
-            item,
-            iface.attributes.index,
-            iface.attributes.alias,
-            iface.attributes.descr,
-        ):
-            continue
-
         vif = extra_info.get(iface.attributes.descr)
         if vif is None:
             continue

@@ -12,6 +12,7 @@ from collections.abc import (
     Collection,
     Container,
     Iterable,
+    Iterator,
     Mapping,
     MutableMapping,
     Sequence,
@@ -509,19 +510,81 @@ def render_mac_address(phys_address: Iterable[int] | str) -> str:
     return (":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(" ", "0")).upper()
 
 
-def item_matches(
+def matching_interfaces_for_item(
     item: str,
-    ifIndex: str,
-    ifAlias: str,
-    ifDescr: str,
-) -> bool:
+    section: Section[TInterfaceType],
+) -> Iterator[TInterfaceType]:
+    if not section:
+        return
+
+    if section[0].attributes.node:
+        yield from _matching_clustered_interfaces_for_item(item, section)
+        return
+
+    if match := _matching_unclustered_interface_for_item(item, section):
+        yield match
+
+
+def _matching_clustered_interfaces_for_item(
+    item: str,
+    section: Section[TInterfaceType],
+) -> Iterator[TInterfaceType]:
+    for _node, node_interfaces in itertools.groupby(
+        # itertools.groupby needs the input to be sorted accordingly. This is most likely already
+        # the case, at least if we reach this point via cluster_check, but I don't want to rely on
+        # it.
+        sorted(
+            section,
+            key=lambda iface: str(iface.attributes.node),
+        ),
+        key=lambda iface: iface.attributes.node,
+    ):
+        if match := _matching_unclustered_interface_for_item(item, list(node_interfaces)):
+            yield match
+
+
+def _matching_unclustered_interface_for_item(
+    item: str,
+    section: Section[TInterfaceType],
+) -> TInterfaceType | None:
     return (
-        item.lstrip("0") == ifIndex
-        or (item == "0" * len(item) and saveint(ifIndex) == 0)
-        or item == ifAlias
-        or item == ifDescr
-        or item == "%s %s" % (ifAlias, ifIndex)
-        or item == "%s %s" % (ifDescr, ifIndex)
+        simple_match
+        if (simple_match := _matching_interface_for_simple_item(item, section))
+        else _matching_interface_for_compound_item(item, section)
+    )
+
+
+def _matching_interface_for_simple_item(
+    item: str,
+    ifaces: Iterable[TInterfaceType],
+) -> TInterfaceType | None:
+    return next(
+        (
+            interface
+            for interface in ifaces
+            if item.lstrip("0") == interface.attributes.index
+            or (item == "0" * len(item) and saveint(interface.attributes.index) == 0)
+            or item in (interface.attributes.alias, interface.attributes.descr)
+        ),
+        None,
+    )
+
+
+def _matching_interface_for_compound_item(
+    item: str,
+    ifaces: Iterable[TInterfaceType],
+) -> TInterfaceType | None:
+    return next(
+        (
+            interface
+            for interface in ifaces
+            if item
+            in (
+                f"{interface.attributes.alias} {interface.attributes.index}",
+                f"{interface.attributes.descr} {interface.attributes.index}",
+            )
+        ),
+        None,
     )
 
 
@@ -983,34 +1046,31 @@ def _check_ungrouped_ifs(
     results_from_fastest_interface = None
     max_out_traffic = -1.0
 
-    for interface in section:
-        if item_matches(
-            item, interface.attributes.index, interface.attributes.alias, interface.attributes.descr
-        ):
-            last_results = list(
-                check_single_interface(
-                    item,
-                    params,
-                    InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
-                        interface,
-                        timestamp=timestamp,
-                        value_store=value_store,
-                        params=params,
-                    ),
-                    use_discovered_state_and_speed=interface.attributes.node is None,
-                )
+    for interface in matching_interfaces_for_item(item, section):
+        last_results = list(
+            check_single_interface(
+                item,
+                params,
+                InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+                    interface,
+                    timestamp=timestamp,
+                    value_store=value_store,
+                    params=params,
+                ),
+                use_discovered_state_and_speed=interface.attributes.node is None,
             )
-            for result in last_results:
-                if (
-                    isinstance(
-                        result,
-                        Metric,
-                    )
-                    and result.name == "out"
-                    and result.value > max_out_traffic
-                ):
-                    max_out_traffic = result.value
-                    results_from_fastest_interface = last_results
+        )
+        for result in last_results:
+            if (
+                isinstance(
+                    result,
+                    Metric,
+                )
+                and result.name == "out"
+                and result.value > max_out_traffic
+            ):
+                max_out_traffic = result.value
+                results_from_fastest_interface = last_results
 
     if results_from_fastest_interface:
         yield from results_from_fastest_interface

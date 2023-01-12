@@ -8,7 +8,8 @@ import * as ajax from "ajax";
 export function getFirstElementByNameAsInput(name: string): HTMLInputElement {
     return document.getElementsByName(name)[0] as HTMLInputElement;
 }
-export function start_test(ident, hostname, transid) {
+
+export function start_test(ident: string, hostname: string, transid: string) {
     var log = document.getElementById(ident + "_log") as HTMLImageElement;
     var img = document.getElementById(ident + "_img") as HTMLImageElement;
     var retry = document.getElementById(ident + "_retry") as HTMLImageElement;
@@ -150,7 +151,10 @@ export function start_test(ident, hostname, transid) {
     });
 }
 
-function handle_host_diag_result(data, response_json) {
+function handle_host_diag_result(
+    data: {hostname: string; ident: string},
+    response_json: string
+) {
     var response = JSON.parse(response_json);
 
     var img = document.getElementById(data.ident + "_img") as HTMLImageElement;
@@ -182,12 +186,7 @@ function handle_host_diag_result(data, response_json) {
 
     retry.src = retry.src.replace(/(.*\/icon_).*(\.svg$)/i, "$1reload$2");
     retry.style.display = "inline";
-    (retry.parentNode as HTMLAnchorElement).href =
-        "javascript:cmk.host_diagnose.start_test('" +
-        data.ident +
-        "', '" +
-        data.hostname +
-        "', '" +
-        response.result.next_transid +
-        "');";
+    (
+        retry.parentNode as HTMLAnchorElement
+    ).href = `javascript:cmk.host_diagnose.start_test(${data.ident}, ${data.hostname}, ${response.result.next_transid});`;
 }

@@ -84,7 +84,7 @@ class CMKAgentUpdateSection(BaseModel):
     last_check: float | None
     last_update: float | None
     pending_hash: str | None
-    update_url: str
+    update_url: str | None
 
     # Added with 2.2
     trusted_certs: dict[int, CertInfo] | None = None

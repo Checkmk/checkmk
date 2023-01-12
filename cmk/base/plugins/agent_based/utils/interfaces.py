@@ -6,27 +6,20 @@
 import itertools
 import time
 from collections import defaultdict
-from dataclasses import asdict, dataclass, fields, replace
-from functools import partial
-from typing import (
-    Any,
+from collections.abc import (
     Callable,
     Collection,
     Container,
-    Dict,
     Iterable,
-    List,
-    Literal,
     Mapping,
     MutableMapping,
-    Optional,
     Sequence,
-    Set,
-    Tuple,
-    TypedDict,
-    TypeGuard,
-    Union,
 )
+from dataclasses import asdict, dataclass, fields, replace
+from functools import partial
+from typing import Any, Literal
+from typing import Mapping as TypingMapping
+from typing import TypedDict, TypeGuard
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -45,7 +38,7 @@ from ..agent_based_api.v1 import (
     type_defs,
 )
 
-ServiceLabels = Dict[str, str]
+ServiceLabels = dict[str, str]
 
 
 class SingleInterfaceDiscoveryParams(TypedDict, total=False):
@@ -54,12 +47,12 @@ class SingleInterfaceDiscoveryParams(TypedDict, total=False):
     labels: ServiceLabels
 
 
-MatchingConditions = Mapping[str, List[str]]
+MatchingConditions = Mapping[str, list[str]]
 
 
 class DiscoveryDefaultParams(TypedDict, total=False):
-    discovery_single: Tuple[bool, SingleInterfaceDiscoveryParams]
-    matching_conditions: Tuple[bool, MatchingConditions]
+    discovery_single: tuple[bool, SingleInterfaceDiscoveryParams]
+    matching_conditions: tuple[bool, MatchingConditions]
 
 
 DISCOVERY_DEFAULT_PARAMETERS: DiscoveryDefaultParams = {
@@ -108,13 +101,13 @@ class Attributes:
     speed: float = 0
     oper_status: str = ""
     out_qlen: float | None = None
-    phys_address: Union[Iterable[int], str] = ""
+    phys_address: Iterable[int] | str = ""
     oper_status_name: str = ""
     speed_as_text: str = ""
-    group: Optional[str] = None
-    node: Optional[str] = None
-    admin_status: Optional[str] = None
-    extra_info: Optional[str] = None
+    group: str | None = None
+    node: str | None = None
+    admin_status: str | None = None
+    extra_info: str | None = None
 
     def __post_init__(self) -> None:
         self.finalize()
@@ -502,7 +495,7 @@ def statename(st: str) -> str:
     return names.get(st, st)
 
 
-def render_mac_address(phys_address: Union[Iterable[int], str]) -> str:
+def render_mac_address(phys_address: Iterable[int] | str) -> str:
     if isinstance(phys_address, str):
         mac_bytes = (ord(x) for x in phys_address)
     else:
@@ -540,8 +533,8 @@ def _pad_with_zeroes(
     return ifIndex
 
 
-LevelSpec = Tuple[Optional[str], Tuple[Optional[float], Optional[float]]]
-GeneralTrafficLevels = Dict[Tuple[str, str], LevelSpec]
+LevelSpec = tuple[str | None, tuple[float | None, float | None]]
+GeneralTrafficLevels = dict[tuple[str, str], LevelSpec]
 
 
 def get_traffic_levels(params: Mapping[str, Any]) -> GeneralTrafficLevels:
@@ -573,16 +566,16 @@ def get_traffic_levels(params: Mapping[str, Any]) -> GeneralTrafficLevels:
     return levels
 
 
-GeneralPacketLevels = Dict[str, Dict[str, Optional[Tuple[float, float]]]]
+GeneralPacketLevels = dict[str, dict[str, tuple[float, float] | None]]
 
 
 def _get_packet_levels(
     params: Mapping[str, Any]
-) -> Tuple[GeneralPacketLevels, GeneralPacketLevels]:
+) -> tuple[GeneralPacketLevels, GeneralPacketLevels]:
     DIRECTIONS = ("in", "out")
     PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast")
 
-    def none_levels() -> Dict[str, Dict[str, Optional[Any]]]:
+    def none_levels() -> dict[str, dict[str, Any | None]]:
         return {name: {direction: None for direction in DIRECTIONS} for name in PACKET_TYPES}
 
     levels_per_type = {
@@ -601,15 +594,15 @@ def _get_packet_levels(
     return levels_per_type["abs"], levels_per_type["perc"]
 
 
-SpecificTrafficLevels = Dict[Union[Tuple[str, str], Tuple[str, str, str]], Any]
+SpecificTrafficLevels = dict[tuple[str, str] | tuple[str, str, str], Any]
 
 
 def get_specific_traffic_levels(
     general_traffic_levels: GeneralTrafficLevels,
     unit: str,
-    speed_in: Optional[float],
-    speed_out: Optional[float],
-    speed_total: Optional[float],
+    speed_in: float | None,
+    speed_out: float | None,
+    speed_total: float | None,
 ) -> SpecificTrafficLevels:
     traffic_levels: SpecificTrafficLevels = {}
     for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
@@ -640,10 +633,10 @@ def get_specific_traffic_levels(
 def _get_scaled_traffic_level(
     direction: str,
     level_value: float,
-    speed_in: Optional[float],
-    speed_out: Optional[float],
-    speed_total: Optional[float],
-) -> Optional[float]:
+    speed_in: float | None,
+    speed_out: float | None,
+    speed_total: float | None,
+) -> float | None:
     """convert percentages to absolute values."""
 
     def _scale(speed: float) -> float:
@@ -658,7 +651,7 @@ def _get_scaled_traffic_level(
     return None
 
 
-def _uses_description_and_alias(item_appearance: str) -> Tuple[bool, bool]:
+def _uses_description_and_alias(item_appearance: str) -> tuple[bool, bool]:
     if item_appearance == "descr":
         return True, False
     if item_appearance == "alias":
@@ -684,7 +677,7 @@ def _compute_item(
 
 def check_regex_match_conditions(
     name: str,
-    what: Optional[Iterable[str]],
+    what: Iterable[str] | None,
 ) -> bool:
     if what is None:
         return True
@@ -755,8 +748,8 @@ def _check_group_matching_conditions(
 
 def _groups_from_params(
     discovery_params: Sequence[Mapping[str, Any]],
-) -> Dict[str, GroupConfiguration]:
-    groups: Dict[str, GroupConfiguration] = {}
+) -> dict[str, GroupConfiguration]:
+    groups: dict[str, GroupConfiguration] = {}
     inclusion_importances = {}
     exclusion_conditions = []
 
@@ -798,9 +791,9 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         return
 
     pre_inventory = []
-    seen_indices: Set[str] = set()
-    n_times_item_seen: Dict[str, int] = defaultdict(int)
-    interface_groups: Dict[str, GroupConfiguration] = {}
+    seen_indices: set[str] = set()
+    n_times_item_seen: dict[str, int] = defaultdict(int)
+    interface_groups: dict[str, GroupConfiguration] = {}
 
     # ==============================================================================================
     # SINGLE-INTERFACE DISCOVERY
@@ -943,7 +936,7 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         )
 
 
-GroupMembers = Dict[Optional[str], List[Dict[str, str]]]
+GroupMembers = dict[str | None, list[dict[str, str]]]
 
 
 def _check_ungrouped_ifs(
@@ -1196,8 +1189,8 @@ def check_multiple_interfaces(
     section: Section,
     *,
     group_name: str = "Interface group",
-    timestamp: Optional[float] = None,
-    value_store: Optional[MutableMapping[str, Any]] = None,
+    timestamp: float | None = None,
+    value_store: MutableMapping[str, Any] | None = None,
 ) -> type_defs.CheckResult:
 
     if timestamp is None:
@@ -1224,7 +1217,7 @@ def check_multiple_interfaces(
         )
 
 
-def _get_map_states(defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Mapping[str, State]:
+def _get_map_states(defined_mapping: Iterable[tuple[Iterable[str], int]]) -> Mapping[str, State]:
     map_states = {}
     for states, mon_state in defined_mapping:
         for st in states:
@@ -1234,7 +1227,7 @@ def _get_map_states(defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Map
 
 def _render_status_info_group_members(
     oper_status_name: str,
-    admin_status_name: Optional[str],
+    admin_status_name: str | None,
 ) -> str:
     if admin_status_name is None:
         return "(%s)" % oper_status_name
@@ -1243,7 +1236,7 @@ def _render_status_info_group_members(
 
 def _check_status(
     interface_status: str,
-    target_states: Optional[Container[str]],
+    target_states: Container[str] | None,
     states_map: Mapping[str, State],
 ) -> State:
     mon_state = State.OK
@@ -1253,7 +1246,7 @@ def _check_status(
     return mon_state
 
 
-def _check_speed(attributes: Attributes, targetspeed: Optional[int]) -> Result:
+def _check_speed(attributes: Attributes, targetspeed: int | None) -> Result:
     """Check speed settings of interface
 
     Only if speed information is available. This is not always the case.
@@ -1283,7 +1276,7 @@ def check_single_interface(
     item: str,
     params: Mapping[str, Any],
     interface: InterfaceWithRatesAndAverages,
-    group_members: Optional[GroupMembers] = None,
+    group_members: GroupMembers | None = None,
     *,
     group_name: str = "Interface group",
     use_discovered_state_and_speed: bool = True,
@@ -1394,7 +1387,7 @@ def check_single_interface(
 
 def _interface_name(  # pylint: disable=too-many-branches
     *,
-    group_name: Optional[str],
+    group_name: str | None,
     item: str,
     params: Mapping[str, Any],
     attributes: Attributes,
@@ -1498,11 +1491,10 @@ def _interface_status(
 def _check_oper_and_admin_state(
     attributes: Attributes,
     state_mapping_type: Literal["independent_mappings", "combined_mappings"],
-    state_mappings: Union[
-        Iterable[Tuple[str, str, int]], Mapping[str, Iterable[Tuple[Iterable[str], int]]]  #
-    ],
-    target_oper_states: Optional[Container[str]],
-    target_admin_states: Optional[Container[str]],
+    state_mappings: Iterable[tuple[str, str, int]]
+    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
+    target_oper_states: Container[str] | None,
+    target_admin_states: Container[str] | None,
 ) -> Iterable[Result]:
     if combined_mon_state := _check_oper_and_admin_state_combined(
         attributes,
@@ -1528,10 +1520,9 @@ def _check_oper_and_admin_state(
 
 def _get_oper_and_admin_states_maps_independent(
     state_mapping_type: Literal["combined_mappings", "independent_mappings"],
-    state_mappings: Union[
-        Iterable[Tuple[str, str, int]], Mapping[str, Iterable[Tuple[Iterable[str], int]]]  #
-    ],
-) -> Tuple[Iterable[Tuple[Iterable[str], int]], Iterable[Tuple[Iterable[str], int]]]:
+    state_mappings: Iterable[tuple[str, str, int]]
+    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
+) -> tuple[Iterable[tuple[Iterable[str], int]], Iterable[tuple[Iterable[str], int]]]:
     if state_mapping_type == "independent_mappings":
         assert isinstance(state_mappings, Mapping)
         return state_mappings.get("map_operstates", []), state_mappings.get("map_admin_states", [])
@@ -1540,10 +1531,10 @@ def _get_oper_and_admin_states_maps_independent(
 
 def _check_oper_and_admin_state_independent(
     attributes: Attributes,
-    target_oper_states: Optional[Container[str]],
-    target_admin_states: Optional[Container[str]],
-    map_oper_states: Iterable[Tuple[Iterable[str], int]],
-    map_admin_states: Iterable[Tuple[Iterable[str], int]],
+    target_oper_states: Container[str] | None,
+    target_admin_states: Container[str] | None,
+    map_oper_states: Iterable[tuple[Iterable[str], int]],
+    map_admin_states: Iterable[tuple[Iterable[str], int]],
 ) -> Iterable[Result]:
     yield Result(
         state=_check_status(
@@ -1571,10 +1562,9 @@ def _check_oper_and_admin_state_independent(
 def _check_oper_and_admin_state_combined(
     attributes: Attributes,
     state_mapping_type: Literal["combined_mappings", "independent_mappings"],
-    state_mappings: Union[
-        Iterable[Tuple[str, str, int]], Mapping[str, Iterable[Tuple[Iterable[str], int]]]  #
-    ],
-) -> Optional[Result]:
+    state_mappings: Iterable[tuple[str, str, int]]
+    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
+) -> Result | None:
     if attributes.admin_status is None:
         return None
     if state_mapping_type == "independent_mappings":
@@ -1603,7 +1593,7 @@ def _check_oper_and_admin_state_combined(
 
 def _output_group_members(
     *,
-    group_members: Optional[GroupMembers],
+    group_members: GroupMembers | None,
 ) -> Iterable[Result]:
     if not group_members:
         return
@@ -1641,8 +1631,8 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     speed_b_total: float,
     unit: str,
     traffic_levels: SpecificTrafficLevels,
-    assumed_speed_in: Optional[int],
-    assumed_speed_out: Optional[int],
+    assumed_speed_in: int | None,
+    assumed_speed_out: int | None,
     *,
     monitor_total: bool,
 ) -> type_defs.CheckResult:
@@ -1686,8 +1676,8 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     speed: float,
     renderer: Callable[[float], str],
     traffic_levels: SpecificTrafficLevels,
-    assumed_speed_in: Optional[int],
-    assumed_speed_out: Optional[int],
+    assumed_speed_in: int | None,
+    assumed_speed_out: int | None,
 ) -> type_defs.CheckResult:
     use_predictive_levels = (direction, "predictive") in traffic_levels
 
@@ -1816,8 +1806,8 @@ def _sum_optional_floats(*vs: float | None) -> float | None:
 def _output_packet_rates(
     abs_packet_levels: GeneralPacketLevels,
     perc_packet_levels: GeneralPacketLevels,
-    nucast_levels: Optional[Tuple[float, float]],
-    disc_levels: Optional[Tuple[float, float]],
+    nucast_levels: tuple[float, float] | None,
+    disc_levels: tuple[float, float] | None,
     *,
     rates: RatesWithAverages,
 ) -> type_defs.CheckResult:
@@ -1929,7 +1919,7 @@ def _check_single_packet_rate(
         if reference_rate is None:
             return
         if reference_rate > 0:
-            merged_levels: Optional[Tuple[float, float]] = (
+            merged_levels: tuple[float, float] | None = (
                 perc_levels[0] / 100.0 * reference_rate,
                 perc_levels[1] / 100.0 * reference_rate,
             )
@@ -1997,7 +1987,7 @@ def _rates_only(
 def cluster_check(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: TypingMapping[str, Section | None],
 ) -> type_defs.CheckResult:
     ifaces = [
         replace(

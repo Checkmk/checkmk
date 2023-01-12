@@ -48,7 +48,8 @@ from cmk.utils.store.host_storage import (
     StandardHostsStorage,
     StorageFormat,
 )
-from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupID, TaggroupIDToTagID, TagID
+from cmk.utils.tags import TaggroupID, TaggroupIDToTagID, TagID
+from cmk.utils.type_defs import ContactgroupName, HostName
 
 from cmk.automations.results import ABCAutomationResult
 

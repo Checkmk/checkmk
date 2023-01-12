@@ -7,8 +7,9 @@ from typing import Any, Final, Literal
 
 from cmk.utils.labels import Labels
 from cmk.utils.password_store import Password
-from cmk.utils.rulesets.ruleset_matcher import Ruleset
+from cmk.utils.rulesets.ruleset_matcher import Ruleset, TagsOfHosts
 from cmk.utils.store.host_storage import FolderAttributes
+from cmk.utils.tags import TagConfigSpec
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
     Contact,
@@ -19,8 +20,6 @@ from cmk.utils.type_defs import (
     HostName,
     ServicegroupName,
     ServiceName,
-    TagConfigSpec,
-    TagsOfHosts,
     TimeperiodSpecs,
 )
 

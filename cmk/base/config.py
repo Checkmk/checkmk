@@ -63,11 +63,12 @@ from cmk.utils.rulesets.ruleset_matcher import (
     Ruleset,
     RulesetMatchObject,
     RulesetName,
+    TagIDToTaggroupID,
 )
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig
-from cmk.utils.tags import ComputedDataSources
+from cmk.utils.tags import ComputedDataSources, TaggroupIDToTagID, TagID
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
@@ -88,9 +89,6 @@ from cmk.utils.type_defs import (
     ServicegroupName,
     ServiceID,
     ServiceName,
-    TaggroupIDToTagID,
-    TagIDs,
-    TagIDToTaggroupID,
     TimeperiodName,
 )
 
@@ -144,6 +142,8 @@ from cmk.base.api.agent_based.type_defs import (
 from cmk.base.autochecks import AutocheckServiceWithNodes
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+TagIDs = set[TagID]
+
 # TODO: Prefix helper functions with "_".
 
 # Default values for retry and check intervals in minutes
@@ -153,7 +153,6 @@ HOST_CHECK_INTERVAL: Final = 1.0
 # Services. Check and retry intervals may differ
 SERVICE_RETRY_INTERVAL: Final = 1.0
 SERVICE_CHECK_INTERVAL: Final = 1.0
-
 
 service_service_levels = []
 host_service_levels = []

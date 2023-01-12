@@ -8,19 +8,45 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from typing import Iterator, NamedTuple
+from typing import Iterator, NamedTuple, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.type_defs import (
-    AuxTagSpec,
-    GroupedTagSpec,
-    TagConfigSpec,
-    TaggroupID,
-    TaggroupIDToTagID,
-    TaggroupSpec,
-    TagID,
-)
+
+TagID = str
+TaggroupID = str
+TaggroupIDToTagID = Mapping[TaggroupID, TagID]
+
+
+class GroupedTagSpec(TypedDict):
+    id: TagID | None
+    title: str
+    aux_tags: list[TagID]
+
+
+class _AuxTagSpecOpt(TypedDict, total=False):
+    topic: str
+
+
+class AuxTagSpec(_AuxTagSpecOpt):
+    id: TagID
+    title: str
+
+
+class _TaggroupSpecOpt(TypedDict, total=False):
+    topic: str
+    help: str
+
+
+class TaggroupSpec(_TaggroupSpecOpt):
+    id: TaggroupID
+    title: str
+    tags: list[GroupedTagSpec]
+
+
+class TagConfigSpec(TypedDict):
+    tag_groups: list[TaggroupSpec]
+    aux_tags: list[AuxTagSpec]
 
 
 def get_effective_tag_config(tag_config: TagConfigSpec) -> TagConfig:

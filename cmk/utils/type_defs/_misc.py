@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Container, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal, NewType, TypedDict, Union
 
@@ -40,68 +40,6 @@ HostOrServiceConditions = (
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = str | None
-
-TagID = str
-TaggroupID = str
-TaggroupIDToTagID = Mapping[TaggroupID, TagID]
-TagIDToTaggroupID = Mapping[TagID, TaggroupID]
-TagIDs = set[TagID]
-TagConditionNE = TypedDict(
-    "TagConditionNE",
-    {
-        "$ne": TagID | None,
-    },
-)
-TagConditionOR = TypedDict(
-    "TagConditionOR",
-    {
-        "$or": Sequence[TagID | None],
-    },
-)
-TagConditionNOR = TypedDict(
-    "TagConditionNOR",
-    {
-        "$nor": Sequence[TagID | None],
-    },
-)
-TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
-# Here, we have data structures such as
-# {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
-TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
-TagsOfHosts = dict[HostName, TaggroupIDToTagID]
-
-LabelConditions = dict[str, str | TagConditionNE]
-
-
-class GroupedTagSpec(TypedDict):
-    id: TagID | None
-    title: str
-    aux_tags: list[TagID]
-
-
-class _AuxTagSpecOpt(TypedDict, total=False):
-    topic: str
-
-
-class AuxTagSpec(_AuxTagSpecOpt):
-    id: TagID
-    title: str
-
-
-class _TaggroupSpecOpt(TypedDict, total=False):
-    topic: str
-    help: str
-
-
-class TaggroupSpec(_TaggroupSpecOpt):
-    id: TaggroupID
-    title: str
-    tags: list[GroupedTagSpec]
-
-
-class TagConfigSpec(TypedDict):
-    tag_groups: list[TaggroupSpec]
-    aux_tags: list[AuxTagSpec]
 
 
 CheckVariables = dict[str, Any]

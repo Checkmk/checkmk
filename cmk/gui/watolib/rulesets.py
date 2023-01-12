@@ -23,15 +23,12 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleOptionsSpec,
     RulesetName,
     RuleSpec,
-)
-from cmk.utils.type_defs import (
-    HostOrServiceConditionRegex,
-    HostOrServiceConditions,
     TagConditionNE,
     TaggroupIDToTagCondition,
-    TagID,
     TagIDToTaggroupID,
 )
+from cmk.utils.tags import TagID
+from cmk.utils.type_defs import HostOrServiceConditionRegex, HostOrServiceConditions
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place

@@ -32,16 +32,9 @@ ActionArguments = list[ActionArgument]
 
 from cmk.utils import plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
-from cmk.utils.type_defs import (
-    HostName,
-    HostState,
-    ServiceDetails,
-    ServiceName,
-    ServiceState,
-    TaggroupID,
-    TaggroupIDToTagCondition,
-    TagID,
-)
+from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagCondition
+from cmk.utils.tags import TaggroupID, TagID
+from cmk.utils.type_defs import HostName, HostState, ServiceDetails, ServiceName, ServiceState
 
 from cmk.bi.type_defs import ActionConfig, ComputationConfigDict, GroupConfigDict, SearchConfig
 

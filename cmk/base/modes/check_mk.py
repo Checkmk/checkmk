@@ -30,6 +30,7 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.tags import TagID
 from cmk.utils.type_defs import (
     CheckPluginName,
     EVERYTHING,
@@ -38,7 +39,6 @@ from cmk.utils.type_defs import (
     HostName,
     InventoryPluginName,
     SectionName,
-    TagID,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes

@@ -8,8 +8,7 @@ from typing import Any, Literal
 
 from marshmallow import validate
 
-from cmk.utils.tags import BuiltinTagConfig
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import BuiltinTagConfig, TagID
 
 from cmk.gui.plugins.userdb import utils
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config_read_only

@@ -13,8 +13,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tags
 from cmk.utils.i18n import _
-from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagGroup
-from cmk.utils.type_defs import TagConfigSpec
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup
 
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException, MKGeneralException

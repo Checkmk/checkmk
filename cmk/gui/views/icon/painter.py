@@ -12,7 +12,7 @@ from typing import Literal
 
 import cmk.utils.plugin_registry
 import cmk.utils.regex
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import TagID
 
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html

@@ -7,8 +7,8 @@
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.tags import TagConfig
-from cmk.utils.type_defs import TagConditionNE, TaggroupID, TagID
+from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
+from cmk.utils.tags import TagConfig, TaggroupID, TagID
 
 from cmk.gui.utils.html import HTML
 from cmk.gui.wato.pages.rulesets import _get_groups, active_config, Rule, RuleConditionRenderer

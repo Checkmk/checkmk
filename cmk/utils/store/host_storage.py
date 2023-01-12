@@ -15,8 +15,9 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.labels import Labels
+from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
-from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupIDToTagID
+from cmk.utils.type_defs import ContactgroupName, HostName
 
 HostAttributeMapping = tuple[
     str, str, dict[str, Any], str

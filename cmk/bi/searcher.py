@@ -7,8 +7,12 @@ from collections.abc import Iterable
 from typing import Any
 
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition
-from cmk.utils.type_defs import HostName, TaggroupIDToTagCondition
+from cmk.utils.rulesets.ruleset_matcher import (
+    matches_labels,
+    matches_tag_condition,
+    TaggroupIDToTagCondition,
+)
+from cmk.utils.type_defs import HostName
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 

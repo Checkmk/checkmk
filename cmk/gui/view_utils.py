@@ -12,8 +12,8 @@ from livestatus import SiteId
 
 from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import Labels
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
-from cmk.utils.type_defs import TaggroupID, TaggroupIDToTagID, TagID
+from cmk.utils.rulesets.ruleset_matcher import LabelSources, TaggroupIDToTagID
+from cmk.utils.tags import TaggroupID, TagID
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter

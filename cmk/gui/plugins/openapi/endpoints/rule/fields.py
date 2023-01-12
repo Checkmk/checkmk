@@ -10,15 +10,16 @@ from typing import cast, Literal, TYPE_CHECKING, TypedDict
 import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, ValidationError
 
-from cmk.utils.type_defs import (
-    HostOrServiceConditions,
-    HostOrServiceConditionsNegated,
-    HostOrServiceConditionsSimple,
-    LabelConditions,
+from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
     TagConditionNOR,
     TagConditionOR,
+)
+from cmk.utils.type_defs import (
+    HostOrServiceConditions,
+    HostOrServiceConditionsNegated,
+    HostOrServiceConditionsSimple,
 )
 
 from cmk.gui import fields as gui_fields
@@ -26,6 +27,8 @@ from cmk.gui.fields import base
 from cmk.gui.plugins.openapi.restful_objects import response_schemas
 
 from cmk import fields
+
+LabelConditions = dict[str, str | TagConditionNE]
 
 # Needed for cast()-ing. Do not move into typing.TYPE_CHECKING
 ApiExpressionValue = list[str] | str

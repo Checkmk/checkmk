@@ -19,9 +19,10 @@ from cmk.utils.rulesets.ruleset_matcher import (
     Ruleset,
     RulesetMatchObject,
     RuleSpec,
+    TagCondition,
 )
-from cmk.utils.tags import TagConfig
-from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName, TagCondition, TaggroupID
+from cmk.utils.tags import TagConfig, TaggroupID
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName
 
 from cmk.base.autochecks import AutocheckEntry
 

@@ -9,8 +9,7 @@ from collections.abc import Mapping
 from typing import Any, Literal
 
 import cmk.utils.paths
-from cmk.utils.tags import TagGroup
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import TagGroup, TagID
 from cmk.utils.version import is_plus_edition, is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation

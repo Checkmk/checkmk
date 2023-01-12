@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 from livestatus import SiteConfigurations
 
-from cmk.utils.type_defs import TagConfigSpec
+from cmk.utils.tags import TagConfigSpec
 
 from cmk.gui.type_defs import GroupSpec, UserSpec
 

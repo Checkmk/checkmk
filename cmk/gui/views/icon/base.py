@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 from collections.abc import Sequence
 
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import TagID
 
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML

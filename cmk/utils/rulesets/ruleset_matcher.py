@@ -5,7 +5,7 @@
 """This module provides generic Check_MK ruleset processing functionality"""
 
 import sys
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from re import Pattern
 from typing import Any, cast, Generic, NamedTuple, TypeVar
 
@@ -20,21 +20,12 @@ from cmk.utils.rulesets.tuple_rulesets import (
     NEGATE,
     PHYSICAL_HOSTS,
 )
-from cmk.utils.tags import TagConfig
+from cmk.utils.tags import TagConfig, TaggroupID, TaggroupIDToTagID, TagID
 from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
     ServiceName,
-    TagCondition,
-    TagConditionNE,
-    TagConditionNOR,
-    TagConditionOR,
-    TaggroupID,
-    TaggroupIDToTagCondition,
-    TagID,
-    TagIDToTaggroupID,
-    TagsOfHosts,
 )
 
 if sys.version_info < (3, 11):
@@ -49,6 +40,37 @@ TRuleValue = TypeVar("TRuleValue")
 
 LabelConditions = dict  # TODO: Optimize this
 LabelSources = dict[str, str]
+
+# The Tag* types below are *not* used in `cmk.utils.tags`
+# but they are used here.  Therefore, they do *not* belong
+# in `cmk.utils.tags`.  This is _not a bug_!
+
+TagIDToTaggroupID = Mapping[TagID, TaggroupID]
+TagConditionNE = TypedDict(
+    "TagConditionNE",
+    {
+        "$ne": TagID | None,
+    },
+)
+TagConditionOR = TypedDict(
+    "TagConditionOR",
+    {
+        "$or": Sequence[TagID | None],
+    },
+)
+TagConditionNOR = TypedDict(
+    "TagConditionNOR",
+    {
+        "$nor": Sequence[TagID | None],
+    },
+)
+TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
+# Here, we have data structures such as
+# {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
+TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
+TagsOfHosts = dict[HostName, TaggroupIDToTagID]
+
+
 PreprocessedHostRuleset = dict[HostName, list[TRuleValue]]
 PreprocessedPattern = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset = list[

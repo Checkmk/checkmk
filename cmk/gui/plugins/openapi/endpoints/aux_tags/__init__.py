@@ -18,8 +18,7 @@ tag for resolving conditions.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.tags import AuxTag
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import AuxTag, TagID
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user

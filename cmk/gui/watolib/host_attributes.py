@@ -16,8 +16,9 @@ from typing import Any
 from marshmallow import fields
 
 import cmk.utils.plugin_registry
-from cmk.utils.tags import TagGroup
-from cmk.utils.type_defs import HostName, TaggroupIDToTagID, TagID
+from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
+from cmk.utils.tags import TagGroup, TagID
+from cmk.utils.type_defs import HostName
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError

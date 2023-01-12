@@ -7,7 +7,7 @@ import pytest
 
 import cmk.utils.tags as tags
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import TaggroupIDToTagID
+from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
 
 
 @pytest.fixture(name="test_cfg")

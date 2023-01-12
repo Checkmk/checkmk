@@ -42,7 +42,7 @@ from collections.abc import Sequence
 
 import cmk.utils
 import cmk.utils.render
-from cmk.utils.type_defs import TagID
+from cmk.utils.tags import TagID
 
 import cmk.gui.bi as bi
 from cmk.gui.config import active_config

@@ -19,18 +19,18 @@ from typing import Any, cast, overload
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.labels import Labels
 from cmk.utils.regex import escape_regex_chars
-from cmk.utils.tags import GroupedTag
+from cmk.utils.rulesets.ruleset_matcher import (
+    TagConditionNE,
+    TagConditionNOR,
+    TagConditionOR,
+    TaggroupIDToTagCondition,
+)
+from cmk.utils.tags import GroupedTag, TaggroupID, TagID
 from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
     ServiceName,
-    TagConditionNE,
-    TagConditionNOR,
-    TagConditionOR,
-    TaggroupID,
-    TaggroupIDToTagCondition,
-    TagID,
 )
 
 import cmk.gui.forms as forms

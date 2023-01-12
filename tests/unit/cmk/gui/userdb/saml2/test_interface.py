@@ -88,6 +88,7 @@ def _reconstruct_original_response_format(response: bytes) -> bytes:
 
 _SIGNATURE_CERTIFICATE_PATHS: Final = signature_certificate_paths()
 _XML_FILES_PATH: Final = Path(__file__).parent / "xml_files"
+_ATTRIBUTE_MAPPINGS_PATH: Final = Path(__file__).parent / "attribute_mappings"
 _IDENTITY_PROVIDER_METADATA: Final = Path(
     _XML_FILES_PATH / "identity_provider_metadata.xml"
 ).read_text()
@@ -143,6 +144,7 @@ def _interface_config(
             digest_algorithm=DIGEST_SHA512,  # this is referring to the digest alg the counterparty should use
             allowed_algorithms=allowed_algorithms,
             signature_certificate=_SIGNATURE_CERTIFICATE_PATHS,
+            user_attribute_mappings_dir=_ATTRIBUTE_MAPPINGS_PATH,
         ),
         cache_settings=CacheSettings(
             redis_namespace="saml2_authentication_requests",
@@ -264,6 +266,16 @@ class TestInterface:
             interface.idp_sso_destination
             == "http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
         )
+
+    def test_interface_does_not_map_attributes(self, interface: Interface) -> None:
+
+        assert interface._config.attribute_converters is not None
+        assert len(interface._config.attribute_converters) == 1
+
+        converter = interface._config.attribute_converters[0]
+        assert not converter.name_format
+        assert not converter._to
+        assert not converter._fro
 
     def test_metadata(self, interface: Interface) -> None:
         metadata = Path(_XML_FILES_PATH / "checkmk_service_provider_metadata.xml").read_text()

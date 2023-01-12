@@ -20,7 +20,11 @@ from saml2.xmldsig import (
     SIG_RSA_SHA512,
 )
 
-from cmk.utils.paths import saml2_signature_private_keyfile, saml2_signature_public_keyfile
+from cmk.utils.paths import (
+    saml2_attribute_mappings_dir,
+    saml2_signature_private_keyfile,
+    saml2_signature_public_keyfile,
+)
 from cmk.utils.site import url_prefix
 
 Milliseconds = NewType("Milliseconds", int)
@@ -53,6 +57,7 @@ class SecuritySettings(BaseModel):
     digest_algorithm: str
     allowed_algorithms: set[str]
     signature_certificate: Certificate
+    user_attribute_mappings_dir: Path
 
 
 class ConnectivitySettings(BaseModel):
@@ -179,6 +184,7 @@ def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
                 SIG_RSA_SHA512,
             },
             signature_certificate=_determine_certificate_paths(user_input["signature_certificate"]),
+            user_attribute_mappings_dir=saml2_attribute_mappings_dir,
         ),
         cache_settings=CacheSettings(
             redis_namespace="saml2_authentication_requests",

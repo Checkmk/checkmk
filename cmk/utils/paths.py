@@ -148,6 +148,9 @@ saml2_signature_public_keyfile = _omd_path("etc/saml2/signature_builtin_public.p
 saml2_custom_signature_private_keyfile = _omd_path("etc/saml2/signature_custom_private.pem")
 saml2_custom_signature_public_keyfile = _omd_path("etc/saml2/signature_custom_public.pem")
 
+# pysaml2 config files
+saml2_attribute_mappings_dir = _omd_path("share/saml2/attribute_mappings")
+
 
 def make_experimental_config_file() -> Path:
     """Returns file with experimental settings to be used.

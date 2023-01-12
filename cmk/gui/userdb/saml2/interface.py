@@ -98,6 +98,9 @@ def saml_config(connection: ConnectivitySettings, security: SecuritySettings) ->
                     "cert_file": "",
                 },
             ],
+            "attribute_map_dir": str(
+                security.user_attribute_mappings_dir
+            ),  # See README in this directory for more information on this option
         }
     )
     return config

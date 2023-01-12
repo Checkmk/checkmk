@@ -301,9 +301,9 @@ def _view_editor_spec(
         )
     ) -> ColumnSpec:
         if value[0] == "column":
-            inner_value = value[1]
+            column_type, inner_value = value
             return ColumnSpec(
-                _column_type="column",
+                _column_type=column_type,
                 name=_get_name(inner_value),
                 parameters=_get_params(inner_value),
                 link_spec=_get_link_spec(inner_value),
@@ -311,9 +311,9 @@ def _view_editor_spec(
             )
 
         if value[0] == "join_column":
-            inner_value = value[1]
+            join_column_type, inner_value = value
             return ColumnSpec(
-                _column_type="column",
+                _column_type=join_column_type,
                 name=_get_name(inner_value),
                 parameters=_get_params(inner_value),
                 link_spec=_get_link_spec(inner_value),

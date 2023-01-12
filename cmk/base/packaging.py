@@ -8,13 +8,7 @@ import sys
 
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
-from cmk.utils.packaging import (
-    cli,
-    get_installed_manifests,
-    package_num_files,
-    PackageException,
-    PACKAGES_DIR,
-)
+from cmk.utils.packaging import cli, get_installed_manifests, PackageException, PACKAGES_DIR
 
 logger = logging.getLogger("cmk.base.packaging")
 
@@ -92,16 +86,23 @@ def package_list(args: list[str]) -> None:
 
     table = [
         [
-            manifest.name,
-            manifest.version,
-            manifest.title,
-            str(package_num_files(manifest)),
+            str(manifest.name),
+            str(manifest.version),
+            str(manifest.title),
+            str(manifest.author),
+            str(manifest.version_min_required),
+            str(manifest.version_usable_until),
+            str(sum(len(f) for f in manifest.files.values())),
         ]
         for manifest in get_installed_manifests()
     ]
 
     if logger.isEnabledFor(VERBOSE):
-        tty.print_table(["Name", "Version", "Title", "Files"], [tty.bold, "", ""], table)
+        tty.print_table(
+            ["Name", "Version", "Title", "Author", "Req. Version", "Until Version", "Files"],
+            [tty.bold, "", "", "", "", "", ""],
+            table,
+        )
     else:
         for name, *_omitted in table:
             sys.stdout.write("%s\n" % name)

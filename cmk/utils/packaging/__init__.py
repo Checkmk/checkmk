@@ -682,10 +682,6 @@ def package_part_info() -> PackagePartInfo:
     return part_info
 
 
-def package_num_files(package: Manifest) -> int:
-    return sum(len(fl) for fl in package.files.values())
-
-
 def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
     """
     Returns a dictionary of rule pack ID to MKP package for a given manifest.

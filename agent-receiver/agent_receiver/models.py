@@ -13,12 +13,16 @@ from fastapi import HTTPException
 from pydantic import BaseModel, validator
 
 
-class PairingBody(BaseModel):
+class CsrBody(BaseModel):
     csr: str
 
 
 class PairingResponse(BaseModel):
     root_cert: str
+    client_cert: str
+
+
+class CertResponse(BaseModel):
     client_cert: str
 
 

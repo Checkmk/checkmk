@@ -23,8 +23,9 @@ from agent_receiver.checkmk_rest_api import (
 from agent_receiver.decompression import DecompressionError, Decompressor
 from agent_receiver.log import logger
 from agent_receiver.models import (
+    CertResponse,
+    CsrBody,
     HostTypeEnum,
-    PairingBody,
     PairingResponse,
     RegistrationStatus,
     RegistrationStatusEnum,
@@ -32,7 +33,12 @@ from agent_receiver.models import (
     RegistrationWithLabelsBody,
 )
 from agent_receiver.site_context import r4r_dir, site_name
-from agent_receiver.utils import get_registration_status_from_file, Host, uuid_from_pem_csr
+from agent_receiver.utils import (
+    get_registration_status_from_file,
+    Host,
+    internal_credentials,
+    uuid_from_pem_csr,
+)
 from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_NOT_IMPLEMENTED
@@ -44,7 +50,7 @@ security = HTTPBasic()
 async def pairing(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
-    pairing_body: PairingBody,
+    pairing_body: CsrBody,
 ) -> PairingResponse:
     uuid = uuid_from_pem_csr(pairing_body.csr)
 
@@ -296,4 +302,48 @@ async def registration_status(
         status=registration_data.status if registration_data else None,
         type=host.host_type,
         message="Host registered",
+    )
+
+
+@UUID_VALIDATION_ROUTER.post(
+    "/renew_certificate/{uuid}",
+    response_model=CertResponse,
+)
+async def renew_certificate(
+    *,
+    uuid: UUID,
+    csr_body: CsrBody,
+) -> CertResponse:
+
+    # Note: Technically, we could omit the {uuid} part of the endpoint url.
+    # We explicitly require it for consistency with other endpoints.
+    if str(uuid) != uuid_from_pem_csr(csr_body.csr):
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail=f"You requested a certificate renewal for {uuid}, but the provided CSR doesn't match.",
+        )
+
+    if not (
+        rest_api_csr_resp := post_csr(
+            internal_credentials(),
+            csr_body.csr,
+        )
+    ).ok:
+        logger.error(
+            "uuid=%s Certificate renewal failed with %s",
+            uuid,
+            rest_api_csr_resp.text,
+        )
+        raise HTTPException(
+            status_code=rest_api_csr_resp.status_code,
+            detail=parse_error_response_body(rest_api_csr_resp.text),
+        )
+
+    logger.info(
+        "uuid=%s Certificate renewal succeeded",
+        uuid,
+    )
+
+    return CertResponse(
+        client_cert=rest_api_csr_resp.json()["cert"],
     )

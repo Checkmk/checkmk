@@ -9,9 +9,12 @@ from pathlib import Path
 from uuid import UUID
 
 from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
-from agent_receiver.site_context import agent_output_dir, r4r_dir
+from agent_receiver.site_context import agent_output_dir, r4r_dir, users_dir
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
+from fastapi.security import HTTPBasicCredentials
+
+INTERNAL_REST_API_USER = "automation"
 
 
 class Host:
@@ -95,3 +98,8 @@ def uuid_from_pem_csr(pem_csr: str) -> str:
         )
     except ValueError:
         return "[CSR parsing failed]"
+
+
+def internal_credentials() -> HTTPBasicCredentials:
+    secret = (users_dir() / INTERNAL_REST_API_USER / "automation.secret").read_text().strip()
+    return HTTPBasicCredentials(username=INTERNAL_REST_API_USER, password=secret)

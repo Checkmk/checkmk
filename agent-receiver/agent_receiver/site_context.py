@@ -29,6 +29,11 @@ def r4r_dir() -> Path:
 
 
 @functools.lru_cache
+def users_dir() -> Path:
+    return _omd_root() / "var" / "check_mk" / "web"
+
+
+@functools.lru_cache
 def site_config_path() -> Path:
     return _omd_root() / "etc" / "omd" / "site.conf"
 

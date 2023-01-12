@@ -95,6 +95,7 @@ def fixture_config_variables(signature_certificate: Variables) -> Variables:
             "vs_p_user_id": "username",
             "vs_p_alias": "",
             "vs_p_email": "",
+            "vs_p_contactgroups": "",
             **signature_certificate.http,
         },
         valuespec={
@@ -112,6 +113,7 @@ def fixture_config_variables(signature_certificate: Variables) -> Variables:
             "user_id": "username",
             "alias": "",
             "email": "",
+            "contactgroups": "",
             **signature_certificate.valuespec,
         },
         serialised={
@@ -131,6 +133,7 @@ def fixture_config_variables(signature_certificate: Variables) -> Variables:
                     "user_id": "username",
                     "alias": None,
                     "email": None,
+                    "contactgroups": None,
                 },
                 **signature_certificate.serialised,
             },

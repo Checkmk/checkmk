@@ -53,6 +53,7 @@ class UserAttributeNames(BaseModel):
     user_id: str
     alias: str | None
     email: str | None
+    contactgroups: str | None
 
 
 class InterfaceConfig(BaseModel):
@@ -72,6 +73,7 @@ class AuthenticatedUser(BaseModel):
     user_id: UserId
     alias: str | None = None
     email: str | None = None
+    contactgroups: set[str] = set()
 
 
 def _metadata_from_idp(url: str, timeout: tuple[int, int]) -> str | None:
@@ -328,6 +330,9 @@ class Interface:
             user_id=UserId(user_id[0]),
             alias=authentication_response.ava.get(self._user_attributes.alias, [None])[0],
             email=authentication_response.ava.get(self._user_attributes.email, [None])[0],
+            contactgroups=set(
+                authentication_response.ava.get(self._user_attributes.contactgroups, [])
+            ),
         )
 
     def validate_in_response_to_id(self, authentication_response: AuthnResponse) -> None:

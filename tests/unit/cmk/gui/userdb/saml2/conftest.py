@@ -46,6 +46,7 @@ def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> Mappin
                 "user_id": "username",
                 "alias": None,
                 "email": None,
+                "contactgroups": None,
             },
             "signature_certificate": {
                 "private": str(private_keyfile_path),

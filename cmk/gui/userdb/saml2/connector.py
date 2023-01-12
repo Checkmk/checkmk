@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+import itertools
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -13,6 +14,7 @@ from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
@@ -95,6 +97,7 @@ class Connector(UserConnector):
         user_profile = authenticated_user_to_user_spec(
             authenticated_user,
             active_config.default_user_profile,
+            contact_groups=set(load_contact_group_information().keys()),
         )
         user_profile["connector"] = self.__config.id
 
@@ -149,8 +152,14 @@ class Connector(UserConnector):
 
 
 def authenticated_user_to_user_spec(
-    authenticated_user: AuthenticatedUser, default_user_profile: UserSpec
+    authenticated_user: AuthenticatedUser,
+    default_user_profile: UserSpec,
+    *,
+    contact_groups: set[str] | None = None,
 ) -> UserSpec:
+    if contact_groups is None:
+        contact_groups = set()
+
     user_spec = copy.deepcopy(default_user_profile)
     user_spec["user_id"] = authenticated_user.user_id
     user_spec["alias"] = authenticated_user.alias or authenticated_user.user_id
@@ -158,6 +167,17 @@ def authenticated_user_to_user_spec(
         # TODO (lisa): this seems to be wrongly typed. It is possible to create users without an
         # email
         user_spec["email"] = authenticated_user.email
+
+    user_spec["contactgroups"] = list(
+        set(
+            itertools.chain(
+                default_user_profile["contactgroups"],
+                authenticated_user.contactgroups,
+            )
+        )
+        & contact_groups
+    )
+
     return user_spec
 
 

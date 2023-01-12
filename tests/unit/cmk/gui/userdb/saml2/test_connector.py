@@ -236,6 +236,7 @@ def test_authenticated_user_to_user_spec() -> None:
         user_id=UserId("banana"),
         alias="Mr. Banana",
         email="banana@totally-not-the-cia.com",
+        contactgroups={"hottopics", "veryhottopics"},
     )
     default_user_profile = UserSpec(
         {
@@ -245,7 +246,9 @@ def test_authenticated_user_to_user_spec() -> None:
         }
     )
 
-    user_spec = authenticated_user_to_user_spec(authenticated_user, default_user_profile)
+    user_spec = authenticated_user_to_user_spec(
+        authenticated_user, default_user_profile, contact_groups={"hottopics"}
+    )
 
     assert user_spec == UserSpec(
         {
@@ -253,7 +256,7 @@ def test_authenticated_user_to_user_spec() -> None:
             "alias": "Mr. Banana",
             "email": "banana@totally-not-the-cia.com",
             "roles": ["user"],
-            "contactgroups": [],
+            "contactgroups": ["hottopics"],
             "force_authuser": False,
         }
     )

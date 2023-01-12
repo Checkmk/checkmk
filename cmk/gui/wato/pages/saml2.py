@@ -188,6 +188,19 @@ def _user_properties() -> list[DictionaryEntry]:
                 size=80,
             ),
         ),
+        (
+            "contactgroups",
+            TextInput(
+                title=_("Contact groups attribute"),
+                help=_(
+                    "The attribute used to map contact groups between your Identity Provider and "
+                    "Checkmk. Note that contact groups must exist in Checkmk so that a mapping can be "
+                    "done."
+                ),
+                allow_empty=True,
+                size=80,
+            ),
+        ),
     ]
 
 
@@ -411,6 +424,7 @@ def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:
                 "user_id",
                 "alias",
                 "email",
+                "contactgroups",
             ]
         ]
         if v

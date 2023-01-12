@@ -31,8 +31,8 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, An
     def module_name(func: Any) -> str:
         return f"{func.__module__}.{func.__name__}"
 
-    def sort_key(e: Endpoint) -> tuple[str, int, str]:
-        return module_name(e.func), methods.index(e.method), e.path
+    def sort_key(e: Endpoint) -> tuple[str | int, ...]:
+        return e.sort, module_name(e.func), methods.index(e.method), e.path
 
     # Depends on another commit. This Any will go away.
     seen_paths = dict[Ident, Any]()

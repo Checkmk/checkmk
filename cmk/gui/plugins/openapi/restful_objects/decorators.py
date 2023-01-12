@@ -363,6 +363,9 @@ class Endpoint:
             into its documentation string, explaining the deprecation and a link to the Werk.
             The URLs need to start with a slash /
 
+        sort:
+            An integer to influence the ordering of the endpoints in the yaml file.
+
     """
 
     def __init__(  # pylint: disable=too-many-branches
@@ -391,6 +394,7 @@ class Endpoint:
         valid_until: Version | None = None,
         deprecated_urls: Mapping[str, int] | None = None,
         update_config_generation: bool = True,
+        sort: int = 0,
     ):
         self.path = path
         self.link_relation = link_relation
@@ -413,6 +417,7 @@ class Endpoint:
         self.permissions_description = self._dict(permissions_description)
         self.valid_from = valid_from
         self.valid_until = valid_until
+        self.sort = sort
         if deprecated_urls is not None:
             for url in deprecated_urls:
                 if not url.startswith("/"):

@@ -28,6 +28,7 @@ from cmk.gui.raw.plugins.main_modules.registration import resolve_combined_singl
     tag_group="Monitoring",
     request_schema=request_schemas.GetSchema,
     response_schema=response_schemas.GraphCollectionSchema,
+    sort=0,
 )
 def get_graph(params):
     """Get a graph

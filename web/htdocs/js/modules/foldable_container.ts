@@ -6,7 +6,12 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 
 // fetch_url: dynamically load content of opened element.
-export function toggle(treename, id, fetch_url, save_state) {
+export function toggle(
+    treename: string,
+    id: string,
+    fetch_url: string,
+    save_state: boolean
+) {
     var img = document.getElementById("treeimg." + treename + "." + id);
     var box = document.getElementById("tree." + treename + "." + id);
 
@@ -14,18 +19,27 @@ export function toggle(treename, id, fetch_url, save_state) {
     if (img) utils.toggle_folding(img, !utils.has_class(box, "closed"));
 }
 
-function toggle_tree_state(tree, name, oContainer, fetch_url, save_state) {
-    var outer_container = oContainer.parentNode;
-    var state;
+function toggle_tree_state(
+    tree: string,
+    name: string,
+    oContainer: HTMLElement | null,
+    fetch_url: string,
+    save_state: boolean
+) {
+    var outer_container = oContainer!.parentNode as HTMLElement | null;
+    var state: "on" | "off";
 
     if (utils.has_class(oContainer, "closed")) {
         utils.change_class(oContainer, "closed", "open");
         utils.change_class(outer_container, "closed", "open");
 
-        if (fetch_url && !oContainer.innerHTML) {
+        if (fetch_url && !oContainer!.innerHTML) {
             ajax.call_ajax(fetch_url, {
                 method: "GET",
-                response_handler: function (handler_data, response_body) {
+                response_handler: function (
+                    handler_data: {container: HTMLElement},
+                    response_body: string
+                ) {
                     handler_data.container.innerHTML = response_body;
                 },
                 handler_data: {
@@ -44,7 +58,11 @@ function toggle_tree_state(tree, name, oContainer, fetch_url, save_state) {
     if (save_state) persist_tree_state(tree, name, state);
 }
 
-export function persist_tree_state(tree, name, state) {
+export function persist_tree_state(
+    tree: string,
+    name: string,
+    state: "on" | "off"
+) {
     ajax.call_ajax(
         "tree_openclose.py?tree=" +
             encodeURIComponent(tree) +

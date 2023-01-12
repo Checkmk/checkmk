@@ -10,13 +10,9 @@ import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
     cli,
-    get_installed_manifest,
     get_installed_manifests,
-    Manifest,
     package_num_files,
-    PACKAGE_PARTS,
     PackageException,
-    PackageName,
     PACKAGES_DIR,
 )
 
@@ -34,7 +30,7 @@ Available commands are:
    find [-h] [-a] [--json]      ...  Find and display unpackaged files
    inspect FILE                 ...  Show manifest of an `.mkp` file.
    list                         ...  List all installed packages
-   list NAME                    ...  List files of installed package
+   files NAME [VERSION]         ...  List files of package
    show [--json] NAME [VERSION] ...  Show information about installed package
    show-all [--json]            ...  Show information about all known packages
    install PACK.mkp             ...  Install or update package from file PACK.mkp
@@ -61,6 +57,7 @@ def do_packaging(args: list[str]) -> None:
     commands = {
         "template": lambda args: cli.main(["template", *args], logger),
         "release": lambda args: cli.main(["release", *args], logger),
+        "files": lambda args: cli.main(["files", *args], logger),
         "list": package_list,
         "find": lambda args: cli.main(["find", *args], logger),
         "inspect": lambda args: cli.main(["inspect", *args], logger),
@@ -91,9 +88,7 @@ def do_packaging(args: list[str]) -> None:
 
 def package_list(args: list[str]) -> None:
     if len(args) > 0:
-        for package in (_resolve_package_argument(arg) for arg in args):
-            _list_package(package)
-            return
+        raise PackageException("Usage: check_mk -P list")
 
     table = [
         [
@@ -110,23 +105,3 @@ def package_list(args: list[str]) -> None:
     else:
         for name, *_omitted in table:
             sys.stdout.write("%s\n" % name)
-
-
-def _list_package(package: Manifest) -> None:
-    if logger.isEnabledFor(VERBOSE):
-        sys.stdout.write(f"Files in package {package.name}:\n")
-        for part in PACKAGE_PARTS:
-            if part_files := package.files.get(part, []):
-                sys.stdout.write(f"  {tty.bold}{part.ui_title}{tty.normal}:\n")
-                for f in part_files:
-                    sys.stdout.write("    %s\n" % f)
-    else:
-        for part in PACKAGE_PARTS:
-            for fn in package.files.get(part, []):
-                sys.stdout.write(f"{part / fn}\n")
-
-
-def _resolve_package_argument(name: str) -> Manifest:
-    if (package := get_installed_manifest(PackageName(name))) is None:
-        raise PackageException(f"No such package: {name}")
-    return package

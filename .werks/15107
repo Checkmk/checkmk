@@ -26,6 +26,9 @@ The <tt>show</tt> and <tt>list</tt> commands no longer accept paths as argument.
 <tt>show-all</tt>
 This is a new command to show the contents of all MKPs known to the sites extension package manager.
 
+<tt>files NAME [VERSION]</tt>
+This is a new command that replaces <tt>list NAME</tt>.
+
 <tt>store PATH_TO_FILE</tt>:
 This is a new command to add an MKP to the collection of MKPs managed by this tool.
 This command corresponds to the "<i>upload</i>" action in the GUI.

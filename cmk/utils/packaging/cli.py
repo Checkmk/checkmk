@@ -119,16 +119,29 @@ def _args_show(
 
 def _command_show(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Show package manifest"""
-    package_id = _get_package_id(args.name, args.version)
-    if (
-        manifest := read_manifest_optionally(
-            PackageStore().get_existing_package_path(package_id), None
-        )
-    ) is None:
-        # don't think this can happen
-        raise PackageException(f"No such package: {package_id.name} {package_id.version}")
-
+    manifest = extract_manifest(
+        PackageStore()
+        .get_existing_package_path(_get_package_id(args.name, args.version))
+        .read_bytes()
+    )
     sys.stdout.write(f"{manifest.json() if args.json else manifest.to_text(summarize=False)}\n")
+    return 0
+
+
+def _command_files(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Show all files beloning to a package"""
+    manifest = extract_manifest(
+        PackageStore()
+        .get_existing_package_path(_get_package_id(args.name, args.version))
+        .read_bytes()
+    )
+    sys.stdout.write(
+        "".join(
+            f"{part.path / rel_path}\n"
+            for part, rel_paths in manifest.files.items()
+            for rel_path in rel_paths
+        )
+    )
     return 0
 
 
@@ -332,6 +345,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
     _add_command(subparsers, "show", _args_show, _command_show)
+    _add_command(subparsers, "files", _args_package_id, _command_files)
     _add_command(subparsers, "store", _args_store, _command_store)
     _add_command(subparsers, "release", _args_release, _command_release)
     _add_command(subparsers, "remove", _args_package_id, _command_remove)

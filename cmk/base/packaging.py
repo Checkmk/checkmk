@@ -28,21 +28,21 @@ def packaging_usage() -> None:
         f"""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-   template NAME           ...  Collect unpackaged files into new package template NAME
-   package MANIFEST_FILE   ...  Create package file from package manifest
-   release NAME            ...  Drop installed package NAME, release packaged files
-   find [-h] [-a] [--json] ...  Find and display unpackaged files
-   inspect FILE            ...  Show manifest of an `.mkp` file.
-   list                    ...  List all installed packages
-   list NAME               ...  List files of installed package
-   show NAME               ...  Show information about installed package
-   show-all [--json]       ...  Show information about all known packages
-   install PACK.mkp        ...  Install or update package from file PACK.mkp
-   remove NAME VERSION     ...  Uninstall and delete package NAME
-   disable NAME [VERSION]  ...  Disable package NAME
-   enable NAME [VERSION]   ...  Enable previously disabled package NAME
-   disable-outdated        ...  Disable outdated packages
-   update-active           ...  Update the selection of active packages (according to Checkmk version)
+   template NAME                ...  Collect unpackaged files into new package template NAME
+   package MANIFEST_FILE        ...  Create package file from package manifest
+   release NAME                 ...  Drop installed package NAME, release packaged files
+   find [-h] [-a] [--json]      ...  Find and display unpackaged files
+   inspect FILE                 ...  Show manifest of an `.mkp` file.
+   list                         ...  List all installed packages
+   list NAME                    ...  List files of installed package
+   show [--json] NAME [VERSION] ...  Show information about installed package
+   show-all [--json]            ...  Show information about all known packages
+   install PACK.mkp             ...  Install or update package from file PACK.mkp
+   remove NAME VERSION          ...  Uninstall and delete package NAME
+   disable NAME [VERSION]       ...  Disable package NAME
+   enable NAME [VERSION]        ...  Enable previously disabled package NAME
+   disable-outdated             ...  Disable outdated packages
+   update-active                ...  Update the selection of active packages (according to Checkmk version)
 
    -v  enables verbose output
 
@@ -65,7 +65,7 @@ def do_packaging(args: list[str]) -> None:
         "find": lambda args: cli.main(["find", *args], logger),
         "inspect": lambda args: cli.main(["inspect", *args], logger),
         "show-all": lambda args: cli.main(["show-all", *args], logger),
-        "show": package_show,
+        "show": lambda args: cli.main(["show", *args], logger),
         "package": lambda args: cli.main(["package", *args], logger),
         "remove": lambda args: cli.main(["remove", *args], logger),
         "disable": lambda args: cli.main(["disable", *args], logger),
@@ -110,14 +110,6 @@ def package_list(args: list[str]) -> None:
     else:
         for name, *_omitted in table:
             sys.stdout.write("%s\n" % name)
-
-
-def package_show(args: list[str]) -> None:
-    if len(args) == 0:
-        raise PackageException("Usage: check_mk -P show NAME")
-
-    for manifest in (_resolve_package_argument(arg) for arg in args):
-        sys.stdout.write(f"{manifest.to_text()}\n")
 
 
 def _list_package(package: Manifest) -> None:

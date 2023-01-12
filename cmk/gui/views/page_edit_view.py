@@ -268,24 +268,18 @@ def _get_vs_link_or_tooltip_elements(
     ]
 
 
-class _RawVSColumnSpecMandatory(TypedDict):
-    painter_spec: PainterName | tuple[PainterName, PainterParameters]
-
-
-class _RawVSColumnSpec(_RawVSColumnSpecMandatory, total=False):
+class _RawVSColumnSpecOptional(TypedDict, total=False):
     link_spec: tuple[VisualTypeName, VisualName]
     tooltip: ColumnName
 
 
-class _RawVSJoinColumnSpecMandatory(TypedDict):
+class _RawVSColumnSpec(_RawVSColumnSpecOptional):
     painter_spec: PainterName | tuple[PainterName, PainterParameters]
+
+
+class _RawVSJoinColumnSpec(_RawVSColumnSpec):
     join_value: ColumnName
     column_title: str
-
-
-class _RawVSJoinColumnSpec(_RawVSJoinColumnSpecMandatory, total=False):
-    link_spec: tuple[VisualTypeName, VisualName]
-    tooltip: ColumnName
 
 
 def _view_editor_spec(
@@ -306,46 +300,38 @@ def _view_editor_spec(
             | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
         )
     ) -> ColumnSpec:
-        column_type, inner_value = value
-
-        if isinstance(name_or_parameters := inner_value["painter_spec"], tuple):
-            name, parameters = name_or_parameters
-        else:
-            name = name_or_parameters
-            parameters = PainterParameters()
-
-        link_spec = (
-            None
-            if (raw_link_spec := inner_value.get("link_spec")) is None
-            else VisualLinkSpec.from_raw(raw_link_spec)
-        )
-        tooltip = inner_value.get("tooltip")
-
-        if column_type == "column":
+        if value[0] == "column":
+            inner_value = value[1]
             return ColumnSpec(
-                _column_type=column_type,
-                name=name,
-                parameters=parameters,
-                link_spec=link_spec,
-                tooltip=tooltip,
+                _column_type="column",
+                name=_get_name(inner_value),
+                parameters=_get_params(inner_value),
+                link_spec=_get_link_spec(inner_value),
+                tooltip=inner_value.get("tooltip"),
             )
 
-        if (
-            column_type == "join_column"
-            and isinstance(join_value := inner_value.get("join_value"), str)
-            and isinstance(column_title := inner_value.get("column_title"), str)
-        ):
+        if value[0] == "join_column":
+            inner_value = value[1]
             return ColumnSpec(
-                _column_type=column_type,
-                name=name,
-                parameters=parameters,
-                link_spec=link_spec,
-                tooltip=tooltip,
-                join_index=join_value,
-                column_title=column_title,
+                _column_type="column",
+                name=_get_name(inner_value),
+                parameters=_get_params(inner_value),
+                link_spec=_get_link_spec(inner_value),
+                tooltip=inner_value.get("tooltip"),
+                join_index=inner_value["join_value"],
+                column_title=inner_value["column_title"],
             )
 
         raise ValueError()
+
+    def _get_name(value: _RawVSColumnSpec) -> PainterName:
+        return ps[0] if isinstance((ps := value["painter_spec"]), tuple) else ps
+
+    def _get_params(value: _RawVSColumnSpec) -> PainterParameters:
+        return ps[1] if isinstance((ps := value["painter_spec"]), tuple) else PainterParameters()
+
+    def _get_link_spec(value: _RawVSColumnSpec) -> VisualLinkSpec | None:
+        return None if (ls := value.get("link_spec")) is None else VisualLinkSpec.from_raw(ls)
 
     def _to_vs(
         column_spec: ColumnSpec | None,

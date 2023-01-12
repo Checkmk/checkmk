@@ -561,10 +561,6 @@ def _create_trees_from_inventory_plugin_items(
 #             retention_interval: configured in the above ruleset
 
 
-_ATTRIBUTES_KEY = "Attributes"
-_TABLE_KEY = "Table"
-
-
 def _may_update(
     *,
     now: int,
@@ -573,62 +569,62 @@ def _may_update(
     inventory_tree: StructuredDataNode,
     previous_tree: StructuredDataNode,
 ) -> UpdateResult:
-    if not (intervals_from_config := _get_intervals_from_config(raw_intervals_from_config)):
+    if not raw_intervals_from_config:
         return UpdateResult(
             save_tree=False,
             reason="No retention intervals found.",
         )
 
-    def _get_node_type(item: Attributes | TableRow) -> str:
-        if isinstance(item, Attributes):
-            return _ATTRIBUTES_KEY
-        if isinstance(item, TableRow):
-            return _TABLE_KEY
-        raise NotImplementedError()
-
-    raw_cache_info_by_retention_key = {
-        (tuple(item.path), _get_node_type(item)): items_of_inventory_plugin.raw_cache_info
+    raw_cache_info_by_path_and_type = {
+        (tuple(item.path), item.__class__.__name__): items_of_inventory_plugin.raw_cache_info
         for items_of_inventory_plugin in items_of_inventory_plugins
         for item in items_of_inventory_plugin.items
     }
 
+    def _get_raw_cache_info(
+        key: tuple[SDPath, Literal["Attributes", "TableRow"]]
+    ) -> tuple[int, int]:
+        if (raw_cache_info := raw_cache_info_by_path_and_type.get(key)) is None:
+            return (now, 0)
+        return raw_cache_info
+
     results = []
-    for retention_key, from_config in intervals_from_config.items():
-        if (raw_cache_info := raw_cache_info_by_retention_key.get(retention_key)) is None:
-            raw_cache_info = (now, 0)
+    for entry in raw_intervals_from_config:
+        node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
-        item_path, node_type = retention_key
-
-        if (previous_node := previous_tree.get_node(item_path)) is None:
+        if (previous_node := previous_tree.get_node(node_path)) is None:
             previous_node = StructuredDataNode()
 
-        if (inv_node := inventory_tree.get_node(item_path)) is None:
-            inv_node = inventory_tree.setdefault_node(item_path)
+        if (inv_node := inventory_tree.get_node(node_path)) is None:
+            inv_node = inventory_tree.setdefault_node(node_path)
 
-        filter_func = make_filter_from_choice(from_config.choices)
-        intervals = RetentionIntervals(
-            cached_at=raw_cache_info[0],
-            cache_interval=raw_cache_info[1],
-            retention_interval=from_config.interval,
-        )
-
-        if node_type == _ATTRIBUTES_KEY:
+        if choices_for_attributes := entry.get("attributes"):
+            raw_cache_info = _get_raw_cache_info((node_path, "Attributes"))
             results.append(
                 inv_node.attributes.update_from_previous(
                     now,
                     previous_node.attributes,
-                    filter_func,
-                    intervals,
+                    make_filter_from_choice(choices_for_attributes),
+                    RetentionIntervals(
+                        cached_at=raw_cache_info[0],
+                        cache_interval=raw_cache_info[1],
+                        retention_interval=entry["interval"],
+                    ),
                 )
             )
 
-        elif node_type == _TABLE_KEY:
+        elif choices_for_table := entry.get("columns"):
+            raw_cache_info = _get_raw_cache_info((node_path, "TableRow"))
             results.append(
                 inv_node.table.update_from_previous(
                     now,
                     previous_node.table,
-                    filter_func,
-                    intervals,
+                    make_filter_from_choice(choices_for_table),
+                    RetentionIntervals(
+                        cached_at=raw_cache_info[0],
+                        cache_interval=raw_cache_info[1],
+                        retention_interval=entry["interval"],
+                    ),
                 )
             )
 
@@ -636,31 +632,6 @@ def _may_update(
         save_tree=any(result.save_tree for result in results),
         reason=", ".join(result.reason for result in results if result.reason),
     )
-
-
-class IntervalFromConfig(NamedTuple):
-    choices: Literal["all"] | tuple[str, Sequence[str]]
-    interval: int
-
-
-def _get_intervals_from_config(
-    raw_intervals_from_config: RawIntervalsFromConfig,
-) -> dict[tuple[SDPath, str], IntervalFromConfig]:
-    intervals: dict[tuple[SDPath, str], IntervalFromConfig] = {}
-
-    for entry in raw_intervals_from_config:
-        interval = entry["interval"]
-        node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
-
-        if for_attributes := entry.get("attributes"):
-            intervals.setdefault(
-                (node_path, _ATTRIBUTES_KEY), IntervalFromConfig(for_attributes, interval)
-            )
-
-        if for_table := entry.get("columns"):
-            intervals.setdefault((node_path, _TABLE_KEY), IntervalFromConfig(for_table, interval))
-
-    return intervals
 
 
 # .

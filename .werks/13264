@@ -1,0 +1,13 @@
+Title: Fix cmk-agent-ctl installation for Centos7
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1673512095
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p20
+
+Agent controller installation was broke for Centos7 due to `--keep` option for `gunzip` which is
+not available for gunzip on Centos7.
+This change simulates `--keep` by explicitly providing an output file instead.

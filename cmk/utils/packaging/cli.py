@@ -174,6 +174,7 @@ def _args_package_id(
         "version",
         type=PackageVersion,
         default=None,
+        nargs="?",
         help="The package version. If only one package by the given name is applicable, the version can be omitted.",
     )
 
@@ -271,7 +272,11 @@ def _get_package_id(
 
 
 def _parse_arguments(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="mkp", description=__doc__)
+    parser = argparse.ArgumentParser(
+        prog="mkp",
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--debug", "-d", action="store_true")
     subparsers = parser.add_subparsers(required=True)
 

@@ -6,7 +6,7 @@
 package lib
 
 hashfile_extension = ".hash"
-def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
     CMK_VERSION_RC_LESS = versioning.strip_rc_number_from_version(CMK_VERSION);

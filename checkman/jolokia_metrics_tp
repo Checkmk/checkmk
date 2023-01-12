@@ -1,8 +1,0 @@
-title: Java Virtual Machine: Tomcat Threads (deprecated)
-agents: linux
-license: GPLv2
-catalog: app/java
-distribution: check_mk
-description:
- This check is deprecated and has been replaced by
- 'jolokia_jvm_threading.pool'.

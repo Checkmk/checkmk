@@ -39,6 +39,10 @@ def add_change(
     sites: Sequence[SiteId] | None = None,
     domain_settings: DomainSettings | None = None,
 ) -> None:
+    """
+    config_domains:
+        list of config domains that are affected by this change
+    """
     log_audit(
         action=action_name,
         message=text,

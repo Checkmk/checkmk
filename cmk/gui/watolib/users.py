@@ -2,14 +2,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Sequence
 from datetime import datetime
 
+import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password
 from cmk.utils.object_diff import make_diff_text
 
 import cmk.gui.userdb as userdb
+from cmk.gui.cee.plugins.watolib.dcd import ConfigDomainDCD
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
@@ -25,6 +26,13 @@ from cmk.gui.watolib.user_scripts import (
     user_script_choices,
     user_script_title,
 )
+
+if not cmk_version.is_raw_edition():
+    from cmk.gui.cee.plugins.watolib.dcd import used_dcd_rest_api_user
+else:
+    # Stub needed for non enterprise edition
+    def used_dcd_rest_api_user():  # type: ignore[misc]
+        return None
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -87,9 +95,23 @@ def edit_users(changed_users: UserObject) -> None:
         all_users[user_id] = user_attrs
 
     if new_users_info:
-        add_change("edit-users", _l("Created new users: %s") % ", ".join(new_users_info))
+        add_change(
+            "edit-users",
+            _l("Created new users: %s") % ", ".join(new_users_info),
+        )
     if modified_users_info:
-        add_change("edit-users", _l("Modified users: %s") % ", ".join(modified_users_info))
+        add_change(
+            "edit-users",
+            _l("Modified users: %s") % ", ".join(modified_users_info),
+        )
+        if (
+            affected_user := used_dcd_rest_api_user()
+        ) is not None and affected_user in modified_users_info:
+            add_change(
+                "edit-dcd-user",
+                _l("User %s of DCD connection was modified") % affected_user,
+                domains=[ConfigDomainDCD],
+            )
 
     userdb.save_users(all_users, datetime.now())
 

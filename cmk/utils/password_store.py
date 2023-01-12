@@ -154,6 +154,7 @@ def _load(store_path: Path) -> dict[str, str]:
 
 
 def extract(password_id: PasswordId) -> str | None:
+    """Translate the password store reference to the actual password"""
     if not isinstance(password_id, tuple):
         return load().get(password_id)
 

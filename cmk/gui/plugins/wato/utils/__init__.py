@@ -397,6 +397,11 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     allow_empty: bool = True,
     size: int = 25,
 ) -> CascadingDropdown:
+    """ValueSpec for a password that can be entered directly or selected from a password store
+
+    One should look into using :func:`password_store.extract` to translate the reference to the
+    actual password.
+    """
     return CascadingDropdown(
         title=title,
         help=help,

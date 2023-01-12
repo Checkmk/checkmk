@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password
 
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
+from cmk.gui.cee.plugins.watolib.dcd import ConfigDomainDCD
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
@@ -39,6 +41,13 @@ from cmk.gui.watolib.user_scripts import (
     user_script_choices,
     user_script_title,
 )
+
+if not cmk_version.is_raw_edition():
+    from cmk.gui.cee.plugins.watolib.dcd import used_dcd_rest_api_user
+else:
+    # Stub needed for non enterprise edition
+    def used_dcd_rest_api_user():  # type: ignore[misc]
+        return None
 
 
 def delete_users(users_to_delete):
@@ -103,8 +112,20 @@ def edit_users(changed_users):
 
     if new_users_info:
         add_change("edit-users", _("Created new users: %s") % ", ".join(new_users_info))
+
     if modified_users_info:
-        add_change("edit-users", _("Modified users: %s") % ", ".join(modified_users_info))
+        add_change(
+            "edit-users",
+            _("Modified users: %s") % ", ".join(modified_users_info),
+        )
+        if (
+            affected_user := used_dcd_rest_api_user()
+        ) is not None and affected_user in modified_users_info:
+            add_change(
+                "edit-dcd-user",
+                _("User %s of DCD connection was modified") % affected_user,
+                domains=[ConfigDomainDCD],
+            )
 
     userdb.save_users(all_users)
 

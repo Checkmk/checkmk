@@ -297,7 +297,10 @@ def add_change(
     sites: Optional[List[SiteId]] = None,
     domain_settings: Optional[DomainSettings] = None,
 ) -> None:
-
+    """
+    config_domains:
+        list of config domains that are affected by this change
+    """
     log_audit(
         action=action_name,
         message=text,

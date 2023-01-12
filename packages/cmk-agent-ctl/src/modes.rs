@@ -9,4 +9,5 @@ pub mod import_connection;
 pub mod pull;
 pub mod push;
 pub mod registration;
+pub mod renew_certificate;
 pub mod status;

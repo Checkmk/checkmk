@@ -29,6 +29,7 @@ use modes::import_connection::import;
 use modes::pull::pull;
 use modes::push::handle_push_cycle as push;
 use modes::registration;
+use modes::renew_certificate::renew_certificate;
 use modes::status::status;
 pub use setup::init;
 
@@ -110,6 +111,10 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
         cli::Mode::DeleteAll(delete_all_opts) => {
             delete_all(&mut registry, delete_all_opts.enable_insecure_connections)
         }
+        cli::Mode::RenewCertificate(renew_certificate_opts) => renew_certificate(
+            &mut registry,
+            config::RenewCertificateConfig::new(runtime_config, renew_certificate_opts),
+        ),
     }
 }
 

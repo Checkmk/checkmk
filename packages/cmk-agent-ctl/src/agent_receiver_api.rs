@@ -10,13 +10,18 @@ use serde_with::DisplayFromStr;
 use string_enum::StringEnum;
 
 #[derive(Serialize)]
-struct PairingBody {
+struct CsrBody {
     csr: String,
 }
 
 #[derive(Deserialize)]
 pub struct PairingResponse {
     pub root_cert: String,
+    pub client_cert: String,
+}
+
+#[derive(Deserialize)]
+pub struct CertificateResponse {
     pub client_cert: String,
 }
 
@@ -112,6 +117,15 @@ pub trait Status {
     ) -> AnyhowResult<StatusResponse>;
 }
 
+pub trait RenewCertificate {
+    fn renew_certificate(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        csr: String,
+    ) -> AnyhowResult<CertificateResponse>;
+}
+
 pub struct Api {
     pub use_proxy: bool,
 }
@@ -181,13 +195,45 @@ impl Pairing for Api {
         )?
         .post(Self::endpoint_url(base_url, &["pairing"])?)
         .basic_auth(&credentials.username, Some(&credentials.password))
-        .json(&PairingBody { csr })
+        .json(&CsrBody { csr })
         .send()?;
         let status = response.status();
 
         if status == StatusCode::OK {
             let body = response.text().context("Failed to obtain response body")?;
             serde_json::from_str::<PairingResponse>(&body)
+                .context(format!("Error parsing this response body: {}", body))
+        } else {
+            bail!(Api::error_response_description(
+                status,
+                response.text().ok()
+            ))
+        }
+    }
+}
+
+impl RenewCertificate for Api {
+    fn renew_certificate(
+        &self,
+        base_url: &reqwest::Url,
+        connection: &config::TrustedConnection,
+        csr: String,
+    ) -> AnyhowResult<CertificateResponse> {
+        let response = certs::client(
+            Some(connection.tls_handshake_credentials()?),
+            self.use_proxy,
+        )?
+        .post(Self::endpoint_url(
+            base_url,
+            &["renew_certificate", &connection.uuid.to_string()],
+        )?)
+        .json(&CsrBody { csr })
+        .send()?;
+        let status = response.status();
+
+        if status == StatusCode::OK {
+            let body = response.text().context("Failed to obtain response body")?;
+            serde_json::from_str::<CertificateResponse>(&body)
                 .context(format!("Error parsing this response body: {}", body))
         } else {
             bail!(Api::error_response_description(

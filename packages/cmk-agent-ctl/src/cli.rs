@@ -79,6 +79,9 @@ pub enum Mode {
     /// A connection is imported from the JSON-encoded connection information.
     /// A compatible dataset can be created using the 'proxy-register' command.
     Import(ImportOpts),
+
+    /// Renew the certificate for a registered connection.
+    RenewCertificate(RenewCertificateOpts),
 }
 
 #[derive(Parser)]
@@ -231,6 +234,18 @@ pub struct ImportOpts {
     /// The file to import. If not provided, data is read from standard input.
     #[arg(name = "CONNECTION_FILE")]
     pub conn_file: Option<std::path::PathBuf>,
+}
+
+#[derive(Parser)]
+pub struct RenewCertificateOpts {
+    /// The connection to renew
+    #[arg(name = "CONNECTION")]
+    pub connection: String,
+
+    /// Detect and use proxy settings configured on this system for outgoing HTTPS connections.
+    /// The default is to ignore configured proxies and to connect directly.
+    #[arg(short = 'd', long)]
+    pub detect_proxy: bool,
 }
 
 impl Cli {

@@ -258,6 +258,24 @@ impl PullConfig {
     }
 }
 
+pub struct RenewCertificateConfig {
+    pub use_proxy: bool,
+    pub connection: String,
+}
+
+impl RenewCertificateConfig {
+    pub fn new(
+        runtime_config: RuntimeConfig,
+        renew_certificate_opts: cli::RenewCertificateOpts,
+    ) -> RenewCertificateConfig {
+        RenewCertificateConfig {
+            use_proxy: renew_certificate_opts.detect_proxy
+                || runtime_config.detect_proxy.unwrap_or(false),
+            connection: renew_certificate_opts.connection,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Registry {
     connections: RegisteredConnections,

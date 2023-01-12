@@ -209,7 +209,7 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 test-format-js:
-	cd ..; npm ci && scripts/run-prettier --check --no-color --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
+	cd ..; npm ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
 
 test-typescript-types:
 	cd ..; npm ci && scripts/check-typescript-types.sh
@@ -233,7 +233,7 @@ test-typescript-types-docker:
 	../scripts/run-in-docker.sh make --quiet test-typescript-types
 
 test-format-css:
-	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/themes/**/*.scss"
+	cd ..; scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
 
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css

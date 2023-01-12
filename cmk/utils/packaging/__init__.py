@@ -41,6 +41,7 @@ from ._installed import (
 from ._manifest import (
     extract_manifest,
     extract_manifest_optionally,
+    extract_manifests,
     Manifest,
     manifest_template,
     read_manifest_optionally,
@@ -628,22 +629,13 @@ def get_stored_manifests(
     package_store: PackageStore,
 ) -> StoredManifests:
     return StoredManifests(
-        local=_get_manifests(package_store.list_local_packages()),
-        shipped=_get_manifests(package_store.list_shipped_packages()),
+        local=extract_manifests(package_store.list_local_packages(), g_logger),
+        shipped=extract_manifests(package_store.list_shipped_packages(), g_logger),
     )
 
 
 def get_enabled_manifests(log: logging.Logger | None = None) -> Mapping[PackageID, Manifest]:
-    return {m.id: m for m in _get_manifests(_get_enabled_package_paths(), log)}
-
-
-def _get_manifests(paths: Iterable[Path], log: logging.Logger | None = None) -> list[Manifest]:
-    return [
-        manifest
-        for pkg_path in paths
-        if (manifest := extract_manifest_optionally(pkg_path, g_logger if log is None else log))
-        is not None
-    ]
+    return {m.id: m for m in extract_manifests(_get_enabled_package_paths(), log or g_logger)}
 
 
 def _get_enabled_package_paths() -> list[Path]:

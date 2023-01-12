@@ -8,7 +8,7 @@ from __future__ import annotations
 import ast
 import pprint
 import tarfile
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from functools import lru_cache
 from io import BytesIO
 from logging import Logger
@@ -134,6 +134,14 @@ def extract_manifest(file_content: bytes) -> Manifest:
         except KeyError:
             raise PackageException("'info' not contained in MKP")
     return Manifest.parse_python_string(raw_info.decode())
+
+
+def extract_manifests(paths: Iterable[Path], logger: Logger) -> list[Manifest]:
+    return [
+        manifest
+        for pkg_path in paths
+        if (manifest := extract_manifest_optionally(pkg_path, logger)) is not None
+    ]
 
 
 def extract_manifest_optionally(pkg_path: Path, logger: Logger) -> Manifest | None:

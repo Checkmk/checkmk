@@ -88,6 +88,28 @@ def _command_inspect(args: argparse.Namespace, _logger: logging.Logger) -> int:
     return 0
 
 
+def _args_show_all(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("--json", action="store_true", help="format output as json")
+
+
+def _command_show_all(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Show all manifests"""
+    stored_manifests = get_stored_manifests(PackageStore())
+
+    if args.json:
+        sys.stdout.write(f"{stored_manifests.json()}\n")
+        return 0
+
+    # I don't think this is very useful, but we include it for consistency.
+    sys.stdout.write("Local extension packages\n========================\n\n")
+    sys.stdout.write("".join(f"{m.to_text(summarize=False)}\n" for m in stored_manifests.local))
+    sys.stdout.write("Shipped extension packages\n==========================\n\n")
+    sys.stdout.write("".join(f"{m.to_text(summarize=False)}\n" for m in stored_manifests.shipped))
+    return 0
+
+
 def _args_store(
     subparser: argparse.ArgumentParser,
 ) -> None:

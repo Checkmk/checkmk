@@ -36,6 +36,7 @@ Available commands are:
    list                    ...  List all installed packages
    list NAME               ...  List files of installed package
    show NAME               ...  Show information about installed package
+   show-all [--json]       ...  Show information about all known packages
    install PACK.mkp        ...  Install or update package from file PACK.mkp
    remove NAME VERSION     ...  Uninstall and delete package NAME
    disable NAME [VERSION]  ...  Disable package NAME
@@ -63,6 +64,7 @@ def do_packaging(args: list[str]) -> None:
         "list": package_list,
         "find": lambda args: cli.main(["find", *args], logger),
         "inspect": lambda args: cli.main(["inspect", *args], logger),
+        "show-all": lambda args: cli.main(["show-all", *args], logger),
         "show": package_show,
         "package": lambda args: cli.main(["package", *args], logger),
         "remove": lambda args: cli.main(["remove", *args], logger),

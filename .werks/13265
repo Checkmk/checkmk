@@ -1,0 +1,15 @@
+Title: netapp_api_if: discover interfaces even if they have no `recv_data` entry
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673535001
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Discovery for `netapp_api_if` would skip interfaces with no entry for amount of received data (for
+historical) reasons.
+This change makes the discovery function discover even those interfaces without this information
+resulting in potentially more discovered items.
+

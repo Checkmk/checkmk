@@ -125,41 +125,39 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
                         oper_status = "1"
                         break
 
-        # Only add interfaces with counters
-        if "recv_data" in values:
-            nics.append(
-                interfaces.InterfaceWithCounters(
-                    interfaces.Attributes(
-                        index=str(idx + 1),
-                        descr=nic_name,
-                        alias=values.get("interface-name", ""),
-                        type="6",
-                        speed=interfaces.saveint(speed),
-                        oper_status=oper_status,
-                        phys_address=interfaces.mac_address_from_hexstring(
-                            values.get("mac-address", "")
-                        ),
-                        speed_as_text=speed == "auto" and "auto" or "",
+        nics.append(
+            interfaces.InterfaceWithCounters(
+                interfaces.Attributes(
+                    index=str(idx + 1),
+                    descr=nic_name,
+                    alias=values.get("interface-name", ""),
+                    type="6",
+                    speed=interfaces.saveint(speed),
+                    oper_status=oper_status,
+                    phys_address=interfaces.mac_address_from_hexstring(
+                        values.get("mac-address", "")
                     ),
-                    interfaces.Counters(
-                        in_octets=interfaces.saveint(values.get("recv_data")),
-                        in_ucast=interfaces.saveint(values.get("recv_packet")),
-                        in_mcast=interfaces.saveint(values.get("recv_mcasts")),
-                        in_err=interfaces.saveint(values.get("recv_errors")),
-                        out_octets=interfaces.saveint(values.get("send_data")),
-                        out_ucast=interfaces.saveint(values.get("send_packet")),
-                        out_mcast=interfaces.saveint(values.get("send_mcasts")),
-                        out_err=interfaces.saveint(values.get("send_errors")),
-                    ),
-                )
+                    speed_as_text=speed == "auto" and "auto" or "",
+                ),
+                interfaces.Counters(
+                    in_octets=interfaces.saveint(values.get("recv_data")),
+                    in_ucast=interfaces.saveint(values.get("recv_packet")),
+                    in_mcast=interfaces.saveint(values.get("recv_mcasts")),
+                    in_err=interfaces.saveint(values.get("recv_errors")),
+                    out_octets=interfaces.saveint(values.get("send_data")),
+                    out_ucast=interfaces.saveint(values.get("send_packet")),
+                    out_mcast=interfaces.saveint(values.get("send_mcasts")),
+                    out_err=interfaces.saveint(values.get("send_errors")),
+                ),
             )
-            if "home-port" in values:
-                extra_info.setdefault(nic_name, {}).update(
-                    {
-                        "home_port": values["home-port"],
-                        "is_home": values.get("is-home") == "true",
-                    }
-                )
+        )
+        if "home-port" in values:
+            extra_info.setdefault(nic_name, {}).update(
+                {
+                    "home_port": values["home-port"],
+                    "is_home": values.get("is-home") == "true",
+                }
+            )
 
     return nics, extra_info
 

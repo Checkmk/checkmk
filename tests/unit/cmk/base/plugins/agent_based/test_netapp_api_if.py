@@ -219,6 +219,34 @@ from cmk.base.plugins.agent_based.utils import interfaces
             ],
             [
                 Service(
+                    item="1",
+                    parameters={
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 1000000000,
+                    },
+                ),
+                Service(
+                    item="2",
+                    parameters={
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 1000000000,
+                    },
+                ),
+                Service(
+                    item="3",
+                    parameters={
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 1000000000,
+                    },
+                ),
+                Service(
+                    item="4",
+                    parameters={
+                        "discovered_oper_status": ["1"],
+                        "discovered_speed": 1000000000,
+                    },
+                ),
+                Service(
                     item="5",
                     parameters={
                         "discovered_oper_status": ["1"],

@@ -201,16 +201,8 @@ def check_netapp_api_if(
         nics,
     )
 
-    for iface in nics:
+    for iface in interfaces.matching_interfaces_for_item(item, nics):
         first_member = True
-        if not interfaces.item_matches(
-            item,
-            iface.index,
-            iface.alias,
-            iface.descr,
-        ):
-            continue
-
         vif = extra_info.get(iface.descr)
         if vif is None:
             continue

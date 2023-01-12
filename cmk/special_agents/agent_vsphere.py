@@ -1068,7 +1068,10 @@ class ESXSession(requests.Session):
     def __init__(self, address: str, port: str, *, cert_check: bool | str = True) -> None:
         super().__init__()
 
-        service = f"https://{address}:{port}"
+        if address.count(":") == 0:
+            service = f"https://{address}:{port}"
+        else:
+            service = f"https://[{address}]:{port}"
         if cert_check is False:
             # Watch out: we must provide the verify keyword to every individual request call!
             # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable

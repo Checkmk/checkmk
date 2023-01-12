@@ -1,0 +1,12 @@
+Title: agent_vsphere: Fix the IPv6 address format
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1683631762
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b8
+
+

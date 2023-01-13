@@ -718,15 +718,15 @@ class Table:
 
         reasons = []
         retentions: TableRetentions = {}
-
         compared_idents = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
+
         self.add_key_columns(other.key_columns)
 
         for ident in compared_idents.only_old:
             old_row: SDRow = {}
             for key, value in other._rows[ident].items():
-                # If a key is part of the row ident then retention info is not added.
-                # These keys are mandatory and added later if non-ident-key-values are found.
+                # Do not take key columns into account.
+                # These keys are mandatory and are added later.
                 if (
                     key not in other.key_columns
                     and filter_func(key)
@@ -737,7 +737,7 @@ class Table:
                     old_row.setdefault(key, value)
 
             if old_row:
-                # Update row with ident-key-values.
+                # Update row with key column entries
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
                 reasons.append(f"added row below {ident!r}")
@@ -749,8 +749,8 @@ class Table:
 
             row: SDRow = {}
             for key in compared_keys.only_old:
-                # If a key is part of the row ident then retention info is not added.
-                # These keys are mandatory and added later if non-ident-key-values are found.
+                # Do not take key columns into account.
+                # These keys are mandatory and are added later.
                 if (
                     key not in self.key_columns
                     and filter_func(key)
@@ -765,19 +765,11 @@ class Table:
                     retentions.setdefault(ident, {})[key] = inv_intervals
 
             if row:
-                # Update row with ident-key-values.
+                # Update row with key column entries
                 row.update(
                     {
-                        **{
-                            k: other._rows[ident][k]
-                            for k in other.key_columns
-                            if k in other._rows[ident][k]
-                        },
-                        **{
-                            k: self._rows[ident][k]
-                            for k in self.key_columns
-                            if k in self._rows[ident][k]
-                        },
+                        **{k: other._rows[ident][k] for k in other.key_columns},
+                        **{k: self._rows[ident][k] for k in self.key_columns},
                     }
                 )
                 self.add_row(ident, row)

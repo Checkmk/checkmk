@@ -1383,3 +1383,38 @@ def test_add_table() -> None:
     assert node.table.path == path
     assert node.table.key_columns == key_columns
     assert node.table.retentions == retentions
+
+
+def test_table_update_from_previous() -> None:
+    previous_table = Table(
+        key_columns=["kc"],
+        retentions={
+            ("KC",): {
+                "c1": RetentionIntervals(1, 2, 3),
+                "c2": RetentionIntervals(1, 2, 3),
+            }
+        },
+    )
+    previous_table.add_rows([{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}])
+
+    current_table = Table(key_columns=["kc"])
+    current_table.add_rows([{"kc": "KC", "c1": "C1: cur", "c3": "C3: only cur"}])
+
+    current_table.update_from_previous(
+        0,
+        previous_table,
+        lambda k: True,
+        RetentionIntervals(4, 5, 6),
+    )
+
+    assert current_table.key_columns == ["kc"]
+    assert current_table.retentions == {
+        ("KC",): {
+            "c1": RetentionIntervals(4, 5, 6),
+            "c2": RetentionIntervals(1, 2, 3),
+            "c3": RetentionIntervals(4, 5, 6),
+        }
+    }
+    assert current_table.rows == [
+        {"c1": "C1: cur", "c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}
+    ]

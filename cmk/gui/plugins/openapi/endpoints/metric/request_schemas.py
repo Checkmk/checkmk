@@ -5,7 +5,7 @@
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui.fields import HostField, SiteField
-from cmk.gui.plugins.openapi.endpoints.graph.common import (
+from cmk.gui.plugins.openapi.endpoints.metric.common import (
     BaseRequestSchema,
     GraphIdField,
     MetricIdField,

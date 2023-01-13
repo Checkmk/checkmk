@@ -2,15 +2,15 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Graphs
+"""Metrics
 
 Graphs visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
 
 from cmk.gui.plugins.metrics.graph_images import graph_spec_from_request
-from cmk.gui.plugins.openapi.endpoints.graph import request_schemas, response_schemas
-from cmk.gui.plugins.openapi.endpoints.graph.common import (
+from cmk.gui.plugins.openapi.endpoints.metric import request_schemas, response_schemas
+from cmk.gui.plugins.openapi.endpoints.metric.common import (
     graph_id_from_request,
     reorganize_response,
     reorganize_time_range,
@@ -22,7 +22,7 @@ from cmk.gui.raw.plugins.main_modules.registration import resolve_combined_singl
 
 # This is the only endpoint that is available in the raw edition
 @Endpoint(
-    constructors.domain_type_action_href("graph", "get"),
+    constructors.domain_type_action_href("metric", "get"),
     "cmk/get_graph",
     method="post",
     tag_group="Monitoring",

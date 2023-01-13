@@ -11,7 +11,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-GRAPH_ENDPOINT_GET = "/NO_SITE/check_mk/api/1.0/domain-types/graph/actions/get/invoke"
+GRAPH_ENDPOINT_GET = "/NO_SITE/check_mk/api/1.0/domain-types/metric/actions/get/invoke"
 
 
 @pytest.mark.usefixtures("with_host")

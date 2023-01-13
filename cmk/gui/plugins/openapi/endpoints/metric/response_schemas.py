@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.plugins.openapi.endpoints.graph.common import TimeRange
+from cmk.gui.plugins.openapi.endpoints.metric.common import TimeRange
 
 from cmk.fields import Float, Integer, List, Nested, String
 

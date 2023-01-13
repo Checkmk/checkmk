@@ -318,7 +318,7 @@ def _view_editor_spec(
                 parameters=_get_params(inner_value),
                 link_spec=_get_link_spec(inner_value),
                 tooltip=inner_value.get("tooltip"),
-                join_index=inner_value["join_value"],
+                join_value=inner_value["join_value"],
                 column_title=inner_value["column_title"],
             )
 
@@ -351,10 +351,10 @@ def _view_editor_spec(
                 raw_vs["tooltip"] = column_spec.tooltip
             return column_type, raw_vs
 
-        if column_type == "join_column" and column_spec.join_index:
+        if column_type == "join_column" and column_spec.join_value:
             raw_vs = _RawVSJoinColumnSpec(
                 painter_spec=_get_painter_spec(column_spec),
-                join_value=column_spec.join_index,
+                join_value=column_spec.join_value,
                 column_title=column_spec.column_title or "",
             )
             if column_spec.link_spec:

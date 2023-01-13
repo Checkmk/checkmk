@@ -4759,15 +4759,15 @@ builtin_views["docker_containers"] = _simple_host_view(
             ColumnSpec(name="host_docker_node"),
             ColumnSpec(
                 name="perfometer",
-                join_index="CPU utilization",
+                join_value="CPU utilization",
             ),
             ColumnSpec(
                 name="perfometer",
-                join_index="Memory used",
+                join_value="Memory used",
             ),
             ColumnSpec(
                 name="perfometer",
-                join_index="Uptime",
+                join_value="Uptime",
             ),
         ],
         "name": "docker_containers",
@@ -4807,20 +4807,20 @@ builtin_views["vpshere_vms"] = _simple_host_view(
             *host_view_painters,
             ColumnSpec(
                 name="svc_plugin_output",
-                join_index="ESX Hostsystem",
+                join_value="ESX Hostsystem",
                 column_title="Server",
             ),
             ColumnSpec(
                 name="perfometer",
-                join_index="CPU utilization",
+                join_value="CPU utilization",
             ),
             ColumnSpec(
                 name="perfometer",
-                join_index="ESX Memory",
+                join_value="ESX Memory",
             ),
             ColumnSpec(
                 name="svc_plugin_output",
-                join_index="ESX Guest Tools",
+                join_value="ESX Guest Tools",
                 column_title="Guest tools",
             ),
         ],
@@ -4920,19 +4920,19 @@ builtin_views["cmk_servers"] = {
         ),
         ColumnSpec(
             name="perfometer",
-            join_index="CPU utilization",
+            join_value="CPU utilization",
         ),
         ColumnSpec(
             name="perfometer",
-            join_index="CPU load",
+            join_value="CPU load",
         ),
         ColumnSpec(
             name="perfometer",
-            join_index="Memory",
+            join_value="Memory",
         ),
         ColumnSpec(
             name="perfometer",
-            join_index="Disk IO SUMMARY",
+            join_value="Disk IO SUMMARY",
         ),
     ],
     "play_sounds": False,

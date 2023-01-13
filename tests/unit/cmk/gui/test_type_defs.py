@@ -6,10 +6,10 @@
 import pytest
 
 from cmk.gui.type_defs import (
+    _RawColumnSpec,
+    _RawLegacyColumnSpec,
     ColumnSpec,
     PainterParameters,
-    RawColumnSpec,
-    RawLegacyColumnSpec,
     VisualLinkSpec,
 )
 
@@ -30,7 +30,7 @@ from cmk.gui.type_defs import (
                     name="view_name",
                 ),
                 tooltip=None,
-                join_index=None,
+                join_value=None,
                 column_title=None,
             ),
         ),
@@ -48,7 +48,7 @@ from cmk.gui.type_defs import (
                     name="view_name",
                 ),
                 tooltip="tooltip",
-                join_index=None,
+                join_value=None,
                 column_title=None,
             ),
         ),
@@ -67,7 +67,7 @@ from cmk.gui.type_defs import (
                     name="view_name",
                 ),
                 tooltip="tooltip",
-                join_index="join index",
+                join_value="join index",
                 column_title=None,
             ),
         ),
@@ -87,7 +87,7 @@ from cmk.gui.type_defs import (
                     name="view_name",
                 ),
                 tooltip="tooltip",
-                join_index="join index",
+                join_value="join index",
                 column_title="column title",
             ),
         ),
@@ -107,7 +107,7 @@ from cmk.gui.type_defs import (
                     name="view_name",
                 ),
                 tooltip=None,
-                join_index=None,
+                join_value=None,
                 column_title=None,
             ),
         ),
@@ -128,7 +128,7 @@ from cmk.gui.type_defs import (
                     name="view_name",
                 ),
                 tooltip="tooltip",
-                join_index="join index",
+                join_value="join index",
                 column_title="column title",
             ),
         ),
@@ -149,14 +149,35 @@ from cmk.gui.type_defs import (
                     name="view_name",
                 ),
                 tooltip=None,
-                join_index=None,
+                join_value=None,
+                column_title=None,
+            ),
+        ),
+        pytest.param(
+            {
+                "name": "name",
+                "parameters": None,
+                "link_spec": ("reports", "view_name"),
+                "tooltip": "",
+                "join_index": "join index",
+                "column_title": None,
+            },
+            ColumnSpec(
+                name="name",
+                parameters=PainterParameters(),
+                link_spec=VisualLinkSpec(
+                    type_name="reports",
+                    name="view_name",
+                ),
+                tooltip=None,
+                join_value="join index",
                 column_title=None,
             ),
         ),
     ],
 )
 def test_column_spec_from_raw(
-    raw_column_spec: tuple | RawLegacyColumnSpec,
+    raw_column_spec: _RawColumnSpec | _RawLegacyColumnSpec | tuple,
     expected_column_spec: ColumnSpec,
 ) -> None:
     assert ColumnSpec.from_raw(raw_column_spec) == expected_column_spec
@@ -174,7 +195,7 @@ def test_column_spec_from_raw(
                     name="view_name",
                 ),
                 tooltip="tooltip",
-                join_index="join index",
+                join_value="join index",
                 column_title="column title",
             ),
             {
@@ -182,7 +203,7 @@ def test_column_spec_from_raw(
                 "parameters": {"column_title": "another column title"},
                 "link_spec": ("views", "view_name"),
                 "tooltip": "tooltip",
-                "join_index": "join index",
+                "join_value": "join index",
                 "column_title": "column title",
                 "column_type": "join_column",
             },
@@ -193,7 +214,7 @@ def test_column_spec_from_raw(
                 parameters=PainterParameters(),
                 link_spec=None,
                 tooltip=None,
-                join_index=None,
+                join_value=None,
                 column_title=None,
             ),
             {
@@ -201,7 +222,7 @@ def test_column_spec_from_raw(
                 "parameters": {},
                 "link_spec": None,
                 "tooltip": None,
-                "join_index": None,
+                "join_value": None,
                 "column_title": None,
                 "column_type": "column",
             },
@@ -210,6 +231,6 @@ def test_column_spec_from_raw(
 )
 def test_column_spec_to_raw(
     column_spec: ColumnSpec,
-    expected_raw_column_spec: RawColumnSpec,
+    expected_raw_column_spec: _RawColumnSpec,
 ) -> None:
     assert column_spec.to_raw() == expected_raw_column_spec

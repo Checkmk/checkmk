@@ -623,16 +623,16 @@ class JoinCell(Cell):
         sort_url_parameter: str | None,
     ) -> None:
         super().__init__(column_spec, sort_url_parameter)
-        if (join_index := column_spec.join_index) is None:
+        if (join_value := column_spec.join_value) is None:
             raise ValueError()
 
-        self.join_index = join_index
+        self.join_value = join_value
 
     def livestatus_filter(self, join_column_name: str) -> LivestatusQuery:
-        return f"Filter: {lqencode(join_column_name)} = {lqencode(self.join_index)}"
+        return f"Filter: {lqencode(join_column_name)} = {lqencode(self.join_value)}"
 
     def title(self, use_short: bool = True) -> str:
-        return self._custom_title or self.join_index
+        return self._custom_title or self.join_value
 
     def export_title(self) -> str:
         serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
@@ -640,7 +640,7 @@ class JoinCell(Cell):
 
 
 def join_row(row: Row, cell: Cell) -> Row:
-    return row.get("JOIN", {}).get(cell.join_index) if isinstance(cell, JoinCell) else row
+    return row.get("JOIN", {}).get(cell.join_value) if isinstance(cell, JoinCell) else row
 
 
 class EmptyCell(Cell):

@@ -276,27 +276,21 @@ def _make_default_painter_parameters() -> PainterParameters:
 ColumnTypes = Literal["column", "join_column"]
 
 
-class RawLegacyColumnSpec(TypedDict):
+class _RawCommonColumnSpec(TypedDict):
     name: PainterName
     parameters: PainterParameters | None
     link_spec: tuple[VisualTypeName, VisualName] | None
     tooltip: ColumnName | None
-    join_index: ColumnName | None
     column_title: str | None
     column_type: ColumnTypes | None
 
 
-class RawColumnSpec(TypedDict):
-    name: PainterName
-    parameters: PainterParameters
-    link_spec: tuple[VisualTypeName, VisualName] | None
-    tooltip: ColumnName | None
+class _RawLegacyColumnSpec(_RawCommonColumnSpec):
     join_index: ColumnName | None
-    column_title: str | None
-    column_type: ColumnTypes | None
 
 
-# TODO join_index -> join_value
+class _RawColumnSpec(_RawCommonColumnSpec):
+    join_value: ColumnName | None
 
 
 @dataclass(frozen=True)
@@ -305,7 +299,7 @@ class ColumnSpec:
     parameters: PainterParameters = field(default_factory=_make_default_painter_parameters)
     link_spec: VisualLinkSpec | None = None
     tooltip: ColumnName | None = None
-    join_index: ColumnName | None = None
+    join_value: ColumnName | None = None
     column_title: str | None = None
     _column_type: ColumnTypes | None = None
 
@@ -313,16 +307,25 @@ class ColumnSpec:
     def column_type(self) -> ColumnTypes:
         if self._column_type in ["column", "join_column"]:
             return self._column_type
-        return "column" if self.join_index is None else "join_column"
+        return "column" if self.join_value is None else "join_column"
 
     @classmethod
-    def from_raw(cls, value: RawColumnSpec | RawLegacyColumnSpec | tuple) -> ColumnSpec:
+    def from_raw(cls, value: _RawColumnSpec | _RawLegacyColumnSpec | tuple) -> ColumnSpec:
         # TODO
         # 1: The params-None case can be removed with Checkmk 2.3
         # 2: The tuple-case can be removed with Checkmk 2.4.
+        # 3: The join_index case can be removed with Checkmk 2.3
         # => The transformation is done via update_config/plugins/actions/cre_visuals.py
 
         if isinstance(value, dict):
+
+            def _get_join_value(value: _RawColumnSpec | _RawLegacyColumnSpec) -> ColumnName | None:
+                if isinstance(join_value := value.get("join_value"), str):
+                    return join_value
+                if isinstance(join_value := value.get("join_index"), str):
+                    return join_value
+                return None
+
             return cls(
                 name=value["name"],
                 parameters=value["parameters"] or PainterParameters(),
@@ -332,7 +335,7 @@ class ColumnSpec:
                     else VisualLinkSpec.from_raw(link_spec)
                 ),
                 tooltip=value["tooltip"] or None,
-                join_index=value["join_index"],
+                join_value=_get_join_value(value),
                 column_title=value["column_title"],
                 _column_type=value.get("column_type"),
             )
@@ -352,18 +355,18 @@ class ColumnSpec:
             parameters=parameters,
             link_spec=None if value[1] is None else VisualLinkSpec.from_raw(value[1]),
             tooltip=value[2],
-            join_index=value[3],
+            join_value=value[3],
             column_title=value[4],
             _column_type=None,
         )
 
-    def to_raw(self) -> RawColumnSpec:
+    def to_raw(self) -> _RawColumnSpec:
         return {
             "name": self.name,
             "parameters": self.parameters,
             "link_spec": None if self.link_spec is None else self.link_spec.to_raw(),
             "tooltip": self.tooltip,
-            "join_index": self.join_index,
+            "join_value": self.join_value,
             "column_title": self.column_title,
             "column_type": self.column_type,
         }

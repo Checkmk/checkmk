@@ -120,7 +120,7 @@ class View:
         return compute_sort_url_parameter(
             painter.name,
             painter.parameters,
-            painter.join_index,
+            painter.join_value,
             self.spec["group_painters"],
             self.spec["sorters"],
             self._user_sorters or [],

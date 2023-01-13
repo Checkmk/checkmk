@@ -19,7 +19,7 @@ def test_get_needed_join_columns(view: View) -> None:
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"] = [
         *view_spec["painters"],
-        ColumnSpec(name="service_description", join_index="CPU load"),
+        ColumnSpec(name="service_description", join_value="CPU load"),
     ]
     view = View(view.name, view_spec, view_spec.get("context", {}))
 

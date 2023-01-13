@@ -1933,11 +1933,11 @@ multisite_builtin_views["inv_hosts_cpu"] = {
         ColumnSpec(name="inv_hardware_cpu_max_speed"),
         ColumnSpec(
             name="perfometer",
-            join_index="CPU load",
+            join_value="CPU load",
         ),
         ColumnSpec(
             name="perfometer",
-            join_index="CPU utilization",
+            join_value="CPU utilization",
         ),
     ],
     "sorters": [],

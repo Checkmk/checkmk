@@ -497,9 +497,9 @@ def _parse_url_sorters(
         return sorters
     for s in sort.split(","):
         if "~" in s:
-            sorter, join_index = s.split("~", 1)
+            sorter, join_value = s.split("~", 1)
         else:
-            sorter, join_index = s, None
+            sorter, join_value = s, None
 
         negate = False
         if sorter.startswith("-"):
@@ -513,7 +513,7 @@ def _parse_url_sorters(
                 continue  # Skip sorters with unresolvable parameters
             sorter = (sorter, parameters)
 
-        sorters.append(SorterSpec(sorter, negate, join_index))
+        sorters.append(SorterSpec(sorter, negate, join_value))
     return sorters
 
 

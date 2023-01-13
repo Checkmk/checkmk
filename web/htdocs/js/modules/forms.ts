@@ -4,13 +4,54 @@
 
 import $ from "jquery";
 import "select2";
-import Tagify from "@yaireo/tagify";
+import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
 import "element-closest-polyfill";
 import Swal from "sweetalert2";
 
 import * as utils from "utils";
 import * as ajax from "ajax";
-import {toggle_label_row_opacity, initialize_autocompleters} from "valuespecs";
+import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
+
+interface TagifyState {
+    inputText: string;
+    editing: boolean;
+    composing: boolean;
+    actions: any;
+    mixMode: any;
+    dropdown: any;
+    flaggedTags: any;
+    blockChangeEvent: boolean;
+    lastOriginalValueReported: string;
+    mainEvents: boolean;
+}
+
+declare global {
+    class Tagify {
+        state: TagifyState;
+    }
+}
+
+interface ConfirmLinkCustomArgs {
+    title: string;
+    html: string;
+    confirmButtonText: string;
+    cancelButtonText: string;
+    icon: string;
+    custom_class_options: Record<string, string>;
+}
+
+interface CheckMKTagifyArgs extends Tagify.TagifySettings<CheckMKTagifyData> {
+    pattern: RegExp;
+    dropdown: {
+        enabled: number;
+        caseSensitive: boolean;
+    };
+    editTags: EditTagsRuntimeSettings;
+}
+
+interface CheckMKTagifyData extends Tagify.BaseTagData {
+    state: TagifyState;
+}
 
 export function enable_dynamic_form_elements(
     container: HTMLElement | null = null
@@ -20,9 +61,11 @@ export function enable_dynamic_form_elements(
 }
 
 let g_previous_timeout_id: number | null = null;
-let g_ajax_obj;
+let g_ajax_obj: XMLHttpRequest | null;
 
-export function enable_select2_dropdowns(container) {
+export function enable_select2_dropdowns(
+    container: JQuery<Document> | HTMLElement | HTMLDocument | null
+) {
     if (!container) container = $(document);
 
     const elements = $(container)
@@ -56,20 +99,25 @@ export function enable_select2_dropdowns(container) {
     });
 }
 
-function enable_label_input_fields(container) {
+function enable_label_input_fields(
+    container: HTMLElement | HTMLDocument | null
+) {
     if (!container) container = document;
 
-    const elements = container.querySelectorAll("input.labels");
+    const elements = container.querySelectorAll(
+        "input.labels"
+    ) as NodeListOf<HTMLInputElement>;
     elements.forEach(element => {
         // Do not tagify objects that are part of a ListOf valuespec template
         if (element.closest(".vlof_prototype") !== null) {
             return;
         }
 
-        const max_labels = element.getAttribute("data-max-labels");
+        const data_max_labels = element.getAttribute("data-max-labels");
+        const max_labels = data_max_labels ? parseFloat(data_max_labels) : null;
         const world = element.getAttribute("data-world");
 
-        const tagify_args = {
+        const tagify_args: CheckMKTagifyArgs = {
             pattern: /^[^:]+:[^:]+$/,
             dropdown: {
                 enabled: 1, // show dropdown on first character
@@ -85,7 +133,7 @@ function enable_label_input_fields(container) {
             tagify_args["maxTags"] = max_labels;
         }
 
-        const tagify = new Tagify(element, tagify_args);
+        const tagify = new Tagify<CheckMKTagifyData>(element, tagify_args);
 
         // Add custom validation function that ensures that a single label key is only used once
         tagify.settings.validate = (t => {
@@ -94,7 +142,7 @@ function enable_label_input_fields(container) {
                 const key_error_msg =
                     "Only one value per KEY can be used at a time.";
                 if (tagify.settings.maxTags == 1) {
-                    const label_type = element.getAttribute("class");
+                    const label_type = element.getAttribute("class")!;
                     const existing_tags = document.querySelectorAll(
                         `.tagify.${label_type.replace(
                             " ",
@@ -144,7 +192,9 @@ function enable_label_input_fields(container) {
                 message = "Only one tag allowed";
             } else if (
                 (e.type == "invalid" &&
-                    e.detail.message.includes("Only one value per KEY")) ||
+                    e.detail.message
+                        .toString()
+                        .includes("Only one value per KEY")) ||
                 e.detail.message == "already exists"
             ) {
                 message =
@@ -163,7 +213,7 @@ function enable_label_input_fields(container) {
             msg.classList.add("message", "error", "label_error");
 
             msg.innerHTML = message;
-            element.parentNode.insertBefore(msg, element.nextSibling);
+            element.parentNode!.insertBefore(msg, element.nextSibling);
         });
 
         tagify.on("add", function () {
@@ -213,11 +263,19 @@ function kill_previous_autocomplete_call() {
     }
 }
 
-function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
+function ajax_call_autocomplete_labels(
+    post_data: string,
+    tagify: Tagify<CheckMKTagifyData>,
+    value: string,
+    element: HTMLInputElement
+) {
     g_ajax_obj = ajax.call_ajax("ajax_vs_autocomplete.py", {
         method: "POST",
         post_data: post_data,
-        response_handler: function (handler_data, ajax_response) {
+        response_handler: function (
+            handler_data: {value: string; tagify: Tagify},
+            ajax_response: string
+        ) {
             const response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
                 console.log(
@@ -243,11 +301,12 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
                 handler_data.value
             );
 
-            const tagify__input =
-                element?.parentElement?.querySelector(".tagify__input");
+            const tagify__input = element.parentElement!.querySelector(
+                ".tagify__input"
+            ) as HTMLElement;
             if (tagify__input) {
                 let max = value.length;
-                handler_data.tagify.suggestedListItems.forEach(entry => {
+                handler_data.tagify.suggestedListItems!.forEach(entry => {
                     max = Math.max(entry.value.length, max);
                 });
                 const fontSize = parseInt(
@@ -258,7 +317,7 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
                 // Minimum width set by tagify
                 const size = Math.max(110, max * (fontSize / 2 + 1));
                 tagify__input.style.width = size.toString() + "px";
-                tagify__input.parentElement.style.width =
+                tagify__input.parentElement!.style.width =
                     (size + 10).toString() + "px";
             }
         },
@@ -270,7 +329,7 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
 }
 
 // Handle Enter key in textfields
-export function textinput_enter_submit(event, submit) {
+export function textinput_enter_submit(event: KeyboardEvent, submit: string) {
     const keyCode = event.which || event.keyCode;
     if (keyCode == 13) {
         if (submit) {
@@ -282,7 +341,10 @@ export function textinput_enter_submit(event, submit) {
 }
 
 // Helper function to display nice popup confirm dialogs
-export function confirm_dialog(optional_args, confirm_handler) {
+export function confirm_dialog(
+    optional_args: any,
+    confirm_handler: null | (() => void)
+) {
     const default_custom_class_args = {
         title: "confirm_title",
         container: "confirm_container",
@@ -341,7 +403,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
 }
 
 // Makes a form submittable after explicit confirmation
-export function add_confirm_on_submit(form_id, message) {
+export function add_confirm_on_submit(form_id: string, message: string) {
     const form = document.getElementById(form_id);
     if (form instanceof HTMLElement) {
         form.addEventListener("submit", e => {
@@ -357,14 +419,18 @@ export function add_confirm_on_submit(form_id, message) {
 }
 
 // Used as onclick handler on links to confirm following the link or not
-export function confirm_link(url, message, custom_args) {
-    confirm_dialog({html: message, ...custom_args}, () => {
+export function confirm_link(
+    url: string,
+    message: string,
+    custom_args: ConfirmLinkCustomArgs
+) {
+    confirm_dialog({...custom_args, html: message}, () => {
         location.href = url;
     });
 }
 
 // On submit of the filter form (filter popup), remove unnecessary HTTP variables
-export function on_filter_form_submit_remove_vars(form_id) {
+export function on_filter_form_submit_remove_vars(form_id: string) {
     const form = document.getElementById(form_id) as HTMLFormElement;
     _remove_listof_vars(form);
 }

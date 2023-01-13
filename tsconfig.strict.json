@@ -25,7 +25,7 @@
         //"./web/htdocs/js/modules/service_discovery.ts",
         "./web/htdocs/js/modules/utils.ts",
         "./web/htdocs/js/modules/selection.ts",
-        //"./web/htdocs/js/modules/number_format.ts",
+        "./web/htdocs/js/modules/number_format.ts",
         "./web/htdocs/js/modules/ajax.ts",
         //"./web/htdocs/js/modules/sites.ts",
         "./web/htdocs/js/modules/foldable_container.ts",

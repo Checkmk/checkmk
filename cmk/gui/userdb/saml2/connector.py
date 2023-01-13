@@ -8,8 +8,6 @@ import itertools
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from pydantic import BaseModel
-
 from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
@@ -19,25 +17,14 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb.saml2.interface import AuthenticatedUser, Interface, InterfaceConfig
+from cmk.gui.userdb.saml2.config import ConnectorConfig
+from cmk.gui.userdb.saml2.interface import AuthenticatedUser, Interface
 from cmk.gui.userdb.store import OpenFileMode, Users, UserStore
 
 # TODO (lisa): introduce enums
 SAML2_CONNECTOR_TYPE = "saml2"
 
 LOGGER = logger.getChild("saml2")
-
-
-class ConnectorConfig(BaseModel):
-    type: str
-    version: str
-    id: str
-    name: str
-    description: str
-    comment: str
-    docu_url: str
-    disabled: bool
-    interface_config: InterfaceConfig
 
 
 class Connector(UserConnector):

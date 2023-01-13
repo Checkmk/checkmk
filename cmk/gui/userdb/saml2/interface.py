@@ -34,6 +34,7 @@ from cmk.utils.site import url_prefix
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.log import logger
+from cmk.gui.userdb.saml2.config import InterfaceConfig
 
 LOGGER = logger.getChild("saml2")
 
@@ -42,26 +43,6 @@ XMLData = NewType("XMLData", str)
 HTMLFormString = NewType("HTMLFormString", str)
 RequestId = NewType("RequestId", str)
 Milliseconds = NewType("Milliseconds", int)
-
-
-class Certificate(BaseModel):
-    private: Path
-    public: Path
-
-
-class UserAttributeNames(BaseModel):
-    user_id: str
-    alias: str | None
-    email: str | None
-    contactgroups: str | None
-
-
-class InterfaceConfig(BaseModel):
-    connection_timeout: tuple[int, int]
-    checkmk_server_url: str
-    idp_metadata_endpoint: str
-    user_attributes: UserAttributeNames
-    signature_certificate: Certificate
 
 
 class HTTPPostRequest(BaseModel):

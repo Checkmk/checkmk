@@ -5,6 +5,7 @@
 
 #include "pch.h"
 
+#include <ranges>
 #include <string>
 #include <string_view>
 
@@ -18,11 +19,12 @@
 #include "tools/_misc.h"
 
 using namespace std::string_literals;
+namespace rs = std::ranges;
 
 namespace {
 bool ValidIndexOfTs(int index) {
-    return std::ranges::any_of(tst::g_terminal_services_indexes,
-                               [index](const auto &e) { return e == index; });
+    return rs::any_of(tst::g_terminal_services_indexes,
+                      [index](const auto &e) { return e == index; });
 }
 }  // namespace
 
@@ -171,9 +173,10 @@ TEST(WinPerf, IfCounter) {
 
     EXPECT_EQ(std::to_string(tools::ConvertToUint64(stamp[1], 12345678)),
               "510");
-
     EXPECT_EQ(tools::ConvertToUint64(stamp[2], 12345678),
               cfg::GetPerformanceFrequency());
+    // check at least one negative value is in
+    EXPECT_TRUE(rs::any_of(table, [](auto &l) { return l[0] == '-'; }));
 }
 
 TEST(WinPerf, TcpConnCounter) {

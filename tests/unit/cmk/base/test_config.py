@@ -1513,21 +1513,16 @@ def _service_list() -> list[ConfiguredService]:
     ]
 
 
-def test_get_sorted_check_table_cmc(
-    monkeypatch: MonkeyPatch, service_list: list[ConfiguredService]
-) -> None:
-    monkeypatch.setattr(config, "is_cmc", lambda: True)
-
-    assert service_list == config.resolve_service_dependencies(
-        host_name=HostName("horst"),
-        services=service_list,
-    )
-
-
 def test_get_sorted_check_table_no_cmc(
     monkeypatch: MonkeyPatch, service_list: list[ConfiguredService]
 ) -> None:
+    host_name = HostName("horst")
+    ts = Scenario()
+    ts.add_host(host_name)
+    config_cache = ts.apply(monkeypatch)
+
     monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
     monkeypatch.setattr(
         config,
         "service_depends_on",
@@ -1538,11 +1533,8 @@ def test_get_sorted_check_table_no_cmc(
         }.get(descr, []),
     )
 
-    sorted_service_list = config.resolve_service_dependencies(
-        host_name=HostName("horst"),
-        services=service_list,
-    )
-    assert [s.description for s in sorted_service_list] == [
+    services = config_cache.configured_services(host_name)
+    assert [s.description for s in services] == [
         "description F",  #
         "description C",  # no deps => input order maintained
         "description E",  #
@@ -1555,11 +1547,17 @@ def test_get_sorted_check_table_no_cmc(
 def test_resolve_service_dependencies_cyclic(
     monkeypatch: MonkeyPatch, service_list: list[ConfiguredService]
 ) -> None:
+    host_name = HostName("MyHost")
+    ts = Scenario()
+    ts.add_host(host_name)
+    config_cache = ts.apply(monkeypatch)
+
     monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(config_cache, "_sorted_services", lambda *args: service_list)
     monkeypatch.setattr(
         config,
         "service_depends_on",
-        lambda _hn, descr: {
+        lambda _, descr: {
             "description A": ["description B"],
             "description B": ["description D"],
             "description D": ["description A"],
@@ -1575,7 +1573,7 @@ def test_resolve_service_dependencies_cyclic(
             " 'description B' (plugin_B / item)"
         ),
     ):
-        _ = config.resolve_service_dependencies(host_name=HostName("MyHost"), services=service_list)
+        config_cache.configured_services(HostName("MyHost"))
 
 
 def test_service_depends_on_unknown_host() -> None:

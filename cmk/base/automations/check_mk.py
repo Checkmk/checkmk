@@ -832,7 +832,7 @@ class AutomationAnalyseServices(Automation):
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # differen information. Also: check table forgets wether it's an *auto*check.
-        table = config.get_check_table(config_cache, host_name)
+        table = config_cache.check_table(host_name)
         services = (
             [
                 service

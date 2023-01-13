@@ -44,6 +44,7 @@ def active_check_checking(
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
     keep_outdated: bool,
+    perfdata_with_times: bool,
 ) -> ServiceState:
     """
     See Also:
@@ -60,6 +61,7 @@ def active_check_checking(
             run_plugin_names=run_plugin_names,
             keep_outdated=keep_outdated,
             selected_sections=selected_sections,
+            perfdata_with_times=perfdata_with_times,
             submitter=submitter,
         ),
         exit_spec=config_cache.exit_code_spec(hostname),

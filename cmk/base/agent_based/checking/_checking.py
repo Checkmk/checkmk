@@ -45,7 +45,6 @@ from cmk.checkers.submitters import Submittee, Submitter
 from cmk.checkers.type_defs import SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.plugin_contexts as plugin_contexts
@@ -89,17 +88,11 @@ def execute_checkmk_checks(
     run_plugin_names: Container[CheckPluginName],
     keep_outdated: bool,
     selected_sections: SectionNameCollection,
+    perfdata_with_times: bool,
     submitter: Submitter,
 ) -> ActiveCheckResult:
     exit_spec = config_cache.exit_code_spec(hostname)
-
-    services = config.resolve_service_dependencies(
-        host_name=hostname,
-        services=sorted(
-            config.get_check_table(config_cache, hostname).values(),
-            key=lambda service: service.description,
-        ),
-    )
+    services = config_cache.configured_services(hostname)
     host_sections, source_results = parse_messages(
         config_cache,
         ((f[0], f[1]) for f in fetched),
@@ -150,7 +143,11 @@ def execute_checkmk_checks(
         )
     return ActiveCheckResult.from_subresults(
         *timed_results,
-        _timing_results(tracker.duration, tuple((f[0], f[2]) for f in fetched)),
+        _timing_results(
+            tracker.duration,
+            tuple((f[0], f[2]) for f in fetched),
+            perfdata_with_times=perfdata_with_times,
+        ),
     )
 
 
@@ -180,13 +177,16 @@ def _do_inventory_actions_during_checking_for(
 
 
 def _timing_results(
-    total_times: Snapshot, fetched: Sequence[tuple[SourceInfo, Snapshot]]
+    total_times: Snapshot,
+    fetched: Sequence[tuple[SourceInfo, Snapshot]],
+    *,
+    perfdata_with_times: bool,
 ) -> ActiveCheckResult:
     for duration in (f[1] for f in fetched):
         total_times += duration
 
     infotext = "execution time %.1f sec" % total_times.process.elapsed
-    if not config.check_mk_perfdata_with_times:
+    if not perfdata_with_times:
         return ActiveCheckResult(
             0, infotext, (), ("execution_time=%.3f" % total_times.process.elapsed,)
         )
@@ -417,7 +417,7 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        table = config.get_check_table(config_cache, host_name, skip_autochecks=True)
+        table = config_cache.check_table(host_name, skip_autochecks=True)
         result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(

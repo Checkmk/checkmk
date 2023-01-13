@@ -209,9 +209,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
 
     table_data = []
-    for service in sorted(
-        config.get_check_table(config_cache, hostname).values(), key=lambda s: s.description
-    ):
+    for service in sorted(config_cache.check_table(hostname).values(), key=lambda s: s.description):
         table_data.append(
             [
                 str(service.check_plugin_name),

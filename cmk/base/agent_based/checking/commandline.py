@@ -38,6 +38,7 @@ def commandline_checking(
     submitter: Submitter,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
+    perfdata_with_times: bool,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
     return error_handling.check_result(
@@ -49,6 +50,7 @@ def commandline_checking(
             file_cache_options=file_cache_options,
             run_plugin_names=run_plugin_names,
             selected_sections=selected_sections,
+            perfdata_with_times=perfdata_with_times,
             submitter=submitter,
         ),
         exit_spec=config_cache.exit_code_spec(host_name),
@@ -70,6 +72,7 @@ def _commandline_checking(
     file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
+    perfdata_with_times: bool,
     submitter: Submitter,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
@@ -109,5 +112,6 @@ def _commandline_checking(
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
+        perfdata_with_times=perfdata_with_times,
         submitter=submitter,
     )

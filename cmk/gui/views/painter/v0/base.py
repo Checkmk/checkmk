@@ -323,26 +323,27 @@ class Cell:
         column_spec: ColumnSpec | None,
         sort_url_parameter: str | None,
     ) -> None:
-        self._sort_url_parameter = sort_url_parameter
-        self._painter_name: PainterName | None = None
-        self._painter_params: PainterParameters | None = None
-        self._link_spec: VisualLinkSpec | None = None
-        self._tooltip_painter_name: PainterName | None = None
-        self._custom_title: str | None = None
+        self._painter_name: PainterName | None
+        self._painter_params: PainterParameters | None
 
         if column_spec:
-            self._from_view(column_spec)
+            self._painter_name = column_spec.name
+            self._painter_params = column_spec.parameters
+            self._custom_title = (
+                column_spec.parameters.get("column_title") or column_spec.column_title
+            )
+            self._link_spec = column_spec.link_spec
+            self._tooltip_painter_name = (
+                column_spec.tooltip if column_spec.tooltip in painter_registry else None
+            )
+        else:
+            self._painter_name = None
+            self._painter_params = None
+            self._custom_title = None
+            self._link_spec = None
+            self._tooltip_painter_name = None
 
-    def _from_view(self, column_spec: ColumnSpec) -> None:
-        self._painter_name = column_spec.name
-        self._painter_params = column_spec.parameters
-        self._custom_title = self._painter_params.get("column_title", None)
-
-        self._link_spec = column_spec.link_spec
-
-        tooltip_painter_name = column_spec.tooltip
-        if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
-            self._tooltip_painter_name = tooltip_painter_name
+        self._sort_url_parameter = sort_url_parameter
 
     def needed_columns(self, permitted_views: Mapping[ViewName, ViewSpec]) -> set[ColumnName]:
         """Get a list of columns we need to fetch in order to render this cell"""
@@ -624,16 +625,8 @@ class JoinCell(Cell):
         column_spec: ColumnSpec,
         sort_url_parameter: str | None,
     ) -> None:
-        self._join_service_descr: ServiceName | None = None
         super().__init__(column_spec, sort_url_parameter)
-
-    def _from_view(self, column_spec: ColumnSpec) -> None:
-        super()._from_view(column_spec)
-
         self._join_service_descr = column_spec.join_index
-
-        if column_spec.column_title and self._custom_title is None:
-            self._custom_title = column_spec.column_title
 
     def join_service(self) -> ServiceName:
         if self._join_service_descr is None:

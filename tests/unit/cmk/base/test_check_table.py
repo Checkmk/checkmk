@@ -72,14 +72,14 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         ),
     )
 
-    clustered_service = config.get_check_table(config_cache, cluster)[service_id]
+    clustered_service = config_cache.check_table(cluster)[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet.from_parameters({"levels": (35, 40)}),
     )
 
 
 # TODO: This misses a lot of cases
-# - different get_check_table arguments
+# - different check_table arguments
 @pytest.mark.parametrize(
     "hostname_str, filter_mode, expected_result",
     [
@@ -311,7 +311,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         ),
     ],
 )
-def test_get_check_table(
+def test_check_table(
     monkeypatch: MonkeyPatch,
     hostname_str: str,
     filter_mode: FilterMode,
@@ -414,12 +414,8 @@ def test_get_check_table(
 
     config_cache = ts.apply(monkeypatch)
 
-    assert set(config.get_check_table(config_cache, hostname, filter_mode=filter_mode)) == set(
-        expected_result
-    )
-    for key, value in config.get_check_table(
-        config_cache, hostname, filter_mode=filter_mode
-    ).items():
+    assert set(config_cache.check_table(hostname, filter_mode=filter_mode)) == set(expected_result)
+    for key, value in config_cache.check_table(hostname, filter_mode=filter_mode).items():
         assert key in expected_result
         assert expected_result[key] == value
 
@@ -431,7 +427,7 @@ def test_get_check_table(
         ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
     ],
 )
-def test_get_check_table_of_mgmt_boards(
+def test_check_table_of_mgmt_boards(
     monkeypatch: MonkeyPatch, hostname_str: str, expected_result: list[ServiceID]
 ) -> None:
     hostname = HostName(hostname_str)
@@ -474,10 +470,10 @@ def test_get_check_table_of_mgmt_boards(
 
     config_cache = ts.apply(monkeypatch)
 
-    assert list(config.get_check_table(config_cache, hostname).keys()) == expected_result
+    assert list(config_cache.check_table(hostname).keys()) == expected_result
 
 
-def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
+def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     hostname_str = "df_host"
     hostname = HostName(hostname_str)
     plugin_name = CheckPluginName("df")
@@ -497,9 +493,8 @@ def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
         },
     )
     ts.set_autochecks(hostname_str, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
-    config_cache = ts.apply(monkeypatch)
 
-    chk_table = config.get_check_table(config_cache, hostname)
+    chk_table = ts.apply(monkeypatch).check_table(hostname)
 
     # assert check table is populated as expected
     assert len(chk_table) == 1

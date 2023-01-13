@@ -1851,6 +1851,7 @@ def mode_check(
         ),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
+        perfdata_with_times=config.check_mk_perfdata_with_times,
     )
 
 

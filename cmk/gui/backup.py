@@ -82,6 +82,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
     Dictionary,
+    DictionaryElements,
     DropdownChoice,
     FixedValue,
     ID,
@@ -1046,8 +1047,16 @@ class ABCBackupTargetType(abc.ABC):
         ...
 
     @classmethod
-    @abc.abstractmethod
     def valuespec(cls) -> Dictionary:
+        return Dictionary(
+            elements=cls.dictionary_elements(),
+            optional_keys=[],
+            validate=lambda params, varprefix: cls(params).validate(varprefix),
+        )
+
+    @classmethod
+    @abc.abstractmethod
+    def dictionary_elements(cls) -> DictionaryElements:
         ...
 
     @abc.abstractmethod
@@ -1097,40 +1106,32 @@ class BackupTargetLocal(ABCBackupTargetType):
         return _("Local path")
 
     @classmethod
-    def valuespec(cls) -> Dictionary:
-        return Dictionary(
-            elements=[
-                (
-                    "path",
-                    AbsoluteDirname(
-                        title=_("Directory to save the backup to"),
-                        help=_(
-                            "This can be a local directory of your choice. You can also use this "
-                            "option if you want to save your backup to a network share using "
-                            "NFS, Samba or similar. But you will have to care about mounting the "
-                            "network share on your own."
-                        ),
-                        allow_empty=False,
-                        size=64,
-                    ),
+    def dictionary_elements(cls) -> DictionaryElements:
+        yield (
+            "path",
+            AbsoluteDirname(
+                title=_("Directory to save the backup to"),
+                help=_(
+                    "This can be a local directory of your choice. You can also use this "
+                    "option if you want to save your backup to a network share using "
+                    "NFS, Samba or similar. But you will have to care about mounting the "
+                    "network share on your own."
                 ),
-                (
-                    "is_mountpoint",
-                    Checkbox(
-                        title=_("Mountpoint"),
-                        label=_("Is mountpoint"),
-                        help=_(
-                            "When this is checked, the backup ensures that the configured path "
-                            "is a mountpoint. If there is no active mount on the path, the backup "
-                            "fails with an error message."
-                        ),
-                        default_value=True,
-                    ),
+                allow_empty=False,
+                size=64,
+            ),
+        )
+        yield (
+            "is_mountpoint",
+            Checkbox(
+                title=_("Mountpoint"),
+                label=_("Is mountpoint"),
+                help=_(
+                    "When this is checked, the backup ensures that the configured path "
+                    "is a mountpoint. If there is no active mount on the path, the backup "
+                    "fails with an error message."
                 ),
-            ],
-            optional_keys=[],
-            validate=lambda params, varprefix: cls(cast(LocalTargetParams, params)).validate(
-                varprefix
+                default_value=True,
             ),
         )
 

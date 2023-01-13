@@ -112,7 +112,7 @@ def parse_ibm_svc_nodestats(info):
             else:
                 continue
             try:
-                stat_current = int(data["stat_current"])
+                stat_current = float(data["stat_current"])
             except ValueError:
                 continue
             parsed.setdefault(item_name, {}).setdefault(stat_name, stat_current)

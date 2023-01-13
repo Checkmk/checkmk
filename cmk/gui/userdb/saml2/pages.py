@@ -7,6 +7,8 @@ import http.client as http_client
 from datetime import datetime
 from typing import NamedTuple
 
+from cmk.utils.redis import get_redis_client
+
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -16,7 +18,7 @@ from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import get_connection
 from cmk.gui.session import session
 from cmk.gui.userdb.saml2.connector import Connector
-from cmk.gui.userdb.saml2.interface import HTTPPostRequest, XMLData
+from cmk.gui.userdb.saml2.interface import HTTPPostRequest, Interface, XMLData
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.urls import makeuri_contextless
@@ -70,7 +72,8 @@ class Metadata(Page):
             relay_state_string=request.get_ascii_input_mandatory("RelayState"),
         )
 
-        return connector.interface.metadata
+        interface = Interface(connector.config.interface_config, get_redis_client())
+        return interface.metadata
 
     def handle_page(self) -> None:
         try:
@@ -110,15 +113,19 @@ class SingleSignOn(Page):
         LOGGER.debug(
             "Authentication request to Identity Provider %s at URL %s",
             relay_state.connection_id,
-            connector.identity_provider_url,
+            connector.config.identity_provider_url,
         )
         LOGGER.debug("Authentication request with RelayState=%s", relay_state_string)
 
         try:
-            authentication_request = connector.interface.authentication_request(relay_state_string)
+            interface = Interface(connector.config.interface_config, get_redis_client())
+            authentication_request = interface.authentication_request(relay_state.target_url)
         except Exception as e:  # pylint: disable=broad-except
             LOGGER.warning(
-                "%s - %s: %s", connector.identity_provider_url(), type(e).__name__, str(e)
+                "%s - %s: %s",
+                connector.config.identity_provider_url,
+                type(e).__name__,
+                str(e),
             )
             raise MKUserError(
                 varname=None, message=_("Unable to create authentication request")
@@ -156,14 +163,15 @@ class AssertionConsumerService(Page):
         LOGGER.debug(
             "Authentication request response from Identity Provider %s at URL %s",
             relay_state.connection_id,
-            connector.identity_provider_url,
+            connector.config.identity_provider_url,
         )
 
         if not (saml_response := request.form.get("SAMLResponse")):
             raise MKUserError(varname=None, message=_("Got no response from IdP"))
 
         try:
-            authn_response = connector.interface.parse_authentication_request_response(
+            interface = Interface(connector.config.interface_config, get_redis_client())
+            authn_response = interface.parse_authentication_request_response(
                 saml_response=saml_response
             )
         except Exception as e:  # pylint: disable=broad-except
@@ -171,7 +179,10 @@ class AssertionConsumerService(Page):
             # not met. Note that the type of the exception raised by the client may be a bare
             # Exception.
             LOGGER.warning(
-                "%s - %s: %s", connector.identity_provider_url(), type(e).__name__, str(e)
+                "%s - %s: %s",
+                connector.config.identity_provider_url,
+                type(e).__name__,
+                str(e),
             )
             raise MKUserError(message=_("Authentication failed"), varname=None) from e
 

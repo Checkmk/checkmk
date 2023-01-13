@@ -42,6 +42,7 @@ class ConnectorConfig(BaseModel):
     comment: str
     docu_url: str
     disabled: bool
+    identity_provider_url: str
     interface_config: InterfaceConfig
 
 
@@ -76,9 +77,10 @@ def _determine_certificate_paths(certificate: str | tuple[str, tuple[str, str]])
 
 
 def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
+    idp_url = user_input["idp_metadata_endpoint"]
     interface_config = InterfaceConfig(
         connection_timeout=user_input["connection_timeout"],
-        idp_metadata_endpoint=user_input["idp_metadata_endpoint"],
+        idp_metadata_endpoint=idp_url,
         checkmk_server_url=user_input["checkmk_server_url"],
         user_attributes=UserAttributeNames(
             user_id=user_input["user_id"],
@@ -97,5 +99,6 @@ def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
         comment=user_input["comment"],
         docu_url=user_input["docu_url"],
         disabled=user_input["disabled"],
+        identity_provider_url=idp_url,
         interface_config=interface_config,
     )

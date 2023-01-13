@@ -21,10 +21,6 @@ from cmk.gui.userdb.saml2.interface import AuthenticatedUser
 
 
 class TestConnector:
-    @pytest.fixture(autouse=True)
-    def patch_metadata_from_idp(self, metadata_from_idp: None) -> None:
-        return metadata_from_idp
-
     @pytest.fixture
     def saml2_connection_id(self, raw_config: Mapping[str, Any]) -> str:
         return raw_config["id"]
@@ -67,11 +63,10 @@ class TestConnector:
 
     def test_connector_properties(self, raw_config: Mapping[str, Any]) -> None:
         connector = Connector(raw_config)
-        assert connector.interface
         assert connector.type() == SAML2_CONNECTOR_TYPE
         assert connector.id == "uuid123"
         assert (
-            connector.identity_provider_url()
+            connector.config.interface_config.idp_metadata_endpoint
             == "http://localhost:8080/simplesaml/saml2/idp/metadata.php"
         )
 

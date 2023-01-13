@@ -8,7 +8,6 @@ import itertools
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import active_config
@@ -18,7 +17,7 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb.saml2.config import valuespec_to_config
-from cmk.gui.userdb.saml2.interface import AuthenticatedUser, Interface
+from cmk.gui.userdb.saml2.interface import AuthenticatedUser
 from cmk.gui.userdb.store import OpenFileMode, Users, UserStore
 
 # TODO (lisa): introduce enums
@@ -30,14 +29,7 @@ LOGGER = logger.getChild("saml2")
 class Connector(UserConnector):
     def __init__(self, raw_config: Mapping[str, Any]) -> None:
         super().__init__(raw_config)
-        self.__config = valuespec_to_config(self._config)
-        self.__interface = Interface(
-            config=self.__config.interface_config, requests_db=get_redis_client()
-        )
-
-    @property
-    def interface(self) -> Interface:
-        return self.__interface
+        self.config = valuespec_to_config(self._config)
 
     @classmethod
     def type(cls) -> str:
@@ -45,7 +37,7 @@ class Connector(UserConnector):
 
     @property
     def id(self) -> str:
-        return self.__config.id
+        return self.config.id
 
     @classmethod
     def title(cls) -> str:
@@ -56,10 +48,7 @@ class Connector(UserConnector):
         return _("SAML 2.0")
 
     def is_enabled(self) -> bool:
-        return not self.__config.disabled
-
-    def identity_provider_url(self) -> str:
-        return self.__config.interface_config.idp_metadata_endpoint
+        return not self.config.disabled
 
     def create_and_update_user(
         self, user_id: UserId, authenticated_user: AuthenticatedUser
@@ -86,7 +75,7 @@ class Connector(UserConnector):
             active_config.default_user_profile,
             contact_groups=set(load_contact_group_information().keys()),
         )
-        user_profile["connector"] = self.__config.id
+        user_profile["connector"] = self.config.id
 
         with UserStore(mode=OpenFileMode.WRITE) as user_store:
             if not (user_entry := user_store.get(user_id)):
@@ -134,7 +123,7 @@ class Connector(UserConnector):
             attribute.
         """
         return ["password"] + [
-            k for k, v in self.__config.interface_config.user_attributes.dict().items() if v
+            k for k, v in self.config.interface_config.user_attributes.dict().items() if v
         ]
 
 

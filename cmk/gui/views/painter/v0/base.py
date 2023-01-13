@@ -18,7 +18,7 @@ from livestatus import lqencode
 
 import cmk.utils.paths
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import ServiceName, TimeRange
+from cmk.utils.type_defs import TimeRange
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
@@ -364,9 +364,6 @@ class Cell:
 
         return columns
 
-    def join_service(self) -> ServiceName | None:
-        return None
-
     def _link_view(self, permitted_views: Mapping[ViewName, ViewSpec]) -> ViewSpec | None:
         if self._link_spec is None:
             return None
@@ -626,18 +623,16 @@ class JoinCell(Cell):
         sort_url_parameter: str | None,
     ) -> None:
         super().__init__(column_spec, sort_url_parameter)
-        self._join_service_descr = column_spec.join_index
-
-    def join_service(self) -> ServiceName:
-        if self._join_service_descr is None:
+        if (join_index := column_spec.join_index) is None:
             raise ValueError()
-        return self._join_service_descr
+
+        self.join_index = join_index
 
     def livestatus_filter(self, join_column_name: str) -> LivestatusQuery:
-        return f"Filter: {lqencode(join_column_name)} = {lqencode(self.join_service())}"
+        return f"Filter: {lqencode(join_column_name)} = {lqencode(self.join_index)}"
 
     def title(self, use_short: bool = True) -> str:
-        return self._custom_title or self.join_service()
+        return self._custom_title or self.join_index
 
     def export_title(self) -> str:
         serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
@@ -645,9 +640,7 @@ class JoinCell(Cell):
 
 
 def join_row(row: Row, cell: Cell) -> Row:
-    if isinstance(cell, JoinCell):
-        return row.get("JOIN", {}).get(cell.join_service())
-    return row
+    return row.get("JOIN", {}).get(cell.join_index) if isinstance(cell, JoinCell) else row
 
 
 class EmptyCell(Cell):

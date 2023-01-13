@@ -89,6 +89,7 @@ def execute_checkmk_checks(
     run_plugin_names: Container[CheckPluginName],
     keep_outdated: bool,
     selected_sections: SectionNameCollection,
+    perfdata_with_times: bool,
     submitter: Submitter,
 ) -> ActiveCheckResult:
     exit_spec = config_cache.exit_code_spec(hostname)
@@ -143,7 +144,11 @@ def execute_checkmk_checks(
         )
     return ActiveCheckResult.from_subresults(
         *timed_results,
-        _timing_results(tracker.duration, tuple((f[0], f[2]) for f in fetched)),
+        _timing_results(
+            tracker.duration,
+            tuple((f[0], f[2]) for f in fetched),
+            perfdata_with_times=perfdata_with_times,
+        ),
     )
 
 
@@ -173,13 +178,16 @@ def _do_inventory_actions_during_checking_for(
 
 
 def _timing_results(
-    total_times: Snapshot, fetched: Sequence[tuple[SourceInfo, Snapshot]]
+    total_times: Snapshot,
+    fetched: Sequence[tuple[SourceInfo, Snapshot]],
+    *,
+    perfdata_with_times: bool,
 ) -> ActiveCheckResult:
     for duration in (f[1] for f in fetched):
         total_times += duration
 
     infotext = "execution time %.1f sec" % total_times.process.elapsed
-    if not config.check_mk_perfdata_with_times:
+    if not perfdata_with_times:
         return ActiveCheckResult(
             0, infotext, (), ("execution_time=%.3f" % total_times.process.elapsed,)
         )

@@ -1331,6 +1331,7 @@ if '-d' in sys.argv:
         "            ),\n"
         "           active_check_handler=lambda *args: None,\n"
         "           keepalive=False,\n"
+        "           perfdata_with_times=config.check_mk_perfdata_with_times,\n"
         "        )\n"
         "    )\n" % (hostname, hostname)
     )

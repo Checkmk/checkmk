@@ -935,7 +935,7 @@ def host_attributes_field(
             May be one of 'folder', 'host' or 'cluster'.
 
         object_context:
-            May be 'create' or 'update'. Deletion is considered as 'update'.
+            May be 'create', 'update' or 'view'. Deletion is considered as 'update'.
 
         direction:
             If the data is *coming from* the user (inbound) or *going to* the user (outbound).

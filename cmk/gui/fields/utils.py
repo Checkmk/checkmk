@@ -54,7 +54,7 @@ def collect_attributes(
             Either 'host', 'folder' or 'cluster'
 
         context:
-            Either 'create' or 'update'
+            Either 'create' or 'update' or 'view'
 
     Returns:
         A list of attribute describing named-tuples.
@@ -136,7 +136,24 @@ def collect_attributes(
 
     tag_group: TagGroup
     for tag_group in tag_config.tag_groups:
-        description: List[str] = []
+        tag_name = _ensure(f"tag_{tag_group.id}")
+        section = tag_group.topic or "No topic"
+        mandatory = False
+        field = None
+
+        if context == "view":
+            result.append(
+                Attr(
+                    name=tag_name,
+                    section=section,
+                    mandatory=mandatory,
+                    description="" if tag_group.help is None else tag_group.help,
+                    field=field,
+                )
+            )
+            continue
+
+        description: list[str] = []
         if tag_group.help:
             description.append(tag_group.help)
 
@@ -151,12 +168,12 @@ def collect_attributes(
 
         result.append(
             Attr(
-                name=_ensure(f"tag_{tag_group.id}"),
-                section=tag_group.topic or "No topic",
-                mandatory=False,
+                name=tag_name,
+                section=section,
+                mandatory=mandatory,
                 description="\n\n".join(description),
                 enum=allowed_ids,
-                field=None,
+                field=field,
             )
         )
 

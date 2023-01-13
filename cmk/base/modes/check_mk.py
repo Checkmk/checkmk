@@ -30,6 +30,7 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.packaging import cli as packaging_cli
 from cmk.utils.tags import TagID
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -66,7 +67,6 @@ import cmk.base.dump_host
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.localize
 import cmk.base.obsolete_output as out
-import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
@@ -717,22 +717,18 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_packaging(args: list[str]) -> None:
-    cmk.base.packaging.do_packaging(args)
-
-
 modes.register(
     Mode(
         long_option="package",
         short_option="P",
-        handler_function=mode_packaging,
+        handler_function=lambda argv: packaging_cli.main(argv, log.logger),
         argument=True,
         argument_descr="COMMAND",
         argument_optional=True,
         short_help="Do package operations",
         long_help=[
             "Brings you into packager mode. Packages are "
-            "used to ship inofficial extensions of Check_MK. Call without "
+            "used to ship inofficial extensions of Checkmk. Call without "
             "arguments for a help on packaging."
         ],
         needs_config=False,

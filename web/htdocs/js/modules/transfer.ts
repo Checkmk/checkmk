@@ -4,12 +4,13 @@
 
 import * as ajax from "ajax";
 
+// @ts-ignore
 declare var XDomainRequest;
 //# +--------------------------------------------------------------------+
 //# | Posting crash report to official Checkmk crash reporting API      |
 //# '--------------------------------------------------------------------'
 
-export function submit_crash_report(url, post_data) {
+export function submit_crash_report(url: string, post_data: string) {
     document.getElementById("pending_msg")!.style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
@@ -40,6 +41,7 @@ function has_cross_domain_ajax_support() {
     return "withCredentials" in new XMLHttpRequest();
 }
 
+// @ts-ignore
 function submit_with_ie(url, post_data) {
     var handler_data = {
         base_url: url,
@@ -58,7 +60,10 @@ function submit_with_ie(url, post_data) {
     xdr.send(post_data);
 }
 
-function handle_report_response(handler_data, response_body) {
+function handle_report_response(
+    _handler_data: {base_url: string},
+    response_body: string
+) {
     hide_report_processing_msg();
 
     if (response_body.substr(0, 2) == "OK") {
@@ -76,7 +81,11 @@ function handle_report_response(handler_data, response_body) {
     }
 }
 
-function handle_report_error(handler_data, status_code, error_msg) {
+function handle_report_error(
+    handler_data: {base_url: string} | null,
+    status_code: number | null,
+    error_msg: string
+) {
     hide_report_processing_msg();
 
     var fail_container = document.getElementById("fail_msg")!;
@@ -88,7 +97,7 @@ function handle_report_error(handler_data, status_code, error_msg) {
     } else {
         fail_container.children[0].innerHTML +=
             " (<tt>" +
-            handler_data["base_url"] +
+            handler_data!["base_url"] +
             "</tt> is not reachable. Does your browser block XMLHttpRequest requests?).";
     }
 }
@@ -100,7 +109,7 @@ function hide_report_processing_msg() {
 
 // Download function only for crash reports
 
-export function download(data_url) {
+export function download(data_url: string) {
     var link = document.createElement("a");
     link.download =
         "Check_MK_GUI_Crash-" + new Date().toISOString() + ".tar.gz";

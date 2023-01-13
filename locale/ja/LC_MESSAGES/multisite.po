@@ -453,10 +453,6 @@ msgid "%s (Customer missing)"
 msgstr "%s(顧客がいません)"
 
 #, python-format
-msgid "%s (system wide)"
-msgstr "%s　(システム全体)"
-
-#, python-format
 msgid ""
 "%s - %s\n"
 "Duration %s\n"
@@ -2073,6 +2069,12 @@ msgstr ""
 msgid "A user with the id \"%s\" does not exist."
 msgstr "IDが\"%s\"のユーザーは存在しません。"
 
+msgid ""
+"A user-friendly name to identify this connection. This will be used for the "
+"log-in button that is shown on the log-in page once the connection has been "
+"set up."
+msgstr ""
+
 msgid "A value in seconds"
 msgstr "秒単位の値"
 
@@ -2310,7 +2312,19 @@ msgid "AWS/ELBv2 Limits"
 msgstr "AWS/ELBv2の制限"
 
 #, fuzzy
+msgid "AWS/ElastiCache CPU Utilization"
+msgstr "AWS/Glacierの制限"
+
+#, fuzzy
+msgid "AWS/ElastiCache Connections"
+msgstr "AWS/Glacierの制限"
+
+#, fuzzy
 msgid "AWS/ElastiCache Limits"
+msgstr "AWS/Glacierの制限"
+
+#, fuzzy
+msgid "AWS/ElastiCache Memory"
 msgstr "AWS/Glacierの制限"
 
 msgid "AWS/Glacier Limits"
@@ -2668,6 +2682,10 @@ msgstr "承認コメント"
 
 msgid "Acknowledgement of problem"
 msgstr "問題の確認"
+
+#, fuzzy
+msgid "Acknowledging problems"
+msgstr "問題を認知"
 
 msgid "Act."
 msgstr "Act."
@@ -4873,6 +4891,10 @@ msgstr "この通知でルールセットを分析する"
 msgid "Analyze this line"
 msgstr "この行を分析する"
 
+#, fuzzy
+msgid "Analyzing the Checkmk site configuration"
+msgstr "構成を分析する"
+
 msgid "Android version regular expression"
 msgstr "Androidバージョン正規表現"
 
@@ -5804,6 +5826,10 @@ msgid "Available macros and search result(s)"
 msgstr "検索結果の数"
 
 msgid "Available options"
+msgstr "利用可能なオプション"
+
+#, fuzzy
+msgid "Available replicas"
 msgstr "利用可能なオプション"
 
 msgid "Available temp space"
@@ -7310,6 +7336,10 @@ msgstr "送信/受信　バイト数"
 msgid "Bytes uploaded"
 msgstr "バイトアップロード済"
 
+#, fuzzy
+msgid "Bytes used for cache upper levels"
+msgstr "合計メッセージ数の上位レベル"
+
 msgid "C"
 msgstr "C"
 
@@ -7566,6 +7596,10 @@ msgstr "バックグラウンドチェックのキャッシュ経過時間"
 #, python-format
 msgid "Cache generated %s ago, cache interval: %s"
 msgstr "%s前に生成されたキャッシュ、キャッシュ間隔: %s"
+
+#, fuzzy
+msgid "Cache hit rate lower levels"
+msgstr "コンテナの下位レベル"
 
 msgid "Cache hit ratio"
 msgstr "キャッシュヒット率"
@@ -8132,8 +8166,8 @@ msgstr "タググループの順序を変更しました"
 msgid "Changed position of %s %d"
 msgstr "%s %dの位置を変更しました"
 
-#, python-format
-msgid "Changed position of LDAP connection %s to %d"
+#, fuzzy, python-format
+msgid "Changed position of connection %s to %d"
 msgstr "LDAP接続%sの位置を%dに変更しました"
 
 #, python-format
@@ -8671,6 +8705,10 @@ msgid ""
 "that support SNMPv2c may be buggy. In such cases, you may want to try "
 "disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
 msgstr ""
+
+#, fuzzy
+msgid "Checkmk extension packages (MKPs)"
+msgstr "Checkmk拡張パッケージ(MKP)を管理および作成します。"
 
 msgid "Checkmk fetcher usage"
 msgstr "Checkmkフェッチャーの使用法"
@@ -10353,7 +10391,8 @@ msgstr "セントラルエージェントベーカリーへの接続"
 msgid "Connection to remote agent bakery"
 msgstr "リモートエージェントベーカリーへの接続"
 
-msgid "Connection to the Web API"
+#, fuzzy
+msgid "Connection to the REST API"
 msgstr "Web APIへの接続"
 
 msgid "Connection type"
@@ -10966,14 +11005,15 @@ msgstr "このホストのクローンを作成します"
 msgid "Create a copy"
 msgstr "コピーを作成する"
 
-msgid "Create a copy of this LDAP connection"
-msgstr "このLDAP接続のコピーを作成します"
-
 msgid "Create a copy of this aggregation"
 msgstr "この集計のコピーを作成します"
 
 msgid "Create a copy of this alert handler rule"
 msgstr "このアラートハンドラルールのコピーを作成します"
+
+#, fuzzy
+msgid "Create a copy of this connection"
+msgstr "このLDAP接続のコピーを作成します"
 
 msgid "Create a copy of this group"
 msgstr "このグループのコピーを作成します"
@@ -11093,10 +11133,6 @@ msgstr "新しいタググループを作成する"
 
 msgid "Create new topic"
 msgstr "新しいトピックを作成する"
-
-#, fuzzy
-msgid "Create new users on login"
-msgstr "ログイン時にのみユーザーを作成する"
 
 msgid "Create new virtual host tree configuration"
 msgstr "新しい仮想ホストツリー構成を作成する"
@@ -11455,6 +11491,14 @@ msgstr "現在のユーザー"
 
 msgid "Current check attempt"
 msgstr "現在のチェックの試み"
+
+#, fuzzy
+msgid "Current connections"
+msgstr "現在開いている接続"
+
+#, fuzzy
+msgid "Current connections upper levels"
+msgstr "上位レベルのクライアント接続の合計"
 
 msgid "Current date"
 msgstr "現在の日付"
@@ -12925,9 +12969,6 @@ msgstr "このBIパックを削除します"
 msgid "Delete this Icon"
 msgstr "このアイコンを削除する"
 
-msgid "Delete this LDAP connection"
-msgstr "このLDAP接続を削除します"
-
 msgid "Delete this MIB"
 msgstr "このMIBを削除する"
 
@@ -12951,6 +12992,10 @@ msgstr "このバックアップジョブを削除します"
 
 msgid "Delete this backup target"
 msgstr "このバックアップターゲットを削除します"
+
+#, fuzzy
+msgid "Delete this connection"
+msgstr "このLDAP接続を削除します"
 
 msgid "Delete this credential"
 msgstr "この資格情報を削除する"
@@ -13043,16 +13088,16 @@ msgid "Deleted BI rule with ID %s"
 msgstr "ID%sのBIルールを削除しました"
 
 #, python-format
-msgid "Deleted LDAP connection %s"
-msgstr "LDAP接続を削除しました %s"
-
-#, python-format
 msgid "Deleted MIB %s"
 msgstr "削除されたMIB%s"
 
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "属性 %sを削除しました"
+
+#, fuzzy, python-format
+msgid "Deleted connection %s"
+msgstr "LDAP接続を削除しました %s"
 
 #, fuzzy, python-format
 msgid "Deleted custom GUI logo %s"
@@ -14378,9 +14423,6 @@ msgstr "ハードウェア/ソフトウェアのインベントリを行う"
 msgid "Do not activate changes"
 msgstr "変更をアクティブにしないでください"
 
-msgid "Do not add a link"
-msgstr "リンクを追加しないでください"
-
 msgid "Do not add a link to this page in sidebar"
 msgstr "サイドバーにこのページへのリンクを追加しないでください"
 
@@ -14841,10 +14883,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Do you really want to delete the LDAP connection <b>%s</b>?"
-msgstr "LDAP接続を本当に削除しますか <b>%s</b>?"
-
-#, python-format
 msgid "Do you really want to delete the MIB file <b>%s</b>?"
 msgstr "本当にMIBファイル<b>%s </b>を削除しますか?"
 
@@ -14855,6 +14893,10 @@ msgstr "本当に集計<b>%s</b>を削除しますか？"
 #, python-format
 msgid "Do you really want to delete the auxiliary tag '%s'?"
 msgstr "本当に補助タグ '%s'を削除しますか？"
+
+#, fuzzy, python-format
+msgid "Do you really want to delete the connection <b>%s</b>?"
+msgstr "LDAP接続を本当に削除しますか <b>%s</b>?"
 
 #, python-format
 msgid "Do you really want to delete the connection to the site %s?"
@@ -15839,9 +15881,6 @@ msgstr "このパックのルールを編集する"
 msgid "Edit this %s"
 msgstr "この %s を編集する"
 
-msgid "Edit this LDAP connection"
-msgstr "このLDAP接続を編集します"
-
 msgid "Edit this aggregation"
 msgstr "この集計を編集する"
 
@@ -15859,6 +15898,10 @@ msgstr "このバックアップジョブを編集する"
 
 msgid "Edit this backup target"
 msgstr "このバックアップターゲットを編集します"
+
+#, fuzzy
+msgid "Edit this connection"
+msgstr "このLDAP接続を編集します"
 
 msgid "Edit this credential"
 msgstr "資格情報を修正する"
@@ -15943,6 +15986,10 @@ msgstr "有効なパラメータ"
 
 msgid "Effective parameters of"
 msgstr "有効なパラメータ"
+
+#, fuzzy
+msgid "Egress packet drop"
+msgstr "ドロップされたパケット"
 
 msgid "Either Containers, Images, Local Volumes or Build Cache"
 msgstr ""
@@ -16523,6 +16570,10 @@ msgstr "施行されたサービス"
 msgid "Engaged Alerts"
 msgstr "エンゲージドアラート"
 
+#, fuzzy
+msgid "Engine CPU utilization"
+msgstr "CPU使用率"
+
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "エンジンIDs(SNMPv3にのみ必要)"
 
@@ -16944,6 +16995,10 @@ msgstr ""
 
 msgid "Every week on..."
 msgstr "毎週..."
+
+#, fuzzy
+msgid "Evictions"
+msgstr "アクション"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "正確なRWVDMS名または正規表現"
@@ -21093,6 +21148,10 @@ msgstr "ホストおよびサービスイベント"
 msgid "Host and service configuration rule"
 msgstr "ホストとサービスの構成ルール"
 
+#, fuzzy
+msgid "Host and service parameters"
+msgstr "ホストおよびサービスイベント"
+
 msgid "Host and service rules related to the Event Console"
 msgstr "イベントコンソールに関連するホストとサービスのルール"
 
@@ -22285,12 +22344,6 @@ msgstr ""
 "定期的なサービス検出</a>に置き換えられました。これにより、ホストごとの構成"
 "や、次のような追加機能が可能になります。自動再検出。そのルールセットのルール"
 "は、ここで行われたグローバル設定を上書きします。"
-
-msgid ""
-"If enabled, Checkmk automatically creates new users when they first log in. "
-"If the user profile cannot be determined based on the current configuration, "
-"the default user profile from the global settings is used."
-msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
@@ -24175,6 +24228,10 @@ msgstr "個別のトピック"
 msgid "Ineffective"
 msgstr "効果がない"
 
+#, fuzzy
+msgid "Ineffective rules"
+msgstr "効果がない"
+
 msgid "Infections"
 msgstr "感染"
 
@@ -24240,6 +24297,9 @@ msgstr "Informix セッション"
 
 msgid "Informix table extents"
 msgstr "Informix テーブルエクステント"
+
+msgid "Ingress packet drop"
+msgstr ""
 
 msgid "Inherit from report time range (Reporting only)"
 msgstr "レポートの時間範囲から継承(レポートのみ)"
@@ -26006,6 +26066,10 @@ msgstr "レベル"
 msgid "Levels CPU"
 msgstr "CPUレベル"
 
+#, fuzzy
+msgid "Levels CPU utilization"
+msgstr "総CPU使用率のレベル"
+
 msgid "Levels Helper usage Check"
 msgstr "レベルヘルパーの使用状況チェック"
 
@@ -26593,10 +26657,6 @@ msgstr "ライセンス契約"
 #, fuzzy
 msgid "License details"
 msgstr "ライセンスの状態"
-
-#, fuzzy
-msgid "License key"
-msgstr "ライセンスの使用法"
 
 msgid "License state"
 msgstr "ライセンスの状態"
@@ -27436,9 +27496,6 @@ msgstr "ログイントークン"
 msgid "Login username"
 msgstr "ログインユーザー名"
 
-msgid "Login with Identity Provider"
-msgstr ""
-
 msgid "Login with the following credentials"
 msgstr "次の資格情報でログインします"
 
@@ -28164,6 +28221,10 @@ msgstr "管理ボードの構成"
 
 msgid "Management type"
 msgstr "マネジメントタイプ"
+
+#, fuzzy
+msgid "Managing licenses"
+msgstr "VMwareライセンス"
 
 msgid "Manual"
 msgstr "マニュアル"
@@ -29070,6 +29131,14 @@ msgstr "メモリコミット"
 msgid "Memory critical at"
 msgstr "で重要なメモリ"
 
+#, fuzzy
+msgid "Memory fragmentation"
+msgstr "ビューの断片化"
+
+#, fuzzy
+msgid "Memory fragmentation ratio lower levels"
+msgstr "コンテナの下位レベル"
+
 msgid "Memory levels"
 msgstr "メモリレベル"
 
@@ -29143,6 +29212,10 @@ msgstr "Fortigateデバイスのメモリ使用量(fortigate_memory)"
 
 msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr "Fortigateデバイスのメモリ使用量(fortigate_memory_base)"
+
+#, fuzzy
+msgid "Memory usage upper levels"
+msgstr "上位レベルを設定する"
 
 msgid "Memory usage: Namespace"
 msgstr "メモリ使用率: 名前空間"
@@ -29513,6 +29586,10 @@ msgid ""
 msgstr ""
 
 msgid "Missing host name"
+msgstr "ホスト名がありません"
+
+#, fuzzy
+msgid "Missing job ID."
 msgstr "ホスト名がありません"
 
 #, python-format
@@ -29896,11 +29973,23 @@ msgstr "監視対象サービス"
 msgid "Monitoring"
 msgstr "モニタリング"
 
+#, fuzzy
+msgid "Monitoring Amazon Web Services (AWS)"
+msgstr "Amazon Web Services (AWS)"
+
 msgid "Monitoring Linux"
 msgstr "Linux監視"
 
+#, fuzzy
+msgid "Monitoring Microsoft Azure"
+msgstr "Microsoft Azure"
+
 msgid "Monitoring URL"
 msgstr "監視URL"
+
+#, fuzzy
+msgid "Monitoring VMWare ESXi"
+msgstr "モニタリングコア"
 
 msgid "Monitoring Windows"
 msgstr "Windows監視"
@@ -30847,6 +30936,14 @@ msgstr "新しいバックアップターゲット"
 msgid "New collection"
 msgstr "新しいコレクション"
 
+#, fuzzy
+msgid "New connections"
+msgstr "新しい接続"
+
+#, fuzzy
+msgid "New connections upper levels"
+msgstr "一時停止されたコンテナの上位レベル"
+
 msgid "New custom graph..."
 msgstr "新しいカスタムグラフ..."
 
@@ -31275,10 +31372,6 @@ msgstr ""
 msgid "No such inventory tree."
 msgstr "そのようなインベントリツリーはありません。"
 
-#, fuzzy
-msgid "No such license key"
-msgstr "ライセンスの使用法"
-
 msgid "No test host"
 msgstr "テストホストなし"
 
@@ -31589,6 +31682,10 @@ msgstr "適用できません"
 
 msgid "Not authenticated"
 msgstr "認証されていません"
+
+#, fuzzy
+msgid "Not available duration"
+msgstr "準備期間"
 
 msgid "Not configured."
 msgstr "構成されていません。"
@@ -32692,6 +32789,10 @@ msgstr "オブジェクトタイプ"
 
 msgid "Observation period for temperature trend computation"
 msgstr ""
+
+#, fuzzy
+msgid "Obsolete rule sets"
+msgstr "選択したルールについて"
 
 msgid "October"
 msgstr "10月"
@@ -36698,6 +36799,10 @@ msgstr "再生可能"
 msgid "Reclaimable memory"
 msgstr "再生可能なメモリ"
 
+#, fuzzy
+msgid "Reclaimed"
+msgstr "再生可能"
+
 msgid "Reclassify complete state"
 msgstr "完全な状態を再分類します"
 
@@ -37357,7 +37462,12 @@ msgstr "この通知をリプレイして、もう一度送信してください
 msgid "Replayed notification number %d"
 msgstr "リプレイ通知番号 %d"
 
-msgid "Replica state"
+#, fuzzy
+msgid "Replica available state"
+msgstr "レプリカ更新状態"
+
+#, fuzzy
+msgid "Replica ready state"
 msgstr "レプリカ状態"
 
 msgid "Replica update state"
@@ -38134,6 +38244,10 @@ msgstr "ルール表示 :%s"
 msgid "Rule search"
 msgstr "ルール検索"
 
+#, fuzzy
+msgid "Rule sets in use"
+msgstr "ルールセット名"
+
 msgid "Rule title"
 msgstr "ルールタイトル"
 
@@ -38370,6 +38484,10 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "SMTP認証"
+
+#, fuzzy
+msgid "SAML connections"
+msgstr "SSL接続"
 
 msgid "SAN"
 msgstr "SAN"
@@ -38878,6 +38996,9 @@ msgstr "予定ダウンタイム"
 
 msgid "Scheduled downtime depth"
 msgstr "スケジュールされたダウンタイムの深度"
+
+msgid "Scheduled downtimes"
+msgstr "スケジュールされたダウンタイム"
 
 msgid "Scheduled report title"
 msgstr "スケジュールされたレポートのタイトル"
@@ -41112,8 +41233,9 @@ msgstr "サイトのバックアップターゲット"
 msgid "Site base URL"
 msgstr "サイトベースURL"
 
+#, fuzzy
 msgid ""
-"Site base URL for accessing the Web API to e.g. create hosts (e.g. "
+"Site base URL for accessing the REST API to e.g. create hosts (e.g. "
 "<tt>https://myhost/mysite</tt>)."
 msgstr ""
 "たとえば、ホストを作成するためにWeb APIにアクセスするためのサイトベースURL(た"
@@ -44750,6 +44872,10 @@ msgstr ""
 msgid "The ESX Host"
 msgstr "ESXホスト"
 
+#, fuzzy
+msgid "The Event Console"
+msgstr "イベントコンソール"
+
 msgid "The Event Console Daemon is currently not running. "
 msgstr "イベントコンソールデーモンは現在実行されていません。 "
 
@@ -48160,6 +48286,10 @@ msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "フォルダ %s のネットワークスキャンで使ったユーザー %s は、存在しません。"
 
+#, fuzzy
+msgid "The user interface"
+msgstr "ユーザーインターフェース"
+
 msgid "The user synchronization completed successfully."
 msgstr "ユーザーの同期が正常に完了しました。"
 
@@ -51226,11 +51356,12 @@ msgstr ""
 msgid ""
 "This ruleset is relevant for Kubernetes replicas. You can set a maximum "
 "allowed duration during which replicas may be in a not ready or not up-to-"
-"date state. For DaemonSets, you may additionally specify the duration for "
-"which there may be a positive number of misscheduled replicas. Keep in mind "
-"that replicas may temporarily be in these states during the process of an "
-"update. Therefore, it is recommended to always have a grace period "
-"configured."
+"date state. For StatefulSets, you may additionally specify such a duration "
+"for the not available state. For DaemonSets, you may additionally specify "
+"the duration for which there may be a positive number of misscheduled "
+"replicas. Keep in mind that replicas may temporarily be in these states "
+"during the process of an update. Therefore, it is recommended to always have "
+"a grace period configured."
 msgstr ""
 
 msgid ""
@@ -54630,6 +54761,22 @@ msgid "Upper levels on total request latency"
 msgstr "リクエストの合計レイテンシの上位レベル"
 
 #, fuzzy
+msgid "Upper levels on tunnel egress"
+msgstr "混合されていないコストの上位レベル"
+
+#, fuzzy
+msgid "Upper levels on tunnel egress packet drop"
+msgstr "未使用スペースの上位レベル"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress"
+msgstr "混合されていないコストの上位レベル"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress packet drop"
+msgstr "未使用スペースの上位レベル"
+
+#, fuzzy
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "ディスク使用率の上位レベル"
 
@@ -55378,11 +55525,12 @@ msgstr ""
 "メーターを指定します。これらのオプションは、カスタム設定が設定されていないす"
 "べての接続で使用されます。"
 
+#, fuzzy
 msgid ""
-"Use this setting to tell the dynamic configuration to which Check_MK Web API "
+"Use this setting to tell the dynamic configuration to which Checkmk REST API "
 "to talk to for creating hosts and so on. This setting controls on which "
 "sites the objects will be created. In single site setups you can set this to "
-"\"local site\".In distributed setups you will have to configure the Web API "
+"\"local site\".In distributed setups you will have to configure the REST API "
 "of the central WATO site from the view of the remote site."
 msgstr ""
 "この設定を使用して、ホストの作成などのためにどのCheck,k Web APIと通信するかを"
@@ -55679,6 +55827,10 @@ msgstr "cifs共有を使用しているユーザー"
 
 msgid "Users' notification rule"
 msgstr "ユーザーの通知ルール"
+
+#, fuzzy
+msgid "Users, roles and permissions"
+msgstr "役割と権限"
 
 msgid "Using predefined condition"
 msgstr "事前定義された条件の使用"
@@ -59808,6 +59960,10 @@ msgstr "有効なキーIDを指定する必要があります。"
 msgid "You need to provide a valid password to be able to send notifications."
 msgstr "通知を送信するには、有効なパスワードを入力する必要があります。"
 
+#, fuzzy
+msgid "You need to provide an ID"
+msgstr "テキストを提供する必要があります。"
+
 #, python-format
 msgid "You need to provide at least %d characters."
 msgstr "少なくとも%d文字を指定する必要があります。"
@@ -62011,6 +62167,28 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Create users only on login"
+#~ msgid "Create new users on login"
+#~ msgstr "ログイン時にのみユーザーを作成する"
+
+#~ msgid "Do not add a link"
+#~ msgstr "リンクを追加しないでください"
+
+#, fuzzy
+#~| msgid "License Usage"
+#~ msgid "License key"
+#~ msgstr "ライセンスの使用法"
+
+#, fuzzy
+#~| msgid "License Usage"
+#~ msgid "No such license key"
+#~ msgstr "ライセンスの使用法"
+
+#, python-format
+#~ msgid "%s (system wide)"
+#~ msgstr "%s　(システム全体)"
 
 #~ msgid "Information to be displayed in the email body"
 #~ msgstr "メール本文に表示される情報"
@@ -66157,9 +66335,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Networks"
 #~ msgstr "ネットワーク"
 
-#~ msgid "New Connections"
-#~ msgstr "新しい接続"
-
 #~ msgid "New event created"
 #~ msgstr "新しいイベントが作成されました"
 
@@ -66542,9 +66717,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "SNMP Information"
 #~ msgstr "SNMP情報"
-
-#~ msgid "Scheduled downtimes"
-#~ msgstr "スケジュールされたダウンタイム"
 
 #~ msgid "Script executed"
 #~ msgstr "スクリプトが実行されました"
@@ -66948,9 +67120,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Versions"
 #~ msgstr "バージョン"
-
-#~ msgid "Views fragmentation"
-#~ msgstr "ビューの断片化"
 
 #~ msgid "Virtual Machine"
 #~ msgstr "仮想マシン"

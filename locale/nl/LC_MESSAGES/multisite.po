@@ -459,10 +459,6 @@ msgid "%s (Customer missing)"
 msgstr "%s (Klant ontbreekt)"
 
 #, python-format
-msgid "%s (system wide)"
-msgstr "%s (systeem wijd)"
-
-#, python-format
 msgid ""
 "%s - %s\n"
 "Duration %s\n"
@@ -2198,6 +2194,12 @@ msgstr ""
 msgid "A user with the id \"%s\" does not exist."
 msgstr "Een gebruiker met het id \"%s\" bestaat niet."
 
+msgid ""
+"A user-friendly name to identify this connection. This will be used for the "
+"log-in button that is shown on the log-in page once the connection has been "
+"set up."
+msgstr ""
+
 msgid "A value in seconds"
 msgstr "Een waarde in seconden"
 
@@ -2436,7 +2438,19 @@ msgid "AWS/ELBv2 Limits"
 msgstr "AWS/ELBv2 Grenzen"
 
 #, fuzzy
+msgid "AWS/ElastiCache CPU Utilization"
+msgstr "AWS/Glacier Grenzen"
+
+#, fuzzy
+msgid "AWS/ElastiCache Connections"
+msgstr "AWS/Glacier Grenzen"
+
+#, fuzzy
 msgid "AWS/ElastiCache Limits"
+msgstr "AWS/Glacier Grenzen"
+
+#, fuzzy
+msgid "AWS/ElastiCache Memory"
 msgstr "AWS/Glacier Grenzen"
 
 msgid "AWS/Glacier Limits"
@@ -2804,6 +2818,10 @@ msgstr "Erkenning Commentaar"
 
 msgid "Acknowledgement of problem"
 msgstr "Erkenning van het probleem"
+
+#, fuzzy
+msgid "Acknowledging problems"
+msgstr "Erken problemen"
 
 msgid "Act."
 msgstr "Act."
@@ -5084,6 +5102,10 @@ msgstr "Analyseer regelset met deze melding"
 msgid "Analyze this line"
 msgstr "Analyseer deze lijn"
 
+#, fuzzy
+msgid "Analyzing the Checkmk site configuration"
+msgstr "Analyseren configuratie"
+
 msgid "Android version regular expression"
 msgstr "Android versie reguliere expressie"
 
@@ -6050,6 +6072,10 @@ msgid "Available macros and search result(s)"
 msgstr "Aantal zoekresultaten"
 
 msgid "Available options"
+msgstr "Beschikbare opties"
+
+#, fuzzy
+msgid "Available replicas"
 msgstr "Beschikbare opties"
 
 msgid "Available temp space"
@@ -7658,6 +7684,10 @@ msgstr "Verzonden/ontvangen bytes"
 msgid "Bytes uploaded"
 msgstr "Geüploade bytes"
 
+#, fuzzy
+msgid "Bytes used for cache upper levels"
+msgstr "Totaal aantal berichten bovenste niveaus"
+
 msgid "C"
 msgstr "C"
 
@@ -7920,6 +7950,10 @@ msgstr "Cache leeftijd voor achtergrond controles"
 #, python-format
 msgid "Cache generated %s ago, cache interval: %s"
 msgstr "Cache %s geleden gegenereerd, cache interval: %s"
+
+#, fuzzy
+msgid "Cache hit rate lower levels"
+msgstr "Containers lagere niveaus"
 
 msgid "Cache hit ratio"
 msgstr "Cache hit ratio"
@@ -8501,8 +8535,8 @@ msgstr "Gewijzigde volgorde van tag-groepen"
 msgid "Changed position of %s %d"
 msgstr "Veranderde positie van %s %d"
 
-#, python-format
-msgid "Changed position of LDAP connection %s to %d"
+#, fuzzy, python-format
+msgid "Changed position of connection %s to %d"
 msgstr "Positie van LDAP-verbinding %s gewijzigd in %d"
 
 #, python-format
@@ -9067,6 +9101,10 @@ msgstr ""
 "echter rekening mee dat sommige apparaten die SNMPv2c ondersteunen buggy "
 "kunnen zijn. In dergelijke gevallen kunt u proberen om bulk walk uit te "
 "schakelen met de regelset \"Disable bulk walks on SNMPv2c/v3\"."
+
+#, fuzzy
+msgid "Checkmk extension packages (MKPs)"
+msgstr "Beheer en creëer Checkmk-uitbreidingspakketten (MKP's)."
 
 msgid "Checkmk fetcher usage"
 msgstr "Checkmk fetcher gebruik"
@@ -10853,7 +10891,8 @@ msgstr "Verbinding met centrale agent bakkerij"
 msgid "Connection to remote agent bakery"
 msgstr "Verbinding met remote agent bakkerij"
 
-msgid "Connection to the Web API"
+#, fuzzy
+msgid "Connection to the REST API"
 msgstr "Verbinding met de Web API"
 
 msgid "Connection type"
@@ -11480,14 +11519,15 @@ msgstr "Maak een kloon van deze host"
 msgid "Create a copy"
 msgstr "Maak een kopie"
 
-msgid "Create a copy of this LDAP connection"
-msgstr "Maak een kopie van deze LDAP-verbinding"
-
 msgid "Create a copy of this aggregation"
 msgstr "Maak een kopie van deze aggregatie"
 
 msgid "Create a copy of this alert handler rule"
 msgstr "Maak een kopie van deze alert handler regel"
+
+#, fuzzy
+msgid "Create a copy of this connection"
+msgstr "Maak een kopie van deze LDAP-verbinding"
 
 msgid "Create a copy of this group"
 msgstr "Maak een kopie van deze groep"
@@ -11607,10 +11647,6 @@ msgstr "Nieuwe tag groep maken"
 
 msgid "Create new topic"
 msgstr "Creëer nieuw onderwerp"
-
-#, fuzzy
-msgid "Create new users on login"
-msgstr "Gebruikers alleen aanmaken bij inloggen"
 
 msgid "Create new virtual host tree configuration"
 msgstr "Nieuwe virtuele hostboomconfiguratie maken"
@@ -11978,6 +12014,14 @@ msgstr "Huidige gebruikers"
 
 msgid "Current check attempt"
 msgstr "Huidige controlepoging"
+
+#, fuzzy
+msgid "Current connections"
+msgstr "Momenteel open verbindingen"
+
+#, fuzzy
+msgid "Current connections upper levels"
+msgstr "Totaal aantal cliëntverbindingen bovenste niveau"
 
 msgid "Current date"
 msgstr "Huidige datum"
@@ -13478,9 +13522,6 @@ msgstr "Verwijder dit BI-pakket"
 msgid "Delete this Icon"
 msgstr "Verwijder dit pictogram"
 
-msgid "Delete this LDAP connection"
-msgstr "Deze LDAP-verbinding verwijderen"
-
 msgid "Delete this MIB"
 msgstr "Verwijder deze MIB"
 
@@ -13504,6 +13545,10 @@ msgstr "Deze back-uptaak verwijderen"
 
 msgid "Delete this backup target"
 msgstr "Dit back-updoel verwijderen"
+
+#, fuzzy
+msgid "Delete this connection"
+msgstr "Deze LDAP-verbinding verwijderen"
 
 msgid "Delete this credential"
 msgstr "Verwijder deze referentie"
@@ -13596,16 +13641,16 @@ msgid "Deleted BI rule with ID %s"
 msgstr "Verwijderde BI regel met ID %s"
 
 #, python-format
-msgid "Deleted LDAP connection %s"
-msgstr "LDAP-verbinding %s verwijderd"
-
-#, python-format
 msgid "Deleted MIB %s"
 msgstr "Verwijderde MIB %s"
 
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "Attribuut %s verwijderd"
+
+#, fuzzy, python-format
+msgid "Deleted connection %s"
+msgstr "LDAP-verbinding %s verwijderd"
 
 #, fuzzy, python-format
 msgid "Deleted custom GUI logo %s"
@@ -14970,9 +15015,6 @@ msgstr "Inventarisatie hardware/software"
 msgid "Do not activate changes"
 msgstr "Veranderingen niet activeren"
 
-msgid "Do not add a link"
-msgstr "Voeg geen link toe"
-
 msgid "Do not add a link to this page in sidebar"
 msgstr "Voeg geen link naar deze pagina toe in de zijbalk"
 
@@ -15438,10 +15480,6 @@ msgstr ""
 "verwijderen?"
 
 #, python-format
-msgid "Do you really want to delete the LDAP connection <b>%s</b>?"
-msgstr "Wilt u echt de LDAP-verbinding <b>%s</b> verwijderen?"
-
-#, python-format
 msgid "Do you really want to delete the MIB file <b>%s</b>?"
 msgstr "Wil je echt het MIB bestand <b>%s</b> verwijderen?"
 
@@ -15452,6 +15490,10 @@ msgstr "Wilt u echt de aggregatie <b>%s</b> verwijderen?"
 #, python-format
 msgid "Do you really want to delete the auxiliary tag '%s'?"
 msgstr "Wilt u echt de hulptag '%s' verwijderen?"
+
+#, fuzzy, python-format
+msgid "Do you really want to delete the connection <b>%s</b>?"
+msgstr "Wilt u echt de LDAP-verbinding <b>%s</b> verwijderen?"
 
 #, python-format
 msgid "Do you really want to delete the connection to the site %s?"
@@ -16462,9 +16504,6 @@ msgstr "Bewerk de regels in dit pakket"
 msgid "Edit this %s"
 msgstr "Bewerk deze %s"
 
-msgid "Edit this LDAP connection"
-msgstr "Bewerk deze LDAP-verbinding"
-
 msgid "Edit this aggregation"
 msgstr "Bewerk deze aggregatie"
 
@@ -16482,6 +16521,10 @@ msgstr "Deze back-uptaak bewerken"
 
 msgid "Edit this backup target"
 msgstr "Bewerk dit back-up doel"
+
+#, fuzzy
+msgid "Edit this connection"
+msgstr "Bewerk deze LDAP-verbinding"
 
 msgid "Edit this credential"
 msgstr "Bewerk deze referentie"
@@ -16566,6 +16609,10 @@ msgstr "Effectieve parameters"
 
 msgid "Effective parameters of"
 msgstr "Effectieve parameters van"
+
+#, fuzzy
+msgid "Egress packet drop"
+msgstr "Gedropte pakketten"
 
 msgid "Either Containers, Images, Local Volumes or Build Cache"
 msgstr "Containers, Images, Local Volumes of Build Cache"
@@ -17159,6 +17206,10 @@ msgstr "Afgedwongen diensten"
 msgid "Engaged Alerts"
 msgstr "Betrokken waarschuwingen"
 
+#, fuzzy
+msgid "Engine CPU utilization"
+msgstr "CPU-gebruik"
+
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "Engine ID's (alleen nodig voor SNMPv3)"
 
@@ -17588,6 +17639,10 @@ msgstr ""
 
 msgid "Every week on..."
 msgstr "Elke week op..."
+
+#, fuzzy
+msgid "Evictions"
+msgstr "Acties"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "Exacte RWVDMS-naam of regex"
@@ -21938,6 +21993,10 @@ msgstr "Host- en Service-evenementen"
 msgid "Host and service configuration rule"
 msgstr "Regel voor gastheer- en dienstconfiguratie"
 
+#, fuzzy
+msgid "Host and service parameters"
+msgstr "Host- en Service-evenementen"
+
 msgid "Host and service rules related to the Event Console"
 msgstr "Host- en serviceregels met betrekking tot de gebeurtenissenconsole"
 
@@ -23183,12 +23242,6 @@ msgstr ""
 "Discovery</a>, die een configuratie per host toestaat en extra functies "
 "zoals automatische herontdekking. Regels in die regelset zullen de globale "
 "instellingen hier overschrijven."
-
-msgid ""
-"If enabled, Checkmk automatically creates new users when they first log in. "
-"If the user profile cannot be determined based on the current configuration, "
-"the default user profile from the global settings is used."
-msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
@@ -25277,6 +25330,10 @@ msgstr "Individueel onderwerp"
 msgid "Ineffective"
 msgstr "Ondoeltreffend"
 
+#, fuzzy
+msgid "Ineffective rules"
+msgstr "Ondoeltreffend"
+
 msgid "Infections"
 msgstr "Infecties"
 
@@ -25342,6 +25399,9 @@ msgstr "Informix sessies"
 
 msgid "Informix table extents"
 msgstr "Informix tabel extenties"
+
+msgid "Ingress packet drop"
+msgstr ""
 
 msgid "Inherit from report time range (Reporting only)"
 msgstr "Erven van rapportagetijdbereik (alleen rapportage)"
@@ -27166,6 +27226,10 @@ msgstr "Niveaus"
 msgid "Levels CPU"
 msgstr "Niveaus CPU"
 
+#, fuzzy
+msgid "Levels CPU utilization"
+msgstr "Niveaus op totaal CPU-gebruik"
+
 msgid "Levels Helper usage Check"
 msgstr "Niveaus Helper gebruik Check"
 
@@ -27761,10 +27825,6 @@ msgstr "Licentieovereenkomst"
 #, fuzzy
 msgid "License details"
 msgstr "Licentie staat"
-
-#, fuzzy
-msgid "License key"
-msgstr "Licentiegebruik"
 
 msgid "License state"
 msgstr "Licentie staat"
@@ -28627,9 +28687,6 @@ msgstr "Aanmeldingstoken"
 msgid "Login username"
 msgstr "Gebruikersnaam inloggen"
 
-msgid "Login with Identity Provider"
-msgstr ""
-
 msgid "Login with the following credentials"
 msgstr "Log in met de volgende gegevens"
 
@@ -29371,6 +29428,10 @@ msgstr "Configuratie raad van bestuur"
 
 msgid "Management type"
 msgstr "Type beheer"
+
+#, fuzzy
+msgid "Managing licenses"
+msgstr "VMware licenties"
 
 msgid "Manual"
 msgstr "Handmatig"
@@ -30304,6 +30365,14 @@ msgstr "Geheugen."
 msgid "Memory critical at"
 msgstr "Geheugen kritisch bij"
 
+#, fuzzy
+msgid "Memory fragmentation"
+msgstr "Uitzicht fragmentatie"
+
+#, fuzzy
+msgid "Memory fragmentation ratio lower levels"
+msgstr "Containers lagere niveaus"
+
 msgid "Memory levels"
 msgstr "Geheugenniveaus"
 
@@ -30379,6 +30448,10 @@ msgstr "Geheugengebruik van Fortigate apparaten (fortigate_memory)"
 
 msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr "Geheugengebruik van Fortigate apparaten (fortigate_memory_base)"
+
+#, fuzzy
+msgid "Memory usage upper levels"
+msgstr "Bovenste niveaus instellen"
 
 msgid "Memory usage: Namespace"
 msgstr "Geheugengebruik: Namespace"
@@ -30755,6 +30828,10 @@ msgstr ""
 "toevoegen, of de met de ontbrekende HTTP-variabelen aanroepen."
 
 msgid "Missing host name"
+msgstr "Ontbrekende hostnaam"
+
+#, fuzzy
+msgid "Missing job ID."
 msgstr "Ontbrekende hostnaam"
 
 #, python-format
@@ -31137,11 +31214,23 @@ msgstr "Bewaakte diensten"
 msgid "Monitoring"
 msgstr "Toezicht"
 
+#, fuzzy
+msgid "Monitoring Amazon Web Services (AWS)"
+msgstr "Amazon Web Services (AWS)"
+
 msgid "Monitoring Linux"
 msgstr "Toezicht op Linux"
 
+#, fuzzy
+msgid "Monitoring Microsoft Azure"
+msgstr "Microsoft Azure"
+
 msgid "Monitoring URL"
 msgstr "Controle URL"
+
+#, fuzzy
+msgid "Monitoring VMWare ESXi"
+msgstr "Bewaking kern"
 
 msgid "Monitoring Windows"
 msgstr "Vensters bewaken"
@@ -32111,6 +32200,14 @@ msgstr "Nieuw back-up doel"
 msgid "New collection"
 msgstr "Nieuwe collectie"
 
+#, fuzzy
+msgid "New connections"
+msgstr "Nieuwe verbindingen"
+
+#, fuzzy
+msgid "New connections upper levels"
+msgstr "Pauzeren containers bovenste niveaus"
+
 msgid "New custom graph..."
 msgstr "Nieuwe aangepaste grafiek..."
 
@@ -32546,10 +32643,6 @@ msgstr ""
 msgid "No such inventory tree."
 msgstr "Geen dergelijke inventaris boom."
 
-#, fuzzy
-msgid "No such license key"
-msgstr "Licentiegebruik"
-
 msgid "No test host"
 msgstr "Geen test host"
 
@@ -32878,6 +32971,10 @@ msgstr "Niet van toepassing"
 
 msgid "Not authenticated"
 msgstr "Niet geauthenticeerd"
+
+#, fuzzy
+msgid "Not available duration"
+msgstr "Niet klaar duur"
 
 msgid "Not configured."
 msgstr "Niet geconfigureerd."
@@ -34009,6 +34106,10 @@ msgstr "Type voorwerp"
 
 msgid "Observation period for temperature trend computation"
 msgstr "Waarnemingsperiode voor de berekening van de temperatuurtendens"
+
+#, fuzzy
+msgid "Obsolete rule sets"
+msgstr "Op geselecteerde regels"
 
 msgid "October"
 msgstr "Oktober"
@@ -38152,6 +38253,10 @@ msgstr "Reclaimable"
 msgid "Reclaimable memory"
 msgstr "Herwinbaar geheugen"
 
+#, fuzzy
+msgid "Reclaimed"
+msgstr "Reclaimable"
+
 msgid "Reclassify complete state"
 msgstr "Herindelen volledige staat"
 
@@ -38833,7 +38938,12 @@ msgstr "Herhaal deze melding, verstuur het opnieuw!"
 msgid "Replayed notification number %d"
 msgstr "Nummer van herhaalde melding %d"
 
-msgid "Replica state"
+#, fuzzy
+msgid "Replica available state"
+msgstr "Replica bijwerken staat"
+
+#, fuzzy
+msgid "Replica ready state"
 msgstr "Replica staat"
 
 msgid "Replica update state"
@@ -39631,6 +39741,10 @@ msgstr "Weergave van de regel: %s"
 msgid "Rule search"
 msgstr "Regel zoeken"
 
+#, fuzzy
+msgid "Rule sets in use"
+msgstr "Naam regelset"
+
 msgid "Rule title"
 msgstr "Titel van de regel"
 
@@ -39880,6 +39994,10 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "SMTP-verificatie"
+
+#, fuzzy
+msgid "SAML connections"
+msgstr "SSL-verbindingen"
 
 msgid "SAN"
 msgstr "SAN"
@@ -40387,6 +40505,9 @@ msgstr "Geplande uitvaltijd"
 
 msgid "Scheduled downtime depth"
 msgstr "Geplande uitval diepte"
+
+msgid "Scheduled downtimes"
+msgstr "Geplande uitvaltijden"
 
 msgid "Scheduled report title"
 msgstr "Geplande rapport titel"
@@ -42733,8 +42854,9 @@ msgstr "Site back-updoelen"
 msgid "Site base URL"
 msgstr "Website basis URL"
 
+#, fuzzy
 msgid ""
-"Site base URL for accessing the Web API to e.g. create hosts (e.g. "
+"Site base URL for accessing the REST API to e.g. create hosts (e.g. "
 "<tt>https://myhost/mysite</tt>)."
 msgstr ""
 "Site base URL voor toegang tot de Web API om bijv. hosts aan te maken (bijv. "
@@ -46541,6 +46663,10 @@ msgstr ""
 
 msgid "The ESX Host"
 msgstr "De ESX Host"
+
+#, fuzzy
+msgid "The Event Console"
+msgstr "Gebeurtenis Console"
 
 msgid "The Event Console Daemon is currently not running. "
 msgstr "De Event Console Daemon draait momenteel niet. "
@@ -50364,6 +50490,10 @@ msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "De gebruiker %s gebruikt door de netwerkscan van de map %s bestaat niet."
 
+#, fuzzy
+msgid "The user interface"
+msgstr "Gebruikersinterface"
+
 msgid "The user synchronization completed successfully."
 msgstr "De gebruikerssynchronisatie is met succes voltooid."
 
@@ -53841,11 +53971,12 @@ msgstr ""
 msgid ""
 "This ruleset is relevant for Kubernetes replicas. You can set a maximum "
 "allowed duration during which replicas may be in a not ready or not up-to-"
-"date state. For DaemonSets, you may additionally specify the duration for "
-"which there may be a positive number of misscheduled replicas. Keep in mind "
-"that replicas may temporarily be in these states during the process of an "
-"update. Therefore, it is recommended to always have a grace period "
-"configured."
+"date state. For StatefulSets, you may additionally specify such a duration "
+"for the not available state. For DaemonSets, you may additionally specify "
+"the duration for which there may be a positive number of misscheduled "
+"replicas. Keep in mind that replicas may temporarily be in these states "
+"during the process of an update. Therefore, it is recommended to always have "
+"a grace period configured."
 msgstr ""
 
 msgid ""
@@ -57396,6 +57527,22 @@ msgid "Upper levels on total request latency"
 msgstr "Bovenste niveaus op totale verzoeklatentie"
 
 #, fuzzy
+msgid "Upper levels on tunnel egress"
+msgstr "Bovenste niveaus voor de leeftijd"
+
+#, fuzzy
+msgid "Upper levels on tunnel egress packet drop"
+msgstr "Bovenste niveaus voor ongebruikte ruimte"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress"
+msgstr "Bovenste niveaus voor de leeftijd"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress packet drop"
+msgstr "Bovenste niveaus voor ongebruikte ruimte"
+
+#, fuzzy
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Bovenste niveaus voor schijfgebruik"
 
@@ -58192,11 +58339,12 @@ msgstr ""
 "verbonden via de livestatus-proxy. Deze opties worden gebruikt door alle "
 "verbindingen waarvoor geen aangepaste instellingen zijn ingesteld's."
 
+#, fuzzy
 msgid ""
-"Use this setting to tell the dynamic configuration to which Check_MK Web API "
+"Use this setting to tell the dynamic configuration to which Checkmk REST API "
 "to talk to for creating hosts and so on. This setting controls on which "
 "sites the objects will be created. In single site setups you can set this to "
-"\"local site\".In distributed setups you will have to configure the Web API "
+"\"local site\".In distributed setups you will have to configure the REST API "
 "of the central WATO site from the view of the remote site."
 msgstr ""
 "Gebruik deze instelling om de dynamische configuratie te vertellen tegen "
@@ -58507,6 +58655,10 @@ msgstr "Gebruikers die een cifs share gebruiken"
 
 msgid "Users' notification rule"
 msgstr "Regel voor kennisgeving aan gebruikers"
+
+#, fuzzy
+msgid "Users, roles and permissions"
+msgstr "Rollen en machtigingen"
 
 msgid "Using predefined condition"
 msgstr "Gebruik van voorgedefinieerde voorwaarde"
@@ -63107,6 +63259,10 @@ msgstr "U moet een geldige sleutel-id opgeven."
 msgid "You need to provide a valid password to be able to send notifications."
 msgstr "U moet een geldig wachtwoord opgeven om meldingen te kunnen versturen."
 
+#, fuzzy
+msgid "You need to provide an ID"
+msgstr "Je moet een tekst geven."
+
 #, python-format
 msgid "You need to provide at least %d characters."
 msgstr "U moet ten minste %d tekens opgeven."
@@ -65339,6 +65495,28 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Create users only on login"
+#~ msgid "Create new users on login"
+#~ msgstr "Gebruikers alleen aanmaken bij inloggen"
+
+#~ msgid "Do not add a link"
+#~ msgstr "Voeg geen link toe"
+
+#, fuzzy
+#~| msgid "License Usage"
+#~ msgid "License key"
+#~ msgstr "Licentiegebruik"
+
+#, fuzzy
+#~| msgid "License Usage"
+#~ msgid "No such license key"
+#~ msgstr "Licentiegebruik"
+
+#, python-format
+#~ msgid "%s (system wide)"
+#~ msgstr "%s (systeem wijd)"
 
 #~ msgid "Information to be displayed in the email body"
 #~ msgstr "Informatie die moet worden weergegeven in de e-mail body"
@@ -69895,9 +70073,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Networks"
 #~ msgstr "Netwerken"
 
-#~ msgid "New Connections"
-#~ msgstr "Nieuwe verbindingen"
-
 #~ msgid "New event created"
 #~ msgstr "Nieuw evenement gecreëerd"
 
@@ -70303,9 +70478,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "SNMP Information"
 #~ msgstr "SNMP-informatie"
-
-#~ msgid "Scheduled downtimes"
-#~ msgstr "Geplande uitvaltijden"
 
 #~ msgid "Script executed"
 #~ msgstr "Script uitgevoerd"
@@ -70733,9 +70905,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Versions"
 #~ msgstr "Versies"
-
-#~ msgid "Views fragmentation"
-#~ msgstr "Uitzicht fragmentatie"
 
 #~ msgid "Virtual Machine"
 #~ msgstr "Virtuele Machine"

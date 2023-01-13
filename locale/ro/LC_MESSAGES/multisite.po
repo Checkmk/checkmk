@@ -453,10 +453,6 @@ msgid "%s (Customer missing)"
 msgstr ""
 
 #, python-format
-msgid "%s (system wide)"
-msgstr ""
-
-#, python-format
 msgid ""
 "%s - %s\n"
 "Duration %s\n"
@@ -1841,6 +1837,12 @@ msgstr ""
 msgid "A user with the id \"%s\" does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
+msgid ""
+"A user-friendly name to identify this connection. This will be used for the "
+"log-in button that is shown on the log-in page once the connection has been "
+"set up."
+msgstr ""
+
 #, fuzzy
 msgid "A value in seconds"
 msgstr " secunde "
@@ -2082,7 +2084,19 @@ msgid "AWS/ELBv2 Limits"
 msgstr ""
 
 #, fuzzy
+msgid "AWS/ElastiCache CPU Utilization"
+msgstr "Adaugă limite"
+
+#, fuzzy
+msgid "AWS/ElastiCache Connections"
+msgstr "Adaugă limite"
+
+#, fuzzy
 msgid "AWS/ElastiCache Limits"
+msgstr "Adaugă limite"
+
+#, fuzzy
+msgid "AWS/ElastiCache Memory"
 msgstr "Adaugă limite"
 
 #, fuzzy
@@ -2480,6 +2494,10 @@ msgstr "Comentariul Confirmației"
 
 #, fuzzy
 msgid "Acknowledgement of problem"
+msgstr "Confirmă Problemele"
+
+#, fuzzy
+msgid "Acknowledging problems"
 msgstr "Confirmă Problemele"
 
 msgid "Act."
@@ -4812,6 +4830,10 @@ msgid "Analyze this line"
 msgstr ""
 
 #, fuzzy
+msgid "Analyzing the Checkmk site configuration"
+msgstr "Activare Configurare"
+
+#, fuzzy
 msgid "Android version regular expression"
 msgstr "Mesajul Text"
 
@@ -5740,6 +5762,10 @@ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Available options"
+msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Available replicas"
 msgstr "Optiuni tabel"
 
 #, fuzzy
@@ -7187,6 +7213,10 @@ msgstr "Sterge Elementul"
 msgid "Bytes uploaded"
 msgstr "Mesajul Text"
 
+#, fuzzy
+msgid "Bytes used for cache upper levels"
+msgstr "Numarul maxim de mesaje"
+
 msgid "C"
 msgstr ""
 
@@ -7457,6 +7487,10 @@ msgstr ""
 #, python-format
 msgid "Cache generated %s ago, cache interval: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Cache hit rate lower levels"
+msgstr "trei nivele"
 
 msgid "Cache hit ratio"
 msgstr ""
@@ -8011,9 +8045,9 @@ msgstr ""
 msgid "Changed position of %s %d"
 msgstr ""
 
-#, python-format
-msgid "Changed position of LDAP connection %s to %d"
-msgstr ""
+#, fuzzy, python-format
+msgid "Changed position of connection %s to %d"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
@@ -8552,6 +8586,10 @@ msgid ""
 "that support SNMPv2c may be buggy. In such cases, you may want to try "
 "disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
 msgstr ""
+
+#, fuzzy
+msgid "Checkmk extension packages (MKPs)"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Checkmk fetcher usage"
@@ -10214,7 +10252,7 @@ msgid "Connection to remote agent bakery"
 msgstr "(Nu trimite site-ului de la distanță)"
 
 #, fuzzy
-msgid "Connection to the Web API"
+msgid "Connection to the REST API"
 msgstr "Conexiune Noua"
 
 #, fuzzy
@@ -10870,15 +10908,16 @@ msgstr ""
 msgid "Create a copy"
 msgstr ""
 
-msgid "Create a copy of this LDAP connection"
-msgstr ""
-
 #, fuzzy
 msgid "Create a copy of this aggregation"
 msgstr "Agregare noua"
 
 msgid "Create a copy of this alert handler rule"
 msgstr ""
+
+#, fuzzy
+msgid "Create a copy of this connection"
+msgstr "Agregare noua"
 
 msgid "Create a copy of this group"
 msgstr ""
@@ -11010,10 +11049,6 @@ msgstr ""
 
 msgid "Create new topic"
 msgstr ""
-
-#, fuzzy
-msgid "Create new users on login"
-msgstr "Conexiune Noua"
 
 msgid "Create new virtual host tree configuration"
 msgstr ""
@@ -11393,6 +11428,14 @@ msgstr "Parola"
 
 msgid "Current check attempt"
 msgstr ""
+
+#, fuzzy
+msgid "Current connections"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Current connections upper levels"
+msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "Current date"
@@ -12951,10 +12994,6 @@ msgid "Delete this Icon"
 msgstr "Sterge Elementul"
 
 #, fuzzy
-msgid "Delete this LDAP connection"
-msgstr "Sterge Elementul"
-
-#, fuzzy
 msgid "Delete this MIB"
 msgstr "Sterge Elementul"
 
@@ -12981,6 +13020,10 @@ msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete this backup target"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete this connection"
 msgstr "Sterge Elementul"
 
 #, fuzzy
@@ -13086,16 +13129,16 @@ msgid "Deleted BI rule with ID %s"
 msgstr ""
 
 #, python-format
-msgid "Deleted LDAP connection %s"
-msgstr ""
-
-#, python-format
 msgid "Deleted MIB %s"
 msgstr ""
 
 #, python-format
 msgid "Deleted attribute %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Deleted connection %s"
+msgstr "Conexiuni Active"
 
 #, fuzzy, python-format
 msgid "Deleted custom GUI logo %s"
@@ -14488,10 +14531,6 @@ msgid "Do not activate changes"
 msgstr "Activare schimbări"
 
 #, fuzzy
-msgid "Do not add a link"
-msgstr "foloseste alias"
-
-#, fuzzy
 msgid "Do not add a link to this page in sidebar"
 msgstr "Adaugă un snapin pe sidebar"
 
@@ -14956,10 +14995,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Do you really want to delete the LDAP connection <b>%s</b>?"
-msgstr ""
-
-#, python-format
 msgid "Do you really want to delete the MIB file <b>%s</b>?"
 msgstr ""
 
@@ -14970,6 +15005,10 @@ msgstr ""
 #, python-format
 msgid "Do you really want to delete the auxiliary tag '%s'?"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Do you really want to delete the connection <b>%s</b>?"
+msgstr "O agregare legată de un singur element"
 
 #, python-format
 msgid "Do you really want to delete the connection to the site %s?"
@@ -15964,10 +16003,6 @@ msgstr ""
 msgid "Edit this %s"
 msgstr ""
 
-#, fuzzy
-msgid "Edit this LDAP connection"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "Edit this aggregation"
 msgstr ""
 
@@ -15987,6 +16022,10 @@ msgstr ""
 #, fuzzy
 msgid "Edit this backup target"
 msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Edit this connection"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Edit this credential"
@@ -16082,6 +16121,10 @@ msgstr "Reguli neaplicate"
 #, fuzzy
 msgid "Effective parameters of"
 msgstr "Reguli neaplicate"
+
+#, fuzzy
+msgid "Egress packet drop"
+msgstr "Conexiuni Active"
 
 msgid "Either Containers, Images, Local Volumes or Build Cache"
 msgstr ""
@@ -16659,6 +16702,10 @@ msgstr "Afectat de serviciu"
 msgid "Engaged Alerts"
 msgstr "Acces la Agenți"
 
+#, fuzzy
+msgid "Engine CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr ""
 
@@ -17101,6 +17148,10 @@ msgstr ""
 
 msgid "Every week on..."
 msgstr ""
+
+#, fuzzy
+msgid "Evictions"
+msgstr "Acțiuni"
 
 msgid "Exact RWVDMS name or regex"
 msgstr ""
@@ -21184,6 +21235,10 @@ msgid "Host and service configuration rule"
 msgstr "Adaugp o noua configurație de utilizator"
 
 #, fuzzy
+msgid "Host and service parameters"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 msgid "Host and service rules related to the Event Console"
 msgstr "(nu trimite notificări câtre Event Console)"
 
@@ -22362,12 +22417,6 @@ msgid ""
 "the rule set <a href='%s'>Periodic Service Discovery</a>, which allows a per-"
 "host configuration and additional features such as automatic rediscovery. "
 "Rules in that rule set will override the global settings done here."
-msgstr ""
-
-msgid ""
-"If enabled, Checkmk automatically creates new users when they first log in. "
-"If the user profile cannot be determined based on the current configuration, "
-"the default user profile from the global settings is used."
 msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
@@ -23826,6 +23875,9 @@ msgstr ""
 msgid "Ineffective"
 msgstr "Reguli neaplicate"
 
+msgid "Ineffective rules"
+msgstr "Reguli neaplicate"
+
 #, fuzzy
 msgid "Infections"
 msgstr "Conexiuni Active"
@@ -23906,6 +23958,9 @@ msgstr "Reguli neaplicate"
 #, fuzzy
 msgid "Informix table extents"
 msgstr "Nivel-urile absolute de licențe neutilizate"
+
+msgid "Ingress packet drop"
+msgstr ""
 
 msgid "Inherit from report time range (Reporting only)"
 msgstr ""
@@ -25731,6 +25786,10 @@ msgid "Levels CPU"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Levels Helper usage Check"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -26405,10 +26464,6 @@ msgstr "% utilizare"
 
 #, fuzzy
 msgid "License details"
-msgstr "Stare adiministrativă"
-
-#, fuzzy
-msgid "License key"
 msgstr "Stare adiministrativă"
 
 #, fuzzy
@@ -27277,9 +27332,6 @@ msgstr "foloseste numele portului"
 msgid "Login username"
 msgstr "foloseste numele portului"
 
-msgid "Login with Identity Provider"
-msgstr ""
-
 msgid "Login with the following credentials"
 msgstr ""
 
@@ -28055,6 +28107,10 @@ msgstr ""
 #, fuzzy
 msgid "Management type"
 msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Managing licenses"
+msgstr "licente nefolosite"
 
 msgid "Manual"
 msgstr ""
@@ -29060,6 +29116,14 @@ msgstr ""
 msgid "Memory critical at"
 msgstr ""
 
+#, fuzzy
+msgid "Memory fragmentation"
+msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Memory fragmentation ratio lower levels"
+msgstr "trei nivele"
+
 msgid "Memory levels"
 msgstr ""
 
@@ -29143,6 +29207,10 @@ msgstr ""
 
 msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr ""
+
+#, fuzzy
+msgid "Memory usage upper levels"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "Memory usage: Namespace"
@@ -29547,6 +29615,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Missing host name"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Missing job ID."
 msgstr " pe siteul de monitorizare: "
 
 #, python-format
@@ -29957,11 +30029,23 @@ msgid "Monitoring"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Monitoring Amazon Web Services (AWS)"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 msgid "Monitoring Linux"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Monitoring Microsoft Azure"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 msgid "Monitoring URL"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring VMWare ESXi"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
@@ -30979,6 +31063,14 @@ msgid "New collection"
 msgstr "Conexiune Noua"
 
 #, fuzzy
+msgid "New connections"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "New connections upper levels"
+msgstr "trei nivele"
+
+#, fuzzy
 msgid "New custom graph..."
 msgstr "Grup nou"
 
@@ -31433,10 +31525,6 @@ msgid "No such inventory tree."
 msgstr ""
 
 #, fuzzy
-msgid "No such license key"
-msgstr "Stare adiministrativă"
-
-#, fuzzy
 msgid "No test host"
 msgstr "(element fără element)"
 
@@ -31726,6 +31814,10 @@ msgstr ""
 
 msgid "Not authenticated"
 msgstr ""
+
+#, fuzzy
+msgid "Not available duration"
+msgstr "Optiuni tabel"
 
 msgid "Not configured."
 msgstr ""
@@ -32912,6 +33004,10 @@ msgstr "Conexiune Noua"
 
 msgid "Observation period for temperature trend computation"
 msgstr ""
+
+#, fuzzy
+msgid "Obsolete rule sets"
+msgstr "Reguli"
 
 msgid "October"
 msgstr ""
@@ -37000,6 +37096,9 @@ msgstr ""
 msgid "Reclaimable memory"
 msgstr ""
 
+msgid "Reclaimed"
+msgstr ""
+
 msgid "Reclassify complete state"
 msgstr ""
 
@@ -37685,7 +37784,11 @@ msgid "Replayed notification number %d"
 msgstr "%d reguli de notificări globale"
 
 #, fuzzy
-msgid "Replica state"
+msgid "Replica available state"
+msgstr "Stare adiministrativă"
+
+#, fuzzy
+msgid "Replica ready state"
 msgstr "Numele Aplicatiei"
 
 #, fuzzy
@@ -38524,6 +38627,10 @@ msgid "Rule search"
 msgstr "Cautare noua"
 
 #, fuzzy
+msgid "Rule sets in use"
+msgstr "Nume nou"
+
+#, fuzzy
 msgid "Rule title"
 msgstr "<b>reprogramează o verificare imediată"
 
@@ -38764,6 +38871,10 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "trimite notificare"
+
+#, fuzzy
+msgid "SAML connections"
+msgstr "Conexiuni Active"
 
 msgid "SAN"
 msgstr ""
@@ -39299,6 +39410,10 @@ msgstr "Întreruperi adhoc"
 
 msgid "Scheduled downtime depth"
 msgstr ""
+
+#, fuzzy
+msgid "Scheduled downtimes"
+msgstr "Întreruperi adhoc"
 
 msgid "Scheduled report title"
 msgstr ""
@@ -41633,7 +41748,7 @@ msgid "Site base URL"
 msgstr ""
 
 msgid ""
-"Site base URL for accessing the Web API to e.g. create hosts (e.g. "
+"Site base URL for accessing the REST API to e.g. create hosts (e.g. "
 "<tt>https://myhost/mysite</tt>)."
 msgstr ""
 
@@ -45154,6 +45269,10 @@ msgstr ""
 msgid "The ESX Host"
 msgstr ""
 
+#, fuzzy
+msgid "The Event Console"
+msgstr "randuri"
+
 msgid "The Event Console Daemon is currently not running. "
 msgstr ""
 
@@ -48087,6 +48206,10 @@ msgstr ""
 msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 
+#, fuzzy
+msgid "The user interface"
+msgstr "Adresă"
+
 msgid "The user synchronization completed successfully."
 msgstr ""
 
@@ -50526,11 +50649,12 @@ msgstr ""
 msgid ""
 "This ruleset is relevant for Kubernetes replicas. You can set a maximum "
 "allowed duration during which replicas may be in a not ready or not up-to-"
-"date state. For DaemonSets, you may additionally specify the duration for "
-"which there may be a positive number of misscheduled replicas. Keep in mind "
-"that replicas may temporarily be in these states during the process of an "
-"update. Therefore, it is recommended to always have a grace period "
-"configured."
+"date state. For StatefulSets, you may additionally specify such a duration "
+"for the not available state. For DaemonSets, you may additionally specify "
+"the duration for which there may be a positive number of misscheduled "
+"replicas. Keep in mind that replicas may temporarily be in these states "
+"during the process of an update. Therefore, it is recommended to always have "
+"a grace period configured."
 msgstr ""
 
 msgid ""
@@ -53917,6 +54041,22 @@ msgid "Upper levels on total request latency"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels on tunnel egress"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels on tunnel egress packet drop"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress packet drop"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -54639,10 +54779,10 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Use this setting to tell the dynamic configuration to which Check_MK Web API "
+"Use this setting to tell the dynamic configuration to which Checkmk REST API "
 "to talk to for creating hosts and so on. This setting controls on which "
 "sites the objects will be created. In single site setups you can set this to "
-"\"local site\".In distributed setups you will have to configure the Web API "
+"\"local site\".In distributed setups you will have to configure the REST API "
 "of the central WATO site from the view of the remote site."
 msgstr ""
 
@@ -54956,6 +55096,10 @@ msgstr ""
 #, fuzzy
 msgid "Users' notification rule"
 msgstr "trimite notificare"
+
+#, fuzzy
+msgid "Users, roles and permissions"
+msgstr "sesiuni"
 
 #, fuzzy
 msgid "Using predefined condition"
@@ -58542,6 +58686,9 @@ msgstr ""
 msgid "You need to provide a valid password to be able to send notifications."
 msgstr ""
 
+msgid "You need to provide an ID"
+msgstr ""
+
 #, python-format
 msgid "You need to provide at least %d characters."
 msgstr ""
@@ -60832,6 +60979,22 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Create new users on login"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Do not add a link"
+#~ msgstr "foloseste alias"
+
+#, fuzzy
+#~ msgid "License key"
+#~ msgstr "Stare adiministrativă"
+
+#, fuzzy
+#~ msgid "No such license key"
+#~ msgstr "Stare adiministrativă"
+
+#, fuzzy
 #~ msgid "Status view"
 #~ msgstr "Întreruperi adhoc"
 
@@ -61139,10 +61302,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Child host name:"
 #~ msgstr "Numele Elementului"
-
-#, fuzzy
-#~ msgid "CPU utilitzation"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "Send data for real-time checks"
@@ -62378,10 +62537,6 @@ msgstr ""
 #~ msgstr "Adresă"
 
 #, fuzzy
-#~ msgid "New Connections"
-#~ msgstr "Conexiune Noua"
-
-#, fuzzy
 #~ msgid "Node Labels"
 #~ msgstr "Numele Elementului"
 
@@ -62639,10 +62794,6 @@ msgstr ""
 #~ msgid "SMT Threads"
 #~ msgstr "fire"
 
-#, fuzzy
-#~ msgid "Scheduled downtimes"
-#~ msgstr "Întreruperi adhoc"
-
 # georgem ##############
 #, fuzzy
 #~ msgid "Search time graphs"
@@ -62823,10 +62974,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Versions"
 #~ msgstr "sesiuni"
-
-#, fuzzy
-#~ msgid "Views fragmentation"
-#~ msgstr "Numele Elementului"
 
 #, fuzzy
 #~ msgid "Volume Group Name"
@@ -63212,10 +63359,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Ntop interface integration of this host"
 #~ msgstr "O descriere sau comentariu despre acest element"
-
-#, fuzzy
-#~ msgid "Ntop service interface"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "Absolute levels for broadcast packets"
@@ -63761,10 +63904,6 @@ msgstr ""
 #~ msgstr "Conexiune Noua"
 
 #, fuzzy
-#~ msgid "Host & Service Parameters"
-#~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 #~ msgid "Host Checks"
 #~ msgstr "serviciu"
 
@@ -63883,9 +64022,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Import Query"
 #~ msgstr "Portul TCO"
-
-#~ msgid "Ineffective rules"
-#~ msgstr "Reguli neaplicate"
 
 #, fuzzy
 #~ msgid "Installed Packages"
@@ -64514,10 +64650,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Used Rulesets"
-#~ msgstr "Reguli"
-
-#, fuzzy
-#~ msgid "Used rulesets"
 #~ msgstr "Reguli"
 
 #, fuzzy

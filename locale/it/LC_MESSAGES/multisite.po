@@ -462,10 +462,6 @@ msgid "%s (Customer missing)"
 msgstr "%s (Cliente mancante)"
 
 #, python-format
-msgid "%s (system wide)"
-msgstr "%s (a livello di sistema)"
-
-#, python-format
 msgid ""
 "%s - %s\n"
 "Duration %s\n"
@@ -2204,6 +2200,12 @@ msgstr ""
 msgid "A user with the id \"%s\" does not exist."
 msgstr "Un utente con l'id \"%s\" non esiste."
 
+msgid ""
+"A user-friendly name to identify this connection. This will be used for the "
+"log-in button that is shown on the log-in page once the connection has been "
+"set up."
+msgstr ""
+
 msgid "A value in seconds"
 msgstr "Un valore in secondi"
 
@@ -2448,7 +2450,19 @@ msgid "AWS/ELBv2 Limits"
 msgstr "Limiti AWS/ELBv2"
 
 #, fuzzy
+msgid "AWS/ElastiCache CPU Utilization"
+msgstr "Limiti di AWS/Glacier"
+
+#, fuzzy
+msgid "AWS/ElastiCache Connections"
+msgstr "Limiti di AWS/Glacier"
+
+#, fuzzy
 msgid "AWS/ElastiCache Limits"
+msgstr "Limiti di AWS/Glacier"
+
+#, fuzzy
+msgid "AWS/ElastiCache Memory"
 msgstr "Limiti di AWS/Glacier"
 
 msgid "AWS/Glacier Limits"
@@ -2818,6 +2832,10 @@ msgstr "Riconoscimento Commento"
 
 msgid "Acknowledgement of problem"
 msgstr "Riconoscimento del problema"
+
+#, fuzzy
+msgid "Acknowledging problems"
+msgstr "Riconoscere i problemi"
 
 msgid "Act."
 msgstr "Atto."
@@ -5132,6 +5150,10 @@ msgid "Analyze this line"
 msgstr "Analizzare questa linea"
 
 #, fuzzy
+msgid "Analyzing the Checkmk site configuration"
+msgstr "Analizzare la configurazione"
+
+#, fuzzy
 msgid "Android version regular expression"
 msgstr "Assegnare tramite espressioni regolari"
 
@@ -6116,6 +6138,10 @@ msgid "Available macros and search result(s)"
 msgstr "Numero di risultati della ricerca"
 
 msgid "Available options"
+msgstr "Opzioni disponibili"
+
+#, fuzzy
+msgid "Available replicas"
 msgstr "Opzioni disponibili"
 
 msgid "Available temp space"
@@ -7742,6 +7768,10 @@ msgstr "Bytes inviati"
 msgid "Bytes uploaded"
 msgstr "Bytes processati"
 
+#, fuzzy
+msgid "Bytes used for cache upper levels"
+msgstr "Conteggio totale dei messaggi livelli superiori"
+
 msgid "C"
 msgstr "C"
 
@@ -8013,6 +8043,10 @@ msgstr "Età della cache per i controlli dei precedenti"
 #, python-format
 msgid "Cache generated %s ago, cache interval: %s"
 msgstr "Cache generata %s fa, intervallo di cache: %s"
+
+#, fuzzy
+msgid "Cache hit rate lower levels"
+msgstr "Contenitori livelli inferiori"
 
 msgid "Cache hit ratio"
 msgstr "Cache hit ratio"
@@ -8604,8 +8638,8 @@ msgstr "Cambiato l'ordine dei gruppi di tag"
 msgid "Changed position of %s %d"
 msgstr "Posizione modificata di %s %d"
 
-#, python-format
-msgid "Changed position of LDAP connection %s to %d"
+#, fuzzy, python-format
+msgid "Changed position of connection %s to %d"
 msgstr "Cambiata la posizione della connessione LDAP %s in %d"
 
 #, python-format
@@ -9176,6 +9210,10 @@ msgstr ""
 "dispositivi che supportano SNMPv2c possono essere difettosi. In questi casi, "
 "si può provare a disabilitare il bulk walk utilizzando il set di regole "
 "\"Disable bulk walks on SNMPv2c/v3\"."
+
+#, fuzzy
+msgid "Checkmk extension packages (MKPs)"
+msgstr "Gestire e creare pacchetti di estensioni Checkmk (MKP)."
 
 msgid "Checkmk fetcher usage"
 msgstr "Uso del checkmk fetcher"
@@ -11002,7 +11040,8 @@ msgstr "Connessione alla panetteria dell'agente centrale"
 msgid "Connection to remote agent bakery"
 msgstr "Connessione alla panetteria dell'agente remoto"
 
-msgid "Connection to the Web API"
+#, fuzzy
+msgid "Connection to the REST API"
 msgstr "Connessione all'API web"
 
 msgid "Connection type"
@@ -11633,14 +11672,15 @@ msgstr "Creare un clone di questo host"
 msgid "Create a copy"
 msgstr "Creare una copia"
 
-msgid "Create a copy of this LDAP connection"
-msgstr "Creare una copia di questa connessione LDAP"
-
 msgid "Create a copy of this aggregation"
 msgstr "Creare una copia di questa aggregazione"
 
 msgid "Create a copy of this alert handler rule"
 msgstr "Creare una copia di questa regola di gestione degli avvisi"
+
+#, fuzzy
+msgid "Create a copy of this connection"
+msgstr "Creare una copia di questa connessione LDAP"
 
 msgid "Create a copy of this group"
 msgstr "Creare una copia di questo gruppo"
@@ -11762,10 +11802,6 @@ msgstr "Creare un nuovo gruppo di tag"
 
 msgid "Create new topic"
 msgstr "Creare un nuovo argomento"
-
-#, fuzzy
-msgid "Create new users on login"
-msgstr "Creare utenti solo al momento del login"
 
 msgid "Create new virtual host tree configuration"
 msgstr "Creare una nuova configurazione dell'albero degli host virtuali"
@@ -12138,6 +12174,14 @@ msgstr "Utenti attuali"
 
 msgid "Current check attempt"
 msgstr "Tentativo di controllo corrente"
+
+#, fuzzy
+msgid "Current connections"
+msgstr "Connessioni attualmente aperte"
+
+#, fuzzy
+msgid "Current connections upper levels"
+msgstr "Numero totale di connessioni client livello superiore"
 
 msgid "Current date"
 msgstr "Data attuale"
@@ -13670,9 +13714,6 @@ msgstr "Cancellare questo pacchetto BI"
 msgid "Delete this Icon"
 msgstr "Cancella questa icona"
 
-msgid "Delete this LDAP connection"
-msgstr "Cancellare questa connessione LDAP"
-
 msgid "Delete this MIB"
 msgstr "Cancellare questa MIB"
 
@@ -13696,6 +13737,10 @@ msgstr "Cancellare questo lavoro di backup"
 
 msgid "Delete this backup target"
 msgstr "Cancellare questa destinazione di backup"
+
+#, fuzzy
+msgid "Delete this connection"
+msgstr "Cancellare questa connessione LDAP"
 
 #, fuzzy
 msgid "Delete this credential"
@@ -13789,16 +13834,16 @@ msgid "Deleted BI rule with ID %s"
 msgstr "Regola BI cancellata con ID %s"
 
 #, python-format
-msgid "Deleted LDAP connection %s"
-msgstr "Connessione LDAP cancellata %s"
-
-#, python-format
 msgid "Deleted MIB %s"
 msgstr "MIB cancellato %s"
 
 #, python-format
 msgid "Deleted attribute %s"
 msgstr "Attributo cancellato %s"
+
+#, fuzzy, python-format
+msgid "Deleted connection %s"
+msgstr "Connessione LDAP cancellata %s"
 
 #, fuzzy, python-format
 msgid "Deleted custom GUI logo %s"
@@ -15202,9 +15247,6 @@ msgstr "Fare l'inventario di hardware/software"
 msgid "Do not activate changes"
 msgstr "Non attivare le modifiche"
 
-msgid "Do not add a link"
-msgstr "Non aggiungere un link"
-
 msgid "Do not add a link to this page in sidebar"
 msgstr "Non aggiungere un link a questa pagina nella barra laterale"
 
@@ -15679,10 +15721,6 @@ msgstr ""
 "aggregazioni?"
 
 #, python-format
-msgid "Do you really want to delete the LDAP connection <b>%s</b>?"
-msgstr "Vuoi davvero cancellare la connessione LDAP <b>%s</b>?"
-
-#, python-format
 msgid "Do you really want to delete the MIB file <b>%s</b>?"
 msgstr "Vuoi davvero cancellare il file MIB <b>%s</b>?"
 
@@ -15693,6 +15731,10 @@ msgstr "Vuoi davvero cancellare l'aggregazione <b>%s</b>?"
 #, python-format
 msgid "Do you really want to delete the auxiliary tag '%s'?"
 msgstr "Vuoi davvero cancellare il tag ausiliario '%s'?"
+
+#, fuzzy, python-format
+msgid "Do you really want to delete the connection <b>%s</b>?"
+msgstr "Vuoi davvero cancellare la connessione LDAP <b>%s</b>?"
 
 #, python-format
 msgid "Do you really want to delete the connection to the site %s?"
@@ -16720,9 +16762,6 @@ msgstr "Modifica le regole in questo pacchetto"
 msgid "Edit this %s"
 msgstr "Modifica questo %s"
 
-msgid "Edit this LDAP connection"
-msgstr "Modifica questa connessione LDAP"
-
 msgid "Edit this aggregation"
 msgstr "Modifica questa aggregazione"
 
@@ -16740,6 +16779,10 @@ msgstr "Modifica questo lavoro di backup"
 
 msgid "Edit this backup target"
 msgstr "Modifica questo obiettivo di backup"
+
+#, fuzzy
+msgid "Edit this connection"
+msgstr "Modifica questa connessione LDAP"
 
 #, fuzzy
 msgid "Edit this credential"
@@ -16826,6 +16869,10 @@ msgstr "Parametri efficaci"
 
 msgid "Effective parameters of"
 msgstr "Parametri efficaci"
+
+#, fuzzy
+msgid "Egress packet drop"
+msgstr "Pacchetti abbandonati"
 
 msgid "Either Containers, Images, Local Volumes or Build Cache"
 msgstr "Contenitori, immagini, volumi locali o costruire la cache"
@@ -17423,6 +17470,10 @@ msgstr "Servizi forzati"
 msgid "Engaged Alerts"
 msgstr "Avvisi impegnati"
 
+#, fuzzy
+msgid "Engine CPU utilization"
+msgstr "Utilizzo della CPU"
+
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "ID del motore (necessario solo per SNMPv3)"
 
@@ -17864,6 +17915,10 @@ msgstr ""
 
 msgid "Every week on..."
 msgstr "Ogni settimana su..."
+
+#, fuzzy
+msgid "Evictions"
+msgstr "Azioni"
 
 msgid "Exact RWVDMS name or regex"
 msgstr "Nome esatto RWVDMS o regex"
@@ -22277,6 +22332,10 @@ msgstr "Eventi di accoglienza e di servizio"
 msgid "Host and service configuration rule"
 msgstr "Regola di configurazione di host e servizi"
 
+#, fuzzy
+msgid "Host and service parameters"
+msgstr "Eventi di accoglienza e di servizio"
+
 msgid "Host and service rules related to the Event Console"
 msgstr "Regole dell'host e del servizio relative alla console degli eventi"
 
@@ -23538,12 +23597,6 @@ msgstr ""
 "Discovery</a>, che permette una configurazione per host e funzionalità "
 "aggiuntive come la riscoperta automatica. Le regole in quel set di regole "
 "sovrascriveranno le impostazioni globali fatte qui."
-
-msgid ""
-"If enabled, Checkmk automatically creates new users when they first log in. "
-"If the user profile cannot be determined based on the current configuration, "
-"the default user profile from the global settings is used."
-msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
@@ -25640,6 +25693,10 @@ msgstr "Argomento individuale"
 msgid "Ineffective"
 msgstr "Inefficace"
 
+#, fuzzy
+msgid "Ineffective rules"
+msgstr "Inefficace"
+
 msgid "Infections"
 msgstr "Infezioni"
 
@@ -25716,6 +25773,9 @@ msgstr "Sessioni inattive"
 #, fuzzy
 msgid "Informix table extents"
 msgstr "Estensioni di tabella Informix"
+
+msgid "Ingress packet drop"
+msgstr ""
 
 msgid "Inherit from report time range (Reporting only)"
 msgstr "Eredita dall'intervallo di tempo del rapporto (solo per i rapporti)"
@@ -27577,6 +27637,10 @@ msgstr "Livelli"
 msgid "Levels CPU"
 msgstr "Livelli"
 
+#, fuzzy
+msgid "Levels CPU utilization"
+msgstr "Livelli di utilizzo totale della CPU"
+
 msgid "Levels Helper usage Check"
 msgstr "Livelli di utilizzo dell'aiutante Controllo"
 
@@ -28191,10 +28255,6 @@ msgstr "Accordo di licenza"
 #, fuzzy
 msgid "License details"
 msgstr "Stato della licenza"
-
-#, fuzzy
-msgid "License key"
-msgstr "Uso della licenza"
 
 msgid "License state"
 msgstr "Stato della licenza"
@@ -29069,9 +29129,6 @@ msgstr "Modalità di accesso"
 msgid "Login username"
 msgstr "Nome utente di accesso"
 
-msgid "Login with Identity Provider"
-msgstr ""
-
 msgid "Login with the following credentials"
 msgstr "Accedi con le seguenti credenziali"
 
@@ -29825,6 +29882,10 @@ msgstr "Configurazione del consiglio di amministrazione"
 #, fuzzy
 msgid "Management type"
 msgstr "Tipo di elemento"
+
+#, fuzzy
+msgid "Managing licenses"
+msgstr "Licenze VMware"
 
 msgid "Manual"
 msgstr "Manuale"
@@ -30771,6 +30832,14 @@ msgstr "Impegnare la memoria"
 msgid "Memory critical at"
 msgstr "Memoria critica a"
 
+#, fuzzy
+msgid "Memory fragmentation"
+msgstr "Frammentazione delle viste"
+
+#, fuzzy
+msgid "Memory fragmentation ratio lower levels"
+msgstr "Contenitori livelli inferiori"
+
 msgid "Memory levels"
 msgstr "Livelli di memoria"
 
@@ -30852,6 +30921,10 @@ msgstr "Utilizzo della memoria dei dispositivi Fortigate (fortigate_memory)"
 msgid "Memory usage of Fortigate devices (fortigate_memory_base)"
 msgstr ""
 "Utilizzo della memoria dei dispositivi Fortigate (fortigate_memory_base)"
+
+#, fuzzy
+msgid "Memory usage upper levels"
+msgstr "Impostare i livelli superiori"
 
 #, fuzzy
 msgid "Memory usage: Namespace"
@@ -31245,6 +31318,10 @@ msgstr ""
 "impostazione fissa, o chiamare il con le variabili HTTP mancanti."
 
 msgid "Missing host name"
+msgstr "Nome host mancante"
+
+#, fuzzy
+msgid "Missing job ID."
 msgstr "Nome host mancante"
 
 #, python-format
@@ -31646,11 +31723,23 @@ msgid "Monitoring"
 msgstr "Monitoraggio"
 
 #, fuzzy
+msgid "Monitoring Amazon Web Services (AWS)"
+msgstr "Servizi Web Amazon (AWS)"
+
+#, fuzzy
 msgid "Monitoring Linux"
 msgstr "Monitoraggio URL"
 
+#, fuzzy
+msgid "Monitoring Microsoft Azure"
+msgstr "Microsoft Azure"
+
 msgid "Monitoring URL"
 msgstr "Monitoraggio URL"
+
+#, fuzzy
+msgid "Monitoring VMWare ESXi"
+msgstr "Nucleo di monitoraggio"
 
 #, fuzzy
 msgid "Monitoring Windows"
@@ -32622,6 +32711,14 @@ msgstr "Nuovo obiettivo di backup"
 msgid "New collection"
 msgstr "Nuova collezione"
 
+#, fuzzy
+msgid "New connections"
+msgstr "Nuove connessioni"
+
+#, fuzzy
+msgid "New connections upper levels"
+msgstr "Contenitori in pausa livelli superiori"
+
 msgid "New custom graph..."
 msgstr "Nuovo grafico personalizzato..."
 
@@ -33072,10 +33169,6 @@ msgstr ""
 msgid "No such inventory tree."
 msgstr "Nessun albero di inventario di questo tipo."
 
-#, fuzzy
-msgid "No such license key"
-msgstr "Uso della licenza"
-
 msgid "No test host"
 msgstr "Nessun host di prova"
 
@@ -33406,6 +33499,10 @@ msgstr "Non applicabile"
 
 msgid "Not authenticated"
 msgstr "Non autenticato"
+
+#, fuzzy
+msgid "Not available duration"
+msgstr "Durata del controllo dell'host"
 
 msgid "Not configured."
 msgstr "Non configurato."
@@ -34574,6 +34671,10 @@ msgstr "Tipo di oggetto"
 msgid "Observation period for temperature trend computation"
 msgstr ""
 "Periodo di osservazione per il calcolo della tendenza della temperatura"
+
+#, fuzzy
+msgid "Obsolete rule sets"
+msgstr "Su regole selezionate"
 
 msgid "October"
 msgstr "Ottobre"
@@ -38790,6 +38891,10 @@ msgstr "Riciclabile"
 msgid "Reclaimable memory"
 msgstr "Memoria recuperabile"
 
+#, fuzzy
+msgid "Reclaimed"
+msgstr "Riciclabile"
+
 msgid "Reclassify complete state"
 msgstr "Riclassificare lo stato completo"
 
@@ -39494,7 +39599,11 @@ msgid "Replayed notification number %d"
 msgstr "Notifica replicata numero %d"
 
 #, fuzzy
-msgid "Replica state"
+msgid "Replica available state"
+msgstr "Stati di replica"
+
+#, fuzzy
+msgid "Replica ready state"
 msgstr "Stati di replica"
 
 #, fuzzy
@@ -40329,6 +40438,10 @@ msgstr "Presentazioni"
 msgid "Rule search"
 msgstr "Ricerca delle regole"
 
+#, fuzzy
+msgid "Rule sets in use"
+msgstr "Ruleset"
+
 msgid "Rule title"
 msgstr "Titolo della regola"
 
@@ -40590,6 +40703,10 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "Autenticazione SMTP"
+
+#, fuzzy
+msgid "SAML connections"
+msgstr "Connessioni SSL"
 
 msgid "SAN"
 msgstr "SAN"
@@ -41098,6 +41215,9 @@ msgstr "Tempo di inattività programmato"
 
 msgid "Scheduled downtime depth"
 msgstr "Profondità di inattività programmata"
+
+msgid "Scheduled downtimes"
+msgstr "Tempi di inattività programmati"
 
 msgid "Scheduled report title"
 msgstr "Titolo del rapporto programmato"
@@ -43474,8 +43594,9 @@ msgstr "Obiettivi di backup del sito"
 msgid "Site base URL"
 msgstr "URL di base del sito"
 
+#, fuzzy
 msgid ""
-"Site base URL for accessing the Web API to e.g. create hosts (e.g. "
+"Site base URL for accessing the REST API to e.g. create hosts (e.g. "
 "<tt>https://myhost/mysite</tt>)."
 msgstr ""
 "URL di base del sito per accedere all'API Web, ad esempio per creare host "
@@ -47329,6 +47450,10 @@ msgstr ""
 msgid "The ESX Host"
 msgstr "L'host ESX"
 
+#, fuzzy
+msgid "The Event Console"
+msgstr "Console degli eventi"
+
 msgid "The Event Console Daemon is currently not running. "
 msgstr "Il demone Event Console non è attualmente in esecuzione. "
 
@@ -51164,6 +51289,10 @@ msgid "The user %s used by the network scan of the folder %s does not exist."
 msgstr ""
 "L'utente %s usato dalla scansione di rete della cartella %s non esiste."
 
+#, fuzzy
+msgid "The user interface"
+msgstr "Interfaccia utente"
+
 msgid "The user synchronization completed successfully."
 msgstr "La sincronizzazione dell'utente è stata completata con successo."
 
@@ -54664,11 +54793,12 @@ msgstr ""
 msgid ""
 "This ruleset is relevant for Kubernetes replicas. You can set a maximum "
 "allowed duration during which replicas may be in a not ready or not up-to-"
-"date state. For DaemonSets, you may additionally specify the duration for "
-"which there may be a positive number of misscheduled replicas. Keep in mind "
-"that replicas may temporarily be in these states during the process of an "
-"update. Therefore, it is recommended to always have a grace period "
-"configured."
+"date state. For StatefulSets, you may additionally specify such a duration "
+"for the not available state. For DaemonSets, you may additionally specify "
+"the duration for which there may be a positive number of misscheduled "
+"replicas. Keep in mind that replicas may temporarily be in these states "
+"during the process of an update. Therefore, it is recommended to always have "
+"a grace period configured."
 msgstr ""
 
 msgid ""
@@ -58273,6 +58403,22 @@ msgid "Upper levels on total request latency"
 msgstr "Livelli superiori sulla latenza totale della richiesta"
 
 #, fuzzy
+msgid "Upper levels on tunnel egress"
+msgstr "Livelli superiori per l'età"
+
+#, fuzzy
+msgid "Upper levels on tunnel egress packet drop"
+msgstr "Livelli superiori per lo spazio inutilizzato"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress"
+msgstr "Livelli superiori per l'età"
+
+#, fuzzy
+msgid "Upper levels on tunnel ingress packet drop"
+msgstr "Livelli superiori per lo spazio inutilizzato"
+
+#, fuzzy
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Livelli superiori di utilizzo del disco"
 
@@ -59078,10 +59224,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Use this setting to tell the dynamic configuration to which Check_MK Web API "
+"Use this setting to tell the dynamic configuration to which Checkmk REST API "
 "to talk to for creating hosts and so on. This setting controls on which "
 "sites the objects will be created. In single site setups you can set this to "
-"\"local site\".In distributed setups you will have to configure the Web API "
+"\"local site\".In distributed setups you will have to configure the REST API "
 "of the central WATO site from the view of the remote site."
 msgstr ""
 "Usare questa impostazione per dire alla Configurazione Dinamica con quale "
@@ -59398,6 +59544,10 @@ msgstr "Utenti che usano una condivisione cifs"
 
 msgid "Users' notification rule"
 msgstr "Regola di notifica degli utenti"
+
+#, fuzzy
+msgid "Users, roles and permissions"
+msgstr "Ruoli e permessi"
 
 msgid "Using predefined condition"
 msgstr "Usare una condizione predefinita"
@@ -64025,6 +64175,10 @@ msgid "You need to provide a valid password to be able to send notifications."
 msgstr ""
 "È necessario fornire una password valida per poter inviare le notifiche."
 
+#, fuzzy
+msgid "You need to provide an ID"
+msgstr "È necessario fornire un testo."
+
 #, python-format
 msgid "You need to provide at least %d characters."
 msgstr "È necessario fornire almeno %d caratteri."
@@ -66286,6 +66440,28 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Create users only on login"
+#~ msgid "Create new users on login"
+#~ msgstr "Creare utenti solo al momento del login"
+
+#~ msgid "Do not add a link"
+#~ msgstr "Non aggiungere un link"
+
+#, fuzzy
+#~| msgid "License Usage"
+#~ msgid "License key"
+#~ msgstr "Uso della licenza"
+
+#, fuzzy
+#~| msgid "License Usage"
+#~ msgid "No such license key"
+#~ msgstr "Uso della licenza"
+
+#, python-format
+#~ msgid "%s (system wide)"
+#~ msgstr "%s (a livello di sistema)"
 
 #~ msgid "Information to be displayed in the email body"
 #~ msgstr "Informazioni da visualizzare nel corpo dell'email"
@@ -70980,9 +71156,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~ msgid "Networks"
 #~ msgstr "Reti"
 
-#~ msgid "New Connections"
-#~ msgstr "Nuove connessioni"
-
 #~ msgid "New event created"
 #~ msgstr "Nuovo evento creato"
 
@@ -71388,9 +71561,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "SNMP Information"
 #~ msgstr "Informazioni SNMP"
-
-#~ msgid "Scheduled downtimes"
-#~ msgstr "Tempi di inattività programmati"
 
 #~ msgid "Script executed"
 #~ msgstr "Script eseguito"
@@ -71820,9 +71990,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Versions"
 #~ msgstr "Versioni"
-
-#~ msgid "Views fragmentation"
-#~ msgstr "Frammentazione delle viste"
 
 #~ msgid "Virtual Machine"
 #~ msgstr "Macchina virtuale"

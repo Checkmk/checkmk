@@ -6,6 +6,7 @@
 package lib
 
 hashfile_extension = ".hash"
+downloads_path = "/var/downloads/checkmk/"
 versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {

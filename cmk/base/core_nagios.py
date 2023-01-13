@@ -371,7 +371,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
         return result
 
-    host_check_table = config.get_check_table(config_cache, hostname)
+    host_check_table = config_cache.check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
@@ -1371,8 +1371,7 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = config.get_check_table(
-        config_cache,
+    needed_agent_based_check_plugin_names = config_cache.check_table(
         host_name,
         filter_mode=FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,

@@ -289,36 +289,6 @@ def _get_clustered_services(
         )
 
 
-def get_check_table(
-    config_cache: ConfigCache,
-    hostname: HostName,
-    *,
-    use_cache: bool = True,
-    skip_autochecks: bool = False,
-    filter_mode: FilterMode = FilterMode.NONE,
-    skip_ignored: bool = True,
-) -> HostCheckTable:
-    cache_key = (hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
-    if cache_key:
-        with contextlib.suppress(KeyError):
-            return config_cache.check_table_cache[cache_key]
-
-    host_check_table = HostCheckTable(
-        services=_aggregate_check_table_services(
-            hostname,
-            config_cache=config_cache,
-            skip_autochecks=skip_autochecks,
-            skip_ignored=skip_ignored,
-            filter_mode=filter_mode,
-        )
-    )
-
-    if cache_key:
-        config_cache.check_table_cache[cache_key] = host_check_table
-
-    return host_check_table
-
-
 class ClusterCacheInfo(NamedTuple):
     clusters_of: dict[HostName, list[HostName]]
     nodes_of: dict[HostName, list[HostName]]
@@ -2730,7 +2700,7 @@ class ConfigCache:
         self.__labels.clear()
         self.__label_sources.clear()
         self.__notification_plugin_parameters.clear()
-        self.check_table_cache = _config_cache.get("check_tables")
+        self._check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
 
@@ -2924,8 +2894,7 @@ class ConfigCache:
         else:
             checking_sections = frozenset(
                 agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=get_check_table(
-                        self,
+                    check_plugin_names=self.check_table(
                         hostname,
                         filter_mode=FilterMode.INCLUDE_CLUSTERED,
                         skip_ignored=True,
@@ -2972,10 +2941,39 @@ class ConfigCache:
     def host_path(self, hostname: HostName) -> str:
         return self._host_paths.get(hostname, "/")
 
+    def check_table(
+        self,
+        hostname: HostName,
+        *,
+        use_cache: bool = True,
+        skip_autochecks: bool = False,
+        filter_mode: FilterMode = FilterMode.NONE,
+        skip_ignored: bool = True,
+    ) -> HostCheckTable:
+        cache_key = (hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
+        if cache_key:
+            with contextlib.suppress(KeyError):
+                return self._check_table_cache[cache_key]
+
+        host_check_table = HostCheckTable(
+            services=_aggregate_check_table_services(
+                hostname,
+                config_cache=self,
+                skip_autochecks=skip_autochecks,
+                skip_ignored=skip_ignored,
+                filter_mode=filter_mode,
+            )
+        )
+
+        if cache_key:
+            self._check_table_cache[cache_key] = host_check_table
+
+        return host_check_table
+
     def _sorted_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
         # This method is only useful for the monkeypatching orgy of the "unit"-tests.
         return sorted(
-            get_check_table(self, hostname).values(),
+            self.check_table(hostname).values(),
             key=lambda service: service.description,
         )
 

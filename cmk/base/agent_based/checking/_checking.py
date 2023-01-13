@@ -45,7 +45,6 @@ from cmk.checkers.submitters import Submittee, Submitter
 from cmk.checkers.type_defs import SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.plugin_contexts as plugin_contexts
@@ -418,7 +417,7 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        table = config.get_check_table(config_cache, host_name, skip_autochecks=True)
+        table = config_cache.check_table(host_name, skip_autochecks=True)
         result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(

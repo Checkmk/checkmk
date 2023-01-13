@@ -16,8 +16,6 @@ from cmk.utils.i18n import _
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-PartName = str
-
 
 @enum.unique
 class PackagePart(str, enum.Enum):
@@ -41,7 +39,7 @@ class PackagePart(str, enum.Enum):
     ALERT_HANDLERS = "alert_handlers"
 
     @property
-    def ident(self) -> PartName:
+    def ident(self) -> str:
         return self.value
 
     @property
@@ -106,25 +104,6 @@ class PackagePart(str, enum.Enum):
 
 
 CONFIG_PARTS: Final = (PackagePart.EC_RULE_PACKS,)
-
-
-PACKAGE_PARTS: Final = (
-    PackagePart.AGENT_BASED,
-    PackagePart.CHECKS,
-    PackagePart.HASI,
-    PackagePart.CHECKMAN,
-    PackagePart.AGENTS,
-    PackagePart.NOTIFICATIONS,
-    PackagePart.GUI,
-    PackagePart.WEB,
-    PackagePart.PNP_TEMPLATES,
-    PackagePart.DOC,
-    PackagePart.LOCALES,
-    PackagePart.BIN,
-    PackagePart.LIB,
-    PackagePart.MIBS,
-    PackagePart.ALERT_HANDLERS,
-)
 
 
 def _part_depth(part: PackagePart) -> int:

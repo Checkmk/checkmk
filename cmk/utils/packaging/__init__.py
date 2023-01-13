@@ -9,11 +9,11 @@ import shutil
 import subprocess
 import tarfile
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from io import BytesIO
 from itertools import groupby
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import Final
 
 from pydantic import BaseModel
 
@@ -44,7 +44,7 @@ from ._manifest import (
     manifest_template,
     read_manifest_optionally,
 )
-from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartName
+from ._parts import CONFIG_PARTS, PackagePart
 from ._reporter import all_local_files, all_rule_pack_files
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
@@ -80,15 +80,13 @@ def release(pacname: PackageName, logger: logging.Logger) -> None:
         raise PackageException(f"Package {pacname} not installed or corrupt.")
 
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        if not (filenames := manifest.files.get(part, [])):
-            continue
-
+    for part, files in manifest.files.items():
         logger.log(VERBOSE, "  Part '%s':", part.ident)
-        for f in filenames:
+        for f in files:
             logger.log(VERBOSE, "    %s", f)
-        if part is PackagePart.EC_RULE_PACKS:
-            ec.release_packaged_rule_packs([str(f) for f in filenames])
+
+    if filenames := manifest.files.get(PackagePart.EC_RULE_PACKS):
+        ec.release_packaged_rule_packs([str(f) for f in filenames])
 
     remove_installed_manifest(pacname)
 
@@ -134,8 +132,8 @@ def create_mkp_object(manifest: Manifest) -> bytes:
         add_file("info.json", manifest.json_file_content().encode())
 
         # Now pack the actual files into sub tars
-        for part in PACKAGE_PARTS + CONFIG_PARTS:
-            if not (filenames := manifest.files.get(part, [])):
+        for part, filenames in manifest.files.items():
+            if not filenames:
                 continue
 
             subtar = _pack_subtar(part.ident, part.path, filenames, g_logger)
@@ -166,14 +164,12 @@ def _pack_subtar(
 
 
 def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> None:
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        if not (filenames := manifest.files.get(part, [])):
-            continue
-
+    for part, filenames in manifest.files.items():
         g_logger.log(VERBOSE, "  Part '%s':", part.ident)
         if part is PackagePart.EC_RULE_PACKS:
             _remove_packaged_rule_packs(filenames)
             continue
+
         for fn in filenames:
             g_logger.log(VERBOSE, "    %s", fn)
             try:
@@ -414,9 +410,7 @@ def _install(  # pylint: disable=too-many-branches
 
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
-        for part in PACKAGE_PARTS + CONFIG_PARTS:
-            if not (filenames := manifest.files.get(part, [])):
-                continue
+        for part, filenames in manifest.files.items():
 
             tarname = f"{part.ident}.tar"
             g_logger.debug("  Extracting '%s':", tarname)
@@ -469,10 +463,9 @@ def _install(  # pylint: disable=too-many-branches
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
-        for part in PACKAGE_PARTS + CONFIG_PARTS:
+        for part, old_files in old_manifest.files.items():
             new_files = set(manifest.files.get(part, []))
-            old_files = set(old_manifest.files.get(part, []))
-            remove_files = old_files - new_files
+            remove_files = set(old_files) - new_files
             for fn in remove_files:
                 path = part.path / fn
                 g_logger.log(VERBOSE, "Removing outdated file %s.", path)
@@ -525,12 +518,12 @@ def _conflicting_files(
 ) -> Iterable[tuple[Path, str]]:
     packaged_files = get_packaged_files()
     # Before installing check for conflicts
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
+    for part, files in package.files.items():
         packaged = packaged_files.get(part, ())
 
         old_files = set(old_package.files.get(part, [])) if old_package else set()
 
-        for fn in package.files.get(part, []):
+        for fn in files:
             if fn in old_files:
                 continue
             path = part.path / fn

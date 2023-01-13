@@ -36,7 +36,7 @@ def _packages_dir() -> Iterable[None]:
 
 @pytest.fixture(autouse=True)
 def clean_dirs() -> Iterable[None]:
-    paths = [Path(p.path) for p in packaging.PACKAGE_PARTS] + [
+    paths = [p.path for p in packaging.PackagePart] + [
         cmk.utils.paths.local_optional_packages_dir,
         cmk.utils.paths.local_enabled_packages_dir,
     ]

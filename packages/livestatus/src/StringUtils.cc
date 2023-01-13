@@ -152,6 +152,18 @@ std::string replace_all(const std::string &str, const std::string &from,
     return result.append(str, pos - added_after_match);
 }
 
+std::string replace_chars(const std::string &str,
+                          const std::string &chars_to_replace,
+                          char replacement) {
+    std::string result(str);
+    size_t i = 0;
+    while ((i = result.find_first_of(chars_to_replace, i)) !=
+           std::string::npos) {
+        result[i++] = replacement;
+    }
+    return result;
+}
+
 std::string from_multi_line(const std::string &str) {
     return replace_all(str, "\n", R"(\n)");
 }

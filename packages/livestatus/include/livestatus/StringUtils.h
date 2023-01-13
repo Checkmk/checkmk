@@ -24,6 +24,10 @@ std::string unsafe_toupper(const std::string &str);
 bool starts_with(std::string_view input, std::string_view test);
 bool ends_with(std::string_view input, std::string_view test);
 
+std::string replace_chars(const std::string &str,
+                          const std::string &chars_to_replace,
+                          char replacement);
+
 std::vector<std::string> split(const std::string &str, char delimiter);
 
 std::tuple<std::string, std::string> splitCompositeKey2(
@@ -73,7 +77,6 @@ std::string replace_first(const std::string &str, const std::string &from,
 
 std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to);
-
 std::string from_multi_line(const std::string &str);
 std::string to_multi_line(const std::string &str);
 

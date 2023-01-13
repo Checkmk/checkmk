@@ -5,7 +5,7 @@
 
 #include "pnp4nagios.h"
 
-#include <cstddef>
+#include "livestatus/StringUtils.h"
 
 #ifndef CMC
 #include <filesystem>
@@ -14,22 +14,8 @@
 #include "MonitoringCore.h"
 #endif
 
-namespace {
-
-// TODO(sp): Move this to some kind of C++ string utility file.
-std::string replace_all(const std::string &str, const std::string &chars,
-                        char replacement) {
-    std::string result(str);
-    size_t i = 0;
-    while ((i = result.find_first_of(chars, i)) != std::string::npos) {
-        result[i++] = replacement;
-    }
-    return result;
-}
-}  // namespace
-
 std::string pnp_cleanup(const std::string &name) {
-    return replace_all(name, R"( /\:)", '_');
+    return mk::replace_chars(name, R"( /\:)", '_');
 }
 
 #ifndef CMC

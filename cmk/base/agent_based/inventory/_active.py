@@ -4,54 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from functools import partial
 
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
-from cmk.utils.type_defs import EVERYTHING, HostName, RuleSetName, ServiceState
+from cmk.utils.type_defs import EVERYTHING, HostName, RuleSetName
 
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION
 
-import cmk.base.agent_based.error_handling as error_handling
 from cmk.base.config import ConfigCache, HWSWInventoryParameters
 
 from ._inventory import check_inventory_tree
 
-__all__ = ["active_check_inventory", "execute_active_check_inventory"]
-
-
-def active_check_inventory(
-    hostname: HostName,
-    options: dict,
-    *,
-    config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-) -> ServiceState:
-    return error_handling.check_result(
-        partial(
-            execute_active_check_inventory,
-            hostname,
-            config_cache=config_cache,
-            file_cache_options=file_cache_options,
-            inventory_parameters=config_cache.inventory_parameters,
-            parameters=HWSWInventoryParameters.from_raw(options),
-        ),
-        exit_spec=config_cache.exit_code_spec(hostname),
-        host_name=hostname,
-        service_name="Check_MK HW/SW Inventory",
-        plugin_name="check_mk_active-cmk_inv",
-        is_cluster=config_cache.is_cluster(hostname),
-        snmp_backend=config_cache.get_snmp_backend(hostname),
-        active_check_handler=active_check_handler,
-        keepalive=keepalive,
-    )
+__all__ = ["execute_active_check_inventory"]
 
 
 def execute_active_check_inventory(

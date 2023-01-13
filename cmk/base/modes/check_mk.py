@@ -54,6 +54,7 @@ from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.discovery as discovery
+import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -68,8 +69,9 @@ import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
+from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, HWSWInventoryParameters
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
@@ -2011,11 +2013,21 @@ def mode_inventory_as_check(
     keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
-    return inventory.active_check_inventory(
-        hostname,
-        options,
-        config_cache=config_cache,
-        file_cache_options=file_cache_options,
+    return error_handling.check_result(
+        partial(
+            execute_active_check_inventory,
+            hostname,
+            config_cache=config_cache,
+            file_cache_options=file_cache_options,
+            inventory_parameters=config_cache.inventory_parameters,
+            parameters=HWSWInventoryParameters.from_raw(options),
+        ),
+        exit_spec=config_cache.exit_code_spec(hostname),
+        host_name=hostname,
+        service_name="Check_MK HW/SW Inventory",
+        plugin_name="check_mk_active-cmk_inv",
+        is_cluster=config_cache.is_cluster(hostname),
+        snmp_backend=config_cache.get_snmp_backend(hostname),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

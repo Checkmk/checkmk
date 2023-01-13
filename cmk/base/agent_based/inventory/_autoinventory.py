@@ -11,7 +11,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.base.config as config
 
-from .active import execute_active_check_inventory
+from ._active import execute_active_check_inventory
 
 __all__ = ["inventorize_marked_hosts"]
 

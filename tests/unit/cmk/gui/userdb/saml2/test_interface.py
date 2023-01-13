@@ -28,7 +28,7 @@ from saml2.xmldsig import SIG_RSA_SHA1
 from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.userdb.saml2.connector import ConnectorConfig
+from cmk.gui.userdb.saml2.config import valuespec_to_config
 from cmk.gui.userdb.saml2.interface import (
     AuthenticatedUser,
     HTMLFormString,
@@ -125,7 +125,7 @@ class TestInterface:
     def interface(
         self, metadata_from_idp: None, raw_config: Mapping[str, Any], initialised_redis: Redis
     ) -> Interface:
-        config = ConnectorConfig(**raw_config).interface_config
+        config = valuespec_to_config(raw_config).interface_config
         interface = Interface(config=config, requests_db=initialised_redis)
 
         # SHA1 is normally disallowed, but used in the test data for performance reasons
@@ -402,7 +402,7 @@ class TestInterfaceSecurityFeatures:
         self, metadata_from_idp: None, raw_config: Mapping[str, Any], initialised_redis: Redis
     ) -> Interface:
         return Interface(
-            config=ConnectorConfig(**raw_config).interface_config, requests_db=initialised_redis
+            config=valuespec_to_config(raw_config).interface_config, requests_db=initialised_redis
         )
 
     @pytest.fixture

@@ -26,9 +26,20 @@ def fixture_signature_certificate_paths() -> tuple[Path, Path]:
     return Path(cert_dir / "signature_private.pem"), Path(cert_dir / "signature_public.pem")
 
 
+@pytest.fixture(autouse=True)
+def patch_signature_certificate_paths(
+    monkeypatch: pytest.MonkeyPatch, signature_certificate_paths: tuple[Path, Path]
+) -> None:
+    private_key_path, cert_path = signature_certificate_paths
+    monkeypatch.setattr(
+        "cmk.gui.userdb.saml2.config.saml2_signature_private_keyfile",
+        private_key_path,
+    )
+    monkeypatch.setattr("cmk.gui.userdb.saml2.config.saml2_signature_public_keyfile", cert_path)
+
+
 @pytest.fixture(name="raw_config")
-def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> Mapping[str, Any]:
-    private_keyfile_path, public_keyfile_path = signature_certificate_paths
+def fixture_raw_config() -> Mapping[str, Any]:
     return {
         "type": "saml2",
         "version": "1.0.0",
@@ -38,21 +49,14 @@ def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> Mappin
         "comment": "",
         "docu_url": "",
         "disabled": False,
-        "interface_config": {
-            "connection_timeout": [12, 12],
-            "checkmk_server_url": "http://localhost",
-            "idp_metadata_endpoint": "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
-            "user_attributes": {
-                "user_id": "username",
-                "alias": None,
-                "email": None,
-                "contactgroups": None,
-            },
-            "signature_certificate": {
-                "private": str(private_keyfile_path),
-                "public": str(public_keyfile_path),
-            },
-        },
+        "connection_timeout": (12, 12),
+        "checkmk_server_url": "http://localhost",
+        "idp_metadata_endpoint": "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
+        "user_id": "username",
+        "alias": "",
+        "email": "",
+        "contactgroups": "",
+        "signature_certificate": "default",
     }
 
 

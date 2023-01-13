@@ -17,7 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb.saml2.config import ConnectorConfig
+from cmk.gui.userdb.saml2.config import valuespec_to_config
 from cmk.gui.userdb.saml2.interface import AuthenticatedUser, Interface
 from cmk.gui.userdb.store import OpenFileMode, Users, UserStore
 
@@ -30,7 +30,7 @@ LOGGER = logger.getChild("saml2")
 class Connector(UserConnector):
     def __init__(self, raw_config: Mapping[str, Any]) -> None:
         super().__init__(raw_config)
-        self.__config = ConnectorConfig(**self._config)
+        self.__config = valuespec_to_config(self._config)
         self.__interface = Interface(
             config=self.__config.interface_config, requests_db=get_redis_client()
         )

@@ -2,18 +2,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import copy
-import json
 from collections.abc import Collection, Iterator
-from contextlib import suppress
-from pathlib import Path
-
-from cmk.utils.paths import (
-    saml2_custom_signature_private_keyfile,
-    saml2_custom_signature_public_keyfile,
-    saml2_signature_private_keyfile,
-    saml2_signature_public_keyfile,
-)
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -37,7 +26,6 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.plugins.wato.utils import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -347,7 +335,7 @@ class ModeEditSAML2Config(WatoMode):
         if clone_id := request.var("clone"):
             render_values = self._action_clone(clone_id=clone_id)
         else:
-            render_values = self.from_config_file(connection_id=request.get_ascii_input("id"))
+            render_values = self._from_config_file(connection_id=request.get_ascii_input("id"))
 
         self._valuespec.render_input_as_form(self._html_valuespec_param_prefix, render_values)
 
@@ -364,24 +352,15 @@ class ModeEditSAML2Config(WatoMode):
 
         return redirect(mode_url("saml_config"))
 
-    def from_config_file(self, *, connection_id: str | None = None) -> DictionaryModel:
+    def _from_config_file(self, *, connection_id: str | None = None) -> DictionaryModel:
         if not connection_id:
             return {}
 
         for connection in active_connections_by_type(self.type):
             if connection["id"] == connection_id:
-                return _config_to_valuespec(ConnectorConfig(**connection))
+                return connection
 
         raise MKUserError(None, _("The requested connection does not exist."))
-
-    def to_config_file(self, user_input: DictionaryModel) -> DictionaryModel:
-        # The config needs to be serialised to JSON and loaded back into a dict because the .dict()
-        # method preserves complex types, which may not be imported depending on the context. E.g.
-        # 'Path' should be serialised to 'str'.
-        # It can't be serialised to JSON permanently due to existing connectors that have config
-        # information in the same file and are serialised to a Python object (i.e. use
-        # 'ast.literal_eval' for loading).
-        return json.loads(_valuespec_to_config(user_input).json())
 
     def _validate_user_input(self, user_input: DictionaryModel) -> None:
         self._valuespec.validate_value(user_input, self._html_valuespec_param_prefix)
@@ -393,113 +372,16 @@ class ModeEditSAML2Config(WatoMode):
 
         connections = load_connection_config(lock=True)
         updated_connections = [c for c in connections if c["id"] != user_input["id"]]
-        updated_connections.append(self.to_config_file(user_input))
+        updated_connections.append(user_input)
         save_connection_config(updated_connections)
 
     def _action_clone(self, clone_id: str) -> DictionaryModel:
         for connection in load_connection_config(lock=False):
             if connection["id"] == clone_id:
                 connection["id"] = UUID().from_html_vars(self._html_valuespec_param_prefix)
-                return _config_to_valuespec(ConnectorConfig(**connection))
+                return connection
 
         raise MKUserError(None, _("The requested connection does not exist."))
-
-
-def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:
-    raw_user_input = copy.deepcopy(user_input)
-
-    interface_config = {
-        k: raw_user_input.pop(k)
-        for k in [
-            "connection_timeout",
-            "idp_metadata_endpoint",
-            "checkmk_server_url",
-        ]
-    }
-    interface_config["user_attributes"] = {
-        k: v
-        for k, v in [
-            (k, raw_user_input.pop(k))
-            for k in [
-                "user_id",
-                "alias",
-                "email",
-                "contactgroups",
-            ]
-        ]
-        if v
-    }
-    interface_config["signature_certificate"] = _certificate_to_config(
-        raw_user_input.pop("signature_certificate"),
-    )
-
-    raw_user_input["interface_config"] = interface_config
-
-    return ConnectorConfig(**raw_user_input)
-
-
-def _certificate_to_config(certificate: str | tuple[str, tuple[str, str]]) -> dict[str, Path]:
-    if isinstance(certificate, str):
-        return {
-            "private": saml2_signature_private_keyfile,
-            "public": saml2_signature_public_keyfile,
-        }
-
-    if not isinstance(certificate, tuple):
-        raise ValueError(
-            f"Expected str or tuple for signature_certificate, got {type(certificate).__name__}"
-        )
-
-    _, (private_key, cert) = certificate
-    # The pysaml2 client expects certificates in an actual file
-    saml2_custom_signature_public_keyfile.write_text(cert)
-    saml2_custom_signature_private_keyfile.write_text(private_key)
-    return {
-        "private": saml2_custom_signature_private_keyfile,
-        "public": saml2_custom_signature_public_keyfile,
-    }
-
-
-def _certificate_from_config(
-    signature_certificate: dict[str, Path]
-) -> str | tuple[str, tuple[str, str]] | tuple[str, tuple[None, None]]:
-    certificate_paths = list(signature_certificate.values())
-    if certificate_paths == [
-        saml2_signature_private_keyfile,
-        saml2_signature_public_keyfile,
-    ]:
-        return "default"
-
-    with suppress(FileNotFoundError):
-        # If the file has disappeared for some reason, there is nothing the user can do except
-        # recreate it, so there is no point in failing. If we do, the user will never get a chance
-        # to enter certificate details over the GUI configuration page again.
-        return (
-            "custom",
-            (
-                saml2_custom_signature_private_keyfile.read_text(),
-                saml2_custom_signature_public_keyfile.read_text(),
-            ),
-        )
-
-    return ("custom", (None, None))
-
-
-def _config_to_valuespec(config: ConnectorConfig) -> DictionaryModel:
-    config_dict = config.dict()
-    interface_config = config_dict.pop("interface_config")
-    signature_certificate = interface_config.pop("signature_certificate")
-
-    user_attributes_config = {
-        k: v or "" for k, v in interface_config.pop("user_attributes").items()
-    }
-
-    return {
-        **config_dict,
-        **interface_config,
-        **user_attributes_config,
-        "signature_certificate": _certificate_from_config(signature_certificate),
-    }
 
 
 def register(

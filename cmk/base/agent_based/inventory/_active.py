@@ -9,14 +9,14 @@ import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
-from cmk.utils.type_defs import EVERYTHING, HostName, RuleSetName
+from cmk.utils.type_defs import EVERYTHING, HostName, HWSWInventoryParameters, RuleSetName
 
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION
 
-from cmk.base.config import ConfigCache, HWSWInventoryParameters
+from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree
 

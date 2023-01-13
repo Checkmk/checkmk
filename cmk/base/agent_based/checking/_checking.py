@@ -25,6 +25,7 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     ExitSpec,
     HostName,
+    HWSWInventoryParameters,
     MetricTuple,
     ParsedSectionName,
     RuleSetName,
@@ -65,7 +66,7 @@ from cmk.base.agent_based.utils import (
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.config import ConfigCache, HWSWInventoryParameters
+from cmk.base.config import ConfigCache
 
 from . import _cluster_modes
 

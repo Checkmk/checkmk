@@ -37,6 +37,7 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
+    HWSWInventoryParameters,
     InventoryPluginName,
     SectionName,
 )
@@ -71,7 +72,7 @@ import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.config import ConfigCache, HWSWInventoryParameters
+from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser

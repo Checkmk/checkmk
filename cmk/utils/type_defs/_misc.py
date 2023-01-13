@@ -90,6 +90,27 @@ class DiscoveryResult:
     diff_text: str | None = None
 
 
+@dataclass(frozen=True)
+class HWSWInventoryParameters:
+    # TODO(ml): Move to inventory when the dependency to
+    #           `cmk.base.config` has been inverted.
+    hw_changes: int
+    sw_changes: int
+    sw_missing: int
+    fail_status: int
+    status_data_inventory: bool
+
+    @classmethod
+    def from_raw(cls, raw_parameters: dict) -> HWSWInventoryParameters:
+        return cls(
+            hw_changes=int(raw_parameters.get("hw-changes", 0)),
+            sw_changes=int(raw_parameters.get("sw-changes", 0)),
+            sw_missing=int(raw_parameters.get("sw-missing", 0)),
+            fail_status=int(raw_parameters.get("inv-fail-status", 1)),
+            status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
+        )
+
+
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
 SNMPDetectBaseType = list[list[tuple[str, str, bool]]]

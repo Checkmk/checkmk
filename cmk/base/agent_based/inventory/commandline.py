@@ -12,14 +12,20 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.structured_data import load_tree
-from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, RuleSetName
+from cmk.utils.type_defs import (
+    EVERYTHING,
+    HostName,
+    HWSWInventoryParameters,
+    InventoryPluginName,
+    RuleSetName,
+)
 
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.type_defs import SectionNameCollection
 
 import cmk.base.section as section
-from cmk.base.config import ConfigCache, HWSWInventoryParameters
+from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree
 

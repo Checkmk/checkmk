@@ -13,14 +13,13 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
-from cmk.utils.type_defs import EVERYTHING
+from cmk.utils.type_defs import EVERYTHING, HWSWInventoryParameters
 
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
-import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
@@ -1237,7 +1236,7 @@ def test_check_inventory_tree(
         inventory_parameters=config_cache.inventory_parameters,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
-        parameters=config.HWSWInventoryParameters.from_raw(
+        parameters=HWSWInventoryParameters.from_raw(
             {} if failed_state is None else {"inv-fail-status": failed_state}
         ),
         file_cache_options=FileCacheOptions(),
@@ -1288,7 +1287,7 @@ def test_check_inventory_tree_no_data_or_files(
         inventory_parameters=config_cache.inventory_parameters,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
-        parameters=config.HWSWInventoryParameters.from_raw({}),
+        parameters=HWSWInventoryParameters.from_raw({}),
         file_cache_options=FileCacheOptions(),
         old_tree=StructuredDataNode(),
     ).check_result

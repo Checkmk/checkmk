@@ -36,7 +36,14 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, result, RuleSetName
+from cmk.utils.type_defs import (
+    AgentRawData,
+    HostName,
+    HWSWInventoryParameters,
+    InventoryPluginName,
+    result,
+    RuleSetName,
+)
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -63,7 +70,7 @@ from cmk.base.agent_based.utils import (
     summarize_host_sections,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.config import ConfigCache, HWSWInventoryParameters
+from cmk.base.config import ConfigCache
 from cmk.base.sources import make_sources
 
 __all__ = [

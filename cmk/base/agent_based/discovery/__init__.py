@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._discovery import execute_check_discovery
-from .active import active_check_discovery
 from .autodiscovery import (
     automation_discovery,
     discover_marked_hosts,
@@ -18,7 +17,6 @@ from .utils import DiscoveryMode, QualifiedDiscovery
 __all__ = [
     "DiscoveryMode",
     "QualifiedDiscovery",
-    "active_check_discovery",
     "automation_discovery",
     "commandline_check_discovery",
     "commandline_discovery",

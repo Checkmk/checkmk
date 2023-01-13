@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._checking import check_host_services, execute_checkmk_checks, get_aggregated_result
-from .active import active_check_checking
 from .commandline import commandline_checking
 
 __all__ = [
-    "active_check_checking",
     "commandline_checking",
     "check_host_services",
     "execute_checkmk_checks",

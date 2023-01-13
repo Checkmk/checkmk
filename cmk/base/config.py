@@ -1471,36 +1471,6 @@ def _checktype_ignored_for_host(
     return False
 
 
-def resolve_service_dependencies(
-    *,
-    host_name: HostName,
-    services: Sequence[ConfiguredService],
-) -> Sequence[ConfiguredService]:
-    if is_cmc():
-        return services
-
-    unresolved = [(s, set(service_depends_on(host_name, s.description))) for s in services]
-
-    resolved: list[ConfiguredService] = []
-    while unresolved:
-        resolved_descriptions = {service.description for service in resolved}
-        newly_resolved = {
-            service.id(): service
-            for service, dependencies in unresolved
-            if dependencies <= resolved_descriptions
-        }
-        if not newly_resolved:
-            problems = ", ".join(
-                f"{s.description!r} ({s.check_plugin_name} / {s.item})" for s, _ in unresolved
-            )
-            raise MKGeneralException(f"Cyclic service dependency of host {host_name}: {problems}")
-
-        unresolved = [(s, d) for s, d in unresolved if s.id() not in newly_resolved]
-        resolved.extend(newly_resolved.values())
-
-    return resolved
-
-
 # TODO: Make this use the generic "rulesets" functions
 # a) This function has never been configurable via WATO (see https://mathias-kettner.de/checkmk_service_dependencies.html)
 # b) It only affects the Nagios core - CMC does not implement service dependencies
@@ -3001,6 +2971,41 @@ class ConfigCache:
 
     def host_path(self, hostname: HostName) -> str:
         return self._host_paths.get(hostname, "/")
+
+    def _sorted_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
+        # This method is only useful for the monkeypatching orgy of the "unit"-tests.
+        return sorted(
+            get_check_table(self, hostname).values(),
+            key=lambda service: service.description,
+        )
+
+    def configured_services(self, hostname: HostName) -> Sequence[ConfiguredService]:
+        services = self._sorted_services(hostname)
+        if is_cmc():
+            return services
+
+        unresolved = [(s, set(service_depends_on(hostname, s.description))) for s in services]
+
+        resolved: list[ConfiguredService] = []
+        while unresolved:
+            resolved_descriptions = {service.description for service in resolved}
+            newly_resolved = {
+                service.id(): service
+                for service, dependencies in unresolved
+                if dependencies <= resolved_descriptions
+            }
+            if not newly_resolved:
+                problems = ", ".join(
+                    f"{s.description!r} ({s.check_plugin_name} / {s.item})" for s, _ in unresolved
+                )
+                raise MKGeneralException(
+                    f"Cyclic service dependency of host {hostname}: {problems}"
+                )
+
+            unresolved = [(s, d) for s, d in unresolved if s.id() not in newly_resolved]
+            resolved.extend(newly_resolved.values())
+
+        return resolved
 
     def enforced_services_table(
         self, hostname: HostName

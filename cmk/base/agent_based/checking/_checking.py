@@ -92,14 +92,7 @@ def execute_checkmk_checks(
     submitter: Submitter,
 ) -> ActiveCheckResult:
     exit_spec = config_cache.exit_code_spec(hostname)
-
-    services = config.resolve_service_dependencies(
-        host_name=hostname,
-        services=sorted(
-            config.get_check_table(config_cache, hostname).values(),
-            key=lambda service: service.description,
-        ),
-    )
+    services = config_cache.configured_services(hostname)
     host_sections, source_results = parse_messages(
         config_cache,
         ((f[0], f[1]) for f in fetched),

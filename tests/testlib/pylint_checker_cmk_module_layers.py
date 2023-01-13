@@ -337,9 +337,6 @@ class CMKModuleLayerChecker(BaseChecker):
         parts[-1] = removesuffix(parts[-1], ".py")
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         parts[-1] = removeprefix(parts[-1], "flycheck_")
-        # Strip CEE/CME/CPE prefix, we use symlink magic to combine editions. :-P
-        if parts[:2] in (["enterprise", "cmk"], ["managed", "cmk"], ["plus", "cmk"]):
-            parts = parts[1:]
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
         if parts[0] != "cmk":
             parts = [parts[-1]]

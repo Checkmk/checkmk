@@ -12,5 +12,4 @@ In version 2.1, Lambda and Route53 service configuration was
 visible in the CRE and CEE editions. The configuration was
 useless because the services themselves weren't released.
 With this werk the configuration is removed from CRE and CEE
-editions. The services are fully functional in the CPE edition.
-
+editions. The services are fully functional in the CCE edition.

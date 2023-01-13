@@ -618,8 +618,8 @@ class ManPageRenderer:
     def _format_distribution(self, distr: str) -> str:
         if distr == "check_mk":
             return "Official part of Checkmk"
-        if distr == "check_mk_plus":
-            return "Official part of Checkmk Plus Edition"
+        if distr == "check_mk_cloud":
+            return "Official part of Checkmk Cloud Edition"
         return distr
 
     def _flush(self) -> None:

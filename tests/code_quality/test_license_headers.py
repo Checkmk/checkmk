@@ -23,15 +23,15 @@ ignored_files = [
 # based on their name.
 enterprise_names = [
     "nonfree",
-    "plus",
+    "cloud",
     "enterprise",
     "managed",
     "cee",
     "cme",
-    "cpe",
+    "cce",
     "cee.py",
     "cme.py",
-    "cpe.py",
+    "cce.py",
 ]
 
 

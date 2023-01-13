@@ -10,16 +10,16 @@ from tests.testlib import is_enterprise_repo
 
 # Is called by pylint to load this plugin
 def register(linter: PyLinter) -> None:
-    # Disable some CEE/CME/CPE specific things when linting CRE repos
+    # Disable some CEE/CME/CCE specific things when linting CRE repos
     if not is_enterprise_repo():
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
         linter.global_set_option(
             "ignored-modules",
-            "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed,cmk.base.cpe,cmk.gui.cpe",
+            "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed,cmk.base.cce,cmk.gui.cce",
         )
         # This disables no-member errors
         linter.global_set_option(
             "generated-members",
-            r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme|cmk\.base\.cpe|cmk\.gui\.cpe)(\..*)?",
+            r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme|cmk\.base\.cce|cmk\.gui\.cce)(\..*)?",
         )

@@ -11,7 +11,7 @@ ROOT=/omd/sites/$SITE
 CMK_VERSION=$(basename "$(readlink "$ROOT"/version)")
 CMK_VERSION=${CMK_VERSION%.*}
 
-# Needed by {managed,plus}/cmk/.f12 to set the correct edition after .f12
+# Needed by {managed,cloud}/cmk/.f12 to set the correct edition after .f12
 if [ -z "$ORIG_EDITION" ]; then
     ORIG_EDITION=$(sudo su - "$SITE" -c "python3 -c 'import cmk.utils.version; print(cmk.utils.version.edition().short)'")
     export ORIG_EDITION
@@ -96,18 +96,18 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/base/cee/plugins/bakery/__init__.py" \
     "$ROOT/lib/python3/cmk/base/cee/bakery/__init__.py" \
     "$ROOT/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cee/bakery/core_bakelets/cpe/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/cee/bakery/core_bakelets/cce/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/sla/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py" \
     \
-    "$ROOT/lib/python3/cmk/gui/cpe/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cpe/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cpe/plugins/wato/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cpe/plugins/wato/check_parameters/__init__.py" \
-    "$ROOT/lib/python3/cmk/gui/cpe/plugins/wato/watolib/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/cpe/plugins/agent_based/__init__.py"
+    "$ROOT/lib/python3/cmk/gui/cce/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/cce/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/check_parameters/__init__.py" \
+    "$ROOT/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/cce/plugins/agent_based/__init__.py"
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py

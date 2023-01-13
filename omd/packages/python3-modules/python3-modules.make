@@ -61,7 +61,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    export CFLAGS="-I$(PACKAGE_PYTHON_INCLUDE_PATH) $$CFLAGS" ; \
-	    `: Reduce GRPC build load peaks (See src/python/grpcio/_parallel_compile_patch.py in grpcio package) ` \
+	    `: Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package` \
 	    export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4 ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \

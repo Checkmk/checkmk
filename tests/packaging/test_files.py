@@ -33,8 +33,8 @@ def _edition_short_from_pkg_path(package_path: str) -> str:
         return "cme"
     if file_name.startswith("check-mk-free-"):
         return "cfe"
-    if file_name.startswith("check-mk-plus-"):
-        return "cpe"
+    if file_name.startswith("check-mk-cloud-"):
+        return "cce"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -140,15 +140,15 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/usr/share/man/$",
             "/usr/share/man/man8/$",
             "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|plus)-.*/README.md$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/changelog.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/COPYING.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/TEAM$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/copyright$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
-            "/etc/init.d/check-mk-(raw|free|enterprise|managed|plus)-.*$",
+            "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud)-.*$",
         ] + version_allowed_patterns
 
         paths = []
@@ -234,7 +234,7 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     prefix = os.path.basename(package_path).replace(".tar.gz", "").split("-rc")[0]
     enterprise_files = []
     managed_files = []
-    plus_files = []
+    cloud_files = []
 
     for line in subprocess.check_output(
         ["tar", "tvf", package_path], encoding="utf-8"
@@ -244,12 +244,12 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
             enterprise_files.append(path)
         if path != "%s/managed/" % prefix and path.startswith("%s/managed/" % prefix):
             managed_files.append(path)
-        if path != "%s/plus/" % prefix and path.startswith("%s/plus/" % prefix):
-            plus_files.append(path)
+        if path != "%s/cloud/" % prefix and path.startswith("%s/cloud/" % prefix):
+            cloud_files.append(path)
 
     assert enterprise_files == []
     assert managed_files == []
-    assert plus_files == []
+    assert cloud_files == []
 
 
 def test_demo_modifications(package_path: str, cmk_version: str) -> None:

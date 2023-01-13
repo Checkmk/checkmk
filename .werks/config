@@ -2,7 +2,7 @@ editions = [
     ( "cre",          "Raw Edition" ),
     ( "cee",          "Enterprise Edition" ),
     ( "cme",          "Managed Services Edition" ),
-    ( "cpe",          "Plus Edition" ),
+    ( "cce",          "Cloud Edition" ),
 ]
 
 components = [

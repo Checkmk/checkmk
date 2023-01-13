@@ -158,15 +158,15 @@ endif
 ifeq ($(EDITION),free)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/plus/plus.make
+    $(REPO_PATH)/cloud/cloud.make
 endif
 ifeq ($(EDITION),managed)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/managed/managed.make
 endif
-ifeq ($(EDITION),plus)
+ifeq ($(EDITION),cloud)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/plus/plus.make
+    $(REPO_PATH)/cloud/cloud.make
 endif

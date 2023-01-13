@@ -37,8 +37,8 @@ def cme_path() -> str:  # TODO: Use Path
     return str(repo_path() / "managed")
 
 
-def cpe_path() -> str:  # TODO: Use Path
-    return str(repo_path() / "plus")
+def cce_path() -> str:  # TODO: Use Path
+    return str(repo_path() / "cloud")
 
 
 def is_enterprise_repo() -> bool:
@@ -49,8 +49,8 @@ def is_managed_repo() -> bool:
     return os.path.exists(cme_path())
 
 
-def is_plus_repo() -> bool:
-    return os.path.exists(cpe_path())
+def is_cloud_repo() -> bool:
+    return os.path.exists(cce_path())
 
 
 def is_containerized() -> bool:

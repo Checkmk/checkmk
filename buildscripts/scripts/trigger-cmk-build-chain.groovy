@@ -47,7 +47,7 @@ def main() {
     ];
 
     // TODO we should take this list from a single source of truth
-    assert edition in ["enterprise", "raw", "free", "managed", "plus"] : (
+    assert edition in ["enterprise", "raw", "free", "managed", "cloud"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
 
     def build_image = !(edition in ["free"]);

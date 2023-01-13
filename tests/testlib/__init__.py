@@ -32,9 +32,9 @@ from tests.testlib.utils import (
     current_branch_name,
     get_cmk_download_credentials,
     get_standard_linux_agent_output,
+    is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
-    is_plus_repo,
     is_running_as_site_user,
     repo_path,
     site_id,
@@ -80,8 +80,8 @@ def fake_version_and_paths() -> None:
 
     if is_managed_repo():
         edition_short = "cme"
-    elif is_plus_repo():
-        edition_short = "cpe"
+    elif is_cloud_repo():
+        edition_short = "cce"
     elif is_enterprise_repo():
         edition_short = "cee"
     else:
@@ -95,11 +95,11 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr(
         cmk_version,
         "is_raw_edition",
-        lambda: not (is_enterprise_repo() and is_managed_repo() and is_plus_repo()),
+        lambda: not (is_enterprise_repo() and is_managed_repo() and is_cloud_repo()),
     )
     monkeypatch.setattr(cmk_version, "is_enterprise_edition", is_enterprise_repo)
     monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
-    monkeypatch.setattr(cmk_version, "is_plus_edition", is_plus_repo)
+    monkeypatch.setattr(cmk_version, "is_cloud_edition", is_cloud_repo)
 
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())

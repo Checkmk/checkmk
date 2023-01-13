@@ -58,8 +58,8 @@ class CMKVersion:
     def is_raw_edition(self) -> bool:
         return self.edition is Edition.CRE
 
-    def is_plus_edition(self) -> bool:
-        return self.edition is Edition.CPE
+    def is_cloud_edition(self) -> bool:
+        return self.edition is Edition.CCE
 
     def version_directory(self) -> str:
         return self.omd_version()

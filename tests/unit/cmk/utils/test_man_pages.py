@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.utils import cmk_path, cpe_path
+from tests.testlib.utils import cce_path, cmk_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
@@ -25,7 +25,7 @@ def patch_man_page_dir_paths(monkeypatch, tmp_path):
         "_get_man_page_dirs",
         lambda: [
             tmp_path,
-            Path(cpe_path(), "checkman"),
+            Path(cce_path(), "checkman"),
             Path(cmk_path(), "checkman"),
         ],
     )
@@ -34,7 +34,7 @@ def patch_man_page_dir_paths(monkeypatch, tmp_path):
 @pytest.fixture(scope="module", name="all_pages")
 def get_all_pages() -> ManPages:
     base_dirs = [
-        Path(cpe_path(), "checkman"),
+        Path(cce_path(), "checkman"),
         Path(cmk_path(), "checkman"),
     ]
     return {

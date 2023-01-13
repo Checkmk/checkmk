@@ -105,7 +105,7 @@ def test_base_dir(th: Theme) -> None:
         cmk.utils.version.Edition.CRE,
         cmk.utils.version.Edition.CEE,
         cmk.utils.version.Edition.CME,
-        cmk.utils.version.Edition.CPE,
+        cmk.utils.version.Edition.CCE,
     ],
 )
 @pytest.mark.parametrize("with_logo", [True, False])

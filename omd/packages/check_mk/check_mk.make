@@ -55,11 +55,11 @@ ifneq ($(EDITION),managed)
 	    --exclude "cme" \
 	    --exclude "cme.py"
 endif
-ifeq ($(filter $(EDITION),plus free),)
+ifeq ($(filter $(EDITION),cloud free),)
 	EDITION_EXCLUDE += \
-	    --exclude "plus" \
-	    --exclude "cpe" \
-	    --exclude "cpe.py"
+	    --exclude "cloud" \
+	    --exclude "cce" \
+	    --exclude "cce.py"
 endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
@@ -211,18 +211,18 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/plugins/bakery/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/cpe/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/cce/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/sla/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py \
 	    \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/wato/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/wato/check_parameters/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/wato/watolib/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cpe/plugins/agent_based/__init__.py
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/check_parameters/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cce/plugins/agent_based/__init__.py
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk

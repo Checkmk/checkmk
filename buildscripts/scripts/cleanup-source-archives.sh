@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Remove source files of enterprise / managed / plus specific components from the
+# Remove source files of enterprise / managed / cloud specific components from the
 # given source archives before publishing them
 
 set -e -o pipefail
@@ -20,9 +20,9 @@ for SRC_PATH in "$@"; do
     REMOVE_DIRS=""
     echo "=> $SRC_PATH"
 
-    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/plus/.+" >/dev/null; then
-        echo "Found CPE specific components..."
-        REMOVE_DIRS+=" $DIRNAME/plus/*"
+    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/cloud/.+" >/dev/null; then
+        echo "Found CCE specific components..."
+        REMOVE_DIRS+=" $DIRNAME/cloud/*"
     fi
 
     if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/managed/.+" >/dev/null; then
@@ -45,8 +45,8 @@ for SRC_PATH in "$@"; do
     gunzip -c "$SRC_PATH" | tar -v --wildcards --delete$REMOVE_DIRS | gzip >"$SRC_PATH.new"
     mv "$SRC_PATH.new" "$SRC_PATH"
 
-    echo "Checking for remaining CEE/CME/CPE files..."
-    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/(plus|managed|enterprise)/.+"; then
+    echo "Checking for remaining CEE/CME/CCE files..."
+    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/(cloud|managed|enterprise)/.+"; then
         echo "ERROR: Still found some CEE/CME specific components."
         exit 1
     fi

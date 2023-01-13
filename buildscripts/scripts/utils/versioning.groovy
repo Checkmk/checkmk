@@ -15,23 +15,23 @@ def REPO_PATCH_RULES = [\
         "managed", \
         "cme", \
         "cme.py", \
-        "plus", \
-        "cpe", \
-        "cpe.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"],\
+        "cloud", \
+        "cce", \
+        "cce.py", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"]], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
         "cme.py", \
-        "plus", \
-        "cpe", \
-        "cpe.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
+        "cloud", \
+        "cce", \
+        "cce.py", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
 "free": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -42,13 +42,13 @@ def REPO_PATCH_RULES = [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
 "managed": [\
     "paths_to_be_removed": [\
-        "plus", \
-        "cpe", \
-        "cpe.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"], \
+        "cloud", \
+        "cce", \
+        "cce.py", \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"]], \
-"plus": [\
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cce"]], \
+"cloud": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
@@ -152,7 +152,7 @@ def patch_themes(EDITION) {
                 """
             }
             break
-        case 'plus':
+        case 'cloud':
         case 'enterprise':
         case 'free':
             // Workaround since scss does not support conditional includes
@@ -190,15 +190,15 @@ def delete_non_cre_files() {
     non_cre_paths = [
         "enterprise",
         "managed",
-        "plus",
+        "cloud",
         "check_mk_enterprise",
         "check_mk_managed",
         "cee",
         "cme",
-        "cpe",
+        "cce",
         "cee.py",
         "cme.py",
-        "cpe.py",
+        "cce.py",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
     sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""

@@ -42,7 +42,7 @@ class _EditionValue(NamedTuple):
 class Edition(_EditionValue, enum.Enum):
     CRE = _EditionValue("cre", "raw", "Checkmk Raw Edition")
     CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
-    CPE = _EditionValue("cpe", "plus", "Checkmk Enterprise Plus Edition")
+    CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
     CFE = _EditionValue("cfe", "free", "Checkmk Free Edition")
 
@@ -67,8 +67,8 @@ def is_enterprise_edition() -> bool:
     return edition() is Edition.CEE
 
 
-def is_plus_edition() -> bool:
-    return edition() is Edition.CPE
+def is_cloud_edition() -> bool:
+    return edition() is Edition.CCE
 
 
 def is_raw_edition() -> bool:

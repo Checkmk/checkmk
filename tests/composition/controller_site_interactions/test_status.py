@@ -61,7 +61,7 @@ def test_status_pull(
     assert remote_status["connection_type"] == "pull-agent"
 
 
-@pytest.mark.usefixtures("skip_if_not_plus_edition")
+@pytest.mark.usefixtures("skip_if_not_cloud_edition")
 def test_status_push(
     central_site: Site,
     agent_ctl: Path,

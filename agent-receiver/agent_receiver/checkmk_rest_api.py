@@ -22,16 +22,16 @@ class CMKEdition(Enum):
     cfe = "Free"
     cee = "Enterprise"
     cme = "Managed Services"
-    cpe = "Plus"
+    cce = "Cloud"
 
     def supports_registration_with_labels(self) -> bool:
         """
         >>> CMKEdition["cre"].supports_registration_with_labels()
         False
-        >>> CMKEdition["cpe"].supports_registration_with_labels()
+        >>> CMKEdition["cce"].supports_registration_with_labels()
         True
         """
-        return self is CMKEdition.cpe
+        return self is CMKEdition.cce
 
 
 def _local_apache_port() -> int:

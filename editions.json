@@ -46,8 +46,8 @@
             "ubuntu-22.04"
         ]
     },
-    "plus": {
-        "NAME": "Plus Edition",
+    "cloud": {
+        "NAME": "Cloud Edition",
         "DISTROS": [
             "ubuntu-20.04",
             "ubuntu-22.04",

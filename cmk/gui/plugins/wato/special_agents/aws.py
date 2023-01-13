@@ -6,7 +6,7 @@
 from collections.abc import Container
 
 from cmk.utils import aws_constants
-from cmk.utils.version import is_plus_edition
+from cmk.utils.version import is_cloud_edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
@@ -102,30 +102,30 @@ def _vs_element_aws_limits():
 
 
 class AWSSpecialAgentValuespecBuilder:
-    # Global services that should be present just in the CMK plus edition
-    PLUS_ONLY_GLOBAL_SERVICES = {"cloudfront", "route53"}
-    # Regional services that should be present just in the CMK plus edition
-    PLUS_ONLY_REGIONAL_SERVICES = {"sns", "lambda", "ecs", "elasticache"}
+    # Global services that should be present just in the CMK cloud edition
+    CCE_ONLY_GLOBAL_SERVICES = {"cloudfront", "route53"}
+    # Regional services that should be present just in the CMK cloud edition
+    CCE_ONLY_REGIONAL_SERVICES = {"sns", "lambda", "ecs", "elasticache"}
 
-    def __init__(self, plus_edition: bool):
-        self.is_plus_edition = plus_edition
+    def __init__(self, cloud_edition: bool):
+        self.is_cloud_edition = cloud_edition
 
     def get_global_services(self) -> ServicesValueSpec:
         return self._get_edition_filtered_services(
-            self._get_all_global_services(), self.PLUS_ONLY_GLOBAL_SERVICES
+            self._get_all_global_services(), self.CCE_ONLY_GLOBAL_SERVICES
         )
 
     def get_regional_services(self) -> ServicesValueSpec:
         return self._get_edition_filtered_services(
-            self._get_all_regional_services(), self.PLUS_ONLY_REGIONAL_SERVICES
+            self._get_all_regional_services(), self.CCE_ONLY_REGIONAL_SERVICES
         )
 
     def _get_edition_filtered_services(
-        self, all_services: ServicesValueSpec, plus_only_services: Container[str]
+        self, all_services: ServicesValueSpec, cce_only_services: Container[str]
     ) -> ServicesValueSpec:
-        if self.is_plus_edition:
+        if self.is_cloud_edition:
             return all_services
-        return [s for s in all_services if s[0] not in plus_only_services]
+        return [s for s in all_services if s[0] not in cce_only_services]
 
     def _get_all_global_services(self) -> ServicesValueSpec:
         return [
@@ -392,7 +392,7 @@ class AWSSpecialAgentValuespecBuilder:
 
 
 def _valuespec_special_agents_aws() -> Dictionary:
-    valuespec_builder = AWSSpecialAgentValuespecBuilder(is_plus_edition())
+    valuespec_builder = AWSSpecialAgentValuespecBuilder(is_cloud_edition())
     global_services = valuespec_builder.get_global_services()
     regional_services = valuespec_builder.get_regional_services()
     regional_services_default_keys = [service[0] for service in regional_services]

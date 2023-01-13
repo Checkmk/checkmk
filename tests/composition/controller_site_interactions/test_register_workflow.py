@@ -76,7 +76,7 @@ def test_register_workflow_pull(
     )
 
 
-@pytest.mark.usefixtures("skip_if_not_plus_edition")
+@pytest.mark.usefixtures("skip_if_not_cloud_edition")
 def test_register_workflow_push(
     central_site: Site,
     agent_ctl: Path,

@@ -120,7 +120,7 @@ def test_03_python_path(site: Site) -> None:
     ordered_path_elements = [
         # there may be more, but these have to occur in this order:
         site.root + f"/local/lib/python{python_version.major}",
-        site.root + f"/lib/python{python_version.major}/plus",
+        site.root + f"/lib/python{python_version.major}/cloud",
         site.root + f"/lib/python{python_version.major}.{python_version.minor}",
         site.root + f"/lib/python{python_version.major}",
     ]

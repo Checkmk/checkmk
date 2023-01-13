@@ -240,7 +240,7 @@ def _test_register_with_labels(
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
-        lambda _c: CMKEdition["cpe"],
+        lambda _c: CMKEdition["cce"],
     )
     response = client.post(
         "/register_with_labels",

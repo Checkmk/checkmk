@@ -25,12 +25,12 @@ else
 MANAGED            := no
 endif
 
-ifneq (,$(wildcard $(REPO_PATH)/plus))
-PLUS               := yes
-EDITION            := plus
-EDITION_SHORT      := cpe
+ifneq (,$(wildcard $(REPO_PATH)/cloud))
+CLOUD              := yes
+EDITION            := cloud
+EDITION_SHORT      := cce
 else
-PLUS               := no
+CLOUD              := no
 endif
 
 # Will be set to "yes" by cmk build system when building a free edition

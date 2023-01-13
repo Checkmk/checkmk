@@ -18,7 +18,7 @@ def _skip_if_uncontainerized() -> None:
         )
 
 
-@pytest.fixture(name="skip_if_not_plus_edition")
-def _skip_if_not_plus_edition(version: CMKVersion) -> None:
-    if not version.is_plus_edition():
-        pytest.skip("Skipping since we are not testing with a plus edition")
+@pytest.fixture(name="skip_if_not_cloud_edition")
+def _skip_if_not_cloud_edition(version: CMKVersion) -> None:
+    if not version.is_cloud_edition():
+        pytest.skip("Skipping since we are not testing with a cloud edition")

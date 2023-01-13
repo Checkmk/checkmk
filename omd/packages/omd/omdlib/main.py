@@ -2898,7 +2898,7 @@ def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:
 
 
 def _get_edition(omd_version: str) -> str:
-    """Returns the long Check_MK Edition name or "unknown" of the given OMD version"""
+    """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
     parts = omd_version.split(".")
     if parts[-1] == "demo":
         edition_short = parts[-2]
@@ -2913,8 +2913,8 @@ def _get_edition(omd_version: str) -> str:
         return "managed"
     if edition_short == "cfe":
         return "free"
-    if edition_short == "cpe":
-        return "plus"
+    if edition_short == "cce":
+        return "cloud"
     return "unknown"
 
 

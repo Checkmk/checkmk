@@ -252,10 +252,10 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
 
     assert default_authorized_builtin_role_ids == ["user", "admin", "guest"]
     assert default_unauthorized_builtin_role_ids == (
-        ["agent_registration"] if cmk_version.is_plus_edition() else []
+        ["agent_registration"] if cmk_version.is_cloud_edition() else []
     )
     assert builtin_role_ids == ["user", "admin", "guest"] + (
-        ["agent_registration"] if cmk_version.is_plus_edition() else []
+        ["agent_registration"] if cmk_version.is_cloud_edition() else []
     )
     assert "test" not in active_config.admin_users
 

@@ -6,8 +6,8 @@
 from cmk.gui.plugins.wato.special_agents.aws import AWSSpecialAgentValuespecBuilder
 
 
-def test_plus_only_services_present_in_plus_edition():
-    valuespec_builder = AWSSpecialAgentValuespecBuilder(plus_edition=True)
+def test_cloud_only_services_present_in_cloud_edition():
+    valuespec_builder = AWSSpecialAgentValuespecBuilder(cloud_edition=True)
     regional_services = valuespec_builder.get_regional_services()
     global_services = valuespec_builder.get_global_services()
 
@@ -15,8 +15,8 @@ def test_plus_only_services_present_in_plus_edition():
     assert "cloudfront" in {service[0] for service in global_services}
 
 
-def test_plus_only_services_not_present_in_enterprise_edition():
-    valuespec_builder = AWSSpecialAgentValuespecBuilder(plus_edition=False)
+def test_cloud_only_services_not_present_in_enterprise_edition():
+    valuespec_builder = AWSSpecialAgentValuespecBuilder(cloud_edition=False)
     regional_services = valuespec_builder.get_regional_services()
     global_services = valuespec_builder.get_global_services()
 

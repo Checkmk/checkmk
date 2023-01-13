@@ -80,7 +80,13 @@ pub enum Mode {
     /// A compatible dataset can be created using the 'proxy-register' command.
     Import(ImportOpts),
 
-    /// Renew the certificate for a registered connection.
+    /// Renew the certificate for a connection to a Checkmk instance.
+    ///
+    /// Connections can be specified either by their site address or their UUID.
+    /// The site address is '<servername>/<site>', see the output of the
+    /// status command.
+    /// Only possible for non-imported connections. To renew imported connections,
+    /// please proxy-register and import again.
     RenewCertificate(RenewCertificateOpts),
 }
 

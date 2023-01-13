@@ -260,7 +260,7 @@ impl PullConfig {
 
 pub struct RenewCertificateConfig {
     pub use_proxy: bool,
-    pub connection: String,
+    pub ident: String,
 }
 
 impl RenewCertificateConfig {
@@ -271,7 +271,7 @@ impl RenewCertificateConfig {
         RenewCertificateConfig {
             use_proxy: renew_certificate_opts.detect_proxy
                 || runtime_config.detect_proxy.unwrap_or(false),
-            connection: renew_certificate_opts.connection,
+            ident: renew_certificate_opts.connection,
         }
     }
 }
@@ -468,6 +468,21 @@ impl Registry {
         self.legacy_pull_marker
             .create()
             .context("Failed to activate legacy pull mode")
+    }
+
+    pub fn retrieve_standard_connection_by_uuid(
+        &self,
+        uuid: &uuid::Uuid,
+    ) -> Option<site_spec::SiteID> {
+        for (site_id, connection) in self
+            .push_connections()
+            .chain(self.standard_pull_connections())
+        {
+            if &connection.trust.uuid == uuid {
+                return Some(site_id.clone());
+            }
+        }
+        None
     }
 
     fn path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
@@ -973,6 +988,29 @@ mod test_registry {
         assert!(reg.connections.pull.len() == 1);
         assert!(reg.connections.pull_imported.len() == 2);
         assert!(reg.connections.pull_imported.contains(&uuid));
+    }
+
+    #[test]
+    fn test_retrieve_standard_connection_by_uuid() {
+        let reg = registry();
+        let uuid_push = reg.push_connections().next().unwrap().1.trust.uuid;
+        let uuid_pull = reg.standard_pull_connections().next().unwrap().1.trust.uuid;
+        let uuid_imported = reg.imported_pull_connections().next().unwrap().uuid;
+
+        assert!(
+            reg.retrieve_standard_connection_by_uuid(&uuid_push)
+                == Some(site_spec::SiteID::from_str("server/push-site").unwrap())
+        );
+        assert!(
+            reg.retrieve_standard_connection_by_uuid(&uuid_pull)
+                == Some(site_spec::SiteID::from_str("server/pull-site").unwrap())
+        );
+        assert!(reg
+            .retrieve_standard_connection_by_uuid(&uuid_imported)
+            .is_none());
+        assert!(reg
+            .retrieve_standard_connection_by_uuid(&uuid::Uuid::new_v4())
+            .is_none());
     }
 
     #[test]

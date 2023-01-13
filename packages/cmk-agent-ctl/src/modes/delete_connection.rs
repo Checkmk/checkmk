@@ -7,23 +7,8 @@ use std::str::FromStr;
 use crate::{config, site_spec};
 use anyhow::{Context, Result as AnyhowResult};
 
-fn retrieve_standard_connection_by_uuid(
-    uuid: &uuid::Uuid,
-    registry: &config::Registry,
-) -> Option<site_spec::SiteID> {
-    for (site_id, connection) in registry
-        .push_connections()
-        .chain(registry.standard_pull_connections())
-    {
-        if &connection.trust.uuid == uuid {
-            return Some(site_id.clone());
-        }
-    }
-    None
-}
-
 fn delete_by_uuid(uuid: &uuid::Uuid, registry: &mut config::Registry) -> AnyhowResult<()> {
-    match retrieve_standard_connection_by_uuid(uuid, registry) {
+    match registry.retrieve_standard_connection_by_uuid(uuid) {
         Some(site_id) => registry.delete_standard_connection(&site_id),
         None => registry
             .delete_imported_connection(uuid)

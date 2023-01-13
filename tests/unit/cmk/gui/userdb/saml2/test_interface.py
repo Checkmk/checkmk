@@ -98,6 +98,46 @@ def fixture_decoded_signed_authentication_request_response(xml_files_path: Path)
     )
 
 
+@pytest.fixture(scope="session", name="signature_certificate_paths")
+def fixture_signature_certificate_paths() -> tuple[Path, Path]:
+    # Were generated with
+    # openssl req -x509 -newkey rsa:1024 -days +3650 -subj "/CN=saml2-test-sign/O=checkmk-testing/C=DE" -keyout signature_private.pem -out signature_public.pem -sha256 -nodes
+    # 1024 bit is used for performance reasons
+    cert_dir = Path(__file__).parent / "certificate_files"
+    return Path(cert_dir / "signature_private.pem"), Path(cert_dir / "signature_public.pem")
+
+
+@pytest.fixture(autouse=True)
+def patch_signature_certificate_paths(
+    monkeypatch: pytest.MonkeyPatch, signature_certificate_paths: tuple[Path, Path]
+) -> None:
+    private_key_path, cert_path = signature_certificate_paths
+    monkeypatch.setattr(
+        "cmk.gui.userdb.saml2.config.saml2_signature_private_keyfile",
+        private_key_path,
+    )
+    monkeypatch.setattr("cmk.gui.userdb.saml2.config.saml2_signature_public_keyfile", cert_path)
+
+
+@pytest.fixture(autouse=True)
+def url_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("cmk.gui.userdb.saml2.interface.url_prefix", lambda: "/heute/")
+
+
+@pytest.fixture(name="xml_files_path", scope="session")
+def fixture_xml_files_path() -> Path:
+    return Path(__file__).parent / "xml_files"
+
+
+@pytest.fixture(name="metadata_from_idp")
+def fixture_metadata_from_idp(monkeypatch: pytest.MonkeyPatch, xml_files_path: Path) -> None:
+    with open(xml_files_path / "identity_provider_metadata.xml", "r") as f:
+        metadata_str = f.read()
+    monkeypatch.setattr(
+        "cmk.gui.userdb.saml2.interface._metadata_from_idp", lambda c, t: metadata_str
+    )
+
+
 @pytest.fixture(scope="module", name="signed_authentication_request_response")
 def fixture_signed_authentication_request_response(
     decoded_signed_authentication_request_response: str,
@@ -106,6 +146,12 @@ def fixture_signed_authentication_request_response(
 
 
 class TestInterface:
+    @pytest.fixture(autouse=True)
+    def xmlsec1_binary_path(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Mock that the xmlsec1 binary exists and is in PATH
+        monkeypatch.setattr("saml2.sigver.get_xmlsec_binary", lambda p: "xmlsec1")
+        monkeypatch.setattr("os.path.exists", lambda p: True)
+
     @pytest.fixture(autouse=True)
     def ignore_signature(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(

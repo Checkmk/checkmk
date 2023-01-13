@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 
 import pytest
 
@@ -38,39 +37,29 @@ def test_valuespec_to_config_default_options(
     assert valuespec_to_config(raw_config)
 
 
-def _options_with_custom_signature_certificate(
-    raw_config: DictionaryModel, private_key_path: Path, cert_path: Path
-) -> DictionaryModel:
+def _options_with_custom_signature_certificate(raw_config: DictionaryModel) -> DictionaryModel:
     return {
         **_default_options(raw_config),
         **{
             "signature_certificate": (
                 "custom",
-                (private_key_path.read_text(), cert_path.read_text()),
+                ("/my/super/duper/privatekey.pem", "/my/super/duper/cert.pem"),
             )
         },
     }
 
 
-def test_signature_option_is_valid_valuespec_option(
-    raw_config: DictionaryModel, signature_certificate_paths: tuple[Path, Path]
-) -> None:
+def test_signature_option_is_valid_valuespec_option(raw_config: DictionaryModel) -> None:
     valuespec = saml2_connection_valuespec()
-    private_key_path, cert_path = signature_certificate_paths
 
     valuespec.validate_datatype(
-        _options_with_custom_signature_certificate(raw_config, private_key_path, cert_path),
+        _options_with_custom_signature_certificate(raw_config),
         "_not_relevant",
     )
 
 
 def test_valuespec_to_config_signature_certificate_option(
-    monkeypatch: pytest.MonkeyPatch,
-    raw_config: DictionaryModel,
-    signature_certificate_paths: tuple[Path, Path],
+    monkeypatch: pytest.MonkeyPatch, raw_config: DictionaryModel
 ) -> None:
-    private_key_path, cert_path = signature_certificate_paths
 
-    assert valuespec_to_config(
-        _options_with_custom_signature_certificate(raw_config, private_key_path, cert_path)
-    )
+    assert valuespec_to_config(_options_with_custom_signature_certificate(raw_config))

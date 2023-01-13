@@ -31,7 +31,7 @@ pub enum Mode {
     ///
     /// Register with a Checkmk instance for monitoring. A new host will be created
     /// in the target Checkmk instance. This mode is only available if the target
-    /// is an Enterprise Plus edition.
+    /// is a Cloud edition.
     RegisterNew(RegisterNewOpts),
 
     /// Register with a Checkmk site on behalf of another host

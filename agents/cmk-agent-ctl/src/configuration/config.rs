@@ -267,7 +267,7 @@ impl Registry {
             connections: RegisteredConnections::default(),
             path: PathBuf::from(path),
             last_reload: None,
-            legacy_pull_marker: LegacyPullMarker::new(&Self::path_legacy_pull_marker(path)?),
+            legacy_pull_marker: LegacyPullMarker::new(Self::path_legacy_pull_marker(path)?),
         })
     }
 
@@ -276,7 +276,7 @@ impl Registry {
             connections: RegisteredConnections::load_missing_safe(path)?,
             path: PathBuf::from(path),
             last_reload: mtime(path)?,
-            legacy_pull_marker: LegacyPullMarker::new(&Self::path_legacy_pull_marker(path)?),
+            legacy_pull_marker: LegacyPullMarker::new(Self::path_legacy_pull_marker(path)?),
         })
     }
 
@@ -314,10 +314,7 @@ impl Registry {
     }
 
     pub fn save(&self) -> io::Result<()> {
-        fs::write(
-            &self.path,
-            &serde_json::to_string_pretty(&self.connections)?,
-        )?;
+        fs::write(&self.path, serde_json::to_string_pretty(&self.connections)?)?;
         #[cfg(unix)]
         fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))?;
         self.legacy_pull_marker.remove()

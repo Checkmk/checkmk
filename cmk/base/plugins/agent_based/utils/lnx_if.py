@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Sequence, Tuple, Union
+from collections.abc import Mapping, Sequence
 
 from cmk.base.plugins.agent_based.utils.interfaces import InterfaceWithCounters
 from cmk.base.plugins.agent_based.utils.interfaces import Section as InterfaceSection
 
-SectionInventory = Dict[str, Dict[str, Union[str, Sequence[str]]]]
-Section = Tuple[InterfaceSection[InterfaceWithCounters], SectionInventory]
+SectionInventory = Mapping[str, Mapping[str, str | Sequence[str]]]
+Section = tuple[InterfaceSection[InterfaceWithCounters], SectionInventory]

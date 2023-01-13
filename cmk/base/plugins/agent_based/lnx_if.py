@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, MutableMapping, MutableSequence, Sequence
 from dataclasses import dataclass, field, replace
-from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence
+from typing import Any, Literal, Mapping, Optional
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
@@ -68,12 +69,12 @@ class EthtoolInterface:
 class IPLinkInterface:
     state_infos: Sequence[str]
     link_ether: str = ""
-    inet: list[str] = field(default_factory=list)
-    inet6: list[str] = field(default_factory=list)
+    inet: MutableSequence[str] = field(default_factory=list)
+    inet6: MutableSequence[str] = field(default_factory=list)
 
 
 EthtoolSection = Mapping[str, EthtoolInterface]
-SectionInventory = dict[str, IPLinkInterface]
+SectionInventory = MutableMapping[str, IPLinkInterface]
 Section = tuple[Sequence[InterfaceWithCounters], SectionInventory]
 
 
@@ -116,8 +117,8 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
 def _parse_lnx_if_sections(
     string_table: type_defs.StringTable,
 ) -> tuple[SectionInventory, EthtoolSection]:
-    ip_stats = {}
-    ethtool_stats: Dict[str, EthtoolInterface] = {}
+    ip_stats: dict[str, IPLinkInterface] = {}
+    ethtool_stats: dict[str, EthtoolInterface] = {}
     iface = None
     lines = iter(string_table)
     ethtool_index = 0

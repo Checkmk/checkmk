@@ -12,7 +12,7 @@ from enum import Enum
 from itertools import zip_longest
 from pathlib import Path
 from shutil import which
-from typing import Any
+from typing import Final
 
 import lxml.html
 import pytest
@@ -28,7 +28,7 @@ from saml2.xmldsig import SIG_RSA_SHA1
 from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.userdb.saml2.config import valuespec_to_config
+from cmk.gui.userdb.saml2.config import Certificate, InterfaceConfig, UserAttributeNames
 from cmk.gui.userdb.saml2.interface import (
     AuthenticatedUser,
     HTMLFormString,
@@ -43,30 +43,60 @@ class SAMLParamName(Enum):
     RELAY_STATE = "RelayState"
 
 
-def _encode(string: str) -> str:
-    return base64.b64encode(string.encode("utf-8")).decode("utf-8")
+def signature_certificate_paths() -> Certificate:
+    # Certificates are generated with 1024 bit for performance reasons. Command:
+    # openssl req -x509 -newkey rsa:1024 -days +3650 -subj \
+    # "/CN=saml2-test-sign/O=checkmk-testing/C=DE" -keyout signature_private.pem -out \
+    # signature_public.pem -sha256 -nodes
+    cert_dir = Path(__file__).parent / "certificate_files"
+    return Certificate(
+        private=Path(cert_dir / "signature_private.pem"),
+        public=Path(cert_dir / "signature_public.pem"),
+    )
 
 
-def _decode(string: str) -> str:
-    return base64.b64decode(string).decode("utf-8")
-
-
-def _reduce_xml_template_whitespace(template: str) -> str:
-    # This is to simplify comparison by adjusting the format to the one the pysaml2 client
-    # generates
-    return " ".join(template.split()).replace("> <", "><")
-
-
-def _reconstruct_original_response_format(response: str) -> str:
+def _reconstruct_original_response_format(response: bytes) -> bytes:
     # The format must be exact for the digest to match the data.
+    response = b" ".join(response.split()).replace(b"> <", b"><")
     for string, replacement in {
-        "<ds:SignedInfo": "\n  <ds:SignedInfo",
-        "<ds:SignatureMethod": "\n    <ds:SignatureMethod",
-        "<ds:Reference": "\n  <ds:Reference",
-        "<ds:KeyInfo": "\n<ds:KeyInfo",
+        b"<ds:SignedInfo": b"\n  <ds:SignedInfo",
+        b"<ds:SignatureMethod": b"\n    <ds:SignatureMethod",
+        b"<ds:Reference": b"\n  <ds:Reference",
+        b"<ds:KeyInfo": b"\n<ds:KeyInfo",
     }.items():
         response = response.replace(string, replacement)
     return response
+
+
+_SIGNATURE_CERTIFICATE_PATHS: Final = signature_certificate_paths()
+_XML_FILES_PATH: Final = Path(__file__).parent / "xml_files"
+_IDENTITY_PROVIDER_METADATA: Final = Path(
+    _XML_FILES_PATH / "identity_provider_metadata.xml"
+).read_text()
+_AUTHENTICATION_REQUEST: Final = Path(_XML_FILES_PATH / "authentication_request.xml").read_text()
+_SIGNED_AUTHENTICATION_REQUEST_RESPONSE: Final = _reconstruct_original_response_format(
+    Path(_XML_FILES_PATH / "signed_authentication_request_response.xml").read_bytes()
+)
+_UNSIGNED_AUTHENTICATION_REQUEST_RESPONSE: Final = Path(
+    _XML_FILES_PATH / "unsigned_authentication_request_response.xml"
+).read_bytes()
+
+_INTERFACE_CONFIG: Final = InterfaceConfig(
+    connection_timeout=(12, 12),
+    idp_metadata_endpoint="http://localhost:8080/simplesaml/saml2/idp/metadata.php",
+    checkmk_server_url="http://localhost",
+    user_attributes=UserAttributeNames(
+        user_id="username",
+        alias=None,
+        email=None,
+        contactgroups=None,
+    ),
+    signature_certificate=_SIGNATURE_CERTIFICATE_PATHS,
+)
+
+
+def _encode(string: bytes) -> str:
+    return base64.b64encode(string).decode("utf-8")
 
 
 def _field_from_html(html_string: HTMLFormString, keyword: SAMLParamName) -> str:
@@ -79,70 +109,12 @@ def _field_from_html(html_string: HTMLFormString, keyword: SAMLParamName) -> str
     if keyword is SAMLParamName.RELAY_STATE:
         return message
 
-    return _decode(message)
-
-
-@pytest.fixture(scope="module", name="authentication_request")
-def fixture_authentication_request(xml_files_path: Path) -> str:
-    return _reduce_xml_template_whitespace(
-        Path(xml_files_path / "authentication_request.xml").read_text()
-    )
-
-
-@pytest.fixture(scope="module", name="decoded_signed_authentication_request_response")
-def fixture_decoded_signed_authentication_request_response(xml_files_path: Path) -> str:
-    return _reconstruct_original_response_format(
-        _reduce_xml_template_whitespace(
-            Path(xml_files_path / "signed_authentication_request_response.xml").read_text()
-        )
-    )
-
-
-@pytest.fixture(scope="session", name="signature_certificate_paths")
-def fixture_signature_certificate_paths() -> tuple[Path, Path]:
-    # Were generated with
-    # openssl req -x509 -newkey rsa:1024 -days +3650 -subj "/CN=saml2-test-sign/O=checkmk-testing/C=DE" -keyout signature_private.pem -out signature_public.pem -sha256 -nodes
-    # 1024 bit is used for performance reasons
-    cert_dir = Path(__file__).parent / "certificate_files"
-    return Path(cert_dir / "signature_private.pem"), Path(cert_dir / "signature_public.pem")
-
-
-@pytest.fixture(autouse=True)
-def patch_signature_certificate_paths(
-    monkeypatch: pytest.MonkeyPatch, signature_certificate_paths: tuple[Path, Path]
-) -> None:
-    private_key_path, cert_path = signature_certificate_paths
-    monkeypatch.setattr(
-        "cmk.gui.userdb.saml2.config.saml2_signature_private_keyfile",
-        private_key_path,
-    )
-    monkeypatch.setattr("cmk.gui.userdb.saml2.config.saml2_signature_public_keyfile", cert_path)
+    return base64.b64decode(message).decode("utf-8")
 
 
 @pytest.fixture(autouse=True)
 def url_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("cmk.gui.userdb.saml2.interface.url_prefix", lambda: "/heute/")
-
-
-@pytest.fixture(name="xml_files_path", scope="session")
-def fixture_xml_files_path() -> Path:
-    return Path(__file__).parent / "xml_files"
-
-
-@pytest.fixture(name="metadata_from_idp")
-def fixture_metadata_from_idp(monkeypatch: pytest.MonkeyPatch, xml_files_path: Path) -> None:
-    with open(xml_files_path / "identity_provider_metadata.xml", "r") as f:
-        metadata_str = f.read()
-    monkeypatch.setattr(
-        "cmk.gui.userdb.saml2.interface._metadata_from_idp", lambda c, t: metadata_str
-    )
-
-
-@pytest.fixture(scope="module", name="signed_authentication_request_response")
-def fixture_signed_authentication_request_response(
-    decoded_signed_authentication_request_response: str,
-) -> str:
-    return _encode(decoded_signed_authentication_request_response)
 
 
 class TestInterface:
@@ -158,7 +130,7 @@ class TestInterface:
             "saml2.sigver.SecurityContext._check_signature", lambda s, d, i, *args, **kwargs: i
         )
 
-    @pytest.fixture(autouse=True)
+    @pytest.fixture
     def initialised_redis(self) -> Iterable[Redis]:
         requests_db = get_redis_client()  # this is already monkeypatched to fakeredis
         requests_db.set(
@@ -168,22 +140,22 @@ class TestInterface:
         yield requests_db
 
     @pytest.fixture
-    def interface(
-        self, metadata_from_idp: None, raw_config: Mapping[str, Any], initialised_redis: Redis
-    ) -> Interface:
-        config = valuespec_to_config(raw_config).interface_config
-        interface = Interface(config=config, requests_db=initialised_redis)
-
+    def interface(self, monkeypatch: pytest.MonkeyPatch, initialised_redis: Redis) -> Interface:
+        # TODO (CMK-11997): this feature will allow me to circumvent this monkeypatched function
+        monkeypatch.setattr(
+            "cmk.gui.userdb.saml2.interface._metadata_from_idp",
+            lambda c, t: _IDENTITY_PROVIDER_METADATA,
+        )
+        interface = Interface(config=_INTERFACE_CONFIG, requests_db=initialised_redis)
         # SHA1 is normally disallowed, but used in the test data for performance reasons
         interface._allowed_algorithms.add(SIG_RSA_SHA1)
         interface._authentication_request_id_expiry = Milliseconds(-1)
-
         client_config = saml_config(
-            timeout=config.connection_timeout,
-            idp_metadata_endpoint=config.idp_metadata_endpoint,
-            checkmk_server_url=config.checkmk_server_url,
-            signature_private_keyfile=config.signature_certificate.private,
-            signature_public_keyfile=config.signature_certificate.public,
+            timeout=_INTERFACE_CONFIG.connection_timeout,
+            idp_metadata_endpoint=_INTERFACE_CONFIG.idp_metadata_endpoint,
+            checkmk_server_url=_INTERFACE_CONFIG.checkmk_server_url,
+            signature_private_keyfile=_INTERFACE_CONFIG.signature_certificate.private,
+            signature_public_keyfile=_INTERFACE_CONFIG.signature_certificate.public,
         )
         # The below suppressions are due to a bug with the typing extensions of the pysaml2
         # dependency. They can be removed once the typing extension package has been upgraded to
@@ -192,18 +164,7 @@ class TestInterface:
         client_config.setattr("sp", "want_assertions_signed", False)  # type: ignore
         client_config.setattr("sp", "want_response_signed", False)  # type: ignore
         interface._client = Saml2Client(client_config)
-
         return interface
-
-    @pytest.fixture
-    def authentication_request_response_not_for_us(
-        self, signed_authentication_request_response: str
-    ) -> str:
-        response = signed_authentication_request_response.replace(
-            "<saml:Audience>http://localhost/heute/check_mk/saml_metadata.py</saml:Audience>",
-            "<saml:Audience>http://some_other_audience.com</saml:Audience>",
-        )
-        return _encode(response)
 
     @pytest.fixture(
         params=[
@@ -216,27 +177,27 @@ class TestInterface:
         ],
     )
     def authentication_request_response_custom_condition(
-        self, signed_authentication_request_response: str, request: pytest.FixtureRequest
+        self, request: pytest.FixtureRequest
     ) -> str:
-        response = signed_authentication_request_response.replace(
-            "</saml:Conditions>",
-            f"{request.param}</saml:Conditions>",
+        response = _SIGNED_AUTHENTICATION_REQUEST_RESPONSE.replace(
+            b"</saml:Conditions>",
+            f"{request.param}</saml:Conditions>".encode("utf-8"),
         )
         return _encode(response)
 
     @pytest.fixture(
         params=[
-            ('InResponseTo="id-Ex1qiCa1tiZj1nBKe"', "", None),
-            ('InResponseTo="id-Ex1qiCa1tiZj1nBKe"', 'InResponseTo=""', None),
-            ('InResponseTo="id-Ex1qiCa1tiZj1nBKe"', 'InResponseTo="id-12345678901234567"', None),
+            (b'InResponseTo="id-Ex1qiCa1tiZj1nBKe"', b"", None),
+            (b'InResponseTo="id-Ex1qiCa1tiZj1nBKe"', b'InResponseTo=""', None),
+            (b'InResponseTo="id-Ex1qiCa1tiZj1nBKe"', b'InResponseTo="id-12345678901234567"', None),
             (
-                'InResponseTo="id-Ex1qiCa1tiZj1nBKe"',
-                'InResponseTo="id-12345678901234567"',
-                "SubjectConfirmationData",
+                b'InResponseTo="id-Ex1qiCa1tiZj1nBKe"',
+                b'InResponseTo="id-12345678901234567"',
+                b"SubjectConfirmationData",
             ),
             (
-                "<saml:Issuer>http://localhost:8080/simplesaml/saml2/idp/metadata.php</saml:Issuer>",
-                "<saml:Issuer>http://hackerman</saml:Issuer>",
+                b"<saml:Issuer>http://localhost:8080/simplesaml/saml2/idp/metadata.php</saml:Issuer>",
+                b"<saml:Issuer>http://hackerman</saml:Issuer>",
                 None,
             ),
         ],
@@ -248,10 +209,8 @@ class TestInterface:
             "Unexpected entity issued response",
         ],
     )
-    def unsolicited_authentication_request_response(
-        self, decoded_signed_authentication_request_response: str, request: pytest.FixtureRequest
-    ) -> str:
-        response = decoded_signed_authentication_request_response.split("\n")
+    def unsolicited_authentication_request_response(self, request: pytest.FixtureRequest) -> str:
+        response = _SIGNED_AUTHENTICATION_REQUEST_RESPONSE.split(b"\n")
 
         original_value, new_value, replacement_criteria = request.param
 
@@ -261,7 +220,7 @@ class TestInterface:
                 line = line.replace(original_value, new_value)
             modified_response.append(line)
 
-        return _encode("\n".join(modified_response))
+        return _encode(b"\n".join(modified_response))
 
     def test_interface_properties(self, interface: Interface) -> None:
         assert interface.acs_endpoint == "http://localhost/heute/check_mk/saml_acs.py?acs"
@@ -272,10 +231,8 @@ class TestInterface:
             == "http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
         )
 
-    def test_metadata(self, interface: Interface, xml_files_path: Path) -> None:
-        metadata = _reduce_xml_template_whitespace(
-            Path(xml_files_path / "checkmk_service_provider_metadata.xml").read_text()
-        )
+    def test_metadata(self, interface: Interface) -> None:
+        metadata = Path(_XML_FILES_PATH / "checkmk_service_provider_metadata.xml").read_text()
 
         assert list((e.tag for e in ET.fromstring(interface.metadata).iter())) == list(
             (e.tag for e in ET.fromstring(metadata).iter())
@@ -289,9 +246,7 @@ class TestInterface:
 
         assert relay_state == "index.py"
 
-    def test_authentication_request_is_valid(
-        self, interface: Interface, authentication_request: str
-    ) -> None:
+    def test_authentication_request_is_valid(self, interface: Interface) -> None:
         dynamic_elements = {
             "ID": re.compile("id-[a-zA-Z0-9]{17}"),
             "IssueInstant": re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"),
@@ -304,7 +259,7 @@ class TestInterface:
 
         for actual_element, expected_element in zip_longest(
             sorted(ET.fromstring(request).items()),
-            sorted(ET.fromstring(authentication_request).items()),
+            sorted(ET.fromstring(_AUTHENTICATION_REQUEST).items()),
         ):
             if regex_to_match := dynamic_elements.get(actual_element[0]):
                 assert re.match(regex_to_match, actual_element[1])
@@ -312,50 +267,46 @@ class TestInterface:
                 assert actual_element == expected_element
 
     @freeze_time("2022-12-28T11:06:05Z")
-    def test_parse_successful_authentication_request_response(
-        self, interface: Interface, signed_authentication_request_response: str
-    ) -> None:
+    def test_parse_successful_authentication_request_response(self, interface: Interface) -> None:
         parsed_response = interface.parse_authentication_request_response(
-            signed_authentication_request_response
+            _encode(_SIGNED_AUTHENTICATION_REQUEST_RESPONSE)
         )
         assert isinstance(parsed_response, AuthenticatedUser)
         assert parsed_response.user_id == UserId("user1")
 
     @freeze_time("2022-12-28T11:11:36Z")
-    def test_parse_authentication_request_response_too_old(
-        self, interface: Interface, signed_authentication_request_response: str
-    ) -> None:
+    def test_parse_authentication_request_response_too_old(self, interface: Interface) -> None:
         with pytest.raises(ResponseLifetimeExceed):
-            interface.parse_authentication_request_response(signed_authentication_request_response)
+            interface.parse_authentication_request_response(
+                _encode(_SIGNED_AUTHENTICATION_REQUEST_RESPONSE)
+            )
 
     @freeze_time("2022-12-28T11:06:04Z")
-    def test_parse_authentication_request_response_too_young(
-        self,
-        interface: Interface,
-        signed_authentication_request_response: str,
-        ignore_signature: None,
-    ) -> None:
+    def test_parse_authentication_request_response_too_young(self, interface: Interface) -> None:
         with pytest.raises(ToEarly):
-            interface.parse_authentication_request_response(signed_authentication_request_response)
+            interface.parse_authentication_request_response(
+                _encode(_SIGNED_AUTHENTICATION_REQUEST_RESPONSE)
+            )
 
     def test_parse_garbage_xml_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(Exception):
-            interface.parse_authentication_request_response(_encode("<aardvark></aardvark>"))
+            interface.parse_authentication_request_response(_encode(b"<aardvark></aardvark>"))
 
     def test_parse_garbage_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(ET.ParseError):
-            interface.parse_authentication_request_response(_encode("aardvark"))
+            interface.parse_authentication_request_response(_encode(b"aardvark"))
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_parse_authentication_request_response_is_not_for_us(
-        self,
-        interface: Interface,
-        authentication_request_response_not_for_us: str,
+        self, interface: Interface
     ) -> None:
+        response = _SIGNED_AUTHENTICATION_REQUEST_RESPONSE.replace(
+            b"<saml:Audience>http://localhost/heute/check_mk/saml_metadata.py</saml:Audience>",
+            b"<saml:Audience>http://some_other_audience.com</saml:Audience>",
+        )
+
         with pytest.raises(Exception):
-            interface.parse_authentication_request_response(
-                authentication_request_response_not_for_us
-            )
+            interface.parse_authentication_request_response(_encode(response))
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_parse_authentication_request_response_custom_condition(
@@ -394,25 +345,20 @@ class TestInterface:
 @pytest.mark.skipif(not which("xmlsec1"), reason="Needs xmlsec1 to run")
 class TestInterfaceSecurityFeatures:
     @pytest.fixture(scope="class", name="signature_certificate")
-    def fixture_signature_certificate(
-        self, signature_certificate_paths: tuple[Path, Path]
-    ) -> Iterable[Mapping[str, str]]:
-        private_keyfile_path, public_keyfile_path = signature_certificate_paths
-
-        private_key_content = private_keyfile_path.read_bytes()
-        public_key_content = public_keyfile_path.read_text()
-
+    def fixture_signature_certificate(self) -> Iterable[Mapping[str, str]]:
+        private_key_content = _SIGNATURE_CERTIFICATE_PATHS.private.read_bytes()
+        public_key_content = _SIGNATURE_CERTIFICATE_PATHS.public.read_text()
         # The following awkwardness is done for performance reasons to patch a few slow spots with the
         # pysaml2 client. Note:
-
         # - 'load_pem_private_key' takes ages (!)
         # - the public key is somehow expected without a header by subsequent functions within the
         #   pysaml2 module
         in_memory_variant = {
-            str(private_keyfile_path): load_pem_private_key(private_key_content),
-            str(public_keyfile_path): "".join(public_key_content.splitlines()[1:-1]),
+            str(_SIGNATURE_CERTIFICATE_PATHS.private): load_pem_private_key(private_key_content),
+            str(_SIGNATURE_CERTIFICATE_PATHS.public): "".join(
+                public_key_content.splitlines()[1:-1]
+            ),
         }
-
         yield in_memory_variant
 
     @pytest.fixture(autouse=True)
@@ -444,27 +390,13 @@ class TestInterfaceSecurityFeatures:
         yield requests_db
 
     @pytest.fixture
-    def interface(
-        self, metadata_from_idp: None, raw_config: Mapping[str, Any], initialised_redis: Redis
-    ) -> Interface:
-        return Interface(
-            config=valuespec_to_config(raw_config).interface_config, requests_db=initialised_redis
+    def interface(self, monkeypatch: pytest.MonkeyPatch, initialised_redis: Redis) -> Interface:
+        # TODO (CMK-11997): this feature will allow me to circumvent this monkeypatched function
+        monkeypatch.setattr(
+            "cmk.gui.userdb.saml2.interface._metadata_from_idp",
+            lambda c, t: _IDENTITY_PROVIDER_METADATA,
         )
-
-    @pytest.fixture
-    def unsigned_authentication_request_response(self, xml_files_path: Path) -> str:
-        return _encode(
-            Path(xml_files_path / "unsigned_authentication_request_response.xml").read_text()
-        )
-
-    @pytest.fixture
-    def malicious_authentication_request_response(
-        self, decoded_signed_authentication_request_response: str
-    ) -> str:
-        malicious_response = decoded_signed_authentication_request_response.replace(
-            "user1", "mwahahaha"
-        )
-        return _encode(malicious_response)
+        return Interface(config=_INTERFACE_CONFIG, requests_db=initialised_redis)
 
     def test_interface_properties_are_secure(self, interface: Interface) -> None:
         assert interface._client.authn_requests_signed is True
@@ -472,9 +404,7 @@ class TestInterfaceSecurityFeatures:
         assert interface._client.want_assertions_signed is True
 
     @freeze_time("2022-12-28T11:06:05Z")
-    def test_authentication_request_is_signed(
-        self, interface: Interface, initialised_redis: Redis
-    ) -> None:
+    def test_authentication_request_is_signed(self, interface: Interface) -> None:
         request = ET.fromstring(
             _field_from_html(
                 html_string=interface.authentication_request(relay_state="_").data,
@@ -495,38 +425,31 @@ class TestInterfaceSecurityFeatures:
         assert signature_elements["X509Certificate"]
 
     @freeze_time("2022-12-28T11:06:05Z")
-    def test_parse_signed_authentication_request_response(
-        self,
-        interface: Interface,
-        signed_authentication_request_response: str,
-        initialised_redis: Redis,
-    ) -> None:
+    def test_parse_signed_authentication_request_response(self, interface: Interface) -> None:
         # SHA1 is normally disallowed, but used in the test data for performance reasons
         interface._allowed_algorithms.add(SIG_RSA_SHA1)
         parsed_response = interface.parse_authentication_request_response(
-            signed_authentication_request_response
+            _encode(_SIGNED_AUTHENTICATION_REQUEST_RESPONSE)
         )
         assert isinstance(parsed_response, AuthenticatedUser)
 
-    def test_reject_unsigned_authentication_request_response(
-        self, interface: Interface, unsigned_authentication_request_response: str
-    ) -> None:
+    def test_reject_unsigned_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(SignatureError):
             interface.parse_authentication_request_response(
-                unsigned_authentication_request_response
+                _encode(_UNSIGNED_AUTHENTICATION_REQUEST_RESPONSE)
             )
 
-    def test_reject_malicious_authentication_request_response(
-        self, interface: Interface, malicious_authentication_request_response: str
-    ) -> None:
+    def test_reject_malicious_authentication_request_response(self, interface: Interface) -> None:
+        malicious_response = _SIGNED_AUTHENTICATION_REQUEST_RESPONSE.replace(b"user1", b"mwahahaha")
+
         with pytest.raises(SignatureError):
-            interface.parse_authentication_request_response(
-                malicious_authentication_request_response
-            )
+            interface.parse_authentication_request_response(_encode(malicious_response))
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_rejected_authentication_response_if_signed_with_disallowed_algorithm(
-        self, interface: Interface, signed_authentication_request_response: str
+        self, interface: Interface
     ) -> None:
         with pytest.raises(AttributeError, match="Insecure algorithm"):
-            interface.parse_authentication_request_response(signed_authentication_request_response)
+            interface.parse_authentication_request_response(
+                _encode(_SIGNED_AUTHENTICATION_REQUEST_RESPONSE)
+            )

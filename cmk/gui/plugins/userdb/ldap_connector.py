@@ -696,6 +696,14 @@ class LDAPUserConnector(UserConnector):
         return replace_macros_in_str(tmpl, {'$OMD_SITE$': config.omd_site() or ''})
 
     def _sanitize_user_id(self, user_id):
+        def is_forbidden(c):
+            # ASCII control chars, space, '\', '/' and 'DEL'
+            return ord(c) <= 32 or c in "\\/\x7f"
+
+        if any(map(is_forbidden, user_id)) or user_id in [".", ".."]:
+            # encode to make control chars apparent in error message
+            raise MKLDAPException(f"Invalid user ID {user_id!r}")
+
         if self._config.get('lower_user_ids', False):
             user_id = user_id.lower()
 

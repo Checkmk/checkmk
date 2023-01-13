@@ -1,0 +1,47 @@
+Title: Improper validation of LDAP user IDs
+Class: security
+Compatible: compat
+Component: wato
+Date: 1673451587
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p33
+
+Prior to this Werk user IDs synced from an LDAP connection were not properly sanitized.
+The allowed characters for LDAP users user IDs were not restricted in the same way as local user IDs.
+
+As a result, malicious actors <b>with the ability to change an LDAP user's <tt>uid</tt> attribute</b> were able to, within limits, manipulate files on the server.
+For instance, attackers were able to override files in other users' <tt>var/check_mk/web</tt> folder, including the deletion of their stored two-factor credentials (thus disabling 2FA for the affected user).
+Additionally, attackers could also lock users out of their accounts by creating a 2FA-credentials file in the affected user's web folder.
+
+However, it should be noted that to the best of our knowledge, attackers could not have impersonated other users or taken over their accounts directly.
+
+This issue was discovered during internal review.
+
+<b>Affected Versions</b>:
+
+LI: 2.1.0 previous to this Werk
+LI: 2.0.0 previous to this Werk
+LI: 1.6.0 (EOL)
+
+<b>Mitigations</b>:
+
+Disable LDAP user synchronization.
+
+<b>Indicators of Compromise</b>:
+
+Inspect the list of users in WATO user management (Setup > Users) for suspicious user IDs from an LDAP connection.
+
+<b>Vulnerability Management</b>:
+
+We have rated the issue with a CVSS Score of 6.8 (Medium) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H</tt>.
+
+We have assigned the CVE <tt>CVE-2023-0284</tt>
+
+<b>Changes</b>:
+
+This Werk adds sanitization to LDAP user IDs.
+We do not anticipate any negative impact on legitimate user IDs as the now-forbidden user IDs could not have been used in a functional way.

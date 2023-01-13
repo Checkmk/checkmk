@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Collection, Iterator
+from pathlib import Path
+
+from cmk.utils.paths import (
+    saml2_custom_signature_private_keyfile,
+    saml2_custom_signature_public_keyfile,
+)
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -26,6 +32,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.plugins.wato.utils import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.userdb.saml2.config import CertificateType, determine_certificate_type
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -337,6 +344,9 @@ class ModeEditSAML2Config(WatoMode):
         else:
             render_values = self._from_config_file(connection_id=request.get_ascii_input("id"))
 
+        if signature_certificate := render_values.get("signature_certificate"):
+            render_values["signature_certificate"] = _read_certificate_files(signature_certificate)
+
         self._valuespec.render_input_as_form(self._html_valuespec_param_prefix, render_values)
 
         forms.end()
@@ -370,6 +380,11 @@ class ModeEditSAML2Config(WatoMode):
         user_input = self._valuespec.from_html_vars(self._html_valuespec_param_prefix)
         self._validate_user_input(user_input)
 
+        # The pysaml2 client needs these in separate files.
+        user_input["signature_certificate"] = _write_certificate_files(
+            user_input["signature_certificate"]
+        )
+
         connections = load_connection_config(lock=True)
         updated_connections = [c for c in connections if c["id"] != user_input["id"]]
         updated_connections.append(user_input)
@@ -382,6 +397,44 @@ class ModeEditSAML2Config(WatoMode):
                 return connection
 
         raise MKUserError(None, _("The requested connection does not exist."))
+
+
+def _write_certificate_files(
+    certificate: str | tuple[str, tuple[str, str]]
+) -> str | tuple[str, tuple[str, str]]:
+    type_ = determine_certificate_type(certificate)
+    if type_ is CertificateType.BUILTIN:
+        return type_.value
+
+    assert isinstance(certificate, tuple)
+
+    _, (private_key, cert) = certificate
+    saml2_custom_signature_private_keyfile.write_text(private_key)
+    saml2_custom_signature_public_keyfile.write_text(cert)
+
+    return type_.value, (
+        str(saml2_custom_signature_private_keyfile),
+        str(saml2_custom_signature_public_keyfile),
+    )
+
+
+def _read_certificate_files(
+    certificate: str | tuple[str, tuple[str, str]]
+) -> str | tuple[str, tuple[str, str]]:
+    type_ = determine_certificate_type(certificate)
+    if type_ is CertificateType.BUILTIN:
+        return type_.value
+
+    assert isinstance(certificate, tuple)
+    _, (private_key_str, cert_str) = certificate
+
+    private_key = Path(private_key_str)
+    cert = Path(cert_str)
+
+    if not private_key.exists() or not cert.exists():
+        return type_.value, ("", "")
+
+    return type_.value, (private_key.read_text(), cert.read_text())
 
 
 def register(

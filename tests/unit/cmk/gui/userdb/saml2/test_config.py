@@ -69,7 +69,6 @@ def test_valuespec_to_config_signature_certificate_option(
     raw_config: DictionaryModel,
     signature_certificate_paths: tuple[Path, Path],
 ) -> None:
-    monkeypatch.setattr("pathlib.Path.write_text", lambda s, t: None)
     private_key_path, cert_path = signature_certificate_paths
 
     assert valuespec_to_config(

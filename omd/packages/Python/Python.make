@@ -4,7 +4,9 @@ include $(REPO_PATH)/defines.make
 PYTHON := Python
 PYTHON_DIR := Python-$(PYTHON_VERSION)
 
-PYTHON_DEPS := $(REPO_PATH)/omd/packages/Python/Python.make
+PYTHON_DEPS := \
+    $(REPO_PATH)/omd/packages/Python/Python.make \
+    $(REPO_PATH)/omd/packages/Python/sitecustomize.py
 
 # Increase the number before the "-" to enforce a recreation of the build cache
 PYTHON_BUILD_ID := $(call cache_pkg_build_id,2,$(PYTHON_DEPS))

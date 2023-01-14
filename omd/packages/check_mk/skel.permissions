@@ -14,4 +14,8 @@ etc/check_mk/multisite.d/wato 0770
 etc/auth.secret 0660
 etc/init.d/mkeventd 0770
 etc/init.d/agent-receiver 0770
+etc/ssl/saml2 0700
+etc/ssl/saml2/builtin 0700
+etc/ssl/saml2/custom 0700
+etc/ssl/saml2/builtin/signature 0700
 tmp/run 0751

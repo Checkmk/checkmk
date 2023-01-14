@@ -9,10 +9,7 @@ from typing import TypeVar
 
 from saml2.config import SPConfig
 
-from cmk.utils.paths import (
-    saml2_custom_signature_private_keyfile,
-    saml2_custom_signature_public_keyfile,
-)
+from cmk.utils.paths import saml2_custom_cert_dir
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -39,10 +36,10 @@ from cmk.gui.plugins.wato.utils import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb.saml2.config import (
-    CertificateType,
     checkmk_server_url,
     checkmk_service_provider_metadata,
-    determine_certificate_type,
+    read_certificate_files,
+    write_certificate_files,
 )
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -424,7 +421,17 @@ class ModeSAML2Config(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        return connection_actions(config_mode_url=self.mode_url(), connection_type=self.type)
+        custom_config_dirs = []
+        if (index := request.get_integer_input("_delete")) is not None:
+            custom_config_dirs.append(
+                saml2_custom_cert_dir / load_connection_config(lock=False)[index]["id"]
+            )
+
+        return connection_actions(
+            config_mode_url=self.mode_url(),
+            connection_type=self.type,
+            custom_config_dirs=custom_config_dirs,
+        )
 
     def page(self) -> None:
         render_connections_page(
@@ -502,7 +509,7 @@ class ModeEditSAML2Config(WatoMode):
             render_values = self._from_config_file(connection_id=request.get_ascii_input("id"))
 
         if signature_certificate := render_values.get("signature_certificate"):
-            render_values["signature_certificate"] = _read_certificate_files(signature_certificate)
+            render_values["signature_certificate"] = read_certificate_files(signature_certificate)
 
         self._valuespec.render_input_as_form(self._html_valuespec_param_prefix, render_values)
 
@@ -537,9 +544,11 @@ class ModeEditSAML2Config(WatoMode):
         user_input = self._valuespec.from_html_vars(self._html_valuespec_param_prefix)
         self._validate_user_input(user_input)
 
+        connection_id = user_input["id"]
+
         # The pysaml2 client needs these in separate files.
-        user_input["signature_certificate"] = _write_certificate_files(
-            user_input["signature_certificate"]
+        user_input["signature_certificate"] = write_certificate_files(
+            user_input["signature_certificate"], connection_id
         )
 
         connection_id = user_input["id"]
@@ -567,44 +576,6 @@ class ModeEditSAML2Config(WatoMode):
                 return connection
 
         raise MKUserError(None, _("The requested connection does not exist."))
-
-
-def _write_certificate_files(
-    certificate: str | tuple[str, tuple[str, str]]
-) -> str | tuple[str, tuple[str, str]]:
-    type_ = determine_certificate_type(certificate)
-    if type_ is CertificateType.BUILTIN:
-        return type_.value
-
-    assert isinstance(certificate, tuple)
-
-    _, (private_key, cert) = certificate
-    saml2_custom_signature_private_keyfile.write_text(private_key)
-    saml2_custom_signature_public_keyfile.write_text(cert)
-
-    return type_.value, (
-        str(saml2_custom_signature_private_keyfile),
-        str(saml2_custom_signature_public_keyfile),
-    )
-
-
-def _read_certificate_files(
-    certificate: str | tuple[str, tuple[str, str]]
-) -> str | tuple[str, tuple[str, str]]:
-    type_ = determine_certificate_type(certificate)
-    if type_ is CertificateType.BUILTIN:
-        return type_.value
-
-    assert isinstance(certificate, tuple)
-    _, (private_key_str, cert_str) = certificate
-
-    private_key = Path(private_key_str)
-    cert = Path(cert_str)
-
-    if not private_key.exists() or not cert.exists():
-        return type_.value, ("", "")
-
-    return type_.value, (private_key.read_text(), cert.read_text())
 
 
 def register(

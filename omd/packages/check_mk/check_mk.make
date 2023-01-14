@@ -283,7 +283,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	# config file for the pysaml2 client
 	# TODO (CMK-12043): should become an enterprise feature
-	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/share/saml2/attribute_mappings
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/saml2/attribute_mappings
 	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/saml2/attribute_mappings/checkmk_saml2_attribute_mappings.py $(CHECK_MK_INSTALL_DIR)/share/saml2/attribute_mappings/
 	$(TOUCH) $@
 

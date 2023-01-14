@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+import shutil
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, NewType
@@ -24,7 +25,9 @@ from saml2.xmldsig import (
 from livestatus import SiteId
 
 from cmk.utils.paths import (
+    omd_root,
     saml2_attribute_mappings_dir,
+    saml2_custom_cert_dir,
     saml2_signature_private_keyfile,
     saml2_signature_public_keyfile,
 )
@@ -139,7 +142,12 @@ def _determine_certificate_paths(certificate: str | tuple[str, tuple[str, str]])
         )
     assert isinstance(certificate, tuple)
     _, (private_key, cert) = certificate
-    return Certificate(private=Path(private_key), public=Path(cert))
+    return Certificate(
+        # Needs to be put together here because OMD_ROOT will be different for each site in a
+        # distributed monitoring set-up
+        private=omd_root / private_key,
+        public=omd_root / cert,
+    )
 
 
 def _role_attribute_name(
@@ -278,3 +286,63 @@ def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
         identity_provider=f"{name} ({connection_id})",
         interface_config=interface_config,
     )
+
+
+def _remove_custom_files(cert_dir: Path) -> None:
+    if not cert_dir.exists():
+        return
+    shutil.rmtree(cert_dir)
+
+
+def write_certificate_files(
+    certificate: str | tuple[str, tuple[str, str]], connection_id: str
+) -> str | tuple[str, tuple[str, str]]:
+    type_ = determine_certificate_type(certificate)
+
+    cert_dir = saml2_custom_cert_dir / connection_id / "signature"
+
+    if type_ is CertificateType.BUILTIN:
+        # If the user switches from using custom certificates to builtin certificates, the custom
+        # ones should be deleted
+        _remove_custom_files(cert_dir)
+        return type_.value
+
+    assert isinstance(certificate, tuple)
+
+    _, (private_key, cert) = certificate
+    cert_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+
+    private_keyfile = cert_dir / "private.pem"
+    cert_file = cert_dir / "public.pem"
+
+    private_keyfile.touch(mode=0o600)
+    private_keyfile.write_text(private_key)
+
+    cert_file.touch(mode=0o600)
+    cert_file.write_text(cert)
+
+    # Needs to be the relative path because OMD_ROOT will be different for each site in a
+    # distributed monitoring set-up
+    return type_.value, (
+        str(private_keyfile.relative_to(omd_root)),
+        str(cert_file.relative_to(omd_root)),
+    )
+
+
+def read_certificate_files(
+    certificate: str | tuple[str, tuple[str, str]]
+) -> str | tuple[str, tuple[str, str]]:
+    type_ = determine_certificate_type(certificate)
+    if type_ is CertificateType.BUILTIN:
+        return type_.value
+
+    assert isinstance(certificate, tuple)
+    _, (private_keyfile_rel_path, cert_file_rel_path) = certificate
+
+    private_key = omd_root / private_keyfile_rel_path
+    cert = omd_root / cert_file_rel_path
+
+    if not private_key.exists() or not cert.exists():
+        return type_.value, ("", "")
+
+    return type_.value, (private_key.read_text(), cert.read_text())

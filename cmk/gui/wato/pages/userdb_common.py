@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import shutil
 from collections.abc import Iterable
+from pathlib import Path
 
 from livestatus import SiteId
 
@@ -165,16 +167,30 @@ def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
     return get_login_sites()
 
 
-def _delete_connection(index: int, connection_type: str) -> None:
+def _delete_connection(
+    index: int, connection_type: str, *, custom_config_dirs: Iterable[Path]
+) -> None:
     connections = load_connection_config(lock=True)
     connection = connections[index]
+    connection_id = connection["id"]
     add_change(
         f"delete-{connection_type}-connection",
-        _("Deleted connection %s") % (connection["id"]),
+        _("Deleted connection %s") % (connection_id),
         get_affected_sites(connection),
     )
+
+    for dir_ in custom_config_dirs:
+        # Any custom config files the user may have uploaded, such as custom certificates
+        _remove_custom_files(dir_)
+
     del connections[index]
     save_connection_config(connections)
+
+
+def _remove_custom_files(cert_dir: Path) -> None:
+    if not cert_dir.exists():
+        return
+    shutil.rmtree(cert_dir)
 
 
 def _move_connection(from_index: int, to_index: int, connection_type: str) -> None:
@@ -190,7 +206,9 @@ def _move_connection(from_index: int, to_index: int, connection_type: str) -> No
     save_connection_config(connections)
 
 
-def connection_actions(config_mode_url: str, connection_type: str) -> ActionResult:
+def connection_actions(
+    config_mode_url: str, connection_type: str, *, custom_config_dirs: Iterable[Path]
+) -> ActionResult:
     if not transactions.check_transaction():
         return redirect(config_mode_url)
 
@@ -198,6 +216,7 @@ def connection_actions(config_mode_url: str, connection_type: str) -> ActionResu
         _delete_connection(
             index=request.get_integer_input_mandatory("_delete"),
             connection_type=connection_type,
+            custom_config_dirs=custom_config_dirs,
         )
 
     elif request.has_var("_move"):

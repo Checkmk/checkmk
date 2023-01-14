@@ -712,7 +712,9 @@ class ModeLDAPConfig(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        return connection_actions(config_mode_url=self.mode_url(), connection_type=self.type)
+        return connection_actions(
+            config_mode_url=self.mode_url(), connection_type=self.type, custom_config_dirs=()
+        )
 
     def page(self) -> None:
         render_connections_page(

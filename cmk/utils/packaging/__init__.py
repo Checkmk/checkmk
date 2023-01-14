@@ -19,7 +19,6 @@ from pydantic import BaseModel
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
@@ -85,7 +84,7 @@ def release(pacname: PackageName, logger: logging.Logger) -> None:
         if not (filenames := manifest.files.get(part, [])):
             continue
 
-        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
+        logger.log(VERBOSE, "  Part '%s':", part.ident)
         for f in filenames:
             logger.log(VERBOSE, "    %s", f)
         if part is PackagePart.EC_RULE_PACKS:
@@ -139,24 +138,31 @@ def create_mkp_object(manifest: Manifest) -> bytes:
             if not (filenames := manifest.files.get(part, [])):
                 continue
 
-            g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
-            for f in filenames:
-                g_logger.log(VERBOSE, "    %s", f)
-            subdata = subprocess.check_output(
-                [
-                    "tar",
-                    "cf",
-                    "-",
-                    "--dereference",
-                    "--force-local",
-                    "-C",
-                    str(part.path),
-                    *(str(f) for f in filenames),
-                ]
-            )
-            add_file(part.ident + ".tar", subdata)
+            subtar = _pack_subtar(part.ident, part.path, filenames, g_logger)
+            add_file(*subtar)
 
     return buffer.getvalue()
+
+
+def _pack_subtar(
+    name: str, src: Path, filenames: Iterable[Path], logger: logging.Logger
+) -> tuple[str, bytes]:
+    tarname = f"{name}.tar"
+    logger.debug("  Packing '%s':", tarname)
+    for f in filenames:
+        logger.debug("    %s", f)
+    return tarname, subprocess.check_output(
+        [
+            "tar",
+            "cf",
+            "-",
+            "--dereference",
+            "--force-local",
+            "-C",
+            str(src),
+            *(str(f) for f in filenames),
+        ]
+    )
 
 
 def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> None:
@@ -164,7 +170,7 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
         if not (filenames := manifest.files.get(part, [])):
             continue
 
-        g_logger.log(VERBOSE, "  %s%s%s", tty.bold, part.ui_title, tty.normal)
+        g_logger.log(VERBOSE, "  Part '%s':", part.ident)
         if part is PackagePart.EC_RULE_PACKS:
             _remove_packaged_rule_packs(filenames)
             continue
@@ -412,21 +418,22 @@ def _install(  # pylint: disable=too-many-branches
             if not (filenames := manifest.files.get(part, [])):
                 continue
 
-            g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
+            tarname = f"{part.ident}.tar"
+            g_logger.debug("  Extracting '%s':", tarname)
             for fn in filenames:
-                g_logger.log(VERBOSE, "    %s", fn)
+                g_logger.debug("    %s", fn)
 
             # make sure target directory exists
             if not part.path.exists():
-                g_logger.log(VERBOSE, "    Creating directory %s", part.path)
+                g_logger.debug("    Creating directory %s", part.path)
                 part.path.mkdir(parents=True, exist_ok=True)
 
-            tarsource = tar.extractfile(part.ident + ".tar")
+            tarsource = tar.extractfile(tarname)
             if tarsource is None:
                 raise PackageException("Failed to open %s.tar" % part.ident)
 
-            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
-            # been installed for cache invalidation.
+            # Important: Do not preserve the tared timestamp.
+            # Checkmk needs to know when the files have been installed for cache invalidation.
             with subprocess.Popen(
                 ["tar", "xf", "-", "--touch", "-C", part.path, *(str(f) for f in filenames)],
                 stdin=subprocess.PIPE,

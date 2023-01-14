@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.df_section import parse_df
-from cmk.base.plugins.agent_based.utils.df import DfBlock
+from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, DfBlock, InodesSubsection
 
 SECTION_MSSQL = msdt.parse_mssql_datafiles(
     [
@@ -87,8 +89,9 @@ SECTION_MSSQL = msdt.parse_mssql_datafiles(
         ),
     ],
 )
-def test_discovery_mssql_transactionlogs(  # type:ignore[no-untyped-def]
-    section_mssql, section_df
+def test_discovery_mssql_transactionlogs(
+    section_mssql: msdt.SectionDatafiles | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
 ) -> None:
     assert sorted(
         msdt.discover_mssql_transactionlogs([{}], section_mssql, section_df),
@@ -223,8 +226,11 @@ def test_discovery_mssql_transactionlogs(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_mssql_transactionlogs(  # type:ignore[no-untyped-def]
-    item, section_mssql, section_df, check_results
+def test_check_mssql_transactionlogs(
+    item: str,
+    section_mssql: msdt.SectionDatafiles | None,
+    section_df: tuple[BlocksSubsection, InodesSubsection] | None,
+    check_results: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(

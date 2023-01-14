@@ -5,6 +5,7 @@
 
 import copy
 import itertools
+from collections.abc import Sequence
 
 import pytest
 
@@ -439,7 +440,9 @@ input_ids = [
     ),
     ids=input_ids,
 )
-def test_parse_ps(capture, result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_ps(
+    capture: StringTable, result: tuple[int, Sequence[Sequence[Sequence[object] | str]]]
+) -> None:
     cpu_core, lines = ps_section.parse_ps(copy.deepcopy(capture))
     assert cpu_core == result[0]  # cpu_cores
 

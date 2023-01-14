@@ -26,7 +26,7 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
 
 
-def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]
+def test_flash(user_id: UserId) -> None:
     # Execute the first request flash some message
     app = session_wsgi_app(testing=True)
     app.testing = True
@@ -59,7 +59,7 @@ def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]
             assert get_flashed_messages() == []
 
 
-def test_flash_escape_html_in_str(user_id) -> None:  # type:ignore[no-untyped-def]
+def test_flash_escape_html_in_str(user_id: UserId) -> None:
     now = datetime.now()
     with application_and_request_context(), login.TransactionIdContext(user_id):
         on_succeeded_login(user_id, now)  # Create and activate session
@@ -68,7 +68,7 @@ def test_flash_escape_html_in_str(user_id) -> None:  # type:ignore[no-untyped-de
         assert get_flashed_messages() == [HTML("&lt;script&gt;aaa&lt;/script&gt;")]
 
 
-def test_flash_dont_escape_html(user_id) -> None:  # type:ignore[no-untyped-def]
+def test_flash_dont_escape_html(user_id: UserId) -> None:
     now = datetime.now()
     with application_and_request_context(), login.TransactionIdContext(user_id):
         on_succeeded_login(user_id, now)  # Create and activate session

@@ -7,6 +7,7 @@
 
 import itertools
 import json
+from collections.abc import Mapping, MutableMapping, Sequence
 
 import pytest
 
@@ -14,6 +15,7 @@ import cmk.base.plugins.agent_based.utils.kube
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import kube_resources
 
 ONE_MINUTE = 60
@@ -105,7 +107,9 @@ def usage_string_table_element(usage_usage):
 
 
 @pytest.fixture
-def usage_string_table(usage_string_table_element) -> StringTable:  # type:ignore[no-untyped-def]
+def usage_string_table(
+    usage_string_table_element: Mapping[str, Mapping[str, str | float]]
+) -> StringTable:
     return [[json.dumps(usage_string_table_element)]]
 
 
@@ -183,16 +187,16 @@ def check_result(params, usage_section, resources_section, allocatable_resource_
     )
 
 
-def test_parse_resources(  # type:ignore[no-untyped-def]
-    resources_string_table, resources_request, resources_limit
+def test_parse_resources(
+    resources_string_table: StringTable, resources_request: float, resources_limit: float
 ) -> None:
     resources_section = kube_cpu.parse_resources(resources_string_table)
     assert resources_section.request == resources_request
     assert resources_section.limit == resources_limit
 
 
-def test_parse_allocatable_resource(  # type:ignore[no-untyped-def]
-    allocatable_resource_string_table, allocatable_value
+def test_parse_allocatable_resource(
+    allocatable_resource_string_table: StringTable, allocatable_value: float
 ) -> None:
     allocatable_resource_section = kube_cpu.parse_allocatable_resource(
         allocatable_resource_string_table
@@ -200,8 +204,10 @@ def test_parse_allocatable_resource(  # type:ignore[no-untyped-def]
     assert allocatable_resource_section.value == allocatable_value
 
 
-def test_discovery(  # type:ignore[no-untyped-def]
-    usage_section, resources_section, allocatable_resource_section
+def test_discovery(
+    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage,
+    resources_section: kube_resources.Resources,
+    allocatable_resource_section: kube_resources.AllocatableResource,
 ) -> None:
     for s1, s2, s3 in itertools.product(
         (usage_section, None), (resources_section, None), (allocatable_resource_section, None)
@@ -210,29 +216,29 @@ def test_discovery(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_missing_usage(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_missing_usage(check_result: CheckResult) -> None:
     assert len(list(check_result)) == 6
 
 
-def test_count_metrics_all_sections_present(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_count_metrics_all_sections_present(check_result: CheckResult) -> None:
     assert len([r for r in check_result if isinstance(r, Metric)]) == 7
 
 
-def test_count_results_all_sections_present(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_count_results_all_sections_present(check_result: CheckResult) -> None:
     assert len([r for r in check_result if isinstance(r, Result)]) == 4
 
 
-def test_check_yields_check_results(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_yields_check_results(check_result: CheckResult) -> None:
     assert len(list(check_result)) == 3 * 1 + 4 * 2
 
 
-def test_check_yields_results(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_yields_results(check_result: CheckResult) -> None:
     expected = 1 + 2 + 1
     assert len([r for r in check_result if isinstance(r, Result)]) == expected
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_results_without_usage(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_results_without_usage(check_result: CheckResult) -> None:
     expected_beginnings = ["Requests: 0.180", "Limits: 0.360"]
     results = [r for r in check_result if isinstance(r, Result)]
     assert all(
@@ -242,7 +248,7 @@ def test_check_results_without_usage(check_result) -> None:  # type:ignore[no-un
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_check_metrics_without_usage(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_metrics_without_usage(check_result: CheckResult) -> None:
     expected_metrics = {
         Metric("kube_cpu_allocatable", ALLOCATABLE, boundaries=(0.0, None)),
         Metric("kube_cpu_request", 0.18, boundaries=(0.0, None)),
@@ -253,7 +259,7 @@ def test_check_metrics_without_usage(check_result) -> None:  # type:ignore[no-un
 
 
 @pytest.mark.parametrize("resources_section", [None])
-def test_check_if_no_resources(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_if_no_resources(check_result: CheckResult) -> None:
     """Crashing is expected, because section_kube_cpu is only missing, if data from the api
     server missing."""
     with pytest.raises(AssertionError):
@@ -291,7 +297,7 @@ def test_check_yields_multiple_metrics_with_values(
     assert [(m.name, m.value) for m in check_result if isinstance(m, Metric)] == expected
 
 
-def test_check_all_states_ok(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_all_states_ok(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
@@ -304,7 +310,7 @@ def test_check_all_states_ok(check_result) -> None:  # type:ignore[no-untyped-de
     ],
 )
 @pytest.mark.parametrize("params_request, params_limit", [(("no_levels"), ("no_levels"))])
-def test_check_all_states_ok_params_ignore(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_all_states_ok_params_ignore(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
@@ -333,8 +339,8 @@ def test_check_all_states_ok_params_ignore(check_result) -> None:  # type:ignore
         ),
     ],
 )
-def test_check_abs_levels_with_mixed(  # type:ignore[no-untyped-def]
-    expected_states, check_result
+def test_check_abs_levels_with_mixed(
+    expected_states: Sequence[State], check_result: CheckResult
 ) -> None:
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
@@ -353,15 +359,15 @@ def test_check_abs_levels_with_mixed(  # type:ignore[no-untyped-def]
         (CRIT, 2 * CRIT, [State.OK, State.CRIT, State.CRIT, State.OK]),
     ],
 )
-def test_check_result_states_mixed(  # type:ignore[no-untyped-def]
-    expected_states, check_result
+def test_check_result_states_mixed(
+    expected_states: Sequence[State], check_result: CheckResult
 ) -> None:
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_overview_requests_contained_no_usage_section(  # type:ignore[no-untyped-def]
-    usage_section, check_result, resources_section
+def test_overview_requests_contained_no_usage_section(
+    usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
 ) -> None:
     overview_requests_ignored = kube_resources.count_overview(resources_section, "request")
     results = [r for r in check_result if isinstance(r, Result)]
@@ -370,8 +376,8 @@ def test_overview_requests_contained_no_usage_section(  # type:ignore[no-untyped
     assert [r for r in results if overview_requests_ignored in r.summary] == requests_results
 
 
-def test_overview_requests_contained(  # type:ignore[no-untyped-def]
-    usage_section, check_result, resources_section
+def test_overview_requests_contained(
+    usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
 ) -> None:
     overview_requests_ignored = kube_resources.count_overview(resources_section, "request")
     results = [r for r in check_result if isinstance(r, Result)]
@@ -381,8 +387,8 @@ def test_overview_requests_contained(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_overview_limits_contained_no_usage(  # type:ignore[no-untyped-def]
-    usage_section, check_result, resources_section
+def test_overview_limits_contained_no_usage(
+    usage_section: None, check_result: CheckResult, resources_section: kube_resources.Resources
 ) -> None:
     overview_limits_ignored = kube_resources.count_overview(resources_section, "limit")
     results = [r for r in check_result if isinstance(r, Result)]
@@ -391,8 +397,9 @@ def test_overview_limits_contained_no_usage(  # type:ignore[no-untyped-def]
     assert [r for r in results if overview_limits_ignored in r.summary] == limits_results
 
 
-def test_overview_limits_contained(  # type:ignore[no-untyped-def]
-    usage_section, check_result, resources_section
+@pytest.mark.usefixtures("usage_section")
+def test_overview_limits_contained(
+    check_result: CheckResult, resources_section: kube_resources.Resources
 ) -> None:
     overview_limits_ignored = kube_resources.count_overview(resources_section, "limit")
     results = [r for r in check_result if isinstance(r, Result)]
@@ -403,9 +410,10 @@ def test_overview_limits_contained(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize("usage_cycle_age", [1])
 @pytest.mark.parametrize("usage_section", [None])
-def test_stored_usage_value(  # type:ignore[no-untyped-def]
-    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None, value_store
-):
+def test_stored_usage_value(
+    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None,
+    value_store: MutableMapping[str, object],
+) -> None:
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
         usage_section, TIMESTAMP, value_store, "cpu_usage"
     )
@@ -413,9 +421,10 @@ def test_stored_usage_value(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("usage_section", [None])
-def test_stored_outdated_usage_value(  # type:ignore[no-untyped-def]
-    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None, value_store
-):
+def test_stored_outdated_usage_value(
+    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None,
+    value_store: MutableMapping[str, object],
+) -> None:
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
         usage_section, TIMESTAMP, value_store, "cpu_usage"
     )

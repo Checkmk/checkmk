@@ -290,9 +290,9 @@ def get_bi_aggregation_state(params: Mapping[str, Any]) -> Response:
     return serve_json(_aggregation_state(filter_names=filter_names, filter_groups=filter_groups))
 
 
-def _aggregation_state(  # type:ignore[no-untyped-def]
+def _aggregation_state(
     filter_names: list[str] | None = None, filter_groups: list[str] | None = None
-):
+) -> dict[str, object]:
     bi_manager = BIManager()
     bi_aggregation_filter = BIAggregationFilter(
         [],
@@ -303,9 +303,9 @@ def _aggregation_state(  # type:ignore[no-untyped-def]
         [],
     )
 
-    def collect_infos(  # type:ignore[no-untyped-def]
+    def collect_infos(
         node_result_bundle: NodeResultBundle, is_single_host_aggregation: bool
-    ):
+    ) -> object:
         actual_result = node_result_bundle.actual_result
 
         own_infos = {}
@@ -368,7 +368,7 @@ def _aggregation_state(  # type:ignore[no-untyped-def]
             if branch.properties.title not in aggregations:
                 missing_aggregations.append(branch.properties.title)
 
-    response = {
+    response: dict[str, object] = {
         "aggregations": aggregations,
         "missing_sites": list(required_sites - have_sites),
         "missing_aggr": missing_aggregations,

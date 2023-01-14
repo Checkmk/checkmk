@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import Callable, ContextManager
+
 import pytest
 
 import cmk.utils.paths
@@ -26,16 +28,16 @@ def patch_config_paths(monkeypatch, tmp_path):
     (gui_confd / "wato").mkdir(parents=True)
 
 
-def test_load_group_information_empty(  # type:ignore[no-untyped-def]
-    tmp_path, run_as_superuser
-) -> None:
+@pytest.mark.usefixtures("tmp_path")
+def test_load_group_information_empty(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
     with application_and_request_context(), run_as_superuser():
         assert groups.load_contact_group_information() == {}
         assert gui_groups.load_host_group_information() == {}
         assert gui_groups.load_service_group_information() == {}
 
 
-def test_load_group_information(tmp_path, run_as_superuser) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("tmp_path")
+def test_load_group_information(run_as_superuser: Callable[[], ContextManager[None]]) -> None:
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
         f.write(
             """# encoding: utf-8
@@ -153,6 +155,7 @@ def _rule_packs() -> list[ECRulePack]:
     ]
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     "contact_group, rule_packs, expected_result",
     [
@@ -183,9 +186,8 @@ def _rule_packs() -> list[ECRulePack]:
         ),
     ],
 )
-def test_find_usages_of_contact_group_in_ec_rules(  # type:ignore[no-untyped-def]
-    request_context,
-    monkeypatch,
+def test_find_usages_of_contact_group_in_ec_rules(
+    monkeypatch: pytest.MonkeyPatch,
     contact_group: str,
     rule_packs: list[ECRulePack],
     expected_result: list[tuple[str, str]],

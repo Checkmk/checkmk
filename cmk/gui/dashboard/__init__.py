@@ -47,7 +47,7 @@ from .page_edit_dashlet import EditDashletPage
 from .page_show_dashboard import (
     ajax_dashlet,
     AjaxInitialDashboardFilters,
-    get_topology_view_and_filters,
+    get_topology_context_and_filters,
     page_dashboard,
 )
 from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
@@ -68,7 +68,7 @@ __all__ = [
     "ViewDashletConfig",
     "StaticTextDashletConfig",
     "get_dashlet",
-    "get_topology_view_and_filters",
+    "get_topology_context_and_filters",
     "get_all_dashboards",
     "get_permitted_dashboards",
     "render_title_with_macros_string",

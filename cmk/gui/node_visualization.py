@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
+import hashlib
 import itertools
 import json
+import pickle
 import time
 from dataclasses import asdict, dataclass, field
-from typing import Any, Literal, TypedDict
+from pathlib import Path
+from typing import Any
 
 import livestatus
-from livestatus import SiteId
 
+import cmk.utils.paths
+import cmk.utils.plugin_registry
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, UserId
 
@@ -24,7 +30,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.config import active_config
-from cmk.gui.dashboard import get_topology_view_and_filters
+from cmk.gui.dashboard import get_topology_context_and_filters
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -43,9 +49,9 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
-from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
+from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
-from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualContext, VisualLinkSpec
+from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
@@ -56,7 +62,7 @@ from cmk.bi.computer import BIAggregationFilter
 from cmk.bi.lib import NodeResultBundle
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 
-Mesh = set[HostName]
+Mesh = set[str]
 Meshes = list[Mesh]
 
 
@@ -68,34 +74,280 @@ class MKGrowthInterruption(MKGeneralException):
     pass
 
 
+@dataclass(kw_only=True)
+class TopologyDatasourceConfiguration:
+    available_datasource: list[str] = field(default_factory=list)
+    used_datasource: str = "default"
+
+
 @dataclass
-class TopologySettings:
-    growth_root_nodes: set[HostName] = field(default_factory=set)  # Growth starts from here
-    growth_forbidden_nodes: set[HostName] = field(default_factory=set)  # Growth stops here
-    growth_continue_nodes: set[HostName] = field(default_factory=set)  # Growth continues here
-    display_mode: str = "parent_child"
-    max_nodes: int = FilterTopologyMaxNodes().range_config.default
-    mesh_depth: int = FilterTopologyMeshDepth().range_config.default
-    growth_auto_max_nodes: int = 400
+class TopologyFrontendConfiguration:
+    growth_root_nodes: set[str] = field(default_factory=set)  # Extra Growth starts from here
+    growth_forbidden_nodes: set[str] = field(default_factory=set)  # Growth stops here
+    growth_continue_nodes: set[str] = field(default_factory=set)  # Growth continues here
     overlays_config: dict[str, dict[str, Any]] = field(default_factory=dict)
+    node_style_config: dict[str, Any] = field(default_factory=dict)
+    custom_node_settings: dict[str, dict[str, Any]] = field(default_factory=dict)
+    datasource_configuration: TopologyDatasourceConfiguration = field(
+        default_factory=TopologyDatasourceConfiguration
+    )
 
-
-class TopologySettingsJSON(TopologySettings):
     @classmethod
-    def from_json(cls, serialized: dict[str, Any]) -> "TopologySettingsJSON":
+    def from_json(cls, serialized: str) -> "TopologyFrontendConfiguration":
+        settings = json.loads(serialized)
         for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
-            serialized[key] = {HostName(hn) for hn in serialized[key]}
-        return cls(**serialized)
+            settings[key] = set(settings[key])
+        settings["datasource_configuration"] = TopologyDatasourceConfiguration(
+            **settings.get("datasource_configuration", {})
+        )
+        return cls(**settings)
 
-    def to_json(self) -> dict[str, Any]:
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> "TopologyFrontendConfiguration":
+        ds_config = TopologyDatasourceConfiguration(**config.pop("datasource_configuration", {}))
+        return cls(datasource_configuration=ds_config, **config)
+
+    def to_json(self) -> str:
+        return json.dumps(self.get_json_export_object())
+
+    def get_json_export_object(self) -> dict[str, Any]:
         value = asdict(self)
         for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
-            value[key] = list(map(str, value[key]))
+            value[key] = list(value[key])
+        #        value["datasource_configuration"] = asdict
         return value
 
 
+@dataclass
+class TopologyFilterConfiguration:
+    max_nodes: int = FilterTopologyMaxNodes().range_config.default
+    mesh_depth: int = FilterTopologyMeshDepth().range_config.default
+    growth_auto_max_nodes: int = 400
+    query: str = "default_query"
+
+    def ident(self):
+        return "#".join(
+            map(str, [self.max_nodes, self.mesh_depth, self.growth_auto_max_nodes, self.query])
+        )
+
+
+@dataclass
+class TopologyConfiguration:
+    type: str
+    frontend: TopologyFrontendConfiguration
+    filter: TopologyFilterConfiguration
+
+
+def _get_topology_configuration(
+    topology_type: str, default_overlays: dict[str, Any] | None = None
+) -> TopologyConfiguration:
+    topology_filters = _get_topology_settings_from_filters()
+    mesh_depth = int(topology_filters["topology_mesh_depth"])
+    max_nodes = int(topology_filters["topology_max_nodes"])
+    filter_configuration = TopologyFilterConfiguration(
+        mesh_depth=mesh_depth, max_nodes=max_nodes, query=_get_query_string()
+    )
+
+    if request.var("search_frontend_settings") and (
+        value := _get_topology_frontend_configuration_for_filter(
+            topology_type, filter_configuration
+        )
+    ):
+        frontend_configuration = TopologyFrontendConfiguration.from_config(value)
+    elif frontend_config := request.get_str_input("topology_frontend_configuration"):
+        frontend_configuration = TopologyFrontendConfiguration.from_json(frontend_config)
+    else:
+        frontend_configuration = TopologyFrontendConfiguration()
+        frontend_configuration.overlays_config = default_overlays or {}
+
+    topology_configuration = TopologyConfiguration(
+        topology_type, frontend_configuration, filter_configuration
+    )
+    return topology_configuration
+
+
+def _get_hostnames_for_query(topology_configuration: TopologyConfiguration) -> set[HostName]:
+    if topology_configuration.filter.query == "default_query":
+        return _get_default_view_hostnames(topology_configuration)
+
+    site_id = (
+        livestatus.SiteId(request.get_str_input_mandatory("site"))
+        if request.get_str_input("site")
+        else None
+    )
+    with sites.only_sites(site_id):
+        return {x[0] for x in sites.live().query(topology_configuration.filter.query)}
+
+
+def _get_topology_settings_from_filters() -> dict[str, str]:
+    topology_values: dict[str, str] = {}
+    for filter_class in (FilterTopologyMaxNodes, FilterTopologyMeshDepth):
+        filter_instance = filter_class()
+        value = filter_instance.value()
+        if not value[filter_instance.ident].isdigit():
+            value = {filter_instance.ident: filter_instance.range_config.default}
+        topology_values.update(value)
+    return topology_values
+
+
+def _get_query_string() -> str:
+    if not request.has_var("filled_in"):
+        return "default_query"
+
+    # Determine hosts from filters
+    filter_headers = "".join(get_livestatus_filter_headers(*get_topology_context_and_filters()))
+    query = "GET hosts\nColumns: name"
+    if filter_headers:
+        query += "\n%s" % filter_headers
+    return query
+
+
+def _get_default_view_hostnames(topology_configuration: TopologyConfiguration) -> set[HostName]:
+    """Returns all hosts without any parents"""
+    query = "GET hosts\nColumns: name\nFilter: parents ="
+    site_id = (
+        livestatus.SiteId(request.get_str_input_mandatory("site"))
+        if request.get_str_input("site")
+        else None
+    )
+    with sites.prepend_site(), sites.only_sites(site_id):
+        hosts = [(x[0], x[1]) for x in sites.live().query(query)]
+
+    # If no explicit site is set and the number of initially displayed hosts
+    # exceeds the auto growth range, only the hosts of the master site are shown
+    if len(hosts) > topology_configuration.filter.growth_auto_max_nodes:
+        hostnames = {x[1] for x in hosts if x[0] == omd_site()}
+    else:
+        hostnames = {x[1] for x in hosts}
+
+    return hostnames
+
+
+def _delete_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
+    query_hash = _compute_topology_hash(topology_configuration)
+    settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.pkl"
+    if not settings_file.exists():
+        return
+
+    with open(settings_file, "rb") as f:
+        try:
+            data = pickle.load(f)
+        except pickle.UnpicklingError:
+            data = {}
+
+    with open(settings_file, "wb") as f:
+        data.pop(query_hash, None)
+        f.write(pickle.dumps(data))
+
+
+def _save_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
+    query_hash = _compute_topology_hash(topology_configuration)
+    settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.pkl"
+    if not settings_file.exists():
+        settings_file.touch()
+
+    with open(settings_file, "rb") as f:
+        try:
+            data = pickle.load(f)
+        except pickle.UnpicklingError:
+            data = {}
+
+    with open(settings_file, "wb") as f:
+        data[query_hash] = asdict(topology_configuration.frontend)
+        f.write(pickle.dumps(data))
+
+
+def _compute_topology_hash(topology_configuration: TopologyConfiguration) -> str:
+    ident = "#".join([topology_configuration.type, topology_configuration.filter.ident()])
+    return hashlib.md5(ident.encode("utf-8")).hexdigest()
+
+
+def _get_topology_frontend_configuration_for_filter(
+    topology_type: str, filter_configuration: TopologyFilterConfiguration
+) -> dict[str, Any]:
+    ident = "#".join([topology_type, filter_configuration.ident()])
+    query_hash = hashlib.md5(ident.encode("utf-8")).hexdigest()
+    settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.pkl"
+    if not settings_file.exists():
+        return {}
+    with open(settings_file, "rb") as f:
+        return pickle.load(f).get(query_hash, {})
+
+
+class ABCTopologyPage(Page):
+    @classmethod
+    @abc.abstractmethod
+    def visual_spec(cls):
+        raise NotImplementedError
+
+    def page(self) -> None:
+        """Determines the hosts to be shown"""
+        user.need_permission("general.parent_child_topology")
+        self.show_topology()
+
+    def show_topology(self) -> None:
+        visual_spec = self.visual_spec()
+        breadcrumb = make_topic_breadcrumb(
+            mega_menu_registry.menu_monitoring(),
+            PagetypeTopics.get_topic(visual_spec["topic"]).title(),
+        )
+        breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
+        page_menu = PageMenu(breadcrumb=breadcrumb)
+        self._extend_display_dropdown(page_menu, visual_spec["name"])
+        make_header(html, str(visual_spec["title"]), breadcrumb, page_menu)
+        self.show_topology_content()
+
+    def show_topology_content(self) -> None:
+        div_id = "node_visualization"
+        html.div("", id_=div_id)
+
+        search_frontend_settings = not request.has_var("topology_frontend_configuration")
+        topology_configuration = _get_topology_configuration(
+            self.visual_spec()["name"], self._get_overlays_config()
+        )
+
+        html.javascript(
+            "topology_instance = new cmk.nodevis.TopologyVisualization(%s,%s);"
+            % (json.dumps(div_id), json.dumps(topology_configuration.type))
+        )
+
+        html.javascript(
+            "topology_instance.show_topology(%s,%s)"
+            % (topology_configuration.frontend.to_json(), json.dumps(search_frontend_settings))
+        )
+
+    def _get_overlays_config(self) -> dict[str, Any]:
+        return {}
+
+    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
+        _context, show_filters = get_topology_context_and_filters()
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Filter"),
+                        icon_name="filters",
+                        item=PageMenuSidePopup(
+                            cmk.gui.visuals.render_filter_form(
+                                info_list=["host", "service"],
+                                context={f.ident: {} for f in show_filters if f.available()},
+                                page_name=page_name,
+                                reset_ajax_page="ajax_initial_topology_filters",
+                            )
+                        ),
+                        name="filters",
+                        is_shortcut=True,
+                    ),
+                ],
+            ),
+        )
+
+
 @page_registry.register_page("parent_child_topology")
-class ParentChildTopologyPage(Page):
+class ParentChildTopologyPage(ABCTopologyPage):
     @classmethod
     def visual_spec(cls) -> Visual:
         return {
@@ -116,144 +368,11 @@ class ParentChildTopologyPage(Page):
             "add_context_to_title": True,
         }
 
-    def page(self) -> PageResult:  # pylint: disable=useless-return
-        """Determines the hosts to be shown"""
-        user.need_permission("general.parent_child_topology")
-
-        topology_settings = TopologySettings()
-        if request.var("filled_in"):
-            # Parameters from the check_mk filters
-            self._update_topology_settings_with_context(topology_settings)
-        elif request.var("host_name"):
-            # Explicit host_name. Used by icon linking to Topology
-            topology_settings.growth_root_nodes = {
-                HostName(request.get_str_input_mandatory("host_name"))
-            }
-        else:
-            # Default page without further context
-            topology_settings.growth_root_nodes = self._get_default_view_hostnames(
-                topology_settings.growth_auto_max_nodes
-            )
-
-        if request.has_var("topology_settings"):
-            # These parameters are usually generated within javascript through user interactions
-            try:
-                settings_from_var = json.loads(request.get_str_input_mandatory("topology_settings"))
-                for key, value in settings_from_var.items():
-                    setattr(topology_settings, key, value)
-            except (TypeError, ValueError):
-                raise MKGeneralException(_("Invalid topology_settings %r") % topology_settings)
-
-        self.show_topology(topology_settings)
-        return None
-
-    def _get_default_view_hostnames(self, max_nodes: int) -> set[HostName]:
-        """Returns all hosts without any parents"""
-        query = "GET hosts\nColumns: name\nFilter: parents ="
-        site = request.var("site")
-        with sites.prepend_site(), sites.only_sites(None if site is None else SiteId(site)):
-            hosts = [(x[0], x[1]) for x in sites.live().query(query)]
-
-        # If no explicit site is set and the number of initially displayed hosts
-        # exceeds the auto growth range, only the hosts of the master site are shown
-        if len(hosts) > max_nodes:
-            hostnames = {HostName(x[1]) for x in hosts if x[0] == omd_site()}
-        else:
-            hostnames = {HostName(x[1]) for x in hosts}
-
-        return hostnames
-
-    def _update_topology_settings_with_context(self, topology_settings: TopologySettings) -> None:
-        view, filters = get_topology_view_and_filters()
-        context = cmk.gui.visuals.active_context_from_request(
-            view.datasource.infos, view.spec["context"]
-        )
-        topology_settings.growth_root_nodes = self._get_hostnames_from_filters(context, filters)
-
-        max_nodes_range_config = FilterTopologyMaxNodes().range_config
-        if value := context.get(max_nodes_range_config.column, {}).get(
-            max_nodes_range_config.column
-        ):
-            topology_settings.max_nodes = int(value)
-
-        mesh_depth_range_config = FilterTopologyMeshDepth().range_config
-        if value := context.get(mesh_depth_range_config.column, {}).get(
-            mesh_depth_range_config.column
-        ):
-            topology_settings.mesh_depth = int(value)
-
-    def _get_hostnames_from_filters(
-        self, context: VisualContext, filters: list[Filter]
-    ) -> set[HostName]:
-        filter_headers = "".join(get_livestatus_filter_headers(context, filters))
-
-        query = "GET hosts\nColumns: name"
-        if filter_headers:
-            query += "\n%s" % filter_headers
-
-        site = request.var("site")
-        with sites.only_sites(None if site is None else SiteId(site)):
-            return {HostName(x) for x in sites.live().query_column_unique(query)}
-
-    def show_topology(self, topology_settings: TopologySettings) -> None:
-        visual_spec = ParentChildTopologyPage.visual_spec()
-        breadcrumb = make_topic_breadcrumb(
-            mega_menu_registry.menu_monitoring(),
-            PagetypeTopics.get_topic(visual_spec["topic"]).title(),
-        )
-        breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
-        page_menu = PageMenu(breadcrumb=breadcrumb)
-        self._extend_display_dropdown(page_menu, visual_spec["name"])
-        make_header(html, str(visual_spec["title"]), breadcrumb, page_menu)
-        self.show_topology_content(topology_settings=topology_settings)
-
-    def show_topology_content(self, topology_settings: TopologySettings) -> None:
-        div_id = "node_visualization"
-        html.div("", id_=div_id)
-        html.javascript(
-            "topology_instance = new cmk.node_visualization.TopologyVisualization(%s);"
-            % json.dumps(div_id)
-        )
-
-        html.javascript(
-            "topology_instance.show_topology(%s)"
-            % json.dumps(TopologySettingsJSON(**asdict(topology_settings)).to_json())
-        )
-
-    def _get_overlays_config(self) -> list:
-        return []
-
-    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
-        _view, show_filters = get_topology_view_and_filters()
-        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-        display_dropdown.topics.insert(
-            0,
-            PageMenuTopic(
-                title=_("Filter"),
-                entries=[
-                    PageMenuEntry(
-                        title=_("Filter"),
-                        icon_name="filter",
-                        item=PageMenuSidePopup(
-                            cmk.gui.visuals.render_filter_form(
-                                info_list=["host", "service"],
-                                context={f.ident: {} for f in show_filters if f.available()},
-                                page_name=page_name,
-                                reset_ajax_page="ajax_initial_topology_filters",
-                            )
-                        ),
-                        name="filters",
-                        is_shortcut=True,
-                    ),
-                ],
-            ),
-        )
-
 
 @page_registry.register_page("ajax_initial_topology_filters")
 class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
     def _get_context(self, page_name: str) -> dict:
-        _view, show_filters = get_topology_view_and_filters()
+        _view, show_filters = get_topology_context_and_filters()
         return {f.ident: {} for f in show_filters if f.available()}
 
 
@@ -266,9 +385,7 @@ def _bi_map() -> None:
     make_header(html, title, breadcrumb)
     div_id = "node_visualization"
     html.div("", id=div_id)
-    html.javascript(
-        "node_instance = new cmk.node_visualization.BIVisualization(%s);" % json.dumps(div_id)
-    )
+    html.javascript("node_instance = new cmk.nodevis.BIVisualization(%s);" % json.dumps(div_id))
 
     html.javascript(
         f"node_instance.show_aggregations({json.dumps([aggr_name])}, {json.dumps(layout_id)})"
@@ -299,7 +416,7 @@ class AjaxFetchAggregationData(AjaxPage):
                 visual_mapper = NodeVisualizationBIDataMapper(
                     is_single_host_aggregation=len(branch.get_required_hosts()) == 1
                 )
-                hierarchy = visual_mapper.consume(node_result_bundle)
+                hierarchy = visual_mapper.consume(node_result_bundle, 1, {})
 
                 data: dict[str, Any] = {}
                 data["type"] = "bi"
@@ -392,11 +509,17 @@ BILeafTreeState = tuple[dict[str, Any], Any, dict[str, Any]]
 
 # Creates are hierarchical dictionary which can be read by the NodeVisualization framework
 class NodeVisualizationBIDataMapper:
-    def __init__(self, is_single_host_aggregation=False) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, is_single_host_aggregation=False):
         super().__init__()
         self._is_single_host_aggregation = is_single_host_aggregation
+        self._siblings: dict[str, int] = {}
 
-    def consume(self, node_result_bundle: NodeResultBundle, depth: int = 1) -> dict[str, Any]:
+    def consume(
+        self,
+        node_result_bundle: NodeResultBundle,
+        depth: int,
+        parent_node: dict[str, Any],
+    ) -> dict[str, Any]:
         instance = node_result_bundle.instance
         if isinstance(instance, BICompiledRule):
             node_data = self._get_node_data_for_rule(instance)
@@ -407,14 +530,63 @@ class NodeVisualizationBIDataMapper:
         if isinstance(instance, BICompiledRule) and instance.properties.icon:
             node_data["icon"] = theme.detect_icon_path(instance.properties.icon, prefix="icon_")
 
+        node_id, aggr_path, aggr_name = self._compute_node_indices(node_data, parent_node)
+        node_data["id"] = node_id
+        node_data["aggr_path_id"] = aggr_path
+        node_data["aggr_path_name"] = aggr_name
+
         node_data["state"] = actual_result.state
 
         node_data["in_downtime"] = actual_result.downtime_state > 0
         node_data["acknowledged"] = actual_result.acknowledged
         node_data["children"] = []
         for nested_bundle in node_result_bundle.nested_results:
-            node_data["children"].append(self.consume(nested_bundle, depth=depth + 1))
+            node_data["children"].append(self.consume(nested_bundle, depth + 1, node_data))
         return node_data
+
+    def _compute_node_indices(
+        self, node_data: dict[str, Any], parent_node: dict[str, Any]
+    ) -> tuple[str, list[tuple[str, int]], list[tuple[str, int]]]:
+        """Computes three unique identifiers for each node
+        - one for the node itself
+        - one for the aggregation path name (based on computed names)
+        - one for the aggregation path id (based on aggr/rule ids)
+        """
+        aggr_path_id: list = []
+        aggr_path_name: list = []
+
+        if parent_node:
+            p_aggr_path_id = parent_node.get("aggr_path_id")
+            if isinstance(p_aggr_path_id, list):
+                aggr_path_name.extend(p_aggr_path_id)
+            p_aggr_path_name = parent_node.get("aggr_path_name")
+            if isinstance(p_aggr_path_name, list):
+                aggr_path_name.extend(p_aggr_path_name)
+
+        parent_id = parent_node.get("id", "")
+        if rule_id := node_data.get("rule_id"):
+            rule_name = node_data["name"]
+            rule_name_idx = self._get_sibling_index("rule_name", parent_id + rule_name)
+            own_id = f"#{rule_name}#{rule_name_idx}"
+            aggr_path_id.append(
+                [rule_id["rule"], self._get_sibling_index("rule_id", parent_id + rule_id["rule"])]
+            )
+            aggr_path_name.append([rule_name, rule_name_idx])
+        else:
+            hostname = node_data["hostname"]
+            if service := node_data.get("service"):
+                own_id = f"{service}({self._get_sibling_index('service', parent_id + service)})"
+            else:
+                own_id = f"{hostname}({self._get_sibling_index('hostname', parent_id + hostname)})"
+        node_id = parent_id + own_id
+
+        return node_id, aggr_path_id, aggr_path_name
+
+    def _get_sibling_index(self, domain: str, value: str) -> int:
+        key = f"{domain}_{value}"
+        self._siblings.setdefault(key, 0)
+        self._siblings[key] += 1
+        return self._siblings[key]
 
     def _get_node_data_for_rule(self, bi_compiled_rule: BICompiledRule) -> dict[str, Any]:
         node_data: dict[str, Any] = {
@@ -518,113 +690,50 @@ class AjaxGetAllBITemplateLayouts(AjaxPage):
 @page_registry.register_page("ajax_fetch_topology")
 class AjaxFetchTopology(AjaxPage):
     def page(self) -> PageResult:
-        # growth_root_nodes: a list of mandatory hostnames
-        # mesh_depth: number of hops from growth root
-        # growth_forbidden: block further traversal at the given nodes
-        # growth_continue_nodes: expand these nodes, event if the depth has been reached
-
-        topology_config_var = request.get_str_input_mandatory("topology_settings")
-        try:
-            topology_settings = TopologySettingsJSON.from_json(json.loads(topology_config_var))
-        except (TypeError, ValueError):
-            raise MKGeneralException(_("Invalid topology_config %r") % topology_config_var)
-
-        topology = self._topology_instance_factory(topology_settings)
+        topology_configuration = _get_topology_configuration(
+            request.get_str_input_mandatory("topology_type")
+        )
+        if request.has_var("delete_topology_configuration"):
+            _delete_topology_configuration(topology_configuration)
+            topology_configuration.frontend = TopologyFrontendConfiguration()
+        if request.has_var("save_topology_configuration"):
+            _save_topology_configuration(topology_configuration)
+        topology = self._topology_instance_factory(topology_configuration)
         meshes = topology.compute()
         topology_info: dict[str, Any] = {
             "topology_meshes": {},
             "topology_chunks": {},
             "headline": topology.title(),
             "errors": topology.errors(),
-            "max_nodes": topology.max_nodes,
-            "mesh_depth": topology.mesh_depth,
+            "frontend_configuration": topology_configuration.frontend.get_json_export_object(),
         }
 
         # Convert mesh information into a node visualization compatible format
         for mesh in meshes:
             if not mesh:
                 continue
-
-            # Pick root host
-            growth_roots = sorted(mesh.intersection(set(topology_settings.growth_root_nodes)))
-            if growth_roots:
-                mesh_root = growth_roots[0]
-            else:
-                mesh_root = list(mesh)[0]
-            mesh_info = topology.get_info_for_host(mesh_root, mesh)
-
-            sorted_children = sorted([x for x in mesh if x != mesh_root])
-            mesh_info["children"] = list(
-                topology.get_info_for_host(x, mesh) for x in sorted_children
-            )
-            sorted_mesh = [mesh_root] + sorted_children
-
-            mesh_links = set()
-            for idx, hostname in enumerate(sorted_mesh):
-                # Incoming connections
-                for child in topology.get_host_incoming(hostname):
-                    if child in sorted_mesh:
-                        mesh_links.add((sorted_mesh.index(child), idx))
-
-                # Outgoing connections
-                for parent in topology.get_host_outgoing(hostname):
-                    if parent in sorted_mesh:
-                        mesh_links.add((idx, sorted_mesh.index(parent)))
-
-            topology_info["topology_chunks"][mesh_root] = {
-                "layout": {
-                    "config": {
-                        "line_config": {
-                            "style": "straight",
-                            "dashed": True,
-                        }
-                    }
-                },
-                "type": "topology",
-                "hierarchy": mesh_info,
-                "links": list(mesh_links),
-            }
+            topology_info["topology_chunks"][
+                topology.get_mesh_root(mesh)
+            ] = topology.generate_mesh_configuration(mesh)
 
         return topology_info
 
-    def _topology_instance_factory(self, topology_settings: TopologySettings) -> "Topology":
-        topology_class = topology_registry.get(topology_settings.display_mode)
+    def _topology_instance_factory(
+        self, topology_configuration: TopologyConfiguration
+    ) -> "Topology":
+        topology_class = topology_registry.get(topology_configuration.type)
         if topology_class is None:
-            raise Exception("unknown topology")
-        return topology_class(topology_settings)
-
-
-class _MeshNode(TypedDict, total=False):
-    name: HostName
-    alias: str
-    site: str
-    hostname: HostName
-    outgoing: list[HostName]
-    incoming: list[HostName]
-    # 2021-08-03: Not entirely sure, so if mypy complains,
-    #             feel free to change it back to str
-    node_type: Literal["topology", "topology_center", "topology_site"]
-    mesh_depth: int
-    icon_image: str
-    state: int
-    has_been_checked: bool
-
-    has_no_parents: bool
-    growth_root: bool
-    growth_possible: bool
-    growth_forbidden: bool
-    growth_continue: bool
-    children: list  # List["_MeshNode"]
-    explicit_force_options: dict[str, int]
+            raise MKGeneralException("Unknown topology %s" % topology_configuration.type)
+        return topology_class(topology_configuration)
 
 
 class Topology:
-    def __init__(self, topology_settings: TopologySettings) -> None:
-        super().__init__()
+    def __init__(self, topology_settings: TopologyConfiguration) -> None:
         self._settings = topology_settings
+        self._hostnames_from_filters = _get_hostnames_for_query(self._settings)
 
         # Hosts with complete data
-        self._known_hosts: dict[HostName, _MeshNode] = {}
+        self._known_nodes: dict[str, Any] = {}
 
         # Child/parent hosts at the depth boundary
         self._border_hosts: set[HostName] = set()
@@ -640,40 +749,46 @@ class Topology:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> _MeshNode:
-        return {
-            "name": hostname,  # Used as node text in GUI
-            "hostname": hostname,
-            "has_no_parents": self.is_root_node(hostname),
-            "growth_root": self.is_growth_root(hostname),
-            "growth_possible": self.may_grow(hostname, mesh),
-            "growth_forbidden": self.growth_forbidden(hostname),
-            "growth_continue": self.is_growth_continue(hostname),
+    def get_info_for_node(self, nodename: str, mesh: Mesh) -> dict[str, Any]:
+        settings = {
+            "name": nodename,  # Used as node text in GUI
+            "id": nodename,
+            "hostname": nodename,  # TODO: remove host reference
+            "has_no_parents": self.is_root_node(nodename),
+            "growth_root": self.is_growth_root(nodename),
+            "growth_possible": self.may_grow(nodename, mesh),
+            "growth_forbidden": self.growth_forbidden(nodename),
+            "growth_continue": self.is_growth_continue(nodename),
+            "data_timestamp": time.time(),
         }
+        settings["custom_node_settings"] = self._settings.frontend.custom_node_settings.get(
+            nodename
+        )
+        return settings
 
     def get_host_icon_image(self, hostname: HostName) -> str | None:
-        if hostname not in self._known_hosts:
+        if hostname not in self._known_nodes:
             return None
-        return self._known_hosts[hostname].get("icon_image")
+        return self._known_nodes[hostname].get("icon_image")
 
-    def get_host_incoming(self, hostname: HostName) -> list[HostName]:
-        if hostname not in self._known_hosts:
+    def get_host_incoming(self, hostname: HostName) -> list[str]:
+        if hostname not in self._known_nodes:
             return []
-        return self._known_hosts[hostname]["incoming"]
+        return self._known_nodes[hostname]["incoming"]
 
-    def get_host_outgoing(self, hostname: HostName) -> list[HostName]:
-        if hostname not in self._known_hosts:
+    def get_host_outgoing(self, hostname: HostName) -> list[str]:
+        if hostname not in self._known_nodes:
             return []
-        return self._known_hosts[hostname]["outgoing"]
+        return self._known_nodes[hostname]["outgoing"]
 
     def is_growth_root(self, hostname: HostName) -> bool:
-        return hostname in self._settings.growth_root_nodes
+        return hostname in self._settings.frontend.growth_root_nodes
 
     def is_growth_continue(self, hostname: HostName) -> bool:
-        return hostname in self._settings.growth_continue_nodes
+        return hostname in self._settings.frontend.growth_continue_nodes
 
     def may_grow(self, hostname: HostName, mesh_hosts: Mesh) -> bool:
-        known_host = self._known_hosts.get(hostname)
+        known_host = self._known_nodes.get(hostname)
         if not known_host:
             return True
 
@@ -681,7 +796,7 @@ class Topology:
         return len(unknown_hosts) > 0
 
     def growth_forbidden(self, hostname: HostName) -> bool:
-        return hostname in self._settings.growth_forbidden_nodes
+        return hostname in self._settings.frontend.growth_forbidden_nodes
 
     def add_error(self, error: str) -> None:
         self._errors.append(error)
@@ -690,7 +805,7 @@ class Topology:
         return self._errors
 
     def compute(self) -> Meshes:
-        if not self._settings.growth_root_nodes:
+        if not self._settings.frontend.growth_root_nodes and not self._hostnames_from_filters:
             return []
 
         self._meshes = []
@@ -727,20 +842,67 @@ class Topology:
                 _("Growth interrupted %d/%d") % (total_nodes, self.growth_auto_max_nodes)
             )
 
+    def get_mesh_root(self, mesh: set[str]) -> str:
+        growth_roots = sorted(mesh.intersection(set(self._settings.frontend.growth_root_nodes)))
+        if growth_roots:
+            return growth_roots[0]
+        return list(mesh)[0]
+
+    def generate_mesh_configuration(self, mesh):
+        # Pick root host
+        mesh_root = self.get_mesh_root(mesh)
+        mesh_info = self.get_info_for_node(mesh_root, mesh)
+
+        sorted_children = sorted([x for x in mesh if x != mesh_root])
+        mesh_info["children"] = list(self.get_info_for_node(x, mesh) for x in sorted_children)
+        sorted_mesh = [mesh_root] + sorted_children
+
+        mesh_links: list[dict[str, Any]] = []
+        for hostname in sorted_mesh:
+            # Incoming connections
+            for child in self.get_host_incoming(hostname):
+                if child in sorted_mesh:
+                    mesh_links.append(
+                        {"source": child, "target": hostname, "config": {"type": "default"}}
+                    )
+
+            # Outgoing connections
+            for parent in self.get_host_outgoing(hostname):
+                if parent in sorted_mesh:
+                    mesh_links.append(
+                        {"source": hostname, "target": parent, "config": {"type": "default"}}
+                    )
+
+        return {
+            "layout": {
+                "config": {
+                    "line_config": {
+                        "style": "straight",
+                        "dashed": True,
+                    }
+                }
+            },
+            "type": "topology",
+            "hierarchy": mesh_info,
+            "links": mesh_links,
+        }
+
     @property
     def max_nodes(self) -> int:
-        return self._settings.max_nodes
+        return self._settings.filter.max_nodes
 
     @property
     def growth_auto_max_nodes(self) -> int:
-        return self._settings.growth_auto_max_nodes
+        return self._settings.filter.growth_auto_max_nodes
 
     @property
     def mesh_depth(self) -> int:
-        return self._settings.mesh_depth
+        return self._settings.filter.mesh_depth
 
     def _fetch_root_nodes(self):
-        self._compute_meshes(self._settings.growth_root_nodes)
+        self._compute_meshes(
+            self._settings.frontend.growth_root_nodes | self._hostnames_from_filters
+        )
 
     def _growth_to_depth(self) -> None:
         while self._current_iteration < self.mesh_depth:
@@ -749,32 +911,32 @@ class Topology:
 
     def _growth_to_parents(self) -> None:
         while True:
-            combined_mesh: set[HostName] = set()
+            combined_mesh = set()
             for mesh in self._meshes:
                 combined_mesh.update(mesh)
 
             combined_mesh -= self._border_hosts
-            all_parents: set[HostName] = set()
+            all_parents: set[str] = set()
             for node_name in combined_mesh:
-                all_parents.update(set(self._known_hosts[node_name]["outgoing"]))
+                all_parents.update(set(self._known_nodes[node_name]["outgoing"]))
 
-            missing_parents: set[HostName] = all_parents - combined_mesh
+            missing_parents = all_parents - combined_mesh
             if not missing_parents:
                 break
 
             self._compute_meshes(missing_parents)
 
     def _growth_to_continue_nodes(self) -> None:
-        growth_continue_nodes = set(self._settings.growth_continue_nodes)
+        growth_continue_nodes = set(self._settings.frontend.growth_continue_nodes)
         while growth_continue_nodes:
-            growth_nodes = growth_continue_nodes.intersection(set(self._known_hosts.keys()))
+            growth_nodes = growth_continue_nodes.intersection(set(self._known_nodes.keys()))
             if not growth_nodes:
                 break
 
-            border_hosts: set[HostName] = set()
+            border_hosts = set()
             for node_name in growth_nodes:
-                border_hosts.update(set(self._known_hosts[node_name]["incoming"]))
-                border_hosts.update(set(self._known_hosts[node_name]["outgoing"]))
+                border_hosts.update(set(self._known_nodes[node_name]["incoming"]))
+                border_hosts.update(set(self._known_nodes[node_name]["outgoing"]))
 
             self._compute_meshes(border_hosts)
             growth_continue_nodes -= growth_nodes
@@ -784,32 +946,35 @@ class Topology:
         self._update_meshes(new_hosts)
         self._check_mesh_size()
 
-    def _query_data(self, hostnames: set[HostName]) -> list[_MeshNode]:
+    def _query_data(self, hostnames: set[HostName]) -> list[dict[str, Any]]:
         if not hostnames:
             return []
 
-        new_hosts = []
+        new_hosts: list[dict[str, Any]] = []
         mandatory_keys = {"name", "outgoing", "incoming"}
         for host_data in self._fetch_data_for_hosts(hostnames):
-            missing_keys = mandatory_keys - set(host_data)
-            if missing_keys:
-                raise MKGeneralException(_("Missing mandatory topology keys: %r") % missing_keys)
+            if len(mandatory_keys - set(host_data.keys())) > 0:
+                raise MKGeneralException(
+                    _("Missing mandatory topology keys: %r")
+                    % (mandatory_keys - set(host_data.keys()))
+                )
+            # Mandatory keys in host_data: name, outgoing, incoming
             new_hosts.append(host_data)
         return new_hosts
 
     def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
         return meshes
 
-    def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[_MeshNode]:
+    def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[dict]:
         raise NotImplementedError()
 
     def is_root_node(self, hostname: HostName) -> bool:
-        return len(self._known_hosts[hostname]["outgoing"]) == 0
+        return len(self._known_nodes[hostname]["outgoing"]) == 0
 
     def is_border_host(self, hostname: HostName) -> bool:
         return hostname in self._border_hosts
 
-    def _update_meshes(self, new_hosts: list[_MeshNode]):  # type:ignore[no-untyped-def]
+    def _update_meshes(self, new_hosts: list[dict[HostName, Any]]) -> None:
         # Data flow is child->parent
         # Incoming data comes from child
         # Outgoing data goes to parent
@@ -819,7 +984,7 @@ class Topology:
         for new_host in new_hosts:
             new_host["mesh_depth"] = self._current_iteration
             hostname = new_host["name"]
-            self._known_hosts[hostname] = new_host
+            self._known_nodes[hostname] = new_host
 
         # Update meshes and border hosts
         new_meshes = []
@@ -828,9 +993,9 @@ class Topology:
             known_mesh_hosts = {hostname}
 
             adjacent_hosts = new_host["outgoing"] + new_host["incoming"]
-            known_mesh_hosts.update(x for x in adjacent_hosts if x in self._known_hosts)
+            known_mesh_hosts.update(x for x in adjacent_hosts if x in self._known_nodes)
             if not self.growth_forbidden(hostname):
-                self._border_hosts.update(x for x in adjacent_hosts if x not in self._known_hosts)
+                self._border_hosts.update(x for x in adjacent_hosts if x not in self._known_nodes)
             new_meshes.append(known_mesh_hosts)
 
         self._integrate_new_meshes(new_meshes)
@@ -866,16 +1031,24 @@ topology_registry = TopologyRegistry()
 
 
 class ParentChildNetworkTopology(Topology):
-    """Generates parent/child topology view"""
+    _topology_site_node_type = "topology_site"
+    """ Generates parent/child topology view """
 
     @classmethod
     def ident(cls) -> str:
-        return "parent_child"
+        return "parent_child_topology"
 
     def title(self) -> str:
         return _("Parent / Child topology")
 
-    def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[_MeshNode]:
+    def get_mesh_root(self, mesh: set[str]) -> str:
+        # The root of each parent/child chunk is the topology_site node
+        for nodename in mesh:
+            if self._known_nodes[nodename].get("node_type") == self._topology_site_node_type:
+                return nodename
+        return "unknown_root"
+
+    def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[dict]:
         hostname_filters = []
         if hostnames:
             for hostname in hostnames:
@@ -894,61 +1067,56 @@ class ParentChildNetworkTopology(Topology):
                 "has_been_checked",
             ]
             query_result = sites.live().query(
-                "GET hosts\nColumns: {}\n{}".format(" ".join(columns), "\n".join(hostname_filters))
+                "GET hosts\nColumns: %s\n%s" % (" ".join(columns), "\n".join(hostname_filters))
             )
         finally:
             sites.live().set_prepend_site(False)
 
-        return [
-            {
-                "site": str(x[0]),
-                "name": HostName(str(x[1])),
-                "state": int(x[2]),
-                "alias": str(x[3]),
-                "icon_image": str(x[4]),
-                "outgoing": [HostName(str(i)) for i in x[5]],
-                "incoming": [HostName(str(i)) for i in x[6]],
-                "has_been_checked": bool(x[7]),
-            }
-            for x in query_result
-        ]
+        headers = ["site"] + columns
+        response = [dict(zip(headers, x)) for x in query_result]
+        # Postprocess data
+        for entry in response:
+            # Abstract parents/children relationship to children(incoming) / parents(outgoing)
+            entry["outgoing"] = entry["parents"]
+            entry["incoming"] = entry["childs"]
+
+        return response
 
     def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
         """Create a central node and add all monitoring sites as children"""
 
-        central_node: _MeshNode = {
-            "name": HostName(""),
-            "hostname": HostName("Checkmk"),
+        central_node = {
+            "name": "",
+            "hostname": "Checkmk",
             "outgoing": [],
             "incoming": [],
             "node_type": "topology_center",
         }
 
-        site_nodes: dict[HostName, _MeshNode] = {}
+        site_nodes: dict[str, Any] = {}
         for mesh in meshes:
             for node_name in mesh:
-                site = self._known_hosts[node_name]["site"]
-                site_node_name = HostName(_("Site %s") % site)
+                site = self._known_nodes[node_name]["site"]
+                site_node_name = _("Site %s") % site
                 site_nodes.setdefault(
                     site_node_name,
                     {
-                        "node_type": "topology_site",
+                        "node_type": self._topology_site_node_type,
                         "outgoing": [central_node["name"]],
                         "incoming": [],
                     },
                 )
-                outgoing_nodes = self._known_hosts.get(node_name, {"outgoing": []})["outgoing"]
-                # Only attach this node to the site if it has no parents that are visible
-                # in the current mesh
-                if not mesh.intersection(outgoing_nodes):
+                outgoing_nodes = self._known_nodes.get(node_name, {"outgoing": []})["outgoing"]
+                # Attach this node to the site not if it has no parents or if none of its parents are visible in the current mesh
+                if not outgoing_nodes or len(set(outgoing_nodes) - mesh) == len(outgoing_nodes):
                     site_nodes[site_node_name]["incoming"].append(node_name)
 
         central_node["incoming"] = list(site_nodes.keys())
-        self._known_hosts[central_node["name"]] = central_node
+        self._known_nodes[str(central_node["name"])] = central_node
 
-        combinator_mesh: set[HostName] = set()
+        combinator_mesh = set(central_node["name"])
         for node_name, settings in site_nodes.items():
-            self._known_hosts[node_name] = settings
+            self._known_nodes[node_name] = settings
             combinator_mesh.add(node_name)
             combinator_mesh.update(set(settings["incoming"]))
 
@@ -957,15 +1125,20 @@ class ParentChildNetworkTopology(Topology):
 
         return meshes
 
-    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> _MeshNode:
-        info = super().get_info_for_host(hostname, mesh)
-        host_info = self._known_hosts[hostname]
+    def get_info_for_node(self, nodename: str, mesh: Mesh) -> dict[str, Any]:
+        info = super().get_info_for_node(nodename, mesh)
+        host_info = self._known_nodes[nodename]
         info.update(host_info)
+        for key in ["childs", "parents"]:
+            try:
+                del info[key]
+            except KeyError:
+                pass
 
         if "node_type" not in info:
             info["node_type"] = "topology"
 
-        info["state"] = self._map_host_state_to_service_state(info)
+        info["state"] = self._map_host_state_to_service_state(info, host_info)
 
         if info["node_type"] == "topology_center":
             info["explicit_force_options"] = {"repulsion": -3000, "center_force": 200}
@@ -974,19 +1147,22 @@ class ParentChildNetworkTopology(Topology):
 
         return info
 
-    def _map_host_state_to_service_state(self, info: _MeshNode) -> int:
+    def _map_host_state_to_service_state(
+        self, info: dict[str, Any], host_info: dict[str, Any]
+    ) -> int:
         if info["node_type"] in ["topology_center", "topology_site"]:
             return 0
-        if not info["has_been_checked"]:
+        if not host_info["has_been_checked"]:
             return -1
-        if info["state"] == 0:
+        if host_info["state"] == 0:
             return 0
-        if info["state"] == 2:
+        if host_info["state"] == 2:
             return 3
         return 2
 
 
 topology_registry.register(ParentChildNetworkTopology)
+
 
 multisite_builtin_views.update(
     {

@@ -1623,7 +1623,6 @@ def filters_of_visual(
         link_filters = {}
 
     filters: dict[FilterName, Filter] = {}
-
     for info_key in info_keys:
         if info_key in visual["single_infos"]:
             for key in info_params(info_key):

@@ -12,7 +12,7 @@ import json
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Mapping
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
@@ -700,7 +700,7 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         # For the topology dashboard filters are retrieved from a corresponding view context.
         # This should not be needed here. Can't we load the context from the board as we usually do?
         if page_name == "topology":
-            _view, show_filters = get_topology_view_and_filters()
+            _context, show_filters = get_topology_context_and_filters()
             return {
                 f.ident: board["context"].get(f.ident, {}) for f in show_filters if f.available()
             }
@@ -708,16 +708,18 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         return _minimal_context(_get_mandatory_filters(board, set()), board["context"])
 
 
-def get_topology_view_and_filters() -> tuple[View, list[Filter]]:
+def get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
     view_name = "topology_filters"
-
     view_spec = get_permitted_views()[view_name]
     view = View(view_name, view_spec, view_spec.get("context", {}))
+    context = cmk.gui.visuals.active_context_from_request(
+        view.datasource.infos, view.spec["context"]
+    )
     filters = cmk.gui.visuals.filters_of_visual(
         view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
     )
     show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-    return view, show_filters
+    return context, show_filters
 
 
 @dataclass

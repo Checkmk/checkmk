@@ -19,36 +19,39 @@
 //#   +--------------------------------------------------------------------+
 
 import * as d3 from "d3";
+import {DatasourceCallback} from "nodevis/type_defs";
 
 // Takes care of all available datasources
 // Offers register and get methods for datasource
 // Prevents duplicate instantiations of same datasources
 export class DatasourceManager {
+    datasources: {[name: string]: AbstractDatasource};
+
     constructor() {
         // Datasources lookup {id: instance}
         this.datasources = {};
         this._initialize_datasources();
-        setInterval(() => this.schedule(true), 10000);
+        // setInterval(() => this.schedule(true), 10000);
     }
 
-    _initialize_datasources() {
+    _initialize_datasources(): void {
         this._register_datasource(AggregationsDatasource);
         this._register_datasource(TopologyDatasource);
     }
 
-    _register_datasource(datasource_class) {
+    _register_datasource(datasource_class: typeof AbstractDatasource): void {
         if (datasource_class.id() in this.datasources) return;
         this.datasources[datasource_class.id()] = new datasource_class();
     }
 
-    schedule(enforce) {
-        let now = Math.floor(new Date().getTime() / 1000);
-        for (let idx in this.datasources) {
-            let datasource = this.datasources[idx];
-            if (datasource._enabled != true || datasource._supports_regular_updates != true)
+    schedule(enforce = false): void {
+        const now = Math.floor(new Date().getTime() / 1000);
+        for (const idx in this.datasources) {
+            const datasource = this.datasources[idx];
+            if (!datasource._enabled || !datasource._supports_regular_updates)
                 continue;
             if (
-                enforce == true ||
+                enforce ||
                 now - datasource._last_update > datasource.get_update_interval()
             ) {
                 datasource.update_fetched_data();
@@ -56,73 +59,68 @@ export class DatasourceManager {
         }
     }
 
-    get_datasource(datasource_id) {
+    get_datasource(datasource_id): AbstractDatasource {
         return this.datasources[datasource_id];
     }
 
-    get_datasources() {
+    get_datasources(): {[name: string]: AbstractDatasource} {
         return this.datasources;
     }
 }
 
 // Abstract base class for all datasources
-export class AbstractDatasource {
-    static id() {
+export class AbstractDatasource extends Object {
+    _enabled = false;
+    _supports_regular_updates = true;
+    _update_interval = 30;
+    _last_update = 0;
+    _fetch_latency = 0;
+    _data: any = null;
+    _new_data_subscribers: DatasourceCallback[] = [];
+    _fetch_url: string | null = null;
+    _fetch_params: BodyInit | null = null;
+    _fetch_start = 0;
+
+    static id(): string {
         return "abstract_datasource";
     }
 
-    constructor(description) {
-        this.description = description;
-
-        this._enabled = false;
-        this._supports_regular_updates = true;
-        this._update_interval = 30;
-        this._last_update = 0;
-        this._fetch_latency = 0;
-
-        this._data = null;
-        this._new_data_subscribers = [];
-
-        this._fetch_url = null;
-        this._fetch_params = null;
-    }
-
-    subscribe_new_data(func) {
+    subscribe_new_data(func: DatasourceCallback): void {
         this._new_data_subscribers.push(func);
     }
 
-    unsubscribe_new_data(func) {
+    unsubscribe_new_data(func): void {
         this._new_data_subscribers.splice(func, 1);
     }
 
-    update_fetched_data() {
+    update_fetched_data(): void {
         this._fetch();
     }
 
-    set_update_interval(value) {
+    set_update_interval(value): void {
         this._update_interval = value;
     }
 
-    get_update_interval() {
+    get_update_interval(): number {
         return this._update_interval;
     }
 
-    enable() {
+    enable(): void {
         this._enabled = true;
     }
 
-    disable() {
+    disable(): void {
         this._enabled = false;
     }
 
-    fetch(url, params = {}) {
+    fetch(url, params: BodyInit | null = null): void {
         this._fetch_start = Math.floor(new Date().getTime() / 1000);
         this._fetch_url = url;
         this._fetch_params = params;
         this._fetch();
     }
 
-    _fetch(params = {}) {
+    _fetch(): void {
         if (!this._fetch_url) return;
         d3.json(encodeURI(this._fetch_url), {
             credentials: "include",
@@ -134,11 +132,11 @@ export class AbstractDatasource {
         }).then(json_data => this._set_data(json_data));
     }
 
-    get_data() {
+    get_data(): {[name: string]: any} {
         return this._data;
     }
 
-    _set_data(new_data) {
+    _set_data(new_data): void {
         this._last_update = Math.floor(new Date().getTime() / 1000);
         this._fetch_latency = this._last_update - this._fetch_start;
 
@@ -147,41 +145,47 @@ export class AbstractDatasource {
         this._inform_subscribers();
     }
 
-    _inform_subscribers() {
-        this.generic_update_latency = +(new Date() - this.time_update_generic_data_start) / 1000;
-        this._new_data_subscribers.forEach(subscriber => subscriber(this._data));
+    _inform_subscribers(): void {
+        const subscriber_start = +new Date() / 1000;
+        this._new_data_subscribers.forEach(subscriber =>
+            subscriber(this._data)
+        );
+        console.log(
+            "Updating subscribers took " +
+                (+new Date() / 1000 - subscriber_start)
+        );
     }
 }
 
 export class AggregationsDatasource extends AbstractDatasource {
-    static id() {
-        return "bi_aggregations";
-    }
-
     constructor() {
         super("Aggregation datasource");
         this._update_interval = 30;
     }
 
-    fetch_aggregations(list_of_aggregations, use_layout_id) {
+    static id(): string {
+        return "bi_aggregations";
+    }
+
+    fetch_aggregations(list_of_aggregations, use_layout_id): void {
         let url =
-            "ajax_fetch_aggregation_data.py?aggregations=" + JSON.stringify(list_of_aggregations);
+            "ajax_fetch_aggregation_data.py?aggregations=" +
+            JSON.stringify(list_of_aggregations);
         if (use_layout_id) url += "&layout_id=" + use_layout_id;
         this.fetch(url);
     }
 }
 
 export class TopologyDatasource extends AbstractDatasource {
-    static id() {
-        return "topology";
-    }
-
     constructor() {
         super("Topology");
     }
 
-    fetch_hosts(topology_settings) {
-        let fetch_params = "topology_settings=" + JSON.stringify(topology_settings);
+    static id(): string {
+        return "topology";
+    }
+
+    fetch_hosts(fetch_params) {
         this.fetch("ajax_fetch_topology.py", fetch_params);
     }
 }

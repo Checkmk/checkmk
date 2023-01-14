@@ -11,19 +11,30 @@
 //   |                                                                    |
 //   +--------------------------------------------------------------------+
 
-import * as node_visualization_search from "node_visualization_search";
-import * as node_visualization_datasources from "node_visualization_datasources";
+import {d3SelectionDiv, NodevisWorld} from "nodevis/type_defs";
+import {ToolbarPluginBase} from "nodevis/toolbar_utils";
+import {SearchAggregationsPlugin} from "nodevis/search";
 
 export class Toolbar {
-    constructor(main_instance, selection) {
-        selection.attr("id", "toolbar").style("width", "100%").style("height", "100%");
-        this.main_instance = main_instance;
-        this._selection = selection;
+    _world: NodevisWorld;
+    _div_selection: d3SelectionDiv;
+    _toolbar_plugins = {};
+    _plugin_contents_selection: d3SelectionDiv;
+    _plugin_controls_selection: d3SelectionDiv;
+    _plugin_buttons_selection: d3SelectionDiv;
+    _plugin_custom_elements_selection: d3SelectionDiv;
 
-        this._toolbar_plugins = {};
-        this._plugins_content_selection = this._selection.append("div").attr("id", "content");
-
-        this._plugin_controls_selection = this._selection
+    constructor(world: NodevisWorld, selection: d3SelectionDiv) {
+        selection
+            .attr("id", "toolbar")
+            .style("width", "100%")
+            .style("height", "100%");
+        this._world = world;
+        this._div_selection = selection;
+        this._plugin_contents_selection = this._div_selection
+            .append("div")
+            .attr("id", "content");
+        this._plugin_controls_selection = this._div_selection
             .append("div")
             .attr("id", "toolbar_controls");
         this._plugin_buttons_selection = this._plugin_controls_selection
@@ -33,40 +44,49 @@ export class Toolbar {
             .append("div")
             .attr("id", "custom");
 
-        this._setup_toolbar_plugins();
-        this.update_toolbar_plugins();
-
         // Kept for debug purposes. This opens the layout toolbar a second later
         //setTimeout(()=>this._toolbar_plugins["layouting_toolbar"].toggle_active(), 1000)
     }
 
-    _setup_toolbar_plugins() {
-        this._register_toolbar_plugin(node_visualization_search.SearchAggregationsPlugin);
+    setup_world_components() {
+        this._setup_toolbar_plugins();
     }
 
-    _register_toolbar_plugin(toolbar_plugin_class) {
-        if (toolbar_plugin_class.prototype.id() in this._toolbar_plugins) return;
-        this.add_toolbar_plugin_instance(new toolbar_plugin_class(this.main_instance));
+    _setup_toolbar_plugins(): void {
+        this._register_toolbar_plugin(SearchAggregationsPlugin);
     }
 
-    add_toolbar_plugin_instance(toolbar_plugin_instance) {
-        this._toolbar_plugins[toolbar_plugin_instance.id()] = toolbar_plugin_instance;
+    _register_toolbar_plugin(toolbar_plugin: typeof ToolbarPluginBase): void {
+        // @ts-ignore
+        const instance = toolbar_plugin.instantiate(this._world);
+        if (instance.id() in this._toolbar_plugins) return;
+        this.add_toolbar_plugin_instance(instance);
     }
 
-    update_toolbar_plugins() {
-        let plugin_ids = Object.keys(this._toolbar_plugins);
-        plugin_ids.sort((a, b) => {
-            return this._toolbar_plugins[a].sort_index < this._toolbar_plugins[b].sort_index;
+    add_toolbar_plugin_instance(
+        toolbar_plugin_instance: ToolbarPluginBase
+    ): void {
+        this._toolbar_plugins[toolbar_plugin_instance.id()] =
+            toolbar_plugin_instance;
+    }
+
+    update_toolbar_plugins(): void {
+        const plugin_ids = Object.keys(this._toolbar_plugins);
+        plugin_ids.sort((a: string, b: string) => {
+            return this._toolbar_plugins[a].sort_index <
+                this._toolbar_plugins[b].sort_index
+                ? -1
+                : 1;
         });
 
         plugin_ids.forEach(plugin_id => {
-            let plugin = this._toolbar_plugins[plugin_id];
+            const plugin = this._toolbar_plugins[plugin_id];
             if (!plugin.content_selection) {
-                let content_selection = this._plugins_content_selection
+                const content_selection = this._plugin_contents_selection
                     .append("div")
                     .attr("id", plugin_id);
                 if (plugin.has_toggle_button()) {
-                    let button_selection = this._plugin_buttons_selection
+                    const button_selection = this._plugin_buttons_selection
                         .append("div")
                         .attr("id", "togglebutton_" + plugin_id)
                         .classed("togglebutton", true)
@@ -83,12 +103,14 @@ export class Toolbar {
         });
     }
 
-    toggle_plugin(plugin) {
+    toggle_plugin(plugin: ToolbarPluginBase): void {
         this.set_plugin_state(plugin, !plugin.active);
     }
 
-    set_plugin_state(plugin, is_active) {
-        let plugin_button = this._plugin_buttons_selection.select("#togglebutton_" + plugin.id());
+    set_plugin_state(plugin: ToolbarPluginBase, is_active: boolean): void {
+        const plugin_button = this._plugin_buttons_selection.select(
+            "#togglebutton_" + plugin.id()
+        );
         plugin_button.classed("up", !is_active);
         plugin_button.classed("down", is_active);
         if (is_active == true) {
@@ -99,7 +121,7 @@ export class Toolbar {
         }
     }
 
-    get_plugin(plugin_id) {
+    get_plugin(plugin_id: string): ToolbarPluginBase {
         return this._toolbar_plugins[plugin_id];
     }
 }

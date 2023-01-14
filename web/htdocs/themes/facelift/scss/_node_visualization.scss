@@ -378,12 +378,12 @@ div.node_vis {
 div.node_vis line.dashed,
 div.node_vis path.dashed,
 .style_indicator {
-  animation-duration: 25s;
+  animation-duration: 60s;
   animation-iteration-count: infinite;
   animation-name: dash;
   animation-timing-function: linear;
   animation-direction: reverse;
-  stroke-dasharray: 20 4;
+  stroke-dasharray: 20 1;
   stroke-dashoffset: 0;
 }
 

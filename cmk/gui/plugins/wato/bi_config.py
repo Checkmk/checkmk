@@ -1528,7 +1528,7 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
     def render_input(self, varprefix: str, value: dict[str, Any]) -> None:
         html.div("", id_=varprefix)
         html.javascript(
-            "let example = new cmk.node_visualization_layout_styles.LayoutStyleExampleGenerator(%s);"
+            "let example = new cmk.nodevis.example_generator(%s);"
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value))
         )
 

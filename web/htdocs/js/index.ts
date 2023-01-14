@@ -53,12 +53,7 @@ try {
 } catch (e) {}
 import * as graphs from "graphs";
 
-import * as node_visualization from "node_visualization";
-import * as node_visualization_utils from "node_visualization_utils";
-import * as node_visualization_layout_styles from "node_visualization_layout_styles";
-import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
-import * as node_visualization_viewport_layers from "node_visualization_viewport_layers";
-
+import * as nodevis from "./modules/nodevis/main";
 import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
@@ -159,12 +154,6 @@ export const cmk_export = {
         graphs_cee: graphs_cee,
         dashboard: dashboard,
         page_menu: page_menu,
-        // TODO: node_visualization cleanups
-        node_visualization_utils: node_visualization_utils,
-        node_visualization_layout_styles: node_visualization_layout_styles,
-        node_visualization_viewport_utils: node_visualization_viewport_utils,
-        node_visualization_viewport_layers: node_visualization_viewport_layers,
-        node_visualization: node_visualization,
         figures: cmk_figures,
         ntop: {
             host_details: ntop_host_details,
@@ -177,6 +166,7 @@ export const cmk_export = {
             timeseries_graph: license_usage_timeseries_graph,
         },
         webauthn: webauthn,
+        nodevis: nodevis,
     },
 };
 

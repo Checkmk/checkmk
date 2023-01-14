@@ -19,23 +19,34 @@ import pytest
 from freezegun import freeze_time
 from lxml.html import HtmlElement
 from redis import Redis
-from saml2.client import Saml2Client
+from saml2 import BINDING_HTTP_POST
 from saml2.cryptography.asymmetric import load_pem_private_key
 from saml2.sigver import SignatureError
 from saml2.validate import ResponseLifetimeExceed, ToEarly
-from saml2.xmldsig import SIG_RSA_SHA1
+from saml2.xmldsig import (
+    DIGEST_SHA512,
+    SIG_ECDSA_SHA256,
+    SIG_ECDSA_SHA384,
+    SIG_ECDSA_SHA512,
+    SIG_RSA_SHA1,
+    SIG_RSA_SHA256,
+    SIG_RSA_SHA384,
+    SIG_RSA_SHA512,
+)
 
 from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.userdb.saml2.config import Certificate, InterfaceConfig, UserAttributeNames
-from cmk.gui.userdb.saml2.interface import (
-    AuthenticatedUser,
-    HTMLFormString,
-    Interface,
+from cmk.gui.userdb.saml2.config import (
+    CacheSettings,
+    Certificate,
+    ConnectivitySettings,
+    InterfaceConfig,
     Milliseconds,
-    saml_config,
+    SecuritySettings,
+    UserAttributeNames,
 )
+from cmk.gui.userdb.saml2.interface import AuthenticatedUser, HTMLFormString, Interface
 
 
 class SAMLParamName(Enum):
@@ -81,18 +92,52 @@ _UNSIGNED_AUTHENTICATION_REQUEST_RESPONSE: Final = Path(
     _XML_FILES_PATH / "unsigned_authentication_request_response.xml"
 ).read_bytes()
 
-_INTERFACE_CONFIG: Final = InterfaceConfig(
-    connection_timeout=(12, 12),
-    idp_metadata_endpoint="http://localhost:8080/simplesaml/saml2/idp/metadata.php",
-    checkmk_server_url="http://localhost",
-    user_attributes=UserAttributeNames(
-        user_id="username",
-        alias=None,
-        email=None,
-        contactgroups=None,
-    ),
-    signature_certificate=_SIGNATURE_CERTIFICATE_PATHS,
-)
+
+def _interface_config(
+    *, do_security: bool = False, cache_expiry: Milliseconds = Milliseconds(-1)
+) -> InterfaceConfig:
+    if do_security:
+        allowed_algorithms = {
+            SIG_ECDSA_SHA256,
+            SIG_ECDSA_SHA384,
+            SIG_ECDSA_SHA512,
+            SIG_RSA_SHA256,
+            SIG_RSA_SHA384,
+            SIG_RSA_SHA512,
+        }
+    else:
+        allowed_algorithms = {SIG_RSA_SHA1}
+
+    return InterfaceConfig(
+        connectivity_settings=ConnectivitySettings(
+            timeout=(12, 12),
+            idp_metadata_endpoint="http://localhost:8080/simplesaml/saml2/idp/metadata.php",
+            checkmk_server_url="http://localhost",
+            entity_id="http://localhost/heute/check_mk/saml_metadata.py",
+            assertion_consumer_service_endpoint="http://localhost/heute/check_mk/saml_acs.py?acs",
+            binding=BINDING_HTTP_POST,
+        ),
+        user_attributes=UserAttributeNames(
+            user_id="username",
+            alias=None,
+            email=None,
+            contactgroups=None,
+        ),
+        security_settings=SecuritySettings(
+            allow_unknown_user_attributes=True,
+            sign_authentication_requests=do_security,
+            enforce_signed_responses=do_security,
+            enforce_signed_assertions=do_security,
+            signing_algortithm=SIG_RSA_SHA512,
+            digest_algorithm=DIGEST_SHA512,  # this is referring to the digest alg the counterparty should use
+            allowed_algorithms=allowed_algorithms,
+            signature_certificate=_SIGNATURE_CERTIFICATE_PATHS,
+        ),
+        cache_settings=CacheSettings(
+            redis_namespace="saml2_authentication_requests",
+            authentication_request_id_expiry=cache_expiry,
+        ),
+    )
 
 
 def _encode(string: bytes) -> str:
@@ -110,11 +155,6 @@ def _field_from_html(html_string: HTMLFormString, keyword: SAMLParamName) -> str
         return message
 
     return base64.b64decode(message).decode("utf-8")
-
-
-@pytest.fixture(autouse=True)
-def url_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("cmk.gui.userdb.saml2.interface.url_prefix", lambda: "/heute/")
 
 
 class TestInterface:
@@ -146,25 +186,8 @@ class TestInterface:
             "cmk.gui.userdb.saml2.interface._metadata_from_idp",
             lambda c, t: _IDENTITY_PROVIDER_METADATA,
         )
-        interface = Interface(config=_INTERFACE_CONFIG, requests_db=initialised_redis)
-        # SHA1 is normally disallowed, but used in the test data for performance reasons
-        interface._allowed_algorithms.add(SIG_RSA_SHA1)
-        interface._authentication_request_id_expiry = Milliseconds(-1)
-        client_config = saml_config(
-            timeout=_INTERFACE_CONFIG.connection_timeout,
-            idp_metadata_endpoint=_INTERFACE_CONFIG.idp_metadata_endpoint,
-            checkmk_server_url=_INTERFACE_CONFIG.checkmk_server_url,
-            signature_private_keyfile=_INTERFACE_CONFIG.signature_certificate.private,
-            signature_public_keyfile=_INTERFACE_CONFIG.signature_certificate.public,
-        )
-        # The below suppressions are due to a bug with the typing extensions of the pysaml2
-        # dependency. They can be removed once the typing extension package has been upgraded to
-        # include https://github.com/cex-solutions/types-pysaml2/pull/59
-        client_config.setattr("sp", "authn_requests_signed", False)  # type: ignore
-        client_config.setattr("sp", "want_assertions_signed", False)  # type: ignore
-        client_config.setattr("sp", "want_response_signed", False)  # type: ignore
-        interface._client = Saml2Client(client_config)
-        return interface
+
+        return Interface(_interface_config(do_security=False), initialised_redis)
 
     @pytest.fixture(
         params=[
@@ -396,7 +419,8 @@ class TestInterfaceSecurityFeatures:
             "cmk.gui.userdb.saml2.interface._metadata_from_idp",
             lambda c, t: _IDENTITY_PROVIDER_METADATA,
         )
-        return Interface(config=_INTERFACE_CONFIG, requests_db=initialised_redis)
+
+        return Interface(config=_interface_config(do_security=True), requests_db=initialised_redis)
 
     def test_interface_properties_are_secure(self, interface: Interface) -> None:
         assert interface._client.authn_requests_signed is True
@@ -428,6 +452,7 @@ class TestInterfaceSecurityFeatures:
     def test_parse_signed_authentication_request_response(self, interface: Interface) -> None:
         # SHA1 is normally disallowed, but used in the test data for performance reasons
         interface._allowed_algorithms.add(SIG_RSA_SHA1)
+
         parsed_response = interface.parse_authentication_request_response(
             _encode(_SIGNED_AUTHENTICATION_REQUEST_RESPONSE)
         )

@@ -66,7 +66,7 @@ class TestConnector:
         assert connector.type() == SAML2_CONNECTOR_TYPE
         assert connector.id == "uuid123"
         assert (
-            connector.config.interface_config.idp_metadata_endpoint
+            connector.config.identity_provider_url
             == "http://localhost:8080/simplesaml/saml2/idp/metadata.php"
         )
 

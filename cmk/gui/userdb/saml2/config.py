@@ -6,11 +6,24 @@
 import enum
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, NewType
 
 from pydantic import BaseModel
+from saml2 import BINDING_HTTP_POST
+from saml2.xmldsig import (
+    DIGEST_SHA512,
+    SIG_ECDSA_SHA256,
+    SIG_ECDSA_SHA384,
+    SIG_ECDSA_SHA512,
+    SIG_RSA_SHA256,
+    SIG_RSA_SHA384,
+    SIG_RSA_SHA512,
+)
 
 from cmk.utils.paths import saml2_signature_private_keyfile, saml2_signature_public_keyfile
+from cmk.utils.site import url_prefix
+
+Milliseconds = NewType("Milliseconds", int)
 
 
 class Certificate(BaseModel):
@@ -25,12 +38,36 @@ class UserAttributeNames(BaseModel):
     contactgroups: str | None
 
 
-class InterfaceConfig(BaseModel):
-    connection_timeout: tuple[int, int]
+class SecuritySettings(BaseModel):
+    allow_unknown_user_attributes: bool
+    sign_authentication_requests: bool
+    enforce_signed_responses: bool
+    enforce_signed_assertions: bool
+    signing_algortithm: str
+    digest_algorithm: str
+    allowed_algorithms: set[str]
+    signature_certificate: Certificate
+
+
+class ConnectivitySettings(BaseModel):
+    timeout: tuple[int, int]
     checkmk_server_url: str
     idp_metadata_endpoint: str
+    entity_id: str
+    assertion_consumer_service_endpoint: str
+    binding: str
+
+
+class CacheSettings(BaseModel):
+    redis_namespace: str
+    authentication_request_id_expiry: Milliseconds
+
+
+class InterfaceConfig(BaseModel):
     user_attributes: UserAttributeNames
-    signature_certificate: Certificate
+    security_settings: SecuritySettings
+    connectivity_settings: ConnectivitySettings
+    cache_settings: CacheSettings
 
 
 class ConnectorConfig(BaseModel):
@@ -78,17 +115,43 @@ def _determine_certificate_paths(certificate: str | tuple[str, tuple[str, str]])
 
 def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
     idp_url = user_input["idp_metadata_endpoint"]
+    checkmk_server_url = f"{user_input['checkmk_server_url']}{url_prefix()}check_mk"
     interface_config = InterfaceConfig(
-        connection_timeout=user_input["connection_timeout"],
-        idp_metadata_endpoint=idp_url,
-        checkmk_server_url=user_input["checkmk_server_url"],
+        connectivity_settings=ConnectivitySettings(
+            timeout=user_input["connection_timeout"],
+            idp_metadata_endpoint=user_input["idp_metadata_endpoint"],
+            checkmk_server_url=checkmk_server_url,
+            entity_id=f"{checkmk_server_url}/saml_metadata.py",
+            assertion_consumer_service_endpoint=f"{checkmk_server_url}/saml_acs.py?acs",
+            binding=BINDING_HTTP_POST,
+        ),
         user_attributes=UserAttributeNames(
             user_id=user_input["user_id"],
             alias=user_input["alias"],
             email=user_input["email"],
             contactgroups=user_input["contactgroups"],
         ),
-        signature_certificate=_determine_certificate_paths(user_input["signature_certificate"]),
+        security_settings=SecuritySettings(
+            allow_unknown_user_attributes=True,
+            sign_authentication_requests=True,
+            enforce_signed_responses=True,
+            enforce_signed_assertions=True,
+            signing_algortithm=SIG_RSA_SHA512,
+            digest_algorithm=DIGEST_SHA512,  # this is referring to the digest alg the counterparty should use
+            allowed_algorithms={
+                SIG_ECDSA_SHA256,
+                SIG_ECDSA_SHA384,
+                SIG_ECDSA_SHA512,
+                SIG_RSA_SHA256,
+                SIG_RSA_SHA384,
+                SIG_RSA_SHA512,
+            },
+            signature_certificate=_determine_certificate_paths(user_input["signature_certificate"]),
+        ),
+        cache_settings=CacheSettings(
+            redis_namespace="saml2_authentication_requests",
+            authentication_request_id_expiry=Milliseconds(5 * 60 * 1000),
+        ),
     )
     return ConnectorConfig(
         type=user_input["type"],

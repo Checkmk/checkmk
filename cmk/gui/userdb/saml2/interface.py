@@ -5,36 +5,24 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import NewType
 
 import requests
 from pydantic import BaseModel
 from redis import Redis
 from redis.client import Pipeline
-from saml2 import BINDING_HTTP_POST
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
 from saml2.metadata import create_metadata_string
 from saml2.response import AuthnResponse
 from saml2.s_utils import UnknownSystemEntity
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.xmldsig import (
-    DIGEST_SHA512,
-    SIG_ECDSA_SHA256,
-    SIG_ECDSA_SHA384,
-    SIG_ECDSA_SHA512,
-    SIG_RSA_SHA256,
-    SIG_RSA_SHA384,
-    SIG_RSA_SHA512,
-)
 
 from cmk.utils.redis import IntegrityCheckResponse, query_redis
-from cmk.utils.site import url_prefix
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.log import logger
-from cmk.gui.userdb.saml2.config import InterfaceConfig
+from cmk.gui.userdb.saml2.config import ConnectivitySettings, InterfaceConfig, SecuritySettings
 
 LOGGER = logger.getChild("saml2")
 
@@ -42,7 +30,6 @@ LOGGER = logger.getChild("saml2")
 XMLData = NewType("XMLData", str)
 HTMLFormString = NewType("HTMLFormString", str)
 RequestId = NewType("RequestId", str)
-Milliseconds = NewType("Milliseconds", int)
 
 
 class HTTPPostRequest(BaseModel):
@@ -66,38 +53,33 @@ def _metadata_from_idp(url: str, timeout: tuple[int, int]) -> str | None:
     return metadata.text
 
 
-def saml_config(
-    checkmk_server_url: str,
-    idp_metadata_endpoint: str,
-    timeout: tuple[int, int],
-    signature_private_keyfile: Path,
-    signature_public_keyfile: Path,
-) -> SPConfig:
+def saml_config(connection: ConnectivitySettings, security: SecuritySettings) -> SPConfig:
     """Convert valuespecs into a valid SAML Service Provider configuration."""
     config = SPConfig()
-    checkmk_base_url = f"{checkmk_server_url}{url_prefix()}check_mk"
     sp_configuration = {
         "endpoints": {
             "assertion_consumer_service": [
-                (f"{checkmk_base_url}/saml_acs.py?acs", BINDING_HTTP_POST),
+                (connection.assertion_consumer_service_endpoint, connection.binding),
             ]
         },
-        "allow_unsolicited": True,
-        "authn_requests_signed": True,
-        "want_assertions_signed": True,
-        "want_response_signed": True,
-        "signing_algorithm": SIG_RSA_SHA512,
-        "digest_algorithm": DIGEST_SHA512,  # this is referring to the digest alg the counterparty should use
+        "allow_unsolicited": security.allow_unknown_user_attributes,
+        "authn_requests_signed": security.sign_authentication_requests,
+        "want_assertions_signed": security.enforce_signed_assertions,
+        "want_response_signed": security.enforce_signed_responses,
+        "signing_algorithm": security.signing_algortithm,
+        "digest_algorithm": security.digest_algorithm,  # this is referring to the digest alg the counterparty should use
     }
     config.load(
         {
-            "entityid": f"{checkmk_base_url}/saml_metadata.py",
-            "metadata": {"inline": [_metadata_from_idp(idp_metadata_endpoint, timeout)]},
+            "entityid": connection.entity_id,
+            "metadata": {
+                "inline": [_metadata_from_idp(connection.idp_metadata_endpoint, connection.timeout)]
+            },
             "service": {"sp": sp_configuration},
-            "allow_unknown_attributes": True,
-            "http_client_timeout": timeout,
-            "key_file": str(signature_private_keyfile),
-            "cert_file": str(signature_public_keyfile),
+            "allow_unknown_attributes": security.allow_unknown_user_attributes,
+            "http_client_timeout": connection.timeout,
+            "key_file": str(security.signature_certificate.private),
+            "cert_file": str(security.signature_certificate.public),
             "encryption_keypairs": [
                 {
                     # TODO (CMK-11946): implement encryption
@@ -113,11 +95,7 @@ def saml_config(
 class Interface:
     def __init__(self, config: InterfaceConfig, requests_db: Redis[str]) -> None:
         self._config = saml_config(
-            timeout=config.connection_timeout,
-            idp_metadata_endpoint=config.idp_metadata_endpoint,
-            checkmk_server_url=config.checkmk_server_url,
-            signature_private_keyfile=config.signature_certificate.private,
-            signature_public_keyfile=config.signature_certificate.public,
+            connection=config.connectivity_settings, security=config.security_settings
         )
         self._user_attributes = config.user_attributes
 
@@ -128,9 +106,8 @@ class Interface:
             0
         ]  # May or may not be the metadata endpoint of the IdP
 
-        self.acs_endpoint, self.acs_binding = self._config.getattr("endpoints")[
-            "assertion_consumer_service"
-        ][0]
+        self.acs_endpoint = config.connectivity_settings.assertion_consumer_service_endpoint
+        self.acs_binding = config.connectivity_settings.binding
 
         self._client = Saml2Client(config=self._config)
         try:
@@ -151,18 +128,13 @@ class Interface:
         # Maintaining an allow-list has the advantage of knowing exactly what we support, and we are
         # less prone to changes made to the pysaml2 dependency. New algorithms are not added
         # frequently.
-        self._allowed_algorithms = {
-            SIG_ECDSA_SHA256,
-            SIG_ECDSA_SHA384,
-            SIG_ECDSA_SHA512,
-            SIG_RSA_SHA256,
-            SIG_RSA_SHA384,
-            SIG_RSA_SHA512,
-        }
+        self._allowed_algorithms = config.security_settings.allowed_algorithms
 
         self._redis_requests_db = requests_db
-        self._redis_namespace = "saml2_authentication_requests"
-        self._authentication_request_id_expiry = Milliseconds(5 * 60 * 1000)
+        self._redis_namespace = config.cache_settings.redis_namespace
+        self._authentication_request_id_expiry = (
+            config.cache_settings.authentication_request_id_expiry
+        )
 
     @property
     def metadata(self) -> XMLData:

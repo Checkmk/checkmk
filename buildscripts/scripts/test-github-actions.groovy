@@ -15,7 +15,7 @@ def main() {
                     "grep target: .github/workflows/pr.yaml | cut -f2 -d':'"
                 ).split("\n").collect({target -> target.trim()})
                 targets.each({target ->
-                    stage(target) { 
+                    stage(target) {
                         sh("make -C tests ${target}");
                     }
                 })

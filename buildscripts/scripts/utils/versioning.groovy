@@ -201,7 +201,10 @@ def delete_non_cre_files() {
         "cce.py",
     ]
     find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
-    sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""
+    // Do not remove files in .git, .venv, .mypy_cache directories
+    sh """bash -c \"find . \\
+        -not \\( -path ./.\\* -prune \\) \\
+        \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""""
 }
 
 def strip_rc_number_from_version(VERSION) {

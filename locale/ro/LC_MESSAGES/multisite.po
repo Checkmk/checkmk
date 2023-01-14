@@ -753,6 +753,10 @@ msgstr ""
 msgid "(default is %r for %s/TLS)"
 msgstr ""
 
+#, fuzzy
+msgid "(deprecated) Kube-state-metrics"
+msgstr "cereri/sec"
+
 msgid "(disabled)"
 msgstr "(dezactivat)"
 
@@ -10371,6 +10375,10 @@ msgstr ""
 msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 
+#, fuzzy
+msgid "Contact groups attribute"
+msgstr "Eticheta de grup nou"
+
 msgid "Contact groups defined in rule"
 msgstr ""
 
@@ -14433,9 +14441,6 @@ msgstr ""
 msgid "Displays amount of services in a selected state."
 msgstr ""
 
-msgid "Displays an introduction and Checkmk logo."
-msgstr ""
-
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr ""
 
@@ -15587,6 +15592,10 @@ msgstr ""
 
 msgid "E-Mails"
 msgstr ""
+
+#, fuzzy
+msgid "E-mail address attribute"
+msgstr "Atribute personalizate"
 
 msgid "E.Type"
 msgstr ""
@@ -19269,6 +19278,10 @@ msgstr ""
 
 msgid "Full name"
 msgstr ""
+
+#, fuzzy
+msgid "Full name attribute"
+msgstr "Atribute personalizate"
 
 msgid "Full name or alias of the user"
 msgstr ""
@@ -25200,14 +25213,6 @@ msgstr ""
 
 msgid "KiB out of sync"
 msgstr ""
-
-#, fuzzy
-msgid "Kube state metrics"
-msgstr "cereri/sec"
-
-#, fuzzy
-msgid "Kube-state-metrics"
-msgstr "cereri/sec"
 
 msgid "Kubernetes"
 msgstr ""
@@ -33885,9 +33890,6 @@ msgid "Oversubscribed"
 msgstr ""
 
 msgid "Overview"
-msgstr ""
-
-msgid "Overview / Introduction"
 msgstr ""
 
 msgid "Owned by other users"
@@ -45737,6 +45739,14 @@ msgstr ""
 msgid "The attribute is added to this section in the edit dialog."
 msgstr ""
 
+msgid "The attribute used as the e-mail of the user."
+msgstr ""
+
+msgid ""
+"The attribute used as the full name of the user. If this is not specified, "
+"the user ID is used."
+msgstr ""
+
 msgid ""
 "The attribute used to identify an individual user. This attribute must be "
 "unique."
@@ -45748,6 +45758,12 @@ msgid ""
 msgstr ""
 
 msgid "The attribute used to identify users group memberships."
+msgstr ""
+
+msgid ""
+"The attribute used to map contact groups between your Identity Provider and "
+"Checkmk. Note that contact groups must exist in Checkmk so that a mapping "
+"can be done."
 msgstr ""
 
 msgid ""
@@ -46728,6 +46744,9 @@ msgstr ""
 msgid ""
 "The key with the fingerprint %s which is needed to decrypt the backup is "
 "misssing."
+msgstr ""
+
+msgid "The kube-state-metrics option is deprecated - Werk 14572."
 msgstr ""
 
 #, fuzzy, python-format
@@ -56193,11 +56212,6 @@ msgstr "saptamanal"
 msgid "Welcome to Checkmk Mobile."
 msgstr ""
 
-msgid ""
-"Welcome to Checkmk. If you want to learn more about Checkmk, please visit "
-"our <a href=\"https://checkmk.com/\" target=\"_blank\">user manual</a>."
-msgstr ""
-
 msgid "Werk"
 msgstr ""
 
@@ -60977,6 +60991,10 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Kube state metrics"
+#~ msgstr "cereri/sec"
 
 #, fuzzy
 #~ msgid "Create new users on login"
@@ -65782,10 +65800,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "contact group"
-#~ msgstr "Eticheta de grup nou"
-
-#, fuzzy
-#~ msgid "contact groups"
 #~ msgstr "Eticheta de grup nou"
 
 #, fuzzy

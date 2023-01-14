@@ -757,6 +757,10 @@ msgstr "(incorporado)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(por defecto es %r para %s/TLS)"
 
+#, fuzzy
+msgid "(deprecated) Kube-state-metrics"
+msgstr "Kube-state-metrics"
+
 msgid "(disabled)"
 msgstr "(desactivado)"
 
@@ -11084,6 +11088,10 @@ msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Los grupos de contacto se utilizan para asignar usuarios a hosts y servicios"
 
+#, fuzzy
+msgid "Contact groups attribute"
+msgstr "Grupos de contacto"
+
 msgid "Contact groups defined in rule"
 msgstr "Grupos de contactos definidos en la norma"
 
@@ -15040,9 +15048,6 @@ msgstr "Muestra la cantidad de hosts en un estado seleccionado."
 msgid "Displays amount of services in a selected state."
 msgstr "Muestra la cantidad de servicios en un estado seleccionado."
 
-msgid "Displays an introduction and Checkmk logo."
-msgstr "Muestra una introducción y el logotipo de Checkmk."
-
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr "Muestra los sitios y los estados o los hosts y los estados de un sitio"
 
@@ -16205,6 +16210,10 @@ msgstr "DynamoDB"
 
 msgid "E-Mails"
 msgstr "Correos electrónicos"
+
+#, fuzzy
+msgid "E-mail address attribute"
+msgstr "Dirección de correo electrónico"
 
 msgid "E.Type"
 msgstr "E.Tipo"
@@ -19937,6 +19946,10 @@ msgstr "Volcado completo de todas las variables y comandos"
 
 msgid "Full name"
 msgstr "Nombre completo"
+
+#, fuzzy
+msgid "Full name attribute"
+msgstr "Atributo del miembro"
 
 msgid "Full name or alias of the user"
 msgstr "Nombre completo o alias del usuario"
@@ -26880,12 +26893,6 @@ msgstr "Palabra clave"
 
 msgid "KiB out of sync"
 msgstr "KiB desincronizado"
-
-msgid "Kube state metrics"
-msgstr "Métricas de estado de Kube"
-
-msgid "Kube-state-metrics"
-msgstr "Kube-state-metrics"
 
 msgid "Kubernetes"
 msgstr "Kubernetes"
@@ -35289,9 +35296,6 @@ msgstr "Sobrecarga de trabajo"
 
 msgid "Overview"
 msgstr "Resumen"
-
-msgid "Overview / Introduction"
-msgstr "Visión general / Introducción"
 
 msgid "Owned by other users"
 msgstr "Propiedad de otros usuarios"
@@ -47736,6 +47740,15 @@ msgid "The attribute is added to this section in the edit dialog."
 msgstr "El atributo se añade a esta sección en el diálogo de edición."
 
 #, fuzzy
+msgid "The attribute used as the e-mail of the user."
+msgstr "El atributo LDAP que contiene el alias del usuario."
+
+msgid ""
+"The attribute used as the full name of the user. If this is not specified, "
+"the user ID is used."
+msgstr ""
+
+#, fuzzy
 msgid ""
 "The attribute used to identify an individual user. This attribute must be "
 "unique."
@@ -47753,6 +47766,12 @@ msgstr ""
 msgid "The attribute used to identify users group memberships."
 msgstr ""
 "Atributo utilizado para identificar la pertenencia a grupos de usuarios."
+
+msgid ""
+"The attribute used to map contact groups between your Identity Provider and "
+"Checkmk. Note that contact groups must exist in Checkmk so that a mapping "
+"can be done."
+msgstr ""
 
 msgid ""
 "The availability is computed by processing entries from a data table of "
@@ -49017,6 +49036,9 @@ msgid ""
 msgstr ""
 "La clave con la huella dactilar %s que se necesita para descifrar la copia "
 "de seguridad es errónea."
+
+msgid "The kube-state-metrics option is deprecated - Werk 14572."
+msgstr ""
 
 #, python-format
 msgid "The label '%s' does not exist but is required."
@@ -60302,13 +60324,6 @@ msgstr "Tarifa semanal"
 msgid "Welcome to Checkmk Mobile."
 msgstr "Bienvenido a Checkmk Mobile."
 
-msgid ""
-"Welcome to Checkmk. If you want to learn more about Checkmk, please visit "
-"our <a href=\"https://checkmk.com/\" target=\"_blank\">user manual</a>."
-msgstr ""
-"Bienvenido a Checkmk. Si quieres saber más sobre Checkmk, visita nuestro <a "
-"href=\"https://checkmk.com/\" target=\"_blank\">manual de usuario</a>."
-
 msgid "Werk"
 msgstr "Werk"
 
@@ -66022,6 +66037,22 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Displays an introduction and Checkmk logo."
+#~ msgstr "Muestra una introducción y el logotipo de Checkmk."
+
+#~ msgid "Kube state metrics"
+#~ msgstr "Métricas de estado de Kube"
+
+#~ msgid "Overview / Introduction"
+#~ msgstr "Visión general / Introducción"
+
+#~ msgid ""
+#~ "Welcome to Checkmk. If you want to learn more about Checkmk, please visit "
+#~ "our <a href=\"https://checkmk.com/\" target=\"_blank\">user manual</a>."
+#~ msgstr ""
+#~ "Bienvenido a Checkmk. Si quieres saber más sobre Checkmk, visita nuestro "
+#~ "<a href=\"https://checkmk.com/\" target=\"_blank\">manual de usuario</a>."
 
 #, fuzzy
 #~| msgid "Create users only on login"

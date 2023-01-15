@@ -763,6 +763,14 @@ msgid "(default is %r for %s/TLS)"
 msgstr "(Standard ist %r für %s/TLS)"
 
 #, fuzzy
+msgid "(deprecated) Host name"
+msgstr "Metriken für kube-state"
+
+#, fuzzy
+msgid "(deprecated) IP Address"
+msgstr "Ursprungs-IP-Adresse"
+
+#, fuzzy
 msgid "(deprecated) Kube-state-metrics"
 msgstr "Metriken für kube-state"
 
@@ -49487,6 +49495,9 @@ msgstr ""
 "Berechtigung \"Kann ausführbare Dateien hinzufügen oder ändern\" "
 "konfiguriert werden."
 
+msgid "The options IP Address and Host name are deprecated - Werk 14573."
+msgstr ""
+
 #, fuzzy
 msgid "The organisation ID"
 msgstr "Organisation"
@@ -70754,9 +70765,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Sort overflow"
 #~ msgstr "Sortiere Überlauf"
-
-#~ msgid "Source IP Address"
-#~ msgstr "Ursprungs-IP-Adresse"
 
 #~ msgid "Speed"
 #~ msgstr "Geschwindigkeit"

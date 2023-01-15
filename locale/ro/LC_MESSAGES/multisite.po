@@ -754,6 +754,14 @@ msgid "(default is %r for %s/TLS)"
 msgstr ""
 
 #, fuzzy
+msgid "(deprecated) Host name"
+msgstr "cereri/sec"
+
+#, fuzzy
+msgid "(deprecated) IP Address"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "(deprecated) Kube-state-metrics"
 msgstr "cereri/sec"
 
@@ -47337,6 +47345,9 @@ msgid ""
 "permission \"Can add or modify executables\"."
 msgstr ""
 
+msgid "The options IP Address and Host name are deprecated - Werk 14573."
+msgstr ""
+
 #, fuzzy
 msgid "The organisation ID"
 msgstr "Numele Aplicatiei"
@@ -62844,10 +62855,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Size of license"
 #~ msgstr "licente nefolosite"
-
-#, fuzzy
-#~ msgid "Source IP Address"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "Starting up"

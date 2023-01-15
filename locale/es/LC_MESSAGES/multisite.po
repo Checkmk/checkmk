@@ -758,6 +758,14 @@ msgid "(default is %r for %s/TLS)"
 msgstr "(por defecto es %r para %s/TLS)"
 
 #, fuzzy
+msgid "(deprecated) Host name"
+msgstr "Kube-state-metrics"
+
+#, fuzzy
+msgid "(deprecated) IP Address"
+msgstr "Dirección IP de origen"
+
+#, fuzzy
 msgid "(deprecated) Kube-state-metrics"
 msgstr "Kube-state-metrics"
 
@@ -49800,6 +49808,9 @@ msgstr ""
 "La opción de utilizar un comando personalizado sólo puede configurarse con "
 "el permiso \"Puede añadir o modificar ejecutables\"."
 
+msgid "The options IP Address and Host name are deprecated - Werk 14573."
+msgstr ""
+
 #, fuzzy
 msgid "The organisation ID"
 msgstr "Organización"
@@ -71240,9 +71251,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Sort overflow"
 #~ msgstr "Desbordamiento de la clasificación"
-
-#~ msgid "Source IP Address"
-#~ msgstr "Dirección IP de origen"
 
 #~ msgid "Speed"
 #~ msgstr "Velocidad"

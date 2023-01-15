@@ -1839,7 +1839,7 @@ class LayoutApplier {
         let new_force_options: ForceOptions;
         if (
             node.data.use_style &&
-            node.data.use_style.constructor.prototype.class_name == "force"
+            node.data.use_style.constructor.class_name == "force"
         )
             new_force_options = node.data.use_style.style_config.options;
         else if (node.parent)

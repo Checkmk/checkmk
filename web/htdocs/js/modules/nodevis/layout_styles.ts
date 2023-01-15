@@ -356,7 +356,11 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
             const node = element as NodevisNode;
             const node_style: null | AbstractLayoutStyle = node.data.use_style;
             if (node_style && node != this.style_root_node) {
-                if (node_style.constructor.prototype.class_name == "block") {
+                if (
+                    // @ts-ignore
+                    node_style.constructor.class_name ==
+                    LayoutStyleBlock.class_name
+                ) {
                     return node_style.get_size();
                 }
 
@@ -366,7 +370,10 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                             180) *
                         Math.PI;
                     let bounding_rect = {height: 10, width: 10};
-                    if (node_style instanceof LayoutStyleHierarchyBase)
+                    if (
+                        node_style instanceof LayoutStyleHierarchyBase &&
+                        node_style.unrotated_vertices.length > 0
+                    )
                         bounding_rect = get_bounding_rect_of_rotated_vertices(
                             node_style.unrotated_vertices,
                             rad
@@ -384,14 +391,21 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 node_rad = node_rad + Math.PI - rad;
 
                 let bounding_rect = {height: 10, width: 10};
-                if (node_style instanceof LayoutStyleHierarchyBase)
+                if (
+                    node_style instanceof LayoutStyleHierarchyBase &&
+                    node_style.unrotated_vertices.length > 0
+                )
                     bounding_rect = get_bounding_rect_of_rotated_vertices(
                         node_style.unrotated_vertices,
                         node_rad
                     );
 
                 let extra_width = 0;
-                if (node_style.constructor.prototype.class_name == "hierarchy")
+                if (
+                    // @ts-ignore
+                    node_style.constructor.class_name ==
+                    LayoutStyleHierarchy.class_name
+                )
                     extra_width =
                         Math.abs(bounding_rect.height * Math.sin(node_rad)) *
                         0.5;

@@ -144,6 +144,9 @@ export class LayoutStyleExampleGenerator {
                     this._update_nodes();
                     this._render_nodes_and_links();
                 },
+                last_zoom: {
+                    k: 1,
+                },
             },
         } as unknown as NodevisWorld;
     }
@@ -268,7 +271,7 @@ export class LayoutStyleExampleGenerator {
 
         const options: StyleOptionDefinition[] = [];
         options.push(this._example_options.total_nodes);
-        if (this._style_config.type != LayoutStyleBlock.prototype.type())
+        if (this._style_config.type != LayoutStyleBlock.class_name)
             options.push(this._example_options.depth);
 
         let rows = table

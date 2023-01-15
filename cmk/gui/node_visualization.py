@@ -8,7 +8,6 @@ import abc
 import hashlib
 import itertools
 import json
-import pickle
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -18,6 +17,7 @@ import livestatus
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
+from cmk.utils import store
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, UserId
 
@@ -223,38 +223,35 @@ def _get_default_view_hostnames(topology_configuration: TopologyConfiguration) -
     return hostnames
 
 
+_topology_settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.json"
+
+
 def _delete_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
     query_hash = _compute_topology_hash(topology_configuration)
-    settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.pkl"
-    if not settings_file.exists():
+    if not _topology_settings_file.exists():
         return
 
-    with open(settings_file, "rb") as f:
-        try:
-            data = pickle.load(f)
-        except pickle.UnpicklingError:
-            data = {}
+    try:
+        data = json.loads(store.load_text_from_file(_topology_settings_file))
+    except json.JSONDecodeError:
+        data = {}
 
-    with open(settings_file, "wb") as f:
-        data.pop(query_hash, None)
-        f.write(pickle.dumps(data))
+    data.pop(query_hash, None)
+    store.save_text_to_file(_topology_settings_file, json.dumps(data))
 
 
 def _save_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
     query_hash = _compute_topology_hash(topology_configuration)
-    settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.pkl"
-    if not settings_file.exists():
-        settings_file.touch()
+    if not _topology_settings_file.exists():
+        _topology_settings_file.touch()
 
-    with open(settings_file, "rb") as f:
-        try:
-            data = pickle.load(f)
-        except pickle.UnpicklingError:
-            data = {}
+    try:
+        data = json.loads(store.load_text_from_file(_topology_settings_file))
+    except json.JSONDecodeError:
+        data = {}
 
-    with open(settings_file, "wb") as f:
-        data[query_hash] = asdict(topology_configuration.frontend)
-        f.write(pickle.dumps(data))
+    data[query_hash] = asdict(topology_configuration.frontend)
+    store.save_text_to_file(_topology_settings_file, json.dumps(data))
 
 
 def _compute_topology_hash(topology_configuration: TopologyConfiguration) -> str:
@@ -267,11 +264,13 @@ def _get_topology_frontend_configuration_for_filter(
 ) -> dict[str, Any]:
     ident = "#".join([topology_type, filter_configuration.ident()])
     query_hash = hashlib.md5(ident.encode("utf-8")).hexdigest()
-    settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.pkl"
-    if not settings_file.exists():
+    if not _topology_settings_file.exists():
         return {}
-    with open(settings_file, "rb") as f:
-        return pickle.load(f).get(query_hash, {})
+
+    try:
+        return json.loads(store.load_text_from_file(_topology_settings_file)).get(query_hash)
+    except json.JSONDecodeError:
+        return {}
 
 
 class ABCTopologyPage(Page):

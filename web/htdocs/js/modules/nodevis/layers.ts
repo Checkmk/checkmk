@@ -260,6 +260,7 @@ export class LayeredNodesLayer extends FixLayer {
     static class_name = "nodes";
     node_instances: {[name: string]: AbstractGUINode};
     link_instances: {[name: string]: AbstractLink};
+    _links_for_node: {[name: string]: AbstractLink[]} = {};
     last_scale: number;
 
     nodes_selection: d3SelectionG;
@@ -300,6 +301,16 @@ export class LayeredNodesLayer extends FixLayer {
         return this.node_instances[node_id];
     }
 
+    get_links_for_node(node_id: string): AbstractLink[] {
+        return this._links_for_node[node_id] || [];
+    }
+
+    simulation_end() {
+        for (const name in this.node_instances) {
+            this.node_instances[name].simulation_end_actions();
+        }
+    }
+
     z_index(): number {
         return 50;
     }
@@ -313,31 +324,42 @@ export class LayeredNodesLayer extends FixLayer {
     }
 
     render_line_style(into_selection: d3SelectionG): void {
-        const line_style_div = into_selection.selectAll("select").data([null]);
+        const line_style_row = into_selection
+            .selectAll("table.line_style tr")
+            .data([null])
+            .join(enter =>
+                enter.append("table").classed("line_style", true).append("tr")
+            );
 
-        const line_style_div_enter = line_style_div.enter();
-        const row_enter = line_style_div_enter.append("table").append("tr");
-        row_enter.append("td").text("Line style");
+        line_style_row
+            .selectAll("td.label")
+            .data([null])
+            .join("td")
+            .classed("label", true)
+            .text("Line style");
 
-        const select = row_enter
-            .append("select")
-            .style("pointer-events", "all")
-            .style("width", "200px");
-
-        let options = select
-            .on("change", event => this._change_line_style(event))
-            .selectAll<HTMLOptionElement, any>("option")
-            .data(["straight", "round", "elbow"]);
-        options.exit().remove();
-        options = options.enter().append("option").merge(options);
+        const select = line_style_row
+            .selectAll("td.select")
+            .data([null])
+            .join(enter =>
+                enter
+                    .append("td")
+                    .classed("select", true)
+                    .append("select")
+                    .style("pointer-events", "all")
+                    .style("width", "200px")
+                    .on("change", event => this._change_line_style(event))
+            );
 
         let current_style = "round";
         this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
-            // @ts-ignore
             current_style = node_chunk.layout_settings.config.line_config.style;
         });
 
-        options
+        select
+            .selectAll<HTMLOptionElement, any>("option")
+            .data(["straight", "round", "elbow"])
+            .join("option")
             .property("value", d => d)
             .property("selected", d => d == current_style)
             .text(d => d);
@@ -417,13 +439,15 @@ export class LayeredNodesLayer extends FixLayer {
 
     _update_links(): void {
         const links = this._world.viewport.get_all_links();
+        this._links_for_node = {};
+        this.link_instances = {};
 
         this.links_selection
             .selectAll<SVGGElement, NodevisLink>(".link_element")
             .remove();
 
         // TODO: rewrite this block, fix typescript
-        const links_selection = this.links_selection
+        this.links_selection
             .selectAll<SVGGElement, NodevisLink>(".link_element")
             .data(links, d => compute_link_id(d))
             .enter()
@@ -432,15 +456,18 @@ export class LayeredNodesLayer extends FixLayer {
                 this._create_link(link_data, d3.select(links[idx]))
             );
 
-        links_selection.each((link_data, idx, links) =>
-            // @ts-ignore
-            this._update_link(link_data, d3.select(links[idx]))
-        );
-        links_selection
-            .exit()
-            // @ts-ignore
-            .each(link_data => this._remove_link(link_data))
-            .remove();
+        for (const [_key, link_instance] of Object.entries(
+            this.link_instances
+        )) {
+            const source_id = link_instance._link_data.source.data.id;
+            const target_id = link_instance._link_data.target.data.id;
+            source_id in this._links_for_node ||
+                (this._links_for_node[source_id] = []);
+            target_id in this._links_for_node ||
+                (this._links_for_node[target_id] = []);
+            this._links_for_node[source_id].push(link_instance);
+            this._links_for_node[target_id].push(link_instance);
+        }
     }
 
     _create_node(node_data: NodevisNode): AbstractGUINode {

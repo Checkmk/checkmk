@@ -25,10 +25,7 @@ export class Toolbar {
     _plugin_custom_elements_selection: d3SelectionDiv;
 
     constructor(world: NodevisWorld, selection: d3SelectionDiv) {
-        selection
-            .attr("id", "toolbar")
-            .style("width", "100%")
-            .style("height", "100%");
+        selection.attr("id", "toolbar").style("width", "100%");
         this._world = world;
         this._div_selection = selection;
         this._plugin_contents_selection = this._div_selection
@@ -43,9 +40,6 @@ export class Toolbar {
         this._plugin_custom_elements_selection = this._plugin_controls_selection
             .append("div")
             .attr("id", "custom");
-
-        // Kept for debug purposes. This opens the layout toolbar a second later
-        //setTimeout(()=>this._toolbar_plugins["layouting_toolbar"].toggle_active(), 1000)
     }
 
     setup_world_components() {

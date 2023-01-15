@@ -55,6 +55,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.gui.watolib.utils import multisite_dir
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter
@@ -75,8 +76,9 @@ class MKGrowthInterruption(MKGeneralException):
 
 @dataclass(kw_only=True)
 class TopologyDatasourceConfiguration:
-    available_datasource: list[str] = field(default_factory=list)
-    used_datasource: str = "default"
+    available_datasources: list[str] = field(default_factory=list)
+    reference: str = "default"
+    compare_to: str = "default"
 
 
 @dataclass
@@ -85,15 +87,21 @@ class TopologyFrontendConfiguration:
     growth_forbidden_nodes: set[str] = field(default_factory=set)  # Growth stops here
     growth_continue_nodes: set[str] = field(default_factory=set)  # Growth continues here
     overlays_config: dict[str, dict[str, Any]] = field(default_factory=dict)
-    node_style_config: dict[str, Any] = field(default_factory=dict)
     custom_node_settings: dict[str, dict[str, Any]] = field(default_factory=dict)
     datasource_configuration: TopologyDatasourceConfiguration = field(
         default_factory=TopologyDatasourceConfiguration
     )
+    reference_size: list[int] = field(default_factory=lambda: [1024, 768])
+    style_configs: list[dict[str, Any]] = field(default_factory=list)
+    line_config: dict[str, Any] = field(default_factory=dict)
+    force_options: dict[str, int | bool] = field(default_factory=dict)
 
     @classmethod
-    def from_json(cls, serialized: str) -> "TopologyFrontendConfiguration":
-        settings = json.loads(serialized)
+    def from_json_str(cls, serialized: str) -> "TopologyFrontendConfiguration":
+        return cls.from_json_object(json.loads(serialized))
+
+    @classmethod
+    def from_json_object(cls, settings: dict[str, Any]) -> "TopologyFrontendConfiguration":
         for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
             settings[key] = set(settings[key])
         settings["datasource_configuration"] = TopologyDatasourceConfiguration(
@@ -113,7 +121,6 @@ class TopologyFrontendConfiguration:
         value = asdict(self)
         for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
             value[key] = list(value[key])
-        #        value["datasource_configuration"] = asdict
         return value
 
 
@@ -152,9 +159,9 @@ def _get_topology_configuration(
             topology_type, filter_configuration
         )
     ):
-        frontend_configuration = TopologyFrontendConfiguration.from_config(value)
+        frontend_configuration = TopologyFrontendConfiguration.from_json_object(value)
     elif frontend_config := request.get_str_input("topology_frontend_configuration"):
-        frontend_configuration = TopologyFrontendConfiguration.from_json(frontend_config)
+        frontend_configuration = TopologyFrontendConfiguration.from_json_str(frontend_config)
     else:
         frontend_configuration = TopologyFrontendConfiguration()
         frontend_configuration.overlays_config = default_overlays or {}
@@ -222,7 +229,7 @@ def _get_default_view_hostnames(topology_configuration: TopologyConfiguration) -
     return hostnames
 
 
-_topology_settings_file = Path(cmk.utils.paths.omd_root) / "etc" / "topology_settings.json"
+_topology_settings_file = Path(multisite_dir()) / "topology" / "topology_settings.json"
 
 
 def _delete_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
@@ -242,6 +249,7 @@ def _delete_topology_configuration(topology_configuration: TopologyConfiguration
 def _save_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
     query_hash = _compute_topology_hash(topology_configuration)
     if not _topology_settings_file.exists():
+        _topology_settings_file.parent.mkdir(parents=True, exist_ok=True)
         _topology_settings_file.touch()
 
     try:
@@ -249,7 +257,7 @@ def _save_topology_configuration(topology_configuration: TopologyConfiguration) 
     except json.JSONDecodeError:
         data = {}
 
-    data[query_hash] = asdict(topology_configuration.frontend)
+    data[query_hash] = topology_configuration.frontend.get_json_export_object()
     store.save_text_to_file(_topology_settings_file, json.dumps(data))
 
 
@@ -267,6 +275,7 @@ def _get_topology_frontend_configuration_for_filter(
     topology_type: str, filter_configuration: TopologyFilterConfiguration
 ) -> dict[str, Any]:
     query_hash = _get_ident_hash("#".join([topology_type, filter_configuration.ident()]))
+
     if not _topology_settings_file.exists():
         return {}
 
@@ -702,12 +711,14 @@ class AjaxFetchTopology(AjaxPage):
             _save_topology_configuration(topology_configuration)
         topology = self._topology_instance_factory(topology_configuration)
         meshes = topology.compute()
+
+        # TODO: this block should be computed in the topology instance
+        # The instance should deliver the complete topology info (add typing)
         topology_info: dict[str, Any] = {
             "topology_meshes": {},
             "topology_chunks": {},
             "headline": topology.title(),
             "errors": topology.errors(),
-            "frontend_configuration": topology_configuration.frontend.get_json_export_object(),
         }
 
         # Convert mesh information into a node visualization compatible format
@@ -718,6 +729,9 @@ class AjaxFetchTopology(AjaxPage):
                 topology.get_mesh_root(mesh)
             ] = topology.generate_mesh_configuration(mesh)
 
+        topology_info[
+            "frontend_configuration"
+        ] = topology_configuration.frontend.get_json_export_object()
         return topology_info
 
     def _topology_instance_factory(
@@ -875,18 +889,26 @@ class Topology:
                         {"source": hostname, "target": parent, "config": {"type": "default"}}
                     )
 
+        frontend_config = {
+            "line_config": self._get_line_config(self._settings.frontend),
+            "style_configs": self._settings.frontend.style_configs,
+        }
+        if self._settings.frontend.force_options:
+            frontend_config["force_options"] = self._settings.frontend.force_options
+
         return {
-            "layout": {
-                "config": {
-                    "line_config": {
-                        "style": "straight",
-                        "dashed": True,
-                    }
-                }
-            },
+            "layout": {"config": frontend_config},
             "type": "topology",
             "hierarchy": mesh_info,
             "links": mesh_links,
+        }
+
+    def _get_line_config(self, frontend_settings: TopologyFrontendConfiguration) -> dict[str, Any]:
+        if line_config := frontend_settings.line_config:
+            return line_config
+        return {
+            "style": "straight",
+            "dashed": True,
         }
 
     @property

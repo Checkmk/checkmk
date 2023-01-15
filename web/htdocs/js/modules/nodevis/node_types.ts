@@ -1,16 +1,11 @@
 import * as d3 from "d3";
-import {
-    ContextMenuElement,
-    NodevisNode,
-    NodevisWorld,
-    SimulationForce,
-} from "nodevis/type_defs";
+import {ContextMenuElement, NodevisNode, NodevisWorld} from "nodevis/type_defs";
 import {
     AbstractGUINode,
     BasicQuickinfo,
     node_type_class_registry,
 } from "nodevis/node_utils";
-import {TypeWithName} from "nodevis/utils";
+import {SearchFilters, TypeWithName} from "nodevis/utils";
 
 export class TopologyNode extends AbstractGUINode {
     static class_name = "topology";
@@ -131,6 +126,10 @@ export class TopologyNode extends AbstractGUINode {
 
     _toggle_root_node() {
         this.node.data.growth_root = !this.node.data.growth_root;
+        if (!this.node.data.growth_root)
+            new SearchFilters().remove_hosts_from_host_regex(
+                new Set([this.node.data.name])
+            );
         this._world.update_data();
     }
 
@@ -145,23 +144,6 @@ export class TopologyNode extends AbstractGUINode {
     _toggle_growth_continue() {
         this.node.data.growth_continue = !this.node.data.growth_continue;
         this._world.update_data();
-    }
-
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_node;
-            case "collide":
-                return this.node.data.force_options.collision_force_node;
-            case "center":
-                return this.node.data.force_options.center_force / 300;
-            case "link_distance":
-                return this.node.data.force_options.link_force_node;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
-        }
     }
 }
 
@@ -281,23 +263,6 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
             );
         }
     }
-
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_node;
-            case "collide":
-                return this.node.data.force_options.collision_force_node;
-            case "center":
-                return this.node.data.force_options.center_force / 300;
-            case "link_distance":
-                return this.node.data.force_options.link_force_node;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
-        }
-    }
 }
 
 export class BIAggregatorNode extends AbstractGUINode {
@@ -402,23 +367,6 @@ export class BIAggregatorNode extends AbstractGUINode {
             img: "themes/facelift/images/icon_error.png",
         });
         return elements;
-    }
-
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_aggregator;
-            case "collide":
-                return this.node.data.force_options.collision_force_aggregator;
-            case "center":
-                return this.node.data.force_options.center_force / 100;
-            case "link_distance":
-                return this.node.data.force_options.link_force_aggregator;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
-        }
     }
 }
 

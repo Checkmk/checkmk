@@ -279,6 +279,8 @@ export class LayeredViewport {
             .join(enter =>
                 enter
                     .append("div")
+                    .classed("togglebox_wrap", true)
+                    .append("div")
                     .text(d => d.layer.name())
                     .attr("layer_id", d => d.layer.id())
                     .classed("noselect", true)
@@ -321,6 +323,9 @@ export class LayeredViewport {
 
         this._remove_obsolete_chunks();
         this._arrange_multiple_node_chunks();
+
+        this._world.force_simulation.restart_with_alpha(0.3);
+
         this.update_layers();
         this._world.layout_manager.layout_applier.apply_multiple_layouts(
             this.get_hierarchy_list(),
@@ -592,15 +597,14 @@ export class LayeredViewport {
 
     recompute_node_chunk_descendants_and_links(node_chunk) {
         this.update_node_chunk_descendants_and_links(node_chunk);
-        this._world.force_simulation.restart_with_alpha(0.5);
         const all_nodes = this.get_all_nodes();
         const all_links = this.get_all_links();
         this.update_layers();
-
         this._world.force_simulation.update_nodes_and_links(
             all_nodes,
             all_links
         );
+        this._world.force_simulation.restart_with_alpha(0.5);
     }
 
     update_layers() {

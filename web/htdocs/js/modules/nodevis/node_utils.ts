@@ -8,7 +8,6 @@ import {
     d3SelectionSvg,
     NodevisNode,
     NodevisWorld,
-    SimulationForce,
 } from "nodevis/type_defs";
 import * as d3 from "d3";
 
@@ -17,6 +16,7 @@ import {
     DefaultTransition,
     TypeWithName,
 } from "nodevis/utils";
+import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
 
 type d3SelectionNodeText = d3.Selection<
     SVGTextElement,
@@ -530,12 +530,17 @@ export class AbstractGUINode implements TypeWithName {
     }
 
     add_optional_transition(selection, enforce_transition = false) {
+        // TODO: remove
+        if (this._world.layout_manager.skip_optional_transitions)
+            return selection;
+
         if (
             (!this.node.data.transition_info.use_transition &&
                 !enforce_transition) ||
             this._world.layout_manager.dragging
         )
             return selection;
+
         return DefaultTransition.add_transition(
             selection.attr("in_transit", 100)
         )
@@ -564,27 +569,18 @@ export class AbstractGUINode implements TypeWithName {
             .attr("in_transit", 0);
     }
 
-    get_force(force_name: SimulationForce): number {
-        const explicit_force = this._get_explicit_force_option(force_name);
-        if (explicit_force) return explicit_force;
-        return this._get_node_type_specific_force(force_name);
+    get_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return this._get_node_type_specific_force(force_name, force_options);
     }
 
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_node;
-            case "collide":
-                return this.node.data.force_options.collision_force_node;
-            case "center":
-                return this.node.data.force_options.center_force / 300;
-            case "link_distance":
-                return this.node.data.force_options.link_force_node;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
-        }
+    _get_node_type_specific_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return force_options[force_name];
     }
 
     _get_explicit_force_option(force_name: string): number | null {
@@ -596,6 +592,17 @@ export class AbstractGUINode implements TypeWithName {
         }
         return null;
     }
+
+    simulation_end_actions(): void {
+        return;
+    }
+}
+
+export function get_custom_node_settings(node: NodevisNode) {
+    node.data.custom_node_settings = node.data.custom_node_settings || {
+        id: node.data.id,
+    };
+    return node.data.custom_node_settings;
 }
 
 // Stores node visualization classes

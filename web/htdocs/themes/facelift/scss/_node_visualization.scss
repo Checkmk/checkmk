@@ -251,12 +251,51 @@ div.node_vis {
     stroke-width: 3;
   }
 
+  .node_element.white_focus circle {
+    stroke: $white !important;
+    stroke-width: 4;
+  }
+
+  .link_element.crit {
+    stroke: $danger !important;
+    stroke-width: 4;
+  }
+
+  .link_element.white_focus {
+    stroke: $white !important;
+    stroke-width: 4;
+  }
+
+  .link_element.only_in_reference {
+    stroke: $bi-new-element-bright !important;
+    stroke-width: 4;
+  }
+
+  .link_element.only_in_reference.white_focus {
+    stroke: $bi-new-element-bright !important;
+    stroke-width: 4;
+  }
+
+  .link_element.missing_in_reference {
+    stroke: $bi-missing-element-bright !important;
+    stroke-width: 4;
+  }
+
+  .link_element.missing_in_reference.white_focus {
+    stroke: $bi-missing-element-bright !important;
+    stroke-width: 4;
+  }
+
+  div.togglebox_wrap {
+    margin: 5px;
+  }
+
   .togglebox {
     display: table-cell;
+    vertical-align: middle;
     width: 150px;
     height: 27px;
     text-align: center;
-    vertical-align: middle;
     cursor: pointer;
     background: $input-background-color;
     border-radius: $theme-border-radius;
@@ -279,7 +318,7 @@ div.node_vis {
   /* Style indicators */
   .style_indicator {
     opacity: 0.3;
-    stroke: "black";
+    stroke: $black;
     stroke-width: 1;
   }
 
@@ -348,12 +387,6 @@ div.node_vis {
 
   div#togglebuttons {
     display: flex;
-
-    div#togglebutton_layouting_toolbar + div.togglebox {
-      padding-top: 6px;
-      margin: 7px;
-      box-sizing: border-box;
-    }
   }
 }
 

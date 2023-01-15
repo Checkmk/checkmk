@@ -57,12 +57,7 @@ export class NodeMatcher {
     }
 
     find_node(matcher: StyleMatcherConditions): NodevisNode | null {
-        let nodes_to_check: NodevisNode[] = [];
-
-        if (matcher.rule_id) nodes_to_check = this._get_aggregator_nodes();
-        else if (matcher.hostname || matcher.service)
-            nodes_to_check = this._get_leaf_nodes();
-        else nodes_to_check = this._get_all_nodes();
+        const nodes_to_check: NodevisNode[] = this._get_all_nodes();
 
         for (const idx in nodes_to_check) {
             const node = nodes_to_check[idx];
@@ -101,26 +96,36 @@ export class NodeMatcher {
     }
 
     _match_node(matcher, node: NodevisNode): boolean {
+        // TODO: cleanup, remove BI components
         // Basic matches
-        let elements = ["hostname", "service"];
+        const elements: [string, boolean][] = [
+            ["hostname", true],
+            ["service", true],
+            ["id", true],
+        ];
         for (const idx in elements) {
-            const match_type = elements[idx];
-            if (
-                matcher[match_type] &&
-                !matcher[match_type].disabled &&
-                node.data[match_type] != matcher[match_type].value
-            )
-                return false;
+            const entry = elements[idx];
+            const match_type = entry[0];
+            const not_for_bi_aggregator = entry[1];
+            if (matcher[match_type] && !matcher[match_type].disabled) {
+                if (
+                    not_for_bi_aggregator &&
+                    node.data.node_type == "bi_aggregator"
+                )
+                    return false;
+                if (node.data[match_type] != matcher[match_type].value)
+                    return false;
+            }
         }
 
+        if (node.data.node_type != "bi_aggregator") return true;
+
         // List matches
-        elements = ["aggr_path_name", "aggr_path_id"];
-        for (const idx in elements) {
-            const match_type = elements[idx];
+        const list_elements = ["aggr_path_name", "aggr_path_id"];
+        for (const idx in list_elements) {
+            const match_type = list_elements[idx];
             if (!matcher[match_type]) continue;
-
             if (matcher[match_type].disabled) continue;
-
             if (
                 JSON.stringify(matcher[match_type].value) !=
                 JSON.stringify(node.data[match_type])
@@ -128,7 +133,7 @@ export class NodeMatcher {
                 return false;
         }
 
-        // Complex matches
+        // Complex matches for bi aggregators
         if (
             matcher.rule_id &&
             !matcher.rule_id.disabled &&
@@ -136,7 +141,6 @@ export class NodeMatcher {
         )
             return false;
 
-        // Complex matches
         if (
             matcher.rule_name &&
             !matcher.rule_name.disabled &&
@@ -212,6 +216,47 @@ export class SearchFilters {
         if (root_node_selector == null) root_node_selector = "#form_filter";
         this._root_node = d3.select(root_node_selector);
     }
+
+    add_hosts_to_host_regex(add_hosts: Set<string>) {
+        this._get_current_host_regex_hosts().forEach(hostname => {
+            add_hosts.add(hostname);
+        });
+        this.set_host_regex_filter(this._build_regex_from_set(add_hosts));
+    }
+
+    remove_hosts_from_host_regex(remove_hosts: Set<string>) {
+        const current_hosts = this._get_current_host_regex_hosts();
+        remove_hosts.forEach(hostname => {
+            current_hosts.delete(hostname);
+        });
+        this.set_host_regex_filter(this._build_regex_from_set(current_hosts));
+    }
+
+    _build_regex_from_set(entries: Set<string>): string {
+        const list_entries: string[] = [];
+        entries.forEach(hostname => {
+            list_entries.push(hostname);
+        });
+
+        if (list_entries.length > 1) return "(" + list_entries.join("|") + ")";
+        else if (list_entries.length == 1) return list_entries[0];
+        else return "";
+    }
+
+    _get_current_host_regex_hosts(): Set<string> {
+        const params = this.get_filter_params();
+        const current_hosts: Set<string> = new Set();
+        const filter_host_regex = params["host_regex"];
+        filter_host_regex
+            .replace(/^\(+/, "")
+            .replace(/\)+$/, "")
+            .split("|")
+            .forEach(hostname => {
+                if (hostname) current_hosts.add(hostname);
+            });
+        return current_hosts;
+    }
+
     set_host_regex_filter(host_regex) {
         const host_regex_filter =
             this._root_node.select<HTMLSelectElement>("#host_regex");

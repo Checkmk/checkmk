@@ -254,16 +254,20 @@ def _save_topology_configuration(topology_configuration: TopologyConfiguration) 
     store.save_text_to_file(_topology_settings_file, json.dumps(data))
 
 
+def _get_ident_hash(ident: str) -> str:
+    return hashlib.md5(ident.encode("utf-8"), usedforsecurity=False).hexdigest()
+
+
 def _compute_topology_hash(topology_configuration: TopologyConfiguration) -> str:
-    ident = "#".join([topology_configuration.type, topology_configuration.filter.ident()])
-    return hashlib.md5(ident.encode("utf-8")).hexdigest()
+    return _get_ident_hash(
+        "#".join([topology_configuration.type, topology_configuration.filter.ident()])
+    )
 
 
 def _get_topology_frontend_configuration_for_filter(
     topology_type: str, filter_configuration: TopologyFilterConfiguration
 ) -> dict[str, Any]:
-    ident = "#".join([topology_type, filter_configuration.ident()])
-    query_hash = hashlib.md5(ident.encode("utf-8")).hexdigest()
+    query_hash = _get_ident_hash("#".join([topology_type, filter_configuration.ident()]))
     if not _topology_settings_file.exists():
         return {}
 

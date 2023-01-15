@@ -221,7 +221,7 @@ export class TopologyVisualization extends NodeVisualization {
         //        this._livesearch = new LiveSearch("form#form_filter", () =>
         //            this.update_data()
         //        );
-        this._add_save_topology_layout_to_filter_form();
+        //this._add_save_topology_layout_to_filter_form();
         this._custom_node_settings_memory = {};
 
         // Parameters used for throttling the GUI update

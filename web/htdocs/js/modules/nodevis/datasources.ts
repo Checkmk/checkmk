@@ -146,13 +146,8 @@ export class AbstractDatasource extends Object {
     }
 
     _inform_subscribers(): void {
-        const subscriber_start = +new Date() / 1000;
         this._new_data_subscribers.forEach(subscriber =>
             subscriber(this._data)
-        );
-        console.log(
-            "Updating subscribers took " +
-                (+new Date() / 1000 - subscriber_start)
         );
     }
 }

@@ -27,6 +27,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     HostLabelGenerator,
 )
 
+COLLECTOR_SERVICE_NAME = "Cluster collector"
+
 LabelValue = NewType("LabelValue", str)
 """
 

@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils.kube import (
+    COLLECTOR_SERVICE_NAME,
     CollectorComponentsMetadata,
     CollectorDaemons,
     CollectorHandlerLog,
@@ -212,7 +213,7 @@ def check(
 
 register.check_plugin(
     name="kube_collector_info",
-    service_name="Cluster collector",
+    service_name=COLLECTOR_SERVICE_NAME,
     sections=[
         "kube_collector_metadata",
         "kube_collector_processing_logs",

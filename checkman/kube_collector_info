@@ -1,4 +1,4 @@
-title: Kubernetes: Cluster Collector
+title: Kubernetes: Checkmk Cluster Collector
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPLv2
@@ -24,5 +24,8 @@ description:
  and "node-collector=container-metrics". The service reports an OK state regardless of
  the data process outcome and the API data.
 
+ Note, that the information displayed by this service changes, if the
+ corresponding collector is changed.
+
 discovery:
- One service is created if the cluster collector option is configured.
+ One service is created if the option `Use data from Checkmk Cluster Collector` is set.

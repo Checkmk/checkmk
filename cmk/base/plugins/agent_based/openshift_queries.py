@@ -10,7 +10,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import OpenShiftEndpoint, PrometheusResult, ResultType
+from cmk.base.plugins.agent_based.utils.kube import (
+    COLLECTOR_SERVICE_NAME,
+    OpenShiftEndpoint,
+    PrometheusResult,
+    ResultType,
+)
 
 
 def parse(string_table: StringTable) -> OpenShiftEndpoint:
@@ -70,7 +75,7 @@ def check(section: OpenShiftEndpoint) -> CheckResult:
 
 register.check_plugin(
     name="openshift_queries",
-    service_name="OpenShift queries",
+    service_name=COLLECTOR_SERVICE_NAME,
     sections=["prometheus_debug"],
     discovery_function=discover,
     check_function=check,

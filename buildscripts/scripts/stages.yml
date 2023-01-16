@@ -343,28 +343,28 @@ STAGES:
     - NAME: 'Agent Controller: cargo check '
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
       DIR: 'agents/cmk-agent-ctl'
-      COMMAND: "../../scripts/run-in-docker.sh ../../scripts/run-cargo-command check --all-targets &> ${RESULTS}/agent-controller-check.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command check --all-targets &> ${RESULTS}/agent-controller-check.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-check.txt"
 
     - NAME: 'Agent Controller: cargo test'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
       DIR: 'agents/cmk-agent-ctl'
-      COMMAND: "../../scripts/run-in-docker.sh ../../scripts/run-cargo-command test --all-targets &> ${RESULTS}/agent-controller-test.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command test --all-targets &> ${RESULTS}/agent-controller-test.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-test.txt"
 
     - NAME: 'Agent Controller: cargo fmt'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
       DIR: 'agents/cmk-agent-ctl'
-      COMMAND: "../../scripts/run-in-docker.sh ../../scripts/run-cargo-command fmt -- --check &> ${RESULTS}/agent-controller-fmt.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command fmt -- --check &> ${RESULTS}/agent-controller-fmt.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-fmt.txt"
 
     - NAME: 'Agent Controller: cargo clippy'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
       DIR: 'agents/cmk-agent-ctl'
-      COMMAND: "../../scripts/run-in-docker.sh ../../scripts/run-cargo-command clippy --all-targets -- -D warnings &> ${RESULTS}/agent-controller-clippy.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command clippy --all-targets -- -D warnings &> ${RESULTS}/agent-controller-clippy.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-clippy.txt"
 

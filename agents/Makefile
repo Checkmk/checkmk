@@ -89,7 +89,7 @@ build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
 controller: $(AGENT_CTL_GZ)
 
 $(AGENT_CTL_CARGO_OUT): $(AGENT_CTL_DEPS)
-	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release)
+	(cd cmk-agent-ctl; ./run-cargo-command build --release)
 	touch $(AGENT_CTL_CARGO_OUT)
 
 $(AGENT_CTL): $(AGENT_CTL_CARGO_OUT)

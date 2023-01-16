@@ -37,6 +37,7 @@ from saml2.xmldsig import (
 from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb.saml2.config import (
     CacheSettings,
     Certificate,
@@ -46,7 +47,12 @@ from cmk.gui.userdb.saml2.config import (
     SecuritySettings,
     UserAttributeNames,
 )
-from cmk.gui.userdb.saml2.interface import AuthenticatedUser, HTMLFormString, Interface
+from cmk.gui.userdb.saml2.interface import (
+    AuthenticatedUser,
+    HTMLFormString,
+    Interface,
+    user_attributes_to_authenticated_user,
+)
 
 
 class SAMLParamName(Enum):
@@ -478,3 +484,43 @@ class TestInterfaceSecurityFeatures:
             interface.parse_authentication_request_response(
                 _encode(_SIGNED_AUTHENTICATION_REQUEST_RESPONSE)
             )
+
+
+def test_user_attributes_to_authenticated_user() -> None:
+    user_attributes = {
+        "username": ["banana"],
+        "pretty_name": ["Mr. Banana"],
+        "email_address": ["banana@totally-not-the-cia.com"],
+        "groups": ["hottopics", "veryhottopics"],
+    }
+    default_user_profile = UserSpec(
+        {
+            "contactgroups": [],
+            "force_authuser": False,
+            "roles": ["user"],
+        }
+    )
+
+    authenticated_user = user_attributes_to_authenticated_user(
+        user_attribute_names=UserAttributeNames(
+            user_id="username",
+            alias="pretty_name",
+            email="email_address",
+            contactgroups="groups",
+        ),
+        user_id=UserId("banana"),
+        user_attributes=user_attributes,
+        default_user_profile=default_user_profile,
+        checkmk_contact_groups={"hottopics"},
+    )
+
+    assert authenticated_user == UserSpec(
+        {
+            "user_id": UserId("banana"),
+            "alias": "Mr. Banana",
+            "email": "banana@totally-not-the-cia.com",
+            "roles": ["user"],
+            "contactgroups": ["hottopics"],
+            "force_authuser": False,
+        }
+    )

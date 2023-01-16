@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
-import itertools
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.config import active_config
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
@@ -50,9 +46,7 @@ class Connector(UserConnector):
     def is_enabled(self) -> bool:
         return not self.config.disabled
 
-    def create_and_update_user(
-        self, user_id: UserId, authenticated_user: AuthenticatedUser
-    ) -> None:
+    def create_and_update_user(self, user_id: UserId, user_profile: AuthenticatedUser) -> None:
         """Update user profile in Checkmk users store.
 
         A new user is created on the condition that a user with the same ID does not already exist
@@ -60,9 +54,7 @@ class Connector(UserConnector):
 
         Args:
             user_id: The unique ID of the user that is to be created or edited
-            updated_user_profile: The profile of the user that should be entered in the Checkmk user store.
-                If the profile attributes are not specified, the default profile is used. This can
-                be configured via the global settings.
+            user_profile: The profile of the user that should be entered in the Checkmk user store.
 
         Raises:
             ValueError:
@@ -70,21 +62,29 @@ class Connector(UserConnector):
                   a connection has been deleted)
                 - The user already exists for a different connection
         """
-        user_profile = authenticated_user_to_user_spec(
-            authenticated_user,
-            active_config.default_user_profile,
-            contact_groups=set(load_contact_group_information().keys()),
+        user_spec = UserSpec(
+            {
+                "user_id": user_id,
+                "alias": user_profile.alias,
+                "contactgroups": list(user_profile.contactgroups),
+                "force_authuser": user_profile.force_authuser,
+                "roles": list(user_profile.roles),
+                "connector": self.config.id,
+            }
         )
-        user_profile["connector"] = self.config.id
+        if user_profile.email:
+            # TODO (lisa): this seems to be wrongly typed. It is possible to create users without an
+            # email
+            user_spec["email"] = user_profile.email
 
         with UserStore(mode=OpenFileMode.WRITE) as user_store:
             if not (user_entry := user_store.get(user_id)):
-                user_store[user_id] = user_profile
+                user_store[user_id] = user_spec
                 return
 
             self._update_user(
                 user_id=user_id,
-                user_profile=user_profile,
+                user_profile=user_spec,
                 connection_id=user_entry.get("connector"),
                 user_store=user_store,
             )
@@ -125,36 +125,6 @@ class Connector(UserConnector):
         return ["password"] + [
             k for k, v in self.config.interface_config.user_attributes.dict().items() if v
         ]
-
-
-def authenticated_user_to_user_spec(
-    authenticated_user: AuthenticatedUser,
-    default_user_profile: UserSpec,
-    *,
-    contact_groups: set[str] | None = None,
-) -> UserSpec:
-    if contact_groups is None:
-        contact_groups = set()
-
-    user_spec = copy.deepcopy(default_user_profile)
-    user_spec["user_id"] = authenticated_user.user_id
-    user_spec["alias"] = authenticated_user.alias or authenticated_user.user_id
-    if authenticated_user.email:
-        # TODO (lisa): this seems to be wrongly typed. It is possible to create users without an
-        # email
-        user_spec["email"] = authenticated_user.email
-
-    user_spec["contactgroups"] = list(
-        set(
-            itertools.chain(
-                default_user_profile["contactgroups"],
-                authenticated_user.contactgroups,
-            )
-        )
-        & contact_groups
-    )
-
-    return user_spec
 
 
 def register(user_connector_registry: UserConnectorRegistry) -> None:

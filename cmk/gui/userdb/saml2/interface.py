@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from typing import NewType
 
 import requests
@@ -21,8 +22,16 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from cmk.utils.redis import IntegrityCheckResponse, query_redis
 from cmk.utils.type_defs import UserId
 
+from cmk.gui.config import active_config
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.log import logger
-from cmk.gui.userdb.saml2.config import ConnectivitySettings, InterfaceConfig, SecuritySettings
+from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb.saml2.config import (
+    ConnectivitySettings,
+    InterfaceConfig,
+    SecuritySettings,
+    UserAttributeNames,
+)
 
 LOGGER = logger.getChild("saml2")
 
@@ -39,9 +48,11 @@ class HTTPPostRequest(BaseModel):
 
 class AuthenticatedUser(BaseModel):
     user_id: UserId
-    alias: str | None = None
-    email: str | None = None
-    contactgroups: set[str] = set()
+    alias: str
+    email: str | None
+    force_authuser: bool
+    contactgroups: Sequence[str]
+    roles: Sequence[str]
 
 
 def _metadata_from_idp(url: str, timeout: tuple[int, int]) -> str | None:
@@ -279,13 +290,12 @@ class Interface:
             LOGGER.debug("User ID not found or empty, value is: %s", repr(user_id))
             raise AttributeError("User ID not found or empty")
 
-        return AuthenticatedUser(
+        return user_attributes_to_authenticated_user(
+            user_attribute_names=self._user_attributes,
             user_id=UserId(user_id[0]),
-            alias=authentication_response.ava.get(self._user_attributes.alias, [None])[0],
-            email=authentication_response.ava.get(self._user_attributes.email, [None])[0],
-            contactgroups=set(
-                authentication_response.ava.get(self._user_attributes.contactgroups, [])
-            ),
+            user_attributes=authentication_response.ava,
+            default_user_profile=active_config.default_user_profile,
+            checkmk_contact_groups=set(load_contact_group_information()),
         )
 
     def validate_in_response_to_id(self, authentication_response: AuthnResponse) -> None:
@@ -362,3 +372,57 @@ class Interface:
                 identity_provider_entity_id,
             )
             raise AttributeError("Response from unexpected entity")
+
+
+def user_attributes_to_authenticated_user(
+    user_attribute_names: UserAttributeNames,
+    user_id: UserId,
+    user_attributes: Mapping[str, Sequence[str]],
+    default_user_profile: UserSpec,
+    checkmk_contact_groups: set[str],
+) -> AuthenticatedUser:
+    """Map user attributes from the authentication request response to Checkmk user attributes.
+
+    The mapping can be configured via the Setup configuration page.
+
+    Some fields are optional (denoted with 'None'). If that is the case, the default profile is used
+    that can be configured via the global settings.
+
+    Args:
+        user_attribute_names: a string representing the field name of the SAML attribute, or 'None'
+            if no mapping is configured
+        user_id: the user ID value of the user
+        user_attributes: a dictionary containing the SAML attributes the Identity Provider has sent
+            for the user
+        default_user_profile: default attributes that should be assigned to new users if no explicit
+            mapping has been configured
+
+    Returns:
+        An 'AuthenticatedUser' instance that can be used to write information to the 'UserStore'
+    """
+
+    alias = str(user_id)
+    if user_attribute_names.alias:
+        alias = user_attributes.get(user_attribute_names.alias, [str(user_id)])[0]
+
+    email = None
+    if user_attribute_names.email and (
+        email_attribute := user_attributes.get(user_attribute_names.email)
+    ):
+        email = email_attribute[0]
+
+    contactgroups = default_user_profile["contactgroups"]
+    if user_attribute_names.contactgroups:
+        contactgroups = list(
+            set(user_attributes.get(user_attribute_names.contactgroups, []))
+            & checkmk_contact_groups
+        )
+
+    return AuthenticatedUser(
+        user_id=user_id,
+        alias=alias,
+        email=email,
+        contactgroups=contactgroups,
+        force_authuser=default_user_profile["force_authuser"],
+        roles=default_user_profile["roles"],
+    )

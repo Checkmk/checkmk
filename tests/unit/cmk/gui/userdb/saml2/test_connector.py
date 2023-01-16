@@ -12,12 +12,19 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
-from cmk.gui.userdb.saml2.connector import (
-    authenticated_user_to_user_spec,
-    Connector,
-    SAML2_CONNECTOR_TYPE,
-)
+from cmk.gui.userdb.saml2.connector import Connector, SAML2_CONNECTOR_TYPE
 from cmk.gui.userdb.saml2.interface import AuthenticatedUser
+
+
+def _authenticated_user(user_id: UserId, *, email: str | None = None) -> AuthenticatedUser:
+    return AuthenticatedUser(
+        user_id=user_id,
+        alias=str(user_id),
+        email=email,
+        contactgroups=[],
+        force_authuser=False,
+        roles=["user"],
+    )
 
 
 class TestConnector:
@@ -90,7 +97,7 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Paul")
-        authenticated_user = AuthenticatedUser(user_id=new_user_id)
+        authenticated_user = _authenticated_user(new_user_id)
 
         connector.create_and_update_user(new_user_id, authenticated_user)
 
@@ -118,7 +125,7 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Paul")
-        authenticated_user = AuthenticatedUser(user_id=new_user_id)
+        authenticated_user = _authenticated_user(new_user_id)
 
         connector.create_and_update_user(new_user_id, authenticated_user)
 
@@ -148,7 +155,7 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Moss")
-        authenticated_user = AuthenticatedUser(user_id=new_user_id)
+        authenticated_user = _authenticated_user(new_user_id)
 
         with pytest.raises(ValueError):
             connector.create_and_update_user(new_user_id, authenticated_user)
@@ -165,7 +172,7 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Roy")
-        authenticated_user = AuthenticatedUser(user_id=new_user_id)
+        authenticated_user = _authenticated_user(new_user_id)
 
         with pytest.raises(ValueError):
             connector.create_and_update_user(new_user_id, authenticated_user)
@@ -182,7 +189,7 @@ class TestConnector:
         connector = Connector(raw_config)
 
         new_user_id = UserId("Jen")
-        authenticated_user = AuthenticatedUser(user_id=new_user_id)
+        authenticated_user = _authenticated_user(new_user_id)
 
         with pytest.raises(ValueError):
             connector.create_and_update_user(new_user_id, authenticated_user)
@@ -199,7 +206,7 @@ class TestConnector:
         connector = Connector(raw_config)
 
         user_id = UserId("Richmond")
-        authenticated_user = AuthenticatedUser(user_id=user_id, email="richmond@hellonerds.com")
+        authenticated_user = _authenticated_user(user_id=user_id, email="richmond@hellonerds.com")
 
         connector.create_and_update_user(user_id, authenticated_user)
 
@@ -224,34 +231,3 @@ class TestConnector:
         connector = Connector(raw_config)
 
         assert "password" in connector.locked_attributes()
-
-
-def test_authenticated_user_to_user_spec() -> None:
-    authenticated_user = AuthenticatedUser(
-        user_id=UserId("banana"),
-        alias="Mr. Banana",
-        email="banana@totally-not-the-cia.com",
-        contactgroups={"hottopics", "veryhottopics"},
-    )
-    default_user_profile = UserSpec(
-        {
-            "contactgroups": [],
-            "force_authuser": False,
-            "roles": ["user"],
-        }
-    )
-
-    user_spec = authenticated_user_to_user_spec(
-        authenticated_user, default_user_profile, contact_groups={"hottopics"}
-    )
-
-    assert user_spec == UserSpec(
-        {
-            "user_id": UserId("banana"),
-            "alias": "Mr. Banana",
-            "email": "banana@totally-not-the-cia.com",
-            "roles": ["user"],
-            "contactgroups": ["hottopics"],
-            "force_authuser": False,
-        }
-    )

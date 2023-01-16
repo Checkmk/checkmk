@@ -10,12 +10,15 @@ import argparse
 import json
 import logging
 import sys
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any, Iterator, TypeVar
 
 import requests
 
 import cmk.utils.password_store
 
 from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.utils.argument_parsing import Args
 
 LOGGER = logging.getLogger(__name__)
 
@@ -125,7 +128,7 @@ SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 #
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "-v", "--verbose", default=0, action="count", help="Enable verbose logging."
@@ -147,7 +150,7 @@ def parse_arguments(argv):
         help="Gives a bucket to monitor. Can be used multiple times.",
     )
     parser.add_argument(
-        "-P", "--port", default=8091, help="Gives the port for API-calls. Default: 8091"
+        "-P", "--port", type=int, default=8091, help="Gives the port for API-calls. Default: 8091"
     )
     parser.add_argument(
         "-u", "--username", default=None, help="The username for authentication at the API."
@@ -160,7 +163,7 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def set_up_logging(verbosity):
+def set_up_logging(verbosity: int) -> None:
     fmt = "%(levelname)s: %(message)s"
     if verbosity >= 2:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
@@ -172,14 +175,21 @@ def set_up_logging(verbosity):
 
 
 class CouchbaseClient:
-    def __init__(self, host, port, timeout, user, password) -> None:  # type:ignore[no-untyped-def]
+    def __init__(
+        self,
+        *,
+        host: str,
+        port: int,
+        timeout: int,
+        credentials: tuple[str, str] | None,
+    ) -> None:
         self._session = requests.Session()
         self._timeout = timeout
-        if None not in (user, password):
-            self._session.auth = (user, password)
+        if credentials:
+            self._session.auth = credentials
         self._base = f"http://{host}:{port}/pools/default"
 
-    def _get_suburi(self, suburi):
+    def _get_suburi(self, suburi: str) -> Any:
         uri = self._base + suburi
         LOGGER.debug("request GET %r", uri)
 
@@ -196,23 +206,33 @@ class CouchbaseClient:
             LOGGER.warning("Invalid response: %r", response)
             raise
 
-    def get_pool(self):
+    def get_pool(self) -> Mapping[str, Any]:
         """Gets the pools response"""
+        # https://docs.couchbase.com/server/current/rest-api/rest-cluster-details.html#response
         return self._get_suburi("")
 
-    def get_bucket(self, bucket):
+    def get_bucket(self, bucket: str) -> Mapping[str, Any]:
+        # See https://docs.couchbase.com/server/current/rest-api/rest-bucket-stats.html#response-2
         return self._get_suburi("/buckets/%s/stats" % bucket)
 
 
-def _get_dump(node_name, raw_data, filter_keys, process=lambda x: x):
-    data = {"name": node_name}
+_TRawData = TypeVar("_TRawData")
+
+
+def _get_dump(
+    node_name: str,
+    raw_data: Mapping[str, _TRawData],
+    filter_keys: Iterable[str],
+    process: Callable[[_TRawData], object] = lambda x: x,
+) -> str:
+    data: dict[str, object] = {"name": node_name}
     for key in filter_keys:
         if key in raw_data:
             data[key] = process(raw_data[key])
     return json.dumps(data)
 
 
-def sections_node(client):
+def sections_node(client: CouchbaseClient) -> list[str]:
     pool = client.get_pool()
     node_list = [(node["hostname"].split(":")[0], node) for node in pool.get("nodes", ())]
 
@@ -258,7 +278,11 @@ def sections_node(client):
     return output
 
 
-def fetch_bucket_data(client, buckets, debug):
+def fetch_bucket_data(
+    client: CouchbaseClient,
+    buckets: Iterable[str],
+    debug: bool,
+) -> Iterator[tuple[str, Mapping[str, Sequence[float]]]]:
     for bucket in buckets:
         try:
             response = client.get_bucket(bucket)
@@ -269,13 +293,13 @@ def fetch_bucket_data(client, buckets, debug):
         yield bucket, response.get("op", {}).get("samples", {})
 
 
-def _average(value_list):
+def _average(value_list: Sequence[float]) -> float | None:
     if value_list:
         return sum(value_list) / float(len(value_list))
     return None
 
 
-def sections_buckets(bucket_list):
+def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[float]]]]) -> list[str]:
 
     sections = {
         "couchbase_buckets_mem:sep(0)": [
@@ -306,7 +330,7 @@ def sections_buckets(bucket_list):
     return output
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
 
     if argv is None:
         cmk.utils.password_store.replace_passwords()
@@ -315,7 +339,17 @@ def main(argv=None):
     args = parse_arguments(argv)
     set_up_logging(args.verbose)
 
-    client = CouchbaseClient(args.hostname, args.port, args.timeout, args.username, args.password)
+    client = CouchbaseClient(
+        host=args.hostname,
+        port=args.port,
+        timeout=args.timeout,
+        credentials=(
+            args.username,
+            args.password,
+        )
+        if args.username and args.password
+        else None,
+    )
 
     try:
         output = sections_node(client)

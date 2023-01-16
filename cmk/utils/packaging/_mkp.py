@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""When it grows up, this file wants to provide an abstraction of the internal MKP structure"""
+"""This file provides an abstraction of the internal MKP structure"""
 from __future__ import annotations
 
 import ast
@@ -12,7 +12,7 @@ import pprint
 import subprocess
 import tarfile
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import lru_cache
 from io import BytesIO
 from logging import Logger
@@ -149,6 +149,42 @@ def _extract_manifest_cached(package_path: Path, mtime: float) -> Manifest:
     return extract_manifest(package_path.read_bytes())
 
 
+def create_mkp(
+    manifest: Manifest,
+    version_packaged: str,
+    site_paths: Callable[[PackagePart], Path],
+    logger: logging.Logger,
+) -> bytes:
+
+    manifest = Manifest(
+        title=manifest.title,
+        name=manifest.name,
+        description=manifest.description,
+        version=manifest.version,
+        version_packaged=version_packaged,
+        version_min_required=manifest.version_min_required,
+        version_usable_until=manifest.version_usable_until,
+        author=manifest.author,
+        download_url=manifest.download_url,
+        files=manifest.files,
+    )
+
+    return _create_tgz(
+        (
+            # add the regular info file (Python format)
+            ("info", manifest.file_content().encode()),
+            # add the info file a second time (JSON format) for external tools
+            ("info.json", manifest.json_file_content().encode()),
+            # Now pack the actual files into sub tars
+            *(
+                _create_tar(part.ident, site_paths(part), filenames, logger)
+                for part, filenames in manifest.files.items()
+                if filenames
+            ),
+        )
+    )
+
+
 def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
     info = tarfile.TarInfo()
     info.mtime = int(time.time())
@@ -161,7 +197,7 @@ def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
     return info
 
 
-def create_tgz(files: Iterable[tuple[str, bytes]]) -> bytes:
+def _create_tgz(files: Iterable[tuple[str, bytes]]) -> bytes:
     buffer = BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
         for name, content in files:
@@ -170,7 +206,7 @@ def create_tgz(files: Iterable[tuple[str, bytes]]) -> bytes:
     return buffer.getvalue()
 
 
-def create_tar(
+def _create_tar(
     name: str, src: Path, filenames: Iterable[Path], logger: logging.Logger
 ) -> tuple[str, bytes]:
     tarname = f"{name}.tar"
@@ -191,7 +227,24 @@ def create_tar(
     )
 
 
-def extract_tgz(
+def extract_mkp(
+    manifest: Manifest,
+    mkp: bytes,
+    site_paths: Callable[[PackagePart], Path],
+    logger: logging.Logger,
+) -> None:
+    _extract_tgz(
+        mkp,
+        [
+            (f"{part.ident}.tar", site_paths(part), filenames)
+            for part, filenames in manifest.files.items()
+            if filenames
+        ],
+        logger,
+    )
+
+
+def _extract_tgz(
     mkp: bytes, content: Iterable[tuple[str, Path, Iterable[Path]]], logger: logging.Logger
 ) -> None:
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:

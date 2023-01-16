@@ -34,12 +34,11 @@ from ._installed import (
     remove_installed_manifest,
 )
 from ._mkp import (
-    create_tar,
-    create_tgz,
+    create_mkp,
     extract_manifest,
     extract_manifest_optionally,
     extract_manifests,
-    extract_tgz,
+    extract_mkp,
     Manifest,
     manifest_template,
     PackagePart,
@@ -93,34 +92,7 @@ def release(pacname: PackageName, logger: logging.Logger) -> None:
 
 
 def create_mkp_object(manifest: Manifest) -> bytes:
-
-    manifest = Manifest(
-        title=manifest.title,
-        name=manifest.name,
-        description=manifest.description,
-        version=manifest.version,
-        version_packaged=cmk_version.__version__,
-        version_min_required=manifest.version_min_required,
-        version_usable_until=manifest.version_usable_until,
-        author=manifest.author,
-        download_url=manifest.download_url,
-        files=manifest.files,
-    )
-
-    return create_tgz(
-        (
-            # add the regular info file (Python format)
-            ("info", manifest.file_content().encode()),
-            # add the info file a second time (JSON format) for external tools
-            ("info.json", manifest.json_file_content().encode()),
-            # Now pack the actual files into sub tars
-            *(
-                create_tar(part.ident, site_path(part), filenames, g_logger)
-                for part, filenames in manifest.files.items()
-                if filenames
-            ),
-        )
-    )
+    return create_mkp(manifest, cmk_version.__version__, site_path, g_logger)
 
 
 def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> None:
@@ -375,15 +347,7 @@ def _install(  # pylint: disable=too-many-branches
 
     _raise_for_installability(manifest, old_manifest, cmk_version.__version__, allow_outdated)
 
-    extract_tgz(
-        mkp,
-        [
-            (f"{part.ident}.tar", site_path(part), filenames)
-            for part, filenames in manifest.files.items()
-            if filenames
-        ],
-        g_logger,
-    )
+    extract_mkp(manifest, mkp, site_path, g_logger)
 
     _fix_files_permissions(manifest, g_logger)
 

@@ -83,7 +83,7 @@ class View:
             if not painter_exists(e):
                 continue
 
-            if (col_type := e.column_type) == "join_column":
+            if (col_type := e.column_type) in ["join_column", "join_inv_column"]:
                 cells.append(JoinCell(e, self._compute_sort_url_parameter(e)))
             elif col_type == "column":
                 cells.append(Cell(e, self._compute_sort_url_parameter(e)))

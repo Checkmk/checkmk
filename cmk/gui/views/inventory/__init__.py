@@ -83,7 +83,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
+from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, render_labels
 from cmk.gui.views.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
@@ -1447,6 +1447,10 @@ def _register_table_column(
             "columns": [column],
             "paint": lambda row: hint.paint_function(row.get(column)),
             "sorter": column,
+            # See views/painter/v0/base.py::Cell.painter_parameters
+            # We have to add a dummy value here such that the painter_parameters are not None and
+            # the "real" parameters, ie. _painter_params, are used.
+            "params": FixedValue(None, totext=""),
         },
     )
 
@@ -1555,6 +1559,7 @@ def _register_table_view(
                 "keys": property(lambda s: []),
                 "id_keys": property(lambda s: []),
                 "inventory_path": property(lambda s: s._inventory_path),
+                "join": ("services", "host_name"),
             },
         )
     )

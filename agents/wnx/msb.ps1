@@ -16,7 +16,7 @@ $cargo_build = (Get-Item -Path ".\").FullName + "\scripts\call_cargo_build.cmd"
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
 $makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
 $host_dir = (Get-Item -Path ".\").FullName
-$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\cmk-agent-ctl"
+$cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\cmk-agent-ctl"
 # string below is used to quckly switch to the Powershell ISE, do not delete it
 # $sln = 'c:\z\m\check_mk\agents\wnx\wamain.sln'
 

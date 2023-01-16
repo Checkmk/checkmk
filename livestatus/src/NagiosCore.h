@@ -18,11 +18,11 @@
 #include <vector>
 
 #include "DowntimeOrComment.h"  // IWYU pragma: keep
-#include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
 #include "contact_fwd.h"
 #include "livestatus/Attributes.h"
+#include "livestatus/Metric.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
 #include "nagios.h"

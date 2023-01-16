@@ -19,7 +19,7 @@
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
-#include "mk_logwatch.h"
+#include "livestatus/mk_logwatch.h"
 #include "nagios.h"
 
 Store::Store(MonitoringCore *mc)

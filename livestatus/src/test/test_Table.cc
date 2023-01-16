@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "LogCache.h"
-#include "Metric.h"
 #include "MonitoringCore.h"
 #include "Table.h"
 #include "TableColumns.h"
@@ -45,6 +44,7 @@
 #include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Metric.h"
 #include "livestatus/Triggers.h"
 
 #ifdef CMC

@@ -57,7 +57,6 @@ test_neb_SOURCES = \
     test/test_CrashReport.cc \
     test/test_DictFilter.cc \
     test/test_MacroExpander.cc \
-    test/test_Metric.cc \
     test/test_Table.cc \
     test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
@@ -108,7 +107,6 @@ liblivestatusneb_a_SOURCES = \
         LogCache.cc \
         Logfile.cc \
         MacroExpander.cc \
-        Metric.cc \
         NagiosCore.cc \
         NebContactGroup.cc \
         NebHost.cc \
@@ -145,7 +143,6 @@ liblivestatusneb_a_SOURCES = \
         TableStatus.cc \
         TableTimeperiods.cc \
         TimeperiodsCache.cc \
-        mk_logwatch.cc \
         module.cc \
         pnp4nagios.cc
 $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)

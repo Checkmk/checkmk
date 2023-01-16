@@ -34,7 +34,9 @@ set(livestatus_headers
     ${header_location}/Logger.h
     ${header_location}/LogwatchList.h
     ${header_location}/MapUtils.h
+    ${header_location}/Metric.h
     ${header_location}/mk_inventory.h
+    ${header_location}/mk_logwatch.h
     ${header_location}/NullColumn.h
     ${header_location}/opids.h
     ${header_location}/OringFilter.h
@@ -87,7 +89,9 @@ set(livestatus_sources
     LogEntry.cc
     Logger.cc
     LogwatchList.cc
+    Metric.cc
     mk_inventory.cc
+    mk_logwatch.cc
     opids.cc
     NullColumn.cc
     OringFilter.cc

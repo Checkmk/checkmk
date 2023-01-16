@@ -16,8 +16,8 @@
 #include <vector>
 
 #include "CmcNebTypeDefs.h"
-#include "Metric.h"
 #include "livestatus/Attributes.h"
+#include "livestatus/Metric.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"

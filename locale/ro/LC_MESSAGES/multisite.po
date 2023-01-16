@@ -24649,14 +24649,6 @@ msgstr ""
 msgid "Invalid topic"
 msgstr ""
 
-#, python-format
-msgid "Invalid topology_config %r"
-msgstr ""
-
-#, python-format
-msgid "Invalid topology_settings %r"
-msgstr ""
-
 msgid "Invalid transaction"
 msgstr ""
 

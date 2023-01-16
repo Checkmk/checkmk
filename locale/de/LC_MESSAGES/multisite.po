@@ -26163,14 +26163,6 @@ msgstr "Ungültiger Schritt \"%d\" angegeben"
 msgid "Invalid topic"
 msgstr "Ungültiges Thema"
 
-#, python-format
-msgid "Invalid topology_config %r"
-msgstr "Ungültige topology_config %r"
-
-#, python-format
-msgid "Invalid topology_settings %r"
-msgstr "Ungültige topology_settings %r"
-
 msgid "Invalid transaction"
 msgstr "Ungültige Transaktion"
 
@@ -65613,6 +65605,14 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, python-format
+#~ msgid "Invalid topology_config %r"
+#~ msgstr "Ungültige topology_config %r"
+
+#, python-format
+#~ msgid "Invalid topology_settings %r"
+#~ msgstr "Ungültige topology_settings %r"
 
 #~ msgid "Displays an introduction and Checkmk logo."
 #~ msgstr "Zeigt eine Einführung und das Checkmk-Logo."

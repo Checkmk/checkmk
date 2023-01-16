@@ -26245,14 +26245,6 @@ msgstr "Tempo inválido \"%d\" dado"
 msgid "Invalid topic"
 msgstr "Tópico inválido"
 
-#, python-format
-msgid "Invalid topology_config %r"
-msgstr "Topologia inválida_config %r"
-
-#, python-format
-msgid "Invalid topology_settings %r"
-msgstr "Topologia inválida_settings %r"
-
 msgid "Invalid transaction"
 msgstr "Transação inválida"
 
@@ -65830,6 +65822,14 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid "Invalid topology_config %r"
+#~ msgstr "Topologia inválida_config %r"
+
+#, python-format
+#~ msgid "Invalid topology_settings %r"
+#~ msgstr "Topologia inválida_settings %r"
 
 #~ msgid "Displays an introduction and Checkmk logo."
 #~ msgstr "Exibe uma introdução e o logotipo Checkmk."

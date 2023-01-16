@@ -26439,14 +26439,6 @@ msgstr "Invalide timestep \"%d\" donné"
 msgid "Invalid topic"
 msgstr "Sujet non valide"
 
-#, python-format
-msgid "Invalid topology_config %r"
-msgstr "Topologie_config invalide %r"
-
-#, python-format
-msgid "Invalid topology_settings %r"
-msgstr "Paramètres topologiques non valides %r"
-
 msgid "Invalid transaction"
 msgstr "Transaction non valide"
 
@@ -66387,6 +66379,14 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#, python-format
+#~ msgid "Invalid topology_config %r"
+#~ msgstr "Topologie_config invalide %r"
+
+#, python-format
+#~ msgid "Invalid topology_settings %r"
+#~ msgstr "Paramètres topologiques non valides %r"
 
 #~ msgid "Displays an introduction and Checkmk logo."
 #~ msgstr "Affiche une introduction et le logo Checkmk."

@@ -26484,14 +26484,6 @@ msgstr "Indicato un tempo non valido \"%d\""
 msgid "Invalid topic"
 msgstr "Argomento non valido"
 
-#, python-format
-msgid "Invalid topology_config %r"
-msgstr "Topologia_config %r non valida"
-
-#, python-format
-msgid "Invalid topology_settings %r"
-msgstr "Impostazioni di topologia non valide %r"
-
 msgid "Invalid transaction"
 msgstr "Transazione non valida"
 
@@ -66466,6 +66458,14 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, python-format
+#~ msgid "Invalid topology_config %r"
+#~ msgstr "Topologia_config %r non valida"
+
+#, python-format
+#~ msgid "Invalid topology_settings %r"
+#~ msgstr "Impostazioni di topologia non valide %r"
 
 #~ msgid "Displays an introduction and Checkmk logo."
 #~ msgstr "Visualizza un'introduzione e il logo Checkmk."

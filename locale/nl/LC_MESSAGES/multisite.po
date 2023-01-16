@@ -26102,14 +26102,6 @@ msgstr "Ongeldige tijdstap \"%d\" gegeven"
 msgid "Invalid topic"
 msgstr "Ongeldig onderwerp"
 
-#, python-format
-msgid "Invalid topology_config %r"
-msgstr "Ongeldige topology_config %r"
-
-#, python-format
-msgid "Invalid topology_settings %r"
-msgstr "Ongeldige topology_settings %r"
-
 msgid "Invalid transaction"
 msgstr "Ongeldige transactie"
 
@@ -65521,6 +65513,14 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid "Invalid topology_config %r"
+#~ msgstr "Ongeldige topology_config %r"
+
+#, python-format
+#~ msgid "Invalid topology_settings %r"
+#~ msgstr "Ongeldige topology_settings %r"
 
 #~ msgid "Displays an introduction and Checkmk logo."
 #~ msgstr "Toont een inleiding en het Checkmk-logo."

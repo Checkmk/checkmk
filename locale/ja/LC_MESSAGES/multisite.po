@@ -24976,14 +24976,6 @@ msgstr "無効なタイムステップ \"%d\"が指定されました"
 msgid "Invalid topic"
 msgstr "無効なトピック"
 
-#, python-format
-msgid "Invalid topology_config %r"
-msgstr "無効なtopology_config %r"
-
-#, python-format
-msgid "Invalid topology_settings %r"
-msgstr ""
-
 msgid "Invalid transaction"
 msgstr "無効なトランザクション"
 
@@ -62193,6 +62185,10 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "Invalid topology_config %r"
+#~ msgstr "無効なtopology_config %r"
 
 #~ msgid "Displays an introduction and Checkmk logo."
 #~ msgstr "イントロダクションとCheckmkロゴを表示します。"

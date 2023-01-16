@@ -16,7 +16,7 @@ def discover_msexch_availability(parsed):
 
 
 def check_msexch_availability(item, params, parsed):
-    yield wmi_yield_raw_persec(
+    yield from wmi_yield_raw_persec(
         parsed[""],
         item,
         "AvailabilityRequestssec",

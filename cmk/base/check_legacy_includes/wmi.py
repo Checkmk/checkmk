@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from math import ceil
-from typing import Callable, Iterable, Optional, Set, Union
+from typing import Callable, Generator, Iterable, Optional, Set, Union
 
 from cmk.base.check_api import (
     check_levels,
@@ -22,6 +22,11 @@ from cmk.base.plugins.agent_based.utils.wmi import (
     WMISection,
     WMITable,
 )
+
+_Metric = tuple[
+    str, float, Union[float, None], Union[float, None], Union[float, None], Union[float, None]
+]
+LegacyCheckFunctionGenerator = Generator[tuple[int, str, list[_Metric]], None, None]
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -188,11 +193,11 @@ def wmi_yield_raw_persec(
     infoname: Optional[str],
     perfvar: Optional[str],
     levels=None,
-):
+) -> LegacyCheckFunctionGenerator:
     if table is None:
-        # This case may be when a check was discovered with a table which subsequently
-        # disappeared again. We expect to get None in this case and return some "nothing happened"
-        return 0, "", []
+        # This case may be when a check was discovered with a table which subsequently disappeared again.
+        # We expect to get `None` in this case.
+        return
 
     if row == "":
         row = 0
@@ -201,11 +206,11 @@ def wmi_yield_raw_persec(
         value = table.get(row, column)
         assert value
     except KeyError:
-        return 3, "Item not present anymore", []
+        return
 
     value_per_sec = get_rate("%s_%s" % (column, table.name), get_wmi_time(table, row), int(value))
 
-    return check_levels(
+    yield check_levels(
         value_per_sec,
         perfvar,
         get_levels_quadruple(levels),
@@ -221,7 +226,7 @@ def wmi_yield_raw_counter(
     perfvar: Optional[str],
     levels=None,
     unit: str = "",
-):
+) -> LegacyCheckFunctionGenerator:
     if row == "":
         row = 0
 
@@ -229,9 +234,9 @@ def wmi_yield_raw_counter(
         value = table.get(row, column)
         assert value
     except KeyError:
-        return 3, "counter %r not present anymore" % ((row, column),), []
+        return
 
-    return check_levels(
+    yield check_levels(
         int(value),
         perfvar,
         get_levels_quadruple(levels),
@@ -309,13 +314,13 @@ def wmi_yield_raw_average(
     perfvar: Optional[str],
     levels=None,
     perfscale: float = 1.0,
-):
+) -> LegacyCheckFunctionGenerator:
     try:
         average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
-        return 3, "item not present anymore", []
+        return
 
-    return check_levels(
+    yield check_levels(
         average,
         perfvar,
         get_levels_quadruple(levels),
@@ -331,7 +336,7 @@ def wmi_yield_raw_average_timer(
     infoname: Optional[str],
     perfvar: Optional[str],
     levels=None,
-):
+) -> LegacyCheckFunctionGenerator:
     assert table.frequency
     try:
         average = (
@@ -343,9 +348,9 @@ def wmi_yield_raw_average_timer(
             / table.frequency
         )  # fixed: true-division
     except KeyError:
-        return 3, "item not present anymore", []
+        return
 
-    return check_levels(
+    yield check_levels(
         average,
         perfvar,
         get_levels_quadruple(levels),
@@ -360,13 +365,13 @@ def wmi_yield_raw_fraction(
     infoname: Optional[str],
     perfvar: Optional[str],
     levels=None,
-):
+) -> LegacyCheckFunctionGenerator:
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
     except KeyError:
-        return 3, "item not present anymore", []
+        return
 
-    return check_levels(
+    yield check_levels(
         average,
         perfvar,
         get_levels_quadruple(levels),

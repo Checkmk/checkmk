@@ -12,7 +12,7 @@ from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-imp
 
 
 def check_wmi_webservices(item, params, parsed):
-    yield wmi_yield_raw_persec(
+    yield from wmi_yield_raw_persec(
         parsed[""], item, "CurrentConnections", infoname="Connections", perfvar="connections"
     )
 

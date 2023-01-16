@@ -339,19 +339,15 @@ class BIAggregationPacks:
         return {"packs": [pack.serialize() for pack in self.packs.values()]}
 
     def _check_rule_cycles(self) -> None:
-        toplevel_rules = {
-            bi_aggregation.node.action.rule_id
-            for bi_aggregation in self.get_all_aggregations()
-            if isinstance(bi_aggregation.node.action, BICallARuleAction)
-        }
+        """We have to check all rules for cycles.
+        Previously only toplevel rules (those configured in aggregations) were parsed.
+        However, it is impossible to determine the actual toplevel rules, because doing so
+        could lead to rule cycles...
+        """
+        for bi_rule in self.get_all_rules():
+            self._traverse_rule(bi_rule, [])
 
-        for toplevel_rule in toplevel_rules:
-            self._traverse_rule(self.get_rule_mandatory(toplevel_rule))
-
-    def _traverse_rule(self, bi_rule: BIRule, parents=None) -> None:
-        if not parents:
-            parents = []
-
+    def _traverse_rule(self, bi_rule: BIRule, parents) -> None:
         if bi_rule.id in parents:
             parents.append(bi_rule.id)
             raise MKGeneralException(

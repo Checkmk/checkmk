@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "pnp4nagios.h"
+#include "livestatus/PnpUtils.h"
 
 class Logger;
 

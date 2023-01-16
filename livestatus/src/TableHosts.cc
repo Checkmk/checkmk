@@ -49,6 +49,7 @@
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/LogwatchList.h"
+#include "livestatus/PnpUtils.h"
 #include "livestatus/ServiceListRenderer.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"

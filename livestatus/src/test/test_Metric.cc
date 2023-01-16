@@ -13,7 +13,7 @@
 #include "Metric.h"
 #include "gtest/gtest.h"
 #include "livestatus/Logger.h"
-#include "pnp4nagios.h"
+#include "livestatus/PnpUtils.h"
 
 namespace fs = std::filesystem;
 

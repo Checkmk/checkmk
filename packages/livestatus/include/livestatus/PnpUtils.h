@@ -3,14 +3,13 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef pnp4nagios_h
-#define pnp4nagios_h
-
-#include "config.h"  // IWYU pragma: keep
+#ifndef PnpUtils_h
+#define PnpUtils_h
 
 #include <string>
-class MonitoringCore;
-int pnpgraph_present(MonitoringCore *mc, const std::string &host,
-                     const std::string &service);
 
-#endif  // pnp4nagios_h
+inline std::string dummy_service_description() { return "_HOST_"; }
+
+std::string pnp_cleanup(const std::string &name);
+
+#endif  // PnpUtils_h

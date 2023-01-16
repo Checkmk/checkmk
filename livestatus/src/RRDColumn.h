@@ -16,8 +16,8 @@
 #include <variant>
 #include <vector>
 #ifndef CMC
+#include "livestatus/PnpUtils.h"
 #include "nagios.h"
-#include "pnp4nagios.h"
 #else
 #include "Host.h"
 #include "Object.h"

@@ -5,20 +5,12 @@
 
 #include "pnp4nagios.h"
 
-#include "livestatus/StringUtils.h"
-
-#ifndef CMC
 #include <filesystem>
 #include <system_error>
 
 #include "MonitoringCore.h"
-#endif
+#include "livestatus/PnpUtils.h"
 
-std::string pnp_cleanup(const std::string &name) {
-    return mk::replace_chars(name, R"( /\:)", '_');
-}
-
-#ifndef CMC
 // TODO(sp) Merge this with Perfdatabase::getPNPXMLPath
 int pnpgraph_present(MonitoringCore *mc, const std::string &host,
                      const std::string &service) {
@@ -32,4 +24,3 @@ int pnpgraph_present(MonitoringCore *mc, const std::string &host,
     (void)std::filesystem::status(path, ec);
     return ec ? 0 : 1;
 }
-#endif

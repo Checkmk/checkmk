@@ -42,6 +42,7 @@ set(livestatus_headers
     ${header_location}/OutputBuffer.h
     ${header_location}/overload.h
     ${header_location}/PerfdataAggregator.h
+    ${header_location}/PnpUtils.h
     ${header_location}/Poller.h
     ${header_location}/POSIXUtils.h
     ${header_location}/Queue.h
@@ -92,6 +93,7 @@ set(livestatus_sources
     OringFilter.cc
     OutputBuffer.cc
     PerfdataAggregator.cc
+    PnpUtils.cc
     POSIXUtils.cc
     RegExp.cc
     Renderer.cc

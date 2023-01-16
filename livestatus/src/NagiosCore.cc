@@ -13,10 +13,10 @@
 
 #include "NebContact.h"
 #include "livestatus/Logger.h"
+#include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/User.h"
 #include "nagios.h"
-#include "pnp4nagios.h"
 
 void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";

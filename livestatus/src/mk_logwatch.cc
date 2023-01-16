@@ -8,7 +8,7 @@
 #include <system_error>
 
 #include "livestatus/Logger.h"
-#include "pnp4nagios.h"
+#include "livestatus/PnpUtils.h"
 
 void mk_logwatch_acknowledge(Logger *logger,
                              const std::filesystem::path &logwatch_path,

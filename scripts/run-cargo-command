@@ -16,7 +16,11 @@ if [ -e "/opt/rust/rustup" ]; then
     export CARGO_HOME
 fi
 
-# shellcheck source=agents/cmk-agent-ctl/cargo_env
-[ -f cargo_env ] && source cargo_env
+export CARGO_BUILD_TARGET="x86_64-unknown-linux-musl"
+RUSTFLAGS="
+$RUSTFLAGS \
+--remap-path-prefix=${REPO_DIR}=/builddir \
+--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo-home"
+export RUSTFLAGS
 
 cargo "$@"

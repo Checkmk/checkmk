@@ -193,7 +193,7 @@ def with_user(request_context: None, load_config: None) -> Iterator[tuple[UserId
 @pytest.fixture()
 def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = UserId(with_user[0])
-    with login.UserSessionContext(user_id, require_auth_type=False):
+    with login.UserSessionContext(user_id):
         yield user_id
 
 
@@ -206,7 +206,7 @@ def with_admin(request_context: None, load_config: None) -> Iterator[tuple[UserI
 @pytest.fixture()
 def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
-    with login.UserSessionContext(user_id, require_auth_type=False):
+    with login.UserSessionContext(user_id):
         yield user_id
 
 

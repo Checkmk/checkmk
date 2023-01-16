@@ -57,25 +57,21 @@ def authenticate() -> Iterator[bool]:
     automation secret authentication."""
     if isinstance(session.user, LoggedInNobody):
         yield False
-        return
-
-    with UserSessionContext(session.user.ident):
-        yield True
+    else:
+        assert session.session_info.auth_type
+        with UserSessionContext(session.user.ident):
+            yield True
 
 
 @contextlib.contextmanager
-def UserSessionContext(user_id: UserId, require_auth_type: bool = True) -> Iterator[None]:
+def UserSessionContext(user_id: UserId) -> Iterator[None]:
     """Managing context of authenticated user session with cleanup before logout.
 
     Args:
         user_id:
             The username.
 
-        require_auth_type:
-            Used for testing. If the auth_type is not relevant. Don't use in production.
     """
-    if require_auth_type:
-        assert session.session_info.auth_type
     with UserContext(user_id):
         # Auth with automation secret succeeded before - mark transid as
         # unneeded in this case

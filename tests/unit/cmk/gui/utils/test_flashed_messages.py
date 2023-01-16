@@ -31,7 +31,7 @@ def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]
     app = session_wsgi_app(testing=True)
     app.testing = True
     with app.app_context():
-        with request_context(app), login.UserSessionContext(user_id, require_auth_type=False):
+        with request_context(app), login.UserSessionContext(user_id):
             assert session is not None
 
             flash("abc")
@@ -39,7 +39,7 @@ def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]
             assert get_flashed_messages() == [HTML("abc")]
 
         # Now create the second request to get the previously flashed message
-        with request_context(app), login.UserSessionContext(user_id, require_auth_type=False):
+        with request_context(app), login.UserSessionContext(user_id):
             assert session is not None
             assert session.session_info.flashes == []
             assert get_flashed_messages() == []
@@ -53,7 +53,7 @@ def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]
 
         # Now create the third request that should not have access to the flashed messages since the
         # second one consumed them.
-        with request_context(app), login.UserSessionContext(user_id, require_auth_type=False):
+        with request_context(app), login.UserSessionContext(user_id):
             assert session is not None
             assert session.session_info.flashes == []
             assert get_flashed_messages() == []
@@ -61,9 +61,7 @@ def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]
 
 def test_flash_escape_html_in_str(user_id) -> None:  # type:ignore[no-untyped-def]
     now = datetime.now()
-    with application_and_request_context(), login.UserSessionContext(
-        user_id, require_auth_type=False
-    ):
+    with application_and_request_context(), login.UserSessionContext(user_id):
         on_succeeded_login(user_id, now)  # Create and activate session
 
         flash("<script>aaa</script>")
@@ -72,9 +70,7 @@ def test_flash_escape_html_in_str(user_id) -> None:  # type:ignore[no-untyped-de
 
 def test_flash_dont_escape_html(user_id) -> None:  # type:ignore[no-untyped-def]
     now = datetime.now()
-    with application_and_request_context(), login.UserSessionContext(
-        user_id, require_auth_type=False
-    ):
+    with application_and_request_context(), login.UserSessionContext(user_id):
         on_succeeded_login(user_id, now)  # Create and activate session
 
         flash(HTML("<script>aaa</script>"))

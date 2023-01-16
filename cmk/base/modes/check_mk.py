@@ -41,6 +41,7 @@ from cmk.utils.type_defs import (
     HWSWInventoryParameters,
     InventoryPluginName,
     SectionName,
+    ServiceState,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
@@ -1815,7 +1816,7 @@ def mode_check(
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
-) -> None:
+) -> ServiceState:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
 
@@ -1833,7 +1834,7 @@ def mode_check(
         ipaddress = args[1]
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
-    checking.commandline_checking(
+    return checking.commandline_checking(
         hostname,
         ipaddress,
         file_cache_options=file_cache_options,

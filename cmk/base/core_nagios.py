@@ -1217,7 +1217,6 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
     output.write("from cmk.utils.log import console\n")
-    output.write("import cmk.base.agent_based.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("from cmk.checkers.submitters import get_submitter\n")
@@ -1313,28 +1312,18 @@ if '-d' in sys.argv:
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
-
-    # perform actual check with a general exception handler
     output.write("try:\n")
-    output.write(
-        "    sys.exit(\n"
-        "        checking.commandline_checking(\n"
-        "            %r,\n"
-        "            None,\n"
-        "            submitter=get_submitter(\n"
-        "                check_submission=config.check_submission,\n"
-        '                monitoring_core="nagios",\n'
-        "                host_name=%r,\n"
-        "                dry_run=False,\n"
-        '                perfdata_format="standard",\n'
-        "                show_perfdata=False,\n"
-        "            ),\n"
-        "           active_check_handler=lambda *args: None,\n"
-        "           keepalive=False,\n"
-        "           perfdata_with_times=config.check_mk_perfdata_with_times,\n"
-        "        )\n"
-        "    )\n" % (hostname, hostname)
-    )
+    output.write("    # mode_check is `mode --check hostname`\n")
+    output.write("    from cmk.base.modes.check_mk import mode_check\n")
+    output.write("    sys.exit(\n")
+    output.write("        mode_check(\n")
+    output.write("            get_submitter,\n")
+    output.write("            {},\n")
+    output.write(f"           [{hostname!r}],\n")
+    output.write("            active_check_handler=lambda *args: None,\n")
+    output.write("            keepalive=False,\n")
+    output.write("        )\n")
+    output.write("    )\n")
     output.write("except MKTerminate:\n")
     output.write("    out.output('<Interrupted>\\n', stream=sys.stderr)\n")
     output.write("    sys.exit(1)\n")

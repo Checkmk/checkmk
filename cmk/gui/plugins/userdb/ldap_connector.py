@@ -159,6 +159,51 @@ GroupMemberships = Dict[DistinguishedName, Dict[str, Union[str, List[str]]]]
 #   '----------------------------------------------------------------------'
 
 
+def _get_ad_locator():
+    import activedirectory  # type: ignore[import] # pylint: disable=import-error
+    import six
+    from activedirectory.protocol.netlogon import Client as NetlogonClient  # type: ignore[import]
+
+    class FasterDetectLocator(activedirectory.Locator):
+        def _detect_site(self, domain):
+            """Detect our site using the netlogon protocol.
+            This modified function only changes the number of parallel queried servers from 3 to 60"""
+            self.m_logger.debug("detecting site")
+            query = "_ldap._tcp.%s" % domain.lower()
+            answer = self._dns_query(query, "SRV")
+            servers = self._order_dns_srv(answer)
+            addresses = self._extract_addresses_from_srv(servers)
+            replies = []
+            netlogon = NetlogonClient()
+            max_servers_parallel = 60
+            for i in range(0, len(addresses), max_servers_parallel):
+                for addr in addresses[i : i + max_servers_parallel]:
+                    self.m_logger.debug("NetLogon query to %s", addr[0])
+                    try:
+                        netlogon.query(addr, domain)
+                    except Exception:
+                        continue
+                replies += netlogon.call()
+                self.m_logger.debug("%d replies", len(replies))
+                if len(replies) >= 1:
+                    break
+            if not replies:
+                self.m_logger.error("could not detect site")
+                return
+            found_sites: Dict[str, int] = {}
+            for reply in replies:
+                try:
+                    found_sites[reply.client_site] += 1
+                except KeyError:
+                    found_sites[reply.client_site] = 1
+            sites_list = [(value, key) for key, value in found_sites.items()]
+            sites_list.sort()
+            self.m_logger.debug("site detected as %s", sites_list[-1][1])
+            return six.ensure_text(sites_list[0][1])
+
+    return FasterDetectLocator()
+
+
 @user_connector_registry.register
 class LDAPUserConnector(UserConnector):
     # TODO: Move this to another place. We should have some managing object for this
@@ -374,9 +419,7 @@ class LDAPUserConnector(UserConnector):
             self._logger.info("Using cached DC %s" % cached_server)
             return cached_server
 
-        import activedirectory  # type: ignore[import] # pylint: disable=import-error
-
-        locator = activedirectory.Locator()
+        locator = _get_ad_locator()
         locator.m_logger = self._logger
         try:
             server = locator.locate(domain)

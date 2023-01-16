@@ -10,11 +10,9 @@ from typing import NamedTuple
 
 import pytest
 import requests
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives import serialization
 
+from tests.testlib.certs import generate_csr_pair
 from tests.testlib.site import Site
 
 
@@ -48,32 +46,6 @@ def test_uuid_check_client_certificate(agent_receiver_url: str) -> None:
     )
 
 
-def _generate_private_key(size: int = 2048) -> rsa.RSAPrivateKey:
-    return rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=size,
-    )
-
-
-def _generate_csr(private_key: rsa.RSAPrivateKey, uuid_: str) -> str:
-    return (
-        x509.CertificateSigningRequestBuilder()
-        .subject_name(
-            x509.Name(
-                [
-                    x509.NameAttribute(NameOID.COMMON_NAME, uuid_),
-                ]
-            )
-        )
-        .sign(
-            private_key,
-            hashes.SHA256(),
-        )
-        .public_bytes(serialization.Encoding.PEM)
-        .decode("utf-8")
-    )
-
-
 class KeyPairInfo(NamedTuple):
     uuid_: str
     private_key_path: Path
@@ -90,8 +62,7 @@ def paired_keypair_fixture(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> KeyPairInfo:
     uuid_ = str(uuid.uuid4())
-    private_key = _generate_private_key()
-    csr = _generate_csr(private_key, uuid_)
+    private_key, csr = generate_csr_pair(uuid_)
 
     agent_receiver_response = requests.post(
         f"{agent_receiver_url}/pairing",
@@ -124,8 +95,7 @@ def paired_keypair_fixture(
 
 def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
     uuid_ = "not a uuid"
-    private_key = _generate_private_key()
-    csr = _generate_csr(private_key, uuid_)
+    _key, csr = generate_csr_pair(uuid_)
 
     agent_receiver_response = requests.post(
         f"{agent_receiver_url}/pairing",

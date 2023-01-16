@@ -323,6 +323,18 @@ async def renew_certificate(
             detail=f"You requested a certificate renewal for {uuid}, but the provided CSR doesn't match.",
         )
 
+    # Don't maintain deleted registrations.
+    host = Host(uuid)
+    if not host.registered:
+        logger.error(
+            "uuid=%s Host is not registered",
+            uuid,
+        )
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="Host is not registered",
+        )
+
     if not (
         rest_api_csr_resp := post_csr(
             internal_credentials(),

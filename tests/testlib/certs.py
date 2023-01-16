@@ -5,9 +5,20 @@
 
 
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
+from cryptography.hazmat.primitives.asymmetric.rsa import (
+    generate_private_key,
+    RSAPrivateKey,
+    RSAPublicKey,
+)
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.x509 import Certificate, CertificateSigningRequest
+from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509 import (
+    Certificate,
+    CertificateSigningRequest,
+    CertificateSigningRequestBuilder,
+    Name,
+    NameAttribute,
+)
 from cryptography.x509.oid import NameOID
 
 from cmk.utils.certs import _rsa_public_key_from_cert_or_csr
@@ -43,3 +54,31 @@ def check_cn(
     expected_cn: str,
 ) -> bool:
     return cert_or_csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == expected_cn
+
+
+def generate_csr_pair(cn: str, private_key_size: int = 2048) -> tuple[RSAPrivateKey, str]:
+    private_key = _generate_private_key(private_key_size)
+    return (
+        private_key,
+        CertificateSigningRequestBuilder()
+        .subject_name(
+            Name(
+                [
+                    NameAttribute(NameOID.COMMON_NAME, cn),
+                ]
+            )
+        )
+        .sign(
+            private_key,
+            SHA256(),
+        )
+        .public_bytes(Encoding.PEM)
+        .decode("utf-8"),
+    )
+
+
+def _generate_private_key(size: int) -> RSAPrivateKey:
+    return generate_private_key(
+        public_exponent=65537,
+        key_size=size,
+    )

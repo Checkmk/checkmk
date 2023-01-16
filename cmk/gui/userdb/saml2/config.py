@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import enum
 from collections.abc import Mapping
 from pathlib import Path
@@ -64,55 +63,39 @@ def determine_certificate_type(certificate: str | tuple[str, tuple[str, str]]) -
     return CertificateType(certificate[0])
 
 
-def _determine_certificate_paths(
-    certificate: str | tuple[str, tuple[str, str]]
-) -> Mapping[str, Path]:
+def _determine_certificate_paths(certificate: str | tuple[str, tuple[str, str]]) -> Certificate:
     type_ = determine_certificate_type(certificate)
 
     if type_ is CertificateType.BUILTIN:
-        return {
-            "private": saml2_signature_private_keyfile,
-            "public": saml2_signature_public_keyfile,
-        }
-
+        return Certificate(
+            private=saml2_signature_private_keyfile, public=saml2_signature_public_keyfile
+        )
     assert isinstance(certificate, tuple)
     _, (private_key, cert) = certificate
-
-    return {
-        "private": Path(private_key),
-        "public": Path(cert),
-    }
+    return Certificate(private=Path(private_key), public=Path(cert))
 
 
 def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
-    valuespec_config = copy.deepcopy(dict(user_input))
-
-    interface_config = {
-        k: valuespec_config.pop(k)
-        for k in [
-            "connection_timeout",
-            "idp_metadata_endpoint",
-            "checkmk_server_url",
-        ]
-    }
-    interface_config["user_attributes"] = {
-        k: v
-        for k, v in [
-            (k, valuespec_config.pop(k))
-            for k in [
-                "user_id",
-                "alias",
-                "email",
-                "contactgroups",
-            ]
-        ]
-        if v
-    }
-
-    interface_config["signature_certificate"] = _determine_certificate_paths(
-        valuespec_config.pop("signature_certificate")
+    interface_config = InterfaceConfig(
+        connection_timeout=user_input["connection_timeout"],
+        idp_metadata_endpoint=user_input["idp_metadata_endpoint"],
+        checkmk_server_url=user_input["checkmk_server_url"],
+        user_attributes=UserAttributeNames(
+            user_id=user_input["user_id"],
+            alias=user_input["alias"],
+            email=user_input["email"],
+            contactgroups=user_input["contactgroups"],
+        ),
+        signature_certificate=_determine_certificate_paths(user_input["signature_certificate"]),
     )
-
-    valuespec_config["interface_config"] = interface_config
-
-    return ConnectorConfig(**valuespec_config)
+    return ConnectorConfig(
+        type=user_input["type"],
+        version=user_input["version"],
+        id=user_input["id"],
+        name=user_input["name"],
+        description=user_input["description"],
+        comment=user_input["comment"],
+        docu_url=user_input["docu_url"],
+        disabled=user_input["disabled"],
+        interface_config=interface_config,
+    )

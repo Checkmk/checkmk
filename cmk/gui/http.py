@@ -596,6 +596,15 @@ class Response(flask.Response):
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)
 
+    def set_csp_form_action(self, form_action: str) -> None:
+        """If you have a form action that is not within the site, the
+        Content-Security-Policy will block it. So you can add it here, Apache
+        will then take this value and complete the CSP"""
+
+        self.headers[
+            "Content-Security-Policy"
+        ] = f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
+
 
 # From request context
 request: Request = cast(Request, flask_request)

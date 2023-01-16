@@ -131,6 +131,7 @@ class SingleSignOn(Page):
                 varname=None, message=_("Unable to create authentication request")
             ) from e
 
+        response.set_csp_form_action(interface.idp_sso_destination)
         return authentication_request
 
     def handle_page(self) -> None:

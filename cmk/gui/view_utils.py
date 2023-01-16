@@ -108,9 +108,7 @@ def format_plugin_output(
             "(?:&lt;A HREF=&quot;)?" + _URL_PATTERN + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
                 html.render_icon_button(
-                    _prepare_button_url(p),
-                    _prepare_button_url(p),
-                    "link",
+                    _prepare_button_url(p), _prepare_button_url(p), "link", target="_blank"
                 )
             ),
             output,

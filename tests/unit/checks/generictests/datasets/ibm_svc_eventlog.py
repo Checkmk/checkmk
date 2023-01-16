@@ -10,21 +10,23 @@
 checkname = "ibm_svc_eventlog"
 
 
-info = [[
-    "164",
-    "220522214408",
-    "enclosure",
-    "1",
-    "",
-    "",
-    "alert",
-    "no",
-    "085044",
-    "1114",
-    "Enclosure Battery fault type 1",
-    "",
-    "",
-]]
+info = [
+    [
+        "164",
+        "220522214408",
+        "enclosure",
+        "1",
+        "",
+        "",
+        "alert",
+        "no",
+        "085044",
+        "1114",
+        "Enclosure Battery fault type 1",
+        "",
+        "",
+    ]
+]
 
 
 discovery = {
@@ -36,6 +38,16 @@ discovery = {
 
 checks = {
     "": [
-        (None, {}, [(1, "1 messages not expired and not yet fixed found in event log, last was: Enclosure Battery fault type 1", [])]),
+        (
+            None,
+            {},
+            [
+                (
+                    1,
+                    "1 messages not expired and not yet fixed found in event log, last was: Enclosure Battery fault type 1",
+                    [],
+                )
+            ],
+        ),
     ]
 }

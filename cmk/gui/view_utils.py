@@ -88,9 +88,10 @@ def format_plugin_output(output: CellContent,
         output = re.sub(
             "(?:&lt;A HREF=&quot;)?" + _URL_PATTERN + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
-                html.render_icon_button(unescape_attributes(p.group(1).replace(
-                    '&quot;', '')), unescape_attributes(p.group(1).replace('&quot;', '')), "link")),
-            output)
+                html.render_icon_button(unescape_attributes(p.group(1).replace('&quot;', '')),
+                                        unescape_attributes(p.group(1).replace('&quot;', '')),
+                                        "link",
+                                        target="_blank")), output)
 
         if output.endswith(" &lt;/A&gt;"):
             output = output[:-11]

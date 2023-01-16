@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import ast
+import enum
 import pprint
 import tarfile
 from collections.abc import Iterable, Mapping, Sequence
@@ -18,8 +19,33 @@ from pydantic import BaseModel, Extra, Field
 
 from cmk.utils import version as cmk_version
 
-from ._parts import PackagePart
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
+
+
+@enum.unique
+class PackagePart(str, enum.Enum):
+    # We have to inherit str to make the (de)serialization work as expected.
+    # It's a shame, but other approaches don't work or are worse.
+    EC_RULE_PACKS = "ec_rule_packs"
+    AGENT_BASED = "agent_based"
+    CHECKS = "checks"
+    HASI = "inventory"
+    CHECKMAN = "checkman"
+    AGENTS = "agents"
+    NOTIFICATIONS = "notifications"
+    GUI = "gui"
+    WEB = "web"
+    PNP_TEMPLATES = "pnp-templates"
+    DOC = "doc"
+    LOCALES = "locales"
+    BIN = "bin"
+    LIB = "lib"
+    MIBS = "mibs"
+    ALERT_HANDLERS = "alert_handlers"
+
+    @property
+    def ident(self) -> str:
+        return self.value
 
 
 class Manifest(BaseModel):

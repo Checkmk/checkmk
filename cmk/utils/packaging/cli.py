@@ -26,7 +26,7 @@ from . import (
     update_active_packages,
 )
 from ._manifest import extract_manifest, Manifest, manifest_template, read_manifest_optionally
-from ._parts import PackagePart
+from ._parts import PackagePart, site_path, ui_title
 from ._reporter import files_inventory
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
@@ -34,7 +34,7 @@ from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 def _to_text(manifest: Manifest, summarize: bool = True) -> str:
     valid_until_text = manifest.version_usable_until or "No version limitation"
     files = "".join(
-        "\n  %s%s" % (part.ui_title, "".join(f"\n    {f}" for f in fs))
+        "\n  %s%s" % (ui_title(part), "".join(f"\n    {f}" for f in fs))
         for part, fs in manifest.files.items()
     )
     return (
@@ -157,7 +157,7 @@ def _command_files(args: argparse.Namespace, _logger: logging.Logger) -> int:
     )
     sys.stdout.write(
         "".join(
-            f"{part.path / rel_path}\n"
+            f"{site_path(part) / rel_path}\n"
             for part, rel_paths in manifest.files.items()
             for rel_path in rel_paths
         )

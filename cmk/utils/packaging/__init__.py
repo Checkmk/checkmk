@@ -42,9 +42,10 @@ from ._manifest import (
     extract_manifests,
     Manifest,
     manifest_template,
+    PackagePart,
     read_manifest_optionally,
 )
-from ._parts import CONFIG_PARTS, PackagePart
+from ._parts import CONFIG_PARTS, permissions, site_path, ui_title
 from ._reporter import all_local_files, all_rule_pack_files
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
@@ -58,7 +59,7 @@ def _get_permissions(part: PackagePart, rel_path: Path) -> int:
     # For now I prefer to stay compatible.
     if part is PackagePart.LIB and rel_path.parts[:2] == ("nagios", "plugins"):
         return 0o755
-    return part.permission
+    return permissions(part)
 
 
 def format_file_name(package_id: PackageID) -> str:
@@ -136,7 +137,7 @@ def create_mkp_object(manifest: Manifest) -> bytes:
             if not filenames:
                 continue
 
-            subtar = _pack_subtar(part.ident, part.path, filenames, g_logger)
+            subtar = _pack_subtar(part.ident, site_path(part), filenames, g_logger)
             add_file(*subtar)
 
     return buffer.getvalue()
@@ -173,7 +174,7 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
         for fn in filenames:
             g_logger.log(VERBOSE, "    %s", fn)
             try:
-                (part.path / fn).unlink(missing_ok=True)
+                (site_path(part) / fn).unlink(missing_ok=True)
             except Exception as exc:
                 raise PackageException(
                     f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
@@ -321,7 +322,7 @@ def edit(pacname: PackageName, new_manifest: Manifest) -> None:
 def _raise_for_nonexisting_files(manifest: Manifest) -> None:
     for part, rel_path in manifest.files.items():
         for rp in rel_path:
-            if not (fp := (part.path / rp).exists()):
+            if not (fp := (site_path(part) / rp).exists()):
                 raise PackageException(f"File {fp} does not exist.")
 
 
@@ -425,9 +426,10 @@ def _install(  # pylint: disable=too-many-branches
                 g_logger.debug("    %s", fn)
 
             # make sure target directory exists
-            if not part.path.exists():
-                g_logger.debug("    Creating directory %s", part.path)
-                part.path.mkdir(parents=True, exist_ok=True)
+            parts_site_path = site_path(part)
+            if not parts_site_path.exists():
+                g_logger.debug("    Creating directory %s", parts_site_path)
+                parts_site_path.mkdir(parents=True, exist_ok=True)
 
             tarsource = tar.extractfile(tarname)
             if tarsource is None:
@@ -436,7 +438,7 @@ def _install(  # pylint: disable=too-many-branches
             # Important: Do not preserve the tared timestamp.
             # Checkmk needs to know when the files have been installed for cache invalidation.
             with subprocess.Popen(
-                ["tar", "xf", "-", "--touch", "-C", part.path, *(str(f) for f in filenames)],
+                ["tar", "xf", "-", "--touch", "-C", site_path(part), *(str(f) for f in filenames)],
                 stdin=subprocess.PIPE,
                 shell=False,
                 close_fds=True,
@@ -452,7 +454,7 @@ def _install(  # pylint: disable=too-many-branches
 
             # Fix permissions of extracted files
             for filename in filenames:
-                path = part.path / filename
+                path = site_path(part) / filename
                 desired_perm = _get_permissions(part, filename)
                 has_perm = path.stat().st_mode & 0o7777
                 if has_perm != desired_perm:
@@ -474,7 +476,7 @@ def _install(  # pylint: disable=too-many-branches
             new_files = set(manifest.files.get(part, []))
             remove_files = set(old_files) - new_files
             for fn in remove_files:
-                path = part.path / fn
+                path = site_path(part) / fn
                 g_logger.log(VERBOSE, "Removing outdated file %s.", path)
                 try:
                     path.unlink(missing_ok=True)
@@ -533,7 +535,7 @@ def _conflicting_files(
         for fn in files:
             if fn in old_files:
                 continue
-            path = part.path / fn
+            path = site_path(part) / fn
             if fn in packaged:
                 yield path, "part of another package"
             elif path.exists():
@@ -574,7 +576,7 @@ def _validate_package_files(manifest: Manifest) -> None:
 def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
     """Packaged files must not already belong to another package"""
     if collisions := set(
-        str(part.path / fn)
+        str(site_path(part) / fn)
         for part in PackagePart
         for fn in manifest.files.get(part, ())
         if fn in other_manifest.files.get(part, ())

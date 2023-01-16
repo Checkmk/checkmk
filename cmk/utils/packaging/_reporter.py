@@ -14,7 +14,8 @@ from typing import TypedDict
 from cmk.utils.paths import local_root
 
 from ._installed import get_installed_manifests
-from ._parts import get_package_part, PackagePart
+from ._manifest import PackagePart
+from ._parts import get_package_part, site_path, ui_title
 
 
 def all_local_files() -> Mapping[PackagePart | None, set[Path]]:
@@ -50,15 +51,13 @@ def all_local_files() -> Mapping[PackagePart | None, set[Path]]:
 
 
 def _relative_path(package_part: PackagePart, full_path: Path) -> Path:
-    return full_path.resolve().relative_to(package_part.path.resolve())
+    return full_path.resolve().relative_to(site_path(package_part).resolve())
 
 
 def all_rule_pack_files() -> set[Path]:
+    ec_path = site_path(PackagePart.EC_RULE_PACKS)
     with suppress(FileNotFoundError):
-        return {
-            f.relative_to(PackagePart.EC_RULE_PACKS.path)
-            for f in PackagePart.EC_RULE_PACKS.path.iterdir()
-        }
+        return {f.relative_to(ec_path) for f in ec_path.iterdir()}
     return set()
 
 
@@ -97,8 +96,8 @@ def files_inventory() -> Sequence[FileMetaInfo]:
             package=package_id.name if package_id else "",
             version=package_id.version if package_id else "",
             part_id=part.ident if part else "",
-            part_title=part.ui_title if part else "",
-            mode=_get_mode((part.path / file) if part else file),
+            part_title=ui_title(part) if part else "",
+            mode=_get_mode((site_path(part) / file) if part else file),
         )
         for part, file, package_id in files_and_packages
     ]

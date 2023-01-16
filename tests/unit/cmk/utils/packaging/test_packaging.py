@@ -36,7 +36,7 @@ def _packages_dir() -> Iterable[None]:
 
 @pytest.fixture(autouse=True)
 def clean_dirs() -> Iterable[None]:
-    paths = [p.path for p in packaging.PackagePart] + [
+    paths = [packaging.site_path(p) for p in packaging.PackagePart] + [
         cmk.utils.paths.local_optional_packages_dir,
         cmk.utils.paths.local_enabled_packages_dir,
     ]
@@ -370,12 +370,13 @@ def test_raise_for_too_new_cmk_version_ok(until_version: str | None, site_versio
 def _setup_local_files_structure() -> None:
     """Let's hope this gets easier during the upcomming changes."""
     for part in packaging.PackagePart:
-        subdir = part.path / "subdir"
+        part_path = packaging.site_path(part)
+        subdir = part_path / "subdir"
         subdir.mkdir(parents=True)
-        (part.path / f"regular_file_of_{part.ident}.py").touch()
-        (part.path / f".hidden_file_of_{part.ident}.py").touch()
-        (part.path / f"editor_file_of_{part.ident}.py~").touch()
-        (part.path / f"compiled_file_of_{part.ident}.pyc").touch()
+        (part_path / f"regular_file_of_{part.ident}.py").touch()
+        (part_path / f".hidden_file_of_{part.ident}.py").touch()
+        (part_path / f"editor_file_of_{part.ident}.py~").touch()
+        (part_path / f"compiled_file_of_{part.ident}.pyc").touch()
         (subdir / f"subdir_file_of_{part.ident}.py").touch()
 
     other_file = cmk.utils.paths.local_root / "some" / "other" / "file.sh"

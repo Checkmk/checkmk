@@ -7,23 +7,29 @@
 # type: ignore
 
 
-
-checkname = 'liebert_reheating'
-
-
-info = [['Reheating is awesome!', '81.3', '%'],
-        ['This value ignored', '21.1', 'def C']]
+checkname = "liebert_reheating"
 
 
-discovery = {'': [(None, {})]}
+info = [["Reheating is awesome!", "81.3", "%"], ["This value ignored", "21.1", "def C"]]
+
+
+discovery = {"": [(None, {})]}
 
 
 checks = {
-    '': [
-        (None, {'levels': (80, 90)}, [
-            (1, '81.30 % (warn/crit at 80.00 %/90.00 %)', [
-                ('filehandler_perc', 81.3, 80, 90, None, None),
-            ]),
-        ]),
+    "": [
+        (
+            None,
+            {"levels": (80, 90)},
+            [
+                (
+                    1,
+                    "81.30 % (warn/crit at 80.00 %/90.00 %)",
+                    [
+                        ("filehandler_perc", 81.3, 80, 90, None, None),
+                    ],
+                ),
+            ],
+        ),
     ],
 }

@@ -5,10 +5,10 @@
 
 # fmt: off
 # type: ignore
-checkname = 'filestats'
+checkname = "filestats"
 
 info = [
-    ['[[[file_stats dtb]]]'],
+    ["[[[file_stats dtb]]]"],
     [
         "{'stat_status': 'ok', 'age': 13761362, 'mtime': 1642827699, 'path': u'/var/bla', 'type': 'file', 'size': 47736}"
     ],
@@ -21,24 +21,27 @@ info = [
     ["{'count': 3, 'type': 'summary'}"],
 ]
 
-discovery = {'single': [], '': [('dtb', {})]}
+discovery = {"single": [], "": [("dtb", {})]}
 
 checks = {
-    '': [(
-        'dtb',
-        {
-            'maxcount': (1, 1),
-            'show_all_files': True
-        },
-        [
-            (2, 'Files in total: 3 (warn/crit at 1/1)\n[/var/bla]\n[/var/foo]\n[/var/boo]', [
-                ('file_count', 3, 1.0, 1.0, None, None),
-            ]),
-            (0, 'Smallest: 18.5 KiB', []),
-            (0, 'Largest: 46.6 KiB', []),
-            (0, 'Newest: 156 days 7 hours', []),
-            (0, 'Oldest: 159 days 6 hours', []),
-            (0, '\n', []),
-        ],
-    ),]
+    "": [
+        (
+            "dtb",
+            {"maxcount": (1, 1), "show_all_files": True},
+            [
+                (
+                    2,
+                    "Files in total: 3 (warn/crit at 1/1)\n[/var/bla]\n[/var/foo]\n[/var/boo]",
+                    [
+                        ("file_count", 3, 1.0, 1.0, None, None),
+                    ],
+                ),
+                (0, "Smallest: 18.5 KiB", []),
+                (0, "Largest: 46.6 KiB", []),
+                (0, "Newest: 156 days 7 hours", []),
+                (0, "Oldest: 159 days 6 hours", []),
+                (0, "\n", []),
+            ],
+        ),
+    ]
 }

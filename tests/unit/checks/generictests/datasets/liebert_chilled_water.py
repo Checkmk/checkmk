@@ -7,34 +7,45 @@
 # type: ignore
 
 
+checkname = "liebert_chilled_water"
 
-checkname = 'liebert_chilled_water'
 
-
-info = [['Supply Chilled Water Over Temp',
-         'Inactive Event',
-         'Chilled Water Control Valve Failure',
-         'Inactive Event',
-         'Supply Chilled Water Loss of Flow',
-         'Everything is on fire']]
+info = [
+    [
+        "Supply Chilled Water Over Temp",
+        "Inactive Event",
+        "Chilled Water Control Valve Failure",
+        "Inactive Event",
+        "Supply Chilled Water Loss of Flow",
+        "Everything is on fire",
+    ]
+]
 
 
 discovery = {
-    '': [
-        ('Supply Chilled Water Over Temp', {}),
-        ('Chilled Water Control Valve Failure', {}),
-        ('Supply Chilled Water Loss of Flow', {}),
+    "": [
+        ("Supply Chilled Water Over Temp", {}),
+        ("Chilled Water Control Valve Failure", {}),
+        ("Supply Chilled Water Loss of Flow", {}),
     ],
 }
 
 
 checks = {
-    '': [
-        ('Supply Chilled Water Over Temp', {}, [
-            (0, 'Normal', []),
-        ]),
-        ('Supply Chilled Water Loss of Flow', {}, [
-            (2, 'Everything is on fire', []),
-        ]),
+    "": [
+        (
+            "Supply Chilled Water Over Temp",
+            {},
+            [
+                (0, "Normal", []),
+            ],
+        ),
+        (
+            "Supply Chilled Water Loss of Flow",
+            {},
+            [
+                (2, "Everything is on fire", []),
+            ],
+        ),
     ],
 }

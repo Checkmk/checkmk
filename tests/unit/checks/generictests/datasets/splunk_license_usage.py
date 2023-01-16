@@ -7,24 +7,28 @@
 # type: ignore
 
 
-
-checkname = 'splunk_license_usage'
-
-
-info = [['license_usage'], ['524288000', '5895880']]
+checkname = "splunk_license_usage"
 
 
-discovery = {'': [(None, {})]}
+info = [["license_usage"], ["524288000", "5895880"]]
 
 
-checks = {'': [(None,
-                {'usage_bytes': (80.0, 90.0)},
-                [(0, 'Quota: 500 MiB', []),
-                 (0,
-                  'Slaves usage: 5.62 MiB',
-                  [('splunk_slave_usage_bytes',
-                    5895880,
-                    419430400.0,
-                    471859200.0,
-                    None,
-                    None)])])]}
+discovery = {"": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {"usage_bytes": (80.0, 90.0)},
+            [
+                (0, "Quota: 500 MiB", []),
+                (
+                    0,
+                    "Slaves usage: 5.62 MiB",
+                    [("splunk_slave_usage_bytes", 5895880, 419430400.0, 471859200.0, None, None)],
+                ),
+            ],
+        )
+    ]
+}

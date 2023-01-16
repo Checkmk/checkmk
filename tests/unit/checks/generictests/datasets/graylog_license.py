@@ -6,9 +6,9 @@
 # fmt: off
 # type: ignore
 
-checkname = 'graylog_license'
+checkname = "graylog_license"
 
-freeze_time = '2019-11-08T08:56:00'
+freeze_time = "2019-11-08T08:56:00"
 
 info = [
     [
@@ -16,31 +16,36 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {
-                'no_enterprise': 0,
-                'violated': 2,
-                'valid': 2,
-                'cluster_not_covered': 1,
-                'traffic_exceeded': 1,
-                'nodes_exceeded': 1,
-                'expired': 2,
-                'remote_checks_failed': 1
-            }, [
-                (0, 'Is expired: no', []), (2, 'Is violated: yes', []),
-                (2, 'Is valid: no', []), (0, 'Traffic is exceeded: no', []),
-                (0, 'Cluster is not covered: no', []),
-                (0, 'Nodes exceeded: no', []),
-                (1, 'Remote checks failed: yes', []),
-                (0, 'Traffic limit: 5.00 GiB', []),
-                (0, 'Expires in: -15 days 3 hours', []),
-                (0, 'Subject: /license/enterprise', []), (0, 'Trial: yes', []),
-                (0, 'Requires remote checks: yes', [])
-            ]
+            None,
+            {
+                "no_enterprise": 0,
+                "violated": 2,
+                "valid": 2,
+                "cluster_not_covered": 1,
+                "traffic_exceeded": 1,
+                "nodes_exceeded": 1,
+                "expired": 2,
+                "remote_checks_failed": 1,
+            },
+            [
+                (0, "Is expired: no", []),
+                (2, "Is violated: yes", []),
+                (2, "Is valid: no", []),
+                (0, "Traffic is exceeded: no", []),
+                (0, "Cluster is not covered: no", []),
+                (0, "Nodes exceeded: no", []),
+                (1, "Remote checks failed: yes", []),
+                (0, "Traffic limit: 5.00 GiB", []),
+                (0, "Expires in: -15 days 3 hours", []),
+                (0, "Subject: /license/enterprise", []),
+                (0, "Trial: yes", []),
+                (0, "Requires remote checks: yes", []),
+            ],
         )
     ]
 }

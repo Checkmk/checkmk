@@ -7,24 +7,21 @@
 # type: ignore
 
 
-checkname = 'aws_s3_limits'
+checkname = "aws_s3_limits"
 
-info = [['[["buckets",', '"TITLE",', '10,', '1,', '"REGION"]]']]
+info = [['[["buckets",', '"TITLE",', "10,", "1,", '"REGION"]]']]
 
-discovery = {'': [("REGION", {})]}
+discovery = {"": [("REGION", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            "REGION", {
-                'buckets': (None, 80.0, 90.0)
-            }, [
-                (
-                    0, 'No levels reached', [
-                        ('aws_s3_buckets', 1, None, None, None, None)
-                    ]
-                ), (0, '\nTITLE: 1 (of max. 10)')
-            ]
+            "REGION",
+            {"buckets": (None, 80.0, 90.0)},
+            [
+                (0, "No levels reached", [("aws_s3_buckets", 1, None, None, None, None)]),
+                (0, "\nTITLE: 1 (of max. 10)"),
+            ],
         )
     ]
 }

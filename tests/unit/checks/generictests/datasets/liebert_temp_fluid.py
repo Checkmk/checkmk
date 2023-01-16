@@ -7,35 +7,55 @@
 # type: ignore
 
 
-
-checkname = 'liebert_temp_fluid'
+checkname = "liebert_temp_fluid"
 
 
 info = [
-    ['Supply Fluid Temp Set Point 1', '18.0', 'deg C',
-     'Supply Fluid Temp Set Point 2', '14', 'deg C',
-     'Supply Fluid Over Temp Alarm Threshold', '22', 'deg C',
-     'Supply Fluid Under Temp Warning Threshold', '0', 'deg C',
-     'Supply Fluid Under Temp Alarm Threshold', '0', 'deg C',
-     'Supply Fluid Over Temp Warning Threshold', '0', 'deg C'],
+    [
+        "Supply Fluid Temp Set Point 1",
+        "18.0",
+        "deg C",
+        "Supply Fluid Temp Set Point 2",
+        "14",
+        "deg C",
+        "Supply Fluid Over Temp Alarm Threshold",
+        "22",
+        "deg C",
+        "Supply Fluid Under Temp Warning Threshold",
+        "0",
+        "deg C",
+        "Supply Fluid Under Temp Alarm Threshold",
+        "0",
+        "deg C",
+        "Supply Fluid Over Temp Warning Threshold",
+        "0",
+        "deg C",
+    ],
 ]
 
 
-
 discovery = {
-    '': [
-        ('Supply Fluid Temp Set Point 1', {}),
-        ('Supply Fluid Temp Set Point 2', {}),
+    "": [
+        ("Supply Fluid Temp Set Point 1", {}),
+        ("Supply Fluid Temp Set Point 2", {}),
     ],
 }
 
 
 checks = {
-    '': [
-        ('Supply Fluid Temp Set Point 1', {}, [
-            (0, '18.0 \xb0C', [
-                ('temp', 18.0, 22.0, 22.0, None, None),
-            ]),
-        ]),
+    "": [
+        (
+            "Supply Fluid Temp Set Point 1",
+            {},
+            [
+                (
+                    0,
+                    "18.0 \xb0C",
+                    [
+                        ("temp", 18.0, 22.0, 22.0, None, None),
+                    ],
+                ),
+            ],
+        ),
     ],
 }

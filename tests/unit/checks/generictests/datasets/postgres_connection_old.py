@@ -5,28 +5,36 @@
 
 # fmt: off
 # type: ignore
-checkname = 'postgres_connections'
+checkname = "postgres_connections"
 
 info = [
-    ['[databases_start]'], ['postgres'], ['adwebconnect'], ['[databases_end]'],
-    ['current', 'mc', 'datname'], ['1', '100', 'postgres']
+    ["[databases_start]"],
+    ["postgres"],
+    ["adwebconnect"],
+    ["[databases_end]"],
+    ["current", "mc", "datname"],
+    ["1", "100", "postgres"],
 ]
 
-discovery = {'': [('adwebconnect', {}), ('postgres', {})]}
+discovery = {"": [("adwebconnect", {}), ("postgres", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            'adwebconnect', {
-                'levels_perc': (80.0, 90.0)
-            }, [(0, 'No active connections', [('active_connections', 0, 0, 0, 0, 0)]),
-               (0, 'No idle connections', [('idle_connections', 0, 0, 0, 0, 0)]) ]
+            "adwebconnect",
+            {"levels_perc": (80.0, 90.0)},
+            [
+                (0, "No active connections", [("active_connections", 0, 0, 0, 0, 0)]),
+                (0, "No idle connections", [("idle_connections", 0, 0, 0, 0, 0)]),
+            ],
         ),
         (
-            'postgres', {
-                'levels_perc': (80.0, 90.0)
-            }, [(0, 'No active connections', [('active_connections', 0, 0, 0, 0, 0)]),
-               (0, 'No idle connections', [('idle_connections', 0, 0, 0, 0, 0)]) ]
-        )
+            "postgres",
+            {"levels_perc": (80.0, 90.0)},
+            [
+                (0, "No active connections", [("active_connections", 0, 0, 0, 0, 0)]),
+                (0, "No idle connections", [("idle_connections", 0, 0, 0, 0, 0)]),
+            ],
+        ),
     ]
 }

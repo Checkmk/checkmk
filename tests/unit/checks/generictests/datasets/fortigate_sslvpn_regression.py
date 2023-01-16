@@ -5,33 +5,23 @@
 
 # fmt: off
 # type: ignore
-checkname = 'fortigate_sslvpn'
+checkname = "fortigate_sslvpn"
 
-info = [[['root']], [['2', '9', '6', '6', '20']]]
+info = [[["root"]], [["2", "9", "6", "6", "20"]]]
 
-discovery = {'': [('root', {})]}
+discovery = {"": [("root", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            'root', {}, [
-                (0, 'enabled', []),
-                (
-                    0, 'Users: 9', [
-                        ('active_vpn_users', 9, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Web sessions: 6', [
-                        ('active_vpn_websessions', 6, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Tunnels: 6', [
-                        ('active_vpn_tunnels', 6, None, None, 0.0, 20.0)
-                    ]
-                )
-            ]
+            "root",
+            {},
+            [
+                (0, "enabled", []),
+                (0, "Users: 9", [("active_vpn_users", 9, None, None, None, None)]),
+                (0, "Web sessions: 6", [("active_vpn_websessions", 6, None, None, None, None)]),
+                (0, "Tunnels: 6", [("active_vpn_tunnels", 6, None, None, 0.0, 20.0)]),
+            ],
         )
     ]
 }

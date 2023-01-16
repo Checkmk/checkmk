@@ -5,13 +5,19 @@
 
 # fmt: off
 # type: ignore
-checkname = 'silverpeak_VX6000'
+checkname = "silverpeak_VX6000"
 
 info = [
-    [['0']],
-    [['','','',]]
+    [["0"]],
+    [
+        [
+            "",
+            "",
+            "",
+        ]
+    ],
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
-checks = {'': [(None, {}, [(0, 'No active alarms.', [])])]}
+checks = {"": [(None, {}, [(0, "No active alarms.", [])])]}

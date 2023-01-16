@@ -7,24 +7,23 @@
 # type: ignore
 
 
-
-checkname = 'liebert_cooling_status'
+checkname = "liebert_cooling_status"
 
 
 info = [
-    ['Fancy cooling device', 'awesome'],
+    ["Fancy cooling device", "awesome"],
 ]
 
 
 discovery = {
-    '': [
-        ('Fancy cooling device', {}),
+    "": [
+        ("Fancy cooling device", {}),
     ],
 }
 
 
 checks = {
-    '': [
-        ('Fancy cooling device', {}, [(0, "awesome", [])]),
+    "": [
+        ("Fancy cooling device", {}, [(0, "awesome", [])]),
     ],
 }

@@ -7,25 +7,34 @@
 # type: ignore
 
 
-
-checkname = 'stulz_humidity'
-
-
-info = [['MICOS11Q', '12', '229376', '15221', '15221', 'NO'],
-        ['MICOS11Q', '12', '229376', '15221', '15221']]
+checkname = "stulz_humidity"
 
 
-discovery = {'': [('MICOS11Q', 'stulz_humidity_default_levels'),
-                  ('MICOS11Q', 'stulz_humidity_default_levels')]}
+info = [
+    ["MICOS11Q", "12", "229376", "15221", "15221", "NO"],
+    ["MICOS11Q", "12", "229376", "15221", "15221"],
+]
 
 
-checks = {'': [('MICOS11Q',
-                (35, 40, 60, 65),
-                [(2,
-                  '1.20% (warn/crit below 40.00%/35.00%)',
-                  [('humidity', 1.2, 60, 65, 0, 100)])]),
-               ('MICOS11Q',
-                (35, 40, 60, 65),
-                [(2,
-                  '1.20% (warn/crit below 40.00%/35.00%)',
-                  [('humidity', 1.2, 60, 65, 0, 100)])])]}
+discovery = {
+    "": [
+        ("MICOS11Q", "stulz_humidity_default_levels"),
+        ("MICOS11Q", "stulz_humidity_default_levels"),
+    ]
+}
+
+
+checks = {
+    "": [
+        (
+            "MICOS11Q",
+            (35, 40, 60, 65),
+            [(2, "1.20% (warn/crit below 40.00%/35.00%)", [("humidity", 1.2, 60, 65, 0, 100)])],
+        ),
+        (
+            "MICOS11Q",
+            (35, 40, 60, 65),
+            [(2, "1.20% (warn/crit below 40.00%/35.00%)", [("humidity", 1.2, 60, 65, 0, 100)])],
+        ),
+    ]
+}

@@ -5,24 +5,24 @@
 
 # fmt: off
 # type: ignore
-checkname = 'pulse_secure_disk_util'
+checkname = "pulse_secure_disk_util"
 
-info = [['7']]
+info = [["7"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {
-                'upper_levels': (80.0, 90.0)
-            }, [
+            None,
+            {"upper_levels": (80.0, 90.0)},
+            [
                 (
-                    0, 'Percentage of disk space used: 7.00%', [
-                        ('disk_utilization', 7, 80.0, 90.0, None, None)
-                    ]
+                    0,
+                    "Percentage of disk space used: 7.00%",
+                    [("disk_utilization", 7, 80.0, 90.0, None, None)],
                 )
-            ]
+            ],
         )
     ]
 }

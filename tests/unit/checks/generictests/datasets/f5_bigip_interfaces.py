@@ -5,93 +5,99 @@
 
 # fmt: off
 # type: ignore
-checkname = 'f5_bigip_interfaces'
+checkname = "f5_bigip_interfaces"
 
 info = [
-    ['1.1', '0', '439189486311', '375541323492'],
-    ['1.2', '0', '121591230679', '201963958037'],
-    ['1.3', '0', '434523103807', '413556383286'],
-    ['1.4', '0', '1244059671', '991534207'], ['2.1', '5', '0', '0'],
-    ['2.2', '5', '0', '0'], ['mgmt', '0', '21498688535', '3648383840']
+    ["1.1", "0", "439189486311", "375541323492"],
+    ["1.2", "0", "121591230679", "201963958037"],
+    ["1.3", "0", "434523103807", "413556383286"],
+    ["1.4", "0", "1244059671", "991534207"],
+    ["2.1", "5", "0", "0"],
+    ["2.2", "5", "0", "0"],
+    ["mgmt", "0", "21498688535", "3648383840"],
 ]
 
 discovery = {
-    '': [
-        ('1.1', {
-            'state': 0
-        }), ('1.2', {
-            'state': 0
-        }), ('1.3', {
-            'state': 0
-        }), ('1.4', {
-            'state': 0
-        }), ('mgmt', {
-            'state': 0
-        })
+    "": [
+        ("1.1", {"state": 0}),
+        ("1.2", {"state": 0}),
+        ("1.3", {"state": 0}),
+        ("1.4", {"state": 0}),
+        ("mgmt", {"state": 0}),
     ]
 }
 
 checks = {
-    '': [
+    "": [
         (
-            '1.1', {
-                'state': 0
-            }, [
+            "1.1",
+            {"state": 0},
+            [
                 (
-                    0, 'in bytes: 0.00 B/s, out bytes: 0.00 B/s', [
-                        ('bytes_in', 0.0, None, None, None, None),
-                        ('bytes_out', 0.0, None, None, None, None)
-                    ]
+                    0,
+                    "in bytes: 0.00 B/s, out bytes: 0.00 B/s",
+                    [
+                        ("bytes_in", 0.0, None, None, None, None),
+                        ("bytes_out", 0.0, None, None, None, None),
+                    ],
                 )
-            ]
+            ],
         ),
         (
-            '1.2', {
-                'state': 0
-            }, [
+            "1.2",
+            {"state": 0},
+            [
                 (
-                    0, 'in bytes: 0.00 B/s, out bytes: 0.00 B/s', [
-                        ('bytes_in', 0.0, None, None, None, None),
-                        ('bytes_out', 0.0, None, None, None, None)
-                    ]
+                    0,
+                    "in bytes: 0.00 B/s, out bytes: 0.00 B/s",
+                    [
+                        ("bytes_in", 0.0, None, None, None, None),
+                        ("bytes_out", 0.0, None, None, None, None),
+                    ],
                 )
-            ]
+            ],
         ),
         (
-            '1.3', {
-                'state': 0
-            }, [
+            "1.3",
+            {"state": 0},
+            [
                 (
-                    0, 'in bytes: 0.00 B/s, out bytes: 0.00 B/s', [
-                        ('bytes_in', 0.0, None, None, None, None),
-                        ('bytes_out', 0.0, None, None, None, None)
-                    ]
+                    0,
+                    "in bytes: 0.00 B/s, out bytes: 0.00 B/s",
+                    [
+                        ("bytes_in", 0.0, None, None, None, None),
+                        ("bytes_out", 0.0, None, None, None, None),
+                    ],
                 )
-            ]
+            ],
         ),
         (
-            '1.4', {
-                'state': 0
-            }, [
+            "1.4",
+            {"state": 0},
+            [
                 (
-                    0, 'in bytes: 0.00 B/s, out bytes: 0.00 B/s', [
-                        ('bytes_in', 0.0, None, None, None, None),
-                        ('bytes_out', 0.0, None, None, None, None)
-                    ]
+                    0,
+                    "in bytes: 0.00 B/s, out bytes: 0.00 B/s",
+                    [
+                        ("bytes_in", 0.0, None, None, None, None),
+                        ("bytes_out", 0.0, None, None, None, None),
+                    ],
                 )
-            ]
+            ],
         ),
         (
-            'mgmt', {
-                'state': 0
-            }, [
+            "mgmt",
+            {"state": 0},
+            [
                 (
-                    0, 'in bytes: 0.00 B/s, out bytes: 0.00 B/s', [
-                        ('bytes_in', 0.0, None, None, None, None),
-                        ('bytes_out', 0.0, None, None, None, None)
-                    ]
+                    0,
+                    "in bytes: 0.00 B/s, out bytes: 0.00 B/s",
+                    [
+                        ("bytes_in", 0.0, None, None, None, None),
+                        ("bytes_out", 0.0, None, None, None, None),
+                    ],
                 )
-            ]
-        )
+            ],
+        ),
     ]
 }

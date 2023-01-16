@@ -6,70 +6,76 @@
 # fmt: off
 # type: ignore
 
-checkname = 'oracle_jobs'
+checkname = "oracle_jobs"
 
 info = [
     [
-        'DB19', 'CDB$ROOT', 'ORACLE_OCM', 'MGMT_STATS_CONFIG_JOB', 'SCHEDULED',
-        '0', '2', 'TRUE', '01-JAN-20 01.01.01.312723 AM +00:00', '-',
-        'SUCCEEDED'
+        "DB19",
+        "CDB$ROOT",
+        "ORACLE_OCM",
+        "MGMT_STATS_CONFIG_JOB",
+        "SCHEDULED",
+        "0",
+        "2",
+        "TRUE",
+        "01-JAN-20 01.01.01.312723 AM +00:00",
+        "-",
+        "SUCCEEDED",
     ]
 ]
 
-discovery = {'': [('DB19.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB', {})]}
+discovery = {"": [("DB19.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            'DB19.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB', {
-                'consider_job_status': 'ignore',
-                'status_missing_jobs': 2,
-                'missinglog': 1
-            }, [
+            "DB19.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB",
+            {"consider_job_status": "ignore", "status_missing_jobs": 2, "missinglog": 1},
+            [
                 (
                     0,
-                    'Job-State: SCHEDULED, Enabled: Yes, Last Duration: 0 seconds, Next Run: 01-JAN-20 01.01.01.312723 AM +00:00, Last Run Status: SUCCEEDED (ignored disabled Job)',
-                    [('duration', 0, None, None, None, None)]
+                    "Job-State: SCHEDULED, Enabled: Yes, Last Duration: 0 seconds, Next Run: 01-JAN-20 01.01.01.312723 AM +00:00, Last Run Status: SUCCEEDED (ignored disabled Job)",
+                    [("duration", 0, None, None, None, None)],
                 )
-            ]
+            ],
         ),
         (
-            'DB19.CDB$ROOT.ORACLE_OCM.MISSING',
+            "DB19.CDB$ROOT.ORACLE_OCM.MISSING",
             {
-                'status_missing_jobs': 2,
+                "status_missing_jobs": 2,
             },
             [
                 (
                     2,
-                    'Job is missing',
+                    "Job is missing",
                 )
-            ]
+            ],
         ),
         # test if old autochecks files still work
         (
-            'DB19.CDB$ROOT.ORACLE_OCM.MISSING',
+            "DB19.CDB$ROOT.ORACLE_OCM.MISSING",
             {
-                'missingjob': 2,
+                "missingjob": 2,
             },
             [
                 (
                     2,
-                    'Job is missing',
+                    "Job is missing",
                 )
-            ]
+            ],
         ),
         (
-            'DB19.CDB$ROOT.ORACLE_OCM.MISSING',
+            "DB19.CDB$ROOT.ORACLE_OCM.MISSING",
             {
-                'status_missing_jobs': 2,
-                'missingjob': 3,
+                "status_missing_jobs": 2,
+                "missingjob": 3,
             },
             [
                 (
                     2,
-                    'Job is missing',
+                    "Job is missing",
                 )
-            ]
+            ],
         ),
     ]
 }

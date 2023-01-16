@@ -7,19 +7,28 @@
 # type: ignore
 
 
-
-checkname = 'splunk_jobs'
-
-
-info = [['2019-05-16T11:17:00.000+02:00', 'splunk-system-user', 'DONE', 'False'],
-        ['2019-05-16T10:17:01.000+02:00', 'splunk-system-user', 'DONE', 'False']]
+checkname = "splunk_jobs"
 
 
-discovery = {'': [(None, {})]}
+info = [
+    ["2019-05-16T11:17:00.000+02:00", "splunk-system-user", "DONE", "False"],
+    ["2019-05-16T10:17:01.000+02:00", "splunk-system-user", "DONE", "False"],
+]
 
 
-checks = {'': [(None,
-                {},
-                [(0, 'Job Count: 0', [('job_total', 0, None, None, None, None)]),
-                 (0, 'Failed jobs: 0', [('failed_jobs', 0, None, None, None, None)]),
-                 (0, 'Zombie jobs: 0', [('zombie_jobs', 0, None, None, None, None)])])]}
+discovery = {"": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {},
+            [
+                (0, "Job Count: 0", [("job_total", 0, None, None, None, None)]),
+                (0, "Failed jobs: 0", [("failed_jobs", 0, None, None, None, None)]),
+                (0, "Zombie jobs: 0", [("zombie_jobs", 0, None, None, None, None)]),
+            ],
+        )
+    ]
+}

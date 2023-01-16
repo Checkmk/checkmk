@@ -5,15 +5,10 @@
 
 # fmt: off
 # type: ignore
-checkname = 'f5_bigip_psu'
+checkname = "f5_bigip_psu"
 
-info = [['1', '1'], ['2', '1']]
+info = [["1", "1"], ["2", "1"]]
 
-discovery = {'': [('1', None), ('2', None)]}
+discovery = {"": [("1", None), ("2", None)]}
 
-checks = {
-    '': [
-        ('1', {}, [(0, 'PSU state: good', [])]),
-        ('2', {}, [(0, 'PSU state: good', [])])
-    ]
-}
+checks = {"": [("1", {}, [(0, "PSU state: good", [])]), ("2", {}, [(0, "PSU state: good", [])])]}

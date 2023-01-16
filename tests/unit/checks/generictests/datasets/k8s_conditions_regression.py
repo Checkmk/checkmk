@@ -6,20 +6,32 @@
 # fmt: off
 # type: ignore
 
-checkname = 'k8s_conditions'
+checkname = "k8s_conditions"
 
-info = [[
-    '{"DiskPressure": "False", "OutOfDisk": "False", "MemoryPressure": "False", "Ready": "False", "NetworkUnavailable": "False", "KernelDeadlock": "True"}'
-]]
+info = [
+    [
+        '{"DiskPressure": "False", "OutOfDisk": "False", "MemoryPressure": "False", "Ready": "False", "NetworkUnavailable": "False", "KernelDeadlock": "True"}'
+    ]
+]
 
 discovery = {
-    '': [('DiskPressure', {}), ('KernelDeadlock', {}), ('MemoryPressure', {}),
-         ('NetworkUnavailable', {}), ('OutOfDisk', {}), ('Ready', {})]
+    "": [
+        ("DiskPressure", {}),
+        ("KernelDeadlock", {}),
+        ("MemoryPressure", {}),
+        ("NetworkUnavailable", {}),
+        ("OutOfDisk", {}),
+        ("Ready", {}),
+    ]
 }
 
 checks = {
-    '': [('DiskPressure', {}, [(0, 'False', [])]), ('KernelDeadlock', {}, [(2, 'True', [])]),
-         ('MemoryPressure', {}, [(0, 'False', [])]),
-         ('NetworkUnavailable', {}, [(0, 'False', [])]), ('OutOfDisk', {}, [(0, 'False', [])]),
-         ('Ready', {}, [(2, 'False', [])])]
+    "": [
+        ("DiskPressure", {}, [(0, "False", [])]),
+        ("KernelDeadlock", {}, [(2, "True", [])]),
+        ("MemoryPressure", {}, [(0, "False", [])]),
+        ("NetworkUnavailable", {}, [(0, "False", [])]),
+        ("OutOfDisk", {}, [(0, "False", [])]),
+        ("Ready", {}, [(2, "False", [])]),
+    ]
 }

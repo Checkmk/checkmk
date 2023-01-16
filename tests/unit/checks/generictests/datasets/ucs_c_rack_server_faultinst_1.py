@@ -10,13 +10,14 @@ from cmk.base.plugins.agent_based.ucs_c_rack_server_faultinst import (
     parse_ucs_c_rack_server_faultinst,
 )
 
-checkname = 'ucs_c_rack_server_faultinst'
+checkname = "ucs_c_rack_server_faultinst"
 
 parsed = parse_ucs_c_rack_server_faultinst([])
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
-checks = {'': [(None,
-                {},
-                [(0, "No fault instances found")]),
-               ]}
+checks = {
+    "": [
+        (None, {}, [(0, "No fault instances found")]),
+    ]
+}

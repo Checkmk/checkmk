@@ -5,22 +5,10 @@
 
 # fmt: off
 # type: ignore
-checkname = 'ups_cps_inphase'
+checkname = "ups_cps_inphase"
 
-info = [['32', 'NULL']]
+info = [["32", "NULL"]]
 
-discovery = {'': [('1', {})]}
+discovery = {"": [("1", {})]}
 
-checks = {
-    '': [
-        (
-            '1', {}, [
-                (
-                    0, 'Voltage: 3.2 V', [
-                        ('voltage', 3.2, None, None, None, None)
-                    ]
-                )
-            ]
-        )
-    ]
-}
+checks = {"": [("1", {}, [(0, "Voltage: 3.2 V", [("voltage", 3.2, None, None, None, None)])])]}

@@ -10,7 +10,9 @@ checkname = "prism_alerts"
 
 info = [
     ['["timestamp", "message", "severity"]'],
-    ['["1456749413140000", "DIMM fault detected on host 172.25.209.110. The node is running with 384 GiB whereas 512 GiB was installed.", "kCritical"]'],
+    [
+        '["1456749413140000", "DIMM fault detected on host 172.25.209.110. The node is running with 384 GiB whereas 512 GiB was installed.", "kCritical"]'
+    ],
     ['["1456749413150000", "Some warning message.", "kWarning"]'],
     ['["1456749413160000", "Some info message.", "kInfo"]'],
 ]
@@ -18,14 +20,18 @@ info = [
 discovery = {"": [(None, {})]}
 
 checks = {
-    "": [(
-        None,
-        {},
-        [
-            (2, "3 alerts", []),
-            (0,
-             "Last worst on Mon Feb 29 13:36:53 2016: 'DIMM fault detected on host 172.25.209.110. The node is running with 384 GiB whereas 512 GiB was installed.'",
-             []),
-        ],
-    ),]
+    "": [
+        (
+            None,
+            {},
+            [
+                (2, "3 alerts", []),
+                (
+                    0,
+                    "Last worst on Mon Feb 29 13:36:53 2016: 'DIMM fault detected on host 172.25.209.110. The node is running with 384 GiB whereas 512 GiB was installed.'",
+                    [],
+                ),
+            ],
+        ),
+    ]
 }

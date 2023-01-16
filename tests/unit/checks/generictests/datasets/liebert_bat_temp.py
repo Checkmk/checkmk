@@ -7,29 +7,35 @@
 # type: ignore
 
 
-
-checkname = 'liebert_bat_temp'
+checkname = "liebert_bat_temp"
 
 
 info = [
-    ['37'],
+    ["37"],
 ]
 
 
-
 discovery = {
-    '': [
-        ('Battery', "liebert_bat_temp_default"),
+    "": [
+        ("Battery", "liebert_bat_temp_default"),
     ],
 }
 
 
 checks = {
-    '': [
-        ('Battery', (30, 40), [
-            (1, '37 \xb0C (warn/crit at 30/40 \xb0C)', [
-                ('temp', 37.0, 30.0, 40.0, None, None),
-            ]),
-        ]),
+    "": [
+        (
+            "Battery",
+            (30, 40),
+            [
+                (
+                    1,
+                    "37 \xb0C (warn/crit at 30/40 \xb0C)",
+                    [
+                        ("temp", 37.0, 30.0, 40.0, None, None),
+                    ],
+                ),
+            ],
+        ),
     ],
 }

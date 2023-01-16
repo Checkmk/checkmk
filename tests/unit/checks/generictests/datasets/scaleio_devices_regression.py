@@ -6,32 +6,45 @@
 # fmt: off
 # type: ignore
 
-checkname = 'scaleio_devices'
+checkname = "scaleio_devices"
 
 info = [
-    ['DEVICE', 'Foo:'], ['ID', 'Foo'], ['SDS_ID', '123'],
-    ['STORAGE_POOL_ID', 'abc'], ['STATE', 'DEVICE_NORMAL'],
-    ['ERR_STATE', 'NO_ERROR'], ['DEVICE', 'Bar:'], ['ID', 'Bar'],
-    ['SDS_ID', '123'], ['STORAGE_POOL_ID', 'def'],
-    ['STATE', 'DEVICE_NORMAL'], ['ERR_STATE', 'ERROR'],
-    ['DEVICE', 'Baz:'], ['ID', 'Baz'], ['SDS_ID', '456'],
-    ['STORAGE_POOL_ID', 'xyz'], ['STATE', 'DEVICE_NORMAL'],
-    ['ERR_STATE', 'NO_ERROR']
+    ["DEVICE", "Foo:"],
+    ["ID", "Foo"],
+    ["SDS_ID", "123"],
+    ["STORAGE_POOL_ID", "abc"],
+    ["STATE", "DEVICE_NORMAL"],
+    ["ERR_STATE", "NO_ERROR"],
+    ["DEVICE", "Bar:"],
+    ["ID", "Bar"],
+    ["SDS_ID", "123"],
+    ["STORAGE_POOL_ID", "def"],
+    ["STATE", "DEVICE_NORMAL"],
+    ["ERR_STATE", "ERROR"],
+    ["DEVICE", "Baz:"],
+    ["ID", "Baz"],
+    ["SDS_ID", "456"],
+    ["STORAGE_POOL_ID", "xyz"],
+    ["STATE", "DEVICE_NORMAL"],
+    ["ERR_STATE", "NO_ERROR"],
 ]
 
-discovery = {'': [('123', {}), ('456', {})]}
+discovery = {"": [("123", {}), ("456", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            '123', {}, [
-                (2, '2 devices, 1 errors (Bar)', []),
+            "123",
+            {},
+            [
+                (2, "2 devices, 1 errors (Bar)", []),
                 (
                     0,
-                    '\nDevice Bar: Error: device normal, State: error (ID: Bar, Storage pool ID: def)',
-                    []
-                )
-            ]
-        ), ('456', {}, [(0, '1 devices, no errors', [])])
+                    "\nDevice Bar: Error: device normal, State: error (ID: Bar, Storage pool ID: def)",
+                    [],
+                ),
+            ],
+        ),
+        ("456", {}, [(0, "1 devices, no errors", [])]),
     ]
 }

@@ -7,16 +7,15 @@
 # type: ignore
 
 
-
-checkname = 'enterasys_powersupply'
-
-
-info = [['101', '3', '1', '1'], ['102', '', '', '1']]
+checkname = "enterasys_powersupply"
 
 
-discovery = {'': [('101', {})]}
+info = [["101", "3", "1", "1"], ["102", "", "", "1"]]
 
 
-checks = {'': [('101',
-                {'redundancy_ok_states': [1]},
-                [(0, 'Status: working and redundant (ac-dc)', [])])]}
+discovery = {"": [("101", {})]}
+
+
+checks = {
+    "": [("101", {"redundancy_ok_states": [1]}, [(0, "Status: working and redundant (ac-dc)", [])])]
+}

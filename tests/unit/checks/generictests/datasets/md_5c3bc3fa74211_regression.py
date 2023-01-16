@@ -7,22 +7,20 @@
 # type: ignore
 
 
-
-checkname = 'md'
-
-
-info = [['Personalities', ':', '[linear]', '[raid0]', '[raid1]'],
-        ['md1', ':', 'active', 'linear', 'sda3[0]', 'sdb3[1]'],
-        ['491026496', 'blocks', '64k', 'rounding'],
-        ['md0', ':', 'active', 'raid0', 'sda2[0]', 'sdb2[1]'],
-        ['2925532672', 'blocks', '64k', 'chunks'],
-        ['unused', 'devices:', '<none>']]
+checkname = "md"
 
 
-discovery = {'': [('md1', None)]}
+info = [
+    ["Personalities", ":", "[linear]", "[raid0]", "[raid1]"],
+    ["md1", ":", "active", "linear", "sda3[0]", "sdb3[1]"],
+    ["491026496", "blocks", "64k", "rounding"],
+    ["md0", ":", "active", "raid0", "sda2[0]", "sdb2[1]"],
+    ["2925532672", "blocks", "64k", "chunks"],
+    ["unused", "devices:", "<none>"],
+]
 
 
-checks = {'': [('md1',
-                {},
-                [(0, 'Status: active', []),
-                 (0, 'Spare: 0, Failed: 0, Active: 2', [])])]}
+discovery = {"": [("md1", None)]}
+
+
+checks = {"": [("md1", {}, [(0, "Status: active", []), (0, "Spare: 0, Failed: 0, Active: 2", [])])]}

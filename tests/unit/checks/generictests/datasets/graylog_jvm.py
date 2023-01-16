@@ -7,7 +7,7 @@
 # type: ignore
 
 
-checkname = 'graylog_jvm'
+checkname = "graylog_jvm"
 
 info = [
     [
@@ -15,26 +15,21 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
+            None,
+            {},
+            [
+                (0, "Used heap space: 441 MiB", [("mem_heap", 461934992, None, None, None, None)]),
                 (
-                    0, 'Used heap space: 441 MiB', [
-                        ('mem_heap', 461934992, None, None, None, None)
-                    ]
+                    0,
+                    "Committed heap space: 973 MiB",
+                    [("mem_heap_committed", 1020067840, None, None, None, None)],
                 ),
-                (
-                    0, 'Committed heap space: 973 MiB', [
-                        (
-                            'mem_heap_committed', 1020067840, None, None, None,
-                            None
-                        )
-                    ]
-                )
-            ]
+            ],
         )
     ]
 }

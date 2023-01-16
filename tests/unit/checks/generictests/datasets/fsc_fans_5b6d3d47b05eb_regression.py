@@ -7,14 +7,13 @@
 # type: ignore
 
 
-
-checkname = 'fsc_fans'
-
-
-info = [['NULL', 'NULL'], ['FAN1 SYS', '4140']]
+checkname = "fsc_fans"
 
 
-discovery = {'': [('FAN1 SYS', {})]}
+info = [["NULL", "NULL"], ["FAN1 SYS", "4140"]]
 
 
-checks = {'': [('FAN1 SYS', {'lower': (2000, 1000)}, [(0, 'Speed: 4140 RPM', [])])]}
+discovery = {"": [("FAN1 SYS", {})]}
+
+
+checks = {"": [("FAN1 SYS", {"lower": (2000, 1000)}, [(0, "Speed: 4140 RPM", [])])]}

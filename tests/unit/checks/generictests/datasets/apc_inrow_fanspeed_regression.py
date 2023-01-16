@@ -7,18 +7,13 @@
 # type: ignore
 
 
-
-checkname = 'apc_inrow_fanspeed'
-
-
-info = [['518']]
+checkname = "apc_inrow_fanspeed"
 
 
-discovery = {'': [(None, None)]}
+info = [["518"]]
 
 
-checks = {'': [(None,
-                {},
-                [(0,
-                  'Current: 51.80%',
-                  [('fanspeed', 51.8, None, None, None, None)])])]}
+discovery = {"": [(None, None)]}
+
+
+checks = {"": [(None, {}, [(0, "Current: 51.80%", [("fanspeed", 51.8, None, None, None, None)])])]}

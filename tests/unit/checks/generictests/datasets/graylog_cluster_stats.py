@@ -6,7 +6,7 @@
 # fmt: off
 # type: ignore
 
-checkname = 'graylog_cluster_stats'
+checkname = "graylog_cluster_stats"
 
 info = [
     [
@@ -14,175 +14,83 @@ info = [
     ]
 ]
 
-discovery = {
-    '': [(None, {})],
-    'mongodb': [(None, {})],
-    'elastic': [(None, {})]
-}
+discovery = {"": [(None, {})], "mongodb": [(None, {})], "elastic": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
-                (
-                    0, 'Number of inputs: 4', [
-                        ('num_input', 4, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Number of outputs: 0', [
-                        ('num_output', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Number of streams: 5', [
-                        ('streams', 5, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Number of stream rules: 7', [
-                        ('num_stream_rule', 7, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Number of extractors: 0', [
-                        ('num_extractor', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Number of user: 3', [
-                        ('num_user', 3, None, None, None, None)
-                    ]
-                )
-            ]
+            None,
+            {},
+            [
+                (0, "Number of inputs: 4", [("num_input", 4, None, None, None, None)]),
+                (0, "Number of outputs: 0", [("num_output", 0, None, None, None, None)]),
+                (0, "Number of streams: 5", [("streams", 5, None, None, None, None)]),
+                (0, "Number of stream rules: 7", [("num_stream_rule", 7, None, None, None, None)]),
+                (0, "Number of extractors: 0", [("num_extractor", 0, None, None, None, None)]),
+                (0, "Number of user: 3", [("num_user", 3, None, None, None, None)]),
+            ],
         )
     ],
-    'mongodb': [
+    "mongodb": [
         (
-            None, {}, [
-                (0, 'Name: Graylog', []), (0, 'Version: 4.0.12', []),
+            None,
+            {},
+            [
+                (0, "Name: Graylog", []),
+                (0, "Version: 4.0.12", []),
+                (0, "Indices: 106", [("index_count", 106, None, None, None, None)]),
                 (
-                    0, 'Indices: 106', [
-                        ('index_count', 106, None, None, None, None)
-                    ]
+                    0,
+                    "Allocated storage: 1.45 MiB",
+                    [("mongodb_collection_storage_size", 1519616, None, None, None, None)],
+                ),
+                (0, "Total size: 2.77 MiB", [("indexes_size", 2899968, None, None, None, None)]),
+                (
+                    0,
+                    "Total size of uncompressed data: 2.26 MiB",
+                    [("mongodb_collection_size", 2366513, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated storage: 1.45 MiB', [
-                        (
-                            'mongodb_collection_storage_size', 1519616, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Average document size: 323 B",
+                    [("avg_doc_size", 323.20581808249113, None, None, None, None)],
                 ),
-                (
-                    0, 'Total size: 2.77 MiB', [
-                        ('indexes_size', 2899968, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Total size of uncompressed data: 2.26 MiB', [
-                        (
-                            'mongodb_collection_size', 2366513, None, None,
-                            None, None
-                        )
-                    ]
-                ),
-                (
-                    0, 'Average document size: 323 B', [
-                        (
-                            'avg_doc_size', 323.20581808249113, None, None,
-                            None, None
-                        )
-                    ]
-                ),
-                (
-                    0, 'Number of extents: 0', [
-                        ('num_extents', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Number of collections: 47', [
-                        ('num_collections', 47, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Number of objects: 7322', [
-                        ('num_objects', 7322, None, None, None, None)
-                    ]
-                )
-            ]
+                (0, "Number of extents: 0", [("num_extents", 0, None, None, None, None)]),
+                (0, "Number of collections: 47", [("num_collections", 47, None, None, None, None)]),
+                (0, "Number of objects: 7322", [("num_objects", 7322, None, None, None, None)]),
+            ],
         )
     ],
-    'elastic': [
+    "elastic": [
         (
-            None, {
-                'green': 0,
-                'red': 2,
-                'yellow': 1
-            }, [
-                (0, 'Name: Graylog', []), (0, 'Version: 6.8.2', []),
-                (0, 'Status: Green', []),
+            None,
+            {"green": 0, "red": 2, "yellow": 1},
+            [
+                (0, "Name: Graylog", []),
+                (0, "Version: 6.8.2", []),
+                (0, "Status: Green", []),
+                (0, "Nodes: 6", [("number_of_nodes", 6, None, None, None, None)]),
+                (0, "Data nodes: 6", [("number_of_data_nodes", 6, None, None, None, None)]),
+                (0, "Active shards: 20", [("active_shards", 20, None, None, None, None)]),
                 (
-                    0, 'Nodes: 6', [
-                        ('number_of_nodes', 6, None, None, None, None)
-                    ]
+                    0,
+                    "Active primary shards: 14",
+                    [("active_primary_shards", 14, None, None, None, None)],
                 ),
+                (0, "Initializing shards: 0", [("initializing_shards", 0, None, None, None, None)]),
+                (0, "Relocating shards: 0", [("relocating_shards", 0, None, None, None, None)]),
+                (0, "Unassigned shards: 0", [("unassigned_shards", 0, None, None, None, None)]),
+                (0, "Pending tasks: 0", [("number_of_pending_tasks", 0, None, None, None, None)]),
+                (0, "Timed out: no", []),
+                (0, "Index count: 3", [("index_count", 3, None, None, None, None)]),
+                (0, "Store size: 1.07 GiB", [("store_size", 1148947754, None, None, None, None)]),
+                (0, "ID cache size: 0 B", [("id_cache_size", 0, None, None, None, None)]),
                 (
-                    0, 'Data nodes: 6', [
-                        ('number_of_data_nodes', 6, None, None, None, None)
-                    ]
+                    0,
+                    "Field data size: 622 KiB",
+                    [("field_data_size", 636952, None, None, None, None)],
                 ),
-                (
-                    0, 'Active shards: 20', [
-                        ('active_shards', 20, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Active primary shards: 14', [
-                        ('active_primary_shards', 14, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Initializing shards: 0', [
-                        ('initializing_shards', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Relocating shards: 0', [
-                        ('relocating_shards', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Unassigned shards: 0', [
-                        ('unassigned_shards', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Pending tasks: 0', [
-                        ('number_of_pending_tasks', 0, None, None, None, None)
-                    ]
-                ), (0, 'Timed out: no', []),
-                (
-                    0, 'Index count: 3', [
-                        ('index_count', 3, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Store size: 1.07 GiB', [
-                        ('store_size', 1148947754, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'ID cache size: 0 B', [
-                        ('id_cache_size', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Field data size: 622 KiB', [
-                        ('field_data_size', 636952, None, None, None, None)
-                    ]
-                )
-            ]
+            ],
         )
-    ]
+    ],
 }

@@ -7,30 +7,33 @@
 # type: ignore
 
 
-
-checkname = 'liebert_pump'
+checkname = "liebert_pump"
 
 
 info = [
-    ['Pump Hours', '3423', 'hr'],
-    ['Pump Hours', '1', 'hr'],
-    ['Pump Hours Threshold', '32', 'hr'],
-    ['Pump Hours Threshold', '32', 'hr'],
+    ["Pump Hours", "3423", "hr"],
+    ["Pump Hours", "1", "hr"],
+    ["Pump Hours Threshold", "32", "hr"],
+    ["Pump Hours Threshold", "32", "hr"],
 ]
 
 
 discovery = {
-    '': [
-        ('Pump Hours', {}),
-        ('Pump Hours 2', {}),
+    "": [
+        ("Pump Hours", {}),
+        ("Pump Hours 2", {}),
     ],
 }
 
 
 checks = {
-    '': [
-        ('Pump Hours', {}, [
-            (2, '3423.00 hr (warn/crit at 32.00 hr/32.00 hr)', []),
-        ]),
+    "": [
+        (
+            "Pump Hours",
+            {},
+            [
+                (2, "3423.00 hr (warn/crit at 32.00 hr/32.00 hr)", []),
+            ],
+        ),
     ],
 }

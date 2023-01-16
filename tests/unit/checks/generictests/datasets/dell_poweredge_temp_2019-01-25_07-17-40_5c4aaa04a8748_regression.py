@@ -7,40 +7,23 @@
 # type: ignore
 
 
-
-checkname = 'dell_poweredge_temp'
-
-
-info = [['1',
-         '1',
-         '2',
-         '3',
-         '170',
-         'System Board Inlet Temp',
-         '470',
-         '420',
-         '30',
-         '-70'],
-        ['1',
-         '2',
-         '2',
-         '3',
-         '300',
-         'System Board Exhaust Temp',
-         '750',
-         '700',
-         '80',
-         '30'],
-        ['1', '3', '1', '2', '', 'CPU1 Temp', '', '', '', ''],
-        ['1', '4', '1', '2', '', 'CPU2 Temp', '', '', '', '']]
+checkname = "dell_poweredge_temp"
 
 
-discovery = {'': [('System Board Exhaust', {}), ('System Board Inlet', {})]}
+info = [
+    ["1", "1", "2", "3", "170", "System Board Inlet Temp", "470", "420", "30", "-70"],
+    ["1", "2", "2", "3", "300", "System Board Exhaust Temp", "750", "700", "80", "30"],
+    ["1", "3", "1", "2", "", "CPU1 Temp", "", "", "", ""],
+    ["1", "4", "1", "2", "", "CPU2 Temp", "", "", "", ""],
+]
 
 
-checks = {'': [('System Board Exhaust',
-                {},
-                [(0, '30.0 \xb0C', [('temp', 30.0, 70.0, 75.0, None, None)])]),
-               ('System Board Inlet',
-                {},
-                [(0, '17.0 \xb0C', [('temp', 17.0, 42.0, 47.0, None, None)])])]}
+discovery = {"": [("System Board Exhaust", {}), ("System Board Inlet", {})]}
+
+
+checks = {
+    "": [
+        ("System Board Exhaust", {}, [(0, "30.0 \xb0C", [("temp", 30.0, 70.0, 75.0, None, None)])]),
+        ("System Board Inlet", {}, [(0, "17.0 \xb0C", [("temp", 17.0, 42.0, 47.0, None, None)])]),
+    ]
+}

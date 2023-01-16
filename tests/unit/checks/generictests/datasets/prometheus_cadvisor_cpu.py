@@ -6,7 +6,7 @@
 # fmt: off
 # type: ignore
 
-checkname = 'cadvisor_cpu'
+checkname = "cadvisor_cpu"
 
 info = [
     [
@@ -14,27 +14,18 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
-                (
-                    0, 'User: 0.11%', [
-                        ('user', 0.10996819381471273, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'System: 0.13%',
-                    [('system', 0.12688637747851422, None, None, None, None)]
-                ),
-                (
-                    0, 'Total CPU: 0.24%', [
-                        ('util', 0.23685457129322696, None, None, None, None)
-                    ]
-                )
-            ]
+            None,
+            {},
+            [
+                (0, "User: 0.11%", [("user", 0.10996819381471273, None, None, None, None)]),
+                (0, "System: 0.13%", [("system", 0.12688637747851422, None, None, None, None)]),
+                (0, "Total CPU: 0.24%", [("util", 0.23685457129322696, None, None, None, None)]),
+            ],
         )
     ]
 }

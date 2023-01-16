@@ -5,13 +5,10 @@
 
 # fmt: off
 # type: ignore
-checkname = 'juniper_alarm'
+checkname = "juniper_alarm"
 
 info = []
 
-discovery = {'': []}
+discovery = {"": []}
 
-checks = {
-    '': [
-    ]
-}
+checks = {"": []}

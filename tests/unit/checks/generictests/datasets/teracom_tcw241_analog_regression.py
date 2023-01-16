@@ -7,27 +7,46 @@
 # type: ignore
 
 
-
-checkname = 'teracom_tcw241_analog'
-
-
-info = [[['1.0', 'Tank_Level', '80000', '10000'],
-         ['2.0', 'Motor_Temp', '70000', '37000'],
-         ['3.0', 'Analog Input 3', '60000', '0'],
-         ['4.0', 'Analog Input 4', '60000', '0']],
-        [['48163', '39158', '33', '34']]]
+checkname = "teracom_tcw241_analog"
 
 
-discovery = {'': [('1', {}), ('2', {})]}
+info = [
+    [
+        ["1.0", "Tank_Level", "80000", "10000"],
+        ["2.0", "Motor_Temp", "70000", "37000"],
+        ["3.0", "Analog Input 3", "60000", "0"],
+        ["4.0", "Analog Input 4", "60000", "0"],
+    ],
+    [["48163", "39158", "33", "34"]],
+]
 
 
-checks = {'': [('2',
-                {},
-                [(1,
-                  '[Motor_Temp]: 39.16 V (warn/crit at 37.00 V/70.00 V)',
-                  [('voltage', 39.158, 37.0, 70.0, None, None)])]),
-               ('1',
-                {},
-                [(1,
-                  '[Tank_Level]: 48.16 V (warn/crit at 10.00 V/80.00 V)',
-                  [('voltage', 48.163, 10.0, 80.0, None, None)])])]}
+discovery = {"": [("1", {}), ("2", {})]}
+
+
+checks = {
+    "": [
+        (
+            "2",
+            {},
+            [
+                (
+                    1,
+                    "[Motor_Temp]: 39.16 V (warn/crit at 37.00 V/70.00 V)",
+                    [("voltage", 39.158, 37.0, 70.0, None, None)],
+                )
+            ],
+        ),
+        (
+            "1",
+            {},
+            [
+                (
+                    1,
+                    "[Tank_Level]: 48.16 V (warn/crit at 10.00 V/80.00 V)",
+                    [("voltage", 48.163, 10.0, 80.0, None, None)],
+                )
+            ],
+        ),
+    ]
+}

@@ -5,10 +5,10 @@
 
 # fmt: off
 # type: ignore
-checkname = 'filestats'
+checkname = "filestats"
 
 info = [
-    ['[[[file_stats foo]]]'],
+    ["[[[file_stats foo]]]"],
     [
         "{'age': 21374, 'mtime': 1600757875, 'path': '/var/log/boot.log', 'size': 0, 'stat_status': 'ok', 'type': 'file'}"
     ],
@@ -23,27 +23,29 @@ info = [
     ],
     [
         "{'stat_status': 'ok', 'age': 4583773, 'mtime': 1596195760, 'path': '/var/log/apport.log.2.gz', 'type': 'file', 'size': 479}"
-    ], ["{'type': 'summary', 'count': 5}"]
+    ],
+    ["{'type': 'summary', 'count': 5}"],
 ]
 
-discovery = {'': [('foo', {})], 'single': []}
+discovery = {"": [("foo", {})], "single": []}
 
 checks = {
-    '': [
+    "": [
         (
-            'foo', {'maxsize_largest': (1, 2), 'show_all_files': True}, [
+            "foo",
+            {"maxsize_largest": (1, 2), "show_all_files": True},
+            [
+                (0, "Files in total: 5", [("file_count", 5, None, None, None, None)]),
+                (0, "Smallest: 0 B", []),
+                (2, "Largest: 21.1 MiB (warn/crit at 1 B/2 B)", []),
+                (0, "Newest: 0 seconds", []),
+                (0, "Oldest: 53 days 1 hour", []),
                 (
-                    0, 'Files in total: 5', [
-                        ('file_count', 5, None, None, None, None)
-                    ]
+                    0,
+                    "\n[/var/log/apport.log.2.gz] Age: 53 days 1 hour, Size: 479 B(!!)\n[/var/log/syslog] Age: 0 seconds, Size: 13.2 MiB(!!)\n[/var/log/syslog.1] Age: 19 days 5 hours, Size: 21.1 MiB(!!)\n[/var/log/syslog.3.gz] Age: 47 days 5 hours, Size: 5.07 MiB(!!)",
+                    [],
                 ),
-                (0, 'Smallest: 0 B', []),
-                (2, 'Largest: 21.1 MiB (warn/crit at 1 B/2 B)', []),
-                (0, 'Newest: 0 seconds', []), (0, 'Oldest: 53 days 1 hour', []),
-                (0, '\n[/var/log/apport.log.2.gz] Age: 53 days 1 hour, Size: 479 B(!!)\n[/var/log/syslog] Age: 0 seconds, Size: 13.2 MiB(!!)\n[/var/log/syslog.1] Age: 19 days 5 hours, Size: 21.1 MiB(!!)\n[/var/log/syslog.3.gz] Age: 47 days 5 hours, Size: 5.07 MiB(!!)',
-                    []
-                )
-            ]
+            ],
         )
     ]
 }

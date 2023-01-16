@@ -6,7 +6,7 @@
 # fmt: off
 # type: ignore
 
-checkname = 'jenkins_instance'
+checkname = "jenkins_instance"
 
 info = [
     [
@@ -14,15 +14,18 @@ info = [
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
-                (0, 'Description: The Master Jenkins Node', []),
-                (0, 'Quieting Down: no', []), (0, 'Security used: yes', [])
-            ]
+            None,
+            {},
+            [
+                (0, "Description: The Master Jenkins Node", []),
+                (0, "Quieting Down: no", []),
+                (0, "Security used: yes", []),
+            ],
         )
     ]
 }

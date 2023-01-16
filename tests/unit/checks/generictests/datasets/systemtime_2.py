@@ -8,24 +8,26 @@
 
 from cmk.base.plugins.agent_based.systemtime import parse_systemtime
 
-checkname = 'systemtime'
+checkname = "systemtime"
 
-freeze_time = '2020-10-10 20:38:55'
+freeze_time = "2020-10-10 20:38:55"
 
-parsed = parse_systemtime([['1593509210']])
+parsed = parse_systemtime([["1593509210"]])
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, (30, 60), [
+            None,
+            (30, 60),
+            [
                 (
-                    2, 'Offset: -102 days 11 hours (warn/crit below -30 seconds/-1 minute 0 seconds)', [
-                        ('offset', -8853125, 30.0, 60.0, None, None)
-                    ]
+                    2,
+                    "Offset: -102 days 11 hours (warn/crit below -30 seconds/-1 minute 0 seconds)",
+                    [("offset", -8853125, 30.0, 60.0, None, None)],
                 )
-            ]
+            ],
         )
     ]
 }

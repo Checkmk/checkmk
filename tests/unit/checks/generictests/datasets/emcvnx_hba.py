@@ -7,21 +7,34 @@
 # type: ignore
 
 
-
-checkname = 'emcvnx_hba'
-
-
-parsed = {'SP A Port 0': {'Blocks Read': 0, 'Blocks Written': 0},
-          'SP B Port 0': {},
-          'SP B Port 3': {}}
+checkname = "emcvnx_hba"
 
 
-discovery = {'': [('SP A Port 0', None)]}
+parsed = {
+    "SP A Port 0": {"Blocks Read": 0, "Blocks Written": 0},
+    "SP B Port 0": {},
+    "SP B Port 3": {},
+}
 
 
-checks = {'': [('SP A Port 0',
-                {},
-                [(0,
-                  'Read: 0 Blocks/s, Write: 0 Blocks/s',
-                  [('read_blocks', 0, None, None, None, None),
-                   ('write_blocks', 0, None, None, None, None)])])]}
+discovery = {"": [("SP A Port 0", None)]}
+
+
+checks = {
+    "": [
+        (
+            "SP A Port 0",
+            {},
+            [
+                (
+                    0,
+                    "Read: 0 Blocks/s, Write: 0 Blocks/s",
+                    [
+                        ("read_blocks", 0, None, None, None, None),
+                        ("write_blocks", 0, None, None, None, None),
+                    ],
+                )
+            ],
+        )
+    ]
+}

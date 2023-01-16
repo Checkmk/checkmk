@@ -6,10 +6,10 @@
 # fmt: off
 # type: ignore
 
-checkname = 'raritan_pdu_outletcount'
+checkname = "raritan_pdu_outletcount"
 
-info = [['36']]
+info = [["36"]]
 
-discovery = {'': [(None, None)]}
+discovery = {"": [(None, None)]}
 
-checks = {'': [(None, {}, [(0, '36', [('outletcount', 36, None, None, None, None)])])]}
+checks = {"": [(None, {}, [(0, "36", [("outletcount", 36, None, None, None, None)])])]}

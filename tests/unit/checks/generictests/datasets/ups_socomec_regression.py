@@ -7,18 +7,27 @@
 # type: ignore
 
 
-
-checkname = 'ups_socomec_in_voltage'
-
-
-info = [['1', '2300']]
+checkname = "ups_socomec_in_voltage"
 
 
-discovery = {'': [('1', 'ups_in_voltage_default_levels')]}
+info = [["1", "2300"]]
 
 
-checks = {'': [('1',
-                (210, 180),
-                [(0,
-                  'in voltage: 230V, (warn/crit at 210V/180V)',
-                  [('in_voltage', 230, 210, 180, 150, None)])])]}
+discovery = {"": [("1", "ups_in_voltage_default_levels")]}
+
+
+checks = {
+    "": [
+        (
+            "1",
+            (210, 180),
+            [
+                (
+                    0,
+                    "in voltage: 230V, (warn/crit at 210V/180V)",
+                    [("in_voltage", 230, 210, 180, 150, None)],
+                )
+            ],
+        )
+    ]
+}

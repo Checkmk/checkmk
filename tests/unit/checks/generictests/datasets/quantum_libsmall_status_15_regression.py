@@ -6,16 +6,39 @@
 # fmt: off
 # type: ignore
 
-checkname = 'quantum_libsmall_status'
+checkname = "quantum_libsmall_status"
 
-info = [[['1.0', '1'], ['2.0', '1'], ['3.0', '1'], ['4.0', '1'], ['5.0', '1'],
-         ['6.0', '1'], ['7.0', '1'], ['8.0', '0']], []]
+info = [
+    [
+        ["1.0", "1"],
+        ["2.0", "1"],
+        ["3.0", "1"],
+        ["4.0", "1"],
+        ["5.0", "1"],
+        ["6.0", "1"],
+        ["7.0", "1"],
+        ["8.0", "0"],
+    ],
+    [],
+]
 
-discovery = {'': [(None, None)]}
+discovery = {"": [(None, None)]}
 
 checks = {
-    '': [(None, {}, [(0, 'Power: good', []), (0, 'Cooling: good', []), (0, 'Control: good', []),
-                     (0, 'Connectivity: good', []), (0, 'Robotics: good', []), (0, 'Media: good',
-                                                                                []),
-                     (0, 'Drive: good', []), (0, 'Operator action request: no', [])])]
+    "": [
+        (
+            None,
+            {},
+            [
+                (0, "Power: good", []),
+                (0, "Cooling: good", []),
+                (0, "Control: good", []),
+                (0, "Connectivity: good", []),
+                (0, "Robotics: good", []),
+                (0, "Media: good", []),
+                (0, "Drive: good", []),
+                (0, "Operator action request: no", []),
+            ],
+        )
+    ]
 }

@@ -8,22 +8,24 @@
 
 from cmk.base.plugins.agent_based.systemtime import parse_systemtime
 
-checkname = 'systemtime'
+checkname = "systemtime"
 
-parsed = parse_systemtime([['1593509210.123', '1593509209.34534']])
+parsed = parse_systemtime([["1593509210.123", "1593509209.34534"]])
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {'levels': (30, 60)}, [
+            None,
+            {"levels": (30, 60)},
+            [
                 (
-                    0, 'Offset: 778 milliseconds', [
-                        ('offset', 0.7776598930358887, 30.0, 60.0, None, None)
-                    ]
+                    0,
+                    "Offset: 778 milliseconds",
+                    [("offset", 0.7776598930358887, 30.0, 60.0, None, None)],
                 )
-            ]
+            ],
         )
     ]
 }

@@ -7,35 +7,50 @@
 # type: ignore
 
 
-
-checkname = 'citrix_controller'
-
-
-info = [['ControllerState'],
-        ['ControllerVersion'],
-        ['DesktopsRegistered'],
-        ['LicensingServerState'],
-        ['LicensingGraceState'],
-        ['ActiveSiteServices'],
-        ['TotalFarmActiveSessions', '0'],
-        ['TotalFarmInactiveSessions', '0']]
+checkname = "citrix_controller"
 
 
-discovery = {'': [(None, None)],
-             'licensing': [(None, None)],
-             'registered': [(None, None)],
-             'services': [(None, None)],
-             'sessions': [(None, {})]}
+info = [
+    ["ControllerState"],
+    ["ControllerVersion"],
+    ["DesktopsRegistered"],
+    ["LicensingServerState"],
+    ["LicensingGraceState"],
+    ["ActiveSiteServices"],
+    ["TotalFarmActiveSessions", "0"],
+    ["TotalFarmInactiveSessions", "0"],
+]
 
 
-checks = {'': [(None, {}, [(3, 'unknown', [])])],
-          'licensing': [(None, {}, [])],
-          'registered': [(None, {}, [(3, 'No desktops registered', [])])],
-          'services': [(None, {}, [(0, '', [])])],
-          'sessions': [(None,
-                        {},
-                        [(0,
-                          'total: 0, active: 0, inactive: 0',
-                          [('total_sessions', 0, None, None, None, None),
-                           ('active_sessions', 0, None, None, None, None),
-                           ('inactive_sessions', 0, None, None, None, None)])])]}
+discovery = {
+    "": [(None, None)],
+    "licensing": [(None, None)],
+    "registered": [(None, None)],
+    "services": [(None, None)],
+    "sessions": [(None, {})],
+}
+
+
+checks = {
+    "": [(None, {}, [(3, "unknown", [])])],
+    "licensing": [(None, {}, [])],
+    "registered": [(None, {}, [(3, "No desktops registered", [])])],
+    "services": [(None, {}, [(0, "", [])])],
+    "sessions": [
+        (
+            None,
+            {},
+            [
+                (
+                    0,
+                    "total: 0, active: 0, inactive: 0",
+                    [
+                        ("total_sessions", 0, None, None, None, None),
+                        ("active_sessions", 0, None, None, None, None),
+                        ("inactive_sessions", 0, None, None, None, None),
+                    ],
+                )
+            ],
+        )
+    ],
+}

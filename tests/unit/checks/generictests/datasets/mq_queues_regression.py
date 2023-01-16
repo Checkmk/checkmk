@@ -7,20 +7,31 @@
 # type: ignore
 
 
-
-checkname = 'mq_queues'
-
-
-info = [['[[Queue_App1_App2]]'], ['1', '2', '3', '4']]
+checkname = "mq_queues"
 
 
-discovery = {'': [('Queue_App1_App2', {})]}
+info = [["[[Queue_App1_App2]]"], ["1", "2", "3", "4"]]
 
 
-checks = {'': [('Queue_App1_App2',
-                {'consumerCount': (None, None), 'size': (None, None)},
-                [(0,
-                  'Queue Size: 1, Enqueue Count: 3, Dequeue Count: 4',
-                  [('queue', 1, None, None, None, None),
-                   ('enque', 3, None, None, None, None),
-                   ('deque', 4, None, None, None, None)])])]}
+discovery = {"": [("Queue_App1_App2", {})]}
+
+
+checks = {
+    "": [
+        (
+            "Queue_App1_App2",
+            {"consumerCount": (None, None), "size": (None, None)},
+            [
+                (
+                    0,
+                    "Queue Size: 1, Enqueue Count: 3, Dequeue Count: 4",
+                    [
+                        ("queue", 1, None, None, None, None),
+                        ("enque", 3, None, None, None, None),
+                        ("deque", 4, None, None, None, None),
+                    ],
+                )
+            ],
+        )
+    ]
+}

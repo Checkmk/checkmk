@@ -7,31 +7,42 @@
 # type: ignore
 
 
-
-checkname = 'mongodb_mem'
-
-
-info = [['resident', '79'],
-        ['supported', 'True'],
-        ['virtual', '1021'],
-        ['mappedWithJournal', '0'],
-        ['mapped', '0'],
-        ['bits', '64'],
-        ['note', 'fields', 'vary', 'by', 'platform'],
-        ['page_faults', '9']]
+checkname = "mongodb_mem"
 
 
-discovery = {'': [(None, {})]}
+info = [
+    ["resident", "79"],
+    ["supported", "True"],
+    ["virtual", "1021"],
+    ["mappedWithJournal", "0"],
+    ["mapped", "0"],
+    ["bits", "64"],
+    ["note", "fields", "vary", "by", "platform"],
+    ["page_faults", "9"],
+]
 
 
-checks = {'': [(None,
-                {},
-                [(0,
-                  'Resident usage: 79.0 MiB',
-                  [('process_resident_size', 82837504, None, None, None, None)]),
-                 (0,
-                  'Virtual usage: 1021 MiB',
-                  [('process_virtual_size', 1070596096, None, None, None, None)]),
-                 (0,
-                  'Mapped usage: 0 B',
-                  [('process_mapped_size', 0, None, None, None, None)])])]}
+discovery = {"": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {},
+            [
+                (
+                    0,
+                    "Resident usage: 79.0 MiB",
+                    [("process_resident_size", 82837504, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Virtual usage: 1021 MiB",
+                    [("process_virtual_size", 1070596096, None, None, None, None)],
+                ),
+                (0, "Mapped usage: 0 B", [("process_mapped_size", 0, None, None, None, None)]),
+            ],
+        )
+    ]
+}

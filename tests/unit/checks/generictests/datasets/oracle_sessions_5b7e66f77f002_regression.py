@@ -7,11 +7,10 @@
 # type: ignore
 
 
-
-checkname = 'oracle_sessions'
-
-
-info = [['foo', 'FAILURE'], ['bar', 'FAILURE']]
+checkname = "oracle_sessions"
 
 
-discovery = {'': []}
+info = [["foo", "FAILURE"], ["bar", "FAILURE"]]
+
+
+discovery = {"": []}

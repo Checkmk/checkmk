@@ -6,7 +6,7 @@
 # fmt: off
 # type: ignore
 
-checkname = 'mongodb_collections'
+checkname = "mongodb_collections"
 
 info = [
     [
@@ -15,478 +15,403 @@ info = [
 ]
 
 discovery = {
-    '': [
-        ('admin.system.keys', {}), ('admin.system.version', {}),
-        ('config.system.sessions', {}), ('config.transactions', {}),
-        ('local.oplog.rs', {}), ('local.replset.election', {}),
-        ('local.replset.minvalid', {}),
-        ('local.replset.oplogTruncateAfterPoint', {}),
-        ('local.startup_log', {}), ('local.system.replset', {}),
-        ('local.system.rollback.id', {}), ('unshardedDB1.collections1', {}),
-        ('unshardedDB2.collections1', {}), ('unshardedDB2.collections2', {})
+    "": [
+        ("admin.system.keys", {}),
+        ("admin.system.version", {}),
+        ("config.system.sessions", {}),
+        ("config.transactions", {}),
+        ("local.oplog.rs", {}),
+        ("local.replset.election", {}),
+        ("local.replset.minvalid", {}),
+        ("local.replset.oplogTruncateAfterPoint", {}),
+        ("local.startup_log", {}),
+        ("local.system.replset", {}),
+        ("local.system.rollback.id", {}),
+        ("unshardedDB1.collections1", {}),
+        ("unshardedDB2.collections1", {}),
+        ("unshardedDB2.collections2", {}),
     ]
 }
 
 checks = {
-    '': [
+    "": [
         (
-            'admin.system.keys', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "admin.system.keys",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 170 B',
-                    [('mongodb_collection_size', 170, None, None, None, None)]
+                    0,
+                    "Uncompressed size in memory: 170 B",
+                    [("mongodb_collection_size", 170, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 16.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 16.0 KiB",
+                    [("mongodb_collection_storage_size", 16384, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 16.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 16.0 KiB",
+                    [("mongodb_collection_total_index_size", 16384, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 2 (Number of documents in collection)\n- Object Size: 85 B (Average object size)\n- Collection Size: 170 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'admin.system.version', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "admin.system.version",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 59 B',
-                    [('mongodb_collection_size', 59, None, None, None, None)]
+                    0,
+                    "Uncompressed size in memory: 59 B",
+                    [("mongodb_collection_size", 59, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 16.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 16.0 KiB",
+                    [("mongodb_collection_storage_size", 16384, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 16.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 16.0 KiB",
+                    [("mongodb_collection_total_index_size", 16384, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 59 B (Average object size)\n- Collection Size: 59 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'config.system.sessions', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "config.system.sessions",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 2.03 KiB', [
-                        (
-                            'mongodb_collection_size', 2079, None, None, None,
-                            None
-                        )
-                    ]
+                    0,
+                    "Uncompressed size in memory: 2.03 KiB",
+                    [("mongodb_collection_size", 2079, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 36.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 36864, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 36.0 KiB",
+                    [("mongodb_collection_storage_size", 36864, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 72.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 73728, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 2', []),
+                    0,
+                    "Total size of indexes: 72.0 KiB",
+                    [("mongodb_collection_total_index_size", 73728, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 2", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 21 (Number of documents in collection)\n- Object Size: 99 B (Average object size)\n- Collection Size: 2.03 KiB (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 72.0 KiB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index '_id_' used 27 times since 2019-11-08 13:37:44\n-- Index 'lsidTTLIndex' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'config.transactions', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "config.transactions",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 0 B', [
-                        ('mongodb_collection_size', 0, None, None, None, None)
-                    ]
+                    0,
+                    "Uncompressed size in memory: 0 B",
+                    [("mongodb_collection_size", 0, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 4.00 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 4096, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 4.00 KiB",
+                    [("mongodb_collection_storage_size", 4096, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 4.00 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 4096, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 4.00 KiB",
+                    [("mongodb_collection_total_index_size", 4096, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 0 (Number of documents in collection)\n- Object Size: n/a (Average object size)\n- Collection Size: 0 B (Uncompressed size in memory)\n- Storage Size: 4.00 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 4.00 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 5 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'local.oplog.rs', {
-                'levels_nindexes': (62, 65)
-            }, [
-                (
-                    0, 'Uncompressed size in memory: 17.9 MiB', [
-                        (
-                            'mongodb_collection_size', 18768774, None, None,
-                            None, None
-                        )
-                    ]
-                ),
-                (
-                    0, 'Allocated for document storage: 5.61 MiB', [
-                        (
-                            'mongodb_collection_storage_size', 5885952, None,
-                            None, None, None
-                        )
-                    ]
-                ),
-                (
-                    0, 'Total size of indexes: 0 B', [
-                        (
-                            'mongodb_collection_total_index_size', 0, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 0', []),
+            "local.oplog.rs",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
                     0,
-                    '\nCollection\n- Document Count: 123910 (Number of documents in collection)\n- Object Size: 151 B (Average object size)\n- Collection Size: 17.9 MiB (Uncompressed size in memory)\n- Storage Size: 5.61 MiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 0 B (Total size of all indexes)\n- Number of Indexes: 0',
-                    []
-                )
-            ]
+                    "Uncompressed size in memory: 17.9 MiB",
+                    [("mongodb_collection_size", 18768774, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Allocated for document storage: 5.61 MiB",
+                    [("mongodb_collection_storage_size", 5885952, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Total size of indexes: 0 B",
+                    [("mongodb_collection_total_index_size", 0, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 0", []),
+                (
+                    0,
+                    "\nCollection\n- Document Count: 123910 (Number of documents in collection)\n- Object Size: 151 B (Average object size)\n- Collection Size: 17.9 MiB (Uncompressed size in memory)\n- Storage Size: 5.61 MiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 0 B (Total size of all indexes)\n- Number of Indexes: 0",
+                    [],
+                ),
+            ],
         ),
         (
-            'local.replset.election', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "local.replset.election",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 60 B',
-                    [('mongodb_collection_size', 60, None, None, None, None)]
+                    0,
+                    "Uncompressed size in memory: 60 B",
+                    [("mongodb_collection_size", 60, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 36.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 36864, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 36.0 KiB",
+                    [("mongodb_collection_storage_size", 36864, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 16.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 16.0 KiB",
+                    [("mongodb_collection_total_index_size", 16384, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 60 B (Average object size)\n- Collection Size: 60 B (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'local.replset.minvalid', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "local.replset.minvalid",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 45 B',
-                    [('mongodb_collection_size', 45, None, None, None, None)]
+                    0,
+                    "Uncompressed size in memory: 45 B",
+                    [("mongodb_collection_size", 45, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 36.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 36864, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 36.0 KiB",
+                    [("mongodb_collection_storage_size", 36864, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 16.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 16.0 KiB",
+                    [("mongodb_collection_total_index_size", 16384, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 45 B (Average object size)\n- Collection Size: 45 B (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'local.replset.oplogTruncateAfterPoint', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "local.replset.oplogTruncateAfterPoint",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 71 B',
-                    [('mongodb_collection_size', 71, None, None, None, None)]
+                    0,
+                    "Uncompressed size in memory: 71 B",
+                    [("mongodb_collection_size", 71, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 36.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 36864, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 36.0 KiB",
+                    [("mongodb_collection_storage_size", 36864, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 16.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 16.0 KiB",
+                    [("mongodb_collection_total_index_size", 16384, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 71 B (Average object size)\n- Collection Size: 71 B (Uncompressed size in memory)\n- Storage Size: 36.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'local.startup_log', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "local.startup_log",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 40.2 KiB', [
-                        (
-                            'mongodb_collection_size', 41160, None, None, None,
-                            None
-                        )
-                    ]
+                    0,
+                    "Uncompressed size in memory: 40.2 KiB",
+                    [("mongodb_collection_size", 41160, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 40.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 40960, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 40.0 KiB",
+                    [("mongodb_collection_storage_size", 40960, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 36.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 36864, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 36.0 KiB",
+                    [("mongodb_collection_total_index_size", 36864, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 28 (Number of documents in collection)\n- Object Size: 1.44 KiB (Average object size)\n- Collection Size: 40.2 KiB (Uncompressed size in memory)\n- Storage Size: 40.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 36.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'local.system.replset', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "local.system.replset",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 794 B',
-                    [('mongodb_collection_size', 794, None, None, None, None)]
+                    0,
+                    "Uncompressed size in memory: 794 B",
+                    [("mongodb_collection_size", 794, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 16.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 16.0 KiB",
+                    [("mongodb_collection_storage_size", 16384, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 16.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 16.0 KiB",
+                    [("mongodb_collection_total_index_size", 16384, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 794 B (Average object size)\n- Collection Size: 794 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'local.system.rollback.id', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "local.system.rollback.id",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 41 B',
-                    [('mongodb_collection_size', 41, None, None, None, None)]
+                    0,
+                    "Uncompressed size in memory: 41 B",
+                    [("mongodb_collection_size", 41, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 16.0 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 16.0 KiB",
+                    [("mongodb_collection_storage_size", 16384, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 16.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 16384, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 16.0 KiB",
+                    [("mongodb_collection_total_index_size", 16384, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 1 (Number of documents in collection)\n- Object Size: 41 B (Average object size)\n- Collection Size: 41 B (Uncompressed size in memory)\n- Storage Size: 16.0 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 16.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'unshardedDB1.collections1', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "unshardedDB1.collections1",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 205 KiB', [
-                        (
-                            'mongodb_collection_size', 210000, None, None,
-                            None, None
-                        )
-                    ]
+                    0,
+                    "Uncompressed size in memory: 205 KiB",
+                    [("mongodb_collection_size", 210000, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 148 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 151552, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 148 KiB",
+                    [("mongodb_collection_storage_size", 151552, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 276 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 282624,
-                            None, None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 2', []),
+                    0,
+                    "Total size of indexes: 276 KiB",
+                    [("mongodb_collection_total_index_size", 282624, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 2", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 6000 (Number of documents in collection)\n- Object Size: 35 B (Average object size)\n- Collection Size: 205 KiB (Uncompressed size in memory)\n- Storage Size: 148 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 276 KiB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44\n-- Index 'x_1' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'unshardedDB2.collections1', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "unshardedDB2.collections1",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 598 KiB', [
-                        (
-                            'mongodb_collection_size', 612000, None, None,
-                            None, None
-                        )
-                    ]
+                    0,
+                    "Uncompressed size in memory: 598 KiB",
+                    [("mongodb_collection_size", 612000, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 336 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 344064, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 336 KiB",
+                    [("mongodb_collection_storage_size", 344064, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 204 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 208896,
-                            None, None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 204 KiB",
+                    [("mongodb_collection_total_index_size", 208896, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 18000 (Number of documents in collection)\n- Object Size: 34 B (Average object size)\n- Collection Size: 598 KiB (Uncompressed size in memory)\n- Storage Size: 336 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 204 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
+                    [],
+                ),
+            ],
         ),
         (
-            'unshardedDB2.collections2', {
-                'levels_nindexes': (62, 65)
-            }, [
+            "unshardedDB2.collections2",
+            {"levels_nindexes": (62, 65)},
+            [
                 (
-                    0, 'Uncompressed size in memory: 140 KiB', [
-                        (
-                            'mongodb_collection_size', 143856, None, None,
-                            None, None
-                        )
-                    ]
+                    0,
+                    "Uncompressed size in memory: 140 KiB",
+                    [("mongodb_collection_size", 143856, None, None, None, None)],
                 ),
                 (
-                    0, 'Allocated for document storage: 120 KiB', [
-                        (
-                            'mongodb_collection_storage_size', 122880, None,
-                            None, None, None
-                        )
-                    ]
+                    0,
+                    "Allocated for document storage: 120 KiB",
+                    [("mongodb_collection_storage_size", 122880, None, None, None, None)],
                 ),
                 (
-                    0, 'Total size of indexes: 84.0 KiB', [
-                        (
-                            'mongodb_collection_total_index_size', 86016, None,
-                            None, None, None
-                        )
-                    ]
-                ), (0, 'Number of indexes: 1', []),
+                    0,
+                    "Total size of indexes: 84.0 KiB",
+                    [("mongodb_collection_total_index_size", 86016, None, None, None, None)],
+                ),
+                (0, "Number of indexes: 1", []),
                 (
                     0,
                     "\nCollection\n- Document Count: 3996 (Number of documents in collection)\n- Object Size: 36 B (Average object size)\n- Collection Size: 140 KiB (Uncompressed size in memory)\n- Storage Size: 120 KiB (Allocated for document storage)\n\nIndexes:\n- Total Index Size: 84.0 KiB (Total size of all indexes)\n- Number of Indexes: 1\n-- Index '_id_' used 0 times since 2019-11-08 13:37:44",
-                    []
-                )
-            ]
-        )
+                    [],
+                ),
+            ],
+        ),
     ]
 }

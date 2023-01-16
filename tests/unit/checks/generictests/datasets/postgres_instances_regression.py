@@ -7,20 +7,23 @@
 # type: ignore
 
 
-
-checkname = 'postgres_instances'
-
-
-info = [['[[[postgres]]]'],
-        ['30611',
-         '/usr/lib/postgresql/10/bin/postgres',
-         '-D',
-         '/var/lib/postgresql/10/main',
-         '-c',
-         'config_file=/etc/postgresql/10/main/postgresql.conf']]
+checkname = "postgres_instances"
 
 
-discovery = {'': [('POSTGRES', {})]}
+info = [
+    ["[[[postgres]]]"],
+    [
+        "30611",
+        "/usr/lib/postgresql/10/bin/postgres",
+        "-D",
+        "/var/lib/postgresql/10/main",
+        "-c",
+        "config_file=/etc/postgresql/10/main/postgresql.conf",
+    ],
+]
 
 
-checks = {'': [('POSTGRES', {}, [(0, 'Status: running with PID 30611', [])])]}
+discovery = {"": [("POSTGRES", {})]}
+
+
+checks = {"": [("POSTGRES", {}, [(0, "Status: running with PID 30611", [])])]}

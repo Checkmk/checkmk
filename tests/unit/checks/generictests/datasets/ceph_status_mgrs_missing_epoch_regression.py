@@ -5,33 +5,42 @@
 
 # fmt: off
 # type: ignore
-checkname = 'ceph_status'
+checkname = "ceph_status"
 
 info = [
-    ['{'], ['"health":', '{'], ['"status":', '"HEALTH_OK",'],
-    ['"checks":', '{},'], ['"mutes":', '[]'], ['},'],
-    ['"election_epoch":', '175986,'], ['"mgrmap":', '{'],
-    ['"available":', 'true,'], ['"num_standbys":', '3,'], ['"modules":', '['],
-    ['"dashboard",'], ['"diskprediction_local",'], ['"restful",'],
-    ['"status"'], ['],'], ['"services":', '{'],
-    ['"dashboard":', '"http://gcd-virthost4.ad.gcd.de:8080/"'], ['}'], ['},'],
-    ['"progress_events":', '{}'], ['}']
+    ["{"],
+    ['"health":', "{"],
+    ['"status":', '"HEALTH_OK",'],
+    ['"checks":', "{},"],
+    ['"mutes":', "[]"],
+    ["},"],
+    ['"election_epoch":', "175986,"],
+    ['"mgrmap":', "{"],
+    ['"available":', "true,"],
+    ['"num_standbys":', "3,"],
+    ['"modules":', "["],
+    ['"dashboard",'],
+    ['"diskprediction_local",'],
+    ['"restful",'],
+    ['"status"'],
+    ["],"],
+    ['"services":', "{"],
+    ['"dashboard":', '"http://gcd-virthost4.ad.gcd.de:8080/"'],
+    ["}"],
+    ["},"],
+    ['"progress_events":', "{}"],
+    ["}"],
 ]
 
-discovery = {'': [(None, {})], 'osds': [], 'pgs': []}
+discovery = {"": [(None, {})], "osds": [], "pgs": []}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {
-                'epoch': (1, 3, 30)
-            }, [
-                (0, 'Health: OK', []),
-                (0, 'Epoch rate (30 minutes 0 seconds average): 0.00', [])
-            ]
+            None,
+            {"epoch": (1, 3, 30)},
+            [(0, "Health: OK", []), (0, "Epoch rate (30 minutes 0 seconds average): 0.00", [])],
         )
     ],
-    'mgrs': [(None, {
-        'epoch': (1, 2, 5)
-    }, [])]
+    "mgrs": [(None, {"epoch": (1, 2, 5)}, [])],
 }

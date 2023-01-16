@@ -5,22 +5,10 @@
 
 # fmt: off
 # type: ignore
-checkname = 'hp_proliant'
+checkname = "hp_proliant"
 
-info = [['2', '2.60 May 23 2018', 'CXX43801XX']]
+info = [["2", "2.60 May 23 2018", "CXX43801XX"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
-checks = {
-    '': [
-        (
-            None, {}, [
-                (
-                    0,
-                    'Status: OK, Firmware: 2.60 May 23 2018, S/N: CXX43801XX',
-                    []
-                )
-            ]
-        )
-    ]
-}
+checks = {"": [(None, {}, [(0, "Status: OK, Firmware: 2.60 May 23 2018, S/N: CXX43801XX", [])])]}

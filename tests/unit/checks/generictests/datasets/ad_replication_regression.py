@@ -6,84 +6,109 @@
 # fmt: off
 # type: ignore
 
-checkname = 'ad_replication'
+checkname = "ad_replication"
 
-freeze_time = '2015-07-12 00:00:00'
+freeze_time = "2015-07-12 00:00:00"
 
 info = [
     [
-        'showrepl_COLUMNS,Destination', 'DSA', 'Site,Destination', 'DSA,Naming',
-        'Context,Source', 'DSA', 'Site,Source', 'DSA,Transport', 'Type,Number', 'of',
-        'Failures,Last', 'Failure', 'Time,Last', 'Success', 'Time,Last', 'Failure', 'Status'
+        "showrepl_COLUMNS,Destination",
+        "DSA",
+        "Site,Destination",
+        "DSA,Naming",
+        "Context,Source",
+        "DSA",
+        "Site,Source",
+        "DSA,Transport",
+        "Type,Number",
+        "of",
+        "Failures,Last",
+        "Failure",
+        "Time,Last",
+        "Success",
+        "Time,Last",
+        "Failure",
+        "Status",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Configuration,DC=internal",HAM,SADS055,RPC,0,0,2015-07-07',
-        '09:15:37,0'
+        "09:15:37,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Configuration,DC=internal",HAM,SADS008,RPC,0,0,2015-07-07',
-        '09:18:37,0'
+        "09:18:37,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Configuration,DC=internal",HAM,SADS015,RPC,0,0,2015-07-07',
-        '09:18:37,0'
+        "09:18:37,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Configuration,DC=internal",HAM,SADS003,RPC,0,0,2015-07-07',
-        '09:18:38,0'
+        "09:18:38,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Schema,CN=Configuration,DC=internal",HAM,SADS003,RPC,0,0,2015-07-07',
-        '08:48:03,0'
+        "08:48:03,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Schema,CN=Configuration,DC=internal",HAM,SADS055,RPC,0,0,2015-07-07',
-        '08:48:03,0'
+        "08:48:03,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Schema,CN=Configuration,DC=internal",HAM,SADS015,RPC,0,0,2015-07-07',
-        '08:48:03,0'
+        "08:48:03,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"CN=Schema,CN=Configuration,DC=internal",HAM,SADS008,RPC,0,0,2015-07-07',
-        '08:48:03,0'
+        "08:48:03,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"DC=network,DC=internal",HAM,SADS008,RPC,0,0,2015-07-07',
-        '09:18:52,0'
+        "09:18:52,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"DC=network,DC=internal",HAM,SADS055,RPC,0,0,2015-07-07',
-        '09:18:55,0'
+        "09:18:55,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"DC=network,DC=internal",HAM,SADS003,RPC,0,0,2015-07-07',
-        '09:19:00,0'
+        "09:19:00,0",
     ],
     [
         'showrepl_INFO,HAM,HSHPI220,"DC=network,DC=internal",HAM,SADS015,RPC,0,0,2015-07-07',
-        '09:19:01,0'
-    ], ['showrepl_INFO,HAM,HSHPI220,DC=internal,HAM,SADS003,RPC,0,0,2015-07-07', '08:48:03,0'],
-    ['showrepl_INFO,HAM,HSHPI220,DC=internal,HAM,SADS055,RPC,0,0,2015-07-07', '08:48:03,0'],
-    ['showrepl_INFO,HAM,HSHPI220,DC=internal,HAM,SADS008,RPC,0,0,2015-07-07', '08:48:03,0']
+        "09:19:01,0",
+    ],
+    ["showrepl_INFO,HAM,HSHPI220,DC=internal,HAM,SADS003,RPC,0,0,2015-07-07", "08:48:03,0"],
+    ["showrepl_INFO,HAM,HSHPI220,DC=internal,HAM,SADS055,RPC,0,0,2015-07-07", "08:48:03,0"],
+    ["showrepl_INFO,HAM,HSHPI220,DC=internal,HAM,SADS008,RPC,0,0,2015-07-07", "08:48:03,0"],
 ]
 
 discovery = {
-    '': [('HAM/SADS003', 'ad_replication_default_params'),
-         ('HAM/SADS008', 'ad_replication_default_params'),
-         ('HAM/SADS015', 'ad_replication_default_params'),
-         ('HAM/SADS055', 'ad_replication_default_params')]
+    "": [
+        ("HAM/SADS003", "ad_replication_default_params"),
+        ("HAM/SADS008", "ad_replication_default_params"),
+        ("HAM/SADS015", "ad_replication_default_params"),
+        ("HAM/SADS055", "ad_replication_default_params"),
+    ]
 }
 
 checks = {
-    '': [
-        ('HAM/SADS003', (15, 20), [(0, 'All replications are OK.', [])]),
-        ('HAM/SADS008', (15, 20), [(0, 'All replications are OK.', [])]),
-        ('HAM/SADS015', (-1, 2),
-         [(1, 'Replications with failures: 3, Total failures: 0', []),
-          (0,
-           '\nHAM/SADS015 replication of context "CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 16 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "CN=Schema;CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 17 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "DC=network;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 16 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)',
-           [])]), ('HAM/SADS055', (15, 20), [(0, 'All replications are OK.', [])]),
-        ('HAM/SADS015', (15, 20), [(0, 'All replications are OK.', [])])
+    "": [
+        ("HAM/SADS003", (15, 20), [(0, "All replications are OK.", [])]),
+        ("HAM/SADS008", (15, 20), [(0, "All replications are OK.", [])]),
+        (
+            "HAM/SADS015",
+            (-1, 2),
+            [
+                (1, "Replications with failures: 3, Total failures: 0", []),
+                (
+                    0,
+                    '\nHAM/SADS015 replication of context "CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 16 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "CN=Schema;CN=Configuration;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 17 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)\nHAM/SADS015 replication of context "DC=network;DC=internal" reached  the threshold of maximum failures (-1) (Last success: 4 days 16 hours ago, Last failure: unknown, Num failures: 0, Status: 0)(!)',
+                    [],
+                ),
+            ],
+        ),
+        ("HAM/SADS055", (15, 20), [(0, "All replications are OK.", [])]),
+        ("HAM/SADS015", (15, 20), [(0, "All replications are OK.", [])]),
     ]
 }

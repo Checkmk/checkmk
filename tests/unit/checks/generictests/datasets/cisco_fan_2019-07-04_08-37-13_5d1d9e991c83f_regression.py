@@ -7,16 +7,13 @@
 # type: ignore
 
 
-
-checkname = 'cisco_fan'
-
-
-info = [['Fan_1_rpm', '', '0'],
-        ['Fan_2_rpm', '1', '1'],
-        ['Fan_3_rpm', '999', '2']]
+checkname = "cisco_fan"
 
 
-discovery = {'': [('Fan_2_rpm 1', None)]}
+info = [["Fan_1_rpm", "", "0"], ["Fan_2_rpm", "1", "1"], ["Fan_3_rpm", "999", "2"]]
 
 
-checks = {'': [('Fan_2_rpm 1', {}, [(0, 'Status: normal', [])])]}
+discovery = {"": [("Fan_2_rpm 1", None)]}
+
+
+checks = {"": [("Fan_2_rpm 1", {}, [(0, "Status: normal", [])])]}

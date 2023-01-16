@@ -7,7 +7,7 @@
 # type: ignore
 
 
-checkname = 'hyperv_vmstatus'
+checkname = "hyperv_vmstatus"
 
 
 info = [
@@ -16,13 +16,17 @@ info = [
 ]
 
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 
 checks = {
-    '': [
-        (None, {}, [
-            (0, 'Integration Service State: Protocol_Mismatch', []),
-        ]),
+    "": [
+        (
+            None,
+            {},
+            [
+                (0, "Integration Service State: Protocol_Mismatch", []),
+            ],
+        ),
     ],
 }

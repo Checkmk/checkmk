@@ -7,20 +7,23 @@
 # type: ignore
 
 
-
-checkname = 'ibm_svc_mdisk'
-
-
-info = [['id',
-         'status',
-         'mode',
-         'capacity',
-         'encrypt',
-         'enclosure_id',
-         'over_provisioned',
-         'supports_unmap',
-         'warning'],
-        ['0', 'online', 'array', '20.8TB', 'no', '1', 'no', 'yes', '80']]
+checkname = "ibm_svc_mdisk"
 
 
-discovery = {'': []}
+info = [
+    [
+        "id",
+        "status",
+        "mode",
+        "capacity",
+        "encrypt",
+        "enclosure_id",
+        "over_provisioned",
+        "supports_unmap",
+        "warning",
+    ],
+    ["0", "online", "array", "20.8TB", "no", "1", "no", "yes", "80"],
+]
+
+
+discovery = {"": []}

@@ -7,14 +7,13 @@
 # type: ignore
 
 
-
-checkname = 'cmctc_state'
-
-
-info = [['1', '3']]
+checkname = "cmctc_state"
 
 
-discovery = {'': [(None, {})]}
+info = [["1", "3"]]
 
 
-checks = {'': [(None, {}, [(2, 'Status: failed, Units connected: 3', [])])]}
+discovery = {"": [(None, {})]}
+
+
+checks = {"": [(None, {}, [(2, "Status: failed, Units connected: 3", [])])]}

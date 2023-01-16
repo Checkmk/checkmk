@@ -7,15 +7,17 @@
 # type: ignore
 
 
-checkname = 'dell_idrac_fans'
+checkname = "dell_idrac_fans"
 
 
-info = [['1', '1', '', 'System Board Fan1A', '', '', '', ''],
-        ['2', '2', '', 'System Board Fan1B', '', '', '', ''],
-        ['3', '10', '', 'System Board Fan2A', '', '', '', '']]
+info = [
+    ["1", "1", "", "System Board Fan1A", "", "", "", ""],
+    ["2", "2", "", "System Board Fan1B", "", "", "", ""],
+    ["3", "10", "", "System Board Fan2A", "", "", "", ""],
+]
 
 
-discovery = {'': [('3', {})]}
+discovery = {"": [("3", {})]}
 
 
-checks = {'': [('3', {}, [(2, 'Status: FAILED, Name: System Board Fan2A', [])])]}
+checks = {"": [("3", {}, [(2, "Status: FAILED, Name: System Board Fan2A", [])])]}

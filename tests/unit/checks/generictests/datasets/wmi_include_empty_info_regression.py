@@ -6,7 +6,7 @@
 # fmt: off
 # type: ignore
 
-checkname = 'wmi_webservices'
+checkname = "wmi_webservices"
 
 info = []
 

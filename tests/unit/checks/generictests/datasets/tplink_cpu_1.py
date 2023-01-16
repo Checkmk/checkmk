@@ -6,18 +6,10 @@
 # fmt: off
 # type: ignore
 
-checkname = 'tplink_cpu'
+checkname = "tplink_cpu"
 
-info = [['21']]
+info = [["21"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
-checks = {
-    '': [
-        (
-            None, {}, [
-                (0, 'Total CPU: 21.00%', [('util', 21.0, None, None, 0, 100)])
-            ]
-        )
-    ]
-}
+checks = {"": [(None, {}, [(0, "Total CPU: 21.00%", [("util", 21.0, None, None, 0, 100)])])]}

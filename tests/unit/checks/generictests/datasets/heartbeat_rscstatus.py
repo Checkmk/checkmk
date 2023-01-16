@@ -6,25 +6,41 @@
 # fmt: off
 # type: ignore
 
-checkname = 'heartbeat_rscstatus'
+checkname = "heartbeat_rscstatus"
 
-info = [['all']]
+info = [["all"]]
 
-discovery = {'': [(None, {'discovered_state': 'all'})]}
+discovery = {"": [(None, {"discovered_state": "all"})]}
 
 checks = {
-    '': [
-        (None, {'discovered_state': 'all'}, [
-            (0, 'Current state: all', []),
-        ]),
-        (None, {'discovered_state': 'local'}, [
-            (2, 'Current state: all (Expected: local)', []),
-        ]),
-        (None, '"all"', [
-            (0, 'Current state: all', []),
-        ]),
-        (None, '"local"', [
-            (2, 'Current state: all (Expected: local)', []),
-        ]),
+    "": [
+        (
+            None,
+            {"discovered_state": "all"},
+            [
+                (0, "Current state: all", []),
+            ],
+        ),
+        (
+            None,
+            {"discovered_state": "local"},
+            [
+                (2, "Current state: all (Expected: local)", []),
+            ],
+        ),
+        (
+            None,
+            '"all"',
+            [
+                (0, "Current state: all", []),
+            ],
+        ),
+        (
+            None,
+            '"local"',
+            [
+                (2, "Current state: all (Expected: local)", []),
+            ],
+        ),
     ],
 }

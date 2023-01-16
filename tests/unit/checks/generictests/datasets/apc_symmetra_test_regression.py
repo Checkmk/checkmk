@@ -7,16 +7,21 @@
 # type: ignore
 
 
-
-checkname = 'apc_symmetra_test'
-
-
-info = [['1', '03/09/2015']]
+checkname = "apc_symmetra_test"
 
 
-discovery = {'': [(None, {})]}
+info = [["1", "03/09/2015"]]
 
 
-checks = {'': [(None,
-                {"levels_elapsed_time": None},
-                [(0, 'Result of self test: OK, Date of last test: 03/09/2015', [])])]}
+discovery = {"": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {"levels_elapsed_time": None},
+            [(0, "Result of self test: OK, Date of last test: 03/09/2015", [])],
+        )
+    ]
+}

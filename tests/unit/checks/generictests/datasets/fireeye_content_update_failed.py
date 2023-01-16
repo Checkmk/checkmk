@@ -7,20 +7,27 @@
 # type: ignore
 
 
-
-checkname = 'fireeye_content'
-
-
-info = [['456.180', '0', '2016/02/26 15:42:06']]
-
-freeze_time = '2017-07-16T08:21:00'
-
-discovery = {'': [(None, {})]}
+checkname = "fireeye_content"
 
 
-checks = {'': [(None,
-                {},
-                [(1, 'Update: failed', []),
-                 (0, 'Last update: 2016/02/26 15:42:06', []),
-                 (0, 'Age: 1 year 140 days', []),
-                 (0, 'Security version: 456.180', [])])]}
+info = [["456.180", "0", "2016/02/26 15:42:06"]]
+
+freeze_time = "2017-07-16T08:21:00"
+
+discovery = {"": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {},
+            [
+                (1, "Update: failed", []),
+                (0, "Last update: 2016/02/26 15:42:06", []),
+                (0, "Age: 1 year 140 days", []),
+                (0, "Security version: 456.180", []),
+            ],
+        )
+    ]
+}

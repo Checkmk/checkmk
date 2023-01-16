@@ -7,15 +7,18 @@
 # type: ignore
 
 
-
-checkname = 'netapp_api_vs_status'
-
-
-info = [['kermit1_ng-mc', 'running'], ['bill_vm', 'stopped']]
+checkname = "netapp_api_vs_status"
 
 
-discovery = {'': [('bill_vm', {}), ('kermit1_ng-mc', {})]}
+info = [["kermit1_ng-mc", "running"], ["bill_vm", "stopped"]]
 
 
-checks = {'': [('bill_vm', {}, [(2, 'State: stopped', [])]),
-               ('kermit1_ng-mc', {}, [(0, 'State: running', [])])]}
+discovery = {"": [("bill_vm", {}), ("kermit1_ng-mc", {})]}
+
+
+checks = {
+    "": [
+        ("bill_vm", {}, [(2, "State: stopped", [])]),
+        ("kermit1_ng-mc", {}, [(0, "State: running", [])]),
+    ]
+}

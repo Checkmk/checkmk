@@ -5,18 +5,14 @@
 
 # fmt: off
 # type: ignore
-checkname = 'pulse_secure_cpu_util'
+checkname = "pulse_secure_cpu_util"
 
-info = [['1']]
+info = [["1"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
-        (
-            None, {
-                'util': (80.0, 90.0)
-            }, [(0, 'Total CPU: 1.00%', [('util', 1, 80.0, 90.0, 0, 100)])]
-        )
+    "": [
+        (None, {"util": (80.0, 90.0)}, [(0, "Total CPU: 1.00%", [("util", 1, 80.0, 90.0, 0, 100)])])
     ]
 }

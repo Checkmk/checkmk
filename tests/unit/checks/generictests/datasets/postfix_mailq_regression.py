@@ -6,55 +6,58 @@
 # fmt: off
 # type: ignore
 
-checkname = 'postfix_mailq'
+checkname = "postfix_mailq"
 
 info = [
-    ['[[[]]]'], ['QUEUE_deferred', '2', '1'],
-    ['QUEUE_active', '4', '3'], ['[[[/etc/postfix-internal]]]'],
-    ['QUEUE_deferred', '2', '1'], ['QUEUE_active', '4', '3']
+    ["[[[]]]"],
+    ["QUEUE_deferred", "2", "1"],
+    ["QUEUE_active", "4", "3"],
+    ["[[[/etc/postfix-internal]]]"],
+    ["QUEUE_deferred", "2", "1"],
+    ["QUEUE_active", "4", "3"],
 ]
 
-discovery = {'': [('', {}), ('/etc/postfix-internal', {})]}
+discovery = {"": [("", {}), ("/etc/postfix-internal", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            '', {
-                'active': (200, 300),
-                'deferred': (10, 20)
-            }, [
+            "",
+            {"active": (200, 300), "deferred": (10, 20)},
+            [
                 (
-                    0, 'Deferred queue length: 1', [
-                        ('length', 1, 10, 20, None, None),
-                        ('size', 2, None, None, None, None)
-                    ]
+                    0,
+                    "Deferred queue length: 1",
+                    [("length", 1, 10, 20, None, None), ("size", 2, None, None, None, None)],
                 ),
                 (
-                    0, 'Active queue length: 3', [
-                        ('mail_queue_active_length', 3, 200, 300, None, None),
-                        ('mail_queue_active_size', 4, None, None, None, None)
-                    ]
-                )
-            ]
+                    0,
+                    "Active queue length: 3",
+                    [
+                        ("mail_queue_active_length", 3, 200, 300, None, None),
+                        ("mail_queue_active_size", 4, None, None, None, None),
+                    ],
+                ),
+            ],
         ),
         (
-            '/etc/postfix-internal', {
-                'active': (200, 300),
-                'deferred': (10, 20)
-            }, [
+            "/etc/postfix-internal",
+            {"active": (200, 300), "deferred": (10, 20)},
+            [
                 (
-                    0, 'Deferred queue length: 1', [
-                        ('length', 1, 10, 20, None, None),
-                        ('size', 2, None, None, None, None)
-                    ]
+                    0,
+                    "Deferred queue length: 1",
+                    [("length", 1, 10, 20, None, None), ("size", 2, None, None, None, None)],
                 ),
                 (
-                    0, 'Active queue length: 3', [
-                        ('mail_queue_active_length', 3, 200, 300, None, None),
-                        ('mail_queue_active_size', 4, None, None, None, None)
-                    ]
-                )
-            ]
-        )
+                    0,
+                    "Active queue length: 3",
+                    [
+                        ("mail_queue_active_length", 3, 200, 300, None, None),
+                        ("mail_queue_active_size", 4, None, None, None, None),
+                    ],
+                ),
+            ],
+        ),
     ]
 }

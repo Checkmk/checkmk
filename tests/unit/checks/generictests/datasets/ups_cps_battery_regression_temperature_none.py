@@ -7,22 +7,25 @@
 # type: ignore
 
 
-
-checkname = 'ups_cps_battery'
-
-
-info = [['100', 'NULL', '612000']]
+checkname = "ups_cps_battery"
 
 
-discovery = {'': [(None, {})]}
+info = [["100", "NULL", "612000"]]
 
 
-checks = {'': [(None,
-                {'capacity': (95, 90)},
-                [
-                 (0, 'Capacity at 100%', []),
-                 (0, '102 minutes remaining on battery', []),
-                 ])],
-          'temp': [('Battery',
-                    {},
-                    [])]}
+discovery = {"": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {"capacity": (95, 90)},
+            [
+                (0, "Capacity at 100%", []),
+                (0, "102 minutes remaining on battery", []),
+            ],
+        )
+    ],
+    "temp": [("Battery", {}, [])],
+}

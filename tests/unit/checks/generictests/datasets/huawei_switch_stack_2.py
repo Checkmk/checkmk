@@ -6,8 +6,8 @@
 # fmt: off
 # type: ignore
 
-checkname = 'huawei_switch_stack'
+checkname = "huawei_switch_stack"
 
-info = [[['0']], [['1', '1'], ['2', '3']]]
+info = [[["0"]], [["1", "1"], ["2", "3"]]]
 
-discovery = {'': []}
+discovery = {"": []}

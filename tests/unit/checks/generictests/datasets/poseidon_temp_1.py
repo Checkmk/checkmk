@@ -6,15 +6,21 @@
 # fmt: off
 # type: ignore
 
-checkname = 'poseidon_temp'
+checkname = "poseidon_temp"
 
-info = [['Bezeichnung Sensor 1', '1', '16.8 C']]
+info = [["Bezeichnung Sensor 1", "1", "16.8 C"]]
 
-discovery = {'': [('Bezeichnung Sensor 1', {})]}
+discovery = {"": [("Bezeichnung Sensor 1", {})]}
 
 checks = {
-    '': [('Bezeichnung Sensor 1', {}, [
-        (0, 'Sensor Bezeichnung Sensor 1, State normal', []),
-        (0, '16.8 \xb0C', [('temp', 16.8, None, None, None, None)]),
-    ])]
+    "": [
+        (
+            "Bezeichnung Sensor 1",
+            {},
+            [
+                (0, "Sensor Bezeichnung Sensor 1, State normal", []),
+                (0, "16.8 \xb0C", [("temp", 16.8, None, None, None, None)]),
+            ],
+        )
+    ]
 }

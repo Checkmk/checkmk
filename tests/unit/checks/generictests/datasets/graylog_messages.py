@@ -5,32 +5,34 @@
 
 # fmt: off
 # type: ignore
-checkname = 'graylog_messages'
+checkname = "graylog_messages"
 
 info = [['{"events": 8569688}']]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
+            None,
+            {},
+            [
                 (
-                    0, 'Total number of messages: 8569688', [
-                        ('messages', 8569688, None, None, None, None)
-                    ]
+                    0,
+                    "Total number of messages: 8569688",
+                    [("messages", 8569688, None, None, None, None)],
                 ),
                 (
-                    0, 'Average number of messages (30 minutes 0 seconds): 0.00', [
-                        ('msgs_avg', 0.0, None, None, None, None)
-                    ]
+                    0,
+                    "Average number of messages (30 minutes 0 seconds): 0.00",
+                    [("msgs_avg", 0.0, None, None, None, None)],
                 ),
                 (
-                    0, 'Total number of messages since last check (within 30 minutes 0 seconds): 0', [
-                        ('graylog_diff', 0, None, None, None, None)
-                    ]
-                )
-            ]
+                    0,
+                    "Total number of messages since last check (within 30 minutes 0 seconds): 0",
+                    [("graylog_diff", 0, None, None, None, None)],
+                ),
+            ],
         )
     ]
 }

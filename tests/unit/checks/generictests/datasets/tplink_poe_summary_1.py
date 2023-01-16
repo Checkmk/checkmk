@@ -6,18 +6,10 @@
 # fmt: off
 # type: ignore
 
-checkname = 'tplink_poe_summary'
+checkname = "tplink_poe_summary"
 
-info = [['150']]
+info = [["150"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
-checks = {
-    '': [
-        (
-            None, {}, [
-                (0, '15.00 Watt', [('power', 15.0)])
-            ]
-        )
-    ]
-}
+checks = {"": [(None, {}, [(0, "15.00 Watt", [("power", 15.0)])])]}

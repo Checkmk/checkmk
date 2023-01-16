@@ -7,11 +7,10 @@
 # type: ignore
 
 
-
-checkname = 'rstcli'
-
-
-info = [['rstcli not found']]
+checkname = "rstcli"
 
 
-discovery = {'': [], 'pdisks': []}
+info = [["rstcli not found"]]
+
+
+discovery = {"": [], "pdisks": []}

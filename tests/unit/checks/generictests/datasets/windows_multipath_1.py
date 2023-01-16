@@ -6,11 +6,17 @@
 # fmt: off
 # type: ignore
 
-checkname = 'windows_multipath'
+checkname = "windows_multipath"
 
-info = [[
-    'C:\\Program', 'Files', '(x86)\\check_mk\\plugins\\windows_multipath.vbs(19,', '1)',
-    '(null):', '0x80041010'
-]]
+info = [
+    [
+        "C:\\Program",
+        "Files",
+        "(x86)\\check_mk\\plugins\\windows_multipath.vbs(19,",
+        "1)",
+        "(null):",
+        "0x80041010",
+    ]
+]
 
-discovery = {'': []}
+discovery = {"": []}

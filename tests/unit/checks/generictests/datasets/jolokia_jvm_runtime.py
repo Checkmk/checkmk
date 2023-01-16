@@ -6,29 +6,28 @@
 # fmt: off
 # type: ignore
 
-checkname = 'jolokia_jvm_runtime'
+checkname = "jolokia_jvm_runtime"
 
-freeze_time = '2019-10-11 08:32:51'
+freeze_time = "2019-10-11 08:32:51"
 
 info = [
-    [
-        'MyJIRA', 'java.lang:type=Runtime/Uptime,Name',
-        '{"Uptime": 34502762, "Name": "1020@jira"}'
-    ]
+    ["MyJIRA", "java.lang:type=Runtime/Uptime,Name", '{"Uptime": 34502762, "Name": "1020@jira"}']
 ]
 
-discovery = {'': [('MyJIRA', {})]}
+discovery = {"": [("MyJIRA", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            'MyJIRA', {}, [
+            "MyJIRA",
+            {},
+            [
                 (
                     0,
-                    'Up since Fri Oct 11 00:57:48 2019, uptime: 9:35:02',
-                    [('uptime', 34502.762, None, None, None, None)]
+                    "Up since Fri Oct 11 00:57:48 2019, uptime: 9:35:02",
+                    [("uptime", 34502.762, None, None, None, None)],
                 )
-            ]
+            ],
         )
     ]
 }

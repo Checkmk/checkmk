@@ -7,23 +7,33 @@
 # type: ignore
 
 
-checkname = 'emc_isilon_cpu'
+checkname = "emc_isilon_cpu"
 
-info = [['123', '234', '231', '567']]
+info = [["123", "234", "231", "567"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [(None, {}, [
-        (0, 'User: 35.70%', [('user', 35.7, None, None, None, None)]),
-        (0, 'System: 23.10%', [('system', 23.1, None, None, None, None)]),
-        (0, 'Interrupt: 56.70%', [('interrupt', 56.7, None, None, None, None)]),
-        (0, 'Total: 115.50%', [])
-    ]),
-       (None, None, [
-        (0, 'User: 35.70%', [('user', 35.7, None, None, None, None)]),
-        (0, 'System: 23.10%', [('system', 23.1, None, None, None, None)]),
-        (0, 'Interrupt: 56.70%', [('interrupt', 56.7, None, None, None, None)]),
-        (0, 'Total: 115.50%', [])
-    ])]
+    "": [
+        (
+            None,
+            {},
+            [
+                (0, "User: 35.70%", [("user", 35.7, None, None, None, None)]),
+                (0, "System: 23.10%", [("system", 23.1, None, None, None, None)]),
+                (0, "Interrupt: 56.70%", [("interrupt", 56.7, None, None, None, None)]),
+                (0, "Total: 115.50%", []),
+            ],
+        ),
+        (
+            None,
+            None,
+            [
+                (0, "User: 35.70%", [("user", 35.7, None, None, None, None)]),
+                (0, "System: 23.10%", [("system", 23.1, None, None, None, None)]),
+                (0, "Interrupt: 56.70%", [("interrupt", 56.7, None, None, None, None)]),
+                (0, "Total: 115.50%", []),
+            ],
+        ),
+    ]
 }

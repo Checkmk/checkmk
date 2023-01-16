@@ -6,75 +6,55 @@
 # fmt: off
 # type: ignore
 
-checkname = 'huawei_switch_stack'
+checkname = "huawei_switch_stack"
 
 info = [
-    [['1']],
+    [["1"]],
     [
-        ['1', '1'],
-        ['2', '3'],
-        ['3', '2'],
-        ['4', '2'],
-        ['5', '4'],
+        ["1", "1"],
+        ["2", "3"],
+        ["3", "2"],
+        ["4", "2"],
+        ["5", "4"],
     ],
 ]
 
 discovery = {
-    '': [
-        ('1', {
-            'expected_role': 'master'
-        }),
-        ('2', {
-            'expected_role': 'slave'
-        }),
-        ('3', {
-            'expected_role': 'standby'
-        }),
-        ('4', {
-            'expected_role': 'standby'
-        }),
-        ('5', {
-            'expected_role': 'unknown'
-        }),
+    "": [
+        ("1", {"expected_role": "master"}),
+        ("2", {"expected_role": "slave"}),
+        ("3", {"expected_role": "standby"}),
+        ("4", {"expected_role": "standby"}),
+        ("5", {"expected_role": "unknown"}),
     ]
 }
 
 checks = {
-    '': [
+    "": [
         (
-            '1',
-            {
-                'expected_role': 'master'
-            },
-            [(0, 'master', [])],
+            "1",
+            {"expected_role": "master"},
+            [(0, "master", [])],
         ),
         (
-            '2',
-            {
-                'expected_role': 'slave'
-            },
-            [(0, 'slave', [])],
+            "2",
+            {"expected_role": "slave"},
+            [(0, "slave", [])],
         ),
         (
-            '3',
-            {
-                'expected_role': 'standby'
-            },
-            [(0, 'standby', [])],
+            "3",
+            {"expected_role": "standby"},
+            [(0, "standby", [])],
         ),
         (
-            '4',
-            {
-                'expected_role': 'slave'
-            },
-            [(2, 'Unexpected role: standby (Expected: slave)', [])],
+            "4",
+            {"expected_role": "slave"},
+            [(2, "Unexpected role: standby (Expected: slave)", [])],
         ),
         (
-            '5',
-            {
-                'expected_role': 'unknown'
-            },
-            [(2, 'unknown', [])],
+            "5",
+            {"expected_role": "unknown"},
+            [(2, "unknown", [])],
         ),
     ]
 }

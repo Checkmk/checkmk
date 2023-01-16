@@ -6,31 +6,21 @@
 # fmt: off
 # type: ignore
 
-checkname = 'mssql_blocked_sessions'
+checkname = "mssql_blocked_sessions"
 
 info = [
-    ['ID-1', 'No blocking sessions'],
-    ['MSSQLSERVER_SA', 'No blocking sessions'],
-    ['MSSQLSERVER_LIVE', 'No blocking sessions']
+    ["ID-1", "No blocking sessions"],
+    ["MSSQLSERVER_SA", "No blocking sessions"],
+    ["MSSQLSERVER_LIVE", "No blocking sessions"],
 ]
 
-discovery = {
-    '': [('ID-1', {}), ('MSSQLSERVER_LIVE', {}), ('MSSQLSERVER_SA', {})]
-}
+discovery = {"": [("ID-1", {}), ("MSSQLSERVER_LIVE", {}), ("MSSQLSERVER_SA", {})]}
 
 checks = {
-    '': [
-        ('ID-1', {
-            'state': 1
-        }, [(0, 'No blocking sessions', [])]),
-        ('ID-1', {
-            'state': 2
-        }, [(0, 'No blocking sessions', [])]),
-        ('MSSQLSERVER_LIVE', {
-            'state': 2
-        }, [(0, 'No blocking sessions', [])]),
-        ('MSSQLSERVER_SA', {
-            'state': 2
-        }, [(0, 'No blocking sessions', [])])
+    "": [
+        ("ID-1", {"state": 1}, [(0, "No blocking sessions", [])]),
+        ("ID-1", {"state": 2}, [(0, "No blocking sessions", [])]),
+        ("MSSQLSERVER_LIVE", {"state": 2}, [(0, "No blocking sessions", [])]),
+        ("MSSQLSERVER_SA", {"state": 2}, [(0, "No blocking sessions", [])]),
     ]
 }

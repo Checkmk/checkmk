@@ -7,21 +7,10 @@
 # type: ignore
 
 
-
-checkname = 'mbg_lantime_ng_refclock'
-
-
-info = [['1',
-         '999',
-         '3',
-         '1',
-         '1',
-         '10',
-         '13',
-         '0',
-         '0',
-         '0',
-         'not announced']]
+checkname = "mbg_lantime_ng_refclock"
 
 
-discovery = {'': [], 'gps': []}
+info = [["1", "999", "3", "1", "1", "10", "13", "0", "0", "0", "not announced"]]
+
+
+discovery = {"": [], "gps": []}

@@ -7,18 +7,21 @@
 # type: ignore
 
 
-
-checkname = 'websphere_mq_queues'
-
-
-info = [['0', 'ABC-123-DEF'], ['TEST-FOO', 'RUNNING']]
+checkname = "websphere_mq_queues"
 
 
-discovery = {'': [('ABC-123-DEF', 'websphere_mq_queues_default_levels')]}
+info = [["0", "ABC-123-DEF"], ["TEST-FOO", "RUNNING"]]
 
 
-checks = {'': [('ABC-123-DEF',
-                {'message_count': (1000, 1200), 'message_count_perc': (80.0, 90.0)},
-                [(0,
-                  'Messages in queue: 0',
-                  [('queue', 0, 1000.0, 1200.0, None, None)])])]}
+discovery = {"": [("ABC-123-DEF", "websphere_mq_queues_default_levels")]}
+
+
+checks = {
+    "": [
+        (
+            "ABC-123-DEF",
+            {"message_count": (1000, 1200), "message_count_perc": (80.0, 90.0)},
+            [(0, "Messages in queue: 0", [("queue", 0, 1000.0, 1200.0, None, None)])],
+        )
+    ]
+}

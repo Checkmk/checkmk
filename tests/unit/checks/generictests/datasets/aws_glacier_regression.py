@@ -7,90 +7,105 @@
 # type: ignore
 
 
-
-checkname = 'aws_glacier'
-
-
-info = [['[{"SizeInBytes":',
-         '0,',
-         '"VaultARN":',
-         '"arn:aws:glacier:eu-central-1:710145618630:vaults/axi_empty_vault",',
-         '"VaultName":',
-         '"axi_empty_vault",',
-         '"Label":',
-         '"axi_empty_vault",',
-         '"Values":',
-         '[],',
-         '"NumberOfArchives":',
-         '0,',
-         '"Timestamps":',
-         '[],',
-         '"CreationDate":',
-         '"2019-07-22T09:39:34.135Z",',
-         '"Id":',
-         '"id_0_GlacierMetric",',
-         '"Tagging":',
-         '{},',
-         '"StatusCode":',
-         '"Complete"},',
-         '{"SizeInBytes":',
-         '0,',
-         '"VaultARN":',
-         '"arn:aws:glacier:eu-central-1:710145618630:vaults/axi_vault",',
-         '"VaultName":',
-         '"axi_vault",',
-         '"Label":',
-         '"axi_vault",',
-         '"Values":',
-         '[],',
-         '"NumberOfArchives":',
-         '0,',
-         '"Timestamps":',
-         '[],',
-         '"CreationDate":',
-         '"2019-07-18T08:07:01.708Z",',
-         '"Id":',
-         '"id_1_GlacierMetric",',
-         '"Tagging":',
-         '{},',
-         '"StatusCode":',
-         '"Complete"}]']]
+checkname = "aws_glacier"
 
 
-discovery = {'': [('axi_empty_vault', {}), ('axi_vault', {})], 'summary': [(None, {})]}
+info = [
+    [
+        '[{"SizeInBytes":',
+        "0,",
+        '"VaultARN":',
+        '"arn:aws:glacier:eu-central-1:710145618630:vaults/axi_empty_vault",',
+        '"VaultName":',
+        '"axi_empty_vault",',
+        '"Label":',
+        '"axi_empty_vault",',
+        '"Values":',
+        "[],",
+        '"NumberOfArchives":',
+        "0,",
+        '"Timestamps":',
+        "[],",
+        '"CreationDate":',
+        '"2019-07-22T09:39:34.135Z",',
+        '"Id":',
+        '"id_0_GlacierMetric",',
+        '"Tagging":',
+        "{},",
+        '"StatusCode":',
+        '"Complete"},',
+        '{"SizeInBytes":',
+        "0,",
+        '"VaultARN":',
+        '"arn:aws:glacier:eu-central-1:710145618630:vaults/axi_vault",',
+        '"VaultName":',
+        '"axi_vault",',
+        '"Label":',
+        '"axi_vault",',
+        '"Values":',
+        "[],",
+        '"NumberOfArchives":',
+        "0,",
+        '"Timestamps":',
+        "[],",
+        '"CreationDate":',
+        '"2019-07-18T08:07:01.708Z",',
+        '"Id":',
+        '"id_1_GlacierMetric",',
+        '"Tagging":',
+        "{},",
+        '"StatusCode":',
+        '"Complete"}]',
+    ]
+]
 
 
-checks = {'': [('axi_empty_vault',
-                {},
-                [(0,
-                  'Vault size: 0 B',
-                  [('aws_glacier_vault_size', 0, None, None, None, None)]),
-                 (0,
-                  'Number of archives: 0',
-                  [('aws_glacier_num_archives', 0, None, None, None, None)])]),
-               ('axi_vault',
-                {},
-                [(0,
-                  'Vault size: 0 B',
-                  [('aws_glacier_vault_size', 0, None, None, None, None)]),
-                 (0,
-                  'Number of archives: 0',
-                  [('aws_glacier_num_archives', 0, None, None, None, None)])])],
-          'summary': [(None,
-                       {},
-                       [(0,
-                         'Total size: 0 B',
-                         [('aws_glacier_total_vault_size',
-                           0,
-                           None,
-                           None,
-                           None,
-                           None)]),
-                        (0,
-                         'Largest vault: axi_vault (0 B)',
-                         [('aws_glacier_largest_vault_size',
-                           0,
-                           None,
-                           None,
-                           None,
-                           None)])])]}
+discovery = {"": [("axi_empty_vault", {}), ("axi_vault", {})], "summary": [(None, {})]}
+
+
+checks = {
+    "": [
+        (
+            "axi_empty_vault",
+            {},
+            [
+                (0, "Vault size: 0 B", [("aws_glacier_vault_size", 0, None, None, None, None)]),
+                (
+                    0,
+                    "Number of archives: 0",
+                    [("aws_glacier_num_archives", 0, None, None, None, None)],
+                ),
+            ],
+        ),
+        (
+            "axi_vault",
+            {},
+            [
+                (0, "Vault size: 0 B", [("aws_glacier_vault_size", 0, None, None, None, None)]),
+                (
+                    0,
+                    "Number of archives: 0",
+                    [("aws_glacier_num_archives", 0, None, None, None, None)],
+                ),
+            ],
+        ),
+    ],
+    "summary": [
+        (
+            None,
+            {},
+            [
+                (
+                    0,
+                    "Total size: 0 B",
+                    [("aws_glacier_total_vault_size", 0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Largest vault: axi_vault (0 B)",
+                    [("aws_glacier_largest_vault_size", 0, None, None, None, None)],
+                ),
+            ],
+        )
+    ],
+}

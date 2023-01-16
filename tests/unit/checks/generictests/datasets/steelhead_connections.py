@@ -10,31 +10,35 @@
 checkname = "steelhead_connections"
 
 info = [
-    ['1.0', '1619'],
-    ['2.0', '1390'],
-    ['3.0', '0'],
-    ['4.0', '4'],
-    ['5.0', '1615'],
-    ['6.0', '347'],
-    ['7.0', '3009'],
+    ["1.0", "1619"],
+    ["2.0", "1390"],
+    ["3.0", "0"],
+    ["4.0", "4"],
+    ["5.0", "1615"],
+    ["6.0", "347"],
+    ["7.0", "3009"],
 ]
 
 
 discovery = {
-    '': [(None, {})],
+    "": [(None, {})],
 }
 
 
 checks = {
-    '': [
-        (None, {}, [
-            (0, 'Total connections: 3009', []),
-            (0, 'Passthrough: 1390', [('passthrough', 1390)]),
-            (0, 'Optimized: 1619', []),
-            (0, 'Active: 347', [('active', 347)]),
-            (0, 'Established: 1615', [('established', 1615)]),
-            (0, 'Half opened: 0', [('halfOpened', 0)]),
-            (0, 'Half closed: 4', [('halfClosed', 4)]),
-        ]),
+    "": [
+        (
+            None,
+            {},
+            [
+                (0, "Total connections: 3009", []),
+                (0, "Passthrough: 1390", [("passthrough", 1390)]),
+                (0, "Optimized: 1619", []),
+                (0, "Active: 347", [("active", 347)]),
+                (0, "Established: 1615", [("established", 1615)]),
+                (0, "Half opened: 0", [("halfOpened", 0)]),
+                (0, "Half closed: 4", [("halfClosed", 4)]),
+            ],
+        ),
     ],
 }

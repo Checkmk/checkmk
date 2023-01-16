@@ -7,26 +7,29 @@
 # type: ignore
 from cmk.base.plugins.agent_based.ucd_mem import parse_ucd_mem
 
-checkname = 'ucd_mem'
+checkname = "ucd_mem"
 
-parsed = parse_ucd_mem([[['10', '9', '', '', '', '', '', '', '', '', '', '']]])
+parsed = parse_ucd_mem([[["10", "9", "", "", "", "", "", "", "", "", "", ""]]])
 
-discovery = {'': [('', {})]}
+discovery = {"": [("", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {
-                'levels_ram': ('abs_free', (2048, 1024)),
-            }, [
+            None,
+            {
+                "levels_ram": ("abs_free", (2048, 1024)),
+            },
+            [
                 (
-                    0, 'RAM: 10.00% - 1.00 KiB of 10.0 KiB',
+                    0,
+                    "RAM: 10.00% - 1.00 KiB of 10.0 KiB",
                     [
-                        ('mem_used', 1024, 8192.0, 9216.0, 0, 10240),
-                        ('mem_used_percent', 10.0, 80.0, 90.0, 0.0, None)
-                    ]
+                        ("mem_used", 1024, 8192.0, 9216.0, 0, 10240),
+                        ("mem_used_percent", 10.0, 80.0, 90.0, 0.0, None),
+                    ],
                 ),
-            ]
+            ],
         )
     ]
 }

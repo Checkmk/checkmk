@@ -7,14 +7,13 @@
 # type: ignore
 
 
-
-checkname = 'ibm_rsa_health'
-
-
-info = [['0'], ['1'], ['Critical'], ['SSL Server Certificate Error']]
+checkname = "ibm_rsa_health"
 
 
-discovery = {'': [(None, None)]}
+info = [["0"], ["1"], ["Critical"], ["SSL Server Certificate Error"]]
 
 
-checks = {'': [(None, {}, [(2, 'SSL Server Certificate Error(Critical)', [])])]}
+discovery = {"": [(None, None)]}
+
+
+checks = {"": [(None, {}, [(2, "SSL Server Certificate Error(Critical)", [])])]}

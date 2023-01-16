@@ -5,15 +5,15 @@
 
 # fmt: off
 # type: ignore
-checkname = 'hp_proliant_cpu'
+checkname = "hp_proliant_cpu"
 
-info = [['0', '0', 'Intel Xeon', '2'], ['1', '0', 'Intel Xeon', '2']]
+info = [["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]]
 
-discovery = {'': [('0', None), ('1', None)]}
+discovery = {"": [("0", None), ("1", None)]}
 
 checks = {
-    '': [
-        ('0', {}, [(0, 'CPU0 "Intel Xeon" in slot 0 is in state "ok"', [])]),
-        ('1', {}, [(0, 'CPU1 "Intel Xeon" in slot 0 is in state "ok"', [])])
+    "": [
+        ("0", {}, [(0, 'CPU0 "Intel Xeon" in slot 0 is in state "ok"', [])]),
+        ("1", {}, [(0, 'CPU1 "Intel Xeon" in slot 0 is in state "ok"', [])]),
     ]
 }

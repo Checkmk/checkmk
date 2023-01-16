@@ -7,18 +7,27 @@
 # type: ignore
 
 
-
-checkname = 'mknotifyd'
-
-
-info = [['[EX]'], ['Binary file (standard input) matches']]
+checkname = "mknotifyd"
 
 
-discovery = {'': [('EX', {})], 'connection': []}
+info = [["[EX]"], ["Binary file (standard input) matches"]]
 
 
-checks = {'': [('EX',
-                {},
-                [(2,
-                  'The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly',
-                  [])])]}
+discovery = {"": [("EX", {})], "connection": []}
+
+
+checks = {
+    "": [
+        (
+            "EX",
+            {},
+            [
+                (
+                    2,
+                    "The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly",
+                    [],
+                )
+            ],
+        )
+    ]
+}

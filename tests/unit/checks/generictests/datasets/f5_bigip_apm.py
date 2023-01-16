@@ -5,22 +5,12 @@
 
 # fmt: off
 # type: ignore
-checkname = 'f5_bigip_apm'
+checkname = "f5_bigip_apm"
 
-info = [['0']]
+info = [["0"]]
 
-discovery = {'': [(None, None)]}
+discovery = {"": [(None, None)]}
 
 checks = {
-    '': [
-        (
-            None, {}, [
-                (
-                    0, 'Connections: 0', [
-                        ('connections_ssl_vpn', 0, None, None, 0, None)
-                    ]
-                )
-            ]
-        )
-    ]
+    "": [(None, {}, [(0, "Connections: 0", [("connections_ssl_vpn", 0, None, None, 0, None)])])]
 }

@@ -6,26 +6,72 @@
 # fmt: off
 # type: ignore
 
-checkname = 'poseidon_inputs'
+checkname = "poseidon_inputs"
 
-info = [['1', 'Bezeichnung Eingang 1', '1', '0'], ['0', 'Bezeichnung Eingang 2', '2', '0'],
-        ['0', 'Bezeichnung Eingang 3', '1', '1'], ['0', 'Bezeichnung Eingang 4', '1', '1'],
-        ['0', 'Comm Monitor 1', '0', '0']]
+info = [
+    ["1", "Bezeichnung Eingang 1", "1", "0"],
+    ["0", "Bezeichnung Eingang 2", "2", "0"],
+    ["0", "Bezeichnung Eingang 3", "1", "1"],
+    ["0", "Bezeichnung Eingang 4", "1", "1"],
+    ["0", "Comm Monitor 1", "0", "0"],
+]
 
 discovery = {
-    '': [('Bezeichnung Eingang 1', {}), ('Bezeichnung Eingang 2', {}),
-         ('Bezeichnung Eingang 3', {}), ('Bezeichnung Eingang 4', {}), ('Comm Monitor 1', {})]
+    "": [
+        ("Bezeichnung Eingang 1", {}),
+        ("Bezeichnung Eingang 2", {}),
+        ("Bezeichnung Eingang 3", {}),
+        ("Bezeichnung Eingang 4", {}),
+        ("Comm Monitor 1", {}),
+    ]
 }
 
 checks = {
-    '': [('Bezeichnung Eingang 1', {}, [(0, 'Bezeichnung Eingang 1: AlarmSetup: activeOff', []),
-                                         (0, 'Alarm State: normal', []), (0, 'Values on', [])]),
-         ('Bezeichnung Eingang 2', {}, [(0, 'Bezeichnung Eingang 2: AlarmSetup: activeOn', []),
-                                         (0, 'Alarm State: normal', []), (0, 'Values off', [])]),
-         ('Bezeichnung Eingang 3', {}, [(0, 'Bezeichnung Eingang 3: AlarmSetup: activeOff', []),
-                                         (2, 'Alarm State: alarm', []), (0, 'Values off', [])]),
-         ('Bezeichnung Eingang 4', {}, [(0, 'Bezeichnung Eingang 4: AlarmSetup: activeOff', []),
-                                         (2, 'Alarm State: alarm', []), (0, 'Values off', [])]),
-         ('Comm Monitor 1', {}, [(0, 'Comm Monitor 1: AlarmSetup: inactive', []),
-                                  (0, 'Alarm State: normal', []), (0, 'Values off', [])])]
+    "": [
+        (
+            "Bezeichnung Eingang 1",
+            {},
+            [
+                (0, "Bezeichnung Eingang 1: AlarmSetup: activeOff", []),
+                (0, "Alarm State: normal", []),
+                (0, "Values on", []),
+            ],
+        ),
+        (
+            "Bezeichnung Eingang 2",
+            {},
+            [
+                (0, "Bezeichnung Eingang 2: AlarmSetup: activeOn", []),
+                (0, "Alarm State: normal", []),
+                (0, "Values off", []),
+            ],
+        ),
+        (
+            "Bezeichnung Eingang 3",
+            {},
+            [
+                (0, "Bezeichnung Eingang 3: AlarmSetup: activeOff", []),
+                (2, "Alarm State: alarm", []),
+                (0, "Values off", []),
+            ],
+        ),
+        (
+            "Bezeichnung Eingang 4",
+            {},
+            [
+                (0, "Bezeichnung Eingang 4: AlarmSetup: activeOff", []),
+                (2, "Alarm State: alarm", []),
+                (0, "Values off", []),
+            ],
+        ),
+        (
+            "Comm Monitor 1",
+            {},
+            [
+                (0, "Comm Monitor 1: AlarmSetup: inactive", []),
+                (0, "Alarm State: normal", []),
+                (0, "Values off", []),
+            ],
+        ),
+    ]
 }

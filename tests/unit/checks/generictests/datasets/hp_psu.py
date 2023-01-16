@@ -6,27 +6,16 @@
 # fmt: off
 # type: ignore
 
-checkname = 'hp_psu'
+checkname = "hp_psu"
 
-info = [['1', '3', '25'], ['2', '3', '23']]
+info = [["1", "3", "25"], ["2", "3", "23"]]
 
-discovery = {
-    '': [('1', None), ('2', None)],
-    'temp': [('1', {}), ('2', {})]
-}
+discovery = {"": [("1", None), ("2", None)], "temp": [("1", {}), ("2", {})]}
 
 checks = {
-    '': [('1', {}, [(0, 'Powered', [])]), ('2', {}, [(0, 'Powered', [])])],
-    'temp': [
-        (
-            '1', {
-                'levels': (70, 80)
-            }, [(0, '25 \xb0C', [('temp', 25, 70, 80, None, None)])]
-        ),
-        (
-            '2', {
-                'levels': (70, 80)
-            }, [(0, '23 \xb0C', [('temp', 23, 70, 80, None, None)])]
-        )
-    ]
+    "": [("1", {}, [(0, "Powered", [])]), ("2", {}, [(0, "Powered", [])])],
+    "temp": [
+        ("1", {"levels": (70, 80)}, [(0, "25 \xb0C", [("temp", 25, 70, 80, None, None)])]),
+        ("2", {"levels": (70, 80)}, [(0, "23 \xb0C", [("temp", 23, 70, 80, None, None)])]),
+    ],
 }

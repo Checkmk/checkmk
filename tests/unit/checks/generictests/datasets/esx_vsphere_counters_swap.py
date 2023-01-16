@@ -8,31 +8,36 @@
 
 from cmk.base.plugins.agent_based.esx_vsphere_counters import parse_esx_vsphere_counters
 
-checkname = 'esx_vsphere_counters'
+checkname = "esx_vsphere_counters"
 
-parsed = parse_esx_vsphere_counters([
-    ['mem.swapin', '', '0', 'kiloBytes'],
-    ['mem.swapout', '', '', 'kiloBytes'],
-    ['mem.swapused', '', '0', 'kiloBytes'],
-])
+parsed = parse_esx_vsphere_counters(
+    [
+        ["mem.swapin", "", "0", "kiloBytes"],
+        ["mem.swapout", "", "", "kiloBytes"],
+        ["mem.swapused", "", "0", "kiloBytes"],
+    ]
+)
 
 discovery = {
-    'cpu': [],
-    'diskio': [],
-    '': [],
-    'if': [],
-    'uptime': [],
-    'ramdisk': [],
-    'swap': [(None, {})]
+    "cpu": [],
+    "diskio": [],
+    "": [],
+    "if": [],
+    "uptime": [],
+    "ramdisk": [],
+    "swap": [(None, {})],
 }
 
 checks = {
-    'swap': [
+    "swap": [
         (
-            None, {}, [
-                (0, 'Swap in: 0 B', []), (0, 'Swap out: not available', []),
-                (0, 'Swap used: 0 B', [])
-            ]
+            None,
+            {},
+            [
+                (0, "Swap in: 0 B", []),
+                (0, "Swap out: not available", []),
+                (0, "Swap used: 0 B", []),
+            ],
         )
     ]
 }

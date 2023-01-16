@@ -7,28 +7,15 @@
 # type: ignore
 
 
-
-checkname = 'mbg_lantime_ng_refclock'
-
-
-info = [['1',
-         '15',
-         '3',
-         '2',
-         '101',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         'not announced']]
+checkname = "mbg_lantime_ng_refclock"
 
 
-discovery = {'': [('1', None)], 'gps': []}
+info = [["1", "15", "3", "2", "101", "0", "0", "0", "0", "0", "not announced"]]
 
 
-checks = {'': [('1',
-                {},
-                [(1,
-                  'Type: tcr511, Usage: primary, State: not synchronized (TCT sync)',
-                  [])])]}
+discovery = {"": [("1", None)], "gps": []}
+
+
+checks = {
+    "": [("1", {}, [(1, "Type: tcr511, Usage: primary, State: not synchronized (TCT sync)", [])])]
+}

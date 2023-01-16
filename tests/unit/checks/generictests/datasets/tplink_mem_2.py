@@ -6,18 +6,24 @@
 # fmt: off
 # type: ignore
 
-checkname = 'tplink_mem'
+checkname = "tplink_mem"
 
-info = [['30'], ['60']] # multiple memory units
+info = [["30"], ["60"]]  # multiple memory units
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {'levels': (40.0, 60.0)}, [
-                (1, 'Usage: 45.00% (warn/crit at 40.00%/60.00%)', [('mem_used_percent', 45.0, 40.0, 60.0)])
-            ]
+            None,
+            {"levels": (40.0, 60.0)},
+            [
+                (
+                    1,
+                    "Usage: 45.00% (warn/crit at 40.00%/60.00%)",
+                    [("mem_used_percent", 45.0, 40.0, 60.0)],
+                )
+            ],
         )
     ]
 }

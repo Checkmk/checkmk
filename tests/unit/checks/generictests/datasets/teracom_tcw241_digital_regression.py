@@ -7,20 +7,23 @@
 # type: ignore
 
 
-
-checkname = 'teracom_tcw241_digital'
-
-
-info = [[['Tank_Status', 'NEA_Status', 'Digital Input 3', 'Digital Input 4']], [['1', '1', '1', '1']]]
+checkname = "teracom_tcw241_digital"
 
 
-discovery = {'': [('4', {}),
-                  ('3', {}),
-                  ('2', {}),
-                  ('1', {})]}
+info = [
+    [["Tank_Status", "NEA_Status", "Digital Input 3", "Digital Input 4"]],
+    [["1", "1", "1", "1"]],
+]
 
 
-checks = {'': [('4', {}, [(0, '[Digital Input 4] is open', [])]),
-               ('3', {}, [(0, '[Digital Input 3] is open', [])]),
-               ('2', {}, [(0, '[NEA_Status] is open', [])]),
-               ('1', {}, [(0, '[Tank_Status] is open', [])])]}
+discovery = {"": [("4", {}), ("3", {}), ("2", {}), ("1", {})]}
+
+
+checks = {
+    "": [
+        ("4", {}, [(0, "[Digital Input 4] is open", [])]),
+        ("3", {}, [(0, "[Digital Input 3] is open", [])]),
+        ("2", {}, [(0, "[NEA_Status] is open", [])]),
+        ("1", {}, [(0, "[Tank_Status] is open", [])]),
+    ]
+}

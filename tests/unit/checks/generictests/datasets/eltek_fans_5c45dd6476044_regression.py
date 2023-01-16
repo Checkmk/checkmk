@@ -7,11 +7,10 @@
 # type: ignore
 
 
-
-checkname = 'eltek_fans'
-
-
-info = [['1', '', '']]
+checkname = "eltek_fans"
 
 
-discovery = {'': []}
+info = [["1", "", ""]]
+
+
+discovery = {"": []}

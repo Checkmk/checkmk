@@ -6,18 +6,10 @@
 # fmt: off
 # type: ignore
 
-checkname = 'tplink_mem'
+checkname = "tplink_mem"
 
-info = [['50']]
+info = [["50"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
-checks = {
-    '': [
-        (
-            None, {}, [
-                (0, 'Usage: 50.00%', [('mem_used_percent', 50.0)])
-            ]
-        )
-    ]
-}
+checks = {"": [(None, {}, [(0, "Usage: 50.00%", [("mem_used_percent", 50.0)])])]}

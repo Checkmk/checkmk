@@ -5,18 +5,12 @@
 
 # fmt: off
 # type: ignore
-checkname = 'pulse_secure_temp'
+checkname = "pulse_secure_temp"
 
-info = [['27']]
+info = [["27"]]
 
-discovery = {'': [('IVE', {})]}
+discovery = {"": [("IVE", {})]}
 
 checks = {
-    '': [
-        (
-            'IVE', {
-                'levels': (70.0, 75.0)
-            }, [(0, '27 °C', [('temp', 27, 70.0, 75.0, None, None)])]
-        )
-    ]
+    "": [("IVE", {"levels": (70.0, 75.0)}, [(0, "27 °C", [("temp", 27, 70.0, 75.0, None, None)])])]
 }

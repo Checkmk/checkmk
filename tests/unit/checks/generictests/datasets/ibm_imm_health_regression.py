@@ -7,17 +7,13 @@
 # type: ignore
 
 
-
-checkname = 'ibm_imm_health'
-
-
-info = [['223523'],
-        ['2342'],
-        ['234'],
-        ['23352']]
+checkname = "ibm_imm_health"
 
 
-discovery = {'': [(None, None)]}
+info = [["223523"], ["2342"], ["234"], ["23352"]]
 
 
-checks = {'': [(None, {}, [(3, '23352(234)', [])])]}
+discovery = {"": [(None, None)]}
+
+
+checks = {"": [(None, {}, [(3, "23352(234)", [])])]}

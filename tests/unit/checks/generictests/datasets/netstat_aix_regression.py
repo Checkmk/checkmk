@@ -7,19 +7,15 @@
 # type: ignore
 
 
-
-checkname = 'netstat'
-
-
-info = [['tcp4', '0', '0', '127.0.0.1.32832', '127.0.0.1.32833', 'ESTABLISHED'],
-        ['tcp',
-         '0',
-         '0',
-         '172.22.182.179.45307',
-         '172.22.182.179.3624',
-         'ESTABLISHED']]
+checkname = "netstat"
 
 
-discovery = {'': []}
+info = [
+    ["tcp4", "0", "0", "127.0.0.1.32832", "127.0.0.1.32833", "ESTABLISHED"],
+    ["tcp", "0", "0", "172.22.182.179.45307", "172.22.182.179.3624", "ESTABLISHED"],
+]
 
-checks = {'': [("connections", {}, [(0, "Matching entries found: 2", [("connections", 2)]) ])]}
+
+discovery = {"": []}
+
+checks = {"": [("connections", {}, [(0, "Matching entries found: 2", [("connections", 2)])])]}

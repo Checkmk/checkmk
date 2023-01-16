@@ -6,25 +6,15 @@
 # fmt: off
 # type: ignore
 
-checkname = 'qnap_fans'
+checkname = "qnap_fans"
 
-info = [['1', '1027 RPM'], ['2', '968 RPM']]
+info = [["1", "1027 RPM"], ["2", "968 RPM"]]
 
-discovery = {'': [('1', {}), ('2', {})]}
+discovery = {"": [("1", {}), ("2", {})]}
 
 checks = {
-    '': [
-        (
-            '1', {
-                'upper': (6000, 6500),
-                'lower': (None, None)
-            }, [(0, 'Speed: 1027 RPM', [])]
-        ),
-        (
-            '2', {
-                'upper': (6000, 6500),
-                'lower': (None, None)
-            }, [(0, 'Speed: 968 RPM', [])]
-        )
+    "": [
+        ("1", {"upper": (6000, 6500), "lower": (None, None)}, [(0, "Speed: 1027 RPM", [])]),
+        ("2", {"upper": (6000, 6500), "lower": (None, None)}, [(0, "Speed: 968 RPM", [])]),
     ]
 }

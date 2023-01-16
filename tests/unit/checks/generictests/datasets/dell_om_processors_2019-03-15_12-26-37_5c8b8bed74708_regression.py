@@ -7,21 +7,18 @@
 # type: ignore
 
 
-
-checkname = 'dell_om_processors'
-
-
-info = [['1', '5', 'Intel', '3', '129'], ['2', '3', 'Intel', '3', '128']]
+checkname = "dell_om_processors"
 
 
-discovery = {'': [('1', None), ('2', None)]}
+info = [["1", "5", "Intel", "3", "129"], ["2", "3", "Intel", "3", "128"]]
 
 
-checks = {'': [('1',
-                {},
-                [(3,
-                  '[Intel] CPU status: BIOS Disabled, CPU reading: unknown[129]',
-                  [])]),
-               ('2',
-                {},
-                [(0, '[Intel] CPU status: Enabled, CPU reading: Present', [])])]}
+discovery = {"": [("1", None), ("2", None)]}
+
+
+checks = {
+    "": [
+        ("1", {}, [(3, "[Intel] CPU status: BIOS Disabled, CPU reading: unknown[129]", [])]),
+        ("2", {}, [(0, "[Intel] CPU status: Enabled, CPU reading: Present", [])]),
+    ]
+}

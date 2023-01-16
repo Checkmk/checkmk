@@ -7,26 +7,25 @@
 # type: ignore
 
 
-
-checkname = 'ibm_svc_enclosure'
-
-
-info = [['0',
-         'online',
-         'control',
-         '9843-AE2',
-         '6860407',
-         '2',
-         '2',
-         '2',
-         '12']]
+checkname = "ibm_svc_enclosure"
 
 
-discovery = {'': [('0', {})]}
+info = [["0", "online", "control", "9843-AE2", "6860407", "2", "2", "2", "12"]]
 
 
-checks = {'': [('0',
-                {},
-                [(0, 'Status: online', []),
-                 (0, 'Online canisters: 2 of 2', []),
-                 (0, 'Online PSUs: 2', [])])]}
+discovery = {"": [("0", {})]}
+
+
+checks = {
+    "": [
+        (
+            "0",
+            {},
+            [
+                (0, "Status: online", []),
+                (0, "Online canisters: 2 of 2", []),
+                (0, "Online PSUs: 2", []),
+            ],
+        )
+    ]
+}

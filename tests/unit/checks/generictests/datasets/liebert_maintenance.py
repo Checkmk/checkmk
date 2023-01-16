@@ -7,24 +7,26 @@
 # type: ignore
 
 
+checkname = "liebert_maintenance"
 
-checkname = 'liebert_maintenance'
 
-
-info = [['Calculated Next Maintenance Month', '9'],
-        ['Calculated Next Maintenance Year', '2019']]
+info = [["Calculated Next Maintenance Month", "9"], ["Calculated Next Maintenance Year", "2019"]]
 
 
 freeze_time = "2019-08-23T12:00:00"
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 
 checks = {
-    '': [
-        (None, {'levels': (10, 5)}, [
-            (0, 'Next maintenance: 9/2019', []),
-            (1, '7 days 11 hours (warn/crit below 10 days 0 hours/5 days 0 hours)', []),
-        ]),
+    "": [
+        (
+            None,
+            {"levels": (10, 5)},
+            [
+                (0, "Next maintenance: 9/2019", []),
+                (1, "7 days 11 hours (warn/crit below 10 days 0 hours/5 days 0 hours)", []),
+            ],
+        ),
     ],
 }

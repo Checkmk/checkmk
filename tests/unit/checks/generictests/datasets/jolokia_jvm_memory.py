@@ -7,19 +7,25 @@
 # type: ignore
 
 
-
-checkname = 'jolokia_jvm_memory'
+checkname = "jolokia_jvm_memory"
 
 
 info = [
-    ['MyInstance', 'java.lang:type=Memory', (
-        '{"NonHeapMemoryUsage": {"max": 780140544, "init": 7667712, "used": 110167224, "committed": 123207680},'
-        ' "HeapMemoryUsage": {"max": 536870912, "init": 67108864, "used": 78331216, "committed": 122683392},'
-        ' "ObjectPendingFinalizationCount": 0, "ObjectName": {"objectName": "java.lang:type=Memory"},'
-        ' "Verbose": false}'
-    )],
-    ['MyInstance', 'java.lang:name=*,type=MemoryPool', (
-        '{"java.lang:name=Metaspace,type=MemoryPool": {'
+    [
+        "MyInstance",
+        "java.lang:type=Memory",
+        (
+            '{"NonHeapMemoryUsage": {"max": 780140544, "init": 7667712, "used": 110167224, "committed": 123207680},'
+            ' "HeapMemoryUsage": {"max": 536870912, "init": 67108864, "used": 78331216, "committed": 122683392},'
+            ' "ObjectPendingFinalizationCount": 0, "ObjectName": {"objectName": "java.lang:type=Memory"},'
+            ' "Verbose": false}'
+        ),
+    ],
+    [
+        "MyInstance",
+        "java.lang:name=*,type=MemoryPool",
+        (
+            '{"java.lang:name=Metaspace,type=MemoryPool": {'
             '"UsageThresholdCount": 0, '
             '"CollectionUsageThreshold": "ERROR: java.lang.UnsupportedOperationException: <...errmsg>", '
             '"Name": "Metaspace", '
@@ -36,7 +42,7 @@ info = [
             '"CollectionUsageThresholdExceeded": "ERROR: java.lang.UnsupportedOperationException: <...errmsg>", '
             '"CollectionUsage": null, '
             '"UsageThresholdExceeded": false},'
-        ' "java.lang:name=Code Cache,type=MemoryPool": {'
+            ' "java.lang:name=Code Cache,type=MemoryPool": {'
             '"UsageThresholdCount": 0, '
             '"CollectionUsageThreshold": "ERROR: java.lang.UnsupportedOperationException: <...errmsg>", '
             '"Name": "Code Cache", '
@@ -53,99 +59,167 @@ info = [
             '"CollectionUsageThresholdExceeded": "ERROR: java.lang.UnsupportedOperationException: <...errmsg>", '
             '"CollectionUsage": null, '
             '"UsageThresholdExceeded": false}}'
-    )],
+        ),
+    ],
 ]
 
 
 discovery = {
-    '': [
-        ('MyInstance', {}),
+    "": [
+        ("MyInstance", {}),
     ],
-    'pools': [
-        ('MyInstance Memory Pool Code Cache', {}),
-        ('MyInstance Memory Pool Metaspace', {}),
+    "pools": [
+        ("MyInstance Memory Pool Code Cache", {}),
+        ("MyInstance Memory Pool Metaspace", {}),
     ],
 }
 
 
 checks = {
-    '': [
-        ('MyInstance', {}, [
-            (0, 'Heap: 74.7 MiB', [
-                ('mem_heap', 78331216, None, None, None, 536870912),
-            ]),
-            (0, '14.59%', []),
-            (0, 'Nonheap: 105 MiB', [
-                ('mem_nonheap', 110167224, None, None, None, 780140544),
-            ]),
-            (0, '14.12%', []),
-            (0, 'Total: 180 MiB', []),
-            (0, '14.31%', []),
-        ]),
-        ('MyInstance', {'perc_total': (13., 15.)}, [
-            (0, 'Heap: 74.7 MiB', [
-                ('mem_heap', 78331216, None, None, None, 536870912),
-            ]),
-            (0, '14.59%', []),
-            (0, 'Nonheap: 105 MiB', [
-                ('mem_nonheap', 110167224, None, None, None, 780140544),
-            ]),
-            (0, '14.12%', []),
-            (0, 'Total: 180 MiB', []),
-            (1, '14.31% (warn/crit at 13.00%/15.00%)', []),
-        ]),
-        ('MyInstance', {'abs_heap': (450, 460)}, [
-            (2, 'Heap: 74.7 MiB (warn/crit at 450 B/460 B)', [
-                ('mem_heap', 78331216, 450.0, 460.0, None, 536870912),
-            ]),
-            (0, '14.59%', []),
-            (0, 'Nonheap: 105 MiB', [
-                ('mem_nonheap', 110167224, None, None, None, 780140544),
-            ]),
-            (0, '14.12%', []),
-            (0, 'Total: 180 MiB', []),
-            (0, '14.31%', []),
-        ]),
-        ('MyInstance', {'perc_total': (12., 30.)}, [
-            (0, 'Heap: 74.7 MiB', [
-                ('mem_heap', 78331216, None, None, None, 536870912),
-            ]),
-            (0, '14.59%', [
-            ]),
-            (0, 'Nonheap: 105 MiB', [
-                ('mem_nonheap', 110167224, None, None, None, 780140544),
-            ]),
-            (0, '14.12%', [
-            ]),
-            (0, 'Total: 180 MiB', []),
-            (1, '14.31% (warn/crit at 12.00%/30.00%)', []),
-        ]),
+    "": [
+        (
+            "MyInstance",
+            {},
+            [
+                (
+                    0,
+                    "Heap: 74.7 MiB",
+                    [
+                        ("mem_heap", 78331216, None, None, None, 536870912),
+                    ],
+                ),
+                (0, "14.59%", []),
+                (
+                    0,
+                    "Nonheap: 105 MiB",
+                    [
+                        ("mem_nonheap", 110167224, None, None, None, 780140544),
+                    ],
+                ),
+                (0, "14.12%", []),
+                (0, "Total: 180 MiB", []),
+                (0, "14.31%", []),
+            ],
+        ),
+        (
+            "MyInstance",
+            {"perc_total": (13.0, 15.0)},
+            [
+                (
+                    0,
+                    "Heap: 74.7 MiB",
+                    [
+                        ("mem_heap", 78331216, None, None, None, 536870912),
+                    ],
+                ),
+                (0, "14.59%", []),
+                (
+                    0,
+                    "Nonheap: 105 MiB",
+                    [
+                        ("mem_nonheap", 110167224, None, None, None, 780140544),
+                    ],
+                ),
+                (0, "14.12%", []),
+                (0, "Total: 180 MiB", []),
+                (1, "14.31% (warn/crit at 13.00%/15.00%)", []),
+            ],
+        ),
+        (
+            "MyInstance",
+            {"abs_heap": (450, 460)},
+            [
+                (
+                    2,
+                    "Heap: 74.7 MiB (warn/crit at 450 B/460 B)",
+                    [
+                        ("mem_heap", 78331216, 450.0, 460.0, None, 536870912),
+                    ],
+                ),
+                (0, "14.59%", []),
+                (
+                    0,
+                    "Nonheap: 105 MiB",
+                    [
+                        ("mem_nonheap", 110167224, None, None, None, 780140544),
+                    ],
+                ),
+                (0, "14.12%", []),
+                (0, "Total: 180 MiB", []),
+                (0, "14.31%", []),
+            ],
+        ),
+        (
+            "MyInstance",
+            {"perc_total": (12.0, 30.0)},
+            [
+                (
+                    0,
+                    "Heap: 74.7 MiB",
+                    [
+                        ("mem_heap", 78331216, None, None, None, 536870912),
+                    ],
+                ),
+                (0, "14.59%", []),
+                (
+                    0,
+                    "Nonheap: 105 MiB",
+                    [
+                        ("mem_nonheap", 110167224, None, None, None, 780140544),
+                    ],
+                ),
+                (0, "14.12%", []),
+                (0, "Total: 180 MiB", []),
+                (1, "14.31% (warn/crit at 12.00%/30.00%)", []),
+            ],
+        ),
     ],
-    'pools': [
-        ('MyInstance Memory Pool Metaspace', {'abs_used': (400*1024*1024, 500*1024*1024)}, [
-            (1, 'Used: 442 MiB (warn/crit at 400 MiB/500 MiB)', [
-                ('mem_used', 463555784, 419430400.0, 524288000.0, None, None)]),
-            (0, 'Initially: 0 B', []),
-            (0, 'Committed: 501 MiB', []),
-        ]),
-        ('MyInstance Memory Pool Metaspace', {'perc_used': (1, 2)}, [
-            (0, 'Used: 442 MiB', [('mem_used', 463555784, None, None, None, None)]),
-            (0, 'Initially: 0 B', []),
-            (0, 'Committed: 501 MiB', []),
-        ]),
-        ('MyInstance Memory Pool Code Cache', {'abs_used': (200*1024*1024, 300*1024*1024)}, [
-            (2, 'Used: 353 MiB (warn/crit at 200 MiB/300 MiB)', [
-                ('mem_used', 370254912, 209715200.0, 314572800.0, None, 536870912.0)]),
-            (0, '68.97%', []),
-            (0, 'Initially: 32.0 MiB', []),
-            (0, 'Committed: 356 MiB', []),
-        ]),
-        ('MyInstance Memory Pool Code Cache', {'perc_used': (60, 70)}, [
-            (0, 'Used: 353 MiB', [
-                ('mem_used', 370254912, None, None, None, 536870912.0)]),
-            (1, '68.97% (warn/crit at 60.00%/70.00%)', []),
-            (0, 'Initially: 32.0 MiB', []),
-            (0, 'Committed: 356 MiB', []),
-        ]),
+    "pools": [
+        (
+            "MyInstance Memory Pool Metaspace",
+            {"abs_used": (400 * 1024 * 1024, 500 * 1024 * 1024)},
+            [
+                (
+                    1,
+                    "Used: 442 MiB (warn/crit at 400 MiB/500 MiB)",
+                    [("mem_used", 463555784, 419430400.0, 524288000.0, None, None)],
+                ),
+                (0, "Initially: 0 B", []),
+                (0, "Committed: 501 MiB", []),
+            ],
+        ),
+        (
+            "MyInstance Memory Pool Metaspace",
+            {"perc_used": (1, 2)},
+            [
+                (0, "Used: 442 MiB", [("mem_used", 463555784, None, None, None, None)]),
+                (0, "Initially: 0 B", []),
+                (0, "Committed: 501 MiB", []),
+            ],
+        ),
+        (
+            "MyInstance Memory Pool Code Cache",
+            {"abs_used": (200 * 1024 * 1024, 300 * 1024 * 1024)},
+            [
+                (
+                    2,
+                    "Used: 353 MiB (warn/crit at 200 MiB/300 MiB)",
+                    [("mem_used", 370254912, 209715200.0, 314572800.0, None, 536870912.0)],
+                ),
+                (0, "68.97%", []),
+                (0, "Initially: 32.0 MiB", []),
+                (0, "Committed: 356 MiB", []),
+            ],
+        ),
+        (
+            "MyInstance Memory Pool Code Cache",
+            {"perc_used": (60, 70)},
+            [
+                (0, "Used: 353 MiB", [("mem_used", 370254912, None, None, None, 536870912.0)]),
+                (1, "68.97% (warn/crit at 60.00%/70.00%)", []),
+                (0, "Initially: 32.0 MiB", []),
+                (0, "Committed: 356 MiB", []),
+            ],
+        ),
     ],
 }

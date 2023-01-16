@@ -6,14 +6,16 @@
 # fmt: off
 # type: ignore
 
-checkname = 'genua_carp'
+checkname = "genua_carp"
 
-info = [[['carp0', '2', '2'], ['carp1', '2', '2'], ['carp2', '1', '0']], []]
+info = [[["carp0", "2", "2"], ["carp1", "2", "2"], ["carp2", "1", "0"]], []]
 
-discovery = {'': [('carp0', None), ('carp1', None), ('carp2', None)]}
+discovery = {"": [("carp0", None), ("carp1", None), ("carp2", None)]}
 
 checks = {
-    '': [('carp0', {}, [(0, 'Node test: node in carp state master with IfLinkState up', [])]),
-         ('carp1', {}, [(0, 'Node test: node in carp state master with IfLinkState up', [])]),
-         ('carp2', {}, [(1, 'Node test: node in carp state init with IfLinkState down', [])])]
+    "": [
+        ("carp0", {}, [(0, "Node test: node in carp state master with IfLinkState up", [])]),
+        ("carp1", {}, [(0, "Node test: node in carp state master with IfLinkState up", [])]),
+        ("carp2", {}, [(1, "Node test: node in carp state init with IfLinkState down", [])]),
+    ]
 }

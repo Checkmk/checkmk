@@ -5,22 +5,14 @@
 
 # fmt: off
 # type: ignore
-checkname = 'hp_proliant_power'
+checkname = "hp_proliant_power"
 
-info = [['2', '268']]
+info = [["2", "268"]]
 
-discovery = {'': [(None, None)]}
+discovery = {"": [(None, None)]}
 
 checks = {
-    '': [
-        (
-            None, {}, [
-                (
-                    0, 'Current reading: 268.00 Watts', [
-                        ('watt', 268, None, None, None, None)
-                    ]
-                )
-            ]
-        )
+    "": [
+        (None, {}, [(0, "Current reading: 268.00 Watts", [("watt", 268, None, None, None, None)])])
     ]
 }

@@ -5,24 +5,23 @@
 
 # fmt: off
 # type: ignore
-checkname = 'storeonce4x_alerts'
+checkname = "storeonce4x_alerts"
 info = [
-    ['{"count": 100, "total": 232, "unFilteredTotal": 0, "start": 0, "prevPageUri": "/rest/alerts?start=0&count=100&category=alerts", "nextPageUri": "/rest/alerts?start=100&count=100&category=alerts", "category": "resources", "members": []}'
+    [
+        '{"count": 100, "total": 232, "unFilteredTotal": 0, "start": 0, "prevPageUri": "/rest/alerts?start=0&count=100&category=alerts", "nextPageUri": "/rest/alerts?start=100&count=100&category=alerts", "category": "resources", "members": []}'
     ]
 ]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
-                (
-                    0,
-                    'No alerts at all found',
-                    []
-                ),
-            ]
+            None,
+            {},
+            [
+                (0, "No alerts at all found", []),
+            ],
         )
     ]
 }

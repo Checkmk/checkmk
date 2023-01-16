@@ -5,50 +5,37 @@
 
 # fmt: off
 # type: ignore
-checkname = 'arista_temp'
+checkname = "arista_temp"
 
 info = [
-    ['Cpu temp sensor', '1', '568'], ['Cpu board temp sensor', '1', '470'],
-    ['Back-panel temp sensor', '1', '450'],
-    ['Front-panel temp sensor', '1', '304']
+    ["Cpu temp sensor", "1", "568"],
+    ["Cpu board temp sensor", "1", "470"],
+    ["Back-panel temp sensor", "1", "450"],
+    ["Front-panel temp sensor", "1", "304"],
 ]
 
 discovery = {
-    '': [
-        ('Back-panel temp sensor', {}), ('Cpu board temp sensor', {}),
-        ('Cpu temp sensor', {}), ('Front-panel temp sensor', {})
+    "": [
+        ("Back-panel temp sensor", {}),
+        ("Cpu board temp sensor", {}),
+        ("Cpu temp sensor", {}),
+        ("Front-panel temp sensor", {}),
     ]
 }
 
 checks = {
-    '': [
+    "": [
+        ("Back-panel temp sensor", {}, [(0, "45.0 °C", [("temp", 45.0, None, None, None, None)])]),
+        ("Cpu board temp sensor", {}, [(0, "47.0 °C", [("temp", 47.0, None, None, None, None)])]),
         (
-            'Back-panel temp sensor', {}, [
-                (0, '45.0 °C', [('temp', 45.0, None, None, None, None)])
-            ]
+            "Cpu temp sensor",
+            {},
+            [(0, "56.8 °C", [("temp", 56.800000000000004, None, None, None, None)])],
         ),
         (
-            'Cpu board temp sensor', {}, [
-                (0, '47.0 °C', [('temp', 47.0, None, None, None, None)])
-            ]
+            "Front-panel temp sensor",
+            {},
+            [(0, "30.4 °C", [("temp", 30.400000000000002, None, None, None, None)])],
         ),
-        (
-            'Cpu temp sensor', {}, [
-                (
-                    0, '56.8 °C', [
-                        ('temp', 56.800000000000004, None, None, None, None)
-                    ]
-                )
-            ]
-        ),
-        (
-            'Front-panel temp sensor', {}, [
-                (
-                    0, '30.4 °C', [
-                        ('temp', 30.400000000000002, None, None, None, None)
-                    ]
-                )
-            ]
-        )
     ]
 }

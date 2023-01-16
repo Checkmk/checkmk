@@ -5,22 +5,24 @@
 
 # fmt: off
 # type: ignore
-checkname = 'pulse_secure_log_util'
+checkname = "pulse_secure_log_util"
 
-info = [['19']]
+info = [["19"]]
 
-discovery = {'': [(None, {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            None, {}, [
+            None,
+            {},
+            [
                 (
-                    0, 'Percentage of log file used: 19.00%', [
-                        ('log_file_utilization', 19, None, None, None, None)
-                    ]
+                    0,
+                    "Percentage of log file used: 19.00%",
+                    [("log_file_utilization", 19, None, None, None, None)],
                 )
-            ]
+            ],
         )
     ]
 }

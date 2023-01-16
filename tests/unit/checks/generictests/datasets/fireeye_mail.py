@@ -7,102 +7,122 @@
 # type: ignore
 
 
-
-checkname = 'fireeye_mail'
-
-
-info = [['0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '0',
-         '04/06/17 12:00:00',
-         '04/06/17 12:01:00',
-         '120']]
+checkname = "fireeye_mail"
 
 
-discovery = {'': [(None, {})],
-             'attachment': [(None, {})],
-             'received': [(None, {})],
-             'statistics': [(None, {})],
-             'url': [(None, {})]}
+info = [
+    [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "04/06/17 12:00:00",
+        "04/06/17 12:01:00",
+        "120",
+    ]
+]
 
 
-checks = {'': [(None,
-                {},
-                [(0,
-                  'Total: 0.00 mails/s',
-                  [('total_rate', 0.0, None, None, None, None)]),
-                 (0,
-                  'Infected: 0.00 mails/s',
-                  [('infected_rate', 0.0, None, None, None, None)]),
-                 (0,
-                  'Analyzed: 0.00 mails/s',
-                  [('analyzed_rate', 0.0, None, None, None, None)])])],
-          'attachment': [(None,
-                          {},
-                          [(0,
-                            'Total Attachment: 0.00 mails/s',
-                            [('total_rate', 0.0, None, None, None, None)]),
-                           (0,
-                            'Infected Attachment: 0.00 mails/s',
-                            [('infected_rate', 0.0, None, None, None, None)]),
-                           (0,
-                            'Analyzed Attachment: 0.00 mails/s',
-                            [('analyzed_rate', 0.0, None, None, None, None)])])],
-          'received': [(None,
-                        {'rate': (6000, 7000)},
-                        [(0,
-                          'Mails received between 04/06/17 12:00:00 and 04/06/17 12:01:00: 120',
-                          []),
-                         (0,
-                          'Rate: 2.00/s',
-                          [('mail_received_rate', 2.0, 6000.0, 7000.0, None, None)])])],
-          'statistics': [(None,
-                          {},
-                          [(0,
-                            'Emails containing Attachment: 0.00 per minute',
-                            [('fireeye_stat_attachment',
-                              0.0,
-                              None,
-                              None,
-                              None,
-                              None)]),
-                           (0,
-                            'Emails containing URL: 0.00 per minute',
-                            [('fireeye_stat_url', 0.0, None, None, None, None)]),
-                           (0,
-                            'Emails containing malicious Attachment: 0.00 per minute',
-                            [('fireeye_stat_maliciousattachment',
-                              0.0,
-                              None,
-                              None,
-                              None,
-                              None)]),
-                           (0,
-                            'Emails containing malicious URL: 0.00 per minute',
-                            [('fireeye_stat_maliciousurl',
-                              0.0,
-                              None,
-                              None,
-                              None,
-                              None)])])],
-          'url': [(None,
-                   {},
-                   [(0,
-                     'Total URL: 0.00 mails/s',
-                     [('total_rate', 0.0, None, None, None, None)]),
-                    (0,
-                     'Infected URL: 0.00 mails/s',
-                     [('infected_rate', 0.0, None, None, None, None)]),
-                    (0,
-                     'Analyzed URL: 0.00 mails/s',
-                     [('analyzed_rate', 0.0, None, None, None, None)])])]}
+discovery = {
+    "": [(None, {})],
+    "attachment": [(None, {})],
+    "received": [(None, {})],
+    "statistics": [(None, {})],
+    "url": [(None, {})],
+}
+
+
+checks = {
+    "": [
+        (
+            None,
+            {},
+            [
+                (0, "Total: 0.00 mails/s", [("total_rate", 0.0, None, None, None, None)]),
+                (0, "Infected: 0.00 mails/s", [("infected_rate", 0.0, None, None, None, None)]),
+                (0, "Analyzed: 0.00 mails/s", [("analyzed_rate", 0.0, None, None, None, None)]),
+            ],
+        )
+    ],
+    "attachment": [
+        (
+            None,
+            {},
+            [
+                (
+                    0,
+                    "Total Attachment: 0.00 mails/s",
+                    [("total_rate", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Infected Attachment: 0.00 mails/s",
+                    [("infected_rate", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Analyzed Attachment: 0.00 mails/s",
+                    [("analyzed_rate", 0.0, None, None, None, None)],
+                ),
+            ],
+        )
+    ],
+    "received": [
+        (
+            None,
+            {"rate": (6000, 7000)},
+            [
+                (0, "Mails received between 04/06/17 12:00:00 and 04/06/17 12:01:00: 120", []),
+                (0, "Rate: 2.00/s", [("mail_received_rate", 2.0, 6000.0, 7000.0, None, None)]),
+            ],
+        )
+    ],
+    "statistics": [
+        (
+            None,
+            {},
+            [
+                (
+                    0,
+                    "Emails containing Attachment: 0.00 per minute",
+                    [("fireeye_stat_attachment", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Emails containing URL: 0.00 per minute",
+                    [("fireeye_stat_url", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Emails containing malicious Attachment: 0.00 per minute",
+                    [("fireeye_stat_maliciousattachment", 0.0, None, None, None, None)],
+                ),
+                (
+                    0,
+                    "Emails containing malicious URL: 0.00 per minute",
+                    [("fireeye_stat_maliciousurl", 0.0, None, None, None, None)],
+                ),
+            ],
+        )
+    ],
+    "url": [
+        (
+            None,
+            {},
+            [
+                (0, "Total URL: 0.00 mails/s", [("total_rate", 0.0, None, None, None, None)]),
+                (0, "Infected URL: 0.00 mails/s", [("infected_rate", 0.0, None, None, None, None)]),
+                (0, "Analyzed URL: 0.00 mails/s", [("analyzed_rate", 0.0, None, None, None, None)]),
+            ],
+        )
+    ],
+}

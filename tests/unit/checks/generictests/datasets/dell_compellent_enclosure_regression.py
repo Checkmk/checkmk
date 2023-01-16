@@ -7,40 +7,59 @@
 # type: ignore
 
 
-checkname = 'dell_compellent_enclosure'
+checkname = "dell_compellent_enclosure"
 
 info = [
-    ['1', '1', '', 'TYP', 'MODEL', 'TAG'],
-    ['2', '999', '', 'TYP', 'MODEL', 'TAG'],
-    ['3', '1', 'ATTENTION', 'TYP', 'MODEL', 'TAG'],
-    ['4', '999', 'ATTENTION', 'TYP', 'MODEL', 'TAG'],
-    ['10', '2', 'KAPUTT', 'TYP', 'MODEL', 'TAG'],
+    ["1", "1", "", "TYP", "MODEL", "TAG"],
+    ["2", "999", "", "TYP", "MODEL", "TAG"],
+    ["3", "1", "ATTENTION", "TYP", "MODEL", "TAG"],
+    ["4", "999", "ATTENTION", "TYP", "MODEL", "TAG"],
+    ["10", "2", "KAPUTT", "TYP", "MODEL", "TAG"],
 ]
 
-discovery = {'': [('1', {}), ('2', {}), ('3', {}), ('4', {}), ('10', {})]}
+discovery = {"": [("1", {}), ("2", {}), ("3", {}), ("4", {}), ("10", {})]}
 
 checks = {
-    '': [
-        ('1', {}, [
-            (0, 'Status: UP', []),
-            (0, 'Model: MODEL, Type: TYP, Service-Tag: TAG', []),
-        ]),
-        ('2', {}, [(3, 'Status: unknown[999]', []),
-                    (0, 'Model: MODEL, Type: TYP, Service-Tag: TAG', [])]),
-        ('3', {}, [
-            (0, 'Status: UP', []),
-            (0, 'Model: MODEL, Type: TYP, Service-Tag: TAG', []),
-            (0, 'State Message: ATTENTION', []),
-        ]),
-        ('4', {}, [
-            (3, 'Status: unknown[999]', []),
-            (0, 'Model: MODEL, Type: TYP, Service-Tag: TAG', []),
-            (3, 'State Message: ATTENTION', []),
-        ]),
-        ('10', {}, [
-            (2, 'Status: DOWN', []),
-            (0, 'Model: MODEL, Type: TYP, Service-Tag: TAG', []),
-            (2, 'State Message: KAPUTT', []),
-        ]),
+    "": [
+        (
+            "1",
+            {},
+            [
+                (0, "Status: UP", []),
+                (0, "Model: MODEL, Type: TYP, Service-Tag: TAG", []),
+            ],
+        ),
+        (
+            "2",
+            {},
+            [(3, "Status: unknown[999]", []), (0, "Model: MODEL, Type: TYP, Service-Tag: TAG", [])],
+        ),
+        (
+            "3",
+            {},
+            [
+                (0, "Status: UP", []),
+                (0, "Model: MODEL, Type: TYP, Service-Tag: TAG", []),
+                (0, "State Message: ATTENTION", []),
+            ],
+        ),
+        (
+            "4",
+            {},
+            [
+                (3, "Status: unknown[999]", []),
+                (0, "Model: MODEL, Type: TYP, Service-Tag: TAG", []),
+                (3, "State Message: ATTENTION", []),
+            ],
+        ),
+        (
+            "10",
+            {},
+            [
+                (2, "Status: DOWN", []),
+                (0, "Model: MODEL, Type: TYP, Service-Tag: TAG", []),
+                (2, "State Message: KAPUTT", []),
+            ],
+        ),
     ]
 }

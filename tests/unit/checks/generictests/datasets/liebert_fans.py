@@ -7,22 +7,29 @@
 # type: ignore
 
 
-
-checkname = 'liebert_fans'
-
-
-info = [['Fan Speed', '1.3', '%']]
+checkname = "liebert_fans"
 
 
-discovery = {'': [('Fan Speed', {})]}
+info = [["Fan Speed", "1.3", "%"]]
+
+
+discovery = {"": [("Fan Speed", {})]}
 
 
 checks = {
-    '': [
-        ('Fan Speed', {'levels': (80, 90), 'levels_lower': (2, 1)}, [
-            (1, '1.30 % (warn/crit below 2.00 %/1.00 %)', [
-                ('filehandler_perc', 1.3, 80, 90, None, None),
-            ]),
-        ]),
+    "": [
+        (
+            "Fan Speed",
+            {"levels": (80, 90), "levels_lower": (2, 1)},
+            [
+                (
+                    1,
+                    "1.30 % (warn/crit below 2.00 %/1.00 %)",
+                    [
+                        ("filehandler_perc", 1.3, 80, 90, None, None),
+                    ],
+                ),
+            ],
+        ),
     ],
 }

@@ -7,18 +7,27 @@
 # type: ignore
 
 
-
-checkname = 'juniper_screenos_mem'
-
-
-info = [['157756272', '541531248']]
+checkname = "juniper_screenos_mem"
 
 
-discovery = {'': [(None, 'juniper_mem_default_levels')]}
+info = [["157756272", "541531248"]]
 
 
-checks = {'': [(None,
-                (80.0, 90.0),
-                [(0,
-                  'Used: 150 MiB/667 MiB (23%)',
-                  [('mem_used', 157755392, 559429222.4, 629357875.2, 0, 699286528)])])]}
+discovery = {"": [(None, "juniper_mem_default_levels")]}
+
+
+checks = {
+    "": [
+        (
+            None,
+            (80.0, 90.0),
+            [
+                (
+                    0,
+                    "Used: 150 MiB/667 MiB (23%)",
+                    [("mem_used", 157755392, 559429222.4, 629357875.2, 0, 699286528)],
+                )
+            ],
+        )
+    ]
+}

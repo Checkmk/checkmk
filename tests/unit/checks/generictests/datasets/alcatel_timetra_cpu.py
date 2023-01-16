@@ -7,13 +7,24 @@
 # type: ignore
 
 
-checkname = 'alcatel_timetra_cpu'
+checkname = "alcatel_timetra_cpu"
 
-info = [['92']]
+info = [["92"]]
 
-discovery = {'': [(None, 'alcatel_timetra_cpu_default_levels')]}
+discovery = {"": [(None, "alcatel_timetra_cpu_default_levels")]}
 
 checks = {
-    '': [(None, (90.0, 95.0), [(1, 'Total CPU: 92.00% (warn/crit at 90.00%/95.00%)',
-                                [('util', 92, 90.0, 95.0, 0, 100)])])]
+    "": [
+        (
+            None,
+            (90.0, 95.0),
+            [
+                (
+                    1,
+                    "Total CPU: 92.00% (warn/crit at 90.00%/95.00%)",
+                    [("util", 92, 90.0, 95.0, 0, 100)],
+                )
+            ],
+        )
+    ]
 }

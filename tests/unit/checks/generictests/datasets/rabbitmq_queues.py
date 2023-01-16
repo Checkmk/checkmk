@@ -7,7 +7,7 @@
 
 from typing import Any
 
-checkname = 'rabbitmq_queues'
+checkname = "rabbitmq_queues"
 
 info = [
     [
@@ -18,100 +18,86 @@ info = [
     ],
     [
         '{"memory": 68036, "messages": 0, "messages_ready": 0, "messages_unacknowledged": 0, "name": "my_queue3", "node": "rabbit@my-rabbit", "state": "running", "type": "quorum"}'
-    ]
+    ],
 ]
 
-discovery: dict[str, list[tuple[str, dict[Any, Any]]]] = {'': [('hello', {}), ('my_queue2', {}), ('my_queue3', {})]}
+discovery: dict[str, list[tuple[str, dict[Any, Any]]]] = {
+    "": [("hello", {}), ("my_queue2", {}), ("my_queue3", {})]
+}
 
-checks: dict[str, list[tuple[str, dict[Any, Any], list[tuple[int, str, list[tuple[str, float, Any, Any, Any, Any]]]]]]] = {
-    '': [
+checks: dict[
+    str,
+    list[
+        tuple[
+            str, dict[Any, Any], list[tuple[int, str, list[tuple[str, float, Any, Any, Any, Any]]]]
+        ]
+    ],
+] = {
+    "": [
         (
-            'hello', {}, [
-                (0, 'Type: Classic', []), (0, 'Is running: running', []),
-                (0, 'Running on node: rabbit@my-rabbit', []),
+            "hello",
+            {},
+            [
+                (0, "Type: Classic", []),
+                (0, "Is running: running", []),
+                (0, "Running on node: rabbit@my-rabbit", []),
+                (0, "Total number of messages: 5", [("messages", 5, None, None, None, None)]),
+                (0, "Messages ready: 5", [("messages_ready", 5, None, None, None, None)]),
                 (
-                    0, 'Total number of messages: 5', [
-                        ('messages', 5, None, None, None, None)
-                    ]
+                    0,
+                    "Messages unacknowledged: 0",
+                    [("messages_unacknowledged", 0, None, None, None, None)],
                 ),
+                (0, "Messages published: 5", [("messages_publish", 5, None, None, None, None)]),
+                (0, "Rate: 0 1/s", [("messages_publish_rate", 0.0, None, None, None, None)]),
                 (
-                    0, 'Messages ready: 5', [
-                        ('messages_ready', 5, None, None, None, None)
-                    ]
+                    0,
+                    "Memory used: 16.4 KiB",
+                    [("mem_lnx_total_used", 16780, None, None, None, None)],
                 ),
-                (
-                    0, 'Messages unacknowledged: 0', [
-                        ('messages_unacknowledged', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Messages published: 5', [
-                        ('messages_publish', 5, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Rate: 0 1/s', [
-                        ('messages_publish_rate', 0.0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Memory used: 16.4 KiB', [
-                        ('mem_lnx_total_used', 16780, None, None, None, None)
-                    ]
-                )
-            ]
+            ],
         ),
         (
-            'my_queue2', {}, [
-                (0, 'Type: Classic', []), (0, 'Is running: running', []),
-                (0, 'Running on node: rabbit@my-rabbit', []),
+            "my_queue2",
+            {},
+            [
+                (0, "Type: Classic", []),
+                (0, "Is running: running", []),
+                (0, "Running on node: rabbit@my-rabbit", []),
+                (0, "Total number of messages: 0", [("messages", 0, None, None, None, None)]),
+                (0, "Messages ready: 0", [("messages_ready", 0, None, None, None, None)]),
                 (
-                    0, 'Total number of messages: 0', [
-                        ('messages', 0, None, None, None, None)
-                    ]
+                    0,
+                    "Messages unacknowledged: 0",
+                    [("messages_unacknowledged", 0, None, None, None, None)],
                 ),
                 (
-                    0, 'Messages ready: 0', [
-                        ('messages_ready', 0, None, None, None, None)
-                    ]
+                    0,
+                    "Memory used: 9.59 KiB",
+                    [("mem_lnx_total_used", 9816, None, None, None, None)],
                 ),
-                (
-                    0, 'Messages unacknowledged: 0', [
-                        ('messages_unacknowledged', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Memory used: 9.59 KiB', [
-                        ('mem_lnx_total_used', 9816, None, None, None, None)
-                    ]
-                )
-            ]
+            ],
         ),
         (
-            'my_queue3', {}, [
-                (0, 'Type: Quorum', []), (0, 'Is running: running', []),
-                (0, 'Running on node: rabbit@my-rabbit', []),
+            "my_queue3",
+            {},
+            [
+                (0, "Type: Quorum", []),
+                (0, "Is running: running", []),
+                (0, "Running on node: rabbit@my-rabbit", []),
+                (0, "Total number of messages: 0", [("messages", 0, None, None, None, None)]),
+                (0, "Messages ready: 0", [("messages_ready", 0, None, None, None, None)]),
                 (
-                    0, 'Total number of messages: 0', [
-                        ('messages', 0, None, None, None, None)
-                    ]
+                    0,
+                    "Messages unacknowledged: 0",
+                    [("messages_unacknowledged", 0, None, None, None, None)],
                 ),
                 (
-                    0, 'Messages ready: 0', [
-                        ('messages_ready', 0, None, None, None, None)
-                    ]
+                    0,
+                    "Memory used: 66.4 KiB",
+                    [("mem_lnx_total_used", 68036, None, None, None, None)],
                 ),
-                (
-                    0, 'Messages unacknowledged: 0', [
-                        ('messages_unacknowledged', 0, None, None, None, None)
-                    ]
-                ),
-                (
-                    0, 'Memory used: 66.4 KiB', [
-                        ('mem_lnx_total_used', 68036, None, None, None, None)
-                    ]
-                )
-            ]
-        )
+            ],
+        ),
     ]
 }

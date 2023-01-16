@@ -5,40 +5,37 @@
 
 # fmt: off
 # type: ignore
-checkname = 'hwg_ste2'
+checkname = "hwg_ste2"
 
-info = [
-    ['1', 'Sensor 215', '1', '23.8', '1'],
-    ['2', 'Sensor 216', '1', '34.6', '4']
-]
+info = [["1", "Sensor 215", "1", "23.8", "1"], ["2", "Sensor 216", "1", "34.6", "4"]]
 
-discovery = {'': [('1', {})], 'humidity': [('2', {})]}
+discovery = {"": [("1", {})], "humidity": [("2", {})]}
 
 checks = {
-    '': [
+    "": [
         (
-            '1', {
-                'levels': (30, 35)
-            }, [
+            "1",
+            {"levels": (30, 35)},
+            [
                 (
-                    0, '23.8 °C (Description: Sensor 215, Status: normal)', [
-                        ('temp', 23.8, 30.0, 35.0, None, None)
-                    ]
+                    0,
+                    "23.8 °C (Description: Sensor 215, Status: normal)",
+                    [("temp", 23.8, 30.0, 35.0, None, None)],
                 )
-            ]
+            ],
         )
     ],
-    'humidity': [
+    "humidity": [
         (
-            '2', {
-                'levels': (60, 70)
-            }, [
+            "2",
+            {"levels": (60, 70)},
+            [
                 (
-                    0, '34.60% (Description: Sensor 216, Status: normal)', [
-                        ('humidity', 34.6, 60.0, 70.0, 0.0, 100.0)
-                    ]
+                    0,
+                    "34.60% (Description: Sensor 216, Status: normal)",
+                    [("humidity", 34.6, 60.0, 70.0, 0.0, 100.0)],
                 )
-            ]
+            ],
         )
-    ]
+    ],
 }

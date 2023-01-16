@@ -62,7 +62,9 @@ def join_service_row_post_processor(
 
     # Add this information into master table in artificial column "JOIN"
     for row in rows:
-        row["JOIN"] = per_master_entry.get(_make_master_key(row, join_master_column), {})
+        row.setdefault("JOIN", {}).update(
+            per_master_entry.get(_make_master_key(row, join_master_column), {})
+        )
 
 
 def _get_needed_join_columns(

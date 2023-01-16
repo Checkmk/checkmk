@@ -5,10 +5,13 @@
 
 """Provides the view editor dialog"""
 
+from __future__ import annotations
+
 import ast
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, TypedDict
 
+from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
@@ -47,6 +50,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
 
 from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
@@ -151,10 +155,60 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
     )
 
 
+def view_inventory_join_macros(ds_name: str) -> Dictionary:
+    def _validate_macro_of_datasource(macro: str, varprefix: str) -> None:
+        if not (macro.startswith("$") and macro.endswith("$")) or len(macro) <= 2:
+            raise MKUserError(varprefix, _("The macro must begin and end with '$'."))
+
+    column_choices: list[tuple[str, str]] = []
+    for hints in DISPLAY_HINTS:
+        if hints.table_hint.view_spec is None or hints.table_hint.view_spec.view_name != ds_name:
+            continue
+
+        column_choices.extend(
+            _get_inventory_column_infos(
+                hints=hints,
+                table_view_name=hints.table_hint.view_spec.view_name,
+            )
+        )
+
+    return Dictionary(
+        title=_("Macros for joining service data or inventory tables"),
+        render="form",
+        optional_keys=False,
+        elements=[
+            (
+                "macros",
+                ListOf(
+                    Tuple(
+                        elements=[
+                            DropdownChoice(
+                                title=_("Use value from"),
+                                choices=column_choices,
+                            ),
+                            TextInput(
+                                title=_("as macro named"),
+                                validate=_validate_macro_of_datasource,
+                                allow_empty=False,
+                            ),
+                        ]
+                    ),
+                    title=_("Macros"),
+                    add_label=_("Add new macro"),
+                    magic="##col##",
+                ),
+            ),
+        ],
+    )
+
+
 def view_editor_column_spec(ident: str, ds_name: str) -> Dictionary:
     choices = [_get_common_vs_column_choice(ds_name)]
     if join_vs_column_choice := _get_join_vs_column_choice(ds_name):
         choices.append(join_vs_column_choice)
+
+    if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(ds_name):
+        choices.append(join_inv_vs_column_choice)
 
     return _view_editor_spec(
         ds_name=ds_name,
@@ -228,6 +282,126 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
     )
 
 
+def _get_join_inv_vs_column_choice(ds_name: str) -> _VSColumnChoice | None:
+    if not _is_inventory_datasource(ds_name):
+        return None
+
+    elements: list[tuple[str, ValueSpec]] = [
+        (
+            "painter_spec",
+            CascadingDropdown(
+                title=_("Column"),
+                label=_("From inventory table"),
+                choices=[
+                    (
+                        table_info.table_view_name,
+                        table_info.title,
+                        Dictionary(
+                            elements=[
+                                (
+                                    "column_to_display",
+                                    DropdownChoice(
+                                        title=_("Display the column"),
+                                        choices=column_infos,
+                                    ),
+                                ),
+                                (
+                                    "columns_to_match",
+                                    ListOf(
+                                        Tuple(
+                                            elements=[
+                                                DropdownChoice(
+                                                    title=_("The column"),
+                                                    choices=column_infos,
+                                                ),
+                                                TextInput(
+                                                    title=_("must match"),
+                                                    allow_empty=False,
+                                                ),
+                                            ],
+                                            orientation="horizontal",
+                                            help=_(
+                                                "Here you have to use macros which are defined"
+                                                " above below <tt>Macros for joining service data"
+                                                " or inventory tables</tt>. The joining of"
+                                                " different inventory tables is based on these"
+                                                " macros."
+                                            ),
+                                        ),
+                                        title=_("Columns to match"),
+                                        add_label=_("Add new match criteria"),
+                                        allow_empty=False,
+                                        magic="#@inv@#",
+                                    ),
+                                ),
+                                ("path_to_table", FixedValue(table_info.path, totext="")),
+                            ],
+                            optional_keys=[],
+                        ),
+                    )
+                    for table_info, column_infos in _get_inventory_column_infos_by_table(ds_name)
+                ],
+            ),
+        ),
+        ("column_title", TextInput(title=_("Title"))),
+    ]
+
+    return _VSColumnChoice(
+        column_type="join_inv_column",
+        title=_("Joined inventory column"),
+        vs=Dictionary(
+            elements=elements + _get_vs_link_or_tooltip_elements({}),
+            optional_keys=["link_spec", "tooltip"],
+        ),
+    )
+
+
+class InventoryTableInfo(NamedTuple):
+    table_view_name: str
+    path: SDPath
+    title: str
+
+
+class InventoryColumnInfo(NamedTuple):
+    column_name: str
+    title: str
+
+
+def _get_inventory_column_infos_by_table(
+    ds_name: str,
+) -> Iterator[tuple[InventoryTableInfo, list[InventoryColumnInfo]]]:
+    for hints in DISPLAY_HINTS:
+        if hints.table_hint.view_spec is None or ds_name == hints.table_hint.view_spec.view_name:
+            # No view, no choices; Also skip in case of same data source:
+            # columns are already avail in "normal" column.
+            continue
+
+        yield (
+            InventoryTableInfo(
+                table_view_name=hints.table_hint.view_spec.view_name,
+                path=hints.abc_path,
+                title=hints.node_hint.long_title,
+            ),
+            _get_inventory_column_infos(
+                hints=hints,
+                table_view_name=hints.table_hint.view_spec.view_name,
+            ),
+        )
+
+
+def _get_inventory_column_infos(
+    *, hints: DisplayHints, table_view_name: str
+) -> list[InventoryColumnInfo]:
+    return [
+        InventoryColumnInfo(
+            column_name=column_name,
+            title=str(column_hint.title),
+        )
+        for column_name, column_hint in hints.column_hints.items()
+        if painter_registry.get(f"{table_view_name}_{column_name}")
+    ]
+
+
 def _get_vs_column_dropdown(
     ds_name: str, painter_type: str, painters: Mapping[str, Painter]
 ) -> tuple[str, ValueSpec]:
@@ -282,6 +456,11 @@ class _RawVSJoinColumnSpec(_RawVSColumnSpec):
     column_title: str
 
 
+class _RawVSJoinInvColumnSpec(_RawVSColumnSpecOptional):
+    painter_spec: tuple[PainterName, PainterParameters]
+    column_title: str
+
+
 def _view_editor_spec(
     *,
     ident: str,
@@ -298,6 +477,7 @@ def _view_editor_spec(
         value: (
             tuple[Literal["column"], _RawVSColumnSpec]
             | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
+            | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
         )
     ) -> ColumnSpec:
         if value[0] == "column":
@@ -322,7 +502,32 @@ def _view_editor_spec(
                 column_title=inner_value["column_title"],
             )
 
+        if value[0] == "join_inv_column":
+            return _from_vs_join_inv_column(*value)
+
         raise ValueError()
+
+    def _from_vs_join_inv_column(
+        column_type: Literal["join_inv_column"],
+        inner_value: _RawVSJoinInvColumnSpec,
+    ) -> ColumnSpec:
+        # The column_spec.name must be created from the table view name ("name") and
+        # "column_to_display" because the related painter is registered under this name.
+        name, parameters = inner_value["painter_spec"]
+        join_value = "_".join([name, parameters["column_to_display"]])
+        return ColumnSpec(
+            _column_type=column_type,
+            name=join_value,
+            parameters=PainterParameters(
+                column_to_display=parameters["column_to_display"],
+                columns_to_match=parameters["columns_to_match"],
+                path_to_table=parameters["path_to_table"],
+            ),
+            link_spec=_get_link_spec(inner_value),
+            tooltip=inner_value.get("tooltip"),
+            join_value=join_value,
+            column_title=inner_value["column_title"],
+        )
 
     def _get_name(value: _RawVSColumnSpec) -> PainterName:
         return ps[0] if isinstance((ps := value["painter_spec"]), tuple) else ps
@@ -330,7 +535,7 @@ def _view_editor_spec(
     def _get_params(value: _RawVSColumnSpec) -> PainterParameters:
         return ps[1] if isinstance((ps := value["painter_spec"]), tuple) else PainterParameters()
 
-    def _get_link_spec(value: _RawVSColumnSpec) -> VisualLinkSpec | None:
+    def _get_link_spec(value: _RawVSColumnSpec | _RawVSJoinInvColumnSpec) -> VisualLinkSpec | None:
         return None if (ls := value.get("link_spec")) is None else VisualLinkSpec.from_raw(ls)
 
     def _to_vs(
@@ -338,6 +543,7 @@ def _view_editor_spec(
     ) -> (
         tuple[Literal["column"], _RawVSColumnSpec]
         | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
+        | tuple[Literal["join_inv_column"], _RawVSJoinInvColumnSpec]
         | None
     ):
         if column_spec is None:
@@ -362,6 +568,27 @@ def _view_editor_spec(
             if column_spec.tooltip:
                 raw_vs["tooltip"] = column_spec.tooltip
             return column_type, raw_vs
+
+        if column_type == "join_inv_column":
+            # See related function "_from_vs" regarding "painter_spec":
+            raw_inv_vs = _RawVSJoinInvColumnSpec(
+                painter_spec=(
+                    column_spec.name.removesuffix(
+                        "_" + column_spec.parameters["column_to_display"]
+                    ),
+                    {
+                        "column_to_display": column_spec.parameters["column_to_display"],
+                        "columns_to_match": column_spec.parameters["columns_to_match"],
+                        "path_to_table": column_spec.parameters["path_to_table"],
+                    },
+                ),
+                column_title=column_spec.column_title or "",
+            )
+            if column_spec.link_spec:
+                raw_inv_vs["link_spec"] = column_spec.link_spec.to_raw()
+            if column_spec.tooltip:
+                raw_inv_vs["tooltip"] = column_spec.tooltip
+            return column_type, raw_inv_vs
 
         raise ValueError()
 
@@ -511,6 +738,11 @@ def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> 
     if general_properties:
         view_editor_general_properties(ds_name).render_input("view", value.get("view"))
 
+    if _is_inventory_datasource(ds_name):
+        view_inventory_join_macros(ds_name).render_input(
+            "macros", value.get("inventory_join_macros")
+        )
+
     vs_columns = view_editor_column_spec("columns", ds_name)
     vs_columns.render_input("columns", value["columns"])
 
@@ -553,6 +785,7 @@ def _transform_view_to_valuespec_value(view: ViewSpec) -> dict[str, Any]:
     }
 
     value["columns"] = {"columns": value.get("painters", [])}
+
     return value
 
 
@@ -577,6 +810,9 @@ def _transform_valuespec_value_to_view(ident, attrs):
     if ident == "columns":
         return {"painters": attrs["columns"]}
 
+    if ident == "macros":
+        return {"inventory_join_macros": {"macros": attrs["macros"]}}
+
     return {ident: attrs}
 
 
@@ -598,6 +834,10 @@ def create_view_from_valuespec(old_view, view):
     update_view("columns", view_editor_column_spec("columns", ds_name))
     update_view("grouping", view_editor_grouping_spec("grouping", ds_name))
     update_view("sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"]))
+
+    if _is_inventory_datasource(ds_name):
+        update_view("macros", view_inventory_join_macros(ds_name))
+
     return view
 
 
@@ -745,3 +985,7 @@ def _allowed_for_datasource(
             allowed[name] = plugin
 
     return allowed
+
+
+def _is_inventory_datasource(ds_name: str) -> bool:
+    return ds_name.startswith("inv")

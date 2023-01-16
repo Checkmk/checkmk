@@ -109,21 +109,21 @@ def test_set_path() -> None:
     na = root.get_node(("path", "to", "nta", "na"))
     ta = root.get_node(("path", "to", "nta", "ta"))
 
-    assert nta.attributes.path == tuple(["path", "to", "nta"])
-    assert nta.table.path == tuple(["path", "to", "nta"])
-    assert nta.path == tuple(["path", "to", "nta"])
+    assert nta.attributes.path == ("path", "to", "nta")
+    assert nta.table.path == ("path", "to", "nta")
+    assert nta.path == ("path", "to", "nta")
 
-    assert nt.attributes.path == tuple(["path", "to", "nta", "nt"])
-    assert nt.table.path == tuple(["path", "to", "nta", "nt"])
-    assert nt.path == tuple(["path", "to", "nta", "nt"])
+    assert nt.attributes.path == ("path", "to", "nta", "nt")
+    assert nt.table.path == ("path", "to", "nta", "nt")
+    assert nt.path == ("path", "to", "nta", "nt")
 
-    assert na.attributes.path == tuple(["path", "to", "nta", "na"])
-    assert na.table.path == tuple(["path", "to", "nta", "na"])
-    assert na.path == tuple(["path", "to", "nta", "na"])
+    assert na.attributes.path == ("path", "to", "nta", "na")
+    assert na.table.path == ("path", "to", "nta", "na")
+    assert na.path == ("path", "to", "nta", "na")
 
-    assert ta.attributes.path == tuple(["path", "to", "nta", "ta"])
-    assert ta.table.path == tuple(["path", "to", "nta", "ta"])
-    assert ta.path == tuple(["path", "to", "nta", "ta"])
+    assert ta.attributes.path == ("path", "to", "nta", "ta")
+    assert ta.table.path == ("path", "to", "nta", "ta")
+    assert ta.path == ("path", "to", "nta", "ta")
 
 
 def test_set_path_sub_nodes_error() -> None:
@@ -261,8 +261,8 @@ def test_add_node() -> None:
     assert node.attributes.path == tuple(["path", "to", "nta", "node"])
 
     assert node.table.key_columns == ["sn0"]
-    assert node.table.path == tuple(["path", "to", "nta", "node"])
-    assert node.path == tuple(["path", "to", "nta", "node"])
+    assert node.table.path == ("path", "to", "nta", "node")
+    assert node.path == ("path", "to", "nta", "node")
 
     assert not root.is_empty()
     assert root.count_entries() == 18

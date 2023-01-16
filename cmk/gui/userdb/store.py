@@ -12,7 +12,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
 from six import ensure_str
 
@@ -141,7 +141,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
 
     # Now load information about users from the GUI config world
     # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
-    users = load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
+    users = load_multisite_users()
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -152,7 +152,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
 
         profile = contacts.get(uid, {})
         profile.update(user)
-        result[uid] = profile
+        result[UserId(uid)] = profile
 
         # Convert non unicode mail addresses
         if "email" in profile:
@@ -164,12 +164,11 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():
-
-        if uid not in result:
+        if (uid := UserId(uid)) not in result:
             result[uid] = contact
             result[uid]["roles"] = ["user"]
             result[uid]["locked"] = True
-            result[uid]["password"] = ""
+            result[uid]["password"] = PasswordHash("")
 
     # Passwords are read directly from the apache htpasswd-file.
     # That way heroes of the command line will still be able to
@@ -210,12 +209,28 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
         for line in serials_file.read_text(encoding="utf-8").splitlines():
             if ":" in line:
                 user_id, serial = line.split(":")[:2]
-                if user_id in result:
+                if (user_id := UserId(user_id)) in result:
                     result[user_id]["serial"] = utils.saveint(serial)
     except OSError:  # file not found
         pass
 
-    attributes: list[tuple[str, Callable]] = [
+    attributes: list[
+        tuple[
+            # This verbose type is required for accessing `result[uid][attr]` below
+            Literal[
+                "num_failed_logins",
+                "last_pw_change",
+                "enforce_pw_change",
+                "idle_timeout",
+                "session_info",
+                "start_url",
+                "ui_theme",
+                "two_factor_credentials",
+                "ui_sidebar_position",
+            ],
+            Callable,
+        ]
+    ] = [
         ("num_failed_logins", utils.saveint),
         ("last_pw_change", utils.saveint),
         ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
@@ -605,6 +620,10 @@ def load_contacts() -> dict[str, Any]:
 
 def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
+
+
+def load_multisite_users() -> dict[str, Any]:
+    return load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
 
 def _convert_start_url(value: str) -> str:

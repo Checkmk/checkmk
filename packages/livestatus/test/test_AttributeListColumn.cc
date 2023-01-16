@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "AttributeListColumn.h"
 #include "gtest/gtest.h"
+#include "livestatus/AttributeListColumn.h"
 
 namespace a = column::attribute_list;
 

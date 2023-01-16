@@ -2,14 +2,18 @@ set(header_location ${Livestatus_SOURCE_DIR}/include/livestatus)
 set(livestatus_headers
     ${header_location}/Aggregator.h
     ${header_location}/AndingFilter.h
+    ${header_location}/AttributeBitmaskColumn.h
+    ${header_location}/AttributeListColumn.h
     ${header_location}/Average.h
     ${header_location}/BitMask.h
+    ${header_location}/BlobColumn.h
     ${header_location}/ChronoUtils.h
     ${header_location}/Column.h
     ${header_location}/ColumnFilter.h
     ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
     ${header_location}/data_encoding.h
+    ${header_location}/DictColumn.h
     ${header_location}/DictFilter.h
     ${header_location}/DoubleAggregator.h
     ${header_location}/DoubleColumn.h
@@ -20,6 +24,8 @@ set(livestatus_headers
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
     ${header_location}/InputBuffer.h
+    ${header_location}/IntAggregator.h
+    ${header_location}/IntColumn.h
     ${header_location}/Interface.h
     ${header_location}/IntFilter.h
     ${header_location}/ListColumn.h
@@ -56,11 +62,13 @@ set(livestatus_headers
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h
     ${header_location}/TimeAggregator.h
+    ${header_location}/TimeColumn.h
     ${header_location}/TimeFilter.h
     ${header_location}/Triggers.h
     ${header_location}/User.h)
 set(livestatus_sources
     AndingFilter.cc
+    AttributeListColumn.cc
     Average.cc
     CrashReport.cc
     Column.cc

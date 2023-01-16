@@ -8,9 +8,9 @@
 #include <memory>
 #include <string>
 
-#include "TimeColumn.h"
 #include "gtest/gtest.h"
 #include "livestatus/Row.h"
+#include "livestatus/TimeColumn.h"
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;

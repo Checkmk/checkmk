@@ -12,17 +12,17 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "AttributeBitmaskColumn.h"
-#include "AttributeListColumn.h"
 #include "CustomAttributeMap.h"
-#include "DictColumn.h"
-#include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "TimeperiodsCache.h"
 #include "contact_fwd.h"
+#include "livestatus/AttributeBitmaskColumn.h"
+#include "livestatus/AttributeListColumn.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
+#include "livestatus/DictColumn.h"
+#include "livestatus/IntColumn.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/StringColumn.h"
 #include "nagios.h"

@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-#include "BlobColumn.h"
 #include "gtest/gtest.h"
+#include "livestatus/BlobColumn.h"
 #include "livestatus/Row.h"
 
 using namespace std::string_literals;

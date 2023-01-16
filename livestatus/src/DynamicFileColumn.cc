@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "BlobColumn.h"
+#include "livestatus/BlobColumn.h"
 #include "livestatus/FileSystemHelper.h"
 
 template <class T>

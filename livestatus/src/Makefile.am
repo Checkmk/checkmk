@@ -54,17 +54,11 @@ unixcat_LDADD = -lpthread
 test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/TableQueryHelper.cc \
-    test/test_AttributeListColumn.cc \
-    test/test_BlobColumn.cc \
-    test/test_BoolColumn.cc \
     test/test_CrashReport.cc \
     test/test_DictFilter.cc \
-    test/test_IntColumn.cc \
-    test/test_ListColumn.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \
     test/test_Table.cc \
-    test/test_TimeColumn.cc \
     test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
 test_neb_CPPFLAGS = \
@@ -104,7 +98,6 @@ liblivestatusneb_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 liblivestatusneb_a_SOURCES = \
-        AttributeListColumn.cc \
         CommentRenderer.cc \
         DowntimeRenderer.cc \
         DynamicEventConsoleReplicationColumn.cc \

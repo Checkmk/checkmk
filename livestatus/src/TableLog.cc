@@ -12,19 +12,19 @@
 #include <stdexcept>
 #include <variant>  // IWYU pragma: keep
 
-#include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "TimeColumn.h"
 #include "contact_fwd.h"
 #include "livestatus/Column.h"
+#include "livestatus/IntColumn.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
 #ifdef CMC

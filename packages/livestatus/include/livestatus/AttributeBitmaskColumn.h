@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -6,18 +6,15 @@
 #ifndef AttributeBitmaskColumn_h
 #define AttributeBitmaskColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <bitset>
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
 
-#include "AttributeListColumn.h"
-#include "IntColumn.h"
-#include "contact_fwd.h"
+#include "livestatus/AttributeListColumn.h"
 #include "livestatus/Filter.h"
+#include "livestatus/IntColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/opids.h"
 class Logger;

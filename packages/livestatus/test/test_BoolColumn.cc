@@ -9,8 +9,8 @@
 #include <string>
 #include <variant>  // IWYU pragma: keep
 
-#include "IntColumn.h"
 #include "gtest/gtest.h"
+#include "livestatus/IntColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 

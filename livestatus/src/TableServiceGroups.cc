@@ -9,12 +9,12 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "IntColumn.h"
 #include "NebService.h"
 #include "NebServiceGroup.h"
 #include "Query.h"
 #include "ServiceListState.h"
 #include "livestatus/Column.h"
+#include "livestatus/IntColumn.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/ServiceGroupMembersColumn.h"
 #include "livestatus/StringColumn.h"

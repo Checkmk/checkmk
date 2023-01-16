@@ -29,7 +29,6 @@
 #endif
 
 #include "Query.h"
-#include "TimeColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/DoubleColumn.h"
@@ -38,6 +37,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
 

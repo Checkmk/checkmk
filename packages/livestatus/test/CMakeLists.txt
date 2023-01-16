@@ -20,14 +20,20 @@ enable_testing()
 add_executable(
   test
   test.cc
+  test_AttributeListColumn.cc
+  test_BlobColumn.cc
+  test_BoolColumn.cc
   test_DoubleColumn.cc
   test_FileSystemHelper.cc
+  test_IntColumn.cc
+  test_ListColumn.cc
   test_LogEntry.cc
   test_RegExp.cc
   test_Renderer.cc
   test_Queue.cc
   test_StringColumn.cc
-  test_StringUtil.cc)
+  test_StringUtil.cc
+  test_TimeColumn.cc)
 
 target_include_directories(test PUBLIC ../include ${googletest_ext_include})
 target_compile_features(test PRIVATE cxx_std_17)

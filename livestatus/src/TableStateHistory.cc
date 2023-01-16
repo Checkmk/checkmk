@@ -15,22 +15,22 @@
 #include <vector>
 
 #include "HostServiceState.h"
-#include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "TimeColumn.h"
 #include "livestatus/Attributes.h"  // IWYU pragma: keep
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/Filter.h"
+#include "livestatus/IntColumn.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
 #ifdef CMC

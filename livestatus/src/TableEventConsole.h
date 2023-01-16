@@ -14,8 +14,8 @@
 #include <string>
 #include <vector>
 
-#include "IntColumn.h"
 #include "Table.h"
+#include "livestatus/IntColumn.h"
 #include "livestatus/ListColumn.h"
 #include "nagios.h"
 

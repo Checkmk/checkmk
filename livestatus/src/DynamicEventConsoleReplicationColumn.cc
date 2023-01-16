@@ -13,8 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include "BlobColumn.h"
 #include "MonitoringCore.h"
+#include "livestatus/BlobColumn.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Logger.h"
 

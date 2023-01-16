@@ -20,15 +20,8 @@ DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
-AGENT_CTL_GZ := $(AGENTS_DIR)/linux/cmk-agent-ctl.gz
+AGENT_CTL_GZ := $(AGENT_CTL).gz
 AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
-AGENT_CTL_CARGO_OUT := $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl
-AGENT_CTL_DEPS := $(AGENT_CTL_DIR)/Cargo.lock \
-	$(AGENT_CTL_DIR)/Cargo.toml \
-	$(wildcard $(AGENT_CTL_DIR)/src/*.rs) \
-	$(wildcard $(AGENT_CTL_DIR)/src/configuration/*.rs) \
-	$(wildcard $(AGENT_CTL_DIR)/src/modes/*.rs) \
-	$(wildcard $(AGENT_CTL_DIR)/src/monitoring_data/*.rs)
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
@@ -45,7 +38,6 @@ usage:
 	@echo "make rpm           -- create RPM package of Linux agent"
 	@echo "make deb           -- create DEB package of Linux agent"
 	@echo "make packages      -- create RPM and DEB package of Linux agent"
-	@echo "make controller    -- build the agent controller binary"
 
 waitmax: waitmax.c
 	@if type diet >/dev/null ; then \
@@ -87,15 +79,10 @@ setversion:
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
 
-controller: $(AGENT_CTL_GZ)
-
-$(AGENT_CTL_CARGO_OUT): $(AGENT_CTL_DEPS)
-	(cd $(AGENT_CTL_DIR); ./run-cargo-command build --release)
-	touch $(AGENT_CTL_CARGO_OUT)
-
-$(AGENT_CTL): $(AGENT_CTL_CARGO_OUT)
+$(AGENT_CTL):
+	$(AGENT_CTL_DIR)/run-ci build --setup-environment --build
 	mkdir -p linux
-	install -m 755 $(AGENT_CTL_CARGO_OUT) $(AGENT_CTL)
+	install -m 755 $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
 	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)

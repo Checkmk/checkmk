@@ -18,7 +18,6 @@ withFolderProperties{
             RUN_IMAGE_TESTS = true
             DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
             BUILD_IMAGE = true
-            BUILD_AMI_IMAGE = false
             break
         case 'cre':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
@@ -28,7 +27,6 @@ withFolderProperties{
             RUN_IMAGE_TESTS = true
             DEPLOY_TO_WEBSITE = false
             BUILD_IMAGE = true
-            BUILD_AMI_IMAGE = false
             break
         case 'cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
@@ -39,7 +37,6 @@ withFolderProperties{
             RUN_IMAGE_TESTS = false
             DEPLOY_TO_WEBSITE = false
             BUILD_IMAGE = false
-            BUILD_AMI_IMAGE = true
             break
         case 'cpe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CPE
@@ -49,11 +46,10 @@ withFolderProperties{
             // Until then it's similar to the CEE.
             RUN_INTEGRATION_TESTS = false
             RUN_IMAGE_TESTS = true
-            // Do not publish anything, no docker and no AMI images. We only
+            // Do not publish anything. We only
             // use the packages for our own tests - for now.
             DEPLOY_TO_WEBSITE = false
             BUILD_IMAGE = true
-            BUILD_AMI_IMAGE = false
             break
         default:
             throw new Exception('unknown trigger job')
@@ -90,15 +86,6 @@ node: {
                 parameters: [
                     [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
                     [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: DEPLOY_TO_WEBSITE],
-                ]
-            )
-        }
-    }
-    if (BUILD_AMI_IMAGE) {
-        stage('Build AMI Image') {
-            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-aws",
-                parameters: [
-                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
                 ]
             )
         }

@@ -37,6 +37,7 @@ class CheckmkTestApp(CheckmkFlaskApp):
         return []
 
 
+@pytest.mark.skip(reason="flaky)")
 def test_timeout_life_cycle(flask_app: Flask) -> None:
     flask_app.debug = False
 

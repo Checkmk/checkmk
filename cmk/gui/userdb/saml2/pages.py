@@ -119,7 +119,7 @@ class SingleSignOn(Page):
 
         try:
             interface = Interface(connector.config.interface_config, get_redis_client())
-            authentication_request = interface.authentication_request(relay_state.target_url)
+            authentication_request = interface.authentication_request(relay_state_string)
         except Exception as e:  # pylint: disable=broad-except
             LOGGER.warning(
                 "%s - %s: %s",

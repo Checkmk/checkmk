@@ -59,12 +59,12 @@ def authenticate() -> Iterator[bool]:
         yield False
     else:
         assert session.session_info.auth_type
-        with UserSessionContext(session.user.ident):
+        with TransactionIdContext(session.user.ident):
             yield True
 
 
 @contextlib.contextmanager
-def UserSessionContext(user_id: UserId) -> Iterator[None]:
+def TransactionIdContext(user_id: UserId) -> Iterator[None]:
     """Managing context of authenticated user session with cleanup before logout.
 
     Args:

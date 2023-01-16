@@ -10,6 +10,7 @@ from cmk.utils.type_defs import EVERYTHING
 from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.base.config as config
+from cmk.base.agent_based.data_provider import ConfiguredParser
 
 from ._active import execute_active_check_inventory
 
@@ -20,6 +21,7 @@ def inventorize_marked_hosts(
     config_cache: config.ConfigCache,
     autoinventory_queue: AutoQueue,
     *,
+    parser: ConfiguredParser,
     file_cache_options: FileCacheOptions,
 ) -> None:
     autoinventory_queue.cleanup(
@@ -39,6 +41,7 @@ def inventorize_marked_hosts(
             if host_name in process_hosts:
                 execute_active_check_inventory(
                     host_name,
+                    parser=parser,
                     config_cache=config_cache,
                     file_cache_options=file_cache_options,
                     inventory_parameters=config_cache.inventory_parameters,

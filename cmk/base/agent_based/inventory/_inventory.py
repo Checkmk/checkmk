@@ -14,7 +14,6 @@ CL:
 from __future__ import annotations
 
 import itertools
-import logging
 import time
 from collections.abc import Collection, Container, Iterable, Iterator, Sequence
 from dataclasses import dataclass
@@ -53,14 +52,14 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
+    ConfiguredParser,
     make_broker,
-    parse_messages,
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
@@ -100,9 +99,9 @@ def check_inventory_tree(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    parser: ConfiguredParser,
     file_cache_options: FileCacheOptions,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
-    selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
     old_tree: StructuredDataNode,
@@ -126,9 +125,9 @@ def check_inventory_tree(
 
     fetched_data_result = _fetch_real_host_data(
         host_name,
+        parser=parser,
         config_cache=config_cache,
         file_cache_options=file_cache_options,
-        selected_sections=selected_sections,
     )
 
     trees, update_result = _inventorize_real_host(
@@ -228,7 +227,7 @@ def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
 def _fetch_real_host_data(
     host_name: HostName,
     *,
-    selected_sections: SectionNameCollection,
+    parser: ConfiguredParser,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
 ) -> FetchedDataResult:
@@ -255,15 +254,9 @@ def _fetch_real_host_data(
             )
             for host_name_, ipaddress_ in hosts
         ),
-        mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
+        mode=(Mode.INVENTORY if parser.selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
-    host_sections, results = parse_messages(
-        config_cache,
-        ((f[0], f[1]) for f in fetched),
-        selected_sections=selected_sections,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.inventory"),
-    )
+    host_sections, results = parser((f[0], f[1]) for f in fetched)
     store_piggybacked_sections(host_sections)
     broker = make_broker(host_sections)
 

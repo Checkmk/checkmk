@@ -5,7 +5,6 @@
 
 
 import itertools
-import logging
 from collections import Counter
 from collections.abc import Callable, Container, Sequence
 from functools import partial
@@ -26,7 +25,7 @@ from cmk.fetchers import fetch_all, Mode, SourceInfo
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.autochecks as autochecks
@@ -35,8 +34,8 @@ import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
+    ConfiguredParser,
     make_broker,
-    parse_messages,
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
@@ -54,8 +53,8 @@ __all__ = ["commandline_discovery", "commandline_check_discovery"]
 def commandline_discovery(
     arg_hostnames: set[HostName],
     *,
+    parser: ConfiguredParser,
     config_cache: ConfigCache,
-    selected_sections: SectionNameCollection,
     file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
@@ -70,7 +69,7 @@ def commandline_discovery(
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
-    mode = Mode.DISCOVERY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
+    mode = Mode.DISCOVERY if parser.selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for host_name in sorted(host_names):
@@ -91,7 +90,9 @@ def commandline_discovery(
                         ip_address_,
                         config_cache=config_cache,
                         force_snmp_cache_refresh=False,
-                        selected_sections=selected_sections if nodes is None else NO_SELECTION,
+                        selected_sections=parser.selected_sections
+                        if nodes is None
+                        else NO_SELECTION,
                         on_scan_error=on_error if nodes is None else OnError.RAISE,
                         simulation_mode=config.simulation_mode,
                         file_cache_options=file_cache_options,
@@ -101,13 +102,7 @@ def commandline_discovery(
                 ),
                 mode=mode,
             )
-            host_sections, _results = parse_messages(
-                config_cache,
-                ((f[0], f[1]) for f in fetched),
-                selected_sections=selected_sections,
-                keep_outdated=file_cache_options.keep_outdated,
-                logger=logging.getLogger("cmk.base.discovery"),
-            )
+            host_sections, _results = parser((f[0], f[1]) for f in fetched)
             store_piggybacked_sections(host_sections)
             parsed_sections_broker = make_broker(host_sections)
             _commandline_discovery_on_host(
@@ -225,6 +220,7 @@ def commandline_check_discovery(
     ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
+    parser: ConfiguredParser,
     active_check_handler: Callable[[HostName, str], object],
     file_cache_options: FileCacheOptions,
     discovery_file_cache_max_age: int | None,
@@ -235,6 +231,7 @@ def commandline_check_discovery(
             _commandline_check_discovery,
             host_name,
             ipaddress,
+            parser=parser,
             file_cache_options=file_cache_options,
             discovery_file_cache_max_age=discovery_file_cache_max_age,
             config_cache=config_cache,
@@ -254,6 +251,7 @@ def _commandline_check_discovery(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    parser: ConfiguredParser,
     file_cache_options: FileCacheOptions,
     discovery_file_cache_max_age: int | None,
     config_cache: ConfigCache,
@@ -290,6 +288,6 @@ def _commandline_check_discovery(
     return execute_check_discovery(
         host_name,
         config_cache=config_cache,
-        fetched=fetched,
-        keep_outdated=file_cache_options.keep_outdated,
+        fetched=((f[0], f[1]) for f in fetched),
+        parser=parser,
     )

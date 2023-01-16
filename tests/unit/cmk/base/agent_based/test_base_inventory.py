@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 
+import logging
 from typing import Literal
 
 import pytest
@@ -20,7 +21,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import ConfiguredParser, ParsedSectionsBroker
 from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
     _parse_inventory_plugin_item,
@@ -1230,11 +1231,18 @@ def test_check_inventory_tree(
         ),
     )
 
+    file_cache_options = FileCacheOptions()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("tests"),
+    )
     check_result = _inventory.check_inventory_tree(
         hostname,
+        parser=parser,
         config_cache=config_cache,
         inventory_parameters=config_cache.inventory_parameters,
-        selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
             {} if failed_state is None else {"inv-fail-status": failed_state}
@@ -1281,14 +1289,21 @@ def test_check_inventory_tree_no_data_or_files(
         ),
     )
 
+    file_cache_options = FileCacheOptions()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("tests"),
+    )
     check_result = _inventory.check_inventory_tree(
         hostname,
+        parser=parser,
         config_cache=config_cache,
         inventory_parameters=config_cache.inventory_parameters,
-        selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),
-        file_cache_options=FileCacheOptions(),
+        file_cache_options=file_cache_options,
         old_tree=StructuredDataNode(),
     ).check_result
 

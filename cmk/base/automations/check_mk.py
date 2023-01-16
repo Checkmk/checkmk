@@ -107,6 +107,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
+from cmk.base.agent_based.data_provider import ConfiguredParser
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
@@ -178,10 +179,17 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         results: dict[HostName, SingleHostDiscoveryResult] = {}
 
+        parser = ConfiguredParser(
+            config_cache,
+            selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
+            logger=logging.getLogger("cmk.base.discovery"),
+        )
         for hostname in hostnames:
             results[hostname] = discovery.automation_discovery(
                 hostname,
                 config_cache=config_cache,
+                parser=parser,
                 mode=mode,
                 service_filters=None,
                 on_error=on_error,
@@ -261,9 +269,17 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = OnError.WARN
 
+        config_cache = config.get_config_cache()
+        parser = ConfiguredParser(
+            config_cache,
+            selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
+            logger=logging.getLogger("cmk.base.discovery"),
+        )
         return discovery.get_check_preview(
             host_name=HostName(args[0]),
-            config_cache=config.get_config_cache(),
+            parser=parser,
+            config_cache=config_cache,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             max_cachefile_age=config.max_cachefile_age(),

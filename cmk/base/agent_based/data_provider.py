@@ -274,60 +274,70 @@ class ParsedSectionsBroker:
         )
 
 
-def parse_messages(
-    config_cache: ConfigCache,
-    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
-    *,
-    selected_sections: SectionNameCollection,
-    keep_outdated: bool,
-    logger: logging.Logger,
-) -> tuple[
-    Mapping[HostKey, HostSections],
-    Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]],
-]:
-    """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
+class ConfiguredParser:
+    def __init__(
+        self,
+        config_cache: ConfigCache,
+        *,
+        selected_sections: SectionNameCollection,
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> None:
+        self.config_cache: Final = config_cache
+        self.selected_sections: Final = selected_sections
+        self.keep_outdated: Final = keep_outdated
+        self.logger: Final = logger
 
-    Communication errors are not raised through by this functions. All agent related errors are
-    caught by the source.run() method and saved in it's _exception attribute. The caller should
-    use source.get_summary_result() to get the state, output and perfdata of the agent execution
-    or source.exception to get the exception object.
-    """
-    console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
+    def __call__(
+        self,
+        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    ) -> tuple[
+        Mapping[HostKey, HostSections],
+        Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]],
+    ]:
+        """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 
-    collected_host_sections: dict[HostKey, HostSections] = {}
-    results: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
-    # Special agents can produce data for the same check_plugin_name on the same host, in this case
-    # the section lines need to be extended
-    for source, raw_data in fetched:
-        host_key = HostKey(source.hostname, source.source_type)
+        Communication errors are not raised through by this functions. All agent related errors are
+        caught by the source.run() method and saved in it's _exception attribute. The caller should
+        use source.get_summary_result() to get the state, output and perfdata of the agent execution
+        or source.exception to get the exception object.
+        """
+        console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
-        console.vverbose(f"  {host_key!s}")
-        collected_host_sections.setdefault(host_key, HostSections())
+        collected_host_sections: dict[HostKey, HostSections] = {}
+        results: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
+        # Special agents can produce data for the same check_plugin_name on the same host, in this case
+        # the section lines need to be extended
+        for source, raw_data in fetched:
+            host_key = HostKey(source.hostname, source.source_type)
 
-        source_result = parse_raw_data(
-            make_parser(
-                config_cache,
-                source,
-                checking_sections=config_cache.make_checking_sections(
-                    source.hostname, selected_sections=NO_SELECTION
+            console.vverbose(f"  {host_key!s}")
+            collected_host_sections.setdefault(host_key, HostSections())
+
+            source_result = parse_raw_data(
+                make_parser(
+                    self.config_cache,
+                    source,
+                    checking_sections=self.config_cache.make_checking_sections(
+                        source.hostname, selected_sections=NO_SELECTION
+                    ),
+                    keep_outdated=self.keep_outdated,
+                    logger=self.logger,
                 ),
-                keep_outdated=keep_outdated,
-                logger=logger,
-            ),
-            raw_data,
-            selection=selected_sections,
-        )
-        results.append((source, source_result))
-        if source_result.is_ok():
-            console.vverbose(
-                "  -> Add sections: %s\n"
-                % sorted([str(s) for s in source_result.ok.sections.keys()])
+                raw_data,
+                selection=self.selected_sections,
             )
-            collected_host_sections[host_key] += source_result.ok
-        else:
-            console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
+            results.append((source, source_result))
+            if source_result.is_ok():
+                console.vverbose(
+                    "  -> Add sections: %s\n"
+                    % sorted([str(s) for s in source_result.ok.sections.keys()])
+                )
+                collected_host_sections[host_key] += source_result.ok
+            else:
+                console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
-    return collected_host_sections, results
+        return collected_host_sections, results
 
 
 def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:

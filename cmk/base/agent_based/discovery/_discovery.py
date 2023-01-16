@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-import logging
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
@@ -20,12 +18,11 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import SourceInfo
 
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (
+    ConfiguredParser,
     make_broker,
-    parse_messages,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
@@ -43,10 +40,8 @@ def execute_check_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    fetched: Sequence[
-        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ],
-    keep_outdated: bool,
+    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    parser: ConfiguredParser,
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -57,13 +52,7 @@ def execute_check_discovery(
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
-    host_sections, source_results = parse_messages(
-        config_cache,
-        ((f[0], f[1]) for f in fetched),
-        selected_sections=NO_SELECTION,
-        keep_outdated=keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
-    )
+    host_sections, source_results = parser(fetched)
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
 

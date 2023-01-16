@@ -5,7 +5,6 @@
 """Performing the actual checks."""
 
 import itertools
-import logging
 from collections import defaultdict
 from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import suppress
@@ -43,7 +42,6 @@ from cmk.checkers import HostKey
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
-from cmk.checkers.type_defs import SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
@@ -51,8 +49,8 @@ import cmk.base.crash_reporting
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
+    ConfiguredParser,
     make_broker,
-    parse_messages,
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
@@ -86,21 +84,14 @@ def execute_checkmk_checks(
     hostname: HostName,
     config_cache: ConfigCache,
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
+    parser: ConfiguredParser,
     run_plugin_names: Container[CheckPluginName],
-    keep_outdated: bool,
-    selected_sections: SectionNameCollection,
     perfdata_with_times: bool,
     submitter: Submitter,
 ) -> ActiveCheckResult:
     exit_spec = config_cache.exit_code_spec(hostname)
     services = config_cache.configured_services(hostname)
-    host_sections, source_results = parse_messages(
-        config_cache,
-        ((f[0], f[1]) for f in fetched),
-        selected_sections=selected_sections,
-        keep_outdated=keep_outdated,
-        logger=logging.getLogger("cmk.base.checking"),
-    )
+    host_sections, source_results = parser((f[0], f[1]) for f in fetched)
     store_piggybacked_sections(host_sections)
     broker = make_broker(host_sections)
     with CPUTracker() as tracker:

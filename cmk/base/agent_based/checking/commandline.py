@@ -17,10 +17,11 @@ from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.submitters import Submitter
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
+from cmk.base.agent_based.data_provider import ConfiguredParser
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_sources
 
@@ -31,10 +32,10 @@ def commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    parser: ConfiguredParser,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
-    selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
@@ -46,10 +47,10 @@ def commandline_checking(
             _commandline_checking,
             host_name,
             ipaddress,
+            parser=parser,
             config_cache=config_cache,
             file_cache_options=file_cache_options,
             run_plugin_names=run_plugin_names,
-            selected_sections=selected_sections,
             perfdata_with_times=perfdata_with_times,
             submitter=submitter,
         ),
@@ -68,10 +69,10 @@ def _commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    parser: ConfiguredParser,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
-    selected_sections: SectionNameCollection = NO_SELECTION,
     perfdata_with_times: bool,
     submitter: Submitter,
 ) -> ActiveCheckResult:
@@ -95,7 +96,7 @@ def _commandline_checking(
                 ipaddress_,
                 config_cache=config_cache,
                 force_snmp_cache_refresh=False,
-                selected_sections=selected_sections if nodes is None else NO_SELECTION,
+                selected_sections=parser.selected_sections if nodes is None else NO_SELECTION,
                 on_scan_error=OnError.RAISE,
                 simulation_mode=config.simulation_mode,
                 file_cache_options=file_cache_options,
@@ -103,15 +104,14 @@ def _commandline_checking(
             )
             for host_name_, ipaddress_ in hosts
         ),
-        mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
+        mode=Mode.CHECKING if parser.selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
     )
     return execute_checkmk_checks(
         hostname=host_name,
         config_cache=config_cache,
         fetched=fetched,
+        parser=parser,
         run_plugin_names=run_plugin_names,
-        selected_sections=selected_sections,
-        keep_outdated=file_cache_options.keep_outdated,
         perfdata_with_times=perfdata_with_times,
         submitter=submitter,
     )

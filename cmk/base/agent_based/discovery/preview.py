@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-import logging
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -36,8 +35,8 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
+    ConfiguredParser,
     make_broker,
-    parse_messages,
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
@@ -58,6 +57,7 @@ __all__ = ["get_check_preview"]
 def get_check_preview(
     *,
     host_name: HostName,
+    parser: ConfiguredParser,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
     force_snmp_cache_refresh: bool,
@@ -99,13 +99,7 @@ def get_check_preview(
         ),
         mode=Mode.DISCOVERY,
     )
-    host_sections, _source_results = parse_messages(
-        config_cache,
-        ((f[0], f[1]) for f in fetched),
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
-    )
+    host_sections, _source_results = parser((f[0], f[1]) for f in fetched)
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
     # end of code duplication

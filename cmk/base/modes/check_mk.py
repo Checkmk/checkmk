@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import os
 import sys
 from collections.abc import Callable, Container, Mapping, Sequence
@@ -71,6 +72,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
+from cmk.base.agent_based.data_provider import ConfiguredParser
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache
@@ -1471,9 +1473,16 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
 
     config.load()
     config_cache = config.get_config_cache()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
     discovery.discover_marked_hosts(
         create_core(config.monitoring_core),
         queue,
+        parser=parser,
         config_cache=config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1516,10 +1525,17 @@ def mode_check_discovery(
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
     discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
+    config_cache = config.get_config_cache()
     return discovery.commandline_check_discovery(
         hostname,
-        config_cache=config.get_config_cache(),
         ipaddress=None,
+        parser=ConfiguredParser(
+            config_cache,
+            selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
+            logger=logging.getLogger("cmk.base.discovery"),
+        ),
+        config_cache=config_cache,
         active_check_handler=active_check_handler,
         file_cache_options=file_cache_options,
         discovery_file_cache_max_age=discovery_file_cache_max_age,
@@ -1715,10 +1731,16 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         file_cache_options = file_cache_options._replace(use_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    config_cache = config.get_config_cache()
     discovery.commandline_discovery(
         set(hostnames),
-        config_cache=config.get_config_cache(),
-        selected_sections=selected_sections,
+        parser=ConfiguredParser(
+            config_cache,
+            selected_sections=selected_sections,
+            keep_outdated=file_cache_options.keep_outdated,
+            logger=logging.getLogger("cmk.base.discovery"),
+        ),
+        config_cache=config_cache,
         run_plugin_names=run_plugin_names,
         file_cache_options=file_cache_options,
         arg_only_new=options["discover"] == 1,
@@ -1833,13 +1855,19 @@ def mode_check(
     if len(args) == 2:
         ipaddress = args[1]
 
+    config_cache = config.get_config_cache()
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     return checking.commandline_checking(
         hostname,
         ipaddress,
+        parser=ConfiguredParser(
+            config_cache,
+            selected_sections=selected_sections,
+            keep_outdated=file_cache_options.keep_outdated,
+            logger=logging.getLogger("cmk.base.checking"),
+        ),
         file_cache_options=file_cache_options,
-        config_cache=config.get_config_cache(),
-        selected_sections=selected_sections,
+        config_cache=config_cache,
         run_plugin_names=run_plugin_names,
         submitter=get_submitter_(
             check_submission=config.check_submission,
@@ -1954,11 +1982,17 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         file_cache_options = file_cache_options._replace(keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=selected_sections,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.inventory"),
+    )
     inventory.commandline_inventory(
         hostnames,
+        parser=parser,
         config_cache=config_cache,
         file_cache_options=file_cache_options,
-        selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
     )
 
@@ -2011,10 +2045,17 @@ def mode_inventory_as_check(
     keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.inventory"),
+    )
     return error_handling.check_result(
         partial(
             execute_active_check_inventory,
             hostname,
+            parser=parser,
             config_cache=config_cache,
             file_cache_options=file_cache_options,
             inventory_parameters=config_cache.inventory_parameters,
@@ -2114,9 +2155,17 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         return
 
     config.load()
+    config_cache = config.get_config_cache()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.inventory"),
+    )
     inventory.inventorize_marked_hosts(
-        config.get_config_cache(),
+        config_cache,
         queue,
+        parser=parser,
         file_cache_options=file_cache_options,
     )
 

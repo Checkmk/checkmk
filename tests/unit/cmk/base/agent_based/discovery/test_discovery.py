@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import logging
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
@@ -41,6 +42,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (
+    ConfiguredParser,
     ParsedSectionsBroker,
     ParsedSectionsResolver,
     SectionsParser,
@@ -873,11 +875,18 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(testhost, ipaddress="127.0.0.1")
     ts.fake_standard_linux_agent_output(testhost)
     config_cache = ts.apply(monkeypatch)
+    file_cache_options = FileCacheOptions()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("tests"),
+    )
 
     discovery.commandline_discovery(
         arg_hostnames={testhost},
+        parser=parser,
         config_cache=config_cache,
-        selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         file_cache_options=FileCacheOptions(),
         arg_only_new=False,

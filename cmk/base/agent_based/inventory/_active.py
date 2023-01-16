@@ -14,8 +14,8 @@ from cmk.utils.type_defs import EVERYTHING, HostName, HWSWInventoryParameters, R
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.type_defs import NO_SELECTION
 
+from cmk.base.agent_based.data_provider import ConfiguredParser
 from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree
@@ -25,6 +25,8 @@ __all__ = ["execute_active_check_inventory"]
 
 def execute_active_check_inventory(
     host_name: HostName,
+    *,
+    parser: ConfiguredParser,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
@@ -38,10 +40,10 @@ def execute_active_check_inventory(
 
     result = check_inventory_tree(
         host_name,
+        parser=parser,
         config_cache=config_cache,
         file_cache_options=file_cache_options,
         inventory_parameters=inventory_parameters,
-        selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=parameters,
         old_tree=old_tree,

@@ -5,7 +5,6 @@
 
 
 import itertools
-import logging
 import socket
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -47,8 +46,8 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
+    ConfiguredParser,
     make_broker,
-    parse_messages,
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
@@ -107,6 +106,7 @@ def automation_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    parser: ConfiguredParser,
     mode: DiscoveryMode,
     service_filters: _ServiceFilters | None,
     on_error: OnError,
@@ -161,13 +161,7 @@ def automation_discovery(
             ),
             mode=Mode.DISCOVERY,
         )
-        host_sections, _results = parse_messages(
-            config_cache,
-            ((f[0], f[1]) for f in fetched),
-            selected_sections=NO_SELECTION,
-            keep_outdated=file_cache_options.keep_outdated,
-            logger=logging.getLogger("cmk.base.discovery"),
-        )
+        host_sections, _results = parser((f[0], f[1]) for f in fetched)
         store_piggybacked_sections(host_sections)
         parsed_sections_broker = make_broker(host_sections)
         # end of code duplication
@@ -374,6 +368,7 @@ def discover_marked_hosts(
     core: MonitoringCore,
     autodiscovery_queue: AutoQueue,
     *,
+    parser: ConfiguredParser,
     file_cache_options: FileCacheOptions,
     force_snmp_cache_refresh: bool,
     config_cache: ConfigCache,
@@ -401,6 +396,7 @@ def discover_marked_hosts(
 
             activation_required |= _discover_marked_host(
                 host_name,
+                parser=parser,
                 config_cache=config_cache,
                 file_cache_options=file_cache_options,
                 force_snmp_cache_refresh=force_snmp_cache_refresh,
@@ -442,6 +438,7 @@ def discover_marked_hosts(
 def _discover_marked_host(
     host_name: HostName,
     *,
+    parser: ConfiguredParser,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
     force_snmp_cache_refresh: bool,
@@ -467,6 +464,7 @@ def _discover_marked_host(
     result = automation_discovery(
         host_name,
         config_cache=config_cache,
+        parser=parser,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         on_error=OnError.IGNORE,

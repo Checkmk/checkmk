@@ -8,13 +8,10 @@
 #include <filesystem>
 #include <system_error>
 
-#include "MonitoringCore.h"
 #include "livestatus/PnpUtils.h"
 
-// TODO(sp) Merge this with Perfdatabase::getPNPXMLPath
-int pnpgraph_present(MonitoringCore *mc, const std::string &host,
-                     const std::string &service) {
-    std::filesystem::path pnp_path = mc->pnpPath();
+int pnpgraph_present(const std::filesystem::path &pnp_path,
+                     const std::string &host, const std::string &service) {
     if (pnp_path.empty()) {
         return -1;
     }

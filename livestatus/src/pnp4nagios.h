@@ -8,9 +8,9 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <filesystem>
 #include <string>
-class MonitoringCore;
-int pnpgraph_present(MonitoringCore *mc, const std::string &host,
-                     const std::string &service);
+int pnpgraph_present(const std::filesystem::path &pnp_path,
+                     const std::string &host, const std::string &service);
 
 #endif  // pnp4nagios_h

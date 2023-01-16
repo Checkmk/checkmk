@@ -720,7 +720,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets, [mc](const host &hst) {
-            return pnpgraph_present(mc, hst.name, dummy_service_description());
+            return pnpgraph_present(mc->pnpPath(), hst.name,
+                                    dummy_service_description());
         }));
     table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "mk_inventory_last",

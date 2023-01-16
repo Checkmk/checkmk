@@ -449,7 +449,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets, [mc](const service &svc) {
-            return pnpgraph_present(mc, svc.host_ptr->name, svc.description);
+            return pnpgraph_present(mc->pnpPath(), svc.host_ptr->name,
+                                    svc.description);
         }));
 
     // columns of type double

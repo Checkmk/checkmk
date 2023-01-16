@@ -46,6 +46,7 @@ from cmk.gui.userdb.saml2.config import (
     Milliseconds,
     SecuritySettings,
     UserAttributeNames,
+    UserAttributeSettings,
 )
 from cmk.gui.userdb.saml2.interface import (
     AuthenticatedUser,
@@ -123,11 +124,15 @@ def _interface_config(
             assertion_consumer_service_endpoint="http://localhost/heute/check_mk/saml_acs.py?acs",
             binding=BINDING_HTTP_POST,
         ),
-        user_attributes=UserAttributeNames(
-            user_id="username",
-            alias=None,
-            email=None,
-            contactgroups=None,
+        user_attributes=UserAttributeSettings(
+            attribute_names=UserAttributeNames(
+                user_id="username",
+                alias=None,
+                email=None,
+                contactgroups=None,
+                roles=None,
+            ),
+            role_membership_mapping={},
         ),
         security_settings=SecuritySettings(
             allow_unknown_user_attributes=True,
@@ -492,6 +497,7 @@ def test_user_attributes_to_authenticated_user() -> None:
         "pretty_name": ["Mr. Banana"],
         "email_address": ["banana@totally-not-the-cia.com"],
         "groups": ["hottopics", "veryhottopics"],
+        "roles": ["peasant", "magician", "overlord"],
     }
     default_user_profile = UserSpec(
         {
@@ -507,11 +513,13 @@ def test_user_attributes_to_authenticated_user() -> None:
             alias="pretty_name",
             email="email_address",
             contactgroups="groups",
+            roles="roles",
         ),
         user_id=UserId("banana"),
         user_attributes=user_attributes,
         default_user_profile=default_user_profile,
         checkmk_contact_groups={"hottopics"},
+        roles_mapping={"admin": {"overlord", "boss"}, "user": {"peasant"}},
     )
 
     assert authenticated_user == UserSpec(
@@ -519,7 +527,7 @@ def test_user_attributes_to_authenticated_user() -> None:
             "user_id": UserId("banana"),
             "alias": "Mr. Banana",
             "email": "banana@totally-not-the-cia.com",
-            "roles": ["user"],
+            "roles": ["admin", "user"],
             "contactgroups": ["hottopics"],
             "force_authuser": False,
         }

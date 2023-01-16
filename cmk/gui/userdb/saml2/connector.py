@@ -123,7 +123,9 @@ class Connector(UserConnector):
             attribute.
         """
         return ["password"] + [
-            k for k, v in self.config.interface_config.user_attributes.dict().items() if v
+            k
+            for k, v in self.config.interface_config.user_attributes.attribute_names.dict().items()
+            if v
         ]
 
 

@@ -27,6 +27,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.userdb.utils import (
     active_connections_by_type,
     load_connection_config,
+    load_roles,
     save_connection_config,
 )
 from cmk.gui.plugins.wato.utils import mode_url, redirect, WatoMode
@@ -43,6 +44,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     HTTPSUrl,
     Integer,
+    ListOf,
     rule_option_elements,
     TextInput,
     Tuple,
@@ -194,6 +196,36 @@ def _user_properties() -> list[DictionaryEntry]:
                 ),
                 allow_empty=True,
                 size=80,
+            ),
+        ),
+        (
+            "role_membership_mapping",
+            CascadingDropdown(
+                title=_("Roles"),
+                help=_(
+                    "Choose whether roles should be mapped. Specify the attribute name, and the "
+                    "corresponding mappings for each role."
+                ),
+                choices=[
+                    (
+                        True,
+                        _("Map roles"),
+                        Tuple(
+                            elements=[
+                                TextInput(title=_("Role attribute"), allow_empty=False, size=80),
+                                Dictionary(
+                                    elements=[
+                                        (r, ListOf(title=re["alias"], valuespec=TextInput()))
+                                        for r, re in load_roles().items()
+                                    ],
+                                ),
+                            ],
+                            orientation="horizontal",
+                        ),
+                    ),
+                    (False, _("Do not map roles"), None),
+                ],
+                default_value=False,
             ),
         ),
     ]

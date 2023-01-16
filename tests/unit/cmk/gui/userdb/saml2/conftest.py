@@ -27,5 +27,6 @@ def fixture_raw_config() -> Mapping[str, Any]:
         "alias": "",
         "email": "",
         "contactgroups": "",
+        "role_membership_mapping": False,
         "signature_certificate": "default",
     }

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, NewType
 
@@ -36,6 +36,12 @@ class UserAttributeNames(BaseModel):
     alias: str | None
     email: str | None
     contactgroups: str | None
+    roles: str | None
+
+
+class UserAttributeSettings(BaseModel):
+    attribute_names: UserAttributeNames
+    role_membership_mapping: Mapping[str, set[str]]
 
 
 class SecuritySettings(BaseModel):
@@ -64,7 +70,7 @@ class CacheSettings(BaseModel):
 
 
 class InterfaceConfig(BaseModel):
-    user_attributes: UserAttributeNames
+    user_attributes: UserAttributeSettings
     security_settings: SecuritySettings
     connectivity_settings: ConnectivitySettings
     cache_settings: CacheSettings
@@ -113,9 +119,31 @@ def _determine_certificate_paths(certificate: str | tuple[str, tuple[str, str]])
     return Certificate(private=Path(private_key), public=Path(cert))
 
 
+def _role_attribute_name(
+    roles_mapping: bool | tuple[bool, tuple[str, Mapping[str, Sequence[str]]]]
+) -> str | None:
+    if not roles_mapping:
+        return None
+
+    assert isinstance(roles_mapping, tuple)
+    return roles_mapping[1][0]
+
+
+def _role_membership_mapping(
+    roles_mapping: bool | tuple[bool, tuple[str, Mapping[str, Sequence[str]]]]
+) -> Mapping[str, set[str]]:
+    if not roles_mapping:
+        return {}
+
+    assert isinstance(roles_mapping, tuple)
+    return {k: set(v) for k, v in roles_mapping[1][1].items()}
+
+
 def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
     idp_url = user_input["idp_metadata_endpoint"]
     checkmk_server_url = f"{user_input['checkmk_server_url']}{url_prefix()}check_mk"
+    roles_mapping = user_input["role_membership_mapping"]
+
     interface_config = InterfaceConfig(
         connectivity_settings=ConnectivitySettings(
             timeout=user_input["connection_timeout"],
@@ -125,11 +153,15 @@ def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
             assertion_consumer_service_endpoint=f"{checkmk_server_url}/saml_acs.py?acs",
             binding=BINDING_HTTP_POST,
         ),
-        user_attributes=UserAttributeNames(
-            user_id=user_input["user_id"],
-            alias=user_input["alias"],
-            email=user_input["email"],
-            contactgroups=user_input["contactgroups"],
+        user_attributes=UserAttributeSettings(
+            attribute_names=UserAttributeNames(
+                user_id=user_input["user_id"],
+                alias=user_input["alias"],
+                email=user_input["email"],
+                contactgroups=user_input["contactgroups"],
+                roles=_role_attribute_name(roles_mapping),
+            ),
+            role_membership_mapping=_role_membership_mapping(roles_mapping),
         ),
         security_settings=SecuritySettings(
             allow_unknown_user_attributes=True,

@@ -63,3 +63,26 @@ def test_valuespec_to_config_signature_certificate_option(
 ) -> None:
 
     assert valuespec_to_config(_options_with_custom_signature_certificate(raw_config))
+
+
+def _options_with_custom_role_mapping(raw_config: DictionaryModel) -> DictionaryModel:
+    return {
+        **_default_options(raw_config),
+        **{"role_membership_mapping": (True, ("roles", {}))},
+    }
+
+
+def test_role_mapping_option_is_valid_valuespec_option(raw_config: DictionaryModel) -> None:
+    valuespec = saml2_connection_valuespec()
+
+    valuespec.validate_datatype(
+        _options_with_custom_role_mapping(raw_config),
+        "_not_relevant",
+    )
+
+
+def test_valuespec_to_config_role_mapping_option(
+    monkeypatch: pytest.MonkeyPatch, raw_config: DictionaryModel
+) -> None:
+
+    assert valuespec_to_config(_options_with_custom_role_mapping(raw_config))

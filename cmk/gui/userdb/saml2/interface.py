@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import NewType
 
 import requests
@@ -108,7 +108,8 @@ class Interface:
         self._config = saml_config(
             connection=config.connectivity_settings, security=config.security_settings
         )
-        self._user_attributes = config.user_attributes
+        self._user_attribute_names = config.user_attributes.attribute_names
+        self._role_membership_mapping = config.user_attributes.role_membership_mapping
 
         if self._config.metadata is None:
             raise AttributeError("Got no metadata information from Identity Provider")
@@ -285,17 +286,18 @@ class Interface:
 
         LOGGER.debug("Found user attributes: %s", ", ".join(authentication_response.ava.keys()))
 
-        LOGGER.debug("Mapping User ID to field %s", self._user_attributes.user_id)
-        if not (user_id := authentication_response.ava.get(self._user_attributes.user_id)):
+        LOGGER.debug("Mapping User ID to field %s", self._user_attribute_names.user_id)
+        if not (user_id := authentication_response.ava.get(self._user_attribute_names.user_id)):
             LOGGER.debug("User ID not found or empty, value is: %s", repr(user_id))
             raise AttributeError("User ID not found or empty")
 
         return user_attributes_to_authenticated_user(
-            user_attribute_names=self._user_attributes,
+            user_attribute_names=self._user_attribute_names,
             user_id=UserId(user_id[0]),
             user_attributes=authentication_response.ava,
             default_user_profile=active_config.default_user_profile,
             checkmk_contact_groups=set(load_contact_group_information()),
+            roles_mapping=self._role_membership_mapping,
         )
 
     def validate_in_response_to_id(self, authentication_response: AuthnResponse) -> None:
@@ -380,6 +382,7 @@ def user_attributes_to_authenticated_user(
     user_attributes: Mapping[str, Sequence[str]],
     default_user_profile: UserSpec,
     checkmk_contact_groups: set[str],
+    roles_mapping: Mapping[str, set[str]],
 ) -> AuthenticatedUser:
     """Map user attributes from the authentication request response to Checkmk user attributes.
 
@@ -418,11 +421,41 @@ def user_attributes_to_authenticated_user(
             & checkmk_contact_groups
         )
 
+    roles = default_user_profile["roles"]
+    if user_attribute_names.roles is not None:
+        roles = list(
+            _external_to_checkmk_memberships(
+                set(user_attributes.get(user_attribute_names.roles, [])), roles_mapping
+            )
+        )
+
     return AuthenticatedUser(
         user_id=user_id,
         alias=alias,
         email=email,
         contactgroups=contactgroups,
         force_authuser=default_user_profile["force_authuser"],
-        roles=default_user_profile["roles"],
+        roles=roles,
     )
+
+
+def _external_to_checkmk_memberships(
+    external_memberships: set[str], memberships_mapping: Mapping[str, set[str]]
+) -> Iterable[str]:
+    """
+
+    >>> list(_external_to_checkmk_memberships({"admin", "superduperadmin", "normal_user"},
+    ... {"admin": {"superduperadmin"}, "user": {"normal_user"}}))
+    ['admin', 'user']
+
+    >>> list(_external_to_checkmk_memberships({"normal_user"},
+    ... {"admin": {"superduperadmin"}, "user": {"normal_user"}}))
+    ['user']
+
+    """
+    if not external_memberships:
+        return
+
+    for checkmk_membership, corresponding_memberships in memberships_mapping.items():
+        if external_memberships & corresponding_memberships:
+            yield checkmk_membership

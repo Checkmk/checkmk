@@ -57,44 +57,6 @@ class Manifest(BaseModel):
     def id(self) -> PackageID:
         return PackageID(name=self.name, version=self.version)
 
-    def raise_for_nonexisting_files(self) -> None:
-        for part, rel_path in self.files.items():
-            for rp in rel_path:
-                if not (fp := (part.path / rp).exists()):
-                    raise PackageException(f"File {fp} does not exist.")
-
-    def raise_for_collision(self, other_manifest: Manifest) -> None:
-        """Packaged files must not already belong to another package"""
-        if collisions := set(
-            str(part.path / fn)
-            for part in PackagePart
-            for fn in self.files.get(part, ())
-            if fn in other_manifest.files.get(part, ())
-        ):
-            raise PackageException(
-                f"Files already belong to {other_manifest.name} {other_manifest.version}: {', '.join(collisions)}"
-            )
-
-    def to_text(self, summarize: bool = True) -> str:
-        valid_until_text = self.version_usable_until or "No version limitation"
-        files = "".join(
-            "\n  %s%s"
-            % (part.ui_title, f": {len(fs)}" if summarize else "".join(f"\n    {f}" for f in fs))
-            for part, fs in self.files.items()
-        )
-        return (
-            f"Name:                          {self.name}\n"
-            f"Version:                       {self.version}\n"
-            f"Packaged on Checkmk Version:   {self.version_packaged}\n"
-            f"Required Checkmk Version:      {self.version_min_required}\n"
-            f"Valid until Checkmk version:   {valid_until_text}\n"
-            f"Title:                         {self.title}\n"
-            f"Author:                        {self.author}\n"
-            f"Download-URL:                  {self.download_url}\n"
-            f"Files:                         {files}\n"
-            f"Description:\n  {self.description}\n"
-        )
-
 
 def manifest_template(
     name: PackageName,

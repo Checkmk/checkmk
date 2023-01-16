@@ -292,7 +292,7 @@ def create(manifest: Manifest) -> None:
 
     package_store = PackageStore()
 
-    manifest.raise_for_nonexisting_files()
+    _raise_for_nonexisting_files(manifest)
     _validate_package_files(manifest)
     add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(package_store, manifest)
@@ -310,12 +310,19 @@ def edit(pacname: PackageName, new_manifest: Manifest) -> None:
             )
     package_store = PackageStore()
 
-    new_manifest.raise_for_nonexisting_files()
+    _raise_for_nonexisting_files(new_manifest)
     _validate_package_files(new_manifest)
 
     _create_enabled_mkp_from_installed_package(package_store, new_manifest)
     remove_installed_manifest(pacname)
     add_installed_manifest(new_manifest)
+
+
+def _raise_for_nonexisting_files(manifest: Manifest) -> None:
+    for part, rel_path in manifest.files.items():
+        for rp in rel_path:
+            if not (fp := (part.path / rp).exists()):
+                raise PackageException(f"File {fp} does not exist.")
 
 
 def _create_enabled_mkp_from_installed_package(
@@ -561,7 +568,20 @@ def _validate_package_files(manifest: Manifest) -> None:
     for other_manifest in get_installed_manifests():
         if manifest.name == other_manifest.name:
             continue
-        manifest.raise_for_collision(other_manifest)
+        _raise_for_collision(manifest, other_manifest)
+
+
+def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
+    """Packaged files must not already belong to another package"""
+    if collisions := set(
+        str(part.path / fn)
+        for part in PackagePart
+        for fn in manifest.files.get(part, ())
+        if fn in other_manifest.files.get(part, ())
+    ):
+        raise PackageException(
+            f"Files already belong to {other_manifest.name} {other_manifest.version}: {', '.join(collisions)}"
+        )
 
 
 def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:

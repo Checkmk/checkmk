@@ -31,6 +31,26 @@ from ._reporter import files_inventory
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 
+def _to_text(manifest: Manifest, summarize: bool = True) -> str:
+    valid_until_text = manifest.version_usable_until or "No version limitation"
+    files = "".join(
+        "\n  %s%s" % (part.ui_title, "".join(f"\n    {f}" for f in fs))
+        for part, fs in manifest.files.items()
+    )
+    return (
+        f"Name:                          {manifest.name}\n"
+        f"Version:                       {manifest.version}\n"
+        f"Packaged on Checkmk Version:   {manifest.version_packaged}\n"
+        f"Required Checkmk Version:      {manifest.version_min_required}\n"
+        f"Valid until Checkmk version:   {valid_until_text}\n"
+        f"Title:                         {manifest.title}\n"
+        f"Author:                        {manifest.author}\n"
+        f"Download-URL:                  {manifest.download_url}\n"
+        f"Files:                         {files}\n"
+        f"Description:\n  {manifest.description}\n"
+    )
+
+
 def _args_find(
     subparser: argparse.ArgumentParser,
 ) -> None:
@@ -84,7 +104,7 @@ def _command_inspect(args: argparse.Namespace, _logger: logging.Logger) -> int:
 
     manifest = extract_manifest(file_content)
 
-    sys.stdout.write(f"{manifest.json() if args.json else manifest.to_text(summarize=False)}\n")
+    sys.stdout.write(f"{manifest.json() if args.json else _to_text(manifest)}\n")
     return 0
 
 
@@ -104,9 +124,9 @@ def _command_show_all(args: argparse.Namespace, _logger: logging.Logger) -> int:
 
     # I don't think this is very useful, but we include it for consistency.
     sys.stdout.write("Local extension packages\n========================\n\n")
-    sys.stdout.write("".join(f"{m.to_text(summarize=False)}\n" for m in stored_manifests.local))
+    sys.stdout.write("".join(f"{_to_text(m)}\n" for m in stored_manifests.local))
     sys.stdout.write("Shipped extension packages\n==========================\n\n")
-    sys.stdout.write("".join(f"{m.to_text(summarize=False)}\n" for m in stored_manifests.shipped))
+    sys.stdout.write("".join(f"{_to_text(m)}\n" for m in stored_manifests.shipped))
     return 0
 
 
@@ -124,7 +144,7 @@ def _command_show(args: argparse.Namespace, _logger: logging.Logger) -> int:
         .get_existing_package_path(_get_package_id(args.name, args.version))
         .read_bytes()
     )
-    sys.stdout.write(f"{manifest.json() if args.json else manifest.to_text(summarize=False)}\n")
+    sys.stdout.write(f"{manifest.json() if args.json else _to_text(manifest)}\n")
     return 0
 
 

@@ -631,12 +631,59 @@ class JoinCell(Cell):
     def livestatus_filter(self, join_column_name: str) -> LivestatusQuery:
         return f"Filter: {lqencode(join_column_name)} = {lqencode(self.join_value)}"
 
+    def livestatus_filter_from_macros(
+        self,
+        join_column_name: str,
+        datasource_ident: str,
+        inventory_join_macros: dict[str, str],
+        rows: Rows,
+    ) -> LivestatusQuery:
+        filters_by_hostname: dict[str, list[str]] = {}
+        for row in rows:
+            service_description = replace_inventory_join_macros(
+                datasource_ident=datasource_ident,
+                inventory_join_macros=inventory_join_macros,
+                row=row,
+                join_value_with_macro=join_column_name,
+            )
+            filters_by_hostname.setdefault(row["host_name"], []).append(
+                f"Filter: {lqencode(join_column_name)} = {lqencode(service_description)}"
+            )
+
+        join_filters = []
+        for host_name, filters in filters_by_hostname.items():
+            join_filters.append(
+                f"Filter: host_name = {host_name}"
+                + "\n"
+                + "\n".join(filters)
+                + f"\nOr: {len(filters)}"
+                + "\nAnd: 2"
+            )
+
+        joined_filters = "\n".join(join_filters)
+        return f"{joined_filters}\nOr: {len(join_filters)}"
+
     def title(self, use_short: bool = True) -> str:
         return self._custom_title or self.join_value
 
     def export_title(self) -> str:
         serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
         return f"{self._painter_name}.{serv_painter}"
+
+
+def replace_inventory_join_macros(
+    *,
+    datasource_ident: str,
+    inventory_join_macros: dict[str, str],
+    row: Row,
+    join_value_with_macro: str,
+) -> str:
+    for column_name, macro in inventory_join_macros.items():
+        if (row_value := row.get(f"{datasource_ident}_{column_name}")) is None:
+            continue
+        if macro in join_value_with_macro:
+            join_value_with_macro = join_value_with_macro.replace(macro, row_value)
+    return join_value_with_macro
 
 
 def join_row(row: Row, cell: Cell) -> Row:

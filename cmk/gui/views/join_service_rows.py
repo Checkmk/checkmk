@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import NamedTuple
 
 from livestatus import SiteId
 
@@ -11,7 +12,7 @@ from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, Row, Rows
 from cmk.gui.view import View
 from cmk.gui.views.data_source import data_source_registry
-from cmk.gui.views.painter.v0.base import columns_of_cells, JoinCell
+from cmk.gui.views.painter.v0.base import columns_of_cells, JoinCell, replace_inventory_join_macros
 from cmk.gui.views.sorter import SorterEntry
 from cmk.gui.views.store import get_permitted_views
 
@@ -31,6 +32,10 @@ def join_service_row_post_processor(
     if slave_ds.join_key is None:
         raise ValueError()
 
+    # The inventory_join_macros are avail if the datasource is an inventory table
+    inventory_join_macros = dict(view.spec.get("inventory_join_macros", {}).get("macros", []))
+    join_filters = _make_join_filters(view, inventory_join_macros, slave_ds.join_key, rows)
+
     row_data = slave_ds.table.query(
         view.datasource,
         view.row_cells,
@@ -43,7 +48,7 @@ def join_service_row_post_processor(
         context=view.context,
         headers="{}{}\n".format(
             "".join(get_livestatus_filter_headers(view.context, all_active_filters)),
-            "\n".join(_make_join_filters(view.join_cells, slave_ds.join_key)),
+            "\n".join(join_filters.filters),
         ),
         only_sites=view.only_sites,
         limit=None,
@@ -62,9 +67,31 @@ def join_service_row_post_processor(
 
     # Add this information into master table in artificial column "JOIN"
     for row in rows:
-        row.setdefault("JOIN", {}).update(
-            per_master_entry.get(_make_master_key(row, join_master_column), {})
+        master_entry = per_master_entry.get(_make_master_key(row, join_master_column), {})
+
+        join_info = {
+            join_value_without_macros: attrs
+            for join_value_without_macros in join_filters.without_macros
+            if (attrs := master_entry.get(join_value_without_macros))
+        }
+
+        join_info.update(
+            {
+                join_value_with_macros: attrs
+                for join_value_with_macros in join_filters.with_macros
+                if (
+                    service_description := replace_inventory_join_macros(
+                        datasource_ident=view.datasource.ident,
+                        inventory_join_macros=inventory_join_macros,
+                        row=row,
+                        join_value_with_macro=join_value_with_macros,
+                    )
+                )
+                and (attrs := master_entry.get(service_description))
+            }
         )
+
+        row.setdefault("JOIN", {}).update(join_info)
 
 
 def _get_needed_join_columns(
@@ -86,10 +113,43 @@ def _get_needed_join_columns(
     return list(join_columns)
 
 
-def _make_join_filters(join_cells: list[JoinCell], join_key: str) -> list[str]:
-    join_filters = [join_cell.livestatus_filter(join_key) for join_cell in join_cells]
-    join_filters.append("Or: %d" % len(join_filters))
-    return join_filters
+class JoinFilters(NamedTuple):
+    with_macros: list[str]
+    without_macros: list[str]
+    filters: list[str]
+
+
+def _make_join_filters(
+    view: View,
+    inventory_join_macros: dict[str, str],
+    join_column_name: str,
+    rows: Rows,
+) -> JoinFilters:
+    with_macros = []
+    without_macros = []
+    filters = []
+
+    for join_cell in view.join_cells:
+        if any(macro in join_cell.join_value for macro in inventory_join_macros.values()):
+            with_macros.append(join_cell.join_value)
+            filters.append(
+                join_cell.livestatus_filter_from_macros(
+                    join_column_name,
+                    view.datasource.ident,
+                    inventory_join_macros,
+                    rows,
+                )
+            )
+        else:
+            without_macros.append(join_cell.join_value)
+            filters.append(join_cell.livestatus_filter(join_column_name))
+
+    filters.append("Or: %d" % len(filters))
+    return JoinFilters(
+        with_macros=with_macros,
+        without_macros=without_macros,
+        filters=filters,
+    )
 
 
 def _make_master_key(row: Row, join_master_column: str) -> tuple[SiteId, str]:

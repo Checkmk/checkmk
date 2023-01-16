@@ -48,7 +48,7 @@ def main(raw_args):
         "Version: %s (%s), Edition: %s, Branch: %s",
         version.version,
         version.version_spec,
-        version.edition.name,
+        version.edition.long,
         version.branch,
     )
 

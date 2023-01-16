@@ -51,11 +51,11 @@ def client() -> docker.DockerClient:
 
 
 def _image_name(version: CMKVersion) -> str:
-    return f"docker-tests/check-mk-{version.edition.name}-{version.branch}-{version.version}"
+    return f"docker-tests/check-mk-{version.edition.long}-{version.branch}-{version.version}"
 
 
 def _package_name(version: CMKVersion) -> str:
-    return f"check-mk-{version.edition.name}-{version.version}_0.{distro_codename}_amd64.deb"
+    return f"check-mk-{version.edition.long}-{version.version}_0.{distro_codename}_amd64.deb"
 
 
 def _prepare_build() -> None:
@@ -138,7 +138,7 @@ def _build(
             network_mode="container:%s" % secret_container.id,
             buildargs={
                 "CMK_VERSION": version.version,
-                "CMK_EDITION": version.edition.name,
+                "CMK_EDITION": version.edition.long,
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )

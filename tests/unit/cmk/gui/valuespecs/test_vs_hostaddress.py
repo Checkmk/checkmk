@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import nullcontext
-from enum import Enum
+from enum import auto, StrEnum
 
 import pytest
 
@@ -12,11 +12,11 @@ import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 
 
-class ValueType(Enum):
-    name = "name"
-    ipv4 = "ipv4"
-    ipv6 = "ipv6"
-    none = "none"
+class ValueType(StrEnum):
+    name_ = auto()
+    ipv4 = auto()
+    ipv6 = auto()
+    none = auto()
 
 
 @pytest.mark.parametrize(
@@ -31,11 +31,11 @@ class ValueType(Enum):
 @pytest.mark.parametrize(
     "value_type,value",
     [
-        (ValueType.name, "xyz"),
-        (ValueType.name, "xyz001_d3"),
-        (ValueType.name, "abc-def-ghi"),
-        (ValueType.name, "asd.abc"),
-        (ValueType.name, "asd.abc."),
+        (ValueType.name_, "xyz"),
+        (ValueType.name_, "xyz001_d3"),
+        (ValueType.name_, "abc-def-ghi"),
+        (ValueType.name_, "asd.abc"),
+        (ValueType.name_, "asd.abc."),
         (ValueType.ipv4, "10.10.123.234"),
         (ValueType.ipv4, "10.10.123.234"),
         (ValueType.ipv6, "2001:db8:3333:4444:5555:6666:7777:8888"),
@@ -62,7 +62,7 @@ def test_host_address_validate_value(
     allow_ipv6_address: bool,
 ) -> None:
     expected_valid = (
-        (value_type is ValueType.name and allow_host_name)
+        (value_type is ValueType.name_ and allow_host_name)
         or (value_type is ValueType.ipv4 and allow_ipv4_address)
         or (value_type is ValueType.ipv6 and allow_ipv6_address)
     )

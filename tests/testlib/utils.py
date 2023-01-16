@@ -203,7 +203,7 @@ def add_python_paths() -> None:
 
 
 def package_hash_path(version: str, edition: Edition) -> Path:
-    return Path(f"/tmp/cmk_package_hash_{version}_{edition.name}")
+    return Path(f"/tmp/cmk_package_hash_{version}_{edition.long}")
 
 
 def version_spec_from_env(fallback: str | None = None) -> str:
@@ -219,7 +219,7 @@ def _parse_raw_edition(raw_edition: str) -> Edition:
         return Edition[raw_edition.upper()]
     except KeyError:
         for edition in Edition:
-            if edition.name == raw_edition:
+            if edition.long == raw_edition:
                 return edition
     raise ValueError(f"Unknown edition: {raw_edition}")
 

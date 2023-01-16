@@ -45,7 +45,7 @@ def main():
     logger.info(
         "Version: %s, Edition: %s, Branch: %s",
         version.version,
-        version.edition.name,
+        version.edition.long,
         version.branch,
     )
 
@@ -227,7 +227,7 @@ def sha256_file(path: Path) -> str:
 
 class PackageManagerDEB(ABCPackageManager):
     def _package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.name}-{version}_0.{self.distro_name}_amd64.deb"
+        return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
 
     def _install_package(self, package_path):
         # As long as we do not have all dependencies preinstalled, we need to ensure that the
@@ -238,7 +238,7 @@ class PackageManagerDEB(ABCPackageManager):
 
 class ABCPackageManagerRPM(ABCPackageManager):
     def _package_name(self, edition: Edition, version: str) -> str:
-        return f"check-mk-{edition.name}-{version}-{self.distro_name}-38.x86_64.rpm"
+        return f"check-mk-{edition.long}-{version}-{self.distro_name}-38.x86_64.rpm"
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):

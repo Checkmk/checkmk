@@ -12,7 +12,7 @@ poe_default_levels = (90.0, 95.0)
 
 
 #  constants for operational status of poe interface
-class PoeStatus(enum.IntEnum):
+class PoeStatus(int, enum.Enum):
     ON = 1
     OFF = 2
     FAULTY = 3

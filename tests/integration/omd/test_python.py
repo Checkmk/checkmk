@@ -148,7 +148,7 @@ def test_02_pip_path(site: Site) -> None:
 def test_03_pip_interpreter_version(site: Site) -> None:
     p = site.execute(PIP_CMD + ["-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("pip 22.0.4")
+    assert version.startswith("pip 22.3.1")
 
 
 @pytest.mark.parametrize(

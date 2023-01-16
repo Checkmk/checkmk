@@ -1187,7 +1187,7 @@ def get_site_factory(
     logger.info(
         "Version: %s, Edition: %s, Branch: %s",
         version.version,
-        version.edition.name,
+        version.edition.long,
         version.branch,
     )
     return SiteFactory(

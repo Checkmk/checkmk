@@ -35,7 +35,7 @@ from cmk.utils.i18n import _
 
 class _EditionValue(NamedTuple):
     short: str
-    name: str
+    long: str
     title: str
 
 

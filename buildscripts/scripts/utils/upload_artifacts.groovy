@@ -105,14 +105,14 @@ def deploy_to_website(CMK_VERS) {
         // CMK_VERS can contain a rc information like v2.1.0p6-rc1.
         // On the website, we only want to have official releases.
         def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS)
+        def SYMLINK_PATH = "/smb-share-customer/checkmk/" + TARGET_VERSION
 
         // We also do not want to keep rc versions on the archive.
         // So rename the folder in case we have a rc
         if (TARGET_VERSION != CMK_VERS) {
             execute_cmd_on_archive_server("mv ${downloads_path}${CMK_VERS} ${downloads_path}${TARGET_VERSION};")
         }
-        execute_cmd_on_archive_server("ln -sf " +
-            "${downloads_path}${TARGET_VERSION} /smb-share-customer/checkmk/${TARGET_VERSION};");
+        execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION} ${SYMLINK_PATH};");
     }
 }
 

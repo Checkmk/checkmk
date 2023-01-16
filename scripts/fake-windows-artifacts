@@ -1,29 +1,37 @@
-if [ ! -e agents/windows ]; then
-    echo "ERROR: Falsches Verzeichnis"
-    exit 1
-fi
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-touch enterprise/agents/plugins/cmk-update-agent
-chmod +x enterprise/agents/plugins/cmk-update-agent
-touch enterprise/agents/plugins/cmk-update-agent-32
-chmod +x enterprise/agents/plugins/cmk-update-agent-32
+REPO_PATH="$(git rev-parse --show-toplevel)"
 
-touch agents/windows/check_mk_agent.msi
-chmod +x agents/windows/check_mk_agent.msi
-touch agents/windows/check_mk_agent_unsigned.msi
-chmod +x agents/windows/check_mk_agent_unsigned.msi
-touch agents/windows/check_mk_agent_legacy-64.exe
-chmod +x agents/windows/check_mk_agent_legacy-64.exe
-touch agents/windows/check_mk_agent_legacy.exe
-chmod +x agents/windows/check_mk_agent_legacy.exe
-touch agents/windows/check_mk_agent_legacy.msi
-chmod +x agents/windows/check_mk_agent_legacy.msi
-touch agents/windows/check_mk.example.ini
-touch agents/windows/check_mk.user.yml
-touch agents/windows/python-3.cab
-touch agents/windows/python-3.4.cab
-touch agents/windows/unsign-msi.patch
+agents_windows="agents/windows"
 
-touch agents/windows/OpenHardwareMonitorCLI.exe
-chmod +x agents/windows/OpenHardwareMonitorCLI.exe
-touch agents/windows/OpenHardwareMonitorLib.dll
+touch_and_executable=(
+    "${REPO_PATH}/enterprise/agents/plugins/cmk-update-agent"
+    "${REPO_PATH}/enterprise/agents/plugins/cmk-update-agent-32"
+    "${REPO_PATH}/${agents_windows}/check_mk_agent.msi"
+    "${REPO_PATH}/${agents_windows}/check_mk_agent_unsigned.msi"
+    "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy-64.exe"
+    "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy.exe"
+    "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy.msi"
+    "${REPO_PATH}/${agents_windows}/OpenHardwareMonitorCLI.exe"
+)
+
+touch_only=(
+    "${REPO_PATH}/agents/windows/check_mk.example.ini"
+    "${REPO_PATH}/agents/windows/check_mk.user.yml"
+    "${REPO_PATH}/agents/windows/python-3.cab"
+    "${REPO_PATH}/agents/windows/python-3.4.cab"
+    "${REPO_PATH}/agents/windows/unsign-msi.patch"
+    "${REPO_PATH}/agents/windows/OpenHardwareMonitorLib.dll"
+)
+
+for f in "${touch_and_executable[@]}"; do
+    touch "${f}"
+    chmod +x "${f}"
+done
+
+for f in "${touch_only[@]}"; do
+    touch "${f}"
+done

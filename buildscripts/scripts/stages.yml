@@ -34,7 +34,7 @@ VARIABLES:
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-python-files --filter"
 
     - NAME: CHANGED_AGENT_CONTROLLER_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/cmk-agent-ctl/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
     - NAME: CHANGED_PYLINT_RC_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.pylintrc' - || true"
@@ -342,28 +342,28 @@ STAGES:
 
     - NAME: 'Agent Controller: cargo check '
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
-      DIR: 'agents/cmk-agent-ctl'
+      DIR: 'packages/cmk-agent-ctl'
       COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command check --all-targets &> ${RESULTS}/agent-controller-check.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-check.txt"
 
     - NAME: 'Agent Controller: cargo test'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
-      DIR: 'agents/cmk-agent-ctl'
+      DIR: 'packages/cmk-agent-ctl'
       COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command test --all-targets &> ${RESULTS}/agent-controller-test.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-test.txt"
 
     - NAME: 'Agent Controller: cargo fmt'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
-      DIR: 'agents/cmk-agent-ctl'
+      DIR: 'packages/cmk-agent-ctl'
       COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command fmt -- --check &> ${RESULTS}/agent-controller-fmt.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-fmt.txt"
 
     - NAME: 'Agent Controller: cargo clippy'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
-      DIR: 'agents/cmk-agent-ctl'
+      DIR: 'packages/cmk-agent-ctl'
       COMMAND: "../../scripts/run-in-docker.sh ./run-cargo-command clippy --all-targets -- -D warnings &> ${RESULTS}/agent-controller-clippy.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller-clippy.txt"

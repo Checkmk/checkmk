@@ -328,7 +328,7 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv.lock" \
 	    --exclude="node_modules"
 
-AGENT_CTL_TARGET_PATH=agents/cmk-agent-ctl/target
+AGENT_CTL_TARGET_PATH=packages/cmk-agent-ctl/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \

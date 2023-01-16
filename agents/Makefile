@@ -21,13 +21,14 @@ DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
 AGENT_CTL_GZ := $(AGENTS_DIR)/linux/cmk-agent-ctl.gz
-AGENT_CTL_CARGO_OUT := cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl
-AGENT_CTL_DEPS := cmk-agent-ctl/Cargo.lock \
-	cmk-agent-ctl/Cargo.toml \
-	$(wildcard cmk-agent-ctl/src/*.rs) \
-	$(wildcard cmk-agent-ctl/src/configuration/*.rs) \
-	$(wildcard cmk-agent-ctl/src/modes/*.rs) \
-	$(wildcard cmk-agent-ctl/src/monitoring_data/*.rs)
+AGENT_CTL_DIR := $(REPO_PATH)/packages/cmk-agent-ctl
+AGENT_CTL_CARGO_OUT := $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl
+AGENT_CTL_DEPS := $(AGENT_CTL_DIR)/Cargo.lock \
+	$(AGENT_CTL_DIR)/Cargo.toml \
+	$(wildcard $(AGENT_CTL_DIR)/src/*.rs) \
+	$(wildcard $(AGENT_CTL_DIR)/src/configuration/*.rs) \
+	$(wildcard $(AGENT_CTL_DIR)/src/modes/*.rs) \
+	$(wildcard $(AGENT_CTL_DIR)/src/monitoring_data/*.rs)
 
 BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
@@ -82,14 +83,14 @@ setversion:
 	    check_mk_agent.openwrt \
 	    check_mk_agent.solaris
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
-	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' cmk-agent-ctl/src/constants.rs
+	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
 
 controller: $(AGENT_CTL_GZ)
 
 $(AGENT_CTL_CARGO_OUT): $(AGENT_CTL_DEPS)
-	(cd cmk-agent-ctl; ./run-cargo-command build --release)
+	(cd $(AGENT_CTL_DIR); ./run-cargo-command build --release)
 	touch $(AGENT_CTL_CARGO_OUT)
 
 $(AGENT_CTL): $(AGENT_CTL_CARGO_OUT)

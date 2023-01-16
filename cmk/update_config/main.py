@@ -44,7 +44,7 @@ from .registry import update_action_registry
 from .update_state import UpdateState
 
 
-def main(args: Sequence[str]) -> bool:
+def main(args: Sequence[str]) -> int:
     arguments = _parse_arguments(args)
 
     if not passed_pre_checks(arguments.conflict):
@@ -73,7 +73,7 @@ def main(args: Sequence[str]) -> bool:
             'ERROR: Please repair this and run "cmk-update-config -v" '
             "BEFORE starting the site again."
         )
-        return False
+        return 1
 
 
 def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
@@ -146,7 +146,7 @@ class ConfigUpdater:
         self._logger: Final = logger
         self.update_state: Final = update_state
 
-    def __call__(self) -> bool:
+    def __call__(self) -> int:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
 
@@ -178,7 +178,7 @@ class ConfigUpdater:
                 except Exception:
                     self._has_errors = True
                     self._logger.error(' + "%s" failed' % action.title, exc_info=True)
-                    if debug.enabled():
+                    if not action.continue_on_failure or debug.enabled():
                         raise
 
             if not self._has_errors and not is_wato_slave_site():
@@ -191,7 +191,7 @@ class ConfigUpdater:
 
         self.update_state.save()
         self._logger.log(VERBOSE, "Done")
-        return self._has_errors
+        return 1 if self._has_errors else 0
 
     def _check_failed_gui_plugins(self) -> None:
         if get_failed_plugins():

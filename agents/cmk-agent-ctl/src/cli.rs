@@ -118,6 +118,9 @@ pub struct RegistrationConnectionOpts {
 
     #[clap(flatten)]
     pub client_opts: ClientOpts,
+
+    #[clap(flatten)]
+    pub reg_client_opts: RegistrationClientOpts,
 }
 
 #[derive(Parser)]
@@ -126,7 +129,10 @@ pub struct ClientOpts {
     /// The default is to ignore configured proxies and to connect directly.
     #[arg(short = 'd', long)]
     pub detect_proxy: bool,
+}
 
+#[derive(Parser)]
+pub struct RegistrationClientOpts {
     /// Enable TLS certificate validation for querying the agent receiver port from the Checkmk
     /// REST API. By default, certificate validation is disabled because it is not security-relevant
     /// at this stage, see werk #14715.
@@ -187,6 +193,9 @@ pub struct DaemonOpts {
 
     #[clap(flatten)]
     pub client_opts: ClientOpts,
+
+    #[clap(flatten)]
+    pub reg_client_opts: RegistrationClientOpts,
 }
 
 #[derive(Parser)]

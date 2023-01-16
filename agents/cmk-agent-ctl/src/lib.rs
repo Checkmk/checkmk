@@ -71,7 +71,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
         cli::Mode::Import(import_opts) => import(&mut registry, &import_opts),
         cli::Mode::Push(client_opts) => push(
             &registry,
-            &config::ClientConfig::new(runtime_config, client_opts),
+            &config::ClientConfig::new(runtime_config, client_opts, None),
             &setup::agent_channel(),
         ),
         cli::Mode::Pull(pull_opts) => pull(config::PullConfig::new(
@@ -83,7 +83,11 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
             &paths.pre_configured_connections_path,
             registry.clone(),
             config::PullConfig::new(runtime_config.clone(), daemon_opts.pull_opts, registry)?,
-            config::ClientConfig::new(runtime_config, daemon_opts.client_opts),
+            config::ClientConfig::new(
+                runtime_config,
+                daemon_opts.client_opts,
+                Some(daemon_opts.reg_client_opts),
+            ),
         ),
         cli::Mode::Dump => dump(),
         cli::Mode::Status(status_opts) => status(
@@ -98,7 +102,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
                 },
                 registry.clone(),
             )?,
-            config::ClientConfig::new(runtime_config, status_opts.client_opts),
+            config::ClientConfig::new(runtime_config, status_opts.client_opts, None),
             status_opts.json,
             !status_opts.no_query_remote,
         ),

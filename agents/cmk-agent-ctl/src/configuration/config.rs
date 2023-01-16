@@ -122,15 +122,18 @@ pub struct RegistrationConnectionConfig {
 impl RegistrationConnectionConfig {
     pub fn new(
         runtime_config: RuntimeConfig,
-        registration_conncection_opts: cli::RegistrationConnectionOpts,
+        registration_connection_opts: cli::RegistrationConnectionOpts,
     ) -> AnyhowResult<Self> {
         let site_id = site_spec::SiteID {
-            server: registration_conncection_opts.server_spec.server,
-            site: registration_conncection_opts.site,
+            server: registration_connection_opts.server_spec.server,
+            site: registration_connection_opts.site,
         };
-        let client_config =
-            ClientConfig::new(runtime_config, registration_conncection_opts.client_opts);
-        let receiver_port = (if let Some(p) = registration_conncection_opts.server_spec.port {
+        let client_config = ClientConfig::new(
+            runtime_config,
+            registration_connection_opts.client_opts,
+            Some(registration_connection_opts.reg_client_opts),
+        );
+        let receiver_port = (if let Some(p) = registration_connection_opts.server_spec.port {
             Ok(p)
         } else {
             site_spec::discover_receiver_port(&site_id, &client_config)
@@ -138,10 +141,10 @@ impl RegistrationConnectionConfig {
         Ok(Self {
             site_id,
             receiver_port,
-            username: registration_conncection_opts.user,
-            password: registration_conncection_opts.password,
+            username: registration_connection_opts.user,
+            password: registration_connection_opts.password,
             root_certificate: None,
-            trust_server_cert: registration_conncection_opts.trust_server_cert,
+            trust_server_cert: registration_connection_opts.trust_server_cert,
             client_config,
         })
     }
@@ -188,11 +191,18 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
-    pub fn new(runtime_config: RuntimeConfig, client_opts: cli::ClientOpts) -> ClientConfig {
+    pub fn new(
+        runtime_config: RuntimeConfig,
+        client_opts: cli::ClientOpts,
+        reg_client_opts: Option<cli::RegistrationClientOpts>,
+    ) -> ClientConfig {
         ClientConfig {
             use_proxy: client_opts.detect_proxy || runtime_config.detect_proxy.unwrap_or(false),
-            validate_api_cert: client_opts.validate_api_cert
-                || runtime_config.validate_api_cert.unwrap_or(false),
+            validate_api_cert: (if let Some(reg_client_opts) = reg_client_opts {
+                reg_client_opts.validate_api_cert
+            } else {
+                false
+            }) || runtime_config.validate_api_cert.unwrap_or(false),
         }
     }
 }
@@ -598,6 +608,8 @@ mod test_registration_config {
             trust_server_cert: false,
             client_opts: cli::ClientOpts {
                 detect_proxy: false,
+            },
+            reg_client_opts: cli::RegistrationClientOpts {
                 validate_api_cert: false,
             },
         }
@@ -727,8 +739,8 @@ mod test_client_config {
             },
             cli::ClientOpts {
                 detect_proxy: false,
-                validate_api_cert: false,
             },
+            None,
         );
         assert!(!client_config.use_proxy);
         assert!(!client_config.validate_api_cert);
@@ -745,8 +757,10 @@ mod test_client_config {
             },
             cli::ClientOpts {
                 detect_proxy: false,
-                validate_api_cert: false,
             },
+            Some(cli::RegistrationClientOpts {
+                validate_api_cert: false,
+            }),
         );
         assert!(client_config.use_proxy);
         assert!(client_config.validate_api_cert);
@@ -761,10 +775,10 @@ mod test_client_config {
                 detect_proxy: None,
                 validate_api_cert: None,
             },
-            cli::ClientOpts {
-                detect_proxy: true,
+            cli::ClientOpts { detect_proxy: true },
+            Some(cli::RegistrationClientOpts {
                 validate_api_cert: true,
-            },
+            }),
         );
         assert!(client_config.use_proxy);
         assert!(client_config.validate_api_cert);

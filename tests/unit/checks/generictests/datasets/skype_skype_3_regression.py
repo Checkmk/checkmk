@@ -263,21 +263,16 @@ checks = {
                     "UDP auth failures/sec: 0.00",
                     [("edge_udp_failed_auth", 0.0, 20, 40, None, None)],
                 ),
-                # The check crashed here with a KeyError.
-                (0, "", []),
-                # end
                 (
                     0,
                     "UDP allocate requests > port limit/sec: 0.00",
                     [("edge_udp_allocate_requests_exceeding_port_limit", 0.0, 20, 40, None, None)],
                 ),
-                (0, "", []),
                 (
                     0,
                     "UDP packets dropped/sec: 0.00",
                     [("edge_udp_packets_dropped", 0.0, 200, 400, None, None)],
                 ),
-                (0, "", []),
             ],
         )
     ],

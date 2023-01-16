@@ -39,7 +39,7 @@ def check_msexch_isclienttype(item, params, parsed):
             unit="ms",
         )
 
-    yield wmi_yield_raw_persec(
+    yield from wmi_yield_raw_persec(
         parsed[""],
         item,
         "RPCRequests",

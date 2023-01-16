@@ -65,11 +65,7 @@ pub enum Mode {
     Status(StatusOpts),
 
     /// Delete a connection to a Checkmk instance
-    ///
-    /// Connections can be specified either by their site address or their UUID.
-    /// The site address is '<servername>/<site>', see the output of the
-    /// status command.
-    Delete(DeleteOpts),
+    Delete(ConnectionOpts),
 
     /// Delete all connections to Checkmk sites
     DeleteAll(DeleteAllOpts),
@@ -82,9 +78,6 @@ pub enum Mode {
 
     /// Renew the certificate for a connection to a Checkmk instance.
     ///
-    /// Connections can be specified either by their site address or their UUID.
-    /// The site address is '<servername>/<site>', see the output of the
-    /// status command.
     /// Only possible for non-imported connections. To renew imported connections,
     /// please proxy-register and import again.
     RenewCertificate(RenewCertificateOpts),
@@ -222,8 +215,11 @@ pub struct StatusOpts {
 }
 
 #[derive(Parser)]
-pub struct DeleteOpts {
-    /// The connection to delete
+pub struct ConnectionOpts {
+    /// Target connection,
+    /// specified either by its site address or its UUID.
+    /// The site address is '<servername>/<site>', see the output of the
+    /// status command.
     #[arg(name = "CONNECTION")]
     pub connection: String,
 }
@@ -244,14 +240,11 @@ pub struct ImportOpts {
 
 #[derive(Parser)]
 pub struct RenewCertificateOpts {
-    /// The connection to renew
-    #[arg(name = "CONNECTION")]
-    pub connection: String,
+    #[clap(flatten)]
+    pub connection_opts: ConnectionOpts,
 
-    /// Detect and use proxy settings configured on this system for outgoing HTTPS connections.
-    /// The default is to ignore configured proxies and to connect directly.
-    #[arg(short = 'd', long)]
-    pub detect_proxy: bool,
+    #[clap(flatten)]
+    pub client_opts: ClientOpts,
 }
 
 impl Cli {

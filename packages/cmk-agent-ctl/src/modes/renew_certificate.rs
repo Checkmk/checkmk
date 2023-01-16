@@ -8,12 +8,13 @@ use std::str::FromStr;
 
 pub fn renew_certificate(
     registry: &mut config::Registry,
-    renew_certificate_config: config::RenewCertificateConfig,
+    ident: &str,
+    client_config: config::ClientConfig,
 ) -> AnyhowResult<()> {
     let renew_certificate_api = agent_receiver_api::Api {
-        use_proxy: renew_certificate_config.use_proxy,
+        use_proxy: client_config.use_proxy,
     };
-    let (connection, site_id) = find_site_for_ident(registry, &renew_certificate_config.ident)?;
+    let (connection, site_id) = find_site_for_ident(registry, ident)?;
 
     renew_connection_cert(&site_id, connection, &renew_certificate_api)?;
 

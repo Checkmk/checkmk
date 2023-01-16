@@ -113,7 +113,8 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
         }
         cli::Mode::RenewCertificate(renew_certificate_opts) => renew_certificate(
             &mut registry,
-            config::RenewCertificateConfig::new(runtime_config, renew_certificate_opts),
+            &renew_certificate_opts.connection_opts.connection,
+            config::ClientConfig::new(runtime_config, renew_certificate_opts.client_opts, None),
         ),
     }
 }

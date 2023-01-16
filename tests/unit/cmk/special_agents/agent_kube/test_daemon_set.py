@@ -22,6 +22,7 @@ def daemon_sets_api_sections() -> set[str]:
         "kube_daemonset_info_v1",
         "kube_update_strategy_v1",
         "kube_daemonset_replicas_v1",
+        "kube_controller_spec_v1",
     }
 
 

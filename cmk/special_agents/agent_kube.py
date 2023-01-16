@@ -392,11 +392,15 @@ def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> sec
     return section.UpdateStrategy.parse_obj(controller.spec)
 
 
-def deployment_replicas(deployment_status: api.DeploymentStatus) -> section.DeploymentReplicas:
+def controller_spec(controller: Deployment | DaemonSet | StatefulSet) -> section.ControllerSpec:
+    return section.ControllerSpec(min_ready_seconds=controller.spec.min_ready_seconds)
+
+
+def deployment_replicas(deployment: Deployment) -> section.DeploymentReplicas:
     return section.DeploymentReplicas(
-        desired=deployment_status.replicas.replicas,
-        ready=deployment_status.replicas.ready,
-        updated=deployment_status.replicas.updated,
+        desired=deployment.status.replicas.replicas,
+        ready=deployment.status.replicas.ready,
+        updated=deployment.status.replicas.updated,
     )
 
 
@@ -1411,8 +1415,13 @@ def create_deployment_api_sections(
         ),
         WriteableSection(
             piggyback_name=piggyback_name,
+            section_name=SectionName("kube_controller_spec_v1"),
+            section=controller_spec(api_deployment),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
             section_name=SectionName("kube_deployment_replicas_v1"),
-            section=deployment_replicas(api_deployment.status),
+            section=deployment_replicas(api_deployment),
         ),
     )
 
@@ -1467,6 +1476,11 @@ def create_daemon_set_api_sections(
             section_name=SectionName("kube_daemonset_replicas_v1"),
             section=daemonset_replicas(api_daemonset),
         ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_controller_spec_v1"),
+            section=controller_spec(api_daemonset),
+        ),
     )
 
 
@@ -1505,6 +1519,11 @@ def create_statefulset_api_sections(
             piggyback_name=piggyback_name,
             section_name=SectionName("kube_update_strategy_v1"),
             section=controller_strategy(api_statefulset),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_controller_spec_v1"),
+            section=controller_spec(api_statefulset),
         ),
         WriteableSection(
             piggyback_name=piggyback_name,

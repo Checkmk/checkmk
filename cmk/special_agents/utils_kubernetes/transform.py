@@ -258,11 +258,13 @@ def parse_selector(selector: client.V1LabelSelector) -> api.Selector:
 def parse_deployment_spec(deployment_spec: client.V1DeploymentSpec) -> api.DeploymentSpec:
     if deployment_spec.strategy.type == "Recreate":
         return api.DeploymentSpec(
+            min_ready_seconds=deployment_spec.min_ready_seconds or 0,
             strategy=api.Recreate(),
             selector=parse_selector(deployment_spec.selector),
         )
     if deployment_spec.strategy.type == "RollingUpdate":
         return api.DeploymentSpec(
+            min_ready_seconds=deployment_spec.min_ready_seconds or 0,
             strategy=api.RollingUpdate(
                 max_surge=deployment_spec.strategy.rolling_update.max_surge,
                 max_unavailable=deployment_spec.strategy.rolling_update.max_unavailable,
@@ -369,11 +371,13 @@ def parse_daemonset_status(status: client.V1DaemonSetStatus) -> api.DaemonSetSta
 def parse_daemonset_spec(daemonset_spec: client.V1DaemonSetSpec) -> api.DaemonSetSpec:
     if daemonset_spec.update_strategy.type == "OnDelete":
         return api.DaemonSetSpec(
+            min_ready_seconds=daemonset_spec.min_ready_seconds or 0,
             strategy=api.OnDelete(),
             selector=parse_selector(daemonset_spec.selector),
         )
     if daemonset_spec.update_strategy.type == "RollingUpdate":
         return api.DaemonSetSpec(
+            min_ready_seconds=daemonset_spec.min_ready_seconds or 0,
             strategy=api.RollingUpdate(
                 max_surge=daemonset_spec.update_strategy.rolling_update.max_surge,
                 max_unavailable=daemonset_spec.update_strategy.rolling_update.max_unavailable,

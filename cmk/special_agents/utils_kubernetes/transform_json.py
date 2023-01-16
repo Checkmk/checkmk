@@ -73,6 +73,7 @@ class JSONSelector(TypedDict, total=False):
 
 
 class JSONStatefulSetSpec(TypedDict):
+    minReadySeconds: NotRequired[int]
     replicas: int
     selector: JSONSelector
     updateStrategy: JSONStatefulSetUpdateStrategy
@@ -161,6 +162,7 @@ def _statefulset_update_strategy_from_json(
 
 def _statefulset_spec_from_json(spec: JSONStatefulSetSpec) -> api.StatefulSetSpec:
     return api.StatefulSetSpec(
+        min_ready_seconds=spec.get("minReadySeconds", 0),
         strategy=_statefulset_update_strategy_from_json(spec["updateStrategy"]),
         selector=_selector_from_json(spec["selector"]),
         replicas=spec["replicas"],

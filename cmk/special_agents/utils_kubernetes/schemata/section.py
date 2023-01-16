@@ -459,6 +459,12 @@ class UpdateStrategy(Section):
     strategy: DisplayableStrategy = Field(discriminator="type_")
 
 
+class ControllerSpec(Section):
+    """section: kube_controller_spec_v1"""
+
+    min_ready_seconds: int
+
+
 class Memory(BaseModel):
     type_: Literal["memory"] = Field("memory", const=True)
     usage: float

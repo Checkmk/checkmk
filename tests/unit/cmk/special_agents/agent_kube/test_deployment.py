@@ -31,6 +31,7 @@ def deployments_api_sections() -> set[str]:
         "kube_cpu_resources_v1",
         "kube_update_strategy_v1",
         "kube_deployment_replicas_v1",
+        "kube_controller_spec_v1",
     }
 
 

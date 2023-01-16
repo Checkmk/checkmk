@@ -25,6 +25,7 @@ def statefulsets_api_sections() -> set[str]:
         "kube_statefulset_info_v1",
         "kube_update_strategy_v1",
         "kube_statefulset_replicas_v1",
+        "kube_controller_spec_v1",
     }
 
 

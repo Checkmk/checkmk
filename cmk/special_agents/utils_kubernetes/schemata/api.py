@@ -477,6 +477,17 @@ class Node(BaseModel):
         ]
 
 
+class ReplicasControllerSpec(BaseModel):
+    """
+    min_ready_seconds:
+        * minimum number of secs for which a newly created pod should be ready before considered
+        available
+        * defaults to 0
+    """
+
+    min_ready_seconds: int
+
+
 class Replicas(BaseModel):
     replicas: int
     updated: int
@@ -570,7 +581,7 @@ class OnDelete(BaseModel):
     type_: Literal["OnDelete"] = Field("OnDelete", const=True)
 
 
-class DeploymentSpec(BaseModel):
+class DeploymentSpec(ReplicasControllerSpec):
     strategy: Recreate | RollingUpdate = Field(discriminator="type_")
     selector: Selector
 
@@ -582,7 +593,7 @@ class Deployment(BaseModel):
     pods: Sequence[PodUID]
 
 
-class DaemonSetSpec(BaseModel):
+class DaemonSetSpec(ReplicasControllerSpec):
     strategy: OnDelete | RollingUpdate = Field(discriminator="type_")
     selector: Selector
 
@@ -602,7 +613,7 @@ class DaemonSet(BaseModel):
     pods: Sequence[PodUID]
 
 
-class StatefulSetSpec(BaseModel):
+class StatefulSetSpec(ReplicasControllerSpec):
     strategy: OnDelete | StatefulSetRollingUpdate = Field(discriminator="type_")
     selector: Selector
     replicas: int

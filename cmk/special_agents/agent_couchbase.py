@@ -134,7 +134,11 @@ def parse_arguments(argv):
     parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
     parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
     parser.add_argument(
-        "-t", "--timeout", default=10, help="Timeout for API-calls in seconds. Default: 10"
+        "-t",
+        "--timeout",
+        type=int,
+        default=10,
+        help="Timeout for API-calls in seconds. Default: 10",
     )
     parser.add_argument(
         "-b",

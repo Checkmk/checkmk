@@ -3607,19 +3607,19 @@ expected_filters: dict[str, dict[str, Any]] = {
         "sort_index": 302,
         "title": "Tags",
     },
-    "host_labels": {
+    "host_label_groups": {
         "comment": None,
-        "filter_class": "LabelFilter",
-        "htmlvars": ["host_label"],
+        "filter_class": "LabelGroupFilter",
+        "htmlvars": [],
         "info": "host",
         "link_columns": [],
         "sort_index": 301,
         "title": "Host labels",
     },
-    "service_labels": {
+    "service_group_labels": {
         "comment": None,
-        "filter_class": "LabelFilter",
-        "htmlvars": ["service_label"],
+        "filter_class": "LabelGroupFilter",
+        "htmlvars": [],
         "info": "service",
         "link_columns": [],
         "sort_index": 301,

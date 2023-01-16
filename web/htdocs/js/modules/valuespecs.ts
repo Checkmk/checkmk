@@ -929,6 +929,23 @@ let dynamicParamsCallbacks = {
             ...autocompleter.params,
         };
     },
+    label_autocompleter(autocompleter, elem) {
+        const label_selects_of_group = elem
+            .closest(".label_group")
+            .getElementsByClassName("label");
+        let group_labels: string[] = [];
+
+        for (let label of label_selects_of_group) {
+            if (label.value) {
+                group_labels.push(label.value);
+            }
+        }
+        return {
+            world: elem.dataset.world,
+            context: {group_labels: group_labels},
+            ...autocompleter.params,
+        };
+    },
 };
 
 function ajax_autocomplete_request(value, elem, autocompleter) {
@@ -952,7 +969,7 @@ function select2_ajax_vs_autocomplete(elem, autocompleter) {
     let value = term =>
         term.term !== undefined
             ? term.term
-            : ["hostname", "service"].find(el =>
+            : ["hostname", "service", "label"].find(el =>
                   autocompleter.ident.includes(el)
               )
             ? elem.value
@@ -977,12 +994,13 @@ function select2_ajax_vs_autocomplete(elem, autocompleter) {
 function select2_vs_autocomplete(container) {
     $(container)
         .find<HTMLSelectElement>("select.ajax-vals")
+        .not(".vlof_prototype .ajax-vals")
         .each((i, elem) => {
             if (!elem.dataset.autocompleter) return;
             let autocompleter = JSON.parse(elem.dataset.autocompleter);
             // TODO: move placeholder_title to python autocompleter config!
             let field_element =
-                ["hostname", "service", "metric", "graph"].find(el =>
+                ["hostname", "service", "metric", "graph", "label"].find(el =>
                     autocompleter.ident.includes(el)
                 ) || "item";
             let placeholder_title = `(Select ${field_element})`;
@@ -997,7 +1015,9 @@ function select2_vs_autocomplete(container) {
                     ajax: select2_ajax_vs_autocomplete(elem, autocompleter),
                 })
                 .on("select2:open", () => {
-                    if (["hostname", "service"].includes(field_element))
+                    if (
+                        ["hostname", "service", "label"].includes(field_element)
+                    )
                         $(".select2-search input").val(elem.value);
                 });
 
@@ -1171,4 +1191,32 @@ export function fetch_ca_from_server(varprefix) {
             }
         },
     });
+}
+
+export function single_label_on_change(select_elem: HTMLSelectElement) {
+    if (select_elem.value === "") {
+        return;
+    }
+
+    // The current select2 needs to be closed before the new one may be opened properly.
+    // This seems to be a select2 bug. Otherwise, the new one is opened without focus, which makes
+    // a click necessary before typing
+    $(select_elem).select2("close");
+    const tbody: HTMLTableSectionElement = select_elem.closest("tbody")!;
+    const labels = tbody.getElementsByClassName(
+        "label"
+    ) as HTMLCollectionOf<HTMLSelectElement>;
+
+    // If the last select.label within tbody has a non empty value, add a new row
+    if (labels[labels.length - 1].value !== "") {
+        const add_element_button = select_elem
+            .closest("div.valuespec_listof")!
+            .getElementsByClassName("vlof_add_button")![0] as HTMLAnchorElement;
+        add_element_button.click();
+    }
+
+    // Automatically open (and focus) the newly added select2 element
+    const new_row = tbody.children[tbody.children.length - 1]!;
+    const last_select_id = "#" + new_row.id.replace("vs_entry", "vs") + "_vs";
+    $(last_select_id).select2("open");
 }

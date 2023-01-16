@@ -104,10 +104,12 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutoc
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
+    AndOrNotLiteral,
     encode_labels_for_http,
-    encode_labels_for_tagify,
-    get_labels_cache,
+    get_labels_from_config,
+    get_labels_from_core,
     label_help_text,
+    LABEL_REGEX,
     parse_labels_value,
 )
 from cmk.gui.utils.output_funnel import output_funnel
@@ -1966,6 +1968,9 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         allow_empty: bool = True,
         empty_text: str | None = None,
         sort_by: int | None = None,
+        first_element_vs: ValueSpec[T] | None = None,
+        add_icon: Icon | None = None,
+        ignore_complain: bool = False,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -1991,6 +1996,9 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         # tuples that contain input field elements directly. The value of sort_by
         # refers to the index of the sort values in the tuple
         self._sort_by = sort_by
+        self._first_element_vs = first_element_vs
+        self._add_icon = add_icon
+        self._ignore_complain = ignore_complain
 
     def help(self) -> str | HTML | None:
         return " ".join(str(t) for t in [super().help(), self._valuespec.help()] if t)
@@ -2023,8 +2031,9 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         # original 'value' but take the value from the HTML variables.
         if request.has_var("%s_count" % varprefix):
             count = len(self.get_indexes(varprefix))
-            # FIXME: Using None here is completely wrong!
-            value = [None] * count  # type: ignore[list-item]  # dummy for the loop
+            if not self._ignore_complain:
+                # FIXME: Using None here is completely wrong!
+                value = [None] * count  # type: ignore[list-item]  # dummy for the loop
         else:
             count = len(value)
 
@@ -2063,12 +2072,28 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             raise NotImplementedError()
 
     def _list_buttons(self, varprefix: str) -> None:
-        html.jsbutton(
-            varprefix + "_add",
-            self._add_label,
-            "cmk.valuespecs.listof_add(%s, %s, %s)"
-            % (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._style.value)),
+        onclick: str = "cmk.valuespecs.listof_add(%s, %s, %s)" % (
+            json.dumps(varprefix),
+            json.dumps(self._magic),
+            json.dumps(self._style.value),
         )
+        if self._add_icon:
+            html.open_a(
+                id_=varprefix + "_add",
+                class_=["vlof_add_button"],
+                href="javascript:void(0)",
+                onclick=onclick,
+                target="",
+            )
+            html.icon(self._add_icon)
+            html.span(self._add_label)
+            html.close_a()
+        else:
+            html.jsbutton(
+                varname=varprefix + "_add",
+                text=self._add_label,
+                onclick=onclick,
+            )
 
         if self._sort_by is not None:
             html.jsbutton(
@@ -2162,7 +2187,10 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         self._del_button(varprefix, index)
         html.close_td()
         html.open_td(class_="vlof_content")
-        self._valuespec.render_input(varprefix + "_" + index, value)
+        if self._first_element_vs and index == "1":
+            self._first_element_vs.render_input(varprefix + "_" + index, value)
+        else:
+            self._valuespec.render_input(varprefix + "_" + index, value)
         html.close_td()
 
     def _del_button(self, vp: str, nr: str) -> None:
@@ -2194,7 +2222,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         while n <= count:
             indexof = request.var(varprefix + "_indexof_%d" % n)
             # for deleted entries, we have removed the whole row, therefore indexof is None
-            if indexof is not None:
+            if indexof:
                 indexes[int(indexof)] = n
             n += 1
         return indexes
@@ -2870,9 +2898,11 @@ class AjaxDropdownChoice(DropdownChoice[str]):
         strict: Literal["True", "False"] = "False",
         # TODO: rename to autocompleter_config!
         autocompleter: AutocompleterConfig | None = None,
+        cssclass: str | None = None,
         # DropdownChoice
         label: str | None = None,
         html_attrs: HTMLTagAttributes | None = None,
+        on_change: str | None = None,
         # From ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -2883,6 +2913,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
             label=label,
             choices=[],
             encode_value=False,  # because JS picks & passes the values on same page
+            on_change=on_change,
             title=title,
             help=help,
             default_value=default_value,
@@ -2908,6 +2939,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
             if regex_error is not None
             else _("Your input does not match the required format.")
         )
+        self._cssclass = cssclass
 
     def from_html_vars(self, varprefix: str) -> str:
         return request.get_str_input_mandatory(varprefix, "")
@@ -2940,7 +2972,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
             onchange=self._on_change,
             ordered=self._sorted,
             label=None,
-            class_=["ajax-vals"],
+            class_=["ajax-vals", self._cssclass if self._cssclass else ""],
             data_autocompleter=json.dumps(self._autocompleter.config),
             size=1,
             read_only=self._read_only,
@@ -6895,7 +6927,7 @@ class Labels(ValueSpec[LabelsModel]):
 
     def render_input(self, varprefix: str, value: LabelsModel) -> None:
         html.help(self.help())
-        label_type = "host_label" if "host_labels" in varprefix else "service_label"
+        label_type = "host_label" if "host_label" in varprefix else "service_label"
         html.text_input(
             varprefix,
             default_value=encode_labels_for_http(value.items()),
@@ -6910,6 +6942,55 @@ class Labels(ValueSpec[LabelsModel]):
 
     def value_from_json(self, json_value: JSONValue) -> LabelsModel:
         return json_value
+
+    @classmethod
+    def get_labels(cls, world: "Labels.World", search_label: str) -> Sequence[tuple[str, str]]:
+        if world is cls.World.CONFIG:
+            return get_labels_from_config(search_label)
+
+        if world is cls.World.CORE:
+            return get_labels_from_core(search_label)
+
+        raise NotImplementedError()
+
+
+AndOrNotDropdownValue = tuple[AndOrNotLiteral, T | None]
+ListOfAndOrNotDropdownValue = Sequence[AndOrNotDropdownValue]
+
+
+class AndOrNotDropdown(DropdownChoice):
+    _bool: str = "_bool"
+    _vs: str = "_vs"
+
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        valuespec: ValueSpec,
+        choices: DropdownChoices | None,
+    ):
+        super().__init__(
+            choices=choices or [("and", _("And")), ("or", _("Or")), ("not", _("Not"))],
+            encode_value=False,
+        )
+
+        self._valuespec = valuespec
+        self._default_value: AndOrNotDropdownValue = ("and", valuespec.default_value())
+
+    def render_input(self, varprefix: str, value: AndOrNotDropdownValue | None) -> None:
+        varprefix_bool, varprefix_vs = [varprefix + self._bool, varprefix + self._vs]
+        value = value if value else self._default_value
+
+        html.open_div(class_=["bool"])
+        super().render_input(varprefix_bool, value[0] if value else None)
+        html.close_div()
+
+        html.div("", class_=["line"])
+        self._valuespec.render_input(varprefix_vs, value[1])
+
+    def from_html_vars(self, varprefix: str) -> AndOrNotDropdownValue | None:
+        varprefix_bool, varprefix_vs = [varprefix + self._bool, varprefix + self._vs]
+        bool_val: AndOrNotLiteral = super().from_html_vars(varprefix_bool)  # type: ignore
+        vs_val = self._valuespec.from_html_vars(varprefix_vs)
+        return (bool_val, vs_val)
 
 
 # TODO: Nuke this, there is only a single call site, and we just fix a single kwarg.
@@ -6936,36 +7017,95 @@ def SingleLabel(  # pylint: disable=redefined-builtin
     )
 
 
-@page_registry.register_page("ajax_autocomplete_labels")
-class PageAutocompleteLabels(AjaxPage):
-    """Return all known labels to support tagify label input dropdown completion"""
+class _SingleLabel(AjaxDropdownChoice):
+    ident: str = "label"
 
-    def page(self) -> PageResult:
-        api_request = request.get_request()
-        return encode_labels_for_tagify(
-            self._get_labels(Labels.World(api_request["world"]), api_request["search_label"])
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        world: Labels.World,
+        label_source: Labels.Source | None = None,
+        strict: Literal["True", "False"] = "False",
+        # DropdownChoice
+        on_change: str | None = None,
+    ):
+        super().__init__(
+            regex=cmk.utils.regex.regex(LABEL_REGEX),
+            regex_error=_(
+                'Labels need to be in the format "[KEY]:[VALUE]". For example "os:windows".'
+            ),
+            autocompleter=AutocompleterConfig(
+                ident=self.ident,
+                dynamic_params_callback_name="label_autocompleter",
+            ),
+            strict=strict,
+            html_attrs={"data-world": world.value},
+            on_change=on_change if on_change else "cmk.valuespecs.single_label_on_change(this)",
+            cssclass=self.ident,
+            default_value="",
         )
 
-    def _get_labels(  # type:ignore[no-untyped-def]
-        self, world, search_label: str
-    ) -> Sequence[tuple[str, str]]:
-        if world is Labels.World.CONFIG:
-            return self._get_labels_from_config(search_label)
 
-        if world is Labels.World.CORE:
-            return self._get_labels_from_core(search_label)
+class LabelGroup(ListOf):
+    _ident: str = "label_group"
+    _choices: DropdownChoices = [("and", "And"), ("or", "Or"), ("not", "Not")]
+    _first_element_choices: DropdownChoices = []
+    _sub_vs: ValueSpec = _SingleLabel(world=Labels.World.CORE)
+    _magic: str = "@:@"  # Used by ListOf class to count through entries
 
-        raise NotImplementedError()
+    def __init__(self):
+        super().__init__(
+            valuespec=AndOrNotDropdown(
+                valuespec=self._sub_vs,
+                choices=self._choices,
+            ),
+            first_element_vs=AndOrNotDropdown(
+                valuespec=self._sub_vs,
+                choices=self._first_element_choices,
+            )
+            if self._first_element_choices
+            else None,
+            magic=self._magic,
+            add_label=_("Add to query"),
+            add_icon="plus",
+            ignore_complain=True,
+            movable=False,
+            default_value=[("and", self._sub_vs.default_value())],
+        )
 
-    def _get_labels_from_config(self, search_label: str) -> Sequence[tuple[str, str]]:
-        # TODO: Until we have a config specific implementation we now use the labels known to the
-        # core. This is not optimal, but better than doing nothing.
-        # To implement a setup specific search, we need to decide which occurrences of labels we
-        # want to search: hosts / folders, rules, ...?
-        return self._get_labels_from_core(search_label)
+    def render_input(
+        self,
+        varprefix: str,
+        value: ListOfAndOrNotDropdownValue,
+    ) -> None:
+        html.open_div(class_=self._ident)
+        super().render_input(varprefix, value)
+        html.close_div()
 
-    def _get_labels_from_core(self, search_label: str) -> Sequence[tuple[str, str]]:
-        return get_labels_cache().get_labels_list()
+
+class LabelGroups(LabelGroup):
+    _ident: str = "label_groups"
+    _choices: DropdownChoices = [("and", "and is"), ("or", "or is"), ("not", "is not")]
+    _first_element_choices: DropdownChoices = [("and", _("Is")), ("not", _("Is not"))]
+    _sub_vs: ValueSpec = LabelGroup()
+    _magic: str = "@!@"  # Used by ListOf class to count through entries
+
+    def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
+        object_type = "host" if "host_label_group" in varprefix else "service"
+        html.p(_("Where host label...") if object_type == "host" else _("Where service label..."))
+        # Always append one empty row to groups
+        value = self._add_empty_row_to_groups(value)
+        super().render_input(varprefix, value)
+
+    def _add_empty_row_to_groups(
+        self, label_groups: ListOfAndOrNotDropdownValue
+    ) -> ListOfAndOrNotDropdownValue:
+        if not label_groups:
+            return [("and", [("and", "")])]
+
+        for _group_operator, label_group in label_groups:
+            if label_group and label_group[-1] != ("and", ""):
+                label_group.append(("and", ""))
+        return label_groups
 
 
 # https://github.com/python/mypy/issues/12368

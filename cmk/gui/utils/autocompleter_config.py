@@ -25,6 +25,7 @@ DynamicParamsCallbackName = Literal[
     "tag_group_options_autocompleter",
     "host_and_service_hinted_autocompleter",
     "host_hinted_autocompleter",
+    "label_autocompleter",
 ]
 
 

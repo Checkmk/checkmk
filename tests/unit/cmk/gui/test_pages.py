@@ -21,7 +21,6 @@ def test_registered_pages() -> None:
         "ajax_cascading_render_painer_parameters",
         "ajax_activation_state",
         "ajax_add_visual",
-        "ajax_autocomplete_labels",
         "ajax_backup_job_state",
         "ajax_background_job_details",
         "ajax_dashlet_pos",

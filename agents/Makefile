@@ -80,7 +80,7 @@ setversion:
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
 
 $(AGENT_CTL):
-	$(AGENT_CTL_DIR)/run-ci build --setup-environment --build
+	$(AGENT_CTL_DIR)/run-ci --setup-environment --build
 	mkdir -p linux
 	install -m 755 $(AGENT_CTL_DIR)/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl $(AGENT_CTL)
 	strip $(AGENT_CTL)

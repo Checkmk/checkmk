@@ -6,15 +6,13 @@
 Special agent for monitoring Couchbase servers with Checkmk
 """
 
-import json
 import logging
-import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Iterator, TypeVar
 
 import requests
 
-from cmk.special_agents.utils.agent_common import special_agent_main
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger(__name__)
@@ -216,58 +214,83 @@ def _get_dump(
     raw_data: Mapping[str, _TRawData],
     filter_keys: Iterable[str],
     process: Callable[[_TRawData], object] = lambda x: x,
-) -> str:
+) -> dict[str, object]:
     data: dict[str, object] = {"name": node_name}
     for key in filter_keys:
         if key in raw_data:
             data[key] = process(raw_data[key])
-    return json.dumps(data)
+    return data
 
 
-def sections_node(client: CouchbaseClient) -> list[str]:
-    pool = client.get_pool()
-    node_list = [(node["hostname"].split(":")[0], node) for node in pool.get("nodes", ())]
+def sections_node(client: CouchbaseClient) -> None:
+    node_list = [
+        (
+            node["hostname"].split(":")[0],
+            node,
+        )
+        for node in client.get_pool().get("nodes", ())
+    ]
 
-    sections = {
-        "couchbase_nodes_uptime": [
-            "{} {}".format(node["uptime"], name) for name, node in node_list
-        ],
-        "couchbase_nodes_info:sep(0)": [
-            _get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list
-        ],
-        "couchbase_nodes_services:sep(0)": [
-            _get_dump(name, node, SECTION_KEYS_SERVICES) for name, node in node_list
-        ],
-        "couchbase_nodes_ports:sep(0)": [
-            _get_dump(name, node, SECTION_KEYS_PORTS) for name, node in node_list
-        ],
-        "couchbase_nodes_stats:sep(0)": [
-            _get_dump(name, node.get("systemStats", {}), SECTION_KEYS_STATS)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_cache:sep(0)": [
-            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_CACHE)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_operations": [
-            "{} {}".format(node.get("interestingStats", {}).get("ops"), name)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_items:sep(0)": [
-            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_ITEMS)
-            for name, node in node_list
-        ],
-        "couchbase_nodes_size:sep(0)": [
-            _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_SIZE)
-            for name, node in node_list
-        ],
-    }
+    for section_name, section_generator_str in [
+        (
+            "couchbase_nodes_uptime",
+            ("{} {}".format(node["uptime"], name) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_operations",
+            (
+                "{} {}".format(node.get("interestingStats", {}).get("ops"), name)
+                for name, node in node_list
+            ),
+        ),
+    ]:
+        with SectionWriter(section_name, separator=None) as section_writer:
+            section_writer.append(section_generator_str)
 
-    output = []
-    for section_name, section_content in sections.items():
-        output.append("<<<%s>>>" % section_name)
-        output.extend(section_content)
-    return output
+    for section_name, section_generator_dict in [
+        (
+            "couchbase_nodes_info",
+            (_get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_services",
+            (_get_dump(name, node, SECTION_KEYS_SERVICES) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_ports",
+            (_get_dump(name, node, SECTION_KEYS_PORTS) for name, node in node_list),
+        ),
+        (
+            "couchbase_nodes_stats",
+            (
+                _get_dump(name, node.get("systemStats", {}), SECTION_KEYS_STATS)
+                for name, node in node_list
+            ),
+        ),
+        (
+            "couchbase_nodes_cache",
+            (
+                _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_CACHE)
+                for name, node in node_list
+            ),
+        ),
+        (
+            "couchbase_nodes_items",
+            (
+                _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_ITEMS)
+                for name, node in node_list
+            ),
+        ),
+        (
+            "couchbase_nodes_size",
+            (
+                _get_dump(name, node.get("interestingStats", {}), SECTION_KEYS_SIZE)
+                for name, node in node_list
+            ),
+        ),
+    ]:
+        with SectionWriter(section_name) as section_writer:
+            section_writer.append_json(section_generator_dict)
 
 
 def fetch_bucket_data(
@@ -291,35 +314,36 @@ def _average(value_list: Sequence[float]) -> float | None:
     return None
 
 
-def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[float]]]]) -> list[str]:
-
-    sections = {
-        "couchbase_buckets_mem:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_MEM, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_operations:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_OPERATIONS, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_cache:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_CACHE, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_vbuckets:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_VBUCKET, _average) for name, data in bucket_list
-        ],
-        "couchbase_buckets_fragmentation:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_FRAGMENTATION, _average)
-            for name, data in bucket_list
-        ],
-        "couchbase_buckets_items:sep(0)": [
-            _get_dump(name, data, SECTION_KEYS_B_ITEMS, _average) for name, data in bucket_list
-        ],
-    }
-
-    output = []
-    for section_name, section_content in sections.items():
-        output.append("<<<%s>>>" % section_name)
-        output.extend(section_content)
-    return output
+def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[float]]]]) -> None:
+    for section_name, filter_keys in [
+        (
+            "couchbase_buckets_mem",
+            SECTION_KEYS_B_MEM,
+        ),
+        (
+            "couchbase_buckets_operations",
+            SECTION_KEYS_B_OPERATIONS,
+        ),
+        (
+            "couchbase_buckets_cache",
+            SECTION_KEYS_B_CACHE,
+        ),
+        (
+            "couchbase_buckets_vbuckets",
+            SECTION_KEYS_B_VBUCKET,
+        ),
+        (
+            "couchbase_buckets_fragmentation",
+            SECTION_KEYS_B_FRAGMENTATION,
+        ),
+        (
+            "couchbase_buckets_items",
+            SECTION_KEYS_B_ITEMS,
+        ),
+    ]:
+        with SectionWriter(section_name) as section_writer:
+            for name, data in bucket_list:
+                section_writer.append_json(_get_dump(name, data, filter_keys, _average))
 
 
 def couchbase_main(args: Args) -> int:
@@ -338,17 +362,14 @@ def couchbase_main(args: Args) -> int:
     )
 
     try:
-        output = sections_node(client)
+        sections_node(client)
     except (ValueError, requests.ConnectionError, requests.HTTPError):
         if args.debug:
             raise
         return 1
 
-    bucket_list = list(fetch_bucket_data(client, args.buckets, args.debug))
-    output += sections_buckets(bucket_list)
+    sections_buckets(list(fetch_bucket_data(client, args.buckets, args.debug)))
 
-    output.append("")
-    sys.stdout.write("\n".join(output))
     return 0
 
 

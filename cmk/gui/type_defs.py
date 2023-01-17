@@ -307,7 +307,7 @@ class ColumnSpec:
     def column_type(self) -> ColumnTypes:
         if self._column_type in ["column", "join_column"]:
             return self._column_type
-        return "column" if self.join_value is None else "join_column"
+        return self._get_column_type_from_join_value(self.join_value)
 
     @classmethod
     def from_raw(cls, value: _RawColumnSpec | _RawLegacyColumnSpec | tuple) -> ColumnSpec:
@@ -350,15 +350,22 @@ class ColumnSpec:
             name = value[0]
             parameters = PainterParameters()
 
+        join_value = value[3]
         return cls(
             name=name,
             parameters=parameters,
             link_spec=None if value[1] is None else VisualLinkSpec.from_raw(value[1]),
             tooltip=value[2],
-            join_value=value[3],
+            join_value=join_value,
             column_title=value[4],
-            _column_type=None,
+            _column_type=cls._get_column_type_from_join_value(join_value),
         )
+
+    @staticmethod
+    def _get_column_type_from_join_value(
+        join_value: ColumnName | None,
+    ) -> Literal["column", "join_column"]:
+        return "column" if join_value is None else "join_column"
 
     def to_raw(self) -> _RawColumnSpec:
         return {

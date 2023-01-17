@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 import pytest
 
 from cmk.gui.type_defs import (
@@ -15,7 +17,7 @@ from cmk.gui.type_defs import (
 
 
 @pytest.mark.parametrize(
-    "raw_column_spec, expected_column_spec",
+    "raw_column_spec, expected_column_spec, expected_column_type",
     [
         pytest.param(
             (
@@ -32,7 +34,9 @@ from cmk.gui.type_defs import (
                 tooltip=None,
                 join_value=None,
                 column_title=None,
+                _column_type="column",
             ),
+            "column",
         ),
         pytest.param(
             (
@@ -50,7 +54,9 @@ from cmk.gui.type_defs import (
                 tooltip="tooltip",
                 join_value=None,
                 column_title=None,
+                _column_type="column",
             ),
+            "column",
         ),
         pytest.param(
             (
@@ -69,7 +75,9 @@ from cmk.gui.type_defs import (
                 tooltip="tooltip",
                 join_value="join index",
                 column_title=None,
+                _column_type="join_column",
             ),
+            "join_column",
         ),
         pytest.param(
             (
@@ -89,7 +97,9 @@ from cmk.gui.type_defs import (
                 tooltip="tooltip",
                 join_value="join index",
                 column_title="column title",
+                _column_type="join_column",
             ),
+            "join_column",
         ),
         pytest.param(
             (
@@ -109,7 +119,9 @@ from cmk.gui.type_defs import (
                 tooltip=None,
                 join_value=None,
                 column_title=None,
+                _column_type="column",
             ),
+            "column",
         ),
         pytest.param(
             {
@@ -130,7 +142,9 @@ from cmk.gui.type_defs import (
                 tooltip="tooltip",
                 join_value="join index",
                 column_title="column title",
+                _column_type=None,
             ),
+            "join_column",
         ),
         pytest.param(
             {
@@ -151,7 +165,9 @@ from cmk.gui.type_defs import (
                 tooltip=None,
                 join_value=None,
                 column_title=None,
+                _column_type=None,
             ),
+            "column",
         ),
         pytest.param(
             {
@@ -172,15 +188,69 @@ from cmk.gui.type_defs import (
                 tooltip=None,
                 join_value="join index",
                 column_title=None,
+                _column_type=None,
             ),
+            "join_column",
+        ),
+        pytest.param(
+            {
+                "name": "name",
+                "parameters": None,
+                "link_spec": ("reports", "view_name"),
+                "tooltip": "",
+                "join_index": "join index",
+                "column_title": None,
+                "column_type": "join_column",
+            },
+            ColumnSpec(
+                name="name",
+                parameters=PainterParameters(),
+                link_spec=VisualLinkSpec(
+                    type_name="reports",
+                    name="view_name",
+                ),
+                tooltip=None,
+                join_value="join index",
+                column_title=None,
+                _column_type="join_column",
+            ),
+            "join_column",
+        ),
+        pytest.param(
+            {
+                "name": "name",
+                "parameters": None,
+                "link_spec": ("reports", "view_name"),
+                "tooltip": "",
+                "join_index": None,
+                "column_title": None,
+                "column_type": "column",
+            },
+            ColumnSpec(
+                name="name",
+                parameters=PainterParameters(),
+                link_spec=VisualLinkSpec(
+                    type_name="reports",
+                    name="view_name",
+                ),
+                tooltip=None,
+                join_value=None,
+                column_title=None,
+                _column_type="column",
+            ),
+            "column",
         ),
     ],
 )
 def test_column_spec_from_raw(
     raw_column_spec: _RawColumnSpec | _RawLegacyColumnSpec | tuple,
     expected_column_spec: ColumnSpec,
+    expected_column_type: Literal["column", "join_column"],
 ) -> None:
-    assert ColumnSpec.from_raw(raw_column_spec) == expected_column_spec
+    column_spec = ColumnSpec.from_raw(raw_column_spec)
+    assert column_spec == expected_column_spec
+    assert column_spec.column_type == expected_column_type
+    assert column_spec.column_type == expected_column_spec.column_type
 
 
 @pytest.mark.parametrize(

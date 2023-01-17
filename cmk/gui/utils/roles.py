@@ -90,11 +90,17 @@ def is_user_with_publish_permissions(
         if for_type == "visual"
         else "general.publish_to_foreign_groups_%s" % type_name
     )
+    publish_sites_permission: str = (
+        "general.publish_" + type_name + "_to_sites"
+        if for_type == "visual"
+        else "general.publish_to_sites_%s" % type_name
+    )
 
     return (
         user_may(user_id, publish_all_permission)
         or user_may(user_id, publish_groups_permission)
         or user_may(user_id, publish_foreign_groups_permission)
+        or user_may(user_id, publish_sites_permission)
     )
 
 

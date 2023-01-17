@@ -83,6 +83,7 @@ from cmk.gui.type_defs import (
     TopicMenuItem,
     TopicMenuTopic,
 )
+from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -456,6 +457,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                 valuespec=PublishTo(
                     publish_all=cls.has_overriding_permission("publish"),
                     publish_groups=cls.has_overriding_permission("publish_to_groups"),
+                    publish_sites=cls.has_overriding_permission("publish_to_sites"),
                     title="",
                     type_title=cls.phrase("title"),
                     with_foreign_groups=cls.has_overriding_permission("publish_to_foreign_groups"),
@@ -726,6 +728,20 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                 )
                 % title_lower,
                 defaults=["admin"],
+            )
+        )
+
+        permission_registry.register(
+            Permission(
+                section=PermissionSectionGeneral,
+                name="publish_to_sites_" + cls.type_name(),
+                title=_l("Publish %s to users of selected sites") % title_lower,
+                description=_l(
+                    "Make %s visible and usable for users of sites the "
+                    "publishing user has selected."
+                )
+                % title_lower,
+                defaults=["admin", "user"],
             )
         )
 
@@ -1358,6 +1374,7 @@ def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
 def PublishTo(
     publish_all: bool,
     publish_groups: bool,
+    publish_sites: bool,
     title: str | None = None,
     type_title: str | None = None,
     with_foreign_groups: bool = True,
@@ -1375,6 +1392,20 @@ def PublishTo(
                 "contact_groups",
                 _("Publish to members of contact groups"),
                 ContactGroupChoice(with_foreign_groups=with_foreign_groups),
+            )
+        )
+
+    if publish_sites:
+        choices.append(
+            (
+                "sites",
+                _("Publish to users of sites"),
+                DualListChoice(
+                    choices=get_configured_site_choices(),
+                    title=_("Publish to all users of sites"),
+                    rows=15,
+                    size=80,
+                ),
             )
         )
 

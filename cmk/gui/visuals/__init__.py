@@ -225,6 +225,14 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
     )
 
     declare_permission(
+        "general.publish_" + what + "_to_sites",
+        ("Publish %s to users of selected sites") % what_plural,
+        _("Make %s visible and usable for users of sites the publishing user has selected.")
+        % what_plural,
+        ["admin", "user"],
+    )
+
+    declare_permission(
         "general.see_user_" + what,
         _("See user %s") % what_plural,
         _("Is needed for seeing %s that other users have created.") % what_plural,
@@ -583,9 +591,14 @@ def available(
         if visual["public"] is True:
             return True
 
-        if isinstance(visual["public"], tuple) and visual["public"][0] == "contact_groups":
-            user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
-            return bool(user_groups.intersection(visual["public"][1]))
+        if isinstance(visual["public"], tuple):
+            if visual["public"][0] == "contact_groups":
+                user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
+                return bool(user_groups.intersection(visual["public"][1]))
+            if visual["public"][0] == "sites":
+                user_sites = set(user.authorized_sites().keys())
+                return bool(user_sites.intersection(visual["public"][1]))
+
         return False
 
     def restricted_visual(visualname: VisualName):  # type:ignore[no-untyped-def]
@@ -1378,6 +1391,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
                 pagetypes.PublishTo(
                     publish_all=user.may("general.publish_" + what),
                     publish_groups=user.may("general.publish_" + what + "_to_groups"),
+                    publish_sites=user.may("general.publish_" + what + "_to_sites"),
                     type_title=visual_type.title,
                     with_foreign_groups=user.may("general.publish_" + what + "_to_foreign_groups"),
                 ),

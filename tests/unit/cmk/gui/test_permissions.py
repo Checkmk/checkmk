@@ -151,6 +151,16 @@ def test_registered_permissions() -> None:
         "general.use",
         "general.view_option_columns",
         "general.view_option_refresh",
+        "general.publish_dashboards_to_sites",
+        "general.publish_to_sites_bookmark_list",
+        "general.publish_to_sites_custom_graph",
+        "general.publish_to_sites_custom_snapin",
+        "general.publish_to_sites_forecast_graph",
+        "general.publish_to_sites_graph_collection",
+        "general.publish_to_sites_graph_tuning",
+        "general.publish_to_sites_pagetype_topic",
+        "general.publish_to_sites_sla_configuration",
+        "general.publish_views_to_sites",
         "icons_and_actions.action_menu",
         "icons_and_actions.aggregation_checks",
         "icons_and_actions.aggregations",
@@ -607,6 +617,7 @@ def test_registered_permissions() -> None:
             "general.publish_to_groups_custom_graph",
             "icons_and_actions.deployment_status",
             "icons_and_actions.ntop_host",
+            "general.publish_reports_to_sites",
         ]
 
     if cmk_version.is_managed_edition():

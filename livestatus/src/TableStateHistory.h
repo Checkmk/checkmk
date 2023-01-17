@@ -13,9 +13,9 @@
 #include <memory>
 #include <string>
 
-#include "LogCache.h"
-#include "Logfile.h"
-#include "Table.h"
+#include "livestatus/LogCache.h"
+#include "livestatus/Logfile.h"
+#include "livestatus/Table.h"
 class Column;
 class ColumnOffsets;
 class Filter;

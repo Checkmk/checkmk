@@ -6,10 +6,10 @@
 #include "TableServicesByHostGroup.h"
 
 #include "NebService.h"
-#include "Query.h"
 #include "TableHostGroups.h"
 #include "TableServices.h"
 #include "livestatus/Column.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 #include "nagios.h"

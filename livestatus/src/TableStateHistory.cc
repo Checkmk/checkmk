@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "HostServiceState.h"
-#include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "livestatus/Attributes.h"  // IWYU pragma: keep
@@ -28,6 +27,7 @@
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MonitoringCore.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"

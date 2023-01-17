@@ -97,27 +97,18 @@ liblivestatusneb_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 liblivestatusneb_a_SOURCES = \
-        CommentRenderer.cc \
-        DowntimeRenderer.cc \
-        DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
         HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
-        LogCache.cc \
-        Logfile.cc \
         MacroExpander.cc \
         NagiosCore.cc \
         NebContact.cc \
         NebHost.cc \
         NebService.cc \
-        Query.cc \
         RRDColumn.cc \
         ServiceListState.cc \
         Store.cc \
-        Table.cc \
-        TableColumns.cc \
-        TableCommands.cc \
         TableComments.cc \
         TableContactGroups.cc \
         TableContacts.cc \

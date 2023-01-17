@@ -1,9 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "Query.h"
+#include "livestatus/Query.h"
 
 #include <algorithm>
 #include <cassert>
@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "Table.h"
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
 #include "livestatus/ChronoUtils.h"
@@ -27,6 +26,7 @@
 #include "livestatus/OringFilter.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/Table.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
 #include "livestatus/strutil.h"

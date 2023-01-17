@@ -12,8 +12,8 @@
 #include <memory>
 #include <string>
 
-#include "LogCache.h"
-#include "Table.h"
+#include "livestatus/LogCache.h"
+#include "livestatus/Table.h"
 class Column;
 class MonitoringCore;
 class Query;

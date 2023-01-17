@@ -10,11 +10,11 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "Query.h"
 #include "TimeperiodsCache.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"

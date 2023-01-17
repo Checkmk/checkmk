@@ -10,6 +10,7 @@ set(livestatus_headers
     ${header_location}/ChronoUtils.h
     ${header_location}/Column.h
     ${header_location}/ColumnFilter.h
+    ${header_location}/CommentRenderer.h
     ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
     ${header_location}/data_encoding.h
@@ -18,7 +19,9 @@ set(livestatus_headers
     ${header_location}/DoubleAggregator.h
     ${header_location}/DoubleColumn.h
     ${header_location}/DoubleFilter.h
+    ${header_location}/DowntimeRenderer.h
     ${header_location}/DynamicColumn.h
+    ${header_location}/DynamicEventConsoleReplicationColumn.h
     ${header_location}/EventConsoleConnection.h
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h
@@ -30,7 +33,9 @@ set(livestatus_headers
     ${header_location}/IntFilter.h
     ${header_location}/ListColumn.h
     ${header_location}/ListFilter.h
+    ${header_location}/LogCache.h
     ${header_location}/LogEntry.h
+    ${header_location}/Logfile.h
     ${header_location}/Logger.h
     ${header_location}/LogwatchList.h
     ${header_location}/MapUtils.h
@@ -47,6 +52,7 @@ set(livestatus_headers
     ${header_location}/PnpUtils.h
     ${header_location}/Poller.h
     ${header_location}/POSIXUtils.h
+    ${header_location}/Query.h
     ${header_location}/Queue.h
     ${header_location}/RegExp.h
     ${header_location}/Renderer.h
@@ -64,6 +70,9 @@ set(livestatus_headers
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h
+    ${header_location}/Table.h
+    ${header_location}/TableColumns.h
+    ${header_location}/TableCommands.h
     ${header_location}/TimeAggregator.h
     ${header_location}/TimeColumn.h
     ${header_location}/TimeFilter.h
@@ -76,17 +85,22 @@ set(livestatus_sources
     CrashReport.cc
     Column.cc
     ColumnFilter.cc
+    CommentRenderer.cc
     CountAggregator.cc
     DictFilter.cc
     DoubleFilter.cc
+    DowntimeRenderer.cc
     EventConsoleConnection.cc
+    DynamicEventConsoleReplicationColumn.cc
     FileSystemHelper.cc
     Filter.cc
     global_counters.cc
     InputBuffer.cc
     IntFilter.cc
     ListFilter.cc
+    LogCache.cc
     LogEntry.cc
+    Logfile.cc
     Logger.cc
     LogwatchList.cc
     Metric.cc
@@ -99,6 +113,7 @@ set(livestatus_sources
     PerfdataAggregator.cc
     PnpUtils.cc
     POSIXUtils.cc
+    Query.cc
     RegExp.cc
     Renderer.cc
     RendererBrokenCSV.cc
@@ -111,6 +126,9 @@ set(livestatus_sources
     StringFilter.cc
     StringUtils.cc
     strutil.cc
+    Table.cc
+    TableColumns.cc
+    TableCommands.cc
     TimeFilter.cc
     Triggers.cc
     User.cc)

@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "CustomAttributeMap.h"
-#include "Query.h"
 #include "TimeperiodsCache.h"
 #include "livestatus/AttributeBitmaskColumn.h"
 #include "livestatus/AttributeListColumn.h"
@@ -24,6 +23,7 @@
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/MonitoringCore.h"
+#include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 #include "nagios.h"
 

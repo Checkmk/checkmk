@@ -7,10 +7,10 @@
 
 #include "NebHost.h"
 #include "NebHostGroup.h"
-#include "Query.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "livestatus/Column.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 #include "nagios.h"

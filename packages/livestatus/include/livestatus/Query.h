@@ -1,14 +1,10 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #ifndef Query_h
 #define Query_h
-
-// NOTE: We need the 2nd "keep" pragma for deleting Query. Is this
-// an IWYU bug?
-#include "config.h"  // IWYU pragma: keep
 
 #include <bitset>
 #include <chrono>

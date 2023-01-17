@@ -1,16 +1,16 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "LogCache.h"
+#include "livestatus/LogCache.h"
 
 #include <iterator>
 #include <sstream>
 #include <string>
 #include <system_error>
 
-#include "Logfile.h"
+#include "livestatus/Logfile.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MonitoringCore.h"
 

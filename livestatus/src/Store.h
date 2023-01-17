@@ -19,10 +19,6 @@
 #include <utility>
 #include <vector>
 #endif
-#include "LogCache.h"
-#include "Table.h"
-#include "TableColumns.h"
-#include "TableCommands.h"
 #include "TableComments.h"
 #include "TableContactGroups.h"
 #include "TableContacts.h"
@@ -44,6 +40,10 @@
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
+#include "livestatus/LogCache.h"
+#include "livestatus/Table.h"
+#include "livestatus/TableColumns.h"
+#include "livestatus/TableCommands.h"
 class Query;
 class InputBuffer;
 class Logger;

@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "Table.h"
 #include "livestatus/Row.h"
+#include "livestatus/Table.h"
 class ColumnOffsets;
 class MonitoringCore;
 class Query;

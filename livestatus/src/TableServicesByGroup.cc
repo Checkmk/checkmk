@@ -9,11 +9,11 @@
 
 #include "NebService.h"
 #include "NebServiceGroup.h"
-#include "Query.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "livestatus/Column.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 #include "nagios.h"

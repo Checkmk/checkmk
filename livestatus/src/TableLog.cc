@@ -12,8 +12,6 @@
 #include <stdexcept>
 #include <variant>  // IWYU pragma: keep
 
-#include "Query.h"
-#include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -22,8 +20,10 @@
 #include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/MonitoringCore.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/TableCommands.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 

@@ -15,10 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "LogCache.h"
-#include "Table.h"
-#include "TableColumns.h"
-#include "TableCommands.h"
 #include "TableComments.h"
 #include "TableContactGroups.h"
 #include "TableContacts.h"
@@ -42,10 +38,14 @@
 #include "gtest/gtest.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
+#include "livestatus/LogCache.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Table.h"
+#include "livestatus/TableColumns.h"
+#include "livestatus/TableCommands.h"
 #include "livestatus/Triggers.h"
 
 #ifdef CMC

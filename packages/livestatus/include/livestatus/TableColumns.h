@@ -6,12 +6,10 @@
 #ifndef TableColumns_h
 #define TableColumns_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <string>
 #include <vector>
 
-#include "Table.h"
+#include "livestatus/Table.h"
 class Column;
 class MonitoringCore;
 class Query;

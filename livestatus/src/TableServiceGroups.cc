@@ -11,11 +11,11 @@
 
 #include "NebService.h"
 #include "NebServiceGroup.h"
-#include "Query.h"
 #include "ServiceListState.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/LogEntry.h"
+#include "livestatus/Query.h"
 #include "livestatus/ServiceGroupMembersColumn.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/User.h"

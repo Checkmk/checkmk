@@ -14,10 +14,10 @@
 #include <string>
 #include <vector>
 
-#include "Table.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/Table.h"
 
 class ColumnOffsets;
 template <class T>

@@ -3,14 +3,14 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "TableCommands.h"
+#include "livestatus/TableCommands.h"
 
 #include <memory>
 #include <vector>
 
-#include "Query.h"
 #include "livestatus/Column.h"
 #include "livestatus/MonitoringCore.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 

@@ -3,13 +3,13 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "TableColumns.h"
+#include "livestatus/TableColumns.h"
 
 #include <map>
 #include <memory>
 
-#include "Query.h"
 #include "livestatus/Column.h"
+#include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 

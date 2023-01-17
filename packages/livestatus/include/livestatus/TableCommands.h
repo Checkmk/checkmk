@@ -6,11 +6,9 @@
 #ifndef TableCommands_h
 #define TableCommands_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <string>
 
-#include "Table.h"
+#include "livestatus/Table.h"
 class ColumnOffsets;
 class MonitoringCore;
 class Query;

@@ -20,14 +20,11 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "CommentRenderer.h"
 #include "CustomAttributeMap.h"
-#include "DowntimeRenderer.h"
 #include "DynamicRRDColumn.h"
 #include "MacroExpander.h"
 #include "NebService.h"
 #include "NebServiceGroup.h"
-#include "Query.h"
 #include "RRDColumn.h"
 #include "TableHosts.h"
 #include "TimeperiodsCache.h"
@@ -36,8 +33,10 @@
 #include "livestatus/Attributes.h"
 #include "livestatus/BlobColumn.h"
 #include "livestatus/Column.h"
+#include "livestatus/CommentRenderer.h"
 #include "livestatus/DictColumn.h"
 #include "livestatus/DoubleColumn.h"
+#include "livestatus/DowntimeRenderer.h"
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
@@ -45,6 +44,7 @@
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
+#include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/TimeColumn.h"

@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "Table.h"
+#include "livestatus/Table.h"
 class MonitoringCore;
 class Query;
 class User;

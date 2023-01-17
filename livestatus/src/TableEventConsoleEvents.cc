@@ -8,13 +8,13 @@
 #include <memory>
 #include <vector>
 
-#include "Table.h"
 #include "TableHosts.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/Table.h"
 #include "livestatus/TimeColumn.h"
 class IHost;
 

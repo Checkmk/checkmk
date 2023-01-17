@@ -6,7 +6,6 @@
 Special agent for monitoring Couchbase servers with Checkmk
 """
 
-import argparse
 import json
 import logging
 import sys
@@ -15,9 +14,8 @@ from typing import Any, Iterator, TypeVar
 
 import requests
 
-from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -128,12 +126,7 @@ SECTION_KEYS_B_CACHE = ("ep_cache_miss_rate",)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "-v", "--verbose", default=0, action="count", help="Enable verbose logging."
-    )
-    parser.add_argument("--debug", action="store_true", help="Raise python exceptions.")
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
+    parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "-t",
         "--timeout",

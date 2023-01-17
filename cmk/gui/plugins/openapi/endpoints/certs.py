@@ -14,10 +14,12 @@ from typing import Any
 
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import CertificateSigningRequest
+from dateutil.relativedelta import relativedelta
 
 from cmk.utils.certs import cert_dir, root_cert_path, RootCA
 from cmk.utils.paths import omd_root
 
+import cmk.gui.config as config
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
@@ -60,7 +62,17 @@ def _serialized_root_cert() -> str:
 
 
 def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
-    return _get_root_ca().sign_csr(csr).public_bytes(Encoding.PEM).decode()
+    return (
+        _get_root_ca()
+        .sign_csr(
+            csr,
+            validity=relativedelta(
+                months=config.active_config.agent_controller_certificates["lifetime_in_months"]
+            ),
+        )
+        .public_bytes(Encoding.PEM)
+        .decode()
+    )
 
 
 @Endpoint(

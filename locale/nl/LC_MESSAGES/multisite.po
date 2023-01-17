@@ -2700,6 +2700,10 @@ msgstr "Aanvaardbare patchleeftijd"
 msgid "Accepted Packages/s"
 msgstr "Geaccepteerde pakketten/s"
 
+#, fuzzy
+msgid "Accepted connection requests"
+msgstr "Geaccepteerde verbindingen"
+
 msgid "Accepted connections"
 msgstr "Geaccepteerde verbindingen"
 
@@ -3095,9 +3099,6 @@ msgstr "Actieve gastheren"
 
 msgid "Active modems"
 msgstr "Actieve modems"
-
-msgid "Active node"
-msgstr "Actief knooppunt"
 
 msgid "Active paths"
 msgstr "Actieve paden"
@@ -9860,9 +9861,6 @@ msgstr "Cluster gebruik"
 
 msgid "Cluster, Indices and Shard statistics"
 msgstr "Cluster-, index- en scherfstatistieken"
-
-msgid "Clustered"
-msgstr "Geclusterd"
 
 msgid "Clustered services"
 msgstr "Geclusterde diensten"
@@ -18147,6 +18145,10 @@ msgstr "Breid de Checkmk GUI uit met uw eigen iconen"
 msgid "Extended perfdata"
 msgstr "Uitgebreide perfagegevens"
 
+#, fuzzy
+msgid "Extension package files"
+msgstr "Uitbreidingspakketten"
+
 msgid "Extension packages"
 msgstr "Uitbreidingspakketten"
 
@@ -19947,6 +19949,10 @@ msgstr "CPU-gebruik"
 
 #, fuzzy
 msgid "GCP/Redis clients connected"
+msgstr "GCP/Memorystore redis geheugen"
+
+#, fuzzy
+msgid "GCP/Redis clients rejected"
 msgstr "GCP/Memorystore redis geheugen"
 
 #, fuzzy
@@ -28148,13 +28154,6 @@ msgid "List of expected logfiles"
 msgstr "Lijst van verwachte logfiles"
 
 msgid ""
-"List of installed, unpacked, optional files below $OMD_ROOT/local. This also "
-"includes information about installed MKPs."
-msgstr ""
-"Lijst van geïnstalleerde, uitgepakte, optionele bestanden onder $OMD_ROOT/"
-"local. Dit bevat ook informatie over geïnstalleerde MKP's."
-
-msgid ""
 "List of installed, unpacked, optional files below OMD_ROOT/local. This also "
 "includes information about installed MKPs."
 msgstr ""
@@ -33389,6 +33388,10 @@ msgstr "Aantal lopende Bossock-vezels"
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Aantal transacties per minuut op een Lotus Domino server"
 
+#, fuzzy
+msgid "Number of accepted connection requests"
+msgstr "Aantal huidige verbindingen"
+
 msgid "Number of access points"
 msgstr "Aantal toegangspunten"
 
@@ -33700,6 +33703,10 @@ msgstr "Aantal gelezen IOPS"
 
 msgid "Number of recoveries"
 msgstr "Aantal terugvorderingen"
+
+#, fuzzy
+msgid "Number of rejected connection requests"
+msgstr "Aantal huidige verbindingen"
 
 msgid "Number of relocating shards"
 msgstr "Aantal verhuizende scherven"
@@ -34950,6 +34957,21 @@ msgstr "Uitgang niet-unicast octetten"
 
 msgid "Output non-unicast packets"
 msgstr "Uitvoer niet-unicast-pakketten"
+
+msgid ""
+"Output of `mkp find --all --json`. See the corresponding commandline help "
+"for more details."
+msgstr ""
+
+msgid ""
+"Output of `mkp list --json`. See the corresponding commandline help for more "
+"details."
+msgstr ""
+
+msgid ""
+"Output of `mkp show-all --json`. See the corresponding commandline help for "
+"more details."
+msgstr ""
 
 msgid "Output power"
 msgstr "Uitgangsvermogen"
@@ -37814,6 +37836,10 @@ msgstr "RCU"
 msgid "REST API"
 msgstr "REST-API"
 
+#, fuzzy
+msgid "REST API communication"
+msgstr "Web API-communicatie"
+
 msgid "REST API documentation"
 msgstr "REST API documentatie"
 
@@ -38535,6 +38561,10 @@ msgstr ""
 
 msgid "Regular heartbeat"
 msgstr "Regelmatige hartslag"
+
+#, fuzzy
+msgid "Rejected connection requests"
+msgstr "Afgewezen verbindingen"
 
 msgid "Rejected sessions"
 msgstr "Afgewezen sessies"
@@ -44218,9 +44248,6 @@ msgstr "Standaardafwijking van de rondreistijd in ms"
 msgid "Standby"
 msgstr "Stand-by"
 
-msgid "Standby node"
-msgstr "Stand-by knooppunt"
-
 msgid "Standby paths"
 msgstr "Stand-by paden"
 
@@ -49484,13 +49511,6 @@ msgstr "Het wachtwoord of de API-sleutel van de gebruiker."
 msgid "The password used to connect to the database"
 msgstr ""
 "Het wachtwoord dat wordt gebruikt om verbinding te maken met de database"
-
-msgid ""
-"The path does not exist or is not a directory. You need to specify an "
-"already existing directory."
-msgstr ""
-"Het pad bestaat niet of is geen directory. U moet een reeds bestaande "
-"directory opgeven."
 
 msgid ""
 "The path to the value within the MBean, for example NonHeapMemoryUsage/used"
@@ -59736,9 +59756,6 @@ msgstr "Web ACL capaciteitseenheden (WCUs)"
 msgid "Web ACLs"
 msgstr "Web ACL's"
 
-msgid "Web API communication"
-msgstr "Web API-communicatie"
-
 msgid "Web Application Firewall (WAFV2)"
 msgstr "Firewall voor webtoepassingen (WAFV2)"
 
@@ -62216,13 +62233,6 @@ msgid "You can only create a new package if there are unpackaged files."
 msgstr "U kunt alleen een nieuw pakket maken als er onverpakte bestanden zijn."
 
 msgid ""
-"You can only use mountpoints below the <tt>/mnt</tt> directory as backup "
-"targets."
-msgstr ""
-"U kunt alleen mountpoints onder de <tt>/mnt</tt> directory gebruiken als "
-"backupdoelen."
-
-msgid ""
 "You can optionally provide CA or self-signed certificates that will be used "
 "by the agent updater to verify outgoing HTTPS connections. By providing "
 "valid certificates here, it is guaranteed that the agent updater is "
@@ -63028,9 +63038,6 @@ msgstr "U heeft <b>%d</b> hosts geselecteerd voor ouder-scan. "
 
 msgid "You have signed some or all agent packages"
 msgstr "U hebt enkele of alle agentpakketten ondertekend"
-
-msgid "You have to provide a canonical path."
-msgstr "Je moet een canoniek pad opgeven."
 
 msgid "You have to provide a role ID."
 msgstr "Je moet een rol ID opgeven."
@@ -65513,6 +65520,39 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Active node"
+#~ msgstr "Actief knooppunt"
+
+#~ msgid "Clustered"
+#~ msgstr "Geclusterd"
+
+#~ msgid ""
+#~ "List of installed, unpacked, optional files below $OMD_ROOT/local. This "
+#~ "also includes information about installed MKPs."
+#~ msgstr ""
+#~ "Lijst van geïnstalleerde, uitgepakte, optionele bestanden onder $OMD_ROOT/"
+#~ "local. Dit bevat ook informatie over geïnstalleerde MKP's."
+
+#~ msgid "Standby node"
+#~ msgstr "Stand-by knooppunt"
+
+#~ msgid ""
+#~ "The path does not exist or is not a directory. You need to specify an "
+#~ "already existing directory."
+#~ msgstr ""
+#~ "Het pad bestaat niet of is geen directory. U moet een reeds bestaande "
+#~ "directory opgeven."
+
+#~ msgid ""
+#~ "You can only use mountpoints below the <tt>/mnt</tt> directory as backup "
+#~ "targets."
+#~ msgstr ""
+#~ "U kunt alleen mountpoints onder de <tt>/mnt</tt> directory gebruiken als "
+#~ "backupdoelen."
+
+#~ msgid "You have to provide a canonical path."
+#~ msgstr "Je moet een canoniek pad opgeven."
 
 #, python-format
 #~ msgid "Invalid topology_config %r"
@@ -70476,9 +70516,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Registry"
 #~ msgstr "Register"
-
-#~ msgid "Rejected Connections"
-#~ msgstr "Afgewezen verbindingen"
 
 #~ msgid "Replication Slot Disk Usage"
 #~ msgstr "Replicatie Slot Schijf Gebruik"

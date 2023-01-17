@@ -2574,6 +2574,10 @@ msgstr ""
 msgid "Accepted Packages/s"
 msgstr "受け入れられたパッケージ/s"
 
+#, fuzzy
+msgid "Accepted connection requests"
+msgstr "受け入れられた接続"
+
 msgid "Accepted connections"
 msgstr "受け入れられた接続"
 
@@ -2951,9 +2955,6 @@ msgstr "アクティブなホスト"
 
 msgid "Active modems"
 msgstr "アクティブモデム"
-
-msgid "Active node"
-msgstr "アクティブノード"
 
 msgid "Active paths"
 msgstr "アクティブパス"
@@ -9433,9 +9434,6 @@ msgstr "クラスターの使用率"
 
 msgid "Cluster, Indices and Shard statistics"
 msgstr "クラスター、インデックス、シャードの統計"
-
-msgid "Clustered"
-msgstr "クラスター化"
 
 msgid "Clustered services"
 msgstr "クラスター化されたサービス"
@@ -17498,6 +17496,10 @@ msgstr "カスタムアイコンでCheckmk GUIを拡張する"
 msgid "Extended perfdata"
 msgstr "拡張perfdata"
 
+#, fuzzy
+msgid "Extension package files"
+msgstr "拡張パッケージ"
+
 msgid "Extension packages"
 msgstr "拡張パッケージ"
 
@@ -19229,6 +19231,10 @@ msgstr "CPU使用率"
 
 #, fuzzy
 msgid "GCP/Redis clients connected"
+msgstr "接続されたクライアント"
+
+#, fuzzy
+msgid "GCP/Redis clients rejected"
 msgstr "接続されたクライアント"
 
 #, fuzzy
@@ -26972,13 +26978,6 @@ msgid "List of expected logfiles"
 msgstr "予想されるログファイルのリスト"
 
 msgid ""
-"List of installed, unpacked, optional files below $OMD_ROOT/local. This also "
-"includes information about installed MKPs."
-msgstr ""
-"$OMD_ROOT/localの下にインストールされ、解凍されたオプションのファイルのリス"
-"ト。これには、インストールされているMKPに関する情報も含まれます。"
-
-msgid ""
 "List of installed, unpacked, optional files below OMD_ROOT/local. This also "
 "includes information about installed MKPs."
 msgstr ""
@@ -32083,6 +32082,10 @@ msgstr "Running Bossock Fibersの数"
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr ""
 
+#, fuzzy
+msgid "Number of accepted connection requests"
+msgstr "現在の接続数"
+
 msgid "Number of access points"
 msgstr "アクセスポイントの数"
 
@@ -32387,6 +32390,10 @@ msgstr "リードIOPS数"
 
 msgid "Number of recoveries"
 msgstr "回収数"
+
+#, fuzzy
+msgid "Number of rejected connection requests"
+msgstr "現在の接続数"
 
 msgid "Number of relocating shards"
 msgstr "リローケイトするシャードの数"
@@ -33595,6 +33602,21 @@ msgstr "ユニキャスト以外のオクテットを出力する"
 
 msgid "Output non-unicast packets"
 msgstr "ユニキャスト以外のパケットを出力する"
+
+msgid ""
+"Output of `mkp find --all --json`. See the corresponding commandline help "
+"for more details."
+msgstr ""
+
+msgid ""
+"Output of `mkp list --json`. See the corresponding commandline help for more "
+"details."
+msgstr ""
+
+msgid ""
+"Output of `mkp show-all --json`. See the corresponding commandline help for "
+"more details."
+msgstr ""
 
 msgid "Output power"
 msgstr "出力電力"
@@ -36367,6 +36389,10 @@ msgstr "RCU"
 msgid "REST API"
 msgstr ""
 
+#, fuzzy
+msgid "REST API communication"
+msgstr "WebAPI通信"
+
 msgid "REST API documentation"
 msgstr "REST API ドキュメント"
 
@@ -37068,6 +37094,10 @@ msgstr ""
 
 msgid "Regular heartbeat"
 msgstr "定期的なハートビート"
+
+#, fuzzy
+msgid "Rejected connection requests"
+msgstr "拒否された接続"
 
 msgid "Rejected sessions"
 msgstr "拒否されたセッション"
@@ -42508,9 +42538,6 @@ msgstr "往復時間の標準偏差(ミリ秒)"
 msgid "Standby"
 msgstr "待機する"
 
-msgid "Standby node"
-msgstr "スタンバイノード"
-
 msgid "Standby paths"
 msgstr "スタンバイパス"
 
@@ -47383,13 +47410,6 @@ msgstr "ユーザーのパスワードまたはAPIキー。"
 
 msgid "The password used to connect to the database"
 msgstr "データベース接続に使用されるパスワード"
-
-msgid ""
-"The path does not exist or is not a directory. You need to specify an "
-"already existing directory."
-msgstr ""
-"パスが存在しないか、ディレクトリではありません。既存のディレクトリを指定する"
-"必要があります。"
 
 msgid ""
 "The path to the value within the MBean, for example NonHeapMemoryUsage/used"
@@ -56872,9 +56892,6 @@ msgstr "Web ACLキャパシティユニット(WCUs)"
 msgid "Web ACLs"
 msgstr "Web ACL"
 
-msgid "Web API communication"
-msgstr "WebAPI通信"
-
 msgid "Web Application Firewall (WAFV2)"
 msgstr "Webアプリケーションファイアウォール(WAFV2)"
 
@@ -59073,13 +59090,6 @@ msgstr ""
 "ます。"
 
 msgid ""
-"You can only use mountpoints below the <tt>/mnt</tt> directory as backup "
-"targets."
-msgstr ""
-"<tt>/mnt</tt> ディレクトリの下のマウントポイントのみをバックアップターゲット"
-"として使用できます。"
-
-msgid ""
 "You can optionally provide CA or self-signed certificates that will be used "
 "by the agent updater to verify outgoing HTTPS connections. By providing "
 "valid certificates here, it is guaranteed that the agent updater is "
@@ -59759,9 +59769,6 @@ msgstr "親スキャン用に<b>%d</b>ホストを選択しました。 "
 
 msgid "You have signed some or all agent packages"
 msgstr "一部またはすべてのエージェントパッケージに署名しました"
-
-msgid "You have to provide a canonical path."
-msgstr "正規のパスを指定する必要があります。"
 
 #, fuzzy
 msgid "You have to provide a role ID."
@@ -62185,6 +62192,39 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Active node"
+#~ msgstr "アクティブノード"
+
+#~ msgid "Clustered"
+#~ msgstr "クラスター化"
+
+#~ msgid ""
+#~ "List of installed, unpacked, optional files below $OMD_ROOT/local. This "
+#~ "also includes information about installed MKPs."
+#~ msgstr ""
+#~ "$OMD_ROOT/localの下にインストールされ、解凍されたオプションのファイルのリ"
+#~ "スト。これには、インストールされているMKPに関する情報も含まれます。"
+
+#~ msgid "Standby node"
+#~ msgstr "スタンバイノード"
+
+#~ msgid ""
+#~ "The path does not exist or is not a directory. You need to specify an "
+#~ "already existing directory."
+#~ msgstr ""
+#~ "パスが存在しないか、ディレクトリではありません。既存のディレクトリを指定す"
+#~ "る必要があります。"
+
+#~ msgid ""
+#~ "You can only use mountpoints below the <tt>/mnt</tt> directory as backup "
+#~ "targets."
+#~ msgstr ""
+#~ "<tt>/mnt</tt> ディレクトリの下のマウントポイントのみをバックアップターゲッ"
+#~ "トとして使用できます。"
+
+#~ msgid "You have to provide a canonical path."
+#~ msgstr "正規のパスを指定する必要があります。"
 
 #, python-format
 #~ msgid "Invalid topology_config %r"
@@ -66707,9 +66747,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Registered phones"
 #~ msgstr "登録済みの電話"
-
-#~ msgid "Rejected Connections"
-#~ msgstr "拒否された接続"
 
 #~ msgid "Replication Slot Disk Usage"
 #~ msgstr "レプリケーションスロットディスクの使用量"

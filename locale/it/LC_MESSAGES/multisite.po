@@ -2713,6 +2713,10 @@ msgstr "Età del livello di patch accettabile"
 msgid "Accepted Packages/s"
 msgstr "Pacchetti accettati"
 
+#, fuzzy
+msgid "Accepted connection requests"
+msgstr "Connessioni accettate"
+
 msgid "Accepted connections"
 msgstr "Connessioni accettate"
 
@@ -3106,9 +3110,6 @@ msgstr "Ospiti attivi"
 
 msgid "Active modems"
 msgstr "Modem attivi"
-
-msgid "Active node"
-msgstr "Nodo attivo"
 
 msgid "Active paths"
 msgstr "Percorsi attivi"
@@ -9995,9 +9996,6 @@ msgstr "Utilizzo di nastri"
 
 msgid "Cluster, Indices and Shard statistics"
 msgstr "Statistiche di cluster, indici e frammenti"
-
-msgid "Clustered"
-msgstr "Cluster"
 
 msgid "Clustered services"
 msgstr "Servizi raggruppati"
@@ -18436,6 +18434,10 @@ msgstr "Estendi la GUI di Checkmk con le tue icone personalizzate"
 msgid "Extended perfdata"
 msgstr "Perfdata estesi"
 
+#, fuzzy
+msgid "Extension package files"
+msgstr "Pacchetti di estensione"
+
 msgid "Extension packages"
 msgstr "Pacchetti di estensione"
 
@@ -20264,6 +20266,10 @@ msgstr "Utilizzo della CPU"
 
 #, fuzzy
 msgid "GCP/Redis clients connected"
+msgstr "GCP/Memorystore redis memoria"
+
+#, fuzzy
+msgid "GCP/Redis clients rejected"
 msgstr "GCP/Memorystore redis memoria"
 
 #, fuzzy
@@ -28578,13 +28584,6 @@ msgid "List of expected logfiles"
 msgstr "Elenco dei file di log attesi"
 
 msgid ""
-"List of installed, unpacked, optional files below $OMD_ROOT/local. This also "
-"includes information about installed MKPs."
-msgstr ""
-"Elenco dei file installati, scompattati e opzionali sotto $OMD_ROOT/local. "
-"Questo include anche informazioni sugli MKP installati."
-
-msgid ""
 "List of installed, unpacked, optional files below OMD_ROOT/local. This also "
 "includes information about installed MKPs."
 msgstr ""
@@ -33919,6 +33918,10 @@ msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Numero di transazioni al minuto su un server Lotus Domino"
 
 #, fuzzy
+msgid "Number of accepted connection requests"
+msgstr "Numero di connessioni attuali"
+
+#, fuzzy
 msgid "Number of access points"
 msgstr "Numero di punti dati"
 
@@ -34242,6 +34245,10 @@ msgstr "Numero di fili"
 
 msgid "Number of recoveries"
 msgstr "Numero di recuperi"
+
+#, fuzzy
+msgid "Number of rejected connection requests"
+msgstr "Numero di connessioni attuali"
 
 msgid "Number of relocating shards"
 msgstr "Numero di frammenti che si trasferiscono"
@@ -35525,6 +35532,21 @@ msgstr "Ottetti non unicast in uscita"
 
 msgid "Output non-unicast packets"
 msgstr "Uscita dei pacchetti non-unicast"
+
+msgid ""
+"Output of `mkp find --all --json`. See the corresponding commandline help "
+"for more details."
+msgstr ""
+
+msgid ""
+"Output of `mkp list --json`. See the corresponding commandline help for more "
+"details."
+msgstr ""
+
+msgid ""
+"Output of `mkp show-all --json`. See the corresponding commandline help for "
+"more details."
+msgstr ""
 
 msgid "Output power"
 msgstr "Potenza di uscita"
@@ -38449,6 +38471,10 @@ msgstr "RCU"
 msgid "REST API"
 msgstr "API REST"
 
+#, fuzzy
+msgid "REST API communication"
+msgstr "Comunicazione Web API"
+
 msgid "REST API documentation"
 msgstr "Documentazione API REST"
 
@@ -39183,6 +39209,10 @@ msgstr ""
 
 msgid "Regular heartbeat"
 msgstr "Battito cardiaco regolare"
+
+#, fuzzy
+msgid "Rejected connection requests"
+msgstr "Connessioni rifiutate"
 
 msgid "Rejected sessions"
 msgstr "Sessioni rifiutate"
@@ -44968,9 +44998,6 @@ msgstr "Deviazione standard dei tempi di andata e ritorno in ms"
 msgid "Standby"
 msgstr "Standby"
 
-msgid "Standby node"
-msgstr "Nodo di standby"
-
 msgid "Standby paths"
 msgstr "Percorsi di standby"
 
@@ -50272,13 +50299,6 @@ msgstr "La password o la chiave API dell'utente."
 
 msgid "The password used to connect to the database"
 msgstr "La password usata per connettersi al database"
-
-msgid ""
-"The path does not exist or is not a directory. You need to specify an "
-"already existing directory."
-msgstr ""
-"Il percorso non esiste o non è una directory. È necessario specificare una "
-"directory già esistente."
 
 msgid ""
 "The path to the value within the MBean, for example NonHeapMemoryUsage/used"
@@ -60642,9 +60662,6 @@ msgstr "Unità di capacità Web ACL (WCU)"
 msgid "Web ACLs"
 msgstr "Richieste Web ACL"
 
-msgid "Web API communication"
-msgstr "Comunicazione Web API"
-
 msgid "Web Application Firewall (WAFV2)"
 msgstr "Web Application Firewall (WAFV2)"
 
@@ -63128,13 +63145,6 @@ msgstr ""
 "Puoi creare un nuovo pacchetto solo se ci sono file non pacchettizzati."
 
 msgid ""
-"You can only use mountpoints below the <tt>/mnt</tt> directory as backup "
-"targets."
-msgstr ""
-"Si possono usare solo punti di montaggio sotto la directory <tt>/mnt</tt> "
-"come obiettivi di backup."
-
-msgid ""
 "You can optionally provide CA or self-signed certificates that will be used "
 "by the agent updater to verify outgoing HTTPS connections. By providing "
 "valid certificates here, it is guaranteed that the agent updater is "
@@ -63940,9 +63950,6 @@ msgstr "Hai selezionato <b>%d</b> host per la scansione dei genitori. "
 
 msgid "You have signed some or all agent packages"
 msgstr "Avete firmato alcuni o tutti i pacchetti di agenti"
-
-msgid "You have to provide a canonical path."
-msgstr "Devi fornire un percorso canonico."
 
 #, fuzzy
 msgid "You have to provide a role ID."
@@ -66458,6 +66465,39 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Active node"
+#~ msgstr "Nodo attivo"
+
+#~ msgid "Clustered"
+#~ msgstr "Cluster"
+
+#~ msgid ""
+#~ "List of installed, unpacked, optional files below $OMD_ROOT/local. This "
+#~ "also includes information about installed MKPs."
+#~ msgstr ""
+#~ "Elenco dei file installati, scompattati e opzionali sotto $OMD_ROOT/"
+#~ "local. Questo include anche informazioni sugli MKP installati."
+
+#~ msgid "Standby node"
+#~ msgstr "Nodo di standby"
+
+#~ msgid ""
+#~ "The path does not exist or is not a directory. You need to specify an "
+#~ "already existing directory."
+#~ msgstr ""
+#~ "Il percorso non esiste o non è una directory. È necessario specificare "
+#~ "una directory già esistente."
+
+#~ msgid ""
+#~ "You can only use mountpoints below the <tt>/mnt</tt> directory as backup "
+#~ "targets."
+#~ msgstr ""
+#~ "Si possono usare solo punti di montaggio sotto la directory <tt>/mnt</tt> "
+#~ "come obiettivi di backup."
+
+#~ msgid "You have to provide a canonical path."
+#~ msgstr "Devi fornire un percorso canonico."
 
 #, python-format
 #~ msgid "Invalid topology_config %r"
@@ -71558,9 +71598,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Registry"
 #~ msgstr "Registro"
-
-#~ msgid "Rejected Connections"
-#~ msgstr "Connessioni rifiutate"
 
 #~ msgid "Replication Slot Disk Usage"
 #~ msgstr "Uso del disco dello slot di replica"

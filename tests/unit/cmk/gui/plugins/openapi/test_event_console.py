@@ -466,6 +466,33 @@ def test_update_and_acknowledge_by_id(
         )
 
 
+def test_update_and_acknowledge_withdrawal_by_id(
+    mock_livestatus: MockLiveStatusConnection,
+    object_base_url: str,
+    change_state_or_update_and_acknowledge: Callable,
+) -> None:
+
+    add_event_console_events_to_live_status_table(mock_livestatus)
+    mock_livestatus.expect_query(
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 4"
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_UPDATE;4;test123-...;0;comment_changed;tribe29", match_type="ellipsis"
+    )
+
+    with mock_livestatus:
+        change_state_or_update_and_acknowledge(
+            url=object_base_url + "4/actions/update_and_acknowledge/invoke",
+            params=json.dumps(
+                {
+                    "change_comment": "comment_changed",
+                    "change_contact": "tribe29",
+                    "phase": "open",
+                }
+            ),
+        )
+
+
 def test_update_and_acknowledge_non_existing_event_by_id(
     mock_livestatus: MockLiveStatusConnection,
     object_base_url: str,
@@ -541,6 +568,55 @@ def test_update_and_acknowledge_params_filter(
                     },
                     "change_contact": "testcontact",
                     "change_comment": "testcomment",
+                },
+            ),
+        )
+
+
+def test_update_and_acknowledge_all_filter(
+    mock_livestatus: MockLiveStatusConnection,
+    update_and_acknowledge_multiple_events: Callable,
+) -> None:
+
+    add_event_console_events_to_live_status_table(mock_livestatus)
+    mock_livestatus.expect_query(
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = open"
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_UPDATE;1,3,5;test123-...;1;testcomment;testcontact", match_type="ellipsis"
+    )
+
+    with mock_livestatus:
+        update_and_acknowledge_multiple_events(
+            params=json.dumps(
+                {
+                    "filter_type": "all",
+                    "change_contact": "testcontact",
+                    "change_comment": "testcomment",
+                },
+            ),
+        )
+
+
+def test_update_and_acknowledge_withdrawal_params_filter(
+    mock_livestatus: MockLiveStatusConnection,
+    update_and_acknowledge_multiple_events: Callable,
+) -> None:
+
+    add_event_console_events_to_live_status_table(mock_livestatus)
+    mock_livestatus.expect_query(
+        "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack"
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] EC_UPDATE;2,4,6;test123-...;0;;", match_type="ellipsis"
+    )
+
+    with mock_livestatus:
+        update_and_acknowledge_multiple_events(
+            params=json.dumps(
+                {
+                    "filter_type": "all",
+                    "phase": "open",
                 },
             ),
         )

@@ -14,16 +14,16 @@
 
 class NebService : public IService {
 public:
-    explicit NebService(const service_struct &svc)
-        : service_{svc}, host_{*svc.host_ptr} {}
-    bool hasContact(const IContact &contact) const override;
-    const IHost &host() const override { return host_; }
+    explicit NebService(const ::service &svc)
+        : host_{*svc.host_ptr}, service_{svc} {}
+    [[nodiscard]] bool hasContact(const IContact &contact) const override;
+    [[nodiscard]] const IHost &host() const override { return host_; }
 
 private:
-    const service_struct &service_;
     const NebHost host_;
+    const ::service &service_;
 };
 
-std::unique_ptr<const IService> ToIService(service_struct *s);
+std::unique_ptr<const IService> ToIService(::service *s);
 
 #endif  // NebService_h

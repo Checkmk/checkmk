@@ -5,17 +5,18 @@
 
 #include "NebContactGroup.h"
 
-#include <memory>
-
-#include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
-#include "nagios.h"
 
+// Older Nagios headers are not const-correct... :-P
+NebContactGroup::NebContactGroup(const std::string &name)
+    : contact_group_{::find_contactgroup(const_cast<char *>(name.c_str()))} {}
+
+// Older Nagios headers are not const-correct... :-P
 bool NebContactGroup::isMember(const IContact &contact) const {
     return ::is_contact_member_of_contactgroup(
-               ::find_contactgroup(const_cast<char *>(name_.c_str())),
-               static_cast<::contact *>(
-                   const_cast<void *>(contact.handle()))) != 0;
+               const_cast<contactgroup *>(contact_group_),
+               const_cast<::contact *>(
+                   static_cast<const ::contact *>(contact.handle()))) != 0;
 }
 
 std::vector<std::unique_ptr<const IContactGroup>> ToIContactGroups(

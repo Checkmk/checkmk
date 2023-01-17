@@ -11,14 +11,15 @@
 #include <vector>
 
 #include "livestatus/Interface.h"
+#include "nagios.h"
 
 class NebContactGroup : public IContactGroup {
 public:
-    explicit NebContactGroup(const std::string &name) : name_{name} {}
-    bool isMember(const IContact &) const override;
+    explicit NebContactGroup(const std::string &name);
+    [[nodiscard]] bool isMember(const IContact &contact) const override;
 
 private:
-    const std::string name_;
+    const contactgroup *contact_group_;
 };
 
 std::vector<std::unique_ptr<const IContactGroup>> ToIContactGroups(

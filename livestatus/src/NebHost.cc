@@ -5,17 +5,15 @@
 
 #include "NebHost.h"
 
-#include "nagios.h"
-
+// Older Nagios headers are not const-correct... :-P
 bool NebHost::hasContact(const IContact &contact) const {
-    // Older Nagios headers are not const-correct... :-P
-    auto *h = const_cast<host_struct *>(&host_);
-    auto *c =
-        static_cast<contact_struct *>(const_cast<void *>(contact.handle()));
+    auto *h = const_cast<::host *>(&host_);
+    auto *c = const_cast<::contact *>(
+        static_cast<const ::contact *>(contact.handle()));
     return ::is_contact_for_host(h, c) != 0 ||
            ::is_escalated_contact_for_host(h, c) != 0;
 }
 
-std::unique_ptr<const IHost> ToIHost(const host_struct *h) {
+std::unique_ptr<const IHost> ToIHost(const ::host *h) {
     return h != nullptr ? std::make_unique<NebHost>(*h) : nullptr;
 }

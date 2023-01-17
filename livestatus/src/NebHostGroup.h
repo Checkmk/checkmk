@@ -11,10 +11,12 @@
 
 #include "livestatus/Interface.h"
 #include "nagios.h"
+
 class NebHostGroup : public IHostGroup {
 public:
     explicit NebHostGroup(const hostgroup &hg);
-    const std::vector<std::unique_ptr<const IHost>> &hosts() const override {
+    [[nodiscard]] const std::vector<std::unique_ptr<const IHost>> &hosts()
+        const override {
         return hosts_;
     };
 

@@ -45,7 +45,7 @@ public:
 class IContactGroup {
 public:
     virtual ~IContactGroup() = default;
-    [[nodiscard]] virtual bool isMember(const IContact &) const = 0;
+    [[nodiscard]] virtual bool isMember(const IContact &contact) const = 0;
 };
 
 #endif  // Interface_h

@@ -5,10 +5,7 @@
 
 #include "NebServiceGroup.h"
 
-#include <memory>
-
 #include "NebService.h"
-#include "nagios.h"
 
 NebServiceGroup::NebServiceGroup(const servicegroup &sg) {
     for (const auto *mem = sg.members; mem != nullptr; mem = mem->next) {

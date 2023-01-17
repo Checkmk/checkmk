@@ -11,10 +11,11 @@
 
 #include "livestatus/Interface.h"
 #include "nagios.h"
+
 class NebServiceGroup : public IServiceGroup {
 public:
     explicit NebServiceGroup(const servicegroup &sg);
-    const std::vector<std::unique_ptr<const IService>> &services()
+    [[nodiscard]] const std::vector<std::unique_ptr<const IService>> &services()
         const override {
         return services_;
     };

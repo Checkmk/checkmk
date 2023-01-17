@@ -9,17 +9,17 @@
 #include <memory>
 
 #include "livestatus/Interface.h"
-struct host_struct;
+#include "nagios.h"
 
 class NebHost : public IHost {
 public:
-    explicit NebHost(const host_struct &host) : host_{host} {}
-    bool hasContact(const IContact &contact) const override;
+    explicit NebHost(const ::host &host) : host_{host} {}
+    [[nodiscard]] bool hasContact(const IContact &contact) const override;
 
 private:
-    const host_struct &host_;
+    const ::host &host_;
 };
 
-std::unique_ptr<const IHost> ToIHost(const host_struct *h);
+std::unique_ptr<const IHost> ToIHost(const ::host *h);
 
 #endif  // NebHost_h

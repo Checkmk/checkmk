@@ -16,10 +16,9 @@ AuthUser::AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
     , service_auth_{service_auth}
     , group_auth_{group_auth} {}
 
-bool AuthUser::is_authorized_for_object(
-    const std::unique_ptr<const IHost> hst,
-    const std::unique_ptr<const IService> svc,
-    bool authorized_if_no_host) const {
+bool AuthUser::is_authorized_for_object(std::unique_ptr<const IHost> hst,
+                                        std::unique_ptr<const IService> svc,
+                                        bool authorized_if_no_host) const {
     return !hst   ? authorized_if_no_host
            : !svc ? is_authorized_for_host(*hst)
                   : is_authorized_for_service(*svc);
@@ -39,11 +38,11 @@ bool AuthUser::is_authorized_for_host_group(const IHostGroup &hg) const {
     auto is_authorized_for = [this](const std::unique_ptr<const IHost> &hst) {
         return is_authorized_for_host(*hst);
     };
-
+    const auto &hosts_in_group = hg.hosts();
     return group_auth_ == GroupAuthorization::loose
-               ? std::any_of(hg.hosts().begin(), hg.hosts().end(),
+               ? std::any_of(hosts_in_group.begin(), hosts_in_group.end(),
                              is_authorized_for)
-               : std::all_of(hg.hosts().begin(), hg.hosts().end(),
+               : std::all_of(hosts_in_group.begin(), hosts_in_group.end(),
                              is_authorized_for);
 }
 
@@ -52,11 +51,11 @@ bool AuthUser::is_authorized_for_service_group(const IServiceGroup &sg) const {
         [this](const std::unique_ptr<const IService> &svc) {
             return is_authorized_for_service(*svc);
         };
-
+    const auto &services_in_group = sg.services();
     return group_auth_ == GroupAuthorization::loose
-               ? std::any_of(sg.services().begin(), sg.services().end(),
+               ? std::any_of(services_in_group.begin(), services_in_group.end(),
                              is_authorized_for)
-               : std::all_of(sg.services().begin(), sg.services().end(),
+               : std::all_of(services_in_group.begin(), services_in_group.end(),
                              is_authorized_for);
 }
 

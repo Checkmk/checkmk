@@ -5,10 +5,7 @@
 
 #include "NebHostGroup.h"
 
-#include <memory>
-
 #include "NebHost.h"
-#include "nagios.h"
 
 NebHostGroup::NebHostGroup(const hostgroup &hg) {
     for (const auto *mem = hg.members; mem != nullptr; mem = mem->next) {

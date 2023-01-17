@@ -17,7 +17,12 @@
 #include "Table.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/ListColumn.h"
+#ifdef CMC
+class Host;
+using host = Host;
+#else
 #include "nagios.h"
+#endif
 
 class ColumnOffsets;
 template <class T>

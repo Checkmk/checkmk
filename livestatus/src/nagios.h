@@ -6,12 +6,7 @@
 #ifndef nagios_h
 #define nagios_h
 
-#include "config.h"  // IWYU pragma: keep
-
 // IWYU pragma: begin_exports
-#ifdef CMC
-#include "cmc.h"
-#else
 #define NSCORE
 #ifdef NAGIOS4
 
@@ -239,6 +234,5 @@ inline int nagios_compat_submit_external_command(const char *cmd) {
 }
 
 #endif  // NAGIOS4
-#endif  // CMC
 // IWYU pragma: end_exports
 #endif  // nagios_h

@@ -42,7 +42,7 @@ def get_graph(params):
             "specification": [
                 "template",
                 {
-                    "site": body["site"],
+                    "site": body.get("site", ""),
                     "host_name": body["host_name"],
                     "service_description": body["service_description"],
                     "graph_id": graph_id_from_request(body),

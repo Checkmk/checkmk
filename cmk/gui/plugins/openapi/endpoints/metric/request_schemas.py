@@ -17,7 +17,10 @@ from cmk.fields import String
 
 class _BaseGetSchema(BaseRequestSchema):
     type = TYPE_FIELD
-    site = SiteField(description="The name of the site.", example="heute", required=True)
+    site = SiteField(
+        description="The name of the site. Even though this is optional, specifying a site will greatly improve performance in large distributed systems.",
+        example="heute",
+    )
     host_name = HostField(
         description="The hostname to use.",
         example="my.cool.host",

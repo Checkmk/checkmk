@@ -11,7 +11,7 @@ import multiprocessing
 import pprint
 import queue
 from collections.abc import Mapping
-from typing import Any, NoReturn, Sequence
+from typing import Any, Literal, NoReturn, Sequence, TypedDict
 
 from pydantic import BaseModel, StrictStr
 
@@ -114,6 +114,12 @@ class RequestHandler(abc.ABC):
         headers: Mapping[str, str] | None = None,
     ) -> Response:
         ...
+
+
+# types used in RestApiClient
+class TimeRange(TypedDict):
+    start: str
+    end: str
 
 
 class RestApiClient:
@@ -457,4 +463,32 @@ class RestApiClient:
             "post",
             url="/domain-types/licensing/actions/verify/invoke",
             expect_ok=expect_ok,
+        )
+
+    def get_graph(
+        self,
+        host_name: str,
+        service_description: str,
+        type_: Literal["single_metric", "graph"],
+        time_range: TimeRange,
+        graph_or_metric_id: str,
+        site: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "host_name": host_name,
+            "service_description": service_description,
+            "type": type_,
+            "time_range": time_range,
+        }
+        if type_ == "graph":
+            body["graph_id"] = graph_or_metric_id
+        if type_ == "single_metric":
+            body["metric_id"] = graph_or_metric_id
+
+        if site is not None:
+            body["site"] = site
+
+        return self._request(
+            "post", url="/domain-types/metric/actions/get/invoke", body=body, expect_ok=expect_ok
         )

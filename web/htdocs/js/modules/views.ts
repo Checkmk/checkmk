@@ -6,10 +6,16 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as foldable_container from "foldable_container";
 
-export function toggle_grouped_rows(tree, id, cell, num_rows) {
-    var group_title_row = cell.parentNode;
+export function toggle_grouped_rows(
+    tree: string,
+    id: string,
+    cell: HTMLTableCellElement,
+    num_rows: number
+) {
+    var group_title_row = cell.parentNode as HTMLElement;
 
-    var display, toggle_img_open, state;
+    var display, toggle_img_open;
+    let state: "on" | "off";
     if (utils.has_class(group_title_row, "closed")) {
         utils.remove_class(group_title_row, "closed");
         display = "";
@@ -22,18 +28,27 @@ export function toggle_grouped_rows(tree, id, cell, num_rows) {
         state = "off";
     }
 
-    utils.toggle_folding(cell.getElementsByTagName("IMG")[0], toggle_img_open);
+    utils.toggle_folding(
+        cell.getElementsByTagName("IMG")[0] as HTMLImageElement,
+        toggle_img_open
+    );
     foldable_container.persist_tree_state(tree, id, state);
 
     var row = group_title_row;
     for (var i = 0; i < num_rows; i++) {
-        row = row.nextElementSibling;
+        row = row.nextElementSibling as HTMLElement;
         row.style.display = display;
     }
 }
 
-export function reschedule_check(oLink, site, host, service, wait_svc) {
-    var img = oLink.getElementsByTagName("IMG")[0];
+export function reschedule_check(
+    oLink: HTMLElement,
+    site: any,
+    host: any,
+    service: string,
+    wait_svc: string
+) {
+    var img = oLink.getElementsByTagName("IMG")[0] as HTMLImageElement;
     utils.remove_class(img, "reload_failed");
     utils.add_class(img, "reloading");
 
@@ -58,7 +73,10 @@ export function reschedule_check(oLink, site, host, service, wait_svc) {
     });
 }
 
-function reschedule_check_response_handler(handler_data, ajax_response) {
+function reschedule_check_response_handler(
+    handler_data: {img: HTMLImageElement},
+    ajax_response: string
+) {
     var img = handler_data.img;
     utils.remove_class(img, "reloading");
 

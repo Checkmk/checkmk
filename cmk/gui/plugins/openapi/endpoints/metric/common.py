@@ -20,7 +20,7 @@ GRAPH_NAME_VALIDATOR = marshmallow.validate.Regexp(
 )
 
 TYPE_FIELD = String(
-    enum=["graph", "single_metric"],
+    enum=["predefined_graph", "single_metric"],
     example="single_metric",
     required=True,
     description=(
@@ -143,7 +143,7 @@ def graph_id_from_request(body: dict[str, Any]) -> str:
     """
     >>> graph_id_from_request({"type": "single_metric", "metric_id": "metric"})
     'METRIC_metric'
-    >>> graph_id_from_request({"type": "graph", "graph_id": "graph"})
+    >>> graph_id_from_request({"type": "predefined_graph", "graph_id": "graph"})
     'graph'
     """
     if body["type"] == "single_metric":

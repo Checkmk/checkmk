@@ -54,7 +54,7 @@ def test_openapi_get_graph_graph(
                     "site": "NO_SITE",
                     "host_name": "heute",
                     "service_description": "CPU load",
-                    "type": "graph",
+                    "type": "predefined_graph",
                     "graph_id": "cpu_load",
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
                 }

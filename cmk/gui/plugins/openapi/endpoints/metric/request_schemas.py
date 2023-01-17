@@ -41,6 +41,6 @@ class GetSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
     type_schemas = {
-        "graph": GetGraphSchema,
+        "predefined_graph": GetGraphSchema,
         "single_metric": GetMetricSchema,
     }

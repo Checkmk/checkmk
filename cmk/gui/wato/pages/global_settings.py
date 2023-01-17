@@ -481,7 +481,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
-            title=_("Hide all settings") if self._show_only_modified else _("Show all settings"),
+            title=_("Show only modified settings"),
             icon_name="toggle_on" if self._show_only_modified else "toggle_off",
             item=make_simple_link(
                 makeactionuri(

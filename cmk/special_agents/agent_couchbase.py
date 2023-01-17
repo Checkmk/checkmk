@@ -15,9 +15,8 @@ from typing import Any, Iterator, TypeVar
 
 import requests
 
-import cmk.utils.password_store
-
 from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.utils.agent_common import special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args
 
 LOGGER = logging.getLogger(__name__)
@@ -330,13 +329,7 @@ def sections_buckets(bucket_list: Sequence[tuple[str, Mapping[str, Sequence[floa
     return output
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-
-    if argv is None:
-        cmk.utils.password_store.replace_passwords()
-        argv = sys.argv[1:]
-
-    args = parse_arguments(argv)
+def couchbase_main(args: Args) -> int:
     set_up_logging(args.verbose)
 
     client = CouchbaseClient(
@@ -364,3 +357,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     output.append("")
     sys.stdout.write("\n".join(output))
     return 0
+
+
+def main() -> int:
+    return special_agent_main(parse_arguments, couchbase_main)

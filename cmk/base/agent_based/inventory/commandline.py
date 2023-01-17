@@ -20,10 +20,8 @@ from cmk.utils.type_defs import (
     RuleSetName,
 )
 
-from cmk.fetchers.filecache import FileCacheOptions
-
 import cmk.base.section as section
-from cmk.base.agent_based.data_provider import ConfiguredParser
+from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree
@@ -34,9 +32,9 @@ __all__ = ["commandline_inventory"]
 def commandline_inventory(
     hostnames: list[HostName],
     *,
-    parser: ConfiguredParser,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
@@ -46,9 +44,9 @@ def commandline_inventory(
         try:
             _commandline_inventory_on_host(
                 hostname,
-                parser=parser,
                 config_cache=config_cache,
-                file_cache_options=file_cache_options,
+                parser=parser,
+                fetcher=fetcher,
                 inventory_parameters=config_cache.inventory_parameters,
                 parameters=config_cache.hwsw_inventory_parameters(hostname),
                 run_plugin_names=run_plugin_names,
@@ -65,9 +63,9 @@ def commandline_inventory(
 def _commandline_inventory_on_host(
     host_name: HostName,
     *,
-    parser: ConfiguredParser,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
     run_plugin_names: Container[InventoryPluginName],
@@ -78,9 +76,9 @@ def _commandline_inventory_on_host(
 
     check_result = check_inventory_tree(
         host_name,
-        parser=parser,
         config_cache=config_cache,
-        file_cache_options=file_cache_options,
+        parser=parser,
+        fetcher=fetcher,
         inventory_parameters=inventory_parameters,
         run_plugin_names=run_plugin_names,
         parameters=parameters,

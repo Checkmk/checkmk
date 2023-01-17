@@ -107,7 +107,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
-from cmk.base.agent_based.data_provider import ConfiguredParser
+from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
@@ -185,17 +185,25 @@ class AutomationDiscovery(DiscoveryAutomation):
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
         )
+        fetcher = ConfiguredFetcher(
+            config_cache,
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
+            mode=Mode.DISCOVERY,
+            on_error=on_error,
+            selected_sections=NO_SELECTION,
+            simulation_mode=config.simulation_mode,
+            max_cachefile_age=config.max_cachefile_age(),
+        )
         for hostname in hostnames:
             results[hostname] = discovery.automation_discovery(
                 hostname,
                 config_cache=config_cache,
                 parser=parser,
+                fetcher=fetcher,
                 mode=mode,
                 service_filters=None,
                 on_error=on_error,
-                file_cache_options=file_cache_options,
-                force_snmp_cache_refresh=force_snmp_cache_refresh,
-                max_cachefile_age=config.max_cachefile_age(),
             )
 
             if results[hostname].error_text is None:
@@ -276,13 +284,21 @@ class AutomationTryDiscovery(Automation):
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
         )
-        return discovery.get_check_preview(
-            host_name=HostName(args[0]),
-            parser=parser,
-            config_cache=config_cache,
+        fetcher = ConfiguredFetcher(
+            config_cache,
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
+            mode=Mode.DISCOVERY,
+            on_error=on_error,
+            selected_sections=NO_SELECTION,
+            simulation_mode=config.simulation_mode,
             max_cachefile_age=config.max_cachefile_age(),
+        )
+        return discovery.get_check_preview(
+            HostName(args[0]),
+            config_cache=config_cache,
+            parser=parser,
+            fetcher=fetcher,
             on_error=on_error,
         )
 

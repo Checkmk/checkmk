@@ -23,8 +23,6 @@ from typing import Callable, Literal, NamedTuple
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import (
     make_filter_from_choice,
@@ -36,7 +34,6 @@ from cmk.utils.structured_data import (
     UpdateResult,
 )
 from cmk.utils.type_defs import (
-    AgentRawData,
     HostName,
     HWSWInventoryParameters,
     InventoryPluginName,
@@ -44,20 +41,16 @@ from cmk.utils.type_defs import (
     RuleSetName,
 )
 
-from cmk.snmplib.type_defs import SNMPRawData
-
-from cmk.fetchers import fetch_all, Mode, SourceInfo, SourceType
-from cmk.fetchers.filecache import FileCacheOptions
+from cmk.fetchers import SourceInfo, SourceType
 
 from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
-from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
+    ConfiguredFetcher,
     ConfiguredParser,
     filter_out_errors,
     make_broker,
@@ -71,7 +64,6 @@ from cmk.base.agent_based.utils import (
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import ConfigCache
-from cmk.base.sources import make_sources
 
 __all__ = [
     "inventorize_status_data_of_real_host",
@@ -101,7 +93,7 @@ def check_inventory_tree(
     *,
     config_cache: ConfigCache,
     parser: ConfiguredParser,
-    file_cache_options: FileCacheOptions,
+    fetcher: ConfiguredFetcher,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
@@ -124,12 +116,7 @@ def check_inventory_tree(
             update_result=UpdateResult(save_tree=False, reason=""),
         )
 
-    fetched_data_result = _fetch_real_host_data(
-        host_name,
-        parser=parser,
-        config_cache=config_cache,
-        file_cache_options=file_cache_options,
-    )
+    fetched_data_result = _fetch_real_host_data(host_name, parser=parser, fetcher=fetcher)
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -229,34 +216,9 @@ def _fetch_real_host_data(
     host_name: HostName,
     *,
     parser: ConfiguredParser,
-    config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
+    fetcher: ConfiguredFetcher,
 ) -> FetchedDataResult:
-    ipaddress = config.lookup_ip_address(config_cache, host_name)
-    nodes = config_cache.nodes_of(host_name)
-    if nodes is None:
-        hosts = [(host_name, ipaddress)]
-    else:
-        hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
-
-    fetched: Sequence[
-        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ] = fetch_all(
-        itertools.chain.from_iterable(
-            make_sources(
-                host_name_,
-                ipaddress_,
-                config_cache=config_cache,
-                force_snmp_cache_refresh=False,
-                on_scan_error=OnError.RAISE,
-                simulation_mode=config.simulation_mode,
-                file_cache_options=file_cache_options,
-                file_cache_max_age=config_cache.max_cachefile_age(host_name),
-            )
-            for host_name_, ipaddress_ in hosts
-        ),
-        mode=(Mode.INVENTORY if parser.selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
-    )
+    fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)

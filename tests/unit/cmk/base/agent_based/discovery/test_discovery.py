@@ -29,7 +29,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-from cmk.fetchers import SourceType
+from cmk.fetchers import Mode, SourceType
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import HostKey
@@ -42,6 +42,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (
+    ConfiguredFetcher,
     ConfiguredParser,
     ParsedSectionsBroker,
     ParsedSectionsResolver,
@@ -882,14 +883,23 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
     )
-
+    fetcher = ConfiguredFetcher(
+        config_cache,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
+        mode=Mode.DISCOVERY,
+        on_error=OnError.RAISE,
+        selected_sections=NO_SELECTION,
+        simulation_mode=True,
+    )
     discovery.commandline_discovery(
         arg_hostnames={testhost},
-        parser=parser,
         config_cache=config_cache,
+        parser=parser,
+        fetcher=fetcher,
         run_plugin_names=EVERYTHING,
-        file_cache_options=FileCacheOptions(),
         arg_only_new=False,
+        on_error=OnError.RAISE,
     )
 
     entries = autochecks.AutochecksStore(testhost).read()

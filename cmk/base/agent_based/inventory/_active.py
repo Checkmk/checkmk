@@ -11,11 +11,9 @@ from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HostName, HWSWInventoryParameters, RuleSetName
 
-from cmk.fetchers.filecache import FileCacheOptions
-
 from cmk.checkers.checkresults import ActiveCheckResult
 
-from cmk.base.agent_based.data_provider import ConfiguredParser
+from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree
@@ -26,9 +24,9 @@ __all__ = ["execute_active_check_inventory"]
 def execute_active_check_inventory(
     host_name: HostName,
     *,
-    parser: ConfiguredParser,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
 ) -> ActiveCheckResult:
@@ -41,8 +39,8 @@ def execute_active_check_inventory(
     result = check_inventory_tree(
         host_name,
         parser=parser,
+        fetcher=fetcher,
         config_cache=config_cache,
-        file_cache_options=file_cache_options,
         inventory_parameters=inventory_parameters,
         run_plugin_names=EVERYTHING,
         parameters=parameters,

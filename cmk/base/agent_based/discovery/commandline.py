@@ -4,36 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import itertools
 from collections import Counter
-from collections.abc import Callable, Container, Sequence
+from collections.abc import Callable, Container
 from functools import partial
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostAddress, HostName, ServiceState
-from cmk.utils.type_defs.result import Result
-
-from cmk.snmplib.type_defs import SNMPRawData
-
-from cmk.fetchers import fetch_all, Mode, SourceInfo
-from cmk.fetchers.filecache import FileCacheOptions
+from cmk.utils.type_defs import CheckPluginName, HostName, ServiceState
 
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.autochecks as autochecks
-import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
+    ConfiguredFetcher,
     ConfiguredParser,
     filter_out_errors,
     make_broker,
@@ -42,7 +33,6 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.config import ConfigCache
-from cmk.base.sources import make_sources
 
 from ._discovered_services import analyse_discovered_services
 from ._discovery import execute_check_discovery
@@ -55,11 +45,12 @@ def commandline_discovery(
     arg_hostnames: set[HostName],
     *,
     parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
     only_host_labels: bool = False,
+    on_error: OnError,
 ) -> None:
     """Implementing cmk -I and cmk -II
 
@@ -67,42 +58,13 @@ def commandline_discovery(
     The list of hostnames is already prepared by the main code.
     If it is empty then we use all hosts and switch to using cache files.
     """
-    on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
-
-    mode = Mode.DISCOVERY if parser.selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for host_name in sorted(host_names):
-        nodes = config_cache.nodes_of(host_name)
-        if nodes is None:
-            hosts = [(host_name, config.lookup_ip_address(config_cache, host_name))]
-        else:
-            hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
-
         section.section_begin(host_name)
         try:
-            fetched: Sequence[
-                tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-            ] = fetch_all(
-                itertools.chain.from_iterable(
-                    make_sources(
-                        host_name_,
-                        ip_address_,
-                        config_cache=config_cache,
-                        force_snmp_cache_refresh=False,
-                        selected_sections=parser.selected_sections
-                        if nodes is None
-                        else NO_SELECTION,
-                        on_scan_error=on_error if nodes is None else OnError.RAISE,
-                        simulation_mode=config.simulation_mode,
-                        file_cache_options=file_cache_options,
-                        file_cache_max_age=config.max_cachefile_age(),
-                    )
-                    for host_name_, ip_address_ in hosts
-                ),
-                mode=mode,
-            )
+            fetched = fetcher(host_name, ip_address=None)
             host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
             store_piggybacked_sections(host_sections)
             parsed_sections_broker = make_broker(host_sections)
@@ -218,24 +180,20 @@ def _commandline_discovery_on_host(
 
 def commandline_check_discovery(
     host_name: HostName,
-    ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
     parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     active_check_handler: Callable[[HostName, str], object],
-    file_cache_options: FileCacheOptions,
-    discovery_file_cache_max_age: int | None,
     keepalive: bool,
 ) -> ServiceState:
     return error_handling.check_result(
         partial(
             _commandline_check_discovery,
             host_name,
-            ipaddress,
-            parser=parser,
-            file_cache_options=file_cache_options,
-            discovery_file_cache_max_age=discovery_file_cache_max_age,
             config_cache=config_cache,
+            parser=parser,
+            fetcher=fetcher,
         ),
         exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
@@ -250,42 +208,12 @@ def commandline_check_discovery(
 
 def _commandline_check_discovery(
     host_name: HostName,
-    ipaddress: HostAddress | None,
     *,
-    parser: ConfiguredParser,
-    file_cache_options: FileCacheOptions,
-    discovery_file_cache_max_age: int | None,
     config_cache: ConfigCache,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
 ) -> ActiveCheckResult:
-    # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
-    # ipaddress is always None
-    if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(config_cache, host_name)
-
-    nodes = config_cache.nodes_of(host_name)
-    if nodes is None:
-        hosts = [(host_name, ipaddress)]
-    else:
-        hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
-
-    fetched = fetch_all(
-        itertools.chain.from_iterable(
-            make_sources(
-                host_name_,
-                ipaddress_,
-                config_cache=config_cache,
-                force_snmp_cache_refresh=False,
-                selected_sections=NO_SELECTION,
-                on_scan_error=OnError.RAISE,
-                simulation_mode=config.simulation_mode,
-                file_cache_options=file_cache_options,
-                file_cache_max_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
-            )
-            for host_name_, ipaddress_ in hosts
-        ),
-        mode=Mode.DISCOVERY,
-    )
-
+    fetched = fetcher(host_name, ip_address=None)
     return execute_check_discovery(
         host_name,
         config_cache=config_cache,

@@ -3,38 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
 from collections.abc import Callable, Container
 from functools import partial
 
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
 
-from cmk.fetchers import fetch_all, Mode
-from cmk.fetchers.filecache import FileCacheOptions
-
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.submitters import Submitter
-from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
-import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ConfiguredParser
+from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.config import ConfigCache
-from cmk.base.sources import make_sources
 
 from ._checking import execute_checkmk_checks
+
+__all__ = ["commandline_checking"]
 
 
 def commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
-    parser: ConfiguredParser,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     submitter: Submitter,
     active_check_handler: Callable[[HostName, str], object],
@@ -47,9 +41,9 @@ def commandline_checking(
             _commandline_checking,
             host_name,
             ipaddress,
-            parser=parser,
             config_cache=config_cache,
-            file_cache_options=file_cache_options,
+            parser=parser,
+            fetcher=fetcher,
             run_plugin_names=run_plugin_names,
             perfdata_with_times=perfdata_with_times,
             submitter=submitter,
@@ -69,43 +63,15 @@ def _commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
-    parser: ConfiguredParser,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     perfdata_with_times: bool,
     submitter: Submitter,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
-    # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
-    # address is unknown). When called as non keepalive ipaddress may be None or
-    # is already an address (2nd argument)
-    if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(config_cache, host_name)
-
-    nodes = config_cache.nodes_of(host_name)
-    if nodes is None:
-        hosts = [(host_name, ipaddress)]
-    else:
-        hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
-
-    fetched = fetch_all(
-        itertools.chain.from_iterable(
-            make_sources(
-                host_name_,
-                ipaddress_,
-                config_cache=config_cache,
-                force_snmp_cache_refresh=False,
-                selected_sections=parser.selected_sections if nodes is None else NO_SELECTION,
-                on_scan_error=OnError.RAISE,
-                simulation_mode=config.simulation_mode,
-                file_cache_options=file_cache_options,
-                file_cache_max_age=config_cache.max_cachefile_age(host_name),
-            )
-            for host_name_, ipaddress_ in hosts
-        ),
-        mode=Mode.CHECKING if parser.selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
-    )
+    fetched = fetcher(host_name, ip_address=ipaddress)
     return execute_checkmk_checks(
         hostname=host_name,
         config_cache=config_cache,

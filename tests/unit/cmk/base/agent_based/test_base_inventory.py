@@ -13,15 +13,21 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.debug
+from cmk.utils.exceptions import OnError
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HWSWInventoryParameters
 
+from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
-from cmk.base.agent_based.data_provider import ConfiguredParser, ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import (
+    ConfiguredFetcher,
+    ConfiguredParser,
+    ParsedSectionsBroker,
+)
 from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
     _parse_inventory_plugin_item,
@@ -1238,16 +1244,25 @@ def test_check_inventory_tree(
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
     )
+    fetcher = ConfiguredFetcher(
+        config_cache,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
+        mode=Mode.INVENTORY,
+        on_error=OnError.RAISE,
+        selected_sections=NO_SELECTION,
+        simulation_mode=True,
+    )
     check_result = _inventory.check_inventory_tree(
         hostname,
-        parser=parser,
         config_cache=config_cache,
+        parser=parser,
+        fetcher=fetcher,
         inventory_parameters=config_cache.inventory_parameters,
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
             {} if failed_state is None else {"inv-fail-status": failed_state}
         ),
-        file_cache_options=FileCacheOptions(),
         old_tree=StructuredDataNode(),
     ).check_result
 
@@ -1296,14 +1311,23 @@ def test_check_inventory_tree_no_data_or_files(
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("tests"),
     )
+    fetcher = ConfiguredFetcher(
+        config_cache,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
+        mode=Mode.INVENTORY,
+        on_error=OnError.RAISE,
+        selected_sections=NO_SELECTION,
+        simulation_mode=True,
+    )
     check_result = _inventory.check_inventory_tree(
         hostname,
-        parser=parser,
         config_cache=config_cache,
+        parser=parser,
+        fetcher=fetcher,
         inventory_parameters=config_cache.inventory_parameters,
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),
-        file_cache_options=file_cache_options,
         old_tree=StructuredDataNode(),
     ).check_result
 

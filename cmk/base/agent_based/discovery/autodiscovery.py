@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import itertools
 import socket
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import Literal, TypeVar, Union
 
@@ -19,12 +18,10 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    AgentRawData,
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
@@ -32,20 +29,13 @@ from cmk.utils.type_defs import (
     ServiceID,
     ServiceName,
 )
-from cmk.utils.type_defs.result import Result
-
-from cmk.snmplib.type_defs import SNMPRawData
-
-from cmk.fetchers import fetch_all, Mode, SourceInfo
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-
-from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
+    ConfiguredFetcher,
     ConfiguredParser,
     filter_out_errors,
     make_broker,
@@ -54,7 +44,6 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
-from cmk.base.sources import make_sources
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -108,12 +97,10 @@ def automation_discovery(
     *,
     config_cache: ConfigCache,
     parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     mode: DiscoveryMode,
     service_filters: _ServiceFilters | None,
     on_error: OnError,
-    file_cache_options: FileCacheOptions,
-    force_snmp_cache_refresh: bool,
-    max_cachefile_age: MaxAge,
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
     result = DiscoveryResult()
@@ -130,42 +117,10 @@ def automation_discovery(
                 host_name
             )  # this is cluster-aware!
 
-        ipaddress = (
-            None
-            if config_cache.is_cluster(host_name)
-            else config.lookup_ip_address(config_cache, host_name)
-        )
-
-        # The code below this line is duplicated in get_check_preview().
-        nodes = config_cache.nodes_of(host_name)
-        if nodes is None:
-            hosts = [(host_name, ipaddress)]
-        else:
-            hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
-
-        fetched: Sequence[
-            tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-        ] = fetch_all(
-            itertools.chain.from_iterable(
-                make_sources(
-                    host_name_,
-                    ipaddress_,
-                    config_cache=config_cache,
-                    force_snmp_cache_refresh=force_snmp_cache_refresh if nodes is None else False,
-                    selected_sections=NO_SELECTION,
-                    on_scan_error=on_error if nodes is None else OnError.RAISE,
-                    simulation_mode=config.simulation_mode,
-                    file_cache_options=file_cache_options,
-                    file_cache_max_age=max_cachefile_age,
-                )
-                for host_name_, ipaddress_ in hosts
-            ),
-            mode=Mode.DISCOVERY,
-        )
+        fetched = fetcher(host_name, ip_address=None)
         host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
         store_piggybacked_sections(host_sections)
         parsed_sections_broker = make_broker(host_sections)
-        # end of code duplication
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
@@ -369,10 +324,10 @@ def discover_marked_hosts(
     core: MonitoringCore,
     autodiscovery_queue: AutoQueue,
     *,
-    parser: ConfiguredParser,
-    file_cache_options: FileCacheOptions,
-    force_snmp_cache_refresh: bool,
     config_cache: ConfigCache,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
+    on_error: OnError,
 ) -> None:
     """Autodiscovery"""
     autodiscovery_queue.cleanup(
@@ -397,13 +352,13 @@ def discover_marked_hosts(
 
             activation_required |= _discover_marked_host(
                 host_name,
-                parser=parser,
                 config_cache=config_cache,
-                file_cache_options=file_cache_options,
-                force_snmp_cache_refresh=force_snmp_cache_refresh,
+                parser=parser,
+                fetcher=fetcher,
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
+                on_error=on_error,
             )
 
     if not activation_required:
@@ -439,13 +394,13 @@ def discover_marked_hosts(
 def _discover_marked_host(
     host_name: HostName,
     *,
-    parser: ConfiguredParser,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
-    force_snmp_cache_refresh: bool,
+    fetcher: ConfiguredFetcher,
+    parser: ConfiguredParser,
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
+    on_error: OnError,
 ) -> bool:
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
@@ -466,15 +421,10 @@ def _discover_marked_host(
         host_name,
         config_cache=config_cache,
         parser=parser,
+        fetcher=fetcher,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
-        on_error=OnError.IGNORE,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=force_snmp_cache_refresh,
-        # autodiscovery is run every 5 minutes (see
-        # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
-        # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=config.max_cachefile_age(discovery=600),
+        on_error=on_error,
     )
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain

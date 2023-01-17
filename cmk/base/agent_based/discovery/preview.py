@@ -3,31 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import itertools
 from collections.abc import Sequence
 from typing import Any, Literal
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.type_defs import AgentRawData, HostName, ServiceName
-from cmk.utils.type_defs.result import Result
+from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.snmplib.type_defs import SNMPRawData
-
-from cmk.fetchers import fetch_all, Mode, SourceInfo
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
-
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
-from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.api.agent_based.register as agent_based_register
@@ -35,6 +26,7 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
+    ConfiguredFetcher,
     ConfiguredParser,
     filter_out_errors,
     make_broker,
@@ -45,7 +37,6 @@ from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
-from cmk.base.sources import make_sources
 
 from ._discovery import get_host_services
 from ._host_labels import analyse_host_labels
@@ -56,13 +47,11 @@ __all__ = ["get_check_preview"]
 
 
 def get_check_preview(
-    *,
     host_name: HostName,
-    parser: ConfiguredParser,
+    *,
     config_cache: ConfigCache,
-    file_cache_options: FileCacheOptions,
-    force_snmp_cache_refresh: bool,
-    max_cachefile_age: MaxAge,
+    parser: ConfiguredParser,
+    fetcher: ConfiguredFetcher,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
@@ -70,40 +59,17 @@ def get_check_preview(
     ip_address = (
         None
         if config_cache.is_cluster(host_name)
+        # We *must* do the lookup *before* calling `get_host_attributes()`
+        # because...  I don't know... global variables I guess.  In any case,
+        # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
     host_attrs = config_cache.get_host_attributes(host_name)
 
-    # The code below this line is duplicated in automation_discovery()
-    nodes = config_cache.nodes_of(host_name)
-    if nodes is None:
-        hosts = [(host_name, ip_address)]
-    else:
-        hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
-
-    fetched: Sequence[
-        tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ] = fetch_all(
-        itertools.chain.from_iterable(
-            make_sources(
-                host_name_,
-                ip_address_,
-                config_cache=config_cache,
-                force_snmp_cache_refresh=force_snmp_cache_refresh if nodes is None else False,
-                selected_sections=NO_SELECTION,
-                on_scan_error=on_error if nodes is None else OnError.RAISE,
-                simulation_mode=config.simulation_mode,
-                file_cache_options=file_cache_options,
-                file_cache_max_age=max_cachefile_age,
-            )
-            for host_name_, ip_address_ in hosts
-        ),
-        mode=Mode.DISCOVERY,
-    )
+    fetched = fetcher(host_name, ip_address=ip_address)
     host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
-    # end of code duplication
 
     host_labels = analyse_host_labels(
         host_name=host_name,

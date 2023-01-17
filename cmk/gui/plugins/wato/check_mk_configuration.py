@@ -1824,6 +1824,50 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableAgentControllerCertificates(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupSiteManagement
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "agent_controller_certificates"
+
+    def valuespec(self) -> ValueSpec:
+        return Dictionary(
+            title=_("Agent Certificates"),
+            help=_("Settings for certificates issued to registered agents."),
+            elements=[
+                (
+                    "lifetime_in_months",
+                    DropdownChoice(
+                        title=_("Lifetime of certificates"),
+                        help=_(
+                            "This setting limits the validity of agent certificates."
+                            " Active agents (i.e., the agent controller is running as a daemon)"
+                            " will automatically call the Checkmk site for renewal when"
+                            " certificates are about to expire. Hence, with this"
+                            " setting, you can assure that registrations of inactive agents"
+                            " expire after a given time."
+                        ),
+                        choices=[
+                            (3, _("3 months")),
+                            (6, _("6 months")),
+                            (12, _("1 year")),
+                            (24, _("2 years")),
+                            (60, _("5 years")),
+                            (120, _("10 years")),
+                            (600, _("50 years")),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=False,
+        )
+
+
+@config_variable_registry.register
 class RestAPIETagLocking(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement

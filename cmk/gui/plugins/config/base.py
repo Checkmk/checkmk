@@ -339,6 +339,10 @@ class CREConfig:
         ]
     )
 
+    agent_controller_certificates: dict[str, int] = field(
+        default_factory=lambda: {"lifetime_in_months": 60}
+    )
+
     #     _   _               ____  ____
     #    | | | |___  ___ _ __|  _ \| __ )
     #    | | | / __|/ _ \ '__| | | |  _ \

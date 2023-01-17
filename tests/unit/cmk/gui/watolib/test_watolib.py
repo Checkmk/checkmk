@@ -195,6 +195,7 @@ def test_registered_configvars() -> None:
         "wato_upload_insecure_snapshots",
         "wato_use_git",
         "graph_timeranges",
+        "agent_controller_certificates",
         "rest_api_etag_locking",
         "enable_login_via_get",
         "enable_community_translations",

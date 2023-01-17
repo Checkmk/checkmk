@@ -84,6 +84,7 @@ def test_default_config_from_plugins() -> None:
         "bulk_discovery_default_settings",
         "use_siteicons",
         "graph_timeranges",
+        "agent_controller_certificates",
         "userdb_automatic_sync",
         "user_login",
         "user_connections",

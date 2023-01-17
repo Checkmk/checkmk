@@ -163,7 +163,7 @@ def acquire_lock(path: Path | str, blocking: bool = True) -> None:
     # Create file (and base dir) for locking if not existent yet
     path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
 
-    fd = os.open(str(path), os.O_RDONLY | os.O_CREAT, 0o660)
+    fd = os.open(str(path), os.O_RDWR | os.O_CREAT, 0o660)
 
     # Handle the case where the file has been renamed in the meantime
     while True:
@@ -177,7 +177,7 @@ def acquire_lock(path: Path | str, blocking: bool = True) -> None:
             os.close(fd)
             raise
 
-        fd_new = os.open(str(path), os.O_RDONLY | os.O_CREAT, 0o660)
+        fd_new = os.open(str(path), os.O_RDWR | os.O_CREAT, 0o660)
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
             break

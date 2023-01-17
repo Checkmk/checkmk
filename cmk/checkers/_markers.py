@@ -50,7 +50,9 @@ class PiggybackMarker(NamedTuple):
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Checkmk code.
         # TODO: this should be moved into the HostName class, if it is ever created.
-        return cls(HostName(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname)))
+        # Note: hostname can be empty here, even though raw_host_name was not.
+        # Since we're silently redirecting here anyway, just replace '' by '_'.
+        return cls(HostName(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname or "_")))
 
 
 class SectionMarker(NamedTuple):

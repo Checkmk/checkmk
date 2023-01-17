@@ -345,7 +345,7 @@ def store_piggyback_raw_data(
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
         logger.log(
             VERBOSE,
-            "Storing piggyback data for: %s",
+            "Storing piggyback data for: %r",
             piggybacked_hostname,
         )
         # Raw data is always stored as bytes. Later the content is

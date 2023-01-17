@@ -146,6 +146,13 @@ class ChangeEventStateSelector(OneOfSchema):
 
 
 class UpdateAndAcknowledgeEvent(BaseSchema):
+    phase = fields.String(
+        enum=["ack", "open"],
+        required=False,
+        example="ack",
+        description="To change the phase of an event",
+        load_default="ack",
+    )
     change_comment = fields.String(
         required=False,
         example="Comment now acked",
@@ -160,9 +167,9 @@ class UpdateAndAcknowledgeEvent(BaseSchema):
 
 class UpdateAndAcknowledgeFilter(UpdateAndAcknowledgeEvent):
     filter_type = fields.String(
-        enum=["query", "params"],
+        enum=["query", "params", "all"],
         required=True,
-        example="by_id",
+        example="all",
         description="The way you would like to filter events.",
     )
 
@@ -184,4 +191,5 @@ class UpdateAndAcknowledgeSelector(OneOfSchema):
     type_schemas = {
         "query": UpdateAndAcknowledgeWithQuery,
         "params": UpdateAndAcknowledgeWithParams,
+        "all": UpdateAndAcknowledgeFilter,
     }

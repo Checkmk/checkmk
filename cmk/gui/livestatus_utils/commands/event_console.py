@@ -179,12 +179,17 @@ def map_sites_to_ids_from_query(
 
 
 def update_and_acknowledge(
-    connection: MultiSiteConnection, change_comment: str, change_contact: str, query: Query
+    connection: MultiSiteConnection,
+    change_comment: str,
+    change_contact: str,
+    query: Query,
+    new_phase: Literal["ack", "open"],
 ) -> Mapping[str, list[str]]:
+    ack = "1" if new_phase == "ack" else "0"
     sites_with_ids = map_sites_to_ids_from_query(connection, query)
     for site, event_ids in sites_with_ids.items():
         event_ids_joined = ",".join(event_ids)
-        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};1;{change_comment};{change_contact}"
+        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};{ack};{change_comment};{change_contact}"
         send_command(connection, cmd, site)
     return sites_with_ids
 

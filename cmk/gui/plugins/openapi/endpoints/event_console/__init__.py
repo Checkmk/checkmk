@@ -10,10 +10,14 @@ not simply defined as states, but they form a category of their own and are in f
 information by Checkmk in the sidebar’s Overview.
 
 The event console endpoints allow for
-* Get an event console event by event id
-* Get event console events with/without filters. Get all, get by query or get by filtering on specific params.
-* Update & Acknowledge / Change State filtering on specific params.
-* Archive events filtering on specific params.
+* Show event console event/s.
+    * Query the event console table using filters, id or live status query.
+* Update & Acknowledge event/s.
+    * Query the event console table using filters, id or live status query and set the phase to ack or open.
+* Change State of event/s.
+    * Query the event console table using filters, id or live status query and set the state for those events.
+* Archive event/s.
+    * Query the event console table using filters, id or live status query and archive those events.
 
 """
 from typing import Any, Mapping
@@ -213,6 +217,7 @@ def update_and_acknowledge_event(params: Mapping[str, Any]) -> Response:
         body.get("change_comment", ""),
         body.get("change_contact", ""),
         query,
+        body["phase"],
     )
 
     if not results:
@@ -256,19 +261,26 @@ def update_and_acknowledge_multiple_events(params: Mapping[str, Any]) -> Respons
     user.need_permission("mkeventd.update_comment")
     user.need_permission("mkeventd.update_contact")
     body = params["body"]
+    # Optimization - If the user wants to acknowledge events, filter for only open events
+    # if the user wants to open events, filter for only acknowledged events
+    filter_phase = "ack" if body["phase"] == "open" else "open"
     match body["filter_type"]:
+        case "all":
+            update_query = filter_event_table(
+                phase=filter_phase,
+            )
         case "params":
             filters = body["filters"]
             update_query = filter_event_table(
                 host=filters.get("host"),
                 state=filters.get("state"),
                 application=filters.get("application"),
-                phase="open",
+                phase=filter_phase,
             )
         case "query":
             update_query = filter_event_table(
                 query=body.get("query"),
-                phase="open",
+                phase=filter_phase,
             )
 
     update_and_acknowledge(
@@ -276,6 +288,7 @@ def update_and_acknowledge_multiple_events(params: Mapping[str, Any]) -> Respons
         body.get("change_comment", ""),
         body.get("change_contact", ""),
         update_query,
+        body["phase"],
     )
     return Response(status=204)
 
@@ -305,7 +318,9 @@ def change_multiple_event_states(params: Mapping[str, Any]) -> Response:
             )
 
         case "query":
-            change_state_query = filter_event_table(query=body.get("query"))
+            change_state_query = filter_event_table(
+                query=body.get("query"),
+            )
 
     change_state(sites.live(), body["new_state"], change_state_query)
     return Response(status=204)

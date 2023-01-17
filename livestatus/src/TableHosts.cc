@@ -27,7 +27,6 @@
 #include "DynamicRRDColumn.h"
 #include "HostListRenderer.h"
 #include "MacroExpander.h"
-#include "MonitoringCore.h"
 #include "NebHost.h"
 #include "NebHostGroup.h"
 #include "NebService.h"
@@ -44,11 +43,13 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/LogwatchList.h"
 #include "livestatus/Metric.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/ServiceListRenderer.h"
 #include "livestatus/StringColumn.h"
@@ -520,52 +521,34 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this object", offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
-        [mc](const host &hst) {
-            return mc->downtimes(
-                reinterpret_cast<const MonitoringCore::Host *>(&hst));
-        }));
+        [mc](const host &hst) { return mc->downtimes(NebHost{hst}); }));
     table->addColumn(std::make_unique<ListColumn<host, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes with id, author and comment",
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
-        [mc](const host &hst) {
-            return mc->downtimes(
-                reinterpret_cast<const MonitoringCore::Host *>(&hst));
-        }));
+        [mc](const host &hst) { return mc->downtimes(NebHost{hst}); }));
     table->addColumn(std::make_unique<ListColumn<host, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
-        [mc](const host &hst) {
-            return mc->downtimes(
-                reinterpret_cast<const MonitoringCore::Host *>(&hst));
-        }));
+        [mc](const host &hst) { return mc->downtimes(NebHost{hst}); }));
     table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
         prefix + "comments", "A list of the ids of all comments", offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
-        [mc](const host &hst) {
-            return mc->comments(
-                reinterpret_cast<const MonitoringCore::Host *>(&hst));
-        }));
+        [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
     table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
         prefix + "comments_with_info",
         "A list of all comments with id, author and comment", offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
-        [mc](const host &hst) {
-            return mc->comments(
-                reinterpret_cast<const MonitoringCore::Host *>(&hst));
-        }));
+        [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
     table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments with id, author, comment, entry type and entry time",
         offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
-        [mc](const host &hst) {
-            return mc->comments(
-                reinterpret_cast<const MonitoringCore::Host *>(&hst));
-        }));
+        [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "custom_variable_names",
@@ -882,8 +865,8 @@ void TableHosts::answerQuery(Query &query, const User &user) {
     // If we know the host, we use it directly.
     if (auto value = query.stringValueRestrictionFor("name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
-        if (const auto *hst =
-                reinterpret_cast<const host *>(core()->find_host(*value))) {
+        if (const auto h = core()->find_host(*value)) {
+            const auto *hst = static_cast<const host *>(h->handle());
             process(*hst);
         }
         return;
@@ -914,5 +897,6 @@ void TableHosts::answerQuery(Query &query, const User &user) {
 
 Row TableHosts::get(const std::string &primary_key) const {
     // "name" is the primary key
-    return Row(core()->find_host(primary_key));
+    auto hst = core()->find_host(primary_key);
+    return Row(hst ? hst->handle() : nullptr);
 }

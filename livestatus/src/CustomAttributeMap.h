@@ -8,8 +8,8 @@
 
 #include <vector>
 
-#include "MonitoringCore.h"
 #include "livestatus/MapUtils.h"
+#include "livestatus/MonitoringCore.h"
 
 class CustomAttributeMap {
 public:

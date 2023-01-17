@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "MonitoringCore.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/MonitoringCore.h"
 class ListRenderer;
 
 class CommentRenderer : public ListColumnRenderer<CommentData> {

@@ -10,20 +10,16 @@
 
 #include <chrono>
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 class HostServiceState;
 
-// for host/service, ugly...
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
+#include <livestatus/Interface.h>
 
 using HostServices = std::vector<HostServiceState *>;
 
-using HostServiceKey = void *;
+using HostServiceKey = void const *;
 
 class HostServiceState {
 public:
@@ -76,8 +72,8 @@ public:
     std::string _notification_period;
     // maybe "": -> no period known, we assume "always"
     std::string _service_period;
-    host *_host;
-    service *_service;
+    std::unique_ptr<const IHost> _host;
+    std::unique_ptr<const IService> _service;
     std::string _host_name;            // Fallback if host no longer exists
     std::string _service_description;  // Fallback if service no longer exists
 

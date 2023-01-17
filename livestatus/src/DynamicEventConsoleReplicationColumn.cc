@@ -13,10 +13,10 @@
 #include <utility>
 #include <vector>
 
-#include "MonitoringCore.h"
 #include "livestatus/BlobColumn.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 
 class TableEventConsoleReplication;
 

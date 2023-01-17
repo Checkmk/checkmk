@@ -7,6 +7,7 @@
 #define NebHost_h
 
 #include <memory>
+#include <string>
 
 #include "livestatus/Interface.h"
 #include "nagios.h"
@@ -15,6 +16,9 @@ class NebHost : public IHost {
 public:
     explicit NebHost(const ::host &host) : host_{host} {}
     [[nodiscard]] bool hasContact(const IContact &contact) const override;
+    [[nodiscard]] const void *handle() const override { return &host_; }
+    [[nodiscard]] std::string notificationPeriodName() const override;
+    [[nodiscard]] std::string servicePeriodName() const override;
 
 private:
     const ::host &host_;

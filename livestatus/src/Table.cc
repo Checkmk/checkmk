@@ -8,10 +8,10 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#include "MonitoringCore.h"
 #include "livestatus/Column.h"
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/StringUtils.h"
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}

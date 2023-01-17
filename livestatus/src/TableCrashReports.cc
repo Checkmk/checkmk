@@ -9,11 +9,11 @@
 #include <memory>
 
 #include "DynamicFileColumn.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "livestatus/Column.h"
 #include "livestatus/CrashReport.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 

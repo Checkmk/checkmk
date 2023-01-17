@@ -13,6 +13,9 @@
 
 #include "NebContact.h"
 #include "NebContactGroup.h"
+#include "NebHost.h"
+#include "NebService.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
@@ -56,33 +59,35 @@ NagiosCore::NagiosCore(
     }
 }
 
-NagiosCore::Host *NagiosCore::find_host(const std::string &name) {
+std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
-    return fromImpl(::find_host(const_cast<char *>(name.c_str())));
+    return ToIHost(::find_host(const_cast<char *>(name.c_str())));
 }
 
-host *NagiosCore::getHostByDesignation(const std::string &designation) {
+std::unique_ptr<const IHost> NagiosCore::getHostByDesignation(
+    const std::string &designation) {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
-    return it == _hosts_by_designation.end() ? nullptr : it->second;
+    auto *host = it == _hosts_by_designation.end() ? nullptr : it->second;
+    return ToIHost(host);
 }
 
-NagiosCore::Service *NagiosCore::find_service(
+std::unique_ptr<const IService> NagiosCore::find_service(
     const std::string &host_name, const std::string &service_description) {
     // Older Nagios headers are not const-correct... :-P
-    return fromImpl(
+    return ToIService(
         ::find_service(const_cast<char *>(host_name.c_str()),
                        const_cast<char *>(service_description.c_str())));
 }
 
-NagiosCore::ContactGroup *NagiosCore::find_contactgroup(
+std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(
     const std::string &name) {
-    // Older Nagios headers are not const-correct... :-P
-    return fromImpl(::find_contactgroup(const_cast<char *>(name.c_str())));
+    return std::make_unique<NebContactGroup>(name);
 }
 
-const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
+std::unique_ptr<const IContact> NagiosCore::find_contact(
+    const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
-    return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
+    return ToIContact(::find_contact(const_cast<char *>(name.c_str())));
 }
 
 std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
@@ -129,20 +134,24 @@ std::vector<Command> NagiosCore::commands() const {
     return commands;
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes(const Host *host) const {
-    return downtimes_for_object(toImpl(host), nullptr);
+std::vector<DowntimeData> NagiosCore::downtimes(const IHost &hst) const {
+    return downtimes_for_object(static_cast<const host *>(hst.handle()),
+                                nullptr);
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes(const Service *service) const {
-    return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
+std::vector<DowntimeData> NagiosCore::downtimes(const IService &svc) const {
+    return downtimes_for_object(static_cast<const host *>(svc.host().handle()),
+                                static_cast<const service *>(svc.handle()));
 }
 
-std::vector<CommentData> NagiosCore::comments(const Host *host) const {
-    return comments_for_object(toImpl(host), nullptr);
+std::vector<CommentData> NagiosCore::comments(const IHost &hst) const {
+    return comments_for_object(static_cast<const host *>(hst.handle()),
+                               nullptr);
 }
 
-std::vector<CommentData> NagiosCore::comments(const Service *service) const {
-    return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
+std::vector<CommentData> NagiosCore::comments(const IService &svc) const {
+    return comments_for_object(static_cast<const host *>(svc.host().handle()),
+                               static_cast<const service *>(svc.handle()));
 }
 
 bool NagiosCore::mkeventdEnabled() {
@@ -225,11 +234,10 @@ std::string b16decode(const std::string &hex) {
 }
 }  // namespace
 
-Attributes NagiosCore::customAttributes(const void *holder,
-                                        AttributeKind kind) const {
-    const auto *h = *static_cast<const customvariablesmember *const *>(holder);
+Attributes CustomAttributes(const customvariablesmember *first,
+                            AttributeKind kind) {
     Attributes attrs;
-    for (const auto *cvm = h; cvm != nullptr; cvm = cvm->next) {
+    for (const auto *cvm = first; cvm != nullptr; cvm = cvm->next) {
         auto [k, name] = to_attribute_kind(cvm->variable_name);
         if (k == kind) {
             const auto *value =
@@ -247,6 +255,12 @@ Attributes NagiosCore::customAttributes(const void *holder,
         }
     }
     return attrs;
+}
+
+Attributes NagiosCore::customAttributes(const void *holder,
+                                        AttributeKind kind) const {
+    return CustomAttributes(
+        *static_cast<const customvariablesmember *const *>(holder), kind);
 }
 
 MetricLocation NagiosCore::metricLocation(

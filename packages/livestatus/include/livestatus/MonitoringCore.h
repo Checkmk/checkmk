@@ -1,12 +1,10 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #ifndef MonitoringCore_h
 #define MonitoringCore_h
-
-#include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
 #include <filesystem>
@@ -15,8 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "CmcNebTypeDefs.h"
 #include "livestatus/Attributes.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Metric.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Triggers.h"
@@ -57,20 +55,18 @@ struct CommentData {
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
-    class Contact;
-    class ContactGroup;
-    class Host;
-    class Service;
-    class TimePeriod;
-
     virtual ~MonitoringCore() = default;
 
-    virtual Host *find_host(const std::string &name) = 0;
-    virtual host *getHostByDesignation(const std::string &designation) = 0;
-    virtual Service *find_service(const std::string &host_name,
-                                  const std::string &service_description) = 0;
-    virtual ContactGroup *find_contactgroup(const std::string &name) = 0;
-    virtual const Contact *find_contact(const std::string &name) = 0;
+    virtual std::unique_ptr<const IHost> find_host(const std::string &name) = 0;
+    virtual std::unique_ptr<const IHost> getHostByDesignation(
+        const std::string &designation) = 0;
+    virtual std::unique_ptr<const IService> find_service(
+        const std::string &host_name,
+        const std::string &service_description) = 0;
+    virtual std::unique_ptr<const IContactGroup> find_contactgroup(
+        const std::string &name) = 0;
+    virtual std::unique_ptr<const IContact> find_contact(
+        const std::string &name) = 0;
     virtual std::unique_ptr<User> find_user(const std::string &name) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
@@ -81,10 +77,10 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
-    virtual std::vector<DowntimeData> downtimes(const Host *) const = 0;
-    virtual std::vector<DowntimeData> downtimes(const Service *) const = 0;
-    virtual std::vector<CommentData> comments(const Host *) const = 0;
-    virtual std::vector<CommentData> comments(const Service *) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const IHost &) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const IService &) const = 0;
+    virtual std::vector<CommentData> comments(const IHost &) const = 0;
+    virtual std::vector<CommentData> comments(const IService &) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

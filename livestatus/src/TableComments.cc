@@ -14,7 +14,6 @@
 #include <variant>  // IWYU pragma: keep
 
 #include "DowntimeOrComment.h"
-#include "MonitoringCore.h"
 #include "NagiosCore.h"
 #include "NebHost.h"
 #include "NebService.h"
@@ -23,6 +22,7 @@
 #include "TableServices.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
@@ -85,8 +85,10 @@ std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query &query, const User &user) {
     for (const auto &[id, co] : core()->impl<NagiosCore>()->_comments) {
-        if (user.is_authorized_for_object(ToIHost(co->_host),
-                                          ToIService(co->_service), false) &&
+        auto h = ToIHost(co->_host);
+        auto s = ToIService(co->_service);
+        if (user.is_authorized_for_object(h ? h.get() : nullptr,
+                                          s ? s.get() : nullptr, false) &&
             !query.processDataset(Row{co.get()})) {
             return;
         }

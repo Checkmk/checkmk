@@ -13,13 +13,13 @@
 #include <sstream>
 #include <variant>  // IWYU pragma: keep
 
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "livestatus/Average.h"
 #include "livestatus/BlobColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/mk_inventory.h"

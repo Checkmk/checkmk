@@ -13,17 +13,17 @@
 #include <vector>
 
 #include "CustomAttributeMap.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "TimeperiodsCache.h"
-#include "contact_fwd.h"
 #include "livestatus/AttributeBitmaskColumn.h"
 #include "livestatus/AttributeListColumn.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/DictColumn.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/StringColumn.h"
 #include "nagios.h"
 
@@ -184,5 +184,6 @@ void TableContacts::answerQuery(Query &query, const User & /*user*/) {
 
 Row TableContacts::get(const std::string &primary_key) const {
     // "name" is the primary key
-    return Row(core()->find_contact(primary_key));
+    auto contact = core()->find_contact(primary_key);
+    return Row(contact ? contact->handle() : nullptr);
 }

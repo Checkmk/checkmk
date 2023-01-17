@@ -8,9 +8,9 @@
 #include <memory>
 #include <vector>
 
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "livestatus/Column.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 

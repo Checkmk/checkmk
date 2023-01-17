@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 
+#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "NagiosCore.h"
 #include "TableCrashReports.h"
 #include "TableQueryHelper.h"
@@ -18,8 +19,6 @@
 #include "livestatus/Logger.h"
 #include "livestatus/data_encoding.h"
 #include "test/Utilities.h"
-class Comment;
-class Downtime;
 
 namespace fs = std::filesystem;
 

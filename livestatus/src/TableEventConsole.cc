@@ -18,20 +18,13 @@
 #include <utility>
 #include <variant>  // IWYU pragma: keep
 
-#include "MonitoringCore.h"
-#ifdef CMC
-#include "CmcHost.h"
-#include "CmcNebTypeDefs.h"
-#else
-#include "NebHost.h"
-#endif
-
 #include "Query.h"
 #include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Filter.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
@@ -275,7 +268,7 @@ std::string ECRow::get(const std::string &column_name,
     return it == map_.end() ? default_value : it->second;
 }
 
-const ::host *ECRow::host() const { return host_; }
+const IHost *ECRow::host() const { return host_ ? host_.get() : nullptr; }
 
 TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table{mc} {}
 
@@ -286,10 +279,10 @@ std::function<bool(const ECRow &)> get_authorizer(const Table &table,
             return c->name() == "event_contact_groups_precedence";
         })) {
         return [&user](const ECRow &row) {
+            const auto *host = row.host();
             return user.is_authorized_for_event(
                 row.getString("event_contact_groups_precedence"),
-                row.getString("event_contact_groups"),
-                ToIHost(row.host()).get());
+                row.getString("event_contact_groups"), host);
         };
     }
     return [](const ECRow & /*row*/) { return true; };

@@ -12,30 +12,20 @@
 #include <stdexcept>
 #include <variant>  // IWYU pragma: keep
 
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "contact_fwd.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
-
-#ifdef CMC
-#include "CmcHost.h"
-#include "CmcService.h"
-#include "cmc.h"
-#else
-#include "NebHost.h"
-#include "NebService.h"
-#include "nagios.h"
-#endif
 
 namespace {
 
@@ -44,17 +34,16 @@ public:
     // TODO(sp): Remove ugly casts.
     LogRow(const LogEntry &entry_, MonitoringCore *mc)
         : entry{&entry_}
-        , hst{reinterpret_cast<host *>(mc->find_host(entry_.host_name()))}
-        , svc{reinterpret_cast<service *>(mc->find_service(
-              entry_.host_name(), entry_.service_description()))}
-        , ctc{reinterpret_cast<const contact *>(
-              mc->find_contact(entry_.contact_name()))}
+        , hst{mc->find_host(entry_.host_name())}
+        , svc{mc->find_service(entry_.host_name(),
+                               entry_.service_description())}
+        , ctc{mc->find_contact(entry_.contact_name())}
         , command{mc->find_command(entry_.command_name())} {}
 
     const LogEntry *entry;
-    host *hst;
-    service *svc;
-    const contact *ctc;
+    std::unique_ptr<const IHost> hst;
+    std::unique_ptr<const IService> svc;
+    std::unique_ptr<const IContact> ctc;
     Command command;
 };
 
@@ -130,14 +119,17 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->hst;
+        const auto &h = r.rawData<LogRow>()->hst;
+        return h ? h->handle() : nullptr;
     }));
     TableServices::addColumns(this, "current_service_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->svc;
+        const auto &s = r.rawData<LogRow>()->svc;
+        return s ? s->handle() : nullptr;
     }),
                               false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->ctc;
+        const auto &c = r.rawData<LogRow>()->ctc;
+        return c ? c->handle() : nullptr;
     }));
     TableCommands::addColumns(this, "current_command_", offsets.add([](Row r) {
         return &r.rawData<LogRow>()->command;
@@ -164,10 +156,12 @@ void TableLog::answerQuery(Query &query, const User &user) {
     }
 
     auto is_authorized = [&user](const LogRow &lr) {
-        // If we have an AuthUser, suppress entries for messages with hosts that
-        // do not exist anymore, otherwise use the common authorization logic.
-        return user.is_authorized_for_object(
-            ToIHost(lr.hst), ToIService(lr.svc), rowWithoutHost(lr));
+        // If we have an AuthUser, suppress entries for messages with hosts
+        // that do not exist anymore, otherwise use the common authorization
+        // logic.
+        return user.is_authorized_for_object(lr.hst ? lr.hst.get() : nullptr,
+                                             lr.svc ? lr.svc.get() : nullptr,
+                                             rowWithoutHost(lr));
     };
 
     auto process = [is_authorized, core = core(),
@@ -181,10 +175,10 @@ void TableLog::answerQuery(Query &query, const User &user) {
 // static
 LogFilter TableLog::constructFilter(Query &query,
                                     size_t max_lines_per_logfile) {
-    // Optimize time interval for the query. In log querys there should always
-    // be a time range in form of one or two filter expressions over time. We
-    // use that to limit the number of logfiles we need to scan and to find the
-    // optimal entry point into the logfile
+    // Optimize time interval for the query. In log querys there should
+    // always be a time range in form of one or two filter expressions over
+    // time. We use that to limit the number of logfiles we need to scan and
+    // to find the optimal entry point into the logfile
     auto since = std::chrono::system_clock::from_time_t(
         query.greatestLowerBoundFor("time").value_or(0));
     auto now =
@@ -192,8 +186,8 @@ LogFilter TableLog::constructFilter(Query &query,
     auto until = std::chrono::system_clock::from_time_t(
         query.leastUpperBoundFor("time").value_or(now) + 1);
 
-    // The second optimization is for log message types. We want to load only
-    // those log type that are queried.
+    // The second optimization is for log message types. We want to load
+    // only those log type that are queried.
     auto classmask =
         static_cast<unsigned>(query.valueSetLeastUpperBoundFor("class")
                                   .value_or(~std::bitset<32>())
@@ -212,9 +206,9 @@ std::shared_ptr<Column> TableLog::column(std::string colname) const {
         return Table::column(colname);
     } catch (const std::runtime_error &e) {
         // Now try with prefix "current_", since our joined tables have this
-        // prefix in order to make clear that we access current and not historic
-        // data and in order to prevent mixing up historic and current fields
-        // with the same name.
+        // prefix in order to make clear that we access current and not
+        // historic data and in order to prevent mixing up historic and
+        // current fields with the same name.
         return Table::column("current_" + colname);
     }
 }

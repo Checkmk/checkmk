@@ -5,6 +5,13 @@
 
 #include "NebService.h"
 
+#include <unordered_map>
+#include <utility>
+
+#include "NagiosCore.h"
+#include "livestatus/Attributes.h"
+#include "nagios.h"
+
 // Older Nagios headers are not const-correct... :-P
 bool NebService::hasContact(const IContact &contact) const {
     auto *s = const_cast<::service *>(&service_);
@@ -12,6 +19,18 @@ bool NebService::hasContact(const IContact &contact) const {
         static_cast<const ::contact *>(contact.handle()));
     return is_contact_for_service(s, c) != 0 ||
            is_escalated_contact_for_service(s, c) != 0;
+}
+
+std::string NebService::notificationPeriodName() const {
+    const auto *np = service_.notification_period;
+    return np == nullptr ? "" : np;
+}
+
+std::string NebService::servicePeriodName() const {
+    auto attrs = CustomAttributes(service_.custom_variables,
+                                  AttributeKind::custom_variables);
+    auto it = attrs.find("SERVICE_PERIOD");
+    return it == attrs.end() ? "" : it->second;
 }
 
 std::unique_ptr<const IService> ToIService(::service *s) {

@@ -108,6 +108,7 @@ liblivestatusneb_a_SOURCES = \
         Logfile.cc \
         MacroExpander.cc \
         NagiosCore.cc \
+        NebContact.cc \
         NebHost.cc \
         NebService.cc \
         Query.cc \

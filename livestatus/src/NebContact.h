@@ -6,6 +6,8 @@
 #ifndef NebContact_h
 #define NebContact_h
 
+#include <memory>
+
 #include "livestatus/Interface.h"
 #include "nagios.h"
 
@@ -17,5 +19,7 @@ public:
 private:
     const contact &contact_;
 };
+
+std::unique_ptr<const IContact> ToIContact(const contact *c);
 
 #endif  // NebContact_h

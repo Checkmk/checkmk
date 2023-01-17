@@ -7,6 +7,7 @@
 #define NebService_h
 
 #include <memory>
+#include <string>
 
 #include "NebHost.h"
 #include "livestatus/Interface.h"
@@ -17,7 +18,10 @@ public:
     explicit NebService(const ::service &svc)
         : host_{*svc.host_ptr}, service_{svc} {}
     [[nodiscard]] bool hasContact(const IContact &contact) const override;
+    [[nodiscard]] const void *handle() const override { return &service_; }
     [[nodiscard]] const IHost &host() const override { return host_; }
+    [[nodiscard]] std::string notificationPeriodName() const override;
+    [[nodiscard]] std::string servicePeriodName() const override;
 
 private:
     const NebHost host_;

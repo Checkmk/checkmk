@@ -16,13 +16,8 @@
 
 #include "Table.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#ifdef CMC
-class Host;
-using host = Host;
-#else
-#include "nagios.h"
-#endif
 
 class ColumnOffsets;
 template <class T>
@@ -60,11 +55,11 @@ public:
     [[nodiscard]] int32_t getInt(const std::string &column_name) const;
     [[nodiscard]] double getDouble(const std::string &column_name) const;
 
-    [[nodiscard]] const ::host *host() const;
+    [[nodiscard]] const IHost *host() const;
 
 private:
     std::map<std::string, std::string> map_;
-    const ::host *host_;
+    std::unique_ptr<const IHost> host_;
 
     [[nodiscard]] std::string get(const std::string &column_name,
                                   const std::string &default_value) const;

@@ -21,12 +21,11 @@ AuthUser::AuthUser(
     , group_auth_{group_auth}
     , make_contact_group_{std::move(make_contact_group)} {}
 
-bool AuthUser::is_authorized_for_object(std::unique_ptr<const IHost> hst,
-                                        std::unique_ptr<const IService> svc,
+bool AuthUser::is_authorized_for_object(const IHost *hst, const IService *svc,
                                         bool authorized_if_no_host) const {
-    return !hst   ? authorized_if_no_host
-           : !svc ? is_authorized_for_host(*hst)
-                  : is_authorized_for_service(*svc);
+    return hst == nullptr   ? authorized_if_no_host
+           : svc == nullptr ? is_authorized_for_host(*hst)
+                            : is_authorized_for_service(*svc);
 }
 
 bool AuthUser::is_authorized_for_host(const IHost &hst) const {

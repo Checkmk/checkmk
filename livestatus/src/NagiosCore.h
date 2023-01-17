@@ -18,17 +18,21 @@
 #include <vector>
 
 #include "DowntimeOrComment.h"  // IWYU pragma: keep
-#include "MonitoringCore.h"
 #include "Store.h"
-#include "contact_fwd.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Metric.h"
+#include "livestatus/MonitoringCore.h"
+#include "livestatus/Renderer.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
 #include "nagios.h"
 class InputBuffer;
 class Logger;
 class OutputBuffer;
+class IContact;
+class IContactGroup;
+class IHost;
+class IService;
 
 struct NagiosPaths {
     std::string _socket{"/usr/local/nagios/var/rw/live"};
@@ -64,12 +68,16 @@ public:
                NagiosPaths paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
-    Host *find_host(const std::string &name) override;
-    host *getHostByDesignation(const std::string &designation) override;
-    Service *find_service(const std::string &host_name,
-                          const std::string &service_description) override;
-    ContactGroup *find_contactgroup(const std::string &name) override;
-    const Contact *find_contact(const std::string &name) override;
+    std::unique_ptr<const IHost> find_host(const std::string &name) override;
+    std::unique_ptr<const IHost> getHostByDesignation(
+        const std::string &designation) override;
+    std::unique_ptr<const IService> find_service(
+        const std::string &host_name,
+        const std::string &service_description) override;
+    std::unique_ptr<const IContactGroup> find_contactgroup(
+        const std::string &name) override;
+    std::unique_ptr<const IContact> find_contact(
+        const std::string &name) override;
     std::unique_ptr<User> find_user(const std::string &name) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation() override;
@@ -79,10 +87,10 @@ public:
     Command find_command(const std::string &name) const override;
     std::vector<Command> commands() const override;
 
-    std::vector<DowntimeData> downtimes(const Host *host) const override;
-    std::vector<DowntimeData> downtimes(const Service *service) const override;
-    std::vector<CommentData> comments(const Host *host) const override;
-    std::vector<CommentData> comments(const Service *service) const override;
+    std::vector<DowntimeData> downtimes(const IHost &hst) const override;
+    std::vector<DowntimeData> downtimes(const IService &svc) const override;
+    std::vector<CommentData> comments(const IHost &hst) const override;
+    std::vector<CommentData> comments(const IService &svc) const override;
 
     bool mkeventdEnabled() override;
 
@@ -139,37 +147,13 @@ private:
         return const_cast<NagiosCore *>(this);
     }
 
-    static const Contact *fromImpl(const contact *c) {
-        return reinterpret_cast<const Contact *>(c);
-    }
-    static const contact *toImpl(const Contact *c) {
-        return reinterpret_cast<const contact *>(c);
-    }
-
-    static ContactGroup *fromImpl(contactgroup *g) {
-        return reinterpret_cast<ContactGroup *>(g);
-    }
-    static const contactgroup *toImpl(const ContactGroup *g) {
-        return reinterpret_cast<const contactgroup *>(g);
-    }
-
-    static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
-    static const host *toImpl(const Host *h) {
-        return reinterpret_cast<const host *>(h);
-    }
-
-    static Service *fromImpl(service *s) {
-        return reinterpret_cast<Service *>(s);
-    }
-    static const service *toImpl(const Service *s) {
-        return reinterpret_cast<const service *>(s);
-    }
-
     std::vector<DowntimeData> downtimes_for_object(const ::host *h,
                                                    const ::service *s) const;
 
     std::vector<CommentData> comments_for_object(const ::host *h,
                                                  const ::service *s) const;
 };
+Attributes CustomAttributes(const customvariablesmember *first,
+                            AttributeKind kind);
 
 #endif  // NagiosCore_h

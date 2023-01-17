@@ -13,7 +13,6 @@
 #include <variant>  // IWYU pragma: keep
 
 #include "DowntimeOrComment.h"
-#include "MonitoringCore.h"
 #include "NagiosCore.h"
 #include "NebHost.h"
 #include "NebService.h"
@@ -23,6 +22,7 @@
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
@@ -98,8 +98,10 @@ std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query &query, const User &user) {
     for (const auto &[id, dt] : core()->impl<NagiosCore>()->_downtimes) {
-        if (user.is_authorized_for_object(ToIHost(dt->_host),
-                                          ToIService(dt->_service), false) &&
+        auto h = ToIHost(dt->_host);
+        auto s = ToIService(dt->_service);
+        if (user.is_authorized_for_object(h ? h.get() : nullptr,
+                                          s ? s.get() : nullptr, false) &&
             !query.processDataset(Row{dt.get()})) {
             return;
         }

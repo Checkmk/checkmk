@@ -25,7 +25,6 @@
 #include "DowntimeRenderer.h"
 #include "DynamicRRDColumn.h"
 #include "MacroExpander.h"
-#include "MonitoringCore.h"
 #include "NebService.h"
 #include "NebServiceGroup.h"
 #include "Query.h"
@@ -41,9 +40,11 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/DynamicColumn.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/TimeColumn.h"
@@ -533,52 +534,34 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this object", offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
-        [mc](const service &svc) {
-            return mc->downtimes(
-                reinterpret_cast<const MonitoringCore::Service *>(&svc));
-        }));
+        [mc](const service &svc) { return mc->downtimes(NebService{svc}); }));
     table->addColumn(std::make_unique<ListColumn<service, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes with id, author and comment",
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
-        [mc](const service &svc) {
-            return mc->downtimes(
-                reinterpret_cast<const MonitoringCore::Service *>(&svc));
-        }));
+        [mc](const service &svc) { return mc->downtimes(NebService{svc}); }));
     table->addColumn(std::make_unique<ListColumn<service, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
-        [mc](const service &svc) {
-            return mc->downtimes(
-                reinterpret_cast<const MonitoringCore::Service *>(&svc));
-        }));
+        [mc](const service &svc) { return mc->downtimes(NebService{svc}); }));
     table->addColumn(std::make_unique<ListColumn<service, CommentData>>(
         prefix + "comments", "A list of the ids of all comments", offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
-        [mc](const service &svc) {
-            return mc->comments(
-                reinterpret_cast<const MonitoringCore::Service *>(&svc));
-        }));
+        [mc](const service &svc) { return mc->comments(NebService{svc}); }));
     table->addColumn(std::make_unique<ListColumn<service, CommentData>>(
         prefix + "comments_with_info",
         "A list of all comments with id, author and comment", offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
-        [mc](const service &svc) {
-            return mc->comments(
-                reinterpret_cast<const MonitoringCore::Service *>(&svc));
-        }));
+        [mc](const service &svc) { return mc->comments(NebService{svc}); }));
     table->addColumn(std::make_unique<ListColumn<service, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments with id, author, comment, entry type and entry time",
         offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
-        [mc](const service &svc) {
-            return mc->comments(
-                reinterpret_cast<const MonitoringCore::Service *>(&svc));
-        }));
+        [mc](const service &svc) { return mc->comments(NebService{svc}); }));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
@@ -732,9 +715,9 @@ void TableServices::answerQuery(Query &query, const User &user) {
     // If we know the host, we use it directly.
     if (auto value = query.stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
-        if (const auto *hst =
-                reinterpret_cast<host *>(core()->find_host(*value))) {
-            for (const auto *m = hst->services; m != nullptr; m = m->next) {
+        if (const auto hst = core()->find_host(*value)) {
+            const auto *h = static_cast<const host *>(hst->handle());
+            for (const auto *m = h->services; m != nullptr; m = m->next) {
                 if (!process(*m->service_ptr)) {
                     return;
                 }
@@ -786,5 +769,5 @@ void TableServices::answerQuery(Query &query, const User &user) {
 Row TableServices::get(const std::string &primary_key) const {
     // "host_name;description" is the primary key
     const auto &[host_name, description] = mk::splitCompositeKey2(primary_key);
-    return Row(core()->find_service(host_name, description));
+    return Row(core()->find_service(host_name, description)->handle());
 }

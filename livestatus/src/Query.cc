@@ -16,13 +16,13 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "MonitoringCore.h"
 #include "Table.h"
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
 #include "livestatus/OutputBuffer.h"

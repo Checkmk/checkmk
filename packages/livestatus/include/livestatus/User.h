@@ -28,7 +28,7 @@ class User {
 public:
     virtual ~User() = default;
     [[nodiscard]] virtual bool is_authorized_for_object(
-        std::unique_ptr<const IHost> hst, std::unique_ptr<const IService> svc,
+        const IHost *hst, const IService *svc,
         bool authorized_if_no_host) const = 0;
     [[nodiscard]] virtual bool is_authorized_for_host(
         const IHost &hst) const = 0;
@@ -51,7 +51,7 @@ public:
                  make_contact_group);
 
     [[nodiscard]] bool is_authorized_for_object(
-        std::unique_ptr<const IHost> hst, std::unique_ptr<const IService> svc,
+        const IHost *hst, const IService *svc,
         bool authorized_if_no_host) const override;
     [[nodiscard]] bool is_authorized_for_host(const IHost &hst) const override;
     [[nodiscard]] bool is_authorized_for_service(
@@ -75,8 +75,7 @@ private:
 class NoAuthUser : public User {
 public:
     [[nodiscard]] bool is_authorized_for_object(
-        std::unique_ptr<const IHost> /* hst */,
-        std::unique_ptr<const IService> /* svc */,
+        const IHost * /* hst */, const IService * /* svc */,
         bool /*authorized_if_no_host*/) const override {
         return true;
     }
@@ -107,8 +106,7 @@ public:
 class UnknownUser : public User {
 public:
     [[nodiscard]] bool is_authorized_for_object(
-        std::unique_ptr<const IHost> hst,
-        std::unique_ptr<const IService> /* svc */,
+        const IHost *hst, const IService * /* svc */,
         bool authorized_if_no_host) const override {
         return !hst && authorized_if_no_host;
     }

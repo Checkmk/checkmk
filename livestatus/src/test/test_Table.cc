@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "LogCache.h"
-#include "MonitoringCore.h"
 #include "Table.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
@@ -45,31 +44,39 @@
 #include "livestatus/Column.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
+#include "livestatus/MonitoringCore.h"
+#include "livestatus/Renderer.h"
 #include "livestatus/Triggers.h"
 
 #ifdef CMC
-#include "Host.h"
 #include "TableCachedStatehist.h"
-#include "cmc.h"
-#else
-#include "nagios.h"
 #endif
+class IContact;
+class IContactGroup;
+class IHost;
+class IService;
 class User;
 
 class DummyMonitoringCore : public MonitoringCore {
-    Host *find_host(const std::string & /*name*/) override { return {}; }
-    host *getHostByDesignation(const std::string & /*designation*/) override {
+    std::unique_ptr<const IHost> find_host(
+        const std::string & /*name*/) override {
         return {};
     }
-    Service *find_service(
+    std::unique_ptr<const IHost> getHostByDesignation(
+        const std::string & /*designation*/) override {
+        return {};
+    }
+    std::unique_ptr<const IService> find_service(
         const std::string & /*host_name*/,
         const std::string & /*service_description*/) override {
         return {};
     }
-    ContactGroup *find_contactgroup(const std::string & /*name*/) override {
+    std::unique_ptr<const IContactGroup> find_contactgroup(
+        const std::string & /*name*/) override {
         return {};
     }
-    const Contact *find_contact(const std::string & /*name*/) override {
+    std::unique_ptr<const IContact> find_contact(
+        const std::string & /*name*/) override {
         return {};
     }
     std::unique_ptr<User> find_user(const std::string & /*name*/) override {
@@ -90,18 +97,20 @@ class DummyMonitoringCore : public MonitoringCore {
     }
     [[nodiscard]] std::vector<Command> commands() const override { return {}; }
 
-    std::vector<DowntimeData> downtimes(const Host * /*host*/) const override {
+    [[nodiscard]] std::vector<DowntimeData> downtimes(
+        const IHost & /*host*/) const override {
         return {};
     }
-    std::vector<DowntimeData> downtimes(
-        const Service * /*service*/) const override {
+    [[nodiscard]] std::vector<DowntimeData> downtimes(
+        const IService & /*service*/) const override {
         return {};
     }
-    std::vector<CommentData> comments(const Host * /*host*/) const override {
+    [[nodiscard]] std::vector<CommentData> comments(
+        const IHost & /*host*/) const override {
         return {};
     }
-    std::vector<CommentData> comments(
-        const Service * /*service*/) const override {
+    [[nodiscard]] std::vector<CommentData> comments(
+        const IService & /*service*/) const override {
         return {};
     }
 

@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "HostServiceState.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -25,8 +24,10 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/Filter.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
@@ -34,10 +35,6 @@
 #include "livestatus/User.h"
 
 #ifdef CMC
-#include "CmcNebTypeDefs.h"
-#include "Host.h"     // IWYU pragma: keep
-#include "Service.h"  // IWYU pragma: keep
-#include "Timeperiod.h"
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_OK 0
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -46,30 +43,11 @@
 #define STATE_CRITICAL 2
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_UNKNOWN 3
-#include "CmcHost.h"
-#include "CmcService.h"
-#include "cmc.h"
 #else
-#include <unordered_map>
-
-#include "NebHost.h"
-#include "NebService.h"
 #include "nagios.h"
 #endif
 
 using namespace std::chrono_literals;
-
-#ifndef CMC
-namespace {
-std::string getCustomVariable(const MonitoringCore *mc,
-                              customvariablesmember *const *cvm,
-                              const std::string &name) {
-    auto attrs = mc->customAttributes(cvm, AttributeKind::custom_variables);
-    auto it = attrs.find(name);
-    return it == attrs.end() ? "" : it->second;
-}
-}  // namespace
-#endif
 
 TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
@@ -206,13 +184,15 @@ void TableStateHistory::addColumns(Table *table, const std::string &prefix,
         }));
 
     // join host and service tables
-    TableHosts::addColumns(table, prefix + "current_host_",
-                           offsets.add([](Row r) {
-                               return r.rawData<HostServiceState>()->_host;
-                           }));
+    TableHosts::addColumns(
+        table, prefix + "current_host_", offsets.add([](Row r) {
+            const auto &h = r.rawData<HostServiceState>()->_host;
+            return h ? h->handle() : nullptr;
+        }));
     TableServices::addColumns(
         table, prefix + "current_service_", offsets.add([](Row r) {
-            return r.rawData<HostServiceState>()->_service;
+            const auto &s = r.rawData<HostServiceState>()->_service;
+            return s ? s->handle() : nullptr;
         }),
         false /* no hosts table */);
 }
@@ -423,11 +403,9 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
         HostServiceKey key = nullptr;
         bool is_service = false;
-        // TODO(sp): Remove ugly casts.
-        auto *entry_host =
-            reinterpret_cast<host *>(core()->find_host(entry->host_name()));
-        auto *entry_service = reinterpret_cast<service *>(core()->find_service(
-            entry->host_name(), entry->service_description()));
+        auto entry_host = core()->find_host(entry->host_name());
+        auto entry_service = core()->find_service(entry->host_name(),
+                                                  entry->service_description());
         switch (entry->kind()) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
@@ -441,7 +419,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
-                key = entry_service;
+                key = entry_service ? entry_service->handle() : nullptr;
                 is_service = true;
             // fall-through
             case LogEntryKind::alert_host:
@@ -450,7 +428,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host: {
                 if (!is_service) {
-                    key = entry_host;
+                    key = entry_host ? entry_host->handle() : nullptr;
                 }
 
                 if (key == nullptr) {
@@ -471,8 +449,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     // now
                     state = new HostServiceState();
                     state->_is_host = entry->service_description().empty();
-                    state->_host = entry_host;
-                    state->_service = entry_service;
+                    state->_host = std::move(entry_host);
+                    state->_service = std::move(entry_service);
                     state->_host_name = entry->host_name();
                     state->_service_description = entry->service_description();
 
@@ -489,19 +467,22 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     }
 
                     // Host/Service relations
-                    if (state->_is_host) {
-                        for (auto &it_inh : state_info) {
-                            if (it_inh.second->_host == state->_host) {
-                                state->_services.push_back(it_inh.second);
+                    if (state->_host) {
+                        const auto *h = state->_host->handle();
+                        if (state->_is_host) {
+                            for (auto &it_inh : state_info) {
+                                if (it_inh.second->_host &&
+                                    it_inh.second->_host->handle() == h) {
+                                    state->_services.push_back(it_inh.second);
+                                }
+                            }
+                        } else {
+                            auto it_inh = state_info.find(h);
+                            if (it_inh != state_info.end()) {
+                                it_inh->second->_services.push_back(state);
                             }
                         }
-                    } else {
-                        auto it_inh = state_info.find(state->_host);
-                        if (it_inh != state_info.end()) {
-                            it_inh->second->_services.push_back(state);
-                        }
                     }
-
                     // Store this state object for tracking state transitions
                     state_info.emplace(key, state);
                     state->_from = since;
@@ -509,50 +490,17 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     // Get notification period of host/service
                     // If this host/service is no longer availabe in nagios ->
                     // set to ""
-                    if (state->_service != nullptr) {
-#ifdef CMC
-                        state->_notification_period =
-                            state->_service->notificationPeriod()->name();
-#else
-                        const auto *np = state->_service->notification_period;
-                        state->_notification_period = np == nullptr ? "" : np;
-#endif
-                    } else if (state->_host != nullptr) {
-#ifdef CMC
-                        state->_notification_period =
-                            state->_host->notificationPeriod()->name();
-#else
-                        const auto *np = state->_host->notification_period;
-                        state->_notification_period = np == nullptr ? "" : np;
-#endif
-                    } else {
-                        state->_notification_period = "";
-                    }
+                    state->_notification_period =
+                        state->_service
+                            ? state->_service->notificationPeriodName()
+                        : state->_host ? state->_host->notificationPeriodName()
+                                       : "";
 
-                    // Same for service period. For Nagios this is a bit
-                    // different, since this is no native field but just a
-                    // custom variable
-                    if (state->_service != nullptr) {
-#ifdef CMC
-                        state->_service_period =
-                            state->_service->servicePeriod()->name();
-#else
-                        state->_service_period = getCustomVariable(
-                            core(), &state->_service->custom_variables,
-                            "SERVICE_PERIOD");
-#endif
-                    } else if (state->_host != nullptr) {
-#ifdef CMC
-                        state->_service_period =
-                            state->_host->servicePeriod()->name();
-#else
-                        state->_service_period = getCustomVariable(
-                            core(), &state->_host->custom_variables,
-                            "SERVICE_PERIOD");
-#endif
-                    } else {
-                        state->_service_period = "";
-                    }
+                    // Same for service period.
+                    state->_service_period =
+                        state->_service ? state->_service->servicePeriodName()
+                        : state->_host  ? state->_host->servicePeriodName()
+                                        : "";
 
                     // Determine initial in_notification_period status
                     auto tmp_period =
@@ -574,8 +522,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
                     // If this key is a service try to find its host and apply
                     // its _in_host_downtime and _host_down parameters
-                    if (!state->_is_host) {
-                        auto my_host = state_info.find(state->_host);
+                    if (!state->_is_host && state->_host) {
+                        auto my_host = state_info.find(state->_host->handle());
                         if (my_host != state_info.end()) {
                             state->_in_host_downtime =
                                 my_host->second->_in_host_downtime;
@@ -934,8 +882,9 @@ void TableStateHistory::process(
 
     // if (hs_state->_duration > 0)
     _abort_query =
-        user.is_authorized_for_object(ToIHost(hs_state->_host),
-                                      ToIService(hs_state->_service), false) &&
+        user.is_authorized_for_object(
+            hs_state->_host ? hs_state->_host.get() : nullptr,
+            hs_state->_service ? hs_state->_service.get() : nullptr, false) &&
         !query.processDataset(Row{hs_state});
 
     hs_state->_from = hs_state->_until;

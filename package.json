@@ -53,7 +53,7 @@
     "webpack-fix-style-only-entries": "^0.6.1"
   },
   "dependencies": {
-    "@yaireo/tagify": "3.22.1",
+    "@yaireo/tagify": "^4.17.7",
     "canvas-5-polyfill": "^0.1.5",
     "core-js": "^3.8.3",
     "crossfilter2": "^1.5.2",

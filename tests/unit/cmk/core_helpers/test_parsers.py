@@ -1248,6 +1248,20 @@ class TestMarkers:
         assert PiggybackMarker.is_header(line) is True
         assert PiggybackMarker.is_footer(line) is False
 
+    def test_piggybacked_host_translation_results_in_empty_string(self):
+        line = b"<<<<x>>>>"
+        translation = {
+            "case": None,
+            "drop_domain": False,
+            "mapping": (),
+            "regex": [
+                (".*(.*?)", r"\1"),
+            ],
+        }
+        assert PiggybackMarker.from_headerline(
+            line, translation, encoding_fallback="utf-8"
+        ).hostname == HostName("_")
+
     def test_piggybacked_host_footer(self):
         line = b"<<<<>>>>"
         assert SectionMarker.is_header(line) is False

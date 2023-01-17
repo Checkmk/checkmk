@@ -25,26 +25,27 @@ class IService {
 public:
     [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
     virtual ~IService() = default;
-    virtual const IHost &host() const = 0;
+    [[nodiscard]] virtual const IHost &host() const = 0;
 };
 
 class IHostGroup {
 public:
     virtual ~IHostGroup() = default;
-    virtual const std::vector<std::unique_ptr<const IHost>> &hosts() const = 0;
+    [[nodiscard]] virtual const std::vector<std::unique_ptr<const IHost>>
+        &hosts() const = 0;
 };
 
 class IServiceGroup {
 public:
     virtual ~IServiceGroup() = default;
-    virtual const std::vector<std::unique_ptr<const IService>> &services()
-        const = 0;
+    [[nodiscard]] virtual const std::vector<std::unique_ptr<const IService>>
+        &services() const = 0;
 };
 
 class IContactGroup {
 public:
     virtual ~IContactGroup() = default;
-    virtual bool isMember(const IContact &) const = 0;
+    [[nodiscard]] virtual bool isMember(const IContact &) const = 0;
 };
 
 #endif  // Interface_h

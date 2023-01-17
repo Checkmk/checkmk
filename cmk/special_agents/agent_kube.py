@@ -1424,32 +1424,6 @@ def create_deployment_api_sections(
         )
 
 
-def write_deployments_api_sections(
-    api_deployments: Sequence[Deployment],
-    host_settings: CheckmkHostSettings,
-    piggyback_formatter: PiggybackFormatter,
-) -> None:
-    """Write the deployment relevant sections based on k8 API information"""
-
-    def output_sections(cluster_deployment: Deployment) -> None:
-        sections = {
-            "kube_deployment_info_v1": lambda: deployment_info(
-                cluster_deployment,
-                host_settings.cluster_name,
-                host_settings.kubernetes_cluster_hostname,
-                host_settings.annotation_key_pattern,
-            ),
-            "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
-            "kube_update_strategy_v1": lambda: controller_strategy(cluster_deployment),
-            "kube_deployment_replicas_v1": lambda: deployment_replicas(cluster_deployment.status),
-        }
-        _write_sections(sections)
-
-    for deployment in api_deployments:
-        with ConditionalPiggybackSection(piggyback_formatter(deployment)):
-            output_sections(deployment)
-
-
 def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
     return api.namespaced_name(metadata.namespace, metadata.name)
 

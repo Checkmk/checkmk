@@ -51,6 +51,9 @@ class RulespecGroupVMCloudContainer(RulespecGroup):
             DocReference.VMWARE: _("Monitoring VMWare ESXi"),
             DocReference.AWS: _("Monitoring Amazon Web Services (AWS)"),
             DocReference.AZURE: _("Monitoring Microsoft Azure"),
+            DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)"),
+            DocReference.KUBERNETES: _("Monitoring Kubernetes"),
+            DocReference.PROMETHEUS: _("Integrating Prometheus"),
         }
 
 

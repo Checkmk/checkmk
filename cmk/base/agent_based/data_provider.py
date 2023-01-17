@@ -291,29 +291,13 @@ class ConfiguredParser:
     def __call__(
         self,
         fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
-    ) -> tuple[
-        Mapping[HostKey, HostSections],
-        Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]],
-    ]:
-        """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
-
-        Communication errors are not raised through by this functions. All agent related errors are
-        caught by the source.run() method and saved in it's _exception attribute. The caller should
-        use source.get_summary_result() to get the state, output and perfdata of the agent execution
-        or source.exception to get the exception object.
-        """
+    ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
+        """Parse fetched data."""
         console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
-
-        collected_host_sections: dict[HostKey, HostSections] = {}
-        results: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
+        output: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         for source, raw_data in fetched:
-            host_key = HostKey(source.hostname, source.source_type)
-
-            console.vverbose(f"  {host_key!s}")
-            collected_host_sections.setdefault(host_key, HostSections())
-
             source_result = parse_raw_data(
                 make_parser(
                     self.config_cache,
@@ -327,17 +311,27 @@ class ConfiguredParser:
                 raw_data,
                 selection=self.selected_sections,
             )
-            results.append((source, source_result))
-            if source_result.is_ok():
-                console.vverbose(
-                    "  -> Add sections: %s\n"
-                    % sorted([str(s) for s in source_result.ok.sections.keys()])
-                )
-                collected_host_sections[host_key] += source_result.ok
-            else:
-                console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
+            output.append((source, source_result))
+        return output
 
-        return collected_host_sections, results
+
+def filter_out_errors(
+    host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]]
+) -> Mapping[HostKey, HostSections]:
+    output: dict[HostKey, HostSections] = {}
+    for source, host_section in host_sections:
+        host_key = HostKey(source.hostname, source.source_type)
+        console.vverbose(f"  {host_key!s}")
+        output.setdefault(host_key, HostSections())
+        if host_section.is_ok():
+            console.vverbose(
+                "  -> Add sections: %s\n"
+                % sorted([str(s) for s in host_section.ok.sections.keys()])
+            )
+            output[host_key] += host_section.ok
+        else:
+            console.vverbose("  -> Not adding sections: %s\n" % host_section.error)
+    return output
 
 
 def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:

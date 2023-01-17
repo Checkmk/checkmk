@@ -59,6 +59,7 @@ import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
     ConfiguredParser,
+    filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
     store_piggybacked_sections,
@@ -80,7 +81,7 @@ __all__ = [
 
 class FetchedDataResult(NamedTuple):
     parsed_sections_broker: ParsedSectionsBroker
-    source_results: Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]
+    host_sections: Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]
     parsing_errors: Sequence[str]
     processing_failed: bool
     no_data_or_files: bool
@@ -169,7 +170,7 @@ def check_inventory_tree(
                         ),
                         is_piggyback=config_cache.is_piggyback_host(host_name),
                     )
-                    for source, host_sections in fetched_data_result.source_results
+                    for source, host_sections in fetched_data_result.host_sections
                 ),
                 check_parsing_errors(
                     errors=fetched_data_result.parsing_errors,
@@ -256,20 +257,21 @@ def _fetch_real_host_data(
         ),
         mode=(Mode.INVENTORY if parser.selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
-    host_sections, results = parser((f[0], f[1]) for f in fetched)
-    store_piggybacked_sections(host_sections)
-    broker = make_broker(host_sections)
+    host_sections = parser((f[0], f[1]) for f in fetched)
+    host_sections_no_error = filter_out_errors(host_sections)
+    store_piggybacked_sections(host_sections_no_error)
+    broker = make_broker(host_sections_no_error)
 
     parsing_errors = broker.parsing_errors()
     return FetchedDataResult(
         parsed_sections_broker=broker,
-        source_results=results,
+        host_sections=host_sections,
         parsing_errors=parsing_errors,
         processing_failed=(
-            _sources_failed(host_section for _source, host_section in results)
+            _sources_failed(host_section for _source, host_section in host_sections)
             or bool(parsing_errors)
         ),
-        no_data_or_files=_no_data_or_files(host_name, host_sections.values()),
+        no_data_or_files=_no_data_or_files(host_name, host_sections_no_error.values()),
     )
 
 

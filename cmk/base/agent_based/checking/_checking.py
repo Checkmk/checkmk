@@ -50,6 +50,7 @@ import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
     ConfiguredParser,
+    filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
     store_piggybacked_sections,
@@ -91,9 +92,10 @@ def execute_checkmk_checks(
 ) -> ActiveCheckResult:
     exit_spec = config_cache.exit_code_spec(hostname)
     services = config_cache.configured_services(hostname)
-    host_sections, source_results = parser((f[0], f[1]) for f in fetched)
-    store_piggybacked_sections(host_sections)
-    broker = make_broker(host_sections)
+    host_sections = parser((f[0], f[1]) for f in fetched)
+    host_sections_no_error = filter_out_errors(host_sections)
+    store_piggybacked_sections(host_sections_no_error)
+    broker = make_broker(host_sections_no_error)
     with CPUTracker() as tracker:
         service_results = check_host_services(
             hostname,
@@ -123,7 +125,7 @@ def execute_checkmk_checks(
                     ),
                     is_piggyback=config_cache.is_piggyback_host(hostname),
                 )
-                for source, host_sections in source_results
+                for source, host_sections in host_sections
             ),
             check_parsing_errors(
                 errors=broker.parsing_errors(),

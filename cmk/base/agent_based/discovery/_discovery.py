@@ -22,6 +22,7 @@ from cmk.checkers.checkresults import ActiveCheckResult
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (
     ConfiguredParser,
+    filter_out_errors,
     make_broker,
     store_piggybacked_sections,
 )
@@ -52,9 +53,10 @@ def execute_check_discovery(
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
-    host_sections, source_results = parser(fetched)
-    store_piggybacked_sections(host_sections)
-    parsed_sections_broker = make_broker(host_sections)
+    host_sections = parser(fetched)
+    host_sections_no_error = filter_out_errors(host_sections)
+    store_piggybacked_sections(host_sections_no_error)
+    parsed_sections_broker = make_broker(host_sections_no_error)
 
     host_labels = analyse_host_labels(
         host_name=host_name,
@@ -101,7 +103,7 @@ def execute_check_discovery(
                     ),
                     is_piggyback=config_cache.is_piggyback_host(host_name),
                 )
-                for source, host_sections in source_results
+                for source, host_sections in host_sections
             ),
             parsing_errors_results,
             [

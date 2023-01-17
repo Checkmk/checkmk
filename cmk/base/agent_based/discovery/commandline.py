@@ -35,6 +35,7 @@ import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
     ConfiguredParser,
+    filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
     store_piggybacked_sections,
@@ -102,7 +103,7 @@ def commandline_discovery(
                 ),
                 mode=mode,
             )
-            host_sections, _results = parser((f[0], f[1]) for f in fetched)
+            host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
             store_piggybacked_sections(host_sections)
             parsed_sections_broker = make_broker(host_sections)
             _commandline_discovery_on_host(

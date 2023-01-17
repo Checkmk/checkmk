@@ -36,6 +36,7 @@ import cmk.base.core
 import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
     ConfiguredParser,
+    filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
     store_piggybacked_sections,
@@ -99,7 +100,7 @@ def get_check_preview(
         ),
         mode=Mode.DISCOVERY,
     )
-    host_sections, _source_results = parser((f[0], f[1]) for f in fetched)
+    host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
     # end of code duplication

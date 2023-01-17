@@ -1212,7 +1212,7 @@ def test_check_inventory_tree(
         "_fetch_real_host_data",
         lambda *args, **kw: _inventory.FetchedDataResult(
             parsed_sections_broker=ParsedSectionsBroker({}),
-            source_results=[],
+            host_sections=[],
             parsing_errors=[],
             processing_failed=True,
             no_data_or_files=False,
@@ -1270,7 +1270,7 @@ def test_check_inventory_tree_no_data_or_files(
         "_fetch_real_host_data",
         lambda *args, **kw: _inventory.FetchedDataResult(
             parsed_sections_broker=ParsedSectionsBroker({}),
-            source_results=[],
+            host_sections=[],
             parsing_errors=[],
             processing_failed=processing_failed,
             no_data_or_files=True,

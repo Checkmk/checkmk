@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 import pytest
@@ -11,6 +12,8 @@ from freezegun import freeze_time
 import cmk.base.plugins.agent_based.sap_hana_data_volume as sap_hana_data_volume
 import cmk.base.plugins.agent_based.utils.df as df
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
+from cmk.base.api.agent_based.checking_classes import IgnoreResults
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -109,8 +112,8 @@ LEVELS_CRIT = {
         )
     ],
 )
-def test_sap_hana_data_volume_parse(  # type:ignore[no-untyped-def]
-    string_table_row, expected_parsed_data
+def test_sap_hana_data_volume_parse(
+    string_table_row: StringTable, expected_parsed_data: sap_hana.ParsedSection
 ) -> None:
     assert sap_hana_data_volume.parse_sap_hana_data_volume(string_table_row) == expected_parsed_data
 
@@ -139,6 +142,7 @@ def value_store_fixture(monkeypatch):
     yield value_store_patched
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "item, params, expected_results",
     [
@@ -230,8 +234,10 @@ def value_store_fixture(monkeypatch):
     ],
 )
 @freeze_time(NOW_SIMULATED)
-def test_sap_hana_data_volume_check(  # type:ignore[no-untyped-def]
-    value_store_patch, item, params, expected_results
+def test_sap_hana_data_volume_check(
+    item: str,
+    params: Mapping[str, object],
+    expected_results: Sequence[IgnoreResults | Metric | Result],
 ) -> None:
 
     yielded_results = list(
@@ -246,6 +252,6 @@ def test_sap_hana_data_volume_check(  # type:ignore[no-untyped-def]
         ("H62 10 - DATA 20", {}),
     ],
 )
-def test_sap_hana_data_volume_check_stale(item, section) -> None:  # type:ignore[no-untyped-def]
+def test_sap_hana_data_volume_check_stale(item: str, section: sap_hana.ParsedSection) -> None:
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_data_volume.check_sap_hana_data_volume(item, {}, section))

@@ -12,15 +12,16 @@ import pytest
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
+from cmk.utils.type_defs.user_id import UserId
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_groups(  # type:ignore[no-untyped-def]
-    monkeypatch,
-    group_type,
+def test_openapi_groups(
+    monkeypatch: pytest.MonkeyPatch,
+    group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
 
@@ -85,11 +86,11 @@ def test_openapi_groups(  # type:ignore[no-untyped-def]
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "service", "contact"])
-def test_openapi_bulk_groups(  # type:ignore[no-untyped-def]
-    monkeypatch,
-    group_type,
+def test_openapi_bulk_groups(
+    monkeypatch: pytest.MonkeyPatch,
+    group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
+) -> None:
 
     groups = [
         {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
@@ -189,11 +190,11 @@ def test_openapi_bulk_groups(  # type:ignore[no-untyped-def]
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_groups_with_customer(  # type:ignore[no-untyped-def]
-    monkeypatch,
-    group_type,
+def test_openapi_groups_with_customer(
+    monkeypatch: pytest.MonkeyPatch,
+    group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
+) -> None:
 
     name = _random_string(10)
     alias = _random_string(10)
@@ -253,8 +254,8 @@ def test_openapi_groups_with_customer(  # type:ignore[no-untyped-def]
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_group_values_are_links(  # type:ignore[no-untyped-def]
-    group_type, wsgi_app, with_automation_user, base
+def test_openapi_group_values_are_links(
+    group_type: str, wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str], base: str
 ) -> None:
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))

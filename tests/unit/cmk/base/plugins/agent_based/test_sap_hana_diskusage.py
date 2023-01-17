@@ -3,14 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 import pytest
 from freezegun import freeze_time
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 import cmk.base.plugins.agent_based.sap_hana_diskusage as sap_hana_diskusage
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -56,8 +60,8 @@ LAST_TIME_EPOCH = (
         ),
     ],
 )
-def test_parse_sap_hana_diskusage(  # type:ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_parse_sap_hana_diskusage(
+    fix_register: FixRegister, info: StringTable, expected_result: Mapping[str, Mapping[str, float]]
 ) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_diskusage")]
     assert section_plugin.parse_function(info) == expected_result
@@ -81,8 +85,8 @@ def test_parse_sap_hana_diskusage(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_sap_hana_diskusage(  # type:ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_inventory_sap_hana_diskusage(
+    fix_register: FixRegister, info: StringTable, expected_result: Sequence[Service]
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
@@ -99,6 +103,7 @@ def value_store_fixture(monkeypatch):
     yield value_store_patched
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "item, info, expected_result",
     [
@@ -194,8 +199,11 @@ def value_store_fixture(monkeypatch):
     ],
 )
 @freeze_time(NOW_SIMULATED)
-def test_check_sap_hana_diskusage(  # type:ignore[no-untyped-def]
-    fix_register, value_store_patch, item, info, expected_result
+def test_check_sap_hana_diskusage(
+    fix_register: FixRegister,
+    item: str,
+    info: StringTable,
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]
@@ -226,8 +234,8 @@ def test_check_sap_hana_diskusage(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_sap_hana_diskusage_stale(  # type:ignore[no-untyped-def]
-    fix_register, item, info
+def test_check_sap_hana_diskusage_stale(
+    fix_register: FixRegister, item: str, info: StringTable
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_diskusage")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_diskusage")]

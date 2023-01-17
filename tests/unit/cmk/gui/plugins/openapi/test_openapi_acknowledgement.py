@@ -24,12 +24,12 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
         ["heute", "Memory", False],  # service OK, not failed.
     ],
 )
-def test_openapi_acknowledge_all_services(  # type:ignore[no-untyped-def]
+def test_openapi_acknowledge_all_services(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-    host_name,
-    service,
-    acknowledgement_sent,
+    mock_livestatus: MockLiveStatusConnection,
+    host_name: str,
+    service: str,
+    acknowledgement_sent: bool,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"
@@ -91,11 +91,11 @@ def test_openapi_acknowledge_all_services(  # type:ignore[no-untyped-def]
         ["CPU load", False],  # service OK, ack not sent
     ],
 )
-def test_openapi_acknowledge_specific_service(  # type:ignore[no-untyped-def]
+def test_openapi_acknowledge_specific_service(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-    service,
-    acknowledgement_sent,
+    mock_livestatus: MockLiveStatusConnection,
+    service: str,
+    acknowledgement_sent: bool,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"
@@ -174,11 +174,11 @@ def test_openapi_acknowledge_specific_service(  # type:ignore[no-untyped-def]
         ["heute", False],  # host ok, ack not sent
     ],
 )
-def test_openapi_acknowledge_host(  # type:ignore[no-untyped-def]
+def test_openapi_acknowledge_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-    host_name,
-    acknowledgement_sent,
+    mock_livestatus: MockLiveStatusConnection,
+    host_name: str,
+    acknowledgement_sent: bool,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"
@@ -226,9 +226,9 @@ def test_openapi_acknowledge_host(  # type:ignore[no-untyped-def]
         )
 
 
-def test_openapi_bulk_acknowledge(  # type:ignore[no-untyped-def]
+def test_openapi_bulk_acknowledge(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"
@@ -292,9 +292,9 @@ def test_openapi_bulk_acknowledge(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("with_groups")
-def test_openapi_acknowledge_servicegroup(  # type:ignore[no-untyped-def]
+def test_openapi_acknowledge_servicegroup(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"
@@ -340,9 +340,9 @@ def test_openapi_acknowledge_servicegroup(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("with_groups")
-def test_openapi_acknowledge_hostgroup(  # type:ignore[no-untyped-def]
+def test_openapi_acknowledge_hostgroup(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"
@@ -425,9 +425,9 @@ def test_openapi_acknowledge_hostgroup(  # type:ignore[no-untyped-def]
         )
 
 
-def test_openapi_acknowledge_host_with_query(  # type:ignore[no-untyped-def]
+def test_openapi_acknowledge_host_with_query(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"
@@ -472,9 +472,9 @@ def test_openapi_acknowledge_host_with_query(  # type:ignore[no-untyped-def]
         )
 
 
-def test_openapi_acknowledge_host_with_non_matching_query(  # type:ignore[no-untyped-def]
+def test_openapi_acknowledge_host_with_non_matching_query(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
     live: MockLiveStatusConnection = mock_livestatus
     base = "/NO_SITE/check_mk/api/1.0"

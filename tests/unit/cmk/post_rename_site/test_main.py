@@ -8,6 +8,7 @@ import logging
 import sys
 
 import pytest
+from pytest_mock import MockerFixture
 
 from tests.testlib import is_enterprise_repo
 
@@ -33,7 +34,7 @@ def test_parse_arguments_defaults() -> None:
     }
 
 
-def test_parse_arguments_missing_old_site_id(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_parse_arguments_missing_old_site_id(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit, match="2"):
         main.parse_arguments([])
     assert "required: OLD_SITE_ID" in capsys.readouterr().err
@@ -49,7 +50,9 @@ def test_parse_arguments_debug() -> None:
     assert main.parse_arguments(["--debug", "old"]).debug is True
 
 
-def test_main_executes_run(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-def]
+def test_main_executes_run(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     def mock_run(args: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId) -> bool:
         sys.stdout.write("XYZ\n")
         return False
@@ -66,7 +69,9 @@ def fixture_test_registry(monkeypatch):
     return registry
 
 
-def test_run_executes_plugins(capsys, test_registry, mocker) -> None:  # type:ignore[no-untyped-def]
+def test_run_executes_plugins(
+    capsys: pytest.CaptureFixture[str], test_registry: RenameActionRegistry, mocker: MockerFixture
+) -> None:
     handler_mock = mocker.MagicMock()
     test_registry.register(
         RenameAction(name="test", title="Test Title", sort_index=0, handler=handler_mock)

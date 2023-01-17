@@ -5,6 +5,7 @@
 import contextlib
 import json
 from collections.abc import Sequence
+from typing import Iterator
 from unittest.mock import MagicMock
 
 import pytest
@@ -322,10 +323,10 @@ def test_openapi_hosts(
     api_client.follow_link(resp.json, ".../delete").assert_status_code(204)
 
 
-def test_openapi_host_update_after_move(  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_update_after_move(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_host,
-):
+) -> None:
     aut_user_auth_wsgi_app.post(
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "bar", "parent": "/"}',
@@ -401,10 +402,10 @@ def test_openapi_host_update_after_move(  # type:ignore[no-untyped-def]
     )
 
 
-def test_openapi_bulk_hosts(  # type:ignore[no-untyped-def]
+def test_openapi_bulk_hosts(
     monkeypatch: pytest.MonkeyPatch,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
@@ -597,7 +598,7 @@ def _custom_host_attribute_with_basic_topic():
 
 
 @contextlib.contextmanager
-def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]):  # type:ignore[no-untyped-def]
+def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]) -> Iterator[None]:
     try:
         save_custom_attrs_to_mk_file(attrs)
         yield
@@ -649,13 +650,12 @@ def test_openapi_host_created_timestamp(
     assert created_at_post == created_at_get == created_at_put
 
 
+@pytest.mark.usefixtures("custom_host_attribute")
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_has_deleted_custom_attributes(  # type:ignore[no-untyped-def]
+def test_openapi_host_has_deleted_custom_attributes(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_host,
-    custom_host_attribute,
-):
+) -> None:
     # Known custom attribute
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
@@ -693,13 +693,12 @@ def test_openapi_host_has_deleted_custom_attributes(  # type:ignore[no-untyped-d
         assert "foo" in resp.json["extensions"]["attributes"]
 
 
+@pytest.mark.usefixtures("custom_host_attribute")
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_custom_attributes(  # type:ignore[no-untyped-def]
+def test_openapi_host_custom_attributes(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_host,
-    custom_host_attribute,
-):
+) -> None:
     # Known custom attribute
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
@@ -759,11 +758,10 @@ def test_openapi_host_custom_attributes(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_collection(  # type:ignore[no-untyped-def]
+def test_openapi_host_collection(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_host,
-):
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/host_config/collections/all",
@@ -780,10 +778,10 @@ def test_openapi_host_collection(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_host_collection_effective_attributes(  # type:ignore[no-untyped-def]
+def test_openapi_host_collection_effective_attributes(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
+) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/host_config/collections/all?effective_attributes=true",
@@ -803,10 +801,10 @@ def test_openapi_host_collection_effective_attributes(  # type:ignore[no-untyped
         assert host["extensions"]["effective_attributes"] is None
 
 
-def test_openapi_host_rename(  # type:ignore[no-untyped-def]
+def test_openapi_host_rename(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: pytest.MonkeyPatch,
-):
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
     )
@@ -851,10 +849,10 @@ def test_openapi_host_rename(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_rename_error_on_not_existing_host(  # type:ignore[no-untyped-def]
+def test_openapi_host_rename_error_on_not_existing_host(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    monkeypatch,
-):
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
     )
@@ -888,10 +886,10 @@ def test_openapi_host_rename_error_on_not_existing_host(  # type:ignore[no-untyp
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_rename_on_invalid_hostname(  # type:ignore[no-untyped-def]
+def test_openapi_host_rename_on_invalid_hostname(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    monkeypatch,
-):
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
     )
@@ -925,12 +923,12 @@ def test_openapi_host_rename_on_invalid_hostname(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_folder_config_normalization(  # type:ignore[no-untyped-def]
+def test_openapi_host_folder_config_normalization(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
-    def _create_folder(fname: str, parent: str):  # type:ignore[no-untyped-def]
+    def _create_folder(fname: str, parent: str) -> None:
         params = f'{{"name": "{fname}", "title": "{fname}", "parent": "{parent}"}}'
         aut_user_auth_wsgi_app.call_method(
             "post",
@@ -942,7 +940,7 @@ def test_openapi_host_folder_config_normalization(  # type:ignore[no-untyped-def
         )
         parent += f"{fname}~"
 
-    def _create_folders_recursive(folders: Sequence[str]):  # type:ignore[no-untyped-def]
+    def _create_folders_recursive(folders: Sequence[str]) -> None:
         _create_folder(folders[0], "~")
         parent = f"~{folders[0]}"
         for fname in folders[1:]:
@@ -970,9 +968,9 @@ def test_openapi_host_folder_config_normalization(  # type:ignore[no-untyped-def
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_rename_with_pending_activate_changes(  # type:ignore[no-untyped-def]
+def test_openapi_host_rename_with_pending_activate_changes(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     aut_user_auth_wsgi_app.call_method(

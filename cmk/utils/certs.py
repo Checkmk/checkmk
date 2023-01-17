@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Final, NamedTuple
 
@@ -39,6 +39,7 @@ from cryptography.x509 import (
     SubjectKeyIdentifier,
 )
 from cryptography.x509.oid import NameOID
+from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteId
 
@@ -59,7 +60,7 @@ class _CNTemplate:
 
 CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
 
-_DEFAULT_VALIDITY = 999 * 365
+_DEFAULT_VALIDITY = relativedelta(years=999)
 
 
 class RootCA(NamedTuple):
@@ -71,26 +72,28 @@ class RootCA(NamedTuple):
         return cls(*load_cert_and_private_key(path))
 
     @classmethod
-    def load_or_create(cls, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY) -> RootCA:
+    def load_or_create(
+        cls, path: Path, name: str, validity: relativedelta = _DEFAULT_VALIDITY
+    ) -> RootCA:
         try:
             return cls.load(path)
         except FileNotFoundError:
             rsa = _make_private_key()
-            cert = _make_root_certificate(_make_subject_name(name), days_valid, rsa)
+            cert = _make_root_certificate(_make_subject_name(name), validity, rsa)
             _save_cert_chain(path, [cert], rsa)
         return cls(cert, rsa)
 
     def sign_csr(
         self,
         csr: CertificateSigningRequest,
-        days_valid: int = _DEFAULT_VALIDITY,
+        validity: relativedelta = _DEFAULT_VALIDITY,
     ) -> Certificate:
-        return _sign_csr(csr, days_valid, self.cert, self.rsa)
+        return _sign_csr(csr, validity, self.cert, self.rsa)
 
     def new_signed_cert(
         self,
         name: str,
-        days_valid: int = _DEFAULT_VALIDITY,
+        validity: relativedelta = _DEFAULT_VALIDITY,
     ) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
         private_key = _make_private_key()
         cert = _sign_csr(
@@ -98,16 +101,16 @@ class RootCA(NamedTuple):
                 _make_subject_name(name),
                 private_key,
             ),
-            days_valid,
+            validity,
             self.cert,
             self.rsa,
         )
         return cert, private_key
 
     def save_new_signed_cert(
-        self, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY
+        self, path: Path, name: str, validity: relativedelta = _DEFAULT_VALIDITY
     ) -> None:
-        cert, private_key = self.new_signed_cert(name, days_valid)
+        cert, private_key = self.new_signed_cert(name, validity)
         _save_cert_chain(path, [cert, self.cert], private_key)
 
 
@@ -153,7 +156,7 @@ def _make_private_key() -> RSAPrivateKeyWithSerialization:
 
 def _make_cert_builder(
     subject_name: Name,
-    days_valid: int,
+    validity: relativedelta,
     public_key: RSAPublicKey,
 ) -> CertificateBuilder:
     return (
@@ -162,19 +165,19 @@ def _make_cert_builder(
         .public_key(public_key)
         .serial_number(random_serial_number())
         .not_valid_before(datetime.utcnow())
-        .not_valid_after(datetime.utcnow() + timedelta(days=days_valid))
+        .not_valid_after(datetime.utcnow() + validity)
     )
 
 
 def _make_root_certificate(
     subject_name: Name,
-    days_valid: int,
+    validity: relativedelta,
     private_key: RSAPrivateKeyWithSerialization,
 ) -> Certificate:
     return (
         _make_cert_builder(
             subject_name,
-            days_valid,
+            validity,
             private_key.public_key(),
         )
         .issuer_name(subject_name)
@@ -226,7 +229,7 @@ def _make_csr(
 
 def _sign_csr(
     csr: CertificateSigningRequest,
-    days_valid: int,
+    validity: relativedelta,
     signing_cert: Certificate,
     signing_private_key: RSAPrivateKeyWithSerialization,
 ) -> Certificate:
@@ -234,7 +237,7 @@ def _sign_csr(
     return (
         _make_cert_builder(
             csr.subject,
-            days_valid,
+            validity,
             _rsa_public_key_from_cert_or_csr(csr),
         )
         .issuer_name(signing_cert.issuer)

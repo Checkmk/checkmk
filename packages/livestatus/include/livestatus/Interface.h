@@ -11,20 +11,20 @@
 
 class IContact {
 public:
-    [[nodiscard]] virtual const void *handle() const = 0;
     virtual ~IContact() = default;
+    [[nodiscard]] virtual const void *handle() const = 0;
 };
 
 class IHost {
 public:
-    [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
     virtual ~IHost() = default;
+    [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
 };
 
 class IService {
 public:
-    [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
     virtual ~IService() = default;
+    [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
     [[nodiscard]] virtual const IHost &host() const = 0;
 };
 

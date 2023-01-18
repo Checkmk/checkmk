@@ -8,6 +8,10 @@ packer {
       version = ">= 1.0.3"
       source  = "github.com/hashicorp/ansible"
     }
+    azure = {
+      version = ">= 1.3.1"
+      source  = "github.com/hashicorp/azure"
+    }
   }
 }
 
@@ -75,6 +79,7 @@ source "azure-arm" "builder" {
   tenant_id                           = "${var.azure_tenant_id}"
   vm_size                             = "Standard_DS2_v2"
 }
+
 
 build {
   name = "checkmk-ansible"

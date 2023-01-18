@@ -228,7 +228,7 @@ def process_matches(  # type:ignore[no-untyped-def]
         return m
 
     # Exact match on name of executable
-    return command_line[0] == process_pattern
+    return command_line and command_line[0] == process_pattern
 
 
 # produce text or html output intended for the long output field of a check

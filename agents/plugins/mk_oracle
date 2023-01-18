@@ -2939,7 +2939,7 @@ export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
 
 set_up_tmpdirs() {
-    ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle"
+    ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle_tmp_dir"
     ORA_TASKS_TMPDIR="${ORA_TMPDIR}/tasks"
     mkdir -p "$ORA_TASKS_TMPDIR"
 }

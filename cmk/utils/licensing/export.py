@@ -7,11 +7,11 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import auto, Enum
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple, Protocol, TypedDict
 
 from dateutil.relativedelta import relativedelta
 
@@ -336,6 +336,7 @@ class LicenseUsageExtensions:
 
 
 class RawLicenseUsageSample(TypedDict):
+    site_hash: str
     version: str
     edition: str
     platform: str
@@ -350,8 +351,14 @@ class RawLicenseUsageSample(TypedDict):
     extension_ntop: bool
 
 
+class LicenseUsageSampleParser(Protocol):
+    def __call__(self, raw_sample: object, *, site_hash: str | None = None) -> LicenseUsageSample:
+        ...
+
+
 @dataclass
 class LicenseUsageSample:
+    site_hash: str
     version: str
     edition: str
     platform: str
@@ -367,6 +374,7 @@ class LicenseUsageSample:
 
     def for_report(self) -> RawLicenseUsageSample:
         return {
+            "site_hash": self.site_hash,
             "version": self.version,
             "edition": self.edition,
             "platform": self.platform,
@@ -382,7 +390,12 @@ class LicenseUsageSample:
         }
 
     @classmethod
-    def get_parser(cls, report_version: str) -> Callable[[object], LicenseUsageSample]:
+    def get_parser(cls, report_version: str) -> LicenseUsageSampleParser:
+        # Note:
+        # - Old samples do not contain "site_hash".
+        # - When loading the history in Checkmk we add the "site_hash".
+        # - On the license server the "site_hash" is already part of the sample.
+
         if report_version == "1.0":
             return cls._parse_sample_v1_0
 
@@ -395,12 +408,18 @@ class LicenseUsageSample:
         raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
 
     @classmethod
-    def _parse_sample_v1_0(cls, raw_sample: object) -> LicenseUsageSample:
+    def _parse_sample_v1_0(
+        cls, raw_sample: object, *, site_hash: str | None = None
+    ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
 
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError()
+
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
+            site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
             platform=cls._restrict_platform(raw_sample["platform"]),
@@ -416,12 +435,18 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v1_1(cls, raw_sample: object) -> LicenseUsageSample:
+    def _parse_sample_v1_1(
+        cls, raw_sample: object, *, site_hash: str | None = None
+    ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
 
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError()
+
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
+            site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
             platform=cls._restrict_platform(raw_sample["platform"]),
@@ -437,12 +462,18 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v1_4(cls, raw_sample: object) -> LicenseUsageSample:
+    def _parse_sample_v1_4(
+        cls, raw_sample: object, *, site_hash: str | None = None
+    ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
 
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError()
+
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
+            site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
             platform=cls._restrict_platform(raw_sample["platform"]),
@@ -463,77 +494,6 @@ class LicenseUsageSample:
         return platform[:50]
 
 
-class RawLicenseUsageSampleWithSiteHash(TypedDict):
-    version: str
-    edition: str
-    platform: str
-    is_cma: bool
-    sample_time: int
-    timezone: str
-    num_hosts: int
-    num_hosts_excluded: int
-    num_shadow_hosts: int
-    num_services: int
-    num_services_excluded: int
-    extension_ntop: bool
-    site_hash: str
-
-
-@dataclass
-class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
-    site_hash: str
-
-    def for_report(self) -> RawLicenseUsageSampleWithSiteHash:
-        return {
-            "version": self.version,
-            "edition": self.edition,
-            "platform": self.platform,
-            "is_cma": self.is_cma,
-            "sample_time": self.sample_time,
-            "timezone": self.timezone,
-            "num_hosts": self.num_hosts,
-            "num_hosts_excluded": self.num_hosts_excluded,
-            "num_shadow_hosts": self.num_shadow_hosts,
-            "num_services": self.num_services,
-            "num_services_excluded": self.num_services_excluded,
-            "extension_ntop": self.extension_ntop,
-            "site_hash": self.site_hash,
-        }
-
-    @classmethod
-    def get_parser(cls, report_version: str) -> Callable[[object], LicenseUsageSampleWithSiteHash]:
-        return lambda raw_sample: cls._parse(
-            LicenseUsageSample.get_parser(report_version),
-            raw_sample,
-        )
-
-    @classmethod
-    def _parse(
-        cls,
-        parser: Callable[[object], LicenseUsageSample],
-        raw_sample: object,
-    ) -> LicenseUsageSampleWithSiteHash:
-        if not isinstance(raw_sample, dict):
-            raise TypeError()
-
-        parsed_sample = parser({k: v for k, v in raw_sample.items() if k != "site_hash"})
-        return cls(
-            version=parsed_sample.version,
-            edition=parsed_sample.edition,
-            platform=parsed_sample.platform,
-            is_cma=parsed_sample.is_cma,
-            sample_time=parsed_sample.sample_time,
-            timezone=parsed_sample.timezone,
-            num_hosts=parsed_sample.num_hosts,
-            num_hosts_excluded=parsed_sample.num_hosts_excluded,
-            num_shadow_hosts=parsed_sample.num_shadow_hosts,
-            num_services=parsed_sample.num_services,
-            num_services_excluded=parsed_sample.num_services_excluded,
-            extension_ntop=parsed_sample.extension_ntop,
-            site_hash=raw_sample["site_hash"],
-        )
-
-
 # .
 #   .--history-------------------------------------------------------------.
 #   |                   _     _     _                                      |
@@ -545,22 +505,22 @@ class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
 #   '----------------------------------------------------------------------'
 
 
-class LicenseUsageHistoryWithSiteHash:
-    def __init__(self, iterable: Iterable[LicenseUsageSampleWithSiteHash]) -> None:
+class LicenseUsageHistory:
+    def __init__(self, iterable: Iterable[LicenseUsageSample]) -> None:
         self._samples = list(iterable)
 
-    def __iter__(self) -> Iterator[LicenseUsageSampleWithSiteHash]:
+    def __iter__(self) -> Iterator[LicenseUsageSample]:
         return iter(self._samples)
 
-    def for_report(self) -> Sequence[RawLicenseUsageSampleWithSiteHash]:
+    def for_report(self) -> Sequence[RawLicenseUsageSample]:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(cls, report_version: str, raw_history: object) -> LicenseUsageHistoryWithSiteHash:
+    def parse(cls, report_version: str, raw_history: object) -> LicenseUsageHistory:
         if not isinstance(raw_history, list):
             raise TypeError()
 
-        parser = LicenseUsageSampleWithSiteHash.get_parser(report_version)
+        parser = LicenseUsageSample.get_parser(report_version)
         return cls(parser(raw_sample) for raw_sample in raw_history)
 
 

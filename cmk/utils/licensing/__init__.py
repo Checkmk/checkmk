@@ -25,12 +25,11 @@ import cmk.utils.version as cmk_version
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageHistoryDumpVersion,
-    LicenseUsageHistoryWithSiteHash,
     LicenseUsageSample,
-    LicenseUsageSampleWithSiteHash,
     RawLicenseUsageSample,
 )
 from cmk.utils.paths import licensing_dir, log_dir
+from cmk.utils.site import omd_site
 
 
 def init_logging() -> logging.Logger:
@@ -109,6 +108,7 @@ def _create_sample() -> LicenseUsageSample:
     extensions = _load_extensions()
 
     return LicenseUsageSample(
+        site_hash=hash_site_id(omd_site()),
         version=cmk_version.omd_version(),
         edition=general_infos["edition"],
         platform=general_infos["os"],
@@ -214,7 +214,7 @@ class RawLicenseUsageHistoryDump(TypedDict):
 @dataclass
 class LicenseUsageHistoryDump:
     VERSION: str
-    history: LicenseUsageHistory
+    history: LocalLicenseUsageHistory
 
     def for_report(self) -> RawLicenseUsageHistoryDump:
         return {
@@ -223,18 +223,23 @@ class LicenseUsageHistoryDump:
         }
 
     @classmethod
-    def parse(cls, raw_dump: object) -> LicenseUsageHistoryDump:
+    def parse(cls, raw_dump: object, site_hash: str) -> LicenseUsageHistoryDump:
         if not isinstance(raw_dump, dict):
             raise TypeError()
 
         if "VERSION" in raw_dump and "history" in raw_dump:
             return cls(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory.parse(raw_dump["VERSION"], raw_dump["history"]),
+                history=LocalLicenseUsageHistory.parse(
+                    raw_dump["VERSION"],
+                    raw_dump["history"],
+                    site_hash,
+                ),
             )
+
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
-            history=LicenseUsageHistory([]),
+            history=LocalLicenseUsageHistory([]),
         )
 
 
@@ -251,7 +256,7 @@ def load_history_dump() -> LicenseUsageHistoryDump:
             default=b"{}",
         )
     )
-    return LicenseUsageHistoryDump.parse(raw_history_dump)
+    return LicenseUsageHistoryDump.parse(raw_history_dump, hash_site_id(omd_site()))
 
 
 # .
@@ -265,7 +270,7 @@ def load_history_dump() -> LicenseUsageHistoryDump:
 #   '----------------------------------------------------------------------'
 
 
-class LicenseUsageHistory:
+class LocalLicenseUsageHistory:
     def __init__(self, iterable: Iterable[LicenseUsageSample]) -> None:
         self._samples = deque(iterable, maxlen=400)
 
@@ -283,46 +288,20 @@ class LicenseUsageHistory:
         return [sample.for_report() for sample in self]
 
     @classmethod
-    def parse(cls, report_version: str, raw_history: object) -> LicenseUsageHistory:
+    def parse(
+        cls,
+        report_version: str,
+        raw_history: object,
+        site_hash: str,
+    ) -> LocalLicenseUsageHistory:
         if not isinstance(raw_history, list):
             raise TypeError()
 
         parser = LicenseUsageSample.get_parser(report_version)
-        return cls(parser(raw_sample) for raw_sample in raw_history)
+        return cls(parser(raw_sample, site_hash=site_hash) for raw_sample in raw_history)
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
         self._samples.appendleft(sample)
-
-    def add_site_hash(self, raw_site_id: str) -> LicenseUsageHistoryWithSiteHash:
-        site_hash = self._hash_site_id(raw_site_id)
-        return LicenseUsageHistoryWithSiteHash(
-            [
-                LicenseUsageSampleWithSiteHash(
-                    version=sample.version,
-                    edition=sample.edition,
-                    platform=sample.platform,
-                    is_cma=sample.is_cma,
-                    sample_time=sample.sample_time,
-                    timezone=sample.timezone,
-                    num_hosts=sample.num_hosts,
-                    num_hosts_excluded=sample.num_hosts_excluded,
-                    num_shadow_hosts=sample.num_shadow_hosts,
-                    num_services=sample.num_services,
-                    num_services_excluded=sample.num_services_excluded,
-                    extension_ntop=sample.extension_ntop,
-                    site_hash=site_hash,
-                )
-                for sample in self
-            ]
-        )
-
-    @staticmethod
-    def _hash_site_id(raw_site_id: str) -> str:
-        # We have to hash the site ID because some sites contain project names.
-        # This hash also has to be constant because it will be used as an DB index.
-        h = hashlib.new("sha256")
-        h.update(raw_site_id.encode("utf-8"))
-        return h.hexdigest()
 
 
 # .
@@ -334,6 +313,14 @@ class LicenseUsageHistory:
 #   |                   |_| |_|\___|_| .__/ \___|_|                        |
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
+
+
+def hash_site_id(site_id: livestatus.SiteId) -> str:
+    # We have to hash the site ID because some sites contain project names.
+    # This hash also has to be constant because it will be used as an DB index.
+    h = hashlib.new("sha256")
+    h.update(str(site_id).encode("utf-8"))
+    return h.hexdigest()
 
 
 def _get_extensions_filepath() -> Path:

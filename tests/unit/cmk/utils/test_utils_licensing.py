@@ -15,10 +15,10 @@ import livestatus
 import cmk.utils.licensing as licensing
 from cmk.utils.licensing import (
     _serialize_dump,
-    LicenseUsageHistory,
     LicenseUsageHistoryDump,
     LicenseUsageHistoryDumpVersion,
     load_history_dump,
+    LocalLicenseUsageHistory,
     update_license_usage,
 )
 from cmk.utils.licensing.export import (
@@ -176,14 +176,13 @@ def test_serialize_history_dump() -> None:
                     "extension_ntop": True,
                 },
             ],
-        }
+        },
+        "site-hash",
     )
-    assert _serialize_dump(history_dump.for_report()) == (
-        b"LQ't#$x~}Qi Q`]cQ[ Q9:DE@CJQi ,LQG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp"
-        b" G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=6"
-        b"0E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D92"
-        b"5@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@"
-        b"AQi ECF6N.N"
+
+    assert (
+        _serialize_dump(history_dump.for_report())
+        == b"LQ't#$x~}Qi Q`]cQ[ Q9:DE@CJQi ,LQD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 
@@ -194,7 +193,7 @@ def test_serialize_history_dump() -> None:
             {},
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory([]),
+                history=LocalLicenseUsageHistory([]),
             ),
         ),
         (
@@ -204,7 +203,7 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory([]),
+                history=LocalLicenseUsageHistory([]),
             ),
         ),
         (
@@ -228,9 +227,10 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory(
+                history=LocalLicenseUsageHistory(
                     [
                         LicenseUsageSample(
+                            site_hash="site-hash",
                             version="",
                             edition="",
                             platform="A very long string with len>50 describing the plat",
@@ -271,9 +271,10 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory(
+                history=LocalLicenseUsageHistory(
                     [
                         LicenseUsageSample(
+                            site_hash="site-hash",
                             version="",
                             edition="",
                             platform="A very long string with len>50 describing the plat",
@@ -317,9 +318,10 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory(
+                history=LocalLicenseUsageHistory(
                     [
                         LicenseUsageSample(
+                            site_hash="site-hash",
                             version="",
                             edition="",
                             platform="A very long string with len>50 describing the plat",
@@ -360,9 +362,10 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory(
+                history=LocalLicenseUsageHistory(
                     [
                         LicenseUsageSample(
+                            site_hash="site-hash",
                             version="",
                             edition="",
                             platform="A very long string with len>50 describing the plat",
@@ -406,9 +409,10 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory(
+                history=LocalLicenseUsageHistory(
                     [
                         LicenseUsageSample(
+                            site_hash="site-hash",
                             version="",
                             edition="",
                             platform="A very long string with len>50 describing the plat",
@@ -450,9 +454,10 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory(
+                history=LocalLicenseUsageHistory(
                     [
                         LicenseUsageSample(
+                            site_hash="site-hash",
                             version="",
                             edition="",
                             platform="A very long string with len>50 describing the plat",
@@ -495,9 +500,10 @@ def test_serialize_history_dump() -> None:
             },
             LicenseUsageHistoryDump(
                 VERSION=LicenseUsageHistoryDumpVersion,
-                history=LicenseUsageHistory(
+                history=LocalLicenseUsageHistory(
                     [
                         LicenseUsageSample(
+                            site_hash="site-hash",
                             version="",
                             edition="",
                             platform="A very long string with len>50 describing the plat",
@@ -520,34 +526,31 @@ def test_serialize_history_dump() -> None:
 def test_history_dump(
     raw_report: Mapping[str, Any], expected_report: LicenseUsageHistoryDump
 ) -> None:
-    dump = LicenseUsageHistoryDump.parse(raw_report)
+    dump = LicenseUsageHistoryDump.parse(raw_report, "site-hash")
 
     assert dump.VERSION == expected_report.VERSION
 
-    history_of_site = dump.history.add_site_hash("the-site")
-    for sample, sample_with_site_hash in zip(dump.history, history_of_site):
-        assert (
-            sample_with_site_hash.site_hash
-            == "76911aba682fcf9148b378cf18bbcebd624024c1499df42ceeb2a6c1fb41d80c"
-        )
-        assert sample.version == sample_with_site_hash.version
-        assert sample.edition == sample_with_site_hash.edition
-        assert sample.platform == sample_with_site_hash.platform
-        assert sample.is_cma == sample_with_site_hash.is_cma
-        assert sample.sample_time == sample_with_site_hash.sample_time
-        assert sample.timezone == sample_with_site_hash.timezone
-        assert sample.num_hosts == sample_with_site_hash.num_hosts
-        assert sample.num_hosts_excluded == sample_with_site_hash.num_hosts_excluded
-        assert sample.num_services == sample_with_site_hash.num_services
-        assert sample.num_services_excluded == sample_with_site_hash.num_services_excluded
-        assert sample.extension_ntop == sample_with_site_hash.extension_ntop
+    for sample, expected_sample in zip(dump.history, expected_report.history):
+        assert sample.site_hash == expected_sample.site_hash
+        assert sample.version == expected_sample.version
+        assert sample.edition == expected_sample.edition
+        assert sample.platform == expected_sample.platform
+        assert sample.is_cma == expected_sample.is_cma
+        assert sample.sample_time == expected_sample.sample_time
+        assert sample.timezone == expected_sample.timezone
+        assert sample.num_hosts == expected_sample.num_hosts
+        assert sample.num_hosts_excluded == expected_sample.num_hosts_excluded
+        assert sample.num_services == expected_sample.num_services
+        assert sample.num_services_excluded == expected_sample.num_services_excluded
+        assert sample.extension_ntop == expected_sample.extension_ntop
 
 
 def test_history_dump_add_sample() -> None:
-    history_dump = LicenseUsageHistoryDump(VERSION="1.0", history=LicenseUsageHistory([]))
+    history_dump = LicenseUsageHistoryDump(VERSION="1.0", history=LocalLicenseUsageHistory([]))
     for idx in range(450):
         history_dump.history.add_sample(
             LicenseUsageSample(
+                site_hash="foo-bar",
                 version="version",
                 edition="edition",
                 platform="platform",
@@ -564,6 +567,7 @@ def test_history_dump_add_sample() -> None:
         )
     assert len(history_dump.history) == 400
     assert history_dump.history.last == LicenseUsageSample(
+        site_hash="foo-bar",
         version="version",
         edition="edition",
         platform="platform",

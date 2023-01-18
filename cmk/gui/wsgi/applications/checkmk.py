@@ -195,10 +195,6 @@ def _process_request(  # pylint: disable=too-many-branches
         resp = _page_not_found()
 
     except HTTPRedirect as exc:
-        # This can't be a new Response as it can have already cookies set/deleted by the pages.
-        # We can't return the response because the Exception has been raised instead.
-        # TODO: Remove all HTTPRedirect exceptions from all pages. Making the Exception a subclass
-        #       of Response may also work as it can then be directly returned from here.
         return flask.redirect(exc.url)(environ, start_response)
 
     except FinalizeRequest as exc:
@@ -215,16 +211,15 @@ def _process_request(  # pylint: disable=too-many-branches
     except MKUserError as e:
         resp = _render_exception(e, title=_("Invalid user input"))
 
+    except MKUnauthenticatedException as e:
+        resp = _render_exception(e, title=_("Not authenticated"))
+
     except MKAuthException as e:
         resp = _render_exception(e, title=_("Permission denied"))
 
     except livestatus.MKLivestatusException as e:
         resp = _render_exception(e, title=_("Livestatus problem"))
         resp.status_code = http_client.BAD_GATEWAY
-
-    except MKUnauthenticatedException as e:
-        resp = _render_exception(e, title=_("Not authenticated"))
-        resp.status_code = http_client.UNAUTHORIZED
 
     except MKConfigError as e:
         resp = _render_exception(e, title=_("Configuration error"))

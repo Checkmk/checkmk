@@ -6,7 +6,11 @@ import http.client
 
 from werkzeug.http import HTTP_STATUS_CODES
 
-from cmk.utils.exceptions import MKException, MKGeneralException, MKTimeout
+from cmk.utils.exceptions import (  # pylint: disable=unused-import  # noqa
+    MKException,
+    MKGeneralException,
+    MKTimeout,
+)
 
 
 class RequestTimeout(MKTimeout):
@@ -41,7 +45,7 @@ class MKAuthException(MKHTTPException):
     status = http.HTTPStatus.UNAUTHORIZED
 
 
-class MKUnauthenticatedException(MKGeneralException):
+class MKUnauthenticatedException(MKAuthException):
     pass
 
 

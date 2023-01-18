@@ -8,6 +8,8 @@ pub const VERSION: &str = "2.2.0i1";
 pub const DEFAULT_PULL_PORT: u16 = 6556;
 pub const MAX_CONNECTIONS: usize = 3;
 pub const CONNECTION_TIMEOUT: u64 = 20;
+pub const CERT_VALIDITY_LOWER_LIMIT: u64 = 3888000; // 45 days = 45*24*60*60
+pub const CERT_VALIDITY_UPPER_LIMIT: u64 = 15768000000; // approx. 500 years = 500*365*24*60*60
 #[cfg(unix)]
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 #[cfg(unix)]

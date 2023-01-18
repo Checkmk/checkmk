@@ -374,6 +374,15 @@ impl Registry {
         self.connections.push.iter()
     }
 
+    pub fn standard_connections_mut(
+        &mut self,
+    ) -> impl Iterator<Item = (&site_spec::SiteID, &mut TrustedConnectionWithRemote)> {
+        self.connections
+            .push
+            .iter_mut()
+            .chain(self.connections.pull.iter_mut())
+    }
+
     pub fn registered_site_ids(&self) -> impl Iterator<Item = &site_spec::SiteID> {
         self.connections
             .pull

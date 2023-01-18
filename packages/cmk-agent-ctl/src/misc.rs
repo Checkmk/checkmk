@@ -2,6 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use log::debug;
+use rand::Rng;
+use std::thread;
+use std::time::Duration;
+
 #[cfg(windows)]
 use is_elevated::is_elevated;
 
@@ -14,6 +19,12 @@ pub fn anyhow_error_to_human_readable(err: &AnyhowError) -> String {
         .map(|e| e.to_string())
         .collect::<Vec<String>>()
         .join("\n")
+}
+
+pub fn sleep_randomly() {
+    let random_period = rand::thread_rng().gen_range(0..59);
+    debug!("Sleeping {}s to avoid DDOSing of sites", random_period);
+    thread::sleep(Duration::from_secs(random_period));
 }
 
 #[cfg(windows)]

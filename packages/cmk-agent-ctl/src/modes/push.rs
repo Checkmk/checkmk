@@ -4,27 +4,20 @@
 
 use crate::{
     agent_receiver_api::{self, AgentData},
-    config, monitoring_data, site_spec,
+    config, misc, monitoring_data, site_spec,
     types::AgentChannel,
 };
 use anyhow::{Context, Result as AnyhowResult};
 use log::{debug, info, warn};
-use rand::Rng;
 use std::thread;
 use std::time::{Duration, Instant};
-
-fn sleep_randomly() {
-    let random_period = rand::thread_rng().gen_range(0..59);
-    debug!("Sleeping {}s to avoid DDOSing of sites", random_period);
-    thread::sleep(Duration::from_secs(random_period));
-}
 
 pub fn push(
     mut registry: config::Registry,
     client_config: config::ClientConfig,
     agent_channel: AgentChannel,
 ) -> AnyhowResult<()> {
-    sleep_randomly();
+    misc::sleep_randomly();
     loop {
         registry.refresh()?;
         let begin = Instant::now();

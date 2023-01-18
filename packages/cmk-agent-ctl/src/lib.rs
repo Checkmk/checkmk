@@ -112,7 +112,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
             delete_all(&mut registry, delete_all_opts.enable_insecure_connections)
         }
         cli::Mode::RenewCertificate(renew_certificate_opts) => renew_certificate(
-            &mut registry,
+            registry,
             &renew_certificate_opts.connection_opts.connection,
             config::ClientConfig::new(runtime_config, renew_certificate_opts.client_opts, None),
         ),

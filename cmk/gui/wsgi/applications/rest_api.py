@@ -43,6 +43,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.session import UserContext
+from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
+from cmk.gui.wsgi.middleware import AbstractWSGIMiddleware
 from cmk.gui.wsgi.wrappers import ParameterDict
 
 if TYPE_CHECKING:
@@ -175,20 +177,14 @@ def user_from_basic_header(auth_header: str) -> tuple[UserId, str]:
     return UserId(user_id), secret
 
 
-class Authenticate:
+class Authenticate(AbstractWSGIMiddleware):
     """Authenticate all URLs going into the wrapped WSGI application"""
-
-    def __init__(self, app: WSGIApplication) -> None:
-        self.app = app
 
     def __repr__(self) -> str:
         return f"<Authenticate {self.app!r}>"
 
     def __get__(self, instance, owner=None):
         return functools.partial(self.wsgi_app, instance)
-
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         try:
@@ -199,20 +195,18 @@ class Authenticate:
             return self.app(environ, start_response)
 
 
-class EndpointAdapter:
+class EndpointAdapter(AbstractWSGIApp):
     """Wrap an Endpoint
 
     Makes a "real" WSGI application out of an endpoint. Should be refactored away.
     """
 
-    def __init__(self, endpoint: Endpoint) -> None:
+    def __init__(self, endpoint: Endpoint, debug: bool = False) -> None:
+        super().__init__(debug)
         self.endpoint = endpoint
 
     def __repr__(self) -> str:
         return f"<EndpointAdapter {self.endpoint!r}>"
-
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         path_args = environ[ARGS_KEY]
@@ -307,13 +301,11 @@ def serve_spec(
     return response
 
 
-class ServeSpec:
-    def __init__(self, target: EndpointTarget, extension: str) -> None:
+class ServeSpec(AbstractWSGIApp):
+    def __init__(self, target: EndpointTarget, extension: str, debug: bool = False) -> None:
+        super().__init__(debug)
         self.target = target
         self.extension = extension
-
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         serializers = {"yaml": dict_to_yaml, "json": json.dumps}
@@ -339,8 +331,9 @@ def _url(environ: WSGIEnvironment) -> str:
     return "/".join(get_url(environ).split("/")[:-1])
 
 
-class ServeSwaggerUI:
-    def __init__(self, prefix="") -> None:  # type:ignore[no-untyped-def]
+class ServeSwaggerUI(AbstractWSGIApp):
+    def __init__(self, prefix: str = "", debug: bool = False) -> None:
+        super().__init__(debug)
         self.prefix = prefix
         self.data: dict[str, Any] | None = None
 
@@ -351,10 +344,7 @@ class ServeSwaggerUI:
             relative_path = "/index.html"
         return relative_path
 
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self._serve_file(environ, start_response)
-
-    def _serve_file(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         current_url = get_url(environ)
         yaml_filename = "openapi-swagger-ui.yaml"
         if current_url.endswith("/ui/"):
@@ -388,9 +378,9 @@ class ServeSwaggerUI:
         return serve_file(file_path, content)(environ, start_response)
 
 
-class CheckmkRESTAPI:
+class CheckmkRESTAPI(AbstractWSGIApp):
     def __init__(self, debug: bool = False) -> None:
-        self.debug = debug
+        super().__init__(debug)
         # This intermediate data structure is necessary because `Rule`s can't contain anything
         # other than str anymore. Technically they could, but the typing is now fixed to str.
         self.endpoints: dict[str, WSGIApplication] = {
@@ -435,9 +425,6 @@ class CheckmkRESTAPI:
                 )
             ]
         )
-
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         try:

@@ -25,7 +25,7 @@ TYPE_FIELD = String(
     required=True,
     description=(
         "Specify whether you want to receive a single metric (via metric_id), "
-        "or a graph containing multiple metrics (via graph_id)."
+        "or a predefined graph containing multiple metrics (via graph_id)."
     ),
 )
 
@@ -34,10 +34,10 @@ class GraphIdField(String):
     def __init__(self):
         super().__init__(
             description=(
-                "The ID of the graph. "
+                "The ID of the predefined graph. "
                 'After activating the "Show internal IDs" in the "display '
-                'options" of the Service view, you can see the ID of a graph in '
-                "the title of the graph."
+                'options" of the Service view, you can see the ID of a '
+                "predefined graph in the title of the graph."
             ),
             example="cmk_cpu_time_by_phase",
             required=True,
@@ -49,10 +49,10 @@ class MetricIdField(String):
     def __init__(self):
         super().__init__(
             description=(
-                "The ID of the metric."
+                "The ID of the single metric."
                 'After activating the "Show internal IDs" in the "display '
-                'options" of the Service view, you can see the ID of a metric in '
-                "the legend of the graph."
+                'options" of the Service view, you can see the ID of a '
+                "single metric in the legend of the graph."
             ),
             example="cmk_time_agent",
             required=True,
@@ -76,7 +76,7 @@ class TimeRange(BaseSchema):
 class BaseRequestSchema(BaseSchema):
     time_range = Nested(
         TimeRange,
-        description="The time range from which to source the graph.",
+        description="The time range from which to source the metrics.",
         example={"start": str(datetime.now() - timedelta(minutes=15)), "end": str(datetime.now())},
         required=True,
     )
@@ -84,7 +84,7 @@ class BaseRequestSchema(BaseSchema):
     reduce = String(
         enum=["min", "max", "average"],
         description=(
-            "Specify how to reduce a segment of data points to a single data point of the output graph. "
+            "Specify how to reduce a segment of data points to a single data point of the output metric. "
             "This can be useful to find spikes in your data that would be smoothed out by computing the average."
         ),
         load_default="average",

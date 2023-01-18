@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Metrics
 
-Graphs visible in the Checkmk user interface can also be retrieved via the
+Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
 
@@ -31,9 +31,9 @@ from cmk.gui.raw.plugins.main_modules.registration import resolve_combined_singl
     sort=0,
 )
 def get_graph(params):
-    """Get a graph
+    """Get metrics
 
-    This endpoint retrieves a graph (consisting of multiple metrics) or a single metric.
+    This endpoint retrieves a predefined graph (consisting of multiple metrics) or a single metric.
     """
     body = params["body"]
 

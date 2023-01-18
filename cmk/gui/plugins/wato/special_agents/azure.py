@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Final
+
+from cmk.utils.version import is_cloud_edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
@@ -41,6 +44,8 @@ ALL_AZURE_SERVICES: list[tuple[str, str]] = [
     ("Microsoft.Network/loadBalancers", _("Load Balancer")),
     ("Microsoft.RecoveryServices/vaults", _("Recovery Services Vault")),
 ]
+
+PLUS_ONLY_AZURE_SERVICES: Final = {"Microsoft.RecoveryServices/vaults"}
 
 
 def _special_agents_azure_azure_explicit_config():
@@ -220,12 +225,19 @@ rulespec_registry.register(
 )
 
 
+def get_filtered_services() -> list[tuple[str, str]]:
+    if is_cloud_edition():
+        return ALL_AZURE_SERVICES
+
+    return [service for service in ALL_AZURE_SERVICES if service[0] not in PLUS_ONLY_AZURE_SERVICES]
+
+
 def get_services_vs() -> tuple[str, ValueSpec]:
     return (
         "services",
         ListChoice(
             title=_("Azure services to monitor"),
-            choices=ALL_AZURE_SERVICES,
+            choices=get_filtered_services(),
             # users_count and ad_connect are disabled by default because they require special
             # permissions on the Azure app (Graph API permissions + admin consent).
             default_value=[

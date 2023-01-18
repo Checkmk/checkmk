@@ -43,7 +43,7 @@ is_valid_plugin() {
     # extensions (remnants from distro upgrades).
     case "${1:?No plugin defined}" in
         *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
-        *) [ -f "${1}" ] && [ -x "${1}" ] ;;
+        *) [ -e "${1}" ] && [ -x "${1}" ] ;;
     esac
 }
 

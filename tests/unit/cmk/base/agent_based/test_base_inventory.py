@@ -6,6 +6,7 @@
 # pylint: disable=protected-access
 
 import logging
+from collections.abc import Sequence
 from typing import Literal
 
 import pytest
@@ -13,25 +14,26 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.debug
-from cmk.utils.exceptions import OnError
-from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
-from cmk.utils.type_defs import EVERYTHING, HWSWInventoryParameters
+from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode
+from cmk.utils.type_defs import (
+    AgentRawData,
+    EVERYTHING,
+    HostAddress,
+    HostName,
+    HWSWInventoryParameters,
+    result,
+)
 
-from cmk.fetchers import Mode
-from cmk.fetchers.filecache import FileCacheOptions
+from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
-from cmk.base.agent_based.data_provider import (
-    ConfiguredFetcher,
-    ConfiguredParser,
-    ParsedSectionsBroker,
-)
+from cmk.base.agent_based.data_provider import ConfiguredParser
 from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
     _parse_inventory_plugin_item,
-    InventoryTrees,
     ItemsOfInventoryPlugin,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
@@ -1208,50 +1210,29 @@ def test_check_inventory_tree(
     failed_state: int | None,
     expected: int,
 ) -> None:
-    hostname = "my-host"
-    ts = Scenario()
-    ts.add_host(hostname)
-    config_cache = ts.apply(monkeypatch)
-
-    monkeypatch.setattr(
-        _inventory,
-        "_fetch_real_host_data",
-        lambda *args, **kw: _inventory.FetchedDataResult(
-            parsed_sections_broker=ParsedSectionsBroker({}),
-            host_sections=[],
-            parsing_errors=[],
-            processing_failed=True,
-            no_data_or_files=False,
-        ),
-    )
-
-    monkeypatch.setattr(
-        _inventory,
-        "_inventorize_real_host",
-        lambda *args, **kw: (
-            InventoryTrees(
-                inventory=StructuredDataNode(),
-                status_data=StructuredDataNode(),
+    def fetcher(
+        host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
+        return [
+            (
+                SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
+                result.Error(Exception()),
+                Snapshot.null(),
             ),
-            UpdateResult(save_tree=False, reason=""),
-        ),
-    )
+            (
+                SourceInfo(hostname, None, "ident", FetcherType.TCP, SourceType.HOST),
+                result.OK(AgentRawData(b"<<<data>>>")),
+                Snapshot.null(),
+            ),
+        ]
 
-    file_cache_options = FileCacheOptions()
+    hostname = HostName("my-host")
+    config_cache = Scenario().apply(monkeypatch)
     parser = ConfiguredParser(
         config_cache,
         selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
+        keep_outdated=True,
         logger=logging.getLogger("tests"),
-    )
-    fetcher = ConfiguredFetcher(
-        config_cache,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        mode=Mode.INVENTORY,
-        on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
-        simulation_mode=True,
     )
     check_result = _inventory.check_inventory_tree(
         hostname,
@@ -1270,61 +1251,18 @@ def test_check_inventory_tree(
     assert "Cannot update tree" in check_result.summary
 
 
-@pytest.mark.parametrize("processing_failed", [True, False])
 def test_check_inventory_tree_no_data_or_files(
     monkeypatch: pytest.MonkeyPatch,
-    processing_failed: bool,
 ) -> None:
-    hostname = "my-host"
-    ts = Scenario()
-    ts.add_host(hostname)
-    config_cache = ts.apply(monkeypatch)
+    hostname = HostName("my-host")
+    config_cache = Scenario().apply(monkeypatch)
 
-    monkeypatch.setattr(
-        _inventory,
-        "_fetch_real_host_data",
-        lambda *args, **kw: _inventory.FetchedDataResult(
-            parsed_sections_broker=ParsedSectionsBroker({}),
-            host_sections=[],
-            parsing_errors=[],
-            processing_failed=processing_failed,
-            no_data_or_files=True,
-        ),
-    )
-
-    monkeypatch.setattr(
-        _inventory,
-        "_inventorize_real_host",
-        lambda *args, **kw: (
-            InventoryTrees(
-                inventory=StructuredDataNode(),
-                status_data=StructuredDataNode(),
-            ),
-            UpdateResult(save_tree=False, reason=""),
-        ),
-    )
-
-    file_cache_options = FileCacheOptions()
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("tests"),
-    )
-    fetcher = ConfiguredFetcher(
-        config_cache,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        mode=Mode.INVENTORY,
-        on_error=OnError.RAISE,
-        selected_sections=NO_SELECTION,
-        simulation_mode=True,
-    )
     check_result = _inventory.check_inventory_tree(
         hostname,
         config_cache=config_cache,
-        parser=parser,
-        fetcher=fetcher,
+        # no data!
+        fetcher=lambda *args, **kwargs: [],
+        parser=lambda *args, **kwargs: [],
         inventory_parameters=config_cache.inventory_parameters,
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),

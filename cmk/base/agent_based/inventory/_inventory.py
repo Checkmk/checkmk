@@ -114,7 +114,23 @@ def check_inventory_tree(
             update_result=UpdateResult(save_tree=False, reason=""),
         )
 
-    fetched_data_result = _fetch_real_host_data(host_name, parser=parser, fetcher=fetcher)
+    fetched = fetcher(host_name, ip_address=None)
+    host_sections = parser((f[0], f[1]) for f in fetched)
+    host_sections_no_error = filter_out_errors(host_sections)
+    store_piggybacked_sections(host_sections_no_error)
+
+    broker = make_broker(host_sections_no_error)
+    parsing_errors = broker.parsing_errors()
+    fetched_data_result = FetchedDataResult(
+        parsed_sections_broker=broker,
+        host_sections=host_sections,
+        parsing_errors=parsing_errors,
+        processing_failed=(
+            any(host_section.is_error() for _source, host_section in host_sections)
+            or bool(parsing_errors)
+        ),
+        no_data_or_files=_no_data_or_files(host_name, host_sections_no_error.values()),
+    )
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -197,55 +213,6 @@ def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
         node.table.add_rows([{"name": node_name} for node_name in nodes])
 
     return inventory_tree
-
-
-# .
-#   .--real host data------------------------------------------------------.
-#   |                   _   _               _         _       _            |
-#   |    _ __ ___  __ _| | | |__   ___  ___| |_    __| | __ _| |_ __ _     |
-#   |   | '__/ _ \/ _` | | | '_ \ / _ \/ __| __|  / _` |/ _` | __/ _` |    |
-#   |   | | |  __/ (_| | | | | | | (_) \__ \ |_  | (_| | (_| | || (_| |    |
-#   |   |_|  \___|\__,_|_| |_| |_|\___/|___/\__|  \__,_|\__,_|\__\__,_|    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _fetch_real_host_data(
-    host_name: HostName,
-    *,
-    parser: ParserFunction,
-    fetcher: FetcherFunction,
-) -> FetchedDataResult:
-    fetched = fetcher(host_name, ip_address=None)
-    host_sections = parser((f[0], f[1]) for f in fetched)
-    host_sections_no_error = filter_out_errors(host_sections)
-    store_piggybacked_sections(host_sections_no_error)
-    broker = make_broker(host_sections_no_error)
-
-    parsing_errors = broker.parsing_errors()
-    return FetchedDataResult(
-        parsed_sections_broker=broker,
-        host_sections=host_sections,
-        parsing_errors=parsing_errors,
-        processing_failed=(
-            _sources_failed(host_section for _source, host_section in host_sections)
-            or bool(parsing_errors)
-        ),
-        no_data_or_files=_no_data_or_files(host_name, host_sections_no_error.values()),
-    )
-
-
-def _sources_failed(
-    host_sections: Iterable[result.Result[HostSections, Exception]],
-) -> bool:
-    """Check if data sources of a host failed
-
-    If a data source failed, we may have incomlete data. In that case we
-    may not write it to disk because that would result in a flapping state
-    of the tree, which would blow up the inventory history (in terms of disk usage).
-    """
-    # If a result is not OK, that means the corresponding sections have not been added.
-    return any(not host_section.is_ok() for host_section in host_sections)
 
 
 def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:

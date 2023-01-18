@@ -208,9 +208,11 @@ def process_attributes_match(process_info, userspec, cgroupspec):
     return True
 
 
-def process_matches(  # type:ignore[no-untyped-def]
-    command_line: Sequence[str], process_pattern, match_groups=None
-):
+def process_matches(
+    command_line: Sequence[str],
+    process_pattern: str | None,
+    match_groups: Sequence[str | None] | None = None,
+) -> bool | re.Match[str]:
 
     if not process_pattern:
         # Process name not relevant
@@ -228,7 +230,7 @@ def process_matches(  # type:ignore[no-untyped-def]
         return m
 
     # Exact match on name of executable
-    return command_line and command_line[0] == process_pattern
+    return bool(command_line) and command_line[0] == process_pattern
 
 
 # produce text or html output intended for the long output field of a check
@@ -536,7 +538,7 @@ def discover_ps(
             i_servicedesc = servicedesc.replace("%u", i_userspec or "")
 
             # Process capture
-            match_groups = matches.groups() if hasattr(matches, "groups") else ()
+            match_groups = () if isinstance(matches, bool) else matches.groups()
 
             i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
 

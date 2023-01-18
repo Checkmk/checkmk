@@ -561,6 +561,43 @@ def test_parse_ps(capture, result) -> None:  # type:ignore[no-untyped-def]
             ),
             id="with_deleted_cgroup",
         ),
+        pytest.param(
+            [
+                ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+                [
+                    "12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+                    "root",
+                    "96112",
+                    "3448",
+                    "00:00:00",
+                    "1-05:33:16",
+                    "4515",
+                ],
+            ],
+            (
+                1,
+                [
+                    (
+                        ps.PsInfo(
+                            user="root",
+                            virtual=96112,
+                            physical=3448,
+                            cputime="00:00:00/1-05:33:16",
+                            process_id="4515",
+                            pagefile=None,
+                            usermode_time=None,
+                            kernelmode_time=None,
+                            handles=None,
+                            threads=None,
+                            uptime=None,
+                            cgroup="12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+                        ),
+                        [],
+                    ),
+                ],
+            ),
+            id="empty command line (SUP-13009)",
+        ),
     ],
 )
 def test_parse_ps_lnx(

@@ -953,3 +953,88 @@ def test_parse_ps_windows(mocker: MockerFixture):  # type:ignore[no-untyped-def]
         state=State.CRIT,
         summary="CPUSTRES64.EXE with PID 2080 CPU: 20.00% (warn/crit at 0%/0%)",
     )
+
+
+# SUP-13009
+_SECTION_EMPTY_CMD_LINE: ps_utils.Section = (
+    1,
+    [
+        (
+            ps_utils.PsInfo(
+                user="root",
+                virtual=96112,
+                physical=3448,
+                cputime="00:00:00/1-05:33:16",
+                process_id="4515",
+                pagefile=None,
+                usermode_time=None,
+                kernelmode_time=None,
+                handles=None,
+                threads=None,
+                uptime=None,
+                cgroup="12:pids:/system.slice/srcmstr.service,5:devices:/system.slice/srcmstr.service,1:name=systemd:/system.slice/srcmstr.service",
+            ),
+            [],
+        ),
+    ],
+)
+
+
+def test_discover_empty_command_line() -> None:
+    assert list(
+        ps_utils.discover_ps(
+            [
+                {
+                    "descr": "my_proc",
+                    "match": "~^$",
+                    "default_params": {"cpu_rescale_max": True},
+                },
+                {},
+            ],
+            _SECTION_EMPTY_CMD_LINE,
+            None,
+            None,
+            None,
+        )
+    ) == [
+        Service(
+            item="my_proc",
+            parameters={
+                "process": "~^$",
+                "match_groups": (),
+                "user": None,
+                "cgroup": (None, False),
+                "cpu_rescale_max": True,
+            },
+        )
+    ]
+
+
+def test_check_empty_command_line() -> None:
+    assert list(
+        ps_check.check_ps(
+            "my_proc",
+            {
+                "process": "~^$",
+                "match_groups": (),
+                "user": None,
+                "cgroup": (None, False),
+                "cpu_rescale_max": True,
+                "levels": (1, 1, 99999, 99999),
+            },
+            _SECTION_EMPTY_CMD_LINE,
+            None,
+            None,
+            None,
+        )
+    ) == [
+        Result(state=State.OK, summary="Processes: 1"),
+        Metric("count", 1.0, levels=(100000.0, 100000.0), boundaries=(0.0, None)),
+        Result(state=State.OK, summary="virtual: 93.9 MiB"),
+        Metric("vsz", 96112.0),
+        Result(state=State.OK, summary="physical: 3.37 MiB"),
+        Metric("rss", 3448.0),
+        Metric("pcpu", 0.0),
+        Result(state=State.OK, summary="CPU: 0%"),
+        Result(state=State.OK, summary="Running for: 1 day 5 hours"),
+    ]

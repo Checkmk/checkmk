@@ -84,32 +84,35 @@ def test_host_labels_ps_match() -> None:
 
 
 @pytest.mark.parametrize(
-    "ps_line, ps_pattern, user_pattern, result",
+    "ps_user, ps_line, ps_pattern, user_pattern, result",
     [
-        (["test", "ps"], "", None, True),
-        (["test", "ps"], "ps", None, True),
-        (["test", "ps"], "ps", "root", False),
-        (["test", "ps"], "ps", "~.*y$", False),
-        (["test", "ps"], "ps", "~.*t$", True),
-        (["test", "ps"], "sp", "~.*t$", False),
-        (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
-        ([None], None, "~.*y", False),
+        ("test", ["ps"], "", None, True),
+        ("test", ["ps"], "ps", None, True),
+        ("test", ["ps"], "ps", "root", False),
+        ("test", ["ps"], "ps", "~.*y$", False),
+        ("test", ["ps"], "ps", "~.*t$", True),
+        ("test", ["ps"], "sp", "~.*t$", False),
+        ("root", ["/sbin/init", "splash"], "/sbin/init", None, True),
+        (None, [], None, "~.*y", False),
         pytest.param(
-            ["test"],
+            "test",
+            [],
             None,
             None,
             True,
             id="empty command line (SUP-13009), no matching",
         ),
         pytest.param(
-            ["test"],
+            "test",
+            [],
             "~^$",
             None,
             True,
             id="empty command line (SUP-13009), matches",
         ),
         pytest.param(
-            ["test"],
+            "test",
+            [],
             "ps",
             None,
             False,
@@ -118,37 +121,40 @@ def test_host_labels_ps_match() -> None:
     ],
 )
 def test_process_matches(
-    ps_line: Sequence[str], ps_pattern: str, user_pattern: str | None, result: bool
+    ps_user: str | None,
+    ps_line: Sequence[str],
+    ps_pattern: str,
+    user_pattern: str | None,
+    result: bool,
 ) -> None:
-    psi = ps.PsInfo(ps_line[0])
-    matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
-    matches_proc = ps.process_matches(ps_line[1:], ps_pattern)
+    matches_attr = ps.process_attributes_match(ps.PsInfo(ps_user), user_pattern, (None, False))
+    matches_proc = ps.process_matches(ps_line, ps_pattern)
 
-    assert (matches_attr and bool(matches_proc)) == result
+    assert (matches_attr and bool(matches_proc)) is result
 
 
 @pytest.mark.parametrize(
-    "ps_line, ps_pattern, user_pattern, match_groups, result",
+    "ps_user, ps_line, ps_pattern, user_pattern, match_groups, result",
     [
-        (["test", "ps"], "", None, None, True),
-        (["test", "123_foo"], "~.*/(.*)_foo", None, ["123"], False),
-        (["test", "/a/b/123_foo"], "~.*/(.*)_foo", None, ["123"], True),
-        (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ["123"], False),
-        (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
+        ("test", ["ps"], "", None, None, True),
+        ("test", ["123_foo"], "~.*/(.*)_foo", None, ["123"], False),
+        ("test", ["/a/b/123_foo"], "~.*/(.*)_foo", None, ["123"], True),
+        ("test", ["123_foo"], "~.*\\\\(.*)_foo", None, ["123"], False),
+        ("test", ["c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
     ],
 )
 def test_process_matches_match_groups(
+    ps_user: str | None,
     ps_line: Sequence[str],
     ps_pattern: str,
     user_pattern: None,
     match_groups: None | Sequence[str],
     result: bool,
 ) -> None:
-    psi = ps.PsInfo(ps_line[0])
-    matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
-    matches_proc = ps.process_matches(ps_line[1:], ps_pattern, match_groups)
+    matches_attr = ps.process_attributes_match(ps.PsInfo(ps_user), user_pattern, (None, False))
+    matches_proc = ps.process_matches(ps_line, ps_pattern, match_groups)
 
-    assert (matches_attr and matches_proc) == result
+    assert (matches_attr and bool(matches_proc)) == result
 
 
 @pytest.mark.parametrize(

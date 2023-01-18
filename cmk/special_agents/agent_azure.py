@@ -16,7 +16,8 @@ import logging
 import string
 import sys
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections import defaultdict
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
@@ -501,6 +502,10 @@ class MgmtApiClient(BaseApiClient):
         return self._get(
             url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
         )
+
+    def resource_health_view(self):
+        path = "providers/Microsoft.ResourceHealth/availabilityStatuses"
+        return self._get(path, params={"api-version": "2022-05-01"})
 
     def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
@@ -1267,6 +1272,50 @@ def write_usage_section_if_enabled(
         usage_client.write_sections(monitored_groups)
 
 
+def _is_monitored(
+    resource_id: str,
+    monitored_resources: Sequence[AzureResource],
+    args: Args,
+) -> bool:
+    for resource in monitored_resources:
+        # different endpoints deliver ids in different case
+        if resource_id.lower() == resource.info["id"].lower():
+            return resource.info["type"] in args.services
+
+    return False
+
+
+def process_resource_health(
+    mgmt_client: MgmtApiClient, monitored_resources: Sequence[AzureResource], args: Args
+) -> Iterator[AzureSection]:
+    resource_health_view = mgmt_client.resource_health_view()
+    health_section: defaultdict[str, list[str]] = defaultdict(list)
+
+    for health in resource_health_view["value"]:
+        health_id = health.get("id")
+        _, group = get_params_from_azure_id(health_id)
+        resource_id = "/".join(health_id.split("/")[:-4])
+
+        if not _is_monitored(resource_id, monitored_resources, args):
+            continue
+
+        health_data = {
+            "id": health_id,
+            "name": "/".join(health_id.split("/")[-6:-4]),
+            **filter_keys(
+                health["properties"], ("availabilityState", "summary", "reasonType", "occuredTime")
+            ),
+        }
+
+        health_section[group].append(json.dumps(health_data))
+
+    for group, values in health_section.items():
+        section = AzureSection("resource_health", [group])
+        for value in values:
+            section.add([value])
+        yield section
+
+
 def main_subscription(args, selector, subscription):
     mgmt_client = MgmtApiClient(subscription)
 
@@ -1295,6 +1344,9 @@ def main_subscription(args, selector, subscription):
     for sections in mapper(process_resource, func_args):
         for section in sections:
             section.write()
+
+    for section in process_resource_health(mgmt_client, monitored_resources, args):
+        section.write()
 
 
 def main(argv=None):

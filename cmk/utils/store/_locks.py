@@ -159,33 +159,30 @@ def acquire_lock(path: Path | str, blocking: bool = True) -> None:
         return  # No recursive locking
 
     logger.debug("Trying to acquire lock on %s", path)
-
     # Create file (and base dir) for locking if not existent yet
     path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+    flags = fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB)
 
-    fd = os.open(str(path), os.O_RDWR | os.O_CREAT, 0o660)
-
-    # Handle the case where the file has been renamed in the meantime
     while True:
-        flags = fcntl.LOCK_EX
-        if not blocking:
-            flags |= fcntl.LOCK_NB
-
-        try:
+        with _open_lock_file(path) as fd:
             fcntl.flock(fd, flags)
-        except OSError:
+            # Handle the case where the file has been renamed in the meantime
+            with _open_lock_file(path) as fd_new:
+                if os.path.sameopenfile(fd, fd_new):
+                    _set_lock(str(path), os.dup(fd))
+                    logger.debug("Got lock on %s", path)
+                    return
+
+
+@contextmanager
+def _open_lock_file(path: os.PathLike) -> Iterator[int]:
+    fd = None
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
+        yield fd
+    finally:
+        if fd is not None:
             os.close(fd)
-            raise
-
-        fd_new = os.open(str(path), os.O_RDWR | os.O_CREAT, 0o660)
-        if os.path.sameopenfile(fd, fd_new):
-            os.close(fd_new)
-            break
-        os.close(fd)
-        fd = fd_new
-
-    _set_lock(str(path), fd)
-    logger.debug("Got lock on %s", path)
 
 
 @contextmanager

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Mapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
@@ -60,11 +61,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 def allnet_ip_sensoric_compose_item(sensor_id, sensor):
     sensor_id = re.sub("sensor", "", sensor_id)
-    if "name" in sensor:
-        item = "%s Sensor %s" % (sensor["name"], sensor_id)
-    else:
-        item = "Sensor %s" % (sensor_id)
-    return item
+    return f"{sensor['name']} Sensor {sensor_id}" if "name" in sensor else f"Sensor {sensor_id}"
 
 
 def _match_function_or_unit(
@@ -97,17 +94,13 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed:
-        return 3, "%s not found in agent output" % item
+        return
 
     value = float(parsed[sensor_id]["value_float"])
 
     perfdata = [("tension", value, None, None, 0, 100)]
 
-    status = 0
-    if value == 0:
-        status = 2
-
-    return status, "%d%% of the normal level" % value, perfdata
+    yield 0 if value == 0 else 2, "%d%% of the normal level" % value, perfdata
 
 
 check_info["allnet_ip_sensoric.tension"] = {
@@ -143,11 +136,11 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed:
-        return 3, "Sensor not found in agent output"
+        return
 
     temp = float(parsed[sensor_id]["value_float"])
 
-    return check_temperature(temp, params, "allnet_ip_sensoric_temp_%s" % item)
+    yield check_temperature(temp, params, "allnet_ip_sensoric_temp_%s" % item)
 
 
 check_info["allnet_ip_sensoric.temp"] = {
@@ -187,9 +180,9 @@ def inventory_allnet_ip_sensoric_humidity(parsed):
 def check_allnet_ip_sensoric_humidity(item, params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
     if sensor_id not in parsed:
-        return 3, "%s not found in agent output" % item
+        return
 
-    return check_humidity(float(parsed[sensor_id]["value_float"]), params)
+    yield check_humidity(float(parsed[sensor_id]["value_float"]), params)
 
 
 check_info["allnet_ip_sensoric.humidity"] = {
@@ -224,13 +217,13 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed:
-        return 3, "%s not found in agent output" % item
+        return
 
     pressure = float(parsed[sensor_id]["value_float"]) / 1000
 
     perfdata = [("pressure", str(pressure) + "bars", None, None, 0)]
 
-    return 0, "%0.5f bar" % pressure, perfdata
+    yield 0, "%0.5f bar" % pressure, perfdata
 
 
 check_info["allnet_ip_sensoric.pressure"] = {

@@ -2258,6 +2258,10 @@ msgstr ""
 msgid "ASP Requests Rejected"
 msgstr "ASPリクエストが拒否されました"
 
+#, fuzzy
+msgid "AWS S3 Bucket"
+msgstr "AWS/S3 バケット"
+
 msgid "AWS Tags"
 msgstr "AWSタグ"
 
@@ -2606,6 +2610,10 @@ msgstr "TCP経由でCheckmkエージェントにアクセスする"
 msgid "Access Point"
 msgstr "アクセスポイント"
 
+#, fuzzy
+msgid "Access key"
+msgstr "アクセス"
+
 msgid "Access point name"
 msgstr "アクセスポイント名"
 
@@ -2888,6 +2896,10 @@ msgstr "ActiveDirectoryレプリケーション"
 
 msgid "Active Directory Replication (Windows)"
 msgstr "Active Directoryレプリケーション(Windows)"
+
+#, fuzzy
+msgid "Active Directory credentials"
+msgstr "Active Directory"
 
 msgid "Active ICMP Sessions"
 msgstr "アクティブなICMPセッション"
@@ -5034,6 +5046,10 @@ msgstr "アプライアンス、その他の専用ハードウェア"
 msgid "Application"
 msgstr "アプリケーション"
 
+#, fuzzy
+msgid "Application (client) ID"
+msgstr "アプリケーション"
+
 msgid "Application (regular expression)"
 msgstr "アプリケーション(正規表現)"
 
@@ -6019,6 +6035,10 @@ msgstr "Azure AD Connect"
 
 msgid "Azure Agent Info"
 msgstr "Azureエージェント情報"
+
+#, fuzzy
+msgid "Azure Blob Storage"
+msgstr "Azureストレージ"
 
 #, fuzzy
 msgid "Azure DB Storage"
@@ -10558,6 +10578,10 @@ msgstr "コンテナ名"
 msgid "Container instances per cluster"
 msgstr "コンテナの上位レベル"
 
+#, fuzzy
+msgid "Container name"
+msgstr "コンテナ名"
+
 msgid "Containerization"
 msgstr "コンテナ化"
 
@@ -13764,6 +13788,10 @@ msgstr "ディレクトリ"
 
 msgid "Directories to search for <tt>EXE</tt> files (Windows)"
 msgstr "<tt> EXE </tt>ファイルを検索するディレクトリ(Windows)"
+
+#, fuzzy
+msgid "Directory (tenant) ID"
+msgstr "ディレクトリタイプ"
 
 msgid "Directory for binaries (executables)"
 msgstr "バイナリ(実行可能ファイル)のディレクトリ"
@@ -18128,6 +18156,11 @@ msgstr "ファイル記述子のオープン試行率"
 msgid "File diff backup"
 msgstr "ファイル差分バックアップ"
 
+#, python-format
+msgid ""
+"File download test for remote storage failed. Original error message: %s"
+msgstr ""
+
 msgid "File grouping"
 msgstr ""
 
@@ -18158,6 +18191,10 @@ msgstr "ファイルパターン"
 msgid "File patterns must begin with <tt>/</tt> and must not contain spaces."
 msgstr ""
 
+#, python-format
+msgid "File removal test for remote storage failed. Original error message: %s"
+msgstr ""
+
 msgid "File size"
 msgstr "ファイルサイズ"
 
@@ -18166,6 +18203,10 @@ msgstr "ファイルサイズ"
 
 msgid "File size below"
 msgstr "以下のファイルサイズ"
+
+#, python-format
+msgid "File upload test for remote storage failed. Original error message: %s"
+msgstr ""
 
 msgid "File with performance counter"
 msgstr "パフォーマンスカウンター付きのファイル"
@@ -19228,6 +19269,10 @@ msgstr "GCP/Cloud Runリクエスト"
 #, fuzzy
 msgid "GCP/Redis CPU utilization"
 msgstr "CPU使用率"
+
+#, fuzzy
+msgid "GCP/Redis clients blocked"
+msgstr "接続されたクライアント"
 
 #, fuzzy
 msgid "GCP/Redis clients connected"
@@ -20887,10 +20932,6 @@ msgstr "サイト %s"
 
 msgid "Hide Checkmk version"
 msgstr "Checkmkバージョンを非表示"
-
-#, fuzzy
-msgid "Hide all settings"
-msgstr "すべての設定を表示"
 
 msgid "Hide analysis"
 msgstr "分析を隠す"
@@ -24561,6 +24602,10 @@ msgstr "SAP R/3などの特別なエージェントを使用してプラット�
 
 msgid "Integrate with VM, cloud or container platforms"
 msgstr "VM、クラウド、またはコンテナプラットフォームと統合する"
+
+#, fuzzy
+msgid "Integrating Prometheus"
+msgstr "統合キー"
 
 msgid "Integration Key"
 msgstr "統合キー"
@@ -29983,6 +30028,14 @@ msgstr "モニタリング"
 msgid "Monitoring Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
+#, fuzzy
+msgid "Monitoring Google Cloud Platform (GCP)"
+msgstr "Google Cloudストレージ (GCS)"
+
+#, fuzzy
+msgid "Monitoring Kubernetes"
+msgstr "監視エージェント"
+
 msgid "Monitoring Linux"
 msgstr "Linux監視"
 
@@ -32366,6 +32419,10 @@ msgstr "進行中の共有情報リクエストの数"
 
 msgid "Number of packets"
 msgstr "パケット数"
+
+#, fuzzy
+msgid "Number of pending clients in a blocking call"
+msgstr "下位レベルのブロッキングコールで保留中のクライアントの総数"
 
 msgid "Number of pending tasks"
 msgstr "保留中のタスク数"
@@ -37214,6 +37271,10 @@ msgstr ""
 "リモートオートメーションは保留中の変更を同期しようとしましたが失敗しました: "
 "%s"
 
+#, fuzzy
+msgid "Remote configuration"
+msgstr "ホスト構成"
+
 msgid "Remote destination"
 msgstr "リモート宛先"
 
@@ -39305,6 +39366,9 @@ msgstr "ポーリングする前に待機する秒数"
 msgid "Seconds to wait between sending string and polling for response"
 msgstr "文字列の送信と応答のポーリングの間に待機する秒数"
 
+msgid "Secret key"
+msgstr ""
+
 msgid "Section"
 msgstr "セクション"
 
@@ -40582,6 +40646,10 @@ msgstr "と共有する"
 msgid "Shared Access Locks"
 msgstr "共有アクセスロック"
 
+#, fuzzy
+msgid "Shared key"
+msgstr "共有メモリ"
+
 msgid "Shared locks"
 msgstr "共有ロック"
 
@@ -40705,9 +40773,6 @@ msgstr "すべての結果を表示"
 msgid "Show all rules"
 msgstr "すべてのルールを表示"
 
-msgid "Show all settings"
-msgstr "すべての設定を表示"
-
 msgid "Show all topics"
 msgstr ""
 
@@ -40811,6 +40876,10 @@ msgstr "シングルの情報を表示する"
 msgid "Show inline help"
 msgstr "インラインヘルプを表示"
 
+#, fuzzy
+msgid "Show internal graph and metric IDs"
+msgstr "内部ツリーパスを表示する"
+
 msgid "Show internal tree paths"
 msgstr "内部ツリーパスを表示する"
 
@@ -40846,6 +40915,10 @@ msgstr "もっと表示/少なく表示"
 
 msgid "Show number of groups"
 msgstr "グループの数を表示する"
+
+#, fuzzy
+msgid "Show only modified settings"
+msgstr "すべての設定を表示"
 
 msgid "Show only problems"
 msgstr "問題のみを表示する"
@@ -43560,6 +43633,10 @@ msgstr "ストレージサイズ"
 msgid "Storage account name"
 msgstr "ストレージアカウント名"
 
+#, fuzzy
+msgid "Storage account shared key"
+msgstr "ストレージアカウント名"
+
 msgid "Storage pools"
 msgstr "ストレージプール"
 
@@ -44535,6 +44612,10 @@ msgstr "一時的に凍結"
 msgid "Temporary filesystem mounted"
 msgstr "一時ファイルシステムがマウントされました"
 
+#, fuzzy
+msgid "Temporary local destination"
+msgstr "ローカルの宛先"
+
 msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
 
@@ -45318,6 +45399,10 @@ msgstr ""
 "ます。"
 
 msgid "The access key ID for your AWS account"
+msgstr "AWSアカウントのアクセスキーID"
+
+#, fuzzy
+msgid "The access key for your AWS account"
 msgstr "AWSアカウントのアクセスキーID"
 
 msgid ""
@@ -47792,6 +47877,10 @@ msgstr "編集しようとしているスケジュールが存在しません。
 msgid "The secret access key for your AWS account"
 msgstr "AWSアカウントのシークレットアクセスキー"
 
+#, fuzzy
+msgid "The secret key for your AWS account"
+msgstr "AWSアカウントのシークレットアクセスキー"
+
 #, python-format
 msgid "The selected %s have been deleted."
 msgstr "選択した %s が削除されました。"
@@ -49363,6 +49452,12 @@ msgstr ""
 
 msgid "This defines one value grouping pattern"
 msgstr "これは、1つの値のグループ化パターンを定義します"
+
+msgid ""
+"This directory will be used for temporarily storing backups before uploading "
+"and after downloading. Please note that Checkmk will not clean up this "
+"directory."
+msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
 msgstr "この要素は現在、スケジュールされたダウンタイムにあります。"
@@ -62192,6 +62287,11 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Show all settings"
+#~ msgid "Hide all settings"
+#~ msgstr "すべての設定を表示"
 
 #~ msgid "Active node"
 #~ msgstr "アクティブノード"

@@ -2384,6 +2384,10 @@ msgstr ""
 msgid "ASP Requests Rejected"
 msgstr "ASP Verzoeken Afgewezen"
 
+#, fuzzy
+msgid "AWS S3 Bucket"
+msgstr "AWS/S3 emmers"
+
 msgid "AWS Tags"
 msgstr "AWS Tags"
 
@@ -2733,6 +2737,10 @@ msgstr "Toegang Checkmk Agent via TCP"
 msgid "Access Point"
 msgstr "Toegangspunt"
 
+#, fuzzy
+msgid "Access key"
+msgstr "Toegang"
+
 msgid "Access point name"
 msgstr "Naam toegangspunt"
 
@@ -3032,6 +3040,10 @@ msgstr "Active Directory replicatie"
 
 msgid "Active Directory Replication (Windows)"
 msgstr "Active Directory replicatie (Windows)"
+
+#, fuzzy
+msgid "Active Directory credentials"
+msgstr "Active Directory"
 
 msgid "Active ICMP Sessions"
 msgstr "Actieve ICMP Sessies"
@@ -5247,6 +5259,10 @@ msgstr "Apparaten, andere specifieke hardware"
 msgid "Application"
 msgstr "Toepassing"
 
+#, fuzzy
+msgid "Application (client) ID"
+msgstr "Toepassing"
+
 msgid "Application (regular expression)"
 msgstr "Toepassing (reguliere uitdrukking)"
 
@@ -6268,6 +6284,10 @@ msgstr "Azure AD Connect"
 
 msgid "Azure Agent Info"
 msgstr "Azure Agent Info"
+
+#, fuzzy
+msgid "Azure Blob Storage"
+msgstr "Azure Opslag"
 
 #, fuzzy
 msgid "Azure DB Storage"
@@ -11061,6 +11081,10 @@ msgstr "Container Naam"
 msgid "Container instances per cluster"
 msgstr "Containers bovenste niveaus"
 
+#, fuzzy
+msgid "Container name"
+msgstr "Container Naam"
+
 msgid "Containerization"
 msgstr "Containerisatie"
 
@@ -14337,6 +14361,10 @@ msgstr "Gidsen"
 msgid "Directories to search for <tt>EXE</tt> files (Windows)"
 msgstr ""
 "Mappen waarin moet worden gezocht naar <tt>EXE</tt> bestanden (Windows)"
+
+#, fuzzy
+msgid "Directory (tenant) ID"
+msgstr "Type Directory"
 
 msgid "Directory for binaries (executables)"
 msgstr "Directory voor binaries (uitvoerbare bestanden)"
@@ -18798,6 +18826,11 @@ msgstr "Poging tot openen van bestandsdescriptor"
 msgid "File diff backup"
 msgstr "Bestand diff back-up"
 
+#, python-format
+msgid ""
+"File download test for remote storage failed. Original error message: %s"
+msgstr ""
+
 msgid "File grouping"
 msgstr "Bestandsgroepering"
 
@@ -18830,6 +18863,10 @@ msgstr ""
 "Bestandspatronen moeten beginnen met <tt>/</tt> en mogen geen spaties "
 "bevatten."
 
+#, python-format
+msgid "File removal test for remote storage failed. Original error message: %s"
+msgstr ""
+
 msgid "File size"
 msgstr "Bestandsgrootte"
 
@@ -18838,6 +18875,10 @@ msgstr "Bestandsgrootte bij"
 
 msgid "File size below"
 msgstr "Bestandsgrootte hieronder"
+
+#, python-format
+msgid "File upload test for remote storage failed. Original error message: %s"
+msgstr ""
 
 msgid "File with performance counter"
 msgstr "Bestand met prestatieteller"
@@ -19946,6 +19987,10 @@ msgstr "GCP/Cloud Run Verzoeken"
 #, fuzzy
 msgid "GCP/Redis CPU utilization"
 msgstr "CPU-gebruik"
+
+#, fuzzy
+msgid "GCP/Redis clients blocked"
+msgstr "GCP/Memorystore redis geheugen"
 
 #, fuzzy
 msgid "GCP/Redis clients connected"
@@ -21731,10 +21776,6 @@ msgstr "Plaats %s"
 
 msgid "Hide Checkmk version"
 msgstr "Verberg Checkmk versie"
-
-#, fuzzy
-msgid "Hide all settings"
-msgstr "Toon alle instellingen"
 
 msgid "Hide analysis"
 msgstr "Verberg analyse"
@@ -25678,6 +25719,10 @@ msgstr "Integreer platforms met behulp van speciale agenten, bijv. SAP R/3"
 
 msgid "Integrate with VM, cloud or container platforms"
 msgstr "Integratie met VM-, cloud- of containerplatforms"
+
+#, fuzzy
+msgid "Integrating Prometheus"
+msgstr "Integratie Toets"
 
 msgid "Integration Key"
 msgstr "Integratie Toets"
@@ -31224,6 +31269,14 @@ msgstr "Toezicht"
 msgid "Monitoring Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
+#, fuzzy
+msgid "Monitoring Google Cloud Platform (GCP)"
+msgstr "Google-cloudplatform (GCP)"
+
+#, fuzzy
+msgid "Monitoring Kubernetes"
+msgstr "Bewakingsagenten"
+
 msgid "Monitoring Linux"
 msgstr "Toezicht op Linux"
 
@@ -33679,6 +33732,10 @@ msgstr "Aantal lopende shard-informatieverzoeken"
 
 msgid "Number of packets"
 msgstr "Aantal pakketten"
+
+#, fuzzy
+msgid "Number of pending clients in a blocking call"
+msgstr "Cliënten in afwachting van een blokkerend gesprek"
 
 msgid "Number of pending tasks"
 msgstr "Aantal lopende taken"
@@ -38681,6 +38738,10 @@ msgstr ""
 "Externe automatisering probeerde hangende wijzigingen te synchroniseren maar "
 "faalde: %s"
 
+#, fuzzy
+msgid "Remote configuration"
+msgstr "Host configuratie"
+
 msgid "Remote destination"
 msgstr "Externe bestemming"
 
@@ -40820,6 +40881,9 @@ msgstr ""
 "Seconden om te wachten tussen het verzenden van de string en het zoeken naar "
 "antwoord"
 
+msgid "Secret key"
+msgstr ""
+
 msgid "Section"
 msgstr "Sectie"
 
@@ -42178,6 +42242,10 @@ msgstr "Deel met"
 msgid "Shared Access Locks"
 msgstr "Sloten met gedeelde toegang"
 
+#, fuzzy
+msgid "Shared key"
+msgstr "Gedeeld geheugen"
+
 msgid "Shared locks"
 msgstr "Gedeelde sloten"
 
@@ -42300,9 +42368,6 @@ msgstr "Toon alle resultaten"
 msgid "Show all rules"
 msgstr "Toon alle regels"
 
-msgid "Show all settings"
-msgstr "Toon alle instellingen"
-
 msgid "Show all topics"
 msgstr "Toon alle onderwerpen"
 
@@ -42406,6 +42471,10 @@ msgstr "Toon informatie van enkele"
 msgid "Show inline help"
 msgstr "Toon inline help"
 
+#, fuzzy
+msgid "Show internal graph and metric IDs"
+msgstr "Toon interne boompaden"
+
 msgid "Show internal tree paths"
 msgstr "Toon interne boompaden"
 
@@ -42441,6 +42510,10 @@ msgstr "Toon meer / Toon minder"
 
 msgid "Show number of groups"
 msgstr "Toon aantal groepen"
+
+#, fuzzy
+msgid "Show only modified settings"
+msgstr "Toon alle instellingen"
 
 msgid "Show only problems"
 msgstr "Toon alleen problemen"
@@ -45286,6 +45359,10 @@ msgstr "Opslagruimte"
 msgid "Storage account name"
 msgstr "Naam opslagrekening"
 
+#, fuzzy
+msgid "Storage account shared key"
+msgstr "Naam opslagrekening"
+
 msgid "Storage pools"
 msgstr "Opslagbassins"
 
@@ -46282,6 +46359,10 @@ msgstr "Tijdelijk bevroren"
 msgid "Temporary filesystem mounted"
 msgstr "Tijdelijk bestandssysteem gemount"
 
+#, fuzzy
+msgid "Temporary local destination"
+msgstr "Lokale bestemming"
+
 msgid "Tenant ID / Directory ID"
 msgstr "Huurder ID / Directory ID"
 
@@ -47145,6 +47226,10 @@ msgstr ""
 "checks</i> en <i>Set execution mode for plugins and local checks</i>."
 
 msgid "The access key ID for your AWS account"
+msgstr "De toegangssleutel ID voor uw AWS account"
+
+#, fuzzy
+msgid "The access key for your AWS account"
 msgstr "De toegangssleutel ID voor uw AWS account"
 
 msgid ""
@@ -49955,6 +50040,10 @@ msgstr "De agenda die u probeert te bewerken bestaat niet."
 msgid "The secret access key for your AWS account"
 msgstr "De geheime toegangssleutel voor uw AWS account"
 
+#, fuzzy
+msgid "The secret key for your AWS account"
+msgstr "De geheime toegangssleutel voor uw AWS account"
+
 #, python-format
 msgid "The selected %s have been deleted."
 msgstr "De geselecteerde %s zijn verwijderd."
@@ -51666,6 +51755,12 @@ msgstr "Dit definieert een logfile patroon regel"
 
 msgid "This defines one value grouping pattern"
 msgstr "Dit definieert een waarde groeperings patroon"
+
+msgid ""
+"This directory will be used for temporarily storing backups before uploading "
+"and after downloading. Please note that Checkmk will not clean up this "
+"directory."
+msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
 msgstr "Dit element bevindt zich momenteel in een geplande downtime."
@@ -65520,6 +65615,11 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Show all settings"
+#~ msgid "Hide all settings"
+#~ msgstr "Toon alle instellingen"
 
 #~ msgid "Active node"
 #~ msgstr "Actief knooppunt"

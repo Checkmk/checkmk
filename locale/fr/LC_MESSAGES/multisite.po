@@ -2416,6 +2416,10 @@ msgstr ""
 msgid "ASP Requests Rejected"
 msgstr "Demandes d'ASP rejetées"
 
+#, fuzzy
+msgid "AWS S3 Bucket"
+msgstr "Buckets AWS/S3"
+
 msgid "AWS Tags"
 msgstr "Tags AWS"
 
@@ -2766,6 +2770,10 @@ msgstr "Accéder à l'agent Checkmk via TCP"
 msgid "Access Point"
 msgstr "Point d'accès"
 
+#, fuzzy
+msgid "Access key"
+msgstr "Accès"
+
 msgid "Access point name"
 msgstr "Nom du point d'accès"
 
@@ -3066,6 +3074,10 @@ msgstr "Réplication d'Active Directory"
 
 msgid "Active Directory Replication (Windows)"
 msgstr "Réplication Active Directory (Windows)"
+
+#, fuzzy
+msgid "Active Directory credentials"
+msgstr "Active Directory"
 
 msgid "Active ICMP Sessions"
 msgstr "Sessions ICMP actives"
@@ -5298,6 +5310,10 @@ msgstr "Appareils, autres matériels dédiés"
 msgid "Application"
 msgstr "Application"
 
+#, fuzzy
+msgid "Application (client) ID"
+msgstr "Application"
+
 msgid "Application (regular expression)"
 msgstr "Application (expression régulière)"
 
@@ -6331,6 +6347,10 @@ msgstr "Azure AD Connect"
 
 msgid "Azure Agent Info"
 msgstr "Informations sur l'agent Azure"
+
+#, fuzzy
+msgid "Azure Blob Storage"
+msgstr "Stockage Azure"
 
 #, fuzzy
 msgid "Azure DB Storage"
@@ -11193,6 +11213,10 @@ msgstr "Nom du conteneur"
 msgid "Container instances per cluster"
 msgstr "Conteneurs niveaux supérieurs"
 
+#, fuzzy
+msgid "Container name"
+msgstr "Nom du conteneur"
+
 msgid "Containerization"
 msgstr "Containerisation"
 
@@ -14506,6 +14530,10 @@ msgstr "Annuaires"
 msgid "Directories to search for <tt>EXE</tt> files (Windows)"
 msgstr ""
 "Répertoires dans lesquels rechercher les fichiers <tt>EXE</tt> (Windows)"
+
+#, fuzzy
+msgid "Directory (tenant) ID"
+msgstr "Type de répertoire"
 
 msgid "Directory for binaries (executables)"
 msgstr "Répertoire pour les binaires (exécutables)"
@@ -19029,6 +19057,11 @@ msgstr "Taux de tentatives d'ouverture de descripteurs de fichiers"
 msgid "File diff backup"
 msgstr "Sauvegarde des différences de fichiers"
 
+#, python-format
+msgid ""
+"File download test for remote storage failed. Original error message: %s"
+msgstr ""
+
 msgid "File grouping"
 msgstr "Regroupement de fichiers"
 
@@ -19061,6 +19094,10 @@ msgstr ""
 "Les modèles de fichiers doivent commencer par <tt>/</tt> et ne doivent pas "
 "contenir d'espaces."
 
+#, python-format
+msgid "File removal test for remote storage failed. Original error message: %s"
+msgstr ""
+
 msgid "File size"
 msgstr "Taille du fichier"
 
@@ -19069,6 +19106,10 @@ msgstr "Taille du fichier à"
 
 msgid "File size below"
 msgstr "Taille du fichier ci-dessous"
+
+#, python-format
+msgid "File upload test for remote storage failed. Original error message: %s"
+msgstr ""
 
 msgid "File with performance counter"
 msgstr "Fichier avec compteur de performance"
@@ -20187,6 +20228,10 @@ msgstr "Demandes d'exécution de GCP/Cloud"
 #, fuzzy
 msgid "GCP/Redis CPU utilization"
 msgstr "Utilisation du CPU"
+
+#, fuzzy
+msgid "GCP/Redis clients blocked"
+msgstr "GCP/Memorystore mémoire redis"
 
 #, fuzzy
 msgid "GCP/Redis clients connected"
@@ -22009,10 +22054,6 @@ msgstr "Site %s"
 
 msgid "Hide Checkmk version"
 msgstr "Cacher la version de Checkmk"
-
-#, fuzzy
-msgid "Hide all settings"
-msgstr "Afficher tous les paramètres"
 
 msgid "Hide analysis"
 msgstr "Cacher l'analyse"
@@ -26006,6 +26047,10 @@ msgstr ""
 
 msgid "Integrate with VM, cloud or container platforms"
 msgstr "Intégration avec les plates-formes VM, cloud ou conteneurs"
+
+#, fuzzy
+msgid "Integrating Prometheus"
+msgstr "Clé d'intégration"
 
 msgid "Integration Key"
 msgstr "Clé d'intégration"
@@ -31608,6 +31653,14 @@ msgstr "Surveillance"
 msgid "Monitoring Amazon Web Services (AWS)"
 msgstr "Services Web d'Amazon (AWS)"
 
+#, fuzzy
+msgid "Monitoring Google Cloud Platform (GCP)"
+msgstr "Plateforme Google Cloud (GCP)"
+
+#, fuzzy
+msgid "Monitoring Kubernetes"
+msgstr "Agents de surveillance"
+
 msgid "Monitoring Linux"
 msgstr "Surveillance de Linux"
 
@@ -34088,6 +34141,10 @@ msgstr "Nombre de demandes d'informations en cours sur les shards"
 
 msgid "Number of packets"
 msgstr "Nombre de paquets"
+
+#, fuzzy
+msgid "Number of pending clients in a blocking call"
+msgstr "Clients en attente d'un appel bloqué"
 
 msgid "Number of pending tasks"
 msgstr "Nombre de tâches en attente"
@@ -39172,6 +39229,10 @@ msgstr ""
 "L'automatisation à distance a essayé de synchroniser les changements en "
 "attente mais a échoué : %s"
 
+#, fuzzy
+msgid "Remote configuration"
+msgstr "utiliser la configuration locale"
+
 msgid "Remote destination"
 msgstr "Destination distante"
 
@@ -41339,6 +41400,9 @@ msgstr ""
 "Secondes d'attente entre l'envoi de la chaîne et l'interrogation de la "
 "réponse."
 
+msgid "Secret key"
+msgstr ""
+
 msgid "Section"
 msgstr "Section"
 
@@ -42718,6 +42782,10 @@ msgstr "Partager avec"
 msgid "Shared Access Locks"
 msgstr "Serrures à accès partagé"
 
+#, fuzzy
+msgid "Shared key"
+msgstr "Mémoire partagée"
+
 msgid "Shared locks"
 msgstr "Serrures partagées"
 
@@ -42843,9 +42911,6 @@ msgstr "Afficher tous les résultats"
 msgid "Show all rules"
 msgstr "Afficher toutes les règles"
 
-msgid "Show all settings"
-msgstr "Afficher tous les paramètres"
-
 msgid "Show all topics"
 msgstr "Afficher tous les sujets"
 
@@ -42951,6 +43016,10 @@ msgstr "Afficher les informations sur un seul produit"
 msgid "Show inline help"
 msgstr "Afficher l'aide en ligne"
 
+#, fuzzy
+msgid "Show internal graph and metric IDs"
+msgstr "Afficher les chemins internes de l'arbre"
+
 msgid "Show internal tree paths"
 msgstr "Afficher les chemins internes de l'arbre"
 
@@ -42986,6 +43055,10 @@ msgstr "Afficher plus / Afficher moins"
 
 msgid "Show number of groups"
 msgstr "Afficher le nombre de groupes"
+
+#, fuzzy
+msgid "Show only modified settings"
+msgstr "Afficher tous les paramètres"
 
 msgid "Show only problems"
 msgstr "Afficher uniquement les problèmes"
@@ -45865,6 +45938,10 @@ msgstr "Taille de stockage"
 msgid "Storage account name"
 msgstr "Nom du compte de stockage"
 
+#, fuzzy
+msgid "Storage account shared key"
+msgstr "Nom du compte de stockage"
+
 msgid "Storage pools"
 msgstr "Pools de stockage"
 
@@ -46880,6 +46957,10 @@ msgstr "Temporairement gelé"
 msgid "Temporary filesystem mounted"
 msgstr "Système de fichiers temporaire monté"
 
+#, fuzzy
+msgid "Temporary local destination"
+msgstr "Destination locale"
+
 msgid "Tenant ID / Directory ID"
 msgstr "ID locataire / ID répertoire"
 
@@ -47753,6 +47834,10 @@ msgstr ""
 "d'exécution pour les plugins et les vérifications locales</i>."
 
 msgid "The access key ID for your AWS account"
+msgstr "L'ID de la clé d'accès de votre compte AWS"
+
+#, fuzzy
+msgid "The access key for your AWS account"
 msgstr "L'ID de la clé d'accès de votre compte AWS"
 
 msgid ""
@@ -50593,6 +50678,10 @@ msgstr "Le programme que vous essayez de modifier n'existe pas."
 msgid "The secret access key for your AWS account"
 msgstr "La clé d'accès secrète pour votre compte AWS"
 
+#, fuzzy
+msgid "The secret key for your AWS account"
+msgstr "La clé d'accès secrète pour votre compte AWS"
+
 #, python-format
 msgid "The selected %s have been deleted."
 msgstr "Les %s sélectionnés ont été supprimés."
@@ -52319,6 +52408,12 @@ msgstr "Ceci définit une règle de modèle de fichier journal"
 
 msgid "This defines one value grouping pattern"
 msgstr "Ceci définit un modèle de groupement de valeurs"
+
+msgid ""
+"This directory will be used for temporarily storing backups before uploading "
+"and after downloading. Please note that Checkmk will not clean up this "
+"directory."
+msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
 msgstr "Cet élément est actuellement en arrêt programmé."
@@ -66387,6 +66482,11 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
+#, fuzzy
+#~| msgid "Show all settings"
+#~ msgid "Hide all settings"
+#~ msgstr "Afficher tous les paramètres"
+
 #~ msgid "Active node"
 #~ msgstr "Nœud actif"
 
@@ -72420,10 +72520,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #, fuzzy
 #~ msgid "Status: "
 #~ msgstr "Statut du site"
-
-#, fuzzy
-#~ msgid "Node configuration"
-#~ msgstr "utiliser la configuration locale"
 
 #, fuzzy
 #~ msgid "Nodes configuration"

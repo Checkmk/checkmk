@@ -2029,6 +2029,10 @@ msgid "ASP Requests Rejected"
 msgstr "cereri/sec"
 
 #, fuzzy
+msgid "AWS S3 Bucket"
+msgstr "foloseste numele portului"
+
+#, fuzzy
 msgid "AWS Tags"
 msgstr "Tag-uri"
 
@@ -2408,6 +2412,10 @@ msgstr "Accesează Agentul Check_MK via TCP"
 msgid "Access Point"
 msgstr "Punct de Acces"
 
+#, fuzzy
+msgid "Access key"
+msgstr "Punct de Acces"
+
 msgid "Access point name"
 msgstr "Numele punctului de acces"
 
@@ -2712,6 +2720,10 @@ msgstr "Replicare Active Directory"
 
 #, fuzzy
 msgid "Active Directory Replication (Windows)"
+msgstr "Replicare Active Directory"
+
+#, fuzzy
+msgid "Active Directory credentials"
 msgstr "Replicare Active Directory"
 
 #, fuzzy
@@ -4969,6 +4981,10 @@ msgstr ""
 msgid "Application"
 msgstr ""
 
+#, fuzzy
+msgid "Application (client) ID"
+msgstr "Numele Aplicatiei"
+
 msgid "Application (regular expression)"
 msgstr ""
 
@@ -5965,6 +5981,10 @@ msgstr "Conexiuni Active"
 
 msgid "Azure Agent Info"
 msgstr ""
+
+#, fuzzy
+msgid "Azure Blob Storage"
+msgstr "Conexiuni Active"
 
 #, fuzzy
 msgid "Azure DB Storage"
@@ -10426,6 +10446,10 @@ msgid "Container instances per cluster"
 msgstr "trei nivele"
 
 #, fuzzy
+msgid "Container name"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Containerization"
 msgstr "Conexiuni Active"
 
@@ -13804,6 +13828,10 @@ msgstr "Acțiune"
 
 msgid "Directories to search for <tt>EXE</tt> files (Windows)"
 msgstr ""
+
+#, fuzzy
+msgid "Directory (tenant) ID"
+msgstr "Acțiune"
 
 msgid "Directory for binaries (executables)"
 msgstr ""
@@ -18333,6 +18361,11 @@ msgstr "Un titlu descriptiv despre această acțiune."
 msgid "File diff backup"
 msgstr "Sterge Elementul"
 
+#, python-format
+msgid ""
+"File download test for remote storage failed. Original error message: %s"
+msgstr ""
+
 #, fuzzy
 msgid "File grouping"
 msgstr "Spațiu liber exact"
@@ -18368,6 +18401,10 @@ msgstr "Editeaza regulile de loguri"
 msgid "File patterns must begin with <tt>/</tt> and must not contain spaces."
 msgstr ""
 
+#, python-format
+msgid "File removal test for remote storage failed. Original error message: %s"
+msgstr ""
+
 #, fuzzy
 msgid "File size"
 msgstr "Dimensiunea Maxima"
@@ -18376,6 +18413,10 @@ msgid "File size at"
 msgstr ""
 
 msgid "File size below"
+msgstr ""
+
+#, python-format
+msgid "File upload test for remote storage failed. Original error message: %s"
 msgstr ""
 
 msgid "File with performance counter"
@@ -19435,6 +19476,10 @@ msgstr "cereri"
 #, fuzzy
 msgid "GCP/Redis CPU utilization"
 msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "GCP/Redis clients blocked"
+msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "GCP/Redis clients connected"
@@ -20955,10 +21000,6 @@ msgstr "Arata in masa"
 
 msgid "Hide Checkmk version"
 msgstr ""
-
-#, fuzzy
-msgid "Hide all settings"
-msgstr "Scaneaza toate elementele"
 
 #, fuzzy
 msgid "Hide analysis"
@@ -24234,6 +24275,10 @@ msgstr ""
 
 msgid "Integrate with VM, cloud or container platforms"
 msgstr ""
+
+#, fuzzy
+msgid "Integrating Prometheus"
+msgstr "Activare schimbări"
 
 msgid "Integration Key"
 msgstr ""
@@ -30036,6 +30081,13 @@ msgstr " pe siteul de monitorizare: "
 msgid "Monitoring Amazon Web Services (AWS)"
 msgstr " pe siteul de monitorizare: "
 
+msgid "Monitoring Google Cloud Platform (GCP)"
+msgstr ""
+
+#, fuzzy
+msgid "Monitoring Kubernetes"
+msgstr " pe siteul de monitorizare: "
+
 #, fuzzy
 msgid "Monitoring Linux"
 msgstr " pe siteul de monitorizare: "
@@ -32546,6 +32598,10 @@ msgstr ""
 
 msgid "Number of packets"
 msgstr ""
+
+#, fuzzy
+msgid "Number of pending clients in a blocking call"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of pending tasks"
 msgstr ""
@@ -37514,6 +37570,10 @@ msgid "Remote automation tried to sync pending changes but failed: %s"
 msgstr ""
 
 #, fuzzy
+msgid "Remote configuration"
+msgstr "foloseste configuratia locala"
+
+#, fuzzy
 msgid "Remote destination"
 msgstr "foloseste descrierea"
 
@@ -39719,6 +39779,9 @@ msgstr ""
 msgid "Seconds to wait between sending string and polling for response"
 msgstr ""
 
+msgid "Secret key"
+msgstr ""
+
 #, fuzzy
 msgid "Section"
 msgstr "Acțiune"
@@ -41043,6 +41106,10 @@ msgstr ""
 msgid "Shared Access Locks"
 msgstr ""
 
+#, fuzzy
+msgid "Shared key"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Shared locks"
 msgstr ""
 
@@ -41177,10 +41244,6 @@ msgid "Show all rules"
 msgstr "Arata regulile de utilizator"
 
 #, fuzzy
-msgid "Show all settings"
-msgstr "Scaneaza toate elementele"
-
-#, fuzzy
 msgid "Show all topics"
 msgstr "trimite notificare"
 
@@ -41301,6 +41364,9 @@ msgstr ""
 msgid "Show inline help"
 msgstr "Cluster nou"
 
+msgid "Show internal graph and metric IDs"
+msgstr ""
+
 msgid "Show internal tree paths"
 msgstr ""
 
@@ -41344,6 +41410,10 @@ msgstr "afiseaza erori"
 #, fuzzy
 msgid "Show number of groups"
 msgstr "Arata regulile de utilizator"
+
+#, fuzzy
+msgid "Show only modified settings"
+msgstr "Scaneaza toate elementele"
 
 msgid "Show only problems"
 msgstr ""
@@ -43956,6 +44026,10 @@ msgstr "Dimensiunea Maxima"
 msgid "Storage account name"
 msgstr "Numele Aplicatiei"
 
+#, fuzzy
+msgid "Storage account shared key"
+msgstr "Numele Aplicatiei"
+
 msgid "Storage pools"
 msgstr ""
 
@@ -44993,6 +45067,10 @@ msgstr ""
 msgid "Temporary filesystem mounted"
 msgstr ""
 
+#, fuzzy
+msgid "Temporary local destination"
+msgstr "Acțiune"
+
 msgid "Tenant ID / Directory ID"
 msgstr ""
 
@@ -45624,6 +45702,9 @@ msgid ""
 msgstr ""
 
 msgid "The access key ID for your AWS account"
+msgstr ""
+
+msgid "The access key for your AWS account"
 msgstr ""
 
 msgid ""
@@ -47791,6 +47872,9 @@ msgstr ""
 msgid "The secret access key for your AWS account"
 msgstr ""
 
+msgid "The secret key for your AWS account"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "The selected %s have been deleted."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
@@ -49095,6 +49179,12 @@ msgid "This defines one logfile pattern rule"
 msgstr ""
 
 msgid "This defines one value grouping pattern"
+msgstr ""
+
+msgid ""
+"This directory will be used for temporarily storing backups before uploading "
+"and after downloading. Please note that Checkmk will not clean up this "
+"directory."
 msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
@@ -61007,6 +61097,10 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Hide all settings"
+#~ msgstr "Scaneaza toate elementele"
+
+#, fuzzy
 #~ msgid "Active node"
 #~ msgstr "Verificare activă"
 
@@ -63279,10 +63373,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Status: "
 #~ msgstr "Întreruperi adhoc"
-
-#, fuzzy
-#~ msgid "Node configuration"
-#~ msgstr "foloseste configuratia locala"
 
 #, fuzzy
 #~ msgid "Nodes configuration"

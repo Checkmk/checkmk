@@ -92,6 +92,27 @@ def test_host_labels_ps_match():
         (["test", "ps"], "sp", "~.*t$", False),
         (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
         ([None], None, "~.*y", False),
+        pytest.param(
+            ["test"],
+            None,
+            None,
+            True,
+            id="empty command line (SUP-13009), no matching",
+        ),
+        pytest.param(
+            ["test"],
+            "~^$",
+            None,
+            True,
+            id="empty command line (SUP-13009), matches",
+        ),
+        pytest.param(
+            ["test"],
+            "ps",
+            None,
+            False,
+            id="empty command line (SUP-13009), does not match",
+        ),
     ],
 )
 def test_process_matches(ps_line, ps_pattern, user_pattern, result):
@@ -99,7 +120,7 @@ def test_process_matches(ps_line, ps_pattern, user_pattern, result):
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern)
 
-    assert (matches_attr and matches_proc) == result
+    assert (matches_attr and bool(matches_proc)) == result
 
 
 @pytest.mark.parametrize(

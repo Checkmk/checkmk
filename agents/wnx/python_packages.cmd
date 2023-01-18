@@ -56,3 +56,5 @@ call python_package_install !ppath! pycryptodomex
 call python_package_install !ppath! black
 call python_package_install !ppath! isort
 call python_package_install !ppath! pytest-mock
+call python_package_install !ppath! telnetlib3
+call python_package_install !ppath! asyncio

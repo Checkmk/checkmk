@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import os
 import platform
 import subprocess
 import sys
-import telnetlib  # nosec
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
+import telnetlib3  # type: ignore
 import yaml
 
 YamlDict = dict[str, dict[str, Any]]
@@ -59,16 +60,36 @@ def create_legacy_pull_file(directory: Path) -> None:
         f.write("Created by integration tests")
 
 
+_result = ""
+
+
+async def _telnet_shell(reader: telnetlib3.TelnetReader, _: telnetlib3.TelnetWriter) -> None:
+    global _result
+    while True:
+        data = await reader.read(1024)
+        if not data:
+            break
+        _result += data
+
+
+def _read_client_data(host: str, port: int) -> None:
+    loop = asyncio.get_event_loop()
+    coro = telnetlib3.open_connection(host, port, shell=_telnet_shell)
+    _, writer = loop.run_until_complete(coro)
+    loop.run_until_complete(writer.protocol.waiter_closed)
+
+
 def _get_data_using_telnet(host: str, port: int) -> list[str]:
     # overloaded CI Node may delay start/init of the agent process
     # we must retry connection few times to avoid complaints
+    global _result
+    _result = ""
     for _ in range(5):
         try:
-            with telnetlib.Telnet(host, port, timeout=10) as telnet:  # nosec
-                result = telnet.read_all().decode(encoding="cp1252")
-                if result:
-                    return result.splitlines()
-                time.sleep(2)
+            _read_client_data(host, port)
+            if _result:
+                return _result.splitlines()
+            time.sleep(2)
         except Exception as _:
             # print('No connect, waiting for agent')
             time.sleep(2)

@@ -1,6 +1,3 @@
-load("@bzlws//:index.bzl", "bzlws_copy")
-
-
 filegroup(
   name = "package_source_files",
   srcs =  glob(["**"]),
@@ -63,12 +60,4 @@ genrule(
         
         mv openssl-built.tgz "$$OUT_DIR"
     """,
-)
-
-# copy to $(DESTDIR)$(OMD_ROOT)/ is done by make
-bzlws_copy(
-    name = "deploy",
-    out = "build/by_bazel/openssl/{FILEPATH}",
-    force = True,
-    srcs = [":build"],
 )

@@ -41,9 +41,8 @@ $(OPENSSL_INTERMEDIATE_INSTALL): $(OPENSSL_BUILD)
 	$(TOUCH) $@
 else
 $(OPENSSL_INTERMEDIATE_INSTALL):  $(OPENSSL_BUILD)
-	bazel run @openssl//:deploy
 	mkdir -p "$(INTERMEDIATE_INSTALL_BASE)/$(OPENSSL_DIR)"
-	tar xf "build/by_bazel/openssl/openssl-built.tgz" -C "$(OPENSSL_INSTALL_DIR)"
+	tar xf "bazel-bin/external/openssl/openssl-built.tgz" -C "$(OPENSSL_INSTALL_DIR)"
 	$(TOUCH) $@
 endif
 
@@ -59,7 +58,6 @@ $(OPENSSL_INSTALL): $(OPENSSL_CACHE_PKG_PROCESS)
 	$(TOUCH) $@
 else
 $(OPENSSL_INSTALL):  $(OPENSSL_CACHE_PKG_PROCESS)
-	bazel run @openssl//:deploy
-	tar xf "build/by_bazel/openssl/openssl-built.tgz" -C "$(DESTDIR)$(OMD_ROOT)/"
+	tar xf "bazel-bin/external/openssl/openssl-built.tgz" -C "$(DESTDIR)$(OMD_ROOT)/"
 	$(TOUCH) $@
 endif

@@ -17,11 +17,11 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import SourceInfo
 
+from cmk.checkers import ParserFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (
-    ConfiguredParser,
     filter_out_errors,
     make_broker,
     store_piggybacked_sections,
@@ -42,7 +42,7 @@ def execute_check_discovery(
     *,
     config_cache: ConfigCache,
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
-    parser: ConfiguredParser,
+    parser: ParserFunction,
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:

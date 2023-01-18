@@ -41,17 +41,15 @@ from cmk.utils.type_defs import (
     RuleSetName,
 )
 
-from cmk.fetchers import SourceInfo, SourceType
+from cmk.fetchers import FetcherFunction, SourceInfo, SourceType
 
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, ParserFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
-    ConfiguredFetcher,
-    ConfiguredParser,
     filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
@@ -92,8 +90,8 @@ def check_inventory_tree(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
@@ -215,8 +213,8 @@ def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
 def _fetch_real_host_data(
     host_name: HostName,
     *,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
 ) -> FetchedDataResult:
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)

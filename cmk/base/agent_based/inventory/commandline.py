@@ -20,8 +20,11 @@ from cmk.utils.type_defs import (
     RuleSetName,
 )
 
+from cmk.fetchers import FetcherFunction
+
+from cmk.checkers import ParserFunction
+
 import cmk.base.section as section
-from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree
@@ -33,8 +36,8 @@ def commandline_inventory(
     hostnames: list[HostName],
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
@@ -64,8 +67,8 @@ def _commandline_inventory_on_host(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
     run_plugin_names: Container[InventoryPluginName],

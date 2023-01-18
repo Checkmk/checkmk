@@ -27,7 +27,7 @@ See Also:
 
 """
 
-from ._api import parse_raw_data
+from ._api import parse_raw_data, ParserFunction
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import Parser
 from ._parseragent import AgentParser
@@ -40,6 +40,7 @@ __all__ = [
     "HostKey",
     "parse_raw_data",
     "Parser",
+    "ParserFunction",
     "PiggybackMarker",
     "SectionMarker",
     "SNMPParser",

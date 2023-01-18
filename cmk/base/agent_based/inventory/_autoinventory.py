@@ -7,8 +7,11 @@ from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.log import console
 from cmk.utils.type_defs import EVERYTHING
 
+from cmk.fetchers import FetcherFunction
+
+from cmk.checkers import ParserFunction
+
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 
 from ._active import execute_active_check_inventory
 
@@ -19,8 +22,8 @@ def inventorize_marked_hosts(
     config_cache: config.ConfigCache,
     autoinventory_queue: AutoQueue,
     *,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
 ) -> None:
     autoinventory_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),

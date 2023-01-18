@@ -10,11 +10,13 @@ import cmk.utils.version as cmk_version
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
 
+from cmk.fetchers import FetcherFunction
+
+from cmk.checkers import ParserFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.submitters import Submitter
 
 import cmk.base.agent_based.error_handling as error_handling
-from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.config import ConfigCache
 
 from ._checking import execute_checkmk_checks
@@ -27,8 +29,8 @@ def commandline_checking(
     ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     submitter: Submitter,
     active_check_handler: Callable[[HostName, str], object],
@@ -64,8 +66,8 @@ def _commandline_checking(
     ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     perfdata_with_times: bool,
     submitter: Submitter,

@@ -16,6 +16,9 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceState
 
+from cmk.fetchers import FetcherFunction
+
+from cmk.checkers import ParserFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -24,8 +27,6 @@ import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
-    ConfiguredFetcher,
-    ConfiguredParser,
     filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
@@ -44,8 +45,8 @@ __all__ = ["commandline_discovery", "commandline_check_discovery"]
 def commandline_discovery(
     arg_hostnames: set[HostName],
     *,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     config_cache: ConfigCache,
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
@@ -182,8 +183,8 @@ def commandline_check_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
@@ -210,8 +211,8 @@ def _commandline_check_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
 ) -> ActiveCheckResult:
     fetched = fetcher(host_name, ip_address=None)
     return execute_check_discovery(

@@ -3,17 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Sequence
 from functools import partial
+from typing import Protocol
 
 from cmk.utils.type_defs import AgentRawData, result
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
+from cmk.fetchers import SourceInfo
+
 from ._parser import Parser
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
-__all__ = ["parse_raw_data"]
+__all__ = ["parse_raw_data", "ParserFunction"]
+
+
+class ParserFunction(Protocol):
+    def __call__(
+        self,
+        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
+        ...
 
 
 def parse_raw_data(

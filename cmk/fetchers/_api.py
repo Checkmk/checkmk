@@ -5,12 +5,13 @@
 
 from collections.abc import Iterable, Sequence
 from functools import partial
+from typing import Protocol
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, result
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData, TRawData
 
@@ -18,7 +19,16 @@ from ._abstract import Fetcher, Mode
 from ._typedefs import SourceInfo
 from .filecache import FileCache
 
-__all__ = ["get_raw_data", "fetch_all"]
+__all__ = ["get_raw_data", "fetch_all", "FetcherFunction"]
+
+
+class FetcherFunction(Protocol):
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ]:
+        ...
 
 
 def get_raw_data(

@@ -30,13 +30,15 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
+from cmk.fetchers import FetcherFunction
+
+from cmk.checkers import ParserFunction
+
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
-    ConfiguredFetcher,
-    ConfiguredParser,
     filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
@@ -96,8 +98,8 @@ def automation_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     mode: DiscoveryMode,
     service_filters: _ServiceFilters | None,
     on_error: OnError,
@@ -325,8 +327,8 @@ def discover_marked_hosts(
     autodiscovery_queue: AutoQueue,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     on_error: OnError,
 ) -> None:
     """Autodiscovery"""
@@ -395,8 +397,8 @@ def _discover_marked_host(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    fetcher: ConfiguredFetcher,
-    parser: ConfiguredParser,
+    fetcher: FetcherFunction,
+    parser: ParserFunction,
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,

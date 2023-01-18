@@ -15,7 +15,7 @@ from typing import Any
 from typing_extensions import assert_never
 
 from ._abstract import Fetcher, Mode
-from ._api import fetch_all, get_raw_data
+from ._api import fetch_all, FetcherFunction, get_raw_data
 from ._ipmi import IPMIFetcher
 from ._nofetcher import NoFetcher
 from ._piggyback import PiggybackFetcher
@@ -28,6 +28,7 @@ __all__ = [
     "fetch_all",
     "Fetcher",
     "FetcherFactory",
+    "FetcherFunction",
     "FetcherType",
     "get_raw_data",
     "IPMIFetcher",

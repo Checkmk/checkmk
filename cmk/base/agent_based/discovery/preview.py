@@ -18,6 +18,9 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
+from cmk.fetchers import FetcherFunction
+
+from cmk.checkers import ParserFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 
 import cmk.base.agent_based.checking as checking
@@ -26,8 +29,6 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
-    ConfiguredFetcher,
-    ConfiguredParser,
     filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
@@ -50,8 +51,8 @@ def get_check_preview(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ConfiguredParser,
-    fetcher: ConfiguredFetcher,
+    parser: ParserFunction,
+    fetcher: FetcherFunction,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of

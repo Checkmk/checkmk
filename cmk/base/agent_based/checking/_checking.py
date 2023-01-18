@@ -38,7 +38,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, ParserFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
@@ -49,7 +49,6 @@ import cmk.base.crash_reporting
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
-    ConfiguredParser,
     filter_out_errors,
     make_broker,
     ParsedSectionsBroker,
@@ -85,7 +84,7 @@ def execute_checkmk_checks(
     hostname: HostName,
     config_cache: ConfigCache,
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
-    parser: ConfiguredParser,
+    parser: ParserFunction,
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,

@@ -15,10 +15,10 @@ from __future__ import annotations
 
 import itertools
 import time
-from collections.abc import Collection, Container, Iterable, Iterator, Sequence
+from collections.abc import Collection, Container, Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Literal, NamedTuple
+from typing import Callable, Literal
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -33,15 +33,9 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    HostName,
-    HWSWInventoryParameters,
-    InventoryPluginName,
-    result,
-    RuleSetName,
-)
+from cmk.utils.type_defs import HostName, HWSWInventoryParameters, InventoryPluginName, RuleSetName
 
-from cmk.fetchers import FetcherFunction, SourceInfo, SourceType
+from cmk.fetchers import FetcherFunction, SourceType
 
 from cmk.checkers import HostKey, ParserFunction
 from cmk.checkers.checkresults import ActiveCheckResult
@@ -67,14 +61,6 @@ __all__ = [
     "inventorize_status_data_of_real_host",
     "check_inventory_tree",
 ]
-
-
-class FetchedDataResult(NamedTuple):
-    parsed_sections_broker: ParsedSectionsBroker
-    host_sections: Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]
-    parsing_errors: Sequence[str]
-    processing_failed: bool
-    no_data_or_files: bool
 
 
 @dataclass(frozen=True)
@@ -121,16 +107,6 @@ def check_inventory_tree(
 
     broker = make_broker(host_sections_no_error)
     parsing_errors = broker.parsing_errors()
-    fetched_data_result = FetchedDataResult(
-        parsed_sections_broker=broker,
-        host_sections=host_sections,
-        parsing_errors=parsing_errors,
-        processing_failed=(
-            any(host_section.is_error() for _source, host_section in host_sections)
-            or bool(parsing_errors)
-        ),
-        no_data_or_files=_no_data_or_files(host_name, host_sections_no_error.values()),
-    )
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -138,7 +114,7 @@ def check_inventory_tree(
             _collect_inventory_plugin_items(
                 host_name,
                 inventory_parameters=inventory_parameters,
-                parsed_sections_broker=fetched_data_result.parsed_sections_broker,
+                parsed_sections_broker=broker,
                 run_plugin_names=run_plugin_names,
             )
         ),
@@ -146,17 +122,23 @@ def check_inventory_tree(
         old_tree=old_tree,
     )
 
+    processing_failed = any(
+        host_section.is_error() for _source, host_section in host_sections
+    ) or bool(parsing_errors)
+    no_data_or_files = _no_data_or_files(host_name, host_sections_no_error.values())
+
     return CheckInventoryTreeResult(
-        processing_failed=fetched_data_result.processing_failed,
-        no_data_or_files=fetched_data_result.no_data_or_files,
+        processing_failed=processing_failed,
+        no_data_or_files=no_data_or_files,
         check_result=ActiveCheckResult.from_subresults(
             *itertools.chain(
                 _check_fetched_data_or_trees(
                     parameters=parameters,
-                    fetched_data_result=fetched_data_result,
                     inventory_tree=trees.inventory,
                     status_data_tree=trees.status_data,
                     old_tree=old_tree,
+                    processing_failed=processing_failed,
+                    no_data_or_files=no_data_or_files,
                 ),
                 *(
                     summarize_host_sections(
@@ -171,10 +153,10 @@ def check_inventory_tree(
                         ),
                         is_piggyback=config_cache.is_piggyback_host(host_name),
                     )
-                    for source, host_sections in fetched_data_result.host_sections
+                    for source, host_sections in host_sections
                 ),
                 check_parsing_errors(
-                    errors=fetched_data_result.parsing_errors,
+                    errors=parsing_errors,
                     error_state=parameters.fail_status,
                 ),
             )
@@ -599,16 +581,17 @@ def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: 
 def _check_fetched_data_or_trees(
     *,
     parameters: HWSWInventoryParameters,
-    fetched_data_result: FetchedDataResult,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
     old_tree: StructuredDataNode,
+    no_data_or_files: bool,
+    processing_failed: bool,
 ) -> Iterator[ActiveCheckResult]:
-    if fetched_data_result.no_data_or_files:
+    if no_data_or_files:
         yield ActiveCheckResult(0, "No data yet, please be patient")
         return
 
-    if fetched_data_result.processing_failed:
+    if processing_failed:
         yield ActiveCheckResult(parameters.fail_status, "Cannot update tree")
 
     yield from _check_trees(

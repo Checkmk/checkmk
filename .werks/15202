@@ -1,0 +1,16 @@
+Title: Allow mk_oracle plugin in /tmp directory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674045879
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p20
+
+This change is relevant if you are monitoring oracle databases and want to use the mk_oracle plugin from within the /tmp directoy.
+Previously, this conflicted with the temporary directory of the same name created by the plugin.
+This has now been fixed.
+
+

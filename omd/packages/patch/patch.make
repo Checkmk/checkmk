@@ -6,7 +6,7 @@ PATCH_BUILD := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-build
 PATCH_INSTALL := $(BUILD_HELPER_DIR)/$(PATCH_DIR)-install
 
 $(PATCH_BUILD):
-	bazel build @patch//:build
+	$(BAZEL_BUILD) @patch//:build
 
 $(PATCH_INSTALL): $(PATCH_BUILD)
 	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rx,Fo=rx bazel-bin/external/patch/bin $(DESTDIR)$(OMD_ROOT)/

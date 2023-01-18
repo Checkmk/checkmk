@@ -29,7 +29,7 @@ $(OPENSSL_BUILD):
 	$(TOUCH) $@
 else
 $(OPENSSL_BUILD):
-	bazel build @openssl//:build
+	$(BAZEL_BUILD) @openssl//:build
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 endif

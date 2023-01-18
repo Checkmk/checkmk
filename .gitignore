@@ -80,6 +80,7 @@ mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*
 omd/pkgs_by_bzl/
+bazel_execution_log*.json
 pip-mirror-tmp
 RemoteSystemsTempFiles
 requirements.txt

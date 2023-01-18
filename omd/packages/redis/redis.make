@@ -6,8 +6,8 @@ REDIS_BUILD := $(BUILD_HELPER_DIR)/$(REDIS_DIR)-build
 REDIS_INSTALL := $(BUILD_HELPER_DIR)/$(REDIS_DIR)-install
 
 $(REDIS_BUILD):
-	$(BAZEL_BUILD)  @redis//:build
-	$(BAZEL_BUILD)  @redis//:skel
+	$(BAZEL_BUILD) @redis//:build
+	$(BAZEL_BUILD) @redis//:skel
 
 $(REDIS_INSTALL): $(REDIS_BUILD)
 	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rx,Fo=rx bazel-bin/external/redis/bin $(DESTDIR)$(OMD_ROOT)/

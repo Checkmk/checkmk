@@ -16,13 +16,13 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Float, Percentage, Tuple
 
 
-def valuespec_percentual(title: str) -> CascadingDropdown:
+def valuespec_percentual(title: str, maxvalue: Optional[float] = 101.0) -> CascadingDropdown:
     return wrap_with_no_levels_dropdown(
         title=title,
         value_spec=Tuple(
             elements=[
-                Percentage(title=_("Warning at"), default_value=80.0),
-                Percentage(title=_("Critical at"), default_value=90.0),
+                Percentage(title=_("Warning at"), default_value=80.0, maxvalue=maxvalue),
+                Percentage(title=_("Critical at"), default_value=90.0, maxvalue=maxvalue),
             ]
         ),
     )
@@ -30,12 +30,15 @@ def valuespec_percentual(title: str) -> CascadingDropdown:
 
 def _parameter_valuespec_memory(
     valuespec_help: str,
-    options: Optional[Sequence[Literal["usage", "request", "limit", "cluster", "node"]]] = None,
+    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] = (
+        "usage",
+        "request",
+        "limit",
+        "cluster",
+        "node",
+    ),
 ):
     elements = []
-    if options is None:
-        options = ["usage", "request", "limit", "cluster", "node"]
-
     if "usage" in options:
         elements.append(
             (
@@ -45,9 +48,17 @@ def _parameter_valuespec_memory(
                 ),
             )
         )
+    if "request" in options:
+        elements.append(
+            (
+                "request",
+                valuespec_percentual(
+                    title=_("Upper levels for requests utilization"), maxvalue=None
+                ),
+            )
+        )
 
     for option, help_text in (
-        ("request", _("Upper levels for requests utilization")),
         ("limit", _("Upper levels for limits utilization")),
         ("cluster", _("Upper levels for cluster utilization")),
         ("node", _("Upper levels for node utilization")),
@@ -122,7 +133,9 @@ def _parameter_valuespec_cpu():
             ),
             (
                 "request",
-                valuespec_percentual(title=_("Upper levels for requests utilization")),
+                valuespec_percentual(
+                    title=_("Upper levels for requests utilization"), maxvalue=None
+                ),
             ),
             (
                 "limit",

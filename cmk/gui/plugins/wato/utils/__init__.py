@@ -2388,7 +2388,11 @@ class HostTagCondition(ValueSpec):
                 tagvalue = tag_group.default_value
             else:
                 tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
-            assert tagvalue is not None
+
+            # Not all tags are submitted, see cmk.gui.forms.remove_unused_vars.
+            # So simply skip None values.
+            if tagvalue is None:
+                continue
 
             mode = request.var(varprefix + "tag_" + tag_group.id)
             if mode == "is":

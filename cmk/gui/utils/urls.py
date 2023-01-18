@@ -344,6 +344,7 @@ class DocReference(Enum):
     DIAGNOSTICS = "support_diagnostics"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     EVENTCONSOLE = "ec"
+    FORECAST_GRAPH = "forecast_graphs"
     GCP = "monitoring_gcp"
     GRAPHING_RRDS = "graphing#rrds"
     HOST_TAGS = "host_tags"

@@ -15,10 +15,26 @@ variable "azure_tenant_id" {
   type      = string
   sensitive = true
 }
+variable "azure_resource_group" {
+  type = string
+}
+variable "build_resource_group_name" {
+  type = string
+}
+variable "virtual_network_resource_group_name" {
+  type = string
+}
+variable "virtual_network_name" {
+  type = string
+}
+variable "virtual_network_subnet_name" {
+  type = string
+}
+
 // Ansible variables
 variable "cmk_version" {
   # set the cmk version to build.
-  type      = string
+  type = string
 }
 variable "cmk_download_user" {
   type      = string

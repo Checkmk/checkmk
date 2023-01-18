@@ -59,25 +59,28 @@ source "azure-arm" "builder" {
     dept = "Engineering"
     task = "Image deployment"
   }
-  client_id                         = "${var.azure_client_id}"
-  client_secret                     = "${var.azure_client_secret}"
-  image_offer                       = "0001-com-ubuntu-server-jammy"
-  image_publisher                   = "Canonical"
-  image_sku                         = "22_04-lts"
-  location                          = "East US"
-  managed_image_name                = "cmk"
-  managed_image_resource_group_name = "myResourceGroup"
-  os_type                           = "Linux"
-  subscription_id                   = "${var.azure_subscription_id}"
-  tenant_id                         = "${var.azure_tenant_id}"
-  vm_size                           = "Standard_DS2_v2"
+  client_id                           = "${var.azure_client_id}"
+  client_secret                       = "${var.azure_client_secret}"
+  image_offer                         = "0001-com-ubuntu-server-jammy"
+  image_publisher                     = "Canonical"
+  image_sku                           = "22_04-lts"
+  build_resource_group_name           = "rg-packer-dev-weu"
+  virtual_network_resource_group_name = "rg-spokes-network-weu"
+  virtual_network_name                = "vnet-spoke-packer-dev-weu"
+  virtual_network_subnet_name         = "snet-spoke-packer-dev-default-weu"
+  managed_image_name                  = "cmk"
+  managed_image_resource_group_name   = "${var.azure_resource_group}"
+  os_type                             = "Linux"
+  subscription_id                     = "${var.azure_subscription_id}"
+  tenant_id                           = "${var.azure_tenant_id}"
+  vm_size                             = "Standard_DS2_v2"
 }
 
 build {
   name = "checkmk-ansible"
   sources = [
-    "source.qemu.ubuntu-2204-amd64-qemu"
-    #"source.azure-arm.builder"
+    #"source.qemu.ubuntu-2204-amd64-qemu"
+    "source.azure-arm.builder"
   ]
   # setup apt-get
   provisioner "shell" {
@@ -102,13 +105,13 @@ build {
     galaxy_file             = "./requirements.yml"
     galaxy_collections_path = "/tmp/ansible/collections"
     role_paths              = ["./roles/change-motd/"]
-    extra_arguments         = [
-            "--extra-vars",
-            "checkmk_server_version=${var.cmk_version}",
-            "--extra-vars",
-            "checkmk_server_download_user=${var.cmk_download_user}",
-            "--extra-vars",
-            "checkmk_server_download_pass=${var.cmk_download_pass}",]
+    extra_arguments = [
+      "--extra-vars",
+      "checkmk_server_version=${var.cmk_version}",
+      "--extra-vars",
+      "checkmk_server_download_user=${var.cmk_download_user}",
+      "--extra-vars",
+    "checkmk_server_download_pass=${var.cmk_download_pass}", ]
   }
   # update user
   provisioner "shell" {

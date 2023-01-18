@@ -12,8 +12,6 @@ from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 
-import flask
-
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils.crypto import Password
@@ -31,15 +29,14 @@ from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.type_defs import RFC7662
 
 
-def _check_auth(req: flask.Request) -> tuple[UserId, AuthType]:
-    if user_id := _check_auth_web_server(req):
+def _check_auth() -> tuple[UserId, AuthType]:
+    if user_id := _check_auth_web_server():
         return _check_user(user_id, "web_server")
 
-    if user_id := check_automation_auth_by_request_values(req):
+    if user_id := check_automation_auth_by_request_values():
         return _check_user(user_id, "automation")
 
-    if auth_by_http_header := active_config.auth_by_http_header:
-        user_id = _check_auth_http_header(auth_by_http_header)
+    if user_id := _check_auth_http_header():
         return _check_user(user_id, "http_header")
 
     if user_id := check_auth_by_cookie():
@@ -98,33 +95,37 @@ def _check_auth_automation() -> UserId:
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 
-def _check_auth_http_header(auth_by_http_header: str) -> UserId | None:
+def _check_auth_http_header() -> UserId | None:
     """When http header auth is enabled, try to read the user_id from the var"""
-    user_id = request.get_request_header(auth_by_http_header)
+    user_id = None
+
+    if auth_by_http_header := active_config.auth_by_http_header:
+        user_id = request.headers.get(auth_by_http_header, type=str)
+
     if not user_id:
         return None
 
     return UserId(user_id)
 
 
-def _check_auth_web_server(req: flask.Request) -> UserId | None:
+def _check_auth_web_server() -> UserId | None:
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
     case a user is provided, we trust that user.
     """
     # ? type of Request.remote_user attribute is unclear
-    user_id = req.remote_user
+    user_id = request.remote_user
     if user_id is None:
         return None
 
     return UserId(user_id)
 
 
-def check_automation_auth_by_request_values(req: flask.Request) -> UserId | None:
+def check_automation_auth_by_request_values() -> UserId | None:
     """Check credentials either in query string or form encoded POST body"""
-    user_name = req.values.get("_username")
-    password = req.values.get("_secret")
+    user_name = request.values.get("_username")
+    password = request.values.get("_secret")
     if user_name is not None and password is not None:
         user_id = UserId(user_name)
         if verify_automation_secret(user_id, password):
@@ -136,14 +137,19 @@ def check_automation_auth_by_request_values(req: flask.Request) -> UserId | None
 def check_auth_by_cookie() -> UserId | None:
     """check if session cookie exists and if it is valid
 
-    Returns None if not authenticated. If a user was successful authenticated the UserId is returned"""
+    Returns None if not authenticated. If a user was successfully authenticated,
+    the UserId is returned
+    """
 
     cookie_name = auth_cookie_name()
-    if not request.has_cookie(cookie_name):
+    if cookie_name not in request.cookies:
         return None
 
     try:
-        return _check_auth_cookie(cookie_name)
+        username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
+        check_parsed_auth_cookie(username, session_id, cookie_hash)
+        userdb.on_access(username, session_id, datetime.now())
+        return username
     except MKAuthException:
         # Suppress cookie validation errors from other sites cookies
         auth_logger.debug(
@@ -175,17 +181,6 @@ def is_site_login() -> bool:
 auth_logger = logger.getChild("auth")
 
 
-def _check_auth_cookie(cookie_name: str) -> UserId | None:
-    username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
-    check_parsed_auth_cookie(username, session_id, cookie_hash)
-
-    now = datetime.now()
-    userdb.on_access(username, session_id, now)
-
-    # Return the authenticated username
-    return username
-
-
 def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
     try:
         username, session_id, cookie_hash = raw_cookie.split(":", 2)
@@ -201,7 +196,7 @@ def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
 
 
 def _fetch_cookie(cookie_name: str) -> str:
-    raw_cookie = request.cookie(cookie_name, "::")
+    raw_cookie = request.cookies.get(cookie_name, default="::", type=str)
     assert raw_cookie is not None
     return raw_cookie
 

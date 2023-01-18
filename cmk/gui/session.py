@@ -212,7 +212,7 @@ class FileBasedSession(SessionInterface):
         config.initialize()
 
         try:
-            user_name, auth_type = _check_auth(request)
+            user_name, auth_type = _check_auth()
         except MKAuthException:
             return self.session_class.create_empty_session()
 

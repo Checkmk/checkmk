@@ -38,6 +38,7 @@ def test_all_services_present_in_gui():
     all_agent_services = [
         "users_count",
         "ad_connect",
+        "app_registrations",
         "usage_details",
         "Microsoft.Compute/virtualMachines",
         "Microsoft.RecoveryServices/vaults",

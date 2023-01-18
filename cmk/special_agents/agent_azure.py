@@ -434,6 +434,16 @@ class GraphApiClient(BaseApiClient):
     def organization(self):
         return self._get("organization", key="value")
 
+    def applications(self):
+        apps = self._get("applications", key="value")
+
+        key_subset = {"id", "appId", "displayName", "passwordCredentials"}
+        apps_selected = [
+            {k: app[k] for k in key_subset} for app in apps if app["passwordCredentials"]
+        ]
+
+        return apps_selected
+
 
 class MgmtApiClient(BaseApiClient):
     def __init__(self, subscription) -> None:  # type:ignore[no-untyped-def]
@@ -1040,6 +1050,20 @@ def write_section_ad(
     section.write()
 
 
+def write_section_app_registrations(graph_client: GraphApiClient, args: argparse.Namespace) -> None:
+    if "app_registrations" not in args.services:
+        return
+
+    section = AzureSection("app_registration")
+
+    # app registration with client secrets
+    apps = graph_client.applications()
+    for app_reg in apps:
+        section.add([json.dumps(app_reg)])
+
+    section.write()
+
+
 def gather_metrics(mgmt_client, resource, debug=False):
     """
     Gather all metrics for a resource. These metrics have different time
@@ -1224,6 +1248,7 @@ def main_graph_client(args):
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client, AzureSection("ad"), args)
+        write_section_app_registrations(graph_client, args)
     except ApiErrorAuthorizationRequestDenied as exc:
         # We are not raising the exception in debug mode.
         # Having no permissions for the graph API is a legit configuration

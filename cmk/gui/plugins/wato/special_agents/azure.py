@@ -32,6 +32,7 @@ from cmk.gui.valuespec import (
 ALL_AZURE_SERVICES: list[tuple[str, str]] = [
     ("users_count", _("Users in the Active Directory")),
     ("ad_connect", _("AD Connect Sync")),
+    ("app_registrations", _("App Registrations")),
     ("usage_details", _("Usage Details")),
     ("Microsoft.Compute/virtualMachines", _("Virtual Machines")),
     ("Microsoft.Network/virtualNetworkGateways", _("vNet Gateway")),
@@ -238,10 +239,12 @@ def get_services_vs() -> tuple[str, ValueSpec]:
         ListChoice(
             title=_("Azure services to monitor"),
             choices=get_filtered_services(),
-            # users_count and ad_connect are disabled by default because they require special
-            # permissions on the Azure app (Graph API permissions + admin consent).
+            # users_count, ad_connect and app_registration are disabled by default because they
+            # require special permissions on the Azure app (Graph API permissions + admin consent).
             default_value=[
-                s[0] for s in ALL_AZURE_SERVICES if s[0] not in {"users_count", "ad_connect"}
+                s[0]
+                for s in ALL_AZURE_SERVICES
+                if s[0] not in {"users_count", "ad_connect", "app_registrations"}
             ],
             allow_empty=True,
             help=_(

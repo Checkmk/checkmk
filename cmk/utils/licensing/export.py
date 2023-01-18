@@ -12,10 +12,11 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from enum import auto, Enum
 from typing import NamedTuple, Protocol, TypedDict
+from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
-LicenseUsageHistoryDumpVersion = "1.4"
+LicenseUsageHistoryDumpVersion = "1.5"
 
 
 class LicenseUsageReportVersionError(Exception):
@@ -336,6 +337,7 @@ class LicenseUsageExtensions:
 
 
 class RawLicenseUsageSample(TypedDict):
+    instance_id: str | None
     site_hash: str
     version: str
     edition: str
@@ -352,12 +354,19 @@ class RawLicenseUsageSample(TypedDict):
 
 
 class LicenseUsageSampleParser(Protocol):
-    def __call__(self, raw_sample: object, *, site_hash: str | None = None) -> LicenseUsageSample:
+    def __call__(
+        self,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
+    ) -> LicenseUsageSample:
         ...
 
 
 @dataclass
 class LicenseUsageSample:
+    instance_id: UUID | None
     site_hash: str
     version: str
     edition: str
@@ -374,6 +383,7 @@ class LicenseUsageSample:
 
     def for_report(self) -> RawLicenseUsageSample:
         return {
+            "instance_id": None if self.instance_id is None else str(self.instance_id),
             "site_hash": self.site_hash,
             "version": self.version,
             "edition": self.edition,
@@ -392,6 +402,14 @@ class LicenseUsageSample:
     @classmethod
     def get_parser(cls, report_version: str) -> LicenseUsageSampleParser:
         # Note:
+        # === Instance ID ===
+        # Checkmk:
+        #    < 1.5: The instance ID is added during history loading (before submit)
+        #   >= 1.5: The instance ID is added during _create_sample
+        # License server:
+        #    < 1.5: The instance ID may be None
+        #   >= 1.5: The instance ID must be an UUID
+        # === Site hash ===
         # - Old samples do not contain "site_hash".
         # - When loading the history in Checkmk we add the "site_hash".
         # - On the license server the "site_hash" is already part of the sample.
@@ -405,20 +423,31 @@ class LicenseUsageSample:
         if report_version == "1.4":
             return cls._parse_sample_v1_4
 
+        if report_version == "1.5":
+            return cls._parse_sample_v1_5
+
         raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
 
     @classmethod
     def _parse_sample_v1_0(
-        cls, raw_sample: object, *, site_hash: str | None = None
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
+
+        if raw_instance_id := raw_sample.get("instance_id"):
+            instance_id = UUID(raw_instance_id)
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
 
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
+            instance_id=instance_id,
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
@@ -436,16 +465,24 @@ class LicenseUsageSample:
 
     @classmethod
     def _parse_sample_v1_1(
-        cls, raw_sample: object, *, site_hash: str | None = None
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
+
+        if raw_instance_id := raw_sample.get("instance_id"):
+            instance_id = UUID(raw_instance_id)
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
 
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
+            instance_id=instance_id,
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
@@ -463,16 +500,62 @@ class LicenseUsageSample:
 
     @classmethod
     def _parse_sample_v1_4(
-        cls, raw_sample: object, *, site_hash: str | None = None
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
             raise TypeError()
+
+        if raw_instance_id := raw_sample.get("instance_id"):
+            instance_id = UUID(raw_instance_id)
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
             raise ValueError()
 
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
+            instance_id=instance_id,
+            site_hash=site_hash,
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_shadow_hosts=raw_sample["num_shadow_hosts"],
+            num_services=raw_sample["num_services"],
+            num_services_excluded=raw_sample["num_services_excluded"],
+            extension_ntop=extensions.ntop,
+        )
+
+    @classmethod
+    def _parse_sample_v1_5(
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
+    ) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError()
+
+        if raw_instance_id := raw_sample.get("instance_id"):
+            instance_id = UUID(raw_instance_id)
+
+        if instance_id is None:
+            raise ValueError()
+
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError()
+
+        extensions = LicenseUsageExtensions.parse(raw_sample)
+        return cls(
+            instance_id=instance_id,
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],

@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
 from typing import NamedTuple, TypedDict
+from uuid import UUID
 
 import livestatus
 
@@ -28,7 +29,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageSample,
     RawLicenseUsageSample,
 )
-from cmk.utils.paths import licensing_dir, log_dir
+from cmk.utils.paths import licensing_dir, log_dir, omd_root
 from cmk.utils.site import omd_site
 
 
@@ -100,6 +101,9 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
 
 
 def _create_sample() -> LicenseUsageSample:
+    if not (instance_id := load_instance_id()):
+        raise ValueError()
+
     hosts_counter = _get_hosts_counter()
     shadow_hosts_counter = _get_shadow_hosts_counter()
     services_counter = _get_services_counter()
@@ -108,6 +112,7 @@ def _create_sample() -> LicenseUsageSample:
     extensions = _load_extensions()
 
     return LicenseUsageSample(
+        instance_id=instance_id,
         site_hash=hash_site_id(omd_site()),
         version=cmk_version.omd_version(),
         edition=general_infos["edition"],
@@ -122,6 +127,18 @@ def _create_sample() -> LicenseUsageSample:
         timezone=time.localtime().tm_zone,
         extension_ntop=extensions.ntop,
     )
+
+
+def load_instance_id() -> UUID | None:
+    try:
+        with _get_instance_id_filepath().open("r", encoding="utf-8") as fp:
+            return UUID(fp.read())
+    except (FileNotFoundError, ValueError):
+        return None
+
+
+def _get_instance_id_filepath() -> Path:
+    return Path(omd_root, "etc/omd/instance_id")
 
 
 class EntityCounter(NamedTuple):
@@ -298,7 +315,11 @@ class LocalLicenseUsageHistory:
             raise TypeError()
 
         parser = LicenseUsageSample.get_parser(report_version)
-        return cls(parser(raw_sample, site_hash=site_hash) for raw_sample in raw_history)
+        instance_id = load_instance_id()
+        return cls(
+            parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
+            for raw_sample in raw_history
+        )
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
         self._samples.appendleft(sample)

@@ -21,9 +21,8 @@ def _create_backup_target(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_input("edit_target_p_ident").fill("mytarget")
     logged_in_page.main_area.get_input("edit_target_p_title").fill("My backup target")
     logged_in_page.main_area.get_input("edit_target_p_remote_0_p_path").fill("/tmp")
-    logged_in_page.main_area.locator(
-        "label[for=cb_edit_target_p_remote_0_p_is_mountpoint]"
-    ).uncheck()
+    logged_in_page.main_area.get_text("Is mountpoint").uncheck()
+
     logged_in_page.main_area.get_suggestion("Save").click()
 
 

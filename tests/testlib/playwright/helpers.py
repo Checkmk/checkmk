@@ -39,8 +39,9 @@ class LocatorHelper(ABC):
     def get_suggestion(self, suggestion: str) -> Locator:
         return self.locator(f"#suggestions >> text={suggestion}")
 
-    def get_text(self, text: str) -> Locator:
-        return self.locator(f"text={text}")
+    def get_text(self, text: str, is_visible: bool = True) -> Locator:
+        is_visible_str = ">> visible=true" if is_visible else ""
+        return self.locator(f"text={text}" + is_visible_str)
 
     def get_element_including_texts(self, element_id: str, texts: list[str]) -> Locator:
         has_text_str = "".join([f":has-text('{t}')" for t in texts])

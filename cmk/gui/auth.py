@@ -39,8 +39,6 @@ def _check_auth(req: flask.Request) -> tuple[UserId, AuthType]:
         return _check_user(user_id, "automation")
 
     if auth_by_http_header := active_config.auth_by_http_header:
-        if not active_config.user_login:
-            raise MKAuthException("Site can't be logged into.")
         user_id = _check_auth_http_header(auth_by_http_header)
         return _check_user(user_id, "http_header")
 
@@ -51,6 +49,9 @@ def _check_auth(req: flask.Request) -> tuple[UserId, AuthType]:
 
 
 def _check_user(user_id: UserId | None, auth_type: AuthType) -> tuple[UserId, AuthType]:
+    if not active_config.user_login:
+        raise MKAuthException("Site can't be logged into.")
+
     if (user_id is not None and not isinstance(user_id, str)) or user_id == "":
         raise MKInternalError(_("Invalid user authentication"))
 

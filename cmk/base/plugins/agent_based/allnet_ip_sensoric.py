@@ -12,6 +12,10 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 Section = Mapping[str, Mapping[str, str]]
 
 
+# No idea why we need this. Devices respond with '10 Â°C'.
+_FIXUP_ENCODING = (("°".encode("utf-8").decode("latin-1"), "°"),)
+
+
 def parse_allnet_ip_sensoric(string_table: StringTable) -> Section:
     """parses agent output in a structure like:
     {'sensor0': {'alarm0': '0',
@@ -36,11 +40,15 @@ def parse_allnet_ip_sensoric(string_table: StringTable) -> Section:
     pat = re.compile(r"(\w+)\.(\w+)")
     parsed: dict[str, dict[str, str]] = {}
     for key, value in string_table:
-        match = pat.search(key)
-        if match:
-            sensor = match.group(1)
-            field = match.group(2)
-            parsed.setdefault(sensor, {})[field] = value
+        if not (match := pat.search(key)):
+            continue
+
+        for wrong, right in _FIXUP_ENCODING:
+            value = value.replace(wrong, right)
+
+        sensor = match.group(1)
+        field = match.group(2)
+        parsed.setdefault(sensor, {})[field] = value
 
     return parsed
 

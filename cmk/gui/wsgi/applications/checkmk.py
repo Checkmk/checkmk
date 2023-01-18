@@ -81,31 +81,6 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     return _call_noauth
 
 
-def get_and_wrap_page(script_name: str | None) -> Callable[[], Response]:
-    """Get the page handler and wrap authentication logic when needed.
-
-    For all "noauth" page handlers the wrapping part is skipped. In the `ensure_authentication`
-    wrapper everything needed to make a logged-in request is listed.
-    """
-    if script_name is None:
-        return _page_not_found
-
-    _handler = pages.get_page_handler(script_name)
-    if _handler is None:
-        # Some pages do skip authentication. This is done by adding
-        # noauth: to the page handler, e.g. "noauth:run_cron" : ...
-        # TODO: Eliminate those "noauth:" pages. Eventually replace it by call using
-        #       the now existing default automation user.
-        _handler = pages.get_page_handler("noauth:" + script_name)
-        if _handler is not None:
-            return _noauth(_handler)
-
-    if _handler is None:
-        return _page_not_found
-
-    return ensure_authentication(_handler)
-
-
 def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
@@ -196,15 +171,24 @@ class CheckmkApp(AbstractWSGIApp):
             return _process_request(environ, start_response, debug=self.debug)
 
 
-def _process_request(
+def _process_request(  # pylint: disable=too-many-branches
     environ: WSGIEnvironment,
     start_response: StartResponse,
     debug: bool = False,
-) -> WSGIResponse:  # pylint: disable=too-many-branches
+) -> WSGIResponse:
     resp: Response
     try:
         file_name = requested_file_name(request, on_error="raise")
-        page_handler = get_and_wrap_page(file_name)
+
+        if file_name is None:
+            page_handler = _page_not_found
+        elif _handler := pages.get_page_handler(file_name):
+            page_handler = ensure_authentication(_handler)
+        elif _handler := pages.get_page_handler(f"noauth:{file_name}"):
+            page_handler = _noauth(_handler)
+        else:
+            page_handler = _page_not_found
+
         resp = page_handler()
 
     except MKNotFound:

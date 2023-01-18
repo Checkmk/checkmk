@@ -188,4 +188,7 @@ def get_page_handler(name: str, dflt: PageHandlerFunc | None = None) -> PageHand
 
         return wrapper
 
-    return dflt if (handle_class := page_registry.get(name)) is None else page_handler(handle_class)
+    if handle_class := page_registry.get(name):
+        return page_handler(handle_class)
+
+    return dflt

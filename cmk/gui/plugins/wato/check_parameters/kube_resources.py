@@ -16,26 +16,29 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, Float, Percentage, Tuple
 
 
-def valuespec_percentual(title: str) -> CascadingDropdown:
+def valuespec_percentual(title: str, maxvalue: None | float = 101.0) -> CascadingDropdown:
     return wrap_with_no_levels_dropdown(
         title=title,
         value_spec=Tuple(
             elements=[
-                Percentage(title=_("Warning at"), default_value=80.0),
-                Percentage(title=_("Critical at"), default_value=90.0),
+                Percentage(title=_("Warning at"), default_value=80.0, maxvalue=None),
+                Percentage(title=_("Critical at"), default_value=90.0, maxvalue=None),
             ]
         ),
     )
 
 
-def _parameter_valuespec_memory(  # type:ignore[no-untyped-def]
+def _parameter_valuespec_memory(
     valuespec_help: str,
-    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] | None = None,
-):
+    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] = (
+        "usage",
+        "request",
+        "limit",
+        "cluster",
+        "node",
+    ),
+) -> Dictionary:
     elements = []
-    if options is None:
-        options = ["usage", "request", "limit", "cluster", "node"]
-
     if "usage" in options:
         elements.append(
             (
@@ -45,9 +48,17 @@ def _parameter_valuespec_memory(  # type:ignore[no-untyped-def]
                 ),
             )
         )
+    if "request" in options:
+        elements.append(
+            (
+                "request",
+                valuespec_percentual(
+                    title=_("Upper levels for requests utilization"), maxvalue=None
+                ),
+            )
+        )
 
     for option, help_text in (
-        ("request", _("Upper levels for requests utilization")),
         ("limit", _("Upper levels for limits utilization")),
         ("cluster", _("Upper levels for cluster utilization")),
         ("node", _("Upper levels for node utilization")),
@@ -100,14 +111,17 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_cpu(  # type:ignore[no-untyped-def]
+def _parameter_valuespec_cpu(
     valuespec_help: str,
-    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] | None = None,
-):
+    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] = (
+        "usage",
+        "request",
+        "limit",
+        "cluster",
+        "node",
+    ),
+) -> Dictionary:
     elements = []
-    if options is None:
-        options = ["usage", "request", "limit", "cluster", "node"]
-
     if "usage" in options:
         elements.append(
             (
@@ -123,9 +137,17 @@ def _parameter_valuespec_cpu(  # type:ignore[no-untyped-def]
                 ),
             )
         )
+    if "request" in options:
+        elements.append(
+            (
+                "request",
+                valuespec_percentual(
+                    title=_("Upper levels for requests utilization"), maxvalue=None
+                ),
+            )
+        )
 
     for option, help_text in (
-        ("request", _("Upper levels for requests utilization")),
         ("limit", _("Upper levels for limits utilization")),
         ("cluster", _("Upper levels for cluster utilization")),
         ("node", _("Upper levels for node utilization")),

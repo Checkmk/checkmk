@@ -12,6 +12,10 @@ packer {
       version = ">= 1.3.1"
       source  = "github.com/hashicorp/azure"
     }
+    amazon = {
+      version = ">= 1.1.1"
+      source  = "github.com/hashicorp/amazon"
+    }
   }
 }
 
@@ -68,10 +72,10 @@ source "azure-arm" "builder" {
   image_offer                         = "0001-com-ubuntu-server-jammy"
   image_publisher                     = "Canonical"
   image_sku                           = "22_04-lts"
-  build_resource_group_name           = "rg-packer-dev-weu"
-  virtual_network_resource_group_name = "rg-spokes-network-weu"
-  virtual_network_name                = "vnet-spoke-packer-dev-weu"
-  virtual_network_subnet_name         = "snet-spoke-packer-dev-default-weu"
+  build_resource_group_name           = var.azure_build_resource_group_name
+  virtual_network_resource_group_name = var.azure_virtual_network_resource_group_name
+  virtual_network_name                = var.azure_virtual_network_name
+  virtual_network_subnet_name         = var.azure_virtual_network_subnet_name
   managed_image_name                  = "cmk"
   managed_image_resource_group_name   = "${var.azure_resource_group}"
   os_type                             = "Linux"
@@ -80,12 +84,23 @@ source "azure-arm" "builder" {
   vm_size                             = "Standard_DS2_v2"
 }
 
+source "amazon-ebs" "builder" {
+    region = "us-east-1"
+    access_key = var.aws_access_key
+    secret_key = var.aws_secret_key
+    source_ami = "ami-00874d747dde814fa"
+    instance_type = "t2.micro"
+    ssh_username = "ubuntu"
+    ami_name = "packer_cmk"
+}
+
 
 build {
   name = "checkmk-ansible"
   sources = [
     #"source.qemu.ubuntu-2204-amd64-qemu"
-    "source.azure-arm.builder"
+    #"source.azure-arm.builder"
+    "source.amazon-ebs.builder"
   ]
   # setup apt-get
   provisioner "shell" {

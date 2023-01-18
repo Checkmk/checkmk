@@ -18,18 +18,29 @@ variable "azure_tenant_id" {
 variable "azure_resource_group" {
   type = string
 }
-variable "build_resource_group_name" {
+variable "azure_build_resource_group_name" {
   type = string
 }
-variable "virtual_network_resource_group_name" {
+variable "azure_virtual_network_resource_group_name" {
   type = string
 }
-variable "virtual_network_name" {
+variable "azure_virtual_network_name" {
   type = string
 }
-variable "virtual_network_subnet_name" {
+variable "azure_virtual_network_subnet_name" {
   type = string
 }
+
+// AWS
+variable "aws_access_key" {
+  type      = string
+  sensitive = true
+}
+variable "aws_secret_key" {
+  type      = string
+  sensitive = true
+}
+
 
 // Ansible variables
 variable "cmk_version" {

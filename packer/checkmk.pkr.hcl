@@ -27,25 +27,25 @@ source "qemu" "ubuntu-2204-amd64-qemu" {
   boot_wait        = "3s"
   boot_command = [
     "<esc><esc><esc><esc>e<wait>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "<del><del><del><del><del><del><del><del>",
-        "linux /casper/vmlinuz --- autoinstall ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"<enter><wait>",
-        "initrd /casper/initrd<enter><wait>",
-        "boot<enter>",
-        "<enter><f10><wait>"
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "<del><del><del><del><del><del><del><del>",
+    "linux /casper/vmlinuz --- autoinstall ds=\"nocloud-net;seedfrom=http://{{.HTTPIP}}:{{.HTTPPort}}/\"<enter><wait>",
+    "initrd /casper/initrd<enter><wait>",
+    "boot<enter>",
+    "<enter><f10><wait>"
   ]
   http_directory   = "http-server"
   shutdown_command = "echo 'packer' | sudo -S shutdown -P now"
@@ -76,35 +76,44 @@ source "azure-arm" "builder" {
 build {
   name = "checkmk-ansible"
   sources = [
-    # "source.qemu.ubuntu-2204-amd64-qemu"
-    "source.azure-arm.builder"
+    "source.qemu.ubuntu-2204-amd64-qemu"
+    #"source.azure-arm.builder"
   ]
   # setup apt-get
   provisioner "shell" {
     inline = [
-       "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections",
-       "sudo apt-get update",
+      "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections",
+      "sudo apt-get update",
     ]
   }
   # install ansible
   provisioner "shell" {
     inline = [
-       "sudo apt-get install -y -q software-properties-common",
-       "sudo add-apt-repository --yes --update ppa:ansible/ansible",
-       "sudo apt-get update",
-       "sudo apt-get install -y -q ansible",
+      "sudo apt-get install -y -q software-properties-common",
+      "sudo add-apt-repository --yes --update ppa:ansible/ansible",
+      "sudo apt-get update",
+      "sudo apt-get install -y -q ansible",
     ]
   }
+
   # run playbook
   provisioner "ansible-local" {
-    playbook_file = "./playbook.yml"
-    galaxy_file = "./requirements.yml"
+    playbook_file           = "./playbook.yml"
+    galaxy_file             = "./requirements.yml"
     galaxy_collections_path = "/tmp/ansible/collections"
+    role_paths              = ["./roles/change-motd/"]
+    extra_arguments         = [
+            "--extra-vars",
+            "checkmk_server_version=${var.cmk_version}",
+            "--extra-vars",
+            "checkmk_server_download_user=${var.cmk_download_user}",
+            "--extra-vars",
+            "checkmk_server_download_pass=${var.cmk_download_pass}",]
   }
   # update user
   provisioner "shell" {
     inline = [
-       "sudo passwd --expire $(whoami)",
+      "sudo passwd --expire $(whoami)",
     ]
   }
 }

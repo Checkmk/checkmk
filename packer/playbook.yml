@@ -3,23 +3,18 @@
   hosts: 127.0.0.1
   connection: local
 
-  vars:
-    checkmk_server_sites:
-      - name: cmk
-        version: "{{ checkmk_server_version }}"
-        state: started
-        admin_pw: cmk
-
-
   roles:
-    - tribe29.checkmk.server
+    - role: tribe29.checkmk.server
+      vars:
+        state: absent
+        checkmk_server_edition: cee
+    - "change-motd"
 
   tasks:
-    - name: enforce password change
-      copy:
-        dest: "/omd/sites/{{ item.name }}/var/check_mk/web/cmkadmin/enforce_pw_change.mk"
-        content: 1
-        owner: cmk
-        group: cmk
-      become: true
-      loop: "{{ checkmk_server_sites }}"
+   - name: Disallow SSH password authentication
+     lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp="^PasswordAuthentication"
+        line="PasswordAuthentication no"
+        state=present
+     become: yes

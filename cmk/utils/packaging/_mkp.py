@@ -20,8 +20,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, Extra, Field
 
-from cmk.utils import version as cmk_version
-
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 
@@ -89,6 +87,7 @@ class Manifest(BaseModel):
 
 def manifest_template(
     name: PackageName,
+    version_packaged: str,
     *,
     version: PackageVersion | None = None,
     files: Mapping[PackagePart, Sequence[Path]] | None = None,
@@ -98,8 +97,8 @@ def manifest_template(
         name=name,
         description="Please add a description here",
         version=version or PackageVersion("1.0.0"),
-        version_packaged=cmk_version.__version__,
-        version_min_required=cmk_version.__version__,
+        version_packaged=version_packaged,
+        version_min_required=version_packaged,
         version_usable_until=None,
         author="Add your name here",
         download_url=f"https://example.com/{name}/",

@@ -19,6 +19,7 @@ from pytest_mock import MockerFixture
 import cmk.utils.packaging as packaging
 import cmk.utils.packaging._installed
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
 
 def _read_manifest(pacname: packaging.PackageName) -> packaging.Manifest:
@@ -100,6 +101,7 @@ def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.Man
     _create_test_file(pacname)
     manifest = packaging.manifest_template(
         name=pacname,
+        version_packaged=cmk_version.__version__,
         files={
             packaging.PackagePart.CHECKS: [Path(pacname)],
         },
@@ -132,6 +134,7 @@ def test_create_twice() -> None:
 def test_edit_not_existing() -> None:
     new_manifest = packaging.manifest_template(
         name=packaging.PackageName("aaa"),
+        version_packaged=cmk_version.__version__,
         version=packaging.PackageVersion("2.0.0"),
     )
 
@@ -142,6 +145,7 @@ def test_edit_not_existing() -> None:
 def test_edit() -> None:
     new_manifest = packaging.manifest_template(
         name=packaging.PackageName("aaa"),
+        version_packaged=cmk_version.__version__,
         version=packaging.PackageVersion("2.0.0"),
     )
 
@@ -154,7 +158,10 @@ def test_edit() -> None:
 
 
 def test_edit_rename() -> None:
-    new_manifest = packaging.manifest_template(packaging.PackageName("bbb"))
+    new_manifest = packaging.manifest_template(
+        packaging.PackageName("bbb"),
+        version_packaged=cmk_version.__version__,
+    )
 
     _create_simple_test_package(packaging.PackageName("aaa"))
 
@@ -167,7 +174,10 @@ def test_edit_rename() -> None:
 
 
 def test_edit_rename_conflict() -> None:
-    new_manifest = packaging.manifest_template(packaging.PackageName("bbb"))
+    new_manifest = packaging.manifest_template(
+        packaging.PackageName("bbb"),
+        version_packaged=cmk_version.__version__,
+    )
     _create_simple_test_package(packaging.PackageName("aaa"))
     _create_simple_test_package(packaging.PackageName("bbb"))
 
@@ -303,7 +313,10 @@ def test_get_stored_manifests(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
 
 
 def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_index: Mock) -> None:
-    package = packaging.manifest_template(packaging.PackageName("ding"))
+    package = packaging.manifest_template(
+        packaging.PackageName("ding"),
+        version_packaged=cmk_version.__version__,
+    )
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
     reload_apache.assert_not_called()
@@ -312,6 +325,7 @@ def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_in
 def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
     package = packaging.manifest_template(
         name=packaging.PackageName("ding"),
+        version_packaged=cmk_version.__version__,
         files={packaging.PackagePart.GUI: [Path("a")]},
     )
 
@@ -323,6 +337,7 @@ def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index:
 def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
     package = packaging.manifest_template(
         name=packaging.PackageName("ding"),
+        version_packaged=cmk_version.__version__,
         files={packaging.PackagePart.WEB: [Path("a")]},
     )
 
@@ -332,7 +347,10 @@ def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index:
 
 
 def _get_test_manifest(properties: Mapping) -> packaging.Manifest:
-    pi = packaging.manifest_template(packaging.PackageName("test-package"))
+    pi = packaging.manifest_template(
+        packaging.PackageName("test-package"),
+        version_packaged=cmk_version.__version__,
+    )
     for k, v in properties.items():
         setattr(pi, k, v)
     return pi
@@ -396,4 +414,4 @@ def test_get_local_files_by_part() -> None:
             cmk.utils.paths.local_root / "some" / "other" / "file.sh",
         },
     }
-    assert packaging.all_local_files() == expected
+    assert packaging.all_local_files(cmk.utils.paths.local_root) == expected

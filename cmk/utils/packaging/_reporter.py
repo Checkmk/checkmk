@@ -11,14 +11,12 @@ from pathlib import Path
 from stat import filemode
 from typing import TypedDict
 
-from cmk.utils.paths import local_root
-
 from ._installed import get_installed_manifests
 from ._mkp import PackagePart
 from ._parts import get_package_part, site_path, ui_title
 
 
-def all_local_files() -> Mapping[PackagePart | None, set[Path]]:
+def all_local_files(local_root: Path) -> Mapping[PackagePart | None, set[Path]]:
     """Return a map of categorized local files
 
     Remove duplicates caused by symlinks, but keep the symlinks.
@@ -70,7 +68,7 @@ class FileMetaInfo(TypedDict):
     mode: str
 
 
-def files_inventory() -> Sequence[FileMetaInfo]:
+def files_inventory(local_root: Path) -> Sequence[FileMetaInfo]:
     """return an overview of all relevant files found on disk"""
     package_map = {
         (part / file): manifest.id
@@ -83,7 +81,7 @@ def files_inventory() -> Sequence[FileMetaInfo]:
         (
             (part, file, package_map.get((part / file) if part else file))
             for part, files in chain(
-                all_local_files().items(),
+                all_local_files(local_root).items(),
                 ((PackagePart.EC_RULE_PACKS, all_rule_pack_files()),),
             )
             for file in files

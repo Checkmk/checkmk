@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Callable
 
 from cmk.utils import paths, tty
+from cmk.utils import version as cmk_version
 from cmk.utils.log import VERBOSE
 
 from . import (
@@ -76,7 +77,7 @@ def _args_find(
 def _command_find(args: argparse.Namespace, logger: logging.Logger) -> int:
     """Show information about local files"""
 
-    files = files_inventory()
+    files = files_inventory(paths.local_root)
 
     if not args.all:
         files = [f for f in files if not f["package"]]
@@ -339,6 +340,7 @@ def _command_template(args: argparse.Namespace, _logger: logging.Logger) -> int:
 
     package = manifest_template(
         name=args.name,
+        version_packaged=cmk_version.__version__,
         files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
     )
 

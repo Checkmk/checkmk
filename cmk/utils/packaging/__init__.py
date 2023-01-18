@@ -583,7 +583,7 @@ def _get_enabled_package_paths() -> list[Path]:
 
 def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
     packaged = get_packaged_files()
-    present = all_local_files()
+    present = all_local_files(cmk.utils.paths.local_root)
     return {
         **{
             part: sorted(present[part] - (packaged.get(part) or set()))

@@ -25,14 +25,7 @@ import cmk.utils.paths
 import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.structured_data import (
-    DeltaStructuredDataNode,
-    load_tree,
-    make_filter,
-    SDKey,
-    SDPath,
-    StructuredDataNode,
-)
+from cmk.utils.structured_data import load_tree, make_filter, SDKey, SDPath, StructuredDataNode
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
@@ -219,7 +212,7 @@ class HistoryEntry(NamedTuple):
     new: int
     changed: int
     removed: int
-    delta_tree: DeltaStructuredDataNode
+    delta_tree: StructuredDataNode
 
 
 class FilteredInventoryHistoryPaths(NamedTuple):
@@ -231,7 +224,7 @@ class FilterInventoryHistoryPathsError(Exception):
     pass
 
 
-def load_latest_delta_tree(hostname: HostName) -> DeltaStructuredDataNode | None:
+def load_latest_delta_tree(hostname: HostName) -> StructuredDataNode | None:
     def _get_latest_timestamps(
         tree_paths: Sequence[InventoryHistoryPath],
     ) -> FilteredInventoryHistoryPaths:
@@ -256,7 +249,7 @@ def load_latest_delta_tree(hostname: HostName) -> DeltaStructuredDataNode | None
 def load_delta_tree(
     hostname: HostName,
     timestamp: int,
-) -> tuple[DeltaStructuredDataNode | None, Sequence[str]]:
+) -> tuple[StructuredDataNode | None, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
@@ -443,25 +436,22 @@ class _CachedDeltaTreeLoader:
         if cached_data is None:
             return None
 
-        new, changed, removed, raw_delta_tree = cached_data
-        return HistoryEntry(
-            self.current_timestamp,
-            new,
-            changed,
-            removed,
-            DeltaStructuredDataNode.deserialize(raw_delta_tree),
-        )
+        new, changed, removed, delta_tree_data = cached_data
+        delta_tree = StructuredDataNode.deserialize(delta_tree_data)
+        return HistoryEntry(self.current_timestamp, new, changed, removed, delta_tree)
 
     def get_calculated_or_store_entry(
         self,
         previous_tree: StructuredDataNode,
         current_tree: StructuredDataNode,
     ) -> HistoryEntry | None:
-        delta_tree = current_tree.compare_with(previous_tree)
-        delta_result = delta_tree.count_entries()
-        new = delta_result["new"]
-        changed = delta_result["changed"]
-        removed = delta_result["removed"]
+        delta_result = current_tree.compare_with(previous_tree)
+        new, changed, removed, delta_tree = (
+            delta_result.counter["new"],
+            delta_result.counter["changed"],
+            delta_result.counter["removed"],
+            delta_result.delta,
+        )
         if new or changed or removed:
             store.save_text_to_file(
                 self._path,

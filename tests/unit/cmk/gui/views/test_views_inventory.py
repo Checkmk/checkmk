@@ -8,14 +8,7 @@ from collections.abc import Sequence
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import (
-    DeltaStructuredDataNode,
-    SDKey,
-    SDPairs,
-    SDPath,
-    SDRow,
-    SDValue,
-)
+from cmk.utils.structured_data import SDKey, SDPairs, SDPath, SDRow, SDValue, StructuredDataNode
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -62,9 +55,9 @@ EXPECTED_INV_KEYS = [
 ]
 
 INV_HIST_ROWS = [
-    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, DeltaStructuredDataNode.deserialize({})),
-    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, DeltaStructuredDataNode.deserialize({})),
-    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, DeltaStructuredDataNode.deserialize({})),
+    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, StructuredDataNode()),
+    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, StructuredDataNode()),
+    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, StructuredDataNode()),
 ]
 
 EXPECTED_INV_HIST_KEYS = [

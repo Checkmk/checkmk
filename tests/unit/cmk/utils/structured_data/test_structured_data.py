@@ -15,7 +15,6 @@ from tests.testlib import cmk_path
 
 from cmk.utils.structured_data import (
     Attributes,
-    DeltaStructuredDataNode,
     make_filter,
     parse_visible_raw_path,
     RetentionIntervals,
@@ -271,20 +270,18 @@ def test_add_node() -> None:
 
 def test_compare_with_self() -> None:
     empty_root = _create_empty_tree()
-    delta_tree0 = empty_root.compare_with(empty_root)
-    delta_result0 = delta_tree0.count_entries()
-    assert delta_result0["new"] == 0
-    assert delta_result0["changed"] == 0
-    assert delta_result0["removed"] == 0
-    assert delta_tree0.is_empty()
+    delta_result0 = empty_root.compare_with(empty_root)
+    assert delta_result0.counter["new"] == 0
+    assert delta_result0.counter["changed"] == 0
+    assert delta_result0.counter["removed"] == 0
+    assert delta_result0.delta.is_empty()
 
     filled_root = _create_filled_tree()
-    delta_tree1 = filled_root.compare_with(filled_root)
-    delta_result1 = delta_tree1.count_entries()
-    assert delta_result1["new"] == 0
-    assert delta_result1["changed"] == 0
-    assert delta_result1["removed"] == 0
-    assert delta_tree1.is_empty()
+    delta_result1 = filled_root.compare_with(filled_root)
+    assert delta_result1.counter["new"] == 0
+    assert delta_result1.counter["changed"] == 0
+    assert delta_result1.counter["removed"] == 0
+    assert delta_result1.delta.is_empty()
 
 
 def test_compare_with() -> None:
@@ -292,17 +289,15 @@ def test_compare_with() -> None:
     empty_root = _create_empty_tree()
     filled_root = _create_filled_tree()
 
-    delta_tree0 = empty_root.compare_with(filled_root)
-    delta_result0 = delta_tree0.count_entries()
-    assert delta_result0["new"] == 0
-    assert delta_result0["changed"] == 0
-    assert delta_result0["removed"] == 12
+    delta_result0 = empty_root.compare_with(filled_root)
+    assert delta_result0.counter["new"] == 0
+    assert delta_result0.counter["changed"] == 0
+    assert delta_result0.counter["removed"] == 12
 
-    delta_tree1 = filled_root.compare_with(empty_root)
-    delta_result1 = delta_tree1.count_entries()
-    assert delta_result1["new"] == 12
-    assert delta_result1["changed"] == 0
-    assert delta_result1["removed"] == 0
+    delta_result1 = filled_root.compare_with(empty_root)
+    assert delta_result1.counter["new"] == 12
+    assert delta_result1.counter["changed"] == 0
+    assert delta_result1.counter["removed"] == 0
 
 
 @pytest.mark.parametrize(
@@ -353,11 +348,11 @@ def test_attributes_compare_with(
     new_attributes = Attributes()
     new_attributes.add_pairs(new_attributes_data)
 
-    delta_result = new_attributes.compare_with(old_attributes).count_entries()
+    delta_result = new_attributes.compare_with(old_attributes)
     assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
     ) == result
 
 
@@ -419,11 +414,11 @@ def test_table_compare_with(
     old_table.add_rows(old_table_data)
     new_table = Table(key_columns=["id"])
     new_table.add_rows(new_table_data)
-    delta_result = new_table.compare_with(old_table).count_entries()
+    delta_result = new_table.compare_with(old_table)
     assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
     ) == result
 
 
@@ -725,11 +720,11 @@ def test_real_count_entries(tree_name: HostName, result: int) -> None:
 )
 def test_real_compare_with_self(tree_name: HostName) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
-    delta_result = tree.compare_with(tree).count_entries()
+    delta_result = tree.compare_with(tree)
     assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
     ) == (0, 0, 0)
 
 
@@ -774,11 +769,11 @@ def test_real_compare_with(
     tree_store = _get_tree_store()
     tree_old = tree_store.load(host_name=tree_name_old)
     tree_new = tree_store.load(host_name=tree_name_new)
-    delta_result = tree_new.compare_with(tree_old).count_entries()
+    delta_result = tree_new.compare_with(tree_old)
     assert (
-        delta_result["new"],
-        delta_result["changed"],
-        delta_result["removed"],
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
     ) == result
 
 
@@ -1061,12 +1056,13 @@ def test_delta_structured_data_tree_serialization(
 
     old_tree = tree_store.load(host_name=tree_name_old)
     new_tree = tree_store.load(host_name=tree_name_new)
-    delta_tree = old_tree.compare_with(new_tree)
+    delta_result = old_tree.compare_with(new_tree)
 
-    delta_raw_tree = delta_tree.serialize()
+    delta_raw_tree = delta_result.delta.serialize()
     assert isinstance(delta_raw_tree, dict)
+    new_delta_tree = StructuredDataNode.deserialize(delta_raw_tree)
 
-    DeltaStructuredDataNode.deserialize(delta_raw_tree)
+    assert delta_result.delta.is_equal(new_delta_tree)
 
 
 # Test filters

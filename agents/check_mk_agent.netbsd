@@ -65,8 +65,7 @@ df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-COLUMNS=10000
-ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+ps ax -ww -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
 echo '<<<cpu>>>'
 echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n hw.ncpu`

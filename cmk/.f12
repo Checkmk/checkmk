@@ -112,6 +112,13 @@ sudo rm -f \
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py
 
+# Make the target a CME version in case the version is already a CME version
+# (The dev is working on CME files)
+if [ "$ORIG_EDITION" = "cme" ]; then
+    echo "Make the target version a CME version..."
+    sudo sed -i "/^def edition() -> Edition:/{n;n;s/.*/        return Edition.CME/}" "$ROOT/lib/python3/cmk/utils/version.py"
+fi
+
 if [ -z "$ONLY_COPY" ]; then
     (
         cd "$ROOT"/lib/python3/cmk

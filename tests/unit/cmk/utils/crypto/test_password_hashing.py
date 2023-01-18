@@ -38,15 +38,9 @@ def test_bcrypt_too_long(password: str) -> None:
 @pytest.mark.parametrize(
     "valid_hash",
     [
-        "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/",  # sha256_crypt
-        "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa",  # bcrypt
-        "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa",  # also bcrypt but apache ident...
-        # the deprecated 2y label is used by `htpasswd -B`
-        "$2y$04$gJMIcys.lfgVjCJHje1nkOs4e7klgmoxWWEbaJK6p.jtww7BxDX1K",  # bcrypt
-        # legacy hashes we currently allow
-        "$1$49rn5.0y$XoUJMucpN.aQUEOquaj5C/",  # md5_crypt
-        "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/",  # apr_md5_crypt
-        "WsbFVbJdvDcpY",  # des_crypt
+        "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa",
+        # the deprecated 2y bcrypt label is used by `htpasswd -B`
+        "$2y$04$gJMIcys.lfgVjCJHje1nkOs4e7klgmoxWWEbaJK6p.jtww7BxDX1K",
     ],
 )
 def test_verify(valid_hash: str) -> None:
@@ -73,6 +67,18 @@ def test_verify_invalid_password_failure(password: str, password_hash: str) -> N
         ("garbage_hash", "0123abcd"),
         ("empty_hash", ""),
         ("bad_algo", "$pbkdf2-sha256$5$n7O2NmaMMeZ87w$1q0e9XwOYpkcY2E1rYGpP1MChmGdKdQDFzuZIzGOML0"),
+        # no longer supported hashes
+        (
+            "foo",
+            "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/",
+        ),  # sha256_crypt
+        (
+            "foo",
+            "$5$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9",
+        ),  # sha256_crypt without rounds (defaults to 5000)
+        ("foo", "$1$49rn5.0y$XoUJMucpN.aQUEOquaj5C/"),  # md5_crypt
+        ("foo", "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),  # apr_md5_crypt
+        ("foo", "WsbFVbJdvDcpY"),  # des_crypt
     ],
 )
 def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
@@ -98,32 +104,11 @@ def test_verify_null_bytes(password: str, password_hash: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "pw_hash",
-    [
-        "$5$rounds=5000$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9",
-        "$5$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9",
-    ],
-)
-def test_verify_sha256_omit_rounds(pw_hash: str) -> None:
-    """
-    The rounds parameter in the hash specification for sha256-crypt may be or may not be omitted to
-    indicate 5000 rounds.
-    https://passlib.readthedocs.io/en/stable/lib/passlib.hash.sha256_crypt.html#passlib.hash.sha256_crypt
-    """
-    ph.verify(Password("foobar"), PasswordHash(pw_hash))
-
-
-@pytest.mark.parametrize(
     "password,pw_hash",
     [
         ("foobar", "$2b$03$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
         ("foobar", "$2b$32$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
         ("foobar", "$2y$32$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
-        ("foobar", "$5$rounds=999$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9"),
-        (
-            "foobar",
-            "$5$rounds=1000000000$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9",
-        ),
     ],
 )
 def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
@@ -132,32 +117,17 @@ def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "expects_update,pw_hash",
-    [
-        (True, "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
-        (False, "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
-        (False, "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
-        (False, "$2y$04$gJMIcys.lfgVjCJHje1nkOs4e7klgmoxWWEbaJK6p.jtww7BxDX1K"),
-        (False, "$1$49rn5.0y$XoUJMucpN.aQUEOquaj5C/"),
-        (False, "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
-        (False, "WsbFVbJdvDcpY"),
-    ],
-)
-def test_verify_and_update(expects_update: bool, pw_hash: str) -> None:
-    assert expects_update == ph.needs_update(PasswordHash(pw_hash))
-
-
-@pytest.mark.parametrize(
-    "is_insecure,pw_hash",
+    "unsupported,pw_hash",
     [
         (True, "$1$49rn5.0y$XoUJMucpN.aQUEOquaj5C/"),
         (True, "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
         (True, "WsbFVbJdvDcpY"),
+        (True, "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
         (False, "foobar"),  # ignore unrecognized algorithms
         (False, ""),
-        (False, "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
         (False, "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
+        (False, "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
     ],
 )
-def test_is_insecure_hash(is_insecure: bool, pw_hash: str) -> None:
-    assert ph.is_insecure_hash(PasswordHash(pw_hash)) == is_insecure
+def test_is_unsupported_legacy_hash(unsupported: bool, pw_hash: str) -> None:
+    assert ph.is_unsupported_legacy_hash(PasswordHash(pw_hash)) == unsupported

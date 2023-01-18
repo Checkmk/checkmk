@@ -9,4 +9,5 @@ from tests.unit.cmk.gui.conftest import (  # NOQA
     flask_app,
     gui_cleanup_after_test,
     request_context,
+    with_user,
 )

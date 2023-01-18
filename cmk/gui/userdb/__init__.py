@@ -238,7 +238,7 @@ def need_to_change_pw(username: UserId, now: datetime) -> str | None:
     # Ignore the enforce_pw_change flag for automation users, they cannot change their passwords
     # themselves. (Password age is checked for them below though.)
     if (
-        not _is_automation_user(user)
+        not is_automation_user(user)
         and load_custom_attr(user_id=username, key="enforce_pw_change", parser=utils.saveint) == 1
     ):
         return "enforced"
@@ -318,8 +318,8 @@ def _is_local_user(user: UserSpec) -> bool:
     return user.get("connector", "htpasswd") == "htpasswd"
 
 
-def _is_automation_user(user: UserSpec) -> bool:
-    return user.get("automation_secret", None) is not None
+def is_automation_user(user: UserSpec) -> bool:
+    return "automation_secret" in user
 
 
 def user_locked(user_id: UserId) -> bool:

@@ -8,7 +8,6 @@ from datetime import datetime
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.unit.cmk.gui.conftest import with_user  # pylint: disable=unused-import
 from tests.unit.cmk.gui.test_userdb import _load_users_uncached
 
 from cmk.utils.type_defs import UserId
@@ -173,7 +172,7 @@ def test_update_user_attributes(
     expected: UserSpec,
     plugin: UpdateUserAttributes,
     mocker: MockerFixture,
-    with_user: tuple[UserId, str],  # pylint: disable=redefined-outer-name
+    with_user: tuple[UserId, str],
 ) -> None:
     now = datetime.now()
     user_id = with_user[0]

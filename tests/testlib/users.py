@@ -31,7 +31,7 @@ def _mk_user_obj(
     # This dramatically improves the performance of the unit tests using this in fixtures
     precomputed_hashes = {
         "Ischbinwischtisch": PasswordHash(
-            "$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9"
+            "$2y$04$E1x6MDiuSlPxeYOfNNkyE.kDQb7SXN5/kqY23eoLyPtZ8eVYzhjsi"
         ),
     }
 

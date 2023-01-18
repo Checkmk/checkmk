@@ -9,6 +9,8 @@ description:
  You can configure levels for SNAT ports usage using the rule
  "SNAT Usage".
 
+ In order to use this check, you need to configure the Azure special agent.
+
 item:
  The name of the resource.
 

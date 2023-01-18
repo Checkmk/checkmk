@@ -477,6 +477,22 @@ class MgmtApiClient(BaseApiClient):
         temp = "resourceGroups/%s/providers/Microsoft.Compute/virtualMachines/%s/instanceView"
         return self._get(temp % (group, name), params={"api-version": "2018-06-01"})
 
+    def load_balancer_view(self, group, name):
+        url = "resourceGroups/{}/providers/Microsoft.Network/loadBalancers/{}"
+        return self._get(url.format(group, name), params={"api-version": "2022-01-01"})
+
+    def nic_ip_conf_view(self, group, nic_name, ip_conf_name):
+        url = (
+            "resourceGroups/{}/providers/Microsoft.Network/networkInterfaces/{}/ipConfigurations/{}"
+        )
+        return self._get(
+            url.format(group, nic_name, ip_conf_name), params={"api-version": "2022-01-01"}
+        )
+
+    def public_ip_view(self, group, name):
+        url = "resourceGroups/{}/providers/Microsoft.Network/publicIPAddresses/{}"
+        return self._get(url.format(group, name), params={"api-version": "2022-01-01"})
+
     def vnet_gateway_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/virtualNetworkGateways/{}"
         return self._get(url.format(group, name), params={"api-version": "2022-01-01"})
@@ -837,6 +853,120 @@ def get_params_from_azure_id(
     return [values[values.index(keyword) + 1] for keyword in index_keywords]
 
 
+def get_frontend_ip_configs(
+    mgmt_client: MgmtApiClient, resource: Mapping
+) -> dict[str, dict[str, object]]:
+    frontend_ip_configs: dict[str, dict[str, object]] = {}
+
+    for ip_config in resource["properties"]["frontendIPConfigurations"]:
+        ip_config_data = {
+            **filter_keys(ip_config, ("id", "name")),
+            **filter_keys(
+                ip_config["properties"], ("privateIPAllocationMethod", "privateIPAddress")
+            ),
+        }
+        if "publicIPAddress" in ip_config.get("properties"):
+            public_ip_id = ip_config["properties"]["publicIPAddress"]["id"]
+
+            _, group, ip_name = get_params_from_azure_id(
+                public_ip_id, resource_types=["publicIPAddresses"]
+            )
+            public_ip: Mapping = mgmt_client.public_ip_view(group, ip_name)
+            dns_settings = public_ip["properties"].get("dnsSettings")
+
+            public_ip_keys = ("ipAddress", "publicIPAllocationMethod")
+            ip_config_data["public_ip_address"] = {
+                "dns_fqdn": dns_settings["fqdn"] if dns_settings else "",
+                **filter_keys(public_ip, ("name", "location")),
+                **filter_keys(public_ip["properties"], public_ip_keys),
+            }
+
+        frontend_ip_configs[ip_config_data["id"]] = ip_config_data
+
+    return frontend_ip_configs
+
+
+def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Mapping[str, Mapping]:
+    _, group, nic_name, ip_conf_name = get_params_from_azure_id(
+        nic_id, resource_types=["networkInterfaces", "ipConfigurations"]
+    )
+    return mgmt_client.nic_ip_conf_view(group, nic_name, ip_conf_name)
+
+
+def get_inbound_nat_rules(
+    mgmt_client: MgmtApiClient, load_balancer: Mapping
+) -> list[dict[str, object]]:
+    nat_rule_keys = ("frontendPort", "backendPort", "frontendIPConfiguration")
+    nic_config_keys = ("privateIPAddress", "privateIPAllocationMethod")
+
+    inbound_nat_rules: list[dict[str, object]] = []
+    for inbound_nat_rule in load_balancer["properties"]["inboundNatRules"]:
+        nat_rule_data = {
+            "name": inbound_nat_rule["name"],
+            **filter_keys(inbound_nat_rule["properties"], nat_rule_keys),
+        }
+
+        if "backendIPConfiguration" in inbound_nat_rule.get("properties"):
+            ip_config_id = inbound_nat_rule["properties"]["backendIPConfiguration"]["id"]
+            nic_config = get_network_interface_config(mgmt_client, ip_config_id)
+
+            nat_rule_data["backend_ip_config"] = {
+                "name": nic_config["name"],
+                **filter_keys(nic_config["properties"], nic_config_keys),
+            }
+
+        inbound_nat_rules.append(nat_rule_data)
+
+    return inbound_nat_rules
+
+
+def get_backend_address_pools(
+    mgmt_client: MgmtApiClient, load_balancer: Mapping
+) -> list[dict[str, object]]:
+    backend_address_keys = ("privateIPAddress", "privateIPAllocationMethod", "primary")
+    backend_pools: list[dict[str, object]] = []
+
+    for backend_pool in load_balancer["properties"]["backendAddressPools"]:
+        backend_addresses = []
+        for backend_address in backend_pool["properties"]["loadBalancerBackendAddresses"]:
+            if "networkInterfaceIPConfiguration" in backend_address.get("properties"):
+                ip_config_id = backend_address["properties"]["networkInterfaceIPConfiguration"][
+                    "id"
+                ]
+                nic_config = get_network_interface_config(mgmt_client, ip_config_id)
+
+                backend_address_data = {
+                    "name": nic_config["name"],
+                    **filter_keys(nic_config["properties"], backend_address_keys),
+                }
+                backend_addresses.append(backend_address_data)
+
+        backend_pools.append(
+            {"id": backend_pool["id"], "name": backend_pool["name"], "addresses": backend_addresses}
+        )
+
+    return backend_pools
+
+
+def process_load_balancer(mgmt_client: MgmtApiClient, resource: AzureResource) -> None:
+    load_balancer = mgmt_client.load_balancer_view(resource.info["group"], resource.info["name"])
+    frontend_ip_configs = get_frontend_ip_configs(mgmt_client, load_balancer)
+    inbound_nat_rules = get_inbound_nat_rules(mgmt_client, load_balancer)
+    backend_pools = get_backend_address_pools(mgmt_client, load_balancer)
+
+    resource.info["properties"] = {}
+    resource.info["properties"]["frontend_ip_configs"] = frontend_ip_configs
+    resource.info["properties"]["inbound_nat_rules"] = inbound_nat_rules
+    resource.info["properties"]["backend_pools"] = {p["id"]: p for p in backend_pools}
+
+    outbound_rule_keys = ("protocol", "idleTimeoutInMinutes", "backendAddressPool")
+    outbound_rules = [
+        {"name": r["name"], **filter_keys(r["properties"], outbound_rule_keys)}
+        for r in load_balancer["properties"]["outboundRules"]
+    ]
+    resource.info["properties"]["outbound_rules"] = outbound_rules
+
+
 def get_remote_peerings(
     mgmt_client: MgmtApiClient, resource: dict
 ) -> Sequence[Mapping[str, object]]:
@@ -1124,6 +1254,8 @@ def process_resource(
         process_recovery_services_vaults(mgmt_client, resource)
     elif resource_type == "Microsoft.Network/virtualNetworkGateways":
         process_virtual_net_gw(mgmt_client, resource)
+    elif resource_type == "Microsoft.Network/loadBalancers":
+        process_load_balancer(mgmt_client, resource)
 
     err = gather_metrics(mgmt_client, resource, debug=args.debug)
 

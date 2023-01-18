@@ -7,6 +7,8 @@ import json
 from datetime import datetime
 from typing import Any, Callable, Iterable, Mapping, NamedTuple, Sequence
 
+from pydantic import BaseModel
+
 from ..agent_based_api.v1 import check_levels, IgnoreResultsError, render, Service
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
@@ -42,6 +44,22 @@ class MetricData(NamedTuple):
     upper_levels_param: str = ""
     lower_levels_param: str = ""
     boundaries: tuple[float | None, float | None] | None = None
+
+
+class PublicIP(BaseModel):
+    name: str
+    location: str
+    ipAddress: str
+    publicIPAllocationMethod: str
+    dns_fqdn: str
+
+
+class FrontendIpConfiguration(BaseModel):
+    id: str
+    name: str
+    privateIPAllocationMethod: str
+    privateIPAddress: str | None
+    public_ip_address: PublicIP | None
 
 
 Section = Mapping[str, Resource]

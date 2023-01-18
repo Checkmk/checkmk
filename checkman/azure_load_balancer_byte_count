@@ -7,6 +7,8 @@ description:
  This check reports the bytes transmitted per second.
  You can configure levels using the rule "Byte Count".
 
+ In order to use this check, you need to configure the Azure special agent.
+
 item:
  The name of the resource.
 

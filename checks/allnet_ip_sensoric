@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping, Optional
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -60,6 +62,9 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # system.sys;114854
 # system.time;16:08:48
 
+# no idea why we need this.
+_FIXUP_ENCODING = (("°".encode("utf-8").decode("latin-1"), "°"),)
+
 
 def parse_allnet_ip_sensoric(info):
     """parses agent output in a structure like:
@@ -85,11 +90,14 @@ def parse_allnet_ip_sensoric(info):
     parsed = {}
     for key, value in info:
         match = re.search(r"(\w+)\.(\w+)", key)
-        if match:
-            sensor = match.group(1)
-            field = match.group(2)
-            parsed.setdefault(sensor, {})
-            parsed[sensor][field] = value
+        if not match:
+            continue
+
+        for wrong, right in _FIXUP_ENCODING:
+            value = value.replace(wrong, right)
+        sensor = match.group(1)
+        field = match.group(2)
+        parsed.setdefault(sensor, {})[field] = value
 
     return parsed
 
@@ -103,6 +111,14 @@ def allnet_ip_sensoric_compose_item(sensor_id, sensor):
     return item
 
 
+def _match_function_or_unit(
+    sensor_data: Mapping[str, str], function: str, unit: Optional[str] = None
+) -> bool:
+    return sensor_data.get("function") == function or (
+        unit is not None and sensor_data.get("unit") == unit
+    )
+
+
 #   .--el. tension---------------------------------------------------------.
 #   |                  _     _                 _                           |
 #   |              ___| |   | |_ ___ _ __  ___(_) ___  _ __                |
@@ -114,12 +130,11 @@ def allnet_ip_sensoric_compose_item(sensor_id, sensor):
 
 
 def inventory_allnet_ip_sensoric_tension(parsed):
-    inventory = []
-    for sensor, sensor_data in parsed.items():
-        if "function" in sensor_data and sensor_data["function"] == "12":
-            item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
-            inventory.append((item, None))
-    return inventory
+    return [
+        (allnet_ip_sensoric_compose_item(sensor, sensor_data), None)
+        for sensor, sensor_data in parsed.items()
+        if _match_function_or_unit(sensor_data, "12")
+    ]
 
 
 def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
@@ -160,12 +175,11 @@ factory_settings["allnet_ip_sensoric_temp_default_levels"] = {"levels": (35, 40)
 
 
 def inventory_allnet_ip_sensoric_temp(parsed):
-    for sensor, sensor_data in parsed.items():
-        if (sensor_data.get("function") and sensor_data["function"] == "1") or (
-            sensor_data.get("unit") and sensor_data["unit"] == "°C"
-        ):
-            item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
-            yield item, {}
+    return [
+        (allnet_ip_sensoric_compose_item(sensor, sensor_data), {})
+        for sensor, sensor_data in parsed.items()
+        if _match_function_or_unit(sensor_data, "1", "°C")
+    ]
 
 
 def check_allnet_ip_sensoric_temp(item, params, parsed):
@@ -202,14 +216,14 @@ allnet_ip_sensoric_humidity_default_levels = (35, 40, 60, 65)
 
 
 def inventory_allnet_ip_sensoric_humidity(parsed):
-    inventory = []
-    for sensor, sensor_data in parsed.items():
-        if ("function" in sensor_data and sensor_data["function"] == "2") or sensor_data.get(
-            "unit"
-        ) == "%":
-            item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
-            inventory.append((item, "allnet_ip_sensoric_humidity_default_levels"))
-    return inventory
+    return [
+        (
+            allnet_ip_sensoric_compose_item(sensor, sensor_data),
+            "allnet_ip_sensoric_humidity_default_levels",
+        )
+        for sensor, sensor_data in parsed.items()
+        if _match_function_or_unit(sensor_data, "2", "%")
+    ]
 
 
 def check_allnet_ip_sensoric_humidity(item, params, parsed):
@@ -240,12 +254,11 @@ check_info["allnet_ip_sensoric.humidity"] = {
 
 
 def inventory_allnet_ip_sensoric_pressure(parsed):
-    inventory = []
-    for sensor, sensor_data in parsed.items():
-        if "function" in sensor_data and sensor_data["function"] == "16":
-            item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
-            inventory.append((item, None))
-    return inventory
+    return [
+        (allnet_ip_sensoric_compose_item(sensor, sensor_data), None)
+        for sensor, sensor_data in parsed.items()
+        if _match_function_or_unit(sensor_data, "16", "hpa")
+    ]
 
 
 def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
@@ -258,7 +271,7 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
 
     perfdata = [("pressure", str(pressure) + "bars", None, None, 0)]
 
-    return 0, "%s is %0.5f bars" % (item, pressure), perfdata
+    return 0, "%0.5f bar" % pressure, perfdata
 
 
 check_info["allnet_ip_sensoric.pressure"] = {

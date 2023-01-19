@@ -189,3 +189,46 @@ def create_tar(
             *(str(f) for f in filenames),
         ]
     )
+
+
+def extract_tgz(
+    mkp: bytes, content: Iterable[tuple[str, Path, Iterable[Path]]], logger: logging.Logger
+) -> None:
+    with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
+        for tarname, dst, filenames in content:
+            _extract_tar(tar, tarname, dst, filenames, logger)
+
+
+def _extract_tar(
+    tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable[Path], logger: logging.Logger
+) -> None:
+
+    logger.debug("  Extracting '%s':", name)
+    for fn in filenames:
+        logger.debug("    %s", fn)
+
+    if not dst.exists():
+        # make sure target directory exists
+        logger.debug("    Creating directory %s", dst)
+        dst.mkdir(parents=True, exist_ok=True)
+
+    tarsource = tar.extractfile(name)
+    if tarsource is None:
+        raise PackageException("Failed to open %s" % name)
+
+    # Important: Do not preserve the tared timestamp.
+    # Checkmk needs to know when the files have been installed for cache invalidation.
+    with subprocess.Popen(
+        ["tar", "xf", "-", "--touch", "-C", str(dst), *(str(f) for f in filenames)],
+        stdin=subprocess.PIPE,
+        shell=False,
+        close_fds=True,
+    ) as tardest:
+        if tardest.stdin is None:
+            raise PackageException("Failed to open stdin")
+
+        while True:
+            data = tarsource.read(4096)
+            if not data:
+                break
+            tardest.stdin.write(data)

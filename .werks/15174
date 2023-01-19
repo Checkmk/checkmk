@@ -1,0 +1,16 @@
+Title: Process (<tt>ps</tt>) monitoring: Handle processes with empty command lines
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674053950
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p33
+
+The service discovery for processes crashed if the agent output contained processes which have an
+emtpy command line and exact process name matching was selected in the process discovery ruleset.
+
+Processes with empty command lines can occur eg. on Linux systems (<tt>ps</tt> command) due
+mandatory access control or in containerized environments.

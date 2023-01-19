@@ -18,3 +18,7 @@
         line="PasswordAuthentication no"
         state=present
      become: yes
+   - name: updates all packages
+     ansible.builtin.apt:
+       upgrade: dist
+     become: true

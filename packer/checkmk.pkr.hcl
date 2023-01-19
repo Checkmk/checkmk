@@ -85,13 +85,13 @@ source "azure-arm" "builder" {
 }
 
 source "amazon-ebs" "builder" {
-    region = "us-east-1"
-    access_key = var.aws_access_key
-    secret_key = var.aws_secret_key
-    source_ami = "ami-00874d747dde814fa"
-    instance_type = "t2.micro"
-    ssh_username = "ubuntu"
-    ami_name = "packer_cmk"
+  region        = "us-east-1"
+  access_key    = var.aws_access_key
+  secret_key    = var.aws_secret_key
+  source_ami    = "ami-00874d747dde814fa"
+  instance_type = "t2.micro"
+  ssh_username  = "ubuntu"
+  ami_name      = "packer_cmk_2"
 }
 
 
@@ -137,6 +137,13 @@ build {
   provisioner "shell" {
     inline = [
       "sudo passwd --expire $(whoami)",
+    ]
+  }
+  # uninstall ansible
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get remove -y -q software-properties-common",
+      "sudo apt-get remove -y -q ansible",
     ]
   }
 }

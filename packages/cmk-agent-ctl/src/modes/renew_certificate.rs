@@ -18,9 +18,17 @@ pub fn renew_certificate(
     let renew_certificate_api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
-    let (connection, site_id) = find_site_for_ident(&mut registry, ident)?;
+    _renew_certificate(&mut registry, ident, &renew_certificate_api)
+}
 
-    renew_connection_cert(&site_id, connection, &renew_certificate_api)?;
+fn _renew_certificate(
+    registry: &mut config::Registry,
+    ident: &str,
+    renew_certificate_api: &impl agent_receiver_api::RenewCertificate,
+) -> AnyhowResult<()> {
+    let (connection, site_id) = find_site_for_ident(registry, ident)?;
+
+    renew_connection_cert(&site_id, connection, renew_certificate_api)?;
 
     registry.save()?;
     Ok(())
@@ -128,4 +136,187 @@ fn conditionally_renew_connection_cert(
     }
 
     renew_connection_cert(site_id, connection, renew_certificate_api)
+}
+#[cfg(test)]
+mod test_renew_certificate {
+
+    use crate::config::test_helpers::registry;
+    use crate::modes::renew_certificate::*;
+    use openssl;
+    use openssl::asn1::Asn1Time;
+    use openssl::bn::{BigNum, MsbOption};
+    use openssl::hash::MessageDigest;
+    use openssl::pkey::PKey;
+    use openssl::rsa::Rsa;
+    use openssl::x509::extension::{BasicConstraints, KeyUsage, SubjectKeyIdentifier};
+    use openssl::x509::{X509NameBuilder, X509};
+    use std::convert::From;
+
+    // Taken from openssl::examples with minor adaptions
+    fn mk_ca_cert(days_valid: u32) -> AnyhowResult<String> {
+        let rsa = Rsa::generate(2048)?;
+        let key_pair = PKey::from_rsa(rsa)?;
+
+        let mut x509_name = X509NameBuilder::new()?;
+        x509_name.append_entry_by_text("CN", "test")?;
+        let x509_name = x509_name.build();
+
+        let mut cert_builder = X509::builder()?;
+        cert_builder.set_version(2)?;
+        let serial_number = {
+            let mut serial = BigNum::new()?;
+            serial.rand(159, MsbOption::MAYBE_ZERO, false)?;
+            serial.to_asn1_integer()?
+        };
+        cert_builder.set_serial_number(&serial_number)?;
+        cert_builder.set_subject_name(&x509_name)?;
+        cert_builder.set_issuer_name(&x509_name)?;
+        cert_builder.set_pubkey(&key_pair)?;
+        let not_before = Asn1Time::days_from_now(0)?;
+        cert_builder.set_not_before(&not_before)?;
+        let not_after = Asn1Time::days_from_now(days_valid)?;
+        cert_builder.set_not_after(&not_after)?;
+
+        cert_builder.append_extension(BasicConstraints::new().critical().ca().build()?)?;
+        cert_builder.append_extension(
+            KeyUsage::new()
+                .critical()
+                .key_cert_sign()
+                .crl_sign()
+                .build()?,
+        )?;
+
+        let subject_key_identifier =
+            SubjectKeyIdentifier::new().build(&cert_builder.x509v3_context(None, None))?;
+        cert_builder.append_extension(subject_key_identifier)?;
+
+        cert_builder.sign(&key_pair, MessageDigest::sha256())?;
+        let cert = cert_builder.build();
+
+        Ok(String::from_utf8(cert.to_pem().unwrap())?)
+    }
+
+    struct TestApi {}
+
+    impl agent_receiver_api::RenewCertificate for TestApi {
+        fn renew_certificate(
+            &self,
+            _base_url: &reqwest::Url,
+            connection: &config::TrustedConnection,
+            _csr: String,
+        ) -> AnyhowResult<agent_receiver_api::CertificateResponse> {
+            Ok(agent_receiver_api::CertificateResponse {
+                client_cert: format!("new_cert_for_{}", connection.uuid),
+            })
+        }
+    }
+
+    #[test]
+    fn test_renew_certificate() {
+        let mut reg = registry();
+        let uuid_push = reg.push_connections().next().unwrap().1.trust.uuid;
+        let uuid_pull = reg.standard_pull_connections().next().unwrap().1.trust.uuid;
+        let uuid_imported = reg.imported_pull_connections().next().unwrap().uuid;
+
+        let test_api = TestApi {};
+
+        _renew_certificate(&mut reg, &uuid_push.to_string(), &test_api).unwrap();
+        assert!(
+            reg.push_connections().next().unwrap().1.trust.certificate
+                == format!("new_cert_for_{}", uuid_push)
+        );
+        _renew_certificate(&mut reg, "server/pull-site", &test_api).unwrap();
+        assert!(
+            reg.standard_pull_connections()
+                .next()
+                .unwrap()
+                .1
+                .trust
+                .certificate
+                == format!("new_cert_for_{}", uuid_pull)
+        );
+        assert!(_renew_certificate(&mut reg, &uuid_imported.to_string(), &test_api).is_err());
+        assert!(_renew_certificate(&mut reg, "not_a_uuid", &test_api).is_err());
+        assert!(_renew_certificate(&mut reg, "unknown/site_id", &test_api).is_err());
+    }
+
+    fn new_trusted_connection_with_remote(cert: String) -> config::TrustedConnectionWithRemote {
+        config::TrustedConnectionWithRemote {
+            trust: new_trusted_connection(cert),
+            receiver_port: 8000,
+        }
+    }
+
+    fn new_trusted_connection(cert: String) -> config::TrustedConnection {
+        config::TrustedConnection {
+            uuid: uuid::Uuid::new_v4(),
+            private_key: String::from("private_key"),
+            certificate: cert,
+            root_cert: String::from("root_cert"),
+        }
+    }
+
+    #[test]
+    fn test_renew_all_certificates() {
+        let mut registry =
+            config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
+        let cert_too_short = mk_ca_cert(10).unwrap();
+        let cert_too_long = mk_ca_cert(365 * 600).unwrap();
+        let cert_ok = mk_ca_cert(100).unwrap();
+        registry.register_connection(
+            &config::ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site_1").unwrap(),
+            new_trusted_connection_with_remote(cert_too_short.clone()),
+        );
+        registry.register_connection(
+            &config::ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site_2").unwrap(),
+            new_trusted_connection_with_remote(cert_too_long.clone()),
+        );
+        registry.register_connection(
+            &config::ConnectionType::Pull,
+            &site_spec::SiteID::from_str("server/pull-site_1").unwrap(),
+            new_trusted_connection_with_remote(cert_too_long),
+        );
+        registry.register_connection(
+            &config::ConnectionType::Pull,
+            &site_spec::SiteID::from_str("server/pull-site_2").unwrap(),
+            new_trusted_connection_with_remote(cert_ok.clone()),
+        );
+        registry.register_imported_connection(new_trusted_connection(cert_too_short.clone()));
+
+        let test_api = TestApi {};
+
+        renew_all_certificates(&mut registry, &test_api).unwrap();
+
+        let conn = &registry
+            .get(&site_spec::SiteID::from_str("server/push-site_1").unwrap())
+            .unwrap()
+            .trust;
+        let (cert, uuid) = (&conn.certificate, conn.uuid);
+        assert!(cert == &format!("new_cert_for_{}", uuid));
+
+        let conn = &registry
+            .get(&site_spec::SiteID::from_str("server/push-site_2").unwrap())
+            .unwrap()
+            .trust;
+        let (cert, uuid) = (&conn.certificate, conn.uuid);
+        assert!(cert == &format!("new_cert_for_{}", uuid));
+
+        let conn = &registry
+            .get(&site_spec::SiteID::from_str("server/pull-site_1").unwrap())
+            .unwrap()
+            .trust;
+        let (cert, uuid) = (&conn.certificate, conn.uuid);
+        assert!(cert == &format!("new_cert_for_{}", uuid));
+
+        let conn = &registry
+            .get(&site_spec::SiteID::from_str("server/pull-site_2").unwrap())
+            .unwrap()
+            .trust;
+        assert!(conn.certificate == cert_ok);
+
+        let conn = &registry.imported_pull_connections().next().unwrap();
+        assert!(conn.certificate == cert_too_short);
+    }
 }

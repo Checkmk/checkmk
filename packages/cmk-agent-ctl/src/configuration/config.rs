@@ -617,6 +617,79 @@ fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
 }
 
 #[cfg(test)]
+pub mod test_helpers {
+    use crate::config::{ConnectionType, Registry, TrustedConnection, TrustedConnectionWithRemote};
+    use crate::site_spec;
+    use std::convert::From;
+    use std::str::FromStr;
+
+    pub fn registry() -> Registry {
+        let mut registry = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
+        registry.register_connection(
+            &ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
+            trusted_connection_with_remote(),
+        );
+        registry.register_connection(
+            &ConnectionType::Pull,
+            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
+            trusted_connection_with_remote(),
+        );
+        registry.register_imported_connection(trusted_connection());
+        registry
+    }
+
+    pub fn trusted_connection_with_remote() -> TrustedConnectionWithRemote {
+        TrustedConnectionWithRemote::from(uuid::Uuid::new_v4())
+    }
+
+    pub fn trusted_connection() -> TrustedConnection {
+        TrustedConnection::from(uuid::Uuid::new_v4())
+    }
+
+    impl From<uuid::Uuid> for TrustedConnection {
+        fn from(u: uuid::Uuid) -> Self {
+            Self {
+                uuid: u,
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            }
+        }
+    }
+
+    impl From<&str> for TrustedConnection {
+        fn from(s: &str) -> Self {
+            Self::from(uuid::Uuid::from_str(s).unwrap())
+        }
+    }
+
+    impl From<uuid::Uuid> for TrustedConnectionWithRemote {
+        fn from(u: uuid::Uuid) -> Self {
+            Self {
+                trust: TrustedConnection::from(u),
+                receiver_port: 8000,
+            }
+        }
+    }
+
+    impl From<&str> for TrustedConnectionWithRemote {
+        fn from(s: &str) -> Self {
+            Self::from(uuid::Uuid::from_str(s).unwrap())
+        }
+    }
+
+    impl Registry {
+        pub fn get(&self, site_id: &site_spec::SiteID) -> Option<&TrustedConnectionWithRemote> {
+            self.connections
+                .pull
+                .get(site_id)
+                .or_else(|| self.connections.push.get(site_id))
+        }
+    }
+}
+
+#[cfg(test)]
 mod test_registration_config {
     use super::*;
 
@@ -812,64 +885,11 @@ mod test_client_config {
 #[cfg(test)]
 mod test_registry {
     use super::*;
+    use crate::config::test_helpers::{
+        registry, trusted_connection, trusted_connection_with_remote,
+    };
     use std::convert::From;
     use std::str::FromStr;
-
-    impl From<uuid::Uuid> for TrustedConnection {
-        fn from(u: uuid::Uuid) -> Self {
-            Self {
-                uuid: u,
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            }
-        }
-    }
-
-    impl std::convert::From<&str> for TrustedConnection {
-        fn from(s: &str) -> Self {
-            Self::from(uuid::Uuid::from_str(s).unwrap())
-        }
-    }
-
-    impl From<uuid::Uuid> for TrustedConnectionWithRemote {
-        fn from(u: uuid::Uuid) -> Self {
-            Self {
-                trust: TrustedConnection::from(u),
-                receiver_port: 8000,
-            }
-        }
-    }
-
-    impl std::convert::From<&str> for TrustedConnectionWithRemote {
-        fn from(s: &str) -> Self {
-            Self::from(uuid::Uuid::from_str(s).unwrap())
-        }
-    }
-
-    fn registry() -> Registry {
-        let mut registry = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
-        registry.register_connection(
-            &ConnectionType::Push,
-            &site_spec::SiteID::from_str("server/push-site").unwrap(),
-            trusted_connection_with_remote(),
-        );
-        registry.register_connection(
-            &ConnectionType::Pull,
-            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
-            trusted_connection_with_remote(),
-        );
-        registry.register_imported_connection(trusted_connection());
-        registry
-    }
-
-    fn trusted_connection_with_remote() -> TrustedConnectionWithRemote {
-        TrustedConnectionWithRemote::from(uuid::Uuid::new_v4())
-    }
-
-    fn trusted_connection() -> TrustedConnection {
-        TrustedConnection::from(uuid::Uuid::new_v4())
-    }
 
     #[test]
     fn test_io() {

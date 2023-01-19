@@ -119,35 +119,36 @@ def create_mkp_object(manifest: Manifest) -> bytes:
         files=manifest.files,
     )
 
+    return create_tgz(
+        (
+            # add the regular info file (Python format)
+            ("info", manifest.file_content().encode()),
+            # add the info file a second time (JSON format) for external tools
+            ("info.json", manifest.json_file_content().encode()),
+            # Now pack the actual files into sub tars
+            *(
+                create_tar(part.ident, site_path(part), filenames, g_logger)
+                for part, filenames in manifest.files.items()
+                if filenames
+            ),
+        )
+    )
+
+
+def create_tgz(files: Iterable[tuple[str, bytes]]) -> bytes:
     buffer = BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
-
-        def add_file(filename: str, data: bytes) -> None:
-            info = _create_tar_info(filename, len(data))
-            tar.addfile(info, BytesIO(data))
-
-        # add the regular info file (Python format)
-        add_file("info", manifest.file_content().encode())
-
-        # add the info file a second time (JSON format) for external tools
-        add_file("info.json", manifest.json_file_content().encode())
-
-        # Now pack the actual files into sub tars
-        for part, filenames in manifest.files.items():
-            if not filenames:
-                continue
-
-            subtar = _pack_subtar(part.ident, site_path(part), filenames, g_logger)
-            add_file(*subtar)
+        for name, content in files:
+            tar.addfile(_create_tar_info(name, len(content)), BytesIO(content))
 
     return buffer.getvalue()
 
 
-def _pack_subtar(
+def create_tar(
     name: str, src: Path, filenames: Iterable[Path], logger: logging.Logger
 ) -> tuple[str, bytes]:
     tarname = f"{name}.tar"
-    logger.debug("  Packing '%s':", tarname)
+    logger.debug("  Packing %s:", tarname)
     for f in filenames:
         logger.debug("    %s", f)
     return tarname, subprocess.check_output(

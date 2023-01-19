@@ -1311,7 +1311,7 @@ def test_contactgroups(monkeypatch: MonkeyPatch, hostname_str: str, result: list
     "hostname_str,result",
     [
         ("testhost1", {}),
-        ("testhost2", {"empty_output": 1}),
+        ("testhost2", {"connection": 1}),
     ],
 )
 def test_config_cache_exit_code_spec_overall(
@@ -1326,8 +1326,8 @@ def test_config_cache_exit_code_spec_overall(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": {
-                    "overall": {"empty_output": 1},
-                    "individual": {"snmp": {"empty_output": 4}},
+                    "overall": {"connection": 1},
+                    "individual": {"snmp": {"connection": 4}},
                 },
             },
         ],
@@ -1340,7 +1340,7 @@ def test_config_cache_exit_code_spec_overall(
     "hostname_str,result",
     [
         ("testhost1", {}),
-        ("testhost2", {"empty_output": 4}),
+        ("testhost2", {"connection": 4}),
     ],
 )
 def test_config_cache_exit_code_spec_individual(
@@ -1355,8 +1355,8 @@ def test_config_cache_exit_code_spec_individual(
             {
                 "condition": {"host_name": ["testhost2"]},
                 "value": {
-                    "overall": {"empty_output": 1},
-                    "individual": {"snmp": {"empty_output": 4}},
+                    "overall": {"connection": 1},
+                    "individual": {"snmp": {"connection": 4}},
                 },
             },
         ],
@@ -1369,30 +1369,30 @@ def test_config_cache_exit_code_spec_individual(
     "ruleset",
     [
         {
-            "empty_output": 2,
+            "connection": 2,
             "restricted_address_mismatch": 2,
         },
         {
             "overall": {
-                "empty_output": 2,
+                "connection": 2,
             },
             "restricted_address_mismatch": 2,
         },
         {
             "individual": {
                 "snmp": {
-                    "empty_output": 2,
+                    "connection": 2,
                 }
             },
             "restricted_address_mismatch": 2,
         },
         {
             "overall": {
-                "empty_output": 1000,
+                "connection": 1000,
             },
             "individual": {
                 "snmp": {
-                    "empty_output": 2,
+                    "connection": 2,
                 }
             },
             "restricted_address_mismatch": 2,
@@ -1419,7 +1419,7 @@ def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: dict[str
     assert exit_code_spec["restricted_address_mismatch"] == 2
 
     result = {
-        "empty_output": 2,
+        "connection": 2,
         "restricted_address_mismatch": 2,
     }
     snmp_exit_code_spec = config_cache.exit_code_spec(hostname, data_source_id="snmp")

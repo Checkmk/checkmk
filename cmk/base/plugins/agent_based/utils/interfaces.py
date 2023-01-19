@@ -1359,22 +1359,22 @@ def check_single_interface(
         )
 
     yield from _output_bandwidth_rates(
-        interface.rates_with_averages,
-        speed_b_in,
-        speed_b_out,
-        speed_b_total,
-        unit,
-        traffic_levels,
-        assumed_speed_in,
-        assumed_speed_out,
+        rates=interface.rates_with_averages,
+        speed_b_in=speed_b_in,
+        speed_b_out=speed_b_out,
+        speed_b_total=speed_b_total,
+        unit=unit,
+        traffic_levels=traffic_levels,
+        assumed_speed_in=assumed_speed_in,
+        assumed_speed_out=assumed_speed_out,
         monitor_total="total_traffic" in params,
     )
 
     yield from _output_packet_rates(
-        abs_packet_levels,
-        perc_packet_levels,
-        nucast_levels,
-        disc_levels,
+        abs_packet_levels=abs_packet_levels,
+        perc_packet_levels=perc_packet_levels,
+        nucast_levels=nucast_levels,
+        disc_levels=disc_levels,
         rates=interface.rates_with_averages,
     )
 
@@ -1628,6 +1628,7 @@ def _output_group_members(
 
 
 def _output_bandwidth_rates(  # pylint: disable=too-many-branches
+    *,
     rates: RatesWithAverages,
     speed_b_in: float,
     speed_b_out: float,
@@ -1636,7 +1637,6 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     traffic_levels: SpecificTrafficLevels,
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
-    *,
     monitor_total: bool,
 ) -> type_defs.CheckResult:
     if unit == "Bit":
@@ -1807,11 +1807,11 @@ def _sum_optional_floats(*vs: float | None) -> float | None:
 
 
 def _output_packet_rates(
+    *,
     abs_packet_levels: GeneralPacketLevels,
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: tuple[float, float] | None,
     disc_levels: tuple[float, float] | None,
-    *,
     rates: RatesWithAverages,
 ) -> type_defs.CheckResult:
     for direction, mrate, brate, urate, nurate, discrate, errorrate in [

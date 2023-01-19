@@ -6,8 +6,6 @@
 #ifndef TableCrashReports_h
 #define TableCrashReports_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <string>
 
 #include "livestatus/Table.h"

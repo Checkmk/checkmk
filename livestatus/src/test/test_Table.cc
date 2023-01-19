@@ -18,7 +18,6 @@
 #include "TableComments.h"
 #include "TableContactGroups.h"
 #include "TableContacts.h"
-#include "TableCrashReports.h"
 #include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
@@ -46,6 +45,7 @@
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
+#include "livestatus/TableCrashReports.h"
 #include "livestatus/Triggers.h"
 
 #ifdef CMC

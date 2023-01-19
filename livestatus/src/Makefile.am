@@ -111,7 +111,6 @@ liblivestatusneb_a_SOURCES = \
         TableComments.cc \
         TableContactGroups.cc \
         TableContacts.cc \
-        TableCrashReports.cc \
         TableDowntimes.cc \
         TableEventConsole.cc \
         TableEventConsoleEvents.cc \

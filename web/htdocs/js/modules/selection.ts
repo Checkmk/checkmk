@@ -76,7 +76,7 @@ function get_all_checkboxes(container: HTMLElement | HTMLElement[]) {
     var checkboxes: HTMLInputElement[] = [],
         childs,
         i;
-    if (container instanceof HTMLElement) {
+    if (container instanceof HTMLElement || container instanceof HTMLDocument) {
         // One DOM node given
         childs = container.getElementsByTagName("input");
 
@@ -136,9 +136,9 @@ function iter_cells(
             }
         }
 
-        let cur_row = row_childs[c];
-        if (cur_row instanceof HTMLTableRowElement) {
-            func(cur_row);
+        const cur_cell = row_childs[c];
+        if (cur_cell instanceof HTMLTableCellElement) {
+            func(cur_cell);
             num_columns--;
         }
     }

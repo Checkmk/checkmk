@@ -7,8 +7,6 @@
 #define Interface_h
 
 #include <functional>
-#include <memory>
-#include <vector>
 
 class IContact {
 public:

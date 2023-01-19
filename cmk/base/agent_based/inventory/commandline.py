@@ -10,7 +10,6 @@ from typing import Callable
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import (
     EVERYTHING,
@@ -33,34 +32,31 @@ __all__ = ["commandline_inventory"]
 
 
 def commandline_inventory(
-    hostnames: list[HostName],
+    hostname: HostName,
     *,
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
-    store.makedirs(cmk.utils.paths.inventory_output_dir)
-    store.makedirs(cmk.utils.paths.inventory_archive_dir)
-    for hostname in hostnames:
-        section.section_begin(hostname)
-        try:
-            _commandline_inventory_on_host(
-                hostname,
-                config_cache=config_cache,
-                parser=parser,
-                fetcher=fetcher,
-                inventory_parameters=config_cache.inventory_parameters,
-                parameters=config_cache.hwsw_inventory_parameters(hostname),
-                run_plugin_names=run_plugin_names,
-            )
+    section.section_begin(hostname)
+    try:
+        _commandline_inventory_on_host(
+            hostname,
+            config_cache=config_cache,
+            parser=parser,
+            fetcher=fetcher,
+            inventory_parameters=config_cache.inventory_parameters,
+            parameters=config_cache.hwsw_inventory_parameters(hostname),
+            run_plugin_names=run_plugin_names,
+        )
 
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            section.section_error("%s" % e)
-        finally:
-            cmk.utils.cleanup.cleanup_globals()
+    except Exception as e:
+        if cmk.utils.debug.enabled():
+            raise
+        section.section_error("%s" % e)
+    finally:
+        cmk.utils.cleanup.cleanup_globals()
 
 
 def _commandline_inventory_on_host(

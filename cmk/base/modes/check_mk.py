@@ -2042,13 +2042,17 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
     )
-    inventory.commandline_inventory(
-        hostnames,
-        config_cache=config_cache,
-        parser=parser,
-        fetcher=fetcher,
-        run_plugin_names=run_plugin_names,
-    )
+
+    store.makedirs(cmk.utils.paths.inventory_output_dir)
+    store.makedirs(cmk.utils.paths.inventory_archive_dir)
+    for hostname in hostnames:
+        inventory.commandline_inventory(
+            hostname,
+            config_cache=config_cache,
+            parser=parser,
+            fetcher=fetcher,
+            run_plugin_names=run_plugin_names,
+        )
 
 
 modes.register(

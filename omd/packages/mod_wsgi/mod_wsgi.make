@@ -3,6 +3,9 @@ MOD_WSGI_VERS := 4.9.4
 MOD_WSGI_DIR := $(MOD_WSGI)-$(MOD_WSGI_VERS)
 # Increase this to enforce a recreation of the build cache
 MOD_WSGI_BUILD_ID := 4
+# The cached package contains the python major/minor version, so include this in the cache name in order to trigger
+# a rebuild on a python version change.
+MOD_WSGI_BUILD_ID := $(MOD_WSGI_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)
 
 # Try to find the apxs binary
 ifneq ("$(wildcard /usr/sbin/apxs)","")

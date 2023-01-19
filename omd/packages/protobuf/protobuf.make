@@ -3,10 +3,10 @@ PROTOBUF := protobuf
 PROTOBUF_VERS := 3.20.1
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
-# TODO: the protobuf-python cache must depend on the python Major.Minor version as this is part of the path within the
-# cached package...
-# The same applies for: net-snmp, rrdtool, lasso and mod_wsgi
 PROTOBUF_BUILD_ID := 6
+# The cached package contains the python major/minor version, so include this in the cache name in order to trigger
+# a rebuild on a python version change.
+PROTOBUF_BUILD_ID := $(PROTOBUF_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)
 
 PROTOBUF_PATCHING := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-patching
 PROTOBUF_CONFIGURE := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-configure

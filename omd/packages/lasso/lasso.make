@@ -3,6 +3,9 @@ LASSO_VERS := 2.7.0
 LASSO_DIR := $(LASSO)-$(LASSO_VERS)
 # Increase this to enforce a recreation of the build cache
 LASSO_BUILD_ID := 3
+# The cached package contains the python major/minor version, so include this in the cache name in order to trigger
+# a rebuild on a python version change.
+LASSO_BUILD_ID := $(LASSO_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)
 
 LASSO_BUILD := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-build
 LASSO_UNPACK := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-unpack

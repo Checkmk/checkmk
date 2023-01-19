@@ -23,13 +23,14 @@ PACKAGE_OPENSSL_LD_LIBRARY_PATH := $(PACKAGE_OPENSSL_DESTDIR)/lib
 PACKAGE_OPENSSL_INCLUDE_PATH := $(PACKAGE_OPENSSL_DESTDIR)/include
 endif
 
+
 ifeq ($(DISTRO_CODE),el8)
 $(OPENSSL_BUILD):
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 else
 $(OPENSSL_BUILD):
-	$(BAZEL_BUILD) @openssl//:build
+	$(BAZEL_BUILD) @openssl//:openssl
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 endif
@@ -42,7 +43,9 @@ $(OPENSSL_INTERMEDIATE_INSTALL): $(OPENSSL_BUILD)
 else
 $(OPENSSL_INTERMEDIATE_INSTALL):  $(OPENSSL_BUILD)
 	mkdir -p "$(INTERMEDIATE_INSTALL_BASE)/$(OPENSSL_DIR)"
-	tar xf "bazel-bin/external/openssl/openssl-built.tgz" -C "$(OPENSSL_INSTALL_DIR)"
+	# This will leave us with some strange file permissions, but works for now, see
+	# https://stackoverflow.com/questions/75208034
+	rsync -r --chmod=u+w "bazel-bin/external/openssl/openssl/" "$(OPENSSL_INSTALL_DIR)/"
 	$(TOUCH) $@
 endif
 
@@ -52,12 +55,11 @@ $(OPENSSL_CACHE_PKG_PROCESS): $(OPENSSL_INTERMEDIATE_INSTALL)
 	$(TOUCH) $@
 
 
-
 ifeq ($(DISTRO_CODE),el8)
 $(OPENSSL_INSTALL): $(OPENSSL_CACHE_PKG_PROCESS)
 	$(TOUCH) $@
 else
-$(OPENSSL_INSTALL):  $(OPENSSL_CACHE_PKG_PROCESS)
-	tar xf "bazel-bin/external/openssl/openssl-built.tgz" -C "$(DESTDIR)$(OMD_ROOT)/"
+$(OPENSSL_INSTALL): $(OPENSSL_CACHE_PKG_PROCESS)
+	rsync -r --perms "$(OPENSSL_INSTALL_DIR)/" "$(DESTDIR)$(OMD_ROOT)/"
 	$(TOUCH) $@
 endif

@@ -138,7 +138,7 @@ def load_session_infos(username: UserId, lock: bool = False) -> dict[str, Sessio
 def _initialize_session(username: UserId, now: datetime) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    session_infos = cleanup_old_sessions(load_session_infos(username, lock=True), now)
+    session_infos = active_sessions(load_session_infos(username, lock=True), now)
 
     session_id = create_session_id()
     now_ts = int(now.timestamp())
@@ -163,13 +163,13 @@ def _load_failed_logins(username: UserId) -> int:
     return 0 if num is None else num
 
 
-def cleanup_old_sessions(
+def active_sessions(
     session_infos: Mapping[str, SessionInfo], now: datetime
 ) -> dict[str, SessionInfo]:
-    """Remove invalid / outdated sessions
+    """Return sessions that are not invalid / outdated
 
-    In single user session mode all sessions are removed. In regular mode, the sessions are limited
-    to 20 per user. Sessions with an inactivity > 7 days are also removed.
+    In single user session mode no sessions are returned. In regular mode, the sessions are limited
+    to 20 per user. Sessions with an inactivity > 7 days are also not returned.
     """
     if active_config.single_user_session:
         # In single user session mode there is only one session allowed at a time. Once we

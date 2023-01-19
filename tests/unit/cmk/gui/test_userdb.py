@@ -401,14 +401,14 @@ def test_ensure_user_can_not_init_with_previous_session(single_auth_request: Sin
         userdb.session.ensure_user_can_init_session(user_id, now)
 
 
-def test_cleanup_old_sessions_no_existing(request_context: None) -> None:
-    assert userdb.session.cleanup_old_sessions({}, datetime.now()) == {}
+def test_active_sessions_no_existing(request_context: None) -> None:
+    assert userdb.session.active_sessions({}, datetime.now()) == {}
 
 
-def test_cleanup_old_sessions_remove_outdated(request_context: None) -> None:
+def test_active_sessions_remove_outdated(request_context: None) -> None:
     now = datetime.now()
     assert list(
-        userdb.session.cleanup_old_sessions(
+        userdb.session.active_sessions(
             {
                 "outdated": SessionInfo(
                     session_id="outdated",
@@ -428,7 +428,7 @@ def test_cleanup_old_sessions_remove_outdated(request_context: None) -> None:
     ) == ["keep"]
 
 
-def test_cleanup_old_sessions_too_many(request_context: None) -> None:
+def test_active_sessions_too_many(request_context: None) -> None:
     now = datetime.now()
     sessions = {
         f"keep_{num}": SessionInfo(
@@ -463,7 +463,7 @@ def test_cleanup_old_sessions_too_many(request_context: None) -> None:
             "keep_19",
             "keep_20",
         ]
-    ) == sorted(userdb.session.cleanup_old_sessions(sessions, now).keys())
+    ) == sorted(userdb.session.active_sessions(sessions, now).keys())
 
 
 def test_create_session_id_is_correct_type() -> None:

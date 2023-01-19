@@ -121,7 +121,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
         """
         now = datetime.now()
-        session_infos = userdb.session.cleanup_old_sessions(
+        session_infos = userdb.session.active_sessions(
             userdb.session.load_session_infos(user_name), now
         )
         info = session_infos[session_id]
@@ -158,7 +158,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             raise RuntimeError("Can't persist a session without a user.")
 
         # Needs more context manager.
-        session_infos = userdb.session.cleanup_old_sessions(
+        session_infos = userdb.session.active_sessions(
             userdb.session.load_session_infos(self.user.ident, lock=True),
             datetime.now(),
         )

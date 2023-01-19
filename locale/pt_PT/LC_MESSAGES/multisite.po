@@ -917,6 +917,10 @@ msgstr "1 mudança"
 msgid "1 row"
 msgstr "1 fila"
 
+#, fuzzy
+msgid "1 year"
+msgstr "ano"
+
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
 
@@ -925,6 +929,10 @@ msgstr "1/s"
 
 msgid "10 seconds"
 msgstr "10 segundos"
+
+#, fuzzy
+msgid "10 years"
+msgstr "anos"
 
 msgid "10+ changes"
 msgstr "10+ mudanças"
@@ -953,6 +961,10 @@ msgstr "15 minutos"
 
 msgid "2 weeks back"
 msgstr "2 semanas atrás"
+
+#, fuzzy
+msgid "2 years"
+msgstr "anos"
 
 msgid "2.0 - 5.0 ms"
 msgstr "2.0 - 5.0 ms"
@@ -1008,8 +1020,16 @@ msgstr "5 Volts Níveis Superiores de Saída"
 msgid "5 minutes"
 msgstr "5 minutos"
 
+#, fuzzy
+msgid "5 years"
+msgstr "anos"
+
 msgid "5.0 - 10.0 ms"
 msgstr "5.0 - 10.0 ms"
+
+#, fuzzy
+msgid "50 years"
+msgstr "anos"
 
 msgid "50.0 - 100.0 ms"
 msgstr "50,0 - 100,0 ms"
@@ -4087,6 +4107,10 @@ msgstr "Agente %s correndo atualmente em <a href=\"%s\">background job</a>."
 #, python-format
 msgid "Agent %s successful"
 msgstr "Agente %s bem sucedido"
+
+#, fuzzy
+msgid "Agent Certificates"
+msgstr "Verificar o certificado"
 
 msgid "Agent Deployment: Downloaded Agent Hash"
 msgstr "Agente Deployment: Download do Agente Hash"
@@ -9487,6 +9511,11 @@ msgstr ""
 
 msgid ""
 "Choose what modem is used. Currently supported is only Teltonika-TRB140."
+msgstr ""
+
+msgid ""
+"Choose whether roles should be mapped. Specify the attribute name, and the "
+"corresponding mappings for each role."
 msgstr ""
 
 msgid ""
@@ -15488,6 +15517,10 @@ msgstr "Não imponha níveis, esteja sempre OK."
 
 msgid "Do not manage the controllers auto-registration"
 msgstr ""
+
+#, fuzzy
+msgid "Do not map roles"
+msgstr "Não imponha níveis"
 
 msgid "Do not match Event Console alerts"
 msgstr "Não corresponder aos alertas do Console de Eventos"
@@ -28102,6 +28135,10 @@ msgstr "Status do licenciamento"
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr "Dispositivo Liebert UPS: Sensor de temperatura"
 
+#, fuzzy
+msgid "Lifetime of certificates"
+msgstr "Nome do certificado"
+
 msgid "Lifetime remaining"
 msgstr "Tempo de vida restante"
 
@@ -29813,6 +29850,10 @@ msgstr "Estados do processo do mapa"
 
 msgid "Map provisioning states"
 msgstr "Estados de aprovisionamento de mapas"
+
+#, fuzzy
+msgid "Map roles"
+msgstr "Definir papéis"
 
 msgid "Map standby state"
 msgstr "Estado de espera do mapa"
@@ -34657,6 +34698,14 @@ msgstr "Online (Versão: %s, Edição: %s)"
 #, fuzzy
 msgid "Online verification"
 msgstr "verificação do certificado SSL"
+
+#, fuzzy
+msgid "Online verification procedure was not successful"
+msgstr "Assar com sucesso"
+
+#, fuzzy
+msgid "Online verification procedure was successful"
+msgstr "Assar com sucesso"
 
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Apenas A-Z, a-z, 0-9 e menos (-) são permitidos."
@@ -40071,6 +40120,10 @@ msgstr "Submeter relatório"
 msgid "Role"
 msgstr "Papel"
 
+#, fuzzy
+msgid "Role attribute"
+msgstr "Atributos bloqueados"
+
 msgid "Roles"
 msgstr "Papéis"
 
@@ -42545,6 +42598,9 @@ msgstr "Configurações para o estado do incidente em caso de recuperação"
 
 msgid "Settings for Parent Scan"
 msgstr "Configurações para a varredura dos pais"
+
+msgid "Settings for certificates issued to registered agents."
+msgstr ""
 
 msgid "Settings for host checks via Smart PING"
 msgstr "Configurações para verificações do host via Smart PING"
@@ -54426,13 +54482,12 @@ msgstr ""
 
 msgid ""
 "This ruleset is relevant for Kubernetes replicas. You can set a maximum "
-"allowed duration during which replicas may be in a not ready or not up-to-"
-"date state. For StatefulSets, you may additionally specify such a duration "
-"for the not available state. For DaemonSets, you may additionally specify "
-"the duration for which there may be a positive number of misscheduled "
-"replicas. Keep in mind that replicas may temporarily be in these states "
-"during the process of an update. Therefore, it is recommended to always have "
-"a grace period configured."
+"allowed duration during which replicas may be in a not ready, not available "
+"or not up-to-date state. For DaemonSets, you may additionally specify the "
+"duration for which there may be a positive number of misscheduled replicas. "
+"Keep in mind that replicas may temporarily be in these states during the "
+"process of an update. Therefore, it is recommended to always have a grace "
+"period configured."
 msgstr ""
 
 msgid ""
@@ -54788,6 +54843,14 @@ msgstr ""
 "sido atingido, ele será reprogramado com este intervalo. O intervalo de nova "
 "tentativa é normalmente definido para um valor menor do que o intervalo "
 "normal.<br>>br> Esta configuração só se aplica a verificações ativas."
+
+msgid ""
+"This setting limits the validity of agent certificates. Active agents (i.e., "
+"the agent controller is running as a daemon) will automatically call the "
+"Checkmk site for renewal when certificates are about to expire. Hence, with "
+"this setting, you can assure that registrations of inactive agents expire "
+"after a given time."
+msgstr ""
 
 msgid "This setting only applies if the WebSphere MQ reports the queue length"
 msgstr ""

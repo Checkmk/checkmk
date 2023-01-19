@@ -917,6 +917,10 @@ msgstr "1 wijziging"
 msgid "1 row"
 msgstr "1 rij"
 
+#, fuzzy
+msgid "1 year"
+msgstr "jaar"
+
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
 
@@ -925,6 +929,10 @@ msgstr "1/s"
 
 msgid "10 seconds"
 msgstr "10 seconden"
+
+#, fuzzy
+msgid "10 years"
+msgstr "jaren"
 
 msgid "10+ changes"
 msgstr "10+ wijzigingen"
@@ -953,6 +961,10 @@ msgstr "15 minuten"
 
 msgid "2 weeks back"
 msgstr "2 weken geleden"
+
+#, fuzzy
+msgid "2 years"
+msgstr "jaren"
 
 msgid "2.0 - 5.0 ms"
 msgstr "2.0 - 5.0 ms"
@@ -1008,8 +1020,16 @@ msgstr "5 Volt Uitvoer Bovengrens"
 msgid "5 minutes"
 msgstr "5 minuten"
 
+#, fuzzy
+msgid "5 years"
+msgstr "jaren"
+
 msgid "5.0 - 10.0 ms"
 msgstr "5.0 - 10.0 ms"
+
+#, fuzzy
+msgid "50 years"
+msgstr "jaren"
 
 msgid "50.0 - 100.0 ms"
 msgstr "50.0 - 100.0 ms"
@@ -4114,6 +4134,10 @@ msgstr "Agent %s draait momenteel in <a href=\"%s\">background job</a>."
 #, python-format
 msgid "Agent %s successful"
 msgstr "Agent %s succesvol"
+
+#, fuzzy
+msgid "Agent Certificates"
+msgstr "Verfiy Certificaten"
 
 msgid "Agent Deployment: Downloaded Agent Hash"
 msgstr "Agent Deployment: Gedownloade Agent Hash"
@@ -9472,6 +9496,11 @@ msgid ""
 msgstr ""
 "Kies welke modem wordt gebruikt. Momenteel wordt alleen Teltonika-TRB140 "
 "ondersteund."
+
+msgid ""
+"Choose whether roles should be mapped. Specify the attribute name, and the "
+"corresponding mappings for each role."
+msgstr ""
 
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
@@ -15389,6 +15418,10 @@ msgstr "Geen niveaus opleggen, altijd OK zijn"
 
 msgid "Do not manage the controllers auto-registration"
 msgstr ""
+
+#, fuzzy
+msgid "Do not map roles"
+msgstr "Geen niveaus opleggen"
 
 msgid "Do not match Event Console alerts"
 msgstr "Komen niet overeen met waarschuwingen van de gebeurtenissenconsole"
@@ -27916,6 +27949,10 @@ msgstr "Licentiestatus"
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr "Liebert UPS apparaat: Temperatuursensor"
 
+#, fuzzy
+msgid "Lifetime of certificates"
+msgstr "Naam van het certificaat"
+
 msgid "Lifetime remaining"
 msgstr "Resterende levensduur"
 
@@ -29608,6 +29645,10 @@ msgstr "Procestoestanden in kaart brengen"
 
 msgid "Map provisioning states"
 msgstr "Provisioning states in kaart brengen"
+
+#, fuzzy
+msgid "Map roles"
+msgstr "Stel rollen in"
 
 msgid "Map standby state"
 msgstr "Map standby status"
@@ -34365,6 +34406,14 @@ msgstr "Online (Versie: %s, Editie: %s)"
 #, fuzzy
 msgid "Online verification"
 msgstr "SSL-certificaat verificatie"
+
+#, fuzzy
+msgid "Online verification procedure was not successful"
+msgstr "Registratie succesvol"
+
+#, fuzzy
+msgid "Online verification procedure was successful"
+msgstr "Registratie succesvol"
 
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Alleen A-Z, a-z, 0-9 en min (-) zijn toegestaan."
@@ -39698,6 +39747,10 @@ msgstr "RobotMK logboeken"
 msgid "Role"
 msgstr "Rol"
 
+#, fuzzy
+msgid "Role attribute"
+msgstr "Vergrendelde attributen"
+
 msgid "Roles"
 msgstr "Rollen"
 
@@ -42157,6 +42210,9 @@ msgstr "Instellingen voor %s toestand in geval van herstel"
 
 msgid "Settings for Parent Scan"
 msgstr "Instellingen voor Ouder Scannen"
+
+msgid "Settings for certificates issued to registered agents."
+msgstr ""
 
 msgid "Settings for host checks via Smart PING"
 msgstr "Instellingen voor hostcontroles via Smart PING"
@@ -54110,13 +54166,12 @@ msgstr ""
 
 msgid ""
 "This ruleset is relevant for Kubernetes replicas. You can set a maximum "
-"allowed duration during which replicas may be in a not ready or not up-to-"
-"date state. For StatefulSets, you may additionally specify such a duration "
-"for the not available state. For DaemonSets, you may additionally specify "
-"the duration for which there may be a positive number of misscheduled "
-"replicas. Keep in mind that replicas may temporarily be in these states "
-"during the process of an update. Therefore, it is recommended to always have "
-"a grace period configured."
+"allowed duration during which replicas may be in a not ready, not available "
+"or not up-to-date state. For DaemonSets, you may additionally specify the "
+"duration for which there may be a positive number of misscheduled replicas. "
+"Keep in mind that replicas may temporarily be in these states during the "
+"process of an update. Therefore, it is recommended to always have a grace "
+"period configured."
 msgstr ""
 
 msgid ""
@@ -54473,6 +54528,14 @@ msgstr ""
 "deze opnieuw worden gepland met dit interval. Het herhalingsinterval wordt "
 "meestal ingesteld op een kleinere waarde dan het normale interval."
 "<br><br>Deze instelling is alleen van toepassing op actieve controles."
+
+msgid ""
+"This setting limits the validity of agent certificates. Active agents (i.e., "
+"the agent controller is running as a daemon) will automatically call the "
+"Checkmk site for renewal when certificates are about to expire. Hence, with "
+"this setting, you can assure that registrations of inactive agents expire "
+"after a given time."
+msgstr ""
 
 msgid "This setting only applies if the WebSphere MQ reports the queue length"
 msgstr ""

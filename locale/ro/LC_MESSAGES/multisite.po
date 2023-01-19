@@ -917,6 +917,10 @@ msgstr "%d schimbări"
 msgid "1 row"
 msgstr "randuri"
 
+#, fuzzy
+msgid "1 year"
+msgstr "ani"
+
 msgid "1.0 - 2.0 ms"
 msgstr ""
 
@@ -925,6 +929,10 @@ msgstr ""
 
 msgid "10 seconds"
 msgstr "10 secunde"
+
+#, fuzzy
+msgid "10 years"
+msgstr "ani"
 
 #, fuzzy
 msgid "10+ changes"
@@ -954,6 +962,10 @@ msgstr "15 minute"
 
 msgid "2 weeks back"
 msgstr ""
+
+#, fuzzy
+msgid "2 years"
+msgstr "ani"
 
 msgid "2.0 - 5.0 ms"
 msgstr ""
@@ -1015,8 +1027,16 @@ msgstr ""
 msgid "5 minutes"
 msgstr "5 minute"
 
+#, fuzzy
+msgid "5 years"
+msgstr "ani"
+
 msgid "5.0 - 10.0 ms"
 msgstr ""
+
+#, fuzzy
+msgid "50 years"
+msgstr "ani"
 
 msgid "50.0 - 100.0 ms"
 msgstr ""
@@ -3868,6 +3888,10 @@ msgstr ""
 #, python-format
 msgid "Agent %s successful"
 msgstr ""
+
+#, fuzzy
+msgid "Agent Certificates"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Agent Deployment: Downloaded Agent Hash"
 msgstr ""
@@ -8889,6 +8913,11 @@ msgstr ""
 
 msgid ""
 "Choose what modem is used. Currently supported is only Teltonika-TRB140."
+msgstr ""
+
+msgid ""
+"Choose whether roles should be mapped. Specify the attribute name, and the "
+"corresponding mappings for each role."
 msgstr ""
 
 msgid ""
@@ -14905,6 +14934,10 @@ msgstr ""
 
 msgid "Do not manage the controllers auto-registration"
 msgstr ""
+
+#, fuzzy
+msgid "Do not map roles"
+msgstr "doua nivele"
 
 msgid "Do not match Event Console alerts"
 msgstr ""
@@ -26554,6 +26587,10 @@ msgstr "Conexiuni Active"
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr ""
 
+#, fuzzy
+msgid "Lifetime of certificates"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Lifetime remaining"
 msgstr ""
 
@@ -28288,6 +28325,10 @@ msgstr "Numele Elementului"
 
 msgid "Map provisioning states"
 msgstr ""
+
+#, fuzzy
+msgid "Map roles"
+msgstr "Ascude regulile de utilizator"
 
 msgid "Map standby state"
 msgstr ""
@@ -33259,6 +33300,14 @@ msgstr ""
 #, fuzzy
 msgid "Online verification"
 msgstr "Activare Configurare"
+
+#, fuzzy
+msgid "Online verification procedure was not successful"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Online verification procedure was successful"
+msgstr "Numele Aplicatiei"
 
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr ""
@@ -38568,6 +38617,10 @@ msgstr "rapoarte"
 msgid "Role"
 msgstr ""
 
+#, fuzzy
+msgid "Role attribute"
+msgstr "Atribute personalizate"
+
 msgid "Roles"
 msgstr ""
 
@@ -41031,6 +41084,9 @@ msgid "Settings for %s state in case of recovery"
 msgstr "Întreruperi adhoc"
 
 msgid "Settings for Parent Scan"
+msgstr ""
+
+msgid "Settings for certificates issued to registered agents."
 msgstr ""
 
 msgid "Settings for host checks via Smart PING"
@@ -50782,13 +50838,12 @@ msgstr ""
 
 msgid ""
 "This ruleset is relevant for Kubernetes replicas. You can set a maximum "
-"allowed duration during which replicas may be in a not ready or not up-to-"
-"date state. For StatefulSets, you may additionally specify such a duration "
-"for the not available state. For DaemonSets, you may additionally specify "
-"the duration for which there may be a positive number of misscheduled "
-"replicas. Keep in mind that replicas may temporarily be in these states "
-"during the process of an update. Therefore, it is recommended to always have "
-"a grace period configured."
+"allowed duration during which replicas may be in a not ready, not available "
+"or not up-to-date state. For DaemonSets, you may additionally specify the "
+"duration for which there may be a positive number of misscheduled replicas. "
+"Keep in mind that replicas may temporarily be in these states during the "
+"process of an update. Therefore, it is recommended to always have a grace "
+"period configured."
 msgstr ""
 
 msgid ""
@@ -51023,6 +51078,14 @@ msgid ""
 "rescheduled with this interval. The retry interval is usually set to a "
 "smaller value than the normal interval.<br><br>This setting only applies to "
 "active checks."
+msgstr ""
+
+msgid ""
+"This setting limits the validity of agent certificates. Active agents (i.e., "
+"the agent controller is running as a daemon) will automatically call the "
+"Checkmk site for renewal when certificates are about to expire. Hence, with "
+"this setting, you can assure that registrations of inactive agents expire "
+"after a given time."
 msgstr ""
 
 msgid "This setting only applies if the WebSphere MQ reports the queue length"

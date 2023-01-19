@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import base64
 import binascii
-import contextlib
 import functools
 import http.client
 import json
@@ -18,7 +17,7 @@ import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping
 from datetime import datetime
-from typing import Any, Generator, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g
@@ -196,7 +195,7 @@ class Authenticate:
             rfc7662 = _verify_user(environ, datetime.now())
         except MKException as exc:
             return problem(status=401, title=str(exc))(environ, start_response)
-        with set_user_context(rfc7662["sub"], rfc7662):
+        with UserContext(rfc7662["sub"]):
             return self.app(environ, start_response)
 
 
@@ -523,12 +522,3 @@ class APICrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def type(cls):
         return "rest_api"
-
-
-@contextlib.contextmanager
-def set_user_context(user_id: UserId, token_info: RFC7662) -> Generator[None, None, None]:
-    if user_id and token_info and user_id == token_info.get("sub"):
-        with UserContext(user_id):
-            yield
-    else:
-        raise MKAuthException("Unauthorized by verify_user")

@@ -6,15 +6,20 @@
 #include "livestatus/User.h"
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
-#include "livestatus/Interface.h"
+#include "livestatus/StringUtils.h"
 
-AuthUser::AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
-                   GroupAuthorization group_auth)
+AuthUser::AuthUser(
+    const IContact &auth_user, ServiceAuthorization service_auth,
+    GroupAuthorization group_auth,
+    std::function<std::unique_ptr<IContactGroup>(const std::string &)>
+        make_contact_group)
     : auth_user_{auth_user}
     , service_auth_{service_auth}
-    , group_auth_{group_auth} {}
+    , group_auth_{group_auth}
+    , make_contact_group_{std::move(make_contact_group)} {}
 
 bool AuthUser::is_authorized_for_object(std::unique_ptr<const IHost> hst,
                                         std::unique_ptr<const IService> svc,
@@ -54,17 +59,18 @@ bool AuthUser::is_authorized_for_service_group(const IServiceGroup &sg) const {
                  });
 }
 
-bool AuthUser::is_authorized_for_event(
-    const std::string &precedence,
-    const std::vector<std::unique_ptr<const IContactGroup>> &contact_groups,
-    const IHost *hst) const {
+bool AuthUser::is_authorized_for_event(const std::string &precedence,
+                                       const std::string &contact_groups,
+                                       const IHost *hst) const {
     auto is_authorized_via_contactgroups = [this, &contact_groups]() {
+        auto groups{mk::ec::split_list(contact_groups)};
         return std::any_of(
-            contact_groups.begin(), contact_groups.end(),
-            [this](const auto &group) { return group->isMember(auth_user_); });
+            groups.begin(), groups.end(), [this](const auto &group) {
+                return make_contact_group_(group)->isMember(auth_user_);
+            });
     };
     if (precedence == "rule") {
-        if (!contact_groups.empty()) {
+        if (!mk::ec::is_none(contact_groups)) {
             return is_authorized_via_contactgroups();
         }
         if (hst != nullptr) {
@@ -76,7 +82,7 @@ bool AuthUser::is_authorized_for_event(
         if (hst != nullptr) {
             return is_authorized_for_host(*hst);
         }
-        if (!contact_groups.empty()) {
+        if (!mk::ec::is_none(contact_groups)) {
             return is_authorized_via_contactgroups();
         }
         return true;

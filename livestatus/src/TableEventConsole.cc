@@ -20,11 +20,9 @@
 
 #include "MonitoringCore.h"
 #ifdef CMC
-#include "CmcContactGroup.h"
 #include "CmcHost.h"
 #include "CmcNebTypeDefs.h"
 #else
-#include "NebContactGroup.h"
 #include "NebHost.h"
 #endif
 
@@ -288,11 +286,10 @@ std::function<bool(const ECRow &)> get_authorizer(const Table &table,
             return c->name() == "event_contact_groups_precedence";
         })) {
         return [&user](const ECRow &row) {
-            auto host = ToIHost(row.host());
             return user.is_authorized_for_event(
                 row.getString("event_contact_groups_precedence"),
-                ToIContactGroups(row.getString("event_contact_groups")),
-                host.get());
+                row.getString("event_contact_groups"),
+                ToIHost(row.host()).get());
         };
     }
     return [](const ECRow & /*row*/) { return true; };

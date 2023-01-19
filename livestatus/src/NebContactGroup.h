@@ -6,23 +6,28 @@
 #ifndef NebContactGroup_h
 #define NebContactGroup_h
 
-#include <memory>
 #include <string>
-#include <vector>
 
 #include "livestatus/Interface.h"
 #include "nagios.h"
 
 class NebContactGroup : public IContactGroup {
 public:
-    explicit NebContactGroup(const std::string &name);
-    [[nodiscard]] bool isMember(const IContact &contact) const override;
+    // Older Nagios headers are not const-correct... :-P
+    explicit NebContactGroup(const std::string &name)
+        : contact_group_{
+              ::find_contactgroup(const_cast<char *>(name.c_str()))} {}
+
+    // Older Nagios headers are not const-correct... :-P
+    [[nodiscard]] bool isMember(const IContact &contact) const override {
+        return ::is_contact_member_of_contactgroup(
+                   const_cast<contactgroup *>(contact_group_),
+                   const_cast<::contact *>(
+                       static_cast<const ::contact *>(contact.handle()))) != 0;
+    }
 
 private:
     const contactgroup *contact_group_;
 };
-
-std::vector<std::unique_ptr<const IContactGroup>> ToIContactGroups(
-    const std::string &group_sequence);
 
 #endif  // NebContactGroup_h

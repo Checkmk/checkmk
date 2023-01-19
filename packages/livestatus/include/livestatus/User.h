@@ -6,16 +6,12 @@
 #ifndef auth_h
 #define auth_h
 
+#include <functional>
 #include <memory>
 #include <string>
-#include <vector>
 
-class IContact;
-class IHost;
-class IService;
-class IContactGroup;
-class IHostGroup;
-class IServiceGroup;
+// Different versions of the system headers differ in their requirements. :-/
+#include "livestatus/Interface.h"  // IWYU pragma: keep
 
 enum class ServiceAuthorization {
     loose = 0,   // contacts for hosts see all services
@@ -43,15 +39,16 @@ public:
     [[nodiscard]] virtual bool is_authorized_for_service_group(
         const IServiceGroup &sg) const = 0;
     [[nodiscard]] virtual bool is_authorized_for_event(
-        const std::string &precedence,
-        const std::vector<std::unique_ptr<const IContactGroup>> &contact_groups,
+        const std::string &precedence, const std::string &contact_groups,
         const IHost *hst) const = 0;
 };
 
 class AuthUser : public User {
 public:
     AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
-             GroupAuthorization group_auth);
+             GroupAuthorization group_auth,
+             std::function<std::unique_ptr<IContactGroup>(const std::string &)>
+                 make_contact_group);
 
     [[nodiscard]] bool is_authorized_for_object(
         std::unique_ptr<const IHost> hst, std::unique_ptr<const IService> svc,
@@ -64,14 +61,15 @@ public:
     [[nodiscard]] bool is_authorized_for_service_group(
         const IServiceGroup &sg) const override;
     [[nodiscard]] bool is_authorized_for_event(
-        const std::string &precedence,
-        const std::vector<std::unique_ptr<const IContactGroup>> &contact_groups,
+        const std::string &precedence, const std::string &contact_groups,
         const IHost *hst) const override;
 
 private:
     const IContact &auth_user_;
     ServiceAuthorization service_auth_;
     GroupAuthorization group_auth_;
+    std::function<std::unique_ptr<IContactGroup>(const std::string &)>
+        make_contact_group_;
 };
 
 class NoAuthUser : public User {
@@ -100,8 +98,7 @@ public:
     }
     [[nodiscard]] bool is_authorized_for_event(
         const std::string & /*precedence*/,
-        const std::vector<std::unique_ptr<const IContactGroup>>
-            & /*contact_groups*/,
+        const std::string & /*contact_groups*/,
         const IHost * /*hst*/) const override {
         return true;
     }
@@ -133,8 +130,7 @@ public:
     }
     [[nodiscard]] bool is_authorized_for_event(
         const std::string & /*precedence*/,
-        const std::vector<std::unique_ptr<const IContactGroup>>
-            & /*contact_groups*/,
+        const std::string & /*contact_groups*/,
         const IHost * /*hst*/) const override {
         return false;
     }

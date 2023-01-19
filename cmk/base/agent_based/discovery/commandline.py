@@ -18,7 +18,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ServiceState
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction
+from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -183,8 +183,9 @@ def commandline_check_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
@@ -193,8 +194,9 @@ def commandline_check_discovery(
             _commandline_check_discovery,
             host_name,
             config_cache=config_cache,
-            parser=parser,
             fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
         ),
         exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
@@ -211,8 +213,9 @@ def _commandline_check_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
 ) -> ActiveCheckResult:
     fetched = fetcher(host_name, ip_address=None)
     return execute_check_discovery(
@@ -220,4 +223,5 @@ def _commandline_check_discovery(
         config_cache=config_cache,
         fetched=((f[0], f[1]) for f in fetched),
         parser=parser,
+        summarizer=summarizer,
     )

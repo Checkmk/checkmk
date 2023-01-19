@@ -37,7 +37,7 @@ from cmk.utils.type_defs import HostName, HWSWInventoryParameters, InventoryPlug
 
 from cmk.fetchers import FetcherFunction, SourceType
 
-from cmk.checkers import HostKey, ParserFunction
+from cmk.checkers import HostKey, ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 
@@ -49,11 +49,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import (
-    check_parsing_errors,
-    get_section_kwargs,
-    summarize_host_sections,
-)
+from cmk.base.agent_based.utils import check_parsing_errors, get_section_kwargs
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import ConfigCache
 
@@ -76,8 +72,9 @@ def check_inventory_tree(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
@@ -140,21 +137,7 @@ def check_inventory_tree(
                     processing_failed=processing_failed,
                     no_data_or_files=no_data_or_files,
                 ),
-                *(
-                    summarize_host_sections(
-                        host_sections,
-                        source,
-                        # Do not use source states which would overwrite "State when inventory fails" in the
-                        # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
-                        override_non_ok_state=parameters.fail_status,
-                        exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
-                        time_settings=config_cache.get_piggybacked_hosts_time_settings(
-                            piggybacked_hostname=source.hostname,
-                        ),
-                        is_piggyback=config_cache.is_piggyback_host(host_name),
-                    )
-                    for source, host_sections in host_sections
-                ),
+                summarizer(host_sections),
                 check_parsing_errors(
                     errors=parsing_errors,
                     error_state=parameters.fail_status,

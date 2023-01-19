@@ -21,7 +21,7 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction
+from cmk.checkers import ParserFunction, SummarizerFunction
 
 import cmk.base.section as section
 from cmk.base.config import ConfigCache
@@ -35,8 +35,10 @@ def commandline_inventory(
     hostname: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
+    parameters: HWSWInventoryParameters,
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     section.section_begin(hostname)
@@ -44,10 +46,11 @@ def commandline_inventory(
         _commandline_inventory_on_host(
             hostname,
             config_cache=config_cache,
-            parser=parser,
             fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
             inventory_parameters=config_cache.inventory_parameters,
-            parameters=config_cache.hwsw_inventory_parameters(hostname),
+            parameters=parameters,
             run_plugin_names=run_plugin_names,
         )
 
@@ -63,8 +66,9 @@ def _commandline_inventory_on_host(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
     run_plugin_names: Container[InventoryPluginName],
@@ -76,8 +80,9 @@ def _commandline_inventory_on_host(
     check_result = check_inventory_tree(
         host_name,
         config_cache=config_cache,
-        parser=parser,
         fetcher=fetcher,
+        parser=parser,
+        summarizer=summarizer,
         inventory_parameters=inventory_parameters,
         run_plugin_names=run_plugin_names,
         parameters=parameters,

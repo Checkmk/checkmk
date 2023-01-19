@@ -17,7 +17,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import SourceInfo
 
-from cmk.checkers import ParserFunction
+from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
 import cmk.base.config as config
@@ -26,7 +26,7 @@ from cmk.base.agent_based.data_provider import (
     make_broker,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
+from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters
@@ -43,6 +43,7 @@ def execute_check_discovery(
     config_cache: ConfigCache,
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
+    summarizer: SummarizerFunction,
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -93,18 +94,7 @@ def execute_check_discovery(
         *itertools.chain(
             services_result,
             [host_labels_result],
-            *(
-                summarize_host_sections(
-                    host_sections,
-                    source,
-                    exit_spec=config_cache.exit_code_spec(source.hostname),
-                    time_settings=config_cache.get_piggybacked_hosts_time_settings(
-                        piggybacked_hostname=source.hostname,
-                    ),
-                    is_piggyback=config_cache.is_piggyback_host(host_name),
-                )
-                for source, host_sections in host_sections
-            ),
+            summarizer(host_sections),
             parsing_errors_results,
             [
                 _schedule_rediscovery(

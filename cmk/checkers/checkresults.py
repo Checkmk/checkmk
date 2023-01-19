@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.type_defs import MetricTuple, state_markers
 
-from cmk.checkers import HostKey
+from ._typedefs import HostKey
 
 __all__ = ["ActiveCheckResult", "ServiceCheckResult"]
 

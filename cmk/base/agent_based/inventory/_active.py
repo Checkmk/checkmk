@@ -13,7 +13,7 @@ from cmk.utils.type_defs import EVERYTHING, HostName, HWSWInventoryParameters, R
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction
+from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
 from cmk.base.config import ConfigCache
@@ -27,8 +27,9 @@ def execute_active_check_inventory(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
 ) -> ActiveCheckResult:
@@ -40,8 +41,9 @@ def execute_active_check_inventory(
 
     result = check_inventory_tree(
         host_name,
-        parser=parser,
         fetcher=fetcher,
+        parser=parser,
+        summarizer=summarizer,
         config_cache=config_cache,
         inventory_parameters=inventory_parameters,
         run_plugin_names=EVERYTHING,

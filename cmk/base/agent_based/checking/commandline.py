@@ -12,7 +12,7 @@ from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostNa
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction
+from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.submitters import Submitter
 
@@ -31,6 +31,7 @@ def commandline_checking(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    summarizer: SummarizerFunction,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     submitter: Submitter,
     active_check_handler: Callable[[HostName, str], object],
@@ -44,8 +45,9 @@ def commandline_checking(
             host_name,
             ipaddress,
             config_cache=config_cache,
-            parser=parser,
             fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
             run_plugin_names=run_plugin_names,
             perfdata_with_times=perfdata_with_times,
             submitter=submitter,
@@ -66,8 +68,9 @@ def _commandline_checking(
     ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -79,6 +82,7 @@ def _commandline_checking(
         config_cache=config_cache,
         fetched=fetched,
         parser=parser,
+        summarizer=summarizer,
         run_plugin_names=run_plugin_names,
         perfdata_with_times=perfdata_with_times,
         submitter=submitter,

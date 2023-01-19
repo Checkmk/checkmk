@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Final
 
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec, ParsedSectionName, result, ServiceState
+from cmk.utils.type_defs import ExitSpec, HostName, ParsedSectionName, result, ServiceState
 
 from cmk.fetchers import SourceInfo
 
@@ -14,6 +15,8 @@ from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.summarize import summarize
+
+from cmk.base.config import ConfigCache
 
 from .data_provider import ParsedSectionContent, ParsedSectionsBroker
 
@@ -67,6 +70,40 @@ def get_section_cluster_kwargs(
         return {}
 
     return kwargs
+
+
+class ConfiguredSummarizer:
+    def __init__(
+        self,
+        config_cache: ConfigCache,
+        host_name: HostName,
+        *,
+        include_ok_results: bool,
+        override_non_ok_state: ServiceState | None = None,
+    ) -> None:
+        self.config_cache: Final = config_cache
+        self.host_name: Final = host_name
+        self.include_ok_results: Final = include_ok_results
+        self.override_non_ok_state: Final = override_non_ok_state
+
+    def __call__(
+        self,
+        host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
+    ) -> Iterable[ActiveCheckResult]:
+        return next(
+            summarize_host_sections(
+                host_sections,
+                source,
+                include_ok_results=self.include_ok_results,
+                override_non_ok_state=self.override_non_ok_state,
+                exit_spec=self.config_cache.exit_code_spec(source.hostname, source.ident),
+                time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
+                    piggybacked_hostname=source.hostname
+                ),
+                is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
+            )
+            for source, host_sections in host_sections
+        )
 
 
 def summarize_host_sections(

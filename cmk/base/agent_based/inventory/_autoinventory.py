@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
 from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.log import console
-from cmk.utils.type_defs import EVERYTHING
+from cmk.utils.type_defs import EVERYTHING, HostName
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction
+from cmk.checkers import ParserFunction, SummarizerFunction
 
 import cmk.base.config as config
 
@@ -24,6 +26,7 @@ def inventorize_marked_hosts(
     *,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    summarizer: Callable[[HostName], SummarizerFunction],
 ) -> None:
     autoinventory_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),
@@ -45,6 +48,7 @@ def inventorize_marked_hosts(
                     config_cache=config_cache,
                     parser=parser,
                     fetcher=fetcher,
+                    summarizer=summarizer(host_name),
                     inventory_parameters=config_cache.inventory_parameters,
                     parameters=config_cache.hwsw_inventory_parameters(host_name),
                 )

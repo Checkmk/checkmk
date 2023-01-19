@@ -38,7 +38,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
-from cmk.checkers import HostKey, ParserFunction
+from cmk.checkers import HostKey, ParserFunction, SummarizerFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
@@ -59,7 +59,6 @@ from cmk.base.agent_based.utils import (
     check_parsing_errors,
     get_section_cluster_kwargs,
     get_section_kwargs,
-    summarize_host_sections,
 )
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
@@ -85,6 +84,7 @@ def execute_checkmk_checks(
     config_cache: ConfigCache,
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     parser: ParserFunction,
+    summarizer: SummarizerFunction,
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -113,19 +113,7 @@ def execute_checkmk_checks(
                 parsed_sections_broker=broker,
             )
         timed_results = itertools.chain(
-            *(
-                summarize_host_sections(
-                    host_sections,
-                    source,
-                    include_ok_results=True,
-                    exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
-                    time_settings=config_cache.get_piggybacked_hosts_time_settings(
-                        piggybacked_hostname=source.hostname,
-                    ),
-                    is_piggyback=config_cache.is_piggyback_host(hostname),
-                )
-                for source, host_sections in host_sections
-            ),
+            summarizer(host_sections),
             check_parsing_errors(
                 errors=broker.parsing_errors(),
             ),

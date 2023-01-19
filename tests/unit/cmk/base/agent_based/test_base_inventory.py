@@ -1237,8 +1237,9 @@ def test_check_inventory_tree(
     check_result = _inventory.check_inventory_tree(
         hostname,
         config_cache=config_cache,
-        parser=parser,
         fetcher=fetcher,
+        parser=parser,
+        summarizer=lambda *args, **kwargs: [],
         inventory_parameters=config_cache.inventory_parameters,
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
@@ -1263,6 +1264,7 @@ def test_check_inventory_tree_no_data_or_files(
         # no data!
         fetcher=lambda *args, **kwargs: [],
         parser=lambda *args, **kwargs: [],
+        summarizer=lambda *args, **kwargs: [],
         inventory_parameters=config_cache.inventory_parameters,
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),

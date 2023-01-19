@@ -74,6 +74,7 @@ import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.agent_based.inventory import execute_active_check_inventory
+from cmk.base.agent_based.utils import ConfiguredSummarizer
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
@@ -1539,12 +1540,6 @@ def mode_check_discovery(
     file_cache_options = _handle_fetcher_options(options)
     discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
-    )
     fetcher = ConfiguredFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -1555,11 +1550,24 @@ def mode_check_discovery(
         simulation_mode=config.simulation_mode,
         max_cachefile_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
     )
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
+    summarizer = ConfiguredSummarizer(
+        config_cache,
+        hostname,
+        include_ok_results=False,
+        override_non_ok_state=None,
+    )
     return discovery.commandline_check_discovery(
         hostname,
         config_cache=config_cache,
-        parser=parser,
         fetcher=fetcher,
+        parser=parser,
+        summarizer=summarizer,
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
@@ -1892,12 +1900,6 @@ def mode_check(
 
     config_cache = config.get_config_cache()
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=selected_sections,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.checking"),
-    )
     fetcher = ConfiguredFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -1907,12 +1909,25 @@ def mode_check(
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
     )
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=selected_sections,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.checking"),
+    )
+    summarizer = ConfiguredSummarizer(
+        config_cache,
+        hostname,
+        include_ok_results=True,
+        override_non_ok_state=None,
+    )
     return checking.commandline_checking(
         hostname,
         ipaddress,
         config_cache=config_cache,
-        parser=parser,
         fetcher=fetcher,
+        parser=parser,
+        summarizer=summarizer,
         run_plugin_names=run_plugin_names,
         submitter=get_submitter_(
             check_submission=config.check_submission,
@@ -2027,12 +2042,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         file_cache_options = file_cache_options._replace(keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=selected_sections,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.inventory"),
-    )
     fetcher = ConfiguredFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -2042,15 +2051,31 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
     )
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=selected_sections,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.inventory"),
+    )
 
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
     for hostname in hostnames:
+        parameters = config_cache.hwsw_inventory_parameters(hostname)
+        summarizer = ConfiguredSummarizer(
+            config_cache,
+            hostname,
+            include_ok_results=False,
+            override_non_ok_state=parameters.fail_status,
+        )
+
         inventory.commandline_inventory(
             hostname,
             config_cache=config_cache,
-            parser=parser,
             fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
+            parameters=parameters,
             run_plugin_names=run_plugin_names,
         )
 
@@ -2103,12 +2128,8 @@ def mode_inventory_as_check(
     keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.inventory"),
-    )
+    parameters = HWSWInventoryParameters.from_raw(options)
+
     fetcher = ConfiguredFetcher(
         config_cache,
         file_cache_options=file_cache_options,
@@ -2118,15 +2139,28 @@ def mode_inventory_as_check(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
     )
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.inventory"),
+    )
+    summarizer = ConfiguredSummarizer(
+        config_cache,
+        hostname,
+        include_ok_results=False,
+        override_non_ok_state=parameters.fail_status,
+    )
     return error_handling.check_result(
         partial(
             execute_active_check_inventory,
             hostname,
             config_cache=config_cache,
-            parser=parser,
             fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
             inventory_parameters=config_cache.inventory_parameters,
-            parameters=HWSWInventoryParameters.from_raw(options),
+            parameters=parameters,
         ),
         exit_spec=config_cache.exit_code_spec(hostname),
         host_name=hostname,
@@ -2238,11 +2272,21 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
     )
+
+    def summarizer(host_name: HostName) -> ConfiguredSummarizer:
+        return ConfiguredSummarizer(
+            config_cache,
+            host_name,
+            include_ok_results=False,
+            override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
+        )
+
     inventory.inventorize_marked_hosts(
         config_cache,
         queue,
         parser=parser,
         fetcher=fetcher,
+        summarizer=summarizer,
     )
 
 

@@ -14,10 +14,11 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 from cmk.fetchers import SourceInfo
 
 from ._parser import Parser
+from .checkresults import ActiveCheckResult
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
-__all__ = ["parse_raw_data", "ParserFunction"]
+__all__ = ["parse_raw_data", "ParserFunction", "SummarizerFunction"]
 
 
 class ParserFunction(Protocol):
@@ -25,6 +26,14 @@ class ParserFunction(Protocol):
         self,
         fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
+        ...
+
+
+class SummarizerFunction(Protocol):
+    def __call__(
+        self,
+        host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
+    ) -> Iterable[ActiveCheckResult]:
         ...
 
 

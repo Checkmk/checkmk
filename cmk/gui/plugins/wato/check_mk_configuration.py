@@ -5397,6 +5397,13 @@ def _factory_default_check_mk_exit_status():
     }
 
 
+def _individual_spec(title: str) -> Dictionary:
+    return Dictionary(
+        title=title,
+        elements=_common_check_mk_exit_status_elements(),
+    )
+
+
 def _valuespec_check_mk_exit_status() -> Dictionary:
     return Dictionary(
         title=_("Status of the Checkmk services"),
@@ -5458,52 +5465,31 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                     elements=[
                         (
                             "agent",
-                            Dictionary(
-                                title=_("Agent"),
-                                elements=_common_check_mk_exit_status_elements(),
-                            ),
+                            _individual_spec(_("Agent")),
                         ),
                         (
                             "programs",
-                            Dictionary(
-                                title=_("Programs"),
-                                elements=_common_check_mk_exit_status_elements(),
-                            ),
+                            _individual_spec(_("Programs")),
                         ),
                         (
                             "special",
-                            Dictionary(
-                                title=_("Special Agent"),
-                                elements=_common_check_mk_exit_status_elements(),
-                            ),
+                            _individual_spec(_("Special Agent")),
                         ),
                         (
                             "snmp",
-                            Dictionary(
-                                title=_("SNMP"),
-                                elements=_common_check_mk_exit_status_elements(),
-                            ),
+                            _individual_spec(_("SNMP")),
                         ),
                         (
                             "mgmt_snmp",
-                            Dictionary(
-                                title=_("SNMP Management Board"),
-                                elements=_common_check_mk_exit_status_elements(),
-                            ),
+                            _individual_spec(_("SNMP Management Board")),
                         ),
                         (
                             "mgmt_ipmi",
-                            Dictionary(
-                                title=_("IPMI Management Board"),
-                                elements=_common_check_mk_exit_status_elements(),
-                            ),
+                            _individual_spec(_("IPMI Management Board")),
                         ),
                         (
                             "piggyback",
-                            Dictionary(
-                                title=_("Piggyback"),
-                                elements=_common_check_mk_exit_status_elements(),
-                            ),
+                            _individual_spec(_("Piggyback")),
                         ),
                     ],
                 ),

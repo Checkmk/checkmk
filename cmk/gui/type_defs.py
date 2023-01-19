@@ -267,17 +267,13 @@ class PainterParameters(TypedDict, total=False):
     render_states: list[int | str]
     use_short: bool
     uuid: str
-    # From join inv painter params
-    path_to_table: SDPath
-    column_to_display: str
-    columns_to_match: list[tuple[str, str]]
 
 
 def _make_default_painter_parameters() -> PainterParameters:
     return PainterParameters()
 
 
-ColumnTypes = Literal["column", "join_column", "join_inv_column"]
+ColumnTypes = Literal["column", "join_column"]
 
 
 class _RawCommonColumnSpec(TypedDict):
@@ -309,21 +305,8 @@ class ColumnSpec:
 
     @property
     def column_type(self) -> ColumnTypes:
-        if self._column_type in ["column", "join_column", "join_inv_column"]:
+        if self._column_type in ["column", "join_column"]:
             return self._column_type
-
-        # First note:
-        #   The "column_type" is used for differentiating ColumnSpecs in the view editor
-        #   dialog. ie. "Column", "Joined Column", "Joined inventory column".
-        # We have two entry points for ColumnSpec initialization:
-        # 1. In "group_painters" or "painters" in views/dashboards/..., eg. views/builtin_views.py
-        #    Here the "_column_type" is not set but calculated from "join_value".
-        #    This only applies to "column" and "join_column" but not to "join_inv_column"
-        #    because there are no such pre-defined ColumnSpecs
-        # 2. during loading of visuals
-        #    Here the "column_type" is part of the raw ColumnSpec which is add below in "from_raw"
-        # Thus we don't need to handle "join_inv_column" here as long as there are no pre-defined
-        # ColumnSpecs.
         return self._get_column_type_from_join_value(self.join_value)
 
     @classmethod
@@ -436,10 +419,6 @@ class _ViewSpecMandatory(Visual):
     sorters: Sequence[SorterSpec]
 
 
-class _InventoryJoinMacrosSpec(TypedDict):
-    macros: list[tuple[str, str]]
-
-
 class ViewSpec(_ViewSpecMandatory, total=False):
     add_headers: str
     # View editor only adds them in case they are truish. In our builtin specs these flags are also
@@ -449,7 +428,6 @@ class ViewSpec(_ViewSpecMandatory, total=False):
     force_checkboxes: bool
     user_sortable: bool
     play_sounds: bool
-    inventory_join_macros: _InventoryJoinMacrosSpec
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]

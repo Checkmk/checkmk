@@ -19,32 +19,9 @@ from cmk.gui.wsgi.applications import CheckmkRESTAPI
 from cmk.gui.wsgi.applications.rest_api import Authenticate
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
-from cmk.gui.wsgi.utils import render_string_template
 
 if typing.TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
-
-REDOC_INDEX_HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>ReDoc</title>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body {{
-        margin: 0;
-        padding: 0;
-      }}
-    </style>
-</head>
-<body>
-<redoc spec-url='/{site}/check_mk/api/{version}/openapi-doc.yaml'></redoc>
-<script src="/{site}/check_mk/api/doc/redoc.standalone.js"> </script>
-</body>
-</html>
-""".strip()
-
 
 rest_api = Blueprint(
     "rest-api",
@@ -92,12 +69,6 @@ def endpoint(site: str, version: str, path: str) -> WSGIApplication:
 @rest_api.route("/doc/", defaults={"file_name": "index.html"})
 @rest_api.route("/doc/<path:file_name>")
 def serve_redoc(site: str, file_name: str) -> Response:
-    if file_name == "index.html":
-        return render_string_template(
-            REDOC_INDEX_HTML,
-            site=site,
-            version="1.0",
-        )
     return send_from_directory(f"{paths.web_dir}/htdocs/openapi", file_name)
 
 

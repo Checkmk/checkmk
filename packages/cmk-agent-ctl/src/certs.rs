@@ -186,7 +186,7 @@ pub fn fetch_server_cert_pem(server: &str, port: &u16) -> AnyhowResult<String> {
     let tcp_stream = TcpStream::connect(format!("{}:{}", server, port))?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
-    let mut ssl_stream = ssl_connector_builder.build().connect("dummy", tcp_stream)?;
+    let mut ssl_stream = ssl_connector_builder.build().connect(server, tcp_stream)?;
 
     let server_cert = ssl_stream
         .ssl()

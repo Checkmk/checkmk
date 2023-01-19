@@ -1285,11 +1285,11 @@ def check_single_interface(
     use_discovered_state_and_speed: bool = True,
 ) -> type_defs.CheckResult:
     if use_discovered_state_and_speed:
-        targetspeed = params.get("speed", params.get("discovered_speed"))
+        targetspeed: int | None = params.get("speed", params.get("discovered_speed"))
     else:
         targetspeed = params.get("speed")
-    assumed_speed_in = params.get("assumed_speed_in")
-    assumed_speed_out = params.get("assumed_speed_out")
+    assumed_speed_in: int | None = params.get("assumed_speed_in")
+    assumed_speed_out: int | None = params.get("assumed_speed_out")
     unit = "Bit" if params.get("unit") in ["Bit", "bit"] else "B"
 
     # broadcast storm detection is turned off by default
@@ -1630,9 +1630,9 @@ def _output_group_members(
 def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     *,
     rates: RatesWithAverages,
-    speed_b_in: float,
-    speed_b_out: float,
-    speed_b_total: float,
+    speed_b_in: float | None,
+    speed_b_out: float | None,
+    speed_b_total: float | None,
     unit: str,
     traffic_levels: SpecificTrafficLevels,
     assumed_speed_in: int | None,
@@ -1676,7 +1676,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     *,
     direction: str,
     traffic: RateWithAverage,
-    speed: float,
+    speed: float | None,
     renderer: Callable[[float], str],
     traffic_levels: SpecificTrafficLevels,
     assumed_speed_in: int | None,

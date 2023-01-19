@@ -413,23 +413,10 @@ def _install(  # pylint: disable=too-many-branches
                         break
                     tardest.stdin.write(data)
 
-            # Fix permissions of extracted files
-            for filename in filenames:
-                path = site_path(part) / filename
-                desired_perm = _get_permissions(part, filename)
-                has_perm = path.stat().st_mode & 0o7777
-                if has_perm != desired_perm:
-                    g_logger.log(
-                        VERBOSE,
-                        "    Fixing permissions of %s: %04o -> %04o",
-                        path,
-                        has_perm,
-                        desired_perm,
-                    )
-                    path.chmod(desired_perm)
+    _fix_files_permissions(manifest, g_logger)
 
-            if part is PackagePart.EC_RULE_PACKS:
-                ec.add_rule_pack_proxies((str(f) for f in filenames))
+    if ecfiles := manifest.files.get(PackagePart.EC_RULE_PACKS):
+        ec.add_rule_pack_proxies((str(f) for f in ecfiles))
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -501,6 +488,23 @@ def _conflicting_files(
                 yield path, "part of another package"
             elif path.exists():
                 yield path, "already existing"
+
+
+def _fix_files_permissions(manifest: Manifest, logger: logging.Logger) -> None:
+    for part, filenames in manifest.files.items():
+        for filename in filenames:
+            path = site_path(part) / filename
+            desired_perm = _get_permissions(part, filename)
+            has_perm = path.stat().st_mode & 0o7777
+            if has_perm != desired_perm:
+                logger.log(
+                    VERBOSE,
+                    "    Fixing permissions of %s: %04o -> %04o",
+                    path,
+                    has_perm,
+                    desired_perm,
+                )
+                path.chmod(desired_perm)
 
 
 def _remove_packaged_rule_packs(file_names: Iterable[Path], delete_export: bool = True) -> None:

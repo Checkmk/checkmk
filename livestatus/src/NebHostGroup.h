@@ -6,21 +6,28 @@
 #ifndef NebHostGroup_h
 #define NebHostGroup_h
 
-#include <memory>
-#include <vector>
+#include <functional>
 
+#include "NebHost.h"
 #include "livestatus/Interface.h"
 #include "nagios.h"
 
 class NebHostGroup : public IHostGroup {
 public:
-    explicit NebHostGroup(const hostgroup &hg);
-    [[nodiscard]] const std::vector<std::unique_ptr<const IHost>> &hosts()
-        const override {
-        return hosts_;
-    };
+    explicit NebHostGroup(const hostgroup &host_group)
+        : host_group_{host_group} {}
+
+    bool all(std::function<bool(const IHost &)> pred) const override {
+        for (const auto *member = host_group_.members; member != nullptr;
+             member = member->next) {
+            if (!pred(NebHost{*member->host_ptr})) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 private:
-    std::vector<std::unique_ptr<const IHost>> hosts_;
+    const hostgroup &host_group_;
 };
 #endif  // NebHostGroup_h

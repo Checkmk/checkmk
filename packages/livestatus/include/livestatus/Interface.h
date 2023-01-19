@@ -6,6 +6,7 @@
 #ifndef Interface_h
 #define Interface_h
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -31,15 +32,13 @@ public:
 class IHostGroup {
 public:
     virtual ~IHostGroup() = default;
-    [[nodiscard]] virtual const std::vector<std::unique_ptr<const IHost>>
-        &hosts() const = 0;
+    virtual bool all(std::function<bool(const IHost &)> pred) const = 0;
 };
 
 class IServiceGroup {
 public:
     virtual ~IServiceGroup() = default;
-    [[nodiscard]] virtual const std::vector<std::unique_ptr<const IService>>
-        &services() const = 0;
+    virtual bool all(std::function<bool(const IService &)> pred) const = 0;
 };
 
 class IContactGroup {

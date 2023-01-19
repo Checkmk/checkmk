@@ -35,28 +35,23 @@ bool AuthUser::is_authorized_for_service(const IService &svc) const {
 }
 
 bool AuthUser::is_authorized_for_host_group(const IHostGroup &hg) const {
-    auto is_authorized_for = [this](const std::unique_ptr<const IHost> &hst) {
-        return is_authorized_for_host(*hst);
-    };
-    const auto &hosts_in_group = hg.hosts();
     return group_auth_ == GroupAuthorization::loose
-               ? std::any_of(hosts_in_group.begin(), hosts_in_group.end(),
-                             is_authorized_for)
-               : std::all_of(hosts_in_group.begin(), hosts_in_group.end(),
-                             is_authorized_for);
+               ? !hg.all([this](const IHost &hst) {  // any, De Morgan's law
+                     return !is_authorized_for_host(hst);
+                 })
+               : hg.all([this](const IHost &hst) {
+                     return is_authorized_for_host(hst);
+                 });
 }
 
 bool AuthUser::is_authorized_for_service_group(const IServiceGroup &sg) const {
-    auto is_authorized_for =
-        [this](const std::unique_ptr<const IService> &svc) {
-            return is_authorized_for_service(*svc);
-        };
-    const auto &services_in_group = sg.services();
     return group_auth_ == GroupAuthorization::loose
-               ? std::any_of(services_in_group.begin(), services_in_group.end(),
-                             is_authorized_for)
-               : std::all_of(services_in_group.begin(), services_in_group.end(),
-                             is_authorized_for);
+               ? !sg.all([this](const IService &hst) {  // any, De Morgan's law
+                     return !is_authorized_for_service(hst);
+                 })
+               : sg.all([this](const IService &hst) {
+                     return is_authorized_for_service(hst);
+                 });
 }
 
 bool AuthUser::is_authorized_for_event(

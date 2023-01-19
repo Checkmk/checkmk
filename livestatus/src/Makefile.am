@@ -110,9 +110,7 @@ liblivestatusneb_a_SOURCES = \
         NagiosCore.cc \
         NebContactGroup.cc \
         NebHost.cc \
-        NebHostGroup.cc \
         NebService.cc \
-        NebServiceGroup.cc \
         Query.cc \
         RRDColumn.cc \
         ServiceListState.cc \

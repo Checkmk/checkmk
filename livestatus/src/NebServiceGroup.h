@@ -6,21 +6,29 @@
 #ifndef NebServiceGroup_h
 #define NebServiceGroup_h
 
-#include <memory>
-#include <vector>
+#include <functional>
 
+#include "NebService.h"
 #include "livestatus/Interface.h"
 #include "nagios.h"
 
 class NebServiceGroup : public IServiceGroup {
 public:
-    explicit NebServiceGroup(const servicegroup &sg);
-    [[nodiscard]] const std::vector<std::unique_ptr<const IService>> &services()
-        const override {
-        return services_;
-    };
+    explicit NebServiceGroup(const servicegroup &service_group)
+        : service_group_{service_group} {}
+
+    bool all(std::function<bool(const IService &)> pred) const override {
+        for (const auto *member = service_group_.members; member != nullptr;
+             member = member->next) {
+            if (!pred(NebService{*member->service_ptr})) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 private:
-    std::vector<std::unique_ptr<const IService>> services_;
+    const servicegroup &service_group_;
 };
+
 #endif  // NebServiceGroup_h

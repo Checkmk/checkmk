@@ -373,6 +373,7 @@ def _valuespec_special_agents_kube():
             "cluster-resource-aggregation",
             "import-annotations",
         ],
+        default_keys=["usage_endpoint"],
         title=_("Kubernetes"),
     )
 

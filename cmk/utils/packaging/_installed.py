@@ -10,7 +10,7 @@ from typing import Final
 
 import cmk.utils.paths
 
-from ._manifest import Manifest, read_manifest_optionally
+from ._mkp import Manifest, read_manifest_optionally
 from ._parts import PackagePart
 from ._type_defs import PackageName
 

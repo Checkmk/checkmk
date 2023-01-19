@@ -7,8 +7,11 @@ from __future__ import annotations
 
 import ast
 import enum
+import logging
 import pprint
+import subprocess
 import tarfile
+import time
 from collections.abc import Iterable, Mapping, Sequence
 from functools import lru_cache
 from io import BytesIO
@@ -144,3 +147,45 @@ def extract_manifest_optionally(pkg_path: Path, logger: Logger) -> Manifest | No
 @lru_cache
 def _extract_manifest_cached(package_path: Path, mtime: float) -> Manifest:
     return extract_manifest(package_path.read_bytes())
+
+
+def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
+    info = tarfile.TarInfo()
+    info.mtime = int(time.time())
+    info.uid = 0
+    info.gid = 0
+    info.size = size
+    info.mode = 0o644
+    info.type = tarfile.REGTYPE
+    info.name = filename
+    return info
+
+
+def create_tgz(files: Iterable[tuple[str, bytes]]) -> bytes:
+    buffer = BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
+        for name, content in files:
+            tar.addfile(_create_tar_info(name, len(content)), BytesIO(content))
+
+    return buffer.getvalue()
+
+
+def create_tar(
+    name: str, src: Path, filenames: Iterable[Path], logger: logging.Logger
+) -> tuple[str, bytes]:
+    tarname = f"{name}.tar"
+    logger.debug("  Packing %s:", tarname)
+    for f in filenames:
+        logger.debug("    %s", f)
+    return tarname, subprocess.check_output(
+        [
+            "tar",
+            "cf",
+            "-",
+            "--dereference",
+            "--force-local",
+            "-C",
+            str(src),
+            *(str(f) for f in filenames),
+        ]
+    )

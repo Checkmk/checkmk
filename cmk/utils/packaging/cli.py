@@ -25,8 +25,14 @@ from . import (
     release,
     update_active_packages,
 )
-from ._manifest import extract_manifest, Manifest, manifest_template, read_manifest_optionally
-from ._parts import PackagePart, site_path, ui_title
+from ._mkp import (
+    extract_manifest,
+    Manifest,
+    manifest_template,
+    PackagePart,
+    read_manifest_optionally,
+)
+from ._parts import site_path, ui_title
 from ._reporter import files_inventory
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 

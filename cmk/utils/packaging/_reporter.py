@@ -14,7 +14,7 @@ from typing import TypedDict
 from cmk.utils.paths import local_root
 
 from ._installed import get_installed_manifests
-from ._manifest import PackagePart
+from ._mkp import PackagePart
 from ._parts import get_package_part, site_path, ui_title
 
 

@@ -15,7 +15,7 @@ from cmk.utils.i18n import _
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from ._manifest import PackagePart
+from ._mkp import PackagePart
 
 
 def ui_title(part: PackagePart) -> str:

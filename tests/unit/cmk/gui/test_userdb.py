@@ -36,6 +36,7 @@ from cmk.gui.session import session
 from cmk.gui.type_defs import SessionId, SessionInfo, WebAuthnCredential
 from cmk.gui.userdb import htpasswd
 from cmk.gui.userdb import ldap_connector as ldap
+from cmk.gui.userdb.store import load_custom_attr
 from cmk.gui.valuespec import Dictionary
 
 if TYPE_CHECKING:
@@ -120,6 +121,10 @@ def _make_valid_session(user_id: UserId, now: datetime) -> SessionId:
     return session_id
 
 
+def _load_failed_logins(user_id: UserId) -> int | None:
+    return load_custom_attr(user_id=user_id, key="num_failed_logins", parser=int)
+
+
 def test_load_pre_20_session(user_id: UserId) -> None:
     timestamp = 1234567890
     userdb.save_custom_attr(user_id, "session_info", f"sess2|{timestamp}")
@@ -135,7 +140,7 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session_id = session_info.session_id
 
-    assert userdb.session._load_failed_logins(user_id) == 0
+    assert _load_failed_logins(user_id) == 0
     assert len(session_info.csrf_token) == 36
 
     # Verify the session was initialized
@@ -153,26 +158,26 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
     }
 
     # Ensure the failed login count is 0
-    assert userdb.session._load_failed_logins(user_id) == 0
+    assert _load_failed_logins(user_id) == 0
 
 
 @pytest.mark.usefixtures("request_context")
 def test_on_failed_login_no_locking(user_id: UserId) -> None:
     now = datetime.now()
     assert active_config.lock_on_logon_failures is None
-    assert userdb.session._load_failed_logins(user_id) == 0
+    assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id, now)
-    assert userdb.session._load_failed_logins(user_id) == 1
+    assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id, now)
-    assert userdb.session._load_failed_logins(user_id) == 2
+    assert _load_failed_logins(user_id) == 2
     assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id, now)
-    assert userdb.session._load_failed_logins(user_id) == 3
+    assert _load_failed_logins(user_id) == 3
     assert not userdb.user_locked(user_id)
 
 
@@ -180,15 +185,15 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
 def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
     now = datetime.now()
     assert active_config.lock_on_logon_failures is None
-    assert userdb.session._load_failed_logins(user_id) == 0
+    assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id)
 
     userdb.on_failed_login(user_id, now)
-    assert userdb.session._load_failed_logins(user_id) == 1
+    assert _load_failed_logins(user_id) == 1
     assert not userdb.user_locked(user_id)
 
     userdb.session.on_succeeded_login(user_id, now)
-    assert userdb.session._load_failed_logins(user_id) == 0
+    assert _load_failed_logins(user_id) == 0
     assert not userdb.user_locked(user_id)
 
 
@@ -199,19 +204,19 @@ def test_on_failed_login_with_locking(
     now = datetime.now()
     with set_config(lock_on_logon_failures=3):
         assert active_config.lock_on_logon_failures == 3
-        assert userdb.session._load_failed_logins(user_id) == 0
+        assert _load_failed_logins(user_id) == 0
         assert not userdb.user_locked(user_id)
 
         userdb.on_failed_login(user_id, now)
-        assert userdb.session._load_failed_logins(user_id) == 1
+        assert _load_failed_logins(user_id) == 1
         assert not userdb.user_locked(user_id)
 
         userdb.on_failed_login(user_id, now)
-        assert userdb.session._load_failed_logins(user_id) == 2
+        assert _load_failed_logins(user_id) == 2
         assert not userdb.user_locked(user_id)
 
         userdb.on_failed_login(user_id, now)
-        assert userdb.session._load_failed_logins(user_id) == 3
+        assert _load_failed_logins(user_id) == 3
         assert userdb.user_locked(user_id)
 
 

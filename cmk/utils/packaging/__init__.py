@@ -381,37 +381,7 @@ def _install(  # pylint: disable=too-many-branches
         # Now install files, but only unpack files explicitely listed
         for part, filenames in manifest.files.items():
 
-            tarname = f"{part.ident}.tar"
-            g_logger.debug("  Extracting '%s':", tarname)
-            for fn in filenames:
-                g_logger.debug("    %s", fn)
-
-            # make sure target directory exists
-            parts_site_path = site_path(part)
-            if not parts_site_path.exists():
-                g_logger.debug("    Creating directory %s", parts_site_path)
-                parts_site_path.mkdir(parents=True, exist_ok=True)
-
-            tarsource = tar.extractfile(tarname)
-            if tarsource is None:
-                raise PackageException("Failed to open %s.tar" % part.ident)
-
-            # Important: Do not preserve the tared timestamp.
-            # Checkmk needs to know when the files have been installed for cache invalidation.
-            with subprocess.Popen(
-                ["tar", "xf", "-", "--touch", "-C", site_path(part), *(str(f) for f in filenames)],
-                stdin=subprocess.PIPE,
-                shell=False,
-                close_fds=True,
-            ) as tardest:
-                if tardest.stdin is None:
-                    raise PackageException("Failed to open stdin")
-
-                while True:
-                    data = tarsource.read(4096)
-                    if not data:
-                        break
-                    tardest.stdin.write(data)
+            _extract_tar(tar, f"{part.ident}.tar", site_path(part), filenames, g_logger)
 
     _fix_files_permissions(manifest, g_logger)
 
@@ -443,6 +413,41 @@ def _install(  # pylint: disable=too-many-branches
         _execute_post_package_change_actions(manifest)
 
     return manifest
+
+
+def _extract_tar(
+    tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable[Path], logger: logging.Logger
+) -> None:
+
+    logger.debug("  Extracting '%s':", name)
+    for fn in filenames:
+        logger.debug("    %s", fn)
+
+    if not dst.exists():
+        # make sure target directory exists
+        logger.debug("    Creating directory %s", dst)
+        dst.mkdir(parents=True, exist_ok=True)
+
+    tarsource = tar.extractfile(name)
+    if tarsource is None:
+        raise PackageException("Failed to open %s" % name)
+
+    # Important: Do not preserve the tared timestamp.
+    # Checkmk needs to know when the files have been installed for cache invalidation.
+    with subprocess.Popen(
+        ["tar", "xf", "-", "--touch", "-C", str(dst), *(str(f) for f in filenames)],
+        stdin=subprocess.PIPE,
+        shell=False,
+        close_fds=True,
+    ) as tardest:
+        if tardest.stdin is None:
+            raise PackageException("Failed to open stdin")
+
+        while True:
+            data = tarsource.read(4096)
+            if not data:
+                break
+            tardest.stdin.write(data)
 
 
 def _raise_for_installability(

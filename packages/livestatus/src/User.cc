@@ -25,13 +25,13 @@ bool AuthUser::is_authorized_for_object(std::unique_ptr<const IHost> hst,
 }
 
 bool AuthUser::is_authorized_for_host(const IHost &hst) const {
-    return host_has_contact(hst);
+    return hst.hasContact(auth_user_);
 }
 
 bool AuthUser::is_authorized_for_service(const IService &svc) const {
-    return service_has_contact(svc) ||
+    return svc.hasContact(auth_user_) ||
            (service_auth_ == ServiceAuthorization::loose &&
-            host_has_contact(svc.host()));
+            svc.host().hasContact(auth_user_));
 }
 
 bool AuthUser::is_authorized_for_host_group(const IHostGroup &hg) const {
@@ -59,10 +59,9 @@ bool AuthUser::is_authorized_for_event(
     const std::vector<std::unique_ptr<const IContactGroup>> &contact_groups,
     const IHost *hst) const {
     auto is_authorized_via_contactgroups = [this, &contact_groups]() {
-        return std::any_of(contact_groups.begin(), contact_groups.end(),
-                           [this](const auto &group) {
-                               return is_member_of_contactgroup(*group);
-                           });
+        return std::any_of(
+            contact_groups.begin(), contact_groups.end(),
+            [this](const auto &group) { return group->isMember(auth_user_); });
     };
     if (precedence == "rule") {
         if (!contact_groups.empty()) {
@@ -83,17 +82,4 @@ bool AuthUser::is_authorized_for_event(
         return true;
     }
     return false;
-}
-
-bool AuthUser::host_has_contact(const IHost &hst) const {
-    return hst.hasContact(auth_user_);
-}
-
-bool AuthUser::service_has_contact(const IService &svc) const {
-    return svc.hasContact(auth_user_);
-}
-
-bool AuthUser::is_member_of_contactgroup(
-    const IContactGroup &contact_group) const {
-    return contact_group.isMember(auth_user_);
 }

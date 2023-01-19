@@ -72,11 +72,6 @@ private:
     const IContact &auth_user_;
     ServiceAuthorization service_auth_;
     GroupAuthorization group_auth_;
-
-    [[nodiscard]] bool host_has_contact(const IHost &hst) const;
-    [[nodiscard]] bool service_has_contact(const IService &svc) const;
-    [[nodiscard]] bool is_member_of_contactgroup(
-        const IContactGroup &contact_group) const;
 };
 
 class NoAuthUser : public User {

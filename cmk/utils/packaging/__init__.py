@@ -377,11 +377,15 @@ def _install(  # pylint: disable=too-many-branches
 
     _raise_for_installability(manifest, old_manifest, cmk_version.__version__, allow_outdated)
 
-    with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
-        # Now install files, but only unpack files explicitely listed
-        for part, filenames in manifest.files.items():
-
-            _extract_tar(tar, f"{part.ident}.tar", site_path(part), filenames, g_logger)
+    extract_tgz(
+        mkp,
+        [
+            (f"{part.ident}.tar", site_path(part), filenames)
+            for part, filenames in manifest.files.items()
+            if filenames
+        ],
+        g_logger,
+    )
 
     _fix_files_permissions(manifest, g_logger)
 
@@ -413,6 +417,14 @@ def _install(  # pylint: disable=too-many-branches
         _execute_post_package_change_actions(manifest)
 
     return manifest
+
+
+def extract_tgz(
+    mkp: bytes, content: Iterable[tuple[str, Path, Iterable[Path]]], logger: logging.Logger
+) -> None:
+    with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
+        for tarname, dst, filenames in content:
+            _extract_tar(tar, tarname, dst, filenames, logger)
 
 
 def _extract_tar(

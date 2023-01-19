@@ -5,7 +5,7 @@
 # pylint: disable=undefined-variable
 import pytest
 
-from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
+from cmk.utils.exceptions import MKAgentError, MKTimeout
 from cmk.utils.type_defs import ExitSpec
 
 from cmk.checkers.checkresults import ActiveCheckResult
@@ -18,9 +18,6 @@ class TestAgentSummarizer:
 
     def test_summarize_base_exception(self) -> None:
         assert summarize_failure(ExitSpec(), Exception()) == [ActiveCheckResult(3)]
-
-    def test_summarize_MKEmptyAgentData_exception(self) -> None:
-        assert summarize_failure(ExitSpec(), MKEmptyAgentData()) == [ActiveCheckResult(2)]
 
     def test_summarize_MKAgentError_exception(self) -> None:
         assert summarize_failure(ExitSpec(), MKAgentError()) == [ActiveCheckResult(2)]

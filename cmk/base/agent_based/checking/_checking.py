@@ -202,20 +202,29 @@ def _check_plugins_missing_data(
     service_results: Sequence[_AggregatedResult],
     exit_spec: ExitSpec,
 ) -> Iterable[ActiveCheckResult]:
+    """Compute a state for the fact that plugins did not get any data"""
+
+    # NOTE:
+    # The keys used here are 'missing_sections' and 'specific_missing_sections'.
+    # They are from a time where the distiction between section and plugin was unclear.
+    # They are kept for compatibility.
+    missing_status = exit_spec.get("missing_sections", 1)
+    specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])
 
     if all(r.data_received for r in service_results):
         return
 
     if not any(r.data_received for r in service_results):
-        yield ActiveCheckResult(exit_spec.get("empty_output", 2), "Got no information from host")
+        yield ActiveCheckResult(
+            missing_status,
+            "Missing monitoring data for all plugins",
+        )
         return
 
     plugins_missing_data = {
         r.service.check_plugin_name for r in service_results if not r.data_received
     }
 
-    # key is a legacy name, kept for compatibility.
-    specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])
     specific_plugins, generic_plugins = set(), set()
     for check_plugin_name in plugins_missing_data:
         for pattern, status in specific_plugins_missing_data_spec:
@@ -226,8 +235,6 @@ def _check_plugins_missing_data(
         else:  # no break
             generic_plugins.add(str(check_plugin_name))
 
-    # key is a legacy name, kept for compatibility.
-    missing_status = exit_spec.get("missing_sections", 1)
     plugin_list = ", ".join(sorted(generic_plugins))
     yield ActiveCheckResult(
         missing_status,

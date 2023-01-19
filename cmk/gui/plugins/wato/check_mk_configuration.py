@@ -5369,10 +5369,6 @@ rulespec_registry.register(
 def _common_check_mk_exit_status_elements():
     return [
         (
-            "empty_output",
-            MonitoringState(default_value=2, title=_("State in case of empty output")),
-        ),
-        (
             "connection",
             MonitoringState(default_value=2, title=_("State in case of connection problems")),
         ),
@@ -5392,15 +5388,21 @@ def _factory_default_check_mk_exit_status():
         "connection": 2,
         "wrong_version": 1,
         "exception": 3,
-        "empty_output": 2,
         "missing_sections": 1,
     }
 
 
-def _individual_spec(title: str) -> Dictionary:
-    return Dictionary(
-        title=title,
-        elements=_common_check_mk_exit_status_elements(),
+def _drop_empty_output(params: dict[str, int]) -> dict[str, int]:
+    return {k: v for k, v in params.items() if k != "empty_output"}
+
+
+def _individual_spec(title: str) -> Migrate:
+    return Migrate(
+        migrate=_drop_empty_output,
+        valuespec=Dictionary(
+            title=title,
+            elements=_common_check_mk_exit_status_elements(),
+        ),
     )
 
 
@@ -5417,45 +5419,45 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
         elements=[
             (
                 "overall",
-                Dictionary(
-                    title=_("Overall status"),
-                    elements=_common_check_mk_exit_status_elements()
-                    + [
-                        (
-                            "missing_sections",
-                            MonitoringState(
-                                default_value=1,
-                                title=_(
-                                    "State if just <i>some</i> check plugins received no "
-                                    "monitoring data"
+                Migrate(
+                    Dictionary(
+                        title=_("Overall status"),
+                        elements=_common_check_mk_exit_status_elements()
+                        + [
+                            (
+                                "missing_sections",
+                                MonitoringState(
+                                    default_value=1,
+                                    title=_("State if check plugins received no monitoring data"),
                                 ),
                             ),
-                        ),
-                        (
-                            "specific_missing_sections",
-                            ListOf(
-                                valuespec=Tuple(
-                                    elements=[
-                                        RegExp(
-                                            help=_(
-                                                'In addition to setting the generic "Missing monitoring '
-                                                'data" state above you can specify a regex pattern to '
-                                                "match specific check plugins and give them an individual "
-                                                "state in case they receive no monitoring data. Note that "
-                                                "the first match is used."
+                            (
+                                "specific_missing_sections",
+                                ListOf(
+                                    valuespec=Tuple(
+                                        elements=[
+                                            RegExp(
+                                                help=_(
+                                                    'In addition to setting the generic "Missing monitoring '
+                                                    'data" state above you can specify a regex pattern to '
+                                                    "match specific check plugins and give them an individual "
+                                                    "state in case they receive no monitoring data. Note that "
+                                                    "the first match is used."
+                                                ),
+                                                mode=RegExp.prefix,
                                             ),
-                                            mode=RegExp.prefix,
-                                        ),
-                                        MonitoringState(),
-                                    ],
-                                    orientation="horizontal",
-                                ),
-                                title=_(
-                                    "State if specific check plugins receive no monitoring data."
+                                            MonitoringState(),
+                                        ],
+                                        orientation="horizontal",
+                                    ),
+                                    title=_(
+                                        "State if specific check plugins receive no monitoring data."
+                                    ),
                                 ),
                             ),
-                        ),
-                    ],
+                        ],
+                    ),
+                    migrate=_drop_empty_output,
                 ),
             ),
             (

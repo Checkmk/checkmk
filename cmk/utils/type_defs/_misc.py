@@ -162,7 +162,6 @@ state_markers = ("", "(!)", "(!!)", "(?)")
 
 
 class ExitSpec(TypedDict, total=False):
-    empty_output: int
     connection: int
     timeout: int
     exception: int

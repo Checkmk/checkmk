@@ -11,7 +11,6 @@ from typing import Final
 
 from cmk.utils.exceptions import (
     MKAgentError,
-    MKEmptyAgentData,
     MKFetcherError,
     MKIPAddressLookupError,
     MKSNMPError,
@@ -62,8 +61,6 @@ def summarize_success(exit_spec: ExitSpec) -> Sequence[ActiveCheckResult]:
 
 def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveCheckResult]:
     def extract_status(exc: Exception) -> int:
-        if isinstance(exc, MKEmptyAgentData):
-            return exit_spec.get("empty_output", 2)
         if isinstance(
             exc,
             (

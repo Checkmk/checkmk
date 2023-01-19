@@ -12,7 +12,6 @@ __all__ = [
     "MKAgentError",
     "MKBailOut",
     "MKIPAddressLookupError",
-    "MKEmptyAgentData",
     "MKException",
     "MKFetcherError",
     "MKGeneralException",
@@ -40,10 +39,6 @@ class MKAgentError(MKFetcherError):
 
 
 class MKSNMPError(MKFetcherError):
-    pass
-
-
-class MKEmptyAgentData(MKAgentError):
     pass
 
 

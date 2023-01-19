@@ -1083,3 +1083,45 @@ class CommentCollection(DomainObjectCollection):
         fields.Nested(CommentObject),
         description="A list of comment objects.",
     )
+
+
+class ActivationRunResponse(DomainObject):
+    domainType = fields.Constant(
+        "activation_run",
+        description="The domain type of the object.",
+    )
+    id = fields.String(
+        description="The unique identifier for this activation run.",
+    )
+    title = fields.String(
+        description="The activation run status.",
+    )
+
+
+class ActivationRunCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "activation_run",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(ActivationRunResponse),
+        description="A list of activation runs.",
+        example=[
+            {
+                "links": [
+                    {
+                        "domainType": "link",
+                        "rel": "self",
+                        "href": "http://localhost/m1601/check_mk/api/1.0/objects/activation_run/7fb606d0-1382-4766-b5d6-4f9bf9929e1e",
+                        "method": "GET",
+                        "type": "application/json",
+                    }
+                ],
+                "domainType": "activation_run",
+                "id": "7fb606d0-1382-4766-b5d6-4f9bf9929e1e",
+                "title": "Activation 7fb606d0-1382-4766-b5d6-4f9bf9929e1e has completed.",
+                "members": {},
+                "extensions": {},
+            }
+        ],
+    )

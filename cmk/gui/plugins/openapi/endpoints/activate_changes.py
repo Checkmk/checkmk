@@ -29,7 +29,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.activate_changes import activate_changes_start, ActivateChangesManager
 
@@ -82,7 +82,7 @@ PERMISSIONS = permissions.AllPerm(
     },
     additional_status_codes=[302, 401, 409, 422, 423],
     request_schema=request_schemas.ActivateChanges,
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.ActivationRunResponse,
     permissions_required=permissions.AllPerm(
         [
             permissions.Perm("wato.activate"),
@@ -109,8 +109,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
         response = Response(status=302)
         response.location = wait_for["href"]
         return response
-
-    return _serve_activation_run(activation_id, is_running=True)
+    return serve_json(_activation_run_domain_object(activation_id, is_running=True))
 
 
 def _completion_link(activation_id: str) -> LinkType:
@@ -121,22 +120,19 @@ def _completion_link(activation_id: str) -> LinkType:
     )
 
 
-def _serve_activation_run(activation_id: str, is_running: bool = False) -> Response:
-    """Serialize the activation response"""
+def _activation_run_domain_object(activation_id: str, is_running: bool = False) -> DomainObject:
     links = []
     action = "has completed"
     if is_running:
         action = "was started"
         links.append(_completion_link(activation_id))
-    return serve_json(
-        constructors.domain_object(
-            domain_type="activation_run",
-            identifier=activation_id,
-            title=f"Activation {activation_id} {action}.",
-            deletable=False,
-            editable=False,
-            links=links,
-        )
+    return constructors.domain_object(
+        domain_type="activation_run",
+        identifier=activation_id,
+        title=f"Activation {activation_id} {action}.",
+        deletable=False,
+        editable=False,
+        links=links,
     )
 
 
@@ -187,7 +183,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
         404: "There is no running activation with this activation_id.",
     },
     permissions_required=PERMISSIONS,
-    response_schema=response_schemas.DomainObject,
+    response_schema=response_schemas.ActivationRunResponse,
 )
 def show_activation(params: Mapping[str, Any]) -> Response:
     """Show the activation status
@@ -205,7 +201,7 @@ def show_activation(params: Mapping[str, Any]) -> Response:
             status=404,
             title=f"Activation {activation_id!r} not found.",
         )
-    return _serve_activation_run(activation_id, is_running=manager.is_running())
+    return serve_json(_activation_run_domain_object(activation_id, is_running=manager.is_running()))
 
 
 @Endpoint(
@@ -213,21 +209,18 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     "cmk/run",
     method="get",
     permissions_required=RO_PERMISSIONS,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.ActivationRunCollection,
 )
 def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
     manager = ActivateChangesManager()
-    activations = []
-    for activation_id, change in manager.activations():
-        activations.append(
-            constructors.collection_item(
-                domain_type="activation_run",
-                identifier=activation_id,
-                title=change["_comment"],
-            )
-        )
 
     return serve_json(
-        constructors.collection_object(domain_type="activation_run", value=activations)
+        constructors.collection_object(
+            domain_type="activation_run",
+            value=[
+                _activation_run_domain_object(activation_id, is_running=manager.is_running())
+                for activation_id, _ in manager.activations()
+            ],
+        )
     )

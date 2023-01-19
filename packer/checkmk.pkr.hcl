@@ -26,7 +26,7 @@ source "qemu" "ubuntu-2204-amd64-qemu" {
   iso_checksum     = "sha256:10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb"
   memory           = 1024
   disk_image       = false
-  output_directory = "output-ubuntu-2204-amd64-qemu"
+  output_directory = var.qemu_output_dir_name
   accelerator      = "kvm"
   disk_size        = "15000M"
   disk_interface   = "virtio"
@@ -76,7 +76,7 @@ source "azure-arm" "builder" {
   virtual_network_resource_group_name = var.azure_virtual_network_resource_group_name
   virtual_network_name                = var.azure_virtual_network_name
   virtual_network_subnet_name         = var.azure_virtual_network_subnet_name
-  managed_image_name                  = "cmk"
+  managed_image_name                  = var.azure_image_name
   managed_image_resource_group_name   = "${var.azure_resource_group}"
   os_type                             = "Linux"
   subscription_id                     = "${var.azure_subscription_id}"
@@ -91,7 +91,7 @@ source "amazon-ebs" "builder" {
   source_ami    = "ami-00874d747dde814fa"
   instance_type = "t2.micro"
   ssh_username  = "ubuntu"
-  ami_name      = "packer_cmk_2"
+  ami_name      = var.aws_ami_name
 }
 
 

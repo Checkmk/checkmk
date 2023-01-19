@@ -30,6 +30,9 @@ variable "azure_virtual_network_name" {
 variable "azure_virtual_network_subnet_name" {
   type = string
 }
+variable "azure_image_name" {
+  type = string
+}
 
 // AWS
 variable "aws_access_key" {
@@ -40,7 +43,14 @@ variable "aws_secret_key" {
   type      = string
   sensitive = true
 }
+variable "aws_ami_name" {
+  type      = string
+}
 
+// Qemu
+variable "qemu_output_dir_name" {
+  type      = string
+}
 
 // Ansible variables
 variable "cmk_version" {

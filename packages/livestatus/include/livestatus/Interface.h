@@ -30,13 +30,14 @@ public:
 class IHostGroup {
 public:
     virtual ~IHostGroup() = default;
-    virtual bool all(std::function<bool(const IHost &)> pred) const = 0;
+    virtual bool all(const std::function<bool(const IHost &)> &pred) const = 0;
 };
 
 class IServiceGroup {
 public:
     virtual ~IServiceGroup() = default;
-    virtual bool all(std::function<bool(const IService &)> pred) const = 0;
+    virtual bool all(
+        const std::function<bool(const IService &)> &pred) const = 0;
 };
 
 class IContactGroup {

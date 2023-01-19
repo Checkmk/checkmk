@@ -17,7 +17,7 @@ public:
     explicit NebServiceGroup(const servicegroup &service_group)
         : service_group_{service_group} {}
 
-    bool all(std::function<bool(const IService &)> pred) const override {
+    bool all(const std::function<bool(const IService &)> &pred) const override {
         for (const auto *member = service_group_.members; member != nullptr;
              member = member->next) {
             if (!pred(NebService{*member->service_ptr})) {

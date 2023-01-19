@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "CustomAttributeMap.h"
-#include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
 #include "HostListRenderer.h"
 #include "MacroExpander.h"
@@ -41,6 +40,7 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/DowntimeRenderer.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/DynamicFileColumn.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"

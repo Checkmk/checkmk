@@ -21,6 +21,7 @@ set(livestatus_headers
     ${header_location}/DoubleFilter.h
     ${header_location}/DowntimeRenderer.h
     ${header_location}/DynamicColumn.h
+    ${header_location}/DynamicFileColumn.h
     ${header_location}/DynamicEventConsoleReplicationColumn.h
     ${header_location}/EventConsoleConnection.h
     ${header_location}/FileSystemHelper.h

@@ -1,15 +1,41 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "DynamicFileColumn.h"
+#ifndef DynamicFileColumn_h
+#define DynamicFileColumn_h
 
+#include <filesystem>
+#include <functional>
+#include <memory>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 #include "livestatus/BlobColumn.h"
+#include "livestatus/Column.h"
+#include "livestatus/DynamicColumn.h"
 #include "livestatus/FileSystemHelper.h"
+
+template <class T>
+class DynamicFileColumn : public DynamicColumn {
+public:
+    DynamicFileColumn(
+        const std::string &name, const std::string &description,
+        const ColumnOffsets &, std::function<std::filesystem::path()> basepath,
+        std::function<std::filesystem::path(const T &, const std::string &args)>
+            filepath);
+    std::unique_ptr<Column> createColumn(const std::string &name,
+                                         const std::string &arguments) override;
+    [[nodiscard]] std::filesystem::path basepath() const;
+
+private:
+    const std::function<std::filesystem::path()> _basepath;
+    const std::function<std::filesystem::path(const T &,
+                                              const std::string &args)>
+        _filepath;
+};
 
 template <class T>
 DynamicFileColumn<T>::DynamicFileColumn(
@@ -50,3 +76,5 @@ std::unique_ptr<Column> DynamicFileColumn<T>::createColumn(
         BlobFileReader<T>{_basepath,
                           [this, f](const T &r) { return _filepath(r, f); }});
 }
+
+#endif  // DynamicFileColumn_h

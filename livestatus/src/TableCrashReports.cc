@@ -7,11 +7,12 @@
 
 #include <filesystem>
 #include <memory>
+#include <sstream>
 
-#include "DynamicFileColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/CrashReport.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/DynamicFileColumn.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"

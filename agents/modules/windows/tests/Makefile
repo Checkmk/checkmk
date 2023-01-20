@@ -4,8 +4,10 @@
 
 include ../../../../defines.make
 # commandline
-PY_VER             ?= 3.10 # $(PYTHON_MAJOR_DOT_MINOR)
-PY_SUBVER          ?= 4    # $(PYTHON_VERSION_PATCH)
+# TODO(sk): reset this to $(PYTHON_MAJOR_DOT_MINOR) as soon 3.11 is done for windows nodes
+PY_VER             ?= 3.10
+# TODO(sk): reset this to $(PYTHON_VERSION_PATCH) as soon 3.11 is done for windows nodes
+PY_SUBVER          ?= 4
 
 INTEGRATION_TIMESTAMP   := results\integration.timestamp
 

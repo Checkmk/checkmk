@@ -1248,8 +1248,12 @@ def test_check_password_hashes(uc: update_config.UpdateConfig) -> None:
             ),
             ("bcrypt", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
             ("unrecognized", "foo"),
+            ("automation_md5", "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
         ]
     )
+    # make an automation user by setting the automation_secret
+    dont_update[UserId("automation_md5")]["automation_secret"] = "my_automation_secret"
+
     all_users = do_update | dont_update
     save_users(all_users)
 

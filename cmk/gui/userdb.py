@@ -214,10 +214,18 @@ def _save_failed_logins(username: UserId, count: int) -> None:
 # userdb.need_to_change_pw returns either False or the reason description why the
 # password needs to be changed
 def need_to_change_pw(username: UserId) -> Union[bool, str]:
-    if not _is_local_user(username):
+    # Don't require password change for users from other connections, their passwords are not
+    # managed here.
+    user = load_user(username)
+    if not _is_local_user(user):
         return False
 
-    if load_custom_attr(username, "enforce_pw_change", utils.saveint) == 1:
+    # Ignore the enforce_pw_change flag for automation users, they cannot change their passwords
+    # themselves. (Password age is checked for them below though.)
+    if (
+        not _is_automation_user(user)
+        and load_custom_attr(username, "enforce_pw_change", utils.saveint) == 1
+    ):
         return "enforced"
 
     last_pw_change = load_custom_attr(username, "last_pw_change", utils.saveint)
@@ -327,8 +335,12 @@ def load_user(user_id: UserId) -> UserSpec:
     return user
 
 
-def _is_local_user(user_id: UserId) -> bool:
-    return load_user(user_id).get("connector", "htpasswd") == "htpasswd"
+def _is_local_user(user: UserSpec) -> bool:
+    return user.get("connector", "htpasswd") == "htpasswd"
+
+
+def _is_automation_user(user: UserSpec) -> bool:
+    return user.get("automation_secret", None) is not None
 
 
 def user_locked(user_id: UserId) -> bool:

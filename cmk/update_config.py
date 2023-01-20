@@ -1466,6 +1466,8 @@ class UpdateConfig:
                 (users[user_id].get("connector") == "htpasswd")
                 and (pw := users[user_id].get("password"))
                 and is_insecure_hash(pw)
+                # Automation users' password hashes are irrelevant, as they are not used for login.
+                and "automation_secret" not in users[user_id]
             )
         ]
 

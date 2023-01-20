@@ -256,6 +256,7 @@ mod test_renew_certificate {
         }
     }
 
+    #[cfg(unix)]
     #[test]
     fn test_renew_all_certificates() {
         let mut registry =

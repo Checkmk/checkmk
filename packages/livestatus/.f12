@@ -15,7 +15,11 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 if [ -d "$ROOT" ]; then
-    sudo cp -P build/src/liblivestatus.so* "$ROOT/lib/"
+    # Fragile glob patterns below, but good enough for now...
+    # Carefully keep the symlink structure intact, "install" would dereference.
+    sudo cp --verbose --no-dereference build/src/liblivestatus.so{,.?} "$ROOT/lib/"
+    # Simply copying the library can cause a running NEB/CMC to crash.
+    sudo install --verbose --mode 644 build/src/liblivestatus.so.?.? "$ROOT/lib/"
     if [ -z "$ONLY_COPY" ]; then
         sudo su - "$SITE" -c "omd restart nagios"
         sudo su - "$SITE" -c "omd restart cmc"

@@ -141,8 +141,8 @@ std::vector<DowntimeData> NagiosCore::downtimes(const IHost &hst) const {
 }
 
 std::vector<DowntimeData> NagiosCore::downtimes(const IService &svc) const {
-    return downtimes_for_object(static_cast<const host *>(svc.host().handle()),
-                                static_cast<const service *>(svc.handle()));
+    const auto *s = static_cast<const service *>(svc.handle());
+    return downtimes_for_object(s->host_ptr, s);
 }
 
 std::vector<CommentData> NagiosCore::comments(const IHost &hst) const {
@@ -151,8 +151,8 @@ std::vector<CommentData> NagiosCore::comments(const IHost &hst) const {
 }
 
 std::vector<CommentData> NagiosCore::comments(const IService &svc) const {
-    return comments_for_object(static_cast<const host *>(svc.host().handle()),
-                               static_cast<const service *>(svc.handle()));
+    const auto *s = static_cast<const service *>(svc.handle());
+    return comments_for_object(s->host_ptr, s);
 }
 
 bool NagiosCore::mkeventdEnabled() {

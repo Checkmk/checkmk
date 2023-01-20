@@ -4,8 +4,8 @@
 
 include ../../../../defines.make
 # commandline
-PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
-PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
+PY_VER             ?= 3.10 # $(PYTHON_MAJOR_DOT_MINOR)
+PY_SUBVER          ?= 4    # $(PYTHON_VERSION_PATCH)
 
 INTEGRATION_TIMESTAMP   := results\integration.timestamp
 

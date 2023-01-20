@@ -77,10 +77,14 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
-    virtual std::vector<DowntimeData> downtimes(const IHost &) const = 0;
-    virtual std::vector<DowntimeData> downtimes(const IService &) const = 0;
-    virtual std::vector<CommentData> comments(const IHost &) const = 0;
-    virtual std::vector<CommentData> comments(const IService &) const = 0;
+    [[nodiscard]] virtual std::vector<DowntimeData> downtimes(
+        const IHost &) const = 0;
+    [[nodiscard]] virtual std::vector<DowntimeData> downtimes(
+        const IService &) const = 0;
+    [[nodiscard]] virtual std::vector<CommentData> comments(
+        const IHost &) const = 0;
+    [[nodiscard]] virtual std::vector<CommentData> comments(
+        const IService &) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

@@ -108,7 +108,7 @@ public:
     [[nodiscard]] bool is_authorized_for_object(
         const IHost *hst, const IService * /* svc */,
         bool authorized_if_no_host) const override {
-        return !hst && authorized_if_no_host;
+        return hst == nullptr && authorized_if_no_host;
     }
     [[nodiscard]] bool is_authorized_for_host(
         const IHost & /*hst*/) const override {

@@ -40,8 +40,8 @@ public:
     [[nodiscard]] queue_status push(value_type &&elem,
                                     queue_overflow_strategy strategy);
     std::optional<value_type> pop(
-        queue_pop_strategy pop_strategy = queue_pop_strategy::blocking,
-        std::optional<std::chrono::nanoseconds> timeout = std::nullopt);
+        queue_pop_strategy pop_strategy,
+        std::optional<std::chrono::nanoseconds> timeout);
     void join();
     [[nodiscard]] bool joinable() const;
 

@@ -264,7 +264,7 @@ void *client_thread(void *data) {
     while (!shouldTerminate()) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
-        if (auto cc = fl_client_queue->pop()) {
+        if (auto cc = fl_client_queue->pop(queue_pop_strategy::blocking, {})) {
             Debug(logger) << "accepted client connection on fd " << *cc;
             InputBuffer input_buffer{*cc, [] { return shouldTerminate(); },
                                      logger, fl_query_timeout, fl_idle_timeout};
@@ -421,7 +421,7 @@ void terminate_threads() {
             << "waiting for client threads to terminate...";
         fl_client_queue->join();
         while (auto fd =
-                   fl_client_queue->pop(queue_pop_strategy::nonblocking)) {
+                   fl_client_queue->pop(queue_pop_strategy::nonblocking, {})) {
             ::close(*fd);
         }
         for (const auto &info : fl_thread_info) {

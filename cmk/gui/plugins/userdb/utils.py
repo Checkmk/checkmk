@@ -23,7 +23,7 @@ from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInUser, save_user_file, user
+from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.utils import is_allowed_url
@@ -42,8 +42,7 @@ CheckCredentialsResult = UserId | None | Literal[False]
 
 
 def load_cached_profile(user_id: UserId) -> UserSpec | None:
-    _user = LoggedInUser(user_id) if user_id != user.id else user
-    return _user.load_file("cached_profile", None)
+    return LoggedInUser(user_id).load_file("cached_profile", None)
 
 
 def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:

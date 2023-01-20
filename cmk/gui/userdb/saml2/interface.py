@@ -30,13 +30,14 @@ from cmk.gui.userdb.saml2.config import (
     ConnectivitySettings,
     InterfaceConfig,
     SecuritySettings,
+    URL,
     UserAttributeNames,
+    XMLText,
 )
 
 LOGGER = logger.getChild("saml2")
 
 
-XMLData = NewType("XMLData", str)
 HTMLFormString = NewType("HTMLFormString", str)
 RequestId = NewType("RequestId", str)
 
@@ -80,12 +81,23 @@ def saml_config(connection: ConnectivitySettings, security: SecuritySettings) ->
         "signing_algorithm": security.signing_algortithm,
         "digest_algorithm": security.digest_algorithm,  # this is referring to the digest alg the counterparty should use
     }
+
+    if isinstance(connection.idp_metadata, URL):
+        idp_metadata = {
+            "remote": [
+                {
+                    "url": str(connection.idp_metadata),
+                }
+            ]
+        }
+    else:
+        # The below suppression is due to a bug with the types-pysaml2 package
+        idp_metadata = {"inline": [str(connection.idp_metadata)]}  # type: ignore
+
     config.load(
         {
             "entityid": connection.entity_id,
-            "metadata": {
-                "inline": [_metadata_from_idp(connection.idp_metadata_endpoint, connection.timeout)]
-            },
+            "metadata": idp_metadata,
             "service": {"sp": sp_configuration},
             "allow_unknown_attributes": security.allow_unknown_user_attributes,
             "http_client_timeout": connection.timeout,
@@ -101,6 +113,7 @@ def saml_config(connection: ConnectivitySettings, security: SecuritySettings) ->
             "attribute_map_dir": str(
                 security.user_attribute_mappings_dir
             ),  # See README in this directory for more information on this option
+            "verify_ssl_cert": connection.verify_tls,
         }
     )
     return config
@@ -152,14 +165,14 @@ class Interface:
         )
 
     @property
-    def metadata(self) -> XMLData:
+    def metadata(self) -> XMLText:
         """Entity ID that is registered with the Identity Provider and information about preferred
         bindings.
 
         Returns:
             A valid XML string
         """
-        return XMLData(self._metadata)
+        return XMLText(self._metadata)
 
     def authentication_request(self, relay_state: str) -> HTTPPostRequest:
         """Authentication request to be forwarded to the Identity Provider.

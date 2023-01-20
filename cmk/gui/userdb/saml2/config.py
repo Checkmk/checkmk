@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, NewType
 
+from lxml import etree
 from pydantic import BaseModel
 from saml2 import BINDING_HTTP_POST
 from saml2.xmldsig import (
@@ -28,6 +29,14 @@ from cmk.utils.paths import (
 from cmk.utils.site import url_prefix
 
 Milliseconds = NewType("Milliseconds", int)
+
+
+class URL(str):
+    ...
+
+
+class XMLText(str):
+    ...
 
 
 class Certificate(BaseModel):
@@ -63,10 +72,11 @@ class SecuritySettings(BaseModel):
 class ConnectivitySettings(BaseModel):
     timeout: tuple[int, int]
     checkmk_server_url: str
-    idp_metadata_endpoint: str
+    idp_metadata: URL | XMLText
     entity_id: str
     assertion_consumer_service_endpoint: str
     binding: str
+    verify_tls: bool
 
 
 class CacheSettings(BaseModel):
@@ -90,7 +100,7 @@ class ConnectorConfig(BaseModel):
     comment: str
     docu_url: str
     disabled: bool
-    identity_provider_url: str
+    identity_provider: str
     interface_config: InterfaceConfig
 
 
@@ -144,19 +154,57 @@ def _role_membership_mapping(
     return {k: set(v) for k, v in roles_mapping[1][1].items()}
 
 
+def _decode_xml(text: bytes) -> XMLText:
+    xml_tree = etree.ElementTree(etree.XML(text))
+    return XMLText(text.decode(xml_tree.docinfo.encoding or "utf-8"))
+
+
+def _idp_metadata(metadata: tuple[str, str] | tuple[str, tuple[str, str, bytes]]) -> XMLText | URL:
+    """
+    >>> _idp_metadata(("url", "http://bla/bli"))
+    'http://bla/bli'
+    >>> _idp_metadata(("text", "<metadata>...</metadata>"))
+    '<metadata>...</metadata>'
+    >>> _idp_metadata(("file", ("/path/to/myfile.xml", "text/xml", b"<metadata>...</metadata>")))
+    '<metadata>...</metadata>'
+
+    >>> isinstance(_idp_metadata(("url", "http://bla/bli")), URL)
+    True
+    >>> isinstance(_idp_metadata(("text", "<metadata>...</metadata>")), XMLText)
+    True
+    >>> isinstance(_idp_metadata(("file", ("/path/to/myfile.xml", "text/xml", b"<metadata>...</metadata>"))), XMLText)
+    True
+    """
+
+    option_name, option = metadata
+    match option_name:
+        case "url":
+            assert isinstance(option, str)
+            return URL(option)
+        case "text":
+            assert isinstance(option, str)
+            return XMLText(option)
+        case "file":
+            assert isinstance(option, tuple)
+            _, _, file_content = option
+            return _decode_xml(file_content)
+        case _:
+            raise ValueError(f"Unrecognised option for IDP metadata: {option_name}")
+
+
 def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
-    idp_url = user_input["idp_metadata_endpoint"]
     checkmk_server_url = f"{user_input['checkmk_server_url']}{url_prefix()}check_mk"
     roles_mapping = user_input["role_membership_mapping"]
 
     interface_config = InterfaceConfig(
         connectivity_settings=ConnectivitySettings(
             timeout=user_input["connection_timeout"],
-            idp_metadata_endpoint=user_input["idp_metadata_endpoint"],
+            idp_metadata=_idp_metadata(user_input["idp_metadata"]),
             checkmk_server_url=checkmk_server_url,
             entity_id=f"{checkmk_server_url}/saml_metadata.py",
             assertion_consumer_service_endpoint=f"{checkmk_server_url}/saml_acs.py?acs",
             binding=BINDING_HTTP_POST,
+            verify_tls=True,
         ),
         user_attributes=UserAttributeSettings(
             attribute_names=UserAttributeNames(
@@ -191,15 +239,18 @@ def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
             authentication_request_id_expiry=Milliseconds(5 * 60 * 1000),
         ),
     )
+
+    name = user_input["name"]
+    identifier = user_input["id"]
     return ConnectorConfig(
         type=user_input["type"],
         version=user_input["version"],
-        id=user_input["id"],
-        name=user_input["name"],
+        id=identifier,
+        name=name,
         description=user_input["description"],
         comment=user_input["comment"],
         docu_url=user_input["docu_url"],
         disabled=user_input["disabled"],
-        identity_provider_url=idp_url,
+        identity_provider=f"{name} ({identifier})",
         interface_config=interface_config,
     )

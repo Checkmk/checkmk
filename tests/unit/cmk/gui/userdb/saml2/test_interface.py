@@ -47,6 +47,7 @@ from cmk.gui.userdb.saml2.config import (
     SecuritySettings,
     UserAttributeNames,
     UserAttributeSettings,
+    XMLText,
 )
 from cmk.gui.userdb.saml2.interface import (
     AuthenticatedUser,
@@ -119,11 +120,12 @@ def _interface_config(
     return InterfaceConfig(
         connectivity_settings=ConnectivitySettings(
             timeout=(12, 12),
-            idp_metadata_endpoint="http://localhost:8080/simplesaml/saml2/idp/metadata.php",
+            idp_metadata=XMLText(_IDENTITY_PROVIDER_METADATA),
             checkmk_server_url="http://localhost",
             entity_id="http://localhost/heute/check_mk/saml_metadata.py",
             assertion_consumer_service_endpoint="http://localhost/heute/check_mk/saml_acs.py?acs",
             binding=BINDING_HTTP_POST,
+            verify_tls=True,
         ),
         user_attributes=UserAttributeSettings(
             attribute_names=UserAttributeNames(
@@ -193,13 +195,7 @@ class TestInterface:
         yield requests_db
 
     @pytest.fixture
-    def interface(self, monkeypatch: pytest.MonkeyPatch, initialised_redis: Redis) -> Interface:
-        # TODO (CMK-11997): this feature will allow me to circumvent this monkeypatched function
-        monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.interface._metadata_from_idp",
-            lambda c, t: _IDENTITY_PROVIDER_METADATA,
-        )
-
+    def interface(self, initialised_redis: Redis) -> Interface:
         return Interface(_interface_config(do_security=False), initialised_redis)
 
     @pytest.fixture(
@@ -436,19 +432,14 @@ class TestInterfaceSecurityFeatures:
         yield requests_db
 
     @pytest.fixture
-    def interface(self, monkeypatch: pytest.MonkeyPatch, initialised_redis: Redis) -> Interface:
-        # TODO (CMK-11997): this feature will allow me to circumvent this monkeypatched function
-        monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.interface._metadata_from_idp",
-            lambda c, t: _IDENTITY_PROVIDER_METADATA,
-        )
-
+    def interface(self, initialised_redis: Redis) -> Interface:
         return Interface(config=_interface_config(do_security=True), requests_db=initialised_redis)
 
     def test_interface_properties_are_secure(self, interface: Interface) -> None:
         assert interface._client.authn_requests_signed is True
         assert interface._client.want_response_signed is True
         assert interface._client.want_assertions_signed is True
+        assert interface._client.config.verify_ssl_cert is True
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_authentication_request_is_signed(self, interface: Interface) -> None:

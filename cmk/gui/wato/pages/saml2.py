@@ -2,8 +2,11 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import xml.etree.ElementTree as ET
 from collections.abc import Collection, Iterator
 from pathlib import Path
+
+from saml2.config import SPConfig
 
 from cmk.utils.paths import (
     saml2_custom_signature_private_keyfile,
@@ -41,11 +44,14 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryEntry,
     DictionaryModel,
+    FileUpload,
+    FileUploadModel,
     FixedValue,
     HTTPSUrl,
     Integer,
     ListOf,
     rule_option_elements,
+    TextAreaUnicode,
     TextInput,
     Tuple,
     UUID,
@@ -92,20 +98,87 @@ def _general_properties() -> list[DictionaryEntry]:
     ] + rule_option_elements()
 
 
+def _validate_xml_metadata_text(text: str | bytes, _html_prefix: str) -> None:
+    try:
+        ET.fromstring(text)
+    except (TypeError, ET.ParseError):
+        raise MKUserError(None, _("Text is not valid XML"))
+
+    config = SPConfig()
+    config.load({})
+    metadata = config.load_metadata({"inline": [text]})
+    if not metadata.identity_providers():
+        raise MKUserError(None, _(("Missing Identity Provider information in metadata")))
+
+
+def _validate_xml_metadata_file(file_: FileUploadModel, _html_prefix: str) -> None:
+    assert isinstance(
+        file_, tuple
+    )  # str or None is not possible as of valuespec configuration v1.0.0
+    # str seems to be a legacy variant, and None would be in the event that the valuespec allows an
+    # empty value
+
+    name, content_type, content = file_
+
+    if Path(name).suffix != ".xml":
+        raise MKUserError(None, _("Please provide a '.xml' file"))
+
+    if content_type != "text/xml":
+        raise MKUserError(None, _("The file does not contain XML text"))
+
+    _validate_xml_metadata_text(content, _html_prefix)
+
+
 def _connection_properties() -> list[DictionaryEntry]:
+    xml_metadata_text_helptext = _(
+        "An XML text (file) containing the metadata information of your organisation's Identity "
+        "Provider. This is useful if the Checkmk server is not able to access the metadata endpoint "
+        "of the Identity Provider. Please note that as a result, any configuration updates that are "
+        "applied to the Identity Provider (e.g. updates to certificates) must be updated manually "
+        "here as well. We therefore recommend using the metadata endpoint URL option where possible."
+    )
     return [
         (
-            "idp_metadata_endpoint",
-            HTTPSUrl(
-                title=_("Metadata endpoint URL"),
+            "idp_metadata",
+            CascadingDropdown(
+                title=_("Identity Provider metadata"),
                 help=_(
-                    "The full URL to the metadata endpoint of your organisation's Identity "
-                    "Provider. This endpoint is used to automatically discover the correct "
-                    "Single Sign-On endpoint and bindings for a successful SAML communication "
-                    "with the Identity Provider. Note that we only support HTTPS for this endpoint, "
-                    "because it specifies certificate which should be trusted."
+                    "Metadata information is exchanged between Checkmk and your Identity Provider "
+                    "and contains configuration information to enable a successful SAML communication. "
+                    "This includes the Single Sing-On endpoint and bindings used by the Identity "
+                    "Provider, as well as details to certificates used for signatures and encryption."
                 ),
-                allow_empty=False,
+                choices=[
+                    (
+                        "url",
+                        _("URL"),
+                        HTTPSUrl(
+                            help=xml_metadata_text_helptext,
+                            allow_empty=False,
+                        ),
+                    ),
+                    (
+                        "file",
+                        _("XML file upload"),
+                        FileUpload(
+                            help=xml_metadata_text_helptext,
+                            allow_empty=False,  # setting this to True will have an effect on the validate function
+                            validate=_validate_xml_metadata_file,
+                        ),
+                    ),
+                    (
+                        "text",
+                        _("XML text"),
+                        TextAreaUnicode(
+                            help=xml_metadata_text_helptext,
+                            allow_empty=False,
+                            cols=120,
+                            rows=80,
+                            validate=_validate_xml_metadata_text,
+                        ),
+                    ),
+                ],
+                default_value="url",
             ),
         ),
         (

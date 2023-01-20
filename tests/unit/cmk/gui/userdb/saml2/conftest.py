@@ -22,7 +22,7 @@ def fixture_raw_config() -> Mapping[str, Any]:
         "disabled": False,
         "connection_timeout": (12, 12),
         "checkmk_server_url": "http://localhost",
-        "idp_metadata_endpoint": "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
+        "idp_metadata": ("url", "http://localhost:8080/simplesaml/saml2/idp/metadata.php"),
         "user_id": "username",
         "alias": "",
         "email": "",

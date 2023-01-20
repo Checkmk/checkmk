@@ -17,8 +17,9 @@ from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import get_connection
 from cmk.gui.session import session
+from cmk.gui.userdb.saml2.config import XMLText
 from cmk.gui.userdb.saml2.connector import Connector
-from cmk.gui.userdb.saml2.interface import HTTPPostRequest, Interface, XMLData
+from cmk.gui.userdb.saml2.interface import HTTPPostRequest, Interface
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.urls import makeuri_contextless
@@ -65,7 +66,7 @@ class Metadata(Page):
     The Identity Provider requests this service to validate that it is dealing with a known entity.
     """
 
-    def page(self) -> XMLData:
+    def page(self) -> XMLText:
         connector, _relay_state = _initialise_page(
             request_method=request.request_method,
             allowed_method="GET",
@@ -113,7 +114,7 @@ class SingleSignOn(Page):
         LOGGER.debug(
             "Authentication request to Identity Provider %s at URL %s",
             relay_state.connection_id,
-            connector.config.identity_provider_url,
+            connector.config.identity_provider,
         )
         LOGGER.debug("Authentication request with RelayState=%s", relay_state_string)
 
@@ -123,7 +124,7 @@ class SingleSignOn(Page):
         except Exception as e:  # pylint: disable=broad-except
             LOGGER.warning(
                 "%s - %s: %s",
-                connector.config.identity_provider_url,
+                connector.config.identity_provider,
                 type(e).__name__,
                 str(e),
             )
@@ -164,7 +165,7 @@ class AssertionConsumerService(Page):
         LOGGER.debug(
             "Authentication request response from Identity Provider %s at URL %s",
             relay_state.connection_id,
-            connector.config.identity_provider_url,
+            connector.config.identity_provider,
         )
 
         if not (saml_response := request.form.get("SAMLResponse")):
@@ -181,7 +182,7 @@ class AssertionConsumerService(Page):
             # Exception.
             LOGGER.warning(
                 "%s - %s: %s",
-                connector.config.identity_provider_url,
+                connector.config.identity_provider,
                 type(e).__name__,
                 str(e),
             )

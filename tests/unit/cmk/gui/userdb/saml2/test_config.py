@@ -86,3 +86,54 @@ def test_valuespec_to_config_role_mapping_option(
 ) -> None:
 
     assert valuespec_to_config(_options_with_custom_role_mapping(raw_config))
+
+
+def _options_with_metadata_xml_blob(raw_config: DictionaryModel) -> DictionaryModel:
+    return {
+        **_default_options(raw_config),
+        **{"idp_metadata": ("text", "<metadata>...</metadata>")},
+    }
+
+
+def test_metadata_xml_blob_is_valid_valuespec_option(raw_config: DictionaryModel) -> None:
+    valuespec = saml2_connection_valuespec()
+
+    valuespec.validate_datatype(
+        _options_with_metadata_xml_blob(raw_config),
+        "_not_relevant",
+    )
+
+
+def test_valuespec_to_config_metadata_xml_blob_option(
+    monkeypatch: pytest.MonkeyPatch, raw_config: DictionaryModel
+) -> None:
+
+    assert valuespec_to_config(_options_with_metadata_xml_blob(raw_config))
+
+
+def _options_with_metadata_xml_file(raw_config: DictionaryModel) -> DictionaryModel:
+    return {
+        **_default_options(raw_config),
+        **{
+            "idp_metadata": (
+                "file",
+                ("/path/to/myfile.xml", "text/xml", b"<metadata>...</metadata>"),
+            )
+        },
+    }
+
+
+def test_metadata_xml_file_is_valid_valuespec_option(raw_config: DictionaryModel) -> None:
+    valuespec = saml2_connection_valuespec()
+
+    valuespec.validate_datatype(
+        _options_with_metadata_xml_file(raw_config),
+        "_not_relevant",
+    )
+
+
+def test_valuespec_to_config_metadata_xml_file_option(
+    monkeypatch: pytest.MonkeyPatch, raw_config: DictionaryModel
+) -> None:
+
+    assert valuespec_to_config(_options_with_metadata_xml_file(raw_config))

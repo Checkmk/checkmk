@@ -5,6 +5,7 @@
 
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import apache_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
@@ -184,7 +185,7 @@ def make_section_2() -> dict[str, dict[str, float]]:
         (make_agent_output_2(), make_section_2()),
     ],
 )
-def test_parse_function(string_table, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_function(string_table: StringTable, section: apache_status.Section) -> None:
     assert apache_status.apache_status_parse(string_table) == section
 
 
@@ -194,7 +195,7 @@ def test_discovery() -> None:
     ]
 
 
-def test_check_function(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_function(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         apache_status,
         "get_value_store",

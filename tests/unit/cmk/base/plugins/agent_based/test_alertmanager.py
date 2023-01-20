@@ -72,11 +72,11 @@ custom_remapping_check_params = alertmanager.CheckParams(
         (alertmanager.RuleState.NA, custom_remapping_check_params, State.UNKNOWN),
     ],
 )
-def test_alertmanager_get_rule_state_remapping(  # type:ignore[no-untyped-def]
+def test_alertmanager_get_rule_state_remapping(
     alertmanager_rule_state: alertmanager.RuleState,
     params: alertmanager.CheckParams,
     status: State,
-):
+) -> None:
     rule = alertmanager.Rule(
         rule_name="foo",
         group_name="bar",
@@ -120,11 +120,11 @@ def test_alertmanager_get_rule_state_remapping(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_alertmanager_discover_rules(  # type:ignore[no-untyped-def]
+def test_alertmanager_discover_rules(
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = alertmanager.parse_alertmanager(data)
     assert list(alertmanager.discovery_alertmanager_rules(params, section)) == result
 
@@ -154,12 +154,12 @@ def test_alertmanager_discover_rules(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_alertmanager_check_rules(  # type:ignore[no-untyped-def]
+def test_alertmanager_check_rules(
     item: str,
     params: alertmanager.CheckParams,
     data: type_defs.StringTable,
     result: CheckResult,
-):
+) -> None:
     section = alertmanager.parse_alertmanager(data)
     assert list(alertmanager.check_alertmanager_rules(item, params, section)) == result
 
@@ -188,11 +188,11 @@ def test_alertmanager_check_rules(  # type:ignore[no-untyped-def]
         (alternative_discovery_params, DATA, []),
     ],
 )
-def test_alertmanager_discover_groups(  # type:ignore[no-untyped-def]
+def test_alertmanager_discover_groups(
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = alertmanager.parse_alertmanager(data)
     assert list(alertmanager.discovery_alertmanager_groups(params, section)) == result
 
@@ -215,12 +215,12 @@ def test_alertmanager_discover_groups(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_alertmanager_check_groups(  # type:ignore[no-untyped-def]
+def test_alertmanager_check_groups(
     item: str,
     params: alertmanager.CheckParams,
     data: type_defs.StringTable,
     result: CheckResult,
-):
+) -> None:
     section = alertmanager.parse_alertmanager(data)
     assert list(alertmanager.check_alertmanager_groups(item, params, section)) == result
 
@@ -249,11 +249,11 @@ def test_alertmanager_check_groups(  # type:ignore[no-untyped-def]
         (alternative_discovery_params, DATA, []),
     ],
 )
-def test_alertmanager_discover_summary(  # type:ignore[no-untyped-def]
+def test_alertmanager_discover_summary(
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = alertmanager.parse_alertmanager(data)
     assert list(alertmanager.discovery_alertmanager_summary(params, section)) == result
 
@@ -276,10 +276,10 @@ def test_alertmanager_discover_summary(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_alertmanager_check_summary(  # type:ignore[no-untyped-def]
+def test_alertmanager_check_summary(
     params: alertmanager.CheckParams,
     data: type_defs.StringTable,
     result: CheckResult,
-):
+) -> None:
     section = alertmanager.parse_alertmanager(data)
     assert list(alertmanager.check_alertmanager_summary(params, section)) == result

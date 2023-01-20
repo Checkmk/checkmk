@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.base.plugins.agent_based import adva_fsp_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 SECTION = {
     "CH-1-4-C1": {
@@ -131,7 +134,9 @@ def test_discover_adva_fsp_if() -> None:
         ),
     ],
 )
-def test_check_huawei_osn_if(item, params, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_adva_fsp_if(
+    item: str, params: Mapping[str, object], expected_result: CheckResult
+) -> None:
     assert (
         list(
             adva_fsp_if.check_adva_fsp_if(

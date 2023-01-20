@@ -22,6 +22,8 @@ from typing import Any, Literal
 from typing import Mapping as TypingMapping
 from typing import TypedDict, TypeVar
 
+from typing_extensions import assert_never
+
 from ..agent_based_api.v1 import (
     check_levels,
     check_levels_predictive,
@@ -542,37 +544,110 @@ class BandwidthUnit(enum.IntEnum):
     BIT = 8
 
 
-LevelSpec = tuple[str | None, tuple[float | None, float | None]]
-GeneralTrafficLevels = dict[tuple[str, str], LevelSpec]
+@dataclass(frozen=True)
+class FixedLevels:
+    upper: tuple[float, float] | None
+    lower: tuple[float, float] | None
 
 
-def get_traffic_levels(params: Mapping[str, Any]) -> GeneralTrafficLevels:
-    traffic_levels = params.get("traffic", [])
-    traffic_levels += [("total", vs) for vs in params.get("total_traffic", {}).get("levels", [])]
+@dataclass(frozen=True)
+class PredictiveLevels:
+    config: dict[str, Any]
 
-    # Now bring the levels in a structure which is easily usable for the check
-    # and also convert direction="both" to single in/out entries
-    levels: GeneralTrafficLevels = {
-        ("in", "upper"): (None, (None, None)),
-        ("out", "upper"): (None, (None, None)),
-        ("in", "lower"): (None, (None, None)),
-        ("out", "lower"): (None, (None, None)),
-        ("total", "lower"): (None, (None, None)),
-        ("total", "upper"): (None, (None, None)),
+
+@dataclass(frozen=True)
+class BandwidthLevels:
+    input: FixedLevels | PredictiveLevels
+    output: FixedLevels | PredictiveLevels
+    total: FixedLevels | PredictiveLevels
+
+
+def bandwidth_levels(
+    *,
+    params: Mapping[str, Any],
+    speed_in: float | None,
+    speed_out: float | None,
+    speed_total: float | None,
+    unit: BandwidthUnit,
+) -> BandwidthLevels:
+    speeds = {
+        "in": speed_in,
+        "out": speed_out,
+        "total": speed_total,
     }
-    for level in traffic_levels:
-        traffic_dir = level[0]
-        up_or_low = level[1][0]
-        level_type = level[1][1][0]
-        level_value = level[1][1][1]
+    raw_levels = [
+        *params.get("traffic", []),
+        *[("total", vs) for vs in params.get("total_traffic", {}).get("levels", [])],
+    ]
 
-        if traffic_dir == "both":
-            levels[("in", up_or_low)] = (level_type, level_value)
-            levels[("out", up_or_low)] = (level_type, level_value)
-        else:
-            levels[(traffic_dir, up_or_low)] = (level_type, level_value)
+    merged_levels: dict[
+        str,
+        PredictiveLevels | dict[str, tuple[float, float] | None],
+    ] = {}
 
-    return levels
+    for direction_spec, (levels_type, levels_spec) in raw_levels:
+        for direction in ["in", "out"] if direction_spec == "both" else [direction_spec]:
+
+            if levels_type == "predictive":
+                merged_levels[direction] = PredictiveLevels(levels_spec)
+
+            else:
+                upper_or_lower, thresholds = levels_spec
+
+                if isinstance(
+                    levels_direction := merged_levels.get(direction, {}), PredictiveLevels
+                ):
+                    levels_direction = {}
+
+                levels_direction |= {
+                    upper_or_lower: _scaled_bandwidth_thresholds(
+                        thresholds_type=levels_type,
+                        thresholds=thresholds,
+                        speed=speeds[direction],
+                        unit=unit,
+                    )
+                }
+
+                merged_levels[direction] = levels_direction
+
+    return BandwidthLevels(
+        input=_finalize_bandwidth_levels(merged_levels.get("in", {})),
+        output=_finalize_bandwidth_levels(merged_levels.get("out", {})),
+        total=_finalize_bandwidth_levels(merged_levels.get("total", {})),
+    )
+
+
+def _scaled_bandwidth_thresholds(
+    *,
+    thresholds_type: Literal["abs", "perc"],
+    thresholds: tuple[float, float],
+    speed: float | None,
+    unit: BandwidthUnit,
+) -> tuple[float, float] | None:
+    """convert percentages to absolute values."""
+
+    def scale(thresholds: tuple[float, float], scale: float) -> tuple[float, float]:
+        return thresholds[0] * scale, thresholds[1] * scale
+
+    match thresholds_type:
+        case "abs":
+            return scale(thresholds, 1 / unit)
+        case "perc":
+            return scale(thresholds, speed / 100) if speed else None
+    assert_never()
+
+
+def _finalize_bandwidth_levels(
+    merged_direction_levels: PredictiveLevels | Mapping[str, tuple[float, float] | None]
+) -> FixedLevels | PredictiveLevels:
+    return (
+        merged_direction_levels
+        if isinstance(merged_direction_levels, PredictiveLevels)
+        else FixedLevels(
+            upper=merged_direction_levels.get("upper"),
+            lower=merged_direction_levels.get("lower"),
+        )
+    )
 
 
 GeneralPacketLevels = dict[str, dict[str, tuple[float, float] | None]]
@@ -601,63 +676,6 @@ def _get_packet_levels(
                 levels_per_type[level[0]][name][direction] = level[1]
 
     return levels_per_type["abs"], levels_per_type["perc"]
-
-
-SpecificTrafficLevels = dict[tuple[str, str] | tuple[str, str, str], Any]
-
-
-def get_specific_traffic_levels(
-    general_traffic_levels: GeneralTrafficLevels,
-    unit: BandwidthUnit,
-    speed_in: float | None,
-    speed_out: float | None,
-    speed_total: float | None,
-) -> SpecificTrafficLevels:
-    traffic_levels: SpecificTrafficLevels = {}
-    for (traffic_dir, up_or_low), (level_type, levels) in general_traffic_levels.items():
-        if not isinstance(levels, tuple):
-            traffic_levels[(traffic_dir, "predictive")] = levels
-            traffic_levels[(traffic_dir, up_or_low, "warn")] = None
-            traffic_levels[(traffic_dir, up_or_low, "crit")] = None
-            continue  # don't convert predictive levels config
-        warn, crit = levels
-
-        for what, level_value in [("warn", warn), ("crit", crit)]:
-            # If the measurement unit is set to bit and the bw levels
-            # are of type absolute, convert these 'bit' entries to byte
-            # still reported as bytes to stay compatible with older rrd data
-            if level_type == "abs":
-                assert isinstance(level_value, int)
-                level_value = level_value // unit
-            elif level_type == "perc":
-                assert isinstance(level_value, float)
-                level_value = _get_scaled_traffic_level(
-                    traffic_dir, level_value, speed_in, speed_out, speed_total
-                )
-
-            traffic_levels[(traffic_dir, up_or_low, what)] = level_value  # bytes
-    return traffic_levels
-
-
-def _get_scaled_traffic_level(
-    direction: str,
-    level_value: float,
-    speed_in: float | None,
-    speed_out: float | None,
-    speed_total: float | None,
-) -> float | None:
-    """convert percentages to absolute values."""
-
-    def _scale(speed: float) -> float:
-        return level_value / 100.0 * speed
-
-    for direction_id, speed in zip(("in", "out", "total"), (speed_in, speed_out, speed_total)):
-        if direction == direction_id:
-            if speed is None:
-                return None
-            return _scale(speed)
-
-    return None
 
 
 def _uses_description_and_alias(item_appearance: str) -> tuple[bool, bool]:
@@ -1290,22 +1308,6 @@ def check_single_interface(
     group_name: str = "Interface group",
     use_discovered_state_and_speed: bool = True,
 ) -> type_defs.CheckResult:
-    if use_discovered_state_and_speed:
-        targetspeed: int | None = params.get("speed", params.get("discovered_speed"))
-    else:
-        targetspeed = params.get("speed")
-    assumed_speed_in: int | None = params.get("assumed_speed_in")
-    assumed_speed_out: int | None = params.get("assumed_speed_out")
-    unit = BandwidthUnit.BIT if params.get("unit") in ["Bit", "bit"] else BandwidthUnit.BYTE
-
-    # broadcast storm detection is turned off by default
-    nucast_levels = params.get("nucasts")
-    disc_levels = params.get("discards")
-
-    # Convert the traffic related levels to a common format
-    general_traffic_levels = get_traffic_levels(params)
-    abs_packet_levels, perc_packet_levels = _get_packet_levels(params)
-
     yield from _interface_name(
         group_name=group_name if group_members else None,
         item=item,
@@ -1326,7 +1328,18 @@ def check_single_interface(
 
     yield from _output_group_members(group_members=group_members)
 
+    if use_discovered_state_and_speed:
+        targetspeed: int | None = params.get("speed", params.get("discovered_speed"))
+    else:
+        targetspeed = params.get("speed")
+
     yield _check_speed(interface.attributes, targetspeed)
+
+    assumed_speed_in: int | None = params.get("assumed_speed_in")
+    assumed_speed_out: int | None = params.get("assumed_speed_out")
+    bandwidth_unit = (
+        BandwidthUnit.BIT if params.get("unit") in ["Bit", "bit"] else BandwidthUnit.BYTE
+    )
 
     # prepare reference speed for computing relative bandwidth usage
     ref_speed = None
@@ -1340,11 +1353,15 @@ def check_single_interface(
     speed_b_out = (assumed_speed_out // BandwidthUnit.BIT) if assumed_speed_out else ref_speed
     speed_b_total = speed_b_in + speed_b_out if speed_b_in and speed_b_out else None
 
-    # Convert the traffic levels to interface specific levels, for example where the percentage
-    # levels are converted to absolute levels or assumed speeds of an interface are treated correctly
-    traffic_levels = get_specific_traffic_levels(
-        general_traffic_levels, unit, speed_b_in, speed_b_out, speed_b_total
+    # Compute levels
+    bw_levels = bandwidth_levels(
+        params=params,
+        speed_in=speed_b_in,
+        speed_out=speed_b_out,
+        speed_total=speed_b_total,
+        unit=bandwidth_unit,
     )
+    abs_packet_levels, perc_packet_levels = _get_packet_levels(params)
 
     #
     # All internal values within this check after this point are bytes, not bits!
@@ -1369,8 +1386,8 @@ def check_single_interface(
         speed_b_in=speed_b_in,
         speed_b_out=speed_b_out,
         speed_b_total=speed_b_total,
-        unit=unit,
-        traffic_levels=traffic_levels,
+        unit=bandwidth_unit,
+        levels=bw_levels,
         assumed_speed_in=assumed_speed_in,
         assumed_speed_out=assumed_speed_out,
         monitor_total="total_traffic" in params,
@@ -1379,8 +1396,8 @@ def check_single_interface(
     yield from _output_packet_rates(
         abs_packet_levels=abs_packet_levels,
         perc_packet_levels=perc_packet_levels,
-        nucast_levels=nucast_levels,
-        disc_levels=disc_levels,
+        nucast_levels=params.get("nucasts"),
+        disc_levels=params.get("discards"),
         rates=interface.rates_with_averages,
     )
 
@@ -1640,7 +1657,7 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     speed_b_out: float | None,
     speed_b_total: float | None,
     unit: BandwidthUnit,
-    traffic_levels: SpecificTrafficLevels,
+    levels: BandwidthLevels,
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
     monitor_total: bool,
@@ -1650,15 +1667,16 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     else:
         bandwidth_renderer = render.iobandwidth
 
-    for direction, traffic, speed in [
-        ("in", rates.in_octets, speed_b_in),
-        ("out", rates.out_octets, speed_b_out),
+    for direction, traffic, speed, direction_levels in [
+        ("in", rates.in_octets, speed_b_in, levels.input),
+        ("out", rates.out_octets, speed_b_out, levels.output),
         *(
             [
                 (
                     "total",
                     rates.total_octets,
                     speed_b_total,
+                    levels.total,
                 )
             ]
             if monitor_total
@@ -1672,7 +1690,7 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
             traffic=traffic,
             speed=speed,
             renderer=bandwidth_renderer,
-            traffic_levels=traffic_levels,
+            levels=direction_levels,
             assumed_speed_in=assumed_speed_in,
             assumed_speed_out=assumed_speed_out,
         )
@@ -1684,28 +1702,10 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     traffic: RateWithAverage,
     speed: float | None,
     renderer: Callable[[float], str],
-    traffic_levels: SpecificTrafficLevels,
+    levels: FixedLevels | PredictiveLevels,
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
 ) -> type_defs.CheckResult:
-    use_predictive_levels = (direction, "predictive") in traffic_levels
-
-    # The "normal" upper/lower levels can be valid for the raw value or the average value.
-    # We display them in the raw signal's graph for both cases.
-    # However, predictive levels are different in it's nature and will be handled seperately
-    if use_predictive_levels:
-        levels_upper = None
-        levels_lower = None
-    else:
-        levels_upper = (
-            traffic_levels[(direction, "upper", "warn")],
-            traffic_levels[(direction, "upper", "crit")],
-        )
-        levels_lower = (
-            traffic_levels[(direction, "lower", "warn")],
-            traffic_levels[(direction, "lower", "crit")],
-        )
-
     if traffic.average:
         filtered_traffic = traffic.average.value
         title = "%s average %dmin" % (direction.title(), traffic.average.backlog)
@@ -1713,16 +1713,15 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
         filtered_traffic = traffic.rate
         title = direction.title()
 
-    if use_predictive_levels:
+    if isinstance(levels, PredictiveLevels):
         if traffic.average:
             dsname = "%s_avg_%d" % (direction, traffic.average.backlog)
         else:
             dsname = direction
 
-        levels_predictive = traffic_levels[(direction, "predictive")]
         result, metric_from_pred_check, *ref_curve = check_levels_predictive(
             filtered_traffic,
-            levels=levels_predictive,
+            levels=levels.config,
             metric_name=dsname,
             render_func=renderer,
             label=title,
@@ -1741,8 +1740,8 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
         # needed here.
         (result,) = check_levels(
             filtered_traffic,
-            levels_upper=levels_upper,
-            levels_lower=levels_lower,
+            levels_upper=levels.upper,
+            levels_lower=levels.lower,
             render_func=renderer,
             label=title,
         )
@@ -1768,7 +1767,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
     yield Metric(
         direction,
         traffic.rate,
-        levels=levels_upper,
+        levels=levels.upper if isinstance(levels, FixedLevels) else None,
         boundaries=(0, speed),
     )
 

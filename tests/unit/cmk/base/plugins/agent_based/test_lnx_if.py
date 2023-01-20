@@ -221,7 +221,7 @@ INTERFACE = interfaces.InterfaceWithCounters(
 PARAMS = {
     "errors": {"both": ("abs", (10, 20))},
     "speed": 10000000,
-    "traffic": [("both", ("upper", ("perc", (5.0, 20.0))))],
+    "traffic": [("both", ("perc", ("upper", (5.0, 20.0))))],
     "state": ["1"],
 }
 

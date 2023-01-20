@@ -837,7 +837,7 @@ ITEM_PARAMS_RESULTS = (
             "errors": {"both": ("abs", (10, 20))},
             "speed": 10_000_000,
             "traffic": [
-                ("both", ("upper", ("perc", (5.0, 20.0)))),
+                ("both", ("perc", ("upper", (5.0, 20.0)))),
             ],
             "state": ["1"],
         },
@@ -859,7 +859,7 @@ ITEM_PARAMS_RESULTS = (
             "errors": {"both": ("abs", (10, 20))},
             "speed": 100_000_000,
             "traffic": [
-                ("both", ("upper", ("perc", (5.0, 20.0)))),
+                ("both", ("perc", ("upper", (5.0, 20.0)))),
             ],
             "total_traffic": {},
             "state": ["1"],
@@ -912,7 +912,7 @@ ITEM_PARAMS_RESULTS = (
         {
             "errors": {"both": ("abs", (10, 20))},
             "speed": 100000000,
-            "traffic": [("both", ("upper", ("perc", (5.0, 20.0))))],
+            "traffic": [("both", ("perc", ("upper", (5.0, 20.0))))],
             "state": ["1"],
             "nucasts": (1, 2),
             "discards": (1, 2),
@@ -1746,11 +1746,11 @@ def test_check_multiple_interfaces_group_simple() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
         "traffic": [
-            ("both", ("upper", ("perc", (5.0, 20.0)))),
+            ("both", ("perc", ("upper", (5.0, 20.0)))),
         ],
         "total_traffic": {
             "levels": [
-                ("upper", ("perc", (10.0, 30.0))),
+                ("perc", ("upper", (10.0, 30.0))),
             ]
         },
         "aggregate": {
@@ -1799,11 +1799,11 @@ def test_check_multiple_interfaces_group_exclude() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
         "traffic": [
-            ("both", ("upper", ("perc", (5.0, 20.0)))),
+            ("both", ("perc", ("upper", (5.0, 20.0)))),
         ],
         "total_traffic": {
             "levels": [
-                ("upper", ("perc", (10.0, 30.0))),
+                ("perc", ("upper", (10.0, 30.0))),
             ]
         },
         "aggregate": {
@@ -1856,11 +1856,11 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
         "traffic": [
-            ("both", ("upper", ("perc", (5.0, 20.0)))),
+            ("both", ("perc", ("upper", (5.0, 20.0)))),
         ],
         "total_traffic": {
             "levels": [
-                ("upper", ("perc", (10.0, 30.0))),
+                ("perc", ("upper", (10.0, 30.0))),
             ]
         },
         "aggregate": {
@@ -1989,11 +1989,11 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
         "traffic": [
-            ("both", ("upper", ("perc", (5.0, 20.0)))),
+            ("both", ("perc", ("upper", (5.0, 20.0)))),
         ],
         "total_traffic": {
             "levels": [
-                ("upper", ("perc", (10.0, 30.0))),
+                ("perc", ("upper", (10.0, 30.0))),
             ]
         },
         "aggregate": {
@@ -2063,11 +2063,11 @@ def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
         "errors": {"both": ("abs", (10, 20))},
         "speed": 10000000,
         "traffic": [
-            ("both", ("upper", ("perc", (5.0, 20.0)))),
+            ("both", ("perc", ("upper", (5.0, 20.0)))),
         ],
         "total_traffic": {
             "levels": [
-                ("upper", ("perc", (10.0, 30.0))),
+                ("perc", ("upper", (10.0, 30.0))),
             ]
         },
         "state": ["1"],

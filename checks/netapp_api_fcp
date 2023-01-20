@@ -10,9 +10,9 @@ from typing import Dict, Optional
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.interfaces import (
+    bandwidth_levels,
     BandwidthUnit,
-    get_specific_traffic_levels,
-    get_traffic_levels,
+    PredictiveLevels,
 )
 
 # <<<netapp_api_fcp:sep(9)>>>
@@ -91,31 +91,45 @@ def _speed_result(params, fcp_if):
 
 
 def _io_bytes_results(item, params, fcp_if):
-    traffic_levels = get_specific_traffic_levels(
-        get_traffic_levels(params), BandwidthUnit.BYTE, fcp_if.get("speed"), None, None
+    bw_levels = bandwidth_levels(
+        params=params,
+        speed_in=fcp_if.get("speed"),
+        speed_out=None,
+        speed_total=None,
+        unit=BandwidthUnit.BYTE,
     )
+
     now = fcp_if["now"]
-    for what, levels_what, descr in [
-        ("read_bytes", "in", "Read"),
-        ("write_bytes", "out", "Write"),
+    for what, levels, descr in [
+        ("read_bytes", bw_levels.input, "Read"),
+        ("write_bytes", bw_levels.output, "Write"),
     ]:
         value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
-        if (what, "predictive") in traffic_levels:
-            level_params = traffic_levels[(what, "predictive")]
-        else:
-            bw_warn = traffic_levels[(levels_what, "upper", "warn")]
-            bw_crit = traffic_levels[(levels_what, "upper", "crit")]
-            bw_warn_min = traffic_levels[(levels_what, "lower", "warn")]
-            bw_crit_min = traffic_levels[(levels_what, "lower", "crit")]
-            level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
-
         yield check_levels(
             value,
             what,
-            level_params,
+            levels.config
+            if isinstance(
+                levels,
+                PredictiveLevels,
+            )
+            else (
+                levels.upper
+                or (
+                    None,
+                    None,
+                )
+            )
+            + (
+                levels.lower
+                or (
+                    None,
+                    None,
+                )
+            ),
             human_readable_func=render.iobandwidth,
             infoname=descr,
         )

@@ -229,10 +229,20 @@ def _check_login_timeout(username: UserId, idle_time: float) -> None:
 # userdb.need_to_change_pw returns either None or the reason description why the
 # password needs to be changed
 def need_to_change_pw(username: UserId, now: datetime) -> str | None:
-    if not _is_local_user(username):
+    # Don't require password change for users from other connections, their passwords are not
+    # managed here.
+    user = load_user(username)
+    if not _is_local_user(user):
         return None
-    if load_custom_attr(user_id=username, key="enforce_pw_change", parser=utils.saveint) == 1:
+
+    # Ignore the enforce_pw_change flag for automation users, they cannot change their passwords
+    # themselves. (Password age is checked for them below though.)
+    if (
+        not _is_automation_user(user)
+        and load_custom_attr(user_id=username, key="enforce_pw_change", parser=utils.saveint) == 1
+    ):
         return "enforced"
+
     last_pw_change = load_custom_attr(user_id=username, key="last_pw_change", parser=utils.saveint)
     max_pw_age = active_config.password_policy.get("max_age")
     if not max_pw_age:
@@ -304,8 +314,12 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: Password) -> bool:
     return True
 
 
-def _is_local_user(user_id: UserId) -> bool:
-    return load_user(user_id).get("connector", "htpasswd") == "htpasswd"
+def _is_local_user(user: UserSpec) -> bool:
+    return user.get("connector", "htpasswd") == "htpasswd"
+
+
+def _is_automation_user(user: UserSpec) -> bool:
+    return user.get("automation_secret", None) is not None
 
 
 def user_locked(user_id: UserId) -> bool:

@@ -411,7 +411,8 @@ def _update_auth_options(  # type:ignore[no-untyped-def]
         if internal_auth_attrs:
             if "automation_secret" not in internal_auth_attrs:  # new password
                 internal_attrs.pop("automation_secret", None)
-            # Note: changing from password to automation secret leaves enforce_pw_change
+            # Note: Changing from password to automation secret leaves enforce_pw_change, although
+            #       it will be ignored for automation users.
             internal_attrs.update(internal_auth_attrs)
 
             if internal_auth_attrs.get("enforce_password_change"):

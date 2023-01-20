@@ -14,8 +14,8 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -c, --clean              remove artifacts first"
     echo "  -e, --setup-environment  setup environment"
+    echo "  -c, --clean              remove artifacts first"
     echo "  -F, --check-format       check for correct formatting"
     echo "  -b, --build              build agent controller"
     echo "  -U, --build-unit-tests   build unit tests"
@@ -30,8 +30,8 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_CLEAN=no
     RUN_SETUP_ENVIRONMENT=no
+    RUN_CLEAN=no
     RUN_CHECK_FORMAT=no
     RUN_BUILD=no
     RUN_BUILD_UNIT_TESTS=no
@@ -40,7 +40,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ceFbUuCaAfDh' --long 'clean,setup-environment,check-format,build,build-unit-tests,unit-tests,clippy,all,build-all,format,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecFbUuCaAfDh' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,all,build-all,format,documentation,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -49,13 +49,13 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-c' | '--clean')
-                RUN_CLEAN=yes
+            '-e' | '--setup-environment')
+                RUN_SETUP_ENVIRONMENT=yes
                 shift
                 continue
                 ;;
-            '-e' | '--setup-environment')
-                RUN_SETUP_ENVIRONMENT=yes
+            '-c' | '--clean')
+                RUN_CLEAN=yes
                 shift
                 continue
                 ;;
@@ -121,7 +121,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION
 }
 
 # TODO: This needs some serious massaging, some stuff probably don't even belong
@@ -157,8 +157,8 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_CLEAN} = yes && cargo clean
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
+    test ${RUN_CLEAN} = yes && cargo clean
     test ${RUN_CHECK_FORMAT} = yes && cargo fmt -- --check
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && cargo build --release --all-targets

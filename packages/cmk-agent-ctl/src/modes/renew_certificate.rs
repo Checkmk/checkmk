@@ -151,6 +151,7 @@ mod test_renew_certificate {
     use openssl::x509::extension::{BasicConstraints, KeyUsage, SubjectKeyIdentifier};
     use openssl::x509::{X509NameBuilder, X509};
     use std::convert::From;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     // Taken from openssl::examples with minor adaptions
     fn mk_ca_cert(days_valid: u32) -> AnyhowResult<String> {
@@ -174,7 +175,14 @@ mod test_renew_certificate {
         cert_builder.set_pubkey(&key_pair)?;
         let not_before = Asn1Time::days_from_now(0)?;
         cert_builder.set_not_before(&not_before)?;
-        let not_after = Asn1Time::days_from_now(days_valid)?;
+
+        // We have to calculate the not_after time like this, because Asn1Time::days_from_now()
+        // wants to calculate the resulting seconds (at least on Windows) as u32, which is not
+        // enough for our 600 years.
+        let not_after = {
+            let na = SystemTime::now() + Duration::from_secs((days_valid as u64) * 24 * 60 * 60);
+            Asn1Time::from_unix(na.duration_since(UNIX_EPOCH)?.as_secs().try_into()?)?
+        };
         cert_builder.set_not_after(&not_after)?;
 
         cert_builder.append_extension(BasicConstraints::new().critical().ca().build()?)?;
@@ -256,7 +264,6 @@ mod test_renew_certificate {
         }
     }
 
-    #[cfg(unix)]
     #[test]
     fn test_renew_all_certificates() {
         let mut registry =

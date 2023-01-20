@@ -61,8 +61,10 @@ from cmk.gui.valuespec import (
     UUID,
 )
 from cmk.gui.wato.pages.userdb_common import (
+    add_change,
     add_connections_page_menu,
     connection_actions,
+    get_affected_sites,
     render_connections_page,
 )
 
@@ -546,9 +548,16 @@ class ModeEditSAML2Config(WatoMode):
 
         connection_id = user_input["id"]
 
+        connections = load_connection_config(lock=True)
+
         # The pysaml2 client needs these in separate files.
         user_input["signature_certificate"] = write_certificate_files(
             user_input["signature_certificate"], connection_id
+        )
+        add_change(
+            f"add-or-edit-{user_input['type']}-connection",
+            _("Added or edited connection %s") % connection_id,
+            get_affected_sites(user_input),
         )
 
         connection_id = user_input["id"]

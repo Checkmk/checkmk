@@ -57,6 +57,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath(
             ty="dir", ident="omd", site_path="etc/omd", excludes=["allocated_ports", "site.conf"]
         ),
+        ReplicationPath(ty="dir", ident="userdb", site_path="etc/ssl/saml2", excludes=[".*new*"]),
     ]
 
     if edition is not cmk_version.Edition.CRE:

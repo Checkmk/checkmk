@@ -257,6 +257,13 @@ def get_replication_paths() -> list[ReplicationPath]:
             site_path="etc/omd",
             excludes=["allocated_ports", "site.conf"],
         ),
+        # TODO (CMK-12043): should be an enterprise feature
+        ReplicationPath(
+            ty="dir",
+            ident="userdb",
+            site_path="etc/ssl/saml2",
+            excludes=[],
+        ),
     ]
 
     # Include rule configuration into backup/restore/replication. Current

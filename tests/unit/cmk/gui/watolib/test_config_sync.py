@@ -313,7 +313,11 @@ def _get_expected_paths(
         ]
 
     if edition is not cmk_version.Edition.CME:
-        expected_paths += ["etc/omd/site.conf"]
+        expected_paths += [
+            "etc/omd/site.conf",
+            "etc/ssl",
+            "etc/ssl/saml2",
+        ]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic

@@ -21,11 +21,12 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

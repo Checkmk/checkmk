@@ -10,13 +10,14 @@ from typing import Any
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.views.store import internal_view_to_runtime_view
 
+from ...utils.exceptions import MKGeneralException
 from .builtin_dashboards import builtin_dashboards
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 

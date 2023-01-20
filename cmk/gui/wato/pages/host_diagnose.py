@@ -7,9 +7,11 @@
 import json
 from collections.abc import Collection
 
+from cmk.utils.exceptions import MKGeneralException
+
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

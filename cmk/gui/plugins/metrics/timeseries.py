@@ -10,10 +10,10 @@ from itertools import chain
 from typing import Literal
 
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.prediction import TimeSeries
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     Curve,

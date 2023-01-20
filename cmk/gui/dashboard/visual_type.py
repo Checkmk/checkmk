@@ -8,7 +8,8 @@ import json
 from collections.abc import Iterator
 from typing import cast
 
-from cmk.gui.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

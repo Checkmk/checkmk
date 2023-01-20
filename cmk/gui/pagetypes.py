@@ -32,6 +32,7 @@ from typing import cast, Generic, Literal, TypedDict, TypeVar
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
@@ -42,7 +43,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadc
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.default_permissions import PermissionSectionGeneral
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header

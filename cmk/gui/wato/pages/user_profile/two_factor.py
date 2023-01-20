@@ -21,12 +21,13 @@ from fido2.server import Fido2Server  # type: ignore[import]
 from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 
 from cmk.utils.crypto import Password
+from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

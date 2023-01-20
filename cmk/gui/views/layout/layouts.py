@@ -8,9 +8,10 @@ import re
 from collections.abc import Hashable, Iterator, Sequence
 from typing import Any
 
+from cmk.utils.exceptions import MKGeneralException
+
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

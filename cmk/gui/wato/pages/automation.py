@@ -14,6 +14,7 @@ from datetime import datetime
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -23,7 +24,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

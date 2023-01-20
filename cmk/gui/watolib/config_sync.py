@@ -26,8 +26,8 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import user_sync_default_config

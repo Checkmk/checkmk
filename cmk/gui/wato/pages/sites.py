@@ -19,6 +19,7 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -28,7 +29,7 @@ import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

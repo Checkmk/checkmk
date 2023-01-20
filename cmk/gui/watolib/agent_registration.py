@@ -10,9 +10,9 @@ from livestatus import SiteId
 
 import cmk.utils.regex
 from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand

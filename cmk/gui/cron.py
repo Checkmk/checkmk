@@ -8,10 +8,10 @@ from pathlib import Path
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import response
 from cmk.gui.log import logger
 from cmk.gui.session import SuperUserContext

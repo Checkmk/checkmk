@@ -37,13 +37,13 @@ import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.type_defs import Icon, PermissionName

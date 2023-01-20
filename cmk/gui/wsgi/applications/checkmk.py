@@ -17,6 +17,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
+from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui import http, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -26,7 +27,6 @@ from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
     MKConfigError,
-    MKGeneralException,
     MKNotFound,
     MKUnauthenticatedException,
     MKUserError,

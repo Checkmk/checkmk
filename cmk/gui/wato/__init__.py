@@ -60,6 +60,7 @@ from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.background_job as background_job
 import cmk.gui.backup as backup
@@ -89,7 +90,6 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
-from cmk.gui.exceptions import MKGeneralException as _MKGeneralException
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -311,7 +311,7 @@ def load_plugins() -> None:
     utils.load_web_plugins("wato", globals())
 
     if modes:
-        raise _MKGeneralException(
+        raise MKGeneralException(
             _("Deprecated WATO modes found: %r. They need to be refactored to new API.")
             % list(modes.keys())
         )

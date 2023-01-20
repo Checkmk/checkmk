@@ -18,13 +18,14 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.search import MatchItem
 

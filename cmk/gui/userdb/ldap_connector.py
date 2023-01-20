@@ -52,6 +52,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -60,7 +61,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (

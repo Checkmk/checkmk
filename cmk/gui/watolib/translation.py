@@ -5,7 +5,8 @@
 
 from typing import Any
 
-from cmk.gui.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,

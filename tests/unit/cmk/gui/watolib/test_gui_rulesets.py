@@ -12,6 +12,7 @@ import pytest
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RuleSpec
 
 import cmk.gui.utils
@@ -21,7 +22,6 @@ import cmk.gui.wato
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.watolib.rulesets import RuleOptions

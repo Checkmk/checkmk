@@ -10,6 +10,7 @@ from typing import Any, NamedTuple
 from livestatus import SiteId
 
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
@@ -22,7 +23,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

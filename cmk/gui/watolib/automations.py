@@ -22,6 +22,7 @@ from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import PhaseOneResult, UserId
 
@@ -37,7 +38,7 @@ from cmk.gui.background_job import (
     JobStatusSpec,
 )
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

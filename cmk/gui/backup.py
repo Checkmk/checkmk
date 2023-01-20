@@ -47,6 +47,7 @@ from cmk.utils.backup.type_defs import (
     TRemoteParams,
 )
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
@@ -55,7 +56,7 @@ from cmk.utils.site import omd_site
 import cmk.gui.forms as forms
 import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKGeneralException, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

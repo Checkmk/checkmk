@@ -17,6 +17,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 from cmk.utils import store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, UserId
 
@@ -30,7 +31,6 @@ from cmk.gui.breadcrumb import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_topology_context_and_filters
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

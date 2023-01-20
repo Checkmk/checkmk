@@ -18,6 +18,7 @@ from livestatus import SiteId
 
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValue
@@ -29,7 +30,6 @@ from cmk.utils.version import parse_check_mk_version
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

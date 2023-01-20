@@ -23,7 +23,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -62,6 +62,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
+from ...utils.exceptions import MKGeneralException
 from .main_menu import MainMenuRenderer
 
 # TODO: Kept for pre 1.6 plugin compatibility

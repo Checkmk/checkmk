@@ -13,12 +13,12 @@ import livestatus
 from livestatus import LivestatusRow, SiteId
 
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValues
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.plugins.metrics.timeseries as ts
 import cmk.gui.sites as sites
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     check_metrics,

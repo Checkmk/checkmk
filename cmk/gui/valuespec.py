@@ -70,6 +70,7 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds, TimeRange, UserId
@@ -80,7 +81,7 @@ import cmk.gui.user_sites as user_sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

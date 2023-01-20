@@ -7,11 +7,12 @@
 import pytest
 
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato
 import cmk.gui.watolib.rulespecs
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils import register_check_parameters, TimeperiodValuespec
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, Tuple, ValueSpec
 from cmk.gui.watolib.main_menu import main_module_registry

@@ -13,10 +13,11 @@ from typing import Any, Literal, NamedTuple
 import livestatus
 
 import cmk.utils.render
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import TimeRange
 
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKMissingDataError
+from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response

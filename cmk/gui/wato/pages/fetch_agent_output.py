@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (
@@ -19,7 +20,7 @@ from cmk.gui.background_job import (
     JobStatusSpec,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

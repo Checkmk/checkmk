@@ -7,9 +7,10 @@ import copy
 from collections.abc import Iterable, Iterator, Sequence
 
 from cmk.utils import pnp_cleanup
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.identification import graph_identification_types, GraphIdentification
 from cmk.gui.plugins.metrics.utils import (

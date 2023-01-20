@@ -10,6 +10,7 @@ from collections.abc import Collection
 from typing import Any, overload
 
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
@@ -39,7 +40,7 @@ from cmk.gui.bi import (
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html

@@ -15,6 +15,7 @@ from typing import Any, cast, Final
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
@@ -36,7 +37,6 @@ import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config, register_post_config_load_hook
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger

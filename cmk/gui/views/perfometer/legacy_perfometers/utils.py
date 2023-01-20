@@ -14,8 +14,9 @@ import math
 from collections.abc import Callable
 from typing import Literal, Union
 
+from cmk.utils.exceptions import MKGeneralException
+
 import cmk.gui.metrics as metrics
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row

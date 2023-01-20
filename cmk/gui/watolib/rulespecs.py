@@ -9,8 +9,8 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 import cmk.utils.plugin_registry
+from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

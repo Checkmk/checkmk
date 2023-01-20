@@ -23,10 +23,11 @@ from typing import Any
 import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
+from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

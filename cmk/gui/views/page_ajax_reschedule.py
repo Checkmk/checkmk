@@ -6,9 +6,10 @@ from typing import Any
 import livestatus
 from livestatus import SiteId
 
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui import sites
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

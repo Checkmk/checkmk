@@ -16,12 +16,13 @@ from typing import Any
 from marshmallow import fields
 
 import cmk.utils.plugin_registry
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
 from cmk.utils.tags import TagGroup, TagID
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u

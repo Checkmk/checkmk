@@ -6,7 +6,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.gui.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, Row

@@ -28,6 +28,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.datastructures import deep_update
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
@@ -59,7 +60,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
+from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

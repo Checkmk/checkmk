@@ -11,6 +11,7 @@ from typing import Any
 import livestatus
 from livestatus import SiteId
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
@@ -22,7 +23,7 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

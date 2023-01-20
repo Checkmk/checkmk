@@ -22,10 +22,10 @@ from typing_extensions import NotRequired, TypedDict
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user

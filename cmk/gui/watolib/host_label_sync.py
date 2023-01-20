@@ -19,6 +19,7 @@ from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import (
     get_host_labels_entry_of_host,
     get_updated_host_label_files,
@@ -37,7 +38,7 @@ from cmk.gui.background_job import (
     job_registry,
 )
 from cmk.gui.config import load_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

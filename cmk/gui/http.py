@@ -17,11 +17,12 @@ from pydantic import BaseModel
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import url_prefix
 
 import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
 UploadedFile = tuple[str, str, bytes]

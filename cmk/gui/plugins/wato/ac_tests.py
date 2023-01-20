@@ -16,6 +16,7 @@ import urllib3
 from livestatus import LocalConnection
 
 from cmk.utils.crypto import Password
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import local_checks_dir, local_inventory_dir
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -24,7 +25,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
 from cmk.gui.backup import Config as BackupConfig
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain

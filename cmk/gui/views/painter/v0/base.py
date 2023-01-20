@@ -17,12 +17,12 @@ from typing import Any, Literal, Union
 from livestatus import lqencode
 
 import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import TimeRange
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

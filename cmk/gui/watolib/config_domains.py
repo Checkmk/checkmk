@@ -25,13 +25,14 @@ import cmk.utils.version as cmk_version
 from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.process import pid_from_file, send_signal
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
 from cmk.gui.plugins.watolib.utils import (

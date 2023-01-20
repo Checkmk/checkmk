@@ -10,12 +10,13 @@ from collections.abc import Sequence
 
 from livestatus import SiteConfiguration, SiteId
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.sites
 from cmk.gui import userdb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user

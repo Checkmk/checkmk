@@ -15,7 +15,7 @@ from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
-from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
+from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageResult
@@ -52,6 +52,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
 
+from ...utils.exceptions import MKGeneralException
 from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
 from .painter.v0.base import Cell, Painter, painter_registry, PainterRegistry

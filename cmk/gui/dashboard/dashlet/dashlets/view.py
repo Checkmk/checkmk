@@ -7,11 +7,12 @@ import copy
 from collections.abc import Callable, Sequence
 from typing import cast, Literal, TypeVar
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

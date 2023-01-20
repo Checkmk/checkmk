@@ -12,11 +12,12 @@ from typing import Any, Final
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tags
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup
 
 from cmk.gui.config import load_config
-from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder

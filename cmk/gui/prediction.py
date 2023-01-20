@@ -12,11 +12,11 @@ import livestatus
 
 import cmk.utils.paths
 import cmk.utils.prediction as prediction
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

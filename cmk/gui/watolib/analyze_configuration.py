@@ -12,11 +12,11 @@ from typing import Any
 from livestatus import LocalConnection
 
 import cmk.utils.defines
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 import cmk.gui.sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import is_wato_slave_site

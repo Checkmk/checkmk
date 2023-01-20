@@ -17,6 +17,7 @@ from typing import Any, cast, Literal
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.gui.forms as forms
@@ -28,7 +29,7 @@ import cmk.gui.watolib.rulespecs as _rulespecs
 import cmk.gui.watolib.timeperiods as _timeperiods
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import (
     GroupSpecs,
     load_contact_group_information,

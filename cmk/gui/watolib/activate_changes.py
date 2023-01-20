@@ -46,6 +46,7 @@ import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing import save_extensions
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.site import omd_site
@@ -71,13 +72,7 @@ from cmk.gui.background_job import (
     JobStatusSpec,
 )
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import (
-    MKAuthException,
-    MKGeneralException,
-    MKInternalError,
-    MKUserError,
-    RequestTimeout,
-)
+from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError, RequestTimeout
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

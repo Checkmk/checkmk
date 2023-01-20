@@ -10,11 +10,12 @@ from typing import Any, Generic, TypeVar
 
 import livestatus
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import MacroMapping
 from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
-from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
+from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.html_render import (

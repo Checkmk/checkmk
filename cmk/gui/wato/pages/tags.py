@@ -9,12 +9,13 @@ import abc
 from collections.abc import Collection
 
 import cmk.utils.tags
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import load_config
-from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u

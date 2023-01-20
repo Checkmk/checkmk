@@ -14,6 +14,7 @@ from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 
 from cmk.automations.results import CheckPreviewEntry
@@ -23,7 +24,7 @@ from cmk.checkers.checkresults import ServiceCheckResult
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

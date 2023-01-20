@@ -7,6 +7,7 @@
 import socket
 from collections.abc import Collection, Sequence
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName
@@ -15,7 +16,7 @@ import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
 from cmk.gui.background_job import BackgroundJob, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

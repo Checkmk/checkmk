@@ -21,7 +21,15 @@ import struct
 import sys
 import types
 from collections import Counter, OrderedDict
-from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Callable,
+    Container,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
@@ -162,6 +170,17 @@ ShadowHosts = dict[HostName, dict]
 AllClusters = dict[HostName, list[HostName]]
 
 ObjectMacros = dict[str, AnyStr]
+
+
+class IgnoredServices(Container[ServiceName]):
+    def __init__(self, config_cache: ConfigCache, host_name: HostName) -> None:
+        self._config_cache = config_cache
+        self._host_name = host_name
+
+    def __contains__(self, _item: object) -> bool:
+        if not isinstance(_item, ServiceName):
+            return False
+        return self._config_cache.service_ignored(self._host_name, _item)
 
 
 def _aggregate_check_table_services(

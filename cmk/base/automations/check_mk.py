@@ -111,7 +111,7 @@ from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredPars
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, IgnoredServices
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -294,11 +294,13 @@ class AutomationTryDiscovery(Automation):
             simulation_mode=config.simulation_mode,
             max_cachefile_age=config.max_cachefile_age(),
         )
+        host_name = HostName(args[0])
         return discovery.get_check_preview(
-            HostName(args[0]),
+            host_name,
             config_cache=config_cache,
             parser=parser,
             fetcher=fetcher,
+            ignored_services=IgnoredServices(config_cache, host_name),
             on_error=on_error,
         )
 

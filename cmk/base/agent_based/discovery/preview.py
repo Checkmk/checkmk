@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Container, Sequence
 from typing import Any, Literal
 
 import cmk.utils.cleanup
@@ -53,6 +53,7 @@ def get_check_preview(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    ignored_services: Container[ServiceName],
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
@@ -133,13 +134,15 @@ def get_check_preview(
     return [
         *passive_rows,
         *_active_check_preview_rows(
-            config_cache,
             host_name,
             config_cache.alias(host_name),
             config_cache.active_checks(host_name),
+            ignored_services,
             host_attrs,
         ),
-        *_custom_check_preview_rows(config_cache, host_name, config_cache.custom_checks(host_name)),
+        *_custom_check_preview_rows(
+            host_name, config_cache.custom_checks(host_name), ignored_services
+        ),
     ], host_labels
 
 
@@ -183,7 +186,7 @@ def _check_preview_table_row(
 
 
 def _custom_check_preview_rows(
-    config_cache: ConfigCache, host_name: HostName, custom_checks: list[dict]
+    host_name: HostName, custom_checks: list[dict], ignored_services: Container[ServiceName]
 ) -> Sequence[CheckPreviewEntry]:
     return list(
         {
@@ -194,7 +197,7 @@ def _custom_check_preview_rows(
                 description=entry["service_description"],
                 check_source=(
                     "ignored_custom"
-                    if config_cache.service_ignored(host_name, entry["service_description"])
+                    if entry["service_description"] in ignored_services
                     else "custom"
                 ),
             )
@@ -204,10 +207,10 @@ def _custom_check_preview_rows(
 
 
 def _active_check_preview_rows(
-    config_cache: ConfigCache,
     host_name: HostName,
     alias: str,
     active_checks: list[tuple[str, list[Any]]],
+    ignored_services: Container[ServiceName],
     host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
     return list(
@@ -217,9 +220,7 @@ def _active_check_preview_rows(
                 check_plugin_name=plugin_name,
                 item=descr,
                 description=descr,
-                check_source=(
-                    "ignored_active" if config_cache.service_ignored(host_name, descr) else "active"
-                ),
+                check_source="ignored_active" if descr in ignored_services else "active",
                 effective_parameters=params,
             )
             for plugin_name, entries in active_checks

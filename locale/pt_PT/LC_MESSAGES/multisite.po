@@ -3417,8 +3417,16 @@ msgstr "Adicionar nova definição de agrupamento"
 msgid "Add new label"
 msgstr "Adicionar algum rótulo"
 
+#, fuzzy
+msgid "Add new macro"
+msgstr "Adicionar nova linha"
+
 msgid "Add new mapping"
 msgstr "Adicionar novo mapeamento"
+
+#, fuzzy
+msgid "Add new match criteria"
+msgstr "Adicionar novo padrão"
 
 msgid "Add new metric"
 msgstr "Adicionar nova métrica"
@@ -5045,11 +5053,11 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"An identifier must only consist of letters, digits, dash, dot, at and "
-"underscore. But it must start with a digit, letter or underscore."
+"An identifier must only consist of letters, digits, dollar, underscore, "
+"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
 msgstr ""
-"Um identificador deve consistir apenas em letras, dígitos, traço, ponto, at "
-"e underscore. Mas deve começar com uma letra ou um sublinhado."
+"Um identificador deve consistir apenas de letras, dígitos, traço e "
+"sublinhado e deve começar com uma letra ou sublinhado."
 
 #, python-format
 msgid ""
@@ -10082,6 +10090,10 @@ msgstr "Título da coluna"
 msgid "Columns"
 msgstr "Colunas"
 
+#, fuzzy
+msgid "Columns to match"
+msgstr "Valores a serem buscados"
+
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/total"
 
@@ -14995,6 +15007,10 @@ msgid "Display source details on"
 msgstr "Exibir detalhes da fonte em"
 
 msgid "Display table actions"
+msgstr "Exibir ações de tabela"
+
+#, fuzzy
+msgid "Display the column"
 msgstr "Exibir ações de tabela"
 
 msgid "Display the host alias"
@@ -19935,6 +19951,10 @@ msgstr "A partir de"
 msgid "From %s until %s (%s) %s"
 msgstr "De %s até %s (%s) %s"
 
+#, fuzzy
+msgid "From inventory table"
+msgstr "Árvore de Inventário"
+
 msgid "From left of the page"
 msgstr "A partir da esquerda da página"
 
@@ -21874,6 +21894,12 @@ msgstr ""
 "por exemplo, restringir um novo rollout a uma lista conhecida de cinco "
 "hosts, então estes cinco devem aparecer aqui no máximo após um intervalo de "
 "atualização configurado."
+
+msgid ""
+"Here you have to use macros which are defined above below <tt>Macros for "
+"joining service data or inventory tables</tt>. The joining of different "
+"inventory tables is based on these macros."
+msgstr ""
 
 msgid "Here you need to insert the original file or pathname"
 msgstr "Aqui você precisa inserir o arquivo original ou o nome do caminho"
@@ -26775,6 +26801,10 @@ msgstr "Junte-se ao Serviço de Lançador Falhas"
 msgid "Joined column"
 msgstr "Coluna aderente"
 
+#, fuzzy
+msgid "Joined inventory column"
+msgstr "Modificações no inventário"
+
 msgid "Jolokia"
 msgstr "Jolokia"
 
@@ -29482,6 +29512,13 @@ msgid ""
 msgstr ""
 "Os nomes das macros devem começar com o prefixo \"CUSTOMER_\" e consistem em "
 "letras maiúsculas, dígitos ou sublinhados."
+
+#, fuzzy
+msgid "Macros"
+msgstr "Nome Macro"
+
+msgid "Macros for joining service data or inventory tables"
+msgstr ""
 
 #, python-format
 msgid "Made rule pack %s available for MKP export"
@@ -34701,6 +34738,10 @@ msgstr "verificação do certificado SSL"
 
 #, fuzzy
 msgid "Online verification procedure was not successful"
+msgstr "Assar com sucesso"
+
+#, fuzzy, python-format
+msgid "Online verification procedure was not successful, reason: %s"
 msgstr "Assar com sucesso"
 
 #, fuzzy
@@ -48144,6 +48185,10 @@ msgid "The cluster must have at least one node"
 msgstr "O agrupamento deve ter pelo menos um nó"
 
 #, fuzzy
+msgid "The column"
+msgstr "%d colunas"
+
+#, fuzzy
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
@@ -49365,6 +49410,9 @@ msgstr "O logfile não existe no site."
 
 msgid "The login is currently locked"
 msgstr "O login está actualmente bloqueado"
+
+msgid "The macro must begin and end with '$'."
+msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
 msgstr "O assunto do correio é usado como aplicação do syslog"
@@ -58942,6 +58990,10 @@ msgstr ""
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr ""
 
+#, fuzzy
+msgid "Use value from"
+msgstr "Arquivo movido de"
+
 msgid "Use volume name and mountpoint"
 msgstr "Use o nome do volume e o ponto de montagem"
 
@@ -64150,6 +64202,10 @@ msgid "as an email"
 msgstr "E-mail simples"
 
 #, fuzzy
+msgid "as macro named"
+msgstr "Nome Macro"
+
+#, fuzzy
 msgid "at"
 msgstr "Dados"
 
@@ -65132,6 +65188,10 @@ msgstr "m/nos"
 msgid "must be equal to '%s'"
 msgstr ""
 
+#, fuzzy
+msgid "must match"
+msgstr "Lista de jogos do anfitrião"
+
 #, fuzzy, python-format
 msgid "must match '%s'"
 msgstr "Lista de jogos do anfitrião"
@@ -65987,6 +66047,17 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid ""
+#~| "An identifier must only consist of letters, digits, dash, dot, at and "
+#~| "underscore. But it must start with a letter or underscore."
+#~ msgid ""
+#~ "An identifier must only consist of letters, digits, dash, dot, at and "
+#~ "underscore. But it must start with a digit, letter or underscore."
+#~ msgstr ""
+#~ "Um identificador deve consistir apenas em letras, dígitos, traço, ponto, "
+#~ "at e underscore. Mas deve começar com uma letra ou um sublinhado."
 
 #, fuzzy
 #~| msgid "Show all settings"

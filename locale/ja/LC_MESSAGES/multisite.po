@@ -3301,8 +3301,16 @@ msgstr "新しいグループ定義を追加する"
 msgid "Add new label"
 msgstr "ラベルを追加"
 
+#, fuzzy
+msgid "Add new macro"
+msgstr "新しい行を追加します"
+
 msgid "Add new mapping"
 msgstr "新しいマッピングを追加する"
+
+#, fuzzy
+msgid "Add new match criteria"
+msgstr "新しいパターンを追加する"
 
 msgid "Add new metric"
 msgstr "新しいメトリックを追加する"
@@ -4850,13 +4858,13 @@ msgstr ""
 "識別子は、文字、数字、ダッシュ、アンダースコアのみで構成され、文字またはアン"
 "ダースコアで始まる必要があります。"
 
+#, fuzzy
 msgid ""
-"An identifier must only consist of letters, digits, dash, dot, at and "
-"underscore. But it must start with a digit, letter or underscore."
+"An identifier must only consist of letters, digits, dollar, underscore, "
+"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
 msgstr ""
-"識別子は、文字、数字、ダッシュ、ドット、アット、アンダースコアのみで構成する"
-"必要があります。ただし、数字、文字またはアンダースコアで始める必要がありま"
-"す。"
+"識別子は、文字、数字、ダッシュ、アンダースコアのみで構成され、文字またはアン"
+"ダースコアで始まる必要があります。"
 
 #, python-format
 msgid ""
@@ -9616,6 +9624,10 @@ msgstr "列のタイトル"
 msgid "Columns"
 msgstr "列"
 
+#, fuzzy
+msgid "Columns to match"
+msgstr "フェッチする値"
+
 msgid "Com. buf. max/total"
 msgstr "Com. Buf. 最大/合計"
 
@@ -14326,6 +14338,10 @@ msgid "Display source details on"
 msgstr "ソースの詳細を表示する"
 
 msgid "Display table actions"
+msgstr "テーブルアクションの表示"
+
+#, fuzzy
+msgid "Display the column"
 msgstr "テーブルアクションの表示"
 
 msgid "Display the host alias"
@@ -19091,6 +19107,10 @@ msgstr "から"
 msgid "From %s until %s (%s) %s"
 msgstr "%s から %s (%s) %sまで"
 
+#, fuzzy
+msgid "From inventory table"
+msgstr "インベントリツリー"
+
 msgid "From left of the page"
 msgstr "ページの左から"
 
@@ -20904,6 +20924,12 @@ msgstr ""
 "ここでは、最近のエージェントのロールアウトに関するフィードバックを取得しま"
 "す。たとえば、新しいロールアウトを5つのホストの既知のリストに制限する場合、こ"
 "れらの5つは、構成された1つの更新間隔の後に遅くともここに表示されます。"
+
+msgid ""
+"Here you have to use macros which are defined above below <tt>Macros for "
+"joining service data or inventory tables</tt>. The joining of different "
+"inventory tables is based on these macros."
+msgstr ""
 
 msgid "Here you need to insert the original file or pathname"
 msgstr "ここで、元のファイルまたはパス名を挿入する必要があります"
@@ -25491,6 +25517,10 @@ msgstr "ランチャーサービスの失敗に参加する"
 msgid "Joined column"
 msgstr "結合された列"
 
+#, fuzzy
+msgid "Joined inventory column"
+msgstr "インベントリーの変更"
+
 msgid "Jolokia"
 msgstr "Jolokia"
 
@@ -28082,6 +28112,13 @@ msgid ""
 msgstr ""
 "マクロ名は \"CUSTOMER_\" プレフィックスで始まり、大文字、数字、またはアンダー"
 "スコアで構成されている必要があります。"
+
+#, fuzzy
+msgid "Macros"
+msgstr "マクロ名"
+
+msgid "Macros for joining service data or inventory tables"
+msgstr ""
 
 #, python-format
 msgid "Made rule pack %s available for MKP export"
@@ -33086,6 +33123,10 @@ msgstr "SSL証明書の検証"
 
 #, fuzzy
 msgid "Online verification procedure was not successful"
+msgstr "登録完了"
+
+#, fuzzy, python-format
+msgid "Online verification procedure was not successful, reason: %s"
 msgstr "登録完了"
 
 #, fuzzy
@@ -45833,6 +45874,10 @@ msgid "The cluster must have at least one node"
 msgstr "クラスターには少なくとも1つのノードが必要です"
 
 #, fuzzy
+msgid "The column"
+msgstr "%d 列"
+
+#, fuzzy
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
@@ -46941,6 +46986,9 @@ msgstr "ログファイルがサイトに存在しません。"
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
+
+msgid "The macro must begin and end with '$'."
+msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
 msgstr "メールの件名はsyslogアプリケーションとして使用されます"
@@ -55770,6 +55818,10 @@ msgstr ""
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr ""
 
+#, fuzzy
+msgid "Use value from"
+msgstr "ファイルの移動元"
+
 msgid "Use volume name and mountpoint"
 msgstr ""
 
@@ -60542,6 +60594,10 @@ msgstr "ポップアップメッセージ"
 msgid "as an email"
 msgstr "メールで"
 
+#, fuzzy
+msgid "as macro named"
+msgstr "マクロ名"
+
 msgid "at"
 msgstr "at"
 
@@ -61501,6 +61557,10 @@ msgstr "ms/us"
 msgid "must be equal to '%s'"
 msgstr ""
 
+#, fuzzy
+msgid "must match"
+msgstr "一致必須 '%s'"
+
 #, python-format
 msgid "must match '%s'"
 msgstr "一致必須 '%s'"
@@ -62350,6 +62410,14 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "An identifier must only consist of letters, digits, dash, dot, at and "
+#~ "underscore. But it must start with a digit, letter or underscore."
+#~ msgstr ""
+#~ "識別子は、文字、数字、ダッシュ、ドット、アット、アンダースコアのみで構成す"
+#~ "る必要があります。ただし、数字、文字またはアンダースコアで始める必要があり"
+#~ "ます。"
 
 #, fuzzy
 #~| msgid "Show all settings"

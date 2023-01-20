@@ -3208,8 +3208,16 @@ msgstr "Adaugp o noua configurație de utilizator"
 msgid "Add new label"
 msgstr "Adaugă o regulă de rol"
 
+#, fuzzy
+msgid "Add new macro"
+msgstr "Adaugă Contoar"
+
 msgid "Add new mapping"
 msgstr "Adaugă o nouă mapare"
+
+#, fuzzy
+msgid "Add new match criteria"
+msgstr "Adaugă model/tipar"
 
 #, fuzzy
 msgid "Add new metric"
@@ -4804,8 +4812,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"An identifier must only consist of letters, digits, dash, dot, at and "
-"underscore. But it must start with a digit, letter or underscore."
+"An identifier must only consist of letters, digits, dollar, underscore, "
+"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
 msgstr ""
 
 #, python-format
@@ -9495,6 +9503,10 @@ msgstr "(fără titlu)"
 
 msgid "Columns"
 msgstr ""
+
+#, fuzzy
+msgid "Columns to match"
+msgstr "(fără titlu)"
 
 msgid "Com. buf. max/total"
 msgstr ""
@@ -14427,6 +14439,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Display table actions"
 msgstr ""
 
+#, fuzzy
+msgid "Display the column"
+msgstr "Optiuni tabel"
+
 msgid "Display the host alias"
 msgstr ""
 
@@ -19292,6 +19308,10 @@ msgstr ""
 msgid "From %s until %s (%s) %s"
 msgstr ""
 
+#, fuzzy
+msgid "From inventory table"
+msgstr "Activare schimbări"
+
 msgid "From left of the page"
 msgstr ""
 
@@ -20986,6 +21006,12 @@ msgid ""
 "Here you get feedback about recent agent rollouts. If you e.g. restrict a "
 "new rollout to a known list of five hosts, then these five should appear "
 "here at latest after one configured update interval."
+msgstr ""
+
+msgid ""
+"Here you have to use macros which are defined above below <tt>Macros for "
+"joining service data or inventory tables</tt>. The joining of different "
+"inventory tables is based on these macros."
 msgstr ""
 
 msgid "Here you need to insert the original file or pathname"
@@ -25168,6 +25194,10 @@ msgstr ""
 msgid "Joined column"
 msgstr ""
 
+#, fuzzy
+msgid "Joined inventory column"
+msgstr "Activare schimbări"
+
 msgid "Jolokia"
 msgstr ""
 
@@ -27967,6 +27997,12 @@ msgstr ""
 msgid ""
 "Macro names must start with \"CUSTOMER_\" prefix and consist of capitalized "
 "letters, digits or underscores."
+msgstr ""
+
+msgid "Macros"
+msgstr ""
+
+msgid "Macros for joining service data or inventory tables"
 msgstr ""
 
 #, python-format
@@ -33303,6 +33339,10 @@ msgstr "Activare Configurare"
 
 #, fuzzy
 msgid "Online verification procedure was not successful"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy, python-format
+msgid "Online verification procedure was not successful, reason: %s"
 msgstr "Numele Aplicatiei"
 
 #, fuzzy
@@ -46076,6 +46116,10 @@ msgstr ""
 msgid "The cluster must have at least one node"
 msgstr ""
 
+#, fuzzy
+msgid "The column"
+msgstr "%d coloane"
+
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
@@ -47059,6 +47103,9 @@ msgid "The logfile does not exist on site."
 msgstr ""
 
 msgid "The login is currently locked"
+msgstr ""
+
+msgid "The macro must begin and end with '$'."
 msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
@@ -55008,6 +55055,9 @@ msgstr ""
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr ""
 
+msgid "Use value from"
+msgstr ""
+
 #, fuzzy
 msgid "Use volume name and mountpoint"
 msgstr " pe siteul de monitorizare: "
@@ -59252,6 +59302,10 @@ msgstr "Mesajul Text"
 msgid "as an email"
 msgstr ""
 
+#, fuzzy
+msgid "as macro named"
+msgstr "Numele Elementului"
+
 msgid "at"
 msgstr ""
 
@@ -60278,6 +60332,10 @@ msgstr ""
 #, python-format
 msgid "must be equal to '%s'"
 msgstr ""
+
+#, fuzzy
+msgid "must match"
+msgstr " pe siteul de monitorizare: "
 
 #, python-format
 msgid "must match '%s'"
@@ -63569,10 +63627,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "percent packets"
 #~ msgstr "trei nivele"
-
-#, fuzzy
-#~ msgid "Display options"
-#~ msgstr "Optiuni tabel"
 
 #, fuzzy
 #~ msgid "Admin Password"

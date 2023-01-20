@@ -3446,8 +3446,16 @@ msgstr "Nieuwe groeperingsdefinitie toevoegen"
 msgid "Add new label"
 msgstr "Nieuw etiket toevoegen"
 
+#, fuzzy
+msgid "Add new macro"
+msgstr "Nieuwe rij toevoegen"
+
 msgid "Add new mapping"
 msgstr "Nieuwe mapping toevoegen"
+
+#, fuzzy
+msgid "Add new match criteria"
+msgstr "Nieuw patroon toevoegen"
 
 msgid "Add new metric"
 msgstr "Nieuwe metriek toevoegen"
@@ -5054,13 +5062,13 @@ msgstr ""
 "Een identifier mag alleen uit letters, cijfers, streepjes en underscore "
 "bestaan en moet met een letter of underscore beginnen."
 
+#, fuzzy
 msgid ""
-"An identifier must only consist of letters, digits, dash, dot, at and "
-"underscore. But it must start with a digit, letter or underscore."
+"An identifier must only consist of letters, digits, dollar, underscore, "
+"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
 msgstr ""
-"Een identifier mag alleen bestaan uit letters, cijfers, streepje, punt, at "
-"en underscore. Maar hij moet beginnen met een cijfer, een letter of een "
-"underscore."
+"Een identifier mag alleen uit letters, cijfers, streepjes en underscore "
+"bestaan en moet met een letter of underscore beginnen."
 
 #, python-format
 msgid ""
@@ -10044,6 +10052,10 @@ msgstr "Kolom titel"
 msgid "Columns"
 msgstr "Kolommen"
 
+#, fuzzy
+msgid "Columns to match"
+msgstr "Te halen waarden"
+
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/totaal"
 
@@ -14910,6 +14922,10 @@ msgid "Display source details on"
 msgstr "Brongegevens weergeven op"
 
 msgid "Display table actions"
+msgstr "Toon tabel acties"
+
+#, fuzzy
+msgid "Display the column"
 msgstr "Toon tabel acties"
 
 msgid "Display the host alias"
@@ -19808,6 +19824,10 @@ msgstr "Van"
 msgid "From %s until %s (%s) %s"
 msgstr "Van %s tot %s (%s) %s"
 
+#, fuzzy
+msgid "From inventory table"
+msgstr "Inventaris Boom"
+
 msgid "From left of the page"
 msgstr "Van links op de pagina"
 
@@ -21739,6 +21759,12 @@ msgstr ""
 "Hier krijg je feedback over recente agent rollouts. Als je bv. een nieuwe "
 "rollout beperkt tot een gekende lijst van vijf hosts, dan zouden deze vijf "
 "hier ten laatste moeten verschijnen na één geconfigureerd update interval."
+
+msgid ""
+"Here you have to use macros which are defined above below <tt>Macros for "
+"joining service data or inventory tables</tt>. The joining of different "
+"inventory tables is based on these macros."
+msgstr ""
 
 msgid "Here you need to insert the original file or pathname"
 msgstr "Hier moet u het originele bestand of de padnaam invoegen"
@@ -26639,6 +26665,10 @@ msgstr "Storing in de Launcher Service"
 msgid "Joined column"
 msgstr "Gevoegde kolom"
 
+#, fuzzy
+msgid "Joined inventory column"
+msgstr "Inventariswijzigingen"
+
 msgid "Jolokia"
 msgstr "Jolokia"
 
@@ -29276,6 +29306,13 @@ msgid ""
 msgstr ""
 "Macronamen moeten beginnen met het voorvoegsel \"CUSTOMER_\" en bestaan uit "
 "hoofdletters, cijfers of underscores."
+
+#, fuzzy
+msgid "Macros"
+msgstr "Macronaam"
+
+msgid "Macros for joining service data or inventory tables"
+msgstr ""
 
 #, python-format
 msgid "Made rule pack %s available for MKP export"
@@ -34409,6 +34446,10 @@ msgstr "SSL-certificaat verificatie"
 
 #, fuzzy
 msgid "Online verification procedure was not successful"
+msgstr "Registratie succesvol"
+
+#, fuzzy, python-format
+msgid "Online verification procedure was not successful, reason: %s"
 msgstr "Registratie succesvol"
 
 #, fuzzy
@@ -47734,6 +47775,10 @@ msgid "The cluster must have at least one node"
 msgstr "Het cluster moet ten minste één knooppunt hebben"
 
 #, fuzzy
+msgid "The column"
+msgstr "%d kolommen"
+
+#, fuzzy
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
@@ -48971,6 +49016,9 @@ msgstr "Het logbestand bestaat niet op de site."
 
 msgid "The login is currently locked"
 msgstr "De login is momenteel vergrendeld"
+
+msgid "The macro must begin and end with '$'."
+msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
 msgstr "Het onderwerp van de mail wordt gebruikt als syslog appliactie"
@@ -58594,6 +58642,10 @@ msgstr ""
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "Gebruik ongeverifieerde TLS encryptie, val terug op platte tekst"
 
+#, fuzzy
+msgid "Use value from"
+msgstr "Bestand verplaatst van"
+
 msgid "Use volume name and mountpoint"
 msgstr "Gebruik volumenaam en koppelpunt"
 
@@ -63859,6 +63911,10 @@ msgstr "als een popup bericht"
 msgid "as an email"
 msgstr "als een e-mail"
 
+#, fuzzy
+msgid "as macro named"
+msgstr "Macronaam"
+
 msgid "at"
 msgstr "op"
 
@@ -64824,6 +64880,10 @@ msgstr "ons"
 msgid "must be equal to '%s'"
 msgstr "moet gelijk zijn aan '%s'"
 
+#, fuzzy
+msgid "must match"
+msgstr "moet overeenkomen met '%s'"
+
 #, python-format
 msgid "must match '%s'"
 msgstr "moet overeenkomen met '%s'"
@@ -65678,6 +65738,14 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "An identifier must only consist of letters, digits, dash, dot, at and "
+#~ "underscore. But it must start with a digit, letter or underscore."
+#~ msgstr ""
+#~ "Een identifier mag alleen bestaan uit letters, cijfers, streepje, punt, "
+#~ "at en underscore. Maar hij moet beginnen met een cijfer, een letter of "
+#~ "een underscore."
 
 #, fuzzy
 #~| msgid "Show all settings"

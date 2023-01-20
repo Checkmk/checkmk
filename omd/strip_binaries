@@ -147,6 +147,7 @@ DONT_STRIP = {
     f"libpython{sys.version_info.major}.so",
     # To make our debugging life easier, don't strip our Livestatus library.
     "liblivestatus.so*",
+    "strip",
 }
 
 

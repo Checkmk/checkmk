@@ -8,6 +8,7 @@ import contextlib
 import http.client
 from collections.abc import Iterator
 from datetime import datetime
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -242,24 +243,45 @@ class LoginPage(Page):
         html.begin_form("login", method="POST", add_transid=False, action="login.py")
         html.hidden_field("_login", "1")
         html.hidden_field("_origtarget", origtarget)
-        html.label("%s:" % _("Username"), id_="label_user", class_=["legend"], for_="_username")
-        html.br()
+
+        saml2_user_error: str | None = None
+        if saml_connections := [
+            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+        ]:
+            saml2_user_error = _show_saml2_login(saml_connections, saml2_user_error, origtarget)
+
+        html.open_table()
+        html.open_tr()
+        html.td(
+            html.render_label(
+                "%s:" % _("Username"), id_="label_user", class_=["legend"], for_="_username"
+            ),
+            class_="login_label",
+        )
+        html.open_td(class_="login_input")
         html.text_input("_username", id_="input_user")
-        html.label("%s:" % _("Password"), id_="label_pass", class_=["legend"], for_="_password")
-        html.br()
+        html.close_td()
+        html.close_tr()
+        html.open_tr()
+        html.td(
+            html.render_label(
+                "%s:" % _("Password"), id_="label_pass", class_=["legend"], for_="_password"
+            ),
+            class_="login_label",
+        )
+        html.open_td(class_="login_input")
         html.password_input("_password", id_="input_pass", size=None)
-
-        if saml2_user_error := request.get_str_input("_saml2_user_error"):
-            user_errors.add(MKUserError(varname=None, message=saml2_user_error))
-
-        if user_errors:
-            html.open_div(id_="login_error")
-            html.show_user_errors()
-            html.close_div()
+        html.close_td()
+        html.close_tr()
+        html.close_table()
 
         html.open_div(id_="button_text")
-        html.button("_login", _("Login"), cssclass="hot")
+        html.button("_login", _("Login"), cssclass=None if saml_connections else "hot")
         html.close_div()
+
+        if user_errors and not saml2_user_error:
+            _show_user_errors("login_error")
+
         html.close_div()
 
         html.open_div(id_="foot")
@@ -267,22 +289,6 @@ class LoginPage(Page):
         if active_config.login_screen.get("login_message"):
             html.open_div(id_="login_message")
             html.show_message(active_config.login_screen["login_message"])
-            html.close_div()
-
-        for connection in [
-            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
-        ]:
-            # SAML login is not supported for remote sites
-            relay_state = RelayState(target_url=origtarget, connection_id=connection["id"])
-            html.open_div(id_="saml_button")
-            html.buttonlink(
-                href=makeuri_contextless(
-                    request, [("RelayState", str(relay_state))], filename="saml_sso.py"
-                ),
-                text=f"{_('Login with')} {connection['name']}",
-                obj_id="_saml2_login_button",
-                class_=["hot"],
-            )
             html.close_div()
 
         footer: list[HTML] = []
@@ -320,6 +326,49 @@ class LoginPage(Page):
         html.close_div()
 
         html.footer()
+
+
+def _show_saml2_login(
+    saml_connections: list[dict[str, Any]],
+    saml2_user_error: str | None,
+    origtarget: str,
+) -> str | None:
+    saml_css_class: list[str] = ["hot"]
+    for connection in saml_connections:
+        relay_state = RelayState(target_url=origtarget, connection_id=connection["id"])
+        html.open_div(id_="saml_button")
+        html.buttonlink(
+            href=makeuri_contextless(
+                request, [("RelayState", str(relay_state))], filename="saml_sso.py"
+            ),
+            text=f"{_('Login with')} {connection['name']}",
+            obj_id="_saml2_login_button",
+            class_=saml_css_class,
+        )
+        saml_css_class = []
+        html.close_div()
+        if (
+            saml2_user_error := request.get_str_input("_saml2_user_error")
+        ) and request.get_str_input("_connection_id") == connection["id"]:
+            user_errors.add(
+                MKUserError(
+                    varname=None,
+                    message=saml2_user_error
+                    + str(HTMLWriter.render_p(_("Please contact your administrator."))),
+                )
+            )
+            _show_user_errors(id_="login_error_saml2")
+
+    if saml_connections:
+        html.h2("or", class_=["login_separator"])
+
+    return saml2_user_error
+
+
+def _show_user_errors(id_: str) -> None:
+    html.open_div(id_=id_)
+    html.show_user_errors()
+    html.close_div()
 
 
 @page_registry.register_page("logout")

@@ -13,7 +13,7 @@
 include ../../../defines.make
 # commandline
 PY_VER             ?= 3.10 # TODO: reset this to $(PYTHON_MAJOR_DOT_MINOR) as soon 3.11 is done for windows nodes
-PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
+PY_SUBVER          ?= 4    # $(PYTHON_VERSION_PATCH)
 MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
 
 # internal dirs:

@@ -133,12 +133,13 @@ def get_check_preview(
     return [
         *passive_rows,
         *_active_check_preview_rows(
+            config_cache,
             host_name,
             config_cache.alias(host_name),
             config_cache.active_checks(host_name),
             host_attrs,
         ),
-        *_custom_check_preview_rows(host_name, config_cache.custom_checks(host_name)),
+        *_custom_check_preview_rows(config_cache, host_name, config_cache.custom_checks(host_name)),
     ], host_labels
 
 
@@ -182,7 +183,7 @@ def _check_preview_table_row(
 
 
 def _custom_check_preview_rows(
-    host_name: HostName, custom_checks: list[dict]
+    config_cache: ConfigCache, host_name: HostName, custom_checks: list[dict]
 ) -> Sequence[CheckPreviewEntry]:
     return list(
         {
@@ -191,9 +192,11 @@ def _custom_check_preview_rows(
                 check_plugin_name="custom",
                 item=entry["service_description"],
                 description=entry["service_description"],
-                check_source="ignored_custom"
-                if config.service_ignored(host_name, None, description=entry["service_description"])
-                else "custom",
+                check_source=(
+                    "ignored_custom"
+                    if config_cache.service_ignored(host_name, entry["service_description"])
+                    else "custom"
+                ),
             )
             for entry in custom_checks
         }.values()
@@ -201,6 +204,7 @@ def _custom_check_preview_rows(
 
 
 def _active_check_preview_rows(
+    config_cache: ConfigCache,
     host_name: HostName,
     alias: str,
     active_checks: list[tuple[str, list[Any]]],
@@ -213,9 +217,9 @@ def _active_check_preview_rows(
                 check_plugin_name=plugin_name,
                 item=descr,
                 description=descr,
-                check_source="ignored_active"
-                if config.service_ignored(host_name, None, descr)
-                else "active",
+                check_source=(
+                    "ignored_active" if config_cache.service_ignored(host_name, descr) else "active"
+                ),
                 effective_parameters=params,
             )
             for plugin_name, entries in active_checks

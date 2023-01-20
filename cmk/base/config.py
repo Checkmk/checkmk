@@ -1404,11 +1404,7 @@ def service_ignored(
         if _checktype_ignored_for_host(host_name, check_plugin_name_str):
             return True
 
-    return description is not None and get_config_cache().in_boolean_serviceconf_list(
-        host_name,
-        description,
-        ignored_services,
-    )
+    return description is not None and get_config_cache().service_ignored(host_name, description)
 
 
 def _checktype_ignored_for_host(
@@ -4432,6 +4428,9 @@ class ConfigCache:
         return self.ruleset_matcher.is_matching_service_ruleset(
             self.ruleset_match_object_of_service(hostname, description), ruleset
         )
+
+    def service_ignored(self, host_name: HostName, description: ServiceName) -> bool:
+        return self.in_boolean_serviceconf_list(host_name, description, ignored_services)
 
     def all_active_hosts(self) -> set[HostName]:
         """Returns a set of all active hosts"""

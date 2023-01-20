@@ -42,7 +42,7 @@ from ._mkp import (  # noqa: F401
 )
 from ._parts import CONFIG_PARTS, PathConfig, permissions, ui_title  # noqa: F401
 from ._reporter import all_local_files, all_rule_pack_files
-from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
+from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
 _logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ def format_file_name(package_id: PackageID) -> str:
 
 def release(installer: Installer, pacname: PackageName) -> None:
     if (manifest := installer.get_installed_manifest(pacname)) is None:
-        raise PackageException(f"Package {pacname} not installed or corrupt.")
+        raise PackageError(f"Package {pacname} not installed or corrupt.")
 
     _logger.info("Releasing files of package %s into freedom...", pacname)
     for part, files in manifest.files.items():
@@ -107,7 +107,7 @@ def uninstall(
             try:
                 (path_config.get_path(part) / fn).unlink(missing_ok=True)
             except Exception as exc:
-                raise PackageException(
+                raise PackageError(
                     f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
                 ) from exc
 
@@ -136,7 +136,7 @@ class PackageStore:
         shipped_package_path = self.shipped_packages / base_name
 
         if local_package_path.exists() or shipped_package_path.exists():
-            raise PackageException("Package '%s' already exists on the site!" % base_name)
+            raise PackageError("Package '%s' already exists on the site!" % base_name)
 
         local_package_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_bytes_to_file(str(local_package_path), file_content)
@@ -170,7 +170,7 @@ class PackageStore:
             return local_package_path
         if not (shipped_package_path := self.shipped_packages / base_name).exists():
             # yes, this is a race condition. But we want to make the intention clear.
-            raise PackageException(f"no such package: {package_id.name} {package_id.version}")
+            raise PackageError(f"no such package: {package_id.name} {package_id.version}")
         return shipped_package_path
 
 
@@ -212,16 +212,16 @@ def _find_path_and_package_info(
 
     package_str = f"{package_name}" + ("" if package_version is None else f" {package_version}")
     if not matching_packages:
-        raise PackageException(f"Package {package_str} is not enabled")
+        raise PackageError(f"Package {package_str} is not enabled")
     if len(matching_packages) > 1:
-        raise PackageException(f"Package not unique: {package_str}")
+        raise PackageError(f"Package not unique: {package_str}")
 
     return matching_packages[0]
 
 
 def create(installer: Installer, manifest: Manifest, path_config: PathConfig) -> None:
     if installer.is_installed(manifest.name):
-        raise PackageException("Packet already exists.")
+        raise PackageError("Packet already exists.")
 
     package_store = PackageStore()
 
@@ -235,14 +235,12 @@ def edit(
     installer: Installer, pacname: PackageName, new_manifest: Manifest, path_config: PathConfig
 ) -> None:
     if not installer.is_installed(pacname):
-        raise PackageException("No such package")
+        raise PackageError("No such package")
 
     # Renaming: check for collision
     if pacname != new_manifest.name:
         if installer.is_installed(new_manifest.name):
-            raise PackageException(
-                "Cannot rename package: a package with that name already exists."
-            )
+            raise PackageError("Cannot rename package: a package with that name already exists.")
     package_store = PackageStore()
 
     _raise_for_nonexisting_files(new_manifest, path_config)
@@ -257,7 +255,7 @@ def _raise_for_nonexisting_files(manifest: Manifest, path_config: PathConfig) ->
     for part, rel_path in manifest.files.items():
         for rp in rel_path:
             if not (fp := (path_config.get_path(part) / rp).exists()):
-                raise PackageException(f"File {fp} does not exist.")
+                raise PackageError(f"File {fp} does not exist.")
 
 
 def _create_enabled_mkp_from_installed_package(
@@ -426,7 +424,7 @@ def _raise_for_conflicts(
     for file_path, type_of_collision in _conflicting_files(
         package, old_package, installer, path_config
     ):
-        raise PackageException(f"File conflict: {file_path} ({type_of_collision})")
+        raise PackageError(f"File conflict: {file_path} ({type_of_collision})")
 
 
 def _conflicting_files(
@@ -480,7 +478,7 @@ def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
         for part in PackagePart
         for fn in (set(manifest.files.get(part, ())) & set(other_manifest.files.get(part, ())))
     ):
-        raise PackageException(
+        raise PackageError(
             "Files already belong to %s %s: %s"
             % (
                 other_manifest.name,
@@ -505,7 +503,7 @@ def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
         return
 
     if too_old:
-        raise PackageException(
+        raise PackageError(
             f"Package requires Checkmk version {min_version} (this is {site_version})"
         )
 
@@ -529,7 +527,7 @@ def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str)
         return
 
     if too_new:
-        raise PackageException(
+        raise PackageError(
             f"Package requires Checkmk version below {until_version} (this is {site_version})"
         )
 
@@ -645,7 +643,7 @@ def _deinstall_inapplicable_active_packages(
                 cmk_version.__version__,
                 allow_outdated=False,
             )
-        except PackageException as exc:
+        except PackageError as exc:
             _logger.info("[%s %s]: Uninstalling: %s", manifest.name, manifest.version, exc)
             uninstall(
                 installer,
@@ -675,7 +673,7 @@ def _install_applicable_inactive_packages(
                     allow_outdated=False,
                     post_package_change_actions=post_package_change_actions,
                 )
-            except PackageException as exc:
+            except PackageError as exc:
                 _logger.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
             else:
                 _logger.info("[%s %s]: Installed", name, manifest.version)
@@ -706,7 +704,7 @@ def disable_outdated(installer: Installer, path_config: PathConfig) -> None:
     for manifest in installer.get_installed_manifests():
         try:
             _raise_for_too_new_cmk_version(manifest.version_usable_until, cmk_version.__version__)
-        except PackageException as exc:
+        except PackageError as exc:
             _logger.info(
                 "[%s %s]: Disabling: %s",
                 manifest.name,

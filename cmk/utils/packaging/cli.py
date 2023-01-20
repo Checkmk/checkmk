@@ -36,7 +36,7 @@ from ._mkp import (
 )
 from ._parts import PathConfig, ui_title
 from ._reporter import files_inventory
-from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
+from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
 _logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ def _command_inspect(args: argparse.Namespace, path_config: PathConfig) -> int:
     try:
         file_content = file_path.read_bytes()
     except OSError as exc:
-        raise PackageException from exc
+        raise PackageError from exc
 
     manifest = extract_manifest(file_content)
 
@@ -249,7 +249,7 @@ def _command_add(args: argparse.Namespace, path_config: PathConfig) -> int:
     try:
         file_content = file_path.read_bytes()
     except OSError as exc:
-        raise PackageException from exc
+        raise PackageError from exc
 
     manifest = PackageStore().store(file_content)
 
@@ -278,7 +278,7 @@ def _command_remove(args: argparse.Namespace, path_config: PathConfig) -> int:
     """Remove a package from the site"""
     package_id = _get_package_id(args.name, args.version)
     if package_id in get_enabled_manifests():
-        raise PackageException("This package is enabled! Please disable it first.")
+        raise PackageError("This package is enabled! Please disable it first.")
 
     _logger.info("Removing package %s...", package_id.name)
     PackageStore().remove(package_id)
@@ -400,7 +400,7 @@ def _command_package(args: argparse.Namespace, path_config: PathConfig) -> int:
     try:
         manifest = store.store(create_mkp_object(package, path_config))
         install(installer, store, manifest.id, path_config)
-    except PackageException as exc:
+    except PackageError as exc:
         sys.stderr.write(f"{exc}\n")
         return 1
 
@@ -421,11 +421,11 @@ def _get_package_id(
         *(p for p in stored_packages.shipped if p.name == name),
     ]:
         case ():
-            raise PackageException(f"No such package: {name}")
+            raise PackageError(f"No such package: {name}")
         case (single_match,):
             return single_match.id
         case multiple_matches:
-            raise PackageException(
+            raise PackageError(
                 f"Please specify version ({', '.join(m.version for m in multiple_matches)})"
             )
 
@@ -488,7 +488,7 @@ def main(argv: list[str], path_config: PathConfig) -> int:
     set_up_logging(args.verbose)
     try:
         return args.handler(args, path_config)
-    except PackageException as exc:
+    except PackageError as exc:
         if args.debug:
             raise
         sys.stderr.write(f"{exc}\n")

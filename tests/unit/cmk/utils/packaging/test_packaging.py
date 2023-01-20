@@ -152,7 +152,7 @@ def test_create(installer: packaging.Installer) -> None:
 def test_create_twice(installer: packaging.Installer) -> None:
     _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
-    with pytest.raises(packaging.PackageException):
+    with pytest.raises(packaging.PackageError):
         _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
 
@@ -163,7 +163,7 @@ def test_edit_not_existing(installer: packaging.Installer) -> None:
         version=packaging.PackageVersion("2.0.0"),
     )
 
-    with pytest.raises(packaging.PackageException):
+    with pytest.raises(packaging.PackageError):
         packaging.edit(installer, packaging.PackageName("aaa"), new_manifest, _PATH_CONFIG)
 
 
@@ -208,7 +208,7 @@ def test_edit_rename_conflict(installer: packaging.Installer) -> None:
     _create_simple_test_package(installer, packaging.PackageName("aaa"))
     _create_simple_test_package(installer, packaging.PackageName("bbb"))
 
-    with pytest.raises(packaging.PackageException):
+    with pytest.raises(packaging.PackageError):
         packaging.edit(installer, packaging.PackageName("aaa"), new_manifest, _PATH_CONFIG)
 
 
@@ -228,7 +228,7 @@ def test_install(
 
 
 def test_release_not_existing(installer: packaging.Installer) -> None:
-    with pytest.raises(packaging.PackageException):
+    with pytest.raises(packaging.PackageError):
         packaging.release(installer, packaging.PackageName("abc"))
 
 
@@ -405,7 +405,7 @@ def _get_test_manifest(properties: Mapping) -> packaging.Manifest:
     ],
 )
 def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_version: str) -> None:
-    with pytest.raises(packaging.PackageException):
+    with pytest.raises(packaging.PackageError):
         packaging._raise_for_too_new_cmk_version(until_version, site_version)
 
 

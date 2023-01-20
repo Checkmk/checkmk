@@ -19,7 +19,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Extra, Field
 
-from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
+from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
 _logger = logging.getLogger(__name__)
 
@@ -119,10 +119,10 @@ def extract_manifest(file_content: bytes) -> Manifest:
     with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
         try:
             if (extracted_file := tar.extractfile("info")) is None:
-                raise PackageException("'info' is not a regular file")
+                raise PackageError("'info' is not a regular file")
             raw_info = extracted_file.read()
         except KeyError:
-            raise PackageException("'info' not contained in MKP")
+            raise PackageError("'info' not contained in MKP")
     return Manifest.parse_python_string(raw_info.decode())
 
 
@@ -257,7 +257,7 @@ def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable
 
     tarsource = tar.extractfile(name)
     if tarsource is None:
-        raise PackageException("Failed to open %s" % name)
+        raise PackageError("Failed to open %s" % name)
 
     # Important: Do not preserve the tared timestamp.
     # Checkmk needs to know when the files have been installed for cache invalidation.
@@ -268,7 +268,7 @@ def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable
         close_fds=True,
     ) as tardest:
         if tardest.stdin is None:
-            raise PackageException("Failed to open stdin")
+            raise PackageError("Failed to open stdin")
 
         while True:
             data = tarsource.read(4096)

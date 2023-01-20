@@ -12,10 +12,8 @@ from typing import Callable, Iterator, Literal, Union
 from pydantic import BaseModel, validator
 from semver import VersionInfo
 
-from cmk.utils.exceptions import MKException
 
-
-class PackageException(MKException):
+class PackageError(Exception):
     pass
 
 

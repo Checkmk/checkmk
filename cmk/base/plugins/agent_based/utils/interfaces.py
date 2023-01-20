@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 import itertools
 import time
 from collections import defaultdict
@@ -536,6 +537,11 @@ def _pad_with_zeroes(
     return ifIndex
 
 
+class BandwidthUnit(enum.IntEnum):
+    BYTE = 1
+    BIT = 8
+
+
 LevelSpec = tuple[str | None, tuple[float | None, float | None]]
 GeneralTrafficLevels = dict[tuple[str, str], LevelSpec]
 
@@ -602,7 +608,7 @@ SpecificTrafficLevels = dict[tuple[str, str] | tuple[str, str, str], Any]
 
 def get_specific_traffic_levels(
     general_traffic_levels: GeneralTrafficLevels,
-    unit: str,
+    unit: BandwidthUnit,
     speed_in: float | None,
     speed_out: float | None,
     speed_total: float | None,
@@ -620,9 +626,9 @@ def get_specific_traffic_levels(
             # If the measurement unit is set to bit and the bw levels
             # are of type absolute, convert these 'bit' entries to byte
             # still reported as bytes to stay compatible with older rrd data
-            if unit == "Bit" and level_type == "abs":
+            if level_type == "abs":
                 assert isinstance(level_value, int)
-                level_value = level_value // 8
+                level_value = level_value // unit
             elif level_type == "perc":
                 assert isinstance(level_value, float)
                 level_value = _get_scaled_traffic_level(
@@ -1255,11 +1261,11 @@ def _check_speed(attributes: Attributes, targetspeed: int | None) -> Result:
     Only if speed information is available. This is not always the case.
     """
     if attributes.speed:
-        speed_actual = render.nicspeed(attributes.speed / 8)
+        speed_actual = render.nicspeed(attributes.speed / BandwidthUnit.BIT)
         speed_expected = (
             ""
             if (targetspeed is None or int(attributes.speed) == targetspeed)
-            else " (expected: %s)" % render.nicspeed(targetspeed / 8)
+            else " (expected: %s)" % render.nicspeed(targetspeed / BandwidthUnit.BIT)
         )
         return Result(
             state=State.WARN if speed_expected else State.OK,
@@ -1269,7 +1275,7 @@ def _check_speed(attributes: Attributes, targetspeed: int | None) -> Result:
     if targetspeed:
         return Result(
             state=State.OK,
-            summary="Speed: %s (assumed)" % render.nicspeed(targetspeed / 8),
+            summary="Speed: %s (assumed)" % render.nicspeed(targetspeed / BandwidthUnit.BIT),
         )
 
     return Result(state=State.OK, summary="Speed: %s" % (attributes.speed_as_text or "unknown"))
@@ -1290,7 +1296,7 @@ def check_single_interface(
         targetspeed = params.get("speed")
     assumed_speed_in: int | None = params.get("assumed_speed_in")
     assumed_speed_out: int | None = params.get("assumed_speed_out")
-    unit = "Bit" if params.get("unit") in ["Bit", "bit"] else "B"
+    unit = BandwidthUnit.BIT if params.get("unit") in ["Bit", "bit"] else BandwidthUnit.BYTE
 
     # broadcast storm detection is turned off by default
     nucast_levels = params.get("nucasts")
@@ -1325,13 +1331,13 @@ def check_single_interface(
     # prepare reference speed for computing relative bandwidth usage
     ref_speed = None
     if interface.attributes.speed:
-        ref_speed = interface.attributes.speed / 8.0
+        ref_speed = interface.attributes.speed / BandwidthUnit.BIT
     elif targetspeed:
-        ref_speed = targetspeed / 8.0
+        ref_speed = targetspeed / BandwidthUnit.BIT
 
     # Speed in bytes
-    speed_b_in = (assumed_speed_in // 8) if assumed_speed_in else ref_speed
-    speed_b_out = (assumed_speed_out // 8) if assumed_speed_out else ref_speed
+    speed_b_in = (assumed_speed_in // BandwidthUnit.BIT) if assumed_speed_in else ref_speed
+    speed_b_out = (assumed_speed_out // BandwidthUnit.BIT) if assumed_speed_out else ref_speed
     speed_b_total = speed_b_in + speed_b_out if speed_b_in and speed_b_out else None
 
     # Convert the traffic levels to interface specific levels, for example where the percentage
@@ -1633,13 +1639,13 @@ def _output_bandwidth_rates(  # pylint: disable=too-many-branches
     speed_b_in: float | None,
     speed_b_out: float | None,
     speed_b_total: float | None,
-    unit: str,
+    unit: BandwidthUnit,
     traffic_levels: SpecificTrafficLevels,
     assumed_speed_in: int | None,
     assumed_speed_out: int | None,
     monitor_total: bool,
 ) -> type_defs.CheckResult:
-    if unit == "Bit":
+    if unit is BandwidthUnit.BIT:
         bandwidth_renderer: Callable[[float], str] = render.nicspeed
     else:
         bandwidth_renderer = render.iobandwidth

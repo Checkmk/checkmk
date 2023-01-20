@@ -87,7 +87,8 @@ std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(
 std::unique_ptr<const IContact> NagiosCore::find_contact(
     const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
-    return ToIContact(::find_contact(const_cast<char *>(name.c_str())));
+    const auto *c = ::find_contact(const_cast<char *>(name.c_str()));
+    return c == nullptr ? nullptr : std::make_unique<NebContact>(*c);
 }
 
 std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {

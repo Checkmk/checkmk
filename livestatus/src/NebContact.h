@@ -14,12 +14,15 @@
 class NebContact : public IContact {
 public:
     explicit NebContact(const contact &contact) : contact_{contact} {}
-    const void *handle() const override { return &contact_; };
+
+    [[nodiscard]] const void *handle() const override { return &contact_; };
 
 private:
     const contact &contact_;
 };
 
-std::unique_ptr<const IContact> ToIContact(const contact *c);
+inline std::unique_ptr<const IContact> ToIContact(const contact *c) {
+    return c != nullptr ? std::make_unique<NebContact>(*c) : nullptr;
+}
 
 #endif  // NebContact_h

@@ -102,9 +102,6 @@ liblivestatusneb_a_SOURCES = \
         HostServiceState.cc \
         MacroExpander.cc \
         NagiosCore.cc \
-        NebContact.cc \
-        NebHost.cc \
-        NebService.cc \
         RRDColumn.cc \
         ServiceListState.cc \
         Store.cc \

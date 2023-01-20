@@ -7,6 +7,7 @@
 #define Interface_h
 
 #include <functional>
+#include <string>
 
 class IContact {
 public:

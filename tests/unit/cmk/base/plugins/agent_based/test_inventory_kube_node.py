@@ -38,8 +38,8 @@ from .utils_inventory import sort_inventory_result
                 labels={},
                 annotations={},
                 addresses=[
-                    NodeAddress(type="Hostname", address=IpAddress("k8-21")),
-                    NodeAddress(type="ExternalIP", address=IpAddress("10.200.3.21")),
+                    NodeAddress(type_="Hostname", address=IpAddress("k8-21")),
+                    NodeAddress(type_="ExternalIP", address=IpAddress("10.200.3.21")),
                 ],
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",

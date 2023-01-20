@@ -5,6 +5,7 @@
 import xml.etree.ElementTree as ET
 from collections.abc import Collection, Iterator
 from pathlib import Path
+from typing import TypeVar
 
 from saml2.config import SPConfig
 
@@ -36,7 +37,12 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.plugins.wato.utils import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.type_defs import ActionResult, PermissionName
-from cmk.gui.userdb.saml2.config import CertificateType, determine_certificate_type
+from cmk.gui.userdb.saml2.config import (
+    CertificateType,
+    checkmk_server_url,
+    checkmk_service_provider_metadata,
+    determine_certificate_type,
+)
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -61,6 +67,41 @@ from cmk.gui.wato.pages.userdb_common import (
     connection_actions,
     render_connections_page,
 )
+
+T = TypeVar("T")
+
+
+class MetadataDisplayText(FixedValue[T]):
+    def validate_datatype(self, value: T, varprefix: str) -> None:
+        if not isinstance(value, str):
+            raise MKUserError(varprefix, _("Value must be string"))
+
+
+def _metadata() -> list[DictionaryEntry]:
+    """This is information the customer must know in order to register Checkmk as a Service Provider
+    with the Identity Provider.
+
+    The endpoints are generated dynamically once the UUID of the connection is known (see
+    ModeEditSAML2Config).
+
+    Each endpoint must be registered as a trusted URL with the Identity Provider. The Identity
+    Provider also checks the source of the requests and whether it can be trusted (entity ID).
+    """
+
+    return [
+        (
+            "checkmk_entity_id",
+            MetadataDisplayText(title=_("Entity ID"), value=""),
+        ),
+        (
+            "checkmk_metadata_endpoint",
+            MetadataDisplayText(title=_("Metadata endpoint"), value=""),
+        ),
+        (
+            "checkmk_assertion_consumer_service_endpoint",
+            MetadataDisplayText(title=_("Assertion Consumer Service endpoint"), value=""),
+        ),
+    ]
 
 
 def _general_properties() -> list[DictionaryEntry]:
@@ -328,15 +369,21 @@ def _security_properties() -> list[DictionaryEntry]:
 
 
 def saml2_connection_valuespec() -> Dictionary:
+    metadata = _metadata()
     general_properties = _general_properties()
     connection_properties = _connection_properties()
     user_properties = _user_properties()
     security_properties = _security_properties()
     return Dictionary(
         title=_("SAML Authentication"),
-        elements=general_properties + connection_properties + user_properties + security_properties,
+        elements=general_properties
+        + metadata
+        + connection_properties
+        + user_properties
+        + security_properties,
         headers=[
             (_("General Properties"), [k for k, _v in general_properties]),
+            (_("Checkmk service provider metadata"), [k for k, _v in metadata]),
             (_("Connection"), [k for k, _v in connection_properties]),
             (_("Security"), [k for k, _v in security_properties]),
             (_("Users"), [k for k, _v in user_properties]),
@@ -490,8 +537,18 @@ class ModeEditSAML2Config(WatoMode):
             user_input["signature_certificate"]
         )
 
+        connection_id = user_input["id"]
+        metadata = checkmk_service_provider_metadata(
+            checkmk_server_url(user_input["checkmk_server_url"]), connection_id
+        )
+        user_input["checkmk_entity_id"] = metadata.entity_id
+        user_input["checkmk_metadata_endpoint"] = metadata.metadata_endpoint
+        user_input[
+            "checkmk_assertion_consumer_service_endpoint"
+        ] = metadata.assertion_consumer_service_endpoint
+
         connections = load_connection_config(lock=True)
-        updated_connections = [c for c in connections if c["id"] != user_input["id"]]
+        updated_connections = [c for c in connections if c["id"] != connection_id]
         updated_connections.append(user_input)
         save_connection_config(updated_connections)
 
@@ -499,6 +556,9 @@ class ModeEditSAML2Config(WatoMode):
         for connection in load_connection_config(lock=False):
             if connection["id"] == clone_id:
                 connection["id"] = UUID().from_html_vars(self._html_valuespec_param_prefix)
+                for key in (k for k, v in _metadata()):
+                    # Metadata needs to be regenerated when a connection is cloned
+                    connection.pop(key, None)
                 return connection
 
         raise MKUserError(None, _("The requested connection does not exist."))

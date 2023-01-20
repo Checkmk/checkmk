@@ -121,7 +121,6 @@ def _interface_config(
         connectivity_settings=ConnectivitySettings(
             timeout=(12, 12),
             idp_metadata=XMLText(_IDENTITY_PROVIDER_METADATA),
-            checkmk_server_url="http://localhost",
             entity_id="http://localhost/heute/check_mk/saml_metadata.py",
             assertion_consumer_service_endpoint="http://localhost/heute/check_mk/saml_acs.py?acs",
             binding=BINDING_HTTP_POST,

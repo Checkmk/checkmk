@@ -42,9 +42,18 @@ def _relay_state_from_url(relay_state: str) -> RelayState:
 
     >>> _relay_state_from_url("123-456,index.py?so=many,many,many,params")
     RelayState(target_url='index.py?so=many,many,many,params', connection_id='123-456')
+
+
+    >>> _relay_state_from_url("123-456")
+    RelayState(target_url='index.py', connection_id='123-456')
     """
 
-    id_, url = relay_state.split(",", 1)
+    id_, *requested_url = relay_state.split(",", 1)
+
+    if not requested_url:
+        url = "index.py"
+    else:
+        url = requested_url[0]
 
     if not is_allowed_url(url):
         LOGGER.debug("The parameter %s is not a valid URL", url)

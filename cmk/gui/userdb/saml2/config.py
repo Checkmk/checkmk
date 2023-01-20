@@ -71,7 +71,6 @@ class SecuritySettings(BaseModel):
 
 class ConnectivitySettings(BaseModel):
     timeout: tuple[int, int]
-    checkmk_server_url: str
     idp_metadata: URL | XMLText
     entity_id: str
     assertion_consumer_service_endpoint: str
@@ -107,6 +106,12 @@ class ConnectorConfig(BaseModel):
 class CertificateType(enum.Enum):
     BUILTIN = "default"
     CUSTOM = "custom"
+
+
+class ServiceProviderMetadata(BaseModel):
+    entity_id: str
+    metadata_endpoint: str
+    assertion_consumer_service_endpoint: str
 
 
 def determine_certificate_type(certificate: str | tuple[str, tuple[str, str]]) -> CertificateType:
@@ -192,17 +197,33 @@ def _idp_metadata(metadata: tuple[str, str] | tuple[str, tuple[str, str, bytes]]
             raise ValueError(f"Unrecognised option for IDP metadata: {option_name}")
 
 
+def checkmk_service_provider_metadata(
+    checkmk_url: str, connection_id: str
+) -> ServiceProviderMetadata:
+    entity_id = f"{checkmk_url}/saml_metadata.py"
+    return ServiceProviderMetadata(
+        entity_id=entity_id,
+        metadata_endpoint=f"{entity_id}?RelayState={connection_id}",
+        assertion_consumer_service_endpoint=f"{checkmk_url}/saml_acs.py?acs",
+    )
+
+
+def checkmk_server_url(checkmk_url: str) -> str:
+    return f"{checkmk_url}{url_prefix()}check_mk"
+
+
 def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
-    checkmk_server_url = f"{user_input['checkmk_server_url']}{url_prefix()}check_mk"
+    connection_id = user_input["id"]
     roles_mapping = user_input["role_membership_mapping"]
 
     interface_config = InterfaceConfig(
         connectivity_settings=ConnectivitySettings(
             timeout=user_input["connection_timeout"],
             idp_metadata=_idp_metadata(user_input["idp_metadata"]),
-            checkmk_server_url=checkmk_server_url,
-            entity_id=f"{checkmk_server_url}/saml_metadata.py",
-            assertion_consumer_service_endpoint=f"{checkmk_server_url}/saml_acs.py?acs",
+            entity_id=user_input["checkmk_entity_id"],
+            assertion_consumer_service_endpoint=user_input[
+                "checkmk_assertion_consumer_service_endpoint"
+            ],
             binding=BINDING_HTTP_POST,
             verify_tls=True,
         ),
@@ -241,16 +262,15 @@ def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
     )
 
     name = user_input["name"]
-    identifier = user_input["id"]
     return ConnectorConfig(
         type=user_input["type"],
         version=user_input["version"],
-        id=identifier,
+        id=connection_id,
         name=name,
         description=user_input["description"],
         comment=user_input["comment"],
         docu_url=user_input["docu_url"],
         disabled=user_input["disabled"],
-        identity_provider=f"{name} ({identifier})",
+        identity_provider=f"{name} ({connection_id})",
         interface_config=interface_config,
     )

@@ -209,18 +209,19 @@ def release_lock(path: Path | str) -> None:
 
     if not have_lock(path):
         return  # no unlocking needed
-    logger.debug("Releasing lock on %s", path)
 
-    fd = _get_lock(str(path))
-    if fd is None:
+    logger.debug("Releasing lock on %s", path)
+    if (fd := _get_lock(str(path))) is None:
         return
+
     try:
         os.close(fd)
     except OSError as e:
         if e.errno != errno.EBADF:  # Bad file number
             raise
-    _del_lock(str(path))
-    logger.debug("Released lock on %s", path)
+    finally:
+        _del_lock(str(path))
+        logger.debug("Released lock on %s", path)
 
 
 def have_lock(path: str | Path) -> bool:

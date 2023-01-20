@@ -174,6 +174,14 @@ def _parameter_valuespec_diskstat():
                 "write_ios",
                 Levels(title=_("Write operations"), unit=_("1/s"), default_levels=(300.0, 400.0)),
             ),
+            (
+                "read_ql",
+                Levels(title=_("Read queue length"), unit=_(""), default_levels=(80.0, 90.0)),
+            ),
+            (
+                "write_ql",
+                Levels(title=_("Write queue length"), unit=_(""), default_levels=(80.0, 90.0)),
+            ),
         ],
     )
 

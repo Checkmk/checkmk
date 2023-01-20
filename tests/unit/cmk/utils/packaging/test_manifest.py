@@ -100,3 +100,18 @@ def test_read_manifest_optionally_invalid(tmp_path: Path) -> None:
 
 def test_read_manifest_optionally_missing(tmp_path: Path) -> None:
     assert read_manifest_optionally(tmp_path, None) is None
+
+
+def test_field_conversion() -> None:
+    m = Manifest.parse_python_string(
+        "{'author': 'tribe29 GmbH (mo)',\n"
+        " 'description': '',\n"
+        " 'download_url': '',\n"
+        " 'files': {},\n"
+        " 'name': 'test-package',\n"
+        " 'title': 'Test Package',\n"
+        " 'version': '1.0.0',\n"
+        " 'version.min_required': '2.1.0',\n"
+        " 'version.packaged': '2.1.0p2'}\n"
+    )
+    assert isinstance(m.version, PackageVersion)

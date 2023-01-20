@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from functools import cached_property
-from typing import Literal, Union
+from typing import Callable, Iterator, Literal, Union
 
 from pydantic import BaseModel, validator
 from semver import VersionInfo
@@ -38,6 +38,14 @@ class PackageVersion(str):
         if "/" in value:
             raise ValueError(cls._MISMATCH_MSG)
         return super().__new__(cls, value)
+
+    @classmethod
+    def validate(cls, value: str | PackageVersion) -> "PackageVersion":
+        return cls(value)
+
+    @classmethod
+    def __get_validators__(cls) -> Iterator[Callable[[str | "PackageVersion"], "PackageVersion"]]:
+        yield cls.validate
 
     @staticmethod
     def parse_semver(raw: str) -> VersionInfo:

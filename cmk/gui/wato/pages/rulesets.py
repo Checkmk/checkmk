@@ -61,7 +61,7 @@ from cmk.gui.plugins.wato.utils import (
     flash,
     HostTagCondition,
     LabelCondition,
-    make_confirm_link,
+    make_customized_confirm_link,
     mode_registry,
     redirect,
     search_form,
@@ -1172,10 +1172,13 @@ class ModeEditRuleset(WatoMode):
         service_labels: Labels,
         analyse_rule_matching: bool,
     ) -> None:
-        table.cell(_("Ma."))
         if analyse_rule_matching:
+            table.cell(_("Match"))
             title, img = self._match(match_state, rule, service_labels=service_labels)
             html.icon("rule%s" % img, title)
+
+        table.cell(_("#"))
+        html.write_text(rulenr)
 
         table.cell("", css=["buttons"])
         if rule.is_disabled():
@@ -1205,11 +1208,21 @@ class ModeEditRuleset(WatoMode):
 
         html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
 
+        rule_description = _get_description_or_comment(rule)
         html.icon_button(
-            url=make_confirm_link(
+            url=make_customized_confirm_link(
                 url=self._action_url("delete", folder, rule.id),
-                message=_("Delete rule #%d (ID: %s) of folder '%s'?")
-                % (rulenr, rule.id, folder.alias_path()),
+                title=_("Delete rule #%d") % rulenr
+                + (f" - {rule_description}" if rule_description else ""),
+                message=_("Folder: %s") % folder.alias_path(),
+                confirm_button=_("Delete"),
+                cancel_button=_("Cancel"),
+                icon="question",
+                custom_class_options={
+                    "title": "confirm_title",
+                    "confirmButton": "warn",
+                    "icon": "confirm_icon",
+                },
             ),
             title=_("Delete this rule"),
             icon="delete",
@@ -1356,7 +1369,7 @@ class ModeEditRuleset(WatoMode):
             )
             html.write_text("&nbsp;")
 
-        desc = rule_options.description or rule_options.comment or ""
+        desc = _get_description_or_comment(rule)
         html.write_text(desc)
 
     def _rule_conditions(self, rule: Rule) -> None:
@@ -1399,6 +1412,10 @@ class ModeEditRuleset(WatoMode):
         html.hidden_field("mode", "new_rule")
         html.hidden_field("folder", self._folder.path())
         html.end_form()
+
+
+def _get_description_or_comment(rule: Rule) -> str:
+    return rule.rule_options.description or rule.rule_options.comment or ""
 
 
 def _get_groups(

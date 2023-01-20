@@ -268,6 +268,26 @@ export function textinput_enter_submit(e, submit) {
 
 // Helper function to display nice popup confirm dialogs
 export function confirm_dialog(optional_args, confirm_handler) {
+    const default_custom_class_args = {
+        container: "confirm_container",
+        popup: "confirm_popup",
+        content: "confirm_content",
+        htmlContainer: "confirm_content",
+        actions: "confirm_actions",
+        confirmButton: "hot",
+    };
+
+    let custom_class_args;
+    if ("customClass" in optional_args) {
+        custom_class_args = {
+            ...default_custom_class_args,
+            ...optional_args["customClass"],
+        };
+        delete optional_args["customClass"];
+    } else {
+        custom_class_args = default_custom_class_args;
+    }
+
     const default_args = {
         // https://sweetalert2.github.io/#configuration
         target: "#page_menu_popups",
@@ -287,14 +307,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
         showCancelButton: true,
         confirmButtonText: "Yes",
         cancelButtonText: "No",
-        customClass: {
-            container: "confirm_container",
-            popup: "confirm_popup",
-            content: "confirm_content",
-            htmlContainer: "confirm_content",
-            actions: "confirm_actions",
-            confirmButton: "hot",
-        },
+        customClass: custom_class_args,
     };
 
     let args = {
@@ -326,8 +339,8 @@ export function add_confirm_on_submit(form_id, message) {
 }
 
 // Used as onclick handler on links to confirm following the link or not
-export function confirm_link(url, message) {
-    confirm_dialog({html: message}, () => {
+export function confirm_link(url, message, custom_args) {
+    confirm_dialog({html: message, ...custom_args}, () => {
         location.href = url;
     });
 }

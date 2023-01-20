@@ -534,80 +534,121 @@ div#page_menu_popups {
     .confirm_popup {
       padding: 16px;
       background-color: $headline-color;
-    }
+      margin-bottom: $spacing;
 
-    .confirm_content {
+      button.warn {
+        &,
+        &:active {
+          color: $font-color-light-bg;
+          background-color: darken($color-state-1-background, 5%);
+          margin-left: 0px;
+        }
+
+        &:hover {
+          background-color: $color-state-1-background;
+        }
+      }
+    }
+  }
+
+  .confirm_icon {
+    position: absolute;
+    width: 25px;
+    height: 100%;
+    border: 0;
+    border-radius: $border-radius-left;
+    background: $yellow;
+    margin: 0;
+    font-size: 7px;
+    font-weight: 800;
+    color: $font-color-light-bg;
+  }
+
+  .confirm_title,
+  .confirm_content {
+    color: $font-color;
+    font-size: $font-size-large;
+    padding: 0;
+    text-align: left;
+  }
+
+  .confirm_title {
+    margin: 0 25px 0px;
+    font-weight: 800;
+    width: 685px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .confirm_content {
+    margin: 5px 25px 0px;
+  }
+
+  .confirm_actions {
+    justify-content: flex-start;
+    margin: $spacing 25px 0;
+  }
+}
+
+div.page_menu_popup {
+  position: relative;
+  display: none;
+  margin-bottom: $spacing;
+  background-color: $base-color;
+  border: none;
+  border-radius: $popup-filters-border-radius;
+
+  &.active {
+    display: block;
+  }
+
+  &.side_popup > .head {
+    background-color: inherit;
+  }
+
+  > .head {
+    padding: 6px 0 5px $spacing;
+    background-color: $headline-color;
+
+    h3 {
       padding: 0;
-      margin: 0 $spacing;
+      margin: 0;
+      font-weight: $font-weight-bold;
       color: $font-color;
-      text-align: left;
     }
 
-    .confirm_actions {
-      justify-content: flex-start;
-      margin: $spacing 0 0;
-    }
-  }
-
-  div.page_menu_popup {
-    position: relative;
-    display: none;
-    margin-bottom: $spacing;
-    background-color: $base-color;
-    border: none;
-    border-radius: $popup-filters-border-radius;
-
-    &.active {
-      display: block;
-    }
-
-    &.side_popup > .head {
-      background-color: inherit;
-    }
-
-    > .head {
-      padding: 6px 0 5px $spacing;
-      background-color: $headline-color;
-
-      h3 {
-        padding: 0;
-        margin: 0;
-        font-weight: $font-weight-bold;
-        color: $font-color;
-      }
-
-      a.close_popup img {
-        position: absolute;
-        top: 8px;
-        right: $simplebar-track-width;
-        width: 12px;
-        height: auto;
-      }
-    }
-
-    &.side_popup > .content {
-      padding: 0;
-    }
-
-    div.group {
-      padding-top: $spacing;
-
-      &:first-of-type {
-        padding-top: 0;
-      }
-    }
-
-    form span.checkbox {
-      padding-right: $spacing;
-      white-space: initial;
+    a.close_popup img {
+      position: absolute;
+      top: 8px;
+      right: $simplebar-track-width;
+      width: 12px;
+      height: auto;
     }
   }
 
-  button,
-  input.button {
-    padding: 8px 16px;
-    margin: 0 $spacing;
+  &.side_popup > .content {
+    padding: 0;
   }
+
+  div.group {
+    padding-top: $spacing;
+
+    &:first-of-type {
+      padding-top: 0;
+    }
+  }
+
+  form span.checkbox {
+    padding-right: $spacing;
+    white-space: initial;
+  }
+}
+
+button,
+input.button {
+  padding: 8px 16px;
+  margin: 0 $spacing;
 }
 
 /* Dashboard editor specific styling */

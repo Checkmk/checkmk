@@ -280,6 +280,32 @@ def make_confirm_link(*, url: str, message: str) -> str:
     )
 
 
+def make_customized_confirm_link(
+    *,
+    url: str,
+    title: str,
+    message: str,
+    confirm_button: str,
+    cancel_button: str,
+    icon: str,
+    custom_class_options: dict[str, str] | None = None,
+) -> str:
+    return "javascript:cmk.forms.confirm_link({}, {}, {}),cmk.popup_menu.close_popup()".format(
+        json.dumps(quote_plus(url)),
+        json.dumps(escape_text(message)),
+        json.dumps(
+            {
+                "title": title,
+                "html": message,
+                "confirmButtonText": confirm_button,
+                "cancelButtonText": cancel_button,
+                "icon": icon,
+                "customClass": custom_class_options,
+            }
+        ),
+    )
+
+
 def file_name_and_query_vars_from_url(url: str) -> tuple[str, QueryVars]:
     """Deconstruct a (potentially relative) URL.
 

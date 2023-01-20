@@ -87,7 +87,10 @@ from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.utils.urls import (  # noqa: F401 # pylint: disable=unused-import
+    make_confirm_link,
+    make_customized_confirm_link,
+)
 from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
     Alternative,

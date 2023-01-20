@@ -13,6 +13,7 @@ from cmk.utils.paths import (
     saml2_custom_signature_private_keyfile,
     saml2_custom_signature_public_keyfile,
 )
+from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -135,6 +136,10 @@ def _general_properties() -> list[DictionaryEntry]:
         (
             "version",
             FixedValue(value="1.0.0"),
+        ),
+        (
+            "owned_by_site",
+            FixedValue(value=str(omd_site())),
         ),
     ] + rule_option_elements()
 
@@ -391,7 +396,7 @@ def saml2_connection_valuespec() -> Dictionary:
         render="form",
         form_narrow=True,
         optional_keys=[],
-        hidden_keys=["type", "version"],
+        hidden_keys=["id", "type", "version", "owned_by_site"],
     )
 
 

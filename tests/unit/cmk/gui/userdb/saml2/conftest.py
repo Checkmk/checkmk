@@ -16,6 +16,7 @@ def fixture_raw_config() -> Mapping[str, Any]:
         "version": "1.0.0",
         "id": "uuid123",
         "name": "härbärt",
+        "owned_by_site": "NO_SITE",
         "description": "",
         "comment": "",
         "docu_url": "",

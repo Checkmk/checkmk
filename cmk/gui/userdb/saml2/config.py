@@ -21,6 +21,8 @@ from saml2.xmldsig import (
     SIG_RSA_SHA512,
 )
 
+from livestatus import SiteId
+
 from cmk.utils.paths import (
     saml2_attribute_mappings_dir,
     saml2_signature_private_keyfile,
@@ -95,6 +97,7 @@ class ConnectorConfig(BaseModel):
     version: str
     id: str
     name: str
+    owned_by_site: SiteId
     description: str
     comment: str
     docu_url: str
@@ -267,6 +270,7 @@ def valuespec_to_config(user_input: Mapping[str, Any]) -> ConnectorConfig:
         version=user_input["version"],
         id=connection_id,
         name=name,
+        owned_by_site=user_input["owned_by_site"],
         description=user_input["description"],
         comment=user_input["comment"],
         docu_url=user_input["docu_url"],

@@ -269,7 +269,10 @@ class LoginPage(Page):
             html.show_message(active_config.login_screen["login_message"])
             html.close_div()
 
-        for connection in active_connections_by_type("saml2"):
+        for connection in [
+            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+        ]:
+            # SAML login is not supported for remote sites
             relay_state = RelayState(target_url=origtarget, connection_id=connection["id"])
             html.open_div(id_="saml_button")
             html.buttonlink(

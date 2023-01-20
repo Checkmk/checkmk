@@ -9,6 +9,7 @@
         state: absent
         checkmk_server_edition: cee
     - "change-motd"
+    - configure-apache
 
   tasks:
    - name: Disallow SSH password authentication

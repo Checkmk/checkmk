@@ -124,7 +124,7 @@ build {
     playbook_file           = "./playbook.yml"
     galaxy_file             = "./requirements.yml"
     galaxy_collections_path = "/tmp/ansible/collections"
-    role_paths              = ["./roles/change-motd/"]
+    role_paths              = ["./roles/change-motd/", "./roles/configure-apache/"]
     extra_arguments = [
       "--extra-vars",
       "checkmk_server_version=${var.cmk_version}",

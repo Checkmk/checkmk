@@ -1,0 +1,66 @@
+---
+- name: Create private key (RSA, 4096 bits)
+  community.crypto.openssl_privatekey:
+    path: /etc/ssl/private/checkmk.key
+  become: true
+
+- name: Create certificate signing request (CSR) for self-signed certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: /etc/ssl/private/checkmk.key
+    common_name: localhost
+  register: csr
+  become: true
+
+- name: Create self-signed certificate from CSR
+  community.crypto.x509_certificate:
+    path: /etc/ssl/certs/checkmk.pem
+    csr_content: "{{ csr.csr }}"
+    privatekey_path: /etc/ssl/private/checkmk.key
+    provider: selfsigned
+  become: true
+
+- name: Enable the Apache2 module headers
+  community.general.apache2_module:
+    state: present
+    name: headers
+  become: yes
+
+- name: Enable the Apache2 module ssl
+  community.general.apache2_module:
+    state: present
+    name: ssl
+  become: yes
+
+- name: Copy apache 000-default.conf
+  template:
+    src: files/000-default.conf.j2
+    dest: /etc/apache2/sites-available/000-default.conf
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: yes
+
+- name: disable rpcbind (service not required)
+  ansible.builtin.systemd:
+    state: stopped
+    enabled: no
+    name: rpcbind
+  become: yes
+
+- name: disable rpcbind.socket (service not required)
+  ansible.builtin.systemd:
+    state: stopped
+    enabled: no
+    name: rpcbind.socket
+  become: yes
+
+- name: Just force systemd to reread configs
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: ensure apache is running
+  service:
+    name: apache2
+    state: started
+  become: yes

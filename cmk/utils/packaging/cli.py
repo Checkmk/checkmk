@@ -313,7 +313,7 @@ def _args_package_id(
 
 def _command_enable(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Enable previously disabled package NAME"""
-    install(PackageStore(), _get_package_id(args.name, args.verison))
+    install(PackageStore(), _get_package_id(args.name, args.version))
     return 0
 
 

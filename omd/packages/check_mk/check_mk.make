@@ -242,6 +242,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(CHECK_MK_INSTALL_DIR)/share/diskspace/check_mk
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/nagios/plugins
 	tar -c -C $(REPO_PATH)/active_checks \
 	    $(CHECK_MK_TAROPTS) \
 	    --exclude Makefile \

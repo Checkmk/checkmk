@@ -16,7 +16,12 @@ from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
-LicenseUsageHistoryDumpVersion = "1.5"
+LicenseUsageReportVersion = "1.5"
+
+
+class RawLicenseUsageReport(TypedDict):
+    VERSION: str
+    history: list[RawLicenseUsageSample]
 
 
 class LicenseUsageReportVersionError(Exception):
@@ -595,16 +600,22 @@ class LicenseUsageHistory:
     def __iter__(self) -> Iterator[LicenseUsageSample]:
         return iter(self._samples)
 
-    def for_report(self) -> Sequence[RawLicenseUsageSample]:
-        return [sample.for_report() for sample in self._samples]
+    def for_report(self) -> RawLicenseUsageReport:
+        return {
+            "VERSION": LicenseUsageReportVersion,
+            "history": [sample.for_report() for sample in self._samples],
+        }
 
     @classmethod
-    def parse(cls, report_version: str, raw_history: object) -> LicenseUsageHistory:
-        if not isinstance(raw_history, list):
+    def parse(cls, raw_report: object) -> LicenseUsageHistory:
+        if not isinstance(raw_report, dict):
             raise TypeError()
 
-        parser = LicenseUsageSample.get_parser(report_version)
-        return cls(parser(raw_sample) for raw_sample in raw_history)
+        if not (version := raw_report.get("VERSION")):
+            raise ValueError()
+
+        parser = LicenseUsageSample.get_parser(version)
+        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
 
 # .

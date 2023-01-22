@@ -11,12 +11,11 @@ import logging
 import random
 import time
 from collections import deque
-from collections.abc import Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple
 from uuid import UUID
 
 import livestatus
@@ -25,9 +24,9 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
-    LicenseUsageHistoryDumpVersion,
+    LicenseUsageReportVersion,
     LicenseUsageSample,
-    RawLicenseUsageSample,
+    RawLicenseUsageReport,
 )
 from cmk.utils.paths import licensing_dir, log_dir, omd_root
 from cmk.utils.site import omd_site
@@ -82,18 +81,19 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
         logger.error("Creation of sample failed due to a livestatus error: %s", e)
         return 1
 
+    report_filepath = get_license_usage_report_filepath()
     licensing_dir.mkdir(parents=True, exist_ok=True)
     next_run_filepath = licensing_dir / "next_run"
 
-    with store.locked(next_run_filepath), store.locked(_get_history_dump_filepath()):
+    with store.locked(next_run_filepath), store.locked(report_filepath):
         now = datetime.now()
 
         if now.timestamp() < _get_next_run_ts(next_run_filepath):
             return 0
 
-        history_dump = load_history_dump()
-        history_dump.history.add_sample(sample)
-        _save_history_dump(history_dump)
+        history = load_license_usage_history(report_filepath)
+        history.add_sample(sample)
+        _save_license_usage_report(report_filepath, history.for_report())
 
         store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
 
@@ -208,72 +208,27 @@ def _create_next_run_ts(now: datetime) -> int:
     return random.randrange(int(start.timestamp()), int(end.timestamp()), 600)
 
 
-# .
-#   .--dump----------------------------------------------------------------.
-#   |                         _                                            |
-#   |                      __| |_   _ _ __ ___  _ __                       |
-#   |                     / _` | | | | '_ ` _ \| '_ \                      |
-#   |                    | (_| | |_| | | | | | | |_) |                     |
-#   |                     \__,_|\__,_|_| |_| |_| .__/                      |
-#   |                                          |_|                         |
-#   '----------------------------------------------------------------------'
-
-
-def _get_history_dump_filepath() -> Path:
+def get_license_usage_report_filepath() -> Path:
     return licensing_dir / "history.json"
 
 
-class RawLicenseUsageHistoryDump(TypedDict):
-    VERSION: str
-    history: Sequence[RawLicenseUsageSample]
-
-
-@dataclass
-class LicenseUsageHistoryDump:
-    VERSION: str
-    history: LocalLicenseUsageHistory
-
-    def for_report(self) -> RawLicenseUsageHistoryDump:
-        return {
-            "VERSION": self.VERSION,
-            "history": self.history.for_report(),
-        }
-
-    @classmethod
-    def parse(cls, raw_dump: object, site_hash: str) -> LicenseUsageHistoryDump:
-        if not isinstance(raw_dump, dict):
-            raise TypeError()
-
-        if "VERSION" in raw_dump and "history" in raw_dump:
-            return cls(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory.parse(
-                    raw_dump["VERSION"],
-                    raw_dump["history"],
-                    site_hash,
-                ),
-            )
-
-        return cls(
-            VERSION=LicenseUsageHistoryDumpVersion,
-            history=LocalLicenseUsageHistory([]),
-        )
-
-
-def _save_history_dump(history_dump: LicenseUsageHistoryDump) -> None:
-    history_dump_filepath = _get_history_dump_filepath()
-    store.save_bytes_to_file(history_dump_filepath, _serialize_dump(history_dump.for_report()))
-
-
-def load_history_dump() -> LicenseUsageHistoryDump:
-    history_dump_filepath = _get_history_dump_filepath()
-    raw_history_dump = deserialize_dump(
-        store.load_bytes_from_file(
-            history_dump_filepath,
-            default=b"{}",
-        )
+def _save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsageReport) -> None:
+    store.save_bytes_to_file(
+        report_filepath,
+        _serialize_dump(raw_report),
     )
-    return LicenseUsageHistoryDump.parse(raw_history_dump, hash_site_id(omd_site()))
+
+
+def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistory:
+    return LocalLicenseUsageHistory.parse(
+        deserialize_dump(
+            store.load_bytes_from_file(
+                report_filepath,
+                default=b"{}",
+            )
+        ),
+        hash_site_id(omd_site()),
+    )
 
 
 # .
@@ -301,24 +256,28 @@ class LocalLicenseUsageHistory:
     def last(self) -> LicenseUsageSample | None:
         return self._samples[0] if self._samples else None
 
-    def for_report(self) -> Sequence[RawLicenseUsageSample]:
-        return [sample.for_report() for sample in self]
+    def for_report(self) -> RawLicenseUsageReport:
+        return {
+            "VERSION": LicenseUsageReportVersion,
+            "history": [sample.for_report() for sample in self._samples],
+        }
 
     @classmethod
-    def parse(
-        cls,
-        report_version: str,
-        raw_history: object,
-        site_hash: str,
-    ) -> LocalLicenseUsageHistory:
-        if not isinstance(raw_history, list):
+    def parse(cls, raw_report: object, site_hash: str) -> LocalLicenseUsageHistory:
+        if not isinstance(raw_report, dict):
             raise TypeError()
 
-        parser = LicenseUsageSample.get_parser(report_version)
+        if not raw_report:
+            return cls([])
+
+        if not (version := raw_report.get("VERSION")):
+            raise ValueError()
+
+        parser = LicenseUsageSample.get_parser(version)
         instance_id = load_instance_id()
         return cls(
             parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
-            for raw_sample in raw_history
+            for raw_sample in raw_report.get("history", [])
         )
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
@@ -353,7 +312,10 @@ def save_extensions(extensions: LicenseUsageExtensions) -> None:
     extensions_filepath = _get_extensions_filepath()
 
     with store.locked(extensions_filepath):
-        store.save_bytes_to_file(extensions_filepath, _serialize_dump(extensions.for_report()))
+        store.save_bytes_to_file(
+            extensions_filepath,
+            _serialize_dump(extensions.for_report()),
+        )
 
 
 def _load_extensions() -> LicenseUsageExtensions:
@@ -368,9 +330,8 @@ def _load_extensions() -> LicenseUsageExtensions:
     return LicenseUsageExtensions.parse(raw_extensions)
 
 
-def _serialize_dump(dump: RawLicenseUsageHistoryDump | Mapping[str, float]) -> bytes:
-    dump_str = json.dumps(dump)
-    return rot47(dump_str).encode("utf-8")
+def _serialize_dump(dump: RawLicenseUsageReport | Mapping[str, float]) -> bytes:
+    return rot47(json.dumps(dump)).encode("utf-8")
 
 
 def deserialize_dump(raw_dump: bytes) -> object:
@@ -403,14 +364,14 @@ class LicenseUsageReportValidity(Enum):
 
 
 def get_license_usage_report_validity() -> LicenseUsageReportValidity:
-    history_dump_filepath = _get_history_dump_filepath()
+    report_filepath = get_license_usage_report_filepath()
 
-    with store.locked(history_dump_filepath):
-        if history_dump_filepath.stat().st_size == 0:
+    with store.locked(report_filepath):
+        if report_filepath.stat().st_size == 0:
             update_license_usage()
             return LicenseUsageReportValidity.recent_enough
 
-        age = time.time() - history_dump_filepath.stat().st_mtime
+        age = time.time() - report_filepath.stat().st_mtime
         if age >= 432000:
             # crit if greater than five days: block activate changes
             return LicenseUsageReportValidity.older_than_five_days

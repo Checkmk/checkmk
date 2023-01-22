@@ -16,9 +16,9 @@ import livestatus
 import cmk.utils.licensing as licensing
 from cmk.utils.licensing import (
     _serialize_dump,
-    LicenseUsageHistoryDump,
-    LicenseUsageHistoryDumpVersion,
-    load_history_dump,
+    get_license_usage_report_filepath,
+    LicenseUsageReportVersion,
+    load_license_usage_history,
     LocalLicenseUsageHistory,
     update_license_usage,
 )
@@ -65,8 +65,10 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
 
+    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+
     assert update_license_usage() == 0
-    assert len(load_history_dump().history) == 1
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 1
 
 
 def test_update_license_usage_livestatus_socket_error(
@@ -101,8 +103,10 @@ def test_update_license_usage_livestatus_socket_error(
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
 
+    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+
     assert update_license_usage() == 1
-    assert len(load_history_dump().history) == 0
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
 def test_update_license_usage_livestatus_not_found_error(
@@ -137,8 +141,10 @@ def test_update_license_usage_livestatus_not_found_error(
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
 
+    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+
     assert update_license_usage() == 1
-    assert len(load_history_dump().history) == 0
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
 def test_update_license_usage_next_run_ts_not_reached(
@@ -175,12 +181,14 @@ def test_update_license_usage_next_run_ts_not_reached(
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
 
+    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+
     assert update_license_usage() == 0
-    assert len(load_history_dump().history) == 0
+    assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
-def test_serialize_history_dump() -> None:
-    history_dump = LicenseUsageHistoryDump.parse(
+def test_serialize_license_usage_report() -> None:
+    history = LocalLicenseUsageHistory.parse(
         {
             "VERSION": "1.2",
             "history": [
@@ -206,30 +214,24 @@ def test_serialize_history_dump() -> None:
     )
 
     assert (
-        _serialize_dump(history_dump.for_report())
+        _serialize_dump(history.for_report())
         == b"LQ't#$x~}Qi Q`]dQ[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 
 @pytest.mark.parametrize(
-    "raw_report, expected_report",
+    "raw_report, expected_history",
     [
         (
             {},
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory([]),
-            ),
+            LocalLicenseUsageHistory([]),
         ),
         (
             {
                 "VERSION": "1.0",
                 "history": [],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory([]),
-            ),
+            LocalLicenseUsageHistory([]),
         ),
         (
             {
@@ -250,28 +252,25 @@ def test_serialize_history_dump() -> None:
                     }
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=0,
-                            num_services=4,
-                            num_hosts_excluded=0,
-                            num_services_excluded=0,
-                            extension_ntop=False,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=0,
+                        num_services=4,
+                        num_hosts_excluded=0,
+                        num_services_excluded=0,
+                        extension_ntop=False,
+                    ),
+                ]
             ),
         ),
         (
@@ -295,28 +294,25 @@ def test_serialize_history_dump() -> None:
                     },
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=0,
-                            num_hosts_excluded=3,
-                            num_services=4,
-                            num_services_excluded=5,
-                            extension_ntop=False,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=0,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_excluded=5,
+                        extension_ntop=False,
+                    ),
+                ]
             ),
         ),
         (
@@ -343,28 +339,25 @@ def test_serialize_history_dump() -> None:
                     },
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=0,
-                            num_hosts_excluded=3,
-                            num_services=4,
-                            num_services_excluded=5,
-                            extension_ntop=True,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=0,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_excluded=5,
+                        extension_ntop=True,
+                    ),
+                ]
             ),
         ),
         (
@@ -388,28 +381,25 @@ def test_serialize_history_dump() -> None:
                     },
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=0,
-                            num_hosts_excluded=3,
-                            num_services=4,
-                            num_services_excluded=5,
-                            extension_ntop=False,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=0,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_excluded=5,
+                        extension_ntop=False,
+                    ),
+                ]
             ),
         ),
         (
@@ -436,28 +426,25 @@ def test_serialize_history_dump() -> None:
                     },
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=0,
-                            num_hosts_excluded=3,
-                            num_services=4,
-                            num_services_excluded=5,
-                            extension_ntop=True,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=0,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_excluded=5,
+                        extension_ntop=True,
+                    ),
+                ]
             ),
         ),
         (
@@ -482,28 +469,25 @@ def test_serialize_history_dump() -> None:
                     },
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=0,
-                            num_hosts_excluded=3,
-                            num_services=4,
-                            num_services_excluded=5,
-                            extension_ntop=True,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=0,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_excluded=5,
+                        extension_ntop=True,
+                    ),
+                ]
             ),
         ),
         (
@@ -529,28 +513,25 @@ def test_serialize_history_dump() -> None:
                     },
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=6,
-                            num_hosts_excluded=3,
-                            num_services=4,
-                            num_services_excluded=5,
-                            extension_ntop=True,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=6,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_excluded=5,
+                        extension_ntop=True,
+                    ),
+                ]
             ),
         ),
         (
@@ -577,36 +558,33 @@ def test_serialize_history_dump() -> None:
                     },
                 ],
             },
-            LicenseUsageHistoryDump(
-                VERSION=LicenseUsageHistoryDumpVersion,
-                history=LocalLicenseUsageHistory(
-                    [
-                        LicenseUsageSample(
-                            instance_id=UUID("4b66f726-c4fc-454b-80a6-4917d1b386ce"),
-                            site_hash="site-hash",
-                            version="",
-                            edition="",
-                            platform="A very long string with len>50 describing the plat",
-                            is_cma=False,
-                            sample_time=1,
-                            timezone="",
-                            num_hosts=2,
-                            num_shadow_hosts=6,
-                            num_hosts_excluded=3,
-                            num_services=4,
-                            num_services_excluded=5,
-                            extension_ntop=True,
-                        ),
-                    ]
-                ),
+            LocalLicenseUsageHistory(
+                [
+                    LicenseUsageSample(
+                        instance_id=UUID("4b66f726-c4fc-454b-80a6-4917d1b386ce"),
+                        site_hash="site-hash",
+                        version="",
+                        edition="",
+                        platform="A very long string with len>50 describing the plat",
+                        is_cma=False,
+                        sample_time=1,
+                        timezone="",
+                        num_hosts=2,
+                        num_shadow_hosts=6,
+                        num_hosts_excluded=3,
+                        num_services=4,
+                        num_services_excluded=5,
+                        extension_ntop=True,
+                    ),
+                ]
             ),
         ),
     ],
 )
-def test_history_dump(
+def test_license_usage_report(
     monkeypatch: pytest.MonkeyPatch,
     raw_report: Mapping[str, Any],
-    expected_report: LicenseUsageHistoryDump,
+    expected_history: LocalLicenseUsageHistory,
 ) -> None:
     monkeypatch.setattr(
         licensing,
@@ -614,11 +592,11 @@ def test_history_dump(
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
 
-    dump = LicenseUsageHistoryDump.parse(raw_report, "site-hash")
+    history = LocalLicenseUsageHistory.parse(raw_report, "site-hash")
 
-    assert dump.VERSION == expected_report.VERSION
+    assert history.for_report()["VERSION"] == LicenseUsageReportVersion
 
-    for sample, expected_sample in zip(dump.history, expected_report.history):
+    for sample, expected_sample in zip(history, expected_history):
         assert sample.instance_id == expected_sample.instance_id
         assert sample.site_hash == expected_sample.site_hash
         assert sample.version == expected_sample.version
@@ -634,10 +612,10 @@ def test_history_dump(
         assert sample.extension_ntop == expected_sample.extension_ntop
 
 
-def test_history_dump_add_sample() -> None:
-    history_dump = LicenseUsageHistoryDump(VERSION="1.0", history=LocalLicenseUsageHistory([]))
+def test_history_add_sample() -> None:
+    history = LocalLicenseUsageHistory([])
     for idx in range(450):
-        history_dump.history.add_sample(
+        history.add_sample(
             LicenseUsageSample(
                 instance_id=None,
                 site_hash="foo-bar",
@@ -655,8 +633,8 @@ def test_history_dump_add_sample() -> None:
                 extension_ntop=False,
             ),
         )
-    assert len(history_dump.history) == 400
-    assert history_dump.history.last == LicenseUsageSample(
+    assert len(history) == 400
+    assert history.last == LicenseUsageSample(
         instance_id=None,
         site_hash="foo-bar",
         version="version",

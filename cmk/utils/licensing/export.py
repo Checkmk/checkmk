@@ -316,11 +316,15 @@ def validate_subscription_period(attrs: dict[str, object]) -> None:
 #   '----------------------------------------------------------------------'
 
 
+class RawLicenseUsageExtensions(TypedDict):
+    ntop: bool
+
+
 @dataclass
 class LicenseUsageExtensions:
     ntop: bool
 
-    def for_report(self) -> Mapping[str, bool]:
+    def for_report(self) -> RawLicenseUsageExtensions:
         return {"ntop": self.ntop}
 
     @classmethod

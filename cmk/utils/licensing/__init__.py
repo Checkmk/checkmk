@@ -11,7 +11,7 @@ import logging
 import random
 import time
 from collections import deque
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
@@ -26,6 +26,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageReportVersion,
     LicenseUsageSample,
+    RawLicenseUsageExtensions,
     RawLicenseUsageReport,
 )
 from cmk.utils.paths import licensing_dir, log_dir, omd_root
@@ -330,7 +331,7 @@ def _load_extensions() -> LicenseUsageExtensions:
     return LicenseUsageExtensions.parse(raw_extensions)
 
 
-def _serialize_dump(dump: RawLicenseUsageReport | Mapping[str, float]) -> bytes:
+def _serialize_dump(dump: RawLicenseUsageReport | RawLicenseUsageExtensions) -> bytes:
     return rot47(json.dumps(dump)).encode("utf-8")
 
 

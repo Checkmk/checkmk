@@ -35,7 +35,7 @@ py_version = "310"
 
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ['py311']
 
 
 # NOTE: Keep this is sync with mypy-raw.ini!

@@ -154,8 +154,24 @@ def _split_vendor(string):
 
 
 def inv_prtconf(section):
-    for attrs, path in get_key_value_pairs(section):
-        yield Attributes(path=path, inventory_attributes=attrs)
+    parsed_tuples = section["tuples"]
+    if cpu_infos := _get_cpu_infos(parsed_tuples):
+        yield Attributes(path=["hardware", "cpu"], inventory_attributes=cpu_infos)
+
+    if sys_infos := _get_sys_infos(parsed_tuples):
+        yield Attributes(path=["hardware", "system"], inventory_attributes=sys_infos)
+
+    if mem_infos := _get_mem_infos(parsed_tuples):
+        yield Attributes(path=["hardware", "memory"], inventory_attributes=mem_infos)
+
+    if fmw_infos := _get_fmw_infos(parsed_tuples):
+        yield Attributes(path=["software", "firmware"], inventory_attributes=fmw_infos)
+
+    if net_infos := _get_net_infos(parsed_tuples):
+        yield Attributes(path=["networking"], inventory_attributes=net_infos)
+
+    if os_infos := _get_os_infos(parsed_tuples):
+        yield Attributes(path=["software", "os"], inventory_attributes=os_infos)
 
     for key_columns, attrs in get_volume_groups(section):
         yield TableRow(
@@ -165,22 +181,12 @@ def inv_prtconf(section):
         )
 
 
-def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
-    parsed_tuples = parsed["tuples"]
+def _get_cpu_infos(parsed_tuples):
     cpu_dict: dict[str, float | str] = {}
-    sys_dict = {}
-    mem_dict = {}
-    fmw_dict = {}
-    net_dict = {}
-    os_dict = {}
 
     cpu_type = parsed_tuples.get("CPU Type")
     if cpu_type is not None:
         cpu_dict["arch"] = "ppc64" if cpu_type == "64-bit" else "ppc"
-
-    kernel_type = parsed_tuples.get("Kernel Type")
-    if kernel_type is not None:
-        os_dict["arch"] = "ppc64" if kernel_type == "64-bit" else "ppc"
 
     proc_type = parsed_tuples.get("Processor Type")
     if proc_type is not None:
@@ -198,15 +204,11 @@ def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
     if num_cpu is not None:
         cpu_dict.setdefault("cpus", int(num_cpu))
 
-    fw_version = parsed_tuples.get("Firmware Version")
-    if fw_version is not None:
-        vendor, fmw_dict["version"] = _split_vendor(fw_version)
-        if vendor:
-            fmw_dict["vendor"] = vendor
+    return cpu_dict
 
-    fw_platform_level = parsed_tuples.get("Platform Firmware level")
-    if fw_platform_level is not None:
-        fmw_dict["platform_level"] = fw_platform_level
+
+def _get_sys_infos(parsed_tuples):
+    sys_dict = {}
 
     serial = parsed_tuples.get("Machine Serial Number")
     if serial is not None:
@@ -218,6 +220,12 @@ def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
         if manufacturer:
             sys_dict["manufacturer"] = manufacturer
 
+    return sys_dict
+
+
+def _get_mem_infos(parsed_tuples):
+    mem_dict = {}
+
     ram = parsed_tuples.get("Memory Size")
     if ram is not None:
         mem_dict["total_ram_usable"] = int(ram.split()[0]) * 1024 * 1024
@@ -225,6 +233,28 @@ def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
     swap = parsed_tuples.get("Total Paging Space")
     if swap is not None:
         mem_dict["total_swap"] = int(swap.replace("MB", "")) * 1024 * 1024
+
+    return mem_dict
+
+
+def _get_fmw_infos(parsed_tuples):
+    fmw_dict = {}
+
+    fw_version = parsed_tuples.get("Firmware Version")
+    if fw_version is not None:
+        vendor, fmw_dict["version"] = _split_vendor(fw_version)
+        if vendor:
+            fmw_dict["vendor"] = vendor
+
+    fw_platform_level = parsed_tuples.get("Platform Firmware level")
+    if fw_platform_level is not None:
+        fmw_dict["platform_level"] = fw_platform_level
+
+    return fmw_dict
+
+
+def _get_net_infos(parsed_tuples):
+    net_dict = {}
 
     domain_name = parsed_tuples.get("Domain Name")
     if domain_name is not None:
@@ -246,14 +276,17 @@ def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
     if sub_netmask is not None:
         net_dict["sub_netmask"] = sub_netmask
 
-    return [
-        (cpu_dict, ["hardware", "cpu"]),
-        (sys_dict, ["hardware", "system"]),
-        (mem_dict, ["hardware", "memory"]),
-        (fmw_dict, ["software", "firmware"]),
-        (net_dict, ["networking"]),
-        (os_dict, ["software", "os"]),
-    ]
+    return net_dict
+
+
+def _get_os_infos(parsed_tuples):
+    os_dict = {}
+
+    kernel_type = parsed_tuples.get("Kernel Type")
+    if kernel_type is not None:
+        os_dict["arch"] = "ppc64" if kernel_type == "64-bit" else "ppc"
+
+    return os_dict
 
 
 def get_volume_groups(parsed):

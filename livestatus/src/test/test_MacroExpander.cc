@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 
+#include "Comment.h"  // IWYU pragma: keep
 #include "MacroExpander.h"
 #include "Store.h"
 #include "gtest/gtest.h"

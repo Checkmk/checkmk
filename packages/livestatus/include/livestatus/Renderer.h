@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "livestatus/Interface.h"
 #include "livestatus/OStreamStateSaver.h"
 enum class Encoding;
 class CSVSeparators;
@@ -49,6 +50,7 @@ public:
     void output(const std::vector<char> &value);
     void output(const std::string &value);
     void output(std::chrono::system_clock::time_point value);
+    void output(CommentType value);
 
     void outputUnicodeChar(char32_t value);
 

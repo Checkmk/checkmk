@@ -540,22 +540,29 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         [mc](const service &svc) { return mc->downtimes(NebService{svc}); }));
-    table->addColumn(std::make_unique<ListColumn<service, CommentData>>(
-        prefix + "comments", "A list of the ids of all comments", offsets,
-        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
-        [mc](const service &svc) { return mc->comments(NebService{svc}); }));
-    table->addColumn(std::make_unique<ListColumn<service, CommentData>>(
-        prefix + "comments_with_info",
-        "A list of all comments with id, author and comment", offsets,
-        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
-        [mc](const service &svc) { return mc->comments(NebService{svc}); }));
-    table->addColumn(std::make_unique<ListColumn<service, CommentData>>(
+    table->addColumn(
+        std::make_unique<ListColumn<service, std::unique_ptr<const IComment>>>(
+            prefix + "comments", "A list of the ids of all comments", offsets,
+            std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
+            [mc](const service &svc) {
+                return mc->comments(NebService{svc});
+            }));
+    table->addColumn(
+        std::make_unique<ListColumn<service, std::unique_ptr<const IComment>>>(
+            prefix + "comments_with_info",
+            "A list of all comments with id, author and comment", offsets,
+            std::make_unique<CommentRenderer>(
+                CommentRenderer::verbosity::medium),
+            [mc](const service &svc) {
+                return mc->comments(NebService{svc});
+            }));
+    table->addColumn(std::make_unique<
+                     ListColumn<service, std::unique_ptr<const IComment>>>(
         prefix + "comments_with_extra_info",
         "A list of all comments with id, author, comment, entry type and entry time",
         offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
         [mc](const service &svc) { return mc->comments(NebService{svc}); }));
-
     if (add_hosts) {
         TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
             return r.rawData<service>()->host_ptr;

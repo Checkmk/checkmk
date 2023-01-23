@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef DowntimeOrComment_h
-#define DowntimeOrComment_h
+#ifndef Comment_h
+#define Comment_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -13,28 +13,6 @@
 
 #include "nagios.h"
 
-// TODO(sp): Merge with DowntimeData
-class Downtime {
-public:
-    unsigned long _id;
-    std::string _author;
-    std::string _comment;
-    bool _origin_is_rule;
-    std::chrono::system_clock::time_point _entry_time;
-    std::chrono::system_clock::time_point _start_time;
-    std::chrono::system_clock::time_point _end_time;
-    bool _fixed;
-    std::chrono::nanoseconds _duration;
-    // --------------------------------------------------
-    int _type;
-    bool _is_service;
-    host *_host;
-    service *_service;
-    unsigned long _triggered_by;
-    bool _is_active;
-};
-
-// TODO(sp): Merge with CommentData
 class Comment {
 public:
     unsigned long _id;
@@ -53,4 +31,4 @@ public:
     int _expires;
 };
 
-#endif  // DowntimeOrComment_h
+#endif  // Comment_h

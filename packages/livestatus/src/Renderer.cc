@@ -6,6 +6,7 @@
 #include "livestatus/Renderer.h"
 
 #include <cmath>
+#include <cstdint>
 
 #include "livestatus/Logger.h"
 #include "livestatus/RendererBrokenCSV.h"
@@ -64,6 +65,8 @@ void Renderer::output(const std::string &value) { outputString(value); }
 void Renderer::output(std::chrono::system_clock::time_point value) {
     output(std::chrono::system_clock::to_time_t(value));
 }
+
+void Renderer::output(CommentType value) { _os << static_cast<int32_t>(value); }
 
 namespace {
 bool isBoringChar(unsigned char ch) {

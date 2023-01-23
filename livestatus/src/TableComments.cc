@@ -13,7 +13,7 @@
 #include <utility>
 #include <variant>  // IWYU pragma: keep
 
-#include "DowntimeOrComment.h"
+#include "Comment.h"
 #include "NagiosCore.h"
 #include "NebHost.h"
 #include "NebService.h"

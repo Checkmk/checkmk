@@ -517,22 +517,25 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         [mc](const host &hst) { return mc->downtimes(NebHost{hst}); }));
-    table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
-        prefix + "comments", "A list of the ids of all comments", offsets,
-        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
-        [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
-    table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
-        prefix + "comments_with_info",
-        "A list of all comments with id, author and comment", offsets,
-        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
-        [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
-    table->addColumn(std::make_unique<ListColumn<host, CommentData>>(
+    table->addColumn(
+        std::make_unique<ListColumn<host, std::unique_ptr<const IComment>>>(
+            prefix + "comments", "A list of the ids of all comments", offsets,
+            std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
+            [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
+    table->addColumn(
+        std::make_unique<ListColumn<host, std::unique_ptr<const IComment>>>(
+            prefix + "comments_with_info",
+            "A list of all comments with id, author and comment", offsets,
+            std::make_unique<CommentRenderer>(
+                CommentRenderer::verbosity::medium),
+            [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
+    table->addColumn(std::make_unique<
+                     ListColumn<host, std::unique_ptr<const IComment>>>(
         prefix + "comments_with_extra_info",
         "A list of all comments with id, author, comment, entry type and entry time",
         offsets,
         std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
         [mc](const host &hst) { return mc->comments(NebHost{hst}); }));
-
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,

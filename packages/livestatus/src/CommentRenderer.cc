@@ -5,28 +5,29 @@
 
 #include "livestatus/CommentRenderer.h"
 
+#include "livestatus/Interface.h"
 #include "livestatus/Renderer.h"
 
-void CommentRenderer::output(ListRenderer &l,
-                             const CommentData &comment) const {
+void CommentRenderer::output(
+    ListRenderer &l, const std::unique_ptr<const IComment> &comment) const {
     switch (verbosity_) {
         case verbosity::none:
-            l.output(comment._id);
+            l.output(comment->id());
             break;
         case verbosity::medium: {
             SublistRenderer s(l);
-            s.output(comment._id);
-            s.output(comment._author);
-            s.output(comment._comment);
+            s.output(comment->id());
+            s.output(comment->author());
+            s.output(comment->comment());
             break;
         }
         case verbosity::full: {
             SublistRenderer s(l);
-            s.output(comment._id);
-            s.output(comment._author);
-            s.output(comment._comment);
-            s.output(comment._entry_type);
-            s.output(comment._entry_time);
+            s.output(comment->id());
+            s.output(comment->author());
+            s.output(comment->comment());
+            s.output(comment->entry_type());
+            s.output(comment->entry_time());
             break;
         }
     }

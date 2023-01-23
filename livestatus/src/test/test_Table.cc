@@ -50,11 +50,12 @@
 #ifdef CMC
 #include "TableCachedStatehist.h"
 #endif
+class User;
+class IComment;
 class IContact;
 class IContactGroup;
 class IHost;
 class IService;
-class User;
 
 class DummyMonitoringCore : public MonitoringCore {
     std::unique_ptr<const IHost> find_host(
@@ -104,11 +105,11 @@ class DummyMonitoringCore : public MonitoringCore {
         const IService & /*service*/) const override {
         return {};
     }
-    [[nodiscard]] std::vector<CommentData> comments(
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IHost & /*host*/) const override {
         return {};
     }
-    [[nodiscard]] std::vector<CommentData> comments(
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IService & /*service*/) const override {
         return {};
     }

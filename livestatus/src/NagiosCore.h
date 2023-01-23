@@ -18,7 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "DowntimeOrComment.h"  // IWYU pragma: keep
+#include "Downtime.h"  // IWYU pragma: keep
 #include "Store.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Metric.h"
@@ -27,9 +27,12 @@
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
 #include "nagios.h"
+class Comment;
 class InputBuffer;
 class Logger;
 class OutputBuffer;
+
+class IComment;
 class IContact;
 class IContactGroup;
 class IHost;
@@ -90,8 +93,10 @@ public:
 
     std::vector<DowntimeData> downtimes(const IHost &hst) const override;
     std::vector<DowntimeData> downtimes(const IService &svc) const override;
-    std::vector<CommentData> comments(const IHost &hst) const override;
-    std::vector<CommentData> comments(const IService &svc) const override;
+    std::vector<std::unique_ptr<const IComment>> comments(
+        const IHost &hst) const override;
+    std::vector<std::unique_ptr<const IComment>> comments(
+        const IService &svc) const override;
 
     bool mkeventdEnabled() override;
 
@@ -148,8 +153,8 @@ private:
     std::vector<DowntimeData> downtimes_for_object(const ::host *h,
                                                    const ::service *s) const;
 
-    std::vector<CommentData> comments_for_object(const ::host *h,
-                                                 const ::service *s) const;
+    std::vector<std::unique_ptr<const IComment>> comments_for_object(
+        const ::host *h, const ::service *s) const;
 };
 
 Attributes CustomAttributes(const customvariablesmember *first,

@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 
+#include "Comment.h"  // IWYU pragma: keep
 #include "CustomAttributeMap.h"
 #include "gtest/gtest.h"
 #include "livestatus/Attributes.h"

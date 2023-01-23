@@ -6,17 +6,20 @@
 #ifndef CommentRenderer_h
 #define CommentRenderer_h
 
+#include <memory>
 #include <string>
 
+#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#include "livestatus/MonitoringCore.h"
 class ListRenderer;
 
-class CommentRenderer : public ListColumnRenderer<CommentData> {
+class CommentRenderer
+    : public ListColumnRenderer<std::unique_ptr<const IComment>> {
 public:
     enum class verbosity { none, medium, full };
     explicit CommentRenderer(verbosity v) : verbosity_{v} {}
-    void output(ListRenderer &l, const CommentData &comment) const override;
+    void output(ListRenderer &l,
+                const std::unique_ptr<const IComment> &comment) const override;
 
 private:
     verbosity verbosity_;
@@ -24,8 +27,8 @@ private:
 
 namespace column::detail {
 template <>
-inline std::string serialize(const CommentData &data) {
-    return std::to_string(data._id);
+inline std::string serialize(const std::unique_ptr<const IComment> &data) {
+    return std::to_string(data->id());
 }
 }  // namespace column::detail
 

@@ -6,7 +6,9 @@
 #ifndef Interface_h
 #define Interface_h
 
+#include <chrono>
 #include <functional>
+#include <memory>
 #include <string>
 
 class IContact {
@@ -52,6 +54,37 @@ public:
     virtual ~IContactGroup() = default;
     [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual bool isMember(const IContact &) const = 0;
+};
+
+enum class CommentType : int32_t {
+    user = 1,
+    downtime = 2,
+    flapping = 3,
+    acknowledgement = 4
+};
+
+enum class CommentSource : int32_t { internal = 0, external = 1 };
+
+class IComment {
+public:
+    virtual ~IComment() = default;
+    [[nodiscard]] virtual int32_t id() const = 0;
+    [[nodiscard]] virtual std::string author() const = 0;
+    [[nodiscard]] virtual std::string comment() const = 0;
+    [[nodiscard]] virtual CommentType entry_type() const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point entry_time()
+        const = 0;
+
+    [[nodiscard]] virtual bool isService() const = 0;
+    bool isHost() const { return !isService(); };
+    [[nodiscard]] virtual bool persistent() const = 0;
+    [[nodiscard]] virtual CommentSource source() const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point expire_time()
+        const = 0;
+    [[nodiscard]] virtual bool expires() const = 0;
+
+    [[nodiscard]] virtual const IHost &host() const = 0;
+    [[nodiscard]] virtual const IService *service() const = 0;
 };
 
 #endif  // Interface_h

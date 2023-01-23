@@ -35,7 +35,8 @@
 #include <utility>
 #include <vector>
 
-#include "DowntimeOrComment.h"
+#include "Comment.h"
+#include "Downtime.h"
 #include "NagiosCore.h"
 #include "TimeperiodsCache.h"
 #include "livestatus/Average.h"

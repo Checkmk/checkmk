@@ -10,7 +10,8 @@
 #include <optional>
 #include <string>
 
-#include "DowntimeOrComment.h"  // IWYU pragma: keep
+#include "Comment.h"   // IWYU pragma: keep
+#include "Downtime.h"  // IWYU pragma: keep
 #include "NagiosCore.h"
 #include "TableQueryHelper.h"
 #include "gtest/gtest.h"

@@ -43,15 +43,6 @@ struct DowntimeData {
     bool _pending;
 };
 
-// Livestatus view onto a comment, regardless of the monitoring core
-struct CommentData {
-    unsigned long _id;
-    std::string _author;
-    std::string _comment;
-    uint32_t _entry_type;  // CMC: Comment::Type
-    std::chrono::system_clock::time_point _entry_time;
-};
-
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
@@ -81,9 +72,9 @@ public:
         const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<DowntimeData> downtimes(
         const IService &) const = 0;
-    [[nodiscard]] virtual std::vector<CommentData> comments(
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IHost &) const = 0;
-    [[nodiscard]] virtual std::vector<CommentData> comments(
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IService &) const = 0;
 
     virtual bool mkeventdEnabled() = 0;

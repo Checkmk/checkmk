@@ -10,6 +10,8 @@
 #include <sstream>
 #include <utility>
 
+#include "Comment.h"
+#include "NebComment.h"
 #include "NebContact.h"
 #include "NebContactGroup.h"
 #include "NebHost.h"
@@ -142,12 +144,14 @@ std::vector<DowntimeData> NagiosCore::downtimes(const IService &svc) const {
     return downtimes_for_object(s->host_ptr, s);
 }
 
-std::vector<CommentData> NagiosCore::comments(const IHost &hst) const {
+std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
+    const IHost &hst) const {
     return comments_for_object(static_cast<const host *>(hst.handle()),
                                nullptr);
 }
 
-std::vector<CommentData> NagiosCore::comments(const IService &svc) const {
+std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
+    const IService &svc) const {
     const auto *s = static_cast<const service *>(svc.handle());
     return comments_for_object(s->host_ptr, s);
 }
@@ -324,16 +328,12 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
     return result;
 }
 
-std::vector<CommentData> NagiosCore::comments_for_object(
+std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_for_object(
     const ::host *h, const ::service *s) const {
-    std::vector<CommentData> result;
+    std::vector<std::unique_ptr<const IComment>> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == h && co->_service == s) {
-            result.push_back(CommentData{._id = co->_id,
-                                         ._author = co->_author,
-                                         ._comment = co->_comment,
-                                         ._entry_type = co->_entry_type,
-                                         ._entry_time = co->_entry_time});
+            result.emplace_back(std::make_unique<NebComment>(*co));
         }
     }
     return result;

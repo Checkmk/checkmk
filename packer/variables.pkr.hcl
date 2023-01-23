@@ -44,12 +44,12 @@ variable "aws_secret_key" {
   sensitive = true
 }
 variable "aws_ami_name" {
-  type      = string
+  type = string
 }
 
 // Qemu
 variable "qemu_output_dir_name" {
-  type      = string
+  type = string
 }
 
 // Ansible variables

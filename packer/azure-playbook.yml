@@ -1,0 +1,17 @@
+---
+- name: azure specific installation
+  hosts: 127.0.0.1
+  connection: local
+
+  tasks:
+   - name: updates all packages
+     ansible.builtin.apt:
+       upgrade: dist
+     become: true
+   - name: install walinuxagent
+     ansible.builtin.apt:
+       pkg:
+         - walinuxagent
+         - python3-pyasn1
+       state: present
+     become: true

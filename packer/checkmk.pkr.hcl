@@ -99,14 +99,13 @@ build {
   name = "checkmk-ansible"
   sources = [
     #"source.qemu.ubuntu-2204-amd64-qemu"
-    #"source.azure-arm.builder"
-    "source.amazon-ebs.builder"
+    #"source.amazon-ebs.builder"
+    "source.azure-arm.builder"
   ]
   # setup apt-get
   provisioner "shell" {
     inline = [
       "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections",
-      "sudo apt-get update",
     ]
   }
   # install ansible
@@ -118,7 +117,6 @@ build {
       "sudo apt-get install -y -q ansible",
     ]
   }
-
   # run playbook
   provisioner "ansible-local" {
     playbook_file           = "./playbook.yml"
@@ -139,11 +137,17 @@ build {
       "sudo passwd --expire $(whoami)",
     ]
   }
+  # run azure playbook
+  provisioner "ansible-local" {
+    playbook_file = "./azure-playbook.yml"
+    only          = ["azure-arm.builder"]
+  }
   # uninstall ansible
   provisioner "shell" {
     inline = [
       "sudo apt-get remove -y -q software-properties-common",
       "sudo apt-get remove -y -q ansible",
+      "sudo add-apt-repository --yes --remove ppa:ansible/ansible",
     ]
   }
 }

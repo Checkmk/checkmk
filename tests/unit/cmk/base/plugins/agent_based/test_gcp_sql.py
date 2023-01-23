@@ -56,13 +56,13 @@ class TestDiscover(DiscoverTester):
     @property
     def expected_labels(self) -> set[ServiceLabel]:
         return {
-            ServiceLabel("gcp/labels/reason", "check-development"),
-            ServiceLabel("gcp/cloud_sql/name", "checktest"),
-            ServiceLabel("gcp/cloud_sql/databaseVersion", "MYSQL_5_7"),
-            ServiceLabel("gcp/labels/team", "dev"),
-            ServiceLabel("gcp/cloud_sql/availability", "ZONAL"),
-            ServiceLabel("gcp/location", "us-central1"),
-            ServiceLabel("gcp/projectId", "backup-255820"),
+            ServiceLabel("cmk/gcp/labels/reason", "check-development"),
+            ServiceLabel("cmk/gcp/cloud_sql/name", "checktest"),
+            ServiceLabel("cmk/gcp/cloud_sql/databaseVersion", "MYSQL_5_7"),
+            ServiceLabel("cmk/gcp/labels/team", "dev"),
+            ServiceLabel("cmk/gcp/cloud_sql/availability", "ZONAL"),
+            ServiceLabel("cmk/gcp/location", "us-central1"),
+            ServiceLabel("cmk/gcp/projectId", "backup-255820"),
         }
 
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
@@ -123,11 +123,11 @@ def test_discover_labels_labels_without_user_labels() -> None:
     servers = list(discover(section_gcp_service_cloud_sql=None, section_gcp_assets=asset_section))
     labels = servers[0].labels
     assert set(labels) == {
-        ServiceLabel("gcp/cloud_sql/name", "checktest"),
-        ServiceLabel("gcp/cloud_sql/databaseVersion", "MYSQL_5_7"),
-        ServiceLabel("gcp/cloud_sql/availability", "ZONAL"),
-        ServiceLabel("gcp/location", "us-central1"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
+        ServiceLabel("cmk/gcp/cloud_sql/name", "checktest"),
+        ServiceLabel("cmk/gcp/cloud_sql/databaseVersion", "MYSQL_5_7"),
+        ServiceLabel("cmk/gcp/cloud_sql/availability", "ZONAL"),
+        ServiceLabel("cmk/gcp/location", "us-central1"),
+        ServiceLabel("cmk/gcp/projectId", "backup-255820"),
     }
 
 

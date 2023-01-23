@@ -62,11 +62,11 @@ class TestGCSDiscover(DiscoverTester):
     @property
     def expected_labels(self) -> set[ServiceLabel]:
         return {
-            ServiceLabel("gcp/labels/tag", "freebackup"),
-            ServiceLabel("gcp/location", "US-CENTRAL1"),
-            ServiceLabel("gcp/bucket/storageClass", "STANDARD"),
-            ServiceLabel("gcp/bucket/locationType", "region"),
-            ServiceLabel("gcp/projectId", "backup-255820"),
+            ServiceLabel("cmk/gcp/labels/tag", "freebackup"),
+            ServiceLabel("cmk/gcp/location", "US-CENTRAL1"),
+            ServiceLabel("cmk/gcp/bucket/storageClass", "STANDARD"),
+            ServiceLabel("cmk/gcp/bucket/locationType", "region"),
+            ServiceLabel("cmk/gcp/projectId", "backup-255820"),
         }
 
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
@@ -84,10 +84,10 @@ def test_discover_bucket_labels_without_user_labels() -> None:
     buckets = list(discover(section_gcp_service_gcs=None, section_gcp_assets=asset_section))
     labels = buckets[0].labels
     assert set(labels) == {
-        ServiceLabel("gcp/location", "US-CENTRAL1"),
-        ServiceLabel("gcp/bucket/storageClass", "STANDARD"),
-        ServiceLabel("gcp/bucket/locationType", "region"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
+        ServiceLabel("cmk/gcp/location", "US-CENTRAL1"),
+        ServiceLabel("cmk/gcp/bucket/storageClass", "STANDARD"),
+        ServiceLabel("cmk/gcp/bucket/locationType", "region"),
+        ServiceLabel("cmk/gcp/projectId", "backup-255820"),
     }
 
 

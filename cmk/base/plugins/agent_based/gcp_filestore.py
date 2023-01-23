@@ -41,12 +41,12 @@ def discover(
     for item, share in assets[ASSET_TYPE].items():
         data = share.resource_data
         labels = [
-            ServiceLabel("gcp/location", share.location),
-            ServiceLabel("gcp/filestore/name", item),
-            ServiceLabel("gcp/projectId", assets.project),
+            ServiceLabel("cmk/gcp/location", share.location),
+            ServiceLabel("cmk/gcp/filestore/name", item),
+            ServiceLabel("cmk/gcp/projectId", assets.project),
         ]
         labels.extend(
-            [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
+            [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
         )
         yield Service(item=item, labels=labels)
 

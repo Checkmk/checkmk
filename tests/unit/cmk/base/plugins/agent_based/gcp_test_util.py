@@ -68,7 +68,7 @@ class DiscoverTester(ABC):
 
     def test_discover_project_label(self, services: Sequence[Service]) -> None:
         for asset in services:
-            assert ServiceLabel("gcp/projectId", "backup-255820") in asset.labels
+            assert ServiceLabel("cmk/gcp/projectId", "backup-255820") in asset.labels
 
     def test_discover_all_items(self, services: Sequence[Service]) -> None:
         assert {a.item for a in services} == self.expected_items

@@ -30,9 +30,9 @@ def discover(
     assets = gcp.validate_asset_section(section_gcp_assets, "gce_storage")
     for item, bucket in assets[ASSET_TYPE].items():
         data = bucket.resource_data
-        labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
-        labels.append(ServiceLabel("gcp/location", bucket.location))
-        labels.append(ServiceLabel("gcp/projectId", assets.project))
+        labels = [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
+        labels.append(ServiceLabel("cmk/gcp/location", bucket.location))
+        labels.append(ServiceLabel("cmk/gcp/projectId", assets.project))
         yield Service(item=item, labels=labels)
 
 

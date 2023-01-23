@@ -29,7 +29,7 @@ def discover(
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "http_lb")
     for item, _ in assets[ASSET_TYPE].items():
-        labels = [ServiceLabel("gcp/projectId", assets.project)]
+        labels = [ServiceLabel("cmk/gcp/projectId", assets.project)]
         yield Service(item=item, labels=labels)
 
 

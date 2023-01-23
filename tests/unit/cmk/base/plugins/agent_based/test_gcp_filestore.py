@@ -41,10 +41,10 @@ class TestDiscover(DiscoverTester):
     @property
     def expected_labels(self) -> set[ServiceLabel]:
         return {
-            ServiceLabel("gcp/location", "us-central1-a"),
-            ServiceLabel("gcp/filestore/name", "test"),
-            ServiceLabel("gcp/projectId", "backup-255820"),
-            ServiceLabel("gcp/labels/foo", "bar"),
+            ServiceLabel("cmk/gcp/location", "us-central1-a"),
+            ServiceLabel("cmk/gcp/filestore/name", "test"),
+            ServiceLabel("cmk/gcp/projectId", "backup-255820"),
+            ServiceLabel("cmk/gcp/labels/foo", "bar"),
         }
 
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
@@ -62,9 +62,9 @@ def test_discover_labels_labels_without_user_labels() -> None:
     servers = list(discover(section_gcp_service_filestore=None, section_gcp_assets=asset_section))
     labels = servers[0].labels
     assert set(labels) == {
-        ServiceLabel("gcp/location", "us-central1-a"),
-        ServiceLabel("gcp/filestore/name", "test"),
-        ServiceLabel("gcp/projectId", "backup-255820"),
+        ServiceLabel("cmk/gcp/location", "us-central1-a"),
+        ServiceLabel("cmk/gcp/filestore/name", "test"),
+        ServiceLabel("cmk/gcp/projectId", "backup-255820"),
     }
 
 

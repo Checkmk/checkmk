@@ -49,7 +49,7 @@ class TestHTTPLoadBalancerDiscover(DiscoverTester):
     @property
     def expected_labels(self) -> set[ServiceLabel]:
         return {
-            ServiceLabel("gcp/projectId", "backup-255820"),
+            ServiceLabel("cmk/gcp/projectId", "backup-255820"),
         }
 
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:

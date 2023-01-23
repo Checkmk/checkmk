@@ -479,7 +479,7 @@ def piggy_back(
         yield PiggyBackSection(
             name=name,
             service_name=service.name,
-            labels=service.labeler(host) | {"gcp/project": client.project},
+            labels=service.labeler(host) | {"cmk/gcp/projectId": client.project},
             sections=sections,
         )
 
@@ -1067,7 +1067,7 @@ HTTP_LOADBALANCER = Service(
 
 def default_labeler(asset: Asset) -> Labels:
     if "labels" in asset.asset.resource.data:
-        return {f"gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
+        return {f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
     return {}
 
 

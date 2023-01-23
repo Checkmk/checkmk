@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Iterator, MutableMapping, Sequence
+from collections.abc import Container, Iterable, Iterator, MutableMapping, Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -24,7 +24,7 @@ import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
-from cmk.base.api.agent_based import checking_classes
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 from .utils import QualifiedDiscovery
 
@@ -188,7 +188,7 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    preliminary_candidates = [
+    preliminary_candidates: Sequence[CheckPlugin] = [
         p for p in agent_based_register.iter_all_check_plugins() if p.name in run_plugin_names
     ]
 
@@ -205,8 +205,8 @@ def _find_candidates(
 
 def _find_host_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: list[checking_classes.CheckPlugin],
-    parsed_sections_of_interest: set[ParsedSectionName],
+    preliminary_candidates: Iterable[CheckPlugin],
+    parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 
     available_parsed_sections = broker.filter_available(
@@ -225,8 +225,8 @@ def _find_host_candidates(
 
 def _find_mgmt_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: list[checking_classes.CheckPlugin],
-    parsed_sections_of_interest: set[ParsedSectionName],
+    preliminary_candidates: Iterable[CheckPlugin],
+    parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 
     available_parsed_sections = broker.filter_available(

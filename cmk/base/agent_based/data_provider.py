@@ -258,7 +258,7 @@ class ParsedSectionsBroker:
 
     def filter_available(
         self,
-        parsed_section_names: set[ParsedSectionName],
+        parsed_section_names: Iterable[ParsedSectionName],
         source_type: SourceType,
     ) -> set[ParsedSectionName]:
         return {

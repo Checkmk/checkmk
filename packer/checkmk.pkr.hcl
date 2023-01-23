@@ -145,9 +145,9 @@ build {
   # uninstall ansible
   provisioner "shell" {
     inline = [
-      "sudo apt-get remove -y -q software-properties-common",
-      "sudo apt-get remove -y -q ansible",
       "sudo add-apt-repository --yes --remove ppa:ansible/ansible",
+      "sudo apt-get remove -y -q software-properties-common ansible",
+      "sudo apt autoremove -y -q"
     ]
   }
 }

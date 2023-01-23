@@ -76,8 +76,8 @@ def inventory_solaris_psrinfo(section: StringTable) -> InventoryResult:
     yield Attributes(
         path=["hardware", "cpu"],
         inventory_attributes={
-            "Model": section[-1][0],
-            "Maximum Speed": f"{section[-1][-2]} {section[-1][-1].strip(')')}",
+            "model": section[-1][0],
+            "max_speed": f"{section[-1][-2]} {section[-1][-1].strip(')')}",
         },
     )
 

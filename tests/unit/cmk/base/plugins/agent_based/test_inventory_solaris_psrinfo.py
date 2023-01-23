@@ -189,8 +189,8 @@ def test_inventory_solaris_cpus(test_set, expected_result):
                 Attributes(
                     path=["hardware", "cpu"],
                     inventory_attributes={
-                        "Model": "SPARC-S7",
-                        "Maximum Speed": "4267 MHz",
+                        "model": "SPARC-S7",
+                        "max_speed": "4267 MHz",
                     },
                 ),
             ],
@@ -201,8 +201,8 @@ def test_inventory_solaris_cpus(test_set, expected_result):
                 Attributes(
                     path=["hardware", "cpu"],
                     inventory_attributes={
-                        "Model": "SPARC-T5",
-                        "Maximum Speed": "3600 MHz",
+                        "model": "SPARC-T5",
+                        "max_speed": "3600 MHz",
                     },
                 ),
             ],

@@ -11,7 +11,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
-from cmk.utils.log import console
+from cmk.utils.log import console, section
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, ServiceID
 
 from cmk.fetchers import SourceType
@@ -22,7 +22,6 @@ from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
-import cmk.base.section as section
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based import checking_classes

@@ -13,7 +13,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
-from cmk.utils.log import console
+from cmk.utils.log import console, section
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceState
 
 from cmk.fetchers import FetcherFunction
@@ -25,7 +25,6 @@ from cmk.checkers.discovery import AutochecksStore
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_broker,

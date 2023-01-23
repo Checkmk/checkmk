@@ -23,7 +23,7 @@ from typing import Callable, Literal
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.log import console
+from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
     make_filter_from_choice,
     parse_visible_raw_path,
@@ -42,7 +42,6 @@ from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_broker,

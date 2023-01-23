@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.tty as tty
-from cmk.utils.log import console
+
+from . import console
 
 
 # Note: section_begin|success|error|step is a naive and incomplete

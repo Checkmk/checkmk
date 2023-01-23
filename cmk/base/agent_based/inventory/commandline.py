@@ -10,6 +10,7 @@ from typing import Callable
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils.log import section
 from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import (
     EVERYTHING,
@@ -23,7 +24,6 @@ from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction, SummarizerFunction
 
-import cmk.base.section as section
 from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree

@@ -51,12 +51,10 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.i18n import _
-from cmk.utils.log import console
+from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import HostName
-
-import cmk.base.section as section
 
 if cmk_version.is_enterprise_edition():
     from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error

@@ -265,7 +265,7 @@ STAGES:
       TEXT_ON_SKIP: 'No agent files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
-    - NAME: 'Compile & Test Livestatus'
+    - NAME: 'Test - Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/livestatus'
       COMMAND: "../../scripts/run-in-docker.sh ./run-ci --all &> ${RESULTS}/livestatus.txt"
@@ -340,7 +340,7 @@ STAGES:
       TEXT_ON_SKIP: 'No SW Documentation files changed'
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
 
-    - NAME: 'Compile & Test Agent Controller '
+    - NAME: 'Test - Agent Controller'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
       DIR: 'packages/cmk-agent-ctl'
       COMMAND: "../../scripts/run-in-docker.sh ./run-ci --setup-environment --all &> ${RESULTS}/agent-controller.txt"

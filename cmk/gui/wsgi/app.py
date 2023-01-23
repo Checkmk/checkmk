@@ -19,9 +19,8 @@ from werkzeug.security import safe_join
 
 from cmk.utils import paths
 
-from cmk.gui import http, log
+from cmk.gui import http
 from cmk.gui.session import FileBasedSession
-from cmk.gui.wsgi.applications.utils import load_gui_log_levels
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
 from cmk.gui.wsgi.middleware import FixApacheEnv
@@ -84,13 +83,6 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
             pin_logging=False,
             pin_security=False,
         )
-
-    production = not debug and not testing
-    if production:
-        # Initialize logging as early as possible, but don't do it in testing or development
-        # as not to override any logging preferences of the developer.
-        log.init_logging()
-        log.set_log_levels(load_gui_log_levels())
 
     # This URL could still be used in bookmarks of customers.
     # Needs to be here, not in blueprints/rest_api.py as the URL is at a lower level than the API.

@@ -6,10 +6,12 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.liebert_humidity_air import (
     check_liebert_humidity_air,
     discover_liebert_humidity_air,
     parse_liebert_humidity_air,
+    ParsedSection,
 )
 
 STRING_TABLE = [
@@ -31,8 +33,8 @@ PARAMETERS = {
 }
 
 PARSED_SECTION = {
-    "Return Humidity": ["36.5", "% RH"],
-    "Cigar Humidity": ["Unavailable", "% RH"],
+    "Return Humidity": ("36.5", "% RH"),
+    "Cigar Humidity": ("Unavailable", "% RH"),
 }
 
 PARSED_EXTRA_SECTION = {
@@ -52,7 +54,7 @@ PARSED_EXTRA_SECTION = {
         ),
     ],
 )
-def test_parse_liebert_humidity_air(string_table, result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_liebert_humidity_air(string_table: list[StringTable], result: ParsedSection) -> None:
     parsed = parse_liebert_humidity_air(string_table)
     assert parsed == result
 

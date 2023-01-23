@@ -13,26 +13,24 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5074 Unit Operating State Reason
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5074 Reason Unknown
 
-from typing import Dict, List
+from typing import List
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert_without_unit
-
-ParsedSection = Dict[str, str]
+from .utils.liebert import DETECT_LIEBERT, parse_liebert_without_unit, SystemSection
 
 
-def parse_liebert_system(string_table: List[StringTable]) -> ParsedSection:
+def parse_liebert_system(string_table: List[StringTable]) -> SystemSection:
     return parse_liebert_without_unit(string_table, str)
 
 
-def discover_liebert_system(section: ParsedSection) -> DiscoveryResult:
+def discover_liebert_system(section: SystemSection) -> DiscoveryResult:
     model = section.get("System Model Number")
     if model:
         yield Service(item=model)
 
 
-def check_liebert_system(item: str, section: ParsedSection) -> CheckResult:
+def check_liebert_system(item: str, section: SystemSection) -> CheckResult:
     # Variable 'item' is used to generate the service description.
     # However, only one item per host is expected, which is why it is not
     # used in this check funtion.

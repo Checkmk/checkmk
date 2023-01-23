@@ -11,18 +11,18 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any, List, Mapping, Optional, Tuple
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert
+from .utils.liebert import DETECT_LIEBERT, parse_liebert, SystemSection
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
     "levels": (50, 55),
     "levels_lower": (10, 15),
 }
 
-ParsedSection = Dict[str, Any]
+ParsedSection = Mapping[str, tuple[str, str]]
 
 
 def _item_from_key(key: str) -> str:
@@ -45,7 +45,7 @@ def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection
 
 def discover_liebert_humidity_air(
     section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[Dict[str, str]],
+    section_liebert_system: Optional[SystemSection],
 ) -> DiscoveryResult:
 
     if section_liebert_humidity_air is None:
@@ -60,7 +60,7 @@ def check_liebert_humidity_air(
     item: str,
     params: Mapping[str, Any],
     section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[Dict[str, str]],
+    section_liebert_system: Optional[SystemSection],
 ) -> CheckResult:
 
     if section_liebert_humidity_air is None or section_liebert_system is None:

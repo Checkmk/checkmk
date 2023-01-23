@@ -3,21 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Type
+from collections.abc import Callable, Mapping
+from typing import TypeVar
 
 from ..agent_based_api.v1 import startswith
 from ..agent_based_api.v1.type_defs import StringTable
 
-ParsedStringSection = Dict[str, str]
-ParsedAnySection = Dict[str, Any]
+SystemSection = Mapping[str, str]
 
 DETECT_LIEBERT = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42")
 
+TParsed = TypeVar("TParsed")
+
 
 def parse_liebert_without_unit(
-    string_table: List[StringTable],
-    type_func: Type = float,
-) -> ParsedStringSection:
+    string_table: list[StringTable],
+    type_func: Callable[[str], TParsed],
+) -> dict[str, TParsed]:
 
     parsed = {}
     used_names = set()
@@ -48,14 +50,14 @@ def parse_liebert_without_unit(
 
 
 def parse_liebert(
-    string_table: List[StringTable],
-    type_func: Type = float,
-) -> ParsedAnySection:
+    string_table: list[StringTable],
+    type_func: Callable[[str], TParsed],
+) -> dict[str, tuple[TParsed, str]]:
 
     parsed = {}
     used_names = set()
 
-    def get_item_name(name):
+    def get_item_name(name: str) -> str:
         counter = 2
         new_name = name
         while True:
@@ -73,7 +75,7 @@ def parse_liebert(
                 continue
             name = get_item_name(element[0])
             try:
-                parsed[name] = [type_func(element[1]), element[2]]
+                parsed[name] = (type_func(element[1]), element[2])
             except ValueError:
                 continue
 

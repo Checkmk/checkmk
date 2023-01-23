@@ -1,0 +1,40 @@
+Title: Avoid using systemd v219 and earlier if possible
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674485940
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p33
+
+The agent package created by the agent bakery now prefers xinetd over systemd v219 if it is available.
+Version 219 and earlier do not provide the <tt>REMOTE_ADDR</tt> environment variable, which might result in dataloss.
+
+In detail:
+
+Users can configure the used network service for the Checkmk agent.
+They can choose to either use xinetd, systemd, or to prefer systemd, but fall back to xinetd if systemd is not available or <i>not suitable</i>.
+
+The question which systemd is suitable depends on your configuration and use case:
+
+LI: If the ruleset <i>Allowed agent access via IP address</i> is configured, we require systemd v235 or newer.
+LI: If users want to monitor the host from more than one site we need systemd v220, or we risk dataloss.
+
+The algorithm to decide which network service is best is improved as follows:
+
+Prior to this werk:
+If the <i>agent access</i> ruleset is configured, we require systemd v235 or newer, otherwise any systemd version is used.
+
+With this werk:
+We still require systemd v235 if the above ruleset is configured.
+If it is not, the order of preference is
+NL: systemd v220 or newer
+NL: xinetd
+NL: systemd v219 or older
+
+We <i>really</i> don't recommend systemd v219 or earlier.
+We allow it as a last resort, because completely disallowing it would break existing installations of hosts that only have systemd v219 and no xinetd (RHEL, we're looking at you).
+If you are monitoring the host only on one site, or you use neither the hardware/software inventory nor logwatch, you're probably fine.
+
+For Checkmk versions 2.1 and newer we only allow systemd v219 in combination with the agent controller, in which case there is no risk of dataloss.

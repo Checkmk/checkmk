@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.cisco_wlc import (
     check_cisco_wlc,
     cluster_check_cisco_wlc,
     discovery_cisco_wlc,
     parse_cisco_wlc,
+    Section,
 )
 
 
@@ -20,7 +25,7 @@ from cmk.base.plugins.agent_based.cisco_wlc import (
         ([[["AP19", "1"], ["AP02", "1"]]], {"AP19": "1", "AP02": "1"}),
     ],
 )
-def test_parse_cisco_wlc(string_table, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
+def test_parse_cisco_wlc(string_table: list[StringTable], expected_parsed_data: Section) -> None:
     assert parse_cisco_wlc(string_table) == expected_parsed_data
 
 
@@ -36,7 +41,7 @@ def test_parse_cisco_wlc(string_table, expected_parsed_data) -> None:  # type:ig
         ),
     ],
 )
-def test_discovery_cisco_wlc(section, services) -> None:  # type:ignore[no-untyped-def]
+def test_discovery_cisco_wlc(section: Section, services: DiscoveryResult) -> None:
     assert list(discovery_cisco_wlc(section)) == services
 
 
@@ -57,7 +62,9 @@ def test_discovery_cisco_wlc(section, services) -> None:  # type:ignore[no-untyp
         ),
     ],
 )
-def test_check_cisco_wlc(item, params, section, results) -> None:  # type:ignore[no-untyped-def]
+def test_check_cisco_wlc(
+    item: str, params: Mapping[str, object], section: Section, results: CheckResult
+) -> None:
     assert list(check_cisco_wlc(item, params, section)) == results
 
 
@@ -78,7 +85,10 @@ def test_check_cisco_wlc(item, params, section, results) -> None:  # type:ignore
         ),
     ],
 )
-def test_cluster_check_cisco_wlc(  # type:ignore[no-untyped-def]
-    item, params, section, result
+def test_cluster_check_cisco_wlc(
+    item: str,
+    params: Mapping[str, object],
+    section: Mapping[str, Section | None],
+    result: CheckResult,
 ) -> None:
     assert list(cluster_check_cisco_wlc(item, params, section)) == result

@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.cisco_asa_failover import (
     check_cisco_asa_failover,
     discovery_cisco_asa_failover,
@@ -76,7 +80,7 @@ _CHECK_PARAMS = {
         ),
     ],
 )
-def test_cisco_asa_failover_parse(string_table, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cisco_asa_failover_parse(string_table: StringTable, expected: Section | None) -> None:
     assert parse_cisco_asa_failover(string_table) == expected
 
 
@@ -97,7 +101,7 @@ def test_cisco_asa_failover_parse(string_table, expected) -> None:  # type:ignor
         ),
     ],
 )
-def test_cisco_asa_failover_discover(section, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cisco_asa_failover_discover(section: Section, expected: DiscoveryResult) -> None:
     assert list(discovery_cisco_asa_failover(section)) == expected
 
 
@@ -216,6 +220,8 @@ def test_cisco_asa_failover_discover(section, expected) -> None:  # type:ignore[
         ),
     ],
 )
-def test_cisco_asa_failover(params, section, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cisco_asa_failover(
+    params: Mapping[str, object], section: Section, expected: CheckResult
+) -> None:
     result = check_cisco_asa_failover(params, section)
     assert list(result) == expected

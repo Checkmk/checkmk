@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, parse_checkmk_labels
 
@@ -27,7 +30,9 @@ from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, pa
         ),
     ],
 )
-def test_checkmk_labels(string_table, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
+def test_checkmk_labels(
+    string_table: StringTable, expected_parsed_data: Sequence[HostLabel]
+) -> None:
     result = list(host_label_function_labels(parse_checkmk_labels(string_table)))
     assert isinstance(result[0], HostLabel)
     assert expected_parsed_data == result

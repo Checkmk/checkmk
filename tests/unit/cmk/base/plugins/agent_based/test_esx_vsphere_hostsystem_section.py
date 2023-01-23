@@ -7,7 +7,9 @@ from collections import OrderedDict
 
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
+from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
 
 
 @pytest.mark.parametrize(
@@ -33,5 +35,5 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_es
         ),
     ],
 )
-def test_parse_esx_vsphere_hostsystem(string_table, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_esx_vsphere_hostsystem(string_table: StringTable, section: Section) -> None:
     assert parse_esx_vsphere_hostsystem(string_table) == section

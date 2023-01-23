@@ -13,6 +13,7 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_9800_clients,
     parse_cisco_wlc_clients,
@@ -99,26 +100,23 @@ ITEM_RESULT = [
 ]
 
 
-def _run_parse_and_check(  # type:ignore[no-untyped-def]
+def _run_parse_and_check(
     item: str,
     info: list[StringTable],
     params: VsResult | None = None,
-):
+) -> CheckResult:
     if params is None:
         params = {}
-    result = list(
-        check_wlc_clients(
-            item=item,
-            params=params,
-            section=parse_cisco_wlc_clients(info),
-        )
+    yield from check_wlc_clients(
+        item=item,
+        params=params,
+        section=parse_cisco_wlc_clients(info),
     )
-    return result
 
 
 @pytest.mark.parametrize("item, result", ITEM_RESULT)
-def test_cisco_wlc_clients(item, result) -> None:  # type:ignore[no-untyped-def]
-    assert _run_parse_and_check(item, INFO) == result
+def test_cisco_wlc_clients(item: str, result: CheckResult) -> None:
+    assert list(_run_parse_and_check(item, INFO)) == result
 
 
 PARAM_STATUS = [
@@ -139,9 +137,10 @@ PARAM_STATUS = [
 
 
 @pytest.mark.parametrize("param, status", PARAM_STATUS)
-def test_cisco_wlc_clients_parameter(param, status) -> None:  # type:ignore[no-untyped-def]
-    result = _run_parse_and_check("Summary", INFO, param)
-    assert result[0].state == status
+def test_cisco_wlc_clients_parameter(param: VsResult | None, status: State) -> None:
+    result = next(iter(_run_parse_and_check("Summary", INFO, param)))
+    assert isinstance(result, Result)
+    assert result.state == status
 
 
 def test_parse_cisco_wlc_clients() -> None:

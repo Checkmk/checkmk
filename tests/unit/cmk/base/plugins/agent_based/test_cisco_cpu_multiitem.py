@@ -5,12 +5,15 @@
 
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult
 from cmk.base.plugins.agent_based.cisco_cpu_multiitem import (
     check_cisco_cpu_multiitem,
     CPUInfo,
     discover_cisco_cpu_multiitem,
     DISCOVERY_DEFAULT_PARAMETERS,
+    DiscoveryParams,
     Params,
     parse_cisco_cpu_multiitem,
     Section,
@@ -90,8 +93,10 @@ def test_check_cisco_cpu_multiitem(parsed_section: Section) -> None:
         ),
     ),
 )
-def test_discover_cisco_cpu_multiitem(  # type:ignore[no-untyped-def]
-    parsed_section: Section, discovery_params, expected_discovery_result
+def test_discover_cisco_cpu_multiitem(
+    parsed_section: Section,
+    discovery_params: DiscoveryParams,
+    expected_discovery_result: DiscoveryResult,
 ) -> None:
     assert (
         list(discover_cisco_cpu_multiitem(discovery_params, parsed_section))
@@ -290,5 +295,5 @@ data = [
 
 
 @pytest.mark.parametrize("string_table, expected", data)
-def test_parse(string_table, expected) -> None:  # type:ignore[no-untyped-def]
+def test_parse(string_table: list[StringTable], expected: Section) -> None:
     assert parse_cisco_cpu_multiitem(string_table) == expected

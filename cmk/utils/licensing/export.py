@@ -160,6 +160,7 @@ class RawSubscriptionDetailsForConfig(TypedDict):
 class SubscriptionDetails(NamedTuple):
     start: int
     end: int
+    # TODO we may add more limits
     limit: SubscriptionDetailsLimit
 
     def for_report(self) -> RawSubscriptionDetails:

@@ -1265,9 +1265,6 @@ def test_check_password_hashes(uc: update_config.UpdateConfig) -> None:
 @pytest.mark.parametrize(
     "user_id, should_warn",
     [
-        # --- previously allowed in wato
-        ("ↄ𝒽ѥ𝕔𖹬", True),
-        ("艋", True),
         # --- previously possible via ldap
         ("admin/", True),
         (".", True),
@@ -1280,6 +1277,8 @@ def test_check_password_hashes(uc: update_config.UpdateConfig) -> None:
         ("Ädmün", False),
         ("$-@._", False),
         ("_ADMIN", False),
+        ("ↄ𝒽ѥ𝕔𖹬", False),
+        ("艋", False),
     ],
 )
 def test_check_user_ids(

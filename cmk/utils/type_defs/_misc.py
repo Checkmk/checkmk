@@ -284,9 +284,7 @@ def user_id_22_regex() -> Pattern[str]:
     The regex that will be used to validate all user IDs starting Checkmk 2.2.0.
     Currently used for user creation and to warn about users that will become incompatible.
     """
-    umlauts = "üöäßÜÖÄåÅØøÆæé"
-    allowed_start = rf"\w${umlauts}"
-    return regex(rf"^[{allowed_start}][-@.{allowed_start}]*$", re.ASCII)
+    return regex(r"^[\w$][-@.\w$]*$", re.UNICODE)
 
 
 EventRule = Dict[str, Any]  # TODO Improve this

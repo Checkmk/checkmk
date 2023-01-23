@@ -493,7 +493,12 @@ class EventServer(ECServerThread):
         self._event_status = event_status
         self._event_columns = event_columns
         self._message_period = ActiveHistoryPeriod()
-        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"], omd_site())
+        self._time_period = TimePeriods(logger)
+        self._rule_matcher = RuleMatcher(
+            logger=self._logger if config["debug_rules"] else None,
+            omd_site_id=omd_site(),
+            is_active_time_period=self._time_period.active,
+        )
 
         # HACK for testing: The real fix would involve breaking up these huge
         # class monsters.
@@ -1207,7 +1212,11 @@ class EventServer(ECServerThread):
         )
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
-        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"], omd_site())
+        self._rule_matcher = RuleMatcher(
+            logger=self._logger if config["debug_rules"] else None,
+            omd_site_id=omd_site(),
+            is_active_time_period=self._time_period.active,
+        )
 
     def compile_rules(  # pylint: disable=too-many-branches
         self, rule_packs: Sequence[ECRulePack]
@@ -1900,17 +1909,21 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress: str) -> E
 
 
 class RuleMatcher:
-    def __init__(self, logger: Logger, debug_rules: bool, omd_site_id: SiteId) -> None:
+    def __init__(
+        self,
+        logger: Logger | None,
+        omd_site_id: SiteId,
+        is_active_time_period: Callable[[TimeperiodName], bool],
+    ) -> None:
         super().__init__()
         self._logger = logger
-        self._debug_rules = debug_rules
-        self._time_periods = TimePeriods(logger)
         self._omd_site = omd_site_id
+        self._is_active_time_period = is_active_time_period
 
     def _log_rule_matching(self, message: str, *args: object, indent: bool = True) -> None:
-        """Check if debug rules is on and log the message as info level"""
-        if self._debug_rules:
-            self._logger.error(f"  {message}" if indent else message, *args)
+        """Check if logger is present and log the message as info level"""
+        if self._logger:
+            self._logger.info(f"  {message}" if indent else message, *args)
 
     def event_rule_matches_non_inverted(self, rule: Rule, event: Event) -> MatchResult:
         self._log_rule_matching("Trying rule %s/%s...", rule["pack"], rule["id"], indent=False)
@@ -2095,7 +2108,7 @@ class RuleMatcher:
         return MatchSuccess(cancelling=False, match_groups={})
 
     def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:
-        if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
+        if "match_timeperiod" in rule and not self._is_active_time_period(rule["match_timeperiod"]):
             return MatchFailure(
                 f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
             )

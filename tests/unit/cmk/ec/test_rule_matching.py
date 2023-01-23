@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-
 import pytest
 
-from cmk.utils.site import omd_site
+from livestatus import SiteId
 
 from cmk.ec.main import (
     Event,
@@ -21,12 +19,6 @@ from cmk.ec.main import (
     RuleMatcher,
     TextMatchResult,
 )
-
-
-@pytest.fixture(name="m")
-def fixture_m() -> RuleMatcher:
-    logger = logging.getLogger("cmk.mkeventd")
-    return RuleMatcher(logger, True, omd_site())
 
 
 @pytest.mark.parametrize(
@@ -126,7 +118,6 @@ def fixture_m() -> RuleMatcher:
     ],
 )
 def test_match_message(
-    m: RuleMatcher,
     message: str,
     result: MatchResult,
     match_message: str,
@@ -134,6 +125,7 @@ def test_match_message(
     match_groups: TextMatchResult,
     cancel_groups: bool | None,
 ) -> None:
+    m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
     rule: Rule = {
         "match": EventServer._compile_matching_value("match", match_message),
     }
@@ -181,12 +173,12 @@ def test_match_message(
     ],
 )
 def test_match_priority(
-    m: RuleMatcher,
     priority: int,
     match_priority: MatchPriority | None,
     cancel_priority: MatchPriority | None,
     expected: MatchPriority | None,
 ) -> None:
+    m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
     rule: Rule = {}
     if match_priority is not None:
         rule["match_priority"] = match_priority
@@ -242,12 +234,12 @@ def test_match_priority(
     ],
 )
 def test_match_outcome(
-    m: RuleMatcher,
     rule: Rule,
     match_groups: MatchGroups,
     match_priority: MatchPriority,
     expected: MatchResult,
 ) -> None:
+    m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
     assert m._check_match_outcome(rule, match_groups, match_priority) == expected
 
 
@@ -260,7 +252,9 @@ def test_match_outcome(
         (MatchFailure(reason="The site does not match."), {"match_site": ["dong"]}),
     ],
 )
-def test_match_site(m: RuleMatcher, rule: Rule, result: MatchResult) -> None:
+def test_match_site(rule: Rule, result: MatchResult) -> None:
+    # TODO why is "NO_SITE" necessary here. Random string as SiteId fails
+    m = RuleMatcher(None, SiteId("NO_SITE"), lambda time_period_name: True)
     assert m.event_rule_matches_site(rule, {}) == result
 
 
@@ -268,6 +262,7 @@ def test_match_site(m: RuleMatcher, rule: Rule, result: MatchResult) -> None:
     "result,rule,event",
     [
         (MatchSuccess(cancelling=False, match_groups={}), {}, {"host": "abc"}),
+        # TODO weird the empty string in the rule seems to be interpreted as 'no match_host specified', which is clearly incorrect.
         (MatchSuccess(cancelling=False, match_groups={}), {"match_host": ""}, {"host": "abc"}),
         (MatchSuccess(cancelling=False, match_groups={}), {"match_host": ""}, {"host": ""}),
         (
@@ -299,7 +294,8 @@ def test_match_site(m: RuleMatcher, rule: Rule, result: MatchResult) -> None:
         ),
     ],
 )
-def test_match_host(m: RuleMatcher, result: MatchResult, rule: Rule, event: Event) -> None:
+def test_match_host(result: MatchResult, rule: Rule, event: Event) -> None:
+    m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
 
     if "match_host" in rule:
         rule = {
@@ -352,7 +348,8 @@ def test_match_host(m: RuleMatcher, result: MatchResult, rule: Rule, event: Even
         ),
     ],
 )
-def test_match_ipaddress(m: RuleMatcher, result: MatchResult, rule: Rule, event: Event) -> None:
+def test_match_ipaddress(result: MatchResult, rule: Rule, event: Event) -> None:
+    m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
     assert m.event_rule_matches_ip(rule, event) == result
 
 
@@ -373,5 +370,6 @@ def test_match_ipaddress(m: RuleMatcher, result: MatchResult, rule: Rule, event:
         ),
     ],
 )
-def test_match_facility(m: RuleMatcher, result: MatchResult, rule: Rule, event: Event) -> None:
+def test_match_facility(result: MatchResult, rule: Rule, event: Event) -> None:
+    m = RuleMatcher(None, SiteId("test_site"), lambda time_period_name: True)
     assert m.event_rule_matches_facility(rule, event) == result

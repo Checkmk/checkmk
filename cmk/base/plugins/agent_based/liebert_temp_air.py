@@ -8,8 +8,8 @@ from typing import Any, List, MutableMapping, Optional
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert, SystemSection
-from .utils.temperature import check_temperature, TempParamType, to_celsius
+from .utils.liebert import DETECT_LIEBERT, parse_liebert, SystemSection, temperature_to_celsius
+from .utils.temperature import check_temperature, TempParamType
 
 ParsedSection = Mapping[str, tuple[str, str]]
 
@@ -82,10 +82,8 @@ def _check_liebert_temp_air(
     except ValueError:
         return
 
-    unit = unit.replace("deg ", "").lower()
-    value_float = to_celsius(value_float, unit)
     yield from check_temperature(
-        value_float,
+        temperature_to_celsius(value_float, unit),
         params,
         unique_name="check_liebert_temp_air.%s" % item,
         value_store=value_store,

@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils.liebert import parse_liebert, parse_liebert_without_unit
+from cmk.base.plugins.agent_based.utils.liebert import (
+    parse_liebert,
+    parse_liebert_without_unit,
+    temperature_to_celsius,
+)
 
 
 def parse_liebert_wrapper(info, type_func=float):
@@ -24,9 +28,4 @@ def scan_liebert(oid):
 
 
 def check_temp_unit(output):
-    value = float(output[0])
-    unit = output[1]
-    if unit == "deg F":
-        value = 5.0 / 9.0 * (value - 32)
-
-    return value
+    return temperature_to_celsius(float(output[0]), output[1])

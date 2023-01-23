@@ -3,24 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.liebert_temp_fluid import parse_liebert_temp_fluid, Section
 from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
-
-
-@pytest.fixture(name="section_plugin", scope="module")
-def _section_plugin(fix_register: FixRegister) -> SNMPSectionPlugin:
-    return fix_register.snmp_sections[SectionName("liebert_temp_fluid")]
 
 
 @pytest.fixture(name="check_plugin", scope="module")
@@ -29,36 +22,34 @@ def _check_plugin(fix_register: FixRegister) -> CheckPlugin:
 
 
 @pytest.fixture(name="section", scope="module")
-def _section(section_plugin: SNMPSectionPlugin) -> Mapping[str, tuple[float, str]]:
-    return section_plugin.parse_function(
+def _section() -> Section:
+    return parse_liebert_temp_fluid(
         [
             [
-                [
-                    "Supply Fluid Temp Set Point 1",
-                    "14.0",
-                    "deg C",
-                    "Supply Fluid Temp Set Point 2",
-                    "-6",
-                    "deg C",
-                    "Supply Fluid Over Temp Alarm Threshold",
-                    "0",
-                    "deg C",
-                    "Supply Fluid Under Temp Warning Threshold",
-                    "0",
-                    "deg C",
-                    "Supply Fluid Under Temp Alarm Threshold",
-                    "0",
-                    "deg C",
-                    "Supply Fluid Over Temp Warning Threshold",
-                    "32",
-                    "deg F",
-                ]
+                "Supply Fluid Temp Set Point 1",
+                "14.0",
+                "deg C",
+                "Supply Fluid Temp Set Point 2",
+                "-6",
+                "deg C",
+                "Supply Fluid Over Temp Alarm Threshold",
+                "0",
+                "deg C",
+                "Supply Fluid Under Temp Warning Threshold",
+                "0",
+                "deg C",
+                "Supply Fluid Under Temp Alarm Threshold",
+                "0",
+                "deg C",
+                "Supply Fluid Over Temp Warning Threshold",
+                "32",
+                "deg F",
             ]
         ]
     )
 
 
-def test_discover(check_plugin: CheckPlugin, section: Mapping[str, tuple[float, str]]) -> None:
+def test_discover(check_plugin: CheckPlugin, section: Section) -> None:
     assert list(check_plugin.discovery_function(section)) == [
         Service(item="Supply Fluid Temp Set Point 1"),
         Service(item="Supply Fluid Temp Set Point 2"),
@@ -98,7 +89,7 @@ def test_check(
     check_plugin: CheckPlugin,
     item: str,
     params: TempParamDict,
-    section: Mapping[str, tuple[float, str]],
+    section: Section,
     expected_result: CheckResult,
 ) -> None:
     assert (

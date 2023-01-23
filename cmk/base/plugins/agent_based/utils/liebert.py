@@ -8,6 +8,7 @@ from typing import TypeVar
 
 from ..agent_based_api.v1 import startswith
 from ..agent_based_api.v1.type_defs import StringTable
+from .temperature import to_celsius
 
 SystemSection = Mapping[str, str]
 
@@ -80,3 +81,13 @@ def parse_liebert(
                 continue
 
     return parsed
+
+
+def temperature_to_celsius(reading: float, unit: str) -> float:
+    """
+    >>> temperature_to_celsius(12.3, "deg C")
+    12.3
+    >>> f"{temperature_to_celsius(40.1, 'deg F'):.2f}"
+    '4.50'
+    """
+    return to_celsius(reading, unit.replace("deg ", "").lower())

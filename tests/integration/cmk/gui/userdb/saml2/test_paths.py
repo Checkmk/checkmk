@@ -3,23 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from saml2.config import SPConfig
 
 from cmk.utils.paths import saml2_attribute_mappings_dir
 
 
-@pytest.mark.skip
 def test_attribute_mapdir_exists() -> None:
     assert saml2_attribute_mappings_dir.exists()
 
 
-@pytest.mark.skip
 def test_attribute_mapdir_contains_files() -> None:
     assert len(list(saml2_attribute_mappings_dir.glob("*.py"))) > 0
 
 
-@pytest.mark.skip
 def test_attribute_mappings_are_noop() -> None:
     config = SPConfig()
     config.load({"attribute_map_dir": str(saml2_attribute_mappings_dir)})

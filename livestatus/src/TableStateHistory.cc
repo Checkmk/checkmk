@@ -467,20 +467,18 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     }
 
                     // Host/Service relations
-                    if (state->_host) {
-                        const auto *h = state->_host->handle();
-                        if (state->_is_host) {
-                            for (auto &it_inh : state_info) {
-                                if (it_inh.second->_host &&
-                                    it_inh.second->_host->handle() == h) {
-                                    state->_services.push_back(it_inh.second);
-                                }
+                    if (state->_is_host) {
+                        for (auto &it_inh : state_info) {
+                            if (it_inh.second->_host &&
+                                it_inh.second->_host->handle() ==
+                                    state->_host->handle()) {
+                                state->_services.push_back(it_inh.second);
                             }
-                        } else {
-                            auto it_inh = state_info.find(h);
-                            if (it_inh != state_info.end()) {
-                                it_inh->second->_services.push_back(state);
-                            }
+                        }
+                    } else {
+                        auto it_inh = state_info.find(state->_host->handle());
+                        if (it_inh != state_info.end()) {
+                            it_inh->second->_services.push_back(state);
                         }
                     }
                     // Store this state object for tracking state transitions
@@ -522,7 +520,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
                     // If this key is a service try to find its host and apply
                     // its _in_host_downtime and _host_down parameters
-                    if (!state->_is_host && state->_host) {
+                    if (!state->_is_host) {
                         auto my_host = state_info.find(state->_host->handle());
                         if (my_host != state_info.end()) {
                             state->_in_host_downtime =

@@ -13,7 +13,8 @@ from tests.testlib.site import Site
 from cmk.utils import version as cmk_version
 from cmk.utils.type_defs import HostName
 
-import cmk.base.autochecks as autochecks
+from cmk.checkers.discovery import AutochecksStore
+
 import cmk.base.check_api as check_api
 import cmk.base.config as config
 
@@ -71,7 +72,7 @@ check_info["test_check_1"] = {
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = autochecks.AutochecksStore(HostName(host_name)).read()
+    entries = AutochecksStore(HostName(host_name)).read()
     assert str(entries[0].check_plugin_name) == "test_check_1"
     assert entries[0].item is None
     assert entries[0].parameters == (10.0, 20.0)
@@ -99,7 +100,7 @@ check_info["test_check_1"] = {
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    entries = autochecks.AutochecksStore(HostName(host_name)).read()
+    entries = AutochecksStore(HostName(host_name)).read()
     assert entries[0].parameters == (5.0, 30.1)
 
 
@@ -155,7 +156,7 @@ check_info["test_check_2"] = {
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Should have discovered nothing so far
-    assert autochecks.AutochecksStore(HostName(host_name)).read() == []
+    assert AutochecksStore(HostName(host_name)).read() == []
 
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
@@ -165,7 +166,7 @@ check_info["test_check_2"] = {
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = autochecks.AutochecksStore(HostName(host_name)).read()
+    entries = AutochecksStore(HostName(host_name)).read()
     assert str(entries[0].check_plugin_name) == "test_check_2"
     assert entries[0].item is None
     assert entries[0].parameters == {}
@@ -228,7 +229,7 @@ check_info["test_check_3"] = {
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = autochecks.AutochecksStore(HostName(host_name)).read()
+    entries = AutochecksStore(HostName(host_name)).read()
     assert str(entries[0].check_plugin_name) == "test_check_3"
     assert entries[0].item is None
     assert entries[0].parameters == {}

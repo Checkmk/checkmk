@@ -33,8 +33,8 @@ from cmk.utils.type_defs import (
 from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction
+from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
-import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -63,9 +63,9 @@ _Transition = Union[
 
 _L = TypeVar("_L", bound=str)
 
-ServicesTableEntry = tuple[_L, autochecks.AutocheckEntry, list[HostName]]
+ServicesTableEntry = tuple[_L, AutocheckEntry, list[HostName]]
 ServicesTable = dict[ServiceID, ServicesTableEntry[_L]]
-ServicesByTransition = dict[_Transition, list[autochecks.AutocheckServiceWithNodes]]
+ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 
 
 # TODO: Move to livestatus module!
@@ -216,7 +216,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
     mode: DiscoveryMode,
-) -> Mapping[ServiceID, autochecks.AutocheckServiceWithNodes]:
+) -> Mapping[ServiceID, AutocheckServiceWithNodes]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
@@ -287,8 +287,8 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
 def _make_diff(
     labels_vanished: Iterable[HostLabel],
     labels_new: Iterable[HostLabel],
-    services_vanished: Iterable[autochecks.AutocheckEntry],
-    services_new: Iterable[autochecks.AutocheckEntry],
+    services_vanished: Iterable[AutocheckEntry],
+    services_new: Iterable[AutocheckEntry],
 ) -> str:
     """Textual representation of what changed
 
@@ -645,7 +645,7 @@ def _group_by_transition(
         services_by_transition.setdefault(
             transition,
             [],
-        ).append(autochecks.AutocheckServiceWithNodes(service, found_on_nodes))
+        ).append(AutocheckServiceWithNodes(service, found_on_nodes))
     return services_by_transition
 
 
@@ -697,7 +697,7 @@ def _cluster_service_entry(
     host_name: HostName,
     node_name: HostName,
     services_cluster: HostName,
-    entry: autochecks.AutocheckEntry,
+    entry: AutocheckEntry,
     existing_entry: ServicesTableEntry[_BasicTransition] | None,
 ) -> Iterable[tuple[ServiceID, ServicesTableEntry[_BasicTransition]]]:
     if host_name != services_cluster:

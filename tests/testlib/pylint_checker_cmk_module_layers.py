@@ -197,6 +197,8 @@ def _allow_default_plus_gui_base_and_bakery(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.checkers")),
+            _in_component(imported, Component("cmk.fetchers")),
             _in_component(imported, Component("cmk.cee.bakery")),
             _in_component(imported, Component("cmk.base")),
             _in_component(imported, Component("cmk.gui")),

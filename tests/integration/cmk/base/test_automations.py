@@ -21,7 +21,7 @@ from cmk.utils.type_defs import DiscoveryResult, HostName
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksTable
 
-import cmk.base.autochecks as autochecks
+from cmk.checkers.discovery import AutochecksStore
 
 
 @pytest.fixture(name="test_cfg", scope="module")
@@ -320,7 +320,7 @@ def test_automation_set_autochecks(test_cfg, site: Site) -> None:  # type:ignore
         autochecks_file = f"{cmk.utils.paths.autochecks_dir}/{hostname}.mk"
         assert os.path.exists(autochecks_file)
 
-        data = autochecks.AutochecksStore(hostname).read()
+        data = AutochecksStore(hostname).read()
         services = [
             (
                 (str(s.check_plugin_name), s.item),

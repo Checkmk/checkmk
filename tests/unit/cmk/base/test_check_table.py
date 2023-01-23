@@ -22,11 +22,11 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.checkers.check_table import ConfiguredService, FilterMode, HostCheckTable
+from cmk.checkers.discovery import AutocheckEntry
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.autochecks import AutocheckEntry
 
 
 @pytest.fixture(autouse=True, scope="module")

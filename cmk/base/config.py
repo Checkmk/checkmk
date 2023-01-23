@@ -129,12 +129,14 @@ from cmk.checkers.check_table import (
     HostCheckTable,
     LegacyCheckParameters,
 )
+from cmk.checkers.discovery import AutocheckServiceWithNodes
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
+import cmk.base._autochecks as autochecks
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.autochecks as autochecks
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base._autochecks import AutochecksManager
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
@@ -147,7 +149,6 @@ from cmk.base.api.agent_based.type_defs import (
     SectionPlugin,
     SNMPSectionPlugin,
 )
-from cmk.base.autochecks import AutocheckServiceWithNodes
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 TagIDs = set[TagID]
@@ -2723,7 +2724,7 @@ class ConfigCache:
         self._hosttags: dict[HostName, TagIDs] = {}
 
         # Autochecks cache
-        self._autochecks_manager = autochecks.AutochecksManager()
+        self._autochecks_manager = AutochecksManager()
 
         # Caches for nodes and clusters
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}

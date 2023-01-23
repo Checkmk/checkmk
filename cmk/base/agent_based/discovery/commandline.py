@@ -20,9 +20,9 @@ from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.discovery import AutochecksStore
 
 import cmk.base.agent_based.error_handling as error_handling
-import cmk.base.autochecks as autochecks
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
@@ -165,7 +165,7 @@ def _commandline_discovery_on_host(
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
     # We should put the persisting in one place.
-    autochecks.AutochecksStore(host_name).write(service_result.present)
+    AutochecksStore(host_name).write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):

@@ -17,8 +17,9 @@ from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 from cmk.checkers.check_table import ConfiguredService
+from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
-import cmk.base.autochecks as autochecks
+from cmk.base._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.base.config import ConfigCache
 
 _COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())
@@ -83,23 +84,23 @@ def test_manager_get_autochecks_of(
     assert test_config.get_autochecks_of(HostName("host")) == result
 
 
-def _entry(name: str, params: dict[str, str] | None = None) -> autochecks.AutocheckEntry:
-    return autochecks.AutocheckEntry(CheckPluginName(name), None, params or {}, {})
+def _entry(name: str, params: dict[str, str] | None = None) -> AutocheckEntry:
+    return AutocheckEntry(CheckPluginName(name), None, params or {}, {})
 
 
 def test_consolidate_autochecks_of_real_hosts() -> None:
 
     new_services_with_nodes = [
-        autochecks.AutocheckServiceWithNodes(  # found on node and new
+        AutocheckServiceWithNodes(  # found on node and new
             _entry("A"), [HostName("node"), HostName("othernode")]
         ),
-        autochecks.AutocheckServiceWithNodes(  # not found, not present (i.e. unrelated)
+        AutocheckServiceWithNodes(  # not found, not present (i.e. unrelated)
             _entry("B"), [HostName("othernode"), HostName("yetanothernode")]
         ),
-        autochecks.AutocheckServiceWithNodes(  # found and preexistting
+        AutocheckServiceWithNodes(  # found and preexistting
             _entry("C", {"params": "new"}), [HostName("node"), HostName("node2")]
         ),
-        autochecks.AutocheckServiceWithNodes(  # not found but present
+        AutocheckServiceWithNodes(  # not found but present
             _entry("D"), [HostName("othernode"), HostName("yetanothernode")]
         ),
     ]
@@ -110,7 +111,7 @@ def test_consolidate_autochecks_of_real_hosts() -> None:
     ]
 
     # the dict is just b/c it's easier to test against.
-    consolidated = autochecks._consolidate_autochecks_of_real_hosts(
+    consolidated = _consolidate_autochecks_of_real_hosts(
         HostName("node"),
         new_services_with_nodes,
         preexisting_entries,

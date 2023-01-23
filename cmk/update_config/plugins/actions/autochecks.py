@@ -12,8 +12,9 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import autochecks_dir
 from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 
+from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
+
 from cmk.base.api.agent_based import register
-from cmk.base.autochecks import AutocheckEntry, AutochecksStore
 
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 

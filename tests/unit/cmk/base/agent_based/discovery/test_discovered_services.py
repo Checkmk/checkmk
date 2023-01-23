@@ -5,8 +5,9 @@
 
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING
 
+from cmk.checkers.discovery import AutocheckEntry
+
 from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
-from cmk.base.autochecks import AutocheckEntry
 
 
 def _service(plugin_name: str, item: str) -> AutocheckEntry:

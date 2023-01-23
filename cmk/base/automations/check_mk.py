@@ -92,6 +92,7 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkers import parse_raw_data
+from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION
 
@@ -109,7 +110,6 @@ import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
 from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.config import ConfigCache, IgnoredServices
 from cmk.base.core import CoreAction, do_restart

@@ -16,6 +16,13 @@ from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceID
 
 from cmk.checkers.check_table import LegacyCheckParameters
 
+__all__ = ["AutocheckServiceWithNodes", "AutocheckEntry", "AutochecksStore"]
+
+
+class AutocheckServiceWithNodes(NamedTuple):
+    service: AutocheckEntry
+    nodes: Sequence[HostName]
+
 
 # If we switched to something less stupid than "LegacyCheckParameters", see
 # if we can use pydantic
@@ -54,7 +61,7 @@ class AutocheckEntry(NamedTuple):
         }
 
 
-class AutochecksSerializer:
+class _AutochecksSerializer:
     @staticmethod
     def serialize(entries: Sequence[AutocheckEntry]) -> bytes:
         return ("[\n%s]\n" % "".join(f"  {e.dump()!r},\n" for e in entries)).encode("utf-8")
@@ -69,7 +76,7 @@ class AutochecksStore:
         self._host_name = host_name
         self._store = ObjectStore(
             Path(cmk.utils.paths.autochecks_dir, f"{host_name}.mk"),
-            serializer=AutochecksSerializer(),
+            serializer=_AutochecksSerializer(),
         )
 
     def read(self) -> Sequence[AutocheckEntry]:

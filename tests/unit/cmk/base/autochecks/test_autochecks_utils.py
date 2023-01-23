@@ -10,7 +10,8 @@ import pytest
 import cmk.utils.paths
 from cmk.utils.type_defs import CheckPluginName, HostName
 
-from cmk.base.autochecks.utils import AutocheckEntry, AutochecksSerializer, AutochecksStore
+from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
+from cmk.checkers.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
 
 # pylint: disable=redefined-outer-name
 

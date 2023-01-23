@@ -34,12 +34,12 @@ from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (
     ConfiguredFetcher,
@@ -70,7 +70,7 @@ def service_table() -> ServicesTable:
     return {
         ServiceID(CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
-            autochecks.AutocheckEntry(
+            AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 1",
                 "Test Description New Item 1",
@@ -80,7 +80,7 @@ def service_table() -> ServicesTable:
         ),
         ServiceID(CheckPluginName("check_plugin_name"), "New Item 2"): (
             "new",
-            autochecks.AutocheckEntry(
+            AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 2",
                 "Test Description New Item 2",
@@ -90,7 +90,7 @@ def service_table() -> ServicesTable:
         ),
         ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
             "vanished",
-            autochecks.AutocheckEntry(
+            AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 1",
                 "Test Description Vanished Item 1",
@@ -100,7 +100,7 @@ def service_table() -> ServicesTable:
         ),
         ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
             "vanished",
-            autochecks.AutocheckEntry(
+            AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 2",
                 "Test Description Vanished Item 2",
@@ -115,8 +115,8 @@ def service_table() -> ServicesTable:
 def grouped_services() -> ServicesByTransition:
     return {
         "new": [
-            autochecks.AutocheckServiceWithNodes(
-                autochecks.AutocheckEntry(
+            AutocheckServiceWithNodes(
+                AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 1",
                     "Test Description New Item 1",
@@ -124,8 +124,8 @@ def grouped_services() -> ServicesByTransition:
                 ),
                 [],
             ),
-            autochecks.AutocheckServiceWithNodes(
-                autochecks.AutocheckEntry(
+            AutocheckServiceWithNodes(
+                AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "New Item 2",
                     "Test Description New Item 2",
@@ -135,8 +135,8 @@ def grouped_services() -> ServicesByTransition:
             ),
         ],
         "vanished": [
-            autochecks.AutocheckServiceWithNodes(
-                autochecks.AutocheckEntry(
+            AutocheckServiceWithNodes(
+                AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 1",
                     "Test Description Vanished Item 1",
@@ -144,8 +144,8 @@ def grouped_services() -> ServicesByTransition:
                 ),
                 [],
             ),
-            autochecks.AutocheckServiceWithNodes(
-                autochecks.AutocheckEntry(
+            AutocheckServiceWithNodes(
+                AutocheckEntry(
                     CheckPluginName("check_plugin_name"),
                     "Vanished Item 2",
                     "Test Description Vanished Item 2",
@@ -902,7 +902,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         on_error=OnError.RAISE,
     )
 
-    entries = autochecks.AutochecksStore(testhost).read()
+    entries = AutochecksStore(testhost).read()
     found = {e.id(): e.service_labels for e in entries}
     assert found == _expected_services
 
@@ -1634,8 +1634,8 @@ def test__perform_host_label_discovery_on_cluster(
 
 def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
 
-    entries: Mapping[str, autochecks.AutocheckEntry] = {
-        discovery_status: autochecks.AutocheckEntry(
+    entries: Mapping[str, AutocheckEntry] = {
+        discovery_status: AutocheckEntry(
             CheckPluginName(f"plugin_{discovery_status}"),
             None,
             {},
@@ -1649,7 +1649,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     }
 
     monkeypatch.setattr(
-        autochecks.AutochecksStore,
+        AutochecksStore,
         "read",
         lambda *args, **kwargs: [
             entries["old"],

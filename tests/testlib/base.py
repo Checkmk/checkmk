@@ -14,17 +14,18 @@ from tests.testlib.utils import get_standard_linux_agent_output
 import cmk.utils.tags
 from cmk.utils.type_defs import HostAddress, HostName
 
+from cmk.checkers.discovery import AutocheckEntry
+
 import cmk.base.config as config
-from cmk.base import autochecks
 from cmk.base.config import ConfigCache
 
 
-class _AutochecksMocker(autochecks.AutochecksManager):
+class _AutochecksMocker(config.AutochecksManager):
     def __init__(self) -> None:
         super().__init__()
-        self.raw_autochecks: dict[HostName, Sequence[autochecks.AutocheckEntry]] = {}
+        self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
 
-    def _read_raw_autochecks(self, hostname: HostName) -> Sequence[autochecks.AutocheckEntry]:
+    def _read_raw_autochecks(self, hostname: HostName) -> Sequence[AutocheckEntry]:
         return self.raw_autochecks.get(hostname, [])
 
 
@@ -163,9 +164,7 @@ class Scenario:
         """Warning: This is used in more cases than setting rule sets."""
         self.config[varname] = ruleset
 
-    def set_autochecks(
-        self, hostname: HostName, entries: Sequence[autochecks.AutocheckEntry]
-    ) -> None:
+    def set_autochecks(self, hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 
     def apply(self, monkeypatch: MonkeyPatch) -> ConfigCache:

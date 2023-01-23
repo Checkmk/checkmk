@@ -2,20 +2,22 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Caring about persistance of the discovered services (aka autochecks)"""
+"""Caring about persistance of the discovered services (aka autochecks)
 
-import logging
+Note:
+    THIS IS ONLY USED BY THE CONFIG, DO NOT IMPORT ANYWHERE ELSE!
+
+"""
+
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import NamedTuple
 
 from cmk.utils.labels import ServiceLabel
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
-
-from .utils import AutocheckEntry, AutochecksStore
+from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 
 ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters],
@@ -24,14 +26,6 @@ ComputeCheckParameters = Callable[
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
-
-
-class AutocheckServiceWithNodes(NamedTuple):
-    service: AutocheckEntry
-    nodes: Sequence[HostName]
-
-
-logger = logging.getLogger("cmk.base.autochecks")
 
 
 class AutochecksManager:

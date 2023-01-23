@@ -11,7 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Literal, NamedTuple, Protocol, TypeVar
+from typing import Any, Final, Literal, NamedTuple, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -2292,6 +2292,9 @@ multisite_builtin_views["inv_host_history"] = {
 #   '----------------------------------------------------------------------'
 
 
+_GRAY: Final[str] = "#777"
+
+
 class ABCNodeRenderer(abc.ABC):
     def __init__(
         self,
@@ -2331,7 +2334,6 @@ class ABCNodeRenderer(abc.ABC):
             title=self._get_header(
                 hints.replace_placeholders(node.path),
                 ".".join(map(str, node.path)),
-                "#666",
             ),
             icon=hints.node_hint.icon,
             fetch_url=makeuri_contextless(
@@ -2381,9 +2383,7 @@ class ABCNodeRenderer(abc.ABC):
             html.th(
                 self._get_header(
                     column.hint.title,
-                    column.key,
-                    "#DDD",
-                    is_key_column=column.is_key_column,
+                    "%s*" % column.key if column.is_key_column else column.key,
                 )
             )
         html.close_tr()
@@ -2429,13 +2429,7 @@ class ABCNodeRenderer(abc.ABC):
             attr_hint = hints.get_attribute_hint(key)
 
             html.open_tr()
-            html.th(
-                self._get_header(
-                    attr_hint.title,
-                    key,
-                    "#DDD",
-                )
-            )
+            html.th(self._get_header(attr_hint.title, key))
             html.open_td()
             self.show_attribute(
                 value,
@@ -2461,18 +2455,10 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---helper---------------------------------------------------------------
 
-    def _get_header(
-        self,
-        title: str,
-        key: str,
-        hex_color: str,
-        *,
-        is_key_column: bool = False,
-    ) -> HTML:
+    def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            key_info = "%s*" % key if is_key_column else key
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, style="color: %s" % hex_color)
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, style=f"color: {_GRAY}")
         return header
 
     def _show_child_value(
@@ -2481,30 +2467,20 @@ class ABCNodeRenderer(abc.ABC):
         hint: ColumnDisplayHint | AttributeDisplayHint,
         retention_intervals: RetentionIntervals | None = None,
     ) -> None:
-        if isinstance(value, HTML):
-            html.write_html(value)
-        else:
+        if not isinstance(value, HTML):
             _tdclass, code = hint.paint_function(value)
-            html.write_text(code)
+            value = HTML(code)
 
-        if (ret_value_to_write := self._get_retention_value(retention_intervals)) is not None:
-            html.write_html(ret_value_to_write)
+        if self._is_outdated(retention_intervals):
+            html.write_html(HTMLWriter.render_span(value.value, style=f"color: {_GRAY}"))
+        else:
+            html.write_html(value)
 
     @staticmethod
-    def _get_retention_value(retention_intervals: RetentionIntervals | None) -> HTML | None:
-        if retention_intervals is None:
-            return None
-
-        now = time.time()
-
-        if now <= retention_intervals.valid_until:
-            return None
-
-        if now <= retention_intervals.keep_until:
-            _tdclass, value = inv_paint_age(retention_intervals.keep_until - now)
-            return HTMLWriter.render_span(_(" (%s left)") % value, style="color: #DDD")
-
-        return HTMLWriter.render_span(_(" (outdated)"), style="color: darkred")
+    def _is_outdated(retention_intervals: RetentionIntervals | None) -> bool:
+        return (
+            False if retention_intervals is None else time.time() > retention_intervals.keep_until
+        )
 
 
 class NodeRenderer(ABCNodeRenderer):

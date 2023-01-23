@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based import prtconf
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 
 INFO = [
     ["System Model", " IBM,8231-E2D"],
@@ -100,51 +100,61 @@ EXPECTED = [
         path=["software", "os"],
         inventory_attributes={"arch": "ppc64"},
     ),
-    Attributes(
-        path=["hardware", "volumes", "physical_volumes", "hdisk664"],
-        inventory_attributes={
+    TableRow(
+        path=["hardware", "volumes", "physical_volumes"],
+        key_columns={
             "volume_group_name": "cow-daag0cvg",
             "physical_volume_name": "hdisk664",
+        },
+        inventory_columns={
             "physical_volume_status": "active",
             "physical_volume_total_partitions": "3218",
             "physical_volume_free_partitions": "0",
         },
     ),
-    Attributes(
-        path=["hardware", "volumes", "physical_volumes", "hdisk665"],
-        inventory_attributes={
+    TableRow(
+        path=["hardware", "volumes", "physical_volumes"],
+        key_columns={
             "volume_group_name": "cow-daag0cvg",
             "physical_volume_name": "hdisk665",
+        },
+        inventory_columns={
             "physical_volume_status": "active",
             "physical_volume_total_partitions": "3218",
             "physical_volume_free_partitions": "0",
         },
     ),
-    Attributes(
-        path=["hardware", "volumes", "physical_volumes", "hdisk666"],
-        inventory_attributes={
+    TableRow(
+        path=["hardware", "volumes", "physical_volumes"],
+        key_columns={
             "volume_group_name": "cow-daag0cvg",
             "physical_volume_name": "hdisk666",
+        },
+        inventory_columns={
             "physical_volume_status": "active",
             "physical_volume_total_partitions": "3218",
             "physical_volume_free_partitions": "0",
         },
     ),
-    Attributes(
-        path=["hardware", "volumes", "physical_volumes", "hdisk18"],
-        inventory_attributes={
+    TableRow(
+        path=["hardware", "volumes", "physical_volumes"],
+        key_columns={
             "volume_group_name": "p2zgkbos4vg",
             "physical_volume_name": "hdisk18",
+        },
+        inventory_columns={
             "physical_volume_status": "active",
             "physical_volume_total_partitions": "643",
             "physical_volume_free_partitions": "0",
         },
     ),
-    Attributes(
-        path=["hardware", "volumes", "physical_volumes", "appvg"],
-        inventory_attributes={
+    TableRow(
+        path=["hardware", "volumes", "physical_volumes"],
+        key_columns={
             "volume_group_name": "appvg",
             "physical_volume_name": "",
+        },
+        inventory_columns={
             "physical_volume_status": "Inactive",
             "physical_volume_total_partitions": "",
             "physical_volume_free_partitions": "",

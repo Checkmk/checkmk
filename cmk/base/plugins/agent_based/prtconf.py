@@ -65,7 +65,7 @@
 # Note: this is only the header. Much more stuff follows, but is currently
 # not being parsed.
 
-from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1 import Attributes, register, TableRow
 
 
 def get_tuples_section(info):
@@ -154,12 +154,15 @@ def _split_vendor(string):
 
 
 def inv_prtconf(section):
-
     for attrs, path in get_key_value_pairs(section):
         yield Attributes(path=path, inventory_attributes=attrs)
 
-    for attrs, path in get_volume_groups(section):
-        yield Attributes(path=path, inventory_attributes=attrs)
+    for key_columns, attrs in get_volume_groups(section):
+        yield TableRow(
+            path=["hardware", "volumes", "physical_volumes"],
+            key_columns=key_columns,
+            inventory_columns=attrs,
+        )
 
 
 def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
@@ -254,25 +257,32 @@ def get_key_value_pairs(parsed):  # pylint: disable=too-many-branches
 
 
 def get_volume_groups(parsed):
-    path = ["hardware", "volumes", "physical_volumes"]
     for item in parsed["active"]:
         vg_name, pv_name, pv_status, pv_total_partitions, pv_free_partitions, _pv_distr = item
-        node = {}
-        node["volume_group_name"] = vg_name
-        node["physical_volume_name"] = pv_name
-        node["physical_volume_status"] = pv_status
-        node["physical_volume_total_partitions"] = pv_total_partitions
-        node["physical_volume_free_partitions"] = pv_free_partitions
-        yield node, [*path, pv_name]
+        yield (
+            {
+                "volume_group_name": vg_name,
+                "physical_volume_name": pv_name,
+            },
+            {
+                "physical_volume_status": pv_status,
+                "physical_volume_total_partitions": pv_total_partitions,
+                "physical_volume_free_partitions": pv_free_partitions,
+            },
+        )
 
     for item in parsed["inactive"]:
-        node = {}
-        node["volume_group_name"] = item
-        node["physical_volume_name"] = ""
-        node["physical_volume_status"] = "Inactive"
-        node["physical_volume_total_partitions"] = ""
-        node["physical_volume_free_partitions"] = ""
-        yield node, [*path, item]
+        yield (
+            {
+                "volume_group_name": item,
+                "physical_volume_name": "",
+            },
+            {
+                "physical_volume_status": "Inactive",
+                "physical_volume_total_partitions": "",
+                "physical_volume_free_partitions": "",
+            },
+        )
 
 
 register.inventory_plugin(

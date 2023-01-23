@@ -609,7 +609,10 @@ def _install(
             if part.ident == "ec_rule_packs":
                 _remove_packaged_rule_packs(list(remove_files), delete_export=False)
 
-        remove_enabled_mark(old_package)
+        # Do not remove the enabled mark if the version has not changed.
+        # In this case we might be installing from an already enabled package, and the enabled mark would not be recreated.
+        if (old_package["name"], old_package["version"]) != (package["name"], package["version"]):
+            remove_enabled_mark(old_package)
 
     # Last but not least install package file
     write_package_info(package)

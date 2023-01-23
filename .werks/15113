@@ -1,0 +1,11 @@
+Title: Extension packages: Error "Package is not enabled"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674473649
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p20
+
+This fixes the WATO and command line error "Package $MyPackage is not enabled", when users try to uninstall or dissolve an active  package.

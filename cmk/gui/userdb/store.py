@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import ast
 import copy
 import itertools
@@ -10,7 +12,6 @@ import os
 import traceback
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, TypeVar
 
@@ -51,42 +52,6 @@ from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
 T = TypeVar("T")
-
-
-class OpenFileMode(Enum):
-    READ = "read"
-    WRITE = "write"
-
-
-class UserStore:
-    def __init__(self, mode: OpenFileMode = OpenFileMode.READ) -> None:
-        self.mode = mode
-
-        try:
-            self.users = load_users(mode is OpenFileMode.WRITE)
-        finally:
-            release_users_lock()
-
-        self.__unchanged_users = copy.deepcopy(self.users)
-
-    def __enter__(self) -> Users:
-        return self.users
-
-    def __exit__(self, *exc_info: object) -> None:
-        if self.mode is OpenFileMode.READ:
-            return
-
-        if self.users == self.__unchanged_users:
-            # only write when really needed, because:
-            # - writing users may be a performance issue
-            # - it invalidates the cache
-            release_users_lock()
-            return
-
-        try:
-            save_users(self.users, datetime.utcnow())  # Implicitly releases the lock
-        finally:
-            release_users_lock()
 
 
 def load_custom_attr(

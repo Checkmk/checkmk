@@ -4,17 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from datetime import datetime
 from typing import Any
 
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
-from cmk.gui.type_defs import UserSpec
+from cmk.gui.plugins.userdb.utils import (
+    get_connection,
+    release_users_lock,
+    UserConnector,
+    UserConnectorRegistry,
+)
+from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb.saml2.config import valuespec_to_config
 from cmk.gui.userdb.saml2.interface import AuthenticatedUser
-from cmk.gui.userdb.store import OpenFileMode, Users, UserStore
+from cmk.gui.userdb.store import load_users, save_users
 
 # TODO (lisa): introduce enums
 SAML2_CONNECTOR_TYPE = "saml2"
@@ -77,20 +83,34 @@ class Connector(UserConnector):
             # email
             user_spec["email"] = user_profile.email
 
-        with UserStore(mode=OpenFileMode.WRITE) as user_store:
-            if not (user_entry := user_store.get(user_id)):
-                user_store[user_id] = user_spec
-                return
-
-            self._update_user(
-                user_id=user_id,
-                user_profile=user_spec,
-                connection_id=user_entry.get("connector"),
-                user_store=user_store,
+        try:
+            self._create_and_update_user(
+                user_id=user_id, user_spec=user_spec, users=load_users(lock=True)
             )
+        finally:
+            release_users_lock()
+
+    def _create_and_update_user(self, user_id: UserId, user_spec: UserSpec, users: Users) -> None:
+        if not (user_entry := users.get(user_id)):
+            users[user_id] = user_spec
+            save_users(users, datetime.now())  # releases the lock implicitly
+            return
+
+        self._update_user(
+            user_id=user_id,
+            user_profile=user_spec,
+            current_user_entry=user_entry,
+            connection_id=user_entry.get("connector"),
+            users=users,
+        )
 
     def _update_user(
-        self, user_id: UserId, user_profile: UserSpec, user_store: Users, connection_id: str | None
+        self,
+        user_id: UserId,
+        user_profile: UserSpec,
+        users: Users,
+        current_user_entry: UserSpec,
+        connection_id: str | None,
     ) -> None:
         if not connection_id or not (connection := get_connection(connection_id)):
             LOGGER.debug(
@@ -109,7 +129,11 @@ class Connector(UserConnector):
             )
             raise ValueError("User already exists for different connection")
 
-        user_store[user_id] = user_profile
+        if user_profile == current_user_entry:
+            return
+
+        users[user_id] = user_profile
+        save_users(users, datetime.now())  # releases the lock implicitly
 
     def locked_attributes(self) -> Sequence[str]:
         """Attributes managed by the connector.

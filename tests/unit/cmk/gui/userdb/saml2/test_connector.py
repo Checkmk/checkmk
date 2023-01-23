@@ -50,11 +50,8 @@ class TestConnector:
     @pytest.fixture
     def user_store(self, monkeypatch: pytest.MonkeyPatch, users_pre_edit: Users) -> Iterable[Users]:
         users = copy.deepcopy(users_pre_edit)
-        # The following two functions are actually accessed via UserStore and patched for it.
-        # 'save_users' will persist any changes in the corresponding file on disk but is not needed
-        # for the purpose of our unit tests.
-        monkeypatch.setattr("cmk.gui.userdb.store.load_users", lambda l: users)
-        monkeypatch.setattr("cmk.gui.userdb.store.save_users", lambda u, n: None)
+        monkeypatch.setattr("cmk.gui.userdb.saml2.connector.load_users", lambda lock: users)
+        monkeypatch.setattr("cmk.gui.userdb.saml2.connector.save_users", lambda u, n: None)
         yield users
 
     @pytest.fixture

@@ -9,8 +9,7 @@ import re
 
 
 class UserId(str):
-    _umlauts = "üöäßÜÖÄåÅØøÆæé"
-    USER_ID_REGEX = re.compile(rf"^[\w${_umlauts}][-@.\w${_umlauts}]*$")
+    USER_ID_REGEX = re.compile(r"^[\w$][-@.\w$]*$", re.UNICODE)
 
     @classmethod
     def validate(cls, text: str) -> None:

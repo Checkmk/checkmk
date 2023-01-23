@@ -467,10 +467,13 @@ def _auth_options_to_internal_format(
             internal_options["password"] = htpasswd.hash_password(
                 Password(auth_details["password"])
             )
-            internal_options["last_pw_change"] = int(time.time())
 
         if "enforce_password_change" in auth_details:
             internal_options["enforce_pw_change"] = auth_details["enforce_password_change"]
+
+    # In contrast to enforce_pw_change, the maximum password age is enforced for automation users
+    # as well. So set this for both kinds of users.
+    internal_options["last_pw_change"] = int(time.time())
 
     return internal_options
 

@@ -452,7 +452,7 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
                 "email": "",
                 "fallback_contact": False,
                 "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
-                "last_pw_change": 1265011200,
+                "last_pw_change": 1265011200,  # 2010-02-01 08:00:00
                 "serial": 1,
                 "disable_notifications": {},
             },
@@ -460,8 +460,9 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         }
     }
 
-    with run_as_superuser():
-        edit_users(user_data)
+    with freeze_time("2010-02-01 08:30:00"):
+        with run_as_superuser():
+            edit_users(user_data)
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -476,12 +477,12 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         "roles": ["user"],
         "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         "serial": 1,
-        "last_pw_change": 1265011200,
+        "last_pw_change": 1265011200,  # 08:00:00 -- uses creation data, not current time
         "enforce_pw_change": True,
         "num_failed_logins": 0,
     }
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with freeze_time("2010-02-01 09:00:00"):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
@@ -510,13 +511,13 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         "automation_secret": "QWXWBFUCSUOXNCPJUMS@",
         "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
         "serial": 1,  # this is 2 internally but the function is not invoked here
-        "last_pw_change": 1265011200,
+        "last_pw_change": 1265014800,  # 09:00:00 -- changed as secret was changed
         "enforce_pw_change": True,
         "num_failed_logins": 0,
         "connector": "htpasswd",
     }
 
-    with freeze_time("2010-02-01 09:00:00"):
+    with freeze_time("2010-02-01 09:30:00"):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name), {"auth_option": {"auth_type": "remove"}}
         )
@@ -541,7 +542,7 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         "locked": False,
         "roles": ["user"],
         "serial": 1,
-        "last_pw_change": 1265011200,  # no change in time from previous edit
+        "last_pw_change": 1265014800,  # 09:00:00 -- no change from previous edit (secret unchanged)
         "enforce_pw_change": True,
         "num_failed_logins": 0,
         "connector": "htpasswd",

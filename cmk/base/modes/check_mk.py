@@ -67,7 +67,6 @@ import cmk.base.core_nagios
 import cmk.base.diagnostics
 import cmk.base.dump_host
 import cmk.base.ip_lookup as ip_lookup
-import cmk.base.localize
 import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
@@ -80,6 +79,8 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
+
+from ._localize import do_localize
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -752,7 +753,7 @@ modes.register(
 
 
 def mode_localize(args: list[str]) -> None:
-    cmk.base.localize.do_localize(args)
+    do_localize(args)
 
 
 modes.register(

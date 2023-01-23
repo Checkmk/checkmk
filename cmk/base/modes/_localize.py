@@ -15,6 +15,8 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKException
 from cmk.utils.log import VERBOSE
 
+__all__ = ["do_localize"]
+
 logger = logging.getLogger("cmk.base.localize")
 
 LanguageName = str

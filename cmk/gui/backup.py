@@ -1530,8 +1530,11 @@ class Target:
     def validate(self, varprefix: str) -> None:
         self._target_type().validate(varprefix)
 
-    def render(self) -> ValueSpecText:
+    def render_destination(self) -> ValueSpecText:
         return self._target_type().render()
+
+    def render_type(self) -> str:
+        return self._target_type().title()
 
 
 def _show_site_and_system_targets(config: Config) -> None:
@@ -1585,8 +1588,9 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
                 html.icon_button(edit_url, _("Edit this backup target"), "edit")
                 html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-                table.cell(_("Title"), target.title)
-                table.cell(_("Destination"), target.render())
+                table.cell(_("Title"), target.title, css=["narrow nowrap"])
+                table.cell(_("Type"), target.render_type())
+                table.cell(_("Destination"), target.render_destination())
 
 
 class PageBackupTargets:

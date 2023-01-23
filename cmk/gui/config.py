@@ -105,7 +105,9 @@ def initialize() -> None:
     # The log level of the pysaml2 package should be set to debug if the logging for SAML has been
     # set to debug in the global settings. Otherwise it should be kept to a minimum as it spams the
     # web.log
-    if active_config.log_levels["cmk.web.saml2"] == 10:
+    if active_config.log_levels.get("cmk.web.saml2", 30) == 10:
+        # The log level for SAML is not defined in the active config in case the customer updates
+        # from 2.1 to 2.2.
         log.set_log_levels({"saml2": 10})
     else:
         log.set_log_levels({"saml2": 50})

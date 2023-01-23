@@ -44,10 +44,6 @@ class _IfInfo(NamedTuple):
 
 
 Section = Sequence[_IfInfo]
-
-
-INVENTORY_PATH = ["networking", "interfaces"]
-
 MAP_VLANS = {
     "1": "static",
     "2": "dynamic",
@@ -152,7 +148,7 @@ register.snmp_section(
 def inv_cisco_vlans(section: Section) -> InventoryResult:
     yield from (
         TableRow(
-            path=INVENTORY_PATH,
+            path=["networking", "interfaces"],
             key_columns={"index": if_info.id_},
             inventory_columns={
                 "vlans": if_info.vlans,

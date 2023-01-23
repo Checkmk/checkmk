@@ -92,11 +92,10 @@ register.agent_section(
 
 
 def inventory_win_networkadapter(section: Section) -> InventoryResult:
-    path = ["hardware", "nwadapter"]
     for adapter in sorted(section, key=lambda a: a.get("name", "")):
         if "name" in adapter:
             yield TableRow(
-                path=path,
+                path=["hardware", "nwadapter"],
                 key_columns={
                     "name": adapter["name"],
                 },

@@ -53,10 +53,9 @@ def inventory_lnx_video(section: Section) -> InventoryResult:
     # FIXME This is very strange: Raw data is parsed into ONE dict,
     # but we save the controller attributes in a table...
     # Maybe there are more controllers?
-    path = ["hardware", "video"]
     if "name" in section:
         yield TableRow(
-            path=path,
+            path=["hardware", "video"],
             key_columns={
                 "name": section["name"],
             },

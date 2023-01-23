@@ -104,10 +104,9 @@ register.agent_section(
 def inventory_solaris_addresses(section: Section) -> InventoryResult:
     interfaces, addresses = section
 
-    ifaces_path = ["networking", "interfaces"]
     for iface in interfaces:
         yield TableRow(
-            path=ifaces_path,
+            path=["networking", "interfaces"],
             key_columns={
                 "index": iface.idx,
                 "description": iface.description,
@@ -121,10 +120,9 @@ def inventory_solaris_addresses(section: Section) -> InventoryResult:
             status_columns={},
         )
 
-    addresses_path = ["networking", "addresses"]
     for address in addresses:
         yield TableRow(
-            path=addresses_path,
+            path=["networking", "addresses"],
             key_columns={
                 "device": address.device,
             },

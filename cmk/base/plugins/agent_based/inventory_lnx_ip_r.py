@@ -54,10 +54,9 @@ register.agent_section(
 
 
 def inventory_lnx_ip_r(section: Section) -> InventoryResult:
-    path = ["networking", "routes"]
     for route in sorted(section, key=lambda r: r["target"]):
         yield TableRow(
-            path=path,
+            path=["networking", "routes"],
             key_columns={
                 "target": route["target"],
                 "gateway": route.get("gateway"),

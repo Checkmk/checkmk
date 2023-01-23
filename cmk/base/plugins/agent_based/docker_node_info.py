@@ -60,7 +60,6 @@ def inventory_docker_node_info(section: Section) -> InventoryResult:
     if not section:
         return
 
-    docker_path = ["software", "applications", "docker"]
     swarm_data = section.get("Swarm")
 
     inventory_attributes = {
@@ -90,28 +89,25 @@ def inventory_docker_node_info(section: Section) -> InventoryResult:
     }
     if inventory_attributes or status_inventory:
         yield Attributes(
-            path=docker_path,
+            path=["software", "applications", "docker"],
             inventory_attributes=inventory_attributes,
             status_attributes=status_inventory,
         )
 
     if swarm_data and (swarm_managers := swarm_data.get("RemoteManagers")):
-        swarm_manager_path = ["software", "applications", "docker", "swarm_manager"]
         for swarm_manager in swarm_managers:
             if "NodeID" in swarm_manager:
                 yield TableRow(
-                    path=swarm_manager_path,
+                    path=["software", "applications", "docker", "swarm_manager"],
                     key_columns={"NodeID": swarm_manager["NodeID"]},
                     inventory_columns={k: v for k, v in swarm_manager.items() if k != "NodeID"},
                     status_columns={},
                 )
 
-    labels_path = ["software", "applications", "docker", "node_labels"]
-
     # Some outputs may look like: {"Labels": null}
     for label in section.get("Labels", []) or []:
         yield TableRow(
-            path=labels_path,
+            path=["software", "applications", "docker", "node_labels"],
             key_columns={
                 "label": label,
             },

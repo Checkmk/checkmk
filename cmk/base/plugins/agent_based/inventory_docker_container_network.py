@@ -25,10 +25,9 @@ register.agent_section(
 
 def inventory_docker_container_network_networks(section: Section) -> InventoryResult:
     network_data = section.get("Networks") or {}
-    path = ["software", "applications", "docker", "container", "networks"]
     for network_name, network in network_data.items():
         yield TableRow(
-            path=path,
+            path=["software", "applications", "docker", "container", "networks"],
             key_columns={
                 "name": network_name,
                 "network_id": network["NetworkID"],
@@ -44,7 +43,6 @@ def inventory_docker_container_network_networks(section: Section) -> InventoryRe
 
 def inventory_docker_container_network_ports(section: Section) -> InventoryResult:
     port_data = section.get("Ports") or {}
-    path = ["software", "applications", "docker", "container", "ports"]
     for container_port_spec, host_ports in port_data.items():
         port, proto = container_port_spec.split("/", 1)
 
@@ -56,7 +54,7 @@ def inventory_docker_container_network_ports(section: Section) -> InventoryResul
             host_addresses = ""
 
         yield TableRow(
-            path=path,
+            path=["software", "applications", "docker", "container", "ports"],
             key_columns={"port": int(port)},
             inventory_columns={
                 "protocol": proto,

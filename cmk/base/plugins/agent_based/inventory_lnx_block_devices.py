@@ -83,10 +83,9 @@ register.agent_section(
 
 
 def inventory_lnx_block_devices(section: Section) -> InventoryResult:
-    path = ["hardware", "storage", "disks"]
     for row in section:
         yield TableRow(
-            path=path,
+            path=["hardware", "storage", "disks"],
             key_columns={
                 "fsnode": row["fsnode"],
             },

@@ -82,10 +82,9 @@ register.agent_section(
 
 
 def inventory_win_wmi_updates(section: Section) -> InventoryResult:
-    path = ["software", "packages"]
     for package in section:
         yield TableRow(
-            path=path,
+            path=["software", "packages"],
             key_columns={
                 "name": package.name,
             },

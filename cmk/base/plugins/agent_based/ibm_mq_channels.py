@@ -23,7 +23,6 @@ register.agent_section(
 
 
 def inventory_ibm_mq_channels(section: Section) -> InventoryResult:
-    path = ["software", "applications", "ibm_mq", "channels"]
     for item, attrs in section.items():
         if ":" not in item:
             # Do not show queue manager in inventory
@@ -31,7 +30,7 @@ def inventory_ibm_mq_channels(section: Section) -> InventoryResult:
 
         qmname, cname = item.split(":")
         yield TableRow(
-            path=path,
+            path=["software", "applications", "ibm_mq", "channels"],
             key_columns={
                 "qmgr": qmname,
                 "name": cname,

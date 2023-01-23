@@ -52,12 +52,11 @@ register.agent_section(
 
 def inventory_docker_node_images(section: Section) -> InventoryResult:
     images = section.get("images", {})
-    images_path = ["software", "applications", "docker", "images"]
     for image_id, image in sorted(images.items()):
         repodigests = ", ".join(image.get("RepoDigests", []))
         fallback_repotag = repodigests.split("@", 1)[:1] if "@" in repodigests else []
         yield TableRow(
-            path=images_path,
+            path=["software", "applications", "docker", "images"],
             key_columns={
                 "id": docker.get_short_id(image_id),
             },
@@ -74,10 +73,9 @@ def inventory_docker_node_images(section: Section) -> InventoryResult:
         )
 
     containers = section.get("containers", {})
-    containers_path = ["software", "applications", "docker", "containers"]
     for container_id, container in sorted(containers.items()):
         yield TableRow(
-            path=containers_path,
+            path=["software", "applications", "docker", "containers"],
             key_columns={
                 "id": docker.get_short_id(container_id),
             },

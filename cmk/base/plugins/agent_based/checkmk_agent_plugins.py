@@ -133,11 +133,10 @@ register.agent_section(
 
 
 def inventory_checkmk_agent_plugins(section: PluginSection) -> InventoryResult:
-    path = ("software", "applications", "checkmk-agent")
     for type_, plugins in zip(("plugins", "local_checks"), (section.plugins, section.local_checks)):
         yield from (
             TableRow(
-                path=[*path, type_],
+                path=["software", "applications", "checkmk-agent", type_],
                 key_columns={
                     "name": plugin.name,
                 },

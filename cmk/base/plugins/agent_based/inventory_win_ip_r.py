@@ -68,10 +68,9 @@ register.agent_section(
 
 
 def inventory_win_ip_r(section: Section) -> InventoryResult:
-    path = ["networking", "routes"]
     for route in section:
         yield TableRow(
-            path=path,
+            path=["networking", "routes"],
             key_columns={
                 "target": route.target,
                 "gateway": route.gateway,

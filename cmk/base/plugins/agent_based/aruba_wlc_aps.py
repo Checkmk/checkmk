@@ -189,10 +189,9 @@ register.check_plugin(
 
 
 def inventory_aruba_wlc_aps(section: Section) -> InventoryResult:
-    path = ["networking", "wlan", "controller", "accesspoints"]
     for ap_name, ap_data in section.items():
         yield TableRow(
-            path=path,
+            path=["networking", "wlan", "controller", "accesspoints"],
             key_columns={"name": ap_name},
             inventory_columns={
                 "ip_addr": ap_data.ip_addr,

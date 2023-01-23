@@ -80,11 +80,10 @@ register.agent_section(
 
 
 def inventory_win_video(section: Section) -> InventoryResult:
-    path = ["hardware", "video"]
     for video in section:
         if "name" in video:
             yield TableRow(
-                path=path,
+                path=["hardware", "video"],
                 key_columns={
                     "name": video["name"],
                 },

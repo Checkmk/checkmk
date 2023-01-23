@@ -41,10 +41,9 @@ register.agent_section(
 
 
 def inventory_ibm_mq_managers(section: Section) -> InventoryResult:
-    path = ["software", "applications", "ibm_mq", "managers"]
     for item, attrs in section.items():
         yield TableRow(
-            path=path,
+            path=["software", "applications", "ibm_mq", "managers"],
             key_columns={
                 "name": item,
             },

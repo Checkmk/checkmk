@@ -41,7 +41,6 @@ register.agent_section(
 
 
 def inventory_oracle_systemparameter(section: Section) -> InventoryResult:
-    path = ["software", "applications", "oracle", "systemparameter"]
     for inst, data in section.items():
         for param in data:
             param_name = param["param_name"]
@@ -53,7 +52,7 @@ def inventory_oracle_systemparameter(section: Section) -> InventoryResult:
                 continue
 
             yield TableRow(
-                path=path,
+                path=["software", "applications", "oracle", "systemparameter"],
                 key_columns={
                     "sid": inst,
                     "name": param_name,

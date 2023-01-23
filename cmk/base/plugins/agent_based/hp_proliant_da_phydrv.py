@@ -176,10 +176,9 @@ register.check_plugin(
 
 
 def inventory_hp_proliant_da_phydrv(section: Section) -> InventoryResult:
-    path = ["hardware", "storage", "disks"]
     for physical_drive in section.values():
         yield TableRow(
-            path=path,
+            path=["hardware", "storage", "disks"],
             key_columns={
                 "controller": physical_drive.controller_index,
                 # TODO In the legacy inventory plugin the 'drive_index' is not used

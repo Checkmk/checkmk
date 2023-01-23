@@ -108,11 +108,10 @@ register.agent_section(
 
 
 def inventory_win_disks(section: Section) -> InventoryResult:
-    path = ["hardware", "storage", "disks"]
     for disk in section:
         if "fsnode" in disk:
             yield TableRow(
-                path=path,
+                path=["hardware", "storage", "disks"],
                 key_columns={
                     "fsnode": disk["fsnode"],
                 },

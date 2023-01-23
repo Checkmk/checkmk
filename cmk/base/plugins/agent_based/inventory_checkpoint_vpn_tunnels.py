@@ -62,10 +62,9 @@ register.snmp_section(
 
 
 def inventory_checkpoint_vpn_tunnels(section: Section) -> InventoryResult:
-    path = ["networking", "tunnels"]
     for vpn_tunnel in section:
         yield TableRow(
-            path=path,
+            path=["networking", "tunnels"],
             key_columns={
                 "peername": vpn_tunnel.peer_name,
             },

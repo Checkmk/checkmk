@@ -388,7 +388,6 @@ register.check_plugin(
 
 
 def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> InventoryResult:
-    path_tablespaces = ["software", "applications", "oracle", "tablespaces"]
     tablespaces = section["tablespaces"]
     for tablespace in tablespaces:
         sid, name = tablespace
@@ -412,7 +411,7 @@ def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Inventor
             }
 
         yield TableRow(
-            path=path_tablespaces,
+            path=["software", "applications", "oracle", "tablespaces"],
             key_columns={
                 "sid": sid,
                 "name": name,

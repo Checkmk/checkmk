@@ -43,10 +43,9 @@ def inventory_aix_service_packs(section: Section) -> InventoryResult:
         inventory_attributes={"service_pack": section.latest_service_pack},
     )
 
-    path = ["software", "os", "service_packs"]
     for service_pack in section.service_packs:
         yield TableRow(
-            path=path,
+            path=["software", "os", "service_packs"],
             key_columns={"name": service_pack},
         )
 

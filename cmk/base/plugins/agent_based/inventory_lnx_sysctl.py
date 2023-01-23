@@ -52,7 +52,6 @@ def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) 
 
     exclude_patterns: Sequence[str] = params.get("exclude_patterns", [])
 
-    path = ["software", "kernel_config"]
     for name, values in section.items():
         if _include_parameter(
             name,
@@ -61,7 +60,7 @@ def inventory_lnx_sysctl(params: Mapping[str, Sequence[str]], section: Section) 
         ):
             for value in values:
                 yield TableRow(
-                    path=path,
+                    path=["software", "kernel_config"],
                     key_columns={
                         "name": name,
                         "value": value,

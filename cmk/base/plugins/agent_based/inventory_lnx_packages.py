@@ -95,7 +95,6 @@ register.agent_section(
 
 
 def inventory_lnx_packages(section: Section) -> InventoryResult:
-    path = ["software", "packages"]
     for package in section:
         inventory_columns = {
             "version": package.version,
@@ -105,8 +104,9 @@ def inventory_lnx_packages(section: Section) -> InventoryResult:
         }
         if package.package_version:
             inventory_columns["package_version"] = package.package_version
+
         yield TableRow(
-            path=path,
+            path=["software", "packages"],
             key_columns={
                 "name": package.name,
             },

@@ -1521,7 +1521,8 @@ def test__discover_host_labels_and_services_on_realhost(
     )
 
     discovered_services = discovery._discovered_services._discover_services(
-        host_name=scenario.hostname,
+        scenario.config_cache,
+        scenario.hostname,
         parsed_sections_broker=scenario.parsed_sections_broker,
         on_error=OnError.RAISE,
         run_plugin_names=EVERYTHING,
@@ -1666,11 +1667,13 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         ],
     )
 
+    config_cache = Scenario().apply(monkeypatch)
     assert _get_node_services(
+        config_cache,
         HostName("horst"),
-        ParsedSectionsBroker({}),
-        OnError.RAISE,
-        lambda hn, _svcdescr: hn,
+        parsed_sections_broker=ParsedSectionsBroker({}),
+        on_error=OnError.RAISE,
+        host_of_clustered_service=lambda hn, _svcdescr: hn,
     ) == {
         entry.id(): (
             discovery_status,

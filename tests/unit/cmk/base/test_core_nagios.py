@@ -776,11 +776,11 @@ def test_create_nagios_servicedefs_omit_service(
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
-    monkeypatch.setattr(config, "service_ignored", lambda *_: True)
 
     config_cache = config.get_config_cache()
     config_cache.initialize()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
+    monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()

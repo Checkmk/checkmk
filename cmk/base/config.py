@@ -246,10 +246,9 @@ class _ServiceFilter:
 
     def keep(self, service: ConfiguredService) -> bool:
 
-        if self._skip_ignored and service_ignored(
-            self._host_name,
-            service.check_plugin_name,
-            service.description,
+        if self._skip_ignored and (
+            self._config_cache.check_plugin_ignored(self._host_name, service.check_plugin_name)
+            or self._config_cache.service_ignored(self._host_name, service.description)
         ):
             return False
 
@@ -1408,34 +1407,6 @@ def get_final_service_description(hostname: HostName, description: ServiceName) 
     return cache.setdefault(
         description, "".join(c for c in description if c not in illegal_chars).rstrip("\\")
     )
-
-
-def service_ignored(
-    host_name: HostName,
-    check_plugin_name: CheckPluginName | None,
-    description: ServiceName | None,
-) -> bool:
-    if check_plugin_name is not None:
-        check_plugin_name_str = str(check_plugin_name)
-
-        if check_plugin_name_str in ignored_checktypes:
-            return True
-
-        if _checktype_ignored_for_host(host_name, check_plugin_name_str):
-            return True
-
-    return description is not None and get_config_cache().service_ignored(host_name, description)
-
-
-def _checktype_ignored_for_host(
-    host_name: HostName,
-    check_plugin_name_str: str,
-) -> bool:
-    ignored = get_config_cache().host_extra_conf(host_name, ignored_checks)
-    for e in ignored:
-        if check_plugin_name_str in e:
-            return True
-    return False
 
 
 # TODO: Make this use the generic "rulesets" functions
@@ -3253,8 +3224,8 @@ class ConfigCache:
 
         def make_discovery_check_parameters() -> DiscoveryCheckParameters:
             service_discovery_name = ConfigCache.service_discovery_name()
-            if self.is_ping_host(host_name) or service_ignored(
-                host_name, None, service_discovery_name
+            if self.is_ping_host(host_name) or self.service_ignored(
+                host_name, service_discovery_name
             ):
                 return DiscoveryCheckParameters.commandline_only_defaults()
 
@@ -4451,6 +4422,28 @@ class ConfigCache:
 
     def service_ignored(self, host_name: HostName, description: ServiceName) -> bool:
         return self.in_boolean_serviceconf_list(host_name, description, ignored_services)
+
+    def check_plugin_ignored(
+        self,
+        host_name: HostName,
+        check_plugin_name: CheckPluginName,
+    ) -> bool:
+        def _checktype_ignored_for_host(check_plugin_name_str: str) -> bool:
+            ignored = self.host_extra_conf(host_name, ignored_checks)
+            for e in ignored:
+                if check_plugin_name_str in e:
+                    return True
+            return False
+
+        check_plugin_name_str = str(check_plugin_name)
+
+        if check_plugin_name_str in ignored_checktypes:
+            return True
+
+        if _checktype_ignored_for_host(check_plugin_name_str):
+            return True
+
+        return False
 
     def all_active_hosts(self) -> set[HostName]:
         """Returns a set of all active hosts"""

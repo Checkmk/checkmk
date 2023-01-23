@@ -196,14 +196,15 @@ def _get_host_services(
     else:
         services = {
             **_get_node_services(
-                host_name=host_name,
+                config_cache,
+                host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
                 host_of_clustered_service=config_cache.host_of_clustered_service,
             )
         }
 
-    services.update(_reclassify_disabled_items(host_name, services))
+    services.update(_reclassify_disabled_items(config_cache, host_name, services))
 
     # remove the ones shadowed by enforced services
     enforced_services = config_cache.enforced_services_table(host_name)
@@ -552,14 +553,15 @@ def get_host_services(
     else:
         services = {
             **_get_node_services(
-                host_name=host_name,
+                config_cache,
+                host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
                 host_of_clustered_service=config_cache.host_of_clustered_service,
             )
         }
 
-    services.update(_reclassify_disabled_items(host_name, services))
+    services.update(_reclassify_disabled_items(config_cache, host_name, services))
 
     # remove the ones shadowed by enforced services
     enforced_services = config_cache.enforced_services_table(host_name)
@@ -568,14 +570,17 @@ def get_host_services(
 
 # Do the actual work for a non-cluster host or node
 def _get_node_services(
+    config_cache: ConfigCache,
     host_name: HostName,
+    *,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
     host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
 ) -> ServicesTable[_Transition]:
 
     service_result = analyse_discovered_services(
-        host_name=host_name,
+        config_cache,
+        host_name,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         forget_existing=False,
@@ -586,8 +591,9 @@ def _get_node_services(
     return {
         entry.id(): (
             _node_service_source(
+                config_cache,
+                host_name,
                 check_source=check_source,
-                host_name=host_name,
                 cluster_name=host_of_clustered_service(host_name, service_name),
                 check_plugin_name=entry.check_plugin_name,
                 service_name=service_name,
@@ -601,9 +607,10 @@ def _get_node_services(
 
 
 def _node_service_source(
+    config_cache: ConfigCache,
+    host_name: HostName,
     *,
     check_source: _BasicTransition,
-    host_name: HostName,
     cluster_name: HostName,
     check_plugin_name: CheckPluginName,
     service_name: ServiceName,
@@ -611,7 +618,9 @@ def _node_service_source(
     if host_name == cluster_name:
         return check_source
 
-    if config.service_ignored(cluster_name, check_plugin_name, service_name):
+    if config_cache.service_ignored(
+        cluster_name, service_name
+    ) or config_cache.check_plugin_ignored(cluster_name, check_plugin_name):
         return "ignored"
 
     if check_source == "vanished":
@@ -622,6 +631,7 @@ def _node_service_source(
 
 
 def _reclassify_disabled_items(
+    config_cache: ConfigCache,
     host_name: HostName,
     services: ServicesTable[_Transition],
 ) -> Iterable[tuple[ServiceID, ServicesTableEntry]]:
@@ -629,11 +639,10 @@ def _reclassify_disabled_items(
     yield from (
         (service.id(), ("ignored", service, [host_name]))
         for check_source, service, _found_on_nodes in services.values()
-        if config.service_ignored(
-            host_name,
-            service.check_plugin_name,
-            config.service_description(host_name, *service.id()),
+        if config_cache.service_ignored(
+            host_name, config.service_description(host_name, *service.id())
         )
+        or config_cache.check_plugin_ignored(host_name, service.check_plugin_name)
     )
 
 
@@ -666,7 +675,8 @@ def _get_cluster_services(
     # From the states and parameters of these we construct the final state per service.
     for node in nodes:
         entries = analyse_discovered_services(
-            host_name=node,
+            config_cache,
+            node,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             forget_existing=False,

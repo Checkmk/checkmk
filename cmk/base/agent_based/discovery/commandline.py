@@ -154,7 +154,8 @@ def _commandline_discovery_on_host(
     section.section_step("Analyse discovered services")
 
     service_result = analyse_discovered_services(
-        host_name=host_name,
+        config_cache,
+        host_name,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
         forget_existing=not only_new,

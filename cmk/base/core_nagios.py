@@ -349,7 +349,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     #  |____/   3. Services
 
     def do_omit_service(hostname: HostName, description: ServiceName) -> bool:
-        if config.service_ignored(hostname, None, description):
+        if config_cache.service_ignored(hostname, description):
             return True
         if hostname != config_cache.host_of_clustered_service(hostname, description):
             return True

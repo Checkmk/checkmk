@@ -25,13 +25,15 @@ import cmk.base.plugin_contexts as plugin_contexts
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery
 
 
 def analyse_discovered_services(
-    *,
+    config_cache: ConfigCache,
     host_name: HostName,
+    *,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
@@ -42,7 +44,8 @@ def analyse_discovered_services(
     return _analyse_discovered_services(
         existing_services=AutochecksStore(host_name).read(),
         discovered_services=_discover_services(
-            host_name=host_name,
+            config_cache,
+            host_name,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=run_plugin_names,
             on_error=on_error,
@@ -119,8 +122,9 @@ def _drop_plugins_services(
 
 
 def _discover_services(
-    *,
+    config_cache: ConfigCache,
     host_name: HostName,
+    *,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     on_error: OnError,
@@ -141,6 +145,7 @@ def _discover_services(
                         {
                             entry.id(): entry
                             for entry in _discover_plugins_services(
+                                config_cache,
                                 check_plugin_name=check_plugin_name,
                                 host_key=HostKey(
                                     host_name,
@@ -243,6 +248,7 @@ def _find_mgmt_candidates(
 
 
 def _discover_plugins_services(
+    config_cache: ConfigCache,
     *,
     check_plugin_name: CheckPluginName,
     host_key: HostKey,
@@ -250,7 +256,7 @@ def _discover_plugins_services(
     on_error: OnError,
 ) -> Iterator[AutocheckEntry]:
     # Skip this check type if is ignored for that host
-    if config.service_ignored(host_key.hostname, check_plugin_name, None):
+    if config_cache.check_plugin_ignored(host_key.hostname, check_plugin_name):
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return
 

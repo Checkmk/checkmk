@@ -11,9 +11,10 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import ParsedSectionName
 
+from cmk.checkers.plugin_contexts import current_host
+
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
-from cmk.base.plugin_contexts import current_host
 
 
 def _section_permutations(

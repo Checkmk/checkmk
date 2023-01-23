@@ -14,8 +14,9 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import CheckPluginName
 
+from cmk.checkers import plugin_contexts
+
 import cmk.base.config as config
-import cmk.base.plugin_contexts as plugin_contexts
 from cmk.base import check_api
 
 

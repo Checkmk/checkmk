@@ -13,7 +13,7 @@ from tests.testlib import Check, MissingCheckInfoError
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.plugin_contexts import current_host, current_service
+from cmk.checkers.plugin_contexts import current_host, current_service
 
 from ..checktestlib import (
     assertCheckResultsEqual,

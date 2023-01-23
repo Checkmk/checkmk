@@ -16,12 +16,11 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, Se
 
 from cmk.fetchers import SourceType
 
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, plugin_contexts
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.plugin_contexts as plugin_contexts
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.config import ConfigCache

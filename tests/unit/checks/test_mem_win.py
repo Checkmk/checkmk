@@ -13,7 +13,8 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.plugin_contexts import current_host, current_service
+from cmk.checkers.plugin_contexts import current_host, current_service
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 

@@ -128,6 +128,12 @@ from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState, state
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
+from cmk.checkers.plugin_contexts import check_type
+from cmk.checkers.plugin_contexts import (
+    host_name as _internal_host_name,  # pylint: disable=unused-import
+)
+from cmk.checkers.plugin_contexts import service_description
+
 import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
@@ -138,11 +144,6 @@ from cmk.base.api.agent_based.checking_classes import (  # noqa: F401 # pylint: 
 )
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
-from cmk.base.plugin_contexts import check_type
-from cmk.base.plugin_contexts import (
-    host_name as _internal_host_name,  # pylint: disable=unused-import
-)
-from cmk.base.plugin_contexts import service_description
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]

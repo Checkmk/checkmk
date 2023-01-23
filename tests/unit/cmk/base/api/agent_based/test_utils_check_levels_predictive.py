@@ -5,8 +5,9 @@
 
 from cmk.utils.type_defs import CheckPluginName
 
+from cmk.checkers.plugin_contexts import current_host, current_service
+
 from cmk.base.api.agent_based import utils
-from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 
 

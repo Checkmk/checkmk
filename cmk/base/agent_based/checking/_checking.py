@@ -38,7 +38,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
-from cmk.checkers import HostKey, ParserFunction, SummarizerFunction
+from cmk.checkers import HostKey, ParserFunction, plugin_contexts, SummarizerFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
@@ -46,7 +46,6 @@ from cmk.checkers.submitters import Submittee, Submitter
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,

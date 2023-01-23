@@ -14,7 +14,8 @@ import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
-import cmk.base.plugin_contexts as plugin_contexts  # pylint: disable=cmk-module-layer-violation
+from cmk.checkers import plugin_contexts
+
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification

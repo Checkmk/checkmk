@@ -89,7 +89,12 @@ def register(
     register_commands(command_registry)
     register_data_sources(data_source_registry)
     perfometer.register(sorter_registry, painter_registry)
-    icon.register(icon.icon_and_action_registry, painter_registry, permission_section_registry)
+    icon.register(
+        icon.icon_and_action_registry,
+        painter_registry,
+        permission_section_registry,
+        register_post_config_load_hook,
+    )
     inventory.register()
 
 

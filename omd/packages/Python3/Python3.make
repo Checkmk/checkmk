@@ -3,7 +3,7 @@ PYTHON3 := Python3
 PYTHON3_VERS := 3.8.16
 PYTHON3_DIR := Python-$(PYTHON3_VERS)
 # Increase this to enforce a recreation of the build cache
-PYTHON3_BUILD_ID := 8
+PYTHON3_BUILD_ID := 9
 
 PYTHON3_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-unpack
 PYTHON3_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-build
@@ -11,6 +11,7 @@ PYTHON3_COMPILE := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-compile
 PYTHON3_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-install-intermediate
 PYTHON3_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-cache-pkg-process
 PYTHON3_INSTALL := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-install
+PYTHON3_SYSCONFIGDATA := _sysconfigdata__linux_x86_64-linux-gnu.py
 
 PYTHON3_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PYTHON3_DIR)
 PYTHON3_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(PYTHON3_DIR)
@@ -24,12 +25,14 @@ PACKAGE_PYTHON3_LD_LIBRARY_PATH := $(PACKAGE_PYTHON3_DESTDIR)/lib
 PACKAGE_PYTHON3_INCLUDE_PATH    := $(PACKAGE_PYTHON3_DESTDIR)/include/python3.8
 PACKAGE_PYTHON3_BIN             := $(PACKAGE_PYTHON3_DESTDIR)/bin
 PACKAGE_PYTHON3_EXECUTABLE      := $(PACKAGE_PYTHON3_BIN)/python3
+PACKAGE_PYTHON3_SYSCONFIGDATA := $(PACKAGE_PYTHON3_PYTHONPATH)/$(PYTHON3_SYSCONFIGDATA)
 
 # HACK!
 PYTHON3_PACKAGE_DIR := $(PACKAGE_DIR)/$(PYTHON3)
 PYTHON3_SITECUSTOMIZE_SOURCE := $(PYTHON3_PACKAGE_DIR)/sitecustomize.py
 PYTHON3_SITECUSTOMIZE_WORK := $(PYTHON3_WORK_DIR)/sitecustomize.py
 PYTHON3_SITECUSTOMIZE_COMPILED := $(PYTHON3_WORK_DIR)/__pycache__/sitecustomize.cpython-38.pyc
+PYTHON3_PREFIX := /replace-me
 
 .NOTPARALLEL: $(PYTHON3_INSTALL)
 
@@ -54,11 +57,11 @@ $(PYTHON3_CACHE_PKG_PROCESS): $(PYTHON3_CACHE_PKG_PATH)
 	    chrpath -r "$(OMD_ROOT)/lib" $$i; \
 	done
 # Native modules built based on this version need to use the correct rpath
-	sed -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' \
-	    $(PACKAGE_PYTHON3_PYTHONPATH)/_sysconfigdata__linux_x86_64-linux-gnu.py
+	$(SED) -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' $(PACKAGE_PYTHON3_SYSCONFIGDATA)
+	$(SED) -i "s|$(PYTHON3_PREFIX)|$(PACKAGE_PYTHON3_DESTDIR)|g" $(PACKAGE_PYTHON3_SYSCONFIGDATA)
 	LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile \
-	    $(PACKAGE_PYTHON3_PYTHONPATH)/_sysconfigdata__linux_x86_64-linux-gnu.py
+	    $(PACKAGE_PYTHON3_SYSCONFIGDATA)
 	rm -r $(PACKAGE_PYTHON3_PYTHONPATH)/test
 	$(TOUCH) $@
 
@@ -82,7 +85,7 @@ $(PYTHON3_COMPILE): $(PYTHON3_UNPACK) $(OPENSSL_INTERMEDIATE_INSTALL)
 	$(TEST) "$(DISTRO_NAME)" = "SLES" && sed -i 's,#include <panel.h>,#include <ncurses/panel.h>,' Modules/_curses_panel.c ; \
 	LD_LIBRARY_PATH="$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" \
 	    ./configure \
-	        --prefix="" \
+	        --prefix=$(PYTHON3_PREFIX) \
 	        --enable-shared \
 	        --with-ensurepip=install \
 	        --with-openssl=$(PACKAGE_OPENSSL_DESTDIR) \
@@ -103,6 +106,10 @@ $(PYTHON3_INTERMEDIATE_INSTALL): $(PYTHON3_BUILD)
 # python-modules, ...) during compilation and install targets.
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	$(MAKE) -j1 -C $(PYTHON3_BUILD_DIR) DESTDIR=$(PYTHON3_INSTALL_DIR) install
+# As we're now setting the prefix during ./configure, we need to clean up here the folder structure to get
+# the same one as before.
+	$(RSYNC) $(PYTHON3_INSTALL_DIR)$(PYTHON3_PREFIX)/* $(PYTHON3_INSTALL_DIR)
+	rm -r $(PYTHON3_INSTALL_DIR)$(PYTHON3_PREFIX)
 # Fix python interpreter
 	$(SED) -i '1s|^#!.*/python3\.8$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-3.8 idle3.8 pip3 pip3.8 pydoc3.8)
 # Fix pip3 configuration
@@ -113,4 +120,7 @@ $(PYTHON3_INTERMEDIATE_INSTALL): $(PYTHON3_BUILD)
 
 $(PYTHON3_INSTALL): $(PYTHON3_CACHE_PKG_PROCESS)
 	$(RSYNC) $(PYTHON3_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+	# Patch for the final destination
+	# TODO: It seems $(DESTDIR) is only defined in this target, so it cannot be used outside of this target?
+	$(SED) -i "s|$(PACKAGE_PYTHON3_DESTDIR)|$(OMD_ROOT)|g" $(DESTDIR)/$(OMD_ROOT)/lib/python3.8/$(PYTHON3_SYSCONFIGDATA)
 	$(TOUCH) $@

@@ -14,6 +14,11 @@ from typing import List
 from pipfile import Pipfile  # type: ignore[import]
 from testlib import repo_path
 
+# TODO: Currently we need to invoke pip as a module and cannot use pip3 only.
+# This is most likley due to the fact, that we set "PIP_TARGET" in pip3 during intermediate install
+# os.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python3")
+PIP_CMD = ["python3", "-m", "pip"]
+
 
 def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
 
@@ -87,6 +92,34 @@ def test_03_pip_interpreter_version(site):
     p = site.execute(["python3", "-m", "pip", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
     assert version.startswith("pip 22.0.4")
+
+
+@pytest.mark.parametrize(
+    "package_name",
+    [
+        # WARNING:
+        # Installing from source takes a long time - and so does the test.
+        # So be sure adding new packages here has a real benefit.
+        "ibm_db",  # Needed by check_sql: no wheels, so pip must be able to find the Python headers
+    ],
+)
+def test_04_pip_user_can_install_and_uninstall_packages_not_shipped_with_omd(site, package_name):
+    p = site.execute(
+        PIP_CMD + ["install", "--user", package_name],
+        stdout=subprocess.PIPE,
+    )
+    install_stdout = p.stdout.read()
+
+    assert "Successfully installed" in install_stdout, install_stdout
+
+    for cmd in (
+        ["python3", "-c", f"import {package_name}"],
+            PIP_CMD + ["uninstall", "-y", package_name],
+            PIP_CMD + ["cache", "purge"],
+    ):
+        p = site.execute(cmd, stdout=subprocess.PIPE)
+        p.communicate()
+        assert p.returncode == 0
 
 
 @pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())

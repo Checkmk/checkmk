@@ -1168,8 +1168,8 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
                 title=_("Temporary local destination"),
                 help=_(
                     "This directory will be used for temporarily storing backups before "
-                    "uploading and after downloading. Please note that Checkmk will not "
-                    "clean up this directory."
+                    "uploading and after downloading. You can for example use the <tt>/tmp</tt> "
+                    "directory. Please note that Checkmk will not clean up this directory."
                 ),
                 optional_keys=[],
             ),

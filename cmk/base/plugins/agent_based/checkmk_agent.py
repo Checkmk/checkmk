@@ -232,6 +232,11 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
             state=State(params.get("error_deployment_globally_disabled", default_state)),
             summary=error,
         )
+    if "agent updates are disabled for hostname" in error.lower():
+        yield Result(
+            state=State(params.get("error_deployment_disabled_for_hostname", default_state)),
+            summary=error,
+        )
     else:
         yield Result(state=default_state, summary=f"Update error: {error}")
 

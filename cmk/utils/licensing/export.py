@@ -28,40 +28,6 @@ class LicenseUsageReportVersionError(Exception):
     pass
 
 
-#   .--upload origin-------------------------------------------------------.
-#   |                _                 _              _       _            |
-#   |    _   _ _ __ | | ___   __ _  __| |   ___  _ __(_) __ _(_)_ __       |
-#   |   | | | | '_ \| |/ _ \ / _` |/ _` |  / _ \| '__| |/ _` | | '_ \      |
-#   |   | |_| | |_) | | (_) | (_| | (_| | | (_) | |  | | (_| | | | | |     |
-#   |    \__,_| .__/|_|\___/ \__,_|\__,_|  \___/|_|  |_|\__, |_|_| |_|     |
-#   |         |_|                                       |___/              |
-#   '----------------------------------------------------------------------'
-
-
-class UploadOrigin(Enum):
-    empty = auto()
-    manual = auto()
-    from_checkmk = auto()
-
-    @classmethod
-    def parse(cls, report_version: str, raw_upload_origin: str) -> UploadOrigin:
-        if report_version in ["1.0", "1.1", "1.2"]:
-            return cls.empty
-
-        if report_version == "1.3":
-            return _UPLOAD_ORIGIN_MAP[raw_upload_origin]
-
-        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
-
-
-_UPLOAD_ORIGIN_MAP = {
-    "empty": UploadOrigin.empty,
-    "manual": UploadOrigin.manual,
-    "from_checkmk": UploadOrigin.from_checkmk,
-}
-
-
-# .
 #   .--subscription details------------------------------------------------.
 #   |                 _                   _       _   _                    |
 #   |       ___ _   _| |__  ___  ___ _ __(_)_ __ | |_(_) ___  _ __         |

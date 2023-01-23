@@ -760,7 +760,7 @@ def test__find_candidates() -> None:
 
     assert discovery._discovered_services._find_host_candidates(
         broker,
-        preliminary_candidates,
+        ((p.name, p.sections) for p in preliminary_candidates),
         parsed_sections_of_interest,
     ) == {
         CheckPluginName("docker_container_status_uptime"),
@@ -772,7 +772,7 @@ def test__find_candidates() -> None:
 
     assert discovery._discovered_services._find_mgmt_candidates(
         broker,
-        preliminary_candidates,
+        ((p.name, p.sections) for p in preliminary_candidates),
         parsed_sections_of_interest,
     ) == {
         CheckPluginName("mgmt_docker_container_status_uptime"),

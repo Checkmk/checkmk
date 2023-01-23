@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 from collections.abc import Container, Iterable, Iterator, MutableMapping, Sequence
 
-import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
@@ -24,7 +24,6 @@ import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery
@@ -193,15 +192,18 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    preliminary_candidates: Sequence[CheckPlugin] = [
-        p for p in agent_based_register.iter_all_check_plugins() if p.name in run_plugin_names
-    ]
+    preliminary_candidates: Sequence[tuple[CheckPluginName, list[ParsedSectionName]]] = list(
+        (p.name, p.sections)
+        for p in agent_based_register.iter_all_check_plugins()
+        if p.name in run_plugin_names
+    )
 
-    parsed_sections_of_interest = {
-        parsed_section_name
-        for plugin in preliminary_candidates
-        for parsed_section_name in plugin.sections
-    }
+    # Flattened list of ParsedSectionName, optimization only.
+    parsed_sections_of_interest: Sequence[ParsedSectionName] = list(
+        frozenset(
+            itertools.chain.from_iterable(sections for (_name, sections) in preliminary_candidates)
+        )
+    )
 
     return _find_host_candidates(
         broker, preliminary_candidates, parsed_sections_of_interest
@@ -210,7 +212,7 @@ def _find_candidates(
 
 def _find_host_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: Iterable[CheckPlugin],
+    preliminary_candidates: Iterable[tuple[CheckPluginName, list[ParsedSectionName]]],
     parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 
@@ -220,17 +222,17 @@ def _find_host_candidates(
     )
 
     return {
-        plugin.name
-        for plugin in preliminary_candidates
+        name
+        for (name, sections) in preliminary_candidates
         # *filter out* all names of management only check plugins
-        if not plugin.name.is_management_name()
-        and any(section in available_parsed_sections for section in plugin.sections)
+        if not name.is_management_name()
+        and any(section in available_parsed_sections for section in sections)
     }
 
 
 def _find_mgmt_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: Iterable[CheckPlugin],
+    preliminary_candidates: Iterable[tuple[CheckPluginName, list[ParsedSectionName]]],
     parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 
@@ -241,9 +243,9 @@ def _find_mgmt_candidates(
 
     return {
         # *create* all management only names of the plugins
-        plugin.name.create_management_name()
-        for plugin in preliminary_candidates
-        if any(section in available_parsed_sections for section in plugin.sections)
+        name.create_management_name()
+        for (name, sections) in preliminary_candidates
+        if any(section in available_parsed_sections for section in sections)
     }
 
 

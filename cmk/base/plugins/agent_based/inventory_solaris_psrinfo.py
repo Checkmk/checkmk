@@ -222,8 +222,8 @@ def inventory_solaris_cpus(
         inventory_attributes["cores"] = cores
 
     if section_solaris_psrinfo_verbose is not None:
-        inventory_attributes["Model"] = section_solaris_psrinfo_verbose.model
-        inventory_attributes["Maximum Speed"] = section_solaris_psrinfo_verbose.maximum_speed
+        inventory_attributes["model"] = section_solaris_psrinfo_verbose.model
+        inventory_attributes["max_speed"] = section_solaris_psrinfo_verbose.maximum_speed
 
     yield Attributes(
         path=["hardware", "cpu"],

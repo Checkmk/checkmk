@@ -489,6 +489,16 @@ def copy_source_package(package_path, archive_path) {
 def build_package(package_type, build_dir, env) {
     print("FN build_package(package_type=${package_type}, build_dir=${build_dir}, env=${env})");
     dir(build_dir) {
+        // TODO: THIS MUST GO AWAY ASAP
+        // Backgroud:
+        // * currently we're building protobuf during source packaging (make dist) in IMAGE_TESTING.
+        // * then, we're simply rsyncing the whole workspace in the different distro workspaces (including the protoc)
+        // * as protobuf exists then in the intermediate_install, it will be used (and not obtained from a correct
+        //   cache key, including DISTRO information...)
+        // * if we then build under an old distro, we get linker issues
+        // * so as long as we don't have the protobuf build bazelized, we need to manually clean it up here.
+        sh("rm -fr omd/build/intermediate_install/protobuf*")
+
         // used withEnv(env) before, but sadly Jenkins does not set 0 length environment variables
         // see also: https://issues.jenkins.io/browse/JENKINS-43632
         def env_str = env.join(" ")

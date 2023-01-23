@@ -50,11 +50,13 @@ def check_liebert_temp_fluid(item, params, parsed):
         warn = max(warn, crit)
         crit = warn
 
-    thresholds = {
-        'levels': (warn, crit),
-        'levels_lower': (warn_lower, crit_lower),
-    }
-    yield check_temperature(value_celsius, thresholds, "check_liebert_temp_fluid.%s" % item)
+    yield check_temperature(
+        reading=value_celsius,
+        params=params,
+        unique_name="check_liebert_temp_fluid.%s" % item,
+        dev_levels=(warn, crit),
+        dev_levels_lower=(warn_lower, crit_lower),
+    )
 
 
 check_info['liebert_temp_fluid'] = {

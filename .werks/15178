@@ -1,0 +1,13 @@
+Title: <tt>liebert_temp_fluid</tt>: Take user-defined parameters into account
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674479219
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p33
+
+The check plugin <tt>liebert_temp_fluid</tt> ignored user-defined parameters and only evaluated the
+thresholds reported by the device. As of this werk, <tt>liebert_temp_fluid</tt> takes user-defined
+parameters into account, including the option to override the thresholds reported by the device.

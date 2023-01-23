@@ -118,6 +118,9 @@ from cmk.gui.valuespec import (
 #   '----------------------------------------------------------------------'
 
 
+_OUTER_TEXT_FIELD_SIZE = 80
+
+
 def mkbackup_path() -> Path:
     return omd_root / "bin/mkbackup"
 
@@ -744,7 +747,7 @@ class PageEditBackupJob:
                             "when objects refer to the job."
                         ),
                         allow_empty=False,
-                        size=12,
+                        size=_OUTER_TEXT_FIELD_SIZE,
                         validate=lambda ident, varprefix: self._validate_backup_job_ident(
                             config,
                             ident,
@@ -770,7 +773,7 @@ class PageEditBackupJob:
                     TextInput(
                         title=_("Title"),
                         allow_empty=False,
-                        size=64,
+                        size=_OUTER_TEXT_FIELD_SIZE,
                     ),
                 ),
                 (
@@ -1116,33 +1119,7 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     @classmethod
     def dictionary_elements(cls) -> DictionaryElements:
-        yield (
-            "path",
-            AbsoluteDirname(
-                title=_("Directory to save the backup to"),
-                help=_(
-                    "This can be a local directory of your choice. You can also use this "
-                    "option if you want to save your backup to a network share using "
-                    "NFS, Samba or similar. But you will have to care about mounting the "
-                    "network share on your own."
-                ),
-                allow_empty=False,
-                size=64,
-            ),
-        )
-        yield (
-            "is_mountpoint",
-            Checkbox(
-                title=_("Mountpoint"),
-                label=_("Is mountpoint"),
-                help=_(
-                    "When this is checked, the backup ensures that the configured path "
-                    "is a mountpoint. If there is no active mount on the path, the backup "
-                    "fails with an error message."
-                ),
-                default_value=True,
-            ),
-        )
+        yield from _local_directory_configuration_elements(77)
 
     def validate(self, varprefix: str) -> None:
         _validate_local_target(
@@ -1156,6 +1133,12 @@ class BackupTargetLocal(ABCBackupTargetType):
 
 
 class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteStorage]):
+    # align text fields with one valuespec nesting level with _OUTER_TEXT_FIELD_SIZE on the right
+    _INNER_TEXT_FIELD_SIZE = 74
+    # align password fields with one valuespec nesting level with _OUTER_TEXT_FIELD_SIZE on the
+    # right
+    _INNER_PASSWORD_FIELD_SIZE = 61
+
     def __init__(self, params: RemoteTargetParams[TRemoteParams]) -> None:
         self._params = params
         self._target = self._instantiate_target(params)
@@ -1181,7 +1164,7 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
         yield (
             "temp_folder",
             Dictionary(
-                elements=BackupTargetLocal.dictionary_elements(),
+                elements=_local_directory_configuration_elements(cls._INNER_TEXT_FIELD_SIZE),
                 title=_("Temporary local destination"),
                 help=_(
                     "This directory will be used for temporarily storing backups before "
@@ -1215,9 +1198,9 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
     ) -> RemoteTarget[TRemoteParams, TRemoteStorage]:
         ...
 
-    @staticmethod
+    @classmethod
     @abc.abstractmethod
-    def _remote_dictionary_elements() -> DictionaryElements:
+    def _remote_dictionary_elements(cls) -> DictionaryElements:
         ...
 
 
@@ -1235,15 +1218,15 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
     def _instantiate_target(params: RemoteTargetParams[S3Params]) -> S3Target:
         return S3Target(TargetId(""), params)
 
-    @staticmethod
-    def _remote_dictionary_elements() -> DictionaryElements:
+    @classmethod
+    def _remote_dictionary_elements(cls) -> DictionaryElements:
         yield (
             "access_key",
             TextInput(
                 title=_("Access key"),
                 help=_("The access key for your AWS account"),
                 allow_empty=False,
-                size=50,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
         )
         yield (
@@ -1252,6 +1235,7 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
                 title=_("Secret key"),
                 help=_("The secret key for your AWS account"),
                 allow_empty=False,
+                size=cls._INNER_PASSWORD_FIELD_SIZE,
             ),
         )
         yield (
@@ -1259,7 +1243,7 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
             TextInput(
                 title=_("Bucket name"),
                 allow_empty=False,
-                size=50,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
         )
 
@@ -1278,14 +1262,14 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
     def _instantiate_target(params: RemoteTargetParams[BlobStorageParams]) -> BlobStorageTarget:
         return BlobStorageTarget(TargetId(""), params)
 
-    @staticmethod
-    def _remote_dictionary_elements() -> DictionaryElements:
+    @classmethod
+    def _remote_dictionary_elements(cls) -> DictionaryElements:
         yield (
             "storage_account_name",
             TextInput(
                 title=_("Storage account name"),
                 allow_empty=False,
-                size=50,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
         )
         yield (
@@ -1293,7 +1277,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
             TextInput(
                 title=_("Container name"),
                 allow_empty=False,
-                size=50,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
         )
         yield (
@@ -1307,8 +1291,11 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                         IndividualOrStoredPassword(
                             title=_("Shared key"),
                             allow_empty=False,
+                            size=cls._INNER_PASSWORD_FIELD_SIZE,
                         ),
                     ),
+                    # Do not use cls._INNER_TEXT_FIELD_SIZE / cls._INNER_PASSWORD_FIELD_SIZE below,
+                    # since we are now at valuespec nesting level 2.
                     (
                         "active_directory",
                         _("Active Directory credentials"),
@@ -1319,7 +1306,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                     TextInput(
                                         title=_("Application (client) ID"),
                                         allow_empty=False,
-                                        size=50,
+                                        size=71,
                                     ),
                                 ),
                                 (
@@ -1327,7 +1314,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                     TextInput(
                                         title=_("Directory (tenant) ID"),
                                         allow_empty=False,
-                                        size=50,
+                                        size=71,
                                     ),
                                 ),
                                 (
@@ -1335,6 +1322,7 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                                     IndividualOrStoredPassword(
                                         title=_("Client secret"),
                                         allow_empty=False,
+                                        size=58,
                                     ),
                                 ),
                             ],
@@ -1344,6 +1332,36 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
                 ],
             ),
         )
+
+
+def _local_directory_configuration_elements(directory_field_size: int) -> DictionaryElements:
+    yield (
+        "path",
+        AbsoluteDirname(
+            title=_("Directory to save the backup to"),
+            help=_(
+                "This can be a local directory of your choice. You can also use this "
+                "option if you want to save your backup to a network share using "
+                "NFS, Samba or similar. But you will have to care about mounting the "
+                "network share on your own."
+            ),
+            allow_empty=False,
+            size=directory_field_size,
+        ),
+    )
+    yield (
+        "is_mountpoint",
+        Checkbox(
+            title=_("Mountpoint"),
+            label=_("Is mountpoint"),
+            help=_(
+                "When this is checked, the backup ensures that the configured path "
+                "is a mountpoint. If there is no active mount on the path, the backup "
+                "fails with an error message."
+            ),
+            default_value=True,
+        ),
+    )
 
 
 def _check_if_target_ready(target: TargetProtocol, varprefix: str | None = None) -> None:
@@ -1681,7 +1699,7 @@ class PageEditBackupTarget:
                             "when objects refer to the target."
                         ),
                         allow_empty=False,
-                        size=12,
+                        size=_OUTER_TEXT_FIELD_SIZE,
                         validate=lambda ident, varprefix: self.validate_backup_target_ident(
                             config,
                             ident,
@@ -1710,7 +1728,7 @@ class PageEditBackupTarget:
                     TextInput(
                         title=_("Title"),
                         allow_empty=False,
-                        size=64,
+                        size=_OUTER_TEXT_FIELD_SIZE,
                     ),
                 ),
                 (

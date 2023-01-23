@@ -7,11 +7,9 @@ import pytest
 
 from livestatus import SiteId
 
-from cmk.ec.main import (
-    Event,
-    EventServer,
+from cmk.ec.main import Event, EventServer, MatchGroups
+from cmk.ec.rule_matcher import (
     MatchFailure,
-    MatchGroups,
     MatchPriority,
     MatchResult,
     MatchSuccess,

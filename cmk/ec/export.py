@@ -18,14 +18,10 @@ from .config import (
 from .defaults import default_config, default_rule_pack
 from .event import Event
 from .forward import SyslogForwarderUnixSocket, SyslogMessage
-from .main import (
-    match_ipv4_network,
-    MatchFailure,
-    MatchResult,
-    MatchSuccess,
-    SyslogFacility,
-    SyslogPriority,
-)
+from .main import SyslogFacility, SyslogPriority
+
+# TODO remove match_ipv4_network when the GUI uses the EC logic.
+from .rule_matcher import match_ipv4_network, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import (
     add_rule_pack_proxies,
     ECRuleSpec,

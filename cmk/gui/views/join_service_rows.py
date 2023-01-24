@@ -137,7 +137,6 @@ def _make_join_filters(
                     view.datasource.ident,
                     inventory_join_macros,
                     rows,
-                    join_cell.join_value,
                     join_column_name,
                 )
             )

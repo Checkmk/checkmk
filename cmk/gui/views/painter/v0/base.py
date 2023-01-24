@@ -636,7 +636,6 @@ class JoinCell(Cell):
         datasource_ident: str,
         inventory_join_macros: dict[str, str],
         rows: Rows,
-        join_value_with_macros: str,
         join_column_name: str,
     ) -> LivestatusQuery:
         filters_by_hostname: dict[str, list[str]] = {}
@@ -645,7 +644,7 @@ class JoinCell(Cell):
                 datasource_ident=datasource_ident,
                 inventory_join_macros=inventory_join_macros,
                 row=row,
-                join_value_with_macros=join_value_with_macros,
+                join_value_with_macros=self.join_value,
             )
             filters_by_hostname.setdefault(row["host_name"], []).append(
                 f"Filter: {lqencode(join_column_name)} = {lqencode(service_description)}"

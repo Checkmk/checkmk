@@ -1,0 +1,18 @@
+Title: Fixed various Livestatus columns in the NEB
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1674573685
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p20
+
+Accessing some Livestatus columns via the NEB could potentially lead to a crash
+of the Nagios core. This affects the "service_period" column in the "hosts" or
+"services" tables, or the "filename" column in the "hosts" table. This has been
+fixed.
+
+If you are running the CMC as the monitoring core, you have not been affected by
+this bug.

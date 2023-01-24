@@ -87,7 +87,7 @@ def analyse_node_labels(
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
-        existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
+        existing_host_labels=do_load_labels(host_name) if load_labels else (),
         save_labels=save_labels,
     )
 
@@ -143,7 +143,7 @@ def analyse_cluster_labels(
         host_name=host_name,
         config_cache=config_cache,
         discovered_host_labels=list(nodes_host_labels.values()),
-        existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
+        existing_host_labels=do_load_labels(host_name) if load_labels else (),
         save_labels=save_labels,
     )
 
@@ -164,14 +164,7 @@ def _analyse_host_labels(
     )
 
     if save_labels:
-        DiscoveredHostLabelsStore(host_name).save(
-            {
-                # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
-                # Whenever we do not load the host labels, vanished will be empty.
-                **{l.name: l.to_dict() for l in host_labels.vanished},
-                **{l.name: l.to_dict() for l in host_labels.present},
-            }
-        )
+        do_save_labels(host_name, host_labels)
 
     if host_labels.new:
         # Some check plugins like 'df' may discover services based on host labels.
@@ -199,9 +192,20 @@ def _analyse_host_labels(
     return host_labels
 
 
-def _load_existing_host_labels(host_name: HostName) -> Sequence[HostLabel]:
+def do_load_labels(host_name: HostName) -> Sequence[HostLabel]:
     raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
     return [HostLabel.from_dict(name, value) for name, value in raw_label_dict.items()]
+
+
+def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabel]) -> None:
+    DiscoveredHostLabelsStore(host_name).save(
+        {
+            # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
+            # Whenever we do not load the host labels, vanished will be empty.
+            **{l.name: l.to_dict() for l in host_labels.vanished},
+            **{l.name: l.to_dict() for l in host_labels.present},
+        }
+    )
 
 
 def _discover_host_labels(

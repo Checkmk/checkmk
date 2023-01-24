@@ -11,7 +11,6 @@ from cmk.utils.crypto import Password
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
-from cmk.gui.cee.plugins.watolib.dcd import ConfigDomainDCD
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
@@ -45,11 +44,23 @@ from cmk.gui.watolib.user_scripts import (
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.watolib.dcd import (  # pylint: disable=no-name-in-module
+        ConfigDomainDCD,
         used_dcd_rest_api_user,
     )
+
+    def _add_dcd_change(affected_user: str) -> None:
+        add_change(
+            "edit-dcd-user",
+            _("User %s of DCD connection was modified") % affected_user,
+            domains=[ConfigDomainDCD],
+        )
+
 else:
     # Stub needed for non enterprise edition
     def used_dcd_rest_api_user() -> Optional[str]:
+        return None
+
+    def _add_dcd_change(affected_user: str) -> None:
         return None
 
 
@@ -124,11 +135,7 @@ def edit_users(changed_users):
         if (
             affected_user := used_dcd_rest_api_user()
         ) is not None and affected_user in modified_users_info:
-            add_change(
-                "edit-dcd-user",
-                _("User %s of DCD connection was modified") % affected_user,
-                domains=[ConfigDomainDCD],
-            )
+            _add_dcd_change(affected_user)
 
     userdb.save_users(all_users)
 

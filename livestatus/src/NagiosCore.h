@@ -120,7 +120,8 @@ public:
     size_t numQueuedAlerts() override;
     size_t numCachedLogMessages() override;
 
-    static Attributes customAttributes(const void *holder, AttributeKind kind);
+    static Attributes customAttributes(
+        const customvariablesmember *const *holder, AttributeKind kind);
 
     MetricLocation metricLocation(const std::string &host_name,
                                   const std::string &service_description,

@@ -168,7 +168,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "Time period during which the object is expected to be available",
         offsets_custom_variables, [](const host &p) {
             auto attrs = NagiosCore::customAttributes(
-                &p, AttributeKind::custom_variables);
+                &p.custom_variables, AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             if (it != attrs.end()) {
                 return it->second;
@@ -598,7 +598,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "filename", "The value of the custom variable FILENAME",
         offsets_custom_variables, [](const host &p) {
             auto attrs = NagiosCore::customAttributes(
-                &p, AttributeKind::custom_variables);
+                &p.custom_variables, AttributeKind::custom_variables);
             auto it = attrs.find("FILENAME");
             if (it != attrs.end()) {
                 return it->second;

@@ -256,10 +256,9 @@ Attributes CustomAttributes(const customvariablesmember *first,
 }
 
 // static
-Attributes NagiosCore::customAttributes(const void *holder,
-                                        AttributeKind kind) {
-    return CustomAttributes(
-        *static_cast<const customvariablesmember *const *>(holder), kind);
+Attributes NagiosCore::customAttributes(
+    const customvariablesmember *const *holder, AttributeKind kind) {
+    return CustomAttributes(*holder, kind);
 }
 
 MetricLocation NagiosCore::metricLocation(

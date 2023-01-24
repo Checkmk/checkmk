@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container, Sequence
+from collections.abc import Callable, Container, Sequence
 from typing import Any, Literal
 
 import cmk.utils.cleanup
@@ -14,7 +14,7 @@ from cmk.utils.labels import HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -53,6 +53,7 @@ def get_check_preview(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
@@ -90,6 +91,7 @@ def get_check_preview(
         host_name,
         config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
+        find_service_description=find_service_description,
         on_error=on_error,
     )
 
@@ -101,7 +103,7 @@ def get_check_preview(
                 service=ConfiguredService(
                     check_plugin_name=entry.check_plugin_name,
                     item=entry.item,
-                    description=config.service_description(host_name, *entry.id()),
+                    description=find_service_description(host_name, *entry.id()),
                     parameters=config.compute_check_parameters(
                         host_name,
                         entry.check_plugin_name,

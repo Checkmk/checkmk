@@ -1500,6 +1500,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        find_service_description=config.service_description,
         on_error=OnError.IGNORE,
     )
 
@@ -1570,6 +1571,7 @@ def mode_check_discovery(
         parser=parser,
         summarizer=summarizer,
         active_check_handler=active_check_handler,
+        find_service_description=config.service_description,
         keepalive=keepalive,
     )
 

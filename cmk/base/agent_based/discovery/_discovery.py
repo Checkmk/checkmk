@@ -5,13 +5,13 @@
 
 import itertools
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
+from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, Item, result, ServiceName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -20,7 +20,6 @@ from cmk.fetchers import SourceInfo
 from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
-import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_broker,
@@ -44,6 +43,7 @@ def execute_check_discovery(
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
+    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -71,6 +71,7 @@ def execute_check_discovery(
         host_name,
         config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
+        find_service_description=find_service_description,
         on_error=OnError.RAISE,
     )
 
@@ -80,6 +81,7 @@ def execute_check_discovery(
         params=params,
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         discovery_mode=discovery_mode,
+        find_service_description=find_service_description,
     )
 
     host_labels_result, host_labels_need_rediscovery = _check_host_labels(
@@ -115,6 +117,7 @@ def _check_service_lists(
     params: DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
     discovery_mode: DiscoveryMode,
+    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> tuple[Sequence[ActiveCheckResult], bool]:
 
     subresults = []
@@ -144,7 +147,7 @@ def _check_service_lists(
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
             if not unfiltered and service_filter(
-                config.service_description(host_name, *discovered_service.id())
+                find_service_description(host_name, *discovered_service.id())
             ):
                 unfiltered = True
 
@@ -157,7 +160,7 @@ def _check_service_lists(
                         % (
                             title.capitalize(),
                             discovered_service.check_plugin_name,
-                            config.service_description(host_name, *discovered_service.id()),
+                            find_service_description(host_name, *discovered_service.id()),
                         )
                     ],
                 )
@@ -195,7 +198,7 @@ def _check_service_lists(
                     "Ignored: %s: %s"
                     % (
                         discovered_service.check_plugin_name,
-                        config.service_description(host_name, *discovered_service.id()),
+                        find_service_description(host_name, *discovered_service.id()),
                     )
                 ],
             )

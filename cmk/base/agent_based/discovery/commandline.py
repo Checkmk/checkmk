@@ -14,7 +14,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console, section
-from cmk.utils.type_defs import CheckPluginName, HostName, ServiceState
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName, ServiceState
 
 from cmk.fetchers import FetcherFunction
 
@@ -187,6 +187,7 @@ def commandline_check_discovery(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     active_check_handler: Callable[[HostName, str], object],
+    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     keepalive: bool,
 ) -> ServiceState:
     return error_handling.check_result(
@@ -197,6 +198,7 @@ def commandline_check_discovery(
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,
+            find_service_description=find_service_description,
         ),
         exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
@@ -216,6 +218,7 @@ def _commandline_check_discovery(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
+    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     fetched = fetcher(host_name, ip_address=None)
     return execute_check_discovery(
@@ -224,4 +227,5 @@ def _commandline_check_discovery(
         fetched=((f[0], f[1]) for f in fetched),
         parser=parser,
         summarizer=summarizer,
+        find_service_description=find_service_description,
     )

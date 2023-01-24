@@ -200,6 +200,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
+                find_service_description=config.service_description,
                 mode=mode,
                 service_filters=None,
                 on_error=on_error,
@@ -299,6 +300,7 @@ class AutomationTryDiscovery(Automation):
             config_cache=config_cache,
             parser=parser,
             fetcher=fetcher,
+            find_service_description=config.service_description,
             ignored_services=IgnoredServices(config_cache, host_name),
             on_error=on_error,
         )

@@ -360,20 +360,12 @@ def test__group_by_transition(
     ],
 )
 def test__get_post_discovery_services(
-    monkeypatch: MonkeyPatch,
     grouped_services: ServicesByTransition,
     mode: DiscoveryMode,
     parameters_rediscovery: dict[str, list[str]],
     result_new_item_names: list[str],
     result_counts: tuple[int, int, int],
 ) -> None:
-    def _get_service_description(  # type:ignore[no-untyped-def]
-        _hostname, _check_plugin_name, item
-    ) -> str:
-        return "Test Description %s" % item
-
-    monkeypatch.setattr(config, "service_description", _get_service_description)
-
     result = DiscoveryResult()
 
     service_filters = _ServiceFilters.from_settings(parameters_rediscovery)
@@ -385,7 +377,8 @@ def test__get_post_discovery_services(
             grouped_services,
             service_filters,
             result,
-            mode,
+            find_service_description=lambda *args: f"Test Description {args[-1]}",
+            mode=mode,
         ).values()
     ]
 
@@ -647,16 +640,10 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
     ],
 )
 def test__check_service_table(
-    monkeypatch: MonkeyPatch,
     grouped_services: ServicesByTransition,
     parameters: config.DiscoveryCheckParameters,
     result_need_rediscovery: bool,
 ) -> None:
-    def _get_service_description(_hostname, _check_plugin_name, item):
-        return "Test Description %s" % item
-
-    monkeypatch.setattr(config, "service_description", _get_service_description)
-
     rediscovery_parameters = parameters.rediscovery.copy()
     discovery_mode = rediscovery_parameters.pop("mode", DiscoveryMode.FALLBACK)
     assert isinstance(discovery_mode, DiscoveryMode)  # for mypy
@@ -665,6 +652,7 @@ def test__check_service_table(
         services_by_transition=grouped_services,
         params=parameters,
         service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
+        find_service_description=lambda *args: f"Test Description {args[-1]}",
         discovery_mode=discovery_mode,
     )
 
@@ -1587,6 +1575,7 @@ def test__discover_services_on_cluster(
         scenario.parent,
         config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
+        find_service_description=config.service_description,
         on_error=OnError.RAISE,
     )
 
@@ -1672,8 +1661,9 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         config_cache,
         HostName("horst"),
         parsed_sections_broker=ParsedSectionsBroker({}),
-        on_error=OnError.RAISE,
+        find_service_description=lambda *_args: "desc",
         host_of_clustered_service=lambda hn, _svcdescr: hn,
+        on_error=OnError.RAISE,
     ) == {
         entry.id(): (
             discovery_status,

@@ -24,6 +24,7 @@
 #include "DynamicRRDColumn.h"
 #include "HostListRenderer.h"
 #include "MacroExpander.h"
+#include "NagiosCore.h"
 #include "NebHost.h"
 #include "NebHostGroup.h"
 #include "NebService.h"
@@ -65,9 +66,9 @@ using namespace std::string_literals;
 extern TimeperiodsCache *g_timeperiods_cache;
 
 namespace {
-bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
-    auto attrs = mc->customAttributes(&svc->custom_variables,
-                                      AttributeKind::custom_variables);
+bool inCustomTimeperiod(const service *svc) {
+    auto attrs = NagiosCore::customAttributes(&svc->custom_variables,
+                                              AttributeKind::custom_variables);
     auto it = attrs.find("SERVICE_PERIOD");
     if (it != attrs.end()) {
         return g_timeperiods_cache->inTimeperiod(it->second);
@@ -77,8 +78,6 @@ bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
 
 class ServiceListGetter {
 public:
-    explicit ServiceListGetter(MonitoringCore *mc) : mc_{mc} {}
-
     std::vector<::column::service_list::Entry> operator()(
         const host &hst, const User &user) const {
         std::vector<::column::service_list::Entry> entries{};
@@ -97,14 +96,11 @@ public:
                     svc->current_attempt, svc->max_attempts,
                     svc->scheduled_downtime_depth,
                     svc->problem_has_been_acknowledged != 0,
-                    inCustomTimeperiod(mc_, svc));
+                    inCustomTimeperiod(svc));
             }
         }
         return entries;
     }
-
-private:
-    MonitoringCore *mc_;
 };
 }  // namespace
 
@@ -145,8 +141,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "check_command_expanded",
         "Logical command name for active checks, with macros expanded", offsets,
-        [mc](const host &r) {
-            return HostMacroExpander::make(r, mc)->expandMacros(
+        [](const host &r) {
+            return HostMacroExpander::make(r)->expandMacros(
                 nagios_compat_host_check_command(r));
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
@@ -170,9 +166,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "service_period",
         "Time period during which the object is expected to be available",
-        offsets_custom_variables, [mc](const host &p) {
-            auto attrs =
-                mc->customAttributes(&p, AttributeKind::custom_variables);
+        offsets_custom_variables, [](const host &p) {
+            auto attrs = NagiosCore::customAttributes(
+                &p, AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             if (it != attrs.end()) {
                 return it->second;
@@ -186,8 +182,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
-        offsets, [mc](const host &r) {
-            return HostMacroExpander::make(r, mc)->expandMacros(r.notes);
+        offsets, [](const host &r) {
+            return HostMacroExpander::make(r)->expandMacros(r.notes);
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_url",
@@ -198,8 +194,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        offsets, [mc](const host &r) {
-            return HostMacroExpander::make(r, mc)->expandMacros(r.notes_url);
+        offsets, [](const host &r) {
+            return HostMacroExpander::make(r)->expandMacros(r.notes_url);
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "action_url",
@@ -210,8 +206,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
-        offsets, [mc](const host &r) {
-            return HostMacroExpander::make(r, mc)->expandMacros(r.action_url);
+        offsets, [](const host &r) {
+            return HostMacroExpander::make(r)->expandMacros(r.action_url);
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "plugin_output", "Output of the last check", offsets,
@@ -232,8 +228,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
-        offsets, [mc](const host &r) {
-            return HostMacroExpander::make(r, mc)->expandMacros(r.icon_image);
+        offsets, [](const host &r) {
+            return HostMacroExpander::make(r)->expandMacros(r.icon_image);
         }));
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
@@ -493,9 +489,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<BoolColumn<host, true>>(
         prefix + "in_service_period",
         "Whether this object is currently in its service period (0/1)", offsets,
-        [mc](const host &r) {
-            auto attrs = mc->customAttributes(&r.custom_variables,
-                                              AttributeKind::custom_variables);
+        [](const host &r) {
+            auto attrs = NagiosCore::customAttributes(
+                &r.custom_variables, AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             return it == attrs.end() ||
                    g_timeperiods_cache->inTimeperiod(it->second);
@@ -553,46 +549,46 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
+        CustomAttributeMap::Keys{AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
+        CustomAttributeMap::Values{AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        offsets, CustomAttributeMap{mc, AttributeKind::custom_variables}));
+        offsets, CustomAttributeMap{AttributeKind::custom_variables}));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "tag_names", "A list of the names of the tags", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::tags}));
+        CustomAttributeMap::Keys{AttributeKind::tags}));
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::tags}));
+        CustomAttributeMap::Values{AttributeKind::tags}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "tags", "A dictionary of the tags", offsets,
-        CustomAttributeMap{mc, AttributeKind::tags}));
+        CustomAttributeMap{AttributeKind::tags}));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_names", "A list of the names of the labels", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::labels}));
+        CustomAttributeMap::Keys{AttributeKind::labels}));
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::labels}));
+        CustomAttributeMap::Values{AttributeKind::labels}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "labels", "A dictionary of the labels", offsets,
-        CustomAttributeMap{mc, AttributeKind::labels}));
+        CustomAttributeMap{AttributeKind::labels}));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_source_names",
         "A list of the names of the label sources", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
+        CustomAttributeMap::Keys{AttributeKind::label_sources}));
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
+        CustomAttributeMap::Values{AttributeKind::label_sources}));
     table->addColumn(std::make_unique<DictColumn<host>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
-        CustomAttributeMap{mc, AttributeKind::label_sources}));
+        CustomAttributeMap{AttributeKind::label_sources}));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
@@ -600,9 +596,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // ordinary Nagios columns.
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "filename", "The value of the custom variable FILENAME",
-        offsets_custom_variables, [mc](const host &p) {
-            auto attrs =
-                mc->customAttributes(&p, AttributeKind::custom_variables);
+        offsets_custom_variables, [](const host &p) {
+            auto attrs = NagiosCore::customAttributes(
+                &p, AttributeKind::custom_variables);
             auto it = attrs.find("FILENAME");
             if (it != attrs.end()) {
                 return it->second;
@@ -794,7 +790,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             prefix + "services", "A list of all services of the host", offsets,
             std::make_unique<ServiceListRenderer>(
                 ServiceListRenderer::verbosity::none),
-            ServiceListGetter{mc}));
+            ServiceListGetter{}));
     table->addColumn(std::make_unique<
                      ListColumn<host, ::column::service_list::Entry>>(
         prefix + "services_with_state",
@@ -802,7 +798,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceListRenderer>(
             ServiceListRenderer::verbosity::low),
-        ServiceListGetter{mc}));
+        ServiceListGetter{}));
     table->addColumn(std::make_unique<
                      ListColumn<host, ::column::service_list::Entry>>(
         prefix + "services_with_info",
@@ -810,7 +806,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceListRenderer>(
             ServiceListRenderer::verbosity::medium),
-        ServiceListGetter{mc}));
+        ServiceListGetter{}));
     table->addColumn(std::make_unique<
                      ListColumn<host, ::column::service_list::Entry>>(
         prefix + "services_with_fullstate",
@@ -818,7 +814,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceListRenderer>(
             ServiceListRenderer::verbosity::full),
-        ServiceListGetter{mc}));
+        ServiceListGetter{}));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "metrics",

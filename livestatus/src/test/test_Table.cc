@@ -35,7 +35,6 @@
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
 #include "gtest/gtest.h"
-#include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Logger.h"
@@ -162,11 +161,6 @@ class DummyMonitoringCore : public MonitoringCore {
     size_t numQueuedNotifications() override { return {}; }
     size_t numQueuedAlerts() override { return {}; }
     size_t numCachedLogMessages() override { return {}; }
-
-    Attributes customAttributes(const void * /*holder*/,
-                                AttributeKind /*kind*/) const override {
-        return {};
-    }
 
     [[nodiscard]] MetricLocation metricLocation(
         const std::string & /*host_name*/,

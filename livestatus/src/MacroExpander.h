@@ -13,7 +13,6 @@
 #include <string>
 
 #include "nagios.h"
-class MonitoringCore;
 
 class MacroExpander {
 public:
@@ -46,24 +45,22 @@ public:
 
 class CustomVariableExpander : public MacroExpander {
 public:
-    CustomVariableExpander(std::string prefix, const customvariablesmember *cvm,
-                           const MonitoringCore *mc);
+    CustomVariableExpander(std::string prefix,
+                           const customvariablesmember *cvm);
 
     [[nodiscard]] std::optional<std::string> expand(
         const std::string &str) const override;
 
 private:
     std::string _prefix;
-    const MonitoringCore *const _mc;
     const customvariablesmember *_cvm;
 };
 
 class HostMacroExpander : public MacroExpander {
 public:
-    HostMacroExpander(const host *hst, const MonitoringCore *mc);
+    explicit HostMacroExpander(const host *hst);
 
-    static std::unique_ptr<MacroExpander> make(const host &hst,
-                                               MonitoringCore *mc);
+    static std::unique_ptr<MacroExpander> make(const host &hst);
 
     [[nodiscard]] std::optional<std::string> expand(
         const std::string &str) const override;
@@ -75,10 +72,9 @@ private:
 
 class ServiceMacroExpander : public MacroExpander {
 public:
-    ServiceMacroExpander(const service *svc, const MonitoringCore *mc);
+    explicit ServiceMacroExpander(const service *svc);
 
-    static std::unique_ptr<MacroExpander> make(const service &svc,
-                                               MonitoringCore *mc);
+    static std::unique_ptr<MacroExpander> make(const service &svc);
 
     [[nodiscard]] std::optional<std::string> expand(
         const std::string &str) const override;

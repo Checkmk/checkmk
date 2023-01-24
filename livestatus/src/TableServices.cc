@@ -23,6 +23,7 @@
 #include "CustomAttributeMap.h"
 #include "DynamicRRDColumn.h"
 #include "MacroExpander.h"
+#include "NagiosCore.h"
 #include "NebService.h"
 #include "NebServiceGroup.h"
 #include "RRDColumn.h"
@@ -126,8 +127,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "check_command_expanded",
         "Logical command name for active checks, with macros expanded", offsets,
-        [mc](const service &r) {
-            return ServiceMacroExpander::make(r, mc)->expandMacros(
+        [](const service &r) {
+            return ServiceMacroExpander::make(r)->expandMacros(
                 nagios_compat_service_check_command(r));
         }));
 
@@ -204,9 +205,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "service_period",
         "Time period during which the object is expected to be available",
-        offsets_custom_variables, [mc](const service &p) {
-            auto attrs =
-                mc->customAttributes(&p, AttributeKind::custom_variables);
+        offsets_custom_variables, [](const service &p) {
+            auto attrs = NagiosCore::customAttributes(
+                &p, AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             if (it != attrs.end()) {
                 return it->second;
@@ -220,8 +221,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
-        offsets, [mc](const service &r) {
-            return ServiceMacroExpander::make(r, mc)->expandMacros(r.notes);
+        offsets, [](const service &r) {
+            return ServiceMacroExpander::make(r)->expandMacros(r.notes);
         }));
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "notes_url",
@@ -232,8 +233,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
-        offsets, [mc](const service &r) {
-            return ServiceMacroExpander::make(r, mc)->expandMacros(r.notes_url);
+        offsets, [](const service &r) {
+            return ServiceMacroExpander::make(r)->expandMacros(r.notes_url);
         }));
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "action_url",
@@ -244,9 +245,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
-        offsets, [mc](const service &r) {
-            return ServiceMacroExpander::make(r, mc)->expandMacros(
-                r.action_url);
+        offsets, [](const service &r) {
+            return ServiceMacroExpander::make(r)->expandMacros(r.action_url);
         }));
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "icon_image",
@@ -257,9 +257,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
-        offsets, [mc](const service &r) {
-            return ServiceMacroExpander::make(r, mc)->expandMacros(
-                r.icon_image);
+        offsets, [](const service &r) {
+            return ServiceMacroExpander::make(r)->expandMacros(r.icon_image);
         }));
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
@@ -500,9 +499,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<BoolColumn<service, true>>(
         prefix + "in_service_period",
         "Whether this object is currently in its service period (0/1)", offsets,
-        [mc](const service &r) {
-            auto attrs = mc->customAttributes(&r.custom_variables,
-                                              AttributeKind::custom_variables);
+        [](const service &r) {
+            auto attrs = NagiosCore::customAttributes(
+                &r.custom_variables, AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             return it == attrs.end() ||
                    g_timeperiods_cache->inTimeperiod(it->second);
@@ -572,50 +571,46 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,
-        CustomAttributeMap::Keys{table->core(),
-                                 AttributeKind::custom_variables}));
+        CustomAttributeMap::Keys{AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", offsets,
-        CustomAttributeMap::Values{table->core(),
-                                   AttributeKind::custom_variables}));
+        CustomAttributeMap::Values{AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        offsets,
-        CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
+        offsets, CustomAttributeMap{AttributeKind::custom_variables}));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "tag_names", "A list of the names of the tags", offsets,
-        CustomAttributeMap::Keys{table->core(), AttributeKind::tags}));
+        CustomAttributeMap::Keys{AttributeKind::tags}));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
-        CustomAttributeMap::Values{table->core(), AttributeKind::tags}));
+        CustomAttributeMap::Values{AttributeKind::tags}));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "tags", "A dictionary of the tags", offsets,
-        CustomAttributeMap{table->core(), AttributeKind::tags}));
+        CustomAttributeMap{AttributeKind::tags}));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_names", "A list of the names of the labels", offsets,
-        CustomAttributeMap::Keys{table->core(), AttributeKind::labels}));
+        CustomAttributeMap::Keys{AttributeKind::labels}));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
-        CustomAttributeMap::Values{table->core(), AttributeKind::labels}));
+        CustomAttributeMap::Values{AttributeKind::labels}));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "labels", "A dictionary of the labels", offsets,
-        CustomAttributeMap{table->core(), AttributeKind::labels}));
+        CustomAttributeMap{AttributeKind::labels}));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_source_names",
         "A list of the names of the label sources", offsets,
-        CustomAttributeMap::Keys{table->core(), AttributeKind::label_sources}));
+        CustomAttributeMap::Keys{AttributeKind::label_sources}));
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets,
-        CustomAttributeMap::Values{table->core(),
-                                   AttributeKind::label_sources}));
+        CustomAttributeMap::Values{AttributeKind::label_sources}));
     table->addColumn(std::make_unique<DictColumn<service>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
-        CustomAttributeMap{table->core(), AttributeKind::label_sources}));
+        CustomAttributeMap{AttributeKind::label_sources}));
 
     table->addColumn(std::make_unique<ListColumn<service>>(
         prefix + "groups", "A list of all service groups this object is in",

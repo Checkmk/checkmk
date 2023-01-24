@@ -7,22 +7,17 @@
 #include <cstdlib>
 #include <functional>
 #include <iterator>
-#include <map>
 #include <memory>
 #include <string>
 
 #include "MacroExpander.h"
-#include "NagiosCore.h"
 #include "Store.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
-#include "livestatus/data_encoding.h"
 #include "nagios.h"
 #include "test_utilities.h"
-class Comment;
-class Downtime;
 
 // TODO(sp) Move this to a better place.
 TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
@@ -61,20 +56,11 @@ struct HostMacroExpanderTest : public ::testing::Test {
                         {"HARRY", "Hirsch"},
                         {"I_AM_NULL", "<nullptr>"},
                         {"_TAG_GUT", "Guten Tag!"}}};
-    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
-    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
-    NagiosCore core{downtimes_,
-                    comments_,
-                    NagiosPaths{},
-                    NagiosLimits{},
-                    NagiosAuthorization{},
-                    Encoding::utf8};
     ColumnOffsets offsets{};
-    StringColumn<host> oshmc{"funny_column_name", "Cool description!", offsets,
-                             [this](const host &r) {
-                                 return HostMacroExpander::make(r, &this->core)
-                                     ->expandMacros(r.notes);
-                             }};
+    StringColumn<host> oshmc{
+        "funny_column_name", "Cool description!", offsets, [](const host &r) {
+            return HostMacroExpander::make(r)->expandMacros(r.notes);
+        }};
 };
 
 // Second test fixture: A single host with a single service
@@ -92,9 +78,8 @@ struct ServiceMacroExpanderTest : public HostMacroExpanderTest {
                               {"WALDORF", "Terrible!"},
                               {"_LABEL_LO", "Labello"}}};
     StringColumn<service> ossmc{
-        "navn", "Beskrivelse", offsets, [this](const service &r) {
-            return ServiceMacroExpander::make(r, &this->core)
-                ->expandMacros(r.notes);
+        "navn", "Beskrivelse", offsets, [](const service &r) {
+            return ServiceMacroExpander::make(r)->expandMacros(r.notes);
         }};
 };
 }  // namespace

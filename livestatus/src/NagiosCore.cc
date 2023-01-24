@@ -7,7 +7,6 @@
 
 #include <cstdlib>
 #include <functional>
-#include <memory>
 #include <sstream>
 #include <utility>
 
@@ -19,8 +18,6 @@
 #include "livestatus/Logger.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
-#include "livestatus/User.h"
-#include "nagios.h"
 
 void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";
@@ -258,8 +255,9 @@ Attributes CustomAttributes(const customvariablesmember *first,
     return attrs;
 }
 
+// static
 Attributes NagiosCore::customAttributes(const void *holder,
-                                        AttributeKind kind) const {
+                                        AttributeKind kind) {
     return CustomAttributes(
         *static_cast<const customvariablesmember *const *>(holder), kind);
 }

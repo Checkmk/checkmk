@@ -10,11 +10,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include "NagiosCore.h"
 #include "livestatus/Attributes.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/RegExp.h"
 #include "livestatus/StringUtils.h"
-#include "nagios.h"
 
 // static
 std::optional<std::string> MacroExpander::from_ptr(const char *str) {
@@ -71,9 +70,8 @@ std::optional<std::string> UserMacroExpander::expand(
 }
 
 CustomVariableExpander::CustomVariableExpander(std::string prefix,
-                                               const customvariablesmember *cvm,
-                                               const MonitoringCore *mc)
-    : _prefix(std::move(prefix)), _mc(mc), _cvm(cvm) {}
+                                               const customvariablesmember *cvm)
+    : _prefix(std::move(prefix)), _cvm(cvm) {}
 
 std::optional<std::string> CustomVariableExpander::expand(
     const std::string &str) const {
@@ -84,7 +82,7 @@ std::optional<std::string> CustomVariableExpander::expand(
     RegExp re(str.substr(_prefix.size()), RegExp::Case::ignore,
               RegExp::Syntax::literal);
     for (const auto &[name, value] :
-         _mc->customAttributes(&_cvm, AttributeKind::custom_variables)) {
+         NagiosCore::customAttributes(&_cvm, AttributeKind::custom_variables)) {
         if (re.match(name)) {
             return value;
         }
@@ -92,14 +90,13 @@ std::optional<std::string> CustomVariableExpander::expand(
     return {};
 }
 
-HostMacroExpander::HostMacroExpander(const host *hst, const MonitoringCore *mc)
-    : _hst(hst), _cve("_HOST", hst->custom_variables, mc) {}
+HostMacroExpander::HostMacroExpander(const host *hst)
+    : _hst(hst), _cve("_HOST", hst->custom_variables) {}
 
 // static
-std::unique_ptr<MacroExpander> HostMacroExpander::make(const host &hst,
-                                                       MonitoringCore *mc) {
+std::unique_ptr<MacroExpander> HostMacroExpander::make(const host &hst) {
     return std::make_unique<CompoundMacroExpander>(
-        std::make_unique<HostMacroExpander>(&hst, mc),
+        std::make_unique<HostMacroExpander>(&hst),
         std::make_unique<UserMacroExpander>());
 }
 
@@ -132,17 +129,15 @@ std::optional<std::string> HostMacroExpander::expand(
     return _cve.expand(str);
 }
 
-ServiceMacroExpander::ServiceMacroExpander(const service *svc,
-                                           const MonitoringCore *mc)
-    : _svc(svc), _cve("_SERVICE", svc->custom_variables, mc) {}
+ServiceMacroExpander::ServiceMacroExpander(const service *svc)
+    : _svc(svc), _cve("_SERVICE", svc->custom_variables) {}
 
 // static
-std::unique_ptr<MacroExpander> ServiceMacroExpander::make(const service &svc,
-                                                          MonitoringCore *mc) {
+std::unique_ptr<MacroExpander> ServiceMacroExpander::make(const service &svc) {
     return std::make_unique<CompoundMacroExpander>(
-        std::make_unique<HostMacroExpander>(svc.host_ptr, mc),
+        std::make_unique<HostMacroExpander>(svc.host_ptr),
         std::make_unique<CompoundMacroExpander>(
-            std::make_unique<ServiceMacroExpander>(&svc, mc),
+            std::make_unique<ServiceMacroExpander>(&svc),
             std::make_unique<UserMacroExpander>()));
 }
 

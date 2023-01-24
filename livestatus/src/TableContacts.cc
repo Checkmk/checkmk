@@ -43,7 +43,6 @@ std::string TableContacts::namePrefix() const { return "contact_"; }
 // static
 void TableContacts::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets) {
-    auto *mc = table->core();
     table->addColumn(std::make_unique<StringColumn<contact>>(
         prefix + "name", "The login name of the contact person", offsets,
         [](const contact &ct) { return ct.name == nullptr ? ""s : ct.name; }));
@@ -118,47 +117,46 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::custom_variables}));
+        CustomAttributeMap::Keys{AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::custom_variables}));
+        CustomAttributeMap::Values{AttributeKind::custom_variables}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        offsets,
-        CustomAttributeMap{table->core(), AttributeKind::custom_variables}));
+        offsets, CustomAttributeMap{AttributeKind::custom_variables}));
 
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "tag_names", "A list of the names of the tags", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::tags}));
+        CustomAttributeMap::Keys{AttributeKind::tags}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "tag_values", "A list of the values of the tags", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::tags}));
+        CustomAttributeMap::Values{AttributeKind::tags}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "tags", "A dictionary of the tags", offsets,
-        CustomAttributeMap{table->core(), AttributeKind::tags}));
+        CustomAttributeMap{AttributeKind::tags}));
 
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "label_names", "A list of the names of the labels", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::labels}));
+        CustomAttributeMap::Keys{AttributeKind::labels}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "label_values", "A list of the values of the labels", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::labels}));
+        CustomAttributeMap::Values{AttributeKind::labels}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "labels", "A dictionary of the labels", offsets,
-        CustomAttributeMap{table->core(), AttributeKind::labels}));
+        CustomAttributeMap{AttributeKind::labels}));
 
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "label_source_names",
         "A list of the names of the label sources", offsets,
-        CustomAttributeMap::Keys{mc, AttributeKind::label_sources}));
+        CustomAttributeMap::Keys{AttributeKind::label_sources}));
     table->addColumn(std::make_unique<ListColumn<contact>>(
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets,
-        CustomAttributeMap::Values{mc, AttributeKind::label_sources}));
+        CustomAttributeMap::Values{AttributeKind::label_sources}));
     table->addColumn(std::make_unique<DictColumn<contact>>(
         prefix + "label_sources", "A dictionary of the label sources", offsets,
-        CustomAttributeMap{table->core(), AttributeKind::label_sources}));
+        CustomAttributeMap{AttributeKind::label_sources}));
 
     table->addColumn(std::make_unique<AttributeBitmaskColumn<contact>>(
         prefix + "modified_attributes",

@@ -116,13 +116,6 @@ public:
     virtual size_t numQueuedAlerts() = 0;
     virtual size_t numCachedLogMessages() = 0;
 
-    // TODO(sp) Horrible and fragile typing of the parameter, we need to fix
-    // this: The type of the holder is either 'customvariablesmember *const *'
-    // (NEB) or 'const Entity *' (CMC). Furthermore, all we need is a range for
-    // iteration, not a copy. The kind parameter is not really OO, either...
-    virtual Attributes customAttributes(const void *holder,
-                                        AttributeKind kind) const = 0;
-
     [[nodiscard]] virtual MetricLocation metricLocation(
         const std::string &host_name, const std::string &service_description,
         const Metric::Name &var) const = 0;

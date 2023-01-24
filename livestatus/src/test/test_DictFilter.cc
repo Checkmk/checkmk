@@ -4,13 +4,11 @@
 // source code package.
 
 #include <iomanip>
-#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "CustomAttributeMap.h"
-#include "NagiosCore.h"
 #include "gtest/gtest.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
@@ -19,12 +17,9 @@
 #include "livestatus/Filter.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
-#include "livestatus/data_encoding.h"
 #include "livestatus/opids.h"
 #include "nagios.h"
 #include "test_utilities.h"
-class Comment;
-class Downtime;
 
 namespace {
 std::string b16encode(const std::string &str) {
@@ -40,21 +35,12 @@ std::string b16encode(const std::string &str) {
 struct DictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string &value) {
         DictColumn<host> cvdc{"name", "description", ColumnOffsets{},
-                              CustomAttributeMap{&core, kind}};
+                              CustomAttributeMap{kind}};
         DictFilter filter{Filter::Kind::row, "name",
                           [&cvdc](Row row) { return cvdc.getValue(row); },
                           RelationalOperator::equal, value};
         return filter.accepts(Row{&test_host}, NoAuthUser{}, {});
     }
-
-    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
-    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
-    NagiosCore core{downtimes_,
-                    comments_,
-                    NagiosPaths{},
-                    NagiosLimits{},
-                    NagiosAuthorization{},
-                    Encoding::utf8};
 
     TestHost test_host{
         {{"ERNIE", "Bert"},

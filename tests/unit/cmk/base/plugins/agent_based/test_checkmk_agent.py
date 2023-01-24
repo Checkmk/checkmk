@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Iterable, Mapping
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import pytest
@@ -26,9 +26,11 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
 )
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
 from cmk.base.plugins.agent_based.utils.checkmk import (
+    CertInfoController,
     CMKAgentUpdateSection,
     Connection,
     ControllerSection,
+    LocalConnectionStatus,
     Plugin,
     PluginSection,
 )
@@ -197,7 +199,10 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
         *_check_transport(
             False,
             ControllerSection(
-                allow_legacy_pull=False, ip_allowlist=(), socket_ready=True, connections=[]
+                allow_legacy_pull=False,
+                ip_allowlist=[],
+                agent_socket_operational=True,
+                connections=[],
             ),
             fail_state,
         )
@@ -210,7 +215,10 @@ def test_check_tranport_no_tls_controller_not_in_use(fail_state: State) -> None:
         *_check_transport(
             False,
             ControllerSection(
-                allow_legacy_pull=True, ip_allowlist=(), socket_ready=False, connections=[]
+                allow_legacy_pull=True,
+                ip_allowlist=[],
+                agent_socket_operational=False,
+                connections=[],
             ),
             fail_state,
         )
@@ -222,7 +230,10 @@ def test_check_tranport_no_tls(fail_state: State) -> None:
     (result,) = _check_transport(
         False,
         ControllerSection(
-            allow_legacy_pull=True, ip_allowlist=(), socket_ready=True, connections=[]
+            allow_legacy_pull=True,
+            ip_allowlist=[],
+            agent_socket_operational=True,
+            connections=[],
         ),
         fail_state,
     )
@@ -931,8 +942,8 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
+                agent_socket_operational=True,
+                ip_allowlist=[],
                 connections=[],
             ),
             [],
@@ -941,16 +952,24 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
+                agent_socket_operational=True,
+                ip_allowlist=[],
                 connections=[
-                    Connection(site_id="localhost/heute", valid_for_seconds=31504213431.635986)
+                    Connection(
+                        site_id="localhost/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2028, 1, 24, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
                 ],
             ),
             [
                 Result(
                     state=State.OK,
-                    notice="Time until controller certificate for 'localhost/heute' expires: 998 years 362 days",
+                    notice="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 5 years 0 days",
                 )
             ],
             id="Certificate valid for more than 30 days -> Result is OK.",
@@ -958,14 +977,24 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
-                connections=[Connection(site_id="localhost/heute", valid_for_seconds=2505600)],
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id="localhost/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2023, 2, 14, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
             ),
             [
                 Result(
                     state=State.WARN,
-                    summary="Time until controller certificate for 'localhost/heute' expires: 29 days 0 hours (warn/crit below 30 days 0 hours/15 days 0 hours)",
+                    summary="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 20 days 22 hours (warn/crit below 30 days 0 hours/15 days 0 hours)",
                 )
             ],
             id="Certificate valid for less than 30 days -> Result is WARN.",
@@ -973,17 +1002,79 @@ def test_check_plugins(
         pytest.param(
             ControllerSection(
                 allow_legacy_pull=False,
-                socket_ready=True,
-                ip_allowlist=(),
-                connections=[Connection(site_id="localhost/heute", valid_for_seconds=31231)],
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id="localhost/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2023, 2, 1, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
             ),
             [
                 Result(
                     state=State.CRIT,
-                    summary="Time until controller certificate for 'localhost/heute' expires: 8 hours 40 minutes (warn/crit below 30 days 0 hours/15 days 0 hours)",
+                    summary="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 7 days 22 hours (warn/crit below 30 days 0 hours/15 days 0 hours)",
                 )
             ],
             id="Certificate valid for less than 15 days -> Result is CRIT.",
+        ),
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id=None,
+                        coordinates="localhost:8000/heute",
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(3021, 5, 27, 15, 20, 40, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Time until controller certificate for `localhost/heute`, issued by `Site 'heute' local CA`, expires: 998 years 364 days",
+                )
+            ],
+            id="Legacy (2.1) case",
+        ),
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                agent_socket_operational=True,
+                ip_allowlist=[],
+                connections=[
+                    Connection(
+                        site_id=None,
+                        coordinates=None,
+                        local=LocalConnectionStatus(
+                            cert_info=CertInfoController(
+                                to=datetime(2028, 1, 24, 15, 20, 54, tzinfo=timezone.utc),
+                                issuer="Site 'heute' local CA",
+                            )
+                        ),
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Time until controller certificate issued by `Site 'heute' local CA` (imported connection) expires: 5 years 0 days",
+                )
+            ],
+            id="Imported connection",
         ),
     ],
 )
@@ -991,4 +1082,7 @@ def test_certificate_validity(
     controller_section: ControllerSection,
     expected_result: CheckResult,
 ) -> None:
-    assert list(check_checkmk_agent({}, None, None, controller_section, None)) == expected_result
+    with on_time(1674578645.3644419, "UTC"):
+        assert (
+            list(check_checkmk_agent({}, None, None, controller_section, None)) == expected_result
+        )

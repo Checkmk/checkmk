@@ -27,16 +27,51 @@ class PluginSection(NamedTuple):
     local_checks: Sequence[Plugin]
 
 
-class Connection(NamedTuple):
-    site_id: str
-    valid_for_seconds: float
+class CertInfoController(BaseModel):
+    to: datetime
+    issuer: str
+
+    @validator("to", pre=True)
+    @classmethod
+    def _parse_cert_validity(cls, value: str | datetime) -> datetime:
+        return (
+            value
+            if isinstance(value, datetime)
+            else datetime.strptime(value, "%a, %d %b %Y %H:%M:%S %z")
+        )
 
 
-class ControllerSection(NamedTuple):
-    # Currently this is all we need. Extend on demand...
+class LocalConnectionStatus(BaseModel):
+    cert_info: CertInfoController
+
+
+class Connection(BaseModel):
+    site_id: str | None
+    coordinates: str | None  # legacy from 2.1
+    local: LocalConnectionStatus
+
+    def get_site_id(self) -> str | None:
+        if self.site_id:
+            return self.site_id
+        if self.coordinates:
+            return self._coordinates_to_site_id(self.coordinates)
+        return None
+
+    @staticmethod
+    def _coordinates_to_site_id(coordinates: str) -> str:
+        """
+        >>> Connection._coordinates_to_site_id("localhost:8000/site")
+        'localhost/site'
+        """
+        server_port, site = coordinates.split("/")
+        server, _port = server_port.split(":")
+        return f"{server}/{site}"
+
+
+class ControllerSection(BaseModel):
     allow_legacy_pull: bool
-    socket_ready: bool
-    ip_allowlist: tuple[str, ...]
+    agent_socket_operational: bool = True
+    ip_allowlist: Sequence[str] = []
     connections: Sequence[Connection]
 
 

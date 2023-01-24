@@ -196,7 +196,7 @@ def _check_transport(
     if (
         not controller_info
         or not controller_info.allow_legacy_pull
-        or not controller_info.socket_ready
+        or not controller_info.agent_socket_operational
     ):
         return
 
@@ -450,13 +450,21 @@ def _check_duplicates(
             )
 
 
-def _check_controller_cert_validity(section: ControllerSection) -> CheckResult:
+def _check_controller_cert_validity(section: ControllerSection, now: float) -> CheckResult:
     for connection in section.connections:
         yield from check_levels(
-            connection.valid_for_seconds,
+            connection.local.cert_info.to.timestamp() - now,
             levels_lower=(30 * 24 * 3600, 15 * 24 * 3600),  # (30 days, 15 days)
             render_func=render.timespan,
-            label=f"Time until controller certificate for '{connection.site_id}' expires",
+            label=(
+                f"Time until controller certificate for `{site_id}`, "
+                f"issued by `{connection.local.cert_info.issuer}`, expires"
+            )
+            if (site_id := connection.get_site_id())
+            else (
+                "Time until controller certificate issued by "
+                f"`{connection.local.cert_info.issuer}` (imported connection) expires"
+            ),
             notice_only=True,
         )
 
@@ -478,7 +486,7 @@ def check_checkmk_agent(
         yield from _check_plugins(params, section_checkmk_agent_plugins)
 
     if section_cmk_agent_ctl_status:
-        yield from _check_controller_cert_validity(section_cmk_agent_ctl_status)
+        yield from _check_controller_cert_validity(section_cmk_agent_ctl_status, time.time())
 
 
 register.check_plugin(

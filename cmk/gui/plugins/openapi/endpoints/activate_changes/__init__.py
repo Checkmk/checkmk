@@ -16,22 +16,28 @@ You can find an introduction to the configuration of Checkmk including activatio
 """
 
 from collections.abc import Mapping
+from dataclasses import asdict
 from typing import Any
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.endpoints.utils import may_fail
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.activate_changes.request_schemas import ActivateChanges
+from cmk.gui.plugins.openapi.endpoints.activate_changes.response_schemas import (
+    ActivationRunCollection,
+    ActivationRunResponse,
 )
+from cmk.gui.plugins.openapi.endpoints.utils import may_fail
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
-from cmk.gui.watolib.activate_changes import activate_changes_start, ActivateChangesManager
+from cmk.gui.watolib.activate_changes import (
+    activate_changes_start,
+    ActivationRestAPIResponseExtensions,
+    get_activation_ids,
+    get_restapi_response_for_activation_id,
+    load_activate_change_manager_with_id,
+)
 
 from cmk import fields
 
@@ -81,8 +87,8 @@ PERMISSIONS = permissions.AllPerm(
         423: "There is already an activation running.",
     },
     additional_status_codes=[302, 401, 409, 422, 423],
-    request_schema=request_schemas.ActivateChanges,
-    response_schema=response_schemas.ActivationRunResponse,
+    request_schema=ActivateChanges,
+    response_schema=ActivationRunResponse,
     permissions_required=permissions.AllPerm(
         [
             permissions.Perm("wato.activate"),
@@ -100,16 +106,17 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     sites = body["sites"]
     with may_fail(MKUserError), may_fail(MKAuthException, status=401):
-        activation_id = activate_changes_start(
+        activation_response = activate_changes_start(
             sites, force_foreign_changes=body["force_foreign_changes"]
         )
 
     if body["redirect"]:
-        wait_for = _completion_link(activation_id)
+        wait_for = _completion_link(activation_response.activation_id)
         response = Response(status=302)
         response.location = wait_for["href"]
         return response
-    return serve_json(_activation_run_domain_object(activation_id, is_running=True))
+
+    return serve_json(_activation_run_domain_object(activation_response))
 
 
 def _completion_link(activation_id: str) -> LinkType:
@@ -120,19 +127,22 @@ def _completion_link(activation_id: str) -> LinkType:
     )
 
 
-def _activation_run_domain_object(activation_id: str, is_running: bool = False) -> DomainObject:
-    links = []
-    action = "has completed"
-    if is_running:
-        action = "was started"
-        links.append(_completion_link(activation_id))
+def _activation_run_domain_object(
+    activation_response: ActivationRestAPIResponseExtensions,
+) -> DomainObject:
+
     return constructors.domain_object(
         domain_type="activation_run",
-        identifier=activation_id,
-        title=f"Activation {activation_id} {action}.",
+        identifier=activation_response.activation_id,
+        title="Activation status: In progress."
+        if activation_response.is_running
+        else "Activation status: Complete.",
+        extensions=asdict(activation_response),
         deletable=False,
         editable=False,
-        links=links,
+        links=[_completion_link(activation_response.activation_id)]
+        if activation_response.is_running
+        else [],
     )
 
 
@@ -159,10 +169,9 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     """
     user.need_permission("wato.activate")
     activation_id = params["activation_id"]
-    manager = ActivateChangesManager()
-    manager.load()
+
     try:
-        manager.load_activation(activation_id)
+        manager = load_activate_change_manager_with_id(activation_id)
     except MKUserError:
         raise ProblemException(status=404, title=f"Activation {activation_id!r} not found.")
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
@@ -183,7 +192,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
         404: "There is no running activation with this activation_id.",
     },
     permissions_required=PERMISSIONS,
-    response_schema=response_schemas.ActivationRunResponse,
+    response_schema=ActivationRunResponse,
 )
 def show_activation(params: Mapping[str, Any]) -> Response:
     """Show the activation status
@@ -192,16 +201,16 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     """
     user.need_permission("wato.activate")
     activation_id = params["activation_id"]
-    manager = ActivateChangesManager()
-    manager.load()
+
     try:
-        manager.load_activation(activation_id)
+        activation_response = get_restapi_response_for_activation_id(activation_id)
     except MKUserError:
         raise ProblemException(
             status=404,
             title=f"Activation {activation_id!r} not found.",
         )
-    return serve_json(_activation_run_domain_object(activation_id, is_running=manager.is_running()))
+
+    return serve_json(_activation_run_domain_object(activation_response))
 
 
 @Endpoint(
@@ -209,18 +218,17 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     "cmk/run",
     method="get",
     permissions_required=RO_PERMISSIONS,
-    response_schema=response_schemas.ActivationRunCollection,
+    response_schema=ActivationRunCollection,
 )
 def list_activations(params: Mapping[str, Any]) -> Response:
     """Show all currently running activations"""
-    manager = ActivateChangesManager()
 
     return serve_json(
         constructors.collection_object(
             domain_type="activation_run",
             value=[
-                _activation_run_domain_object(activation_id, is_running=manager.is_running())
-                for activation_id, _ in manager.activations()
+                _activation_run_domain_object(get_restapi_response_for_activation_id(activation_id))
+                for activation_id in get_activation_ids()
             ],
         )
     )

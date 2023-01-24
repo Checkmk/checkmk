@@ -34,7 +34,6 @@ from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.plugins.userdb.utils import user_attribute_registry
 from cmk.gui.userdb import load_users, register_custom_user_attributes
 from cmk.gui.watolib import userroles
-from cmk.gui.watolib.activate_changes import activate_changes_start
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.tags import tag_group_exists
@@ -2021,34 +2020,6 @@ class BulkDeleteContactGroup(BaseSchema):
         required=True,
         example=["windows", "panels"],
         description="A list of contract group names.",
-    )
-
-
-class ActivateChanges(BaseSchema):
-    redirect = fields.Boolean(
-        description=(
-            "After starting the activation, redirect immediately to the 'Wait for completion' "
-            "endpoint instead of waiting for the completion."
-        ),
-        required=False,
-        load_default=False,
-        example=False,
-    )
-    sites = fields.List(
-        gui_fields.SiteField(presence="ignore"),
-        description=(
-            "The names of the sites on which the configuration shall be activated."
-            " An empty list means all sites which have pending changes."
-        ),
-        required=False,
-        load_default=list,
-        example=["production"],
-    )
-    force_foreign_changes = fields.Boolean(
-        description=param_description(activate_changes_start.__doc__, "force_foreign_changes"),
-        required=False,
-        load_default=False,
-        example=False,
     )
 
 

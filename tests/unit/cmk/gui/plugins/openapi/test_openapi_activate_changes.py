@@ -86,6 +86,21 @@ def test_openapi_activate_changes(
             content_type="application/json",
         )
 
+    assert set(resp.json["extensions"]) == {
+        "sites",
+        "is_running",
+        "force_foreign_changes",
+        "time_started",
+        "changes",
+    }
+    assert set(resp.json["extensions"]["changes"][0]) == {
+        "id",
+        "user_id",
+        "action_name",
+        "text",
+        "time",
+    }
+
     with live(expect_status_query=True):
         resp = aut_user_auth_wsgi_app.call_method(
             "post",

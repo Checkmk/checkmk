@@ -32,7 +32,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, Iterator, NamedTuple, Sequence
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle
@@ -131,6 +131,9 @@ STATE_WARNING = "warning"  # e.g. in case of core config warnings
 ACTIVATION_TIME_RESTART = "restart"
 ACTIVATION_TIME_SYNC = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
+
+ACTIVATION_TMP_BASE_DIR = cmk.utils.paths.tmp_dir + "/wato/activation"
+ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
@@ -385,8 +388,7 @@ class ActivateChanges:
 
         # A list of changes ordered by time and grouped by the change.
         # Each change contains a list of affected sites.
-        self._changes: list = []
-
+        self._changes: list[tuple[str, dict]] = []
         super().__init__()
 
     def load(self):
@@ -567,11 +569,6 @@ class ActivateChangesManager(ActivateChanges):
     manage the activation for the single sites.
     """
 
-    # Temporary data
-    activation_tmp_base_dir = cmk.utils.paths.tmp_dir + "/wato/activation"
-    # Persisted data
-    activation_persisted_dir = cmk.utils.paths.var_dir + "/wato/activation"
-
     # These keys will be persisted in <activation_id>/info.mk
     info_keys = (
         "_sites",
@@ -580,6 +577,7 @@ class ActivateChangesManager(ActivateChanges):
         "_activate_foreign",
         "_activation_id",
         "_time_started",
+        "_persisted_changes",
     )
 
     def __init__(self) -> None:
@@ -590,8 +588,30 @@ class ActivateChangesManager(ActivateChanges):
         self._activate_foreign = False
         self._activation_id: str | None = None
         self._prevent_activate = False
-        store.makedirs(self.activation_persisted_dir)
+        self._persisted_changes: list[dict[str, Any]] = []
+
+        store.makedirs(ACTIVATION_PERISTED_DIR)
         super().__init__()
+
+    @property
+    def activation_id(self) -> str:
+        return self._new_activation_id() if self._activation_id is None else self._activation_id
+
+    @property
+    def sites(self) -> Sequence[SiteId]:
+        return self._sites
+
+    @property
+    def activate_foreign(self) -> bool:
+        return self._activate_foreign
+
+    @property
+    def time_started(self) -> float:
+        return self._time_started
+
+    @property
+    def persisted_changes(self) -> Sequence[ActivationChange]:
+        return [ActivationChange(**change) for change in self._persisted_changes]
 
     def load_activation(self, activation_id: ActivationId) -> None:
         self._activation_id = activation_id
@@ -664,6 +684,7 @@ class ActivateChangesManager(ActivateChanges):
         self._comment = comment
         self._time_started = time.time()
         self._prevent_activate = prevent_activate
+        self._set_persisted_changes()
 
         self._verify_valid_host_config()
         self._save_activation()
@@ -781,35 +802,53 @@ class ActivateChangesManager(ActivateChanges):
 
         return sites
 
-    def _info_path(self, activation_id):
-        return f"{self.activation_tmp_base_dir}/{activation_id}/info.mk"
+    def _info_path(self, activation_id: str) -> str:
+        return f"{ACTIVATION_TMP_BASE_DIR}/{activation_id}/info.mk"
 
-    def activations(self):
-        if os.path.exists(self.activation_tmp_base_dir):
-            for activation_id in os.listdir(self.activation_tmp_base_dir):
-                yield activation_id, self._load_activation_info(activation_id)
+    def activations(self) -> Iterator[tuple[str, dict[str, Any]]]:
+        for activation_id in get_activation_ids():
+            yield activation_id, self._load_activation_info(activation_id)
 
-    def _site_snapshot_file(self, site_id):
+    def _site_snapshot_file(self, site_id: SiteId) -> str:
         return "{}/{}/site_{}_sync.tar.gz".format(
-            self.activation_tmp_base_dir,
+            ACTIVATION_TMP_BASE_DIR,
             self._activation_id,
             site_id,
         )
 
-    def _load_activation_info(self, activation_id):
+    def _load_activation_info(self, activation_id: str) -> dict[str, Any]:
         info_path = self._info_path(activation_id)
         if not os.path.exists(info_path):
             raise MKUserError(
                 None,
                 f"Unknown activation process: {info_path!r} not found",
             )
-
         return store.load_object_from_file(info_path, default={})
 
-    def _save_activation(self):
+    def _set_persisted_changes(self) -> None:
+        """Sets the persisted_changes, which are a subset of self._changes."""
+        if not self._persisted_changes:
+            for _activation_id, change in self._changes:
+                self._persisted_changes.append(
+                    asdict(
+                        ActivationChange(
+                            **{
+                                k: v
+                                for k, v in change.items()
+                                if k in ("id", "action_name", "text", "user_id", "time")
+                            }
+                        )
+                    )
+                )
+
+    def _save_activation(self) -> None:
+        MKUserError(None, _("activation ID is not set"))
+        if self._activation_id is None:
+            raise MKUserError(None, _("activation ID is not set"))
+
         store.makedirs(os.path.dirname(self._info_path(self._activation_id)))
         to_file = {key: getattr(self, key) for key in self.info_keys}
-        return store.save_object_to_file(self._info_path(self._activation_id), to_file)
+        store.save_object_to_file(self._info_path(self._activation_id), to_file)
 
     # Give hooks chance to do some pre-activation things (and maybe stop
     # the activation)
@@ -854,7 +893,7 @@ class ActivateChangesManager(ActivateChanges):
 
             logger.debug("Start creating config sync snapshots")
             start = time.time()
-            work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
+            work_dir = os.path.join(ACTIVATION_TMP_BASE_DIR, self._activation_id)
 
             # Do not create a snapshot for the local site. All files are already in place
             site_snapshot_settings = self._site_snapshot_settings.copy()
@@ -953,14 +992,14 @@ class ActivateChangesManager(ActivateChanges):
     @staticmethod
     def persisted_site_state_path(site_id: SiteId) -> str:
         return os.path.join(
-            ActivateChangesManager.activation_persisted_dir,
+            ACTIVATION_PERISTED_DIR,
             ActivateChangesManager.site_filename(site_id),
         )
 
     @staticmethod
     def site_state_path(activation_id: ActivationId, site_id: SiteId) -> str:
         return os.path.join(
-            ActivateChangesManager.activation_tmp_base_dir,
+            ACTIVATION_TMP_BASE_DIR,
             activation_id,
             ActivateChangesManager.site_filename(site_id),
         )
@@ -1249,7 +1288,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                 # case we wait for some time and only delete sufficiently old activations.
                 for base_dir in (
                     str(cmk.utils.paths.site_config_dir),
-                    ActivateChangesManager.activation_tmp_base_dir,
+                    ACTIVATION_TMP_BASE_DIR,
                 ):
                     activation_dir = os.path.join(base_dir, activation_id)
                     if not os.path.isdir(activation_dir):
@@ -1275,7 +1314,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
 
         for base_dir in (
             str(cmk.utils.paths.site_config_dir),
-            ActivateChangesManager.activation_tmp_base_dir,
+            ACTIVATION_TMP_BASE_DIR,
         ):
             try:
                 files.update(os.listdir(base_dir))
@@ -2521,11 +2560,94 @@ class AutomationReceiveConfigSync(AutomationCommand):
         _unpack_sync_archive(sync_archive, base_dir)
 
 
+@dataclass
+class ActivationChange:
+    id: str
+    user_id: UserId
+    action_name: str
+    text: str
+    time: float
+
+
+@dataclass
+class ActivationRestAPIResponseExtensions:
+    activation_id: str
+    sites: Sequence[SiteId]
+    is_running: bool
+    force_foreign_changes: bool
+    time_started: float
+    changes: Sequence[ActivationChange]
+
+
+def get_activation_ids() -> list[str]:
+    """
+    Returns:
+        A list of activation ids found in the tmp activation directory
+    """
+    if os.path.exists(ACTIVATION_TMP_BASE_DIR):
+        return os.listdir(ACTIVATION_TMP_BASE_DIR)
+    return []
+
+
+def load_activate_change_manager_with_id(activation_id: str) -> ActivateChangesManager:
+    """Load activation from file and setattr on an ActivateChangeManager instance.
+
+    Args:
+        activation_id: A string id representing a recent activation.
+
+    Returns:
+        An ActivateChangesManager instance with the attributes of a recent activation.
+
+    """
+    manager = ActivateChangesManager()
+    manager.load_activation(activation_id)
+    return manager
+
+
+def activation_attributes_for_rest_api_response(
+    manager: ActivateChangesManager,
+) -> ActivationRestAPIResponseExtensions:
+    """Creates and returns an ActivationRestAPIResponseExtensions instance
+
+    Args:
+        manager: An instance of an ActivateChangesManager
+
+    Returns:
+        An ActivateRestAPIResponseExtensions instance.
+
+    """
+    return ActivationRestAPIResponseExtensions(
+        activation_id=manager.activation_id,
+        sites=manager.sites,
+        is_running=manager.is_running(),
+        force_foreign_changes=manager.activate_foreign,
+        time_started=manager.time_started,
+        changes=manager.persisted_changes,
+    )
+
+
+def get_restapi_response_for_activation_id(
+    activation_id: str,
+) -> ActivationRestAPIResponseExtensions:
+    """Get the Rest API response for a given activation_id
+
+    Args:
+        activation_id: A string id representing a recent activation.
+
+    Returns:
+        An ActivationRestAPIResponseExtensions instance
+
+    """
+    return activation_attributes_for_rest_api_response(
+        load_activate_change_manager_with_id(activation_id)
+    )
+
+
 def activate_changes_start(
     sites: list[SiteId],
     comment: str | None = None,
     force_foreign_changes: bool = False,
-) -> ActivationId:
+) -> ActivationRestAPIResponseExtensions:
     """Start activation of configuration changes on specific or "dirty" sites.
 
     A "dirty" site is defined by having pending configuration changes to be activated.
@@ -2542,7 +2664,7 @@ def activate_changes_start(
             logged in user.
 
     Returns:
-        An activation id.
+        An ActivationRestAPIResponseExtensions instance.
 
     """
     changes = ActivateChanges()
@@ -2568,6 +2690,7 @@ def activate_changes_start(
 
     manager = ActivateChangesManager()
     manager.load()
+
     if manager.is_running():
         raise MKUserError(None, _("There is an activation already running."), status=423)
 
@@ -2592,7 +2715,8 @@ def activate_changes_start(
                 status=409,
             )
 
-    return manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)
+    manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)
+    return activation_attributes_for_rest_api_response(manager)
 
 
 def activate_changes_wait(

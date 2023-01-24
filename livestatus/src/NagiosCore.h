@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -153,5 +154,9 @@ private:
 
 Attributes CustomAttributes(const customvariablesmember *first,
                             AttributeKind kind);
+
+std::optional<std::string> findCustomAttributeValue(
+    const customvariablesmember *first, AttributeKind kind,
+    const std::string &key);
 
 #endif  // NagiosCore_h

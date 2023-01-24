@@ -255,6 +255,34 @@ Attributes CustomAttributes(const customvariablesmember *first,
     return attrs;
 }
 
+// TODO(sp): Reduce copy-n-paste with function above.
+std::optional<std::string> findCustomAttributeValue(
+    const customvariablesmember *first, AttributeKind kind,
+    const std::string &key) {
+    for (const auto *cvm = first; cvm != nullptr; cvm = cvm->next) {
+        auto [k, name] = to_attribute_kind(cvm->variable_name);
+        if (k == kind) {
+            const auto *value =
+                cvm->variable_value == nullptr ? "" : cvm->variable_value;
+            switch (kind) {
+                case AttributeKind::custom_variables:
+                    if (key == name) {
+                        return value;
+                    }
+                    break;
+                case AttributeKind::tags:
+                case AttributeKind::labels:
+                case AttributeKind::label_sources:
+                    if (key == b16decode(name)) {
+                        return b16decode(value);
+                    }
+                    break;
+            }
+        }
+    }
+    return {};
+}
+
 MetricLocation NagiosCore::metricLocation(
     const std::string &host_name, const std::string &service_description,
     const Metric::Name &var) const {

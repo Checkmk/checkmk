@@ -37,10 +37,10 @@ public:
     }
 
     [[nodiscard]] std::string servicePeriodName() const override {
-        auto attrs = CustomAttributes(host_.custom_variables,
-                                      AttributeKind::custom_variables);
-        auto it = attrs.find("SERVICE_PERIOD");
-        return it == attrs.end() ? "" : it->second;
+        return findCustomAttributeValue(host_.custom_variables,
+                                        AttributeKind::custom_variables,
+                                        "SERVICE_PERIOD")
+            .value_or("");
     }
 
 private:

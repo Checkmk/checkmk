@@ -71,13 +71,30 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
         elements=[
             (
                 "server",
-                HostAddress(
+                Alternative(
                     title=f"{protocol} Server",
-                    allow_empty=False,
-                    help=_(
-                        "You can specify a hostname or IP address different from the IP address "
-                        "of the host this check will be assigned to."
-                    ),
+                    elements=[
+                        FixedValue(
+                            value="$HOSTADDRESS$",
+                            title=_(
+                                "Use the address of the host for which the service is generated"
+                            ),
+                            totext="",
+                        ),
+                        FixedValue(
+                            value="$HOSTNAME$",
+                            title=_("Use the name of the host for which the service is generated"),
+                            totext="",
+                        ),
+                        HostAddress(
+                            title=f"{protocol} Server",
+                            allow_empty=False,
+                            help=_(
+                                "You can specify a hostname or IP address different from the IP "
+                                "address of the host this check will be assigned to."
+                            ),
+                        ),
+                    ],
                 ),
             ),
             (

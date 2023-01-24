@@ -19,7 +19,7 @@ public:
     template <class T>
     Attributes operator()(const T &obj) {
         if (const auto *p = obj.custom_variables) {
-            return NagiosCore::customAttributes(&p, kind_);
+            return NagiosCore::customAttributes(p, kind_);
         }
         return {};
     };

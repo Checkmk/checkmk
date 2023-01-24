@@ -216,6 +216,11 @@ def _get_replication_info(client, databases):
     oplog = databases.get("local", {}).get("collstats", {}).get("oplog.rs", {})
     result = {}
 
+    # this is basically "db.getReplicationInfo()" but it's not implemented in the python driver:
+    # https://jira.mongodb.org/browse/PYTHON-1717
+    # see also: https://gist.github.com/konstruktoid/bcb9daefab6beca67de833b5f547be91
+    # and: https://github.com/mongodb/mongo/blob/20d43f94ce5e943971904f65f8abff1e8b67521f/src/mongo/shell/db.js#L868-L933
+
     # Returns the total size of the oplog in bytes
     # This refers to the total amount of space allocated to the oplog rather than
     # the current size of operations stored in the oplog.
@@ -232,8 +237,8 @@ def _get_replication_info(client, databases):
     # Returns a timestamp for the first and last (i.e. earliest/latest) operation in the oplog.
     # Compare this value to the last write operation issued against the server.
     # Timestamp is time in seconds since epoch UTC
-    firstc = client.local.oplog.rs.find().sort("{$natural: 1}").limit(1)
-    lastc = client.local.oplog.rs.find().sort("{$natural: -1}").limit(1)
+    firstc = client.local.oplog.rs.find().sort([("$natural", 1)]).limit(1)
+    lastc = client.local.oplog.rs.find().sort([("$natural", -1)]).limit(1)
     if firstc and lastc:
         timestamp_first_operation = firstc.next().get("ts", None)
         timestamp_last_operation = lastc.next().get("ts", None)

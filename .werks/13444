@@ -1,0 +1,11 @@
+Title: mk_mongodb.py: Improve performance for replication info
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1675765978
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p21
+

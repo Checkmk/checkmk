@@ -1562,7 +1562,7 @@ def test__discover_services_on_cluster(
     scenario = cluster_scenario
 
     # we need the sideeffects of this call. TODO: guess what.
-    _ = discovery._host_labels.analyse_cluster_labels(
+    _ = analyse_node_labels(
         scenario.parent,
         config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1591,7 +1591,7 @@ def test__perform_host_label_discovery_on_cluster(
 ) -> None:
     scenario = cluster_scenario
 
-    host_label_result = discovery._host_labels.analyse_cluster_labels(
+    host_label_result = analyse_node_labels(
         scenario.parent,
         config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,

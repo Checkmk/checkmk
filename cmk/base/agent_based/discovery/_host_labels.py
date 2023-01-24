@@ -2,14 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Discovery of HostLabels
-
-This module exposes three functions:
- * analyse_node_labels
- * analyse_cluster_labels
- * analyse_host_labels (dispatching to one of the above based on the cluster configuration)
-
-"""
+"""Discovery of HostLabels."""
 from collections.abc import Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
@@ -27,105 +20,75 @@ from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery
 
-
-def analyse_host_labels(
-    *,
-    host_name: HostName,
-    config_cache: ConfigCache,
-    load_labels: bool,
-    save_labels: bool,
-    parsed_sections_broker: ParsedSectionsBroker,
-    on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
-    return (
-        analyse_cluster_labels(
-            host_name,
-            config_cache=config_cache,
-            parsed_sections_broker=parsed_sections_broker,
-            load_labels=load_labels,
-            save_labels=save_labels,
-            on_error=on_error,
-        )
-        if config_cache.is_cluster(host_name)
-        else analyse_node_labels(
-            host_name=host_name,
-            config_cache=config_cache,
-            parsed_sections_broker=parsed_sections_broker,
-            load_labels=load_labels,
-            save_labels=save_labels,
-            on_error=on_error,
-        )
-    )
+__all__ = [
+    "analyse_node_labels",
+    "analyse_host_labels",
+    "discover_cluster_labels",
+    "discover_host_labels",
+    "do_load_labels",
+    "do_save_labels",
+]
 
 
 def analyse_node_labels(
-    *,
     host_name: HostName,
+    *,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
+    parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
-    """Discovers and processes host labels per real host or node
+    """Discovery and analysis for hosts and clusters."""
+    if config_cache.is_cluster(host_name):
+        nodes = config_cache.nodes_of(host_name)
+        if not nodes:
+            return QualifiedDiscovery.empty()
 
-    Side effects:
-     * may write to disk
-     * may reset ruleset optimizer
-
-    If specified in the discovery_parameters, the host labels after
-    the discovery are persisted on disk.
-
-    Some plugins discover services based on host labels, so the ruleset
-    optimizer caches have to be cleared if new host labels are found.
-    """
-    return _analyse_host_labels(
-        host_name=host_name,
-        config_cache=config_cache,
-        discovered_host_labels=_discover_host_labels(
-            host_name=host_name,
+        discovered_host_labels = discover_cluster_labels(
+            nodes,
+            config_cache=config_cache,
+            parsed_sections_broker=parsed_sections_broker,
+            load_labels=load_labels,
+            save_labels=save_labels,
+            on_error=on_error,
+        )
+    else:
+        discovered_host_labels = discover_host_labels(
+            host_name,
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
-        ),
+        )
+    return analyse_host_labels(
+        host_name,
+        config_cache=config_cache,
+        discovered_host_labels=discovered_host_labels,
         existing_host_labels=do_load_labels(host_name) if load_labels else (),
         save_labels=save_labels,
     )
 
 
-def analyse_cluster_labels(
-    host_name: HostName,
+def discover_cluster_labels(
+    nodes: Sequence[HostName],
     *,
     config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
     on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
-    """Discovers and processes host labels per cluster host
-
-    Side effects:
-     * may write to disk
-     * may reset ruleset optimizer
-
-    If specified in the discovery_parameters, the host labels after
-    the discovery are persisted on disk.
-
-    Some plugins discover services based on host labels, so the ruleset
-    optimizer caches have to be cleared if new host labels are found.
-    """
-    nodes = config_cache.nodes_of(host_name)
-    if not nodes:
-        return QualifiedDiscovery.empty()
-
+) -> Sequence[HostLabel]:
     nodes_host_labels: dict[str, HostLabel] = {}
     for node in nodes:
-        node_result = analyse_node_labels(
+        node_result = analyse_host_labels(
             host_name=node,
             config_cache=config_cache,
-            parsed_sections_broker=parsed_sections_broker,
-            load_labels=load_labels,
+            discovered_host_labels=discover_host_labels(
+                node,
+                parsed_sections_broker=parsed_sections_broker,
+                on_error=on_error,
+            ),
+            existing_host_labels=do_load_labels(node) if load_labels else (),
             save_labels=save_labels,
-            on_error=on_error,
         )
 
         # keep the latest for every label.name
@@ -138,19 +101,12 @@ def analyse_cluster_labels(
                 **{l.name: l for l in node_result.present},
             }
         )
-
-    return _analyse_host_labels(
-        host_name=host_name,
-        config_cache=config_cache,
-        discovered_host_labels=list(nodes_host_labels.values()),
-        existing_host_labels=do_load_labels(host_name) if load_labels else (),
-        save_labels=save_labels,
-    )
+    return list(nodes_host_labels.values())
 
 
-def _analyse_host_labels(
-    *,
+def analyse_host_labels(
     host_name: HostName,
+    *,
     config_cache: ConfigCache,
     discovered_host_labels: Sequence[HostLabel],
     existing_host_labels: Sequence[HostLabel],
@@ -180,7 +136,7 @@ def _analyse_host_labels(
         #         }
         #     }
         # }]
-        # In the first step '_discover_host_labels' the ruleset optimizer caches the
+        # In the first step 'discover_host_labels' the ruleset optimizer caches the
         # result of the evaluation of these rules. Contemporary we may find new host
         # labels which are not yet taken into account by the ruleset optimizer.
         # In the next step '_discover_services' we want to discover new services
@@ -208,9 +164,9 @@ def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabe
     )
 
 
-def _discover_host_labels(
-    *,
+def discover_host_labels(
     host_name: HostName,
+    *,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> Sequence[HostLabel]:

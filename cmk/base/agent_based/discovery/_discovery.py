@@ -29,7 +29,7 @@ from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_host_labels
+from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
 from .autodiscovery import get_host_services, ServicesByTransition
 from .utils import DiscoveryMode, QualifiedDiscovery
 
@@ -60,12 +60,15 @@ def execute_check_discovery(
     parsed_sections_broker = make_broker(host_sections_no_error)
 
     host_labels = analyse_host_labels(
-        host_name=host_name,
+        host_name,
         config_cache=config_cache,
-        parsed_sections_broker=parsed_sections_broker,
-        load_labels=True,
+        discovered_host_labels=discover_host_labels(
+            host_name,
+            parsed_sections_broker=parsed_sections_broker,
+            on_error=OnError.RAISE,
+        ),
+        existing_host_labels=do_load_labels(host_name),
         save_labels=False,
-        on_error=OnError.RAISE,
     )
     services = get_host_services(
         host_name,

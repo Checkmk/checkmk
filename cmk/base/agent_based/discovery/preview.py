@@ -40,7 +40,7 @@ from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
 
 from ._discovery import get_host_services
-from ._host_labels import analyse_host_labels
+from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
 from .autodiscovery import _Transition
 from .utils import QualifiedDiscovery
 
@@ -75,12 +75,15 @@ def get_check_preview(
     parsed_sections_broker = make_broker(host_sections)
 
     host_labels = analyse_host_labels(
-        host_name=host_name,
+        host_name,
         config_cache=config_cache,
-        parsed_sections_broker=parsed_sections_broker,
-        load_labels=True,
+        discovered_host_labels=discover_host_labels(
+            host_name,
+            parsed_sections_broker=parsed_sections_broker,
+            on_error=on_error,
+        ),
+        existing_host_labels=do_load_labels(host_name),
         save_labels=False,
-        on_error=on_error,
     )
 
     for result in check_parsing_errors(parsed_sections_broker.parsing_errors()):

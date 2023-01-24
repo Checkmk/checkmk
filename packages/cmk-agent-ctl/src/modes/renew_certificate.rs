@@ -92,7 +92,6 @@ pub fn daemon(
         if let Err(error) = renew_all_certificates(&mut registry, &renew_certificate_api) {
             warn!("Error running renew-certificate cycle. ({})", error);
         };
-        registry.save()?;
         thread::sleep(Duration::from_secs(60 * 60 * 24).saturating_sub(begin.elapsed()));
     }
 }
@@ -101,9 +100,14 @@ fn renew_all_certificates(
     registry: &mut config::Registry,
     renew_certificate_api: &impl agent_receiver_api::RenewCertificate,
 ) -> AnyhowResult<()> {
+    if registry.is_empty() {
+        // if the registry is empty, we mustn't save, otherwise we might remove the legacy pull marker
+        return Ok(());
+    }
     for (site_id, connection) in registry.standard_connections_mut() {
         conditionally_renew_connection_cert(site_id, connection, renew_certificate_api)?;
     }
+    registry.save()?;
     Ok(())
 }
 
@@ -326,5 +330,14 @@ mod test_renew_certificate {
 
         let conn = &registry.imported_pull_connections().next().unwrap();
         assert!(conn.certificate == cert_too_short);
+    }
+
+    #[test]
+    fn test_renew_all_certificates_legacy_pull_mode() -> AnyhowResult<()> {
+        let mut registry = config::Registry::new(tempfile::NamedTempFile::new()?.as_ref())?;
+        registry.activate_legacy_pull()?;
+        renew_all_certificates(&mut registry, &TestApi {})?;
+        assert!(registry.legacy_pull_active());
+        Ok(())
     }
 }

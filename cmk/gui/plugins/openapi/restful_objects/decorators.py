@@ -955,7 +955,7 @@ class Endpoint:
         return f"{self.method}:{self.default_path}:{self.content_type}"
 
     @property
-    def default_path(self):
+    def default_path(self) -> str:
         replace = {}
         if self.path_params is not None:
             parameters = to_openapi(self.path_params, "path")

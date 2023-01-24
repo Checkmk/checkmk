@@ -14,6 +14,7 @@ import mimetypes
 import os
 import re
 import traceback
+import typing
 import urllib.parse
 from collections.abc import Callable, Mapping
 from datetime import datetime
@@ -26,7 +27,7 @@ from werkzeug.routing import Map, Rule, Submount
 
 from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import HTTPMethod, UserId
 
 import cmk.gui.session
 from cmk.gui import config, userdb
@@ -41,6 +42,7 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
+from cmk.gui.plugins.openapi.restful_objects import Endpoint
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.session import UserContext
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
@@ -49,9 +51,8 @@ from cmk.gui.wsgi.wrappers import ParameterDict
 
 if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
+    from _typeshed.wsgi import StartResponse, WSGIEnvironment
 
-    from cmk.gui.plugins.openapi.restful_objects import Endpoint
     from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import RFC7662, WSGIResponse
 
@@ -63,6 +64,8 @@ EXCEPTION_STATUS: dict[type[Exception], int] = {
     MKUserError: 400,
     MKAuthException: 401,
 }
+
+PathArgs = Mapping[str, Any]
 
 
 def _verify_user(  # pylint: disable=too-many-branches
@@ -313,6 +316,14 @@ class ServeSpec(AbstractWSGIApp):
             "json": "application/json",
             "yaml": "application/x-yaml; charset=utf-8",
         }
+
+        def _site(_environ: WSGIEnvironment) -> str:
+            path_info = _environ["PATH_INFO"].split("/")
+            return path_info[1]
+
+        def _url(_environ: WSGIEnvironment) -> str:
+            return "/".join(get_url(_environ).split("/")[:-1])
+
         return serve_spec(
             site=_site(environ),
             target=self.target,
@@ -320,15 +331,6 @@ class ServeSpec(AbstractWSGIApp):
             content_type=content_types[self.extension],
             serializer=serializers[self.extension],
         )(environ, start_response)
-
-
-def _site(environ: WSGIEnvironment) -> str:
-    path_info = environ["PATH_INFO"].split("/")
-    return path_info[1]
-
-
-def _url(environ: WSGIEnvironment) -> str:
-    return "/".join(get_url(environ).split("/")[:-1])
 
 
 class ServeSwaggerUI(AbstractWSGIApp):
@@ -383,65 +385,94 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         super().__init__(debug)
         # This intermediate data structure is necessary because `Rule`s can't contain anything
         # other than str anymore. Technically they could, but the typing is now fixed to str.
-        self.endpoints: dict[str, WSGIApplication] = {
-            "swagger-ui": ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui"),
-            "swagger-ui-yaml": ServeSpec("swagger-ui", "yaml"),
-            "swagger-ui-json": ServeSpec("swagger-ui", "json"),
-            "doc-yaml": ServeSpec("doc", "yaml"),
-            "doc-json": ServeSpec("doc", "json"),
-        }
+        self._endpoints: dict[str, AbstractWSGIApp] = {}
         self._url_map: Map | None = None
+        self._rules: list[Rule] = []
 
     def _build_url_map(self) -> Map:
-        rules: list[Rule] = []
+        self._endpoints.clear()
+        self._rules[:] = []
+
+        self.add_rule(
+            ["/ui/", "/ui/<path:path>"],
+            ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui"),
+            "swagger-ui",
+        )
+        self.add_rule(
+            ["/openapi-swagger-ui.yaml"],
+            ServeSpec("swagger-ui", "yaml"),
+            "swagger-ui-yaml",
+        )
+        self.add_rule(
+            ["/openapi-swagger-ui.json"],
+            ServeSpec("swagger-ui", "json"),
+            "swagger-ui-json",
+        )
+        self.add_rule(
+            ["/openapi-doc.yaml"],
+            ServeSpec("doc", "yaml"),
+            "doc-yaml",
+        )
+        self.add_rule(
+            ["/openapi-doc.json"],
+            ServeSpec("doc", "json"),
+            "doc-json",
+        )
+
         endpoint: Endpoint
         for endpoint in ENDPOINT_REGISTRY:
             if self.debug:
                 # This helps us to make sure we can always generate a valid OpenAPI yaml file.
                 _ = endpoint.to_operation_dict()
 
-            rules.append(
-                Rule(
-                    endpoint.default_path,
-                    methods=[endpoint.method],
-                    endpoint=endpoint.ident,
-                )
+            self.add_rule(
+                [endpoint.default_path],
+                EndpointAdapter(endpoint),
+                endpoint.ident,
+                methods=[endpoint.method],
             )
-            self.endpoints[endpoint.ident] = EndpointAdapter(endpoint)
 
-        return Map(
-            [
-                Submount(
-                    "/<path:_path>",
-                    [
-                        Rule("/ui/", endpoint="swagger-ui"),
-                        Rule("/ui/<path:path>", endpoint="swagger-ui"),
-                        Rule("/openapi-swagger-ui.yaml", endpoint="swagger-ui-yaml"),
-                        Rule("/openapi-swagger-ui.json", endpoint="swagger-ui-json"),
-                        Rule("/openapi-doc.yaml", endpoint="doc-yaml"),
-                        Rule("/openapi-doc.json", endpoint="doc-json"),
-                        *rules,
-                    ],
-                )
-            ]
-        )
+        return Map([Submount("/<path:_path>", [*self._rules])])
+
+    def add_rule(
+        self,
+        path_entries: list[str],
+        endpoint: AbstractWSGIApp,
+        key: str,
+        methods: typing.Sequence[HTTPMethod] | None = None,
+    ) -> None:
+        if methods is None:
+            methods = ["get"]
+        self._endpoints[key] = endpoint
+        for path in path_entries:
+            self._rules.append(Rule(path, methods=methods, endpoint=key))
+
+    def _lookup_destination(self, environ: WSGIEnvironment) -> tuple[AbstractWSGIApp, PathArgs]:
+        """Match the URL which is requested with the corresponding endpoint.
+
+        The returning of the path variables should be considered a hack and should be removed
+        once the call graph to the Endpoint class is properly refactored.
+        """
+        if self._url_map is None:
+            # NOTE: This needs to be executed in a Request context because it depends on
+            # the configuration
+            self._url_map = self._build_url_map()
+
+        urls = self._url_map.bind_to_environ(environ)
+        result: tuple[str, PathArgs] = urls.match(return_rule=False)
+        endpoint_ident, matched_path_args = result
+
+        # Remove _path again (see the Submount in the rules Map), so the validators don't go crazy.
+        path_args = {key: value for key, value in matched_path_args.items() if key != "_path"}
+
+        return self._endpoints[endpoint_ident], path_args
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         try:
-            if self._url_map is None:
-                # NOTE: This needs to be executed in a Request context because it depends on
-                # the configuration
-                self._url_map = self._build_url_map()
+            wsgi_app, path_args = self._lookup_destination(environ)
 
-            urls = self._url_map.bind_to_environ(environ)
-            result: tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
-            endpoint_ident, matched_path_args = result  # pylint: disable=unpacking-non-sequence
-            wsgi_app = self.endpoints[endpoint_ident]
             if isinstance(wsgi_app, EndpointAdapter):
                 g.endpoint = wsgi_app.endpoint
-
-            # Remove _path again (see Submount above), so the validators don't go crazy.
-            path_args = {key: value for key, value in matched_path_args.items() if key != "_path"}
 
             # This is an implicit dependency, as we only know the args at runtime, but the
             # function at setup-time.

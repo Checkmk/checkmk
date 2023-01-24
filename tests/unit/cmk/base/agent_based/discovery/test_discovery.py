@@ -1507,12 +1507,12 @@ def test__discover_host_labels_and_services_on_realhost(
     if discovery_test_case.save_labels:
         analyse_host_labels(
             host_name=scenario.hostname,
-            config_cache=scenario.config_cache,
             discovered_host_labels=discover_host_labels(
                 scenario.hostname,
                 parsed_sections_broker=scenario.parsed_sections_broker,
                 on_error=OnError.RAISE,
             ),
+            ruleset_matcher=scenario.config_cache.ruleset_matcher,
             existing_host_labels=(
                 do_load_labels(scenario.hostname) if discovery_test_case.load_labels else ()
             ),
@@ -1541,12 +1541,12 @@ def test__perform_host_label_discovery_on_realhost(
 
     host_label_result = analyse_host_labels(
         host_name=scenario.hostname,
-        config_cache=scenario.config_cache,
         discovered_host_labels=discover_host_labels(
             scenario.hostname,
             parsed_sections_broker=scenario.parsed_sections_broker,
             on_error=OnError.RAISE,
         ),
+        ruleset_matcher=scenario.config_cache.ruleset_matcher,
         existing_host_labels=(
             do_load_labels(scenario.hostname) if discovery_test_case.load_labels else ()
         ),
@@ -1583,15 +1583,14 @@ def test__discover_services_on_cluster(
     if discovery_test_case.save_labels:
         analyse_host_labels(
             scenario.parent,
-            config_cache=scenario.config_cache,
             discovered_host_labels=discover_cluster_labels(
                 nodes,
-                config_cache=scenario.config_cache,
                 parsed_sections_broker=scenario.parsed_sections_broker,
                 load_labels=discovery_test_case.load_labels,
                 save_labels=discovery_test_case.save_labels,
                 on_error=OnError.RAISE,
             ),
+            ruleset_matcher=scenario.config_cache.ruleset_matcher,
             existing_host_labels=(
                 do_load_labels(scenario.parent) if discovery_test_case.load_labels else ()
             ),
@@ -1622,15 +1621,14 @@ def test__perform_host_label_discovery_on_cluster(
 
     host_label_result = analyse_host_labels(
         scenario.parent,
-        config_cache=scenario.config_cache,
         discovered_host_labels=discover_cluster_labels(
             nodes,
-            config_cache=scenario.config_cache,
             parsed_sections_broker=scenario.parsed_sections_broker,
             load_labels=discovery_test_case.load_labels,
             save_labels=discovery_test_case.save_labels,
             on_error=OnError.RAISE,
         ),
+        ruleset_matcher=scenario.config_cache.ruleset_matcher,
         existing_host_labels=(
             do_load_labels(scenario.parent) if discovery_test_case.load_labels else ()
         ),

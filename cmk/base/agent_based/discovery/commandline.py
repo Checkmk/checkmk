@@ -13,7 +13,9 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
+from cmk.utils.labels import HostLabel
 from cmk.utils.log import console, section
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName, ServiceState
 
 from cmk.fetchers import FetcherFunction
@@ -36,7 +38,13 @@ from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
 from ._discovery import execute_check_discovery
-from ._host_labels import analyse_node_labels
+from ._host_labels import (
+    analyse_host_labels,
+    discover_cluster_labels,
+    discover_host_labels,
+    do_load_labels,
+)
+from .utils import QualifiedDiscovery
 
 __all__ = ["commandline_discovery", "commandline_check_discovery"]
 
@@ -122,6 +130,44 @@ def _preprocess_hostnames(
     return host_names
 
 
+def _analyse_node_labels(
+    host_name: HostName,
+    *,
+    config_cache: ConfigCache,
+    parsed_sections_broker: ParsedSectionsBroker,
+    ruleset_matcher: RulesetMatcher,
+    load_labels: bool,
+    save_labels: bool,
+    on_error: OnError,
+) -> QualifiedDiscovery[HostLabel]:
+    """Discovery and analysis for hosts and clusters."""
+    if config_cache.is_cluster(host_name):
+        nodes = config_cache.nodes_of(host_name)
+        if not nodes:
+            return QualifiedDiscovery.empty()
+
+        discovered_host_labels = discover_cluster_labels(
+            nodes,
+            parsed_sections_broker=parsed_sections_broker,
+            load_labels=load_labels,
+            save_labels=save_labels,
+            on_error=on_error,
+        )
+    else:
+        discovered_host_labels = discover_host_labels(
+            host_name,
+            parsed_sections_broker=parsed_sections_broker,
+            on_error=on_error,
+        )
+    return analyse_host_labels(
+        host_name,
+        discovered_host_labels=discovered_host_labels,
+        existing_host_labels=do_load_labels(host_name) if load_labels else (),
+        ruleset_matcher=ruleset_matcher,
+        save_labels=save_labels,
+    )
+
+
 def _commandline_discovery_on_host(
     *,
     host_name: HostName,
@@ -136,10 +182,11 @@ def _commandline_discovery_on_host(
 
     section.section_step("Analyse discovered host labels")
 
-    host_labels = analyse_node_labels(
+    host_labels = _analyse_node_labels(
         host_name=host_name,
         config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
+        ruleset_matcher=config_cache.ruleset_matcher,
         load_labels=load_labels,
         save_labels=True,
         on_error=on_error,

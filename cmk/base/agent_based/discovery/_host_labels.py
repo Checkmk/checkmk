@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import HostName
 
 from cmk.fetchers import SourceType
@@ -16,12 +17,10 @@ from cmk.checkers import HostKey
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery
 
 __all__ = [
-    "analyse_node_labels",
     "analyse_host_labels",
     "discover_cluster_labels",
     "discover_host_labels",
@@ -30,48 +29,9 @@ __all__ = [
 ]
 
 
-def analyse_node_labels(
-    host_name: HostName,
-    *,
-    config_cache: ConfigCache,
-    load_labels: bool,
-    save_labels: bool,
-    parsed_sections_broker: ParsedSectionsBroker,
-    on_error: OnError,
-) -> QualifiedDiscovery[HostLabel]:
-    """Discovery and analysis for hosts and clusters."""
-    if config_cache.is_cluster(host_name):
-        nodes = config_cache.nodes_of(host_name)
-        if not nodes:
-            return QualifiedDiscovery.empty()
-
-        discovered_host_labels = discover_cluster_labels(
-            nodes,
-            config_cache=config_cache,
-            parsed_sections_broker=parsed_sections_broker,
-            load_labels=load_labels,
-            save_labels=save_labels,
-            on_error=on_error,
-        )
-    else:
-        discovered_host_labels = discover_host_labels(
-            host_name,
-            parsed_sections_broker=parsed_sections_broker,
-            on_error=on_error,
-        )
-    return analyse_host_labels(
-        host_name,
-        config_cache=config_cache,
-        discovered_host_labels=discovered_host_labels,
-        existing_host_labels=do_load_labels(host_name) if load_labels else (),
-        save_labels=save_labels,
-    )
-
-
 def discover_cluster_labels(
     nodes: Sequence[HostName],
     *,
-    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
@@ -79,17 +39,17 @@ def discover_cluster_labels(
 ) -> Sequence[HostLabel]:
     nodes_host_labels: dict[str, HostLabel] = {}
     for node in nodes:
-        node_result = analyse_host_labels(
-            host_name=node,
-            config_cache=config_cache,
-            discovered_host_labels=discover_host_labels(
+        node_labels = QualifiedDiscovery[HostLabel](
+            preexisting=do_load_labels(node) if load_labels else (),
+            current=discover_host_labels(
                 node,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
             ),
-            existing_host_labels=do_load_labels(node) if load_labels else (),
-            save_labels=save_labels,
+            key=lambda hl: hl.label,
         )
+        if save_labels:
+            do_save_labels(node, node_labels)
 
         # keep the latest for every label.name
         nodes_host_labels.update(
@@ -97,8 +57,8 @@ def discover_cluster_labels(
                 # TODO (mo): According to unit tests, this is what was done prior to refactoring.
                 # I'm not sure this is desired. If it is, it should be explained.
                 # Whenever we do not load the host labels, vanished will be empty.
-                **{l.name: l for l in node_result.vanished},
-                **{l.name: l for l in node_result.present},
+                **{l.name: l for l in node_labels.vanished},
+                **{l.name: l for l in node_labels.present},
             }
         )
     return list(nodes_host_labels.values())
@@ -107,13 +67,13 @@ def discover_cluster_labels(
 def analyse_host_labels(
     host_name: HostName,
     *,
-    config_cache: ConfigCache,
     discovered_host_labels: Sequence[HostLabel],
     existing_host_labels: Sequence[HostLabel],
+    ruleset_matcher: RulesetMatcher,
     save_labels: bool,
 ) -> QualifiedDiscovery[HostLabel]:
 
-    host_labels = QualifiedDiscovery(
+    host_labels = QualifiedDiscovery[HostLabel](
         preexisting=existing_host_labels,
         current=discovered_host_labels,
         key=lambda hl: hl.label,
@@ -143,7 +103,7 @@ def analyse_host_labels(
         # based on these new host labels but we only got the cached result.
         # If we found new host labels, we have to evaluate these rules again in order
         # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
-        config_cache.ruleset_matcher.ruleset_optimizer.clear_caches()
+        ruleset_matcher.clear_caches()
 
     return host_labels
 

@@ -204,6 +204,7 @@ class RulesetMatcher:
         self.labels_of_service = self.ruleset_optimizer.labels_of_service
         self.label_sources_of_host = self.ruleset_optimizer.label_sources_of_host
         self.label_sources_of_service = self.ruleset_optimizer.label_sources_of_service
+        self.clear_caches = self.ruleset_optimizer.clear_caches
 
         self._service_match_cache: dict = {}
 

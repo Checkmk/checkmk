@@ -76,12 +76,12 @@ def get_check_preview(
 
     host_labels = analyse_host_labels(
         host_name,
-        config_cache=config_cache,
         discovered_host_labels=discover_host_labels(
             host_name,
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
+        ruleset_matcher=config_cache.ruleset_matcher,
         existing_host_labels=do_load_labels(host_name),
         save_labels=False,
     )

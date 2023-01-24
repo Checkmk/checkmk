@@ -165,8 +165,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "service_period",
         "Time period during which the object is expected to be available",
         offsets_custom_variables, [mc](const host &p) {
-            auto attrs =
-                mc->customAttributes(&p, AttributeKind::custom_variables);
+            auto attrs = mc->customAttributes(&p.custom_variables,
+                                              AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             if (it != attrs.end()) {
                 return it->second;
@@ -613,8 +613,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "filename", "The value of the custom variable FILENAME",
         offsets_custom_variables, [mc](const host &p) {
-            auto attrs =
-                mc->customAttributes(&p, AttributeKind::custom_variables);
+            auto attrs = mc->customAttributes(&p.custom_variables,
+                                              AttributeKind::custom_variables);
             auto it = attrs.find("FILENAME");
             if (it != attrs.end()) {
                 return it->second;

@@ -201,8 +201,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "service_period",
         "Time period during which the object is expected to be available",
         offsets_custom_variables, [mc](const service &p) {
-            auto attrs =
-                mc->customAttributes(&p, AttributeKind::custom_variables);
+            auto attrs = mc->customAttributes(&p.custom_variables,
+                                              AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             if (it != attrs.end()) {
                 return it->second;

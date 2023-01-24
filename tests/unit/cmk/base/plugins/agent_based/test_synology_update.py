@@ -2,9 +2,13 @@ from typing import Any
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
 from cmk.base.plugins.agent_based import synology_update
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+)
 
 SECTION_TABLE = [
     ["nana batman", "0"],

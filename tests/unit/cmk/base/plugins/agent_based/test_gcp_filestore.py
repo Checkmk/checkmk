@@ -7,8 +7,7 @@
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import ServiceLabel
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, ServiceLabel, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,

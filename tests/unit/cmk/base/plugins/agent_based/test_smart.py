@@ -9,11 +9,11 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.api.agent_based.checking_classes import IgnoreResults
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     GetRateError,
+    IgnoreResults,
     Metric,
     Result,
     Service,

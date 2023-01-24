@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import Result, State
 from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.splunk_system_msg import check, parse, Section, SplunkMessage
 
 

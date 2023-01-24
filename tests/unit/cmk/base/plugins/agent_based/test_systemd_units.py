@@ -9,7 +9,7 @@ import pytest
 
 from cmk.utils.type_defs import ParametersTypeAlias
 
-from cmk.base.api.agent_based.checking_classes import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.systemd_units import (
     _services_split,
     check_systemd_services,

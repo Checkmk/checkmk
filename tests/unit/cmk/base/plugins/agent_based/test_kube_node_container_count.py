@@ -9,9 +9,8 @@ import json
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import Metric
 from cmk.base.plugins.agent_based import kube_node_container_count
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 
 @pytest.fixture

@@ -5,9 +5,9 @@
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import Metric, Result, Service, State
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import mysql_capacity
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 
 @pytest.mark.parametrize(

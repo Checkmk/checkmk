@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 from google.cloud import monitoring_v3
 
-from cmk.base.api.agent_based.checking_classes import Result, Service, ServiceLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,

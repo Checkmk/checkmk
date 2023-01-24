@@ -12,9 +12,9 @@ from freezegun import freeze_time
 import cmk.base.plugins.agent_based.sap_hana_data_volume as sap_hana_data_volume
 import cmk.base.plugins.agent_based.utils.df as df
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.api.agent_based.checking_classes import IgnoreResults
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResults,
     IgnoreResultsError,
     Metric,
     Result,

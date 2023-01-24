@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Optional
 
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password
@@ -43,10 +44,12 @@ from cmk.gui.watolib.user_scripts import (
 )
 
 if not cmk_version.is_raw_edition():
-    from cmk.gui.cee.plugins.watolib.dcd import used_dcd_rest_api_user
+    from cmk.gui.cee.plugins.watolib.dcd import (  # pylint: disable=no-name-in-module
+        used_dcd_rest_api_user,
+    )
 else:
     # Stub needed for non enterprise edition
-    def used_dcd_rest_api_user():  # type: ignore[misc]
+    def used_dcd_rest_api_user() -> Optional[str]:
         return None
 
 

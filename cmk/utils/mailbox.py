@@ -558,7 +558,10 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         help="Use TLS/SSL for feching the mailbox (disabled by default)",
     )
     parser.add_argument(
-        "--no-cert-check", action="store_true", help="Don't enforce SSL/TLS certificate validation"
+        "--no-cert-check",
+        "--fetch-disable-cert-validation",
+        action="store_true",
+        help="Don't enforce SSL/TLS certificate validation",
     )
 
     parser.add_argument("--verbose", "-v", action="count", default=0)

@@ -1,0 +1,16 @@
+Title: Rule "Check Email": Option "Disable certificate validation"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1674551935
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p20
+
+If the option "Disable certificate validation" -> "Ignore unsuccessful validation (in case of TLS/SSL)" under "Mail Receving"/"Connection settings" in the "Check Email" rule configuration is enabled, the corresponding service will return an error
+C+:
+check_mail: error: unrecognized arguments: --fetch-disable-cert-validation
+C-:
+
+This has now been fixed.

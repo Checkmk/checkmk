@@ -6,9 +6,10 @@
 import dataclasses
 from collections.abc import Mapping
 
-from .agent_based_api.v1 import register, SNMPTree
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.liebert import DETECT_LIEBERT, parse_liebert, temperature_to_celsius
+from .utils.temperature import check_temperature, TempParamDict
 
 
 @dataclasses.dataclass(frozen=True)
@@ -73,4 +74,32 @@ register.snmp_section(
             "30.1.2.2.4644",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
         ],
     ),
+)
+
+
+def discover_liebert_temp_fluid(section: Section) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section.readings if "Set Point" in name)
+
+
+def check_liebert_temp_fluid(item: str, params: TempParamDict, section: Section) -> CheckResult:
+    if (reading := section.readings.get(item)) is None:
+        return
+
+    yield from check_temperature(
+        reading=reading,
+        params=params,
+        unique_name=item,
+        value_store=get_value_store(),
+        dev_levels=section.upper_device_levels,
+        dev_levels_lower=section.lower_device_levels,
+    )
+
+
+register.check_plugin(
+    name="liebert_temp_fluid",
+    service_name="%s",
+    discovery_function=discover_liebert_temp_fluid,
+    check_function=check_liebert_temp_fluid,
+    check_default_parameters={},
+    check_ruleset_name="temperature",
 )

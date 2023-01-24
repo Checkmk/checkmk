@@ -5,20 +5,15 @@
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.liebert_temp_fluid import parse_liebert_temp_fluid, Section
+from cmk.base.plugins.agent_based.liebert_temp_fluid import (
+    check_liebert_temp_fluid,
+    discover_liebert_temp_fluid,
+    parse_liebert_temp_fluid,
+    Section,
+)
 from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
-
-
-@pytest.fixture(name="check_plugin", scope="module")
-def _check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("liebert_temp_fluid")]
 
 
 @pytest.fixture(name="section", scope="module")
@@ -49,8 +44,8 @@ def _section() -> Section:
     )
 
 
-def test_discover(check_plugin: CheckPlugin, section: Section) -> None:
-    assert list(check_plugin.discovery_function(section)) == [
+def test_discover(section: Section) -> None:
+    assert list(discover_liebert_temp_fluid(section)) == [
         Service(item="Supply Fluid Temp Set Point 1"),
         Service(item="Supply Fluid Temp Set Point 2"),
     ]
@@ -63,11 +58,12 @@ def test_discover(check_plugin: CheckPlugin, section: Section) -> None:
             "Supply Fluid Temp Set Point 1",
             {},
             [
-                Result(
-                    state=State.CRIT,
-                    summary="14.0 °C (device warn/crit at 0.0/0.0 °C) (device warn/crit below 0.0/0.0 °C)",
-                ),
                 Metric("temp", 14.0, levels=(0.0, 0.0)),
+                Result(state=State.CRIT, summary="Temperature: 14.0°C (warn/crit at 0.0°C/0.0°C)"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
             ],
             id="default params",
         ),
@@ -78,15 +74,15 @@ def test_discover(check_plugin: CheckPlugin, section: Section) -> None:
                 "device_levels_handling": "usr",
             },
             [
-                Result(state=State.OK, summary="-6.0 °C"),
                 Metric("temp", -6.0, levels=(20.0, 30.0)),
+                Result(state=State.OK, summary="Temperature: -6.0°C"),
+                Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
             id="custom thresholds",
         ),
     ],
 )
 def test_check(
-    check_plugin: CheckPlugin,
     item: str,
     params: TempParamDict,
     section: Section,
@@ -94,7 +90,7 @@ def test_check(
 ) -> None:
     assert (
         list(
-            check_plugin.check_function(
+            check_liebert_temp_fluid(
                 item=item,
                 params=params,
                 section=section,

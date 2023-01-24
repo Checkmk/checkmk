@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.aruba_wlc_aps import inventory_aruba_wlc_aps, parse_aruba_wlc_aps
 
 from .utils_inventory import sort_inventory_result
@@ -51,8 +53,8 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_aruba_wlc_aps(  # type:ignore[no-untyped-def]
-    raw_section, expected_result
+def test_inventory_aruba_wlc_aps(
+    raw_section: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))

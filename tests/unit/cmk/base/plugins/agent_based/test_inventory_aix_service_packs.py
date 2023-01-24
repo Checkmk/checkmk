@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_aix_service_packs import (
     inventory_aix_service_packs,
     parse_aix_service_packs,
@@ -46,7 +48,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inv_aix_baselevel(raw_section, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inv_aix_baselevel(raw_section: StringTable, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
         inventory_aix_service_packs(parse_aix_service_packs(raw_section))
     ) == sort_inventory_result(expected_result)

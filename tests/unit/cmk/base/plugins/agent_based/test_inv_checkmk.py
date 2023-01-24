@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Any, Mapping
 
 import pytest
 
@@ -395,8 +395,8 @@ MERGED_SECTION_RAWEDITION = {
         (True, MERGED_SECTION_RAWEDITION),
     ],
 )
-def test_merge_sections(  # type:ignore[no-untyped-def]
-    monkeypatch, is_raw_edition, merged_sections
+def test_merge_sections(
+    monkeypatch: pytest.MonkeyPatch, is_raw_edition: bool, merged_sections: Mapping[str, object]
 ) -> None:
     monkeypatch.setattr(inv_checkmk.cmk_version, "is_raw_edition", lambda: is_raw_edition)
     assert merged_sections == inv_checkmk.merge_sections(

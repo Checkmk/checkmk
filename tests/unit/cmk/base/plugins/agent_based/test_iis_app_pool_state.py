@@ -6,10 +6,13 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.iis_app_pool_state import (
     check_iis_app_pool_state,
     DefaultCheckParameters,
     IisAppPoolState,
+    IisAppPoolStateCheckParams,
+    Section,
 )
 
 
@@ -66,7 +69,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
     ],
 )
-def test_check_iis_app_pool_state(  # type:ignore[no-untyped-def]
-    item, section, params, results
+def test_check_iis_app_pool_state(
+    item: str, section: Section, params: IisAppPoolStateCheckParams, results: CheckResult
 ) -> None:
     assert list(check_iis_app_pool_state(item, params, section)) == results

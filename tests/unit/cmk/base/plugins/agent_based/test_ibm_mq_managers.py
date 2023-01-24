@@ -6,7 +6,8 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.ibm_mq_managers import inventory_ibm_mq_managers
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from cmk.base.plugins.agent_based.ibm_mq_managers import inventory_ibm_mq_managers, Section
 
 
 @pytest.mark.parametrize(
@@ -64,5 +65,5 @@ from cmk.base.plugins.agent_based.ibm_mq_managers import inventory_ibm_mq_manage
         ),
     ],
 )
-def test_inv_aix_baselevel(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inv_aix_baselevel(parsed: Section, expected_result: InventoryResult) -> None:
     assert list(inventory_ibm_mq_managers(parsed)) == expected_result

@@ -12,10 +12,12 @@ from freezegun import freeze_time
 from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_section
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.esx_vsphere_snapshot import (
     check_snapshots,
     check_snapshots_summary,
     parse_esx_vsphere_snapshots,
+    Section,
     Snapshot,
 )
 from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
@@ -57,8 +59,8 @@ def test_parse_esx_vsphere_snapshots() -> None:
     ],
 )
 @freeze_time("2020-11-23")
-def test_check_snapshots_summary(  # type:ignore[no-untyped-def]
-    section, expected_result, monkeypatch
+def test_check_snapshots_summary(
+    section: Section, expected_result: CheckResult, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     result = check_snapshots_summary({}, section)
@@ -66,7 +68,7 @@ def test_check_snapshots_summary(  # type:ignore[no-untyped-def]
 
 
 @freeze_time("2020-11-23")
-def test_check_snapshots(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     assert list(
         check_snapshots(
@@ -83,7 +85,7 @@ def test_check_snapshots(monkeypatch) -> None:  # type:ignore[no-untyped-def]
 
 
 @freeze_time("2020-11-23 14:37:00")
-def test_check_multi_snapshots(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_multi_snapshots(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [
@@ -114,7 +116,7 @@ def test_check_multi_snapshots(monkeypatch) -> None:  # type:ignore[no-untyped-d
 
 
 @freeze_time("2019-06-22 14:37:00")
-def test_check_one_snapshot(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_one_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [
@@ -148,7 +150,7 @@ def test_check_one_snapshot(monkeypatch) -> None:  # type:ignore[no-untyped-def]
 
 
 @freeze_time("2022-06-22")
-def test_time_reference_snapshot(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_time_reference_snapshot(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     parsed = parse_esx_vsphere_vm(
         [

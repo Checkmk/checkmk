@@ -6,10 +6,16 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.infoblox_services import (
     check_infoblox_services,
     discovery_infoblox_services,
     parse_infoblox_services,
+    Section,
 )
 
 example_snmp_string_table = [
@@ -93,8 +99,8 @@ example_parsed_data = {
         (example_snmp_string_table, example_parsed_data),
     ],
 )
-def test_parse_infoblox_services(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_infoblox_services(
+    string_table: list[StringTable], expected_parsed_data: Section
 ) -> None:
     assert parse_infoblox_services(string_table) == expected_parsed_data
 
@@ -105,7 +111,7 @@ def test_parse_infoblox_services(  # type:ignore[no-untyped-def]
         (example_parsed_data, [Service(item=key) for key in example_parsed_data]),
     ],
 )
-def test_discovery_infoblox_services(section, result) -> None:  # type:ignore[no-untyped-def]
+def test_discovery_infoblox_services(section: Section, result: DiscoveryResult) -> None:
     assert list(discovery_infoblox_services(section)) == result
 
 
@@ -119,5 +125,5 @@ def test_discovery_infoblox_services(section, result) -> None:  # type:ignore[no
         ),
     ],
 )
-def test_check_infoblox_services(item, section, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_infoblox_services(item: str, section: Section, result: CheckResult) -> None:
     assert list(check_infoblox_services(item, section)) == result

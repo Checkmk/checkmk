@@ -84,7 +84,7 @@ def join_service_row_post_processor(
                         datasource_ident=view.datasource.ident,
                         inventory_join_macros=inventory_join_macros,
                         row=row,
-                        join_value_with_macro=join_value_with_macros,
+                        join_value_with_macros=join_value_with_macros,
                     )
                 )
                 and (attrs := master_entry.get(service_description))
@@ -134,10 +134,11 @@ def _make_join_filters(
             with_macros.append(join_cell.join_value)
             filters.append(
                 join_cell.livestatus_filter_from_macros(
-                    join_column_name,
                     view.datasource.ident,
                     inventory_join_macros,
                     rows,
+                    join_cell.join_value,
+                    join_column_name,
                 )
             )
         else:

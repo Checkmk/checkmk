@@ -633,10 +633,11 @@ class JoinCell(Cell):
 
     def livestatus_filter_from_macros(
         self,
-        join_column_name: str,
         datasource_ident: str,
         inventory_join_macros: dict[str, str],
         rows: Rows,
+        join_value_with_macros: str,
+        join_column_name: str,
     ) -> LivestatusQuery:
         filters_by_hostname: dict[str, list[str]] = {}
         for row in rows:
@@ -644,7 +645,7 @@ class JoinCell(Cell):
                 datasource_ident=datasource_ident,
                 inventory_join_macros=inventory_join_macros,
                 row=row,
-                join_value_with_macro=join_column_name,
+                join_value_with_macros=join_value_with_macros,
             )
             filters_by_hostname.setdefault(row["host_name"], []).append(
                 f"Filter: {lqencode(join_column_name)} = {lqencode(service_description)}"
@@ -676,14 +677,14 @@ def replace_inventory_join_macros(
     datasource_ident: str,
     inventory_join_macros: dict[str, str],
     row: Row,
-    join_value_with_macro: str,
+    join_value_with_macros: str,
 ) -> str:
     for column_name, macro in inventory_join_macros.items():
         if (row_value := row.get(f"{datasource_ident}_{column_name}")) is None:
             continue
-        if macro in join_value_with_macro:
-            join_value_with_macro = join_value_with_macro.replace(macro, row_value)
-    return join_value_with_macro
+        if macro in join_value_with_macros:
+            join_value_with_macros = join_value_with_macros.replace(macro, row_value)
+    return join_value_with_macros
 
 
 def join_row(row: Row, cell: Cell) -> Row:

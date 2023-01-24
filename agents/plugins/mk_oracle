@@ -3047,7 +3047,7 @@ main_queries() {
     wait
 
     cat "$ORA_TASKS_TMPDIR/${_QUERY_PREFIX}"*
-    rm -f "$ORA_TASKS_TMPDIR"/*
+    rm -f "$ORA_TASKS_TMPDIR/${_QUERY_PREFIX}"*
 
     #   ---remote---------------------------------------------------------------
 

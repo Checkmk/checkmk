@@ -28,10 +28,12 @@ from cmk.gui.watolib.user_scripts import (
 )
 
 if not cmk_version.is_raw_edition():
-    from cmk.gui.cee.plugins.watolib.dcd import used_dcd_rest_api_user
+    from cmk.gui.cee.plugins.watolib.dcd import (  # pylint: disable=no-name-in-module
+        used_dcd_rest_api_user,
+    )
 else:
     # Stub needed for non enterprise edition
-    def used_dcd_rest_api_user():  # type: ignore[misc]
+    def used_dcd_rest_api_user() -> str | None:
         return None
 
 

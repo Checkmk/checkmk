@@ -13,6 +13,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Final,
     Iterable,
     List,
     Mapping,
@@ -1877,6 +1878,7 @@ def _sort_by_index(keyorder, item):
 
 
 TableTitles = List[Tuple[str, str, bool]]
+_GRAY: Final[str] = "#777"
 
 
 class ABCNodeRenderer(abc.ABC):
@@ -1909,7 +1911,7 @@ class ABCNodeRenderer(abc.ABC):
         if "%d" in title or "%s" in title:
             title = self._replace_placeholders(title, invpath)
 
-        header = self._get_header(title, ".".join(map(str, node.path)), "#666")
+        header = self._get_header(title, ".".join(map(str, node.path)))
         fetch_url = makeuri_contextless(
             request,
             [
@@ -2004,7 +2006,7 @@ class ABCNodeRenderer(abc.ABC):
         html.open_table(class_="data")
         html.open_tr()
         for title, key, is_key_column in titles:
-            html.th(self._get_header(title, key, "#DDD", is_key_column=is_key_column))
+            html.th(self._get_header(title, "%s*" % key if is_key_column else key))
 
         html.close_tr()
 
@@ -2106,7 +2108,7 @@ class ABCNodeRenderer(abc.ABC):
             hint = _get_display_hint(sub_invpath)
 
             html.open_tr()
-            html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)
+            html.th(self._get_header(title, key), title=sub_invpath)
             html.open_td()
             self.show_attribute(
                 value,
@@ -2132,18 +2134,10 @@ class ABCNodeRenderer(abc.ABC):
         raw_path = ".".join(map(str, path)) if path else self._invpath
         return raw_path.strip(".")
 
-    def _get_header(
-        self,
-        title: str,
-        key: str,
-        hex_color: str,
-        *,
-        is_key_column: bool = False,
-    ) -> HTML:
+    def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            key_info = "%s*" % key if is_key_column else key
-            header += " " + html.render_span("(%s)" % key_info, style="color: %s" % hex_color)
+            header += " " + html.render_span("(%s)" % key_info, style=f"color: {_GRAY}")
         return header
 
     def _show_child_value(
@@ -2152,41 +2146,37 @@ class ABCNodeRenderer(abc.ABC):
         hint: InventoryHintSpec,
         retention_intervals: Optional[RetentionIntervals] = None,
     ) -> None:
+        if value is None:
+            html.write_text("")
+            return
+
         if "paint_function" in hint:
             paint_function: PaintFunction = hint["paint_function"]
-            _tdclass, code = paint_function(value)
-            html.write_text(code)
-        elif isinstance(value, str):
-            html.write_text(value)
+            _tdclass, value = paint_function(value)
         elif isinstance(value, int):
-            html.write_text(str(value))
+            value = str(value)
         elif isinstance(value, float):
-            html.write_text("%.2f" % value)
+            value = "%.2f" % value
         elif isinstance(value, HTML):
-            html.write_html(value)
+            value = value.value
         elif value is not None:
-            html.write_text(str(value))
+            value = str(value)
 
-        if (ret_value_to_write := self._get_retention_value(retention_intervals)) is not None:
-            html.write_html(ret_value_to_write)
+        if not isinstance(value, HTML):
+            value = HTML(value)
 
-    def _get_retention_value(
+        if self._is_outdated(retention_intervals):
+            html.write_html(html.render_span(value.value, style=f"color: {_GRAY}"))
+        else:
+            html.write_html(value)
+
+    def _is_outdated(
         self,
         retention_intervals: Optional[RetentionIntervals],
-    ) -> Optional[HTML]:
-        if retention_intervals is None:
-            return None
-
-        now = time.time()
-
-        if now <= retention_intervals.valid_until:
-            return None
-
-        if now <= retention_intervals.keep_until:
-            _tdclass, value = inv_paint_age(retention_intervals.keep_until - now)
-            return html.render_span(_(" (%s left)") % value, style="color: #DDD")
-
-        return html.render_span(_(" (outdated)"), style="color: darkred")
+    ) -> bool:
+        return (
+            False if retention_intervals is None else time.time() > retention_intervals.keep_until
+        )
 
 
 class NodeRenderer(ABCNodeRenderer):

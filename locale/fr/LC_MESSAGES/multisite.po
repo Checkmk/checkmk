@@ -5066,6 +5066,16 @@ msgstr ""
 "Un nom de région AWS tel que \"eu-central-1\" ou \"CloudFront\" pour les WAF "
 "devant les ressources CloudFront."
 
+msgid ""
+"An XML text (file) containing the metadata information of your "
+"organisation's Identity Provider. This is useful if the Checkmk server is "
+"not able to access the metadata endpoint of the Identity Provider. Please "
+"note that as a result, any configuration updates that are applied to the "
+"Identity Provider (e.g. updates to certificates) must be updated manually "
+"here as well. We therefore recommend using the metadata endpoint URL option "
+"where possible."
+msgstr ""
+
 msgid "An absolute path to a CA certificate"
 msgstr "Un chemin absolu vers un certificat CA"
 
@@ -5312,6 +5322,10 @@ msgstr "Utilisation des processus Apache"
 
 msgid "Apache webservers (Linux)"
 msgstr "Serveurs web Apache (Linux)"
+
+#, fuzzy
+msgid "App Registrations"
+msgstr "Enregistrement des agents"
 
 msgid "AppDynamics application name"
 msgstr "Nom de l'application AppDynamics"
@@ -5628,6 +5642,10 @@ msgstr "Ascendant"
 
 msgid "Ask for an optional comment"
 msgstr "Demandez un commentaire facultatif"
+
+#, fuzzy
+msgid "Assertion Consumer Service endpoint"
+msgstr "Description des incidents de service"
 
 msgid "Asserts / s"
 msgstr "Affirmations / s"
@@ -6586,6 +6604,18 @@ msgstr "Aperçu des emplois de base"
 
 msgid "Background shading for rows"
 msgstr "Ombrage de fond pour les lignes"
+
+#, fuzzy
+msgid "Backup"
+msgstr "Sauvegardes"
+
+#, fuzzy
+msgid "Backup Age"
+msgstr "Cible de sauvegarde"
+
+#, fuzzy
+msgid "Backup age"
+msgstr "Cible de sauvegarde"
 
 msgid "Backup code"
 msgstr "Code de sauvegarde"
@@ -9301,6 +9331,10 @@ msgstr "Utilisation de l'aide Checkmk"
 #, fuzzy
 msgid "Checkmk server URL"
 msgstr "Vérifiez l'URL"
+
+#, fuzzy
+msgid "Checkmk service provider metadata"
+msgstr "Checkmk avec les données de performance de temps"
 
 msgid ""
 "Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
@@ -12056,6 +12090,10 @@ msgstr "L'accréditation a été supprimée"
 
 msgid "Credentials"
 msgstr "Références"
+
+#, fuzzy
+msgid "Credentials Expiration"
+msgstr "Expiration de l'authentification"
 
 msgid "Credentials for Connect (ODBC interface)"
 msgstr "Informations d'identification pour Connect (interface ODBC)"
@@ -17622,6 +17660,10 @@ msgid "Entersekt Soap Service Errors"
 msgstr "Erreurs du service de savon Entersekt"
 
 msgid "Entity"
+msgstr "Entité"
+
+#, fuzzy
+msgid "Entity ID"
 msgstr "Entité"
 
 msgid "Entity level used to create Checkmk piggyback hosts"
@@ -23429,6 +23471,10 @@ msgstr "Identité"
 
 #, fuzzy
 msgid "Identity Provider connection timeout"
+msgstr "Définir le délai de connexion"
+
+#, fuzzy
+msgid "Identity Provider metadata"
 msgstr "Définir le délai de connexion"
 
 msgid "Identity of an authorized key"
@@ -30466,6 +30512,10 @@ msgstr "Âge maximum des événements récupérés (10 heures max.)"
 msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "Âge maximum des événements récupérés (10 heures max.)"
 
+#, fuzzy
+msgid "Maximum age of latest backup"
+msgstr "Âge maximal des sauvegardes"
+
 msgid "Maximum age of latest timemachine backup"
 msgstr "Âge maximum de la dernière sauvegarde du timemachine"
 
@@ -31074,8 +31124,16 @@ msgid "Meta usage"
 msgstr "Utilisation du méta"
 
 #, fuzzy
-msgid "Metadata endpoint URL"
+msgid "Metadata endpoint"
 msgstr "URL du point de terminaison REST"
+
+msgid ""
+"Metadata information is exchanged between Checkmk and your Identity Provider "
+"and contains configuration information to enable a successful SAML "
+"communication. This includes the Single Sing-On endpoint and bindings used "
+"by the Identity Provider, as well as details to certificates used for "
+"signatures and encryption."
+msgstr ""
 
 msgid "Method"
 msgstr "Méthode"
@@ -37135,6 +37193,10 @@ msgstr ""
 "rapport est créé. Par exemple, si vous créez un rapport hebdomadaire le "
 "lundi 00:00, vous devez sélectionner <i>dernière semaine</i>."
 
+#, fuzzy
+msgid "Please provide a '.xml' file"
+msgstr "Veuillez fournir un nom valide"
+
 msgid "Please provide a valid host and port"
 msgstr "Veuillez fournir un hôte et un port valides"
 
@@ -38946,6 +39008,10 @@ msgid "Recover"
 msgstr "Récupérer"
 
 msgid "Recovery Area"
+msgstr "Zone de récupération"
+
+#, fuzzy
+msgid "Recovery Services Vault"
 msgstr "Zone de récupération"
 
 msgid "Recovery Status"
@@ -45201,6 +45267,12 @@ msgstr "Indiquez si la batterie doit être remplacée"
 msgid "State if calibration is invalid"
 msgstr "État si l'étalonnage est invalide"
 
+#, fuzzy
+msgid "State if check plugins received no monitoring data"
+msgstr ""
+"Indique si des plugins de contrôle spécifiques ne reçoivent aucune donnée de "
+"surveillance."
+
 msgid "State if conditions above are not satisfied."
 msgstr "Indiquer si les conditions ci-dessus ne sont pas remplies."
 
@@ -45285,11 +45357,6 @@ msgstr "Etat si l'entrée est ON"
 #, fuzzy
 msgid "State if input is Unknown"
 msgstr "Etat si l'entrée est ON"
-
-msgid "State if just <i>some</i> check plugins received no monitoring data"
-msgstr ""
-"Etat si seulement <i>quelques</i> plugins de contrôle n'ont reçu aucune "
-"donnée de surveillance"
 
 msgid "State if license is expired"
 msgstr "Indiquez si la licence est expirée"
@@ -45382,9 +45449,6 @@ msgstr "État en cas de TLS disponible mais non activé"
 
 msgid "State in case of connection problems"
 msgstr "État en cas de problèmes de connexion"
-
-msgid "State in case of empty output"
-msgstr "État en cas de sortie vide"
 
 msgid "State in case of logins are not possible: "
 msgstr "État en cas d'impossibilité de se connecter : "
@@ -47091,6 +47155,10 @@ msgstr "Essais"
 
 msgid "Text"
 msgstr "Texte"
+
+#, fuzzy
+msgid "Text is not valid XML"
+msgstr "La valeur de cette règle n'est pas valide. "
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Fichiers journaux textuels (Linux, Solaris, Windows)"
@@ -48921,6 +48989,10 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "Le fichier %s doit être créé et maintenu manuellement."
 
+#, fuzzy
+msgid "The file does not contain XML text"
+msgstr "Le fichier journal n'existe pas sur le site."
+
 msgid "The file does not look like a valid key file."
 msgstr "Le fichier ne ressemble pas à un fichier clé valide."
 
@@ -49086,14 +49158,6 @@ msgid ""
 "The full URL to the Prometheus API endpoint including the protocol (http or "
 "https). OpenShift exposes such endpoints via a route in the openshift-"
 "monitoring namespace called prometheus-k8s."
-msgstr ""
-
-msgid ""
-"The full URL to the metadata endpoint of your organisation's Identity "
-"Provider. This endpoint is used to automatically discover the correct Single "
-"Sign-On endpoint and bindings for a successful SAML communication with the "
-"Identity Provider. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificate which should be trusted."
 msgstr ""
 
 #, python-format
@@ -52516,8 +52580,8 @@ msgstr "Ceci définit un modèle de groupement de valeurs"
 
 msgid ""
 "This directory will be used for temporarily storing backups before uploading "
-"and after downloading. Please note that Checkmk will not clean up this "
-"directory."
+"and after downloading. You can for example use the <tt>/tmp</tt> directory. "
+"Please note that Checkmk will not clean up this directory."
 msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
@@ -56069,6 +56133,10 @@ msgstr "Temps jusqu'à l'alerte, si la condition REPLICAFAILURE est vraie."
 #, fuzzy
 msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr "Définir une période de tolérance pour l'activation des services"
+
+#, fuzzy
+msgid "Time until credentials expiration"
+msgstr "Temps jusqu'à l'expiration de la licence"
 
 msgid "Time until license expiration"
 msgstr "Temps jusqu'à l'expiration de la licence"
@@ -59974,6 +60042,10 @@ msgstr "La valeur %r n'est pas autorisée ici."
 msgid "Value Type"
 msgstr "Type de valeur"
 
+#, fuzzy
+msgid "Value must be string"
+msgstr "Tous doivent être en ligne"
+
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "La valeur de {diff_path} a changé de {val_t1} à {val_t2}."
@@ -62604,6 +62676,14 @@ msgstr "Mauvais client"
 #, python-format
 msgid "Wrong service level %d (need %d..%d)"
 msgstr "Mauvais niveau de service %d (besoin %d..%d)"
+
+#, fuzzy
+msgid "XML file upload"
+msgstr "Fichier MIB %s téléchargé."
+
+#, fuzzy
+msgid "XML text"
+msgstr "Le texte"
 
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP Échec de l'établissement du flux entrant"
@@ -66605,6 +66685,14 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "State if just <i>some</i> check plugins received no monitoring data"
+#~ msgstr ""
+#~ "Etat si seulement <i>quelques</i> plugins de contrôle n'ont reçu aucune "
+#~ "donnée de surveillance"
+
+#~ msgid "State in case of empty output"
+#~ msgstr "État en cas de sortie vide"
 
 #~ msgid ""
 #~ "An identifier must only consist of letters, digits, dash, dot, at and "

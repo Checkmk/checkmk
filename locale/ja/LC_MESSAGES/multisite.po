@@ -4816,6 +4816,16 @@ msgstr ""
 "CloudFrontリソースの前にあるWAFの\"eu-central-1\"や\"CloudFront\"などのAWS"
 "リージョン名"
 
+msgid ""
+"An XML text (file) containing the metadata information of your "
+"organisation's Identity Provider. This is useful if the Checkmk server is "
+"not able to access the metadata endpoint of the Identity Provider. Please "
+"note that as a result, any configuration updates that are applied to the "
+"Identity Provider (e.g. updates to certificates) must be updated manually "
+"here as well. We therefore recommend using the metadata endpoint URL option "
+"where possible."
+msgstr ""
+
 msgid "An absolute path to a CA certificate"
 msgstr "CA証明書への絶対パス"
 
@@ -5047,6 +5057,10 @@ msgstr "Apacheプロセスの使用法"
 
 msgid "Apache webservers (Linux)"
 msgstr "Apache Webサーバー(Linux)"
+
+#, fuzzy
+msgid "App Registrations"
+msgstr "エージェント登録"
 
 msgid "AppDynamics application name"
 msgstr "AppDynamicsアプリケーション名"
@@ -5338,6 +5352,10 @@ msgstr "上昇"
 
 msgid "Ask for an optional comment"
 msgstr "オプションのコメントを求める"
+
+#, fuzzy
+msgid "Assertion Consumer Service endpoint"
+msgstr "サービスインシデントの説明"
 
 msgid "Asserts / s"
 msgstr "アサート/秒"
@@ -6273,6 +6291,18 @@ msgstr "バックグラウンドジョブの概要"
 
 msgid "Background shading for rows"
 msgstr "行のバックグラウンドシェーディング"
+
+#, fuzzy
+msgid "Backup"
+msgstr "バックアップ"
+
+#, fuzzy
+msgid "Backup Age"
+msgstr "バックアップターゲット"
+
+#, fuzzy
+msgid "Backup age"
+msgstr "バックアップターゲット"
 
 msgid "Backup code"
 msgstr "バックアップコード"
@@ -8799,6 +8829,10 @@ msgstr "Checkmkヘルパーの使用法"
 #, fuzzy
 msgid "Checkmk server URL"
 msgstr "URLを確認する"
+
+#, fuzzy
+msgid "Checkmk service provider metadata"
+msgstr "時間パフォーマンスデータを使用したCheckmk"
 
 msgid ""
 "Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
@@ -11389,6 +11423,10 @@ msgstr "資格情報が削除されました"
 
 msgid "Credentials"
 msgstr "資格情報"
+
+#, fuzzy
+msgid "Credentials Expiration"
+msgstr "認証の有効期限"
 
 msgid "Credentials for Connect (ODBC interface)"
 msgstr "Connectの資格情報(ODBCインターフェース)"
@@ -16761,6 +16799,10 @@ msgid "Entersekt Soap Service Errors"
 msgstr "Entersekt Soapサービスエラー"
 
 msgid "Entity"
+msgstr "エンティティ"
+
+#, fuzzy
+msgid "Entity ID"
 msgstr "エンティティ"
 
 msgid "Entity level used to create Checkmk piggyback hosts"
@@ -22275,6 +22317,10 @@ msgstr "アイデンティティー"
 
 #, fuzzy
 msgid "Identity Provider connection timeout"
+msgstr "接続タイムアウトを設定する"
+
+#, fuzzy
+msgid "Identity Provider metadata"
 msgstr "接続タイムアウトを設定する"
 
 msgid "Identity of an authorized key"
@@ -28875,6 +28921,10 @@ msgstr "取得したイベントの最大経過時間(最大10時間)"
 msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "取得したイベントの最大経過時間(最大10時間)"
 
+#, fuzzy
+msgid "Maximum age of latest backup"
+msgstr "バックアップの最大経過時間"
+
 msgid "Maximum age of latest timemachine backup"
 msgstr "最新のタイムマシンバックアップの最大経過時間"
 
@@ -29458,8 +29508,16 @@ msgid "Meta usage"
 msgstr "メタ使用法"
 
 #, fuzzy
-msgid "Metadata endpoint URL"
+msgid "Metadata endpoint"
 msgstr "RESTエンドポイントURL"
+
+msgid ""
+"Metadata information is exchanged between Checkmk and your Identity Provider "
+"and contains configuration information to enable a successful SAML "
+"communication. This includes the Single Sing-On endpoint and bindings used "
+"by the Identity Provider, as well as details to certificates used for "
+"signatures and encryption."
+msgstr ""
 
 msgid "Method"
 msgstr "方法"
@@ -35268,6 +35326,10 @@ msgid ""
 "00:00 you need to select <i>last week</i>."
 msgstr ""
 
+#, fuzzy
+msgid "Please provide a '.xml' file"
+msgstr "有効な名前を入力してください"
+
 msgid "Please provide a valid host and port"
 msgstr "有効なホストとポートを入力してください"
 
@@ -37005,6 +37067,10 @@ msgid "Recover"
 msgstr "回復します"
 
 msgid "Recovery Area"
+msgstr "回復エリア"
+
+#, fuzzy
+msgid "Recovery Services Vault"
 msgstr "回復エリア"
 
 msgid "Recovery Status"
@@ -42915,6 +42981,10 @@ msgstr "バッテリーの交換が必要かどうかを述べる"
 msgid "State if calibration is invalid"
 msgstr "キャリブレーションが無効かどうかを記載する"
 
+#, fuzzy
+msgid "State if check plugins received no monitoring data"
+msgstr "特定のチェックプラグインが監視データを受信しないかどうかを記述します。"
+
 msgid "State if conditions above are not satisfied."
 msgstr ""
 
@@ -42998,11 +43068,6 @@ msgstr ""
 #, fuzzy
 msgid "State if input is Unknown"
 msgstr "チャネルステータスが不明な場合の状態"
-
-msgid "State if just <i>some</i> check plugins received no monitoring data"
-msgstr ""
-"<i>一部の</i>チェックプラグインがモニタリングデータを受信しなかったかどうかを"
-"記載します"
 
 msgid "State if license is expired"
 msgstr "ライセンスの有効期限が切れているかどうかを記載する"
@@ -43091,9 +43156,6 @@ msgstr "TLSが利用可能だが有効でない場合の状態"
 
 msgid "State in case of connection problems"
 msgstr "接続に問題がある場合の状態"
-
-msgid "State in case of empty output"
-msgstr "出力が空の場合の状態"
 
 msgid "State in case of logins are not possible: "
 msgstr "ログイン時の状態は不可能です: "
@@ -44746,6 +44808,10 @@ msgstr "テスト"
 msgid "Text"
 msgstr "テキスト"
 
+#, fuzzy
+msgid "Text is not valid XML"
+msgstr "このルールの値は無効です。 "
+
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr ""
 
@@ -46354,6 +46420,10 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "ファイル %s は、手動で作成および保守する必要があります。"
 
+#, fuzzy
+msgid "The file does not contain XML text"
+msgstr "ログファイルがサイトに存在しません。"
+
 msgid "The file does not look like a valid key file."
 msgstr "ファイルは有効なキーファイルのようには見えません。"
 
@@ -46495,14 +46565,6 @@ msgid ""
 "The full URL to the Prometheus API endpoint including the protocol (http or "
 "https). OpenShift exposes such endpoints via a route in the openshift-"
 "monitoring namespace called prometheus-k8s."
-msgstr ""
-
-msgid ""
-"The full URL to the metadata endpoint of your organisation's Identity "
-"Provider. This endpoint is used to automatically discover the correct Single "
-"Sign-On endpoint and bindings for a successful SAML communication with the "
-"Identity Provider. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificate which should be trusted."
 msgstr ""
 
 #, python-format
@@ -49559,8 +49621,8 @@ msgstr "これは、1つの値のグループ化パターンを定義します"
 
 msgid ""
 "This directory will be used for temporarily storing backups before uploading "
-"and after downloading. Please note that Checkmk will not clean up this "
-"directory."
+"and after downloading. You can for example use the <tt>/tmp</tt> directory. "
+"Please note that Checkmk will not clean up this directory."
 msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
@@ -52651,6 +52713,10 @@ msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの�
 #, fuzzy
 msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
+
+#, fuzzy
+msgid "Time until credentials expiration"
+msgstr "ライセンスの有効期限が切れるまでの時間"
 
 msgid "Time until license expiration"
 msgstr "ライセンスの有効期限が切れるまでの時間"
@@ -56354,6 +56420,10 @@ msgstr "ここでは値 %r は許可されていません。"
 msgid "Value Type"
 msgstr "値型"
 
+#, fuzzy
+msgid "Value must be string"
+msgstr "すべてオンラインである必要があります"
+
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "{diff_path} の値が{val_t1} から {val_t2}に変更されました。"
@@ -58722,6 +58792,14 @@ msgstr "間違ったカスタマー"
 #, python-format
 msgid "Wrong service level %d (need %d..%d)"
 msgstr "間違ったサービスレベル %d ( %d..%d が必要)"
+
+#, fuzzy
+msgid "XML file upload"
+msgstr "MIBファイル%sがアップロードされました。"
+
+#, fuzzy
+msgid "XML text"
+msgstr "テキスト"
 
 msgid "XMPP Failed inbound stream establishes"
 msgstr "XMPP失敗したインバウンドストリームが確立します"
@@ -62410,6 +62488,14 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "State if just <i>some</i> check plugins received no monitoring data"
+#~ msgstr ""
+#~ "<i>一部の</i>チェックプラグインがモニタリングデータを受信しなかったかどう"
+#~ "かを記載します"
+
+#~ msgid "State in case of empty output"
+#~ msgstr "出力が空の場合の状態"
 
 #~ msgid ""
 #~ "An identifier must only consist of letters, digits, dash, dot, at and "

@@ -4768,6 +4768,16 @@ msgid ""
 "of CloudFront resources"
 msgstr ""
 
+msgid ""
+"An XML text (file) containing the metadata information of your "
+"organisation's Identity Provider. This is useful if the Checkmk server is "
+"not able to access the metadata endpoint of the Identity Provider. Please "
+"note that as a result, any configuration updates that are applied to the "
+"Identity Provider (e.g. updates to certificates) must be updated manually "
+"here as well. We therefore recommend using the metadata endpoint URL option "
+"where possible."
+msgstr ""
+
 #, fuzzy
 msgid "An absolute path to a CA certificate"
 msgstr "Calea exactă câtre log"
@@ -4980,6 +4990,10 @@ msgstr ""
 
 msgid "Apache webservers (Linux)"
 msgstr ""
+
+#, fuzzy
+msgid "App Registrations"
+msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "AppDynamics application name"
@@ -5269,6 +5283,9 @@ msgid "Ascending"
 msgstr ""
 
 msgid "Ask for an optional comment"
+msgstr ""
+
+msgid "Assertion Consumer Service endpoint"
 msgstr ""
 
 msgid "Asserts / s"
@@ -6230,6 +6247,18 @@ msgstr ""
 
 msgid "Background shading for rows"
 msgstr ""
+
+#, fuzzy
+msgid "Backup"
+msgstr "foloseste numele portului"
+
+#, fuzzy
+msgid "Backup Age"
+msgstr "foloseste numele portului"
+
+#, fuzzy
+msgid "Backup age"
+msgstr "foloseste numele portului"
 
 #, fuzzy
 msgid "Backup code"
@@ -8675,6 +8704,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 #, fuzzy
 msgid "Checkmk server URL"
 msgstr "Privire de ansamblu"
+
+#, fuzzy
+msgid "Checkmk service provider metadata"
+msgstr "Starea porturilor pentru inventariere"
 
 msgid ""
 "Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
@@ -11314,6 +11347,10 @@ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "Credentials"
 msgstr ""
+
+#, fuzzy
+msgid "Credentials Expiration"
+msgstr "Adaugă Excepție"
 
 msgid "Credentials for Connect (ODBC interface)"
 msgstr ""
@@ -16893,6 +16930,10 @@ msgstr "Grup nou"
 msgid "Entity"
 msgstr ""
 
+#, fuzzy
+msgid "Entity ID"
+msgstr "Prioritatea Syslog"
+
 msgid "Entity level used to create Checkmk piggyback hosts"
 msgstr ""
 
@@ -22390,6 +22431,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Identity Provider connection timeout"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Identity Provider metadata"
 msgstr "Conexiune Noua"
 
 msgid "Identity of an authorized key"
@@ -28813,6 +28858,10 @@ msgstr "Vechimea maxima a backup-urilor"
 msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "Vechimea maxima a backup-urilor"
 
+#, fuzzy
+msgid "Maximum age of latest backup"
+msgstr "Vechimea maxima a backup-urilor"
+
 msgid "Maximum age of latest timemachine backup"
 msgstr ""
 
@@ -29461,7 +29510,15 @@ msgstr "Mesajul Text"
 msgid "Meta usage"
 msgstr "% utilizare"
 
-msgid "Metadata endpoint URL"
+msgid "Metadata endpoint"
+msgstr ""
+
+msgid ""
+"Metadata information is exchanged between Checkmk and your Identity Provider "
+"and contains configuration information to enable a successful SAML "
+"communication. This includes the Single Sing-On endpoint and bindings used "
+"by the Identity Provider, as well as details to certificates used for "
+"signatures and encryption."
 msgstr ""
 
 msgid "Method"
@@ -35483,6 +35540,9 @@ msgid ""
 "00:00 you need to select <i>last week</i>."
 msgstr ""
 
+msgid "Please provide a '.xml' file"
+msgstr ""
+
 msgid "Please provide a valid host and port"
 msgstr ""
 
@@ -37299,6 +37359,10 @@ msgstr "Statusul Serverului"
 
 msgid "Recovery Area"
 msgstr ""
+
+#, fuzzy
+msgid "Recovery Services Vault"
+msgstr "Statusul Serverului"
 
 #, fuzzy
 msgid "Recovery Status"
@@ -43291,6 +43355,9 @@ msgstr ""
 msgid "State if calibration is invalid"
 msgstr ""
 
+msgid "State if check plugins received no monitoring data"
+msgstr ""
+
 msgid "State if conditions above are not satisfied."
 msgstr ""
 
@@ -43360,9 +43427,6 @@ msgstr "Numele elementului pentru eveniment"
 #, fuzzy
 msgid "State if input is Unknown"
 msgstr "Numele elementului pentru eveniment"
-
-msgid "State if just <i>some</i> check plugins received no monitoring data"
-msgstr ""
 
 msgid "State if license is expired"
 msgstr ""
@@ -43449,9 +43513,6 @@ msgid "State in case of available but not enabled TLS"
 msgstr ""
 
 msgid "State in case of connection problems"
-msgstr ""
-
-msgid "State in case of empty output"
 msgstr ""
 
 msgid "State in case of logins are not possible: "
@@ -45205,6 +45266,9 @@ msgstr "testare"
 msgid "Text"
 msgstr ""
 
+msgid "Text is not valid XML"
+msgstr ""
+
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr ""
 
@@ -46527,6 +46591,10 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr ""
 
+#, fuzzy
+msgid "The file does not contain XML text"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid "The file does not look like a valid key file."
 msgstr ""
 
@@ -46651,14 +46719,6 @@ msgid ""
 "The full URL to the Prometheus API endpoint including the protocol (http or "
 "https). OpenShift exposes such endpoints via a route in the openshift-"
 "monitoring namespace called prometheus-k8s."
-msgstr ""
-
-msgid ""
-"The full URL to the metadata endpoint of your organisation's Identity "
-"Provider. This endpoint is used to automatically discover the correct Single "
-"Sign-On endpoint and bindings for a successful SAML communication with the "
-"Identity Provider. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificate which should be trusted."
 msgstr ""
 
 #, python-format
@@ -49286,8 +49346,8 @@ msgstr ""
 
 msgid ""
 "This directory will be used for temporarily storing backups before uploading "
-"and after downloading. Please note that Checkmk will not clean up this "
-"directory."
+"and after downloading. You can for example use the <tt>/tmp</tt> directory. "
+"Please note that Checkmk will not clean up this directory."
 msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
@@ -51770,6 +51830,10 @@ msgstr ""
 
 msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr ""
+
+#, fuzzy
+msgid "Time until credentials expiration"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "Time until license expiration"
 msgstr ""
@@ -55584,6 +55648,9 @@ msgstr ""
 msgid "Value Type"
 msgstr ""
 
+msgid "Value must be string"
+msgstr ""
+
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr ""
@@ -57696,6 +57763,13 @@ msgstr ""
 #, python-format
 msgid "Wrong service level %d (need %d..%d)"
 msgstr ""
+
+msgid "XML file upload"
+msgstr ""
+
+#, fuzzy
+msgid "XML text"
+msgstr "Mesajul Text"
 
 msgid "XMPP Failed inbound stream establishes"
 msgstr ""
@@ -63012,10 +63086,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Reading request"
 #~ msgstr "cereri"
-
-#, fuzzy
-#~ msgid "Recovery area"
-#~ msgstr "Statusul Serverului"
 
 #, fuzzy
 #~ msgid "Registry"

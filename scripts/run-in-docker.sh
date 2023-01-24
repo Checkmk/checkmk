@@ -58,12 +58,16 @@ fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.sh "${IMAGE_ALIAS}")"}"
+: "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
-echo "Running in Docker container from image ${IMAGE_ID} (cmd=$*) (workdir=${PWD})"
+if [ -t 0 ]; then
+    echo "Running in Docker container from image ${IMAGE_ID} (cmd=$*) (workdir=${PWD})"
+fi
 
 # shellcheck disable=SC2086
-docker run -t -a stdout -a stderr \
+docker run -a stdout -a stderr \
     --rm \
+    ${TERMINAL_FLAG} \
     --init \
     -u "${UID}:$(id -g)" \
     -v "${REPO_DIR}:${REPO_DIR}" \

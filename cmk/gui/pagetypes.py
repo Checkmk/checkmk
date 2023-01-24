@@ -741,7 +741,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                     "publishing user has selected."
                 )
                 % title_lower,
-                defaults=["admin", "user"],
+                defaults=["admin"],
             )
         )
 
@@ -1405,6 +1405,12 @@ def PublishTo(
                     title=_("Publish to all users of sites"),
                     rows=15,
                     size=80,
+                    help=_(
+                        "Select sites the %s should be avalable on. It will "
+                        "become available for all users of that sites on the "
+                        "next activation of changes for the selected sites."
+                    )
+                    % type_title,
                 ),
             )
         )

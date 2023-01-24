@@ -229,7 +229,7 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
         ("Publish %s to users of selected sites") % what_plural,
         _("Make %s visible and usable for users of sites the publishing user has selected.")
         % what_plural,
-        ["admin", "user"],
+        ["admin"],
     )
 
     declare_permission(

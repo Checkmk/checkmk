@@ -206,8 +206,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "service_period",
         "Time period during which the object is expected to be available",
         offsets_custom_variables, [](const service &p) {
-            auto attrs = NagiosCore::customAttributes(
-                p.custom_variables, AttributeKind::custom_variables);
+            auto attrs = CustomAttributes(p.custom_variables,
+                                          AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             if (it != attrs.end()) {
                 return it->second;
@@ -500,8 +500,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "in_service_period",
         "Whether this object is currently in its service period (0/1)", offsets,
         [](const service &r) {
-            auto attrs = NagiosCore::customAttributes(
-                r.custom_variables, AttributeKind::custom_variables);
+            auto attrs = CustomAttributes(r.custom_variables,
+                                          AttributeKind::custom_variables);
             auto it = attrs.find("SERVICE_PERIOD");
             return it == attrs.end() ||
                    g_timeperiods_cache->inTimeperiod(it->second);

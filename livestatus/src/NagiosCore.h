@@ -120,9 +120,6 @@ public:
     size_t numQueuedAlerts() override;
     size_t numCachedLogMessages() override;
 
-    static Attributes customAttributes(const customvariablesmember *holder,
-                                       AttributeKind kind);
-
     MetricLocation metricLocation(const std::string &host_name,
                                   const std::string &service_description,
                                   const Metric::Name &var) const override;
@@ -153,6 +150,7 @@ private:
     std::vector<CommentData> comments_for_object(const ::host *h,
                                                  const ::service *s) const;
 };
+
 Attributes CustomAttributes(const customvariablesmember *first,
                             AttributeKind kind);
 

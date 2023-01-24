@@ -414,7 +414,11 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
 
 
 def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
-    assert gce_sections[0].labels == {"cmk/gcp/labels/t": "tt", "cmk/gcp/projectId": "test"}
+    assert gce_sections[0].labels == {
+        "cmk/gcp/gce": "instance",
+        "cmk/gcp/labels/t": "tt",
+        "cmk/gcp/projectId": "test",
+    }
 
 
 def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:

@@ -1071,13 +1071,17 @@ def default_labeler(asset: Asset) -> Labels:
     return {}
 
 
+def gce_labeler(asset: Asset) -> Labels:
+    return {**default_labeler(asset), "cmk/gcp/gce": "instance"}
+
+
 GCE = PiggyBackService(
     name="gce",
     asset_type="compute.googleapis.com/Instance",
     asset_label="id",
     metric_label="instance_id",
     name_label="name",
-    labeler=default_labeler,
+    labeler=gce_labeler,
     services=[
         Service(
             name="uptime_total",

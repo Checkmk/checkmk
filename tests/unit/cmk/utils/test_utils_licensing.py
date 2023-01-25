@@ -29,7 +29,6 @@ from cmk.utils.licensing.export import (
     SubscriptionDetailsError,
     SubscriptionDetailsLimit,
     SubscriptionDetailsLimitType,
-    SubscriptionDetailsSource,
 )
 
 
@@ -667,7 +666,6 @@ def test_subscription_details_empty_source() -> None:
             "subscription_limit": ("custom", "3"),
         }
     ) == SubscriptionDetails(
-        source=SubscriptionDetailsSource.empty,
         start=1,
         end=2,
         limit=SubscriptionDetailsLimit(
@@ -678,16 +676,13 @@ def test_subscription_details_empty_source() -> None:
 
 
 @pytest.mark.parametrize(
-    "raw_subscription_details_source, subscription_details_source",
+    "raw_subscription_details_source",
     [
-        ("empty", SubscriptionDetailsSource.empty),
-        ("manual", SubscriptionDetailsSource.manual),
-        # ("from_tribe29", SubscriptionDetailsSource.from_tribe29),
+        "empty",
+        "manual",
     ],
 )
-def test_subscription_details_source(
-    raw_subscription_details_source: str, subscription_details_source: SubscriptionDetailsSource
-) -> None:
+def test_subscription_details_source(raw_subscription_details_source: str) -> None:
     assert SubscriptionDetails.parse(
         {
             "source": raw_subscription_details_source,
@@ -696,7 +691,6 @@ def test_subscription_details_source(
             "subscription_limit": ("custom", "3"),
         }
     ) == SubscriptionDetails(
-        source=subscription_details_source,
         start=1,
         end=2,
         limit=SubscriptionDetailsLimit(
@@ -778,7 +772,6 @@ def test_subscription_details_limit(
             "subscription_limit": raw_subscription_details_limit,
         }
     ) == SubscriptionDetails(
-        source=SubscriptionDetailsSource.empty,
         start=1,
         end=2,
         limit=subscription_details_limit,
@@ -790,7 +783,6 @@ def test_subscription_details_limit(
     [
         (
             SubscriptionDetails(
-                source=SubscriptionDetailsSource.empty,
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
@@ -799,7 +791,6 @@ def test_subscription_details_limit(
                 ),
             ),
             {
-                "source": "empty",
                 "subscription_start": 1,
                 "subscription_end": 2,
                 "subscription_limit": ("fixed", 3000),
@@ -807,7 +798,6 @@ def test_subscription_details_limit(
         ),
         (
             SubscriptionDetails(
-                source=SubscriptionDetailsSource.empty,
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
@@ -816,7 +806,6 @@ def test_subscription_details_limit(
                 ),
             ),
             {
-                "source": "empty",
                 "subscription_start": 1,
                 "subscription_end": 2,
                 "subscription_limit": ("unlimited", -1),
@@ -824,7 +813,6 @@ def test_subscription_details_limit(
         ),
         (
             SubscriptionDetails(
-                source=SubscriptionDetailsSource.empty,
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
@@ -833,7 +821,6 @@ def test_subscription_details_limit(
                 ),
             ),
             {
-                "source": "empty",
                 "subscription_start": 1,
                 "subscription_end": 2,
                 "subscription_limit": ("custom", 3),
@@ -852,7 +839,6 @@ def test_subscription_details_for_report(
     [
         (
             SubscriptionDetails(
-                source=SubscriptionDetailsSource.empty,
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
@@ -861,7 +847,6 @@ def test_subscription_details_for_report(
                 ),
             ),
             {
-                "source": "empty",
                 "subscription_start": 1,
                 "subscription_end": 2,
                 "subscription_limit": "3000",
@@ -869,7 +854,6 @@ def test_subscription_details_for_report(
         ),
         (
             SubscriptionDetails(
-                source=SubscriptionDetailsSource.empty,
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
@@ -878,7 +862,6 @@ def test_subscription_details_for_report(
                 ),
             ),
             {
-                "source": "empty",
                 "subscription_start": 1,
                 "subscription_end": 2,
                 "subscription_limit": "2000000+",
@@ -886,7 +869,6 @@ def test_subscription_details_for_report(
         ),
         (
             SubscriptionDetails(
-                source=SubscriptionDetailsSource.empty,
                 start=1,
                 end=2,
                 limit=SubscriptionDetailsLimit(
@@ -895,7 +877,6 @@ def test_subscription_details_for_report(
                 ),
             ),
             {
-                "source": "empty",
                 "subscription_start": 1,
                 "subscription_end": 2,
                 "subscription_limit": ("custom", 3),

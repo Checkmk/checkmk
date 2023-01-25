@@ -52,26 +52,6 @@ class SubscriptionPeriodError(Exception):
     pass
 
 
-class SubscriptionDetailsSource(Enum):
-    empty = auto()
-    manual = auto()
-    # from_tribe29 = auto()
-
-    @classmethod
-    def parse(cls, raw_subscription_details_source: str) -> SubscriptionDetailsSource:
-        try:
-            return _SUBSCRIPTION_DETAILS_SOURCE_MAP[raw_subscription_details_source]
-        except KeyError:
-            raise SubscriptionDetailsError(
-                f"Unknown subscription details source {raw_subscription_details_source}"
-            ) from None
-
-
-_SUBSCRIPTION_DETAILS_SOURCE_MAP = {
-    "empty": SubscriptionDetailsSource.empty,
-    "manual": SubscriptionDetailsSource.manual,
-}
-
 _SUBSCRIPTION_LIMITS_FIXED = (
     "3000",
     "7000",
@@ -166,28 +146,24 @@ class SubscriptionDetailsLimit(NamedTuple):
 
 
 class RawSubscriptionDetails(TypedDict):
-    source: str
     subscription_start: int
     subscription_end: int
     subscription_limit: tuple[str, int]
 
 
 class RawSubscriptionDetailsForConfig(TypedDict):
-    source: str
     subscription_start: int
     subscription_end: int
     subscription_limit: str | tuple[str, int]
 
 
 class SubscriptionDetails(NamedTuple):
-    source: SubscriptionDetailsSource
     start: int
     end: int
     limit: SubscriptionDetailsLimit
 
     def for_report(self) -> RawSubscriptionDetails:
         return {
-            "source": self.source.name,
             "subscription_start": self.start,
             "subscription_end": self.end,
             "subscription_limit": self.limit.for_report(),
@@ -195,7 +171,6 @@ class SubscriptionDetails(NamedTuple):
 
     def for_config(self) -> RawSubscriptionDetailsForConfig:
         return {
-            "source": self.source.name,
             "subscription_start": self.start,
             "subscription_end": self.end,
             "subscription_limit": self.limit.for_config(),
@@ -213,29 +188,21 @@ class SubscriptionDetails(NamedTuple):
             isinstance(raw_subscription_details, (list, tuple))
             and len(raw_subscription_details) == 2
         ):
-            source, details = raw_subscription_details
+            _source, details = raw_subscription_details
             if not isinstance(details, dict):
                 raise SubscriptionDetailsError()
 
             cls._validate_detail_values(details)
 
             return SubscriptionDetails(
-                source=SubscriptionDetailsSource.parse(source),
                 start=int(details["subscription_start"]),
                 end=int(details["subscription_end"]),
                 limit=SubscriptionDetailsLimit.parse(details["subscription_limit"]),
             )
 
         if isinstance(raw_subscription_details, dict):
-            if "source" in raw_subscription_details:
-                source = SubscriptionDetailsSource.parse(raw_subscription_details["source"])
-            else:
-                source = SubscriptionDetailsSource.empty
-
             cls._validate_detail_values(raw_subscription_details)
-
             return SubscriptionDetails(
-                source=source,
                 start=int(raw_subscription_details["subscription_start"]),
                 end=int(raw_subscription_details["subscription_end"]),
                 limit=SubscriptionDetailsLimit.parse(

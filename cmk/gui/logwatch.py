@@ -43,7 +43,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 
 #   .--HTML Output---------------------------------------------------------.
@@ -501,13 +501,11 @@ def _page_menu_entry_acknowledge(
         title=label,
         icon_name="delete",
         item=make_simple_link(
-            make_confirm_link(
+            make_confirm_delete_link(
                 url=makeactionuri(request, transactions, urivars),
-                message=_(
-                    "Do you really want to acknowledge %s "
-                    "by <b>deleting</b> all stored messages?"
-                )
-                % ack_msg,
+                title=_("Clear logs by deleting all stored messages"),
+                message=_("This affects %s") % ack_msg,
+                confirm_button=_("Clear & Delete"),
             )
         ),
         is_shortcut=True,

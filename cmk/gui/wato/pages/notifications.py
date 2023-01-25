@@ -45,7 +45,7 @@ from cmk.gui.plugins.wato.utils import (
     ABCEventsMode,
     ContactGroupSelection,
     flash,
-    make_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     notification_parameter_registry,
 )
@@ -300,6 +300,8 @@ class ABCNotificationsMode(ABCEventsMode):
                         html.icon("rulenmatch", _("This rule does not match: %s") % reason)
 
                 if show_buttons and self._actions_allowed(rule):
+                    table.cell(_("#"), css=["narrow nowrap"])
+                    html.write_text(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     links = self._rule_links(rule, nr, profilemode, userid)
                     html.icon_button(links.edit, _("Edit this notification rule"), "edit")
@@ -442,7 +444,7 @@ class ABCNotificationsMode(ABCEventsMode):
         else:
             mode = "notification_rule"
 
-        delete_url = make_confirm_link(
+        delete_url = make_confirm_delete_link(
             url=make_action_link(
                 [
                     ("mode", listmode),
@@ -450,8 +452,8 @@ class ABCNotificationsMode(ABCEventsMode):
                     ("_delete", nr),
                 ]
             ),
-            message=_("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?")
-            % (nr, rule.get("description", "")),
+            title=_("Delete notification rule #%d") % nr,
+            identifier=rule.get("description", ""),
         )
         drag_url = make_action_link(
             [

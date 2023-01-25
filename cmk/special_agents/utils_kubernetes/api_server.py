@@ -107,10 +107,6 @@ class RawAPIResponse:
 
 
 class RawAPI:
-    """
-    readyz and livez is not part of the OpenAPI doc, so we have to query it directly.
-    """
-
     def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
         self.timeout = timeout
         self._api_client = api_client
@@ -135,6 +131,27 @@ class RawAPI:
             response=response.data.decode("utf-8"), status_code=status_code, headers=headers
         )
 
+
+class CoreAPI(RawAPI):
+    """
+    readyz and livez is not part of the OpenAPI doc, so we have to query it directly.
+    """
+
+    def query_raw_version(self) -> str:
+        return self._request("GET", "/version").response
+
+    def query_kubelet_metrics(self, node_name: str) -> str:
+        return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
+
+    def query_raw_nodes(self) -> JSONNodeList:
+        return json.loads(self._request("GET", "/api/v1/nodes").response)
+
+    def query_api_health(self) -> api.APIHealth:
+        return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
+
+    def query_kubelet_health(self, node_name: str) -> api.HealthZ:
+        return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
+
     def _get_healthz(self, url: str) -> api.HealthZ:
         def get_health(query_params: dict[str, str] | None = None) -> tuple[int, str]:
             # https://kubernetes.io/docs/reference/using-api/health-checks/
@@ -156,23 +173,10 @@ class RawAPI:
             verbose_response=verbose_response,
         )
 
-    def query_raw_version(self) -> str:
-        return self._request("GET", "/version").response
 
-    def query_api_health(self) -> api.APIHealth:
-        return api.APIHealth(ready=self._get_healthz("/readyz"), live=self._get_healthz("/livez"))
-
-    def query_kubelet_health(self, node_name: str) -> api.HealthZ:
-        return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
-
+class AppsAPI(RawAPI):
     def query_raw_statefulsets(self) -> JSONStatefulSetList:
         return json.loads(self._request("GET", "/apis/apps/v1/statefulsets").response)
-
-    def query_kubelet_metrics(self, node_name: str) -> str:
-        return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
-
-    def query_raw_nodes(self) -> JSONNodeList:
-        return json.loads(self._request("GET", "/api/v1/nodes").response)
 
 
 def _extract_sequence_based_identifier(git_version: str) -> str | None:
@@ -333,12 +337,13 @@ class UnparsedAPIData:
 
 
 def query_raw_api_data_v2(
+    core_api: CoreAPI,
+    apps_api: AppsAPI,
     client_batch_api: ClientBatchAPI,
     client_core_api: ClientCoreAPI,
-    raw_api: RawAPI,
     client_apps_api: ClientAppsAPI,
 ) -> UnparsedAPIData:
-    raw_nodes = raw_api.query_raw_nodes()
+    raw_nodes = core_api.query_raw_nodes()
     return UnparsedAPIData(
         raw_jobs=client_batch_api.query_raw_jobs(),
         raw_cron_jobs=client_batch_api.query_raw_cron_jobs(),
@@ -349,15 +354,17 @@ def query_raw_api_data_v2(
         raw_persistent_volume_claims=client_core_api.query_persistent_volume_claims(),
         raw_deployments=client_apps_api.query_raw_deployments(),
         raw_daemonsets=client_apps_api.query_raw_daemon_sets(),
-        raw_statefulsets=raw_api.query_raw_statefulsets(),
+        raw_statefulsets=apps_api.query_raw_statefulsets(),
         raw_replica_sets=client_apps_api.query_raw_replica_sets(),
         node_to_kubelet_health={
-            raw_node["metadata"]["name"]: raw_api.query_kubelet_health(raw_node["metadata"]["name"])
+            raw_node["metadata"]["name"]: core_api.query_kubelet_health(
+                raw_node["metadata"]["name"]
+            )
             for raw_node in raw_nodes["items"]
         },
-        api_health=raw_api.query_api_health(),
+        api_health=core_api.query_api_health(),
         raw_kubelet_open_metrics_dumps=[
-            raw_api.query_kubelet_metrics(raw_node["metadata"]["name"])
+            core_api.query_kubelet_metrics(raw_node["metadata"]["name"])
             for raw_node in raw_nodes["items"]
         ],
     )
@@ -456,16 +463,18 @@ def parse_api_data(
 
 
 def create_api_data_v2(
+    core_api: CoreAPI,
+    apps_api: AppsAPI,
     client_batch_api: ClientBatchAPI,
     client_core_api: ClientCoreAPI,
-    raw_api: RawAPI,
     client_apps_api: ClientAppsAPI,
     git_version: api.GitVersion,
 ) -> APIData:
     raw_api_data = query_raw_api_data_v2(
+        core_api,
+        apps_api,
         client_batch_api,
         client_core_api,
-        raw_api,
         client_apps_api,
     )
     object_to_owners = parse_object_to_owners(
@@ -512,17 +521,19 @@ def from_kubernetes(api_client: client.ApiClient, timeout: tuple[int, int]) -> A
     """
     client_batch_api = ClientBatchAPI(api_client, timeout)
     client_core_api = ClientCoreAPI(api_client, timeout)
-    raw_api = RawAPI(api_client, timeout)
     client_apps_api = ClientAppsAPI(api_client, timeout)
 
-    raw_version = raw_api.query_raw_version()
+    core_api = CoreAPI(api_client, timeout)
+    apps_api = AppsAPI(api_client, timeout)
+    raw_version = core_api.query_raw_version()
     version = version_from_json(raw_version)
     _verify_version_support(version)
 
     return create_api_data_v2(
+        core_api,
+        apps_api,
         client_batch_api,
         client_core_api,
-        raw_api,
         client_apps_api,
         version.git_version,
     )

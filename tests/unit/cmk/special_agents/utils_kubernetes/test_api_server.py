@@ -17,8 +17,8 @@ from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeByteRespons
 
 from cmk.special_agents.utils_kubernetes.api_server import (
     _verify_version_support,
+    CoreAPI,
     decompose_git_version,
-    RawAPI,
     UnsupportedEndpointData,
     version_from_json,
 )
@@ -31,30 +31,30 @@ def kubernetes_api_client() -> ApiClient:
     return ApiClient(config)
 
 
-@pytest.fixture(name="raw_api")
-def _raw_api() -> RawAPI:
-    return RawAPI(kubernetes_api_client(), timeout=(10, 10))
+@pytest.fixture(name="core_api")
+def _core_api() -> CoreAPI:
+    return CoreAPI(kubernetes_api_client(), timeout=(10, 10))
 
 
 CALL_API = "cmk.special_agents.utils_kubernetes.api_server.client.ApiClient.call_api"
 
 
-def test_raw_api_get_healthz_ok(raw_api: RawAPI) -> None:
+def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
         mock_request.return_value = (FakeByteResponse("response-ok"), 200, {})
-        result = raw_api._get_healthz("/some_health_endpoint")
+        result = core_api._get_healthz("/some_health_endpoint")
     assert result.status_code == 200
     assert result.response == "response-ok"
     assert result.verbose_response is None
 
 
-def test_raw_api_get_healthz_nok(raw_api: RawAPI) -> None:
+def test_raw_api_get_healthz_nok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
         mock_request.side_effect = [
             (FakeByteResponse("response-nok"), 500, {}),
             (FakeByteResponse("verbose\nresponse\nnok"), 500, {}),
         ]
-        result = raw_api._get_healthz("/some_health_endpoint")
+        result = core_api._get_healthz("/some_health_endpoint")
 
     assert result.status_code == 500
     assert result.response == "response-nok"
@@ -127,7 +127,7 @@ version_json_pytest_params = [
 
 @pytest.mark.parametrize("version_json, _", version_json_pytest_params)
 def test_version_endpoint(
-    version_json: Mapping[str, str], _: api.KubernetesVersion, raw_api: RawAPI
+    version_json: Mapping[str, str], _: api.KubernetesVersion, core_api: CoreAPI
 ) -> None:
     # arrange
     version_json_dump = json.dumps(version_json)
@@ -138,12 +138,12 @@ def test_version_endpoint(
             200,
             {"content-type": "application/json"},
         )
-        queried_version = raw_api.query_raw_version()
+        queried_version = core_api.query_raw_version()
     # assert
     assert queried_version == version_json_dump
 
 
-def test_version_endpoint_no_json(raw_api: RawAPI) -> None:
+def test_version_endpoint_no_json(core_api: CoreAPI) -> None:
     """
 
     Invalid endpoint, since returned data is not json. RawAPI will not
@@ -151,11 +151,11 @@ def test_version_endpoint_no_json(raw_api: RawAPI) -> None:
     """
     with patch(CALL_API) as mock_request:
         mock_request.return_value = (FakeByteResponse("I'm not json"), 200, {})
-        result = raw_api.query_raw_version()
+        result = core_api.query_raw_version()
     assert result == "I'm not json"
 
 
-def test_version_endpoint_invalid_json(raw_api: RawAPI) -> None:
+def test_version_endpoint_invalid_json(core_api: CoreAPI) -> None:
     """
 
     Invalid endpoint, since gitVersion field is missing. RawAPI will not
@@ -170,7 +170,7 @@ def test_version_endpoint_invalid_json(raw_api: RawAPI) -> None:
             {"content-type": "application/json"},
         )
         # act
-        queried_version = raw_api.query_raw_version()
+        queried_version = core_api.query_raw_version()
     # assert
     assert queried_version == "{}"
 

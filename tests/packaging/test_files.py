@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -223,6 +224,21 @@ def test_src_only_contains_relative_version_paths(
     ).splitlines():
         path = line.split()[5]
         assert path.startswith(prefix + "/")
+
+
+def test_src_does_not_contain_dev_files(
+    package_path: str,
+) -> None:
+    """test that there are no dev files (currently only .f12 files) are packed"""
+
+    if not package_path.endswith(".tar.gz"):
+        pytest.skip("%s is not a source package" % os.path.basename(package_path))
+
+    for line in subprocess.check_output(
+        ["tar", "tvf", package_path], encoding="utf-8"
+    ).splitlines():
+        path = Path(line.split()[5])
+        assert path.name != ".f12"
 
 
 def test_src_not_contains_enterprise_sources(package_path: str) -> None:

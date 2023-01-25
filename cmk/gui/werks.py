@@ -52,7 +52,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -254,9 +254,10 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
         is_shortcut=True,
         is_suggested=True,
         item=make_simple_link(
-            make_confirm_link(
+            make_confirm_delete_link(
                 url=makeactionuri(request, transactions, [("_ack_all", "1")]),
-                message=_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+                title=_("Acknowledge all incompatible werks"),
+                confirm_button=_("Acknowledge all"),
             )
         ),
         is_enabled=bool(unacknowledged_incompatible_werks()),

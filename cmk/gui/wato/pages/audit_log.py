@@ -27,7 +27,13 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import flash, make_confirm_link, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import (
+    flash,
+    make_confirm_delete_link,
+    mode_registry,
+    redirect,
+    WatoMode,
+)
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.userdb import UserSelection
@@ -133,9 +139,10 @@ class ModeAuditLog(WatoMode):
                 title=_("Clear log"),
                 icon_name="delete",
                 item=make_simple_link(
-                    make_confirm_link(
+                    make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_action", "clear")]),
-                        message=_("Do you really want to clear the audit log?"),
+                        title=_("Clear audit log"),
+                        confirm_button=_("Clear"),
                     )
                 ),
             )

@@ -19,7 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import make_confirm_link, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils import make_confirm_delete_link, mode_registry, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.theme import theme
@@ -152,16 +152,22 @@ class ModeIcons(WatoMode):
 
         icons = sorted(self._load_custom_icons().items())
         with table_element("icons", _("Custom Icons")) as table:
-            for icon_name, category_name in icons:
+            for nr, (icon_name, category_name) in enumerate(icons):
                 table.row()
 
+                table.cell(_("#"))
+                html.write_text(nr)
+
                 table.cell(_("Actions"), css=["buttons"])
-                delete_url = make_confirm_link(
+                category = IconSelector.category_alias(category_name)
+                delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "icons"), ("_delete", icon_name)]),
-                    message=_("Do you really want to delete the icon <b>%s</b>?") % icon_name,
+                    title=_("Delete icon #%d") % nr,
+                    message=_("Category: %s") % category,
+                    identifier=icon_name,
                 )
                 html.icon_button(delete_url, _("Delete this Icon"), "delete")
 
                 table.cell(_("Icon"), html.render_icon(icon_name), css=["buttons"])
                 table.cell(_("Name"), icon_name)
-                table.cell(_("Category"), IconSelector.category_alias(category_name))
+                table.cell(_("Category"), category)

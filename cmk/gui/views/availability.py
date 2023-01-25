@@ -56,7 +56,7 @@ from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, urlencode_vars
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     AbsoluteDate,
@@ -1043,8 +1043,10 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     render_date = availability.get_annotation_date_render_function(annos_to_render, avoptions)
 
     with table_element(title=_("Annotations"), omit_if_empty=True) as table:
-        for (site_id, host, service), annotation in annos_to_render:
+        for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
+            table.cell(_("#"))
+            html.write_text(nr)
             table.cell("", css=["buttons"])
             anno_vars = [
                 ("anno_site", site_id),
@@ -1056,9 +1058,10 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             edit_url = makeuri(request, anno_vars)
             html.icon_button(edit_url, _("Edit this annotation"), "edit")
             del_anno: HTTPVariables = [("_delete_annotation", "1")]
-            delete_url = make_confirm_link(
+            delete_url = make_confirm_delete_link(
                 url=makeactionuri(request, transactions, del_anno + anno_vars),
-                message=_("Are you sure that you want to delete this annotation?"),
+                title=_("Delete annotation #%d") % nr,
+                message=_("Annotation: %s") % " ".join(annotation["text"].strip().split()),
             )
             html.icon_button(delete_url, _("Delete this annotation"), "delete")
 

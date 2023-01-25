@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import configure_attributes, make_confirm_link, mode_registry
+from cmk.gui.plugins.wato.utils import configure_attributes, make_confirm_delete_link, mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import is_wato_slave_site
@@ -533,9 +533,10 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             title=_("Delete"),
             icon_name="delete",
             item=make_simple_link(
-                make_confirm_link(
+                make_confirm_delete_link(
                     url=makeactionuri(request, transactions, [("delete", "1")]),
-                    message=_("Do you really want to delete the host <tt>%s</tt>?") % host.name(),
+                    title=_("Delete host"),
+                    identifier=host.name(),
                 )
             ),
         )
@@ -552,16 +553,14 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                 title=_("Remove TLS registration"),
                 icon_name="delete",
                 item=make_simple_link(
-                    make_confirm_link(
+                    make_confirm_delete_link(
                         url=makeactionuri(
                             request, transactions, [("_remove_tls_registration", "1")]
                         ),
-                        message=_(
-                            "Do you really want to remove the TLS registration of the host"
-                            " <tt>%s</tt>?"
-                        )
-                        % host.name()
-                        + remove_tls_registration_help(),
+                        title=_("Remove TLS registration"),
+                        message=remove_tls_registration_help(),
+                        confirm_button=_("Remove"),
+                        warning=True,
                     )
                 ),
             )

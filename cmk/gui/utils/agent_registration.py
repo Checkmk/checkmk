@@ -8,8 +8,9 @@ from cmk.gui.i18n import _
 
 def remove_tls_registration_help() -> str:
     return _(
-        "<br>This action invalidates the stored connection data and the host connections will not"
-        " work any longer. There are only 2 reasons to do this:"
+        "This action invalidates the stored connection data and the host connections will not"
+        " work any longer.<br>"
+        "There are only 2 reasons to do this:"
         "<ul>"
         "<li>You do not trust this host any longer and don't want to receive or fetch data"
         " anymore.</li>"

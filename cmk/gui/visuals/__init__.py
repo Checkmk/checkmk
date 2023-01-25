@@ -96,7 +96,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
     file_name_and_query_vars_from_url,
-    make_confirm_link,
+    make_confirm_delete_link,
     makeactionuri,
     makeuri,
     makeuri_contextless,
@@ -783,12 +783,16 @@ def page_list(  # pylint: disable=too-many-branches
                 # Delete
                 if owner and (owner == user.id or user.may("general.delete_foreign_%s" % what)):
                     add_vars: HTTPVariables = [("_delete", visual_name)]
+                    confirm_message = _("ID: %s") % visual_name
                     if owner != user.id:
                         add_vars.append(("_user_id", owner))
+                        confirm_message += "<br>" + _("Owner: %s") % owner
                     html.icon_button(
-                        make_confirm_link(
+                        make_confirm_delete_link(
                             url=makeactionuri(request, transactions, add_vars),
-                            message=_('Please confirm the deletion of "%s".') % visual["title"],
+                            title=_("Delete %s") % visual_type.title,
+                            message=confirm_message,
+                            identifier=str(visual["title"]),
                         ),
                         _("Delete!"),
                         "delete",

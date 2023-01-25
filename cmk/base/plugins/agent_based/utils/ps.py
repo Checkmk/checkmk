@@ -599,8 +599,7 @@ def check_ps_common(
     if processes.count:
         yield from cpu_check(processes.percent_cpu, params)
 
-    if "single_cpulevels" in params:
-        yield from individual_process_check(processes, params)
+    yield from individual_process_check(processes, params, total_ram_map)
 
     # only check handle_count if provided by wmic counters
     if processes.handle_count:
@@ -659,19 +658,27 @@ def memory_check(
         yield Metric(metric, size, levels=params.get(levels))
 
 
+def get_total_resident_mem_size(
+    processes: ProcessAggregator, total_ram_map: Mapping[str, float]
+) -> float:
+    """Return the total RAM size or raise KeyError if the size can't be calculated"""
+    nodes = processes.running_on_nodes or ("",)
+    return sum(total_ram_map[node] for node in nodes)
+
+
 def memory_perc_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
     total_ram_map: Mapping[str, float],
 ) -> CheckResult:
     """Check levels that are in percent of the total RAM of the host"""
-    if not processes.resident_size or "resident_levels_perc" not in params:
+    if not processes.resident_size or (
+        "resident_levels_perc" not in params and "resident_perc_average" not in params
+    ):
         return
 
-    nodes = processes.running_on_nodes or ("",)
-
     try:
-        total_ram = sum(total_ram_map[node] for node in nodes)
+        total_ram = get_total_resident_mem_size(processes, total_ram_map)
     except KeyError:
         yield Result(
             state=State.UNKNOWN,
@@ -719,37 +726,75 @@ def cpu_check(percent_cpu: float, params: Mapping[str, Any]) -> CheckResult:
     )
 
 
+def extract_process_data(process: _Process) -> tuple[str | None, str | None, float, float, float]:
+    name, pid, cpu_usage, virt_usage, res_usage = None, None, 0.0, 0.0, 0.0
+    for the_item, (value, _unit) in process:
+        if the_item == "name":
+            name = str(value)
+        elif the_item == "pid":
+            pid = str(value)
+        elif the_item == "cpu usage":
+            cpu_usage += float(value)  # float conversion fo mypy
+        elif the_item == "virtual size":
+            virt_usage = float(value) * 1024  # memory is reported in kB
+        elif the_item == "resident size":
+            res_usage = float(value) * 1024  # memory is reported in kB
+    return name, pid, cpu_usage, virt_usage, res_usage
+
+
 def individual_process_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
+    total_ram_map: Mapping[str, float],
 ) -> CheckResult:
-    levels = params["single_cpulevels"]
-    for p in processes.processes:
-        cpu_usage, name, pid = 0.0, None, None
+    cpu_levels = params.get("single_cpulevels")
+    virt_levels = params.get("single_virtual_levels")
+    res_levels = params.get("single_resident_levels")
+    res_levels_perc = params.get("single_resident_levels_perc")
+    if (
+        cpu_levels is None
+        and virt_levels is None
+        and res_levels is None
+        and res_levels_perc is None
+    ):
+        return  # Let's skip calculations if we don't have anything to check
 
-        for the_item, (value, _unit) in p:
-            if the_item == "name":
-                name = value
-            if the_item == "pid":
-                pid = value
-            elif the_item == "cpu usage":
-                cpu_usage += float(value)
-
-        result, *_ = check_levels(
-            cpu_usage,
-            levels_upper=levels,
-            render_func=render.percent,
-            label=str(name) + (" with PID %s CPU" % pid if pid else ""),
-        )
-        # To avoid listing of all processes regardless of level setting we
-        # only generate output in case WARN level has been reached.
-        # In case a full list of processes is desired, one should enable
-        # `process_info`, i.E."Enable per-process details in long-output"
-        if result.state is not State.OK:
+    total_res_memory = None
+    if res_levels_perc is not None:
+        try:
+            total_res_memory = get_total_resident_mem_size(processes, total_ram_map)
+        except KeyError:
             yield Result(
-                state=result.state,
-                notice=result.summary,
+                state=State.UNKNOWN,
+                summary="Percentual RAM levels configured, but total RAM is unknown",
             )
+
+    for p in processes.processes:
+        name, pid, cpu_usage, virt_usage, res_usage = extract_process_data(p)
+        res_usage_pct = res_usage * 100 / total_res_memory if total_res_memory is not None else None
+        label_prefix = str(name) + (" with PID %s" % pid if pid else "")
+
+        for levels, metric_name, metric_value, render_fn in (
+            (cpu_levels, "CPU", cpu_usage, render.percent),
+            (virt_levels, "virtual memory", virt_usage, render.bytes),
+            (res_levels, "physical memory", res_usage, render.bytes),
+            (res_levels_perc, "percentage of physical memory", res_usage_pct, render.percent),
+        ):
+            if levels is None or metric_value is None:
+                continue
+
+            check_result, *_ = check_levels(
+                metric_value,
+                levels_upper=levels,
+                render_func=render_fn,
+                label=label_prefix + " " + metric_name,
+            )
+            # To avoid listing of all processes regardless of level setting we
+            # only generate output in case WARN level has been reached.
+            # In case a full list of processes is desired, one should enable
+            # `process_info`, i.E."Enable per-process details in long-output"
+            if check_result.state is not State.OK:
+                yield Result(state=check_result.state, notice=check_result.summary)
 
 
 def uptime_check(

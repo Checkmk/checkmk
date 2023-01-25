@@ -70,21 +70,21 @@ def join_service_row_post_processor(
         master_entry = per_master_entry.get(_make_master_key(row, join_master_column), {})
 
         join_info = {
-            join_value_without_macros: attrs
-            for join_value_without_macros in join_filters.without_macros
-            if (attrs := master_entry.get(join_value_without_macros))
+            join_value: attrs
+            for join_value in join_filters.without_macros
+            if (attrs := master_entry.get(join_value))
         }
 
         join_info.update(
             {
-                join_value_with_macros: attrs
-                for join_value_with_macros in join_filters.with_macros
+                join_value: attrs
+                for join_value in join_filters.with_macros
                 if (
                     replaced_join_value := _replace_inventory_join_macros(
                         datasource_ident=view.datasource.ident,
                         inventory_join_macros=inventory_join_macros,
                         row=row,
-                        join_value_with_macros=join_value_with_macros,
+                        join_value=join_value,
                     )
                 )
                 and (attrs := master_entry.get(replaced_join_value))
@@ -170,7 +170,7 @@ def _livestatus_filter_from_macros(
             datasource_ident=datasource_ident,
             inventory_join_macros=inventory_join_macros,
             row=row,
-            join_value_with_macros=join_value,
+            join_value=join_value,
         )
         filters_by_hostname.setdefault(row["host_name"], []).append(
             _livestatus_filter(join_column_name, replaced_join_value)
@@ -199,11 +199,11 @@ def _replace_inventory_join_macros(
     datasource_ident: str,
     inventory_join_macros: dict[str, str],
     row: Row,
-    join_value_with_macros: str,
+    join_value: str,
 ) -> str:
     for column_name, macro in inventory_join_macros.items():
         if (row_value := row.get(f"{datasource_ident}_{column_name}")) is None:
             continue
-        if macro in join_value_with_macros:
-            join_value_with_macros = join_value_with_macros.replace(macro, row_value)
-    return join_value_with_macros
+        if macro in join_value:
+            join_value = join_value.replace(macro, row_value)
+    return join_value

@@ -342,6 +342,7 @@ def query_raw_api_data_v2(
     client_batch_api: ClientBatchAPI,
     client_core_api: ClientCoreAPI,
     client_apps_api: ClientAppsAPI,
+    query_kubelet_endpoints: bool,
 ) -> UnparsedAPIData:
     raw_nodes = core_api.query_raw_nodes()
     return UnparsedAPIData(
@@ -366,7 +367,9 @@ def query_raw_api_data_v2(
         raw_kubelet_open_metrics_dumps=[
             core_api.query_kubelet_metrics(raw_node["metadata"]["name"])
             for raw_node in raw_nodes["items"]
-        ],
+        ]
+        if query_kubelet_endpoints
+        else [],
     )
 
 
@@ -469,6 +472,7 @@ def create_api_data_v2(
     client_core_api: ClientCoreAPI,
     client_apps_api: ClientAppsAPI,
     git_version: api.GitVersion,
+    query_kubelet_endpoints: bool,
 ) -> APIData:
     raw_api_data = query_raw_api_data_v2(
         core_api,
@@ -476,6 +480,7 @@ def create_api_data_v2(
         client_batch_api,
         client_core_api,
         client_apps_api,
+        query_kubelet_endpoints,
     )
     object_to_owners = parse_object_to_owners(
         workload_resources_client=itertools.chain(
@@ -514,7 +519,11 @@ def create_api_data_v2(
     )
 
 
-def from_kubernetes(api_client: client.ApiClient, timeout: tuple[int, int]) -> APIData:
+def from_kubernetes(
+    api_client: client.ApiClient,
+    timeout: tuple[int, int],
+    query_kubelet_endpoints: bool,
+) -> APIData:
     """
     This function provides a stable interface that should not change between kubernetes versions
     This should be the only data source for all special agent code!
@@ -536,4 +545,5 @@ def from_kubernetes(api_client: client.ApiClient, timeout: tuple[int, int]) -> A
         client_core_api,
         client_apps_api,
         version.git_version,
+        query_kubelet_endpoints,
     )

@@ -2171,6 +2171,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 api_data = from_kubernetes(
                     api_client,
                     timeout=(arguments.k8s_api_connect_timeout, arguments.k8s_api_read_timeout),
+                    query_kubelet_endpoints=MonitoredObject.pvcs in arguments.monitored_objects,
                 )
             except urllib3.exceptions.MaxRetryError as e:
                 raise ClusterConnectionError(

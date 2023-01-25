@@ -112,6 +112,7 @@ class MonitoredObject(enum.Enum):
     pods = "pods"
     cronjobs = "cronjobs"
     cronjobs_pods = "cronjobs_pods"
+    pvcs = "pvcs"
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:

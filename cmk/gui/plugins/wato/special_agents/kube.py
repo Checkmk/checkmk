@@ -231,6 +231,7 @@ def _valuespec_special_agents_kube():
                             ("namespaces", _("Namespaces")),
                             ("nodes", _("Nodes")),
                             ("pods", _("Pods")),
+                            ("pvcs", _("Persistent Volume Claims & Persistent Volumes")),
                             ("cronjobs", _("CronJobs")),
                             ("cronjobs_pods", _("Pods of CronJobs")),
                         ],
@@ -248,7 +249,9 @@ def _valuespec_special_agents_kube():
                             "Select the Kubernetes objects you would like to monitor. Pods "
                             "controlled by CronJobs are treated separately as they are usually "
                             "quite short lived. Those pods will be monitored in the same "
-                            "manner as regular pods. Your Dynamic host management rule should "
+                            "manner as regular pods. Persistent Volume Claims will only appear "
+                            "in the respective object piggyback host instead of having their own "
+                            "host. Your Dynamic host management rule should "
                             "be configured accordingly to avoid that the piggyback hosts for "
                             "terminated CronJob pods are kept for too long. This 'Pods of CronJobs' "
                             "option has no effect if Pods are not monitored"

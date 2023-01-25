@@ -10,19 +10,19 @@ import * as utils from "utils";
 // ----------------------------------------------------------------------------
 
 interface Dialog {
-    inherited_tags;
-    check_attributes;
-    aux_tags_by_tag;
-    depends_on_tags;
-    depends_on_roles;
-    volatile_topics;
-    user_roles;
-    hide_attributes;
+    inherited_tags: Record<string, any>;
+    check_attributes: string[];
+    aux_tags_by_tag: any;
+    depends_on_tags: Record<string, string[]>;
+    depends_on_roles: Record<string, string[]>;
+    volatile_topics: string[];
+    user_roles: string[];
+    hide_attributes: string[];
 }
 
 var dialog_properties: null | Dialog = null;
 
-export function prepare_edit_dialog(attrs) {
+export function prepare_edit_dialog(attrs: Dialog) {
     dialog_properties = attrs;
 }
 
@@ -41,7 +41,7 @@ export function fix_visibility() {
 
     var index;
     for (var i = 0; i < dialog_properties.check_attributes.length; i++) {
-        var attrname = dialog_properties.check_attributes[i];
+        let attrname: string = dialog_properties.check_attributes[i];
         /* Now comes the tricky part: decide whether that attribute should
            be visible or not: */
         var display = "";
@@ -123,7 +123,7 @@ export function fix_visibility() {
             // There is at least one item in this topic -> show it
             var topic = oTr.parentNode!.childNodes[0].textContent;
             if (display == "") {
-                index = hide_topics.indexOf(topic);
+                index = hide_topics.indexOf(topic!);
                 if (index != -1) delete hide_topics[index];
             }
         }
@@ -139,7 +139,7 @@ export function fix_visibility() {
                 if (oTr.className == "nform") {
                     if (
                         hide_topics.indexOf(
-                            oTr.childNodes[0].childNodes[0].textContent
+                            oTr.childNodes[0].childNodes[0].textContent!
                         ) > -1
                     )
                         oTr.style.display = "none";
@@ -152,7 +152,10 @@ export function fix_visibility() {
 }
 
 /* Make attributes visible or not when clicked on a checkbox */
-export function toggle_attribute(oCheckbox, attrname) {
+export function toggle_attribute(
+    oCheckbox: HTMLInputElement,
+    attrname: string
+) {
     var oEntry = document.getElementById("attr_entry_" + attrname);
     var oDefault = document.getElementById("attr_default_" + attrname);
 
@@ -180,7 +183,7 @@ function get_containers() {
 }
 
 function get_effective_tags() {
-    var current_tags: HTMLElement[] = [];
+    var current_tags: string[] = [];
 
     var containers = get_containers()!;
 
@@ -253,7 +256,7 @@ function get_effective_tags() {
     return current_tags;
 }
 
-export function randomize_secret(id, len) {
+export function randomize_secret(id: string, len: number) {
     var secret = "";
     for (var i = 0; i < len; i++) {
         var c = parseInt(String(26 * Math.random() + 64));
@@ -263,7 +266,7 @@ export function randomize_secret(id, len) {
     oInput.value = secret;
 }
 
-export function toggle_container(id) {
+export function toggle_container(id: string) {
     var obj = document.getElementById(id);
     if (utils.has_class(obj, "hidden")) utils.remove_class(obj, "hidden");
     else utils.add_class(obj, "hidden");
@@ -273,7 +276,7 @@ export function toggle_container(id) {
 // Folderlist
 // ----------------------------------------------------------------------------
 
-export function open_folder(event: Event | undefined, link) {
+export function open_folder(event: Event | undefined, link: string) {
     if (!event) event = window.event;
     var target = event!.target;
     if ((target as HTMLElement).tagName != "DIV") {
@@ -284,13 +287,17 @@ export function open_folder(event: Event | undefined, link) {
     location.href = link;
 }
 
-export function toggle_folder(event, oDiv, on) {
+export function toggle_folder(
+    event: Event | undefined,
+    oDiv: HTMLElement,
+    on: boolean
+) {
     if (!event) event = window.event;
 
     // Skip mouseout event when moving mouse over a child element of the
     // folder element
     if (!on) {
-        var node = event.toElement || event.relatedTarget;
+        var node: HTMLElement | null | Node = event!.target as HTMLElement;
         while (node) {
             if (node == oDiv) {
                 return false;
@@ -299,7 +306,7 @@ export function toggle_folder(event, oDiv, on) {
         }
     }
 
-    var obj = oDiv.parentNode;
+    var obj = oDiv.parentNode as HTMLElement;
     var id = obj.id.substr(7);
 
     var elements = ["edit", "popup_trigger_move", "delete"];
@@ -327,7 +334,7 @@ export function toggle_folder(event, oDiv, on) {
     }
 }
 
-export function toggle_rule_condition_type(select_id) {
+export function toggle_rule_condition_type(select_id: string) {
     var value = (document.getElementById(select_id) as HTMLInputElement).value;
     $(".condition").hide();
     $(".condition." + value).show();

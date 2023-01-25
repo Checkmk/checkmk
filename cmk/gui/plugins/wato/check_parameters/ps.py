@@ -136,10 +136,10 @@ def process_level_elements():
         (
             "cpu_average",
             Integer(
-                title=_("CPU Averaging"),
+                title=_("CPU averaging"),
                 help=_(
-                    "By activating averaging, Check_MK will compute the average of "
-                    "the total CPU utilization over a given interval. If you have defined "
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the total CPU utilization. If you have defined "
                     "alerting levels then these will automatically be applied on the "
                     "averaged value. This helps to mask out short peaks. "
                 ),
@@ -154,7 +154,7 @@ def process_level_elements():
                 title=_("Levels on CPU utilization of a single process"),
                 help=_(
                     "Here you can define levels on the CPU utilization of single "
-                    "processes. For performance reasons CPU Averaging will not be "
+                    "processes. For performance reasons CPU averaging will not be "
                     "applied to to the levels of single processes."
                 ),
                 elements=[
@@ -202,9 +202,69 @@ def process_level_elements():
             ),
         ),
         (
+            "virtual_average",
+            Integer(
+                title=_("Virtual memory averaging"),
+                help=_(
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the virtual memory utilization. If you have defined "
+                    "alerting levels then these will automatically be applied on the "
+                    "averaged value. This helps to mask out short peaks. "
+                ),
+                unit=_("minutes"),
+                minvalue=1,
+                default_value=15,
+            ),
+        ),
+        (
+            "single_virtual_levels",
+            Tuple(
+                title=_("Virtual memory utilization of a single process"),
+                help=_(
+                    "Here you can define levels on the virtual memory utilization of single "
+                    "processes. For performance reasons virtual memory averaging will not be "
+                    "applied to to the levels of single processes."
+                ),
+                elements=[
+                    Filesize(title=_("Warning at"), default_value=1000 * 1024 * 1024 * 1024),
+                    Filesize(title=_("Critical at"), default_value=2000 * 1024 * 1024 * 1024),
+                ],
+            ),
+        ),
+        (
             "resident_levels",
             Tuple(
-                title=_("Physical memory usage"),
+                title=_("Resident memory usage"),
+                elements=[
+                    Filesize(title=_("Warning at"), default_value=100 * 1024 * 1024),
+                    Filesize(title=_("Critical at"), default_value=200 * 1024 * 1024),
+                ],
+            ),
+        ),
+        (
+            "resident_average",
+            Integer(
+                title=_("Resident memory averaging"),
+                help=_(
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the resident memory utilization. If you have defined "
+                    "alerting levels then these will automatically be applied on the "
+                    "averaged value. This helps to mask out short peaks. "
+                ),
+                unit=_("minutes"),
+                minvalue=1,
+                default_value=15,
+            ),
+        ),
+        (
+            "single_resident_levels",
+            Tuple(
+                title=_("Resident memory utilization of a single process"),
+                help=_(
+                    "Here you can define levels on the resident memory utilization of single "
+                    "processes. For performance reasons resident memory averaging will not be "
+                    "applied to to the levels of single processes."
+                ),
                 elements=[
                     Filesize(title=_("Warning at"), default_value=100 * 1024 * 1024),
                     Filesize(title=_("Critical at"), default_value=200 * 1024 * 1024),
@@ -214,7 +274,37 @@ def process_level_elements():
         (
             "resident_levels_perc",
             Tuple(
-                title=_("Physical memory usage, in percentage of total RAM"),
+                title=_("Resident memory usage, in percentage of total RAM"),
+                elements=[
+                    Percentage(title=_("Warning at"), default_value=25.0),
+                    Percentage(title=_("Critical at"), default_value=50.0),
+                ],
+            ),
+        ),
+        (
+            "resident_perc_average",
+            Integer(
+                title=_("Resident memory usage (in percentage of total RAM) averaging"),
+                help=_(
+                    "By activating averaging, Checkmk will compute an exponential moving average "
+                    "of the resident memory utilization, in percentage of total RAM. "
+                    "If you have defined alerting levels then these will automatically be "
+                    "applied on the averaged value. This helps to mask out short peaks. "
+                ),
+                unit=_("minutes"),
+                minvalue=1,
+                default_value=15,
+            ),
+        ),
+        (
+            "single_resident_levels_perc",
+            Tuple(
+                title=_("Resident memory usage (in percentage of total RAM) of a single process"),
+                help=_(
+                    "Here you can define levels on the resident memory utilization (in percentage "
+                    "of total RAM) of single processes. For performance reasons resident memory "
+                    "averaging will not be applied to to the levels of single processes."
+                ),
                 elements=[
                     Percentage(title=_("Warning at"), default_value=25.0),
                     Percentage(title=_("Critical at"), default_value=50.0),

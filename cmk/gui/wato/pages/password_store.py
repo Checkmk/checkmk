@@ -79,8 +79,9 @@ class ModePasswords(SimpleListMode):
         return " ".join(
             [
                 _(
-                    "The password may be used in checks. If you delete the password, "
-                    "the checks won't be able to authenticate with this password anymore."
+                    "<b>Beware:</b> The password may be used in checks. If you "
+                    "delete the password, the checks won't be able to "
+                    "authenticate with this password anymore."
                 ),
                 super()._delete_confirm_message(),
             ]
@@ -104,6 +105,7 @@ class ModePasswords(SimpleListMode):
         super().page()
 
     def _show_entry_cells(self, table: Table, ident: str, entry: Password) -> None:
+        table.cell(_("ID"), ident)
         table.cell(_("Title"), entry["title"])
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:

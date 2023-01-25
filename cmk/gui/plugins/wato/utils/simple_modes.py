@@ -41,7 +41,7 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeuri_contextless
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -257,23 +257,31 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
     def _validate_deletion(self, ident: str, entry: _T) -> None:
         """Override this to implement custom validations"""
 
+    def _delete_confirm_title(self, nr: int) -> str:
+        return _("Delete %s #%d") % (self._mode_type.name_singular(), nr)
+
     def _delete_confirm_message(self) -> str:
-        return _("Do you really want to delete this %s?") % self._mode_type.name_singular()
+        return ""
 
     def page(self) -> None:
         self._show_table(self._store.filter_editable_entries(self._store.load_for_reading()))
 
     def _show_table(self, entries: dict[str, _T]) -> None:
         with table_element(self._mode_type.type_name(), self._table_title()) as table:
-            for ident, entry in sorted(entries.items(), key=lambda e: e[1]["title"]):
+            for nr, (ident, entry) in enumerate(
+                sorted(entries.items(), key=lambda e: e[1]["title"])
+            ):
                 table.row()
-                self._show_row(table, ident, entry)
+                self._show_row(nr, table, ident, entry)
 
-    def _show_row(self, table: Table, ident: str, entry: _T) -> None:
-        self._show_action_cell(table, ident)
+    def _show_row(self, nr: int, table: Table, ident: str, entry: _T) -> None:
+        table.cell(_("#"), css=["narrow nowrap"])
+        html.write_text(nr)
+
+        self._show_action_cell(nr, table, ident, entry)
         self._show_entry_cells(table, ident, entry)
 
-    def _show_action_cell(self, table: Table, ident: str) -> None:
+    def _show_action_cell(self, nr: int, table: Table, ident: str, entry: _T) -> None:
         table.cell(_("Actions"), css=["buttons"])
 
         edit_url = makeuri_contextless(
@@ -294,7 +302,10 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         )
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
-        delete_url = make_confirm_link(
+        confirm_delete: str = _("ID: %s") % ident
+        if delete_confirm_msg := self._delete_confirm_message():
+            confirm_delete += "<br><br>" + delete_confirm_msg
+        delete_url = make_confirm_delete_link(
             url=make_action_link(
                 [
                     ("mode", self._mode_type.list_mode_name()),
@@ -302,7 +313,9 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
                     ("_delete", ident),
                 ]
             ),
-            message=self._delete_confirm_message(),
+            title=self._delete_confirm_title(nr),
+            message=confirm_delete,
+            identifier=entry["title"],
         )
         html.icon_button(
             delete_url, _("Delete this %s") % self._mode_type.name_singular(), "delete"

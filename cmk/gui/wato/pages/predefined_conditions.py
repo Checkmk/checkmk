@@ -20,6 +20,7 @@ from cmk.gui.plugins.wato.utils import (
     SimpleModeType,
     WatoMode,
 )
+from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -140,8 +141,14 @@ class ModePredefinedConditions(SimpleListMode):
         )
         super().page()
 
-    def _show_action_cell(self, table, ident):
-        super()._show_action_cell(table, ident)
+    def _show_action_cell(  # type:ignore[no-untyped-def]
+        self,
+        nr: int,
+        table: Table,
+        ident: str,
+        entry,
+    ) -> None:
+        super()._show_action_cell(nr, table, ident, entry)
 
         html.icon_button(
             self._search_url(ident),

@@ -45,7 +45,7 @@ from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
@@ -82,7 +82,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
-    make_confirm_link,
+    make_confirm_delete_link,
     makeactionuri,
     makeactionuri_contextless,
     makeuri,
@@ -529,11 +529,13 @@ class ModeBIPacks(ABCBIMode):
 
     def page(self) -> None:
         with table_element("bi_packs", title=_("BI Configuration Packs")) as table:
-            for pack in sorted(self._bi_packs.packs.values(), key=lambda x: x.id):
+            for nr, pack in enumerate(sorted(self._bi_packs.packs.values(), key=lambda x: x.id)):
                 if not bi_valuespecs.may_use_rules_in_pack(pack):
                     continue
 
                 table.row()
+                table.cell(_("#"), css=["narrow", "nowrap"])
+                html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if user.may("wato.bi_admin"):
                     target_mode = "bi_edit_pack"
@@ -542,13 +544,11 @@ class ModeBIPacks(ABCBIMode):
                         [("mode", target_mode), ("pack", pack.id)],
                     )
                     html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
-                    delete_url = make_confirm_link(
+                    delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_delete", pack.id)]),
-                        message=_(
-                            "Do you really want to delete the BI pack "
-                            "<b>%s</b> <i>%s</i> with <b>%d</b> aggregations?"
-                        )
-                        % (pack.id, pack.title, pack.num_aggregations()),
+                        title=_("Delete BI pack #%d") % nr,
+                        message=_get_pack_confirm_message(pack),
+                        identifier=pack.title,
                     )
                     html.icon_button(delete_url, _("Delete this BI pack"), "delete")
                 rules_url = makeuri_contextless(request, [("mode", "bi_rules"), ("pack", pack.id)])
@@ -570,6 +570,24 @@ class ModeBIPacks(ABCBIMode):
     def _render_contact_group(self, c) -> HTML:  # type:ignore[no-untyped-def]
         display_name = self._contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
+
+
+def _get_pack_confirm_message(pack: BIAggregationPack) -> str:
+    return str(
+        _("ID: %s") % pack.id
+        + "<br>"
+        + _("Contains: %d %s and %d %s")
+        % (
+            num_aggregations := pack.num_aggregations(),
+            ungettext("aggregation", "aggregations", num_aggregations),
+            len_rules := len(pack.rules),
+            ungettext(
+                "rule",
+                "rules",
+                len_rules,
+            ),
+        ),
+    )
 
 
 #   .--BIRules-------------------------------------------------------------.
@@ -892,7 +910,7 @@ class ModeBIRules(ABCBIMode):
         rules_refs.sort(key=lambda x: (x[1].properties.title, x[2][2]))
 
         with table_element("bi_rules", title) as table:
-            for rule_id, bi_rule, (aggr_refs, rule_refs, level) in rules_refs:
+            for nr, (rule_id, bi_rule, (aggr_refs, rule_refs, level)) in enumerate(rules_refs):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
                     table.row()
@@ -910,6 +928,8 @@ class ModeBIRules(ABCBIMode):
                     )
                     html.checkbox("_c_rule_%s" % rule_id)
 
+                    table.cell(_("#"))
+                    html.write_text(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     edit_url = self.url_to_pack(
                         [("mode", "bi_edit_rule"), ("id", rule_id)], self.bi_pack
@@ -935,7 +955,7 @@ class ModeBIRules(ABCBIMode):
                         )
 
                     if refs == 0:
-                        delete_url = make_confirm_link(
+                        delete_url = make_confirm_delete_link(
                             url=makeactionuri_contextless(
                                 request,
                                 transactions,
@@ -945,10 +965,9 @@ class ModeBIRules(ABCBIMode):
                                     ("pack", self.bi_pack.id),
                                 ],
                             ),
-                            message=_(
-                                "Do you really want to delete the rule with the ID <b>%s</b>?"
-                            )
-                            % rule_id,
+                            title=_("Delete BI rule #%s") % nr,
+                            message=_("ID: %s") % rule_id,
+                            identifier=bi_rule.properties.title,
                         )
                         html.icon_button(delete_url, _("Delete this rule"), "delete")
 
@@ -2127,7 +2146,9 @@ class BIModeAggregations(ABCBIMode):
 
     def _render_aggregations(self) -> None:
         with table_element("bi_aggr", _("Aggregations")) as table:
-            for aggregation_id, bi_aggregation in self.bi_pack.get_aggregations().items():
+            for nr, (aggregation_id, bi_aggregation) in enumerate(
+                self.bi_pack.get_aggregations().items()
+            ):
                 table.row()
                 table.cell(
                     html.render_input(
@@ -2142,6 +2163,8 @@ class BIModeAggregations(ABCBIMode):
                 )
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
+                table.cell(_("#"), css=["narrow", "nowrap"])
+                html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = makeuri_contextless(
                     request,
@@ -2159,10 +2182,10 @@ class BIModeAggregations(ABCBIMode):
                 html.icon_button(clone_url, _("Create a copy of this aggregation"), "clone")
 
                 if bi_valuespecs.is_contact_for_pack(self.bi_pack):
-                    delete_url = make_confirm_link(
+                    delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_del_aggr", aggregation_id)]),
-                        message=_("Do you really want to delete the aggregation <b>%s</b>?")
-                        % (aggregation_id),
+                        title=_("Delete BI aggregation #%s") % nr,
+                        identifier=aggregation_id,
                     )
                     html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 

@@ -36,7 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    make_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     mode_url,
     redirect,
@@ -161,14 +161,19 @@ class ModeGroups(WatoMode, abc.ABC):
     def _collect_additional_data(self) -> None:
         pass
 
-    def _show_row_cells(self, table: Table, name: GroupName, group: GroupSpec) -> None:
+    def _show_row_cells(self, nr: int, table: Table, name: GroupName, group: GroupSpec) -> None:
+        table.cell(_("#"))
+        html.write_text(nr)
+
         table.cell(_("Actions"), css=["buttons"])
         edit_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)]
         )
-        delete_url = make_confirm_link(
+        delete_url = make_confirm_delete_link(
             url=makeactionuri(request, transactions, [("_delete", name)]),
-            message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name),
+            title=_("Delete %s group #%d") % (self.type_name, nr),
+            message=_("Name: %s") % name,
+            identifier=group["alias"],
         )
         clone_url = folder_preserving_link(
             [("mode", "edit_%s_group" % self.type_name), ("clone", name)]
@@ -188,9 +193,11 @@ class ModeGroups(WatoMode, abc.ABC):
         self._collect_additional_data()
 
         with table_element(self.type_name + "groups") as table:
-            for name, group in sorted(self._groups.items(), key=lambda x: x[1]["alias"]):
+            for nr, (name, group) in enumerate(
+                sorted(self._groups.items(), key=lambda x: x[1]["alias"])
+            ):
                 table.row()
-                self._show_row_cells(table, name, group)
+                self._show_row_cells(nr, table, name, group)
 
 
 class ABCModeEditGroup(WatoMode, abc.ABC):
@@ -396,8 +403,8 @@ class ModeContactgroups(ModeGroups):
             for cg in cgs:
                 self._members.setdefault(cg, []).append((userid, user.get("alias", userid)))
 
-    def _show_row_cells(self, table: Table, name: GroupName, group: GroupSpec) -> None:
-        super()._show_row_cells(table, name, group)
+    def _show_row_cells(self, nr: int, table: Table, name: GroupName, group: GroupSpec) -> None:
+        super()._show_row_cells(nr, table, name, group)
         table.cell(_("Members"))
         html.write_html(
             HTML(", ").join(

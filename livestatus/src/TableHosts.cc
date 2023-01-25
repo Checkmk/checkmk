@@ -112,8 +112,6 @@ std::string TableHosts::namePrefix() const { return "host_"; }
 // static
 void TableHosts::addColumns(Table *table, const std::string &prefix,
                             const ColumnOffsets &offsets) {
-    auto offsets_custom_variables{offsets.add(
-        [](Row r) { return &r.rawData<host>()->custom_variables; })};
     auto *mc = table->core();
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "name", "Host name", offsets,
@@ -163,8 +161,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "service_period",
         "Time period during which the object is expected to be available",
-        offsets_custom_variables, [](const host &p) {
-            return findCustomAttributeValue(p.custom_variables,
+        offsets, [](const host &r) {
+            return findCustomAttributeValue(r.custom_variables,
                                             AttributeKind::custom_variables,
                                             "SERVICE_PERIOD")
                 .value_or(""s);
@@ -591,8 +589,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     // ordinary Nagios columns.
     table->addColumn(std::make_unique<StringColumn<host>>(
         prefix + "filename", "The value of the custom variable FILENAME",
-        offsets_custom_variables, [](const host &p) {
-            return findCustomAttributeValue(p.custom_variables,
+        offsets, [](const host &r) {
+            return findCustomAttributeValue(r.custom_variables,
                                             AttributeKind::custom_variables,
                                             "FILENAME")
                 .value_or(""s);

@@ -101,8 +101,6 @@ std::string TableServices::namePrefix() const { return "service_"; }
 // static
 void TableServices::addColumns(Table *table, const std::string &prefix,
                                const ColumnOffsets &offsets, bool add_hosts) {
-    auto offsets_custom_variables{offsets.add(
-        [](Row r) { return &r.rawData<service>()->custom_variables; })};
     auto *mc = table->core();
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
@@ -203,8 +201,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<StringColumn<service>>(
         prefix + "service_period",
         "Time period during which the object is expected to be available",
-        offsets_custom_variables, [](const service &p) {
-            return findCustomAttributeValue(p.custom_variables,
+        offsets, [](const service &r) {
+            return findCustomAttributeValue(r.custom_variables,
                                             AttributeKind::custom_variables,
                                             "SERVICE_PERIOD")
                 .value_or(""s);

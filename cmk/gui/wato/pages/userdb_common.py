@@ -30,7 +30,7 @@ from cmk.gui.plugins.userdb.utils import (
     save_connection_config,
     UserConnectionSpec,
 )
-from cmk.gui.plugins.wato.utils import make_confirm_link, redirect
+from cmk.gui.plugins.wato.utils import make_confirm_delete_link, redirect
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
@@ -114,12 +114,16 @@ def render_connections_page(
         for index, connection in enumerate(connections_by_type(connection_type)):
             table.row()
 
+            table.cell(_("#"), css=["narrow nowrap"])
+            html.write_text(index)
+
             table.cell(_("Actions"), css=["buttons"])
             edit_url = folder_preserving_link([("mode", edit_mode_path), ("id", connection["id"])])
-            delete_url = make_confirm_link(
+            delete_url = make_confirm_delete_link(
                 url=make_action_link([("mode", config_mode_path), ("_delete", index)]),
-                message=_("Do you really want to delete the connection <b>%s</b>?")
-                % connection["id"],
+                title=_("Delete connection #%d") % index,
+                message=_("ID: %s") % connection["id"],
+                identifier=connection.get("name", connection["id"]),
             )
             drag_url = make_action_link([("mode", config_mode_path), ("_move", index)])
             clone_url = folder_preserving_link(

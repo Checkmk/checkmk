@@ -73,32 +73,26 @@ bool inCustomTimeperiod(const service *svc) {
     return true;  // assume 24X7
 }
 
-class ServiceListGetter {
-public:
-    std::vector<::column::service_list::Entry> operator()(
-        const host &hst, const User &user) const {
-        std::vector<::column::service_list::Entry> entries{};
-        for (servicesmember *mem = hst.services; mem != nullptr;
-             mem = mem->next) {
-            service *svc = mem->service_ptr;
-            if (user.is_authorized_for_service(NebService{*svc})) {
-                entries.emplace_back(
-                    svc->description,
-                    static_cast<ServiceState>(svc->current_state),
-                    svc->has_been_checked != 0,
-                    svc->plugin_output == nullptr
-                        ? ""
-                        : std::string(svc->plugin_output),
-                    static_cast<ServiceState>(svc->last_hard_state),
-                    svc->current_attempt, svc->max_attempts,
-                    svc->scheduled_downtime_depth,
-                    svc->problem_has_been_acknowledged != 0,
-                    inCustomTimeperiod(svc));
-            }
+std::vector<::column::service_list::Entry> getServices(const host &hst,
+                                                       const User &user) {
+    std::vector<::column::service_list::Entry> entries{};
+    for (servicesmember *mem = hst.services; mem != nullptr; mem = mem->next) {
+        service *svc = mem->service_ptr;
+        if (user.is_authorized_for_service(NebService{*svc})) {
+            entries.emplace_back(
+                svc->description, static_cast<ServiceState>(svc->current_state),
+                svc->has_been_checked != 0,
+                svc->plugin_output == nullptr ? ""
+                                              : std::string(svc->plugin_output),
+                static_cast<ServiceState>(svc->last_hard_state),
+                svc->current_attempt, svc->max_attempts,
+                svc->scheduled_downtime_depth,
+                svc->problem_has_been_acknowledged != 0,
+                inCustomTimeperiod(svc));
         }
-        return entries;
     }
-};
+    return entries;
+}
 }  // namespace
 
 TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
@@ -780,7 +774,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             prefix + "services", "A list of all services of the host", offsets,
             std::make_unique<ServiceListRenderer>(
                 ServiceListRenderer::verbosity::none),
-            ServiceListGetter{}));
+            getServices));
     table->addColumn(std::make_unique<
                      ListColumn<host, ::column::service_list::Entry>>(
         prefix + "services_with_state",
@@ -788,7 +782,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceListRenderer>(
             ServiceListRenderer::verbosity::low),
-        ServiceListGetter{}));
+        getServices));
     table->addColumn(std::make_unique<
                      ListColumn<host, ::column::service_list::Entry>>(
         prefix + "services_with_info",
@@ -796,7 +790,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceListRenderer>(
             ServiceListRenderer::verbosity::medium),
-        ServiceListGetter{}));
+        getServices));
     table->addColumn(std::make_unique<
                      ListColumn<host, ::column::service_list::Entry>>(
         prefix + "services_with_fullstate",
@@ -804,7 +798,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets,
         std::make_unique<ServiceListRenderer>(
             ServiceListRenderer::verbosity::full),
-        ServiceListGetter{}));
+        getServices));
 
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "metrics",

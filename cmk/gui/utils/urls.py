@@ -277,7 +277,7 @@ def makeuri_contextless_rulespec_group(
 def make_confirm_link(
     *,
     url: str,
-    title: str | None = None,
+    title: str,
     message: str | None = None,
     identifier: str | None = None,
     confirm_button: str | None = None,
@@ -286,9 +286,9 @@ def make_confirm_link(
     return _make_customized_confirm_link(
         url=url,
         title=_get_confirm_link_title(title, identifier),
-        message=message,
         confirm_button=confirm_button if confirm_button else _("Yes"),
         cancel_button=cancel_button if cancel_button else _("No"),
+        message=message,
     )
 
 
@@ -305,9 +305,9 @@ def make_confirm_delete_link(
     return _make_customized_confirm_link(
         url=url,
         title=_get_confirm_link_title(title, identifier),
-        message=message,
         confirm_button=confirm_button if confirm_button else _("Delete"),
         cancel_button=cancel_button if cancel_button else _("Cancel"),
+        message=message,
         icon="warning" if warning else "question",
         custom_class_options={
             "confirmButton": "confirm_warning" if warning else "confirm_question",
@@ -320,9 +320,9 @@ def _make_customized_confirm_link(
     *,
     url: str,
     title: str,
-    message: str | None = None,
     confirm_button: str,
     cancel_button: str,
+    message: str | None = None,
     icon: str | None = None,
     custom_class_options: dict[str, str] | None = None,
 ) -> str:
@@ -343,11 +343,9 @@ def _make_customized_confirm_link(
 
 
 def _get_confirm_link_title(
-    title: str | None,
+    title: str,
     identifier: str | None = None,
 ) -> str:
-    if title is None:
-        return ""
     if title and identifier:
         return title + f" - {identifier}?"
     return title + "?"

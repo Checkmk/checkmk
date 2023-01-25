@@ -80,6 +80,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
+    make_confirm_delete_link,
     make_confirm_link,
     makeactionuri,
     makeactionuri_contextless,
@@ -549,16 +550,22 @@ class PageBackup:
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 
-            for job in sorted(Config.load().jobs.values(), key=lambda j: j.ident):
+            for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
                 table.row()
+                table.cell(_("#"))
+                html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
-                delete_url = make_confirm_link(
+                state = job.state()
+                job_state = state["state"]
+                delete_url = make_confirm_delete_link(
                     url=makeactionuri_contextless(
                         request,
                         transactions,
                         [("mode", "backup"), ("_action", "delete"), ("_job", job.ident)],
                     ),
-                    message=_("Do you really want to delete this job?"),
+                    title=_("Delete job #%d") % nr,
+                    message=_("ID: %s") % job.ident,
+                    identifier=job.title,
                 )
                 edit_url = makeuri_contextless(
                     request,
@@ -569,13 +576,11 @@ class PageBackup:
                     [("mode", "backup_job_state"), ("job", job.ident)],
                 )
 
-                state = job.state()
-
                 if not job.is_running():
                     html.icon_button(edit_url, _("Edit this backup job"), "edit")
                     html.icon_button(delete_url, _("Delete this backup job"), "delete")
 
-                if state["state"] is not None:
+                if job_state is not None:
                     html.icon_button(
                         state_url, _("Show current / last state of this backup job"), "backup_state"
                     )
@@ -605,17 +610,18 @@ class PageBackup:
 
                     html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
 
+                table.cell(_("ID"), job.ident)
                 table.cell(_("Name"), job.title)
 
                 css = "state0"
-                state_txt = job.state_name(state["state"])
-                if state["state"] == "finished":
+                state_txt = job.state_name(job_state)
+                if job_state == "finished":
                     if not state["success"]:
                         css = "state2"
                         state_txt = _("Failed")
                     else:
                         state_txt = _("Finished")
-                elif state["state"] is None:
+                elif job_state is None:
                     css = ""
 
                 table.cell(_("State"), css=[css])
@@ -625,7 +631,7 @@ class PageBackup:
                 if state["started"]:
                     html.write_text(_("Started at %s") % render.date_and_time(state["started"]))
                     duration = time.time() - state["started"]
-                    if state["state"] == "finished":
+                    if job_state == "finished":
                         html.write_text(
                             ", Finished at %s" % render.date_and_time(state["finished"])
                         )
@@ -1486,11 +1492,14 @@ class Target:
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
 
-                delete_url = make_confirm_link(
+                from_info = f"{info.hostname} (Site: {info.site_id}, Version: {info.site_version})"
+                delete_url = make_confirm_delete_link(
                     url=makeactionuri(
                         request, transactions, [("_action", "delete"), ("_backup", backup_ident)]
                     ),
-                    message=_("Do you really want to delete this backup?"),
+                    title=_("Delete backup"),
+                    message=_("From: %s") % from_info,
+                    identifier=backup_ident,
                 )
 
                 html.icon_button(delete_url, _("Delete this backup"), "delete")
@@ -1499,7 +1508,11 @@ class Target:
                     url=makeactionuri(
                         request, transactions, [("_action", "start"), ("_backup", backup_ident)]
                     ),
-                    message=_("Do you really want to start the restore of this backup?"),
+                    title=_("Start restore of backup"),
+                    message=_("From: %s") % from_info,
+                    identifier=backup_ident,
+                    confirm_button=_("Start"),
+                    cancel_button=_("Cancel"),
                 )
 
                 html.icon_button(
@@ -1511,7 +1524,6 @@ class Target:
                     },
                 )
 
-                from_info = f"{info.hostname} (Site: {info.site_id}, Version: {info.site_version})"
                 table.cell(_("Backup-ID"), backup_ident)
                 table.cell(_("From"), from_info)
                 table.cell(_("Finished"), render.date_and_time(info.finished))
@@ -1556,8 +1568,10 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
 
     with table_element(sortable=False, searchable=False) as table:
 
-        for target in sorted(targets, key=lambda t: t.ident):
+        for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
+            table.cell(_("#"))
+            html.write_text(nr)
             table.cell(_("Actions"), css=["buttons"])
             restore_url = makeuri_contextless(
                 request,
@@ -1573,13 +1587,15 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
             )
 
             if not targets_are_cma:
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=makeactionuri_contextless(
                         request,
                         transactions,
                         [("mode", "backup_targets"), ("target", target.ident)],
                     ),
-                    message=_("Do you really want to delete this target?"),
+                    title=_("Delete target #%d") % nr,
+                    message=_("ID: %s") % target.ident,
+                    identifier=target.title,
                 )
                 edit_url = makeuri_contextless(
                     request,
@@ -1589,6 +1605,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
                 html.icon_button(edit_url, _("Edit this backup target"), "edit")
                 html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
+                table.cell(_("ID"), target.ident, css=["narrow nowrap"])
                 table.cell(_("Title"), target.title, css=["narrow nowrap"])
                 table.cell(_("Type"), target.render_type())
                 table.cell(_("Destination"), target.render_destination())
@@ -2003,15 +2020,16 @@ class PageBackupRestore:
                                     title=_("Stop"),
                                     icon_name="backup_stop",
                                     item=make_simple_link(
-                                        make_confirm_link(
+                                        make_confirm_delete_link(
                                             url=makeactionuri(
                                                 request, transactions, [("_action", "stop")]
                                             ),
+                                            title=_("Stop restore of backup"),
                                             message=_(
-                                                "Do you really want to stop the restore of "
-                                                "this backup? This will - leave your environment in "
-                                                "an undefined state."
+                                                "<b>Beware:</b> This will leave your environment in an undefined state."
                                             ),
+                                            confirm_button=_("Stop"),
+                                            cancel_button=_("Cancel"),
                                         )
                                     ),
                                     is_shortcut=True,

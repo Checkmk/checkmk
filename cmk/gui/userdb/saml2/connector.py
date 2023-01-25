@@ -21,6 +21,7 @@ from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb.saml2.config import valuespec_to_config
 from cmk.gui.userdb.saml2.interface import AuthenticatedUser
 from cmk.gui.userdb.store import load_users, save_users
+from cmk.gui.watolib.changes import add_change
 
 # TODO (lisa): introduce enums
 SAML2_CONNECTOR_TYPE = "saml2"
@@ -94,6 +95,7 @@ class Connector(UserConnector):
         if not (user_entry := users.get(user_id)):
             users[user_id] = user_spec
             save_users(users, datetime.now())  # releases the lock implicitly
+            add_change("edit-user", _("Added user %s") % str(user_id))
             return
 
         self._update_user(
@@ -134,6 +136,7 @@ class Connector(UserConnector):
 
         users[user_id] = user_profile
         save_users(users, datetime.now())  # releases the lock implicitly
+        add_change("edit-user", _("Edited user profile for user %s") % str(user_id))
 
     def locked_attributes(self) -> Sequence[str]:
         """Attributes managed by the connector.

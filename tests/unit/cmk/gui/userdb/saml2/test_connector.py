@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import copy
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 import pytest
@@ -48,6 +48,15 @@ class TestConnector:
         }
 
     @pytest.fixture
+    def activate_changes_list(self, monkeypatch: pytest.MonkeyPatch) -> Iterable[list[str]]:
+        def _add_change(change_name: str, change_text: str) -> None:
+            changes.append(change_name)
+
+        changes: list[str] = []
+        monkeypatch.setattr("cmk.gui.userdb.saml2.connector.add_change", _add_change)
+        yield changes
+
+    @pytest.fixture
     def user_store(self, monkeypatch: pytest.MonkeyPatch, users_pre_edit: Users) -> Iterable[Users]:
         users = copy.deepcopy(users_pre_edit)
         monkeypatch.setattr("cmk.gui.userdb.saml2.connector.load_users", lambda lock: users)
@@ -87,6 +96,7 @@ class TestConnector:
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
+        activate_changes_list: Sequence[str],
     ) -> None:
         connector = Connector(raw_config)
 
@@ -108,6 +118,7 @@ class TestConnector:
                 }
             ),
         }
+        assert len(activate_changes_list) == 1
 
     def test_edit_user_creates_new_user_with_default_profile(
         self,
@@ -115,6 +126,7 @@ class TestConnector:
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
+        activate_changes_list: Sequence[str],
     ) -> None:
         connector = Connector(raw_config)
 
@@ -136,6 +148,7 @@ class TestConnector:
                 }
             ),
         }
+        assert len(activate_changes_list) == 1
 
     def test_edit_user_does_not_overwrite_existing_user_in_different_namespace(
         self,
@@ -143,6 +156,7 @@ class TestConnector:
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
+        activate_changes_list: Sequence[str],
     ) -> None:
         """Ensure SAML2 connector does not edit users that exist for a different connection (LDAP/HTPASSWD/...)."""
 
@@ -155,6 +169,7 @@ class TestConnector:
             connector.create_and_update_user(new_user_id, authenticated_user)
 
         assert user_store == users_pre_edit
+        assert len(activate_changes_list) == 0
 
     def test_edit_user_does_not_overwrite_user_of_None_namespace(
         self,
@@ -162,6 +177,7 @@ class TestConnector:
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
+        activate_changes_list: Sequence[str],
     ) -> None:
         connector = Connector(raw_config)
 
@@ -172,6 +188,7 @@ class TestConnector:
             connector.create_and_update_user(new_user_id, authenticated_user)
 
         assert user_store == users_pre_edit
+        assert len(activate_changes_list) == 0
 
     def test_edit_user_does_not_overwrite_user_of_missing_namespace(
         self,
@@ -179,6 +196,7 @@ class TestConnector:
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
+        activate_changes_list: Sequence[str],
     ) -> None:
         connector = Connector(raw_config)
 
@@ -189,6 +207,7 @@ class TestConnector:
             connector.create_and_update_user(new_user_id, authenticated_user)
 
         assert user_store == users_pre_edit
+        assert len(activate_changes_list) == 0
 
     def test_edit_user_updates_user_profile(
         self,
@@ -196,6 +215,7 @@ class TestConnector:
         get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
+        activate_changes_list: Sequence[str],
     ) -> None:
         connector = Connector(raw_config)
 
@@ -220,6 +240,7 @@ class TestConnector:
                 ),
             },
         }
+        assert len(activate_changes_list) == 1
 
     def test_password_is_a_locked_attribute(self, raw_config: Mapping[str, Any]) -> None:
         connector = Connector(raw_config)

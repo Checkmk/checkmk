@@ -1124,7 +1124,6 @@ def create_pvc_sections(
         if (volume := attached_volumes.get(pvc_namespaced_name)) is not None
     }
     if pvc_attached_volumes:
-        pvc_attached_volumes = {}
         yield WriteableSection(
             piggyback_name=piggyback_name,
             section_name=SectionName("kube_pvc_volumes_v1"),

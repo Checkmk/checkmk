@@ -60,7 +60,7 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
-    make_confirm_link,
+    make_confirm_delete_link,
     makeactionuri,
     makeuri,
     makeuri_contextless,
@@ -781,19 +781,25 @@ class ModeFolder(WatoMode):
         )
 
     def _show_subfolder_delete_button(self, subfolder):
-        msg = _("Do you really want to delete the folder %s?") % subfolder.title()
-        if not active_config.wato_hide_filenames:
-            msg += _(" Its directory is <tt>%s</tt>.") % subfolder.filesystem_path()
+        confirm_message: str = ""
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts:
-            msg += (
-                _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
+            confirm_message += (
+                _("<b>Beware:</b> The folder contains <b>%d</b> hosts, which will also be deleted!")
+                % num_hosts
             )
 
+        if not active_config.wato_hide_filenames:
+            if num_hosts:
+                confirm_message += _("<br><br>")
+            confirm_message += _("Directory: <tt>%s</tt>.") % subfolder.filesystem_path()
+
         html.icon_button(
-            make_confirm_link(
+            make_confirm_delete_link(
                 url=make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
-                message=msg,
+                title=_("Delete folder"),
+                message=confirm_message,
+                identifier=subfolder.title(),
             ),
             _("Delete this folder"),
             "delete",
@@ -1076,9 +1082,10 @@ class ModeFolder(WatoMode):
             if user.may("wato.manage_hosts"):
                 if user.may("wato.clone_hosts"):
                     html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "folder"), ("_delete_host", host.name())]),
-                    message=_("Do you really want to delete the host <tt>%s</tt>?") % host.name(),
+                    title=_("Delete host"),
+                    identifier=host.name(),
                 )
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 

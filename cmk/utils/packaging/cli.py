@@ -2,6 +2,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Command line interface for the Checkmk Extension Packages"""
 import argparse
 import json
 import logging
@@ -144,7 +145,7 @@ def _args_show(
 
 
 def _command_show(args: argparse.Namespace, _logger: logging.Logger) -> int:
-    """Show package manifest"""
+    """Show manifest of a stored package"""
     manifest = extract_manifest(
         PackageStore()
         .get_existing_package_path(_get_package_id(args.name, args.version))
@@ -178,7 +179,7 @@ def _args_list(
 
 
 def _command_list(args: argparse.Namespace, logger: logging.Logger) -> int:
-
+    """Show a table of all known files, including the deployment state"""
     classified_manifests = get_classified_manifests(PackageStore(), logger)
 
     if args.json:
@@ -250,10 +251,7 @@ def _args_release(
 
 
 def _command_release(args: argparse.Namespace, logger: logging.Logger) -> int:
-    """Release package
-
-    This command removes the package, and leaves its contained files as unpackaged files behind.
-    """
+    """Remove the package and leave its contained files as unpackaged files behind."""
     release(args.name, logger)
     return 0
 
@@ -271,7 +269,7 @@ def _command_remove(args: argparse.Namespace, logger: logging.Logger) -> int:
 
 
 def _command_disable_outdated(_args: argparse.Namespace, _logger: logging.Logger) -> int:
-    """Disable MKP packages that are declared to be outdated with the new version
+    """Disable MKP packages that are declared to be outdated with the new version.
 
     Since 1.6 there is the option version.usable_until available in MKP packages.
     For all installed packages, this command compares that version with the Checkmk version.
@@ -282,7 +280,7 @@ def _command_disable_outdated(_args: argparse.Namespace, _logger: logging.Logger
 
 
 def _command_update_active(_args: argparse.Namespace, logger: logging.Logger) -> int:
-    """Disable MKP packages that are not suitable for this version, and enable others
+    """Disable MKP packages that are not suitable for this version, and enable others.
 
     Packages can declare their minimum or maximum required Checkmk versions.
     Also packages can collide with one another or fail to load for other reasons.
@@ -311,7 +309,7 @@ def _args_package_id(
 
 
 def _command_enable(args: argparse.Namespace, _logger: logging.Logger) -> int:
-    """Enable previously disabled package NAME"""
+    """Enable a disabled package"""
     install(PackageStore(), _get_package_id(args.name, args.version))
     return 0
 
@@ -364,6 +362,10 @@ def _args_package(
 
 
 def _command_package(args: argparse.Namespace, logger: logging.Logger) -> int:
+    """Create an .mkp file from the provided manifest.
+
+    You can use the `template` command ot create a manifest template.
+    """
     if (package := read_manifest_optionally(args.manifest_file, logger=logger)) is None:
         return 1
 
@@ -419,8 +421,8 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
 
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
-    _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
     _add_command(subparsers, "show", _args_show, _command_show)
+    _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
     _add_command(subparsers, "files", _args_package_id, _command_files)
     _add_command(subparsers, "list", _args_list, _command_list)
     _add_command(subparsers, "store", _args_store, _command_store)

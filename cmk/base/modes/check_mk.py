@@ -31,7 +31,6 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.packaging import cli as packaging_cli
 from cmk.utils.tags import TagID
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -722,20 +721,24 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
+_DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
+
+
+def _fail_with_deprecation_msg(argv: list[str]) -> Literal[1]:
+    sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
+    return 1
+
+
 modes.register(
     Mode(
         long_option="package",
         short_option="P",
-        handler_function=lambda argv: packaging_cli.main(argv, log.logger),
+        handler_function=_fail_with_deprecation_msg,
         argument=True,
         argument_descr="COMMAND",
         argument_optional=True,
-        short_help="Do package operations",
-        long_help=[
-            "Brings you into packager mode. Packages are "
-            "used to ship inofficial extensions of Checkmk. Call without "
-            "arguments for a help on packaging."
-        ],
+        short_help="DEPRECATED: Do package operations",
+        long_help=[_DEPRECATION_MSG % ""],
         needs_config=False,
         needs_checks=False,
     )

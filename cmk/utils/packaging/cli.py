@@ -11,7 +11,6 @@ from typing import Callable
 
 from cmk.utils import paths, tty
 from cmk.utils import version as cmk_version
-from cmk.utils.log import VERBOSE
 
 from . import (
     create_mkp_object,
@@ -265,9 +264,9 @@ def _command_remove(args: argparse.Namespace, logger: logging.Logger) -> int:
     if package_id in get_enabled_manifests():
         raise PackageException("This package is enabled! Please disable it first.")
 
-    logger.log(VERBOSE, "Removing package %s...", package_id.name)
+    logger.info("Removing package %s...", package_id.name)
     PackageStore().remove(package_id)
-    logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)
+    logger.info("Successfully removed package %s.", package_id.name)
     return 0
 
 
@@ -382,7 +381,7 @@ def _command_package(args: argparse.Namespace, logger: logging.Logger) -> int:
         sys.stderr.write(f"{exc}\n")
         return 1
 
-    logger.log(VERBOSE, "Successfully created %s %s", manifest.name, manifest.version)
+    logger.info("Successfully created %s %s", manifest.name, manifest.version)
     return 0
 
 
@@ -415,6 +414,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--debug", "-d", action="store_true")
+    parser.add_argument("--verbose", "-v", action="count", help="Be more verbose")
     subparsers = parser.add_subparsers(required=True)
 
     _add_command(subparsers, "find", _args_find, _command_find)
@@ -451,10 +451,18 @@ def _add_command(
     subparser.set_defaults(handler=handler)
 
 
-def main(argv: list[str], logger: logging.Logger) -> int:
+def set_up_logging(verbosity: int) -> logging.Logger:
+    logging.basicConfig(
+        format="%(levelname)s: %(message)s" if verbosity else "%(message)s",
+        level={0: logging.WARNING, 1: logging.INFO}.get(verbosity, logging.DEBUG),
+    )
+    return logging.getLogger(__name__)
+
+
+def main(argv: list[str]) -> int:
     args = _parse_arguments(argv)
     try:
-        return args.handler(args, logger)
+        return args.handler(args, set_up_logging(args.verbose))
     except PackageException as exc:
         if args.debug:
             raise

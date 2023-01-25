@@ -577,14 +577,11 @@ class LicenseUsageHistory:
         }
 
     @classmethod
-    def parse(cls, raw_report: object) -> LicenseUsageHistory:
+    def parse(cls, report_version: str, raw_report: object) -> LicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError()
 
-        if not (version := raw_report.get("VERSION")):
-            raise ValueError()
-
-        parser = LicenseUsageSample.get_parser(version)
+        parser = LicenseUsageSample.get_parser(report_version)
         return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
 

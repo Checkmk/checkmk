@@ -221,13 +221,26 @@ def _save_license_usage_report(report_filepath: Path, raw_report: RawLicenseUsag
 
 
 def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistory:
-    return LocalLicenseUsageHistory.parse(
-        deserialize_dump(
+    if not isinstance(
+        raw_report := deserialize_dump(
             store.load_bytes_from_file(
                 report_filepath,
                 default=b"{}",
             )
         ),
+        dict,
+    ):
+        raise TypeError()
+
+    if not raw_report.get("history"):
+        return LocalLicenseUsageHistory([])
+
+    if not isinstance(report_version := raw_report.get("VERSION"), str):
+        raise ValueError()
+
+    return LocalLicenseUsageHistory.parse(
+        report_version,
+        raw_report,
         hash_site_id(omd_site()),
     )
 
@@ -264,17 +277,16 @@ class LocalLicenseUsageHistory:
         }
 
     @classmethod
-    def parse(cls, raw_report: object, site_hash: str) -> LocalLicenseUsageHistory:
+    def parse(
+        cls, report_version: str, raw_report: object, site_hash: str
+    ) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError()
 
         if not raw_report:
             return cls([])
 
-        if not (version := raw_report.get("VERSION")):
-            raise ValueError()
-
-        parser = LicenseUsageSample.get_parser(version)
+        parser = LicenseUsageSample.get_parser(report_version)
         instance_id = load_instance_id()
         return cls(
             parser(raw_sample, instance_id=instance_id, site_hash=site_hash)

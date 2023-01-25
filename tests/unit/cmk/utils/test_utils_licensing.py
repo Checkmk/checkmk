@@ -188,30 +188,29 @@ def test_update_license_usage_next_run_ts_not_reached(
 
 
 def test_serialize_license_usage_report() -> None:
-    history = LocalLicenseUsageHistory.parse(
-        {
-            "VERSION": "1.2",
-            "history": [
-                {
-                    "version": "",
-                    "edition": "",
-                    "platform": (
-                        "A very long string with len>50 describing the platform"
-                        " a Checkmk server is operating on."
-                    ),
-                    "is_cma": False,
-                    "sample_time": 1,
-                    "timezone": "",
-                    "num_hosts": 2,
-                    "num_hosts_excluded": 3,
-                    "num_services": 4,
-                    "num_services_excluded": 5,
-                    "extension_ntop": True,
-                },
-            ],
-        },
-        "site-hash",
-    )
+    report_version = "1.2"
+    raw_report = {
+        "VERSION": report_version,
+        "history": [
+            {
+                "version": "",
+                "edition": "",
+                "platform": (
+                    "A very long string with len>50 describing the platform"
+                    " a Checkmk server is operating on."
+                ),
+                "is_cma": False,
+                "sample_time": 1,
+                "timezone": "",
+                "num_hosts": 2,
+                "num_hosts_excluded": 3,
+                "num_services": 4,
+                "num_services_excluded": 5,
+                "extension_ntop": True,
+            },
+        ],
+    }
+    history = LocalLicenseUsageHistory.parse(report_version, raw_report, "site-hash")
 
     assert (
         _serialize_dump(history.for_report())
@@ -222,10 +221,6 @@ def test_serialize_license_usage_report() -> None:
 @pytest.mark.parametrize(
     "raw_report, expected_history",
     [
-        (
-            {},
-            LocalLicenseUsageHistory([]),
-        ),
         (
             {
                 "VERSION": "1.0",
@@ -592,7 +587,7 @@ def test_license_usage_report(
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
 
-    history = LocalLicenseUsageHistory.parse(raw_report, "site-hash")
+    history = LocalLicenseUsageHistory.parse(raw_report["VERSION"], raw_report, "site-hash")
 
     assert history.for_report()["VERSION"] == LicenseUsageReportVersion
 

@@ -115,7 +115,7 @@ from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
-    make_confirm_link,
+    make_confirm_delete_link,
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
 )
@@ -1680,14 +1680,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     title=_("Reset counters"),
                     icon_name="reload_cmk",
                     item=make_simple_link(
-                        make_confirm_link(
+                        make_confirm_delete_link(
                             url=make_action_link(
                                 [("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")]
                             ),
-                            message=_(
-                                "Do you really want to reset all rule hit counters "
-                                "in <b>all rule packs</b> to zero?"
-                            ),
+                            title=_("Reset all rule hit counters to zero"),
+                            message=_("This affects all rule packs."),
+                            confirm_button=_("Reset"),
                         )
                     ),
                 ),
@@ -1819,25 +1818,27 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
         rep_mode = replication_mode()
-        if rep_mode in ["sync", "takeover"]:
-            copy_url = make_confirm_link(
+        if rep_mode in ["master", "takeover"]:
+            copy_url = make_confirm_delete_link(
                 url=make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]),
-                message=_(
-                    "Do you really want to copy all event rules from the master and "
-                    "replace your local configuration with them?"
-                ),
+                title=_("Copy all event rules from the central site"),
+                message=_("This will replace your local configuration"),
+                confirm_button=_("Copy"),
             )
             html.show_warning(
                 _(
-                    "WARNING: This Event Console is currently running as a replication "
-                    "slave. The rules edited here will not be used. Instead a copy of the rules of the "
-                    "master are being used in the case of a takeover. The same holds for the event "
-                    "actions in the global settings.<br><br>If you want you can copy the ruleset of "
-                    "the master into your local slave configuration: "
+                    "WARNING: This Event Console is currently running as a remote replication"
+                    ". The rules edited here will not be used. Instead a copy of the rules of the "
+                    "central site are being used in the case of a takeover. The same holds for the event "
+                    "actions in the global settings."
                 )
-                + '<a href="%s">' % copy_url
-                + _("Copy Rules From Master")
-                + "</a>"
+                + html.render_br()
+                + html.render_br()
+                + _(
+                    "If you want you can copy the ruleset of "
+                    "the central site into your local configuration: "
+                )
+                + html.render_icon_button(copy_url, _("Copy rules from central site"), "clone")
             )
 
         elif rep_mode == "stopped":
@@ -1873,6 +1874,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
                 table.row(css=["matches_search"] if id_ in found_packs else [])
+                table.cell(_("#"))
+                html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
 
                 edit_url = makeuri_contextless(
@@ -1889,13 +1892,13 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 html.element_dragger_url("tr", base_url=drag_url)
 
                 if type_ == ec.RulePackType.internal:
-                    delete_url = make_confirm_link(
+                    delete_url = make_confirm_delete_link(
                         url=make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)]),
-                        message=_(
-                            "Do you really want to delete the rule pack <b>%s</b> "
-                            "<i>%s</i> with <b>%s</b> rules?"
-                        )
-                        % (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"])),
+                        title=_("Delete rule pack #%d") % nr,
+                        message=_("ID: %s") % id_
+                        + "<br>"
+                        + _("Used rules: %d") % len(rule_pack["rules"]),
+                        identifier=rule_pack["title"],
                     )
                     html.icon_button(delete_url, _("Delete this rule pack"), "delete")
                 else:
@@ -2287,7 +2290,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             have_match = False
             for nr, rule in enumerate(self._rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=make_action_link(
                         [
                             ("mode", "mkeventd_rules"),
@@ -2295,8 +2298,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                             ("_delete", nr),
                         ]
                     ),
-                    message=_("Do you really want to delete the rule <b>%s</b> <i>%s</i>?")
-                    % (nr, rule.get("description", "")),
+                    title=_("Delete rule #%d") % nr,
+                    message=_("ID: %s") % rule["id"],
+                    identifier=rule.get("description", ""),
                 )
                 drag_url = make_action_link(
                     [("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_move", nr)]
@@ -2311,6 +2315,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ],
                 )
 
+                table.cell(_("#"))
+                html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
                 html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
@@ -3180,10 +3186,11 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
                 table.cell(_("Actions"), css=["buttons"])
                 if is_custom_dir:
-                    delete_url = make_confirm_link(
+                    delete_url = make_confirm_delete_link(
                         url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
-                        message=_("Do you really want to delete the MIB file <b>%s</b>?")
-                        % filename,
+                        title=_("Delete MIB file"),
+                        message=_("Filename: %s") % str(filename),
+                        identifier=mib.name,
                     )
                     html.icon_button(delete_url, _("Delete this MIB"), "delete")
 

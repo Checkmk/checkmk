@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import (
     flash,
-    make_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     mode_url,
     redirect,
@@ -402,9 +402,11 @@ class ModeTags(ABCTagMode):
 
         html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
 
-        delete_url = make_confirm_link(
+        delete_url = make_confirm_delete_link(
             url=make_action_link([("mode", "tags"), ("_delete", tag_group.id)]),
-            message=_("Do you really want to delete the tag group '%s'?") % tag_group.id,
+            title=_("Delete tag group"),
+            message=_("ID: %s") % tag_group.id,
+            identifier=tag_group.title,
         )
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
@@ -448,9 +450,11 @@ class ModeTags(ABCTagMode):
             return
 
         edit_url = folder_preserving_link([("mode", "edit_auxtag"), ("edit", aux_tag.id)])
-        delete_url = make_confirm_link(
+        delete_url = make_confirm_delete_link(
             url=make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)]),
-            message=_("Do you really want to delete the auxiliary tag '%s'?") % aux_tag.id,
+            title=_("Delete auxiliary tag"),
+            message=_("ID: %s") % aux_tag.id,
+            identifier=aux_tag.title,
         )
         html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
         html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")

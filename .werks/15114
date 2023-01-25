@@ -19,7 +19,9 @@ They can choose to either use xinetd, systemd, or to prefer systemd, but fall ba
 The question which systemd is suitable depends on your configuration and use case:
 
 LI: If the ruleset <i>Allowed agent access via IP address</i> is configured, we require systemd v235 or newer.
-LI: If users want to monitor the host from more than one site we need systemd v220, or we risk dataloss.
+LI: If users want to monitor the host from more than one site we need at least systemd v220, or we risk dataloss.
+
+Note that we cannot decide if the latter is the case by looking at the configuration.
 
 The algorithm to decide which network service is best is improved as follows:
 

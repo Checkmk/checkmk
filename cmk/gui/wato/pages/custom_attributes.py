@@ -27,7 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    make_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     mode_url,
     redirect,
@@ -482,17 +482,20 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
             return
 
         with table_element(self._type + "attrs") as table:
-            for custom_attr in sorted(self._attrs, key=lambda x: x["title"]):
+            for nr, custom_attr in enumerate(sorted(self._attrs, key=lambda x: x["title"])):
                 table.row()
+                table.cell(_("#"), css=["narrow nowrap"])
+                html.write_text(nr)
 
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link(
                     [("mode", "edit_%s_attr" % self._type), ("edit", custom_attr["name"])]
                 )
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=makeactionuri(request, transactions, [("_delete", custom_attr["name"])]),
-                    message=_('Do you really want to delete the custom attribute "%s"?')
-                    % custom_attr["name"],
+                    title=_("Delete custom attribute #%d") % nr,
+                    message=_("Name: %s") % custom_attr["name"],
+                    identifier=custom_attr["title"],
                 )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(delete_url, _("Delete"), "delete")

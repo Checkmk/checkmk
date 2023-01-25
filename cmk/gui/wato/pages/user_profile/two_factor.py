@@ -60,7 +60,12 @@ from cmk.gui.userdb import (
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    DocReference,
+    make_confirm_delete_link,
+    makeactionuri,
+    makeuri_contextless,
+)
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 
@@ -203,11 +208,11 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             for credential in webauthn_credentials.values():
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=makeactionuri(
                         request, transactions, [("_delete", credential["credential_id"])]
                     ),
-                    message=_("Do you really want to delete this credential"),
+                    title=_("Delete credential"),
                 )
                 html.icon_button(delete_url, _("Delete this credential"), "delete")
 

@@ -135,24 +135,30 @@ class ParsedSectionsResolver:
         *,
         section_plugins: Sequence[SectionPlugin],
     ) -> None:
-        self._section_plugins = section_plugins
+        self._section_plugins: Final = section_plugins
+        self._superseders = ParsedSectionsResolver._init_superseders(section_plugins)
+        self._producers = ParsedSectionsResolver._init_producers(section_plugins)
         self._memoized_results: dict[ParsedSectionName, ResolvedResult | None] = {}
-        self._superseders = self._init_superseders()
-        self._producers = self._init_producers()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(section_plugins={self._section_plugins})"
 
-    def _init_superseders(self) -> Mapping[SectionName, Sequence[SectionPlugin]]:
+    @staticmethod
+    def _init_superseders(
+        section_plugins: Iterable[SectionPlugin],
+    ) -> Mapping[SectionName, Sequence[SectionPlugin]]:
         superseders: dict[SectionName, list[SectionPlugin]] = {}
-        for section in self._section_plugins:
+        for section in section_plugins:
             for superseded in section.supersedes:
                 superseders.setdefault(superseded, []).append(section)
         return superseders
 
-    def _init_producers(self) -> Mapping[ParsedSectionName, Sequence[SectionPlugin]]:
+    @staticmethod
+    def _init_producers(
+        section_plugins: Iterable[SectionPlugin],
+    ) -> Mapping[ParsedSectionName, Sequence[SectionPlugin]]:
         producers: dict[ParsedSectionName, list[SectionPlugin]] = {}
-        for section in self._section_plugins:
+        for section in section_plugins:
             producers.setdefault(section.parsed_section_name, []).append(section)
         return producers
 

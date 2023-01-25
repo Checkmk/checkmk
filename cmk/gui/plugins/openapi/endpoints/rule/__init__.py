@@ -215,13 +215,19 @@ def list_rules(param):
     ruleset_name = param["ruleset_name"]
 
     try:
-        ruleset = all_rulesets.get(ruleset_name.replace("-", ":"))
+        ruleset = all_rulesets.get(ruleset_name)
     except KeyError:
-        return problem(
-            status=400,
-            title="Unknown ruleset.",
-            detail=f"The ruleset of name {ruleset_name!r} is not known.",
-        )
+        try:
+            # this should have been removed with Change-Id I1a85858fc8881f416f96f4b3f069f558d896b844
+            # as customers could have written scripts where this replacement
+            # could return a valid response we keep it in the 2.1.0 branch.
+            ruleset = all_rulesets.get(ruleset_name.replace("-", ":"))
+        except KeyError:
+            return problem(
+                status=400,
+                title="Unknown ruleset.",
+                detail=f"The ruleset of name {ruleset_name!r} is not known.",
+            )
 
     result = []
     for folder, index, rule in ruleset.get_rules():

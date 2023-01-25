@@ -89,7 +89,7 @@ from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
-    make_confirm_link,
+    make_confirm_delete_link,
     makeactionuri,
     makeuri,
     makeuri_contextless,
@@ -634,14 +634,17 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         if not self.is_mine():
             add_vars.append(("_owner", self.owner()))
 
-        if not self.is_mine():
-            owned_by = _(" (owned by %s)") % self.owner()
-        else:
-            owned_by = ""
-        message = _('Please confirm the deletion of "%s"%s.') % (self.title(), owned_by)
+        assert user.id is not None
 
-        return make_confirm_link(
-            url=makeactionuri(request, transactions, add_vars), message=message
+        confirm_message = _("ID: %s") % self.name()
+        if not self.is_mine():
+            confirm_message += "<br>" + _("Owner: %s") % self.owner()
+
+        return make_confirm_delete_link(
+            url=makeactionuri(request, transactions, add_vars),
+            title=_("Delete %s") % self.phrase("title").lower(),
+            message=confirm_message,
+            identifier=self.title(),
         )
 
     @classmethod

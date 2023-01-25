@@ -230,6 +230,10 @@ msgstr ""
 "processos são exemplos para cada grupo correspondente. Dessa forma, impor os "
 "delimitadores fora do grupo."
 
+#, fuzzy
+msgid "#"
+msgstr "N#"
+
 msgid "%"
 msgstr "%"
 
@@ -8253,13 +8257,6 @@ msgstr ""
 "Não é possível exibir esta vista no layout da matriz. Você precisa de pelo "
 "menos duas colunas!"
 
-#, fuzzy
-msgid ""
-"Cannot download license usage report due to missing subscription settings."
-msgstr ""
-"Para descarregar relatórios de utilização de licenças deve adicionar "
-"detalhes de subscrição."
-
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr ""
@@ -13665,9 +13662,9 @@ msgstr "Eliminar mensagens processadas"
 msgid "Delete report schedule entry '%s'?"
 msgstr "Eliminar a entrada de calendário de relatórios '%s'?"
 
-#, python-format
-msgid "Delete rule #%d (ID: %s) of folder '%s'?"
-msgstr "Eliminar regra #%d (ID: %s) da pasta '%s'?"
+#, fuzzy, python-format
+msgid "Delete rule #%d"
+msgstr "Regra eliminada %s"
 
 msgid "Delete rules"
 msgstr "Eliminar regras"
@@ -29545,9 +29542,6 @@ msgstr "destino MTR"
 
 msgid "MTree name"
 msgstr "nome MTree"
-
-msgid "Ma."
-msgstr "Mãe."
 
 msgid "Macro name"
 msgstr "Nome Macro"
@@ -58740,6 +58734,11 @@ msgstr "Use o assunto do correio"
 msgid "Use the multipath alias as service name, if one is set"
 msgstr "Use o nome multi-caminho como nome de serviço, se um estiver definido"
 
+#, fuzzy
+msgid "Use the name of the host for which the service is generated"
+msgstr ""
+"Isto é o padrão para o host para o qual a verificação ativa está configurada."
+
 msgid "Use the name specified in the ESX system"
 msgstr "Use o nome especificado no sistema ESX"
 
@@ -66127,6 +66126,22 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid ""
+#~| "For downloading license usage reports you must add subscription details."
+#~ msgid ""
+#~ "Cannot download license usage report due to missing subscription settings."
+#~ msgstr ""
+#~ "Para descarregar relatórios de utilização de licenças deve adicionar "
+#~ "detalhes de subscrição."
+
+#, python-format
+#~ msgid "Delete rule #%d (ID: %s) of folder '%s'?"
+#~ msgstr "Eliminar regra #%d (ID: %s) da pasta '%s'?"
+
+#~ msgid "Ma."
+#~ msgstr "Mãe."
 
 #~ msgid "State if just <i>some</i> check plugins received no monitoring data"
 #~ msgstr ""

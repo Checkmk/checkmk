@@ -230,6 +230,10 @@ msgstr ""
 "worden voor elke matchende groep. Daarom worden scheidingstekens buiten de "
 "groep afgedwongen."
 
+#, fuzzy
+msgid "#"
+msgstr "N#"
+
 msgid "%"
 msgstr "%"
 
@@ -8248,13 +8252,6 @@ msgstr ""
 "Kan deze weergave niet in matrix layout weergeven. U hebt ten minste twee "
 "kolommen nodig!"
 
-#, fuzzy
-msgid ""
-"Cannot download license usage report due to missing subscription settings."
-msgstr ""
-"Voor het downloaden van licentie gebruiksrapporten moet u "
-"abonnementsgegevens toevoegen."
-
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr "Kan schema-item voor niet-bestaand rapport %s niet bewerken"
@@ -13602,9 +13599,9 @@ msgstr "Verwerkte berichten verwijderen"
 msgid "Delete report schedule entry '%s'?"
 msgstr "Rapportageplanning item '%s' verwijderen?"
 
-#, python-format
-msgid "Delete rule #%d (ID: %s) of folder '%s'?"
-msgstr "Regel #%d (ID: %s) van map '%s' verwijderen?"
+#, fuzzy, python-format
+msgid "Delete rule #%d"
+msgstr "Regel %s verwijderd"
 
 msgid "Delete rules"
 msgstr "Regels verwijderen"
@@ -29339,9 +29336,6 @@ msgstr "MTR bestemming"
 
 msgid "MTree name"
 msgstr "Naam MTree"
-
-msgid "Ma."
-msgstr "Ma."
 
 msgid "Macro name"
 msgstr "Macronaam"
@@ -58394,6 +58388,10 @@ msgstr "Gebruik het onderwerp van de e-mail"
 msgid "Use the multipath alias as service name, if one is set"
 msgstr "Gebruik de multipath alias als dienstnaam, als er een is ingesteld"
 
+#, fuzzy
+msgid "Use the name of the host for which the service is generated"
+msgstr "Gebruik het adres van de host waarvoor de dienst wordt gegenereerd"
+
 msgid "Use the name specified in the ESX system"
 msgstr "Gebruik de naam die in het ESX-systeem is opgegeven"
 
@@ -65817,6 +65815,22 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid ""
+#~| "For downloading license usage reports you must add subscription details."
+#~ msgid ""
+#~ "Cannot download license usage report due to missing subscription settings."
+#~ msgstr ""
+#~ "Voor het downloaden van licentie gebruiksrapporten moet u "
+#~ "abonnementsgegevens toevoegen."
+
+#, python-format
+#~ msgid "Delete rule #%d (ID: %s) of folder '%s'?"
+#~ msgstr "Regel #%d (ID: %s) van map '%s' verwijderen?"
+
+#~ msgid "Ma."
+#~ msgstr "Ma."
 
 #~ msgid "State if just <i>some</i> check plugins received no monitoring data"
 #~ msgstr ""

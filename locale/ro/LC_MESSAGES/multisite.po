@@ -224,6 +224,9 @@ msgid ""
 "group."
 msgstr ""
 
+msgid "#"
+msgstr ""
+
 msgid "%"
 msgstr ""
 
@@ -7762,10 +7765,6 @@ msgid ""
 "Cannot display this view in matrix layout. You need at least two columns!"
 msgstr ""
 
-msgid ""
-"Cannot download license usage report due to missing subscription settings."
-msgstr ""
-
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr ""
@@ -13066,9 +13065,9 @@ msgstr ""
 msgid "Delete report schedule entry '%s'?"
 msgstr ""
 
-#, python-format
-msgid "Delete rule #%d (ID: %s) of folder '%s'?"
-msgstr ""
+#, fuzzy, python-format
+msgid "Delete rule #%d"
+msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete rules"
@@ -28032,9 +28031,6 @@ msgstr "foloseste descrierea"
 #, fuzzy
 msgid "MTree name"
 msgstr "Nume nou"
-
-msgid "Ma."
-msgstr ""
 
 msgid "Macro name"
 msgstr ""
@@ -54903,6 +54899,10 @@ msgstr ""
 
 msgid "Use the multipath alias as service name, if one is set"
 msgstr ""
+
+#, fuzzy
+msgid "Use the name of the host for which the service is generated"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Use the name specified in the ESX system"
 msgstr ""

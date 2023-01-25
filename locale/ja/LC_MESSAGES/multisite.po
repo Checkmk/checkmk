@@ -226,6 +226,10 @@ msgstr ""
 "てのグループに対してインスタンス化されるため、グループ内の境界文字は検出後に"
 "消えます。したがって、グループ外で区切り文字を適用します。"
 
+#, fuzzy
+msgid "#"
+msgstr "N#"
+
 msgid "%"
 msgstr "%"
 
@@ -7881,13 +7885,6 @@ msgstr ""
 "このビューをマトリックスレイアウトで表示することはできません。少なくとも2つの"
 "列が必要です!"
 
-#, fuzzy
-msgid ""
-"Cannot download license usage report due to missing subscription settings."
-msgstr ""
-"ライセンス使用状況レポートをダウンロードするには、サブスクリプションの詳細を"
-"追加する必要があります。"
-
 #, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr "存在しないレポート %s のスケジュールエントリを編集できません"
@@ -13049,9 +13046,9 @@ msgstr "処理されたメッセージを削除する"
 msgid "Delete report schedule entry '%s'?"
 msgstr "レポートスケジュールエントリ '%s'を削除しますか？"
 
-#, python-format
-msgid "Delete rule #%d (ID: %s) of folder '%s'?"
-msgstr ""
+#, fuzzy, python-format
+msgid "Delete rule #%d"
+msgstr "ルール %s を削除しました"
 
 msgid "Delete rules"
 msgstr "ルールを削除する"
@@ -28145,9 +28142,6 @@ msgstr "MTRの宛先"
 
 msgid "MTree name"
 msgstr "MTree名"
-
-msgid "Ma."
-msgstr "Ma."
 
 msgid "Macro name"
 msgstr "マクロ名"
@@ -55610,6 +55604,10 @@ msgstr "メールの件名を使用する"
 msgid "Use the multipath alias as service name, if one is set"
 msgstr "マルチパスエイリアスが設定されている場合は、サービス名として使用します"
 
+#, fuzzy
+msgid "Use the name of the host for which the service is generated"
+msgstr "サービスが生成されるホストのアドレスを使用する"
+
 msgid "Use the name specified in the ESX system"
 msgstr "ESXシステムで指定された名前を使用します"
 
@@ -62488,6 +62486,18 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid ""
+#~| "For downloading license usage reports you must add subscription details."
+#~ msgid ""
+#~ "Cannot download license usage report due to missing subscription settings."
+#~ msgstr ""
+#~ "ライセンス使用状況レポートをダウンロードするには、サブスクリプションの詳細"
+#~ "を追加する必要があります。"
+
+#~ msgid "Ma."
+#~ msgstr "Ma."
 
 #~ msgid "State if just <i>some</i> check plugins received no monitoring data"
 #~ msgstr ""

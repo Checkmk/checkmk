@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import NamedTuple
 
 from livestatus import lqencode, SiteId
@@ -32,9 +33,18 @@ def join_service_row_post_processor(
     if slave_ds.join_key is None:
         raise ValueError()
 
-    # The inventory_join_macros are avail if the datasource is an inventory table
-    inventory_join_macros = dict(view.spec.get("inventory_join_macros", {}).get("macros", []))
-    join_filters = _make_join_filters(view, inventory_join_macros, slave_ds.join_key, rows)
+    inventory_join_macros = _InventoryJoinMacros(
+        datasource_ident=view.datasource.ident,
+        # The inventory_join_macros are avail if the datasource is an inventory table
+        inventory_join_macros=dict(view.spec.get("inventory_join_macros", {}).get("macros", [])),
+    )
+
+    join_filters = _make_join_filters(
+        view.join_cells,
+        inventory_join_macros,
+        slave_ds.join_key,
+        rows,
+    )
 
     row_data = slave_ds.table.query(
         view.datasource,
@@ -79,14 +89,7 @@ def join_service_row_post_processor(
             {
                 join_value: attrs
                 for join_value in join_filters.with_macros
-                if (
-                    replaced_join_value := _replace_inventory_join_macros(
-                        datasource_ident=view.datasource.ident,
-                        inventory_join_macros=inventory_join_macros,
-                        row=row,
-                        join_value=join_value,
-                    )
-                )
+                if (replaced_join_value := inventory_join_macros.replace(join_value, row))
                 and (attrs := master_entry.get(replaced_join_value))
             }
         )
@@ -117,6 +120,23 @@ def _make_master_key(row: Row, join_master_column: str) -> tuple[SiteId, str]:
     return (SiteId(row["site"]), row[join_master_column])
 
 
+@dataclass(frozen=True)
+class _InventoryJoinMacros:
+    datasource_ident: str
+    inventory_join_macros: dict[str, str]
+
+    def has_macros(self, join_value: str) -> bool:
+        return any(macro in join_value for macro in self.inventory_join_macros.values())
+
+    def replace(self, join_value: str, row: Row) -> str:
+        for column_name, macro in self.inventory_join_macros.items():
+            if (row_value := row.get(f"{self.datasource_ident}_{column_name}")) is None:
+                continue
+            if macro in join_value:
+                join_value = join_value.replace(macro, row_value)
+        return join_value
+
+
 class JoinFilters(NamedTuple):
     with_macros: list[str]
     without_macros: list[str]
@@ -124,8 +144,8 @@ class JoinFilters(NamedTuple):
 
 
 def _make_join_filters(
-    view: View,
-    inventory_join_macros: dict[str, str],
+    join_cells: list[JoinCell],
+    inventory_join_macros: _InventoryJoinMacros,
     join_column_name: str,
     rows: Rows,
 ) -> JoinFilters:
@@ -133,12 +153,11 @@ def _make_join_filters(
     without_macros = []
     filters = []
 
-    for join_cell in view.join_cells:
-        if any(macro in join_cell.join_value for macro in inventory_join_macros.values()):
+    for join_cell in join_cells:
+        if inventory_join_macros.has_macros(join_cell.join_value):
             with_macros.append(join_cell.join_value)
             filters.append(
                 _livestatus_filter_from_macros(
-                    view.datasource.ident,
                     inventory_join_macros,
                     rows,
                     join_column_name,
@@ -158,22 +177,18 @@ def _make_join_filters(
 
 
 def _livestatus_filter_from_macros(
-    datasource_ident: str,
-    inventory_join_macros: dict[str, str],
+    inventory_join_macros: _InventoryJoinMacros,
     rows: Rows,
     join_column_name: str,
     join_value: str,
 ) -> LivestatusQuery:
     filters_by_hostname: dict[str, list[str]] = {}
     for row in rows:
-        replaced_join_value = _replace_inventory_join_macros(
-            datasource_ident=datasource_ident,
-            inventory_join_macros=inventory_join_macros,
-            row=row,
-            join_value=join_value,
-        )
         filters_by_hostname.setdefault(row["host_name"], []).append(
-            _livestatus_filter(join_column_name, replaced_join_value)
+            _livestatus_filter(
+                join_column_name,
+                inventory_join_macros.replace(join_value, row),
+            )
         )
 
     join_filters = []
@@ -192,18 +207,3 @@ def _livestatus_filter_from_macros(
 
 def _livestatus_filter(join_column_name: str, join_value: str) -> LivestatusQuery:
     return f"Filter: {lqencode(join_column_name)} = {lqencode(join_value)}"
-
-
-def _replace_inventory_join_macros(
-    *,
-    datasource_ident: str,
-    inventory_join_macros: dict[str, str],
-    row: Row,
-    join_value: str,
-) -> str:
-    for column_name, macro in inventory_join_macros.items():
-        if (row_value := row.get(f"{datasource_ident}_{column_name}")) is None:
-            continue
-        if macro in join_value:
-            join_value = join_value.replace(macro, row_value)
-    return join_value

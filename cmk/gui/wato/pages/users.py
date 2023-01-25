@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
 from cmk.gui.plugins.wato.utils import (
     flash,
-    make_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     mode_url,
     redirect,
@@ -377,9 +377,11 @@ class ModeUsers(WatoMode):
                     clone_url = folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
                     html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "users"), ("_delete", uid)]),
-                    message=_("Do you really want to delete the user %s?") % uid,
+                    title=_("Delete user"),
+                    message=_("ID: %s") % uid,
+                    identifier=(user_alias := user_spec.get("alias", "")),
                 )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -463,7 +465,7 @@ class ModeUsers(WatoMode):
                     html.icon("notif_disabled", _("Notifications are disabled"))
 
                 # Full name / Alias
-                table.cell(_("Alias"), user_spec.get("alias", ""))
+                table.cell(_("Alias"), user_alias)
 
                 # Email
                 table.cell(_("Email"), user_spec.get("email", ""))
@@ -673,7 +675,7 @@ class ModeEditUser(WatoMode):
                 title=_("Remove two-factor authentication"),
                 icon_name="2fa",
                 item=make_simple_link(
-                    make_confirm_link(
+                    make_confirm_delete_link(
                         url=make_action_link(
                             [
                                 ("mode", "edit_user"),
@@ -681,10 +683,7 @@ class ModeEditUser(WatoMode):
                                 ("_disable_two_factor", "1"),
                             ]
                         ),
-                        message=_(
-                            "Do you really want to remove the two-factor authentication of %s?"
-                        )
-                        % self._user_id,
+                        title=_("Remove two-factor authentication of %s") % self._user_id,
                     )
                 ),
                 is_enabled=_is_two_factor_enabled(self._user),

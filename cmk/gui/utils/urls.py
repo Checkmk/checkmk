@@ -300,6 +300,7 @@ def make_confirm_delete_link(
     identifier: str | None = None,
     confirm_button: str | None = None,
     cancel_button: str | None = None,
+    warning: bool = False,
 ) -> str:
     return _make_customized_confirm_link(
         url=url,
@@ -307,9 +308,10 @@ def make_confirm_delete_link(
         message=message,
         confirm_button=confirm_button if confirm_button else _("Delete"),
         cancel_button=cancel_button if cancel_button else _("Cancel"),
+        icon="warning" if warning else "question",
         custom_class_options={
-            "confirmButton": "warn",
-            "icon": "confirm_icon warn",
+            "confirmButton": "confirm_warning" if warning else "confirm_question",
+            "icon": "confirm_icon" + (" confirm_warning" if warning else " confirm_question"),
         },
     )
 

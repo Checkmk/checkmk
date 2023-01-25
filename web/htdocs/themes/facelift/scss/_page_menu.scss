@@ -536,16 +536,32 @@ div#page_menu_popups {
       background-color: $headline-color;
       margin-bottom: $spacing;
 
-      button.warn {
+      button.confirm_question,
+      button.confirm_warning {
+        margin-left: 0px;
+      }
+
+      button.confirm_question {
         &,
         &:active {
           color: $font-color-light-bg;
           background-color: darken($color-state-1-background, 5%);
-          margin-left: 0px;
         }
 
         &:hover {
           background-color: $color-state-1-background;
+        }
+      }
+
+      button.confirm_warning {
+        &,
+        &:active {
+          color: $white;
+          background-color: darken($color-state-2-background, 5%);
+        }
+
+        &:hover {
+          background-color: $color-state-2-background;
         }
       }
     }
@@ -563,8 +579,13 @@ div#page_menu_popups {
     font-weight: 800;
     color: $font-color-light-bg;
 
-    &.warn {
+    &.confirm_question {
       background-color: $yellow;
+    }
+
+    &.confirm_warning {
+      color: $white;
+      background-color: $color-state-2-background;
     }
   }
 

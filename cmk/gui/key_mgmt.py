@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -173,6 +173,9 @@ class PageKeyManagement:
     def _delete_confirm_msg(self) -> str:
         raise NotImplementedError()
 
+    def _delete_confirm_title(self, nr: int) -> str:
+        raise NotImplementedError()
+
     def _key_in_use(self, key_id: int, key: Key) -> bool:
         raise NotImplementedError()
 
@@ -182,21 +185,27 @@ class PageKeyManagement:
     def page(self) -> None:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
-            for key_id, key in sorted(self.key_store.load().items()):
+            for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
 
                 table.row()
+                table.cell(_("#"))
+                html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
                     if key.owner != user.id:
                         message += (
-                            _("<br><b>Note</b>: this key has created by user <b>%s</b>") % key.owner
+                            _("<br><br><b>Note</b>: this key was created by user <b>%s</b>")
+                            % key.owner
                         )
 
-                    delete_url = make_confirm_link(
+                    delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_delete", key_id)]),
+                        title=self._delete_confirm_title(nr),
                         message=message,
+                        identifier=key.alias,
+                        warning=True,
                     )
                     html.icon_button(delete_url, _("Delete this key"), "delete")
                 download_url = makeuri_contextless(

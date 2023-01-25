@@ -1856,13 +1856,15 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
 
     def _delete_confirm_msg(self) -> str:
         return _(
-            "Are you sure you want to delete this key?<br><br>"
             "<b>Beware:</b> Deleting this key "
             "means that you will not be able to encrypt or sign backups with the key. "
             "Already created backups which have been encrypted, can not be decrypted "
             "without access to this key. So please be sure that you either have a "
             "backup or don't need this key anymore."
         )
+
+    def _delete_confirm_title(self, nr: int) -> str:
+        return _("Delete backup key #%d") % nr
 
 
 class PageBackupEditKey(key_mgmt.PageEditKey):

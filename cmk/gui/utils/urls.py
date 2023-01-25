@@ -14,6 +14,7 @@ from typing_extensions import assert_never
 
 from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
@@ -273,21 +274,54 @@ def makeuri_contextless_rulespec_group(
     )
 
 
-def make_confirm_link(*, url: str, message: str) -> str:
-    return "javascript:cmk.forms.confirm_link({}, {}),cmk.popup_menu.close_popup()".format(
-        json.dumps(quote_plus(url)),
-        json.dumps(escape_text(message)),
+def make_confirm_link(
+    *,
+    url: str,
+    title: str | None = None,
+    message: str | None = None,
+    identifier: str | None = None,
+    confirm_button: str | None = None,
+    cancel_button: str | None = None,
+) -> str:
+    return _make_customized_confirm_link(
+        url=url,
+        title=_get_confirm_link_title(title, identifier),
+        message=message,
+        confirm_button=confirm_button if confirm_button else _("Yes"),
+        cancel_button=cancel_button if cancel_button else _("No"),
     )
 
 
-def make_customized_confirm_link(
+def make_confirm_delete_link(
     *,
     url: str,
     title: str,
-    message: str,
+    message: str | None = None,
+    identifier: str | None = None,
+    confirm_button: str | None = None,
+    cancel_button: str | None = None,
+) -> str:
+    return _make_customized_confirm_link(
+        url=url,
+        title=_get_confirm_link_title(title, identifier),
+        message=message,
+        confirm_button=confirm_button if confirm_button else _("Delete"),
+        cancel_button=cancel_button if cancel_button else _("Cancel"),
+        custom_class_options={
+            "confirmButton": "warn",
+            "icon": "confirm_icon warn",
+        },
+    )
+
+
+def _make_customized_confirm_link(
+    *,
+    url: str,
+    title: str,
+    message: str | None = None,
     confirm_button: str,
     cancel_button: str,
-    icon: str,
+    icon: str | None = None,
     custom_class_options: dict[str, str] | None = None,
 ) -> str:
     return "javascript:cmk.forms.confirm_link({}, {}, {}),cmk.popup_menu.close_popup()".format(
@@ -299,11 +333,22 @@ def make_customized_confirm_link(
                 "html": message,
                 "confirmButtonText": confirm_button,
                 "cancelButtonText": cancel_button,
-                "icon": icon,
-                "customClass": custom_class_options,
+                "icon": icon if icon else "question",
+                "customClass": custom_class_options if custom_class_options else {},
             }
         ),
     )
+
+
+def _get_confirm_link_title(
+    title: str | None,
+    identifier: str | None = None,
+) -> str:
+    if title is None:
+        return ""
+    if title and identifier:
+        return title + f" - {identifier}?"
+    return title + "?"
 
 
 def file_name_and_query_vars_from_url(url: str) -> tuple[str, QueryVars]:

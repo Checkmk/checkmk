@@ -555,13 +555,17 @@ div#page_menu_popups {
     position: absolute;
     width: 25px;
     height: 100%;
+    background-color: $success-dimmed;
     border: 0;
     border-radius: $border-radius-left;
-    background: $yellow;
     margin: 0;
     font-size: 7px;
     font-weight: 800;
     color: $font-color-light-bg;
+
+    &.warn {
+      background-color: $yellow;
+    }
   }
 
   .confirm_title,
@@ -575,10 +579,6 @@ div#page_menu_popups {
   .confirm_title {
     margin: 0 25px 0px;
     font-weight: 800;
-    width: 685px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .confirm_content {

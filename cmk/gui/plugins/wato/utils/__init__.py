@@ -88,8 +88,8 @@ from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (  # noqa: F401 # pylint: disable=unused-import
+    make_confirm_delete_link,
     make_confirm_link,
-    make_customized_confirm_link,
 )
 from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,

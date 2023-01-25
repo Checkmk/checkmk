@@ -269,11 +269,13 @@ export function textinput_enter_submit(e, submit) {
 // Helper function to display nice popup confirm dialogs
 export function confirm_dialog(optional_args, confirm_handler) {
     const default_custom_class_args = {
+        title: "confirm_title",
         container: "confirm_container",
         popup: "confirm_popup",
         content: "confirm_content",
         htmlContainer: "confirm_content",
         actions: "confirm_actions",
+        icon: "confirm_icon",
         confirmButton: "hot",
     };
 
@@ -307,6 +309,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
         showCancelButton: true,
         confirmButtonText: "Yes",
         cancelButtonText: "No",
+        icon: "question",
         customClass: custom_class_args,
     };
 

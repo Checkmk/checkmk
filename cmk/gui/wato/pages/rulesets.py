@@ -61,7 +61,7 @@ from cmk.gui.plugins.wato.utils import (
     flash,
     HostTagCondition,
     LabelCondition,
-    make_customized_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     redirect,
     search_form,
@@ -1208,21 +1208,12 @@ class ModeEditRuleset(WatoMode):
 
         html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
 
-        rule_description = _get_description_or_comment(rule)
         html.icon_button(
-            url=make_customized_confirm_link(
+            url=make_confirm_delete_link(
                 url=self._action_url("delete", folder, rule.id),
-                title=_("Delete rule #%d") % rulenr
-                + (f" - {rule_description}" if rule_description else ""),
+                title=_("Delete rule #%d") % rulenr,
                 message=_("Folder: %s") % folder.alias_path(),
-                confirm_button=_("Delete"),
-                cancel_button=_("Cancel"),
-                icon="question",
-                custom_class_options={
-                    "title": "confirm_title",
-                    "confirmButton": "warn",
-                    "icon": "confirm_icon",
-                },
+                identifier=rule.rule_options.description,
             ),
             title=_("Delete this rule"),
             icon="delete",
@@ -1369,7 +1360,7 @@ class ModeEditRuleset(WatoMode):
             )
             html.write_text("&nbsp;")
 
-        desc = _get_description_or_comment(rule)
+        desc = rule.rule_options.description or rule.rule_options.comment or ""
         html.write_text(desc)
 
     def _rule_conditions(self, rule: Rule) -> None:
@@ -1412,10 +1403,6 @@ class ModeEditRuleset(WatoMode):
         html.hidden_field("mode", "new_rule")
         html.hidden_field("folder", self._folder.path())
         html.end_form()
-
-
-def _get_description_or_comment(rule: Rule) -> str:
-    return rule.rule_options.description or rule.rule_options.comment or ""
 
 
 def _get_groups(

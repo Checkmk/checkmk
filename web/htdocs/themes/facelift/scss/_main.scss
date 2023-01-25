@@ -184,7 +184,8 @@ input.button:not([type="password"]) {
 }
 
 button.hot,
-input.button.hot {
+input.button.hot,
+#confirm_icon.warn {
   &,
   &:active {
     color: $font-color-light-bg;

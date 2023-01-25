@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    make_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     mode_url,
     redirect,
@@ -330,15 +330,16 @@ class ModeTimeperiods(WatoMode):
                 table.row()
 
                 table.cell(_("Actions"), css=["buttons"])
+                alias = timeperiod_spec_alias(timeperiod)
                 if name in watolib.timeperiods.builtin_timeperiods():
                     html.i(_("(builtin)"))
                 else:
-                    self._action_buttons(name)
+                    self._action_buttons(name, alias)
 
                 table.cell(_("Name"), name)
-                table.cell(_("Alias"), timeperiod_spec_alias(timeperiod))
+                table.cell(_("Alias"), alias)
 
-    def _action_buttons(self, name):
+    def _action_buttons(self, name: str, alias: str) -> None:
         edit_url = folder_preserving_link(
             [
                 ("mode", "edit_timeperiod"),
@@ -351,14 +352,16 @@ class ModeTimeperiods(WatoMode):
                 ("clone", name),
             ]
         )
-        delete_url = make_confirm_link(
+        delete_url = make_confirm_delete_link(
             url=make_action_link(
                 [
                     ("mode", "timeperiods"),
                     ("_delete", name),
                 ]
             ),
-            message=_("Do you really want to delete the time period '%s'?") % name,
+            title=_("Delete time period"),
+            message=_("Name: %s") % name,
+            identifier=alias,
         )
 
         html.icon_button(edit_url, _("Properties"), "edit")

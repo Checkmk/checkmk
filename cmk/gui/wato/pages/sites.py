@@ -63,7 +63,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
-    make_confirm_link,
+    make_confirm_delete_link,
     makeactionuri,
     makeactionuri_contextless,
     makeuri_contextless,
@@ -780,10 +780,11 @@ class ModeDistributedMonitoring(WatoMode):
         if site_id == omd_site():
             html.empty_icon_button()
         else:
-            delete_url = make_confirm_link(
+            delete_url = make_confirm_delete_link(
                 url=makeactionuri(request, transactions, [("_delete", site_id)]),
-                message=_("Do you really want to delete the connection to the site %s?")
-                % HTMLWriter.render_tt(site_id),
+                title=_("Delete connection to site"),
+                message=_("ID: %s") % site_id,
+                identifier=site.get("alias", ""),
             )
             html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -854,10 +855,12 @@ class ModeDistributedMonitoring(WatoMode):
 
         if site["replication"]:
             if site.get("secret"):
-                logout_url = make_confirm_link(
+                logout_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "sites"), ("_logout", site_id)]),
-                    message=_("Do you really want to log out of '%s'?")
-                    % HTMLWriter.render_tt(site["alias"]),
+                    title=_("Log out of site"),
+                    message=_("ID: %s") % site_id,
+                    identifier=site["alias"],
+                    confirm_button=_("Log out"),
                 )
                 html.icon_button(logout_url, _("Logout"), "autherr")
             else:

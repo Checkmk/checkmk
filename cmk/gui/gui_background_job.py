@@ -29,7 +29,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri_contextless
 
 
 @permission_section_registry.register
@@ -235,22 +235,28 @@ class JobRenderer:
         html.open_td()
         if may_stop:
             html.icon_button(
-                make_confirm_link(
+                make_confirm_delete_link(
                     url=makeactionuri(
                         request, transactions, [(ActionHandler.stop_job_var, job_id)]
                     ),
-                    message=_("Stop job %s%s?") % (job_id, cls._get_extra_info(job_status)),
+                    title=_("Stop job"),
+                    message=_("ID: %s") % job_id,
+                    identifier=job_status.title,
+                    confirm_button=_("Stop"),
+                    cancel_button=_("Cancel"),
                 ),
                 _("Stop this job"),
                 "disable_test",
             )
         if may_delete:
             html.icon_button(
-                make_confirm_link(
+                make_confirm_delete_link(
                     url=makeactionuri(
                         request, transactions, [(ActionHandler.delete_job_var, job_id)]
                     ),
-                    message=_("Delete job %s%s?") % (job_id, cls._get_extra_info(job_status)),
+                    title=_("Delete job"),
+                    message=_("ID: %s") % job_id,
+                    identifier=job_status.title,
                 ),
                 _("Delete this job"),
                 "delete",

@@ -7,9 +7,18 @@
 
 from collections.abc import Iterable, Sequence
 
-from cmk.utils.type_defs import ParsedSectionName, SectionName
+from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.base.agent_based.data_provider import ParsedSectionsResolver, ParsingResult, ResolvedResult
+from cmk.fetchers import SourceType
+
+from cmk.checkers import HostKey
+
+from cmk.base.agent_based.data_provider import (
+    ParsedSectionsBroker,
+    ParsedSectionsResolver,
+    ParsingResult,
+    ResolvedResult,
+)
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 
@@ -33,7 +42,7 @@ class _FakeParser(dict):
             _ = self.pop(str(name), None)
 
 
-class TestPArsedSectionsResolver:
+class TestParsedSectionsResolver:
     @staticmethod
     def make_provider(
         section_plugins: Sequence[SectionPlugin],
@@ -125,20 +134,20 @@ class TestPArsedSectionsResolver:
         assert section and section.name == SectionName("section_one")
 
     def test_iteration(self) -> None:
+        host_key = HostKey(HostName("host"), SourceType.HOST)
         sections = [
             _section("section_one", "parsed_section_one", set()),
             _section("section_two", "parsed_section_two", set()),
             _section("section_thr", "parsed_section_thr", {"section_two"}),
             _section("section_fou", "parsed_section_fou", {"section_one"}),
         ]
-        resolver, parser = self.make_provider(section_plugins=sections)
+        broker = ParsedSectionsBroker(
+            {
+                host_key: self.make_provider(sections),  # type: ignore[dict-item]
+            }
+        )
 
-        assert sorted(
-            resolver.resolve_all(
-                parser,  # type: ignore[arg-type]
-            ),
-            key=lambda r: r.section.name,
-        ) == [
+        assert broker.all_parsing_results(host_key) == [
             ResolvedResult(
                 parsed=ParsingResult(data=1, cache_info=None),
                 section=sections[0],

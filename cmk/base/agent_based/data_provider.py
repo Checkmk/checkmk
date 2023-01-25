@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, NamedTuple
 
 import cmk.utils.piggyback
@@ -135,13 +135,13 @@ class ParsedSectionsResolver:
         *,
         section_plugins: Sequence[SectionPlugin],
     ) -> None:
-        self._section_plugins: Final = section_plugins
+        self.section_plugins: Final = section_plugins
         self._superseders = ParsedSectionsResolver._init_superseders(section_plugins)
         self._producers = ParsedSectionsResolver._init_producers(section_plugins)
         self._memoized_results: dict[ParsedSectionName, ResolvedResult | None] = {}
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(section_plugins={self._section_plugins})"
+        return f"{self.__class__.__name__}(section_plugins={self.section_plugins})"
 
     @staticmethod
     def _init_superseders(
@@ -188,13 +188,6 @@ class ParsedSectionsResolver:
                 )
 
         return self._memoized_results.setdefault(parsed_section_name, None)
-
-    def resolve_all(self, parser: SectionsParser) -> Iterator[ResolvedResult]:
-        return iter(
-            res
-            for psn in {section.parsed_section_name for section in self._section_plugins}
-            if (res := self.resolve(parser, psn)) is not None
-        )
 
 
 class ParsedSectionsBroker:
@@ -277,13 +270,20 @@ class ParsedSectionsBroker:
             )
         }
 
-    def all_parsing_results(self, host_key: HostKey) -> Iterable[ResolvedResult]:
+    def all_parsing_results(self, host_key: HostKey) -> Sequence[ResolvedResult]:
         try:
             resolver, parser = self._providers[host_key]
         except KeyError:
             return ()
 
-        return sorted(resolver.resolve_all(parser), key=lambda r: r.section.name)
+        return sorted(
+            (
+                res
+                for psn in {section.parsed_section_name for section in resolver.section_plugins}
+                if (res := resolver.resolve(parser, psn)) is not None
+            ),
+            key=lambda r: r.section.name,
+        )
 
     def parsing_errors(self) -> Sequence[str]:
         return sum(

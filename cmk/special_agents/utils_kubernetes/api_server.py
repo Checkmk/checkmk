@@ -44,7 +44,7 @@ LOWEST_FUNCTIONING_VERSION = min(SUPPORTED_VERSIONS)
 SUPPORTED_VERSIONS_DISPLAY = ", ".join(f"v{major}.{minor}" for major, minor in SUPPORTED_VERSIONS)
 
 
-class BatchAPI:
+class ClientBatchAPI:
     def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
         self.connection = client.BatchV1Api(api_client)
         self.timeout = timeout
@@ -56,7 +56,7 @@ class BatchAPI:
         return self.connection.list_job_for_all_namespaces(_request_timeout=self.timeout).items
 
 
-class CoreAPI:
+class ClientCoreAPI:
     def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
         self.connection = client.CoreV1Api(api_client)
         self.timeout = timeout
@@ -78,7 +78,7 @@ class CoreAPI:
         ).items
 
 
-class AppsAPI:
+class ClientAppsAPI:
     def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
         self.connection = client.AppsV1Api(api_client)
         self.timeout = timeout
@@ -333,24 +333,24 @@ class UnparsedAPIData:
 
 
 def query_raw_api_data_v2(
-    batch_api: BatchAPI,
-    core_api: CoreAPI,
+    client_batch_api: ClientBatchAPI,
+    client_core_api: ClientCoreAPI,
     raw_api: RawAPI,
-    external_api: AppsAPI,
+    client_apps_api: ClientAppsAPI,
 ) -> UnparsedAPIData:
     raw_nodes = raw_api.query_raw_nodes()
     return UnparsedAPIData(
-        raw_jobs=batch_api.query_raw_jobs(),
-        raw_cron_jobs=batch_api.query_raw_cron_jobs(),
-        raw_pods=core_api.query_raw_pods(),
+        raw_jobs=client_batch_api.query_raw_jobs(),
+        raw_cron_jobs=client_batch_api.query_raw_cron_jobs(),
+        raw_pods=client_core_api.query_raw_pods(),
         raw_nodes=raw_nodes,
-        raw_namespaces=core_api.query_raw_namespaces(),
-        raw_resource_quotas=core_api.query_raw_resource_quotas(),
-        raw_persistent_volume_claims=core_api.query_persistent_volume_claims(),
-        raw_deployments=external_api.query_raw_deployments(),
-        raw_daemonsets=external_api.query_raw_daemon_sets(),
+        raw_namespaces=client_core_api.query_raw_namespaces(),
+        raw_resource_quotas=client_core_api.query_raw_resource_quotas(),
+        raw_persistent_volume_claims=client_core_api.query_persistent_volume_claims(),
+        raw_deployments=client_apps_api.query_raw_deployments(),
+        raw_daemonsets=client_apps_api.query_raw_daemon_sets(),
         raw_statefulsets=raw_api.query_raw_statefulsets(),
-        raw_replica_sets=external_api.query_raw_replica_sets(),
+        raw_replica_sets=client_apps_api.query_raw_replica_sets(),
         node_to_kubelet_health={
             raw_node["metadata"]["name"]: raw_api.query_kubelet_health(raw_node["metadata"]["name"])
             for raw_node in raw_nodes["items"]
@@ -456,17 +456,17 @@ def parse_api_data(
 
 
 def create_api_data_v2(
-    batch_api: BatchAPI,
-    core_api: CoreAPI,
+    client_batch_api: ClientBatchAPI,
+    client_core_api: ClientCoreAPI,
     raw_api: RawAPI,
-    external_api: AppsAPI,
+    client_apps_api: ClientAppsAPI,
     git_version: api.GitVersion,
 ) -> APIData:
     raw_api_data = query_raw_api_data_v2(
-        batch_api,
-        core_api,
+        client_batch_api,
+        client_core_api,
         raw_api,
-        external_api,
+        client_apps_api,
     )
     object_to_owners = parse_object_to_owners(
         workload_resources_client=itertools.chain(
@@ -510,19 +510,19 @@ def from_kubernetes(api_client: client.ApiClient, timeout: tuple[int, int]) -> A
     This function provides a stable interface that should not change between kubernetes versions
     This should be the only data source for all special agent code!
     """
-    batch_api = BatchAPI(api_client, timeout)
-    core_api = CoreAPI(api_client, timeout)
+    client_batch_api = ClientBatchAPI(api_client, timeout)
+    client_core_api = ClientCoreAPI(api_client, timeout)
     raw_api = RawAPI(api_client, timeout)
-    external_api = AppsAPI(api_client, timeout)
+    client_apps_api = ClientAppsAPI(api_client, timeout)
 
     raw_version = raw_api.query_raw_version()
     version = version_from_json(raw_version)
     _verify_version_support(version)
 
     return create_api_data_v2(
-        batch_api,
-        core_api,
+        client_batch_api,
+        client_core_api,
         raw_api,
-        external_api,
+        client_apps_api,
         version.git_version,
     )

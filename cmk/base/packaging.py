@@ -22,10 +22,13 @@ from cmk.utils.packaging import (
     get_config_parts,
     get_enabled_package_infos,
     get_initial_package_info,
+    get_installed_package_infos,
+    get_optional_package_infos,
     get_package_parts,
     package_dir,
     PACKAGE_EXTENSION,
     PackageException,
+    PackageInfo,
     parse_package_info,
     read_package_info,
     unpackaged_files,
@@ -47,7 +50,7 @@ Available commands are:
    pack NAME               ...  Create package file from installed package
    release NAME            ...  Drop installed package NAME, release packaged files
    find                    ...  Find and display unpackaged files
-   list                    ...  List all installed packages
+   list                    ...  Show a table of all known packages
    list NAME               ...  List files of installed package
    list PACK.mkp           ...  List files of uninstalled package file
    show NAME               ...  Show information about installed package
@@ -106,21 +109,42 @@ def package_list(args: List[str]) -> None:
     if len(args) > 0:
         for name in args:
             show_package_contents(name)
-    else:
-        if logger.isEnabledFor(VERBOSE):
-            table = []
-            for pacname in packaging.installed_names():
-                package = read_package_info(pacname)
-                if package is None:
-                    table.append([pacname, "package info is missing or broken", "0"])
-                else:
-                    table.append(
-                        [pacname, package["title"], str(packaging.package_num_files(package))]
-                    )
-            tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
-        else:
-            for pacname in packaging.installed_names():
-                sys.stdout.write("%s\n" % pacname)
+        return
+
+    optional = {(p["name"], p["version"]): p for p in get_optional_package_infos().values()}
+    enabled = {(p["name"], p["version"]): p for p in get_enabled_package_infos().values()}
+    installed = {
+        (p["name"], p["version"]): p
+        for p in get_installed_package_infos().values()
+        if p is not None
+    }
+
+    tty.print_table(
+        ["Name", "Version", "Title", "Author", "Req. Version", "Until Version", "Files", "State"],
+        ["", "", "", "", "", "", "", ""],
+        [
+            *(_row(m, "Enabled (active on this site)") for m in installed.values()),
+            *(
+                _row(m, "Enabled (inactive on this site)")
+                for id_, m in enabled.items()
+                if id_ not in installed
+            ),
+            *(_row(m, "Disabled") for id_, m in optional.items() if id_ not in enabled),
+        ],
+    )
+
+
+def _row(manifest: PackageInfo, state: str) -> list[str]:
+    return [
+        str(manifest["name"]),
+        str(manifest["version"]),
+        str(manifest["title"]),
+        str(manifest["author"]),
+        str(manifest["version.min_required"]),
+        str(manifest["version.usable_until"]),
+        str(sum(len(f) for f in manifest["files"].values())),
+        state,
+    ]
 
 
 def package_info(args: List[str]) -> None:

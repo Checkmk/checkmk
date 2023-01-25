@@ -1,0 +1,35 @@
+Title: More detailed output of the "mkp list" command
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1674661049
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p21
+
+The output of the command line call <tt>mkp list</tt> (without arguments) has changed.
+
+This change is only incompatible for users that use this output in a script.
+
+The command previously only showed a list of all installed packages:
+
+C+:
+OMD[mySite]$ mkp list
+my_package
+C-:
+
+It will now show a table of all known packages, much more similar to the <i>WATO</i> page in the GUI:
+
+C+:
+OMD[mySite]:~$ mkp list
+Name            Version Title                 Author       Req. Version Until Version Files State
+--------------- ------- --------------------- ------------ ------------ ------------- ----- -----------------------------
+my_package      1.0     A test package        tribe29 GmbH 1.6.0        None          1     Enabled (active on this site)
+another-package 1.0     A nother test package tribe29 GmbH 2.0.0        2.1.0         42    Enabled (inactive on this site)
+C-:
+
+This change was originally intended to be part of the 2.2 release.
+
+However, up to now the `list` command was designed to only report on <b>installed</b> (active) packages.
+In preparation for upgrades it might be helpful to see information on disabled or inactive packages, so we decided to bring this change to Checkmk version 2.1.

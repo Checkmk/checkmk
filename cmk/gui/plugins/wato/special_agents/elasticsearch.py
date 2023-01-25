@@ -25,7 +25,7 @@ def _factory_default_special_agents_elasticsearch():
 
 def _valuespec_special_agents_elasticsearch():
     return Dictionary(
-        optional_keys=["user", "password"],
+        optional_keys=["user", "password", "no-cert-check"],
         title=_("Elasticsearch"),
         help=_("Requests data about Elasticsearch clusters, nodes and indices."),
         elements=[

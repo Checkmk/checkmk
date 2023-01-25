@@ -6,13 +6,13 @@
 from collections.abc import Sequence
 from typing import NamedTuple
 
-from livestatus import SiteId
+from livestatus import lqencode, SiteId
 
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
-from cmk.gui.type_defs import ColumnName, Row, Rows
+from cmk.gui.type_defs import ColumnName, LivestatusQuery, Row, Rows
 from cmk.gui.view import View
 from cmk.gui.views.data_source import data_source_registry
-from cmk.gui.views.painter.v0.base import columns_of_cells, JoinCell, replace_inventory_join_macros
+from cmk.gui.views.painter.v0.base import columns_of_cells, JoinCell
 from cmk.gui.views.sorter import SorterEntry
 from cmk.gui.views.store import get_permitted_views
 
@@ -80,14 +80,14 @@ def join_service_row_post_processor(
                 join_value_with_macros: attrs
                 for join_value_with_macros in join_filters.with_macros
                 if (
-                    service_description := replace_inventory_join_macros(
+                    replaced_join_value := _replace_inventory_join_macros(
                         datasource_ident=view.datasource.ident,
                         inventory_join_macros=inventory_join_macros,
                         row=row,
                         join_value_with_macros=join_value_with_macros,
                     )
                 )
-                and (attrs := master_entry.get(service_description))
+                and (attrs := master_entry.get(replaced_join_value))
             }
         )
 
@@ -113,6 +113,10 @@ def _get_needed_join_columns(
     return list(join_columns)
 
 
+def _make_master_key(row: Row, join_master_column: str) -> tuple[SiteId, str]:
+    return (SiteId(row["site"]), row[join_master_column])
+
+
 class JoinFilters(NamedTuple):
     with_macros: list[str]
     without_macros: list[str]
@@ -133,16 +137,17 @@ def _make_join_filters(
         if any(macro in join_cell.join_value for macro in inventory_join_macros.values()):
             with_macros.append(join_cell.join_value)
             filters.append(
-                join_cell.livestatus_filter_from_macros(
+                _livestatus_filter_from_macros(
                     view.datasource.ident,
                     inventory_join_macros,
                     rows,
                     join_column_name,
+                    join_cell.join_value,
                 )
             )
         else:
             without_macros.append(join_cell.join_value)
-            filters.append(join_cell.livestatus_filter(join_column_name))
+            filters.append(_livestatus_filter(join_column_name, join_cell.join_value))
 
     filters.append("Or: %d" % len(filters))
     return JoinFilters(
@@ -152,5 +157,53 @@ def _make_join_filters(
     )
 
 
-def _make_master_key(row: Row, join_master_column: str) -> tuple[SiteId, str]:
-    return (SiteId(row["site"]), row[join_master_column])
+def _livestatus_filter_from_macros(
+    datasource_ident: str,
+    inventory_join_macros: dict[str, str],
+    rows: Rows,
+    join_column_name: str,
+    join_value: str,
+) -> LivestatusQuery:
+    filters_by_hostname: dict[str, list[str]] = {}
+    for row in rows:
+        replaced_join_value = _replace_inventory_join_macros(
+            datasource_ident=datasource_ident,
+            inventory_join_macros=inventory_join_macros,
+            row=row,
+            join_value_with_macros=join_value,
+        )
+        filters_by_hostname.setdefault(row["host_name"], []).append(
+            _livestatus_filter(join_column_name, replaced_join_value)
+        )
+
+    join_filters = []
+    for host_name, filters in filters_by_hostname.items():
+        join_filters.append(
+            f"Filter: host_name = {host_name}"
+            + "\n"
+            + "\n".join(filters)
+            + f"\nOr: {len(filters)}"
+            + "\nAnd: 2"
+        )
+
+    joined_filters = "\n".join(join_filters)
+    return f"{joined_filters}\nOr: {len(join_filters)}"
+
+
+def _livestatus_filter(join_column_name: str, join_value: str) -> LivestatusQuery:
+    return f"Filter: {lqencode(join_column_name)} = {lqencode(join_value)}"
+
+
+def _replace_inventory_join_macros(
+    *,
+    datasource_ident: str,
+    inventory_join_macros: dict[str, str],
+    row: Row,
+    join_value_with_macros: str,
+) -> str:
+    for column_name, macro in inventory_join_macros.items():
+        if (row_value := row.get(f"{datasource_ident}_{column_name}")) is None:
+            continue
+        if macro in join_value_with_macros:
+            join_value_with_macros = join_value_with_macros.replace(macro, row_value)
+    return join_value_with_macros

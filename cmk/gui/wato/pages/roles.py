@@ -47,7 +47,7 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.plugins.wato.utils import (
     get_search_expression,
-    make_confirm_link,
+    make_confirm_delete_link,
     mode_registry,
     mode_url,
     redirect,
@@ -129,16 +129,23 @@ class ModeRoles(WatoMode):
         with table_element("roles") as table:
 
             users = userdb.load_users()
-            for role in sorted(userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name)):
+            for nr, role in enumerate(
+                sorted(userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name))
+            ):
                 table.row()
+
+                table.cell(_("#"), css=["narrow nowrap"])
+                html.write_text(nr)
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = folder_preserving_link([("mode", "edit_role"), ("edit", role.name)])
                 clone_url = make_action_link([("mode", "roles"), ("_clone", role.name)])
-                delete_url = make_confirm_link(
+                delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "roles"), ("_delete", role.name)]),
-                    message=_("Do you really want to delete the role %s?") % role.name,
+                    title=_("Delete role #%d") % nr,
+                    message=("Name: %s") % role.name,
+                    identifier=role.alias,
                 )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(clone_url, _("Clone"), "clone")

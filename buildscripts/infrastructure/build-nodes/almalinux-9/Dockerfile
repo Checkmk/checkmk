@@ -16,6 +16,7 @@ RUN yum -y --enablerepo=crb  makecache && yum repolist --enablerepo=crb \
     krb5-devel \
     make \
     openldap-devel \
+    openldap-compat \
     postfix \
     graphviz-gd \
     strace \

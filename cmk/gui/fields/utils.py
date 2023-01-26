@@ -136,7 +136,8 @@ def collect_attributes(
                 section=tag_group.topic or "No topic",
                 mandatory=False,
                 description="\n\n".join(description),
-                enum=[tag.id for tag in tag_group.tags],
+                # tag choice values can be null, e.g. in one choice/checkbox tags
+                enum=[tag.id for tag in tag_group.tags] + [None],
                 field=None,
             ))
 

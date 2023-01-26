@@ -1,0 +1,13 @@
+Title: Host Tag can now be "null" in REST API responses
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1674574820
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p34
+
+The REST API can now return "null" values for host tags.
+The need for this will arise if a folder sets a tag, but a host within unsets a tag.
+Previously this lead to a 500 status code response.

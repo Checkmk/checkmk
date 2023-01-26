@@ -31,8 +31,8 @@ from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.session import session, UserContext
-from cmk.gui.userdb.saml2.pages import RelayState
 from cmk.gui.userdb.session import auth_cookie_name
+from cmk.gui.userdb.type_defs import RelayState
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile

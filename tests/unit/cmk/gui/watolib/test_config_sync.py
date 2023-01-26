@@ -310,14 +310,12 @@ def _get_expected_paths(
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",
             "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
-        ]
-
-    if edition is not cmk_version.Edition.CME:
-        expected_paths += [
-            "etc/omd/site.conf",
             "etc/ssl",
             "etc/ssl/saml2",
         ]
+
+    if edition is not cmk_version.Edition.CME:
+        expected_paths += ["etc/omd/site.conf"]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
@@ -350,7 +348,11 @@ def _get_expected_paths(
                 "var/check_mk/packages",
             ]
 
-        expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
+        expected_paths = [
+            p
+            for p in expected_paths
+            if p not in {"etc/check_mk/conf.d/wato/hosts.mk", "etc/ssl", "etc/ssl/saml2"}
+        ]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
@@ -378,6 +380,8 @@ def _get_expected_paths(
             "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
             "etc/check_mk/liveproxyd.d",
             "etc/check_mk/liveproxyd.d/wato",
+            "etc/ssl",
+            "etc/ssl/saml2",
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:

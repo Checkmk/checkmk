@@ -9,15 +9,12 @@
 from functools import partial
 
 import cmk.gui.pages
-import cmk.gui.userdb.saml2.connector as saml2_connector
-import cmk.gui.userdb.saml2.pages as saml2_pages
 from cmk.gui import autocompleters, crash_reporting, dashboard, mobile, views, visuals, wato
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.plugins.userdb.utils import user_connector_registry
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.plugins.wato.utils import mode_registry
@@ -39,7 +36,6 @@ from cmk.gui.views.painter.v0.base import painter_registry
 from cmk.gui.views.painter_options import painter_option_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
-from cmk.gui.wato.pages import saml2 as saml2_wato
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
@@ -101,6 +97,3 @@ bi_registration.register(
 register_sites_options()
 register_row_post_processor(inventory_row_post_processor)
 register_row_post_processor(join_service_row_post_processor)
-saml2_connector.register(user_connector_registry)
-saml2_pages.register(cmk.gui.pages.page_registry)
-saml2_wato.register(mode_registry)

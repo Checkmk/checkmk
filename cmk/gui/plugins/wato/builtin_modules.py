@@ -635,41 +635,6 @@ class MainModuleLDAP(ABCMainModule):
 
 
 @main_module_registry.register
-class MainModuleSAML2(ABCMainModule):
-    @property
-    def mode_or_url(self) -> str:
-        return "saml_config"
-
-    @property
-    def topic(self) -> MainModuleTopic:
-        return MainModuleTopicUsers
-
-    @property
-    def title(self) -> str:
-        return _("SAML Authentication")
-
-    @property
-    def icon(self) -> Icon:
-        return "saml"
-
-    @property
-    def permission(self) -> None | str:
-        return "users"
-
-    @property
-    def description(self) -> str:
-        return _("Delegate authentication to your organisation's Identity Provider using SAML 2.0.")
-
-    @property
-    def sort_index(self) -> int:
-        return 51
-
-    @property
-    def is_show_more(self) -> bool:
-        return True
-
-
-@main_module_registry.register
 class MainModuleUserCustomAttributes(ABCMainModule):
     @property
     def mode_or_url(self) -> str:

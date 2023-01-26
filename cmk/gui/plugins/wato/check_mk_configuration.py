@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from typing import Any, Literal
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.tags import TagGroup, TagID
 from cmk.utils.version import is_cloud_edition, is_raw_edition
 
@@ -240,6 +241,13 @@ def _slow_view_logging_help():
     )
 
 
+def _add_saml_log_level(params: dict[str, int]) -> dict[str, int]:
+    """Update version 2.1 -> 2.2"""
+    if not cmk_version.is_raw_edition():
+        params.setdefault("cmk.web.saml2", 30)
+    return params
+
+
 @config_variable_registry.register
 class ConfigVariableLogLevels(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
@@ -252,15 +260,18 @@ class ConfigVariableLogLevels(ConfigVariable):
         return "log_levels"
 
     def valuespec(self) -> ValueSpec:
-        return Dictionary(
-            title=_("Logging"),
-            help=_(
-                "This setting decides which types of messages to log into "
-                "the web log <tt>%s</tt>."
-            )
-            % site_neutral_path(cmk.utils.paths.log_dir + "/web.log"),
-            elements=self._web_log_level_elements(),
-            optional_keys=[],
+        return Migrate(
+            valuespec=Dictionary(
+                title=_("Logging"),
+                help=_(
+                    "This setting decides which types of messages to log into "
+                    "the web log <tt>%s</tt>."
+                )
+                % site_neutral_path(cmk.utils.paths.log_dir + "/web.log"),
+                elements=self._web_log_level_elements(),
+                optional_keys=[],
+            ),
+            migrate=_add_saml_log_level,
         )
 
     def _web_log_level_elements(self):
@@ -279,7 +290,6 @@ class ConfigVariableLogLevels(ConfigVariable):
                 _("The log level for user authentication related log entries."),
             ),
             ("cmk.web.ldap", _("LDAP"), _("The log level for LDAP related log entries.")),
-            ("cmk.web.saml2", _("SAML"), _("The log level for SAML 2.0 related log entries.")),
             (
                 "cmk.web.bi.compilation",
                 _("BI compilation"),
@@ -310,15 +320,22 @@ class ConfigVariableLogLevels(ConfigVariable):
         ]
 
         if not is_raw_edition():
-            loggers.append(
-                (
-                    "cmk.web.agent_registration",
-                    _("Agent registration"),
-                    _(
-                        "Log the agent registration process of incoming requests"
-                        " by the Checkmk agent controller registration command."
+            loggers.extend(
+                [
+                    (
+                        "cmk.web.agent_registration",
+                        _("Agent registration"),
+                        _(
+                            "Log the agent registration process of incoming requests"
+                            " by the Checkmk agent controller registration command."
+                        ),
                     ),
-                ),
+                    (
+                        "cmk.web.saml2",
+                        _("SAML"),
+                        _("The log level for SAML 2.0 related log entries."),
+                    ),
+                ]
             )
 
         elements = []

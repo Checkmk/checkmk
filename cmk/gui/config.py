@@ -7,7 +7,7 @@ import copy
 import errno
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
@@ -98,20 +98,41 @@ active_config = request_local_attr("config", Config)
 #   '----------------------------------------------------------------------'
 
 
+def _determine_pysaml2_log_level(log_levels: Mapping[str, int]) -> Mapping[str, int]:
+    """Note this sets the log level for the pysaml2 client, an external
+    dependency used by SAML.
+
+    The SAML log level is missing in the CRE editions, and at the time when
+    cmk-update-config is run after an update from Checmk version 2.1.
+
+    The log level of the pysaml2 package should be set to debug if the
+    logging for SAML has been set to debug in the global settings. Otherwise it
+    should be kept to a minimum as it spams the web.log
+
+    >>> _determine_pysaml2_log_level({"cmk.web.saml2": 30})
+    {'saml2': 50}
+    >>> _determine_pysaml2_log_level({"cmk.web.saml2": 10})
+    {'saml2': 10}
+    >>> _determine_pysaml2_log_level({})
+    {}
+
+    """
+    match log_levels.get("cmk.web.saml2"):
+        case None:
+            return {}
+        case 10:
+            return {"saml2": 10}
+        case _:
+            return {"saml2": 50}
+
+
 def initialize() -> None:
     load_config()
-    log.set_log_levels(active_config.log_levels)
-
-    # The log level of the pysaml2 package should be set to debug if the logging for SAML has been
-    # set to debug in the global settings. Otherwise it should be kept to a minimum as it spams the
-    # web.log
-    if active_config.log_levels.get("cmk.web.saml2", 30) == 10:
-        # The log level for SAML is not defined in the active config in case the customer updates
-        # from 2.1 to 2.2.
-        log.set_log_levels({"saml2": 10})
-    else:
-        log.set_log_levels({"saml2": 50})
-
+    log_levels = {
+        **active_config.log_levels,
+        **_determine_pysaml2_log_level(active_config.log_levels),
+    }
+    log.set_log_levels(log_levels)
     cmk.gui.i18n.set_user_localizations(active_config.user_localizations)
 
 

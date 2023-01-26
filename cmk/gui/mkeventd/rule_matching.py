@@ -7,7 +7,6 @@ import re
 import socket
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -20,11 +19,10 @@ from cmk.gui.i18n import _
 # does not know anything about the currently configured but not yet activated
 # rules. And also we do not want to have shared code.
 def event_rule_matches(
-    rule_pack: ec.ECRulePack,
     rule: ec.Rule,
     event: ec.Event,
 ) -> ec.MatchResult:
-    result = event_rule_matches_non_inverted(rule_pack, rule, event)
+    result = event_rule_matches_non_inverted(rule, event)
     if rule.get("invert_matching"):
         if isinstance(result, ec.MatchSuccess):
             return ec.MatchFailure(_("The rule would match, but matching is inverted."))
@@ -33,7 +31,6 @@ def event_rule_matches(
 
 
 def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
-    rule_pack: ec.ECRulePack,
     rule: ec.Rule,
     event: ec.Event,
 ) -> ec.MatchResult:
@@ -91,19 +88,6 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
         reason = check_timeperiod(rule["match_timeperiod"])
         if reason:
             return ec.MatchFailure(reason)
-
-    if cmk_version.is_managed_edition():
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module,import-outside-toplevel
-
-        if "customer" in rule_pack:
-            rule_customer_id = rule_pack["customer"]
-        else:
-            rule_customer_id = rule.get("customer", managed.SCOPE_GLOBAL)
-
-        site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
-
-        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
-            return ec.MatchFailure(_("Wrong customer"))
 
     if match_groups is True:
         match_groups = ()  # no matching groups

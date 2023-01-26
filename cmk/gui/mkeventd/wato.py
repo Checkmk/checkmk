@@ -262,6 +262,19 @@ def mib_dirs() -> list[tuple[Path, str]]:
     ]
 
 
+def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -> ec.MatchResult:
+    if managed:
+        rule_customer_id = (
+            rule_pack["customer"]
+            if "customer" in rule_pack
+            else rule.get("customer", managed.SCOPE_GLOBAL)
+        )
+        site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
+        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
+            return ec.MatchFailure(_("Wrong customer"))
+    return event_rule_matches(rule, event)
+
+
 # .
 #   .--ValueSpecs----------------------------------------------------------.
 #   |        __     __    _            ____                                |
@@ -1981,7 +1994,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     skips = 0
 
                     for rule in rule_pack["rules"]:
-                        result = event_rule_matches(rule_pack, rule, event)
+                        result = match_event_rule(rule_pack, rule, event)
                         if isinstance(result, ec.MatchSuccess):
                             cancelling, groups = result.cancelling, result.match_groups
 
@@ -2310,7 +2323,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         "disabled", _("This rule is currently disabled and will not be applied")
                     )
                 elif event:
-                    result = event_rule_matches(self._rule_pack, rule, event)
+                    result = match_event_rule(self._rule_pack, rule, event)
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("rulenmatch", _("Rule does not match: %s") % result.reason)
                     else:

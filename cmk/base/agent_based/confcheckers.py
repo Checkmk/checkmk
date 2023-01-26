@@ -13,15 +13,15 @@ from collections.abc import Iterable, Sequence
 from typing import Final
 
 import cmk.utils.tty as tty
-from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import fetch_all, Mode, SourceInfo
-from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.fetchers import Fetcher, get_raw_data, Mode, SourceInfo
+from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkers import parse_raw_data
 from cmk.checkers.host_sections import HostSections
@@ -32,6 +32,31 @@ from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
 
 __all__ = ["ConfiguredParser", "ConfiguredFetcher"]
+
+
+def _fetch_all(
+    sources: Iterable[tuple[SourceInfo, FileCache, Fetcher]],
+    *,
+    mode: Mode,
+) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
+    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
+    return [
+        _do_fetch(source_info, file_cache, fetcher, mode=mode)
+        for source_info, file_cache, fetcher in sources
+    ]
+
+
+def _do_fetch(
+    source_info: SourceInfo,
+    file_cache: FileCache,
+    fetcher: Fetcher,
+    *,
+    mode: Mode,
+) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]:
+    console.vverbose(f"  Source: {source_info}\n")
+    with CPUTracker() as tracker:
+        raw_data = get_raw_data(file_cache, fetcher, mode)
+    return source_info, raw_data, tracker.duration
 
 
 class ConfiguredParser:
@@ -114,7 +139,7 @@ class ConfiguredFetcher:
         else:
             hosts = [(node, config.lookup_ip_address(self.config_cache, node)) for node in nodes]
 
-        return fetch_all(
+        return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
                     host_name_,

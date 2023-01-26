@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from functools import partial
 from typing import Protocol
 
-import cmk.utils.tty as tty
-from cmk.utils.cpu_tracking import CPUTracker, Snapshot
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.log import console
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData, TRawData
@@ -19,7 +17,7 @@ from ._abstract import Fetcher, Mode
 from ._typedefs import SourceInfo
 from .filecache import FileCache
 
-__all__ = ["get_raw_data", "fetch_all", "FetcherFunction"]
+__all__ = ["get_raw_data", "FetcherFunction"]
 
 
 class FetcherFunction(Protocol):
@@ -52,28 +50,3 @@ def get_raw_data(
 
     except Exception as exc:
         return result.Error(exc)
-
-
-def fetch_all(
-    sources: Iterable[tuple[SourceInfo, FileCache, Fetcher]],
-    *,
-    mode: Mode,
-) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
-    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    return [
-        do_fetch(source_info, file_cache, fetcher, mode=mode)
-        for source_info, file_cache, fetcher in sources
-    ]
-
-
-def do_fetch(
-    source_info: SourceInfo,
-    file_cache: FileCache,
-    fetcher: Fetcher,
-    *,
-    mode: Mode,
-) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]:
-    console.vverbose(f"  Source: {source_info}\n")
-    with CPUTracker() as tracker:
-        raw_data = get_raw_data(file_cache, fetcher, mode)
-    return source_info, raw_data, tracker.duration

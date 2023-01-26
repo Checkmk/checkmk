@@ -9,6 +9,10 @@ import typing as t
 from flask import make_response, Response
 
 
+class undefined:
+    pass
+
+
 def render_string_template(template_string: str, **kwargs: str) -> Response:
     """Renders a text formatted with Python's `string.format`"""
     return make_response(template_string.format(**kwargs))
@@ -48,7 +52,19 @@ class dict_property(t.Generic[T]):
             >>> foo["int_key"]  # not type-checked
             5
 
+        A default can also be set:
+
+            >>> class Bar(dict):
+            ...     int_key = dict_property[int](default=0)
+
+            >>> bar = Bar()
+            >>> assert bar.int_key == 0
+
+
     """
+
+    def __init__(self, default: T | undefined = undefined()) -> None:
+        self.default = default
 
     def __set_name__(self: Self, owner: Inst, name: str) -> None:
         self.name: str = name
@@ -70,6 +86,9 @@ class dict_property(t.Generic[T]):
         if instance is None:
             return self
         try:
+            if not isinstance(self.default, undefined):
+                return instance.setdefault(self.name, self.default)
+
             return instance[self.name]
         except KeyError as exc:
             raise AttributeError(exc) from exc

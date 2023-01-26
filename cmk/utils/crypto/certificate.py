@@ -298,6 +298,22 @@ class Certificate:
         return CertificatePEM(self._cert.public_bytes(serialization.Encoding.PEM))
 
     @property
+    def serial_number(self) -> int:
+        """The serial as a Python integer."""
+        return self._cert.serial_number
+
+    @property
+    def serial_number_string(self) -> str:
+        """
+        The serial as a ':' separated hex string.
+
+        This is the same format shown by 'openssl x509' and it looks like this:
+            65:2e:18:0f:3f:a7:4b:c8:a6:fb:da:ea:bc:f8:57:f1:d0:96:5e:47
+        """
+        sn = self.serial_number
+        return sn.to_bytes((sn.bit_length() + 7) // 8).hex(":")
+
+    @property
     def public_key(self) -> RsaPublicKey:
         pk = self._cert.public_key()
         assert isinstance(pk, rsa.RSAPublicKey)
@@ -370,7 +386,7 @@ class Certificate:
         :raise: InvalidExpiryError if the expiry is invalid.
         """
         if allowed_drift is None:
-            allowed_drift = relativedelta(hours=2)
+            allowed_drift = relativedelta(hours=+2)
 
         if datetime.utcnow() + allowed_drift < self._cert.not_valid_before:
             raise InvalidExpiryError(
@@ -380,6 +396,18 @@ class Certificate:
             raise InvalidExpiryError(
                 f"Certificate is expired (not_valid_after: {self._cert.not_valid_after})"
             )
+
+    def days_til_expiry(self) -> int:
+        """
+        Return the time remaining until the certificate expires in days (rounded down).
+
+        This function should not be used to check certificate validity; use `verify_expiry()`
+        instead. This function will not consider the certificate's "not_valid_before" attribute, so
+        not-yet-valid certificates will not be detected here.
+        If the certificate's "not_valid_after" time lies in the past, a negative value will be
+        returned.
+        """
+        return (self._cert.not_valid_after - datetime.utcnow()).days
 
     def _get_name_attribute(self, attribute: x509.ObjectIdentifier) -> str:
         attr = self._cert.subject.get_attributes_for_oid(attribute)

@@ -48,6 +48,7 @@ from cmk.special_agents.utils import (
     get_seconds_since_midnight,
     vcrtrace,
 )
+from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.argument_parsing import Args
 
 NOW = datetime.now()
@@ -625,6 +626,7 @@ class AWSSectionResults(NamedTuple):
 class AWSSectionResult(NamedTuple):
     piggyback_hostname: AWSStrings
     content: Any
+    piggyback_host_labels: Mapping[str, str] | None = None
 
 
 class AWSLimit(NamedTuple):
@@ -1622,6 +1624,10 @@ class EC2(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
+    @property
+    def host_labels(self) -> Mapping[str, str]:
+        return {"cmk/aws/ec2": "instance"}
+
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
@@ -1678,7 +1684,7 @@ class EC2(AWSSectionCloudwatch):
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
-            AWSSectionResult(piggyback_hostname, rows)
+            AWSSectionResult(piggyback_hostname, rows, self.host_labels)
             for piggyback_hostname, rows in computed_content.content.items()
         ]
 
@@ -6327,7 +6333,34 @@ class AWSSections(abc.ABC):
                 )
 
         self._write_exceptions(exceptions)
+        self._write_host_labels(results)
         self._write_section_results(results)
+
+    def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
+        return (
+            section_result.piggyback_hostname is not None
+            and section_result.piggyback_hostname != ""
+            and section_result.piggyback_hostname != self._hostname
+        )
+
+    def _collect_piggyback_host_labels(self, results: Results) -> Mapping[str, Mapping[str, str]]:
+        """Labels dependent on the type of piggyback host"""
+        host_labels: dict[str, dict[str, str]] = defaultdict(dict)
+        for result in results.values():
+            for row in result:
+                if self._is_piggyback_host_result(row) and row.piggyback_host_labels:
+                    host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels)
+        return host_labels
+
+    def _write_labels_section(self, host_labels: Mapping[str, str]) -> None:
+        with SectionWriter("labels") as w:
+            w.append(json.dumps(host_labels))
+
+    def _write_host_labels(self, results: Results) -> None:
+        piggyback_host_labels = self._collect_piggyback_host_labels(results)
+        for hostname, host_labels in piggyback_host_labels.items():
+            with ConditionalPiggybackSection(hostname):
+                self._write_labels_section(host_labels)
 
     def _write_exceptions(self, exceptions: Sequence) -> None:
         sys.stdout.write("<<<aws_exceptions>>>\n")
@@ -6373,9 +6406,7 @@ class AWSSections(abc.ABC):
             section_header = f"<<<aws_{section_name}{cached_suffix}>>>\n"
 
         for row in result:
-            write_piggyback_header = (
-                row.piggyback_hostname and row.piggyback_hostname != self._hostname
-            )
+            write_piggyback_header = self._is_piggyback_host_result(row)
             if write_piggyback_header:
                 sys.stdout.write("<<<<%s>>>>\n" % str(row.piggyback_hostname))
             sys.stdout.write(section_header)

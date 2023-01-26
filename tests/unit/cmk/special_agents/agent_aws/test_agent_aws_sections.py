@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+from unittest import mock
+
 import pytest
 
 from cmk.special_agents.agent_aws import AWSSectionResult, AWSSectionsGeneric, Results
@@ -54,3 +57,63 @@ class TestAWSSections:
         generic_section._write_section_results(cached_data)
         section_stdout = capsys.readouterr().out
         assert section_stdout.split("\n")[0] == "<<<aws_costs_and_usage:cached(1606382471,38642)>>>"
+
+
+class MockSession(mock.Mock):
+    def client(self, client_type: str) -> mock.Mock:
+        sts_client_mock = mock.Mock()
+        sts_client_mock.get_caller_identity = mock.Mock(return_value={"Account": "test-account"})
+        return sts_client_mock
+
+
+class TestAWSHostLabelSections:
+    @pytest.fixture
+    def generic_section(self):
+        session = MockSession()
+        return AWSSectionsGeneric(hostname="", session=session)
+
+    @pytest.mark.parametrize(
+        "cached_data,expected_lines",
+        [
+            pytest.param(
+                {
+                    ("costs_and_usage", 1606382471.693873, 38582.763184): [
+                        AWSSectionResult(piggyback_hostname="", content=[{}])
+                    ],
+                },
+                [""],
+                id="no_piggyback_label",
+            ),
+            pytest.param(
+                {
+                    ("costs_and_usage", 1606382471.693873, 38582.763184): [
+                        AWSSectionResult(piggyback_hostname="", content=[{}])
+                    ],
+                    ("ec2", 1606382471.693873, 38582.763184): [
+                        AWSSectionResult(
+                            piggyback_hostname="test-piggyback",
+                            content=[{}],
+                            piggyback_host_labels={"cmk/aws/test-key": "test-value"},
+                        )
+                    ],
+                },
+                [
+                    "<<<<test-piggyback>>>>",
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/test-key": "test-value"}',
+                    "<<<<>>>>",
+                ],
+                id="piggyback_ec2_label",
+            ),
+        ],
+    )
+    def test_label_section_header(
+        self,
+        generic_section: AWSSectionsGeneric,
+        capsys: pytest.CaptureFixture[str],
+        cached_data: Results,
+        expected_lines: Sequence[str],
+    ) -> None:
+        generic_section._write_host_labels(cached_data)
+        section_stdout = capsys.readouterr().out
+        assert section_stdout.strip().split("\n") == expected_lines

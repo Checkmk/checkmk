@@ -207,8 +207,3 @@ def is_valid_user_session(
         return False
 
     return True
-
-
-def refresh_session(session_info: SessionInfo, now: datetime) -> None:
-    """Updates the current session of the user"""
-    session_info.last_activity = int(now.timestamp())

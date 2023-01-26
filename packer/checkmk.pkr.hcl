@@ -99,7 +99,7 @@ build {
   name = "checkmk-ansible"
   sources = [
     #"source.qemu.ubuntu-2204-amd64-qemu"
-    #"source.amazon-ebs.builder"
+    "source.amazon-ebs.builder"
     "source.azure-arm.builder"
   ]
   # setup apt-get

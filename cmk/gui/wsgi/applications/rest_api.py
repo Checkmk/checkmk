@@ -38,7 +38,7 @@ from cmk.gui.auth import (
     rfc7662_subject,
     user_from_bearer_header,
 )
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import Request, Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
@@ -481,8 +481,14 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             return wsgi_app(environ, start_response)
         except ProblemException as exc:
             return exc(environ, start_response)
+        except MKHTTPException as exc:
+            assert isinstance(exc.status, int)
+            return problem(
+                status=exc.status,
+                title=http.client.responses[exc.status],
+                detail=str(exc),
+            )(environ, start_response)
         except HTTPException as exc:
-            # We don't want to log explicit HTTPExceptions as these are intentional.
             assert isinstance(exc.code, int)
             return problem(
                 status=exc.code,

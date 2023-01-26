@@ -428,7 +428,7 @@ class _CombinedVisualsCache(Generic[T]):
             _CombinedVisualsCache(visual_type).invalidate_cache()
 
     def invalidate_cache(self) -> None:
-        self._update_cache_info_timestamp()
+        self._info_filename.unlink(missing_ok=True)
 
     def _update_cache_info_timestamp(self) -> None:
         cache_info_filename = self._info_filename
@@ -459,7 +459,7 @@ class _CombinedVisualsCache(Generic[T]):
 
         if not self._info_filename.exists():
             # Create a new file for future reference (this obviously has the newest timestamp)
-            self.invalidate_cache()
+            self._update_cache_info_timestamp()
             return False
 
         if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:

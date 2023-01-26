@@ -124,23 +124,28 @@ def try_detect_servers(ssl_ports):
         "fcgi-pm",
     ]
 
-    for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
-        parts = netstat_line.split()
+    #  ss lists parent and first level child processes
+    #  last process in line is the parent:
+    #    users:(("apache2",pid=123456,fd=3),...,("apache2",pid=123,fd=3))
+    #  capture content of last brackets (...))
+    pattern = re.compile(r"users:.*\(([^\(\)]*?)\)\)$")
+
+    for ss_line in os.popen("ss -tlnp 2>/dev/null").readlines():
+        parts = ss_line.split()
         # Skip lines with wrong format
-        if len(parts) < 7 or "/" not in parts[6]:
+        if len(parts) < 6 or "users:" not in parts[5]:
             continue
 
-        pid, proc = parts[6].split("/", 1)
-        to_replace = re.compile("^.*/")
-        proc = to_replace.sub("", proc)
-
-        # the pid/proc field length is limited to 19 chars. Thus in case of
-        # long PIDs, the process names are stripped of by that length.
-        # Workaround this problem here
-        stripped_procs = [p[: 19 - len(pid) - 1] for p in procs]
+        match = re.match(pattern, parts[5])
+        if match is None:
+            continue
+        proc_info = match.group(1)
+        proc, pid, _fd = proc_info.split(",")
+        proc = proc.replace('"', "")
+        pid = pid.replace("pid=", "")
 
         # Skip unwanted processes
-        if proc not in stripped_procs:
+        if proc not in procs:
             continue
 
         scheme, server_address, server_port = parse_address_and_port(parts[3], ssl_ports)
@@ -148,32 +153,27 @@ def try_detect_servers(ssl_ports):
         results.append((scheme, server_address, server_port))
 
     if not results:
-        # if netstat output was empty (maybe not installed), try ss instead
+        # if ss output was empty (maybe not installed), try netstat instead
         # (plugin silently fails without any section output,
         #  if neither netstat nor ss are installed.)
 
-        #  ss lists parent and first level child processes
-        #  last process in line is the parent:
-        #    users:(("apache2",pid=123456,fd=3),...,("apache2",pid=123,fd=3))
-        #  capture content of last brackets (...))
-        pattern = re.compile(r"users:.*\(([^\(\)]*?)\)\)$")
-
-        for ss_line in os.popen("ss -tlnp 2>/dev/null").readlines():
-            parts = ss_line.split()
+        for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
+            parts = netstat_line.split()
             # Skip lines with wrong format
-            if len(parts) < 6 or "users:" not in parts[5]:
+            if len(parts) < 7 or "/" not in parts[6]:
                 continue
 
-            match = re.match(pattern, parts[5])
-            if match is None:
-                continue
-            proc_info = match.group(1)
-            proc, pid, _fd = proc_info.split(",")
-            proc = proc.replace('"', "")
-            pid = pid.replace("pid=", "")
+            pid, proc = parts[6].split("/", 1)
+            to_replace = re.compile("^.*/")
+            proc = to_replace.sub("", proc)
+
+            # the pid/proc field length is limited to 19 chars. Thus in case of
+            # long PIDs, the process names are stripped of by that length.
+            # Workaround this problem here
+            stripped_procs = [p[: 19 - len(pid) - 1] for p in procs]
 
             # Skip unwanted processes
-            if proc not in procs:
+            if proc not in stripped_procs:
                 continue
 
             scheme, server_address, server_port = parse_address_and_port(parts[3], ssl_ports)

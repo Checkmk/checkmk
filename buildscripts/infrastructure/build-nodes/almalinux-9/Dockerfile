@@ -56,6 +56,7 @@ RUN yum -y makecache \
     libtool-ltdl-devel \
     libuuid-devel \
     libxml2-devel \
+    libxcrypt-compat \
     xmlsec1-devel \
     mariadb-devel \
     mpfr-devel \

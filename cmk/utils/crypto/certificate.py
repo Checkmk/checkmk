@@ -67,6 +67,7 @@ class CertificateWithPrivateKey(NamedTuple):
         cls,
         common_name: str,
         organization: str | None = None,  # defaults to "Checkmk Site <SITE>"
+        organizational_unit_name: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
     ) -> CertificateWithPrivateKey:
@@ -80,6 +81,7 @@ class CertificateWithPrivateKey(NamedTuple):
             organization or f"Checkmk Site {omd_site()}",
             expiry,
             HashAlgorithm.Sha512,
+            organizational_unit_name=organizational_unit_name,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -196,12 +198,19 @@ class Certificate:
         organization: str,
         expiry: relativedelta,
         signature_digest_algorithm: HashAlgorithm,
+        organizational_unit_name: str | None = None,
     ) -> Certificate:
 
         name_attrs = [
             x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name),
             x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization),
         ]
+        if organizational_unit_name is not None:
+            name_attrs.append(
+                x509.NameAttribute(
+                    x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit_name
+                )
+            )
         name = x509.Name(name_attrs)
 
         # TODO: We'll need to set these extensions depending on how we intend to use the cert.

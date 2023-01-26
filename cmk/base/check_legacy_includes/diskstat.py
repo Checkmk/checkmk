@@ -32,15 +32,6 @@ diskstat_default_levels: Mapping[str, Any] = {
     #    "latency_perfdata" : True,
 }
 
-# Rule for controlling diskstat inventory more fine grained
-diskstat_inventory: Any = []
-
-# Example
-# diskstat_inventory = [
-#  ( [], [ 'linux' ], ALL_HOST ), --> No diskstat on this host
-#  ( [ 'summary', 'physical', 'lvm', 'vxvm' ], ALL_HOSTS ),
-# ]
-
 diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
 
 

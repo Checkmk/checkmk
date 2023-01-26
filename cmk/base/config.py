@@ -756,14 +756,7 @@ def _collect_parameter_rulesets_from_globals(global_dict: dict[str, Any]) -> Non
             agent_based_register.set_host_label_ruleset(ruleset_name, global_dict[var_name])
             vars_to_remove.add(var_name)
 
-    # list of discovery ruleset names which are used in migrated AND in legacy code; can be removed
-    # once we have no such cases any more
-    partially_migrated = {
-        "diskstat_inventory",
-        "filesystem_groups",
-    }
-
-    for var_name in vars_to_remove - partially_migrated:
+    for var_name in vars_to_remove:
         del global_dict[var_name]
 
 

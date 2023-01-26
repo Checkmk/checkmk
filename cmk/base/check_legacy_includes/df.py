@@ -28,15 +28,6 @@ from .size_trend import size_trend
 filesystem_levels: list[Any] = []  # obsolete. Just here to check config and warn if changed
 filesystem_default_levels: dict[str, Any] = {}  # can also be dropped some day in future
 
-# Grouping of filesystems into groups that are monitored as one entity
-# Example:
-# filesystem_groups = [
-#     ( [ ( "Storage pool", "/data/pool*" ) ], [ 'linux', 'prod' ], ALL_HOSTS ),
-#     ( [ ( "Backup space 1", "/usr/backup/*.xyz" ),
-#         ( "Backup space 2", "/usr/backup2/*.xyz" ) ], ALL_HOSTS ),
-# ]
-filesystem_groups: list[RuleSpec] = []
-
 
 # ==================================================================================================
 # THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO

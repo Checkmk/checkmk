@@ -11,6 +11,8 @@ from typing import Mapping, NamedTuple
 
 from livestatus import lqencode, SiteId
 
+from cmk.utils.regex import regex
+
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, LivestatusQuery, Row, Rows
 from cmk.gui.view import View
@@ -129,6 +131,14 @@ class _JoinValue:
     join_column_name: str
     value: str
 
+    @property
+    def is_regex(self) -> bool:
+        return self.value.startswith("~")
+
+    @property
+    def pattern(self) -> str:
+        return self.value[1:] if self.is_regex else self.value
+
     def has_macros(self) -> bool:
         return any(macro in self.value for macro in self._inventory_join_macros.values())
 
@@ -139,6 +149,13 @@ class _JoinValue:
                 continue
             if macro in replaced_value:
                 replaced_value = replaced_value.replace(macro, row_value)
+
+        if self.is_regex:
+            # Escape remaining macros in order to avoid conflicts with regexes, eg.
+            # "foo $bar$ baz$" -> "foo \\$bar\\$ baz$"
+            for macro in regex(r"(\$[a-zA-Z]*\$)").findall(replaced_value):
+                replaced_value = replaced_value.replace(macro, f"\\${macro[1:-1]}\\$")
+
         return _JoinValue(
             self._datasource_ident,
             self._inventory_join_macros,
@@ -147,7 +164,15 @@ class _JoinValue:
         )
 
     def get_row(self, master_entry: Mapping[str, Row]) -> Row | None:
-        return master_entry.get(self.value)
+        if not self.is_regex:
+            return master_entry.get(self.value)
+
+        reg = regex(self.pattern)
+        for key, row in sorted(master_entry.items()):
+            if reg.match(key):
+                return row
+
+        return None
 
 
 class _JoinFilters(NamedTuple):
@@ -199,4 +224,7 @@ def _livestatus_filter_from_macros(join_value: _JoinValue, rows: Rows) -> Livest
 
 
 def _livestatus_filter(join_value: _JoinValue) -> LivestatusQuery:
-    return f"Filter: {lqencode(join_value.join_column_name)} = {lqencode(join_value.value)}"
+    operator = "~" if join_value.is_regex else "="
+    return (
+        f"Filter: {lqencode(join_value.join_column_name)} {operator} {lqencode(join_value.pattern)}"
+    )

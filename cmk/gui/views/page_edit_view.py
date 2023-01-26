@@ -47,6 +47,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOf,
     TextInput,
+    TextOrRegExp,
     Transform,
     Tuple,
     ValueSpec,
@@ -282,9 +283,19 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
                 _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
                 (
                     "join_value",
-                    TextInput(
+                    TextOrRegExp(
                         title=_("of Service"),
                         allow_empty=False,
+                        help=_(
+                            "If multiple entries are found, the first one of the sorted entries"
+                            " is used. If you use macros within inventory based views these"
+                            " macros are replaced <tt>before</tt> the regex evaluation."
+                            "<br>Note: If a service description contains special characters like"
+                            " <tt>%s</tt> you have to escape them in order to get reliable"
+                            " results. Macros don't need to be escaped. If a macro could not be"
+                            " found then it stays as it is."
+                        )
+                        % ", ".join([f"'{c}'" for c in "[]\\().?{}|*^$+"]),
                     ),
                 ),
                 ("column_title", TextInput(title=_("Title"))),

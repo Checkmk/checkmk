@@ -2093,10 +2093,16 @@ def get_number_of_pending_changes() -> int:
     return len(changes.grouped_changes())
 
 
-def _need_to_update_config_after_sync() -> bool:
+def _need_to_update_mkps_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
     logger.debug("Local version: %s, Central version: %s", cmk_version.__version__, central_version)
+    return cmk_version.__version__ != central_version
+
+
+def _need_to_update_config_after_sync() -> bool:
+    if not (central_version := _request.headers.get("x-checkmk-version")):
+        raise ValueError("Request header x-checkmk-version is missing")
     return not cmk_version.is_same_major_version(
         cmk_version.__version__,
         central_version,
@@ -2129,7 +2135,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # When receiving configuration from a central site that uses a previous major
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
-        if _need_to_update_config_after_sync():
+        if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
             cmk.utils.packaging.update_active_packages(
                 cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
@@ -2153,6 +2159,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
                 ),
             )
+        if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
 

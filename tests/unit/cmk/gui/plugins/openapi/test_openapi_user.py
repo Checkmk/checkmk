@@ -14,6 +14,8 @@ import pytest
 from freezegun import freeze_time
 from pytest import MonkeyPatch
 
+from tests.testlib.rest_api_client import RestApiClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
@@ -1205,3 +1207,9 @@ def test_create_user_with_non_existing_custom_attribute(
         content_type="application/json",
         params=json.dumps(params),
     )
+
+
+def test_user_with_invalid_id(api_client: RestApiClient) -> None:
+    api_client.create_user(
+        username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
+    ).assert_status_code(400)

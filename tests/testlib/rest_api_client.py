@@ -15,6 +15,7 @@ from typing import Any, Literal, NoReturn, Sequence, TypedDict
 
 from pydantic import BaseModel, StrictStr
 
+from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
 
 
@@ -491,4 +492,21 @@ class RestApiClient:
 
         return self._request(
             "post", url="/domain-types/metric/actions/get/invoke", body=body, expect_ok=expect_ok
+        )
+
+    # TODO: add optional parameters
+    def create_user(self, username: str, fullname: str, expect_ok: bool = True) -> Response:
+        body = {
+            "username": username,
+            "fullname": fullname,
+        }
+
+        if version.is_managed_edition():
+            body["customer"] = "provider"
+
+        return self._request(
+            "post",
+            url="/domain-types/user_config/collections/all",
+            body=body,
+            expect_ok=expect_ok,
         )

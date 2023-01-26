@@ -11,6 +11,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables
+from cmk.utils.type_defs import UserId
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.config import builtin_role_ids
@@ -1045,6 +1046,7 @@ class Username(fields.String):
     default_error_messages = {
         "should_exist": "Username missing: {username!r}",
         "should_not_exist": "Username {username!r} already exists",
+        "invalid_name": "Username {username!r} is not a valid checkmk username",
     }
 
     def __init__(  # type:ignore[no-untyped-def]
@@ -1064,7 +1066,13 @@ class Username(fields.String):
         )
 
     def _validate(self, value):
+
         super()._validate(value)
+
+        try:
+            UserId(value)
+        except ValueError:
+            raise self.make_error("invalid_name", username=value)
 
         # TODO: change to names list only
         usernames = load_users()

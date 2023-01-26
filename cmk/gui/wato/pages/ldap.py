@@ -70,6 +70,7 @@ from cmk.gui.wato.pages.userdb_common import (
     connection_actions,
     get_affected_sites,
     render_connections_page,
+    validate_connection_id,
 )
 
 if cmk_version.is_managed_edition():
@@ -629,11 +630,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         return other_elements
 
     def _validate_ldap_connection_id(self, value, varprefix):
-        if value in [c["id"] for c in active_config.user_connections]:
-            raise MKUserError(
-                varprefix,
-                _("This ID is already used by another connection. Please choose another one."),
-            )
+        validate_connection_id(value, varprefix)
 
     def _validate_ldap_connection(self, value, varprefix):
         for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():

@@ -13,6 +13,8 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -78,7 +80,12 @@ def add_connections_page_menu(
                                 title=_("Add connection"),
                                 icon_name="new",
                                 item=make_simple_link(
-                                    folder_preserving_link([("mode", edit_mode_path)])
+                                    folder_preserving_link(
+                                        [
+                                            ("mode", edit_mode_path),
+                                            ("new", request.get_ascii_input("id")),
+                                        ]
+                                    )
                                 ),
                                 is_shortcut=True,
                                 is_suggested=True,
@@ -122,7 +129,10 @@ def render_connections_page(
             html.write_text(index)
 
             table.cell(_("Actions"), css=["buttons"])
-            edit_url = folder_preserving_link([("mode", edit_mode_path), ("id", connection["id"])])
+            connection_id = connection["id"]
+            edit_url = folder_preserving_link(
+                [("mode", edit_mode_path), ("id", connection_id), ("edit", connection_id)]
+            )
             delete_url = make_confirm_delete_link(
                 url=make_action_link([("mode", config_mode_path), ("_delete", index)]),
                 title=_("Delete connection #%d") % index,
@@ -215,7 +225,7 @@ def _move_connection(from_index: int, to_index: int, connection_type: str) -> No
 
 
 def connection_actions(
-    config_mode_url: str, connection_type: str, *, custom_config_dirs: Iterable[Path]
+    config_mode_url: str, connection_type: str, custom_config_dirs: Iterable[Path]
 ) -> ActionResult:
     if not transactions.check_transaction():
         return redirect(config_mode_url)
@@ -235,3 +245,11 @@ def connection_actions(
         )
 
     return redirect(config_mode_url)
+
+
+def validate_connection_id(value: str, varprefix: str) -> None:
+    if value in [c["id"] for c in active_config.user_connections] or value == "htpasswd":
+        raise MKUserError(
+            varprefix,
+            _("This ID already exists."),
+        )

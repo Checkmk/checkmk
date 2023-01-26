@@ -71,7 +71,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
+from cmk.base.agent_based.confcheckers import ConfiguredFetcher, ConfiguredParser
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.agent_based.utils import ConfiguredSummarizer
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin

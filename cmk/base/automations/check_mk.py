@@ -107,7 +107,7 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
-from cmk.base.agent_based.data_provider import ConfiguredFetcher, ConfiguredParser
+from cmk.base.agent_based.confcheckers import ConfiguredFetcher, ConfiguredParser
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.config import ConfigCache, IgnoredServices

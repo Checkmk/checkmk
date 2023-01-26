@@ -41,9 +41,8 @@ from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
+from cmk.base.agent_based.confcheckers import ConfiguredFetcher, ConfiguredParser
 from cmk.base.agent_based.data_provider import (
-    ConfiguredFetcher,
-    ConfiguredParser,
     ParsedSectionsBroker,
     ParsedSectionsResolver,
     SectionsParser,

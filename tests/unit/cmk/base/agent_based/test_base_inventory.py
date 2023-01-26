@@ -30,7 +30,7 @@ from cmk.fetchers import FetcherType, SourceInfo, SourceType
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
-from cmk.base.agent_based.data_provider import ConfiguredParser
+from cmk.base.agent_based.confcheckers import ConfiguredParser
 from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
     _parse_inventory_plugin_item,

@@ -30,9 +30,10 @@ def valuespec_percentual(title: str, maxvalue: None | float = 101.0) -> Cascadin
 
 def _parameter_valuespec_memory(
     valuespec_help: str,
-    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] = (
+    options: Sequence[Literal["usage", "request", "request_lower", "limit", "cluster", "node"]] = (
         "usage",
         "request",
+        "request_lower",
         "limit",
         "cluster",
         "node",
@@ -59,6 +60,7 @@ def _parameter_valuespec_memory(
         )
 
     for option, help_text in (
+        ("request_lower", _("Lower levels for requests utilization")),
         ("limit", _("Upper levels for limits utilization")),
         ("cluster", _("Upper levels for cluster utilization")),
         ("node", _("Upper levels for node utilization")),
@@ -104,7 +106,7 @@ rulespec_registry.register(
                 "Here you can configure levels for usage, requests "
                 "utilization and limits utilization, respectively."
             ),
-            options=["usage", "request", "limit"],
+            options=["usage", "request", "request_lower", "limit"],
         ),
         title=lambda: _("Kubernetes resource quota memory utilization"),
     )
@@ -113,9 +115,10 @@ rulespec_registry.register(
 
 def _parameter_valuespec_cpu(
     valuespec_help: str,
-    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] = (
+    options: Sequence[Literal["usage", "request", "request_lower", "limit", "cluster", "node"]] = (
         "usage",
         "request",
+        "request_lower",
         "limit",
         "cluster",
         "node",
@@ -148,6 +151,7 @@ def _parameter_valuespec_cpu(
         )
 
     for option, help_text in (
+        ("request_lower", _("Lower levels for requests utilization")),
         ("limit", _("Upper levels for limits utilization")),
         ("cluster", _("Upper levels for cluster utilization")),
         ("node", _("Upper levels for node utilization")),
@@ -193,7 +197,7 @@ rulespec_registry.register(
                 "Here you can configure levels for usage, requests "
                 "utilization and limits utilization, respectively."
             ),
-            options=["usage", "request", "limit"],
+            options=["usage", "request", "request_lower", "limit"],
         ),
         title=lambda: _("Kubernetes resource quota cpu utilization"),
     )

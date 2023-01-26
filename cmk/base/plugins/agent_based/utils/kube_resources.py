@@ -110,6 +110,7 @@ Param = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[float, float]
 class Params(TypedDict, total=False):
     usage: Param
     request: Param
+    request_lower: Param
     limit: Param
     cluster: Param
     node: Param
@@ -118,6 +119,7 @@ class Params(TypedDict, total=False):
 DEFAULT_PARAMS = Params(
     usage="no_levels",
     request="no_levels",
+    request_lower="no_levels",
     limit="no_levels",
     cluster="no_levels",
     node="no_levels",
@@ -127,6 +129,7 @@ DEFAULT_PARAMS = Params(
 RESOURCE_QUOTA_DEFAULT_PARAMS = Params(
     usage="no_levels",
     request="no_levels",
+    request_lower="no_levels",
     limit="no_levels",
 )
 
@@ -147,6 +150,15 @@ absolute_title: Mapping[Union[RequirementType, AllocatableKubernetesObject], str
 
 def cpu_render_func(x: float) -> str:
     return f"{x:0.3f}"
+
+
+def _get_lower_levels(
+    params: Params, requirement_type: RequirementType
+) -> tuple[float, float] | None:
+    request_lower = params.get("request_lower", "no_levels")
+    if request_lower == "no_levels" or requirement_type != "request":
+        return None
+    return request_lower[1]
 
 
 def check_with_utilization(
@@ -171,6 +183,7 @@ def check_with_utilization(
     result, metric = check_levels(
         utilization,
         levels_upper=param[1] if param != "no_levels" else None,
+        levels_lower=_get_lower_levels(params, requirement_type),
         metric_name=metric_name,
         render_func=render.percent,
         boundaries=(0.0, None),

@@ -339,20 +339,20 @@ check_results = [
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
             state=State.WARN,
-            summary="virtual: 1.00 GiB (warn/crit at 1.00 GiB/2.00 GiB)",
+            summary="Virtual memory: 1.00 GiB (warn/crit at 1.00 GiB/2.00 GiB)",
         ),
         Metric("vsz", 1050360, levels=(1073741824, 2147483648)),
         Result(
             state=State.OK,
-            summary="physical: 296 MiB",
+            summary="Resident memory: 296 MiB",
         ),
         Metric("rss", 303252, levels=(1073741824, 2147483648)),
         Result(
             state=State.WARN,
-            summary="Percentage of total RAM: 28.92% (warn/crit at 25.00%/50.00%)",
+            summary="Percentage of resident memory: 28.92% (warn/crit at 25.00%/50.00%)",
         ),
         Metric("pcpu", 0.0),
-        Metric("pcpuavg", 0.0, boundaries=(0, 15)),
+        Metric("pcpuavg", 0.0),
         Result(
             state=State.OK,
             summary="CPU: 0%, 15 min average: 0%",
@@ -379,12 +379,12 @@ check_results = [
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
         Result(
             state=State.OK,
-            summary="virtual: 2.79 GiB",
+            summary="Virtual memory: 2.79 GiB",
         ),
         Metric("vsz", 2924232),
         Result(
             state=State.OK,
-            summary="physical: 461 MiB",
+            summary="Resident memory: 461 MiB",
         ),
         Metric("rss", 472252),
         Metric("pcpu", 0.0),
@@ -402,9 +402,9 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 10.9 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=State.OK, summary="physical: 1.12 MiB"),
+        Result(state=State.OK, summary="Resident memory: 1.12 MiB"),
         Metric("rss", 1144),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -421,9 +421,9 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 21.8 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 21.8 MiB"),
         Metric("vsz", 22360),
-        Result(state=State.OK, summary="physical: 2.33 MiB"),
+        Result(state=State.OK, summary="Resident memory: 2.33 MiB"),
         Metric("rss", 2388),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -445,9 +445,9 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 10.9 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 10.9 MiB"),
         Metric("vsz", 11180),
-        Result(state=State.OK, summary="physical: 1.21 MiB"),
+        Result(state=State.OK, summary="Resident memory: 1.21 MiB"),
         Metric("rss", 1244),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -464,9 +464,9 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 2"),
         Metric("count", 2, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 20.7 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 20.7 MiB"),
         Metric("vsz", 21232),
-        Result(state=State.OK, summary="physical: 18.6 MiB"),
+        Result(state=State.OK, summary="Resident memory: 18.6 MiB"),
         Metric("rss", 19052),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -482,9 +482,9 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 3"),
         Metric("count", 3, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 136 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 136 MiB"),
         Metric("vsz", 139532, levels=(1073741824000, 2147483648000)),
-        Result(state=State.OK, summary="physical: 38.6 MiB"),
+        Result(state=State.OK, summary="Resident memory: 38.6 MiB"),
         Metric("rss", 39516, levels=(104857600, 209715200)),
         Result(
             state=State.UNKNOWN,
@@ -511,9 +511,9 @@ check_results = [
     [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 4.47 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 4.47 MiB"),
         Metric("vsz", 4576),
-        Result(state=State.OK, summary="physical: 316 KiB"),
+        Result(state=State.OK, summary="Resident memory: 316 KiB"),
         Metric("rss", 316),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
@@ -687,9 +687,9 @@ def test_check_ps_common_cpu(data) -> None:  # type:ignore[no-untyped-def]
     assert output[:6] == [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 105 KiB"),
+        Result(state=State.OK, summary="Virtual memory: 105 KiB"),
         Metric("vsz", 105),
-        Result(state=State.OK, summary="physical: 30.0 KiB"),
+        Result(state=State.OK, summary="Resident memory: 30.0 KiB"),
         Metric("rss", 30),
     ]
     assert output[8:] == [
@@ -863,9 +863,9 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type:ignore[no-un
     reference = [
         Result(state=State.OK, summary="Processes: 4"),
         Metric("count", 4, levels=(100000, 100000), boundaries=(0, None)),
-        Result(state=State.OK, summary="virtual: 13.0 GiB"),
+        Result(state=State.OK, summary="Virtual memory: 13.0 GiB"),
         Metric("vsz", 13631104),
-        Result(state=State.OK, summary="physical: 1.06 GiB"),
+        Result(state=State.OK, summary="Resident memory: 1.06 GiB"),
         Metric("rss", 1106568),
         Metric("pcpu", cpu_util),
         Result(state=State.OK, summary="CPU: %s" % cpu_util_s),
@@ -1030,9 +1030,9 @@ def test_check_empty_command_line() -> None:
     ) == [
         Result(state=State.OK, summary="Processes: 1"),
         Metric("count", 1.0, levels=(100000.0, 100000.0), boundaries=(0.0, None)),
-        Result(state=State.OK, summary="virtual: 93.9 MiB"),
+        Result(state=State.OK, summary="Virtual memory: 93.9 MiB"),
         Metric("vsz", 96112.0),
-        Result(state=State.OK, summary="physical: 3.37 MiB"),
+        Result(state=State.OK, summary="Resident memory: 3.37 MiB"),
         Metric("rss", 3448.0),
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),

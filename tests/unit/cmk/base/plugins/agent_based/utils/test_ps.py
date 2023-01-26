@@ -316,7 +316,7 @@ def test_memory_perc_check_realnode() -> None:
     ) == [
         Result(
             state=State.CRIT,
-            summary="Percentage of total RAM: 42.00% (warn/crit at 10.00%/20.00%)",
+            summary="Percentage of resident memory: 42.00% (warn/crit at 10.00%/20.00%)",
         ),
     ]
 
@@ -329,7 +329,7 @@ def test_memory_perc_check_cluster() -> None:
 
     mem_map = {"A": 102400.0, "B": 102400.0, "C": 102400.0}
     assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map)) == [
-        Result(state=State.OK, summary="Percentage of total RAM: 21.00%")
+        Result(state=State.OK, summary="Percentage of resident memory: 21.00%")
     ]
 
 

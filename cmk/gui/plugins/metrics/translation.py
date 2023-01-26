@@ -1069,9 +1069,17 @@ ps_translation: dict[str, CheckMetricEntry] = {
         "name": "process_virtual_size",
         "scale": KB,
     },
+    "vszavg": {
+        "name": "process_virtual_size_avg",
+        "scale": 1,
+    },
     "rss": {
         "name": "process_resident_size",
         "scale": KB,
+    },
+    "rssavg": {
+        "name": "process_resident_size_avg",
+        "scale": 1,
     },
     "pcpu": {"name": "util"},
     "pcpuavg": {"name": "util_average"},

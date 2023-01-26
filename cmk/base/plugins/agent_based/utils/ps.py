@@ -8,6 +8,7 @@ import time
 from dataclasses import dataclass
 from typing import (
     Any,
+    Callable,
     Dict,
     Generator,
     Iterable,
@@ -641,21 +642,26 @@ def memory_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
 ) -> CheckResult:
-    """Check levels for virtual and physical used memory"""
-    for size, label, levels, metric in [
-        (processes.virtual_size, "virtual", "virtual_levels", "vsz"),
-        (processes.resident_size, "physical", "resident_levels", "rss"),
-    ]:
+    """Check levels for virtual and resident used memory"""
+    for size, metric_name, memory_type, metric_id in (
+        (processes.virtual_size, "Virtual memory", "virtual", "vsz"),
+        (processes.resident_size, "Resident memory", "resident", "rss"),
+    ):
         if size == 0:
             continue
+        levels = params.get(f"{memory_type}_levels")
 
-        yield from check_levels(
-            size * 1024,
-            levels_upper=params.get(levels),
-            render_func=render.bytes,
-            label=label,
+        yield from check_averageable_metric(
+            metric_id=metric_id,
+            avg_metric_id=f"{metric_id}avg",
+            metric_name=metric_name,
+            metric_value=size * 1024,
+            levels=levels,
+            average_mins=params.get(f"{memory_type}_average"),
+            render_fn=render.bytes,
+            produce_avg_metric=True,
         )
-        yield Metric(metric, size, levels=params.get(levels))
+        yield Metric(metric_id, size, levels=levels)
 
 
 def get_total_resident_mem_size(
@@ -687,42 +693,67 @@ def memory_perc_check(
         return
 
     resident_perc = 100.0 * processes.resident_size * 1024.0 / total_ram
+
+    yield from check_averageable_metric(
+        metric_id="res_perc",
+        avg_metric_id="res_percavg",
+        metric_name="Percentage of resident memory",
+        metric_value=resident_perc,
+        levels=params.get("resident_levels_perc"),
+        average_mins=params.get("resident_perc_average"),
+        render_fn=render.percent,
+        produce_avg_metric=False,
+    )
+
+
+def check_averageable_metric(
+    metric_id: str,
+    avg_metric_id: str,
+    metric_name: str,
+    metric_value: Union[float, int],
+    levels: tuple[float, float] | None,
+    average_mins: int | None,
+    render_fn: Callable,
+    produce_avg_metric: bool,
+) -> CheckResult:
+    if average_mins:
+        avg_metric_value = get_average(
+            get_value_store(), metric_id, time.time(), metric_value, average_mins
+        )
+        infotext = "%s: %s, %d min average" % (
+            metric_name,
+            render_fn(metric_value),
+            average_mins,
+        )
+        if produce_avg_metric:
+            yield Metric(avg_metric_id, avg_metric_value, levels=levels)
+        metric_value = avg_metric_value  # use this for level comparison
+    else:
+        infotext = metric_name
+
     yield from check_levels(
-        resident_perc,
-        levels_upper=params["resident_levels_perc"],
-        render_func=render.percent,
-        label="Percentage of total RAM",
+        metric_value,
+        levels_upper=levels,
+        render_func=render_fn,
+        label=infotext,
     )
 
 
 def cpu_check(percent_cpu: float, params: Mapping[str, Any]) -> CheckResult:
     """Check levels for cpu utilization from given process"""
 
-    warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
-    yield Metric("pcpu", percent_cpu, levels=(warn_cpu, crit_cpu))
+    cpu_levels = params.get("cpulevels", (None, None, None))[:2]
+    yield Metric("pcpu", percent_cpu, levels=cpu_levels)
 
-    # CPU might come with previous
-    if "cpu_average" in params:
-        avg_cpu = get_average(
-            get_value_store(),
-            "cpu",
-            time.time(),
-            percent_cpu,
-            params["cpu_average"],
-        )
-        infotext = "CPU: %s, %d min average" % (render.percent(percent_cpu), params["cpu_average"])
-        yield Metric(
-            "pcpuavg", avg_cpu, levels=(warn_cpu, crit_cpu), boundaries=(0, params["cpu_average"])
-        )  # wat?
-        percent_cpu = avg_cpu  # use this for level comparison
-    else:
-        infotext = "CPU"
-
-    yield from check_levels(
-        percent_cpu,
-        levels_upper=(warn_cpu, crit_cpu),
-        render_func=render.percent,
-        label=infotext,
+    yield from check_averageable_metric(
+        metric_id="cpu",
+        avg_metric_id="pcpuavg",
+        metric_name="CPU",
+        metric_value=percent_cpu,
+        levels=cpu_levels,
+        average_mins=params.get("cpu_average"),
+        render_fn=render.percent,
+        produce_avg_metric=True,
     )
 
 
@@ -777,8 +808,8 @@ def individual_process_check(
         for levels, metric_name, metric_value, render_fn in (
             (cpu_levels, "CPU", cpu_usage, render.percent),
             (virt_levels, "virtual memory", virt_usage, render.bytes),
-            (res_levels, "physical memory", res_usage, render.bytes),
-            (res_levels_perc, "percentage of physical memory", res_usage_pct, render.percent),
+            (res_levels, "resident memory", res_usage, render.bytes),
+            (res_levels_perc, "percentage of resident memory", res_usage_pct, render.percent),
         ):
             if levels is None or metric_value is None:
                 continue

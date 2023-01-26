@@ -14,17 +14,14 @@ from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection
 
 from cmk.base import crash_reporting
-from cmk.base.agent_based.data_provider import SectionsParser
-from cmk.base.api.agent_based.register.section_plugins import (
-    AgentSectionPlugin,
-    trivial_section_factory,
-)
+from cmk.base.agent_based.data_provider import SectionParser, SectionsParser
+from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 
 
-def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:
+def _section(name: str, parse_function: Callable) -> SectionParser:
     """create a simple section for testing"""
     section = trivial_section_factory(SectionName(name))
-    return section._replace(parse_function=parse_function)
+    return SectionParser(section.name, parse_function)
 
 
 class TestSectionsParser:

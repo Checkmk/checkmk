@@ -18,6 +18,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsResolver,
     ParsingResult,
     ResolvedResult,
+    SectionParser,
 )
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.type_defs import SectionPlugin
@@ -34,8 +35,8 @@ def _section(name: str, parsed_section_name: str, supersedes: set[str]) -> Secti
 
 
 class _FakeParser(dict):
-    def parse(self, section: SectionPlugin):  # type:ignore[no-untyped-def]
-        return self.get(str(section.name))
+    def parse(self, section_parser: SectionParser):  # type:ignore[no-untyped-def]
+        return self.get(str(section_parser.section_name))
 
     def disable(self, names: Iterable[SectionName]) -> None:
         for name in names:

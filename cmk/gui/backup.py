@@ -47,6 +47,7 @@ from cmk.utils.backup.type_defs import (
     TRemoteParams,
 )
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
@@ -1873,7 +1874,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "passphrase to decrypt the backup."
         )
 
-    def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
+    def _generate_key(self, alias: str, passphrase: PasswordType) -> key_mgmt.Key:
         assert user.id is not None
         key = key_mgmt.generate_key(alias, passphrase, user.id, omd_site())
         # Mark key as not downloaded yet to issue a warning to the user that the key
@@ -1943,7 +1944,10 @@ def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
 
 class RestoreJob(MKBackupJob):
     def __init__(
-        self, target_ident: TargetId | None, backup_ident: str | None, passphrase: str | None = None
+        self,
+        target_ident: TargetId | None,
+        backup_ident: str | None,
+        passphrase: PasswordType | None = None,
     ) -> None:
         super().__init__()
         self._target_ident = target_ident
@@ -1971,7 +1975,7 @@ class RestoreJob(MKBackupJob):
 
         if self._passphrase is not None:
             modified_env.update(os.environ.copy())
-            modified_env["MKBACKUP_PASSPHRASE"] = self._passphrase
+            modified_env["MKBACKUP_PASSPHRASE"] = self._passphrase.raw
         super().start(modified_env)
 
 
@@ -2133,7 +2137,7 @@ class PageBackupRestore:
                 value = self._vs_key().from_html_vars("_key")
                 if request.has_var("_key_p_passphrase"):
                     self._vs_key().validate_value(value, "_key")
-                    passphrase = value["passphrase"]
+                    passphrase = PasswordType(value["passphrase"])
 
                     # Validate the passphrase
                     key_mgmt.decrypt_private_key(key.private_key, passphrase)

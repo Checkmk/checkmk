@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
+from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.wato as wato
@@ -23,7 +24,7 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch) -> None:
     mode = wato.ModeBackupEditKey()
 
     # First create a backup key
-    mode._create_key(alias="älias", passphrase="passphra$e")
+    mode._create_key(alias="älias", passphrase=Password("passphra$e"))
 
     assert store_path.exists()
 

@@ -165,6 +165,15 @@ def patch_themes(EDITION) {
     }
 }
 
+def patch_demo(EDITION) {
+    if (EDITION == 'free') {
+        sh '''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make'''
+        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
+        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' enterprise/core/src/{TrialManager.h,test/test_TrialManager.cc}'''
+        sh '''sed -i 's/#ifdef DEMOVERSION/#if 1/g' livestatus/src/TableStatus.cc'''
+    }
+}
+
 def set_version(cmk_version) {
     sh("make NEW_VERSION=${cmk_version} setversion");
 }
@@ -173,6 +182,7 @@ def configure_checkout_folder(edition, cmk_version) {
     assert edition in REPO_PATCH_RULES: "edition=${edition} not known"
     patch_folders(edition);
     patch_themes(edition);
+    patch_demo(edition);
     set_version(cmk_version);
 }
 

@@ -168,7 +168,6 @@ def patch_themes(EDITION) {
 def patch_demo(EDITION) {
     if (EDITION == 'free') {
         sh '''sed -ri 's/^(FREE[[:space:]]*:?= *).*/\\1'"yes/" defines.make'''
-        sh 'mv omd/packages/nagios/{9999-demo-version.dif,patches/9999-demo-version.dif}'
     }
 }
 

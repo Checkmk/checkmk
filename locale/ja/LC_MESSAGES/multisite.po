@@ -26,10 +26,6 @@ msgstr " %s, 停止期間 %s"
 msgid " (%d times)"
 msgstr " ( %d 回 )"
 
-#, python-format
-msgid " (%s left)"
-msgstr ""
-
 msgid " (Copy)"
 msgstr " (コピー)"
 
@@ -59,9 +55,6 @@ msgstr " (すべてのパケットに関して(成功 + エラー))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (成功したすべてのパケットに関して)"
-
-msgid " (outdated)"
-msgstr " 旧式"
 
 #, python-format
 msgid " (owned by %s)"
@@ -42963,6 +42956,10 @@ msgstr "\"メンテナンス\"サービスが見つかった場合の状態"
 msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr "LGETTIMEとLGETDATEが使用可能であるが、設定されていない場合の状態"
 
+#, fuzzy
+msgid "State if agent deployment is disabled for host"
+msgstr "エージェントの展開がグローバルに無効になっている場合の状態"
+
 msgid "State if agent deployment is globally disabled"
 msgstr "エージェントの展開がグローバルに無効になっている場合の状態"
 
@@ -49819,6 +49816,11 @@ msgstr "これは有効なNagios期間の日の指定ではありません。"
 
 msgid "This is only be used in case of percentual levels"
 msgstr "これは、パーセントレベルの場合にのみ使用されます"
+
+msgid ""
+"This is only relevant when agent updates are globally enabled. Otherwise, "
+"configured host conditions are not tested and won't yield an error message."
+msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -62486,6 +62488,9 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid " (outdated)"
+#~ msgstr " 旧式"
 
 #, fuzzy
 #~| msgid ""

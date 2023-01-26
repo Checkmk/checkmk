@@ -26,10 +26,6 @@ msgstr " %s, duración de la interrupción %s"
 msgid " (%d times)"
 msgstr " (%d veces)"
 
-#, python-format
-msgid " (%s left)"
-msgstr " (%s izquierda)"
-
 msgid " (Copy)"
 msgstr " (Copia)"
 
@@ -59,9 +55,6 @@ msgstr " (relación de entrada a todos los paquetes (exitoso + error))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (relación de entrada para todos los paquetes exitosos)"
-
-msgid " (outdated)"
-msgstr " (anticuado)"
 
 #, python-format
 msgid " (owned by %s)"
@@ -45069,6 +45062,10 @@ msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr ""
 "Indica si LGETTIME y LGETDATE están disponibles pero no están configurados"
 
+#, fuzzy
+msgid "State if agent deployment is disabled for host"
+msgstr "Estado si el despliegue del agente está globalmente desactivado"
+
 msgid "State if agent deployment is globally disabled"
 msgstr "Estado si el despliegue del agente está globalmente desactivado"
 
@@ -52614,6 +52611,11 @@ msgstr ""
 
 msgid "This is only be used in case of percentual levels"
 msgstr "Esto sólo se utiliza en caso de niveles porcentuales"
+
+msgid ""
+"This is only relevant when agent updates are globally enabled. Otherwise, "
+"configured host conditions are not tested and won't yield an error message."
+msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -66344,6 +66346,13 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#, python-format
+#~ msgid " (%s left)"
+#~ msgstr " (%s izquierda)"
+
+#~ msgid " (outdated)"
+#~ msgstr " (anticuado)"
 
 #, fuzzy
 #~| msgid ""

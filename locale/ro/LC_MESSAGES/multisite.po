@@ -27,10 +27,6 @@ msgstr ""
 msgid " (%d times)"
 msgstr ""
 
-#, python-format
-msgid " (%s left)"
-msgstr ""
-
 msgid " (Copy)"
 msgstr " (Copiază)"
 
@@ -62,9 +58,6 @@ msgid " (in relation to all packets (successful + error))"
 msgstr ""
 
 msgid " (in relation to all successful packets)"
-msgstr ""
-
-msgid " (outdated)"
 msgstr ""
 
 #, python-format
@@ -43339,6 +43332,10 @@ msgstr ""
 msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr ""
 
+#, fuzzy
+msgid "State if agent deployment is disabled for host"
+msgstr "Notificari"
+
 msgid "State if agent deployment is globally disabled"
 msgstr ""
 
@@ -49528,6 +49525,11 @@ msgid "This is not a valid Nagios time period day specification."
 msgstr ""
 
 msgid "This is only be used in case of percentual levels"
+msgstr ""
+
+msgid ""
+"This is only relevant when agent updates are globally enabled. Otherwise, "
+"configured host conditions are not tested and won't yield an error message."
 msgstr ""
 
 msgid ""

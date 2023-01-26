@@ -26,10 +26,6 @@ msgstr " %s, duur van de onderbreking %s"
 msgid " (%d times)"
 msgstr " (%d maal)"
 
-#, python-format
-msgid " (%s left)"
-msgstr " (%s links)"
-
 msgid " (Copy)"
 msgstr " (Kopiëren)"
 
@@ -59,9 +55,6 @@ msgstr " (in relatie tot alle pakketten (succesvol + fout))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (in relatie tot alle succesvolle pakketten)"
-
-msgid " (outdated)"
-msgstr " (verouderd)"
 
 #, python-format
 msgid " (owned by %s)"
@@ -44674,6 +44667,10 @@ msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr ""
 "Geeft aan of LGETTIME en LGETDATE beschikbaar zijn, maar niet zijn ingesteld"
 
+#, fuzzy
+msgid "State if agent deployment is disabled for host"
+msgstr "Staat als agent deployment globaal is uitgeschakeld"
+
 msgid "State if agent deployment is globally disabled"
 msgstr "Staat als agent deployment globaal is uitgeschakeld"
 
@@ -52181,6 +52178,11 @@ msgstr "Dit is geen geldige Nagios tijdsperiode dag specificatie."
 
 msgid "This is only be used in case of percentual levels"
 msgstr "Dit wordt alleen gebruikt in het geval van percentuele niveaus"
+
+msgid ""
+"This is only relevant when agent updates are globally enabled. Otherwise, "
+"configured host conditions are not tested and won't yield an error message."
+msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -65815,6 +65817,13 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid " (%s left)"
+#~ msgstr " (%s links)"
+
+#~ msgid " (outdated)"
+#~ msgstr " (verouderd)"
 
 #, fuzzy
 #~| msgid ""

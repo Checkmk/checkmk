@@ -26,10 +26,6 @@ msgstr " %s, Dauer des Ausfalls %s"
 msgid " (%d times)"
 msgstr " (%d mal)"
 
-#, python-format
-msgid " (%s left)"
-msgstr " (%s verbleibend)"
-
 msgid " (Copy)"
 msgstr " (Kopie)"
 
@@ -59,9 +55,6 @@ msgstr " (in Bezug auf alle Pakete (erfolgreich + fehlgeschlagene))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (im Bezug auf alle erfolgreichen Pakete)"
-
-msgid " (outdated)"
-msgstr " (veraltet)"
 
 #, python-format
 msgid " (owned by %s)"
@@ -44798,6 +44791,10 @@ msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr ""
 "Status falls LGETTIME und LGETDATE zwar vorhanden, aber nicht gesetzt sind"
 
+#, fuzzy
+msgid "State if agent deployment is disabled for host"
+msgstr "Status, wenn der Agenteneinsatz global deaktiviert ist"
+
 msgid "State if agent deployment is globally disabled"
 msgstr "Status, wenn der Agenteneinsatz global deaktiviert ist"
 
@@ -52271,6 +52268,11 @@ msgid "This is only be used in case of percentual levels"
 msgstr ""
 "Sie können diese Option nur im Falle von prozentualen Schwellwerten "
 "verwenden."
+
+msgid ""
+"This is only relevant when agent updates are globally enabled. Otherwise, "
+"configured host conditions are not tested and won't yield an error message."
+msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -65906,6 +65908,13 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, python-format
+#~ msgid " (%s left)"
+#~ msgstr " (%s verbleibend)"
+
+#~ msgid " (outdated)"
+#~ msgstr " (veraltet)"
 
 #, fuzzy
 #~| msgid ""

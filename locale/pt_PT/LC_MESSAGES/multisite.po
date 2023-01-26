@@ -26,10 +26,6 @@ msgstr " %s, duração de indisponibilidade %s"
 msgid " (%d times)"
 msgstr " (%d vezes)"
 
-#, python-format
-msgid " (%s left)"
-msgstr ""
-
 msgid " (Copy)"
 msgstr " (Copiar)"
 
@@ -59,9 +55,6 @@ msgstr " (em relação a todos os pacotes (sucesso+ erros))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (em relação a todos os successful packets)"
-
-msgid " (outdated)"
-msgstr " (Desatualizado)"
 
 #, python-format
 msgid " (owned by %s)"
@@ -45066,6 +45059,10 @@ msgstr "Indique se são encontrados serviços de \"manutenção"
 msgid "State if LGETTIME and LGETDATE are available but not set"
 msgstr "Indique se LGETTIME e LGETDATE estão disponíveis mas não definidos"
 
+#, fuzzy
+msgid "State if agent deployment is disabled for host"
+msgstr "Declarar se a implementação do agente está globalmente desactivada"
+
 msgid "State if agent deployment is globally disabled"
 msgstr "Declarar se a implementação do agente está globalmente desactivada"
 
@@ -52522,6 +52519,11 @@ msgstr "Esta não é uma especificação válida do dia do período de tempo Nag
 
 msgid "This is only be used in case of percentual levels"
 msgstr "Isto só é usado em caso de níveis percentuais"
+
+msgid ""
+"This is only relevant when agent updates are globally enabled. Otherwise, "
+"configured host conditions are not tested and won't yield an error message."
+msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -66126,6 +66128,9 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid " (outdated)"
+#~ msgstr " (Desatualizado)"
 
 #, fuzzy
 #~| msgid ""

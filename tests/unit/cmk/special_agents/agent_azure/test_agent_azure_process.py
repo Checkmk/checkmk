@@ -204,7 +204,7 @@ def test_process_vm(
             },
             (
                 [
-                    '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan"}\n'
+                    '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
                 ],
                 ["MyVM"],
             ),
@@ -263,7 +263,7 @@ def test_get_vm_labels_section(
                     LabelsSection,
                     ["MyVM"],
                     [
-                        '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan"}\n'
+                        '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
                     ],
                 ),
                 (AzureSection, [""], ["remaining-reads|2.0\n"]),

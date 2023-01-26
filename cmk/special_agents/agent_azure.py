@@ -1290,6 +1290,8 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
         if tag_name not in vm.tags:
             vm_labels[tag_name] = tag_value
 
+    vm_labels["cmk/azure/vm"] = "instance"
+
     labels_section = LabelsSection(vm.info["name"])
     labels_section.add((json.dumps(vm_labels),))
     return labels_section

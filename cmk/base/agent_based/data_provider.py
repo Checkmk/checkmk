@@ -216,10 +216,10 @@ class ParsedSectionsBroker:
         providers: Mapping[HostKey, tuple[ParsedSectionsResolver, SectionsParser]],
     ) -> None:
         super().__init__()
-        self._providers: Final = providers
+        self.providers: Final = providers
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(providers={self._providers!r})"
+        return f"{self.__class__.__name__}(providers={self.providers!r})"
 
     def get_cache_info(
         self,
@@ -237,7 +237,7 @@ class ParsedSectionsBroker:
             resolved.parsed.cache_info
             for resolved in (
                 resolver.resolve(parser, parsed_section_name)
-                for resolver, parser in self._providers.values()
+                for resolver, parser in self.providers.values()
                 for parsed_section_name in parsed_section_names
             )
             if resolved is not None and resolved.parsed.cache_info is not None
@@ -257,7 +257,7 @@ class ParsedSectionsBroker:
         parsed_section_name: ParsedSectionName,
     ) -> ParsedSectionContent | None:
         try:
-            resolver, parser = self._providers[host_key]
+            resolver, parser = self.providers[host_key]
         except KeyError:
             return None
 
@@ -274,7 +274,7 @@ class ParsedSectionsBroker:
     ) -> set[ParsedSectionName]:
         return {
             parsed_section_name
-            for host_key, (resolver, parser) in self._providers.items()
+            for host_key, (resolver, parser) in self.providers.items()
             for parsed_section_name in parsed_section_names
             if (
                 host_key.source_type is source_type
@@ -282,24 +282,9 @@ class ParsedSectionsBroker:
             )
         }
 
-    def all_parsing_results(self, host_key: HostKey) -> Sequence[ResolvedResult]:
-        try:
-            resolver, parser = self._providers[host_key]
-        except KeyError:
-            return ()
-
-        return sorted(
-            (
-                res
-                for psn in {section.parsed_section_name for section in resolver.section_plugins}
-                if (res := resolver.resolve(parser, psn)) is not None
-            ),
-            key=lambda r: r.section.name,
-        )
-
     def parsing_errors(self) -> Sequence[str]:
         return sum(
-            (list(parser.parsing_errors) for _, parser in self._providers.values()),
+            (list(parser.parsing_errors) for _, parser in self.providers.values()),
             start=[],
         )
 

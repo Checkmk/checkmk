@@ -20,6 +20,7 @@ from cmk.base.agent_based.data_provider import (
     ResolvedResult,
     SectionParser,
 )
+from cmk.base.agent_based.discovery._host_labels import _all_parsing_results as all_parsing_results
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 
@@ -148,7 +149,7 @@ class TestParsedSectionsResolver:
             }
         )
 
-        assert broker.all_parsing_results(host_key) == [
+        assert all_parsing_results(host_key, broker) == [
             ResolvedResult(
                 parsed=ParsingResult(data=1, cache_info=None),
                 section=sections[0],

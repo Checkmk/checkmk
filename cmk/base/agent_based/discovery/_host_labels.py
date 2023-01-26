@@ -16,7 +16,7 @@ from cmk.fetchers import SourceType
 from cmk.checkers import HostKey
 
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ResolvedResult
 
 from .utils import QualifiedDiscovery
 
@@ -147,6 +147,24 @@ def discover_host_labels(
     return list(labels_by_name.values())
 
 
+def _all_parsing_results(
+    host_key: HostKey, broker: ParsedSectionsBroker
+) -> Sequence[ResolvedResult]:
+    try:
+        resolver, parser = broker.providers[host_key]
+    except KeyError:
+        return ()
+
+    return sorted(
+        (
+            res
+            for psn in {section.parsed_section_name for section in resolver.section_plugins}
+            if (res := resolver.resolve(parser, psn)) is not None
+        ),
+        key=lambda r: r.section.name,
+    )
+
+
 def _discover_host_labels_for_source_type(
     *,
     host_key: HostKey,
@@ -156,7 +174,7 @@ def _discover_host_labels_for_source_type(
 
     host_labels = {}
     try:
-        parsed_results = parsed_sections_broker.all_parsing_results(host_key)
+        parsed_results = _all_parsing_results(host_key, parsed_sections_broker)
 
         console.vverbose(
             "Trying host label discovery with: %s\n"

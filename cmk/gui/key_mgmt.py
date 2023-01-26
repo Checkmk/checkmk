@@ -15,6 +15,7 @@ from livestatus import SiteId
 
 import cmk.utils.render
 import cmk.utils.store as store
+from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -239,7 +240,7 @@ class PageEditKey:
             # leak the secret information
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
-            self._create_key(value["alias"], value["passphrase"])
+            self._create_key(value["alias"], PasswordType(value["passphrase"]))
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -251,7 +252,7 @@ class PageEditKey:
             return HTTPRedirect(mode_url(self.back_mode))
         return None
 
-    def _create_key(self, alias: str, passphrase: str) -> None:
+    def _create_key(self, alias: str, passphrase: PasswordType) -> None:
         keys = self.key_store.load()
 
         new_id = 1
@@ -333,7 +334,7 @@ class PageUploadKey:
             ):
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
-            self._upload_key(key_file, value["alias"], value["passphrase"])
+            self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -353,7 +354,7 @@ class PageUploadKey:
             return cert_spec[1][2].decode("ascii")
         return cert_spec[1]
 
-    def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
+    def _upload_key(self, key_file: str, alias: str, passphrase: PasswordType) -> None:
         keys = self.key_store.load()
 
         new_id = 1
@@ -533,7 +534,7 @@ class PageDownloadKey:
         )
 
 
-def generate_key(alias: str, passphrase: str, user_id: UserId, site_id: SiteId) -> Key:
+def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id: SiteId) -> Key:
     pkey = crypto.PKey()
     pkey.generate_key(crypto.TYPE_RSA, 2048)
 
@@ -541,7 +542,7 @@ def generate_key(alias: str, passphrase: str, user_id: UserId, site_id: SiteId) 
     return Key(
         certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
         private_key=crypto.dump_privatekey(
-            crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
+            crypto.FILETYPE_PEM, pkey, "AES256", passphrase.raw_bytes
         ).decode("ascii"),
         alias=alias,
         owner=user_id,
@@ -564,10 +565,10 @@ def create_self_signed_cert(pkey: crypto.PKey, user_id: UserId, site_id: SiteId)
     return cert
 
 
-def decrypt_private_key(encrypted_private_key: str, passphrase: str) -> crypto.PKey:
+def decrypt_private_key(encrypted_private_key: str, passphrase: PasswordType) -> crypto.PKey:
     try:
         return crypto.load_privatekey(
-            crypto.FILETYPE_PEM, encrypted_private_key, passphrase.encode("utf-8")
+            crypto.FILETYPE_PEM, encrypted_private_key, passphrase.raw_bytes
         )
     except crypto.Error:
         raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

@@ -7,6 +7,7 @@
 from collections.abc import Collection
 
 import cmk.utils.paths
+from cmk.utils.crypto.password import Password
 
 import cmk.gui.backup as backup
 from cmk.gui.http import request
@@ -172,7 +173,7 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
 
-    def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
+    def _upload_key(self, key_file: str, alias: str, passphrase: Password) -> None:
         log_audit("upload-backup-key", "Uploaded backup key '%s'" % alias)
         super()._upload_key(key_file, alias, passphrase)
 

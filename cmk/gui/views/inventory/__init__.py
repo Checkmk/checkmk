@@ -11,7 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Final, Literal, NamedTuple, Protocol, TypeVar
+from typing import Any, Literal, NamedTuple, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -2292,9 +2292,6 @@ multisite_builtin_views["inv_host_history"] = {
 #   '----------------------------------------------------------------------'
 
 
-_GRAY: Final[str] = "#777"
-
-
 class ABCNodeRenderer(abc.ABC):
     def __init__(
         self,
@@ -2458,7 +2455,7 @@ class ABCNodeRenderer(abc.ABC):
     def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, style=f"color: {_GRAY}")
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
         return header
 
     def _show_child_value(
@@ -2472,7 +2469,7 @@ class ABCNodeRenderer(abc.ABC):
             value = HTML(code)
 
         if self._is_outdated(retention_intervals):
-            html.write_html(HTMLWriter.render_span(value.value, style=f"color: {_GRAY}"))
+            html.write_html(HTMLWriter.render_span(value.value, css="muted-text"))
         else:
             html.write_html(value)
 

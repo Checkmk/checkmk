@@ -102,8 +102,8 @@ class AutochecksManager:
         get_service_description: GetServiceDescription,
     ) -> Mapping[str, ServiceLabel]:
         # NOTE: this returns an empty labels object for non-existing services
-        with suppress(KeyError):
-            return self._discovered_labels_of[hostname][service_desc]
+        if (loaded_labels := self._discovered_labels_of.get(hostname)) is not None:
+            return loaded_labels.get(service_desc, {})
 
         hosts_labels = self._discovered_labels_of.setdefault(hostname, {})
         # Only read the raw autochecks here, do not compute the effective

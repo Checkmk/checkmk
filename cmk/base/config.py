@@ -3435,6 +3435,9 @@ class ConfigCache:
 
     def _initialize_caches(self) -> None:
         self.check_table_cache = _config_cache.get("check_tables")
+        self._host_of_clustered_service_cache: Dict[
+            tuple[HostName, ServiceName, Optional[tuple]], HostName
+        ] = {}
 
         self._cache_section_name_of: Dict[CheckPluginNameStr, str] = {}
 
@@ -4002,6 +4005,23 @@ class ConfigCache:
         return set(strip_tags(list(clusters)))
 
     def host_of_clustered_service(
+        self,
+        hostname: HostName,
+        servicedesc: str,
+        part_of_clusters: Optional[List[HostName]] = None,
+    ) -> HostName:
+        key = (hostname, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
+        if (actual_hostname := self._host_of_clustered_service_cache.get(key)) is not None:
+            return actual_hostname
+
+        self._host_of_clustered_service_cache[key] = self._host_of_clustered_service(
+            hostname,
+            servicedesc,
+            part_of_clusters,
+        )
+        return self._host_of_clustered_service_cache[key]
+
+    def _host_of_clustered_service(
         self,
         hostname: HostName,
         servicedesc: str,

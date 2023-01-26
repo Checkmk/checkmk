@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -19,7 +21,8 @@ from cmk.gui.session import SuperUserContext
 multisite_cronjobs = []
 
 
-def register_job(cron_job):
+def register_job(cron_job: Callable[[], Any]) -> None:
+    # the callable should really return None, but some jobs return something (which is then ignored)
     multisite_cronjobs.append(cron_job)
 
 

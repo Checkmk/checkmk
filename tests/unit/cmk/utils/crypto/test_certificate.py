@@ -59,14 +59,14 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
             None,  # The default 2 hours slack is not enough.
             pytest.raises(InvalidExpiryError, match="not yet valid"),
         ),
-        (relativedelta(hours=5), None, pytest.raises(InvalidExpiryError, match="expired")),
+        (relativedelta(hours=+5), None, pytest.raises(InvalidExpiryError, match="expired")),
         (
-            relativedelta(hours=5),  # It's now 5 hours after cert creation, so the cert has expired
-            # 3 hours ago.
-            relativedelta(hours=5),  # But we allow 5 hours drift.
+            # It's now 5 hours after cert creation, so the cert has expired 3 hours ago.
+            relativedelta(hours=+5),
+            relativedelta(hours=+5),  # But we allow 5 hours drift.
             does_not_raise(),
         ),
-        (relativedelta(minutes=10), None, does_not_raise()),
+        (relativedelta(minutes=+10), None, does_not_raise()),
     ],
 )
 def test_verify_expiry(
@@ -85,6 +85,25 @@ def test_verify_expiry(
             self_signed_cert.certificate.verify_expiry(allowed_drift)
 
 
+@pytest.mark.parametrize(
+    "when,expected_days_remaining",
+    [
+        (relativedelta(seconds=0), 0),  # in 2 hours
+        (relativedelta(days=-1), 1),  # yesterday it was valid for another day
+        (relativedelta(months=-12), 365),  # 2022 was not a leap year
+        (relativedelta(hours=+2), 0),  # expires right now
+        (relativedelta(hours=+4), -1),  # today but rounded "down" to a day ago
+    ],
+)
+def test_days_til_expiry(
+    self_signed_cert: CertificateWithPrivateKey,
+    when: relativedelta,
+    expected_days_remaining: relativedelta,
+) -> None:
+    with freeze_time(FROZEN_NOW + when):
+        assert self_signed_cert.certificate.days_til_expiry() == expected_days_remaining
+
+
 def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivateKey) -> None:
     cert_path = tmp_path / "cert.crt"
     key_path = tmp_path / "key.pem"
@@ -97,9 +116,8 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
 
     loaded = PersistedCertificateWithPrivateKey.read_files(cert_path, key_path, password)
 
-    assert (
-        loaded.certificate._cert.serial_number == self_signed_cert.certificate._cert.serial_number
-    )
+    assert loaded.certificate.serial_number == self_signed_cert.certificate.serial_number
+
     # mypy doesn't find most attributes of cryptography's RSAPrivateKey as it seems
     loaded_nums = loaded.private_key._key.private_numbers()  # type: ignore[attr-defined]
     orig_nums = self_signed_cert.private_key._key.private_numbers()  # type: ignore[attr-defined]

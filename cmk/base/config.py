@@ -2700,6 +2700,9 @@ class ConfigCache:
         # Caches for nodes and clusters
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}
         self._nodes_of_cache: dict[HostName, list[HostName]] = {}
+        self._host_of_clustered_service_cache: dict[
+            tuple[HostName, ServiceName, tuple | None], HostName
+        ] = {}
 
     def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
         ipmi_credentials = self._ipmi_credentials(host_name)
@@ -4494,6 +4497,23 @@ class ConfigCache:
         return self._all_configured_clusters
 
     def host_of_clustered_service(
+        self,
+        hostname: HostName,
+        servicedesc: str,
+        part_of_clusters: list[HostName] | None = None,
+    ) -> HostName:
+        key = (hostname, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
+        if (actual_hostname := self._host_of_clustered_service_cache.get(key)) is not None:
+            return actual_hostname
+
+        self._host_of_clustered_service_cache[key] = self._host_of_clustered_service(
+            hostname,
+            servicedesc,
+            part_of_clusters,
+        )
+        return self._host_of_clustered_service_cache[key]
+
+    def _host_of_clustered_service(
         self,
         hostname: HostName,
         servicedesc: str,

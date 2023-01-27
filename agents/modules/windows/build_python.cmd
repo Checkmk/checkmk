@@ -15,6 +15,10 @@ set HOST_PYTHON=c:\python310\python.exe
 if not exist "%HOST_PYTHON%" powershell Write-Host "You should install Python as %HOST_PYTHON%" -Foreground Red && exit /b 4
 set
 @echo call buildrelease.bat  -o %build_dir% -b -x86 --skip-nuget --skip-pgo --skip-zip
+
+:: we do not need doc anyway, build of the doc may lead to error
+copy /Y %cur_dir%\patches\doc.wxs doc\doc.wxs
+# del /Q bundle\packagegroups\doc.wxs
 if "%PY_VER%" == "3.6" (
   :: 3.6 cant build doc
   powershell Write-Host "Creating empty %chm_368%" -foreground white

@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Language="!(loc.LCID)" Name="!(loc.Title)" Version="$(var.Version)" Manufacturer="!(loc.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
+		<Package InstallerVersion="500" Compressed="yes" InstallScope="perUser" />
+		<MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+		<PropertyRef Id="DetectTargetDir" />
+		<PropertyRef Id="UpgradeTable" />
+		<PropertyRef Id="REGISTRYKEY" />
+
+		<Feature Id="DefaultFeature" AllowAdvertise="no" Title="!(loc.Title)" Description="!(loc.Description)">
+			<ComponentRef Id="OptionalFeature" />
+
+			<Component Id="doc_folder" Directory="Doc" Guid="{22FD42DB-EC66-4B1C-B1FC-44E0CF7B2462}">
+				<CreateFolder />
+				<RemoveFolder Id="Remove_doc_folder" On="uninstall" />
+			</Component>
+		</Feature>
+		<Feature Id="Shortcuts" AllowAdvertise="no" Title="!(loc.Title)" Description="!(loc.Description)">
+
+		</Feature>
+	</Product>
+</Wix>

@@ -83,15 +83,15 @@ class MaxAge(NamedTuple):
 
     """
 
-    checking: int
-    discovery: int
-    inventory: int
+    checking: float
+    discovery: float
+    inventory: float
 
     @classmethod
     def zero(cls):
-        return cls(0, 0, 0)
+        return cls(0.0, 0.0, 0.0)
 
-    def get(self, mode: Mode, *, default: int = 0) -> int:
+    def get(self, mode: Mode, *, default: float = 0.0) -> float:
         return self._asdict().get(mode.name.lower(), default)
 
 

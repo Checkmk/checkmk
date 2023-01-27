@@ -13,7 +13,7 @@ from itertools import groupby
 import snap7
 from snap7.common import Snap7Library
 from snap7.exceptions import Snap7Exception
-from snap7.types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM
+from snap7.types import Areas
 
 from cmk.special_agents.utils.agent_common import SectionWriter
 
@@ -183,14 +183,14 @@ def _get_dint(_bytearray, byte_index):
     return byte3 + (byte2 << 8) + (byte1 << 16) + (byte0 << 32)
 
 
-def _area_name_to_area_id(area_name):
+def _area_name_to_area_id(area_name: str) -> Areas:
     return {
-        "db": S7AreaDB,
-        "input": S7AreaPE,
-        "output": S7AreaPA,
-        "merker": S7AreaMK,
-        "timer": S7AreaTM,
-        "counter": S7AreaCT,
+        "db": Areas.DB,
+        "input": Areas.PE,
+        "output": Areas.PA,
+        "merker": Areas.MK,
+        "timer": Areas.TM,
+        "counter": Areas.CT,
     }[area_name]
 
 

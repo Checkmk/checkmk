@@ -10,32 +10,32 @@
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Renderer.h"
 
-void DowntimeRenderer::output(ListRenderer &l,
-                              const DowntimeData &downtime) const {
+void DowntimeRenderer::output(
+    ListRenderer &l, const std::unique_ptr<const IDowntime> &downtime) const {
     switch (verbosity_) {
         case verbosity::none:
-            l.output(downtime._id);
+            l.output(downtime->id());
             break;
         case verbosity::medium: {
             SublistRenderer s(l);
-            s.output(downtime._id);
-            s.output(downtime._author);
-            s.output(downtime._comment);
+            s.output(downtime->id());
+            s.output(downtime->author());
+            s.output(downtime->comment());
             break;
         }
         case verbosity::full: {
             SublistRenderer s(l);
-            s.output(downtime._id);
-            s.output(downtime._author);
-            s.output(downtime._comment);
-            s.output(downtime._origin_is_rule);
-            s.output(downtime._entry_time);
-            s.output(downtime._start_time);
-            s.output(downtime._end_time);
-            s.output(downtime._fixed);
-            s.output(mk::ticks<std::chrono::seconds>(downtime._duration));
-            s.output(downtime._recurring);
-            s.output(downtime._pending);
+            s.output(downtime->id());
+            s.output(downtime->author());
+            s.output(downtime->comment());
+            s.output(downtime->origin_is_rule());
+            s.output(downtime->entry_time());
+            s.output(downtime->start_time());
+            s.output(downtime->end_time());
+            s.output(downtime->fixed());
+            s.output(mk::ticks<std::chrono::seconds>(downtime->duration()));
+            s.output(downtime->recurring());
+            s.output(downtime->pending());
             break;
         }
     }

@@ -13,6 +13,7 @@
 #include "NebComment.h"
 #include "NebContact.h"
 #include "NebContactGroup.h"
+#include "NebDowntime.h"
 #include "NebHost.h"
 #include "NebService.h"
 #include "livestatus/Interface.h"
@@ -133,12 +134,14 @@ std::vector<Command> NagiosCore::commands() const {
     return commands;
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes(const IHost &hst) const {
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+    const IHost &hst) const {
     return downtimes_for_object(static_cast<const host *>(hst.handle()),
                                 nullptr);
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes(const IService &svc) const {
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+    const IService &svc) const {
     const auto *s = static_cast<const service *>(svc.handle());
     return downtimes_for_object(s->host_ptr, s);
 }
@@ -328,24 +331,12 @@ bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     return _store.answerRequest(input, output);
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes_for_object(
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_for_object(
     const ::host *h, const ::service *s) const {
-    std::vector<DowntimeData> result;
+    std::vector<std::unique_ptr<const IDowntime>> result;
     for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == h && dt->_service == s) {
-            result.push_back(DowntimeData{
-                ._id = dt->_id,
-                ._author = dt->_author,
-                ._comment = dt->_comment,
-                ._origin_is_rule = false,
-                ._entry_time = dt->_entry_time,
-                ._start_time = dt->_start_time,
-                ._end_time = dt->_end_time,
-                ._fixed = dt->_fixed,
-                ._duration = dt->_duration,
-                ._recurring = 0,
-                ._pending = !dt->_is_active,
-            });
+            result.emplace_back(std::make_unique<NebDowntime>(*dt));
         }
     }
     return result;

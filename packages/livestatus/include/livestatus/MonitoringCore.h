@@ -28,21 +28,6 @@ struct Command {
     std::string _command_line;
 };
 
-// Livestatus view onto a downtime, regardless of the monitoring core
-struct DowntimeData {
-    unsigned long _id;
-    std::string _author;
-    std::string _comment;
-    bool _origin_is_rule;
-    std::chrono::system_clock::time_point _entry_time;
-    std::chrono::system_clock::time_point _start_time;
-    std::chrono::system_clock::time_point _end_time;
-    bool _fixed;
-    std::chrono::nanoseconds _duration;
-    int32_t _recurring;
-    bool _pending;
-};
-
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
@@ -68,10 +53,10 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
-    [[nodiscard]] virtual std::vector<DowntimeData> downtimes(
-        const IHost &) const = 0;
-    [[nodiscard]] virtual std::vector<DowntimeData> downtimes(
-        const IService &) const = 0;
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
+    downtimes(const IHost &) const = 0;
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
+    downtimes(const IService &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(

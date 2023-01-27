@@ -6,17 +6,21 @@
 #ifndef DowntimeRenderer_h
 #define DowntimeRenderer_h
 
+#include <memory>
 #include <string>
 
+#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#include "livestatus/MonitoringCore.h"
 class ListRenderer;
 
-class DowntimeRenderer : public ListColumnRenderer<DowntimeData> {
+class DowntimeRenderer
+    : public ListColumnRenderer<std::unique_ptr<const IDowntime>> {
 public:
     enum class verbosity { none, medium, full };
     explicit DowntimeRenderer(verbosity v) : verbosity_{v} {}
-    void output(ListRenderer &l, const DowntimeData &downtime) const override;
+    void output(
+        ListRenderer &l,
+        const std::unique_ptr<const IDowntime> &downtime) const override;
 
 private:
     verbosity verbosity_;
@@ -24,8 +28,8 @@ private:
 
 namespace column::detail {
 template <>
-inline std::string serialize(const DowntimeData &data) {
-    return std::to_string(data._id);
+inline std::string serialize(const std::unique_ptr<const IDowntime> &data) {
+    return std::to_string(data->id());
 }
 }  // namespace column::detail
 #endif  // DowntimeRenderer_h

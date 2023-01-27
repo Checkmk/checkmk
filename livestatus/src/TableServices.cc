@@ -523,18 +523,28 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<ListColumn<service, DowntimeData>>(
-        prefix + "downtimes",
-        "A list of the ids of all scheduled downtimes of this object", offsets,
-        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
-        [mc](const service &svc) { return mc->downtimes(NebService{svc}); }));
-    table->addColumn(std::make_unique<ListColumn<service, DowntimeData>>(
-        prefix + "downtimes_with_info",
-        "A list of the scheduled downtimes with id, author and comment",
-        offsets,
-        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
-        [mc](const service &svc) { return mc->downtimes(NebService{svc}); }));
-    table->addColumn(std::make_unique<ListColumn<service, DowntimeData>>(
+    table->addColumn(
+        std::make_unique<ListColumn<service, std::unique_ptr<const IDowntime>>>(
+            prefix + "downtimes",
+            "A list of the ids of all scheduled downtimes of this object",
+            offsets,
+            std::make_unique<DowntimeRenderer>(
+                DowntimeRenderer::verbosity::none),
+            [mc](const service &svc) {
+                return mc->downtimes(NebService{svc});
+            }));
+    table->addColumn(
+        std::make_unique<ListColumn<service, std::unique_ptr<const IDowntime>>>(
+            prefix + "downtimes_with_info",
+            "A list of the scheduled downtimes with id, author and comment",
+            offsets,
+            std::make_unique<DowntimeRenderer>(
+                DowntimeRenderer::verbosity::medium),
+            [mc](const service &svc) {
+                return mc->downtimes(NebService{svc});
+            }));
+    table->addColumn(std::make_unique<
+                     ListColumn<service, std::unique_ptr<const IDowntime>>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets,

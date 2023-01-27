@@ -55,6 +55,7 @@ class User;
 class IComment;
 class IContact;
 class IContactGroup;
+class IDowntime;
 class IHost;
 class IService;
 
@@ -98,11 +99,11 @@ class DummyMonitoringCore : public MonitoringCore {
     }
     [[nodiscard]] std::vector<Command> commands() const override { return {}; }
 
-    [[nodiscard]] std::vector<DowntimeData> downtimes(
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost & /*host*/) const override {
         return {};
     }
-    [[nodiscard]] std::vector<DowntimeData> downtimes(
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IService & /*service*/) const override {
         return {};
     }

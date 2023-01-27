@@ -36,6 +36,7 @@ class OutputBuffer;
 class IComment;
 class IContact;
 class IContactGroup;
+class IDowntime;
 class IHost;
 class IService;
 
@@ -92,8 +93,10 @@ public:
     Command find_command(const std::string &name) const override;
     std::vector<Command> commands() const override;
 
-    std::vector<DowntimeData> downtimes(const IHost &hst) const override;
-    std::vector<DowntimeData> downtimes(const IService &svc) const override;
+    std::vector<std::unique_ptr<const IDowntime>> downtimes(
+        const IHost &hst) const override;
+    std::vector<std::unique_ptr<const IDowntime>> downtimes(
+        const IService &svc) const override;
     std::vector<std::unique_ptr<const IComment>> comments(
         const IHost &hst) const override;
     std::vector<std::unique_ptr<const IComment>> comments(
@@ -153,8 +156,8 @@ private:
         return const_cast<NagiosCore *>(this);
     }
 
-    std::vector<DowntimeData> downtimes_for_object(const ::host *h,
-                                                   const ::service *s) const;
+    std::vector<std::unique_ptr<const IDowntime>> downtimes_for_object(
+        const ::host *h, const ::service *s) const;
 };
 
 Attributes CustomAttributes(const customvariablesmember *first,

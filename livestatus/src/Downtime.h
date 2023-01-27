@@ -13,7 +13,6 @@
 
 #include "nagios.h"
 
-// TODO(sp): Merge with DowntimeData
 class Downtime {
 public:
     unsigned long _id;

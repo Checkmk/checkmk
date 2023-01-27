@@ -51,6 +51,7 @@ public:
     void output(const std::string &value);
     void output(std::chrono::system_clock::time_point value);
     void output(CommentType value);
+    void output(RecurringKind value);
 
     void outputUnicodeChar(char32_t value);
 

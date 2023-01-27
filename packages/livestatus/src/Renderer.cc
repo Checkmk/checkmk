@@ -68,6 +68,10 @@ void Renderer::output(std::chrono::system_clock::time_point value) {
 
 void Renderer::output(CommentType value) { _os << static_cast<int32_t>(value); }
 
+void Renderer::output(RecurringKind value) {
+    _os << static_cast<int32_t>(value);
+}
+
 namespace {
 bool isBoringChar(unsigned char ch) {
     return 32 <= ch && ch <= 127 && ch != '"' && ch != '\\';

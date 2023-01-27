@@ -87,4 +87,40 @@ public:
     [[nodiscard]] virtual const IService *service() const = 0;
 };
 
+enum class RecurringKind : int32_t {
+    none = 0,
+    hourly = 1,
+    daily = 2,
+    weekly = 3,
+    biweekly = 4,
+    every_4weeks = 5,
+    nth_weekday = 6,
+    nth_weekday_from_end = 7,
+    day_of_month = 8,
+    every_5min = 999  // just for testing
+};
+
+class IDowntime {
+public:
+    virtual ~IDowntime() = default;
+    [[nodiscard]] virtual int32_t id() const = 0;
+    [[nodiscard]] virtual std::string author() const = 0;
+    [[nodiscard]] virtual std::string comment() const = 0;
+    [[nodiscard]] virtual bool origin_is_rule() const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point entry_time()
+        const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point start_time()
+        const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point end_time()
+        const = 0;
+
+    [[nodiscard]] virtual bool fixed() const = 0;
+    [[nodiscard]] virtual std::chrono::nanoseconds duration() const = 0;
+    [[nodiscard]] virtual RecurringKind recurring() const = 0;
+    [[nodiscard]] virtual bool pending() const = 0;
+
+    [[nodiscard]] virtual const IHost &host() const = 0;
+    [[nodiscard]] virtual const IService *service() const = 0;
+};
+
 #endif  // Interface_h

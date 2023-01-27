@@ -154,7 +154,7 @@ impl RegistrationConnectionConfig {
 pub struct PreConfiguredConnections {
     pub connections: HashMap<site_spec::SiteID, PreConfiguredConnection>,
     pub agent_labels: types::AgentLabels,
-    pub keep_vanished_connections: bool,
+    pub keep_existing_connections: bool,
 }
 
 impl JSONLoader for PreConfiguredConnections {}

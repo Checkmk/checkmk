@@ -385,7 +385,7 @@ fn _register_pre_configured(
         }
     }
 
-    if !pre_configured_connections.keep_vanished_connections {
+    if !pre_configured_connections.keep_existing_connections {
         delete_vanished_connections(
             registry,
             registry
@@ -819,7 +819,7 @@ mod tests {
         }
 
         fn pre_configured_connections(
-            keep_vanished_connections: bool,
+            keep_existing_connections: bool,
         ) -> config::PreConfiguredConnections {
             config::PreConfiguredConnections {
                 connections: std::collections::HashMap::from([
@@ -872,7 +872,7 @@ mod tests {
                     String::from("key"),
                     String::from("value"),
                 )]),
-                keep_vanished_connections,
+                keep_existing_connections,
             }
         }
 
@@ -931,7 +931,7 @@ mod tests {
         }
 
         fn test_registry_after_registration(
-            keep_vanished_connections: bool,
+            keep_existing_connections: bool,
             registry: &mut config::Registry,
         ) {
             // We reload to ensure that the changes were written to disk
@@ -941,7 +941,7 @@ mod tests {
                 vec!["server/pre-baked-pull-site", "server/pre-baked-pull-site-2"];
             let mut expected_push_site_ids =
                 vec!["server/pre-baked-push-site", "server/pre-baked-push-site-2"];
-            if keep_vanished_connections {
+            if keep_existing_connections {
                 expected_pull_site_ids.push("server/other-pull-site");
                 expected_push_site_ids.push("server/other-push-site");
             }
@@ -975,7 +975,7 @@ mod tests {
 
             assert_eq!(
                 registry.imported_pull_connections().count(),
-                match keep_vanished_connections {
+                match keep_existing_connections {
                     true => 1,
                     false => 0,
                 },
@@ -983,7 +983,7 @@ mod tests {
         }
 
         #[test]
-        fn test_keep_vanished_connections() {
+        fn test_keep_existing_connections() {
             let mut registry = registry();
             assert!(_register_pre_configured(
                 &pre_configured_connections(true),
@@ -1038,7 +1038,7 @@ mod tests {
                     String::from("key"),
                     String::from("value"),
                 )]),
-                keep_vanished_connections: true,
+                keep_existing_connections: true,
             };
             assert!(_register_pre_configured(
                 &pre_configured_connections,

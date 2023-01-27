@@ -74,7 +74,7 @@ class TestHosts:
             f"//*[contains(@href,'delete_host%3D{host.name}')]"
         ).click()
 
-        logged_in_page.main_area.get_text("Yes").click()
+        logged_in_page.main_area.get_text("Delete").click()
         logged_in_page.main_area.get_element_including_texts(
             element_id="changes_info", texts=["1", "change"]
         ).click()

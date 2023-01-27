@@ -125,13 +125,14 @@ def test_normal_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) 
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py")
+    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py", status=200)
     login.form["_username"] = username
     login.form["_password"] = password
     resp = login.form.submit("_login", index=1)
 
     assert "Invalid credentials." not in resp.text
 
+    wsgi_app.set_authorization(None)
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
     )

@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_lnx_sysctl import inventory_lnx_sysctl, parse_lnx_sysctl
 
 from .utils_inventory import sort_inventory_result
@@ -166,8 +169,10 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inv_oracle_systemparameter(  # type:ignore[no-untyped-def]
-    info, params, inventory_data
+def test_inv_oracle_systemparameter(
+    info: StringTable,
+    params: Mapping[str, Sequence[str]],
+    inventory_data: InventoryResult,
 ) -> None:
     assert sort_inventory_result(
         inventory_lnx_sysctl(params, parse_lnx_sysctl(info))

@@ -5,9 +5,12 @@
 
 import pytest
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import GetRateError, Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 # the following string tables should display 150% cpu usage
 # two cpus were working at 75% `stress-ng -c2 -l75`
@@ -172,6 +175,8 @@ LXC_CONTAINER_CPU_CGROUPV2_10 = [
 ]
 
 
+@pytest.mark.usefixtures("num_cpu")
+@pytest.mark.usefixtures("mocker")
 @pytest.mark.parametrize(
     "section_name, plugin_name, string_table_0, string_table_10, num_cpu, util",
     [
@@ -225,15 +230,13 @@ LXC_CONTAINER_CPU_CGROUPV2_10 = [
         ],
     ],
 )
-def test_container_cpu_cgroupv1(  # type:ignore[no-untyped-def]
+def test_container_cpu_cgroupv1(
     section_name: str,
     plugin_name: str,
-    string_table_0,
-    string_table_10,
-    num_cpu,
-    util,
-    mocker,
-    fix_register,
+    string_table_0: StringTable,
+    string_table_10: StringTable,
+    util: float,
+    fix_register: FixRegister,
 ) -> None:
     agent_section = fix_register.agent_sections[SectionName(section_name)]
     plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]

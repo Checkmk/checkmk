@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pytest_mock import MockerFixture
+
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.checkers.plugin_contexts import current_host, current_service
@@ -11,7 +13,7 @@ from cmk.base.api.agent_based import utils
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 
 
-def test_check_levels_predictive_default_render_func(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_check_levels_predictive_default_render_func(mocker: MockerFixture) -> None:
     mocker.patch(
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
     )

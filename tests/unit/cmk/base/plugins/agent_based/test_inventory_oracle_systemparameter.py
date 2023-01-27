@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_oracle_systemparameter import (
     inventory_oracle_systemparameter,
     parse_oracle_systemparameter,
@@ -81,8 +83,8 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_oracle_systemparameter(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_oracle_systemparameter(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_oracle_systemparameter(parse_oracle_systemparameter(string_table))

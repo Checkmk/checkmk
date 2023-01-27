@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # fmt: off
 
 
@@ -13,7 +18,7 @@ info = [
 ]
 
 
-discovery = {
+discovery: dict[str, object] = {
     "": [("Watchdog 1", {}), ("Watchdog 2", {})],
     "dew": [("Dew point 1", {}), ("Dew point 2", {})],
     "humidity": [("Humidity 1", {}), ("Humidity 2", {})],

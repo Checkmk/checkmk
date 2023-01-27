@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.watolib.host_attributes import (
     _clear_config_based_host_attributes,

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -236,7 +237,11 @@ STRING_TABLE_SECTION_CHECK_RESULT_5142 = [
     "_, section, check_result",
     STRING_TABLE_SECTION_CHECK_RESULT_5142 + STRING_TABLE_SECTION_CHECK_RESULT_5171,
 )
-def test_check_ciena_health_output(_, section: Section, check_result: list[Result]):
+def test_check_ciena_health_output(
+    _: object,
+    section: Section,
+    check_result: list[Result],
+) -> None:
     assert list(check_ciena_health(section)) == check_result
 
 
@@ -244,7 +249,11 @@ def test_check_ciena_health_output(_, section: Section, check_result: list[Resul
     "string_table, section, _",
     STRING_TABLE_SECTION_CHECK_RESULT_5142,
 )
-def test_parse_ciena_health_5142(string_table: list[StringTable], section: Section, _):
+def test_parse_ciena_health_5142(
+    string_table: list[StringTable],
+    section: Section,
+    _: object,
+) -> None:
     assert parse_ciena_health(_REFERENCES_5142, string_table) == section
 
 
@@ -252,5 +261,9 @@ def test_parse_ciena_health_5142(string_table: list[StringTable], section: Secti
     "string_table, section, _",
     STRING_TABLE_SECTION_CHECK_RESULT_5171,
 )
-def test_parse_ciena_health_5171(string_table: list[StringTable], section: Section, _):
+def test_parse_ciena_health_5171(
+    string_table: list[StringTable],
+    section: Section,
+    _: object,
+) -> None:
     assert parse_ciena_health(_REFERENCES_5171, string_table) == section

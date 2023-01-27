@@ -1,6 +1,5 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 # iLert Checkmk Native Plugin
-# -*- coding: utf-8; py-ident-offset: 4 -*-
 
 # Copyright (c) 2013-2020, iLert GmbH
 #       iLert <support@ilert.com>

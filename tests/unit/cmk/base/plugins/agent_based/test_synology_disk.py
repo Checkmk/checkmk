@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 from cmk.base.plugins.agent_based import synology_disks
@@ -24,7 +29,7 @@ def test_discovery() -> None:
 
 
 def make_section(
-    state: int = 1, temperature: float = 42.1, disk: str = "none", model="hello"
+    state: int = 1, temperature: float = 42.1, disk: str = "none", model: str = "hello"
 ) -> synology_disks.Section:
     return {disk: synology_disks.Disk(state=state, temperature=temperature, disk=disk, model=model)}
 
@@ -33,7 +38,7 @@ def make_section(
     "state, expected",
     [(1, State.OK), (2, State.OK), (3, State.WARN), (4, State.CRIT), (5, State.CRIT)],
 )
-def test_result_state(state, expected) -> None:
+def test_result_state(state: int, expected: State) -> None:
     section = make_section(state=state)
     item = list(section.keys())[0]
     result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))[-1]
@@ -52,14 +57,14 @@ def test_temperature_metric() -> None:
 
 
 @pytest.mark.parametrize("model, expected", [("mSSD", True), ("mNVME", True), ("HDD", None)])
-def test_discovery_detect_cached(model, expected) -> None:
+def test_discovery_detect_cached(model: str, expected: bool) -> None:
     section = make_section(model=model, state=3)
     service = list(synology_disks.discover_synology_disks(section))[0]
-    assert service.parameters.get("used_as_cache") == expected
+    assert service.parameters.get("used_as_cache") is expected
 
 
 @pytest.mark.parametrize("used_as_cache, expected", [(True, State.OK), (False, State.WARN)])
-def test_check_cached_is_ok(used_as_cache, expected) -> None:
+def test_check_cached_is_ok(used_as_cache: bool, expected: State) -> None:
     section = make_section(state=3)
     item = list(section.keys())[0]
     params = {"used_as_cache": used_as_cache}

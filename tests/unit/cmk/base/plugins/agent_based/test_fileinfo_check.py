@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 from copy import deepcopy
 
 import pytest
@@ -5,8 +11,13 @@ from freezegun import freeze_time
 
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.utils import fileinfo as fileinfo_utils
-from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
+from cmk.base.plugins.agent_based.utils.fileinfo import DiscoveryParams, Fileinfo, FileinfoItem
 
 pytestmark = pytest.mark.checks
 
@@ -106,7 +117,7 @@ def test_fileinfo_min_max_age_levels() -> None:
                 reftime=1563288717,
                 files={},
             ),
-            {"group_patterns": [("banana", ("/banana/*", ""))]},
+            [{"group_patterns": [("banana", ("/banana/*", ""))]}],
             [
                 Result(state=State.OK, notice="Include patterns: /banana/*"),
                 Result(state=State.OK, summary="Count: 0"),
@@ -118,7 +129,7 @@ def test_fileinfo_min_max_age_levels() -> None:
         (
             [],
             Fileinfo(),
-            {"group_patterns": []},
+            [{"group_patterns": []}],
             [
                 Result(state=State.UNKNOWN, summary="Missing reference timestamp"),
             ],
@@ -131,7 +142,7 @@ def test_fileinfo_min_max_age_levels() -> None:
                 reftime=1563288717,
                 files={},
             ),
-            {"group_patterns": [("banana", ("/banana/*", ""))]},
+            [{"group_patterns": [("banana", ("/banana/*", ""))]}],
             [
                 Result(state=State.OK, notice="Include patterns: /banana/*"),
                 Result(state=State.OK, summary="Count: 0"),
@@ -142,7 +153,12 @@ def test_fileinfo_min_max_age_levels() -> None:
         ),
     ],
 )
-def test_check_fileinfo_group_no_files(info, parsed, discovery_params, expected_result) -> None:
+def test_check_fileinfo_group_no_files(
+    info: StringTable,
+    parsed: Fileinfo,
+    discovery_params: DiscoveryParams,
+    expected_result: CheckResult,
+) -> None:
     """Test that the check returns an OK status when there are no files."""
     assert fileinfo_utils.parse_fileinfo(info) == parsed
     assert not list(fileinfo_plugin.discovery_fileinfo_groups(discovery_params, parsed))
@@ -214,7 +230,11 @@ def test_check_fileinfo_group_no_files(info, parsed, discovery_params, expected_
         ),
     ],
 )
-def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result) -> None:
+def test_check_fileinfo_group_no_matching_files(
+    info: StringTable,
+    parsed: Fileinfo,
+    expected_result: CheckResult,
+) -> None:
     """Test that the check returns an OK status if there are no matching files."""
 
     actual_parsed = fileinfo_utils.parse_fileinfo(info)
@@ -348,7 +368,11 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result) -
         ),
     ],
 )
-def test_check_fileinfo_group_patterns(info, group_pattern, expected_result) -> None:
+def test_check_fileinfo_group_patterns(
+    info: StringTable,
+    group_pattern: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     assert expected_result == list(
         fileinfo_plugin.check_fileinfo_groups(
             "banana",
@@ -385,7 +409,11 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result) -> 
         ),
     ],
 )
-def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_result) -> None:
+def test_check_fileinfo_group_patterns_host_extra_conf(
+    item: str,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     assert (
         list(
             fileinfo_plugin.check_fileinfo_groups(
@@ -507,7 +535,11 @@ def test_check_fileinfo_group_patterns_host_extra_conf(item, params, expected_re
         ),
     ],
 )
-def test_fileinfo_discovery(info, params, expected_result) -> None:
+def test_fileinfo_discovery(
+    info: StringTable,
+    params: DiscoveryParams,
+    expected_result: DiscoveryResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     discovery_result = fileinfo_utils.discovery_fileinfo(params, section)
@@ -718,7 +750,12 @@ def test_fileinfo_discovery(info, params, expected_result) -> None:
         ([], "fil1234", {}, [Result(state=State.UNKNOWN, summary="Missing reference timestamp")]),
     ],
 )
-def test_fileinfo_check(info, item, params, expected_result) -> None:
+def test_fileinfo_check(
+    info: StringTable,
+    item: str,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     check_result = fileinfo_plugin.check_fileinfo(item, params, section)
@@ -770,7 +807,11 @@ def test_fileinfo_check(info, item, params, expected_result) -> None:
         ),
     ],
 )
-def test_fileinfo_group_discovery(info, params, expected_result) -> None:
+def test_fileinfo_group_discovery(
+    info: StringTable,
+    params: DiscoveryParams,
+    expected_result: DiscoveryResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     discovery_result = fileinfo_utils.discovery_fileinfo_groups(params, section)
@@ -906,7 +947,12 @@ def test_fileinfo_group_discovery(info, params, expected_result) -> None:
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_fileinfo_groups_check(info, item, params, expected_result) -> None:
+def test_fileinfo_groups_check(
+    info: StringTable,
+    item: str,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
     section = fileinfo_utils.parse_fileinfo(info)
 
     check_result = fileinfo_plugin.check_fileinfo_groups(item, params, section)

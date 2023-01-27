@@ -40,6 +40,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from .interfaces import saveint
 
+DiscoveryParams = Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]]
+
 
 class FileinfoItem(NamedTuple):
     name: str
@@ -261,7 +263,7 @@ def fileinfo_groups_get_group_name(
 
 
 def discovery_fileinfo_common(
-    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
+    params: DiscoveryParams,
     section: Fileinfo,
     check_type: CheckType,
 ) -> DiscoveryResult:
@@ -285,14 +287,14 @@ def discovery_fileinfo_common(
 
 
 def discovery_fileinfo(
-    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
+    params: DiscoveryParams,
     section: Fileinfo,
 ) -> DiscoveryResult:
     yield from discovery_fileinfo_common(params, section, CheckType.SINGLE)
 
 
 def discovery_fileinfo_groups(
-    params: Iterable[Mapping[str, List[Tuple[str, Union[str, Tuple[str, str]]]]]],
+    params: DiscoveryParams,
     section: Fileinfo,
 ) -> DiscoveryResult:
     yield from discovery_fileinfo_common(params, section, CheckType.GROUP)

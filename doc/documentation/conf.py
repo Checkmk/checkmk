@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -21,7 +26,7 @@ sys.path.insert(0, os.path.join(DOC_ROOT, "..", ".."))
 # -- Project information -----------------------------------------------------
 
 project = "CheckMK"
-copyright = "2019, tribe29 GmbH"
+copyright = "2019, tribe29 GmbH"  # pylint: disable=redefined-builtin
 author = "tribe29 GmbH"
 
 

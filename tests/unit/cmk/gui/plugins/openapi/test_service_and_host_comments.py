@@ -1,9 +1,14 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 import random
 import time
+from collections.abc import Callable
 from functools import partial
 from typing import Any
-from collections.abc import Callable
 
 import pytest
 from faker import Faker

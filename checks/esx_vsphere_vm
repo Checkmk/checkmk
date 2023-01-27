@@ -15,7 +15,7 @@
 
 
 def parse_esx_vsphere_vm_mounted_devices(section):
-    data = section.get("config.hardware.device", [])
+    data = section.mounted_devices
     parsed = {}
     for device_data in " ".join(data).split("@@"):
         if "|" not in device_data:

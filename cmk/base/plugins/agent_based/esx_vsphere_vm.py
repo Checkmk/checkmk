@@ -27,6 +27,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
         grouped_values[line[0]] = line[1:]
 
     return ESXVm(
+        mounted_devices=grouped_values.get("config.hardware.device", []),
         snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
         status=_parse_vm_status(grouped_values),
         heartbeat=_parse_esx_vm_heartbeat_status(grouped_values),

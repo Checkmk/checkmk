@@ -84,6 +84,7 @@ class HeartBeat(BaseModel):
 
 
 class ESXVm(BaseModel):
+    mounted_devices: Sequence[str]
     snapshots: Sequence[str]
     status: ESXStatus | None
     power_state: str | None

@@ -234,6 +234,7 @@ def discover_enviromux_humidity(section: EnviromuxSection) -> DiscoveryResult:
 #   '----------------------------------------------------------------------'
 
 DETECT_ENVIROMUX = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.11")
+DETECT_ENVIROMUX5 = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.10")
 
 DETECT_ENVIROMUX_SEMS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.2")
 

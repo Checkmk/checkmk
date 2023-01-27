@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import ast
+import string
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, TypedDict
 
@@ -158,8 +159,19 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
 
 def view_inventory_join_macros(ds_name: str) -> Dictionary:
     def _validate_macro_of_datasource(macro: str, varprefix: str) -> None:
-        if not (macro.startswith("$") and macro.endswith("$")) or len(macro) <= 2:
-            raise MKUserError(varprefix, _("The macro must begin and end with '$'."))
+        allowed_macros_chars = string.ascii_uppercase + string.digits + "_"
+        if (
+            not (macro.startswith("$") and macro.endswith("$"))
+            or len(macro) <= 2
+            or any(c not in allowed_macros_chars for c in macro[1:-1])
+        ):
+            raise MKUserError(
+                varprefix,
+                _(
+                    "A macro must begin and end with '$' and is allowed to contain only"
+                    " ASCII upper letters, digits and underscores."
+                ),
+            )
 
     column_choices: list[tuple[str, str]] = []
     for hints in DISPLAY_HINTS:

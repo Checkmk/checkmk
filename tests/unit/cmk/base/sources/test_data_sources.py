@@ -101,6 +101,6 @@ def test_host_config_creates_passing_source_sources(
             config_cache=config_cache,
             simulation_mode=True,
             file_cache_options=FileCacheOptions(),
-            file_cache_max_age=MaxAge.none(),
+            file_cache_max_age=MaxAge.zero(),
         )
     ] == sources

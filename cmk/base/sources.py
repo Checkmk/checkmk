@@ -234,7 +234,7 @@ class _Builder:
                     fetcher_type=source.fetcher_type, ident=source.ident
                 ),
                 max_age=(
-                    MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
+                    MaxAge.zero() if self.force_snmp_cache_refresh else self.file_cache_max_age
                 ),
                 use_outdated=(
                     self.simulation_mode
@@ -284,7 +284,7 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=(
-                        MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
+                        MaxAge.zero() if self.force_snmp_cache_refresh else self.file_cache_max_age
                     ),
                     use_outdated=(
                         self.simulation_mode

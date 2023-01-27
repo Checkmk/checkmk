@@ -84,7 +84,7 @@ class TestFileCache:
         return request.param(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=False,
             simulation=True,
             use_only_cache=True,
@@ -213,7 +213,7 @@ class TestIPMIFetcher:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -233,7 +233,7 @@ class TestIPMIFetcher:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -552,7 +552,7 @@ class TestSNMPFetcherFetch:
         file_cache = SNMPFileCache(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -601,7 +601,7 @@ class TestSNMPFetcherFetch:
         file_cache = SNMPFileCache(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -625,7 +625,7 @@ class TestSNMPFetcherFetch:
         file_cache = SNMPFileCache(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -662,7 +662,7 @@ class TestSNMPFetcherFetch:
         file_cache = SNMPFileCache(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -685,7 +685,7 @@ class TestSNMPFetcherFetch:
         file_cache = SNMPFileCache(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -708,7 +708,7 @@ class TestSNMPFetcherFetch:
         file_cache = SNMPFileCache(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -730,7 +730,7 @@ class TestSNMPFetcherFetch:
         file_cache = SNMPFileCache(
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -775,7 +775,7 @@ class TestSNMPFetcherFetchCache:
         file_cache = StubFileCache[SNMPRawData](
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -845,7 +845,7 @@ class TestTCPFetcher:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -869,7 +869,7 @@ class TestTCPFetcher:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -893,7 +893,7 @@ class TestTCPFetcher:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=True,
             use_only_cache=False,
@@ -1038,7 +1038,7 @@ class TestFetcherCaching:
         file_cache = StubFileCache[AgentRawData](
             fetcher.host_name,
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,
@@ -1054,7 +1054,7 @@ class TestFetcherCaching:
         file_cache = StubFileCache[AgentRawData](
             fetcher.host_name,
             path_template=os.devnull,
-            max_age=MaxAge.none(),
+            max_age=MaxAge.zero(),
             use_outdated=True,
             simulation=False,
             use_only_cache=False,

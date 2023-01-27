@@ -186,7 +186,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             file_cache_options=FileCacheOptions(),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
-            file_cache_max_age=MaxAge.none(),
+            file_cache_max_age=MaxAge.zero(),
         )
     ]
 

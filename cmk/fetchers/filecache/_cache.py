@@ -88,7 +88,7 @@ class MaxAge(NamedTuple):
     inventory: int
 
     @classmethod
-    def none(cls):
+    def zero(cls):
         return cls(0, 0, 0)
 
     def get(self, mode: Mode, *, default: int = 0) -> int:

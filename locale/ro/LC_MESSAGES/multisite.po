@@ -3530,12 +3530,20 @@ msgstr ""
 msgid "Added new BI pack %s"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Added or edited connection %s"
+msgstr "Conexiuni Active"
+
 #, python-format
 msgid "Added the %s '%s'"
 msgstr ""
 
 msgid "Added to stack"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Added user %s"
+msgstr "Adaugă Contoar"
 
 #, python-format
 msgid "Added: %s"
@@ -16224,6 +16232,10 @@ msgstr ""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Edited user profile for user %s"
+msgstr "Editeaza regulile de loguri"
 
 #, fuzzy
 msgid "Edition"
@@ -64128,10 +64140,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Edit site"
-#~ msgstr "Editeaza regulile de loguri"
-
-#, fuzzy
-#~ msgid "Edit the user profile"
 #~ msgstr "Editeaza regulile de loguri"
 
 #, fuzzy

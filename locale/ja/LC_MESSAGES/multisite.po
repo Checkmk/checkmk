@@ -3568,12 +3568,20 @@ msgstr ""
 msgid "Added new BI pack %s"
 msgstr "新しいBIパック%sを追加しました"
 
+#, fuzzy, python-format
+msgid "Added or edited connection %s"
+msgstr "LDAP接続を削除しました %s"
+
 #, python-format
 msgid "Added the %s '%s'"
 msgstr "%s '%s' を追加しました"
 
 msgid "Added to stack"
 msgstr "スタックに追加"
+
+#, fuzzy, python-format
+msgid "Added user %s"
+msgstr "ユーザーを追加する"
 
 #, python-format
 msgid "Added: %s"
@@ -16094,6 +16102,10 @@ msgstr "ルールセット内 \"%s\" フォルダー内 \"%s\"で編集された
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "%s '%s' を編集しました"
+
+#, fuzzy, python-format
+msgid "Edited user profile for user %s"
+msgstr "ユーザー %sを編集"
 
 msgid "Edition"
 msgstr "版"

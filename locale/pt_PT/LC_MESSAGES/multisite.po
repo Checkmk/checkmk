@@ -3694,12 +3694,20 @@ msgstr ""
 msgid "Added new BI pack %s"
 msgstr "Adicionado novo pacote BI %s"
 
+#, fuzzy, python-format
+msgid "Added or edited connection %s"
+msgstr "Ligação LDAP eliminada %s"
+
 #, python-format
 msgid "Added the %s '%s'"
 msgstr "Adicionadas as %s \"%s\"."
 
 msgid "Added to stack"
 msgstr "Adicionado à pilha"
+
+#, fuzzy, python-format
+msgid "Added user %s"
+msgstr "Adicionar usuário"
 
 #, python-format
 msgid "Added: %s"
@@ -16812,6 +16820,10 @@ msgstr "Regra editada no conjunto de regras \"%s\" na pasta \"%s\"."
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "Editado o %s \"%s\"."
+
+#, fuzzy, python-format
+msgid "Edited user profile for user %s"
+msgstr "Editar usuário %s"
 
 msgid "Edition"
 msgstr "Edição"

@@ -3719,12 +3719,20 @@ msgstr ""
 msgid "Added new BI pack %s"
 msgstr "Nieuw BI-pakket %s toegevoegd"
 
+#, fuzzy, python-format
+msgid "Added or edited connection %s"
+msgstr "LDAP-verbinding %s verwijderd"
+
 #, python-format
 msgid "Added the %s '%s'"
 msgstr "Toegevoegd de %s '%s'"
 
 msgid "Added to stack"
 msgstr "Toegevoegd aan stapel"
+
+#, fuzzy, python-format
+msgid "Added user %s"
+msgstr "Gebruiker toevoegen"
 
 #, python-format
 msgid "Added: %s"
@@ -16717,6 +16725,10 @@ msgstr "Bewerkte regel in regelset \"%s\" in map \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "Bewerkte de %s '%s'"
+
+#, fuzzy, python-format
+msgid "Edited user profile for user %s"
+msgstr "Bewerk gebruiker %s"
 
 msgid "Edition"
 msgstr "Editie"

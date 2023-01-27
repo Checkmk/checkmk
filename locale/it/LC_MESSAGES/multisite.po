@@ -3741,12 +3741,20 @@ msgstr ""
 msgid "Added new BI pack %s"
 msgstr "Aggiunto nuovo pacchetto BI %s"
 
+#, fuzzy, python-format
+msgid "Added or edited connection %s"
+msgstr "Connessione LDAP cancellata %s"
+
 #, python-format
 msgid "Added the %s '%s'"
 msgstr "Aggiunto il %s '%s'"
 
 msgid "Added to stack"
 msgstr "Aggiunto alla pila"
+
+#, fuzzy, python-format
+msgid "Added user %s"
+msgstr "Aggiungi utente"
 
 #, python-format
 msgid "Added: %s"
@@ -16977,6 +16985,10 @@ msgstr "Regola modificata nel ruleset \"%s\" nella cartella \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "Modificato il %s '%s'"
+
+#, fuzzy, python-format
+msgid "Edited user profile for user %s"
+msgstr "Modifica utente %s"
 
 msgid "Edition"
 msgstr "Edizione"

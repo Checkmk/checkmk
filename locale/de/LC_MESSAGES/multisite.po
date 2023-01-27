@@ -3725,12 +3725,20 @@ msgstr ""
 msgid "Added new BI pack %s"
 msgstr "Neues BI-Paket %s hinzugefügt"
 
+#, fuzzy, python-format
+msgid "Added or edited connection %s"
+msgstr "LDAP-Verbindung %s gelöscht"
+
 #, python-format
 msgid "Added the %s '%s'"
 msgstr "%s '%s' hinzugefügt"
 
 msgid "Added to stack"
 msgstr "Dem Stack hinzugefügt"
+
+#, fuzzy, python-format
+msgid "Added user %s"
+msgstr "Benutzer hinzufügen"
 
 #, python-format
 msgid "Added: %s"
@@ -16746,6 +16754,10 @@ msgstr "Regel in Regelsatz \"%s\" in Ordner \"%s\" editiert"
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "%s '%s' editiert"
+
+#, fuzzy, python-format
+msgid "Edited user profile for user %s"
+msgstr "Bearbeite Benutzerrolle %s"
 
 msgid "Edition"
 msgstr "Edition"
@@ -74056,9 +74068,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Edit the user profile"
 #~ msgstr "Bearbeite Benutzerprofil"
-
-#~ msgid "Edit user role %s"
-#~ msgstr "Bearbeite Benutzerrolle %s"
 
 #~ msgid "Edit your personal settings, change your password"
 #~ msgstr "Bearbeite Persönliche Einstellungen/Passwort"

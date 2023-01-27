@@ -33,6 +33,10 @@ configure_make(
         "//conditions:default": ["@openssl"],
     }),
     out_binaries=["xmlsec1"],
+    out_shared_libs=[
+        "libxmlsec1.so",
+        "libxmlsec1.so.1",
+    ],
     targets=[
         "install",
     ],

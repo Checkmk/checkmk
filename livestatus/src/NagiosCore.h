@@ -155,9 +155,6 @@ private:
 
     std::vector<DowntimeData> downtimes_for_object(const ::host *h,
                                                    const ::service *s) const;
-
-    std::vector<std::unique_ptr<const IComment>> comments_for_object(
-        const ::host *h, const ::service *s) const;
 };
 
 Attributes CustomAttributes(const customvariablesmember *first,

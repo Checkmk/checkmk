@@ -145,14 +145,28 @@ std::vector<DowntimeData> NagiosCore::downtimes(const IService &svc) const {
 
 std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
     const IHost &hst) const {
-    return comments_for_object(static_cast<const host *>(hst.handle()),
-                               nullptr);
+    // TODO(sp): Do we need a mutex here?
+    std::vector<std::unique_ptr<const IComment>> result;
+    for (const auto &[id, co] : _comments) {
+        if (co->_host == static_cast<const host *>(hst.handle()) &&
+            co->_service == nullptr) {
+            result.emplace_back(std::make_unique<NebComment>(*co));
+        }
+    }
+    return result;
 }
 
 std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
     const IService &svc) const {
-    const auto *s = static_cast<const service *>(svc.handle());
-    return comments_for_object(s->host_ptr, s);
+    // TODO(sp): Do we need a mutex here?
+    std::vector<std::unique_ptr<const IComment>> result;
+    for (const auto &[id, co] : _comments) {
+        if (co->_host == static_cast<const service *>(svc.handle())->host_ptr &&
+            co->_service == static_cast<const service *>(svc.handle())) {
+            result.emplace_back(std::make_unique<NebComment>(*co));
+        }
+    }
+    return result;
 }
 
 void NagiosCore::forEachCommentUntil(
@@ -332,17 +346,6 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
                 ._recurring = 0,
                 ._pending = dt->_type != 0,
             });
-        }
-    }
-    return result;
-}
-
-std::vector<std::unique_ptr<const IComment>> NagiosCore::comments_for_object(
-    const ::host *h, const ::service *s) const {
-    std::vector<std::unique_ptr<const IComment>> result;
-    for (const auto &[id, co] : _comments) {
-        if (co->_host == h && co->_service == s) {
-            result.emplace_back(std::make_unique<NebComment>(*co));
         }
     }
     return result;

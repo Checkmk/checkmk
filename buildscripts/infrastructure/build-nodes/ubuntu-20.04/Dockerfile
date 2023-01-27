@@ -158,6 +158,7 @@ RUN /opt/install-musl-tools.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-patchelf.sh
+RUN /opt/install-packer.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

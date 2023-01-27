@@ -536,7 +536,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                 make_confirm_delete_link(
                     url=makeactionuri(request, transactions, [("delete", "1")]),
                     title=_("Delete host"),
-                    identifier=host.name(),
+                    suffix=host.name(),
                 )
             ),
         )

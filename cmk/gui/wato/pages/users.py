@@ -380,8 +380,8 @@ class ModeUsers(WatoMode):
                 delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "users"), ("_delete", uid)]),
                     title=_("Delete user"),
+                    suffix=(user_alias := user_spec.get("alias", "")),
                     message=_("ID: %s") % uid,
-                    identifier=(user_alias := user_spec.get("alias", "")),
                 )
                 html.icon_button(delete_url, _("Delete"), "delete")
 

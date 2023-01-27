@@ -144,8 +144,8 @@ class ModeRoles(WatoMode):
                 delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "roles"), ("_delete", role.name)]),
                     title=_("Delete role #%d") % nr,
+                    suffix=role.alias,
                     message=("Name: %s") % role.name,
-                    identifier=role.alias,
                 )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(clone_url, _("Clone"), "clone")

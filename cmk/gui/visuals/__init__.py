@@ -791,8 +791,8 @@ def page_list(  # pylint: disable=too-many-branches
                         make_confirm_delete_link(
                             url=makeactionuri(request, transactions, add_vars),
                             title=_("Delete %s") % visual_type.title,
+                            suffix=str(visual["title"]),
                             message=confirm_message,
-                            identifier=str(visual["title"]),
                         ),
                         _("Delete!"),
                         "delete",

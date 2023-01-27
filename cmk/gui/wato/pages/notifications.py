@@ -453,7 +453,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 ]
             ),
             title=_("Delete notification rule #%d") % nr,
-            identifier=rule.get("description", ""),
+            suffix=rule.get("description", ""),
         )
         drag_url = make_action_link(
             [

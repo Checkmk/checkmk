@@ -405,8 +405,8 @@ class ModeTags(ABCTagMode):
         delete_url = make_confirm_delete_link(
             url=make_action_link([("mode", "tags"), ("_delete", tag_group.id)]),
             title=_("Delete tag group"),
+            suffix=tag_group.title,
             message=_("ID: %s") % tag_group.id,
-            identifier=tag_group.title,
         )
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
@@ -453,8 +453,8 @@ class ModeTags(ABCTagMode):
         delete_url = make_confirm_delete_link(
             url=make_action_link([("mode", "tags"), ("_del_aux", aux_tag.id)]),
             title=_("Delete auxiliary tag"),
+            suffix=aux_tag.title,
             message=_("ID: %s") % aux_tag.id,
-            identifier=aux_tag.title,
         )
         html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
         html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")

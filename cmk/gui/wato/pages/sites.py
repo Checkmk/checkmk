@@ -783,8 +783,8 @@ class ModeDistributedMonitoring(WatoMode):
             delete_url = make_confirm_delete_link(
                 url=makeactionuri(request, transactions, [("_delete", site_id)]),
                 title=_("Delete connection to site"),
+                suffix=site.get("alias", ""),
                 message=_("ID: %s") % site_id,
-                identifier=site.get("alias", ""),
             )
             html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -858,8 +858,8 @@ class ModeDistributedMonitoring(WatoMode):
                 logout_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "sites"), ("_logout", site_id)]),
                     title=_("Log out of site"),
+                    suffix=site["alias"],
                     message=_("ID: %s") % site_id,
-                    identifier=site["alias"],
                     confirm_button=_("Log out"),
                 )
                 html.icon_button(logout_url, _("Logout"), "autherr")

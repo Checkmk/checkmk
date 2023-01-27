@@ -122,8 +122,8 @@ def render_connections_page(
             delete_url = make_confirm_delete_link(
                 url=make_action_link([("mode", config_mode_path), ("_delete", index)]),
                 title=_("Delete connection #%d") % index,
+                suffix=connection.get("name", connection["id"]),
                 message=_("ID: %s") % connection["id"],
-                identifier=connection.get("name", connection["id"]),
             )
             drag_url = make_action_link([("mode", config_mode_path), ("_move", index)])
             clone_url = folder_preserving_link(

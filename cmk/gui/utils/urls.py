@@ -278,14 +278,14 @@ def make_confirm_link(
     *,
     url: str,
     title: str,
+    suffix: str | None = None,
     message: str | None = None,
-    identifier: str | None = None,
     confirm_button: str | None = None,
     cancel_button: str | None = None,
 ) -> str:
     return _make_customized_confirm_link(
         url=url,
-        title=_get_confirm_link_title(title, identifier),
+        title=_get_confirm_link_title(title, suffix),
         confirm_button=confirm_button if confirm_button else _("Yes"),
         cancel_button=cancel_button if cancel_button else _("No"),
         message=message,
@@ -296,15 +296,15 @@ def make_confirm_delete_link(
     *,
     url: str,
     title: str,
+    suffix: str | None = None,
     message: str | None = None,
-    identifier: str | None = None,
     confirm_button: str | None = None,
     cancel_button: str | None = None,
     warning: bool = False,
 ) -> str:
     return _make_customized_confirm_link(
         url=url,
-        title=_get_confirm_link_title(title, identifier),
+        title=_get_confirm_link_title(title, suffix),
         confirm_button=confirm_button if confirm_button else _("Delete"),
         cancel_button=cancel_button if cancel_button else _("Cancel"),
         message=message,
@@ -344,10 +344,10 @@ def _make_customized_confirm_link(
 
 def _get_confirm_link_title(
     title: str,
-    identifier: str | None = None,
+    suffix: str | None = None,
 ) -> str:
-    if title and identifier:
-        return title + f" - {identifier}?"
+    if title and suffix:
+        return title + f" - {suffix}?"
     return title + "?"
 
 

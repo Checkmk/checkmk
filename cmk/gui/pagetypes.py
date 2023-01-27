@@ -643,8 +643,8 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return make_confirm_delete_link(
             url=makeactionuri(request, transactions, add_vars),
             title=_("Delete %s") % self.phrase("title").lower(),
+            suffix=self.title(),
             message=confirm_message,
-            identifier=self.title(),
         )
 
     @classmethod

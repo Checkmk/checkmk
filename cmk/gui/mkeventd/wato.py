@@ -1895,10 +1895,10 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     delete_url = make_confirm_delete_link(
                         url=make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)]),
                         title=_("Delete rule pack #%d") % nr,
+                        suffix=rule_pack["title"],
                         message=_("ID: %s") % id_
                         + "<br>"
                         + _("Used rules: %d") % len(rule_pack["rules"]),
-                        identifier=rule_pack["title"],
                     )
                     html.icon_button(delete_url, _("Delete this rule pack"), "delete")
                 else:
@@ -2300,7 +2300,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ),
                     title=_("Delete rule #%d") % nr,
                     message=_("ID: %s") % rule["id"],
-                    identifier=rule.get("description", ""),
+                    suffix=rule.get("description", ""),
                 )
                 drag_url = make_action_link(
                     [("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_move", nr)]
@@ -3190,7 +3190,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                         url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
                         title=_("Delete MIB file"),
                         message=_("Filename: %s") % str(filename),
-                        identifier=mib.name,
+                        suffix=mib.name,
                     )
                     html.icon_button(delete_url, _("Delete this MIB"), "delete")
 

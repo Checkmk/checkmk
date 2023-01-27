@@ -240,8 +240,8 @@ class JobRenderer:
                         request, transactions, [(ActionHandler.stop_job_var, job_id)]
                     ),
                     title=_("Stop job"),
+                    suffix=job_status.title,
                     message=_("ID: %s") % job_id,
-                    identifier=job_status.title,
                     confirm_button=_("Stop"),
                     cancel_button=_("Cancel"),
                 ),
@@ -255,8 +255,8 @@ class JobRenderer:
                         request, transactions, [(ActionHandler.delete_job_var, job_id)]
                     ),
                     title=_("Delete job"),
+                    suffix=job_status.title,
                     message=_("ID: %s") % job_id,
-                    identifier=job_status.title,
                 ),
                 _("Delete this job"),
                 "delete",

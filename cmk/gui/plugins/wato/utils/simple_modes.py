@@ -314,8 +314,8 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
                 ]
             ),
             title=self._delete_confirm_title(nr),
+            suffix=entry["title"],
             message=confirm_delete,
-            identifier=entry["title"],
         )
         html.icon_button(
             delete_url, _("Delete this %s") % self._mode_type.name_singular(), "delete"

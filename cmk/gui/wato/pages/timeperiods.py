@@ -360,8 +360,8 @@ class ModeTimeperiods(WatoMode):
                 ]
             ),
             title=_("Delete time period"),
+            suffix=alias,
             message=_("Name: %s") % name,
-            identifier=alias,
         )
 
         html.icon_button(edit_url, _("Properties"), "edit")

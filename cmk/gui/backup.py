@@ -564,8 +564,8 @@ class PageBackup:
                         [("mode", "backup"), ("_action", "delete"), ("_job", job.ident)],
                     ),
                     title=_("Delete job #%d") % nr,
+                    suffix=job.title,
                     message=_("ID: %s") % job.ident,
-                    identifier=job.title,
                 )
                 edit_url = makeuri_contextless(
                     request,
@@ -1499,7 +1499,7 @@ class Target:
                     ),
                     title=_("Delete backup"),
                     message=_("From: %s") % from_info,
-                    identifier=backup_ident,
+                    suffix=backup_ident,
                 )
 
                 html.icon_button(delete_url, _("Delete this backup"), "delete")
@@ -1509,8 +1509,8 @@ class Target:
                         request, transactions, [("_action", "start"), ("_backup", backup_ident)]
                     ),
                     title=_("Start restore of backup"),
+                    suffix=backup_ident,
                     message=_("From: %s") % from_info,
-                    identifier=backup_ident,
                     confirm_button=_("Start"),
                     cancel_button=_("Cancel"),
                 )
@@ -1594,8 +1594,8 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
                         [("mode", "backup_targets"), ("target", target.ident)],
                     ),
                     title=_("Delete target #%d") % nr,
+                    suffix=target.title,
                     message=_("ID: %s") % target.ident,
-                    identifier=target.title,
                 )
                 edit_url = makeuri_contextless(
                     request,

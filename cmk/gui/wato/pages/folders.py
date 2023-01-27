@@ -798,8 +798,8 @@ class ModeFolder(WatoMode):
             make_confirm_delete_link(
                 url=make_action_link([("mode", "folder"), ("_delete_folder", subfolder.name())]),
                 title=_("Delete folder"),
+                suffix=subfolder.title(),
                 message=confirm_message,
-                identifier=subfolder.title(),
             ),
             _("Delete this folder"),
             "delete",
@@ -1085,7 +1085,7 @@ class ModeFolder(WatoMode):
                 delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "folder"), ("_delete_host", host.name())]),
                     title=_("Delete host"),
-                    identifier=host.name(),
+                    suffix=host.name(),
                 )
                 html.icon_button(delete_url, _("Delete this host"), "delete")
 

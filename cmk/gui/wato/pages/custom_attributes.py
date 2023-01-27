@@ -494,8 +494,8 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
                 delete_url = make_confirm_delete_link(
                     url=makeactionuri(request, transactions, [("_delete", custom_attr["name"])]),
                     title=_("Delete custom attribute #%d") % nr,
+                    suffix=custom_attr["title"],
                     message=_("Name: %s") % custom_attr["name"],
-                    identifier=custom_attr["title"],
                 )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(delete_url, _("Delete"), "delete")

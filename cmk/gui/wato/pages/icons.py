@@ -163,8 +163,8 @@ class ModeIcons(WatoMode):
                 delete_url = make_confirm_delete_link(
                     url=make_action_link([("mode", "icons"), ("_delete", icon_name)]),
                     title=_("Delete icon #%d") % nr,
+                    suffix=icon_name,
                     message=_("Category: %s") % category,
-                    identifier=icon_name,
                 )
                 html.icon_button(delete_url, _("Delete this Icon"), "delete")
 

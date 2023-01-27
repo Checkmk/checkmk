@@ -203,8 +203,8 @@ class PageKeyManagement:
                     delete_url = make_confirm_delete_link(
                         url=makeactionuri(request, transactions, [("_delete", key_id)]),
                         title=self._delete_confirm_title(nr),
+                        suffix=key.alias,
                         message=message,
-                        identifier=key.alias,
                         warning=True,
                     )
                     html.icon_button(delete_url, _("Delete this key"), "delete")

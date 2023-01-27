@@ -1212,8 +1212,8 @@ class ModeEditRuleset(WatoMode):
             url=make_confirm_delete_link(
                 url=self._action_url("delete", folder, rule.id),
                 title=_("Delete rule #%d") % rulenr,
+                suffix=rule.rule_options.description,
                 message=_("Folder: %s") % folder.alias_path(),
-                identifier=rule.rule_options.description,
             ),
             title=_("Delete this rule"),
             icon="delete",

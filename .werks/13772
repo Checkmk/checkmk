@@ -16,3 +16,8 @@ private key. One rule has to be created per project.
 Monitored GCP services
 
 - Google Cloud Storage (GCS)
+- Cloud Load Balancing
+- Google Compute Engine (GCE)
+- Cloud SQL
+- Filestore
+- Cloud Costs

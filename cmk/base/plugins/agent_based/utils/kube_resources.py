@@ -152,7 +152,7 @@ def cpu_render_func(x: float) -> str:
     return f"{x:0.3f}"
 
 
-def _get_lower_levels(
+def _get_request_lower_levels(
     params: Params, requirement_type: RequirementType
 ) -> tuple[float, float] | None:
     request_lower = params.get("request_lower", "no_levels")
@@ -183,7 +183,7 @@ def check_with_utilization(
     result, metric = check_levels(
         utilization,
         levels_upper=param[1] if param != "no_levels" else None,
-        levels_lower=_get_lower_levels(params, requirement_type),
+        levels_lower=_get_request_lower_levels(params, requirement_type),
         metric_name=metric_name,
         render_func=render.percent,
         boundaries=(0.0, None),

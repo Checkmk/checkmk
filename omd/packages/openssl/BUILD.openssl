@@ -17,6 +17,7 @@ configure_make(
          "enable-md2",
          "no-tests",
     ],
+    args=["-j6"],
     targets=[
         "build_programs",
         "install_sw",

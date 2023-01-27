@@ -28,6 +28,7 @@ configure_make(
         "--disable-mans",
         "--disable-docs",
     ],
+    args=["-j6"],
     deps=select({
         ":no_own_openssl": [],
         "//conditions:default": ["@openssl"],

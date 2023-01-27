@@ -6,7 +6,7 @@
 import enum
 from typing import Literal, Tuple, TypedDict, Union
 
-from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
+from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.kube import NodeCount, ReadyCount
 
@@ -79,10 +79,11 @@ def _check_levels(
     )
     assert isinstance(result, Result)
     levels = result.summary.removeprefix(str(ready_count.ready))
-    yield Result(
-        state=result.state,
-        summary=f"{name.pretty()} nodes {ready_count.ready}/{ready_count.total}{levels}",
-    )
+    if ready_count.total != 0:
+        summary = f"{name.pretty()} nodes {ready_count.ready}/{ready_count.total}{levels}"
+    else:
+        summary = f"No {name.pretty().lower()} nodes found{levels}"
+    yield Result(state=result.state, summary=summary)
     yield metric
     yield Metric(f"kube_node_count_{name}_not_ready", ready_count.not_ready)
     yield Metric(f"kube_node_count_{name}_total", ready_count.total)
@@ -90,10 +91,7 @@ def _check_levels(
 
 def check(params: KubeNodeCountVSResult, section: NodeCount) -> CheckResult:
     yield from _check_levels(section.worker, NodeType.worker, params)
-    if section.control_plane.total == 0:
-        yield Result(state=State.OK, summary="No control plane nodes found")
-    else:
-        yield from _check_levels(section.control_plane, NodeType.control_plane, params)
+    yield from _check_levels(section.control_plane, NodeType.control_plane, params)
 
 
 register.agent_section(

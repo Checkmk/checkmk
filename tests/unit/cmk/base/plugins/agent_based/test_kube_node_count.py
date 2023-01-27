@@ -5,10 +5,12 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.kube_node_count import (
+    _check_levels,
     check,
     check_default_parameters,
     KubeNodeCountVSResult,
     NodeCount,
+    NodeType,
     ReadyCount,
 )
 
@@ -24,7 +26,7 @@ def test_check_kube_node_count_default_params() -> None:
         )
     )
     assert result == [
-        Result(state=State.OK, summary="Worker nodes 0/0"),
+        Result(state=State.OK, summary="No worker nodes found"),
         Metric("kube_node_count_worker_ready", 0.0, boundaries=(0.0, None)),
         Metric("kube_node_count_worker_not_ready", 0.0),
         Metric("kube_node_count_worker_total", 0.0),
@@ -54,6 +56,9 @@ def test_check_kube_node_count_default_params_cp_zero() -> None:
         Metric("kube_node_count_worker_not_ready", 2.0),
         Metric("kube_node_count_worker_total", 12.0),
         Result(state=State.OK, summary="No control plane nodes found"),
+        Metric("kube_node_count_control_plane_ready", 0.0, boundaries=(0.0, None)),
+        Metric("kube_node_count_control_plane_not_ready", 0.0),
+        Metric("kube_node_count_control_plane_total", 0.0),
     ]
 
 
@@ -78,4 +83,23 @@ def test_check_kube_node_count_params() -> None:
         Metric("kube_node_count_worker_not_ready", 2.0),
         Metric("kube_node_count_worker_total", 12.0),
         Result(state=State.OK, summary="No control plane nodes found"),
+        Metric("kube_node_count_control_plane_ready", 0.0, boundaries=(0.0, None)),
+        Metric("kube_node_count_control_plane_not_ready", 0.0),
+        Metric("kube_node_count_control_plane_total", 0.0),
     ]
+
+
+def test__check_levels_zero_control_plane_nodes_with_levels() -> None:
+    results = list(
+        _check_levels(
+            ReadyCount(ready=0, not_ready=0),
+            NodeType.control_plane,
+            KubeNodeCountVSResult(
+                worker_levels_lower="no_levels",
+                worker_levels_upper="no_levels",
+                control_plane_levels_lower=("levels", (1, 1)),
+                control_plane_levels_upper="no_levels",
+            ),
+        )
+    )
+    assert any(isinstance(r, Result) and r.state == State.CRIT for r in results)

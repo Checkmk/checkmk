@@ -33,7 +33,6 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
     with freeze_time(FROZEN_NOW):
         return CertificateWithPrivateKey.generate_self_signed(
             common_name="TestGenerateSelfSigned",
-            organization="Checkmk-Unit-Tests",
             expiry=relativedelta(hours=2),
             key_size=1024,
         )
@@ -45,7 +44,11 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
         == self_signed_cert.certificate.public_key
         == self_signed_cert.private_key.public_key
     )
+
     self_signed_cert.certificate.verify_is_signed_by(self_signed_cert.certificate)
+
+    assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
+    assert "Checkmk Site" in self_signed_cert.certificate.organization_name
 
 
 @pytest.mark.parametrize(

@@ -45,6 +45,7 @@ from dateutil.relativedelta import relativedelta
 
 from cmk.utils.crypto import HashAlgorithm, Password
 from cmk.utils.exceptions import MKException
+from cmk.utils.site import omd_site
 
 
 class InvalidSignatureError(MKException):
@@ -65,7 +66,7 @@ class CertificateWithPrivateKey(NamedTuple):
     def generate_self_signed(
         cls,
         common_name: str,
-        organization: str,
+        organization: str | None = None,  # defaults to "Checkmk Site <SITE>"
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
     ) -> CertificateWithPrivateKey:
@@ -76,7 +77,7 @@ class CertificateWithPrivateKey(NamedTuple):
             private_key.public_key,
             private_key,
             common_name,
-            organization,
+            organization or f"Checkmk Site {omd_site()}",
             expiry,
             HashAlgorithm.Sha512,
         )
@@ -258,6 +259,14 @@ class Certificate:
         assert isinstance(pk, rsa.RSAPublicKey)
         return RsaPublicKey(pk)
 
+    @property
+    def common_name(self) -> str:
+        return self._get_name_attribute(x509.oid.NameOID.COMMON_NAME)
+
+    @property
+    def organization_name(self) -> str:
+        return self._get_name_attribute(x509.oid.NameOID.ORGANIZATION_NAME)
+
     def verify_is_signed_by(self, signer: Certificate) -> None:
         """
         Verify that this certificate was signed by `signer`.
@@ -327,6 +336,14 @@ class Certificate:
             raise InvalidExpiryError(
                 f"Certificate is expired (not_valid_after: {self._cert.not_valid_after})"
             )
+
+    def _get_name_attribute(self, attribute: x509.ObjectIdentifier) -> str:
+        attr = self._cert.subject.get_attributes_for_oid(attribute)
+        if (count := len(attr)) != 1:
+            raise ValueError(
+                f"Expected to find exactly one attribute for identifier {attribute}, found {count}"
+            )
+        return attr[0].value
 
 
 class RsaPrivateKey:

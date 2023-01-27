@@ -8,7 +8,6 @@ from __future__ import annotations
 import base64
 import binascii
 import hmac
-import time
 import traceback
 from contextlib import suppress
 from datetime import datetime
@@ -29,7 +28,6 @@ from cmk.gui.log import logger
 from cmk.gui.type_defs import AuthType
 from cmk.gui.userdb.session import auth_cookie_name, generate_auth_hash
 from cmk.gui.utils.urls import requested_file_name
-from cmk.gui.wsgi.type_defs import RFC7662
 
 auth_logger = logger.getChild("auth")
 
@@ -152,7 +150,7 @@ def check_auth_by_bearer_header() -> UserId | None:
 def verify_credentials(user_id: UserId, password: Password) -> bool:
     if verify_automation_secret(user_id, password.raw):
         return True
-    if gui_user_auth(user_id, password, datetime.now()):
+    if verify_gui_secret(user_id, password, datetime.now()):
         return True
     return False
 
@@ -373,38 +371,20 @@ def user_from_bearer_header(auth_header: str) -> tuple[UserId, Password]:
     return _try_user_id(user_id), Password(secret)
 
 
-def automation_auth(user_id: UserId, secret: Password) -> RFC7662 | None:
-    if verify_automation_secret(user_id, secret.raw):
-        return rfc7662_subject(user_id, "bearer")
-
-    return None
-
-
-def gui_user_auth(user_id: UserId | None, secret: Password, now: datetime) -> RFC7662 | None:
-    if user_id is None:
-        return None
-    try:
-        if userdb.check_credentials(user_id, secret, now):
-            return rfc7662_subject(user_id, "bearer")
-    except MKUserError:
-        # This is the case of "Automation user rejected". We don't care about that in the REST API
-        # because every type of user is allowed in.
-        return None
-
-    return None
-
-
-def rfc7662_subject(user_id: UserId, _auth_type: AuthType) -> RFC7662:
-    """Create a RFC7662 compatible user representation
-
-    Args:
-        user_id:
-            The user's user_id
-
-        _auth_type:
-            One of 'automation', 'cookie', 'web_server', 'http_header', 'bearer'
+def verify_gui_secret(user_id: UserId | None, secret: Password, now: datetime) -> bool:
+    """Verify a GUI secret.
 
     Returns:
-        The filled-out dictionary.
+        True if the User is a valid GUI user, False otherwise.
+
+    Raises:
+        Nothing
+
     """
-    return {"sub": user_id, "iat": int(time.time()), "active": True, "scope": _auth_type}
+    if user_id is None:
+        return False
+
+    try:
+        return bool(userdb.check_credentials(user_id, secret, now))
+    except MKUserError:
+        return False

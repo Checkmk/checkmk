@@ -16,7 +16,6 @@ from cmk.utils.site import get_omd_config
 from cmk.gui import hooks, main_modules, sites
 from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.wsgi.applications import CheckmkRESTAPI
-from cmk.gui.wsgi.applications.rest_api import Authenticate
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.gui.wsgi.middleware import OverrideRequestMethod
 
@@ -36,7 +35,6 @@ rest_api.before_app_request(set_global_vars)
 def app_instance(debug: bool) -> CheckmkRESTAPI:
     app = CheckmkRESTAPI(debug=debug)
     app.wsgi_app = OverrideRequestMethod(app.wsgi_app)  # type: ignore[assignment]
-    app.wsgi_app = Authenticate(app.wsgi_app)  # type: ignore[assignment]
     return app
 
 

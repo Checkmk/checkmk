@@ -21,6 +21,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Final, NamedTuple, Union
@@ -44,7 +45,6 @@ class Edition(_EditionValue, enum.Enum):
     CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
     CCE = _EditionValue("cce", "cloud", "Checkmk Cloud Edition")
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
-    CFE = _EditionValue("cfe", "free", "Checkmk Free Edition")
 
 
 @lru_cache
@@ -79,12 +79,30 @@ def is_managed_edition() -> bool:
     return edition() is Edition.CME
 
 
-def is_free_edition() -> bool:
-    return edition() is Edition.CFE
-
-
 def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
+
+
+def license_status_message() -> str:
+    if is_raw_edition():
+        return ""
+
+    passed_time = get_age_trial()
+    # Hardcoded 30 days of trial. For dynamic trial time change the 30 days
+    remaining_time = timedelta(seconds=30 * 24 * 60 * 60 - passed_time)
+
+    # TODO: Handle the "licensed" case
+    # TODO: Handle the "license expired" case
+
+    if is_expired_trial() or remaining_time.days < 0:
+        return _("Trial expired")
+
+    if remaining_time.days > 1:
+        return _("Trial expires in %s days") % remaining_time.days
+
+    return _("Trial expires today (%s)") % time.strftime(
+        str(_("%H:%M")), time.localtime(time.time() + remaining_time.seconds)
+    )
 
 
 class TrialState(enum.Enum):
@@ -124,7 +142,9 @@ def get_age_trial() -> int:
 
 
 def is_expired_trial() -> bool:
-    return is_free_edition() and _get_expired_status() == TrialState.EXPIRED
+    if is_raw_edition():
+        return False
+    return _get_expired_status() is TrialState.EXPIRED
 
 
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>

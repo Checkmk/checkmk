@@ -147,7 +147,7 @@ ActivationState = dict[str, SiteActivationState]
 def get_trial_expired_message() -> str:
     return _(
         "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
-        "The Checkmk Free Edition does not allow distributed setups after the 30-day trial period. "
+        "Your Checkmk installation does not allow distributed setups after the 30-day trial period. "
         "In case you want to test distributed setups, please contact us at "
         "https://checkmk.com/contact"
     )

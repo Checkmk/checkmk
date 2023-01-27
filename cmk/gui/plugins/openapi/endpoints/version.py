@@ -43,6 +43,6 @@ def search(param):
                 "wsgi": request.environ["wsgi.version"],
             },
             "edition": cmk_version.edition().short,
-            "demo": cmk_version.is_free_edition(),
+            "demo": False,
         }
     )

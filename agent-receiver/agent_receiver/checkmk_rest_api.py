@@ -19,7 +19,6 @@ from pydantic import BaseModel
 
 class CMKEdition(Enum):
     cre = "Raw"
-    cfe = "Free"
     cee = "Enterprise"
     cme = "Managed Services"
     cce = "Cloud"

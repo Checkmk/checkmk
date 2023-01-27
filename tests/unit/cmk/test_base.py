@@ -24,7 +24,6 @@ def cache_clear() -> None:
         ("1.4.0i1.cre", cmk_version.Edition.CRE),
         ("1.4.0i1.cee", cmk_version.Edition.CEE),
         ("2016.09.22.cee", cmk_version.Edition.CEE),
-        ("2016.09.22.cfe", cmk_version.Edition.CFE),
         ("2.1.0p3.cme", cmk_version.Edition.CME),
         ("2.1.0p3.cce", cmk_version.Edition.CCE),
     ],

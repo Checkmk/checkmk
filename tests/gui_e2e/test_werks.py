@@ -24,7 +24,6 @@ def test_werks_available(logged_in_page: PPage) -> None:
     # since the tests are always running in a CEE environment, we do not consider other editions
     werk_editions = {
         cmk_version.Edition.CRE.short,
-        cmk_version.Edition.CFE.short,
         cmk_version.Edition.CEE.short,
     }
     logger.info("Checking for editions: %s", ",".join(werk_editions))

@@ -8,14 +8,13 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
-import time
-from datetime import timedelta
-
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.version import __version__, edition, get_age_trial, is_expired_trial, is_free_edition
+from cmk.utils.version import __version__, edition, license_status_message
 
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 
 
@@ -204,23 +203,13 @@ mega_menu_registry.register(
         icon="main_help",
         sort_index=18,
         topics=_help_menu_topics,
-        info_line=lambda: f"{edition().title} {__version__}{free_edition_status()}",
+        info_line=lambda: f"{edition().title} {__version__}{license_status()}",
     )
 )
 
 
-def free_edition_status() -> str:
-    if not is_free_edition():
+def license_status() -> HTML | str:
+    status_message = license_status_message()
+    if not status_message:
         return ""
-
-    passed_time = get_age_trial()
-    # Hardcoded 30 days of trial. For dynamic trial time change the 30 days
-    remaining_time = timedelta(seconds=30 * 24 * 60 * 60 - passed_time)
-
-    if is_expired_trial() or remaining_time.days < 0:
-        return "<br>" + _("Trial expired")
-    if remaining_time.days > 1:
-        return "<br>" + _("Trial expires in %s days") % remaining_time.days
-    return "<br>" + _("Trial expires today (%s)") % time.strftime(
-        str(_("%H:%M")), time.localtime(time.time() + remaining_time.seconds)
-    )
+    return HTMLWriter.render_br() + status_message

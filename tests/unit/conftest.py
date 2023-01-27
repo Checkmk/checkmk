@@ -394,3 +394,14 @@ def initialised_item_state():
 def reduce_password_hashing_rounds(monkeypatch: MonkeyPatch) -> None:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
     monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
+
+
+@pytest.fixture(name="monkeypatch_session", scope="session")
+def fixture_monkeypatch_session() -> Iterator[pytest.MonkeyPatch]:
+    with pytest.MonkeyPatch.context() as mp:
+        yield mp
+
+
+@pytest.fixture(name="is_in_trial_state", scope="session")
+def fixture_is_not_expired_trial(monkeypatch_session: pytest.MonkeyPatch) -> None:
+    monkeypatch_session.setattr("cmk.utils.version.is_expired_trial", lambda: False)

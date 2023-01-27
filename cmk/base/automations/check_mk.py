@@ -140,6 +140,12 @@ class DiscoveryAutomation(Automation):
         discovery.schedule_discovery_check(host_name)
 
 
+def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]]:
+    if directive in args:
+        return True, [a for i, a in enumerate(args) if i != args.index(directive)]
+    return False, args
+
+
 class AutomationDiscovery(DiscoveryAutomation):
     cmd = "inventory"  # TODO: Rename!
     needs_config = True
@@ -153,20 +159,15 @@ class AutomationDiscovery(DiscoveryAutomation):
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
     def execute(self, args: list[str]) -> DiscoveryResult:
+        scan, args = _extract_directive("@scan", args)
+        _noscan, args = _extract_directive("@noscan", args)
+        raise_errors, args = _extract_directive("@raiseerrors", args)
         # Error sensitivity
-        if args[0] == "@raiseerrors":
-            args = args[1:]
+        if raise_errors:
             on_error = OnError.RAISE
             os.dup2(os.open("/dev/null", os.O_WRONLY), 2)
         else:
             on_error = OnError.IGNORE
-
-        # Do a full service scan
-        if args[0] == "@scan":
-            force_snmp_cache_refresh = True
-            args = args[1:]
-        else:
-            force_snmp_cache_refresh = False
 
         # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
         file_cache_options = FileCacheOptions(use_outdated=True)
@@ -192,7 +193,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         fetcher = ConfiguredFetcher(
             config_cache,
             file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=force_snmp_cache_refresh,
+            force_snmp_cache_refresh=scan,
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,
@@ -267,26 +268,20 @@ class AutomationTryDiscovery(Automation):
     def _execute_discovery(
         self, args: list[str]
     ) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
-        perform_scan = True
         # Note: in the @noscan case we *must not* fetch live data (it must be fast)
         # In the @scan case we *must* fetch live data (it must be up to date)
-        if args[0] == "@noscan":
-            args = args[1:]
-            perform_scan = False
+        _scan, args = _extract_directive("@scan", args)
+        noscan, args = _extract_directive("@noscan", args)
+        raise_errors, args = _extract_directive("@raiseerrors", args)
+        perform_scan = (
+            not noscan
+        )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
 
-        elif args[0] == "@scan":
-            # Do a full service scan
-            args = args[1:]
+        on_error = OnError.RAISE if raise_errors else OnError.WARN
 
         file_cache_options = FileCacheOptions(
             use_outdated=not perform_scan, use_only_cache=not perform_scan
         )
-
-        if args[0] == "@raiseerrors":
-            on_error = OnError.RAISE
-            args = args[1:]
-        else:
-            on_error = OnError.WARN
 
         config_cache = config.get_config_cache()
         parser = ConfiguredParser(

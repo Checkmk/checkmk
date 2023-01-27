@@ -59,7 +59,9 @@ echo "========================================================================="
 
 # shellcheck disable=SC2086
 bazel build \
-    --verbose_failures --sandbox_debug \
+    --verbose_failures \
+    --sandbox_debug \
+    --subcommands=pretty_print \
     --execution_log_json_file="${EXECUTION_LOG_FILE_NAME}" \
     --action_env=PATH="$PATH" \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \

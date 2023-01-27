@@ -69,8 +69,6 @@ def check_mailboxes_arguments(params):
 
     if auth_type == "basic":
         username, password = auth_data
-        assert isinstance(username, str)
-        assert isinstance(password, str)
         args += [
             f"--fetch-username={username}",
             passwordstore_get_cmdline("--fetch-password=%s", password),
@@ -78,9 +76,6 @@ def check_mailboxes_arguments(params):
 
     else:
         client_id, client_secret, tenant_id = auth_data
-        assert isinstance(client_id, str)
-        assert isinstance(client_secret, str)
-        assert isinstance(tenant_id, str)
         args += [
             f"--fetch-client-id={client_id}",
             passwordstore_get_cmdline("--fetch-client-secret=%s", client_secret),

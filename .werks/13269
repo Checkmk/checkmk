@@ -1,0 +1,13 @@
+Title: check_mail_loop: AssertionError when using PasswordStore
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683550745
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p28
+
+A leftover Python `assert` statement dealing with plaintext passwords only led to fatal AssertionError
+when using PasswordStore instead of plaintext passwords.
+This change simply removes those statements as already done on newer branches.

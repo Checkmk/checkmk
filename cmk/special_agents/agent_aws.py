@@ -53,6 +53,8 @@ from cmk.special_agents.utils.argument_parsing import Args
 
 NOW = datetime.now()
 
+GLOBAL_SERVICE_REGION = "us-east-1"
+
 
 AWSStrings = bytes | str
 
@@ -6273,6 +6275,7 @@ class AWSSections(abc.ABC):
         self,
         hostname: str,
         session: boto3.session.Session,
+        account_id: str,
         debug: bool = False,
         config: botocore.config.Config = None,
     ) -> None:
@@ -6281,6 +6284,7 @@ class AWSSections(abc.ABC):
         self._debug = debug
         self._sections: list[AWSSection] = []
         self.config = config
+        self.account_id = account_id
 
     @abc.abstractmethod
     def init_sections(
@@ -6336,6 +6340,11 @@ class AWSSections(abc.ABC):
         self._write_host_labels(results)
         self._write_section_results(results)
 
+    def _collect_static_host_labels(self) -> Mapping[str, str]:
+        """Labels every host will be labelled with regardless of type"""
+        host_labels = {"cmk/aws/account": self.account_id}
+        return host_labels
+
     def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
         return (
             section_result.piggyback_hostname is not None
@@ -6343,9 +6352,11 @@ class AWSSections(abc.ABC):
             and section_result.piggyback_hostname != self._hostname
         )
 
-    def _collect_piggyback_host_labels(self, results: Results) -> Mapping[str, Mapping[str, str]]:
+    def _collect_piggyback_host_labels(
+        self, results: Results, static_labels: Mapping[str, str]
+    ) -> Mapping[str, Mapping[str, str]]:
         """Labels dependent on the type of piggyback host"""
-        host_labels: dict[str, dict[str, str]] = defaultdict(dict)
+        host_labels: dict[str, dict[str, str]] = defaultdict(lambda: {**static_labels})
         for result in results.values():
             for row in result:
                 if self._is_piggyback_host_result(row) and row.piggyback_host_labels:
@@ -6357,7 +6368,10 @@ class AWSSections(abc.ABC):
             w.append(json.dumps(host_labels))
 
     def _write_host_labels(self, results: Results) -> None:
-        piggyback_host_labels = self._collect_piggyback_host_labels(results)
+        static_host_labels = self._collect_static_host_labels()
+        self._write_labels_section(static_host_labels)
+
+        piggyback_host_labels = self._collect_piggyback_host_labels(results, static_host_labels)
         for hostname, host_labels in piggyback_host_labels.items():
             with ConditionalPiggybackSection(hostname):
                 self._write_labels_section(host_labels)
@@ -7295,6 +7309,20 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
     return aws_config
 
 
+def _create_session_from_args(args: Args, region: str) -> boto3.session.Session:
+    if args.assume_role:
+        return _sts_assume_role(
+            args.access_key_id, args.secret_access_key, args.role_arn, args.external_id, region
+        )
+    return _create_session(args.access_key_id, args.secret_access_key, region)
+
+
+def _get_account_id(args: Args) -> str:
+    session = _create_session_from_args(args, GLOBAL_SERVICE_REGION)
+    account_id = session.client("sts").get_caller_identity()["Account"]
+    return account_id
+
+
 def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-many-branches
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
@@ -7326,8 +7354,21 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
             ", ".join(regional_services),
         )
 
+    try:
+        account_id = _get_account_id(args)
+    except AwsAccessError as ae:
+        # can not access AWS, retreat
+        sys.stdout.write("<<<aws_exceptions>>>\n")
+        sys.stdout.write("Exception: %s\n" % ae)
+        return 0
+    except Exception as e:
+        logging.info(e)
+        if args.debug:
+            raise
+        return 1
+
     for aws_services, aws_regions, aws_sections in [
-        (global_services, ["us-east-1"], AWSSectionsUSEast),
+        (global_services, [GLOBAL_SERVICE_REGION], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:
@@ -7335,22 +7376,10 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
 
         for region in aws_regions:
             try:
-                if args.assume_role:
-                    session = _sts_assume_role(
-                        args.access_key_id,
-                        args.secret_access_key,
-                        args.role_arn,
-                        args.external_id,
-                        region,
-                    )
-                else:
-                    session = _create_session(
-                        args.access_key_id,
-                        args.secret_access_key,
-                        region,
-                    )
-
-                sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
+                session = _create_session_from_args(args, region)
+                sections = aws_sections(
+                    hostname, session, account_id, debug=args.debug, config=proxy_config
+                )
                 sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
             except AwsAccessError as ae:

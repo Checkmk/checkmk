@@ -59,29 +59,36 @@ class TestAWSSections:
         assert section_stdout.split("\n")[0] == "<<<aws_costs_and_usage:cached(1606382471,38642)>>>"
 
 
-class MockSession(mock.Mock):
-    def client(self, client_type: str) -> mock.Mock:
-        sts_client_mock = mock.Mock()
-        sts_client_mock.get_caller_identity = mock.Mock(return_value={"Account": "test-account"})
-        return sts_client_mock
-
-
 class TestAWSHostLabelSections:
     @pytest.fixture
-    def generic_section(self):
-        session = MockSession()
-        return AWSSectionsGeneric(hostname="", session=session)
+    def account_id(self):
+        return "test-account"
+
+    @pytest.fixture
+    def generic_section(self, account_id):
+        return AWSSectionsGeneric(hostname="", session=mock.Mock(), account_id=account_id)
 
     @pytest.mark.parametrize(
         "cached_data,expected_lines",
         [
+            pytest.param(
+                {},
+                [
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/account": "test-account"}',
+                ],
+                id="standard_aws_host_label",
+            ),
             pytest.param(
                 {
                     ("costs_and_usage", 1606382471.693873, 38582.763184): [
                         AWSSectionResult(piggyback_hostname="", content=[{}])
                     ],
                 },
-                [""],
+                [
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/account": "test-account"}',
+                ],
                 id="no_piggyback_label",
             ),
             pytest.param(
@@ -98,9 +105,11 @@ class TestAWSHostLabelSections:
                     ],
                 },
                 [
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/account": "test-account"}',
                     "<<<<test-piggyback>>>>",
                     "<<<labels:sep(0)>>>",
-                    '{"cmk/aws/test-key": "test-value"}',
+                    '{"cmk/aws/account": "test-account", "cmk/aws/test-key": "test-value"}',
                     "<<<<>>>>",
                 ],
                 id="piggyback_ec2_label",

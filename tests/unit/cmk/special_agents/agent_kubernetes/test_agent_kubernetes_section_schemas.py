@@ -33,6 +33,7 @@ def get_kube_agent_section_models() -> frozenset[type[agent.Section]]:
         and not m.__name__ == "Sequence"  # HACK to avoid an exception in issubclass
         and issubclass(m, agent.Section)
         and not m == agent.Section
+        and not m == agent.AttachedPersistentVolumes  # temporary exception
     )
 
 

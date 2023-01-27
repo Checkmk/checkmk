@@ -941,6 +941,7 @@ class PersistentVolumeClaimMetaData(BaseModel):
 class PersistentVolumeClaim(BaseModel):
     metadata: PersistentVolumeClaimMetaData
     status: PersistentVolumeClaimStatus
+    volume_name: str | None = None
 
 
 class PersistentVolumeClaims(Section):

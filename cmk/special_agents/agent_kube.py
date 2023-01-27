@@ -1094,6 +1094,7 @@ def create_pvc_sections(
     piggyback_name: str,
     attached_pvc_namespaced_names: Sequence[str],
     api_persistent_volume_claims: Mapping[str, section.PersistentVolumeClaim],
+    api_persistent_volumes: Mapping[str, section.PersistentVolume],
     attached_volumes: Mapping[str, section.AttachedVolume],
 ) -> Iterator[WriteableSection]:
     if not attached_pvc_namespaced_names:
@@ -1109,6 +1110,19 @@ def create_pvc_sections(
         section_name=SectionName("kube_pvc_v1"),
         section=section.PersistentVolumeClaims(claims=attached_pvcs),
     )
+
+    pvc_attached_api_pvs = {
+        pvc.volume_name: api_persistent_volumes[pvc.volume_name]
+        for pvc in attached_pvcs.values()
+        if pvc.volume_name is not None
+    }
+
+    if pvc_attached_api_pvs:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pvc_pvs_v1"),
+            section=section.AttachedPersistentVolumes(volumes=pvc_attached_api_pvs),
+        )
 
     pvc_attached_volumes = {
         pvc_namespaced_name: volume
@@ -2198,9 +2212,13 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             )
             api_persistent_volume_claims = {
                 namespaced_name_from_metadata(pvc.metadata): section.PersistentVolumeClaim(
-                    **pvc.dict()
+                    volume_name=pvc.spec.volume_name, **pvc.dict()
                 )
                 for pvc in api_data.persistent_volume_claims
+            }
+            api_persistent_volumes = {
+                pv.metadata.name: section.PersistentVolume(name=pv.metadata.name, spec=pv.spec)
+                for pv in api_data.persistent_volumes
             }
             attached_volumes = serialize_attached_volumes_from_kubelet_metrics(
                 filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
@@ -2237,6 +2255,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                                     deployment.pods
                                 ),
                                 api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
                                 attached_volumes=attached_volumes,
                             ),
                         )
@@ -2289,6 +2308,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                                     daemonset.pods
                                 ),
                                 api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
                                 attached_volumes=attached_volumes,
                             ),
                         )
@@ -2314,6 +2334,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                                     statefulset.pods
                                 ),
                                 api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
                                 attached_volumes=attached_volumes,
                             ),
                         )
@@ -2373,6 +2394,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                                     pod_attached_persistent_volume_claim_names(pod)
                                 ),
                                 api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
                                 attached_volumes=attached_volumes,
                             ),
                         )

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from kubernetes import client  # type: ignore[import]
+from pydantic import parse_obj_as
 
 from cmk.special_agents.utils_kubernetes.controllers import (
     map_controllers,
@@ -76,6 +77,9 @@ class ClientCoreAPI:
         return self.connection.list_persistent_volume_claim_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
+
+    def query_persistent_volumes(self):
+        return self.connection.list_persistent_volume(_request_timeout=self.timeout).items
 
 
 class ClientAppsAPI:
@@ -313,6 +317,7 @@ class APIData:
     nodes: Sequence[api.Node]
     pods: Sequence[api.Pod]
     persistent_volume_claims: Sequence[api.PersistentVolumeClaim]
+    persistent_volumes: Sequence[api.PersistentVolume]
     kubelet_open_metrics: Sequence[api.OpenMetricSample]
     resource_quotas: Sequence[api.ResourceQuota]
     cluster_details: api.ClusterDetails
@@ -327,6 +332,7 @@ class UnparsedAPIData:
     raw_namespaces: Sequence[client.V1Namespace]
     raw_resource_quotas: Sequence[client.V1ResourceQuota]
     raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim]
+    raw_persistent_volumes: Sequence[client.V1PersistentVolume]
     raw_deployments: Sequence[client.V1Deployment]
     raw_daemonsets: Sequence[client.V1DaemonSet]
     raw_replica_sets: Sequence[client.V1ReplicaSet]
@@ -353,6 +359,7 @@ def query_raw_api_data_v2(
         raw_namespaces=client_core_api.query_raw_namespaces(),
         raw_resource_quotas=client_core_api.query_raw_resource_quotas(),
         raw_persistent_volume_claims=client_core_api.query_persistent_volume_claims(),
+        raw_persistent_volumes=client_core_api.query_persistent_volumes(),
         raw_deployments=client_apps_api.query_raw_deployments(),
         raw_daemonsets=client_apps_api.query_raw_daemon_sets(),
         raw_statefulsets=apps_api.query_raw_statefulsets(),
@@ -384,6 +391,7 @@ def parse_api_data(
     raw_daemonsets: Sequence[client.V1DaemonSet],
     raw_statefulsets: JSONStatefulSetList,
     raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim],
+    raw_persistent_volumes: Sequence[client.V1PersistentVolume],
     node_to_kubelet_health: Mapping[str, api.HealthZ],
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
@@ -455,6 +463,7 @@ def parse_api_data(
         nodes=nodes,
         pods=pods,
         persistent_volume_claims=persistent_volume_claims,
+        persistent_volumes=parse_obj_as(list[api.PersistentVolume], raw_persistent_volumes),
         kubelet_open_metrics=[
             kubelet_metric_sample
             for dump in kubelet_open_metrics_dumps
@@ -509,6 +518,7 @@ def create_api_data_v2(
         raw_api_data.raw_daemonsets,
         raw_api_data.raw_statefulsets,
         raw_api_data.raw_persistent_volume_claims,
+        raw_api_data.raw_persistent_volumes,
         raw_api_data.node_to_kubelet_health,
         raw_api_data.api_health,
         controller_to_pods,

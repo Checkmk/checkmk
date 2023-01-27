@@ -255,6 +255,12 @@ class PersistentVolumeClaimFactory(ModelFactory):
     metadata = Use(MetaDataFactory.build, factory_use_construct=True)
 
 
+class PersistentVolumeFactory(ModelFactory):
+    __model__ = api.PersistentVolume
+
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
+
+
 # Node related Factories
 
 
@@ -369,6 +375,7 @@ class APIDataFactory(ModelFactory):
     __model__ = APIData
 
     persistent_volume_claims = randomize_size(PersistentVolumeClaimFactory.batch)
+    persistent_volumes = randomize_size(PersistentVolumeFactory.batch)
     nodes = randomize_size(APINodeFactory.batch)
     cron_jobs = randomize_size(APICronJobFactory.batch)
     deployments = randomize_size(APIDeploymentFactory.batch)

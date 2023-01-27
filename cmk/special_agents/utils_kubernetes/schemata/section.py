@@ -703,6 +703,7 @@ class PersistentVolumeClaimMetaData(BaseModel):
 class PersistentVolumeClaim(BaseModel):
     metadata: PersistentVolumeClaimMetaData
     status: PersistentVolumeClaimStatus
+    volume_name: str | None
 
 
 class PersistentVolumeClaims(Section):
@@ -715,3 +716,14 @@ class PersistentVolumeClaimAttachedVolumes(Section):
     """section: kube_pvc_volumes_v1"""
 
     volumes: Mapping[str, AttachedVolume]
+
+
+class PersistentVolume(BaseModel):
+    name: str
+    spec: api.PersistentVolumeSpec
+
+
+class AttachedPersistentVolumes(Section):
+    """section: kube_pvc_pvs_v1"""
+
+    volumes: Mapping[str, PersistentVolume]

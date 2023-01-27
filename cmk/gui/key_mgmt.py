@@ -15,6 +15,7 @@ from livestatus import SiteId
 
 import cmk.utils.render
 import cmk.utils.store as store
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -535,15 +536,13 @@ class PageDownloadKey:
 
 
 def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id: SiteId) -> Key:
-    pkey = crypto.PKey()
-    pkey.generate_key(crypto.TYPE_RSA, 2048)
-
-    cert = create_self_signed_cert(pkey, user_id, site_id)
+    key_pair = CertificateWithPrivateKey.generate_self_signed(
+        common_name=alias,
+        organizational_unit_name=user_id,
+    )
     return Key(
-        certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
-        private_key=crypto.dump_privatekey(
-            crypto.FILETYPE_PEM, pkey, "AES256", passphrase.raw_bytes
-        ).decode("ascii"),
+        certificate=key_pair.certificate.dump_pem().str,
+        private_key=key_pair.private_key.dump_pem(password=passphrase).str,
         alias=alias,
         owner=user_id,
         date=time.time(),
@@ -551,21 +550,30 @@ def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id:
     )
 
 
-def create_self_signed_cert(pkey: crypto.PKey, user_id: UserId, site_id: SiteId) -> crypto.X509:
-    cert = crypto.X509()
-    cert.get_subject().O = f"Check_MK Site {site_id}"
-    cert.get_subject().CN = user_id
-    cert.set_serial_number(1)
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.
-    cert.set_issuer(cert.get_subject())
-    cert.set_pubkey(pkey)
-    cert.sign(pkey, "sha1")
-
-    return cert
-
-
 def decrypt_private_key(encrypted_private_key: str, passphrase: PasswordType) -> crypto.PKey:
+    """return pyopenssl private key or raise an exception if the something went wrong
+
+    >>> private_key_str = "\\n".join([
+    ...   "-----BEGIN ENCRYPTED PRIVATE KEY-----",
+    ...   "MIIBvTBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQImGYj+dTTBg4CAggA",
+    ...   "MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBCcp71rLl7Qsn2ZpZmBn+dcBIIB",
+    ...   "YBGrPAdBbP+5j9iEeRgHaBSVVybjSAYr+OcsATuQR8gtIxO3q8knOFbvMv6mFqvx",
+    ...   "Lgg+urlyEfmsnzXDXD5JDBWFY9M3m9UvbcW/65o9x4Wt5fwfU3GoJIBeNgxIrYOT",
+    ...   "qYzWUnFkUocAuQt3zFK3gWgpnad3Dft/OtHRmEGjMqgVUO6Q/nJishSAQd/asB7q",
+    ...   "q+RGBQnMFHvyHJmcG6Dw/Lq8zxap9iIHpjAKM74Rv0bXwg4f1ewXW1gCQTMnNzMw",
+    ...   "vcrONRQM8nxkLjDErGiUXBtmeaenH5IJYwsg/yJxn9SXNt3RV0SbCt7T8Be4DDTd",
+    ...   "7CKc4FVjpUm1cOtutMWQDBCFlxyNtwGmG124oWKHkfTDJ+DEe5kBbBQCiLmwxJiu",
+    ...   "qQ1V2ZNUGmQhM/kDYBVX8qFo5xOrdIe25aAS2ommhxk8F8az4m7t1Wb+xJ7CIX20",
+    ...   "IpwUtjhTGLBmA3sUN/k7Bk4=",
+    ...   "-----END ENCRYPTED PRIVATE KEY-----",
+    ... ])
+    >>> decrypt_private_key(private_key_str, PasswordType("right"))
+    <OpenSSL.crypto.PKey object at ...>
+    >>> decrypt_private_key(private_key_str, PasswordType("wrong"))
+    Traceback (most recent call last):
+        ...
+    cmk.gui.exceptions.MKUserError: Invalid pass phrase
+    """
     try:
         return crypto.load_privatekey(
             crypto.FILETYPE_PEM, encrypted_private_key, passphrase.raw_bytes

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-import json
-import re
 from typing import Literal, Tuple, TypedDict, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
@@ -18,6 +16,13 @@ OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int,
 class NodeType(enum.StrEnum):
     worker = "worker"
     control_plane = "control_plane"
+
+    def pretty(self) -> str:
+        match self:
+            case NodeType.worker:
+                return "Worker"
+            case NodeType.control_plane:
+                return "Control plane"
 
 
 class LevelName(enum.StrEnum):
@@ -33,7 +38,7 @@ class KubeNodeCountVSResult(TypedDict):
 
 
 def parse(string_table: StringTable) -> NodeCount:
-    return NodeCount(**json.loads(string_table[0][0]))
+    return NodeCount.parse_raw(string_table[0][0])
 
 
 def discovery(section: NodeCount) -> DiscoveryResult:
@@ -70,18 +75,13 @@ def _check_levels(
         levels_upper=levels_upper,
         levels_lower=levels_lower,
         render_func=lambda x: str(int(x)),
-        label=f"{name.replace('_', ' ')} nodes".capitalize(),
         boundaries=(0, None),
     )
     assert isinstance(result, Result)
-    levels = ""
-    # if '(warn/crit below 3/1)' is part of the summary, append it to our summary
-    if match := re.match(r"[^(]+(\([^)]+\))", result.summary):
-        levels = " " + match.groups()[0]
-
+    levels = result.summary.removeprefix(str(ready_count.ready))
     yield Result(
         state=result.state,
-        summary=f"{name.replace('_', ' ').capitalize()} nodes {ready_count.ready}/{ready_count.total}{levels}",
+        summary=f"{name.pretty()} nodes {ready_count.ready}/{ready_count.total}{levels}",
     )
     yield metric
     yield Metric(f"kube_node_count_{name}_not_ready", ready_count.not_ready)

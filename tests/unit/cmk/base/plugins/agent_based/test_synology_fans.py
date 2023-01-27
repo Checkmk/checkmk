@@ -8,19 +8,19 @@ import pytest
 from cmk.base.plugins.agent_based import synology_fans
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
-SECTION_TABLE = [
-    ["1", "0"],
-]
+
+@pytest.fixture(name="section")
+def _section() -> synology_fans.Section:
+    section = synology_fans.parse(
+        [
+            ["2", "1"],
+        ]
+    )
+    assert section
+    return section
 
 
-def test_parsing() -> None:
-    section = synology_fans.parse(SECTION_TABLE)
-    assert section == {"System": 1, "CPU": 0}
-
-
-def test_discovery() -> None:
-    section = synology_fans.parse(SECTION_TABLE)
-    assert section is not None
+def test_discovery(section: synology_fans.Section) -> None:
     services = list(synology_fans.discovery(section))
     assert {s.item for s in services} == {"System", "CPU"}
 
@@ -29,9 +29,7 @@ def test_discovery() -> None:
     "item, expected",
     [("System", State.CRIT), ("CPU", State.OK)],
 )
-def test_result_state(item: str, expected: State) -> None:
-    section = synology_fans.parse(SECTION_TABLE)
-    assert section is not None
+def test_result_state(section: synology_fans.Section, item: str, expected: State) -> None:
     result = list(synology_fans.check(item=item, section=section))[0]
     assert isinstance(result, Result)
-    assert result.state == expected
+    assert result.state is expected

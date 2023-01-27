@@ -15,6 +15,7 @@ from cmk.base.plugins.agent_based.kube_persistent_volume_claim import (
 )
 from cmk.base.plugins.agent_based.utils.kube import (
     AttachedVolume,
+    PersistentVolume,
     PersistentVolumeClaim,
     PersistentVolumeClaimPhase,
     PersistentVolumeClaimStatus,
@@ -34,6 +35,10 @@ class AttachedVolumeFactory(ModelFactory):
     __model__ = AttachedVolume
 
 
+class PersistentVolumeFactory(ModelFactory):
+    __model__ = PersistentVolume
+
+
 @pytest.fixture(name="bound_pvc")
 def fixture_bounded_pvc() -> PersistentVolumeClaim:
     return PVCFactory.build(
@@ -49,6 +54,7 @@ def test_pvc_with_no_volume(bound_pvc: PersistentVolumeClaim) -> None:
         bound_pvc.metadata.name,
         value_store={},
         pvc=bound_pvc,
+        persistent_volume=None,
         volume=None,
         params={},
         timestamp=60,
@@ -75,6 +81,7 @@ def test_pvc_with_volume(bound_pvc: PersistentVolumeClaim) -> None:
             value_store={f"{bound_pvc.metadata.name}.delta": (current_timestamp - 60, 0)},
             pvc=bound_pvc,
             volume=volume,
+            persistent_volume=None,
             params=VOLUME_DEFAULT_PARAMS,
             timestamp=current_timestamp,
         )
@@ -105,6 +112,7 @@ def test_pvc_with_critical_volume(bound_pvc: PersistentVolumeClaim) -> None:
         value_store={f"{bound_pvc.metadata.name}.delta": (current_timestamp - 60, 0)},
         pvc=bound_pvc,
         volume=volume,
+        persistent_volume=None,
         params=VOLUME_DEFAULT_PARAMS,
         timestamp=current_timestamp,
     )
@@ -112,3 +120,24 @@ def test_pvc_with_critical_volume(bound_pvc: PersistentVolumeClaim) -> None:
     assert [r.state for r in check_result if isinstance(r, Result) and r.state == State.CRIT] == [
         State.CRIT
     ]
+
+
+def test_pvc_with_persistent_volume(bound_pvc: PersistentVolumeClaim) -> None:
+    """Test the details content when PV is available."""
+    persistent_volume = PersistentVolumeFactory.build()
+    check_result = _check_kube_pvc(
+        bound_pvc.metadata.name,
+        value_store={},
+        pvc=bound_pvc,
+        volume=None,
+        persistent_volume=persistent_volume,
+        params=VOLUME_DEFAULT_PARAMS,
+        timestamp=None,
+    )
+
+    details = " ".join([r.details for r in check_result if isinstance(r, Result)])
+    assert "Status" in details
+    assert "StorageClass" in details
+    assert "Access Modes" in details
+    assert "VolumeMode" in details
+    assert "Mounted Volume" in details

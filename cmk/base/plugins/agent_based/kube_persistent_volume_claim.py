@@ -15,9 +15,12 @@ from .utils.df import (
     TREND_DEFAULT_PARAMS,
 )
 from .utils.kube import (
+    AttachedPersistentVolumes,
     AttachedVolume,
+    PersistentVolume,
     PersistentVolumeClaim,
     PersistentVolumeClaimAttachedVolumes,
+    PersistentVolumeClaimPhase,
     PersistentVolumeClaims,
 )
 
@@ -40,6 +43,13 @@ def parse_persistent_volume_claims_attached_volumes(
     return PersistentVolumeClaimAttachedVolumes(**json.loads(string_table[0][0]))
 
 
+def parse_attached_persistent_volumes(
+    string_table: StringTable,
+) -> AttachedPersistentVolumes:
+    """Parses `string_table` into a PersistentVolumeClaimAttachedPersistentVolumes instance"""
+    return AttachedPersistentVolumes.parse_raw(string_table[0][0])
+
+
 register.agent_section(
     name="kube_pvc_v1",
     parse_function=parse_persistent_volume_claims,
@@ -53,10 +63,17 @@ register.agent_section(
     parsed_section_name="kube_pvc_volumes",
 )
 
+register.agent_section(
+    name="kube_pvc_pvs_v1",
+    parse_function=parse_attached_persistent_volumes,
+    parsed_section_name="kube_pvc_pvs",
+)
+
 
 def discovery_kube_pvc(
     section_kube_pvc: PersistentVolumeClaims | None,
     section_kube_pvc_volumes: PersistentVolumeClaimAttachedVolumes | None,
+    section_kube_pvc_pvs: AttachedPersistentVolumes | None,
 ) -> DiscoveryResult:
     if section_kube_pvc is None:
         return
@@ -68,6 +85,7 @@ def check_kube_pvc(
     params: Mapping[str, Any],
     section_kube_pvc: PersistentVolumeClaims | None,
     section_kube_pvc_volumes: PersistentVolumeClaimAttachedVolumes | None,
+    section_kube_pvc_pvs: AttachedPersistentVolumes | None,
 ) -> CheckResult:
     if section_kube_pvc is None or (pvc := section_kube_pvc.claims.get(item)) is None:
         return
@@ -75,11 +93,17 @@ def check_kube_pvc(
     volume: AttachedVolume | None = (
         section_kube_pvc_volumes.volumes.get(item) if section_kube_pvc_volumes is not None else None
     )
+    persistent_volume: PersistentVolume | None = (
+        section_kube_pvc_pvs.volumes.get(pvc.volume_name)
+        if section_kube_pvc_pvs and pvc.volume_name
+        else None
+    )
     yield from _check_kube_pvc(
         item=item,
         params=params,
         value_store=get_value_store(),
         pvc=pvc,
+        persistent_volume=persistent_volume,
         volume=volume,
         timestamp=time.time(),
     )
@@ -90,6 +114,7 @@ def _check_kube_pvc(
     params: Mapping[str, Any],
     value_store: MutableMapping[str, Any],
     pvc: PersistentVolumeClaim,
+    persistent_volume: PersistentVolume | None,
     volume: AttachedVolume | None,
     timestamp: None | float,
 ) -> CheckResult:
@@ -98,7 +123,7 @@ def _check_kube_pvc(
         yield Result(state=State.CRIT, summary="Status: not reported")
         return
 
-    yield Result(state=State.OK, summary=f"Status: {status_phase.value}")
+    yield from _output_status_and_pv_details(status_phase, persistent_volume)
 
     if volume is None:
         yield from _output_status_capacity_result(pvc)
@@ -117,6 +142,26 @@ def _check_kube_pvc(
     )
 
 
+def _output_status_and_pv_details(
+    status_phase: PersistentVolumeClaimPhase, persistent_volume: PersistentVolume | None
+) -> Iterator[Result]:
+    status_output = f"Status: {status_phase.value}"
+    yield Result(state=State.OK, summary=status_output)
+
+    if status_phase is not PersistentVolumeClaimPhase.CLAIM_BOUND or persistent_volume is None:
+        return
+
+    yield from (
+        Result(state=State.OK, notice=detail)
+        for detail in (
+            f"StorageClass: {persistent_volume.spec.storage_class_name}",
+            f"Access Modes: {', '.join(mode.value for mode in persistent_volume.spec.access_modes)}",
+            f"VolumeMode: {persistent_volume.spec.volume_mode}",
+            f"Mounted Volume: {persistent_volume.name}",
+        )
+    )
+
+
 def _output_status_capacity_result(pvc: PersistentVolumeClaim) -> Iterator[Result]:
     if (capacity := pvc.status.capacity) is not None and capacity.storage is not None:
         capacity_summary = f"Capacity: {render.bytes(capacity.storage)}"
@@ -131,6 +176,7 @@ register.check_plugin(
     sections=[
         "kube_pvc",
         "kube_pvc_volumes",
+        "kube_pvc_pvs",
     ],
     discovery_function=discovery_kube_pvc,
     check_function=check_kube_pvc,

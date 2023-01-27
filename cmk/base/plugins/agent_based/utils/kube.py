@@ -235,6 +235,40 @@ class CollectorState(enum.Enum):
     ERROR = "error"
 
 
+class AccessMode(enum.Enum):
+    """
+
+    Context:
+        providers will have different capabilities and each PV's access modes are set to the
+        specific modes supported by the particular volume.
+        Each PV gets its own set of access modes describing that specific PV's capabilities
+
+    Modes:
+        ReadWriteOnce (RWO):
+            * volume can be mounted as read-write by a single node
+            * can still allow multiple pods to access the volume when the pods are running on same
+            node
+
+        ReadOnlyMany (ROX):
+            * volume can be mounted as read-only by many nodes
+
+        ReadWriteMany (RWX):
+            * volume can be mounted as read-write by many nodes
+
+        ReadWriteOncePod (RWOP):
+            * volume can be mounted as read-write by a single pod
+            * use of this mode ensures that only one pod across the whole cluster can read that PVC
+            or write to it
+            * only supported for CSI volumes and Kubernetes version 1.22+
+
+    """
+
+    READ_WRITE_ONCE = "ReadWriteOnce"
+    READ_ONLY_MANY = "ReadOnlyMany"
+    READ_WRITE_MANY = "ReadWriteMany"
+    READ_WRITE_ONCE_POD = "ReadWriteOncePod"
+
+
 class CollectorHandlerLog(BaseModel):
     status: CollectorState
     title: str
@@ -948,6 +982,23 @@ class PersistentVolumeClaims(Section):
     """section: kube_pvc_v1"""
 
     claims: Mapping[str, PersistentVolumeClaim]
+
+
+class PersistentVolumeSpec(BaseModel):
+    access_modes: list[AccessMode]
+    storage_class_name: str
+    volume_mode: str
+
+
+class PersistentVolume(BaseModel):
+    name: str
+    spec: PersistentVolumeSpec
+
+
+class AttachedPersistentVolumes(Section):
+    """section: kube_pvc_pvs_v1"""
+
+    volumes: Mapping[str, PersistentVolume]
 
 
 class AttachedVolume(BaseModel):

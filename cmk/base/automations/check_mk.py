@@ -260,16 +260,20 @@ class AutomationTryDiscovery(Automation):
     def _execute_discovery(
         self, args: list[str]
     ) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
-        force_snmp_cache_refresh = True
+        perform_scan = True
+        # Note: in the @noscan case we *must not* fetch live data (it must be fast)
+        # In the @scan case we *must* fetch live data (it must be up to date)
         if args[0] == "@noscan":
             args = args[1:]
-            force_snmp_cache_refresh = False
+            perform_scan = False
+
         elif args[0] == "@scan":
             # Do a full service scan
             args = args[1:]
 
-        # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
-        file_cache_options = FileCacheOptions(use_outdated=True)
+        file_cache_options = FileCacheOptions(
+            use_outdated=not perform_scan, use_only_cache=not perform_scan
+        )
 
         if args[0] == "@raiseerrors":
             on_error = OnError.RAISE
@@ -287,7 +291,7 @@ class AutomationTryDiscovery(Automation):
         fetcher = ConfiguredFetcher(
             config_cache,
             file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=force_snmp_cache_refresh,
+            force_snmp_cache_refresh=perform_scan,
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,

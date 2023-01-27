@@ -28,3 +28,5 @@ openssl()
 load("//packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
 xmlsec1()
 
+load("//packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
+heirloommailx()

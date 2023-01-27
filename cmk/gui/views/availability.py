@@ -1045,7 +1045,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     with table_element(title=_("Annotations"), omit_if_empty=True) as table:
         for nr, ((site_id, host, service), annotation) in enumerate(annos_to_render):
             table.row()
-            table.cell(_("#"))
+            table.cell("#", css=["narrow nowrap"])
             html.write_text(nr)
             table.cell("", css=["buttons"])
             anno_vars = [

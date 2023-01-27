@@ -1177,7 +1177,7 @@ class ModeEditRuleset(WatoMode):
             title, img = self._match(match_state, rule, service_labels=service_labels)
             html.icon("rule%s" % img, title)
 
-        table.cell(_("#"), css=["narrow nowrap"])
+        table.cell("#", css=["narrow nowrap"])
         html.write_text(rulenr)
 
         table.cell("", css=["buttons"])

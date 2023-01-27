@@ -275,7 +275,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
                 self._show_row(nr, table, ident, entry)
 
     def _show_row(self, nr: int, table: Table, ident: str, entry: _T) -> None:
-        table.cell(_("#"), css=["narrow nowrap"])
+        table.cell("#", css=["narrow nowrap"])
         html.write_text(nr)
 
         self._show_action_cell(nr, table, ident, entry)

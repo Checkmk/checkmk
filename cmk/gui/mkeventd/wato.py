@@ -1874,7 +1874,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
 
                 table.row(css=["matches_search"] if id_ in found_packs else [])
-                table.cell(_("#"))
+                table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
 
@@ -2315,7 +2315,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ],
                 )
 
-                table.cell(_("#"))
+                table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")

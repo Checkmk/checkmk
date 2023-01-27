@@ -534,7 +534,7 @@ class ModeBIPacks(ABCBIMode):
                     continue
 
                 table.row()
-                table.cell(_("#"), css=["narrow", "nowrap"])
+                table.cell("#", css=["narrow", "nowrap"])
                 html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if user.may("wato.bi_admin"):
@@ -928,7 +928,7 @@ class ModeBIRules(ABCBIMode):
                     )
                     html.checkbox("_c_rule_%s" % rule_id)
 
-                    table.cell(_("#"))
+                    table.cell("#", css=["narrow nowrap"])
                     html.write_text(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     edit_url = self.url_to_pack(
@@ -2163,7 +2163,7 @@ class BIModeAggregations(ABCBIMode):
                 )
                 html.checkbox("_c_aggregation_%s" % aggregation_id)
 
-                table.cell(_("#"), css=["narrow", "nowrap"])
+                table.cell("#", css=["narrow", "nowrap"])
                 html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 edit_url = makeuri_contextless(

@@ -484,7 +484,7 @@ class ModeCustomAttrs(WatoMode, abc.ABC):
         with table_element(self._type + "attrs") as table:
             for nr, custom_attr in enumerate(sorted(self._attrs, key=lambda x: x["title"])):
                 table.row()
-                table.cell(_("#"), css=["narrow nowrap"])
+                table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
 
                 table.cell(_("Actions"), css=["buttons"])

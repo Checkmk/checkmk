@@ -552,7 +552,7 @@ class PageBackup:
 
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
                 table.row()
-                table.cell(_("#"))
+                table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 state = job.state()
@@ -1570,7 +1570,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
 
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
-            table.cell(_("#"))
+            table.cell("#", css=["narrow nowrap"])
             html.write_text(nr)
             table.cell(_("Actions"), css=["buttons"])
             restore_url = makeuri_contextless(

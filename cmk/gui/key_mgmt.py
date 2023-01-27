@@ -189,7 +189,7 @@ class PageKeyManagement:
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
 
                 table.row()
-                table.cell(_("#"))
+                table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 if self._may_edit_config():

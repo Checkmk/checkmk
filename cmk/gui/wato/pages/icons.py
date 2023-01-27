@@ -155,7 +155,7 @@ class ModeIcons(WatoMode):
             for nr, (icon_name, category_name) in enumerate(icons):
                 table.row()
 
-                table.cell(_("#"))
+                table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
 
                 table.cell(_("Actions"), css=["buttons"])

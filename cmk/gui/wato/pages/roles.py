@@ -134,7 +134,7 @@ class ModeRoles(WatoMode):
             ):
                 table.row()
 
-                table.cell(_("#"), css=["narrow nowrap"])
+                table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
 
                 # Actions

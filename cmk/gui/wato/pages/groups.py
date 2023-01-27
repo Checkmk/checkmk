@@ -162,7 +162,7 @@ class ModeGroups(WatoMode, abc.ABC):
         pass
 
     def _show_row_cells(self, nr: int, table: Table, name: GroupName, group: GroupSpec) -> None:
-        table.cell(_("#"))
+        table.cell("#", css=["narrow nowrap"])
         html.write_text(nr)
 
         table.cell(_("Actions"), css=["buttons"])

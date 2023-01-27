@@ -114,7 +114,7 @@ def render_connections_page(
         for index, connection in enumerate(connections_by_type(connection_type)):
             table.row()
 
-            table.cell(_("#"), css=["narrow nowrap"])
+            table.cell("#", css=["narrow nowrap"])
             html.write_text(index)
 
             table.cell(_("Actions"), css=["buttons"])

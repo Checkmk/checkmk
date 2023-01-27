@@ -19,8 +19,8 @@ set PY_VER_COMPACT=%PY_VER:.=%
 :: This is shortcut to fit path in Windows limit of 260 symbols.
 set temp=c:\temp
 
-:: Some older Pythons may require this
-set MSBUILD="C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe"
+:: Since 3.11 we could use latest ione
+set MSBUILD="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
 
 :: Variables
 set p_full_name=python-%PY_VER%.%PY_SUBVER%

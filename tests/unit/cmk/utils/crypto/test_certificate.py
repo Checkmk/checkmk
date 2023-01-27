@@ -90,9 +90,7 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
     key_path = tmp_path / "key.pem"
     password = Password("geheim")
 
-    _persisted = PersistedCertificateWithPrivateKey.persist(
-        self_signed_cert, cert_path, key_path, password
-    )
+    PersistedCertificateWithPrivateKey.persist(self_signed_cert, cert_path, key_path, password)
 
     assert key_path.read_bytes().splitlines()[0] == b"-----BEGIN ENCRYPTED PRIVATE KEY-----"
     assert cert_path.read_bytes().splitlines()[0] == b"-----BEGIN CERTIFICATE-----"
@@ -112,13 +110,13 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
     key = RsaPrivateKey.generate(512)
 
     pem_plain = key.dump_pem(None)
-    assert pem_plain.startswith(b"-----BEGIN PRIVATE KEY-----")
+    assert pem_plain.bytes.startswith(b"-----BEGIN PRIVATE KEY-----")
 
     loaded_plain = RsaPrivateKey.load_pem(pem_plain)
     assert loaded_plain._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
 
     pem_enc = key.dump_pem(Password("verysecure"))
-    assert pem_enc.startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY-----")
+    assert pem_enc.bytes.startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
     with pytest.raises(ValueError):
         RsaPrivateKey.load_pem(pem_enc, Password("wrong"))

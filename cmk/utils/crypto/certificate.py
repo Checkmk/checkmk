@@ -47,6 +47,43 @@ from cmk.utils.crypto.password import HashAlgorithm, Password
 from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 
+Signature = NewType("Signature", bytes)
+
+
+class _SerializedPEM:
+    """A serialized anything in PEM format
+
+    we tried NewTypes but the str or bytes encoding/decoding calls were just
+    annoying. This class can be inherited by the former NewTypes"""
+
+    def __init__(self, pem: str | bytes) -> None:
+        if isinstance(pem, str):
+            self._data = pem.encode()
+        elif isinstance(pem, bytes):
+            self._data = pem
+        else:
+            raise TypeError("Pem must either be bytes or str")
+
+    @property
+    def str(self) -> str:
+        return self._data.decode()
+
+    @property
+    def bytes(self) -> bytes:
+        return self._data
+
+
+class PlaintextPrivateKeyPEM(_SerializedPEM):
+    """A unencrypted private key in pem format"""
+
+
+class EncryptedPrivateKeyPEM(_SerializedPEM):
+    """A encrypted private key in pem format"""
+
+
+class CertificatePEM(_SerializedPEM):
+    """A certificate in pem format"""
+
 
 class InvalidSignatureError(MKException):
     """A signature could not be verified"""
@@ -138,14 +175,14 @@ class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
 
         Provide the password if the private key is encrypted.
         """
-        cert = Certificate.load_pem(Certificate.PEM(certificate_path.read_bytes()))
+        cert = Certificate.load_pem(CertificatePEM(certificate_path.read_bytes()))
 
         # bit verbose, as mypy thinks the PEM-NewTypes are bytes when I try to assign them directly
         pk_pem = private_key_path.read_bytes()
         if private_key_password is None:
-            key = RsaPrivateKey.load_pem(RsaPrivateKey.PlaintextPEM(pk_pem))
+            key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(pk_pem))
         else:
-            key = RsaPrivateKey.load_pem(RsaPrivateKey.EncryptedPEM(pk_pem), private_key_password)
+            key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(pk_pem), private_key_password)
 
         return PersistedCertificateWithPrivateKey(certificate_path, cert, private_key_path, key)
 
@@ -173,14 +210,12 @@ class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
         private key.
         """
 
-        self.certificate_path.write_bytes(self.certificate.dump_pem())
-        self.private_key_path.write_bytes(self.private_key.dump_pem(private_key_password))
+        self.certificate_path.write_bytes(self.certificate.dump_pem().bytes)
+        self.private_key_path.write_bytes(self.private_key.dump_pem(private_key_password).bytes)
 
 
 class Certificate:
     """An X.509 RSA certificate"""
-
-    PEM = NewType("PEM", bytes)
 
     def __init__(self, certificate: x509.Certificate) -> None:
         """Wrap an cryptography.x509.Certificate (RSA keys only)"""
@@ -256,11 +291,11 @@ class Certificate:
         )
 
     @classmethod
-    def load_pem(cls, pem_data: Certificate.PEM) -> Certificate:
-        return Certificate(x509.load_pem_x509_certificate(pem_data))
+    def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
+        return Certificate(x509.load_pem_x509_certificate(pem_data.bytes))
 
-    def dump_pem(self) -> Certificate.PEM:
-        return Certificate.PEM(self._cert.public_bytes(serialization.Encoding.PEM))
+    def dump_pem(self) -> CertificatePEM:
+        return CertificatePEM(self._cert.public_bytes(serialization.Encoding.PEM))
 
     @property
     def public_key(self) -> RsaPublicKey:
@@ -320,7 +355,7 @@ class Certificate:
                 )
 
         signer.public_key.verify(
-            self._cert.signature,
+            Signature(self._cert.signature),
             self._cert.tbs_certificate_bytes,
             HashAlgorithm.from_cryptography(self._cert.signature_hash_algorithm),
         )
@@ -362,9 +397,6 @@ class RsaPrivateKey:
     This class provides methods to generate, serialize and deserialize RSA private keys.
     """
 
-    PlaintextPEM = NewType("PlaintextPEM", bytes)
-    EncryptedPEM = NewType("EncryptedPEM", bytes)
-
     def __init__(self, key: rsa.RSAPrivateKey) -> None:
         self._key = key
 
@@ -374,18 +406,18 @@ class RsaPrivateKey:
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: RsaPrivateKey.PlaintextPEM, password: None = None) -> RsaPrivateKey:
+    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> RsaPrivateKey:
         ...
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: RsaPrivateKey.EncryptedPEM, password: Password) -> RsaPrivateKey:
+    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> RsaPrivateKey:
         ...
 
     @classmethod
     def load_pem(
         cls,
-        pem_data: RsaPrivateKey.EncryptedPEM | RsaPrivateKey.PlaintextPEM,
+        pem_data: EncryptedPrivateKeyPEM | PlaintextPrivateKeyPEM,
         password: Password | None = None,
     ) -> RsaPrivateKey:
         """
@@ -395,19 +427,19 @@ class RsaPrivateKey:
         """
 
         pw = password.raw_bytes if password is not None else None
-        return RsaPrivateKey(serialization.load_pem_private_key(pem_data, password=pw))
+        return RsaPrivateKey(serialization.load_pem_private_key(pem_data.bytes, password=pw))
 
     @overload
-    def dump_pem(self, password: None) -> RsaPrivateKey.PlaintextPEM:
+    def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM:
         ...
 
     @overload
-    def dump_pem(self, password: Password) -> RsaPrivateKey.EncryptedPEM:
+    def dump_pem(self, password: Password) -> EncryptedPrivateKeyPEM:
         ...
 
     def dump_pem(
         self, password: Password | None
-    ) -> RsaPrivateKey.EncryptedPEM | RsaPrivateKey.PlaintextPEM:
+    ) -> EncryptedPrivateKeyPEM | PlaintextPrivateKeyPEM:
         """
         Encode the private key in PKCS8 PEM (i.e. '-----BEGIN PRIVATE KEY-----...').
 
@@ -416,17 +448,25 @@ class RsaPrivateKey:
         """
 
         # mypy is convinced private_bytes() doesn't exist, I don't know why
-        return self._key.private_bytes(  # type: ignore[attr-defined]
+        bytes_ = self._key.private_bytes(  # type: ignore[attr-defined]
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.BestAvailableEncryption(password.raw_bytes)
             if password is not None
             else serialization.NoEncryption(),
         )
+        if password is None:
+            return PlaintextPrivateKeyPEM(bytes_)
+        return EncryptedPrivateKeyPEM(bytes_)
 
     @property
     def public_key(self) -> RsaPublicKey:
         return RsaPublicKey(self._key.public_key())
+
+    def sign_data(
+        self, data: bytes, hash_algorithm: HashAlgorithm = HashAlgorithm.Sha512
+    ) -> Signature:
+        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value()))
 
 
 class RsaPublicKey:
@@ -438,7 +478,7 @@ class RsaPublicKey:
             return NotImplemented
         return self._key.public_numbers() == other._key.public_numbers()
 
-    def verify(self, signature: bytes, message: bytes, digest_algorithm: HashAlgorithm) -> None:
+    def verify(self, signature: Signature, message: bytes, digest_algorithm: HashAlgorithm) -> None:
 
         # Currently the discouraged PKCS1 v1.5 padding is assumed. This is the only padding scheme
         # cryptography.io supports for signing X.509 certificates at this time.

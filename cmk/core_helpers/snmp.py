@@ -160,7 +160,7 @@ class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,
             disabled=self.disabled,
-            use_outdated=False if force_cache_refresh else self.disabled,
+            use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )
 

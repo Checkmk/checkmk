@@ -14,7 +14,7 @@ import os
 import shutil
 import subprocess
 import sys
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from itertools import islice
 from pathlib import Path
 from typing import Any, cast, Dict, List, Mapping, Optional, Sequence, Tuple, Union
@@ -224,9 +224,14 @@ class AutomationTryDiscovery(Automation):
     ]:
 
         use_cached_snmp_data = False
+        use_simulation_mode = config.simulation_mode
         if args[0] == "@noscan":
             args = args[1:]
-            use_cached_snmp_data = True
+            use_cached_snmp_data = True  # implies "use_outdated"
+            # Hack:
+            # This is currently the only way to make the fetcher rather fail than get live data if no cache is available.
+            # That is exacty what we want.
+            use_simulation_mode = True
 
         elif args[0] == "@scan":
             # Do a full service scan
@@ -238,12 +243,23 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = OnError.WARN
 
-        return discovery.get_check_preview(
-            host_name=HostName(args[0]),
-            max_cachefile_age=config.max_cachefile_age(),
-            use_cached_snmp_data=use_cached_snmp_data,
-            on_error=on_error,
-        )
+        with _simulation_mode(use_simulation_mode):
+            return discovery.get_check_preview(
+                host_name=HostName(args[0]),
+                max_cachefile_age=config.max_cachefile_age(),
+                use_cached_snmp_data=use_cached_snmp_data,
+                on_error=on_error,
+            )
+
+
+@contextmanager
+def _simulation_mode(value: bool):
+    old_value = config.simulation_mode
+    config.simulation_mode = value
+    try:
+        yield
+    finally:
+        config.simulation_mode = old_value
 
 
 automations.register(AutomationTryDiscovery())

@@ -76,6 +76,8 @@ public:
         const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IService &) const = 0;
+    void virtual forEachCommentUntil(
+        const std::function<bool(const IComment &)> &f) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

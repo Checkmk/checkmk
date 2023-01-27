@@ -76,7 +76,7 @@ public:
         const = 0;
 
     [[nodiscard]] virtual bool isService() const = 0;
-    bool isHost() const { return !isService(); };
+    [[nodiscard]] bool isHost() const { return !isService(); };
     [[nodiscard]] virtual bool persistent() const = 0;
     [[nodiscard]] virtual CommentSource source() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point expire_time()

@@ -6,7 +6,6 @@
 #include "NagiosCore.h"
 
 #include <cstdlib>
-#include <functional>
 #include <sstream>
 #include <utility>
 
@@ -154,6 +153,16 @@ std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
     const IService &svc) const {
     const auto *s = static_cast<const service *>(svc.handle());
     return comments_for_object(s->host_ptr, s);
+}
+
+void NagiosCore::forEachCommentUntil(
+    // TODO(sp): Do we need a mutex here?
+    const std::function<bool(const IComment &)> &f) const {
+    for (const auto &[id, co] : _comments) {
+        if (f(NebComment{*co})) {
+            break;
+        }
+    }
 }
 
 bool NagiosCore::mkeventdEnabled() {

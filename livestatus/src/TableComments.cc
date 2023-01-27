@@ -7,74 +7,70 @@
 
 #include <chrono>
 #include <cstdint>
-#include <map>
 #include <memory>
-#include <type_traits>
-#include <utility>
-#include <variant>  // IWYU pragma: keep
+#include <variant>
 
-#include "Comment.h"
-#include "NagiosCore.h"
-#include "NebHost.h"
-#include "NebService.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
-#include "nagios.h"  // IWYU pragma: keep
-
-// TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<Comment>>(
+    addColumn(std::make_unique<StringColumn<IComment>>(
         "author", "The contact that entered the comment", offsets,
-        [](const Comment &r) { return r._author; }));
-    addColumn(std::make_unique<StringColumn<Comment>>(
+        [](const IComment &r) { return r.author(); }));
+    addColumn(std::make_unique<StringColumn<IComment>>(
         "comment", "A comment text", offsets,
-        [](const Comment &r) { return r._comment; }));
-    addColumn(std::make_unique<IntColumn<Comment>>(
+        [](const IComment &r) { return r.comment(); }));
+    addColumn(std::make_unique<IntColumn<IComment>>(
         "id", "The id of the comment", offsets,
-        [](const Comment &r) { return r._id; }));
-    addColumn(std::make_unique<TimeColumn<Comment>>(
+        [](const IComment &r) { return r.id(); }));
+    addColumn(std::make_unique<TimeColumn<IComment>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
-        [](const Comment &r) { return r._entry_time; }));
-    addColumn(std::make_unique<IntColumn<Comment>>(
-        "type", "The type of the comment: 1 is host, 2 is service", offsets,
-        [](const Comment &r) { return r._type; }));
-    addColumn(std::make_unique<BoolColumn<Comment>>(
+        [](const IComment &r) { return r.entry_time(); }));
+    addColumn(std::make_unique<BoolColumn<IComment>>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,
-        [](const Comment &r) { return r._is_service; }));
+        [](const IComment &r) { return r.isService(); }));
 
-    addColumn(std::make_unique<IntColumn<Comment>>(
+    // Totally redundant column...
+    addColumn(std::make_unique<IntColumn<IComment>>(
+        "type", "The type of the comment: 1 is host, 2 is service", offsets,
+        [](const IComment &r) { return r.isService() ? 2 : 1; }));
+    addColumn(std::make_unique<BoolColumn<IComment>>(
         "persistent", "Whether this comment is persistent (0/1)", offsets,
-        [](const Comment &r) { return r._persistent; }));
-    addColumn(std::make_unique<IntColumn<Comment>>(
+        [](const IComment &r) { return r.persistent(); }));
+    addColumn(std::make_unique<IntColumn<IComment>>(
         "source", "The source of the comment (0 is internal and 1 is external)",
-        offsets, [](const Comment &r) { return r._source; }));
-    addColumn(std::make_unique<IntColumn<Comment>>(
+        offsets,
+        [](const IComment &r) { return static_cast<int32_t>(r.source()); }));
+    addColumn(std::make_unique<IntColumn<IComment>>(
         "entry_type",
         "The type of the comment: 1 is user, 2 is downtime, 3 is flapping and 4 is acknowledgement",
-        offsets, [](const Comment &r) { return r._entry_type; }));
-    addColumn(std::make_unique<IntColumn<Comment>>(
+        offsets, [](const IComment &r) {
+            return static_cast<int32_t>(r.entry_type());
+        }));
+    addColumn(std::make_unique<BoolColumn<IComment>>(
         "expires", "Whether this comment expires", offsets,
-        [](const Comment &r) { return r._expires; }));
-    addColumn(std::make_unique<TimeColumn<Comment>>(
+        [](const IComment &r) { return r.expires(); }));
+    addColumn(std::make_unique<TimeColumn<IComment>>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
-        offsets, [](const Comment &r) { return r._expire_time; }));
+        offsets, [](const IComment &r) { return r.expire_time(); }));
 
     TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
-        return r.rawData<Comment>()->_host;
+        return r.rawData<IComment>()->host().handle();
     }));
     TableServices::addColumns(this, "service_", offsets.add([](Row r) {
-        return r.rawData<Comment>()->_service;
+        const auto *svc = r.rawData<IComment>()->service();
+        return svc == nullptr ? nullptr : svc->handle();
     }),
                               false /* no hosts table */);
 }
@@ -84,13 +80,8 @@ std::string TableComments::name() const { return "comments"; }
 std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query &query, const User &user) {
-    for (const auto &[id, co] : core()->impl<NagiosCore>()->_comments) {
-        auto h = ToIHost(co->_host);
-        auto s = ToIService(co->_service);
-        if (user.is_authorized_for_object(h ? h.get() : nullptr,
-                                          s ? s.get() : nullptr, false) &&
-            !query.processDataset(Row{co.get()})) {
-            return;
-        }
-    }
+    core()->forEachCommentUntil([&query, &user](const IComment &r) {
+        return user.is_authorized_for_object(&r.host(), r.service(), false) &&
+               !query.processDataset(Row{&r});
+    });
 }

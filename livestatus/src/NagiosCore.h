@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -97,6 +98,8 @@ public:
         const IHost &hst) const override;
     std::vector<std::unique_ptr<const IComment>> comments(
         const IService &svc) const override;
+    void forEachCommentUntil(
+        const std::function<bool(const IComment &)> &f) const override;
 
     bool mkeventdEnabled() override;
 

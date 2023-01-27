@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <initializer_list>
 #include <map>
 #include <memory>
@@ -113,6 +114,8 @@ class DummyMonitoringCore : public MonitoringCore {
         const IService & /*service*/) const override {
         return {};
     }
+    void forEachCommentUntil(
+        const std::function<bool(const IComment &)> & /*f*/) const override {}
 
     bool mkeventdEnabled() override { return {}; }
 

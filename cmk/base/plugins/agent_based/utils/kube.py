@@ -318,26 +318,21 @@ class PodLifeCycle(Section, BasePodLifeCycle):
     """section: kube_pod_lifecycle_v1"""
 
 
-class ReadyCount(BaseModel):
-    ready: int = 0
-    not_ready: int = 0
-
-    @property
-    def total(self) -> int:
-        return self.ready + self.not_ready
-
-
 class NodeConditionStatus(str, enum.Enum):
     TRUE = "True"
     FALSE = "False"
     UNKNOWN = "Unknown"
 
 
+class CountableNode(BaseModel):
+    ready: bool
+    roles: Sequence[str]
+
+
 class NodeCount(Section):
     """section: kube_node_count_v1"""
 
-    worker: ReadyCount = ReadyCount()
-    control_plane: ReadyCount = ReadyCount()
+    nodes: Sequence[CountableNode]
 
 
 class NodeCondition(BaseModel):

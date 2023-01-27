@@ -113,42 +113,22 @@ def test_write_cluster_api_sections_maps_section_names_to_callables(
     )
 
 
-@pytest.mark.parametrize("cluster_nodes", [0, 10, 20])
-def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes: int) -> None:
-    nodes = APINodeFactory.batch(
-        size=cluster_nodes, status=node_status(api.NodeConditionStatus.TRUE)
-    )
+@pytest.mark.parametrize("node_count", [0, 10, 20])
+def test_node_count(node_count: int) -> None:
+    nodes = APINodeFactory.batch(size=node_count)
     cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
-    node_count = cluster.node_count()
-    assert node_count.worker.ready + node_count.worker.not_ready == cluster_nodes
+    section_node_count = cluster.node_count()
+    assert len(section_node_count.nodes) == node_count
 
 
-def test_node_control_plane_count() -> None:
-    metadata = NodeMetaDataFactory.build(
-        labels=_create_labels_from_roles(["master"]),
-        factory_use_construct=True,
-    )
-    api_node = APINodeFactory.build(
-        metadata=metadata, status=node_status(api.NodeConditionStatus.TRUE)
-    )
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=[api_node]))
-    node_count = cluster.node_count()
-    assert node_count.worker.total == 0
-    assert node_count.control_plane.total == 1
-    assert node_count.control_plane.ready == 1
+def test__node_is_ready_with_ready_node() -> None:
+    api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
+    assert agent._node_is_ready(api_node) is True
 
 
-def test_node_control_plane_not_ready_count() -> None:
-    metadata = NodeMetaDataFactory.build(
-        labels=_create_labels_from_roles(["master"]), factory_use_construct=True
-    )
-    api_node = APINodeFactory.build(
-        metadata=metadata,
-        status=node_status(api.NodeConditionStatus.FALSE),
-    )
-    cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=[api_node]))
-    node_count = cluster.node_count()
-    assert node_count.control_plane.not_ready == 1
+def test__node_is_ready_with_unready_node() -> None:
+    api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.FALSE))
+    assert agent._node_is_ready(api_node) is False
 
 
 @pytest.mark.parametrize("cluster_daemon_sets", [0, 10, 20])

@@ -613,10 +613,6 @@ def _node_is_ready(node: api.Node) -> bool:
     return False
 
 
-def _node_is_control_plane(node: api.Node) -> bool:
-    return "master" in node.roles() or "control_plane" in node.roles()
-
-
 @dataclass(frozen=True)
 class Cluster:
     cluster_details: api.ClusterDetails
@@ -662,20 +658,15 @@ class Cluster:
         )
 
     def node_count(self) -> section.NodeCount:
-        node_count = section.NodeCount()
-        for node in self.nodes:
-            ready = _node_is_ready(node)
-            if _node_is_control_plane(node):
-                if ready:
-                    node_count.control_plane.ready += 1
-                else:
-                    node_count.control_plane.not_ready += 1
-            else:
-                if ready:
-                    node_count.worker.ready += 1
-                else:
-                    node_count.worker.not_ready += 1
-        return node_count
+        return section.NodeCount(
+            nodes=[
+                section.CountableNode(
+                    ready=_node_is_ready(node),
+                    roles=node.roles(),
+                )
+                for node in self.nodes
+            ]
+        )
 
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources_from_api_pods(self.aggregation_pods)

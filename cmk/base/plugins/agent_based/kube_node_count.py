@@ -3,14 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import enum
 from typing import Literal, Tuple, TypedDict, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import NodeCount, ReadyCount
+from .utils.kube import CountableNode, NodeCount
 
 OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
+
+
+def _node_is_control_plane(node: CountableNode) -> bool:
+    return "master" in node.roles or "control_plane" in node.roles
+
+
+@dataclasses.dataclass
+class ReadyCount:
+    ready: int = 0
+    not_ready: int = 0
+
+    @property
+    def total(self) -> int:
+        return self.ready + self.not_ready
+
+    @classmethod
+    def node_count(cls, section: NodeCount) -> tuple["ReadyCount", "ReadyCount"]:
+        worker = cls()
+        control_plane = cls()
+        for node in section.nodes:
+            if _node_is_control_plane(node):
+                if node.ready:
+                    control_plane.ready += 1
+                else:
+                    control_plane.not_ready += 1
+            else:
+                if node.ready:
+                    worker.ready += 1
+                else:
+                    worker.not_ready += 1
+        return worker, control_plane
 
 
 class NodeType(enum.StrEnum):
@@ -90,8 +122,9 @@ def _check_levels(
 
 
 def check(params: KubeNodeCountVSResult, section: NodeCount) -> CheckResult:
-    yield from _check_levels(section.worker, NodeType.worker, params)
-    yield from _check_levels(section.control_plane, NodeType.control_plane, params)
+    worker, control_plane = ReadyCount.node_count(section)
+    yield from _check_levels(worker, NodeType.worker, params)
+    yield from _check_levels(control_plane, NodeType.control_plane, params)
 
 
 register.agent_section(

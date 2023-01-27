@@ -313,20 +313,15 @@ class ThinContainers(BaseModel):
     names: Sequence[api.ContainerName]
 
 
-class ReadyCount(BaseModel):
-    ready: int = 0
-    not_ready: int = 0
-
-    @property
-    def total(self) -> int:
-        return self.ready + self.not_ready
+class CountableNode(BaseModel):
+    ready: bool
+    roles: Sequence[str]
 
 
 class NodeCount(Section):
     """section: kube_node_count_v1"""
 
-    worker: ReadyCount = ReadyCount()
-    control_plane: ReadyCount = ReadyCount()
+    nodes: Sequence[CountableNode]
 
 
 class NodeInfo(Section):

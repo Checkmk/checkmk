@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 import json
 import re
-from typing import Literal, Mapping, Optional, Tuple, Union
+from typing import Literal, Tuple, TypedDict, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -14,7 +15,21 @@ from .utils.kube import NodeCount, ReadyCount
 OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
 
 
-KubeNodeCountVSResult = Mapping[str, OptionalLevels]
+class NodeType(enum.StrEnum):
+    worker = "worker"
+    control_plane = "control_plane"
+
+
+class LevelName(enum.StrEnum):
+    levels_lower = "levels_lower"
+    levels_upper = "levels_upper"
+
+
+class KubeNodeCountVSResult(TypedDict):
+    worker_levels_lower: OptionalLevels
+    worker_levels_upper: OptionalLevels
+    control_plane_levels_lower: OptionalLevels
+    control_plane_levels_upper: OptionalLevels
 
 
 def parse(string_table: StringTable) -> NodeCount:
@@ -27,20 +42,28 @@ def discovery(section: NodeCount) -> DiscoveryResult:
 
 def _get_levels(
     params: KubeNodeCountVSResult,
-    name: Literal["worker", "control_plane"],
-    level_name: Literal["levels_lower", "levels_upper"],
-) -> Optional[Tuple[int, int]]:
-    level = params.get(f"{name}_{level_name}", "no_levels")
-    if level == "no_levels":
-        return None
-    return level[1]
+    name: NodeType,
+    level_name: LevelName,
+) -> None | tuple[int, int]:
+    match name, level_name:
+        case NodeType.worker, LevelName.levels_lower:
+            level = params.get("worker_levels_lower", "no_levels")
+        case NodeType.worker, LevelName.levels_upper:
+            level = params.get("worker_levels_upper", "no_levels")
+        case NodeType.control_plane, LevelName.levels_lower:
+            level = params.get("control_plane_levels_lower", "no_levels")
+        case NodeType.control_plane, LevelName.levels_upper:
+            level = params.get("control_plane_levels_upper", "no_levels")
+        case _:
+            raise ValueError(f"Combination of {name} and {level_name} unknown.")
+    return level[1] if level != "no_levels" else None
 
 
 def _check_levels(
-    ready_count: ReadyCount, name: Literal["worker", "control_plane"], params: KubeNodeCountVSResult
+    ready_count: ReadyCount, name: NodeType, params: KubeNodeCountVSResult
 ) -> CheckResult:
-    levels_upper = _get_levels(params, name, "levels_upper")
-    levels_lower = _get_levels(params, name, "levels_lower")
+    levels_upper = _get_levels(params, name, LevelName.levels_upper)
+    levels_lower = _get_levels(params, name, LevelName.levels_lower)
     result, metric = check_levels(
         ready_count.ready,
         metric_name=f"kube_node_count_{name}_ready",
@@ -66,11 +89,11 @@ def _check_levels(
 
 
 def check(params: KubeNodeCountVSResult, section: NodeCount) -> CheckResult:
-    yield from _check_levels(section.worker, "worker", params)
+    yield from _check_levels(section.worker, NodeType.worker, params)
     if section.control_plane.total == 0:
         yield Result(state=State.OK, summary="No control plane nodes found")
     else:
-        yield from _check_levels(section.control_plane, "control_plane", params)
+        yield from _check_levels(section.control_plane, NodeType.control_plane, params)
 
 
 register.agent_section(
@@ -79,7 +102,13 @@ register.agent_section(
     parsed_section_name="kube_node_count",
 )
 
-check_default_parameters: KubeNodeCountVSResult = {}
+check_default_parameters = KubeNodeCountVSResult(
+    worker_levels_lower="no_levels",
+    worker_levels_upper="no_levels",
+    control_plane_levels_lower="no_levels",
+    control_plane_levels_upper="no_levels",
+)
+
 
 register.check_plugin(
     name="kube_node_count",

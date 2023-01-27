@@ -7,6 +7,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Stat
 from cmk.base.plugins.agent_based.kube_node_count import (
     check,
     check_default_parameters,
+    KubeNodeCountVSResult,
     NodeCount,
     ReadyCount,
 )
@@ -59,7 +60,12 @@ def test_check_kube_node_count_default_params_cp_zero() -> None:
 def test_check_kube_node_count_params() -> None:
     result = list(
         check(
-            {"worker_levels_lower": ("levels", (80, 100))},
+            KubeNodeCountVSResult(
+                worker_levels_lower=("levels", (80, 100)),
+                worker_levels_upper="no_levels",
+                control_plane_levels_lower="no_levels",
+                control_plane_levels_upper="no_levels",
+            ),
             NodeCount(
                 worker=ReadyCount(ready=10, not_ready=2),
                 control_plane=ReadyCount(ready=0, not_ready=0),

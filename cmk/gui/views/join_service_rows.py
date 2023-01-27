@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import Mapping, NamedTuple
 
 from livestatus import lqencode, SiteId
 
@@ -83,16 +83,16 @@ def join_service_row_post_processor(
         master_entry = per_master_entry.get(_make_master_key(row, join_master_column), {})
 
         join_info = {
-            join_value.value: attrs
+            join_value.value: join_row
             for join_value in join_filters.without_macros
-            if (attrs := master_entry.get(join_value.value))
+            if (join_row := join_value.get_row(master_entry))
         }
 
         join_info.update(
             {
-                join_value.value: attrs
+                join_value.value: join_row
                 for join_value in join_filters.with_macros
-                if (attrs := master_entry.get(join_value.replace_macros(row).value))
+                if (join_row := join_value.replace_macros(row).get_row(master_entry))
             }
         )
 
@@ -100,7 +100,7 @@ def join_service_row_post_processor(
 
 
 def _get_needed_join_columns(
-    join_cells: list[JoinCell], sorters: list[SorterEntry]
+    join_cells: Sequence[JoinCell], sorters: Sequence[SorterEntry]
 ) -> list[ColumnName]:
     join_columns = columns_of_cells(join_cells, get_permitted_views())
 
@@ -125,19 +125,15 @@ def _make_master_key(row: Row, join_master_column: str) -> tuple[SiteId, str]:
 @dataclass(frozen=True)
 class _JoinValue:
     _datasource_ident: str
-    _inventory_join_macros: dict[str, str]
+    _inventory_join_macros: Mapping[str, str]
     join_column_name: str
-    _value: str
-
-    @property
-    def value(self) -> str:
-        return self._value
+    value: str
 
     def has_macros(self) -> bool:
-        return any(macro in self._value for macro in self._inventory_join_macros.values())
+        return any(macro in self.value for macro in self._inventory_join_macros.values())
 
     def replace_macros(self, row: Row) -> _JoinValue:
-        replaced_value = self._value
+        replaced_value = self.value
         for column_name, macro in self._inventory_join_macros.items():
             if (row_value := row.get(f"{self._datasource_ident}_{column_name}")) is None:
                 continue
@@ -150,11 +146,14 @@ class _JoinValue:
             replaced_value,
         )
 
+    def get_row(self, master_entry: Mapping[str, Row]) -> Row | None:
+        return master_entry.get(self.value)
+
 
 class _JoinFilters(NamedTuple):
-    with_macros: list[_JoinValue]
-    without_macros: list[_JoinValue]
-    filters: list[LivestatusQuery]
+    with_macros: Sequence[_JoinValue]
+    without_macros: Sequence[_JoinValue]
+    filters: Sequence[LivestatusQuery]
 
 
 def _make_join_filters(join_values: Sequence[_JoinValue], rows: Rows) -> _JoinFilters:

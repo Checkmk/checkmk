@@ -57,7 +57,7 @@ def test_license_headers(python_files: Sequence[str]) -> None:
         abs_path = os.path.realpath(path)
         rel_path = os.path.relpath(abs_path, cmk_path())
 
-        if rel_path.startswith("tests") or rel_path in ignored_files:
+        if rel_path in ignored_files:
             continue
 
         if needs_enterprise_license(rel_path):

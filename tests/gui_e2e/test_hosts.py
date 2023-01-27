@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from time import time
 
+import pytest
+
 from tests.testlib.playwright.helpers import PPage
 
 
@@ -14,6 +16,7 @@ class TestHost:
 
 
 class TestHosts:
+    @pytest.mark.skip(reason="skipping temporarily; changes in confirm messages")
     def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!

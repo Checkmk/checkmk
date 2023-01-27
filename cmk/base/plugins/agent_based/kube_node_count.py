@@ -5,6 +5,7 @@
 
 import dataclasses
 import enum
+from collections.abc import Sequence
 from typing import Literal, Tuple, TypedDict, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
@@ -14,8 +15,15 @@ from .utils.kube import CountableNode, NodeCount
 OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
 
 
-def _node_is_control_plane(node: CountableNode) -> bool:
-    return "master" in node.roles or "control_plane" in node.roles
+def _node_is_control_plane(control_plane_roles: Sequence[str], node: CountableNode) -> bool:
+    """Checkmks definition of a control plane node.
+
+    >>> _node_is_control_plane(["blue"], CountableNode(ready=False, roles=["blue", "red"]))
+    True
+    >>> _node_is_control_plane([], CountableNode(ready=True, roles=["blue", "red"]))
+    False
+    """
+    return any(role in node.roles for role in control_plane_roles)
 
 
 @dataclasses.dataclass
@@ -28,11 +36,13 @@ class ReadyCount:
         return self.ready + self.not_ready
 
     @classmethod
-    def node_count(cls, section: NodeCount) -> tuple["ReadyCount", "ReadyCount"]:
+    def node_count(
+        cls, control_plane_roles: Sequence[str], section: NodeCount
+    ) -> tuple["ReadyCount", "ReadyCount"]:
         worker = cls()
         control_plane = cls()
         for node in section.nodes:
-            if _node_is_control_plane(node):
+            if _node_is_control_plane(control_plane_roles, node):
                 if node.ready:
                     control_plane.ready += 1
                 else:
@@ -63,6 +73,7 @@ class LevelName(enum.StrEnum):
 
 
 class KubeNodeCountVSResult(TypedDict):
+    control_plane_roles: Sequence[str]
     worker_levels_lower: OptionalLevels
     worker_levels_upper: OptionalLevels
     control_plane_levels_lower: OptionalLevels
@@ -122,7 +133,7 @@ def _check_levels(
 
 
 def check(params: KubeNodeCountVSResult, section: NodeCount) -> CheckResult:
-    worker, control_plane = ReadyCount.node_count(section)
+    worker, control_plane = ReadyCount.node_count(params["control_plane_roles"], section)
     yield from _check_levels(worker, NodeType.worker, params)
     yield from _check_levels(control_plane, NodeType.control_plane, params)
 
@@ -134,6 +145,7 @@ register.agent_section(
 )
 
 check_default_parameters = KubeNodeCountVSResult(
+    control_plane_roles=["master", "control_plane"],
     worker_levels_lower="no_levels",
     worker_levels_upper="no_levels",
     control_plane_levels_lower="no_levels",

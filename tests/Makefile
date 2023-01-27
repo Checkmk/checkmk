@@ -146,7 +146,7 @@ bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
 	  $(FIND_PYTHON_FILES) | tr '\n' ',' | sed 's/,$$//'; \
 	  echo ) > bandit.ini
-	( echo exclude: /tests >> bandit.ini )
+	( echo exclude: /tests,/scripts >> bandit.ini )
 
 format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)

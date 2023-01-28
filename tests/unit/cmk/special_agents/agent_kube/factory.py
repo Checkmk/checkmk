@@ -14,14 +14,31 @@ Notice (for pydantic_factories):
     resolves this with persistent_volume_claims.
 """
 import itertools
+import random
+import typing
 from collections.abc import Iterator, Sequence
 
+import pydantic
 from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api
+
+T = typing.TypeVar("T", bound=pydantic.BaseModel)
+
+
+class Batch(typing.Protocol[T]):
+    def __call__(self, size: int) -> list[T]:
+        ...
+
+
+def randomize_size(batch: Batch[T]) -> typing.Callable[[], list[T]]:
+    def use() -> list[T]:
+        return batch(size=random.choice([0, 1, 2, 4, 8]))
+
+    return use
 
 
 # Container related Factories
@@ -351,16 +368,16 @@ class SampleFactory(ModelFactory):
 class APIDataFactory(ModelFactory):
     __model__ = APIData
 
-    persistent_volume_claims = Use(PersistentVolumeClaimFactory.batch, size=2)
-    nodes = Use(APINodeFactory.batch, size=3)
-    cron_jobs = Use(APICronJobFactory.batch, size=3)
-    deployments = Use(APIDeploymentFactory.batch, size=3)
-    daemonsets = Use(APIDaemonSetFactory.batch, size=3)
-    jobs = Use(APIJobFactory.batch, size=3)
-    statefulsets = Use(APIStatefulSetFactory.batch, size=3)
-    namespaces = Use(APINamespaceFactory.batch, size=3)
-    pods = Use(APIPodFactory.batch, size=3)
-    resource_quotas = Use(APIResourceQuotaFactory.batch, size=3)
+    persistent_volume_claims = randomize_size(PersistentVolumeClaimFactory.batch)
+    nodes = randomize_size(APINodeFactory.batch)
+    cron_jobs = randomize_size(APICronJobFactory.batch)
+    deployments = randomize_size(APIDeploymentFactory.batch)
+    daemonsets = randomize_size(APIDaemonSetFactory.batch)
+    jobs = randomize_size(APIJobFactory.batch)
+    statefulsets = randomize_size(APIStatefulSetFactory.batch)
+    namespaces = randomize_size(APINamespaceFactory.batch)
+    pods = randomize_size(APIPodFactory.batch)
+    resource_quotas = randomize_size(APIResourceQuotaFactory.batch)
 
 
 class ClusterDetailsFactory(ModelFactory):

@@ -188,7 +188,7 @@ class _Builder:
                     max_age=self.file_cache_max_age,
                     use_outdated=self.file_cache_options.use_outdated,
                     simulation=False,  # TODO Quickfix for SUP-9912
-                    use_only_cache=False,
+                    use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=FileCacheMode.DISABLED,
                 ),
             )
@@ -245,7 +245,7 @@ class _Builder:
                     )
                 ),
                 simulation=self.simulation_mode,
-                use_only_cache=False,
+                use_only_cache=self.file_cache_options.use_only_cache,
                 file_cache_mode=self.file_cache_options.file_cache_mode(),
             ),
         )
@@ -295,7 +295,7 @@ class _Builder:
                         )
                     ),
                     simulation=self.simulation_mode,
-                    use_only_cache=False,
+                    use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
@@ -319,7 +319,7 @@ class _Builder:
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
-                    use_only_cache=False,
+                    use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
@@ -353,7 +353,7 @@ class _Builder:
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
-                    use_only_cache=False,
+                    use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
@@ -408,7 +408,8 @@ class _Builder:
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
-                    use_only_cache=self.file_cache_options.tcp_use_only_cache,
+                    use_only_cache=self.file_cache_options.tcp_use_only_cache
+                    or self.file_cache_options.use_only_cache,
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
@@ -449,7 +450,7 @@ class _Builder:
                 max_age=self.file_cache_max_age,
                 use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                 simulation=self.simulation_mode,
-                use_only_cache=False,
+                use_only_cache=self.file_cache_options.use_only_cache,
                 file_cache_mode=self.file_cache_options.file_cache_mode(),
             )
             yield source, fetcher, file_cache

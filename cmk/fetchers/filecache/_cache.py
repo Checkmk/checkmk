@@ -288,6 +288,9 @@ class FileCacheOptions(NamedTuple):
     # Set by the --no-tcp option from discovery, inventory, inventory as check,
     # and dump agent.
     tcp_use_only_cache: bool = False
+    # Currently not (yet) used
+    # I think this should be a fetcher option: "allow_live_fetching"
+    use_only_cache: bool = False
     # Set by the --force option from inventory.
     keep_outdated: bool = False
 

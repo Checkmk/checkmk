@@ -24,7 +24,7 @@ class CountableNodeFactory(pydantic_factories.ModelFactory):
 def test_check_levels_default_params_worker() -> None:
     result = list(
         _check_levels(
-            ReadyCount(ready=0, not_ready=0),
+            ReadyCount(ready=0, not_ready=0, total=0),
             NodeType.worker,
             check_default_parameters,
         )
@@ -40,7 +40,7 @@ def test_check_levels_default_params_worker() -> None:
 def test_check_kube_node_count_default_params_control_plane() -> None:
     result = list(
         _check_levels(
-            ReadyCount(ready=0, not_ready=1),
+            ReadyCount(ready=0, not_ready=1, total=1),
             NodeType.control_plane,
             check_default_parameters,
         )
@@ -59,7 +59,7 @@ def test_check_kube_node_count_default_params_control_plane() -> None:
 def test_check_kube_node_count_default_params_cp_zero() -> None:
     result = list(
         _check_levels(
-            ReadyCount(ready=0, not_ready=0),
+            ReadyCount(ready=0, not_ready=0, total=0),
             NodeType.control_plane,
             check_default_parameters,
         )
@@ -75,7 +75,7 @@ def test_check_kube_node_count_default_params_cp_zero() -> None:
 def test_check_kube_node_count_params() -> None:
     result = list(
         _check_levels(
-            ReadyCount(ready=10, not_ready=2),
+            ReadyCount(ready=10, not_ready=2, total=12),
             NodeType.worker,
             KubeNodeCountVSResult(
                 control_plane_roles=["master", "control_plane_roles"],
@@ -97,7 +97,7 @@ def test_check_kube_node_count_params() -> None:
 def test__check_levels_zero_control_plane_nodes_with_levels() -> None:
     results = list(
         _check_levels(
-            ReadyCount(ready=0, not_ready=0),
+            ReadyCount(ready=0, not_ready=0, total=0),
             NodeType.control_plane,
             KubeNodeCountVSResult(
                 control_plane_roles=["master", "control_plane"],

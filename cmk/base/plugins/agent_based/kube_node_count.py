@@ -28,31 +28,28 @@ def _node_is_control_plane(control_plane_roles: Sequence[str], node: CountableNo
 
 @dataclasses.dataclass
 class ReadyCount:
-    ready: int = 0
-    not_ready: int = 0
-
-    @property
-    def total(self) -> int:
-        return self.ready + self.not_ready
+    ready: int
+    not_ready: int
+    total: int
 
     @classmethod
     def node_count(
         cls, control_plane_roles: Sequence[str], section: NodeCount
     ) -> tuple["ReadyCount", "ReadyCount"]:
-        worker = cls()
-        control_plane = cls()
-        for node in section.nodes:
-            if _node_is_control_plane(control_plane_roles, node):
-                if node.ready:
-                    control_plane.ready += 1
-                else:
-                    control_plane.not_ready += 1
-            else:
-                if node.ready:
-                    worker.ready += 1
-                else:
-                    worker.not_ready += 1
-        return worker, control_plane
+        w_nodes = [n for n in section.nodes if not _node_is_control_plane(control_plane_roles, n)]
+        cp_nodes = [n for n in section.nodes if _node_is_control_plane(control_plane_roles, n)]
+        return (
+            ReadyCount(
+                ready=(w_ready := sum(n.ready for n in w_nodes)),
+                not_ready=len(w_nodes) - w_ready,
+                total=len(w_nodes),
+            ),
+            ReadyCount(
+                ready=(cp_ready := sum(n.ready for n in cp_nodes)),
+                not_ready=len(cp_nodes) - cp_ready,
+                total=len(cp_nodes),
+            ),
+        )
 
 
 class NodeType(enum.StrEnum):

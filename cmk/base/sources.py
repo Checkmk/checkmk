@@ -185,8 +185,9 @@ class _Builder:
                     path_template=make_file_cache_path_template(
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
-                    max_age=self.file_cache_max_age,
-                    use_outdated=self.file_cache_options.use_outdated,
+                    max_age=MaxAge.unlimited()
+                    if self.file_cache_options.use_outdated
+                    else self.file_cache_max_age,
                     simulation=False,  # TODO Quickfix for SUP-9912
                     use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=FileCacheMode.DISABLED,
@@ -233,17 +234,7 @@ class _Builder:
                 path_template=make_file_cache_path_template(
                     fetcher_type=source.fetcher_type, ident=source.ident
                 ),
-                max_age=(
-                    MaxAge.zero() if self.force_snmp_cache_refresh else self.file_cache_max_age
-                ),
-                use_outdated=(
-                    self.simulation_mode
-                    or (
-                        False
-                        if self.force_snmp_cache_refresh
-                        else self.file_cache_options.use_outdated
-                    )
-                ),
+                max_age=self._max_age_snmp(),
                 simulation=self.simulation_mode,
                 use_only_cache=self.file_cache_options.use_only_cache,
                 file_cache_mode=self.file_cache_options.file_cache_mode(),
@@ -283,17 +274,7 @@ class _Builder:
                     path_template=make_file_cache_path_template(
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
-                    max_age=(
-                        MaxAge.zero() if self.force_snmp_cache_refresh else self.file_cache_max_age
-                    ),
-                    use_outdated=(
-                        self.simulation_mode
-                        or (
-                            False
-                            if self.force_snmp_cache_refresh
-                            else self.file_cache_options.use_outdated
-                        )
-                    ),
+                    max_age=self._max_age_snmp(),
                     simulation=self.simulation_mode,
                     use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
@@ -316,8 +297,7 @@ class _Builder:
                     path_template=make_file_cache_path_template(
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
-                    max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
+                    max_age=self._max_age_tcp(),
                     simulation=self.simulation_mode,
                     use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
@@ -350,8 +330,7 @@ class _Builder:
                     path_template=make_file_cache_path_template(
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
-                    max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
+                    max_age=self._max_age_tcp(),
                     simulation=self.simulation_mode,
                     use_only_cache=self.file_cache_options.use_only_cache,
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
@@ -377,8 +356,9 @@ class _Builder:
                     path_template=make_file_cache_path_template(
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
-                    max_age=MaxAge(interval, interval, interval),
-                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
+                    max_age=MaxAge.unlimited()
+                    if self.simulation_mode or self.file_cache_options.use_outdated
+                    else MaxAge(interval, interval, interval),
                     simulation=self.simulation_mode,
                     use_only_cache=True,
                     file_cache_mode=(
@@ -405,8 +385,7 @@ class _Builder:
                     path_template=make_file_cache_path_template(
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
-                    max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
+                    max_age=self._max_age_tcp(),
                     simulation=self.simulation_mode,
                     use_only_cache=self.file_cache_options.tcp_use_only_cache
                     or self.file_cache_options.use_only_cache,
@@ -447,13 +426,28 @@ class _Builder:
                 path_template=make_file_cache_path_template(
                     fetcher_type=source.fetcher_type, ident=source.ident
                 ),
-                max_age=self.file_cache_max_age,
-                use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
+                max_age=self._max_age_tcp(),
                 simulation=self.simulation_mode,
                 use_only_cache=self.file_cache_options.use_only_cache,
                 file_cache_mode=self.file_cache_options.file_cache_mode(),
             )
             yield source, fetcher, file_cache
+
+    def _max_age_snmp(self) -> MaxAge:
+        if self.simulation_mode:
+            return MaxAge.unlimited()
+        if self.force_snmp_cache_refresh:
+            return MaxAge.zero()
+        if self.file_cache_options.use_outdated:
+            return MaxAge.unlimited()
+        return self.file_cache_max_age
+
+    def _max_age_tcp(self) -> MaxAge:
+        if self.simulation_mode:
+            return MaxAge.unlimited()
+        if self.file_cache_options.use_outdated:
+            return MaxAge.unlimited()
+        return self.file_cache_max_age
 
 
 def make_sources(

@@ -91,6 +91,10 @@ class MaxAge(NamedTuple):
     def zero(cls):
         return cls(0.0, 0.0, 0.0)
 
+    @classmethod
+    def unlimited(cls):
+        return cls(float("inf"), float("inf"), float("inf"))
+
     def get(self, mode: Mode, *, default: float = 0.0) -> float:
         return self._asdict().get(mode.name.lower(), default)
 
@@ -110,7 +114,6 @@ class FileCache(Generic[TRawData], abc.ABC):
         *,
         path_template: str,
         max_age: MaxAge,
-        use_outdated: bool,
         simulation: bool,
         use_only_cache: bool,
         file_cache_mode: FileCacheMode | int,
@@ -119,7 +122,6 @@ class FileCache(Generic[TRawData], abc.ABC):
         self.hostname: Final = hostname
         self.path_template: Final = path_template
         self.max_age = max_age
-        self.use_outdated = use_outdated
         # TODO(ml): Make sure simulation and use_only_cache are identical
         #           and find a better, more generic name such as "force"
         #           to produce the intended behavior.
@@ -136,7 +138,6 @@ class FileCache(Generic[TRawData], abc.ABC):
                     f"{self.hostname}",
                     f"path_template={self.path_template}",
                     f"max_age={self.max_age}",
-                    f"use_outdated={self.use_outdated}",
                     f"simulation={self.simulation}",
                     f"use_only_cache={self.use_only_cache}",
                     f"file_cache_mode={self.file_cache_mode.value}",
@@ -153,7 +154,6 @@ class FileCache(Generic[TRawData], abc.ABC):
                 self.hostname == other.hostname,
                 self.path_template == other.path_template,
                 self.max_age == other.max_age,
-                self.use_outdated == other.use_outdated,
                 self.simulation == other.simulation,
                 self.use_only_cache == other.use_only_cache,
                 self.file_cache_mode == other.file_cache_mode,
@@ -165,7 +165,6 @@ class FileCache(Generic[TRawData], abc.ABC):
             "hostname": str(self.hostname),
             "path_template": self.path_template,
             "max_age": self.max_age,
-            "use_outdated": self.use_outdated,
             "simulation": self.simulation,
             "use_only_cache": self.use_only_cache,
             "file_cache_mode": self.file_cache_mode,
@@ -236,7 +235,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             self._logger.debug("Not using cache (does not exist)")
             return None
 
-        if not self.use_outdated and cachefile_age > self.max_age.get(mode):
+        if cachefile_age > self.max_age.get(mode):
             self._logger.debug(
                 "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
                 cachefile_age,

@@ -5,7 +5,13 @@
 import dataclasses
 from typing import Iterable, Sequence, Type, TypeVar
 
-from cmk.special_agents.utils.node_exporter import CPULoad, NodeExporter, PromQLMetric, SectionStr
+from cmk.special_agents.utils.node_exporter import (
+    CPULoad,
+    MemUsed,
+    NodeExporter,
+    PromQLMetric,
+    SectionStr,
+)
 from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import section
 
@@ -34,7 +40,8 @@ class MemoryMeasurement(Measurement):
 
 @dataclasses.dataclass
 class ClusterAggregation:
-    cpu_section: CPULoad | None
+    cpu_section: CPULoad | None = None
+    memory_section: MemUsed | None = None
 
 
 def _filter_fully_labeled(samples: Sequence[prometheus_api.Sample]) -> list[prometheus_api.Sample]:
@@ -105,17 +112,20 @@ def machine_sections(
 
     node_exporter = NodeExporter(promql_getter)
     cpu_cluster_section, cpu_summary = node_exporter.cpu_summary()
+    memory_cluster_section, memory_summary = node_exporter.memory_summary()
     result_list: dict[str, list[SectionStr]] = {}
     for node_to_section in [
         node_exporter.df_summary(),
         node_exporter.diskstat_summary(),
         node_exporter.kernel_summary(),
-        node_exporter.memory_summary(),
+        memory_summary,
         node_exporter.uptime_summary(),
         cpu_summary,
     ]:
         for node, section_str in node_to_section.items():
             result_list.setdefault(node, []).append(section_str)
-    return ClusterAggregation(cpu_section=cpu_cluster_section), {
-        node: "\n".join([*node_list, ""]) for node, node_list in result_list.items()
-    }
+    cluster_aggregation = ClusterAggregation(
+        cpu_section=cpu_cluster_section, memory_section=memory_cluster_section
+    )
+    node_sections = {node: "\n".join([*node_list, ""]) for node, node_list in result_list.items()}
+    return cluster_aggregation, node_sections

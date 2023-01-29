@@ -100,6 +100,19 @@ class CPULoad(pydantic.BaseModel):
     num_cpus: int
 
 
+class MemUsed(pydantic.BaseModel):
+    """section: prometheus_mem_used_v1"""
+
+    Cached: int
+    MemFree: int
+    MemTotal: int
+    SwapFree: int
+    SwapTotal: int
+    Buffers: int
+    Dirty: int
+    Writeback: int
+
+
 class Uptime(pydantic.BaseModel):
     """section: prometheus_uptime_v1"""
 
@@ -264,14 +277,20 @@ class NodeExporter:
                 device[entity_name] = int(float(node_info["value"]))
         return result
 
-    def memory_summary(self) -> dict[str, SectionStr]:
+    def memory_summary(self) -> tuple[MemUsed, dict[str, SectionStr]]:
         result: dict[str, list[str]] = {}
         memory = self._retrieve_memory()
         for query_name, query in memory:
             for node_element in query:
                 node_mem = result.setdefault(node_element["labels"]["instance"], [])
                 node_mem.append("{}: {} kB".format(query_name, int(node_element["value"])))
-        return {node: _create_section("mem", section_list) for node, section_list in result.items()}
+        node_sections = {
+            node: _create_section("mem", section_list) for node, section_list in result.items()
+        }
+        cluster_section = MemUsed.parse_obj(
+            {key: sum(sample["value"] for sample in samples) for key, samples in memory}
+        )
+        return cluster_section, node_sections
 
     def _retrieve_memory(self) -> list[tuple[str, list[PromQLMetric]]]:
         return [

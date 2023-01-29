@@ -1542,6 +1542,9 @@ def write_machine_sections(
     if cluster_sections.cpu_section is not None:
         with SectionWriter("prometheus_cpu_v1") as writer:
             writer.append(cluster_sections.cpu_section.json())
+    if cluster_sections.memory_section is not None:
+        with SectionWriter("prometheus_mem_used_v1") as writer:
+            writer.append(cluster_sections.memory_section.json())
 
 
 def _supported_cluster_collector_major_version(
@@ -2544,7 +2547,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         write_machine_sections(
                             composed_entities,
                             (
-                                prometheus_section.ClusterAggregation(cpu_section=None),
+                                prometheus_section.ClusterAggregation(),
                                 {s["node_name"]: s["sections"] for s in machine_sections},
                             ),
                             piggyback_formatter,

@@ -342,7 +342,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     )
     assert (
         content.context["HOSTOUTPUT_HTML"]
-        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;Packet received via smart PING <b class="stmarkWARNING">WARN</b>'
+        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;Packet received via smart PING <b class="stmark state1">WARN</b>'
     )
     assert (
         content.context["SERVICEOUTPUT"]
@@ -350,7 +350,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     )
     assert (
         content.context["SERVICEOUTPUT_HTML"]
-        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok <b class="stmarkWARNING">WARN</b>'
+        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok <b class="stmark state1">WARN</b>'
     )
     assert (
         content.context["LONGSERVICEOUTPUT"]
@@ -358,7 +358,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     )
     assert (
         content.context["LONGSERVICEOUTPUT_HTML"]
-        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;<b class="stmarkWARNING">WARN</b><br>another line<br>last line'
+        == '&lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;<b class="stmark state1">WARN</b><br>another line<br>last line'
     )
 
     assert (

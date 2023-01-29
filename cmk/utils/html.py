@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-_OK_MARKER = '<b class="stmarkOK">OK</b>'
-_WARN_MARKER = '<b class="stmarkWARNING">WARN</b>'
-_CRIT_MARKER = '<b class="stmarkCRITICAL">CRIT</b>'
-_UNKNOWN_MARKER = '<b class="stmarkUNKNOWN">UNKN</b>'
+_OK_MARKER = '<b class="stmark state0">OK</b>'
+_WARN_MARKER = '<b class="stmark state1">WARN</b>'
+_CRIT_MARKER = '<b class="stmark state2">CRIT</b>'
+_UNKNOWN_MARKER = '<b class="stmark state3">UNKN</b>'
 
 
 def replace_state_markers(output: str) -> str:

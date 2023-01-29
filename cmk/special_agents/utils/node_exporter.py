@@ -265,70 +265,71 @@ class NodeExporter:
         return result
 
     def memory_summary(self) -> dict[str, SectionStr]:
-        memory_list = [
-            ("MemTotal", NodeExporterQuery.node_memory_MemTotal_bytes),
-            ("MemFree", NodeExporterQuery.node_memory_MemFree_bytes),
-            ("MemAvailable", NodeExporterQuery.node_memory_MemAvailable_bytes),
-            ("Buffers", NodeExporterQuery.node_memory_Buffers_bytes),
-            ("Cached", NodeExporterQuery.node_memory_Cached_bytes),
-            ("SwapCached", NodeExporterQuery.node_memory_SwapCached_bytes),
-            ("Active", NodeExporterQuery.node_memory_Active_bytes),
-            ("Inactive", NodeExporterQuery.node_memory_Inactive_bytes),
-            ("Active(anon)", NodeExporterQuery.node_memory_Active_anon_bytes),
-            ("Inactive(anon)", NodeExporterQuery.node_memory_Inactive_anon_bytes),
-            ("Active(file)", NodeExporterQuery.node_memory_Active_file_bytes),
-            ("Inactive(file)", NodeExporterQuery.node_memory_Inactive_file_bytes),
-            ("Unevictable", NodeExporterQuery.node_memory_Unevictable_bytes),
-            ("Mlocked", NodeExporterQuery.node_memory_Mlocked_bytes),
-            ("SwapTotal", NodeExporterQuery.node_memory_SwapTotal_bytes),
-            ("SwapFree", NodeExporterQuery.node_memory_SwapFree_bytes),
-            ("Dirty", NodeExporterQuery.node_memory_Dirty_bytes),
-            ("Writeback", NodeExporterQuery.node_memory_Writeback_bytes),
-            ("AnonPages", NodeExporterQuery.node_memory_AnonPages_bytes),
-            ("Mapped", NodeExporterQuery.node_memory_Mapped_bytes),
-            ("Shmem", NodeExporterQuery.node_memory_Shmem_bytes),
-            ("KReclaimable", NodeExporterQuery.node_memory_KReclaimable_bytes),
-            ("Slab", NodeExporterQuery.node_memory_Slab_bytes),
-            ("SReclaimable", NodeExporterQuery.node_memory_SReclaimable_bytes),
-            ("SUnreclaim", NodeExporterQuery.node_memory_SUnreclaim_bytes),
-            ("KernelStack", NodeExporterQuery.node_memory_KernelStack_bytes),
-            ("PageTables", NodeExporterQuery.node_memory_PageTables_bytes),
-            ("NFS_Unstable", NodeExporterQuery.node_memory_NFS_Unstable_bytes),
-            ("Bounce", NodeExporterQuery.node_memory_Bounce_bytes),
-            ("WritebackTmp", NodeExporterQuery.node_memory_WritebackTmp_bytes),
-            ("CommitLimit", NodeExporterQuery.node_memory_CommitLimit_bytes),
-            ("Committed_AS", NodeExporterQuery.node_memory_Committed_AS_bytes),
-            ("VmallocTotal", NodeExporterQuery.node_memory_VmallocTotal_bytes),
-            ("VmallocUsed", NodeExporterQuery.node_memory_VmallocUsed_bytes),
-            ("VmallocChunk", NodeExporterQuery.node_memory_VmallocChunk_bytes),
-            ("Percpu", NodeExporterQuery.node_memory_Percpu_bytes),
-            ("HardwareCorrupted", NodeExporterQuery.node_memory_HardwareCorrupted_bytes),
-            ("AnonHugePages", NodeExporterQuery.node_memory_AnonHugePages_bytes),
-            ("ShmemHugePages", NodeExporterQuery.node_memory_ShmemHugePages_bytes),
-            ("ShmemPmdMapped", NodeExporterQuery.node_memory_ShmemPmdMapped_bytes),
-            ("CmaTotal", NodeExporterQuery.node_memory_CmaTotal_bytes),
-            ("CmaFree", NodeExporterQuery.node_memory_CmaFree_bytes),
-            ("HugePages_Total", NodeExporterQuery.node_memory_HugePages_Total),
-            ("HugePages_Free", NodeExporterQuery.node_memory_HugePages_Free),
-            ("HugePages_Rsvd", NodeExporterQuery.node_memory_HugePages_Rsvd),
-            ("HugePages_Surp", NodeExporterQuery.node_memory_HugePages_Surp),
-            ("Hugepagesize", NodeExporterQuery.node_memory_Hugepagesize_bytes),
-            ("Hugetlb", NodeExporterQuery.node_memory_Hugetlb_bytes),
-            ("DirectMap4k", NodeExporterQuery.node_memory_DirectMap4k_bytes),
-            ("DirectMap2M", NodeExporterQuery.node_memory_DirectMap2M_bytes),
-            ("DirectMap1G", NodeExporterQuery.node_memory_DirectMap1G_bytes),
-        ]
-        return self._generate_memory_stats(memory_list)
-
-    def _generate_memory_stats(
-        self, promql_list: typing.Sequence[tuple[str, str]]
-    ) -> dict[str, SectionStr]:
         result: dict[str, list[str]] = {}
-        for entity_name, promql_query in promql_list:
-            for node_element in self.get_promql(promql_query):
+        memory = self._retrieve_memory()
+        for query_name, query in memory:
+            for node_element in query:
                 node_mem = result.setdefault(node_element["labels"]["instance"], [])
-                node_mem.append("{}: {} kB".format(entity_name, int(node_element["value"])))
+                node_mem.append("{}: {} kB".format(query_name, int(node_element["value"])))
         return {node: _create_section("mem", section_list) for node, section_list in result.items()}
+
+    def _retrieve_memory(self) -> list[tuple[str, list[PromQLMetric]]]:
+        return [
+            (query_name, self.get_promql(query))
+            for query_name, query in [
+                ("MemTotal", NodeExporterQuery.node_memory_MemTotal_bytes),
+                ("MemFree", NodeExporterQuery.node_memory_MemFree_bytes),
+                ("MemAvailable", NodeExporterQuery.node_memory_MemAvailable_bytes),
+                ("Buffers", NodeExporterQuery.node_memory_Buffers_bytes),
+                ("Cached", NodeExporterQuery.node_memory_Cached_bytes),
+                ("SwapCached", NodeExporterQuery.node_memory_SwapCached_bytes),
+                ("Active", NodeExporterQuery.node_memory_Active_bytes),
+                ("Inactive", NodeExporterQuery.node_memory_Inactive_bytes),
+                ("Active(anon)", NodeExporterQuery.node_memory_Active_anon_bytes),
+                ("Inactive(anon)", NodeExporterQuery.node_memory_Inactive_anon_bytes),
+                ("Active(file)", NodeExporterQuery.node_memory_Active_file_bytes),
+                ("Inactive(file)", NodeExporterQuery.node_memory_Inactive_file_bytes),
+                ("Unevictable", NodeExporterQuery.node_memory_Unevictable_bytes),
+                ("Mlocked", NodeExporterQuery.node_memory_Mlocked_bytes),
+                ("SwapTotal", NodeExporterQuery.node_memory_SwapTotal_bytes),
+                ("SwapFree", NodeExporterQuery.node_memory_SwapFree_bytes),
+                ("Dirty", NodeExporterQuery.node_memory_Dirty_bytes),
+                ("Writeback", NodeExporterQuery.node_memory_Writeback_bytes),
+                ("AnonPages", NodeExporterQuery.node_memory_AnonPages_bytes),
+                ("Mapped", NodeExporterQuery.node_memory_Mapped_bytes),
+                ("Shmem", NodeExporterQuery.node_memory_Shmem_bytes),
+                ("KReclaimable", NodeExporterQuery.node_memory_KReclaimable_bytes),
+                ("Slab", NodeExporterQuery.node_memory_Slab_bytes),
+                ("SReclaimable", NodeExporterQuery.node_memory_SReclaimable_bytes),
+                ("SUnreclaim", NodeExporterQuery.node_memory_SUnreclaim_bytes),
+                ("KernelStack", NodeExporterQuery.node_memory_KernelStack_bytes),
+                ("PageTables", NodeExporterQuery.node_memory_PageTables_bytes),
+                ("NFS_Unstable", NodeExporterQuery.node_memory_NFS_Unstable_bytes),
+                ("Bounce", NodeExporterQuery.node_memory_Bounce_bytes),
+                ("WritebackTmp", NodeExporterQuery.node_memory_WritebackTmp_bytes),
+                ("CommitLimit", NodeExporterQuery.node_memory_CommitLimit_bytes),
+                ("Committed_AS", NodeExporterQuery.node_memory_Committed_AS_bytes),
+                ("VmallocTotal", NodeExporterQuery.node_memory_VmallocTotal_bytes),
+                ("VmallocUsed", NodeExporterQuery.node_memory_VmallocUsed_bytes),
+                ("VmallocChunk", NodeExporterQuery.node_memory_VmallocChunk_bytes),
+                ("Percpu", NodeExporterQuery.node_memory_Percpu_bytes),
+                ("HardwareCorrupted", NodeExporterQuery.node_memory_HardwareCorrupted_bytes),
+                ("AnonHugePages", NodeExporterQuery.node_memory_AnonHugePages_bytes),
+                ("ShmemHugePages", NodeExporterQuery.node_memory_ShmemHugePages_bytes),
+                ("ShmemPmdMapped", NodeExporterQuery.node_memory_ShmemPmdMapped_bytes),
+                ("CmaTotal", NodeExporterQuery.node_memory_CmaTotal_bytes),
+                ("CmaFree", NodeExporterQuery.node_memory_CmaFree_bytes),
+                ("HugePages_Total", NodeExporterQuery.node_memory_HugePages_Total),
+                ("HugePages_Free", NodeExporterQuery.node_memory_HugePages_Free),
+                ("HugePages_Rsvd", NodeExporterQuery.node_memory_HugePages_Rsvd),
+                ("HugePages_Surp", NodeExporterQuery.node_memory_HugePages_Surp),
+                ("Hugepagesize", NodeExporterQuery.node_memory_Hugepagesize_bytes),
+                ("Hugetlb", NodeExporterQuery.node_memory_Hugetlb_bytes),
+                ("DirectMap4k", NodeExporterQuery.node_memory_DirectMap4k_bytes),
+                ("DirectMap2M", NodeExporterQuery.node_memory_DirectMap2M_bytes),
+                ("DirectMap1G", NodeExporterQuery.node_memory_DirectMap1G_bytes),
+            ]
+        ]
 
     def kernel_summary(self) -> dict[str, SectionStr]:
 

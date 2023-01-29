@@ -24,7 +24,7 @@ class PromQLGetter(typing.Protocol):
         ...
 
 
-class NodeExporterQuery(str, enum.Enum):
+class NodeExporterQuery(enum.StrEnum):
     # node_boot_time_seconds: btime for /proc/stats
     # node_time_seconds: system time of the node, equal to btime + uptime from /proc/uptime
     node_uptime_seconds = "(node_time_seconds - node_boot_time_seconds)"

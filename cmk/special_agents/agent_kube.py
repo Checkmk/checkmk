@@ -1530,14 +1530,18 @@ def create_statefulset_api_sections(
 
 def write_machine_sections(
     composed_entities: ComposedEntities,
-    machine_sections: Mapping[str, str],
+    machine_sections: tuple[prometheus_section.ClusterAggregation, Mapping[str, str]],
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
+    cluster_sections, node_sections = machine_sections
     for node in composed_entities.nodes:
-        if sections := machine_sections.get(str(node.metadata.name)):
+        if sections := node_sections.get(str(node.metadata.name)):
             with ConditionalPiggybackSection(piggyback_formatter(node)):
                 sys.stdout.write(sections)
+    if cluster_sections.cpu_section is not None:
+        with SectionWriter("prometheus_cpu_v1") as writer:
+            writer.append(cluster_sections.cpu_section.json())
 
 
 def _supported_cluster_collector_major_version(
@@ -2539,7 +2543,10 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     try:
                         write_machine_sections(
                             composed_entities,
-                            {s["node_name"]: s["sections"] for s in machine_sections},
+                            (
+                                prometheus_section.ClusterAggregation(cpu_section=None),
+                                {s["node_name"]: s["sections"] for s in machine_sections},
+                            ),
                             piggyback_formatter,
                         )
                     except Exception as e:

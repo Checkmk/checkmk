@@ -400,7 +400,7 @@ class NodeExporter:
     def _retrieve_uptime(self) -> list[PromQLMetric]:
         return self.get_promql(NodeExporterQuery.node_uptime_seconds)
 
-    def cpu_summary(self) -> dict[str, SectionStr]:
+    def cpu_summary(self) -> tuple[CPULoad, dict[str, SectionStr]]:
         cpu = self._retrieve_cpu()
         node_to_raw: dict[str, dict[str, float]] = {}
         for key, samples in cpu:
@@ -408,10 +408,16 @@ class NodeExporter:
                 instance = sample["labels"]["instance"]
                 raw = node_to_raw.setdefault(instance, {})
                 raw[key] = sample["value"]
-        return {
-            node: _create_section("prometheus_cpu_v1:sep(0)", [CPULoad.parse_obj(raw).json()])
-            for node, raw in node_to_raw.items()
-        }
+        cluster_section = CPULoad.parse_obj(
+            {key: sum(sample["value"] for sample in samples) for key, samples in cpu}
+        )
+        return (
+            cluster_section,
+            {
+                node: _create_section("prometheus_cpu_v1:sep(0)", [CPULoad.parse_obj(raw).json()])
+                for node, raw in node_to_raw.items()
+            },
+        )
 
     def _retrieve_cpu(self) -> list[tuple[str, list[PromQLMetric]]]:
         return [

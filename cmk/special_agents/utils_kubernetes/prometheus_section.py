@@ -2,9 +2,10 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import dataclasses
 from typing import Iterable, Sequence, Type, TypeVar
 
-from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
+from cmk.special_agents.utils.node_exporter import CPULoad, NodeExporter, PromQLMetric, SectionStr
 from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import section
 
@@ -29,6 +30,11 @@ class CPUMeasurement(Measurement):
 
 class MemoryMeasurement(Measurement):
     pass
+
+
+@dataclasses.dataclass
+class ClusterAggregation:
+    cpu_section: CPULoad | None
 
 
 def _filter_fully_labeled(samples: Sequence[prometheus_api.Sample]) -> list[prometheus_api.Sample]:
@@ -91,11 +97,14 @@ def debug_section(base_url: str, *responses: query.HTTPResponse) -> common.Write
     )
 
 
-def machine_sections(config: query.PrometheusSessionConfig) -> dict[str, str]:
+def machine_sections(
+    config: query.PrometheusSessionConfig,
+) -> tuple[ClusterAggregation, dict[str, str]]:
     def promql_getter(promql_expression: str) -> list[PromQLMetric]:
         return query.node_exporter_getter(config, common.LOGGER, promql_expression)
 
     node_exporter = NodeExporter(promql_getter)
+    cpu_cluster_section, cpu_summary = node_exporter.cpu_summary()
     result_list: dict[str, list[SectionStr]] = {}
     for node_to_section in [
         node_exporter.df_summary(),
@@ -103,8 +112,10 @@ def machine_sections(config: query.PrometheusSessionConfig) -> dict[str, str]:
         node_exporter.kernel_summary(),
         node_exporter.memory_summary(),
         node_exporter.uptime_summary(),
-        node_exporter.cpu_summary(),
+        cpu_summary,
     ]:
         for node, section_str in node_to_section.items():
             result_list.setdefault(node, []).append(section_str)
-    return {node: "\n".join([*node_list, ""]) for node, node_list in result_list.items()}
+    return ClusterAggregation(cpu_section=cpu_cluster_section), {
+        node: "\n".join([*node_list, ""]) for node, node_list in result_list.items()
+    }

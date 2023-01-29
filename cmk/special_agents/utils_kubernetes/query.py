@@ -41,17 +41,17 @@ HTTPResult = Union[
 ]
 
 
-class PrometheusEndpoints(str, enum.Enum):
+class PrometheusEndpoints(enum.StrEnum):
     query = "/api/v1/query"
 
 
-class CollectorPath(str, enum.Enum):
+class CollectorPath(enum.StrEnum):
     metadata = "/metadata"
     container_metrics = "/container_metrics"
     machine_sections = "/machine_sections"
 
 
-class Query(str, enum.Enum):
+class Query(enum.StrEnum):
     # These two rules are 1-to-1 copies from the OKD dashboard. The reason for setting the "pod" and
     # the "container" label is, that cAdvisor and kubelet both collect the same metric. Therefore,
     # not setting these labels results in overestimating usage by a factor of 2. The specifics of

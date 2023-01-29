@@ -60,10 +60,6 @@ msgstr ""
 msgid " (in relation to all successful packets)"
 msgstr ""
 
-#, python-format
-msgid " (owned by %s)"
-msgstr ""
-
 #, fuzzy, python-format
 msgid " (worst state: %s)"
 msgstr " Se potriveste grupurilor: %s"
@@ -94,10 +90,6 @@ msgid " Ignore this option"
 msgstr " Ignoră această opțiune"
 
 #, python-format
-msgid " Its directory is <tt>%s</tt>."
-msgstr " Directorul său este <tt>%s</tt>."
-
-#, python-format
 msgid " Match groups: %s"
 msgstr " Se potrivește grupurilor: %s"
 
@@ -114,10 +106,6 @@ msgid ""
 msgstr ""
 "Notă: dacă nu este configurat un nivel de service pentru un serviciu atunci "
 "cele ale elementelului vor fi folosite (dacâ sunt configurate)"
-
-#, python-format
-msgid " The folder contains <b>%d</b> hosts, which will also be deleted!"
-msgstr " Folderul conține <b>%d</b> elemente, ce vor fi șterse!"
 
 msgid ""
 " The text will automatically be wrapped. An empty line will start a new "
@@ -215,9 +203,6 @@ msgid ""
 "characters inside groups will vanish after discovery, because processes are "
 "instanced for every matching group. Thus enforce delimiters outside the "
 "group."
-msgstr ""
-
-msgid "#"
 msgstr ""
 
 msgid "%"
@@ -1113,6 +1098,34 @@ msgstr ""
 msgid "<b>%s until sunday night</b>"
 msgstr ""
 
+msgid ""
+"<b>Beware:</b> Deleting this key means that you will not be able to create "
+"signatures with the key. Already deployed agents might not be able to update "
+"anymore. You might need to update all agents manually!"
+msgstr ""
+
+msgid ""
+"<b>Beware:</b> Deleting this key means that you will not be able to encrypt "
+"or sign backups with the key. Already created backups which have been "
+"encrypted, can not be decrypted without access to this key. So please be "
+"sure that you either have a backup or don't need this key anymore."
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"<b>Beware:</b> The folder contains <b>%d</b> hosts, which will also be "
+"deleted!"
+msgstr " Folderul conține <b>%d</b> elemente, ce vor fi șterse!"
+
+msgid ""
+"<b>Beware:</b> The password may be used in checks. If you delete the "
+"password, the checks won't be able to authenticate with this password "
+"anymore."
+msgstr ""
+
+msgid "<b>Beware:</b> This will leave your environment in an undefined state."
+msgstr ""
+
 #, fuzzy
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -1227,8 +1240,11 @@ msgid ""
 "call run correctly in all execution contexts (UI and console)."
 msgstr ""
 
+msgid "<br><br>"
+msgstr ""
+
 #, python-format
-msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
+msgid "<br><br><b>Note</b>: this key was created by user <b>%s</b>"
 msgstr ""
 
 msgid ""
@@ -1250,15 +1266,6 @@ msgstr ""
 msgid ""
 "<br>Please note that Check_MK needs this password in clear<br>text during "
 "normal operation and thus stores it unencrypted<br>on the Check_MK server."
-msgstr ""
-
-msgid ""
-"<br>This action invalidates the stored connection data and the host "
-"connections will not work any longer. There are only 2 reasons to do this:"
-"<ul><li>You do not trust this host any longer and don't want to receive or "
-"fetch data anymore.</li><li>You want to reset the communication to the "
-"legacy and unencrypted mode (in which case you also need to reset the agent "
-"controller on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
 msgstr ""
 
 msgid ""
@@ -2490,6 +2497,14 @@ msgstr "Confirmă"
 #, fuzzy
 msgid "Acknowledge all"
 msgstr "Confirmă"
+
+#, fuzzy
+msgid "Acknowledge all failed notifications"
+msgstr "trimite notificare"
+
+#, fuzzy
+msgid "Acknowledge all incompatible werks"
+msgstr "Confirmă Problemele"
 
 #, fuzzy, python-format
 msgid "Acknowledge last %s result"
@@ -4230,6 +4245,10 @@ msgstr "Adaugă o regulă de rol"
 msgid "Alert handler with parameters"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Alert handler: %s"
+msgstr "Adaugă o regulă de rol"
+
 msgid "Alert handler: Don't handle all check executions"
 msgstr ""
 
@@ -4914,6 +4933,10 @@ msgstr ""
 msgid "Annotation"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Annotation: %s"
+msgstr "<p>Trimis notificare câtre: %s</p>"
+
 msgid "Annotations"
 msgstr ""
 
@@ -5216,25 +5239,6 @@ msgid "Archive this event"
 msgstr "Adaugă element"
 
 msgid "Arcserve (German) backups (Windows)"
-msgstr ""
-
-#, fuzzy
-msgid "Are you sure that you want to delete this annotation?"
-msgstr "O agregare legată de un singur element"
-
-msgid ""
-"Are you sure you want to delete this key?<br><br><b>Beware:</b> Deleting "
-"this key means that you will not be able to encrypt or sign backups with the "
-"key. Already created backups which have been encrypted, can not be decrypted "
-"without access to this key. So please be sure that you either have a backup "
-"or don't need this key anymore."
-msgstr ""
-
-msgid ""
-"Are you sure you want to delete this signature key?<br><br><b>Beware:</b> "
-"Deleting this key means that you will not be able to create signatures with "
-"the key. Already deployed agents might not be able to update anymore. You "
-"might need to update all agents manually!"
 msgstr ""
 
 #, python-format
@@ -7977,6 +7981,10 @@ msgstr ""
 msgid "Category overview"
 msgstr "Privire de ansamblu"
 
+#, fuzzy, python-format
+msgid "Category: %s"
+msgstr "Privire de ansamblu"
+
 msgid "Cell padding"
 msgstr ""
 
@@ -9119,6 +9127,18 @@ msgid "Cleanup when disk space is below"
 msgstr ""
 
 #, fuzzy
+msgid "Clear"
+msgstr "Regula Noua"
+
+#, fuzzy
+msgid "Clear & Delete"
+msgstr "Nume AP"
+
+#, fuzzy
+msgid "Clear audit log"
+msgstr "Regula Noua"
+
+#, fuzzy
 msgid "Clear failed notifications"
 msgstr "trimite notificare"
 
@@ -9129,6 +9149,9 @@ msgstr "Regula Noua"
 #, fuzzy
 msgid "Clear logs"
 msgstr "Regula Noua"
+
+msgid "Clear logs by deleting all stored messages"
+msgstr ""
 
 msgid "Clear modified attributes"
 msgstr ""
@@ -10542,6 +10565,10 @@ msgstr "trei nivele"
 msgid "Contains corrupt file %s"
 msgstr ""
 
+#, python-format
+msgid "Contains: %d %s and %d %s"
+msgstr ""
+
 msgid "Content elements"
 msgstr ""
 
@@ -10662,8 +10689,13 @@ msgstr ""
 msgid "Copies a view to a dashboard element"
 msgstr ""
 
-msgid "Copy Rules From Master"
-msgstr ""
+#, fuzzy
+msgid "Copy"
+msgstr " (Copiază)"
+
+#, fuzzy
+msgid "Copy all event rules from the central site"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Copy existing view"
@@ -10679,6 +10711,10 @@ msgstr ""
 #, python-format
 msgid "Copy rule: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Copy rules from central site"
+msgstr "(Nu trimite site-ului de la distanță)"
 
 msgid "Core"
 msgstr ""
@@ -12994,9 +13030,33 @@ msgstr ""
 msgid "Delete %s"
 msgstr ""
 
-#, python-format
-msgid "Delete %s number %d?"
-msgstr ""
+#, fuzzy, python-format
+msgid "Delete %s #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete %s element #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete %s group #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete BI aggregation #%s"
+msgstr "Agregare noua"
+
+#, fuzzy, python-format
+msgid "Delete BI pack #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete BI rule #%s"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete MIB file"
+msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete MIBs"
@@ -13013,6 +13073,10 @@ msgstr "Sterge Elementul"
 msgid "Delete aggregations"
 msgstr "Agregare noua"
 
+#, fuzzy, python-format
+msgid "Delete alert handler rule #%d"
+msgstr "Sterge Elementul"
+
 msgid ""
 "Delete all messages identified as being related to this check. This is "
 "disabled by default, which will make your mailbox grow when you do not clean "
@@ -13022,8 +13086,48 @@ msgstr ""
 msgid "Delete all processed message belonging to this check"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Delete annotation #%d"
+msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "Delete auxiliary tag"
+msgstr "Adaugă nume de senzor"
+
+#, fuzzy
+msgid "Delete backup"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete backup key #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete connection #%d"
+msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "Delete connection to site"
+msgstr "Conexiuni Active"
+
 #, fuzzy
 msgid "Delete crash reports"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete credential"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete custom attribute #%d"
+msgstr "Atribute personalizate"
+
+#, fuzzy
+msgid "Delete custom logo"
+msgstr "Perioada de timp Noua"
+
+#, fuzzy, python-format
+msgid "Delete customer #%d"
 msgstr "Sterge Elementul"
 
 msgid "Delete event immediately after the actions"
@@ -13033,9 +13137,17 @@ msgstr ""
 msgid "Delete files older than"
 msgstr "Sterge Elementul"
 
+#, fuzzy
+msgid "Delete folder"
+msgstr "Sterge Elementul"
+
 #, python-format
 msgid "Delete foreign %s"
 msgstr ""
+
+#, fuzzy
+msgid "Delete host"
+msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete hosts"
@@ -13046,9 +13158,17 @@ msgid ""
 "piggyback data available anymore."
 msgstr ""
 
-#, python-format
-msgid "Delete job %s%s?"
-msgstr ""
+#, fuzzy, python-format
+msgid "Delete icon #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete job"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete job #%d"
+msgstr "Sterge Elementul"
 
 msgid "Delete last alert handler rule"
 msgstr ""
@@ -13056,18 +13176,34 @@ msgstr ""
 msgid "Delete messages"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Delete notification rule #%d"
+msgstr "Notificari"
+
 msgid "Delete oldest event, create new event"
 msgstr ""
 
 msgid "Delete processed messages"
 msgstr ""
 
-#, python-format
-msgid "Delete report schedule entry '%s'?"
-msgstr ""
+#, fuzzy, python-format
+msgid "Delete report schedule entry #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete role #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete rule"
+msgstr "Sterge Elementul"
 
 #, fuzzy, python-format
 msgid "Delete rule #%d"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete rule pack #%d"
 msgstr "Sterge Elementul"
 
 #, fuzzy
@@ -13079,9 +13215,9 @@ msgid ""
 "positive sense. Just remove that tag if it's used negated."
 msgstr ""
 
-#, python-format
-msgid "Delete scheduled report '%s'?"
-msgstr ""
+#, fuzzy, python-format
+msgid "Delete scheduled report #%d"
+msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete selected"
@@ -13093,6 +13229,18 @@ msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete selected users"
+msgstr "Sterge Elementul"
+
+#, fuzzy, python-format
+msgid "Delete signature key #%d"
+msgstr "actualizare"
+
+#, fuzzy
+msgid "Delete tag group"
+msgstr "Adaugă group de model"
+
+#, fuzzy, python-format
+msgid "Delete target #%d"
 msgstr "Sterge Elementul"
 
 #, python-format
@@ -13208,7 +13356,19 @@ msgid "Delete this unpackaged file"
 msgstr "Sterge Elementul"
 
 #, fuzzy
+msgid "Delete time period"
+msgstr "Perioada de timp Noua"
+
+#, fuzzy
 msgid "Delete time range"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete unpackaged file"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete user"
 msgstr "Sterge Elementul"
 
 #, fuzzy
@@ -13927,6 +14087,10 @@ msgstr ""
 #, fuzzy
 msgid "Directory type"
 msgstr "Acțiune"
+
+#, fuzzy, python-format
+msgid "Directory: <tt>%s</tt>."
+msgstr " Directorul său este <tt>%s</tt>."
 
 msgid "Directs links to all host groups"
 msgstr ""
@@ -15084,110 +15248,6 @@ msgid "Do you really want to %s"
 msgstr ""
 
 #, python-format
-msgid ""
-"Do you really want to acknowledge %s by <b>deleting</b> all stored messages?"
-msgstr ""
-
-msgid "Do you really want to acknowledge <b>all</b> incompatible werks?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to acknowledge all failed notifications up to %s?"
-msgstr ""
-
-msgid "Do you really want to clear the audit log?"
-msgstr ""
-
-msgid ""
-"Do you really want to copy all event rules from the master and replace your "
-"local configuration with them?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the %s <b>%d</b> <i>%s</i>?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the %s group \"%s\"?"
-msgstr ""
-
-#, python-format
-msgid ""
-"Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> "
-"aggregations?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the MIB file <b>%s</b>?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the aggregation <b>%s</b>?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the auxiliary tag '%s'?"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Do you really want to delete the connection <b>%s</b>?"
-msgstr "O agregare legată de un singur element"
-
-#, python-format
-msgid "Do you really want to delete the connection to the site %s?"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Do you really want to delete the custom %s?"
-msgstr "O agregare legată de un singur element"
-
-#, python-format
-msgid "Do you really want to delete the custom attribute \"%s\"?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the customer %s?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the folder %s?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the host <tt>%s</tt>?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the icon <b>%s</b>?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the role %s?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the rule <b>%s</b> <i>%s</i>?"
-msgstr ""
-
-#, python-format
-msgid ""
-"Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</"
-"b> rules?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the rule with the ID <b>%s</b>?"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "Do you really want to delete the rule<b>%s</b> "
-msgstr "O agregare legată de un singur element"
-
-#, python-format
 msgid "Do you really want to delete the selected %s?"
 msgstr ""
 
@@ -15211,56 +15271,12 @@ msgstr "O agregare legată de un singur element"
 msgid "Do you really want to delete the selected users?"
 msgstr "O agregare legată de un singur element"
 
-#, python-format
-msgid "Do you really want to delete the tag group '%s'?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the time period '%s'?"
-msgstr ""
-
-#, python-format
-msgid ""
-"Do you really want to delete the unpackaged file <b>%s: <tt>%s</tt></b> from "
-"your system?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete the user %s?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to delete this %s?"
-msgstr ""
-
-msgid "Do you really want to delete this backup?"
-msgstr ""
-
-#, fuzzy
-msgid "Do you really want to delete this credential"
-msgstr "O agregare legată de un singur element"
-
-msgid "Do you really want to delete this job?"
-msgstr ""
-
-msgid "Do you really want to delete this target?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to log out of '%s'?"
-msgstr ""
-
 #, fuzzy
 msgid "Do you really want to move the selected aggregations?"
 msgstr "O agregare legată de un singur element"
 
 #, fuzzy
 msgid "Do you really want to move the selected rules?"
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy, python-format
-msgid ""
-"Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
 msgstr "O agregare legată de un singur element"
 
 #, fuzzy
@@ -15274,36 +15290,14 @@ msgid ""
 "Do you really want to remove the TLS registration of the selected hosts?"
 msgstr "O agregare legată de un singur element"
 
-#, fuzzy, python-format
-msgid ""
-"Do you really want to remove the package <tt>%s %s</tt> from your system?"
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy, python-format
-msgid "Do you really want to remove the two-factor authentication of %s?"
-msgstr "O agregare legată de un singur element"
-
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
 msgstr ""
 
 msgid ""
-"Do you really want to reset all rule hit counters in <b>all rule packs</b> "
-"to zero?"
-msgstr ""
-
-msgid ""
 "Do you really want to reset this configuration variable back to its default "
 "value?"
-msgstr ""
-
-msgid "Do you really want to start the restore of this backup?"
-msgstr ""
-
-msgid ""
-"Do you really want to stop the restore of this backup? This will - leave "
-"your environment in an undefined state."
 msgstr ""
 
 #, fuzzy
@@ -18535,6 +18529,10 @@ msgstr ""
 msgid "Filename/- expression"
 msgstr "sesiuni"
 
+#, fuzzy, python-format
+msgid "Filename: %s"
+msgstr "Adăugat %s"
+
 msgid "Filer Disk Levels (NetApp, IBM SVC)"
 msgstr ""
 
@@ -19395,6 +19393,10 @@ msgstr ""
 
 msgid "From:"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "From: %s"
+msgstr "(altul: %s)"
 
 msgid "From: email address"
 msgstr ""
@@ -22232,6 +22234,10 @@ msgstr ""
 msgid "ID of the license, e.g. <tt>virtualization</tt>"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "ID: %s"
+msgstr "Adăugat %s"
+
 msgid "IDLE"
 msgstr ""
 
@@ -22748,15 +22754,17 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If this is active, the controller will keep all other connections, that "
-"might have been created manually."
-msgstr ""
-
-msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
 "check cycle but just every time the configured age has expired. Furthermore "
 "the plugin will be executed asynchronously as a backbround process. This is "
 "useful for plugins that have a long execution time."
+msgstr ""
+
+msgid ""
+"If this is selected, the controller will keep all connections found on the "
+"monitored host. Those connections might have been created manually or by a "
+"previous configuration. If it is deselected, the controller will discard all "
+"connections not listed here."
 msgstr ""
 
 msgid ""
@@ -23336,6 +23344,11 @@ msgid ""
 "<b>Note:</b> If you remove some of the default extensions, not all of the "
 "shipped agent plugins will continue to work!<br><br>Specify the extensions "
 "in lower case and without a leading dot."
+msgstr ""
+
+msgid ""
+"If you want you can copy the ruleset of the central site into your local "
+"configuration: "
 msgstr ""
 
 msgid ""
@@ -25300,6 +25313,10 @@ msgstr ""
 msgid "Kaspersky Anti-Virus Time Settings"
 msgstr ""
 
+#, fuzzy
+msgid "Keep existing connections"
+msgstr "Conexiuni Active"
+
 msgid ""
 "Keep hosts while piggyback source sends piggyback data only for other hosts "
 "for"
@@ -25318,10 +25335,6 @@ msgstr ""
 
 msgid "Keep special characters"
 msgstr ""
-
-#, fuzzy
-msgid "Keep vanished connections"
-msgstr "Conexiuni Active"
 
 msgid "Keepalived Parameters"
 msgstr ""
@@ -27308,6 +27321,13 @@ msgstr ""
 msgid "Log level for the processing of all incoming events"
 msgstr ""
 
+msgid "Log out"
+msgstr ""
+
+#, fuzzy
+msgid "Log out of site"
+msgstr "(Nu trimite site-ului de la distanță)"
+
 msgid "Log replication events"
 msgstr ""
 
@@ -27780,6 +27800,10 @@ msgstr ""
 #, fuzzy
 msgid "Lower levels for remaining expiration time of licenses"
 msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Lower levels for requests utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -30950,6 +30974,10 @@ msgstr ""
 
 msgid "Name resolution"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Name: %s"
+msgstr "Nume"
 
 #, fuzzy
 msgid "Names"
@@ -34126,6 +34154,10 @@ msgstr ""
 msgid "Owner of event"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Owner: %s"
+msgstr "(altul: %s)"
+
 msgid "P"
 msgstr ""
 
@@ -35408,14 +35440,6 @@ msgid ""
 msgstr ""
 
 msgid "Please configure proper bind credentials."
-msgstr ""
-
-#, python-format
-msgid "Please confirm the deletion of \"%s\"%s."
-msgstr ""
-
-#, python-format
-msgid "Please confirm the deletion of \"%s\"."
 msgstr ""
 
 #, python-format
@@ -37648,6 +37672,14 @@ msgstr ""
 msgid "Relay Log Size"
 msgstr ""
 
+#, fuzzy
+msgid "Release"
+msgstr "slot-uri"
+
+#, fuzzy
+msgid "Release package"
+msgstr "Conexiune Noua"
+
 msgid "Reliability"
 msgstr ""
 
@@ -37821,6 +37853,10 @@ msgid "Remove only matching vanished services"
 msgstr "Adaugă filtre"
 
 #, fuzzy
+msgid "Remove package"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Remove service"
 msgstr "Adaugă filtre"
 
@@ -37848,6 +37884,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Remove two-factor authentication"
+msgstr "trimite notificare"
+
+#, fuzzy, python-format
+msgid "Remove two-factor authentication of %s"
 msgstr "trimite notificare"
 
 msgid "Remove vanished services"
@@ -38300,6 +38340,9 @@ msgstr ""
 #, fuzzy
 msgid "Reset acknowledged state"
 msgstr "Autorul Confirmației"
+
+msgid "Reset all rule hit counters to zero"
+msgstr ""
 
 #, fuzzy
 msgid "Reset counters"
@@ -42442,8 +42485,8 @@ msgid "Sophos Memory utilization"
 msgstr "Dezactiveaza Notificarile"
 
 msgid ""
-"Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
-"Free Edition does not allow distributed setups after the 30-day trial "
+"Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
+"installation does not allow distributed setups after the 30-day trial "
 "period. In case you want to test distributed setups, please contact us at "
 "https://checkmk.com/contact"
 msgstr ""
@@ -43196,6 +43239,10 @@ msgstr ""
 
 msgid "Start restore"
 msgstr ""
+
+#, fuzzy
+msgid "Start restore of backup"
+msgstr "Adaugă filtre"
 
 msgid "Start restore of this backup"
 msgstr ""
@@ -44127,14 +44174,14 @@ msgstr ""
 msgid "Stop job"
 msgstr "de sus in jos"
 
-#, python-format
-msgid "Stop job %s%s?"
-msgstr ""
-
 msgid ""
 "Stop processing of the registration request. Do not iterate through the "
 "following rules."
 msgstr ""
+
+#, fuzzy
+msgid "Stop restore of backup"
+msgstr "Adaugă filtre"
 
 msgid "Stop this backup job"
 msgstr ""
@@ -47686,11 +47733,6 @@ msgid ""
 "authenticate with remote systems. "
 msgstr ""
 
-msgid ""
-"The password may be used in checks. If you delete the password, the checks "
-"won't be able to authenticate with this password anymore."
-msgstr ""
-
 #, fuzzy
 msgid "The password or API key of the user."
 msgstr "Parola"
@@ -49025,6 +49067,15 @@ msgid "This account has no permission for automation."
 msgstr ""
 
 msgid ""
+"This action invalidates the stored connection data and the host connections "
+"will not work any longer.<br>There are only 2 reasons to do this:<ul><li>You "
+"do not trust this host any longer and don't want to receive or fetch data "
+"anymore.</li><li>You want to reset the communication to the legacy and "
+"unencrypted mode (in which case you also need to reset the agent controller "
+"on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
+msgstr ""
+
+msgid ""
 "This active check sends out special E-Mails to a defined mail address using "
 "the SMTP protocol and then tries to receive these mails back by querying the "
 "inbox of a IMAP or POP3 mailbox. With this check you can verify that your "
@@ -49044,6 +49095,13 @@ msgid ""
 "impractical on device with very many cores. This is currently only supported "
 "on linux and windows agents as well as devices monitored through the host-"
 "resource mib"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "This affects %s"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+msgid "This affects all rule packs."
 msgstr ""
 
 msgid "This aggregation does not exist."
@@ -49727,11 +49785,10 @@ msgid ""
 "This object is a shadow object from a remote site. It cannot be managed here."
 msgstr ""
 
-#, python-format
 msgid ""
-"This operation will release the package <tt>%s</tt> from your system and "
-"release all its packaged files into unpackaged state. The files are then "
-"free to be packaged into another package or to be deleted manually."
+"This operation will release the package from your system and release all its "
+"packaged files into unpackaged state. The files are then free to be packaged "
+"into another package or to be deleted manually."
 msgstr ""
 
 msgid ""
@@ -51495,6 +51552,10 @@ msgid ""
 "<tt>plesk_domain</tt>, used for monitoring Plesk."
 msgstr ""
 
+#, fuzzy
+msgid "This will replace your local configuration"
+msgstr "foloseste configuratia locala"
+
 msgid ""
 "This will result in all files whos full file path does match the regular "
 "expression beeing dismissed."
@@ -52889,6 +52950,10 @@ msgstr ""
 
 msgid "Type of tree layout"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Type: %s"
+msgstr "Adăugat %s"
 
 msgid "Types of events that are being processed"
 msgstr ""
@@ -55224,6 +55289,10 @@ msgstr ""
 msgid "Used quota: Absolute or relative upper levels"
 msgstr "Numarul maxim de mesaje"
 
+#, fuzzy, python-format
+msgid "Used rules: %d"
+msgstr "licente nefolosite"
+
 #, fuzzy
 msgid "Used size of log files"
 msgstr "Dimensiunea maxima pentru cel mai mare fisier"
@@ -55867,6 +55936,10 @@ msgstr ""
 msgid "Version of Server"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Version: %s"
+msgstr "sesiuni"
+
 #, fuzzy
 msgid "Vertical axis mirroring"
 msgstr "Nivelurile maxime pentru voltaj"
@@ -56144,11 +56217,10 @@ msgid "WARNING"
 msgstr ""
 
 msgid ""
-"WARNING: This Event Console is currently running as a replication slave. The "
-"rules edited here will not be used. Instead a copy of the rules of the "
-"master are being used in the case of a takeover. The same holds for the "
-"event actions in the global settings.<br><br>If you want you can copy the "
-"ruleset of the master into your local slave configuration: "
+"WARNING: This Event Console is currently running as a remote replication. "
+"The rules edited here will not be used. Instead a copy of the rules of the "
+"central site are being used in the case of a takeover. The same holds for "
+"the event actions in the global settings."
 msgstr ""
 
 msgid "WCU"
@@ -59312,6 +59384,13 @@ msgstr ""
 msgid "add new pattern"
 msgstr "Adaugă model/tipar"
 
+#, fuzzy
+msgid "aggregation"
+msgid_plural "aggregations"
+msgstr[0] "Agregare noua"
+msgstr[1] "Agregare noua"
+msgstr[2] "Agregare noua"
+
 msgid "ago"
 msgstr ""
 
@@ -59544,6 +59623,10 @@ msgstr ""
 
 msgid "contact groups: "
 msgstr ""
+
+#, fuzzy
+msgid "content"
+msgstr "Adaugă Conținut"
 
 msgid "count"
 msgstr ""
@@ -59869,6 +59952,10 @@ msgstr "Element nou"
 
 msgid "fixed"
 msgstr ""
+
+#, fuzzy
+msgid "fixed page"
+msgstr "% / gamă"
 
 msgid "fixed page element"
 msgstr ""
@@ -60868,6 +60955,13 @@ msgstr "randuri"
 msgid "rpm"
 msgstr ""
 
+#, fuzzy
+msgid "rule"
+msgid_plural "rules"
+msgstr[0] "Adaugă o regulă de rol"
+msgstr[1] "Adaugă o regulă de rol"
+msgstr[2] "Adaugă o regulă de rol"
+
 msgid "run as background job"
 msgstr ""
 
@@ -61108,6 +61202,10 @@ msgstr "necunoscut"
 msgid "unknown (old agent)"
 msgstr "necunoscut (agent vechi)"
 
+#, fuzzy
+msgid "unlimited"
+msgstr "limita superioara"
+
 msgid "unmonitored"
 msgstr "nemonitorizat"
 
@@ -61304,6 +61402,44 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Are you sure that you want to delete this annotation?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy, python-format
+#~ msgid "Do you really want to delete the connection <b>%s</b>?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy, python-format
+#~ msgid "Do you really want to delete the custom %s?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy, python-format
+#~ msgid "Do you really want to delete the rule<b>%s</b> "
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Do you really want to delete this credential"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Do you really want to remove the package <tt>%s %s</tt> from your system?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy, python-format
+#~ msgid "Do you really want to remove the two-factor authentication of %s?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Keep vanished connections"
+#~ msgstr "Conexiuni Active"
 
 #, fuzzy
 #~ msgid "Hide all settings"
@@ -62185,10 +62321,6 @@ msgstr ""
 #~ msgstr "slot-uri"
 
 #, fuzzy
-#~ msgid "Release notes"
-#~ msgstr "slot-uri"
-
-#, fuzzy
 #~ msgid "monitored"
 #~ msgstr "nemonitorizat"
 
@@ -62264,11 +62396,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Notify users"
 #~ msgstr "Notifica utilizatorii"
-
-#, fuzzy, python-format
-#~| msgid "<p>Sent notification to: %s</p>"
-#~ msgid "Sent notification to: %s"
-#~ msgstr "<p>Trimis notificare câtre: %s</p>"
 
 #, fuzzy
 #~ msgid "User notifications"
@@ -63303,10 +63430,6 @@ msgstr ""
 #~ msgstr "Dimensiunea Maxima"
 
 #, fuzzy
-#~ msgid "Versions"
-#~ msgstr "sesiuni"
-
-#, fuzzy
 #~ msgid "Volume Group Name"
 #~ msgstr "Numele Elementului"
 
@@ -63895,10 +64018,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Back to Logfile"
 #~ msgstr "Editeaza regulile de loguri"
-
-#, fuzzy
-#~ msgid "Bulk Delete"
-#~ msgstr "Nume AP"
 
 #, fuzzy
 #~ msgid "Bulk delete"
@@ -65374,10 +65493,6 @@ msgstr ""
 #~ msgstr "Conexiuni Active"
 
 #, fuzzy
-#~ msgid "Content"
-#~ msgstr "Adaugă Conținut"
-
-#, fuzzy
 #~ msgid "Create gateway hosts in<ul>"
 #~ msgstr "Verificări active"
 
@@ -66144,10 +66259,6 @@ msgstr ""
 #~ msgstr "foloseste descrierea"
 
 #, fuzzy
-#~ msgid "use local configuration"
-#~ msgstr "foloseste configuratia locala"
-
-#, fuzzy
 #~ msgid "All tags"
 #~ msgstr "Adaugă Condiție"
 
@@ -66178,10 +66289,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New aux tag"
 #~ msgstr "Eticheta Auxiliara noua"
-
-#, fuzzy
-#~ msgid "New tag group"
-#~ msgstr "Adaugă group de model"
 
 #, fuzzy
 #~ msgid "SELECT Requests"

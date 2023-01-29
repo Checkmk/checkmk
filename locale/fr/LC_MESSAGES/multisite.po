@@ -57,10 +57,6 @@ msgid " (in relation to all successful packets)"
 msgstr " (en relation avec tous les paquets correctement installés)"
 
 #, python-format
-msgid " (owned by %s)"
-msgstr " (appartenant à %s)"
-
-#, python-format
 msgid " (worst state: %s)"
 msgstr " (état de panne: %s)"
 
@@ -93,10 +89,6 @@ msgid " Ignore this option"
 msgstr " Ignorer cette option"
 
 #, python-format
-msgid " Its directory is <tt>%s</tt>."
-msgstr " Le répertoire est  <tt>%s</tt>."
-
-#, python-format
 msgid " Match groups: %s"
 msgstr " Groupe(s) correspondant(s): %s"
 
@@ -113,11 +105,6 @@ msgid ""
 msgstr ""
 " Remarque : si aucun niveau de service n'est configuré pour un service, "
 "celui de l'hôte sera utilisé à la place (s'il est configuré)."
-
-#, python-format
-msgid " The folder contains <b>%d</b> hosts, which will also be deleted!"
-msgstr ""
-" Les dossiers qui contiennent <b>%d</b> hôtes, seront également supprimés !"
 
 msgid ""
 " The text will automatically be wrapped. An empty line will start a new "
@@ -223,10 +210,6 @@ msgstr ""
 "découverte, car les processus sont instanciés pour chaque groupe "
 "correspondant. Il faut donc appliquer les délimiteurs à l'extérieur du "
 "groupe."
-
-#, fuzzy
-msgid "#"
-msgstr "N#"
 
 msgid "%"
 msgstr "%"
@@ -1116,6 +1099,55 @@ msgstr "<b>%s jusqu'à la fin de l'année</b>"
 msgid "<b>%s until sunday night</b>"
 msgstr "<b>%s jusqu'à dimanche soir</b>"
 
+#, fuzzy
+msgid ""
+"<b>Beware:</b> Deleting this key means that you will not be able to create "
+"signatures with the key. Already deployed agents might not be able to update "
+"anymore. You might need to update all agents manually!"
+msgstr ""
+"Êtes-vous sûr de vouloir supprimer cette clé de signature ? "
+"<br><br><b>Attention : </b> La suppression de cette clé signifie que vous ne "
+"pourrez plus créer de signatures avec cette clé. Les agents déjà déployés "
+"pourraient ne plus être en mesure de se mettre à jour. Vous devrez peut-être "
+"mettre à jour tous les agents manuellement !"
+
+#, fuzzy
+msgid ""
+"<b>Beware:</b> Deleting this key means that you will not be able to encrypt "
+"or sign backups with the key. Already created backups which have been "
+"encrypted, can not be decrypted without access to this key. So please be "
+"sure that you either have a backup or don't need this key anymore."
+msgstr ""
+"Êtes-vous sûr de vouloir supprimer cette clé ? <br><br><b>Attention : </b> "
+"La suppression de cette clé signifie que vous ne pourrez pas crypter ou "
+"signer des sauvegardes avec cette clé. Les sauvegardes déjà créées qui ont "
+"été cryptées, ne peuvent pas être décryptées sans accès à cette clé. Assurez-"
+"vous donc que vous avez une sauvegarde ou que vous n'avez plus besoin de "
+"cette clé."
+
+#, fuzzy, python-format
+msgid ""
+"<b>Beware:</b> The folder contains <b>%d</b> hosts, which will also be "
+"deleted!"
+msgstr ""
+" Les dossiers qui contiennent <b>%d</b> hôtes, seront également supprimés !"
+
+#, fuzzy
+msgid ""
+"<b>Beware:</b> The password may be used in checks. If you delete the "
+"password, the checks won't be able to authenticate with this password "
+"anymore."
+msgstr ""
+"Le mot de passe peut être utilisé dans les contrôles. Si vous supprimez le "
+"mot de passe, les contrôles ne pourront plus s'authentifier avec ce mot de "
+"passe."
+
+#, fuzzy
+msgid "<b>Beware:</b> This will leave your environment in an undefined state."
+msgstr ""
+"Voulez-vous vraiment arrêter la restauration de cette sauvegarde ? Cela va - "
+"laisser votre environnement dans un état indéfini."
+
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
 "<b>Négation : </b> faire en sorte que la règle s'applique pour <b>toutes les "
@@ -1252,8 +1284,11 @@ msgstr ""
 "pour permettre le lancement correct du programme dans tous les contextes "
 "d'exécution (UI et console)."
 
-#, python-format
-msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
+msgid "<br><br>"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "<br><br><b>Note</b>: this key was created by user <b>%s</b>"
 msgstr "<br><b>Note</b> : cette clé a été créée par l'utilisateur <b>%s</b>."
 
 msgid ""
@@ -1288,22 +1323,6 @@ msgstr ""
 "<br>Veuillez noter que Check_MK a besoin de ce mot de passe en "
 "clair<br>pendant le fonctionnement normal et le stocke donc en clair<br>sur "
 "le serveur Check_MK."
-
-msgid ""
-"<br>This action invalidates the stored connection data and the host "
-"connections will not work any longer. There are only 2 reasons to do this:"
-"<ul><li>You do not trust this host any longer and don't want to receive or "
-"fetch data anymore.</li><li>You want to reset the communication to the "
-"legacy and unencrypted mode (in which case you also need to reset the agent "
-"controller on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
-msgstr ""
-"<br>Cette action invalide les données de connexion stockées et les "
-"connexions de l'hôte ne fonctionneront plus. Il n'y a que 2 raisons de faire "
-"cela:<ul><li>Vous ne faites plus confiance à cet hôte et ne voulez plus "
-"recevoir ou récupérer de données.</li><li>Vous voulez réinitialiser la "
-"communication en mode traditionnel et non crypté (dans ce cas, vous devez "
-"également réinitialiser le contrôleur d'agent sur l'hôte surveillé (voir "
-"`cmk-agent-ctl help`).</li></ul> ;"
 
 msgid ""
 "<br>With these intervals specific single values or table columns can be kept "
@@ -2853,6 +2872,14 @@ msgstr "Accuser réception"
 
 msgid "Acknowledge all"
 msgstr "Accuser réception de tous les"
+
+#, fuzzy
+msgid "Acknowledge all failed notifications"
+msgstr "Effacer les notifications d'échec"
+
+#, fuzzy
+msgid "Acknowledge all incompatible werks"
+msgstr "Reconnu incompatible Werks"
 
 #, python-format
 msgid "Acknowledge last %s result"
@@ -4504,6 +4531,10 @@ msgstr "Le gestionnaire d'alerte s'est arrêté"
 msgid "Alert handler with parameters"
 msgstr "Gestionnaire d'alerte avec paramètres"
 
+#, fuzzy, python-format
+msgid "Alert handler: %s"
+msgstr "Gestionnaires d'alertes"
+
 msgid "Alert handler: Don't handle all check executions"
 msgstr ""
 "Gestionnaire d'alertes : Ne pas gérer toutes les exécutions de contrôle"
@@ -5240,6 +5271,10 @@ msgstr ""
 msgid "Annotation"
 msgstr "Annotation"
 
+#, fuzzy, python-format
+msgid "Annotation: %s"
+msgstr "Annotations"
+
 msgid "Annotations"
 msgstr "Annotations"
 
@@ -5554,35 +5589,6 @@ msgstr "Archiver cet événement"
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Sauvegardes Arcserve (allemand) (Windows)"
-
-msgid "Are you sure that you want to delete this annotation?"
-msgstr "Êtes-vous sûr de vouloir supprimer cette annotation ?"
-
-msgid ""
-"Are you sure you want to delete this key?<br><br><b>Beware:</b> Deleting "
-"this key means that you will not be able to encrypt or sign backups with the "
-"key. Already created backups which have been encrypted, can not be decrypted "
-"without access to this key. So please be sure that you either have a backup "
-"or don't need this key anymore."
-msgstr ""
-"Êtes-vous sûr de vouloir supprimer cette clé ? <br><br><b>Attention : </b> "
-"La suppression de cette clé signifie que vous ne pourrez pas crypter ou "
-"signer des sauvegardes avec cette clé. Les sauvegardes déjà créées qui ont "
-"été cryptées, ne peuvent pas être décryptées sans accès à cette clé. Assurez-"
-"vous donc que vous avez une sauvegarde ou que vous n'avez plus besoin de "
-"cette clé."
-
-msgid ""
-"Are you sure you want to delete this signature key?<br><br><b>Beware:</b> "
-"Deleting this key means that you will not be able to create signatures with "
-"the key. Already deployed agents might not be able to update anymore. You "
-"might need to update all agents manually!"
-msgstr ""
-"Êtes-vous sûr de vouloir supprimer cette clé de signature ? "
-"<br><br><b>Attention : </b> La suppression de cette clé signifie que vous ne "
-"pourrez plus créer de signatures avec cette clé. Les agents déjà déployés "
-"pourraient ne plus être en mesure de se mettre à jour. Vous devrez peut-être "
-"mettre à jour tous les agents manuellement !"
 
 #, python-format
 msgid ""
@@ -8577,6 +8583,10 @@ msgstr "Catégorie"
 msgid "Category overview"
 msgstr "Aperçu des catégories"
 
+#, fuzzy, python-format
+msgid "Category: %s"
+msgstr "Catégorie"
+
 msgid "Cell padding"
 msgstr "Rembourrage des cellules"
 
@@ -9815,6 +9825,18 @@ msgstr "Messages de nettoyage"
 msgid "Cleanup when disk space is below"
 msgstr "Nettoyage lorsque l'espace disque est insuffisant"
 
+#, fuzzy
+msgid "Clear"
+msgstr "Effacer le journal"
+
+#, fuzzy
+msgid "Clear & Delete"
+msgstr "Fichier supprimé"
+
+#, fuzzy
+msgid "Clear audit log"
+msgstr "Effacement du journal d'audit."
+
 msgid "Clear failed notifications"
 msgstr "Effacer les notifications d'échec"
 
@@ -9823,6 +9845,12 @@ msgstr "Effacer le journal"
 
 msgid "Clear logs"
 msgstr "Effacer les journaux"
+
+#, fuzzy
+msgid "Clear logs by deleting all stored messages"
+msgstr ""
+"Voulez-vous vraiment reconnaître %s en <b>supprimant</b> tous les messages "
+"stockés ?"
 
 msgid "Clear modified attributes"
 msgstr "Effacer les attributs modifiés"
@@ -11307,6 +11335,10 @@ msgstr "Conteneurs niveaux supérieurs"
 msgid "Contains corrupt file %s"
 msgstr "Contient un fichier corrompu %s"
 
+#, python-format
+msgid "Contains: %d %s and %d %s"
+msgstr ""
+
 msgid "Content elements"
 msgstr "Éléments de contenu"
 
@@ -11425,8 +11457,13 @@ msgstr "Copie des règles d'événements du maître dans la configuration locale
 msgid "Copies a view to a dashboard element"
 msgstr "Copie une vue sur un élément du tableau de bord"
 
-msgid "Copy Rules From Master"
-msgstr "Copier les règles du maître"
+#, fuzzy
+msgid "Copy"
+msgstr " (copie)"
+
+#, fuzzy
+msgid "Copy all event rules from the central site"
+msgstr "Copie des règles d'événements du maître dans la configuration locale."
 
 msgid "Copy existing view"
 msgstr "Copier la vue existante"
@@ -11441,6 +11478,10 @@ msgstr ""
 #, python-format
 msgid "Copy rule: %s"
 msgstr "Règle de copie : %s"
+
+#, fuzzy
+msgid "Copy rules from central site"
+msgstr "Copie des règles du maître"
 
 msgid "Core"
 msgstr "Core"
@@ -13691,9 +13732,33 @@ msgstr "Supprimer"
 msgid "Delete %s"
 msgstr "Supprimer %s"
 
-#, python-format
-msgid "Delete %s number %d?"
-msgstr "Supprimer %s numéro %d ?"
+#, fuzzy, python-format
+msgid "Delete %s #%d"
+msgstr "Supprimé %s %d"
+
+#, fuzzy, python-format
+msgid "Delete %s element #%d"
+msgstr "Supprimer cet élément"
+
+#, fuzzy, python-format
+msgid "Delete %s group #%d"
+msgstr "Supprimé %s groupe %s"
+
+#, fuzzy, python-format
+msgid "Delete BI aggregation #%s"
+msgstr "Agrégation BI supprimée %s"
+
+#, fuzzy, python-format
+msgid "Delete BI pack #%d"
+msgstr "Pack BI supprimé %s"
+
+#, fuzzy, python-format
+msgid "Delete BI rule #%s"
+msgstr "Règle supprimée %s"
+
+#, fuzzy
+msgid "Delete MIB file"
+msgstr "Supprimer les MIB"
 
 msgid "Delete MIBs"
 msgstr "Supprimer les MIB"
@@ -13709,6 +13774,10 @@ msgstr "Supprimer après"
 msgid "Delete aggregations"
 msgstr "Supprimer les agrégations"
 
+#, fuzzy, python-format
+msgid "Delete alert handler rule #%d"
+msgstr "Supprimer la dernière règle de traitement des alertes"
+
 msgid ""
 "Delete all messages identified as being related to this check. This is "
 "disabled by default, which will make your mailbox grow when you do not clean "
@@ -13721,8 +13790,48 @@ msgstr ""
 msgid "Delete all processed message belonging to this check"
 msgstr "Supprimer tous les messages traités appartenant à ce contrôle"
 
+#, fuzzy, python-format
+msgid "Delete annotation #%d"
+msgstr "Supprimer cette annotation"
+
+#, fuzzy
+msgid "Delete auxiliary tag"
+msgstr "Supprimer cette balise auxiliaire"
+
+#, fuzzy
+msgid "Delete backup"
+msgstr "Supprimer cette sauvegarde"
+
+#, fuzzy, python-format
+msgid "Delete backup key #%d"
+msgstr "Créer une clé de sauvegarde"
+
+#, fuzzy, python-format
+msgid "Delete connection #%d"
+msgstr "Connexion LDAP supprimée %s"
+
+#, fuzzy
+msgid "Delete connection to site"
+msgstr "Connexion LDAP supprimée %s"
+
 msgid "Delete crash reports"
 msgstr "Supprimer les rapports d'accident"
+
+#, fuzzy
+msgid "Delete credential"
+msgstr "Supprimer cette accréditation"
+
+#, fuzzy, python-format
+msgid "Delete custom attribute #%d"
+msgstr "Suppression de l'attribut %s"
+
+#, fuzzy
+msgid "Delete custom logo"
+msgstr "Suppression du logo personnalisé de l'interface graphique"
+
+#, fuzzy, python-format
+msgid "Delete customer #%d"
+msgstr "Supprimer ce client"
 
 msgid "Delete event immediately after the actions"
 msgstr "Suppression de l'événement immédiatement après les actions"
@@ -13730,9 +13839,17 @@ msgstr "Suppression de l'événement immédiatement après les actions"
 msgid "Delete files older than"
 msgstr "Supprimer les fichiers plus anciens que"
 
+#, fuzzy
+msgid "Delete folder"
+msgstr "Dossier supprimé %s"
+
 #, python-format
 msgid "Delete foreign %s"
 msgstr "Supprimer les étrangers %s"
+
+#, fuzzy
+msgid "Delete host"
+msgstr "Supprimer les hôtes"
 
 msgid "Delete hosts"
 msgstr "Supprimer les hôtes"
@@ -13744,8 +13861,16 @@ msgstr ""
 "Supprime les hôtes qui ont été créés par cette connexion et qui n'ont plus "
 "de données de ferroutage disponibles."
 
-#, python-format
-msgid "Delete job %s%s?"
+#, fuzzy, python-format
+msgid "Delete icon #%d"
+msgstr "Règle supprimée %s"
+
+#, fuzzy
+msgid "Delete job"
+msgstr "Supprimer ce travail"
+
+#, fuzzy, python-format
+msgid "Delete job #%d"
 msgstr "Supprimer le travail %s%s ?"
 
 msgid "Delete last alert handler rule"
@@ -13754,19 +13879,35 @@ msgstr "Supprimer la dernière règle de traitement des alertes"
 msgid "Delete messages"
 msgstr "Supprimer les messages"
 
+#, fuzzy, python-format
+msgid "Delete notification rule #%d"
+msgstr "Supprimer cette règle de notification"
+
 msgid "Delete oldest event, create new event"
 msgstr "Supprimer l'événement le plus ancien, créer un nouvel événement"
 
 msgid "Delete processed messages"
 msgstr "Supprimer les messages traités"
 
-#, python-format
-msgid "Delete report schedule entry '%s'?"
+#, fuzzy, python-format
+msgid "Delete report schedule entry #%d"
 msgstr "Supprimer l'entrée du calendrier des rapports '%s' ?"
+
+#, fuzzy, python-format
+msgid "Delete role #%d"
+msgstr "Règle supprimée %s"
+
+#, fuzzy
+msgid "Delete rule"
+msgstr "Supprimer les règles"
 
 #, fuzzy, python-format
 msgid "Delete rule #%d"
 msgstr "Règle supprimée %s"
+
+#, fuzzy, python-format
+msgid "Delete rule pack #%d"
+msgstr "Pack de règles supprimé %s"
 
 msgid "Delete rules"
 msgstr "Supprimer les règles"
@@ -13779,8 +13920,8 @@ msgstr ""
 "balise est utilisée dans un sens positif. Supprimez simplement la balise si "
 "elle est utilisée dans un sens négatif."
 
-#, python-format
-msgid "Delete scheduled report '%s'?"
+#, fuzzy, python-format
+msgid "Delete scheduled report #%d"
 msgstr "Supprimer le rapport programmé '%s' ?"
 
 msgid "Delete selected"
@@ -13791,6 +13932,18 @@ msgstr "Supprimer les MIB sélectionnées"
 
 msgid "Delete selected users"
 msgstr "Supprimer les utilisateurs sélectionnés"
+
+#, fuzzy, python-format
+msgid "Delete signature key #%d"
+msgstr "Clé de signature d'agent supprimée '%s'."
+
+#, fuzzy
+msgid "Delete tag group"
+msgstr "Supprimer ce groupe de tags"
+
+#, fuzzy, python-format
+msgid "Delete target #%d"
+msgstr "Règle supprimée %s"
 
 #, python-format
 msgid "Delete this %s"
@@ -13888,8 +14041,20 @@ msgstr "Supprimer ce groupe de tags"
 msgid "Delete this unpackaged file"
 msgstr "Supprimer ce fichier non emballé"
 
+#, fuzzy
+msgid "Delete time period"
+msgstr "Période supprimée %s"
+
 msgid "Delete time range"
 msgstr "Supprimer la plage horaire"
+
+#, fuzzy
+msgid "Delete unpackaged file"
+msgstr "Supprimer ce fichier non emballé"
+
+#, fuzzy
+msgid "Delete user"
+msgstr "Supprimer les utilisateurs"
 
 msgid "Delete users"
 msgstr "Supprimer les utilisateurs"
@@ -14630,6 +14795,10 @@ msgstr "Répertoire où sauvegarder la sauvegarde"
 
 msgid "Directory type"
 msgstr "Type de répertoire"
+
+#, fuzzy, python-format
+msgid "Directory: <tt>%s</tt>."
+msgstr " Le répertoire est  <tt>%s</tt>."
 
 msgid "Directs links to all host groups"
 msgstr "Dirige les liens vers tous les groupes d'hôtes"
@@ -15752,122 +15921,6 @@ msgid "Do you really want to %s"
 msgstr "Voulez-vous vraiment %s"
 
 #, python-format
-msgid ""
-"Do you really want to acknowledge %s by <b>deleting</b> all stored messages?"
-msgstr ""
-"Voulez-vous vraiment reconnaître %s en <b>supprimant</b> tous les messages "
-"stockés ?"
-
-msgid "Do you really want to acknowledge <b>all</b> incompatible werks?"
-msgstr ""
-"Voulez-vous vraiment reconnaître <b>tous</b> les travaux incompatibles ?"
-
-#, python-format
-msgid "Do you really want to acknowledge all failed notifications up to %s?"
-msgstr ""
-"Voulez-vous vraiment accuser réception de toutes les notifications échouées "
-"jusqu'à %s ?"
-
-msgid "Do you really want to clear the audit log?"
-msgstr "Voulez-vous vraiment effacer le journal d'audit ?"
-
-msgid ""
-"Do you really want to copy all event rules from the master and replace your "
-"local configuration with them?"
-msgstr ""
-"Voulez-vous vraiment copier toutes les règles d'événements du maître et "
-"remplacer votre configuration locale par celles-ci ?"
-
-#, python-format
-msgid "Do you really want to delete the %s <b>%d</b> <i>%s</i>?"
-msgstr "Voulez-vous vraiment supprimer le %s <b>%d</b> <i>%s</i> ?"
-
-#, python-format
-msgid "Do you really want to delete the %s group \"%s\"?"
-msgstr "Voulez-vous vraiment supprimer le groupe %s \"%s\" ?"
-
-#, python-format
-msgid ""
-"Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> "
-"aggregations?"
-msgstr ""
-"Voulez-vous vraiment supprimer le pack BI <b>%s</b> <i>%s</i> avec <b>%d</b> "
-"agrégations ?"
-
-#, python-format
-msgid "Do you really want to delete the MIB file <b>%s</b>?"
-msgstr "Voulez-vous vraiment supprimer le fichier MIB <b>%s</b> ?"
-
-#, python-format
-msgid "Do you really want to delete the aggregation <b>%s</b>?"
-msgstr "Voulez-vous vraiment supprimer l'agrégation <b>%s</b> ?"
-
-#, python-format
-msgid "Do you really want to delete the auxiliary tag '%s'?"
-msgstr "Voulez-vous vraiment supprimer la balise auxiliaire '%s' ?"
-
-#, fuzzy, python-format
-msgid "Do you really want to delete the connection <b>%s</b>?"
-msgstr "Voulez-vous vraiment supprimer la connexion LDAP <b>%s</b> ?"
-
-#, python-format
-msgid "Do you really want to delete the connection to the site %s?"
-msgstr "Voulez-vous vraiment supprimer la connexion au site %s ?"
-
-#, fuzzy, python-format
-msgid "Do you really want to delete the custom %s?"
-msgstr "Voulez-vous vraiment supprimer le client %s ?"
-
-#, python-format
-msgid "Do you really want to delete the custom attribute \"%s\"?"
-msgstr "Voulez-vous vraiment supprimer l'attribut personnalisé \"%s\" ?"
-
-#, python-format
-msgid "Do you really want to delete the customer %s?"
-msgstr "Voulez-vous vraiment supprimer le client %s ?"
-
-#, python-format
-msgid "Do you really want to delete the folder %s?"
-msgstr "Voulez-vous vraiment supprimer le dossier %s ?"
-
-#, python-format
-msgid "Do you really want to delete the host <tt>%s</tt>?"
-msgstr "Voulez-vous vraiment supprimer l'hôte <tt>%s</tt> ?"
-
-#, python-format
-msgid "Do you really want to delete the icon <b>%s</b>?"
-msgstr "Voulez-vous vraiment supprimer l'icône <b>%s</b> ?"
-
-#, python-format
-msgid "Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?"
-msgstr ""
-"Voulez-vous vraiment supprimer la règle de notification <b>%d</b> <i>%s</i> ?"
-
-#, python-format
-msgid "Do you really want to delete the role %s?"
-msgstr "Voulez-vous vraiment supprimer le rôle %s ?"
-
-#, python-format
-msgid "Do you really want to delete the rule <b>%s</b> <i>%s</i>?"
-msgstr "Voulez-vous vraiment supprimer la règle <b>%s</b> <i>%s</i> ?"
-
-#, python-format
-msgid ""
-"Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</"
-"b> rules?"
-msgstr ""
-"Voulez-vous vraiment supprimer le paquet de règles <b>%s</b> <i>%s</i> avec "
-"<b>%s</b> règles ?"
-
-#, python-format
-msgid "Do you really want to delete the rule with the ID <b>%s</b>?"
-msgstr "Voulez-vous vraiment supprimer la règle avec l'ID <b>%s</b> ?"
-
-#, python-format
-msgid "Do you really want to delete the rule<b>%s</b> "
-msgstr "Voulez-vous vraiment supprimer la règle<b>%s</b>. "
-
-#, python-format
 msgid "Do you really want to delete the selected %s?"
 msgstr "Voulez-vous vraiment supprimer les %s sélectionnés ?"
 
@@ -15886,57 +15939,11 @@ msgstr "Voulez-vous vraiment supprimer les règles sélectionnées ?"
 msgid "Do you really want to delete the selected users?"
 msgstr "Voulez-vous vraiment supprimer les utilisateurs sélectionnés ?"
 
-#, python-format
-msgid "Do you really want to delete the tag group '%s'?"
-msgstr "Voulez-vous vraiment supprimer le groupe de tags '%s' ?"
-
-#, python-format
-msgid "Do you really want to delete the time period '%s'?"
-msgstr "Voulez-vous vraiment supprimer la période de temps '%s' ?"
-
-#, python-format
-msgid ""
-"Do you really want to delete the unpackaged file <b>%s: <tt>%s</tt></b> from "
-"your system?"
-msgstr ""
-"Voulez-vous vraiment supprimer le fichier non emballé <b>%s : <tt>%s</tt></"
-"b> de votre système ?"
-
-#, python-format
-msgid "Do you really want to delete the user %s?"
-msgstr "Voulez-vous vraiment supprimer l'utilisateur %s ?"
-
-#, python-format
-msgid "Do you really want to delete this %s?"
-msgstr "Voulez-vous vraiment supprimer ce %s ?"
-
-msgid "Do you really want to delete this backup?"
-msgstr "Voulez-vous vraiment supprimer cette sauvegarde ?"
-
-msgid "Do you really want to delete this credential"
-msgstr "Voulez-vous vraiment supprimer cette accréditation ?"
-
-msgid "Do you really want to delete this job?"
-msgstr "Voulez-vous vraiment supprimer ce travail ?"
-
-msgid "Do you really want to delete this target?"
-msgstr "Voulez-vous vraiment supprimer cette cible ?"
-
-#, python-format
-msgid "Do you really want to log out of '%s'?"
-msgstr "Voulez-vous vraiment vous déconnecter de '%s' ?"
-
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Voulez-vous vraiment déplacer les agrégations sélectionnées ?"
 
 msgid "Do you really want to move the selected rules?"
 msgstr "Voulez-vous vraiment déplacer les règles sélectionnées ?"
-
-#, python-format
-msgid ""
-"Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
-msgstr ""
-"Voulez-vous vraiment supprimer l'enregistrement TLS de l'hôte <tt>%s</tt> ?"
 
 msgid ""
 "Do you really want to remove the TLS registration of the hosts in this "
@@ -15950,17 +15957,6 @@ msgid ""
 msgstr ""
 "Voulez-vous vraiment supprimer l'enregistrement TLS des hôtes sélectionnés ?"
 
-#, fuzzy, python-format
-msgid ""
-"Do you really want to remove the package <tt>%s %s</tt> from your system?"
-msgstr ""
-"Voulez-vous vraiment supprimer le paquet <tt>%s</tt> de votre système ?"
-
-#, fuzzy, python-format
-msgid "Do you really want to remove the two-factor authentication of %s?"
-msgstr ""
-"Voulez-vous vraiment désactiver l'authentification à deux facteurs de %s ?"
-
 #, fuzzy
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
@@ -15970,28 +15966,11 @@ msgstr ""
 "redémarrage du noyau de surveillance !"
 
 msgid ""
-"Do you really want to reset all rule hit counters in <b>all rule packs</b> "
-"to zero?"
-msgstr ""
-"Voulez-vous vraiment remettre à zéro tous les compteurs d'occurrences de "
-"règles dans <b>tous les packs de règles</b> ?"
-
-msgid ""
 "Do you really want to reset this configuration variable back to its default "
 "value?"
 msgstr ""
 "Voulez-vous vraiment réinitialiser cette variable de configuration à sa "
 "valeur par défaut ?"
-
-msgid "Do you really want to start the restore of this backup?"
-msgstr "Voulez-vous vraiment commencer la restauration de cette sauvegarde ?"
-
-msgid ""
-"Do you really want to stop the restore of this backup? This will - leave "
-"your environment in an undefined state."
-msgstr ""
-"Voulez-vous vraiment arrêter la restauration de cette sauvegarde ? Cela va - "
-"laisser votre environnement dans un état indéfini."
 
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "Voulez-vous vraiment changer le mode du démon d'événements ?"
@@ -19226,6 +19205,10 @@ msgstr "Nom de fichier du PDF joint"
 msgid "Filename/- expression"
 msgstr "Nom de fichier/- expression"
 
+#, fuzzy, python-format
+msgid "Filename: %s"
+msgstr "Nom de fichier"
+
 msgid "Filer Disk Levels (NetApp, IBM SVC)"
 msgstr "Niveaux de disques de filer (NetApp, IBM SVC)"
 
@@ -20156,6 +20139,10 @@ msgstr ""
 
 msgid "From:"
 msgstr "De :"
+
+#, fuzzy, python-format
+msgid "From: %s"
+msgstr "De : "
 
 msgid "From: email address"
 msgstr "De : adresse e-mail"
@@ -23272,6 +23259,10 @@ msgstr "ID de la licence, par exemple <tt>Windows Server 2008 R2</tt>."
 msgid "ID of the license, e.g. <tt>virtualization</tt>"
 msgstr "ID de la licence, par exemple <tt>virtualisation</tt>."
 
+#, fuzzy, python-format
+msgid "ID: %s"
+msgstr "%s : %s"
+
 msgid "IDLE"
 msgstr "IDLE"
 
@@ -23957,11 +23948,6 @@ msgstr ""
 "pas affectés."
 
 msgid ""
-"If this is active, the controller will keep all other connections, that "
-"might have been created manually."
-msgstr ""
-
-msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
 "check cycle but just every time the configured age has expired. Furthermore "
 "the plugin will be executed asynchronously as a backbround process. This is "
@@ -23972,6 +23958,13 @@ msgstr ""
 "configuré aura expiré. De plus, le plugin sera exécuté de manière asynchrone "
 "comme un processus backbround. Ceci est utile pour les plugins qui ont un "
 "long temps d'exécution."
+
+msgid ""
+"If this is selected, the controller will keep all connections found on the "
+"monitored host. Those connections might have been created manually or by a "
+"previous configuration. If it is deselected, the controller will discard all "
+"connections not listed here."
+msgstr ""
 
 msgid ""
 "If this is set, the plugin output will be cached and will only be refreshed "
@@ -24933,6 +24926,14 @@ msgstr ""
 "trouvé. <b>Note:</b> Si vous supprimez certaines des extensions par défaut, "
 "tous les plugins d'agent livrés ne continueront pas à fonctionner!"
 "<br><br>Spécifiez les extensions en minuscules et sans point de tête."
+
+#, fuzzy
+msgid ""
+"If you want you can copy the ruleset of the central site into your local "
+"configuration: "
+msgstr ""
+"Voulez-vous vraiment copier toutes les règles d'événements du maître et "
+"remplacer votre configuration locale par celles-ci ?"
 
 msgid ""
 "If you want, you can specify a name that will be used in the <tt>define "
@@ -27109,6 +27110,10 @@ msgstr "Kaspersky Anti-Virus (Linux)"
 msgid "Kaspersky Anti-Virus Time Settings"
 msgstr "Paramètres de temps de Kaspersky Anti-Virus"
 
+#, fuzzy
+msgid "Keep existing connections"
+msgstr "Connexions en attente"
+
 msgid ""
 "Keep hosts while piggyback source sends piggyback data only for other hosts "
 "for"
@@ -27134,10 +27139,6 @@ msgstr "Conserver le niveau de service du message (si disponible)"
 
 msgid "Keep special characters"
 msgstr "Conserver les caractères spéciaux"
-
-#, fuzzy
-msgid "Keep vanished connections"
-msgstr "Connexions établies"
 
 msgid "Keepalived Parameters"
 msgstr "Paramètres de maintien en vie"
@@ -29021,6 +29022,14 @@ msgstr ""
 msgid "Log level for the processing of all incoming events"
 msgstr "Niveau de journal pour le traitement de tous les événements entrants"
 
+#, fuzzy
+msgid "Log out"
+msgstr "Déconnecté."
+
+#, fuzzy
+msgid "Log out of site"
+msgstr "Déconnexion du site distant %s"
+
 msgid "Log replication events"
 msgstr "Journaliser les événements de réplication"
 
@@ -29454,6 +29463,10 @@ msgstr "Niveaux inférieurs pour les lectures API restantes"
 #, fuzzy
 msgid "Lower levels for remaining expiration time of licenses"
 msgstr "Niveaux inférieurs pour les lectures API restantes"
+
+#, fuzzy
+msgid "Lower levels for requests utilization"
+msgstr "Niveaux supérieurs d'utilisation des demandes"
 
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
@@ -32483,6 +32496,10 @@ msgstr "Nom de la machine virtuelle et/ou du<br>threadpool"
 
 msgid "Name resolution"
 msgstr "Résolution du nom"
+
+#, fuzzy, python-format
+msgid "Name: %s"
+msgstr "Noms"
 
 msgid "Names"
 msgstr "Noms"
@@ -35685,6 +35702,10 @@ msgstr "Propriétaire"
 msgid "Owner of event"
 msgstr "Propriétaire de l'événement"
 
+#, fuzzy, python-format
+msgid "Owner: %s"
+msgstr "Propriétaire"
+
 msgid "P"
 msgstr "P"
 
@@ -37015,14 +37036,6 @@ msgstr ""
 
 msgid "Please configure proper bind credentials."
 msgstr "Veuillez configurer les informations d'identification appropriées."
-
-#, python-format
-msgid "Please confirm the deletion of \"%s\"%s."
-msgstr "Veuillez confirmer la suppression de \"%s\"%s."
-
-#, python-format
-msgid "Please confirm the deletion of \"%s\"."
-msgstr "Veuillez confirmer la suppression de \"%s\"."
 
 #, python-format
 msgid ""
@@ -39306,6 +39319,14 @@ msgstr "Niveaux relatifs des sessions actives."
 msgid "Relay Log Size"
 msgstr "Taille du journal du relais"
 
+#, fuzzy
+msgid "Release"
+msgstr "Notes de mise à jour"
+
+#, fuzzy
+msgid "Release package"
+msgstr "Créer un paquet"
+
 msgid "Reliability"
 msgstr "Fiabilité"
 
@@ -39475,6 +39496,10 @@ msgstr "Enlever la condition de l'étiquette"
 msgid "Remove only matching vanished services"
 msgstr "Supprimer uniquement les services disparus correspondants"
 
+#, fuzzy
+msgid "Remove package"
+msgstr "Retirer ce paquet"
+
 msgid "Remove service"
 msgstr "Supprimer le service"
 
@@ -39498,6 +39523,10 @@ msgstr "Supprimez ce paquet de règles du module \"Extension Packages\"."
 
 #, fuzzy
 msgid "Remove two-factor authentication"
+msgstr "Authentification à deux facteurs"
+
+#, fuzzy, python-format
+msgid "Remove two-factor authentication of %s"
 msgstr "Authentification à deux facteurs"
 
 msgid "Remove vanished services"
@@ -39949,6 +39978,10 @@ msgstr ""
 
 msgid "Reset acknowledged state"
 msgstr "Remise à zéro de l'état d'acquittement"
+
+#, fuzzy
+msgid "Reset all rule hit counters to zero"
+msgstr "Remise à zéro de tous les compteurs d'occurrences de règles"
 
 msgid "Reset counters"
 msgstr "Remise à zéro des compteurs"
@@ -44165,8 +44198,8 @@ msgstr "Sophos Utilisation de la mémoire"
 
 #, fuzzy
 msgid ""
-"Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
-"Free Edition does not allow distributed setups after the 30-day trial "
+"Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
+"installation does not allow distributed setups after the 30-day trial "
 "period. In case you want to test distributed setups, please contact us at "
 "https://checkmk.com/contact"
 msgstr ""
@@ -45108,6 +45141,10 @@ msgstr "Début ou fin de l'état de battement"
 msgid "Start restore"
 msgstr "Démarrer la restauration"
 
+#, fuzzy
+msgid "Start restore of backup"
+msgstr "Démarrer la restauration de cette sauvegarde"
+
 msgid "Start restore of this backup"
 msgstr "Démarrer la restauration de cette sauvegarde"
 
@@ -46045,16 +46082,16 @@ msgstr ""
 msgid "Stop job"
 msgstr "Arrêter le travail"
 
-#, python-format
-msgid "Stop job %s%s?"
-msgstr "Arrêter le travail de %s%s ?"
-
 msgid ""
 "Stop processing of the registration request. Do not iterate through the "
 "following rules."
 msgstr ""
 "Arrêter le traitement de la demande d'enregistrement. Ne pas itérer à "
 "travers les règles suivantes."
+
+#, fuzzy
+msgid "Stop restore of backup"
+msgstr "Démarrer la restauration de cette sauvegarde"
 
 msgid "Stop this backup job"
 msgstr "Arrêter cette tâche de sauvegarde"
@@ -50390,14 +50427,6 @@ msgstr ""
 "surveillance doit avoir accès au mot de passe non crypté car il doit le "
 "soumettre pour s'authentifier auprès des systèmes distants. "
 
-msgid ""
-"The password may be used in checks. If you delete the password, the checks "
-"won't be able to authenticate with this password anymore."
-msgstr ""
-"Le mot de passe peut être utilisé dans les contrôles. Si vous supprimez le "
-"mot de passe, les contrôles ne pourront plus s'authentifier avec ce mot de "
-"passe."
-
 msgid "The password or API key of the user."
 msgstr "Le mot de passe ou la clé API de l'utilisateur."
 
@@ -52138,6 +52167,23 @@ msgstr "Cette URL n'est pas autorisée à être utilisée comme signet."
 msgid "This account has no permission for automation."
 msgstr "Ce compte n'a pas de permission pour l'automatisation."
 
+#, fuzzy
+msgid ""
+"This action invalidates the stored connection data and the host connections "
+"will not work any longer.<br>There are only 2 reasons to do this:<ul><li>You "
+"do not trust this host any longer and don't want to receive or fetch data "
+"anymore.</li><li>You want to reset the communication to the legacy and "
+"unencrypted mode (in which case you also need to reset the agent controller "
+"on the monitored host (refer to `cmk-agent-ctl help`).</li></ul>"
+msgstr ""
+"<br>Cette action invalide les données de connexion stockées et les "
+"connexions de l'hôte ne fonctionneront plus. Il n'y a que 2 raisons de faire "
+"cela:<ul><li>Vous ne faites plus confiance à cet hôte et ne voulez plus "
+"recevoir ou récupérer de données.</li><li>Vous voulez réinitialiser la "
+"communication en mode traditionnel et non crypté (dans ce cas, vous devez "
+"également réinitialiser le contrôleur d'agent sur l'hôte surveillé (voir "
+"`cmk-agent-ctl help`).</li></ul> ;"
+
 msgid ""
 "This active check sends out special E-Mails to a defined mail address using "
 "the SMTP protocol and then tries to receive these mails back by querying the "
@@ -52174,6 +52220,14 @@ msgstr ""
 "graphique peut être peu pratique sur les appareils ayant un très grand "
 "nombre de cœurs. Ceci n'est actuellement supporté que par les agents linux "
 "et windows ainsi que par les appareils surveillés par le host-resource mib."
+
+#, fuzzy, python-format
+msgid "This affects %s"
+msgstr "Ce site est %s"
+
+#, fuzzy
+msgid "This affects all rule packs."
+msgstr "Cette règle correspond."
 
 msgid "This aggregation does not exist."
 msgstr "Cette agrégation n'existe pas."
@@ -53113,11 +53167,11 @@ msgstr ""
 "Cet objet est un objet fantôme provenant d'un site distant. Il ne peut pas "
 "être géré ici."
 
-#, python-format
+#, fuzzy
 msgid ""
-"This operation will release the package <tt>%s</tt> from your system and "
-"release all its packaged files into unpackaged state. The files are then "
-"free to be packaged into another package or to be deleted manually."
+"This operation will release the package from your system and release all its "
+"packaged files into unpackaged state. The files are then free to be packaged "
+"into another package or to be deleted manually."
 msgstr ""
 "Cette opération libère le paquet <tt>%s</tt> de votre système et libère tous "
 "ses fichiers empaquetés dans un état non empaqueté. Les fichiers sont alors "
@@ -55769,6 +55823,10 @@ msgstr ""
 "Cela va déployer les deux plugins d'agent <tt>plesk_backup</tt> et "
 "<tt>plesk_domain</tt>, utilisés pour surveiller Plesk."
 
+#, fuzzy
+msgid "This will replace your local configuration"
+msgstr "Utilisez la configuration globale"
+
 msgid ""
 "This will result in all files whos full file path does match the regular "
 "expression beeing dismissed."
@@ -57157,6 +57215,10 @@ msgstr "Type de la valeur"
 
 msgid "Type of tree layout"
 msgstr "Type de disposition des arbres"
+
+#, fuzzy, python-format
+msgid "Type: %s"
+msgstr "Modèle : %s"
 
 msgid "Types of events that are being processed"
 msgstr "Types d'événements en cours de traitement"
@@ -59568,6 +59630,10 @@ msgstr "Méta-données utilisées"
 msgid "Used quota: Absolute or relative upper levels"
 msgstr "Quota utilisé : Niveaux supérieurs absolus ou relatifs"
 
+#, fuzzy, python-format
+msgid "Used rules: %d"
+msgstr "Nouvelle règle : %s"
+
 msgid "Used size of log files"
 msgstr "Taille utilisée des fichiers journaux"
 
@@ -60250,6 +60316,10 @@ msgstr "Version 3 et TLS"
 msgid "Version of Server"
 msgstr "Version du serveur"
 
+#, fuzzy, python-format
+msgid "Version: %s"
+msgstr "Versions"
+
 msgid "Vertical axis mirroring"
 msgstr "Miroir à axe vertical"
 
@@ -60519,12 +60589,12 @@ msgstr "WARN/CRIT"
 msgid "WARNING"
 msgstr "AVERTISSEMENT"
 
+#, fuzzy
 msgid ""
-"WARNING: This Event Console is currently running as a replication slave. The "
-"rules edited here will not be used. Instead a copy of the rules of the "
-"master are being used in the case of a takeover. The same holds for the "
-"event actions in the global settings.<br><br>If you want you can copy the "
-"ruleset of the master into your local slave configuration: "
+"WARNING: This Event Console is currently running as a remote replication. "
+"The rules edited here will not be used. Instead a copy of the rules of the "
+"central site are being used in the case of a takeover. The same holds for "
+"the event actions in the global settings."
 msgstr ""
 "AVERTISSEMENT : Cette console d'événements fonctionne actuellement en tant "
 "qu'esclave de réplication. Les règles éditées ici ne seront pas utilisées. "
@@ -64796,6 +64866,12 @@ msgstr "ajouter ISL"
 msgid "add new pattern"
 msgstr "Ajouter un nouveau modèle"
 
+#, fuzzy
+msgid "aggregation"
+msgid_plural "aggregations"
+msgstr[0] "Agrégation"
+msgstr[1] "Agrégation"
+
 msgid "ago"
 msgstr "il y a un an"
 
@@ -65016,6 +65092,10 @@ msgstr "connexions"
 
 msgid "contact groups: "
 msgstr "les groupes de contact : "
+
+#, fuzzy
+msgid "content"
+msgstr "Contenu"
 
 msgid "count"
 msgstr "compter"
@@ -65324,6 +65404,10 @@ msgstr "ajustement et prévisions"
 
 msgid "fixed"
 msgstr "Correction de"
+
+#, fuzzy
+msgid "fixed page"
+msgstr "Gamme fixe"
 
 msgid "fixed page element"
 msgstr "élément de page fixe"
@@ -66271,6 +66355,12 @@ msgstr "rangées"
 msgid "rpm"
 msgstr "rpm"
 
+#, fuzzy
+msgid "rule"
+msgid_plural "rules"
+msgstr[0] "Ajouter une règle"
+msgstr[1] "Ajouter une règle"
+
 msgid "run as background job"
 msgstr "exécuter en tâche de fond"
 
@@ -66509,6 +66599,10 @@ msgstr "inconnu"
 msgid "unknown (old agent)"
 msgstr "inconnu (ancien agent)"
 
+#, fuzzy
+msgid "unlimited"
+msgstr "Limite de la règle"
+
 msgid "unmonitored"
 msgstr "non surveillé"
 
@@ -66697,6 +66791,220 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#, fuzzy
+#~| msgid "N#"
+#~ msgid "#"
+#~ msgstr "N#"
+
+#, python-format
+#~ msgid " (owned by %s)"
+#~ msgstr " (appartenant à %s)"
+
+#~ msgid "Are you sure that you want to delete this annotation?"
+#~ msgstr "Êtes-vous sûr de vouloir supprimer cette annotation ?"
+
+#~ msgid "Copy Rules From Master"
+#~ msgstr "Copier les règles du maître"
+
+#, python-format
+#~ msgid "Delete %s number %d?"
+#~ msgstr "Supprimer %s numéro %d ?"
+
+#~ msgid "Do you really want to acknowledge <b>all</b> incompatible werks?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment reconnaître <b>tous</b> les travaux incompatibles ?"
+
+#, python-format
+#~ msgid "Do you really want to acknowledge all failed notifications up to %s?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment accuser réception de toutes les notifications "
+#~ "échouées jusqu'à %s ?"
+
+#~ msgid "Do you really want to clear the audit log?"
+#~ msgstr "Voulez-vous vraiment effacer le journal d'audit ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the %s <b>%d</b> <i>%s</i>?"
+#~ msgstr "Voulez-vous vraiment supprimer le %s <b>%d</b> <i>%s</i> ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the %s group \"%s\"?"
+#~ msgstr "Voulez-vous vraiment supprimer le groupe %s \"%s\" ?"
+
+#, python-format
+#~ msgid ""
+#~ "Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</"
+#~ "b> aggregations?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment supprimer le pack BI <b>%s</b> <i>%s</i> avec <b>%d</"
+#~ "b> agrégations ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the MIB file <b>%s</b>?"
+#~ msgstr "Voulez-vous vraiment supprimer le fichier MIB <b>%s</b> ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the aggregation <b>%s</b>?"
+#~ msgstr "Voulez-vous vraiment supprimer l'agrégation <b>%s</b> ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the auxiliary tag '%s'?"
+#~ msgstr "Voulez-vous vraiment supprimer la balise auxiliaire '%s' ?"
+
+#, fuzzy, python-format
+#~| msgid "Do you really want to delete the LDAP connection <b>%s</b>?"
+#~ msgid "Do you really want to delete the connection <b>%s</b>?"
+#~ msgstr "Voulez-vous vraiment supprimer la connexion LDAP <b>%s</b> ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the connection to the site %s?"
+#~ msgstr "Voulez-vous vraiment supprimer la connexion au site %s ?"
+
+#, fuzzy, python-format
+#~| msgid "Do you really want to delete the customer %s?"
+#~ msgid "Do you really want to delete the custom %s?"
+#~ msgstr "Voulez-vous vraiment supprimer le client %s ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the custom attribute \"%s\"?"
+#~ msgstr "Voulez-vous vraiment supprimer l'attribut personnalisé \"%s\" ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the customer %s?"
+#~ msgstr "Voulez-vous vraiment supprimer le client %s ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the folder %s?"
+#~ msgstr "Voulez-vous vraiment supprimer le dossier %s ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the host <tt>%s</tt>?"
+#~ msgstr "Voulez-vous vraiment supprimer l'hôte <tt>%s</tt> ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the icon <b>%s</b>?"
+#~ msgstr "Voulez-vous vraiment supprimer l'icône <b>%s</b> ?"
+
+#, python-format
+#~ msgid ""
+#~ "Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment supprimer la règle de notification <b>%d</b> <i>%s</"
+#~ "i> ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the role %s?"
+#~ msgstr "Voulez-vous vraiment supprimer le rôle %s ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the rule <b>%s</b> <i>%s</i>?"
+#~ msgstr "Voulez-vous vraiment supprimer la règle <b>%s</b> <i>%s</i> ?"
+
+#, python-format
+#~ msgid ""
+#~ "Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>"
+#~ "%s</b> rules?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment supprimer le paquet de règles <b>%s</b> <i>%s</i> "
+#~ "avec <b>%s</b> règles ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the rule with the ID <b>%s</b>?"
+#~ msgstr "Voulez-vous vraiment supprimer la règle avec l'ID <b>%s</b> ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the rule<b>%s</b> "
+#~ msgstr "Voulez-vous vraiment supprimer la règle<b>%s</b>. "
+
+#, python-format
+#~ msgid "Do you really want to delete the tag group '%s'?"
+#~ msgstr "Voulez-vous vraiment supprimer le groupe de tags '%s' ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the time period '%s'?"
+#~ msgstr "Voulez-vous vraiment supprimer la période de temps '%s' ?"
+
+#, python-format
+#~ msgid ""
+#~ "Do you really want to delete the unpackaged file <b>%s: <tt>%s</tt></b> "
+#~ "from your system?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment supprimer le fichier non emballé <b>%s : <tt>%s</"
+#~ "tt></b> de votre système ?"
+
+#, python-format
+#~ msgid "Do you really want to delete the user %s?"
+#~ msgstr "Voulez-vous vraiment supprimer l'utilisateur %s ?"
+
+#, python-format
+#~ msgid "Do you really want to delete this %s?"
+#~ msgstr "Voulez-vous vraiment supprimer ce %s ?"
+
+#~ msgid "Do you really want to delete this backup?"
+#~ msgstr "Voulez-vous vraiment supprimer cette sauvegarde ?"
+
+#~ msgid "Do you really want to delete this credential"
+#~ msgstr "Voulez-vous vraiment supprimer cette accréditation ?"
+
+#~ msgid "Do you really want to delete this job?"
+#~ msgstr "Voulez-vous vraiment supprimer ce travail ?"
+
+#~ msgid "Do you really want to delete this target?"
+#~ msgstr "Voulez-vous vraiment supprimer cette cible ?"
+
+#, python-format
+#~ msgid "Do you really want to log out of '%s'?"
+#~ msgstr "Voulez-vous vraiment vous déconnecter de '%s' ?"
+
+#, python-format
+#~ msgid ""
+#~ "Do you really want to remove the TLS registration of the host <tt>%s</tt>?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment supprimer l'enregistrement TLS de l'hôte <tt>%s</"
+#~ "tt> ?"
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "Do you really want to remove the package <tt>%s</tt> from your system?"
+#~ msgid ""
+#~ "Do you really want to remove the package <tt>%s %s</tt> from your system?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment supprimer le paquet <tt>%s</tt> de votre système ?"
+
+#, fuzzy, python-format
+#~| msgid "Do you really want to disable the two-factor authentication of %s?"
+#~ msgid "Do you really want to remove the two-factor authentication of %s?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment désactiver l'authentification à deux facteurs de %s ?"
+
+#~ msgid ""
+#~ "Do you really want to reset all rule hit counters in <b>all rule packs</"
+#~ "b> to zero?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment remettre à zéro tous les compteurs d'occurrences de "
+#~ "règles dans <b>tous les packs de règles</b> ?"
+
+#~ msgid "Do you really want to start the restore of this backup?"
+#~ msgstr ""
+#~ "Voulez-vous vraiment commencer la restauration de cette sauvegarde ?"
+
+#, fuzzy
+#~| msgid "Established connections"
+#~ msgid "Keep vanished connections"
+#~ msgstr "Connexions établies"
+
+#, python-format
+#~ msgid "Please confirm the deletion of \"%s\"%s."
+#~ msgstr "Veuillez confirmer la suppression de \"%s\"%s."
+
+#, python-format
+#~ msgid "Please confirm the deletion of \"%s\"."
+#~ msgstr "Veuillez confirmer la suppression de \"%s\"."
+
+#, python-format
+#~ msgid "Stop job %s%s?"
+#~ msgstr "Arrêter le travail de %s%s ?"
 
 #, python-format
 #~ msgid " (%s left)"
@@ -66900,11 +67208,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "Nom de l'alias de l'instance"
-
-#, fuzzy, python-format
-#~| msgid "Template: %s"
-#~ msgid "Type: %s"
-#~ msgstr "Modèle : %s"
 
 #~ msgid "View changes"
 #~ msgstr "Voir les changements"
@@ -67777,14 +68080,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~ msgstr "Création de nouveaux utilisateurs : %s"
 
 #, python-format
-#~ msgid "Deleted %s group %s"
-#~ msgstr "Supprimé %s groupe %s"
-
-#, python-format
-#~ msgid "Deleted folder %s"
-#~ msgstr "Dossier supprimé %s"
-
-#, python-format
 #~ msgid "Deleted host %s"
 #~ msgstr "Hôte supprimé %s"
 
@@ -68201,10 +68496,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #, python-format
 #~ msgid "Created snapshot %s"
 #~ msgstr "Création du snapshot %s"
-
-#, python-format
-#~ msgid "Deleted agent signature key '%s'"
-#~ msgstr "Clé de signature d'agent supprimée '%s'."
 
 #~ msgid "Disabled agent updates"
 #~ msgstr "Mises à jour des agents désactivées"
@@ -69641,9 +69932,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~ msgid "Release Notes - %s %s"
 #~ msgstr "Notes de mise à jour"
 
-#~ msgid "Release notes"
-#~ msgstr "Notes de mise à jour"
-
 #~ msgid "With unlimited scale"
 #~ msgstr "Avec une échelle illimitée"
 
@@ -69706,9 +69994,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #, python-format
 #~ msgid "Currently there are %d changes to activate."
 #~ msgstr "Il y a actuellement %d changements à activer."
-
-#~ msgid "From: "
-#~ msgstr "De : "
 
 #~ msgid "To: "
 #~ msgstr "A : "
@@ -72271,9 +72556,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~ msgid "Vendor and Device ID"
 #~ msgstr "ID du fournisseur et du dispositif"
 
-#~ msgid "Versions"
-#~ msgstr "Versions"
-
 #~ msgid "Virtual Machine"
 #~ msgstr "Machine virtuelle"
 
@@ -73313,9 +73595,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Choose this icon"
 #~ msgstr "Choisir cette icône"
-
-#~ msgid "Content"
-#~ msgstr "Contenu"
 
 #~ msgid "Create and email this report right now"
 #~ msgstr "Créer et envoyer ce rapport par e-mail tout de suite"

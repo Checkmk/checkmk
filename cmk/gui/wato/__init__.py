@@ -327,6 +327,8 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
 
     In the moment we define an official plugin API, we can drop this and require all plugins to
     switch to the new API. Until then let's not bother the users with it.
+
+    CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.plugins.wato as api_module
@@ -453,11 +455,14 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     ):
         api_module.__dict__[name] = cmk.gui.watolib.hosts_and_folders.__dict__[name]
     for name in (
+        "register_rule",
         "Rulespec",
         "rulespec_group_registry",
         "rulespec_registry",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.rulespecs.__dict__[name]
+    globals().update({"register_rule": cmk.gui.watolib.rulespecs.register_rule})
+
     for name in ("LivestatusViaTCP",):
         api_module.__dict__[name] = cmk.gui.watolib.sites.__dict__[name]
     for name in ("TimeperiodSelection",):
@@ -487,6 +492,23 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         api_module.__dict__[name] = cmk.gui.plugins.watolib.utils.__dict__[name]
     for name in ("rule_option_elements",):
         api_module.__dict__[name] = cmk.gui.valuespec.__dict__[name]
+
+    # Avoid needed imports, see CMK-12147
+    globals().update(
+        {
+            "Age": cmk.gui.valuespec.Age,
+            "Alternative": cmk.gui.valuespec.Alternative,
+            "Dictionary": cmk.gui.valuespec.Dictionary,
+            "FixedValue": cmk.gui.valuespec.FixedValue,
+            "ListOfStrings": cmk.gui.valuespec.ListOfStrings,
+            "MonitoredHostname": cmk.gui.valuespec.MonitoredHostname,
+            "Password": cmk.gui.valuespec.Password,
+            "TextAscii": cmk.gui.valuespec.TextAscii,
+            "TextUnicode": cmk.gui.valuespec.TextUnicode,
+            "Transform": cmk.gui.valuespec.Transform,
+        }
+    )
+
     for name in (
         "multisite_dir",
         "site_neutral_path",

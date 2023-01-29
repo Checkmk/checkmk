@@ -2670,12 +2670,13 @@ class DropdownChoice(ValueSpec[T | None]):
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T | None] | None = None,
+        default: ValueSpecDefault[T] | None = None,  # CMK-12228
     ):
 
         super().__init__(
             title=title,
             help=help,
-            default_value=default_value,
+            default_value=default or default_value,
             validate=validate,
         )
         self._choices = choices
@@ -5259,6 +5260,7 @@ class Alternative(ValueSpec[AlternativeModel]):
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[AlternativeModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[AlternativeModel] | None = None,
+        style: str | None = None,  # CMK-12228
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._elements = elements

@@ -647,9 +647,9 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         self,
         *,
         check_group_name: str,
-        item_spec: Callable[[], ValueSpec],
         group: type[RulespecBaseGroup],
         parameter_valuespec: Callable[[], ValueSpec],
+        item_spec: Callable[[], ValueSpec] | None = None,  # CMK-12228
         title: Callable[[], str] | None = None,
         match_type: str | None = None,
         item_type: Literal["item", "service"] = "item",

@@ -168,6 +168,8 @@ def _register_pre_21_plugin_api() -> None:
 
     In the moment we define an official plugin API, we can drop this and require all plugins to
     switch to the new API. Until then let's not bother the users with it.
+
+    CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.plugins.visuals as api_module

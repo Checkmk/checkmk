@@ -84,6 +84,8 @@ def _register_pre_21_plugin_api() -> None:
 
     In the moment we define an official plugin API, we can drop this and require all plugins to
     switch to the new API. Until then let's not bother the users with it.
+
+    CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.plugins.metrics as api_module
@@ -122,6 +124,14 @@ def _register_pre_21_plugin_api() -> None:
         "unit_info",
     ):
         api_module.__dict__[name] = plugin_utils.__dict__[name]
+
+    # Avoid needed imports, see CMK-12147
+    globals().update(
+        {
+            "indexed_color": plugin_utils.indexed_color,
+            "metric_info": plugin_utils.metric_info,
+        }
+    )
 
 
 def fixup_graph_info() -> None:

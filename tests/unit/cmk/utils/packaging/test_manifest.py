@@ -6,6 +6,9 @@
 import pprint
 from pathlib import Path
 
+import pydantic
+import pytest
+
 from cmk.utils.packaging import (
     Manifest,
     PackageName,
@@ -115,3 +118,34 @@ def test_field_conversion() -> None:
         " 'version.packaged': '2.1.0p2'}\n"
     )
     assert isinstance(m.version, PackageVersion)
+
+
+def test_field_conversion_package_name() -> None:
+    with pytest.raises(pydantic.ValidationError, match="must start with a letter or underscore"):
+        Manifest.parse_python_string(
+            "{'author': 'tribe29 GmbH (mo)',\n"
+            " 'description': '',\n"
+            " 'download_url': '',\n"
+            " 'files': {},\n"
+            " 'name': '111',\n"
+            " 'title': 'Test Package',\n"
+            " 'version': '1.0.0',\n"
+            " 'version.min_required': '2.1.0',\n"
+            " 'version.packaged': '2.1.0p2'}\n"
+        )
+
+
+def test_field_conversion_package_part() -> None:
+    with pytest.raises(pydantic.ValidationError, match="value is not a valid enumeration member"):
+        Manifest.parse_python_string(
+            "{'author': 'tribe29 GmbH (mo)',\n"
+            " 'description': '',\n"
+            " 'download_url': '',\n"
+            " 'files': {'not-a-package-part': ['just-some-file']},\n"
+            " 'name': 'test-package-only-21',\n"
+            " 'title': 'Test Package for 2.1 only',\n"
+            " 'version': '1.0',\n"
+            " 'version.min_required': '2.1.0',\n"
+            " 'version.packaged': '2022.08.08',\n"
+            " 'version.usable_until': '2.2.0'}\n"
+        )

@@ -86,6 +86,14 @@ class PackageName(str):
         "underscore and it must start with a letter or underscore."
     )
 
+    @classmethod
+    def validate(cls, value: str | PackageName) -> "PackageName":
+        return cls(value)
+
+    @classmethod
+    def __get_validators__(cls) -> Iterator[Callable[[str | "PackageName"], "PackageName"]]:
+        yield cls.validate
+
     def __new__(cls, value: str) -> PackageName:
         if not cls._REGEX.match(value):
             raise ValueError(cls._MISMATCH_MSG)

@@ -15,6 +15,7 @@ import cmk.gui.metrics as metrics
 from cmk.gui.plugins.metrics import utils
 from cmk.gui.plugins.metrics.utils import (
     Atom,
+    hex_color_to_rgb_color,
     HorizontalRule,
     NormalizedPerfData,
     StackElement,
@@ -433,3 +434,14 @@ def test_unit_conversion_target_units_exist() -> None:
     # This test may be useful to avoid that modifications in the unit_info dict will result in an
     # empty result or an error when calling `get_all_target_units`
     assert utils.UnitConverter.get_all_target_units()
+
+
+@pytest.mark.parametrize(
+    "hex_color, expected_rgb",
+    [
+        ("#112233", (17, 34, 51)),
+        ("#123", (17, 34, 51)),
+    ],
+)
+def test_hex_color_to_rgb_color(hex_color: str, expected_rgb: tuple[int, int, int]) -> None:
+    assert hex_color_to_rgb_color(hex_color) == expected_rgb

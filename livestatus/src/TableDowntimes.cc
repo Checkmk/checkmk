@@ -79,10 +79,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         "triggered_by",
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
         offsets, [](const Downtime &r) { return r._triggered_by; }));
-    addColumn(std::make_unique<IntColumn<Downtime>>(
+    addColumn(std::make_unique<BoolColumn<Downtime>>(
         "is_pending",
         "1 if the downtime is currently pending (not active), 0 if it is active",
-        offsets, [](const Downtime &r) { return r._is_active ? 0 : 1; }));
+        offsets, [](const Downtime &r) { return !r._is_active; }));
     TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
         return r.rawData<Downtime>()->_host;
     }));

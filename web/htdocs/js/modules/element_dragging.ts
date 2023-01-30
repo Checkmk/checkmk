@@ -19,22 +19,29 @@ import * as utils from "utils";
 interface element_dragging {
     dragging: any;
     moved: boolean;
-    drop_handler: any;
+    drop_handler: (index: number) => void;
 }
+
 let g_element_dragging: null | element_dragging = null;
 
-export function start(event, dragger, dragging_tag, drop_handler) {
-    const button = utils.get_button(event);
+export function start(
+    event: Event,
+    dragger: HTMLAnchorElement,
+    dragging_tag: string,
+    drop_handler: (index: number) => void
+) {
+    const button = utils.get_button(event as MouseEvent);
 
     // Skip calls when already dragging or other button than left mouse
     if (g_element_dragging !== null || button != "LEFT") return true;
 
     // Find the first parent of the given tag type
-    let dragging = dragger;
-    while (dragging && dragging.tagName != dragging_tag)
+    let dragging: HTMLAnchorElement | null | ParentNode = dragger;
+
+    while (dragging instanceof HTMLElement && dragging.tagName != dragging_tag)
         dragging = dragging.parentNode;
 
-    if (dragging.tagName != dragging_tag)
+    if ((dragging as HTMLElement).tagName != dragging_tag)
         throw (
             "Failed to find the parent node of " +
             dragger +
@@ -42,7 +49,7 @@ export function start(event, dragger, dragging_tag, drop_handler) {
             dragging_tag
         );
 
-    utils.add_class(dragging, "dragging");
+    utils.add_class(dragging as HTMLElement, "dragging");
 
     g_element_dragging = {
         dragging: dragging,
@@ -53,17 +60,17 @@ export function start(event, dragger, dragging_tag, drop_handler) {
     return utils.prevent_default_events(event);
 }
 
-function element_dragging(event) {
+function element_dragging(event: MouseEvent) {
     if (g_element_dragging === null) return true;
 
     position_dragging_object(event);
 }
 
-function position_dragging_object(event) {
-    const dragging = g_element_dragging?.dragging,
-        container = g_element_dragging?.dragging.parentNode;
+function position_dragging_object(event: MouseEvent) {
+    const dragging = g_element_dragging?.dragging;
+    const container = g_element_dragging?.dragging.parentNode;
 
-    const get_previous = function (node) {
+    const get_previous = function (node: Element) {
         const previous = node.previousElementSibling;
 
         // In case this is a header TR, don't move it above this!
@@ -75,12 +82,13 @@ function position_dragging_object(event) {
         )
             return null;
         // Do not move above the action rows of tables rendered with "table.py"
-        if (previous && utils.has_class(previous, "actions")) return null;
+        if (previous && utils.has_class(previous as HTMLElement, "actions"))
+            return null;
 
         return previous;
     };
 
-    const get_next = function (node) {
+    const get_next = function (node: Element) {
         return node.nextElementSibling;
     };
 
@@ -102,7 +110,7 @@ function position_dragging_object(event) {
 }
 
 // mouse offset to the middle coordinates of an object
-function mouse_offset_to_middle(obj, event) {
+function mouse_offset_to_middle(obj: Element, event: MouseEvent) {
     const obj_pos = obj.getBoundingClientRect();
     const mouse_pos = utils.mouse_position(event);
     return {
@@ -111,7 +119,7 @@ function mouse_offset_to_middle(obj, event) {
     };
 }
 
-function element_drag_stop(event) {
+function element_drag_stop(event: Event) {
     if (g_element_dragging === null) return true;
 
     finalize_dragging();
@@ -144,17 +152,17 @@ function finalize_dragging() {
     g_element_dragging.drop_handler(index);
 }
 
-export function url_drop_handler(base_url, index) {
+export function url_drop_handler(base_url: string, index: number) {
     const url = base_url + "&_index=" + encodeURIComponent(index);
     location.href = url;
 }
 
 export function register_event_handlers() {
-    utils.add_event_handler("mousemove", function (event) {
-        return element_dragging(event);
+    utils.add_event_handler("mousemove", function (event: Event) {
+        return element_dragging(event as MouseEvent);
     });
 
-    utils.add_event_handler("mouseup", function (event) {
+    utils.add_event_handler("mouseup", function (event: Event) {
         return element_drag_stop(event);
     });
 }

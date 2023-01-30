@@ -169,7 +169,6 @@ XML Security Library example: Original XML
 
         assert p.returncode == 0, f"STDERR: {stderr}"
 
-    @pytest.mark.xfail(reason="wrong xmlsec library gets loaded")
     def test_xmlsec1_signing(
         self,
         site: Site,
@@ -192,7 +191,6 @@ XML Security Library example: Original XML
 
         assert p.returncode == 0, f"STDERR: {stderr}"
 
-    @pytest.mark.xfail(reason="wrong xmlsec library gets loaded")
     def test_xmlsec1_encryption(
         self,
         site: Site,

@@ -42,6 +42,9 @@ def test_openapi_missing_host(api_client: RestApiClient) -> None:
 def test_openapi_cluster_host(api_client: RestApiClient) -> None:
     api_client.create_host(host_name="foobar")
     api_client.create_cluster(host_name="bazfoo", nodes=["foobar"])
+    api_client.create_host(
+        host_name="foobaz", attributes={"ipv6address": "xxx.myfritz.net"}
+    ).assert_status_code(200)
 
     api_client.get_host("bazfoozle", expect_ok=False).assert_status_code(404)
     api_client.get_host("bazfoo")

@@ -194,7 +194,12 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def openapi_field(self) -> gui_fields.Field:
         return fields.String(
             description="An IPv6 address.",
-            validate=gui_fields.ValidateIPv6(),
+            validate=gui_fields.ValidateAnyOfValidators(
+                [
+                    gui_fields.ValidateIPv6(),
+                    validators.ValidateHostName(),
+                ]
+            ),
         )
 
 
@@ -282,7 +287,14 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> gui_fields.Field:
         return fields.List(
-            fields.String(validate=gui_fields.ValidateIPv6()),
+            fields.String(
+                validate=gui_fields.ValidateAnyOfValidators(
+                    [
+                        gui_fields.ValidateIPv6(),
+                        validators.ValidateHostName(),
+                    ]
+                ),
+            ),
             description="A list of IPv6 addresses.",
         )
 

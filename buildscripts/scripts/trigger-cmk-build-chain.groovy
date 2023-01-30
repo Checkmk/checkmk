@@ -51,7 +51,7 @@ def main() {
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
 
     def build_image = !(edition in ["free"]);
-    def build_ami_image = edition == "free";
+    def build_cloud_images = edition == "enterprise";
 
     def run_integration_tests = !(edition in ["free"]);
     def run_image_tests = !(edition in ["free"]);
@@ -62,7 +62,7 @@ def main() {
         |edition:............... │${edition}│
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
-        |build_ami_image:....... │${build_ami_image}│
+        |build_cloud_images:.... │${build_cloud_images}│
         |run_integration_tests:. │${run_integration_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |===================================================
@@ -80,9 +80,9 @@ def main() {
         }
     }
 
-    conditional_stage('Build AMI Image', build_ami_image) {
-        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-aws-ami") {
-            build(job: "${base_folder}/build-cmk-aws-ami", parameters: job_parameters);
+    conditional_stage('Build Cloud Images', build_cloud_images) {
+        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-cloud-images") {
+            build(job: "${base_folder}/build-cmk-cloud-images", parameters: job_parameters);
         }
     }
 

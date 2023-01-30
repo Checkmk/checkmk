@@ -574,7 +574,22 @@ def _check_fetched_data_or_trees(
         return
 
     if processing_failed:
-        yield ActiveCheckResult(parameters.fail_status, "Cannot update tree")
+        # Inventory trees in Checkmk <2.2 the cluster property was added in any case.
+        # Since Checkmk 2.2 we changed this behaviour: see werk 14836.
+        # In order to avoid a lot of "useless" warnings we check the following:
+        if (
+            inventory_tree.count_entries() == 1
+            and (
+                cluster_attributes := inventory_tree.get_attributes(
+                    ("software", "applications", "check_mk", "cluster")
+                )
+            )
+            is not None
+            and cluster_attributes.pairs.get("is_cluster") in [True, False]
+        ):
+            yield ActiveCheckResult(0, "No further data for tree update")
+        else:
+            yield ActiveCheckResult(parameters.fail_status, "Cannot update tree")
 
     yield from _check_trees(
         parameters=parameters,

@@ -27,6 +27,7 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
@@ -1273,3 +1274,165 @@ def test_check_inventory_tree_no_data_or_files(
 
     assert check_result.state == 0
     assert check_result.summary == "No data yet, please be patient"
+
+
+@pytest.mark.parametrize(
+    "inventory_tree, active_check_results",
+    [
+        (
+            StructuredDataNode.deserialize(
+                {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {},
+                }
+            ),
+            [
+                ActiveCheckResult(state=1, summary="Cannot update tree", details=(), metrics=()),
+                ActiveCheckResult(state=0, summary="Found no data", details=(), metrics=()),
+            ],
+        ),
+        (
+            StructuredDataNode.deserialize(
+                {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "software": {
+                            "Attributes": {},
+                            "Table": {},
+                            "Nodes": {
+                                "applications": {
+                                    "Attributes": {},
+                                    "Table": {},
+                                    "Nodes": {
+                                        "check_mk": {
+                                            "Attributes": {},
+                                            "Table": {},
+                                            "Nodes": {
+                                                "cluster": {
+                                                    "Attributes": {
+                                                        "Pairs": {"is_cluster": True, "foo": "bar"}
+                                                    },
+                                                    "Table": {},
+                                                    "Nodes": {},
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        }
+                    },
+                }
+            ),
+            [
+                ActiveCheckResult(state=1, summary="Cannot update tree", details=(), metrics=()),
+                ActiveCheckResult(
+                    state=0, summary="Found 2 inventory entries", details=(), metrics=()
+                ),
+                ActiveCheckResult(state=0, summary="software changes", details=(), metrics=()),
+            ],
+        ),
+        (
+            StructuredDataNode.deserialize(
+                {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "software": {
+                            "Attributes": {},
+                            "Table": {},
+                            "Nodes": {
+                                "applications": {
+                                    "Attributes": {},
+                                    "Table": {},
+                                    "Nodes": {
+                                        "check_mk": {
+                                            "Attributes": {},
+                                            "Table": {},
+                                            "Nodes": {
+                                                "cluster": {
+                                                    "Attributes": {"Pairs": {"is_cluster": True}},
+                                                    "Table": {},
+                                                    "Nodes": {},
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        }
+                    },
+                }
+            ),
+            [
+                ActiveCheckResult(
+                    state=0, summary="No further data for tree update", details=(), metrics=()
+                ),
+                ActiveCheckResult(
+                    state=0, summary="Found 1 inventory entries", details=(), metrics=()
+                ),
+                ActiveCheckResult(state=0, summary="software changes", details=(), metrics=()),
+            ],
+        ),
+        (
+            StructuredDataNode.deserialize(
+                {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "software": {
+                            "Attributes": {},
+                            "Table": {},
+                            "Nodes": {
+                                "applications": {
+                                    "Attributes": {},
+                                    "Table": {},
+                                    "Nodes": {
+                                        "check_mk": {
+                                            "Attributes": {},
+                                            "Table": {},
+                                            "Nodes": {
+                                                "cluster": {
+                                                    "Attributes": {"Pairs": {"is_cluster": False}},
+                                                    "Table": {},
+                                                    "Nodes": {},
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        }
+                    },
+                }
+            ),
+            [
+                ActiveCheckResult(
+                    state=0, summary="No further data for tree update", details=(), metrics=()
+                ),
+                ActiveCheckResult(
+                    state=0, summary="Found 1 inventory entries", details=(), metrics=()
+                ),
+                ActiveCheckResult(state=0, summary="software changes", details=(), metrics=()),
+            ],
+        ),
+    ],
+)
+def test__check_fetched_data_or_trees_only_cluster_property(
+    inventory_tree: StructuredDataNode, active_check_results: Sequence[ActiveCheckResult]
+) -> None:
+    assert (
+        list(
+            _inventory._check_fetched_data_or_trees(
+                parameters=HWSWInventoryParameters.from_raw({}),
+                inventory_tree=inventory_tree,
+                status_data_tree=StructuredDataNode.deserialize({}),
+                old_tree=StructuredDataNode.deserialize({}),
+                no_data_or_files=False,
+                processing_failed=True,
+            )
+        )
+        == active_check_results
+    )

@@ -206,15 +206,10 @@ export function form_submit(form_name, button_name) {
 }
 
 // Helper for building form submit links after confirming a dialog
-export function confirmed_form_submit(form_name, button_name, message) {
-    forms.confirm_dialog(
-        {
-            html: message,
-        },
-        () => {
-            form_submit(form_name, button_name);
-        }
-    );
+export function confirmed_form_submit(form_name, button_name, options) {
+    forms.confirm_dialog(options, () => {
+        form_submit(form_name, button_name);
+    });
 }
 
 // Show / hide all entries of this group

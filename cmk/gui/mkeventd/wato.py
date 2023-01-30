@@ -3095,9 +3095,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_delete_form",
                                         button_name="_bulk_delete_custom_mibs",
-                                        message=_(
-                                            "Do you really want to delete the selected MIBs?"
-                                        ),
+                                        title=_("Delete selected MIBs"),
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,

@@ -31,6 +31,7 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
+    get_confirm_link_title,
     makeuri,
     makeuri_contextless,
     requested_file_with_query,
@@ -84,14 +85,36 @@ def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
 
 
 def make_confirmed_form_submit_link(
-    *, form_name: str, button_name: str, message: str
+    *,
+    form_name: str,
+    button_name: str,
+    title: str | None = None,
+    suffix: str | None = None,
+    message: str | None = None,
+    confirm_button: str | None = None,
+    cancel_button: str | None = None,
+    icon: str | None = None,
+    warning: bool = False,
 ) -> PageMenuLink:
     return make_javascript_link(
         "cmk.page_menu.confirmed_form_submit(%s, %s, %s)"
         % (
             json.dumps(form_name),
             json.dumps(button_name),
-            json.dumps(escaping.escape_text(message)),
+            json.dumps(
+                {
+                    "title": get_confirm_link_title(title, suffix),
+                    "html": escaping.escape_text(message),
+                    "confirmButtonText": confirm_button if confirm_button else _("Delete"),
+                    "cancelButtonText": cancel_button if cancel_button else _("Cancel"),
+                    "icon": "warning" if warning else "question",
+                    "customClass": {
+                        "confirmButton": "confirm_warning" if warning else "confirm_question",
+                        "icon": "confirm_icon"
+                        + (" confirm_warning" if warning else " confirm_question"),
+                    },
+                }
+            ),
         )
     )
 

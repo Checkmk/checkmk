@@ -686,9 +686,7 @@ class ModeBIRules(ABCBIMode):
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_action_form",
                                         button_name="_bulk_delete_bi_rules",
-                                        message=_(
-                                            "Do you really want to delete the selected rules?"
-                                        ),
+                                        title=_("Delete selected rules"),
                                     ),
                                     is_enabled=bool(self.bi_pack and self.bi_pack.num_rules() > 0),
                                 ),
@@ -2047,9 +2045,7 @@ class BIModeAggregations(ABCBIMode):
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_action_form",
                                         button_name="_bulk_delete_bi_aggregations",
-                                        message=_(
-                                            "Do you really want to delete the selected aggregations?"
-                                        ),
+                                        title=_("Delete selected aggregations"),
                                     ),
                                     is_enabled=bool(
                                         self.bi_pack and self.bi_pack.num_aggregations() > 0

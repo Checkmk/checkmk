@@ -290,10 +290,8 @@ class ABCEditGlobalSettingMode(WatoMode):
                 item=make_confirmed_form_submit_link(
                     form_name="value_editor",
                     button_name="_reset",
-                    message=_(
-                        "Do you really want to reset this configuration variable "
-                        "back to its default value?"
-                    ),
+                    title=_("Reset configuration variable to default value"),
+                    confirm_button=_("Reset"),
                 ),
                 is_enabled=reset_possible,
                 is_shortcut=True,

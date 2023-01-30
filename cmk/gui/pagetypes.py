@@ -942,8 +942,7 @@ class ListPage(Page, Generic[_Self]):
                             item=make_confirmed_form_submit_link(
                                 form_name="bulk_delete",
                                 button_name="_bulk_delete",
-                                message=_("Do you really want to delete the selected %s?")
-                                % title_plural,
+                                title=_("Delete selected %s") % title_plural.lower(),
                             ),
                             is_shortcut=True,
                             is_suggested=True,

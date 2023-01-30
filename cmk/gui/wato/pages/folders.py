@@ -298,12 +298,13 @@ class ModeFolder(WatoMode):
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_folder",
-                    message=_(
-                        "Do you really want to remove the TLS registration of the hosts in"
-                        " this folder?"
-                        "<br>This does not affect hosts in subfolders."
-                    )
+                    title=_("Remove TLS registration of hosts in this folder"),
+                    message=_("This does not affect hosts in subfolders.")
+                    + "<br>"
+                    + "<br>"
                     + remove_tls_registration_help(),
+                    confirm_button=_("Remove"),
+                    warning=True,
                 ),
             )
 
@@ -388,12 +389,14 @@ class ModeFolder(WatoMode):
                         item=make_confirmed_form_submit_link(
                             form_name="hosts",
                             button_name="_bulk_movetotarget",
+                            title=_("Move selected hosts"),
                             message=_(
                                 "You are going to move the selected hosts to folders "
                                 "representing their original folder location in the system "
-                                "you did the import from. Please make sure that you have "
+                                "you did the import from.<br><br>Please make sure that you have "
                                 "done an <b>inventory</b> before moving the hosts."
                             ),
+                            confirm_button=_("Move"),
                         ),
                         is_enabled=is_enabled,
                     )
@@ -427,10 +430,10 @@ class ModeFolder(WatoMode):
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_selection",
-                    message=_(
-                        "Do you really want to remove the TLS registration of the selected hosts?"
-                    )
-                    + remove_tls_registration_help(),
+                    title=_("Remove TLS registration of selected hosts"),
+                    message=remove_tls_registration_help(),
+                    confirm_button=_("Remove"),
+                    warning=True,
                 ),
             )
 
@@ -441,7 +444,7 @@ class ModeFolder(WatoMode):
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_bulk_delete",
-                    message=_("Do you really want to delete the selected hosts?"),
+                    title=_("Delete selected hosts"),
                 ),
                 is_enabled=is_enabled,
             )

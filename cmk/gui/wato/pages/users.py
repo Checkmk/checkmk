@@ -130,9 +130,7 @@ class ModeUsers(WatoMode):
                                     item=make_confirmed_form_submit_link(
                                         form_name="bulk_delete_form",
                                         button_name="_bulk_delete_users",
-                                        message=_(
-                                            "Do you really want to delete the selected users?"
-                                        ),
+                                        title=_("Delete selected users"),
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,

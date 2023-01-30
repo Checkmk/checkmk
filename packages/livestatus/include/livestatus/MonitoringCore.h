@@ -63,6 +63,8 @@ public:
         const IService &) const = 0;
     void virtual forEachCommentUntil(
         const std::function<bool(const IComment &)> &f) const = 0;
+    void virtual forEachDowntimeUntil(
+        const std::function<bool(const IDowntime &)> &f) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

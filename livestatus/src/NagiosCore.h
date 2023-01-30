@@ -103,6 +103,8 @@ public:
         const IService &svc) const override;
     void forEachCommentUntil(
         const std::function<bool(const IComment &)> &f) const override;
+    void forEachDowntimeUntil(
+        const std::function<bool(const IDowntime &)> &f) const override;
 
     bool mkeventdEnabled() override;
 

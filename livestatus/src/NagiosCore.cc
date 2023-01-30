@@ -182,6 +182,16 @@ void NagiosCore::forEachCommentUntil(
     }
 }
 
+void NagiosCore::forEachDowntimeUntil(
+    // TODO(sp): Do we need a mutex here?
+    const std::function<bool(const IDowntime &)> &f) const {
+    for (const auto &[id, dt] : _downtimes) {
+        if (f(NebDowntime{*dt})) {
+            break;
+        }
+    }
+}
+
 bool NagiosCore::mkeventdEnabled() {
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
         return config_mkeventd == std::string("on");

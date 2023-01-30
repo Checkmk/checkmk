@@ -117,6 +117,8 @@ class DummyMonitoringCore : public MonitoringCore {
     }
     void forEachCommentUntil(
         const std::function<bool(const IComment &)> & /*f*/) const override {}
+    void forEachDowntimeUntil(
+        const std::function<bool(const IDowntime &)> & /*f*/) const override {}
 
     bool mkeventdEnabled() override { return {}; }
 

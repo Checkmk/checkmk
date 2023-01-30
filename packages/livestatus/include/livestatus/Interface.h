@@ -114,10 +114,14 @@ public:
     [[nodiscard]] virtual std::chrono::system_clock::time_point end_time()
         const = 0;
 
+    [[nodiscard]] virtual bool isService() const = 0;
+    [[nodiscard]] bool isHost() const { return !isService(); };
+
     [[nodiscard]] virtual bool fixed() const = 0;
     [[nodiscard]] virtual std::chrono::nanoseconds duration() const = 0;
     [[nodiscard]] virtual RecurringKind recurring() const = 0;
     [[nodiscard]] virtual bool pending() const = 0;
+    [[nodiscard]] virtual int32_t triggered_by() const = 0;
 
     [[nodiscard]] virtual const IHost &host() const = 0;
     [[nodiscard]] virtual const IService *service() const = 0;

@@ -38,6 +38,10 @@ public:
         return downtime_._end_time;
     }
 
+    [[nodiscard]] bool isService() const override {
+        return downtime_._service != nullptr;
+    }
+
     [[nodiscard]] bool fixed() const override { return downtime_._fixed; }
     [[nodiscard]] std::chrono::nanoseconds duration() const override {
         return downtime_._duration;
@@ -48,6 +52,9 @@ public:
     [[nodiscard]] bool pending() const override {
         return !downtime_._is_active;
     }
+    [[nodiscard]] int32_t triggered_by() const override {
+        return downtime_._triggered_by;
+    };
 
     [[nodiscard]] const IHost &host() const override { return host_; }
     [[nodiscard]] const IService *service() const override {

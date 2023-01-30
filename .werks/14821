@@ -14,13 +14,12 @@ tribe29 sources such as the Checkmk exchange).
 Before this werk, the Checkmk codebase offered the <tt>ValueSpec</tt> subclass <tt>Transform</tt>,
 which was used for two things:
 
-LI: Changing the format in which configured values are stored (<tt>back</tt> and <tt>forth</tt>
-specified).
+LI: Changing the format in which configured values are stored (<tt>back</tt> and <tt>forth</tt> specified).
 LI: Updating legacy configurations to the current format (<tt>forth</tt> only specified).
 
 As of this werk, the <tt>Transform</tt> class can only be used for the first point above (changing
-the storage format). It now expects two mandatory arguments <tt>into_vs</tt> (previously
-<tt>forth</tt>) and <tt>out_of_vs</tt> (previously <tt>back</tt>).
+the storage format). It now expects two mandatory arguments <tt>to_valuespec</tt> (previously
+<tt>forth</tt>) and <tt>from_valuespec</tt> (previously <tt>back</tt>).
 
 For updating legacy configurations, use the new <tt>Migrate</tt> class, which requires a mandatory
 <tt>migrate</tt> argument. This is the equivalent of specifying <tt>forth</tt> only in the old

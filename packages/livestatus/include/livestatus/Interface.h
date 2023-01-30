@@ -10,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 class IContact {
 public:
@@ -54,6 +55,20 @@ public:
     virtual ~IContactGroup() = default;
     [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual bool isMember(const IContact &) const = 0;
+};
+
+class ITimeperiod {
+public:
+    virtual ~ITimeperiod() = default;
+    [[nodiscard]] virtual std::string name() const = 0;
+    [[nodiscard]] virtual std::string alias() const = 0;
+    [[nodiscard]] virtual bool isActive() const = 0;
+    [[nodiscard]] virtual std::vector<std::chrono::system_clock::time_point>
+    transitions(std::chrono::seconds timezone_offset) const = 0;
+    [[nodiscard]] virtual int32_t numTransitions() const = 0;
+    [[nodiscard]] virtual int32_t nextTransitionId() const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point
+    nextTransitionTime() const = 0;
 };
 
 enum class CommentType : int32_t {

@@ -34,7 +34,6 @@
 #include "TableServicesByHostGroup.h"
 #include "TableStateHistory.h"
 #include "TableStatus.h"
-#include "TableTimeperiods.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/LogCache.h"
@@ -47,6 +46,7 @@
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableLabels.h"
+#include "livestatus/TableTimeperiods.h"
 #include "livestatus/Triggers.h"
 
 #ifdef CMC
@@ -59,6 +59,7 @@ class IContactGroup;
 class IDowntime;
 class IHost;
 class IService;
+class ITimeperiod;
 
 class DummyMonitoringCore : public MonitoringCore {
     std::unique_ptr<const IHost> find_host(
@@ -125,6 +126,10 @@ class DummyMonitoringCore : public MonitoringCore {
     void forEachLabelUntil(
         const std::function<bool(const std::string &, const std::string &)>
             & /*f*/) const override {}
+
+    void forEachTimeperiodUntil(
+        const std::function<bool(const ITimeperiod &)> & /*f*/) const override {
+    }
 
     bool mkeventdEnabled() override { return {}; }
 

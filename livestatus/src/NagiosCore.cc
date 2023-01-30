@@ -16,6 +16,7 @@
 #include "NebDowntime.h"
 #include "NebHost.h"
 #include "NebService.h"
+#include "NebTimeperiod.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/PnpUtils.h"
@@ -182,6 +183,10 @@ void NagiosCore::forEachCommentUntil(
     }
 }
 
+void NagiosCore::forEachLabelUntil(
+    const std::function<bool(const std::string &name, const std::string &value)>
+        & /*f*/) const {}
+
 void NagiosCore::forEachDowntimeUntil(
     // TODO(sp): Do we need a mutex here?
     const std::function<bool(const IDowntime &)> &f) const {
@@ -192,9 +197,14 @@ void NagiosCore::forEachDowntimeUntil(
     }
 }
 
-void NagiosCore::forEachLabelUntil(
-    const std::function<bool(const std::string &name, const std::string &value)>
-        & /*f*/) const {}
+void NagiosCore::forEachTimeperiodUntil(
+    const std::function<bool(const ITimeperiod &)> &f) const {
+    for (const timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
+        if (f(NebTimeperiod{*tp})) {
+            break;
+        }
+    }
+}
 
 bool NagiosCore::mkeventdEnabled() {
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {

@@ -39,6 +39,7 @@ class IContactGroup;
 class IDowntime;
 class IHost;
 class IService;
+class ITimeperiod;
 
 struct NagiosPaths {
     std::string _socket{"/usr/local/nagios/var/rw/live"};
@@ -109,6 +110,9 @@ public:
     void forEachLabelUntil(
         const std::function<bool(const std::string &name,
                                  const std::string &value)> &f) const override;
+
+    void forEachTimeperiodUntil(
+        const std::function<bool(const ITimeperiod &)> &f) const override;
 
     bool mkeventdEnabled() override;
 

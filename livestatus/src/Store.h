@@ -38,13 +38,13 @@
 #include "TableServicesByHostGroup.h"
 #include "TableStateHistory.h"
 #include "TableStatus.h"
-#include "TableTimeperiods.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableLabels.h"
+#include "livestatus/TableTimeperiods.h"
 class Query;
 class InputBuffer;
 class Logger;

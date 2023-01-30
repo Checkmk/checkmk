@@ -59,6 +59,8 @@ public:
         const std::function<bool(const IComment &)> &f) const = 0;
     void virtual forEachDowntimeUntil(
         const std::function<bool(const IDowntime &)> &f) const = 0;
+    void virtual forEachTimeperiodUntil(
+        const std::function<bool(const ITimeperiod &)> &f) const = 0;
 
     void virtual forEachLabelUntil(
         const std::function<bool(const std::string &name,

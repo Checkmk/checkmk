@@ -76,6 +76,7 @@ set(livestatus_headers
     ${header_location}/TableCommands.h
     ${header_location}/TableCrashReports.h
     ${header_location}/TableLabels.h
+    ${header_location}/TableTimeperiods.h
     ${header_location}/TimeAggregator.h
     ${header_location}/TimeColumn.h
     ${header_location}/TimeFilter.h
@@ -134,6 +135,7 @@ set(livestatus_sources
     TableCommands.cc
     TableCrashReports.cc
     TableLabels.cc
+    TableTimeperiods.cc
     TimeFilter.cc
     Triggers.cc
     User.cc)

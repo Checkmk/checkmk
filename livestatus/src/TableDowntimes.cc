@@ -77,7 +77,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         }));
     addColumn(std::make_unique<IntColumn<Downtime>>(
         "triggered_by",
-        "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
+        "The ID of the downtime triggering this dowtime or 0 if there is none",
         offsets, [](const Downtime &r) { return r._triggered_by; }));
     addColumn(std::make_unique<BoolColumn<Downtime>>(
         "is_pending",

@@ -5,8 +5,6 @@
 
 from time import time
 
-import pytest
-
 from tests.testlib.playwright.helpers import PPage
 
 
@@ -17,7 +15,6 @@ class TestHost:
 
 
 class TestHosts:
-    @pytest.mark.skip(reason="skipping temporarily; changes in confirm messages")
     def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!
@@ -30,7 +27,6 @@ class TestHosts:
 
         self._delete_host(logged_in_page, host)
 
-    @pytest.mark.skip(reason="skipping temporarily; changes in confirm messages")
     def test_reschedule(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """reschedules a check"""
         host = TestHost(round(time(), 2))
@@ -79,7 +75,7 @@ class TestHosts:
             f"//*[contains(@href,'delete_host%3D{host.name}')]"
         ).click()
 
-        logged_in_page.main_area.get_text("Delete").click()
+        logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
         logged_in_page.main_area.get_element_including_texts(
             element_id="changes_info", texts=["1", "change"]
         ).click()

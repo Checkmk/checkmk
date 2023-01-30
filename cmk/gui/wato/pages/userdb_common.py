@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import Any, NewType
 
 from livestatus import SiteId
 
@@ -44,6 +45,10 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_actio
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+
+DisplayIndex = NewType("DisplayIndex", int)
+RealIndex = NewType("RealIndex", int)
 
 
 def _related_page_menu_entries() -> Iterable[PageMenuEntry]:
@@ -113,20 +118,39 @@ def add_connections_page_menu(
     return page_menu
 
 
+def _connections(
+    connection_type: str, all_connections: Sequence[Mapping[str, Any]]
+) -> Iterable[tuple[RealIndex, Mapping[str, Any]]]:
+    for real_index, connection in enumerate(all_connections):
+        if connection["type"] == connection_type:
+            yield RealIndex(real_index), connection
+
+
+def _connections_by_gui_index(
+    connection_type: str, all_connections: Sequence[Mapping[str, Any]]
+) -> Mapping[DisplayIndex, tuple[RealIndex, Mapping[str, Any]]]:
+    """Enumerated connections of the same type (SAML/LDAP).
+
+    >>> _connections_by_gui_index("saml2", [{"id": "myldap1","type": "ldap"}, {"id": "mysaml1", "type": "saml2"}])
+    {0: (1, {'id': 'mysaml1', 'type': 'saml2'})}
+    """
+    return {
+        DisplayIndex(k): v
+        for k, v in enumerate(list(_connections(connection_type, all_connections)))
+    }
+
+
 def render_connections_page(
     connection_type: str, edit_mode_path: str, config_mode_path: str
 ) -> None:
     with table_element() as table:
-        for index, connection in enumerate(load_connection_config(lock=False)):
-            if connection["type"] != connection_type:
-                # NOTE: We must iterate over all the connections so that the move operation works, as all
-                # connections are in the same list
-                continue
-
+        for display_index, (real_index, connection) in _connections_by_gui_index(
+            connection_type, load_connection_config(lock=False)
+        ).items():
             table.row()
 
             table.cell("#", css=["narrow nowrap"])
-            html.write_text(index)
+            html.write_text(display_index)
 
             table.cell(_("Actions"), css=["buttons"])
             connection_id = connection["id"]
@@ -134,12 +158,18 @@ def render_connections_page(
                 [("mode", edit_mode_path), ("id", connection_id), ("edit", connection_id)]
             )
             delete_url = make_confirm_delete_link(
-                url=make_action_link([("mode", config_mode_path), ("_delete", index)]),
-                title=_("Delete connection #%d") % index,
+                url=make_action_link([("mode", config_mode_path), ("_delete", real_index)]),
+                title=_("Delete connection #%d") % display_index,
                 suffix=connection.get("name", connection["id"]),
                 message=_("ID: %s") % connection["id"],
             )
-            drag_url = make_action_link([("mode", config_mode_path), ("_move", index)])
+            drag_url = make_action_link(
+                [
+                    ("mode", config_mode_path),
+                    ("_move", real_index),
+                    ("_connection_type", connection["type"]),
+                ]
+            )
             clone_url = folder_preserving_link(
                 [("mode", edit_mode_path), ("clone", connection["id"])]
             )
@@ -224,6 +254,19 @@ def _move_connection(from_index: int, to_index: int, connection_type: str) -> No
     save_connection_config(connections)
 
 
+def _gui_index_to_real_index(
+    connection_type: str, gui_index: DisplayIndex, all_connections: Sequence[Mapping[str, Any]]
+) -> RealIndex:
+    """Map the index that's shown in the GUI and available as '_index' HTTP parameter in case of a
+    move connection action to its actual index in the user_connections.mk file.
+
+    >>> all_connections = [{"id": "myldap1","type": "ldap"}, {"id": "mysaml1", "type": "saml2"}]
+    >>> _gui_index_to_real_index("saml2", DisplayIndex(0), all_connections)
+    1
+    """
+    return _connections_by_gui_index(connection_type, all_connections)[gui_index][0]
+
+
 def connection_actions(
     config_mode_url: str, connection_type: str, custom_config_dirs: Iterable[Path]
 ) -> ActionResult:
@@ -240,7 +283,11 @@ def connection_actions(
     elif request.has_var("_move"):
         _move_connection(
             from_index=request.get_integer_input_mandatory("_move"),
-            to_index=request.get_integer_input_mandatory("_index"),
+            to_index=_gui_index_to_real_index(
+                request.get_ascii_input_mandatory("_connection_type"),
+                DisplayIndex(request.get_integer_input_mandatory("_index")),
+                load_connection_config(lock=False),
+            ),
             connection_type=connection_type,
         )
 

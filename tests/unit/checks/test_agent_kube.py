@@ -601,7 +601,7 @@ def test_proxy_arguments(params, expected_proxy_arg) -> None:  # type:ignore[no-
 def test_valuespec_matches_agent_kube() -> None:
     """agent_kube_arguments needs to be updated, if you remove any of the two assertions below."""
 
-    valuespec = kube._valuespec_special_agents_kube()
+    valuespec = kube._valuespec_special_agents_kube()._valuespec
     assert "monitored-objects" in valuespec._required_keys
     for element in valuespec._get_elements():
         if element[0] == "monitored-objects":

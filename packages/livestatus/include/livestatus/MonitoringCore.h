@@ -7,16 +7,10 @@
 #define MonitoringCore_h
 
 #include <chrono>
-#include <filesystem>
 #include <string>
-#include <tuple>
-#include <unordered_map>
-#include <vector>
 
-#include "livestatus/Attributes.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Metric.h"
-#include "livestatus/StringUtils.h"
 #include "livestatus/Triggers.h"
 #include "livestatus/User.h"
 enum class Encoding;

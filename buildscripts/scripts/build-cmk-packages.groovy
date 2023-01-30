@@ -52,7 +52,8 @@ def main() {
             "DISTROS_TESTBUILD",
             /// Testbuilds: Do not use our build cache to ensure we catch build related
             /// issues. And disable python optimizations to execute the build faster
-            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS="],
+            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS=",
+             "BAZEL_CACHE_URL=", "BAZEL_CACHE_USER=", "BAZEL_CACHE_PASSWORD="],
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
@@ -279,7 +280,7 @@ def main() {
                                 ]) {
                                     withCredentials([usernamePassword(
                                         credentialsId: 'bazel-caching-credentials',
-                                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config 
+                                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config
                                         passwordVariable: 'BAZEL_CACHE_PASSWORD',
                                         usernameVariable: 'BAZEL_CACHE_USER')
                                     ]) {

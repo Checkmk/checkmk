@@ -2135,7 +2135,9 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # configuration compatible with the local Checkmk version.
         if _need_to_update_config_after_sync():
             logger.debug("Updating active packages")
-            cmk.utils.packaging.update_active_packages(logger)
+            cmk.utils.packaging.update_active_packages(
+                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir), logger
+            )
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
 

@@ -26,6 +26,7 @@ from . import (
     release,
     update_active_packages,
 )
+from ._installed import Installer
 from ._mkp import (
     extract_manifest,
     Manifest,
@@ -76,8 +77,9 @@ def _args_find(
 
 def _command_find(args: argparse.Namespace, logger: logging.Logger) -> int:
     """Show information about local files"""
+    installer = Installer(paths.installed_packages_dir)
 
-    files = files_inventory(paths.local_root)
+    files = files_inventory(paths.local_root, installer)
 
     if not args.all:
         files = [f for f in files if not f["package"]]
@@ -180,7 +182,8 @@ def _args_list(
 
 def _command_list(args: argparse.Namespace, logger: logging.Logger) -> int:
     """Show a table of all known files, including the deployment state"""
-    classified_manifests = get_classified_manifests(PackageStore(), logger)
+    installer = Installer(paths.installed_packages_dir)
+    classified_manifests = get_classified_manifests(PackageStore(), installer, logger)
 
     if args.json:
         sys.stdout.write(f"{classified_manifests.json()}\n")
@@ -265,7 +268,7 @@ def _args_release(
 
 def _command_release(args: argparse.Namespace, logger: logging.Logger) -> int:
     """Remove the package and leave its contained files as unpackaged files behind."""
-    release(args.name, logger)
+    release(Installer(paths.installed_packages_dir), args.name, logger)
     return 0
 
 
@@ -288,7 +291,7 @@ def _command_disable_outdated(_args: argparse.Namespace, _logger: logging.Logger
     For all installed packages, this command compares that version with the Checkmk version.
     In case it is outdated, the package is disabled.
     """
-    disable_outdated()
+    disable_outdated(Installer(paths.installed_packages_dir))
     return 0
 
 
@@ -300,7 +303,7 @@ def _command_update_active(_args: argparse.Namespace, logger: logging.Logger) ->
 
     This command deactivates all packages that are not applicable, and then activates the ones that are.
     """
-    update_active_packages(logger)
+    update_active_packages(Installer(paths.installed_packages_dir), logger)
     return 0
 
 
@@ -323,13 +326,14 @@ def _args_package_id(
 
 def _command_enable(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Enable a disabled package"""
-    install(PackageStore(), _get_package_id(args.name, args.version))
+    installer = Installer(paths.installed_packages_dir)
+    install(installer, PackageStore(), _get_package_id(args.name, args.version))
     return 0
 
 
 def _command_disable(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Disable an enabled package"""
-    disable(args.name, args.version)
+    disable(Installer(paths.installed_packages_dir), args.name, args.version)
     return 0
 
 
@@ -345,8 +349,9 @@ def _args_template(
 
 def _command_template(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Create a template of a package manifest"""
+    installer = Installer(paths.installed_packages_dir)
 
-    unpackaged = get_unpackaged_files()
+    unpackaged = get_unpackaged_files(installer)
 
     package = manifest_template(
         name=args.name,
@@ -389,9 +394,10 @@ def _command_package(args: argparse.Namespace, logger: logging.Logger) -> int:
         return 1
 
     store = PackageStore()
+    installer = Installer(paths.installed_packages_dir)
     try:
         manifest = store.store(create_mkp_object(package))
-        install(store, manifest.id)
+        install(installer, store, manifest.id)
     except PackageException as exc:
         sys.stderr.write(f"{exc}\n")
         return 1

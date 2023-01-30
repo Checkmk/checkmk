@@ -1526,7 +1526,13 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         )
 
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
-        return {} if cmk_version.is_raw_edition() else cmk.utils.packaging.rule_pack_id_to_mkp()
+        return (
+            {}
+            if cmk_version.is_raw_edition()
+            else cmk.utils.packaging.rule_pack_id_to_mkp(
+                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir)
+            )
+        )
 
     def _vs_mkeventd_event(self) -> Dictionary:
         """Valuespec for simulating an event"""

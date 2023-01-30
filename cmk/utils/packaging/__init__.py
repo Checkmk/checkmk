@@ -24,15 +24,7 @@ from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from ._installed import (
-    add_installed_manifest,
-    get_installed_manifest,
-    get_installed_manifests,
-    get_packaged_files,
-    is_installed,
-    PACKAGES_DIR,
-    remove_installed_manifest,
-)
+from ._installed import Installer
 from ._mkp import (
     create_mkp,
     extract_manifest,
@@ -75,8 +67,8 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
-def release(pacname: PackageName, logger: logging.Logger) -> None:
-    if (manifest := get_installed_manifest(pacname)) is None:
+def release(installer: Installer, pacname: PackageName, logger: logging.Logger) -> None:
+    if (manifest := installer.get_installed_manifest(pacname)) is None:
         raise PackageException(f"Package {pacname} not installed or corrupt.")
 
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
@@ -88,14 +80,16 @@ def release(pacname: PackageName, logger: logging.Logger) -> None:
     if filenames := manifest.files.get(PackagePart.EC_RULE_PACKS):
         ec.release_packaged_rule_packs([str(f) for f in filenames])
 
-    remove_installed_manifest(pacname)
+    installer.remove_installed_manifest(pacname)
 
 
 def create_mkp_object(manifest: Manifest) -> bytes:
     return create_mkp(manifest, cmk_version.__version__, site_path, g_logger)
 
 
-def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> None:
+def uninstall(
+    installer: Installer, manifest: Manifest, post_package_change_actions: bool = True
+) -> None:
     for part, filenames in manifest.files.items():
         g_logger.log(VERBOSE, "  Part '%s':", part.ident)
         if part is PackagePart.EC_RULE_PACKS:
@@ -111,7 +105,7 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
                     f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
                 ) from exc
 
-    remove_installed_manifest(manifest.name)
+    installer.remove_installed_manifest(manifest.name)
 
     if post_package_change_actions:
         _execute_post_package_change_actions(manifest)
@@ -174,12 +168,14 @@ class PackageStore:
         return shipped_package_path
 
 
-def disable(package_name: PackageName, package_version: PackageVersion | None) -> None:
+def disable(
+    installer: Installer, package_name: PackageName, package_version: PackageVersion | None
+) -> None:
     package_path, manifest = _find_path_and_package_info(package_name, package_version)
 
-    if (installed := get_installed_manifest(package_name)) is not None:
+    if (installed := installer.get_installed_manifest(package_name)) is not None:
         if package_version is None or installed.version == package_version:
-            uninstall(manifest)
+            uninstall(installer, manifest)
 
     package_path.unlink()
 
@@ -218,36 +214,36 @@ def _find_path_and_package_info(
     return matching_packages[0]
 
 
-def create(manifest: Manifest) -> None:
-    if is_installed(manifest.name):
+def create(installer: Installer, manifest: Manifest) -> None:
+    if installer.is_installed(manifest.name):
         raise PackageException("Packet already exists.")
 
     package_store = PackageStore()
 
     _raise_for_nonexisting_files(manifest)
-    _validate_package_files(manifest)
-    add_installed_manifest(manifest)
+    _validate_package_files(manifest, installer)
+    installer.add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(package_store, manifest)
 
 
-def edit(pacname: PackageName, new_manifest: Manifest) -> None:
-    if not is_installed(pacname):
+def edit(installer: Installer, pacname: PackageName, new_manifest: Manifest) -> None:
+    if not installer.is_installed(pacname):
         raise PackageException("No such package")
 
     # Renaming: check for collision
     if pacname != new_manifest.name:
-        if is_installed(new_manifest.name):
+        if installer.is_installed(new_manifest.name):
             raise PackageException(
                 "Cannot rename package: a package with that name already exists."
             )
     package_store = PackageStore()
 
     _raise_for_nonexisting_files(new_manifest)
-    _validate_package_files(new_manifest)
+    _validate_package_files(new_manifest, installer)
 
     _create_enabled_mkp_from_installed_package(package_store, new_manifest)
-    remove_installed_manifest(pacname)
-    add_installed_manifest(new_manifest)
+    installer.remove_installed_manifest(pacname)
+    installer.add_installed_manifest(new_manifest)
 
 
 def _raise_for_nonexisting_files(manifest: Manifest) -> None:
@@ -306,6 +302,7 @@ def remove_enabled_mark(manifest: Manifest) -> None:
 
 
 def install(
+    installer: Installer,
     package_store: PackageStore,
     package_id: PackageID,
     allow_outdated: bool = True,
@@ -313,6 +310,7 @@ def install(
 ) -> Manifest:
     try:
         return _install(
+            installer,
             package_store.get_existing_package_path(package_id).read_bytes(),
             allow_outdated=allow_outdated,
             post_package_change_actions=post_package_change_actions,
@@ -323,6 +321,7 @@ def install(
 
 
 def _install(  # pylint: disable=too-many-branches
+    installer: Installer,
     mkp: bytes,
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
@@ -334,7 +333,7 @@ def _install(  # pylint: disable=too-many-branches
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
-    if old_manifest := get_installed_manifest(manifest.name):
+    if old_manifest := installer.get_installed_manifest(manifest.name):
         g_logger.log(
             VERBOSE,
             "Updating %s from version %s to %s.",
@@ -345,7 +344,9 @@ def _install(  # pylint: disable=too-many-branches
     else:
         g_logger.log(VERBOSE, "Installing %s version %s.", manifest.name, manifest.version)
 
-    _raise_for_installability(manifest, old_manifest, cmk_version.__version__, allow_outdated)
+    _raise_for_installability(
+        installer, manifest, old_manifest, cmk_version.__version__, allow_outdated
+    )
 
     extract_mkp(manifest, mkp, site_path, g_logger)
 
@@ -373,7 +374,7 @@ def _install(  # pylint: disable=too-many-branches
         remove_enabled_mark(old_manifest)
 
     # Last but not least install package file
-    add_installed_manifest(manifest)
+    installer.add_installed_manifest(manifest)
 
     if post_package_change_actions:
         _execute_post_package_change_actions(manifest)
@@ -382,6 +383,7 @@ def _install(  # pylint: disable=too-many-branches
 
 
 def _raise_for_installability(
+    installer: Installer,
     package: Manifest,
     old_package: Manifest | None,
     site_version: str,
@@ -394,22 +396,24 @@ def _raise_for_installability(
     _raise_for_too_old_cmk_version(package.version_min_required, site_version)
     if not allow_outdated:
         _raise_for_too_new_cmk_version(package.version_usable_until, site_version)
-    _raise_for_conflicts(package, old_package)
+    _raise_for_conflicts(package, old_package, installer)
 
 
 def _raise_for_conflicts(
     package: Manifest,
     old_package: Manifest | None,
+    installer: Installer,
 ) -> None:
-    for file_path, type_of_collision in _conflicting_files(package, old_package):
+    for file_path, type_of_collision in _conflicting_files(package, old_package, installer):
         raise PackageException(f"File conflict: {file_path} ({type_of_collision})")
 
 
 def _conflicting_files(
     package: Manifest,
     old_package: Manifest | None,
+    installer: Installer,
 ) -> Iterable[tuple[Path, str]]:
-    packaged_files = get_packaged_files()
+    packaged_files = installer.get_packaged_files()
     # Before installing check for conflicts
     for part, files in package.files.items():
         packaged = packaged_files.get(part, ())
@@ -466,9 +470,9 @@ def _remove_packaged_rule_packs(file_names: Iterable[Path], delete_export: bool 
     ec.save_rule_packs(rule_packs)
 
 
-def _validate_package_files(manifest: Manifest) -> None:
+def _validate_package_files(manifest: Manifest, installer: Installer) -> None:
     """Packaged files must not already belong to another package"""
-    for other_manifest in get_installed_manifests():
+    for other_manifest in installer.get_installed_manifests():
         if manifest.name == other_manifest.name:
             continue
         _raise_for_collision(manifest, other_manifest)
@@ -557,9 +561,9 @@ class ClassifiedManifests(BaseModel):
 
 
 def get_classified_manifests(
-    package_store: PackageStore, logger: logging.Logger
+    package_store: PackageStore, installer: Installer, logger: logging.Logger
 ) -> ClassifiedManifests:
-    installed = get_installed_manifests(logger)
+    installed = installer.get_installed_manifests(logger)
     installed_ids = {m.id for m in installed}
     return ClassifiedManifests(
         stored=get_stored_manifests(package_store),
@@ -581,8 +585,8 @@ def _get_enabled_package_paths() -> list[Path]:
         return []
 
 
-def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
-    packaged = get_packaged_files()
+def get_unpackaged_files(installer: Installer) -> dict[PackagePart, list[Path]]:
+    packaged = installer.get_packaged_files()
     present = all_local_files(cmk.utils.paths.local_root)
     return {
         **{
@@ -596,7 +600,7 @@ def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
     }
 
 
-def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
+def rule_pack_id_to_mkp(installer: Installer) -> dict[str, PackageName | None]:
     """
     Returns a dictionary of rule pack ID to MKP package for a given manifest.
     Every rule pack is contained exactly once in this mapping. If no corresponding
@@ -604,27 +608,30 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
     """
     package_map = {
         file: manifest.name
-        for manifest in get_installed_manifests()
+        for manifest in installer.get_installed_manifests()
         for file in manifest.files.get(PackagePart.EC_RULE_PACKS, ())
     }
 
     return {f.stem: package_map.get(f) for f in all_rule_pack_files()}
 
 
-def update_active_packages(log: logging.Logger) -> None:
+def update_active_packages(installer: Installer, log: logging.Logger) -> None:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore()
-    _deinstall_inapplicable_active_packages(log, post_package_change_actions=False)
-    _install_applicable_inactive_packages(package_store, log, post_package_change_actions=False)
+    _deinstall_inapplicable_active_packages(installer, log, post_package_change_actions=False)
+    _install_applicable_inactive_packages(
+        package_store, installer, log, post_package_change_actions=False
+    )
     _execute_post_package_change_actions(None)
 
 
 def _deinstall_inapplicable_active_packages(
-    log: logging.Logger, *, post_package_change_actions: bool
+    installer: Installer, log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
-    for manifest in get_installed_manifests(log):
+    for manifest in installer.get_installed_manifests(log):
         try:
             _raise_for_installability(
+                installer,
                 manifest,
                 manifest,
                 cmk_version.__version__,
@@ -632,18 +639,23 @@ def _deinstall_inapplicable_active_packages(
             )
         except PackageException as exc:
             log.log(VERBOSE, "[%s %s]: Uninstalling (%s)", manifest.name, manifest.version, exc)
-            uninstall(manifest, post_package_change_actions=post_package_change_actions)
+            uninstall(installer, manifest, post_package_change_actions=post_package_change_actions)
         else:
             log.log(VERBOSE, "[%s %s]: Kept", manifest.name, manifest.version)
 
 
 def _install_applicable_inactive_packages(
-    package_store: PackageStore, log: logging.Logger, *, post_package_change_actions: bool
+    package_store: PackageStore,
+    installer: Installer,
+    log: logging.Logger,
+    *,
+    post_package_change_actions: bool,
 ) -> None:
     for name, manifests in _sort_enabled_packages_for_installation(log):
         for manifest in manifests:
             try:
                 install(
+                    installer,
                     package_store,
                     manifest.id,
                     allow_outdated=False,
@@ -673,13 +685,13 @@ def _sort_enabled_packages_for_installation(
     )
 
 
-def disable_outdated() -> None:
+def disable_outdated(installer: Installer) -> None:
     """Check installed packages and disables the outdated ones
 
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
     using this function. Others are not disabled.
     """
-    for manifest in get_installed_manifests(g_logger):
+    for manifest in installer.get_installed_manifests(g_logger):
         g_logger.log(VERBOSE, "[%s %s]: Is it outdated?", manifest.name, manifest.version)
 
         try:
@@ -692,7 +704,7 @@ def disable_outdated() -> None:
                 manifest.version,
                 exc,
             )
-            disable(manifest.name, manifest.version)
+            disable(installer, manifest.name, manifest.version)
         else:
             g_logger.log(VERBOSE, "[%s %s]: Not disabling", manifest.name, manifest.version)
 

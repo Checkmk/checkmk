@@ -11,7 +11,7 @@ from pathlib import Path
 from stat import filemode
 from typing import TypedDict
 
-from ._installed import get_installed_manifests
+from ._installed import Installer
 from ._mkp import PackagePart
 from ._parts import get_package_part, site_path, ui_title
 
@@ -68,11 +68,11 @@ class FileMetaInfo(TypedDict):
     mode: str
 
 
-def files_inventory(local_root: Path) -> Sequence[FileMetaInfo]:
+def files_inventory(local_root: Path, installer: Installer) -> Sequence[FileMetaInfo]:
     """return an overview of all relevant files found on disk"""
     package_map = {
         (part / file): manifest.id
-        for manifest in get_installed_manifests()
+        for manifest in installer.get_installed_manifests()
         for part, files in manifest.files.items()
         for file in files
     }

@@ -100,6 +100,7 @@ lib_dir = _omd_path_str("lib")
 mib_dir = _omd_path("share/snmp/mibs")
 optional_packages_dir = _omd_path("share/check_mk/optional_packages")
 disabled_packages_dir = _omd_path("var/check_mk/disabled_packages")
+installed_packages_dir = _omd_path("var/check_mk/packages")
 protocols_dir = _omd_path("share/protocols")
 alert_handlers_dir = _omd_path("share/check_mk/alert_handlers")
 

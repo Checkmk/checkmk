@@ -20,6 +20,7 @@ from cmk.utils.licensing import (
     LicenseUsageReportVersion,
     load_license_usage_history,
     LocalLicenseUsageHistory,
+    RawLicenseUsageReport,
     update_license_usage,
 )
 from cmk.utils.licensing.export import (
@@ -187,9 +188,8 @@ def test_update_license_usage_next_run_ts_not_reached(
 
 
 def test_serialize_license_usage_report() -> None:
-    report_version = "1.2"
     raw_report = {
-        "VERSION": report_version,
+        "VERSION": "1.2",
         "history": [
             {
                 "version": "",
@@ -209,10 +209,15 @@ def test_serialize_license_usage_report() -> None:
             },
         ],
     }
-    history = LocalLicenseUsageHistory.parse(report_version, raw_report, "site-hash")
+    history = LocalLicenseUsageHistory.parse(raw_report, "site-hash")
 
     assert (
-        _serialize_dump(history.for_report())
+        _serialize_dump(
+            RawLicenseUsageReport(
+                VERSION=LicenseUsageReportVersion,
+                history=history.for_report(),
+            )
+        )
         == b"LQ't#$x~}Qi Q`]dQ[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
@@ -586,9 +591,7 @@ def test_license_usage_report(
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
 
-    history = LocalLicenseUsageHistory.parse(raw_report["VERSION"], raw_report, "site-hash")
-
-    assert history.for_report()["VERSION"] == LicenseUsageReportVersion
+    history = LocalLicenseUsageHistory.parse(raw_report, "site-hash")
 
     for sample, expected_sample in zip(history, expected_history):
         assert sample.instance_id == expected_sample.instance_id

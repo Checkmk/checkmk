@@ -15,7 +15,7 @@ from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 from uuid import UUID
 
 import livestatus
@@ -27,7 +27,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageReportVersion,
     LicenseUsageSample,
     RawLicenseUsageExtensions,
-    RawLicenseUsageReport,
+    RawLicenseUsageSample,
 )
 from cmk.utils.paths import licensing_dir, log_dir, omd_root
 from cmk.utils.site import omd_site
@@ -44,6 +44,11 @@ def init_logging() -> logging.Logger:
     logger.addHandler(handler)
 
     return logger
+
+
+class RawLicenseUsageReport(TypedDict):
+    VERSION: str
+    history: list[RawLicenseUsageSample]
 
 
 #   .--update--------------------------------------------------------------.
@@ -94,7 +99,13 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
 
         history = load_license_usage_history(report_filepath)
         history.add_sample(sample)
-        _save_license_usage_report(report_filepath, history.for_report())
+        _save_license_usage_report(
+            report_filepath,
+            RawLicenseUsageReport(
+                VERSION=LicenseUsageReportVersion,
+                history=history.for_report(),
+            ),
+        )
 
         store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
 
@@ -235,14 +246,7 @@ def load_license_usage_history(report_filepath: Path) -> LocalLicenseUsageHistor
     if not raw_report.get("history"):
         return LocalLicenseUsageHistory([])
 
-    if not isinstance(report_version := raw_report.get("VERSION"), str):
-        raise ValueError()
-
-    return LocalLicenseUsageHistory.parse(
-        report_version,
-        raw_report,
-        hash_site_id(omd_site()),
-    )
+    return LocalLicenseUsageHistory.parse(raw_report, hash_site_id(omd_site()))
 
 
 # .
@@ -270,23 +274,21 @@ class LocalLicenseUsageHistory:
     def last(self) -> LicenseUsageSample | None:
         return self._samples[0] if self._samples else None
 
-    def for_report(self) -> RawLicenseUsageReport:
-        return {
-            "VERSION": LicenseUsageReportVersion,
-            "history": [sample.for_report() for sample in self._samples],
-        }
+    def for_report(self) -> list[RawLicenseUsageSample]:
+        return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(
-        cls, report_version: str, raw_report: object, site_hash: str
-    ) -> LocalLicenseUsageHistory:
+    def parse(cls, raw_report: object, site_hash: str) -> LocalLicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError()
 
         if not raw_report:
             return cls([])
 
-        parser = LicenseUsageSample.get_parser(report_version)
+        if not isinstance(version := raw_report.get("VERSION"), str):
+            raise ValueError()
+
+        parser = LicenseUsageSample.get_parser(version)
         instance_id = load_instance_id()
         return cls(
             parser(raw_sample, instance_id=instance_id, site_hash=site_hash)

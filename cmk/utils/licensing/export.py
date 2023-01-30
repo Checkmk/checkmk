@@ -11,21 +11,12 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import auto, Enum
-from typing import NamedTuple, Protocol, TypedDict
+from typing import Final, NamedTuple, Protocol, TypedDict
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
-LicenseUsageReportVersion = "1.5"
-
-
-class RawLicenseUsageReport(TypedDict):
-    VERSION: str
-    history: list[RawLicenseUsageSample]
-
-
-class LicenseUsageReportVersionError(Exception):
-    pass
+LicenseUsageReportVersion: Final[str] = "1.5"
 
 
 #   .--subscription details------------------------------------------------.
@@ -343,7 +334,7 @@ class LicenseUsageSample:
         }
 
     @classmethod
-    def get_parser(cls, report_version: str) -> LicenseUsageSampleParser:
+    def get_parser(cls, version: str) -> LicenseUsageSampleParser:
         # Note:
         # === Instance ID ===
         # Checkmk:
@@ -357,19 +348,19 @@ class LicenseUsageSample:
         # - When loading the history in Checkmk we add the "site_hash".
         # - On the license server the "site_hash" is already part of the sample.
 
-        if report_version == "1.0":
+        if version == "1.0":
             return cls._parse_sample_v1_0
 
-        if report_version in ["1.1", "1.2", "1.3"]:
+        if version in ["1.1", "1.2", "1.3"]:
             return cls._parse_sample_v1_1
 
-        if report_version == "1.4":
+        if version == "1.4":
             return cls._parse_sample_v1_4
 
-        if report_version == "1.5":
+        if version == "1.5":
             return cls._parse_sample_v1_5
 
-        raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
+        raise ValueError()
 
     @classmethod
     def _parse_sample_v1_0(
@@ -538,18 +529,18 @@ class LicenseUsageHistory:
     def __iter__(self) -> Iterator[LicenseUsageSample]:
         return iter(self._samples)
 
-    def for_report(self) -> RawLicenseUsageReport:
-        return {
-            "VERSION": LicenseUsageReportVersion,
-            "history": [sample.for_report() for sample in self._samples],
-        }
+    def for_report(self) -> list[RawLicenseUsageSample]:
+        return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(cls, report_version: str, raw_report: object) -> LicenseUsageHistory:
+    def parse(cls, raw_report: object) -> LicenseUsageHistory:
         if not isinstance(raw_report, dict):
             raise TypeError()
 
-        parser = LicenseUsageSample.get_parser(report_version)
+        if not isinstance(version := raw_report.get("VERSION"), str):
+            raise ValueError()
+
+        parser = LicenseUsageSample.get_parser(version)
         return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
 

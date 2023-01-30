@@ -192,6 +192,10 @@ void NagiosCore::forEachDowntimeUntil(
     }
 }
 
+void NagiosCore::forEachLabelUntil(
+    const std::function<bool(const std::string &name, const std::string &value)>
+        & /*f*/) const {}
+
 bool NagiosCore::mkeventdEnabled() {
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
         return config_mkeventd == std::string("on");

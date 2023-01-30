@@ -106,6 +106,10 @@ public:
     void forEachDowntimeUntil(
         const std::function<bool(const IDowntime &)> &f) const override;
 
+    void forEachLabelUntil(
+        const std::function<bool(const std::string &name,
+                                 const std::string &value)> &f) const override;
+
     bool mkeventdEnabled() override;
 
     std::filesystem::path mkeventdSocketPath() const override;

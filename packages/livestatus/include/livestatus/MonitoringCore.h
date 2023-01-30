@@ -60,6 +60,10 @@ public:
     void virtual forEachDowntimeUntil(
         const std::function<bool(const IDowntime &)> &f) const = 0;
 
+    void virtual forEachLabelUntil(
+        const std::function<bool(const std::string &name,
+                                 const std::string &value)> &f) const = 0;
+
     virtual bool mkeventdEnabled() = 0;
 
     [[nodiscard]] virtual std::filesystem::path mkeventdSocketPath() const = 0;

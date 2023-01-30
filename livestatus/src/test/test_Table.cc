@@ -46,6 +46,7 @@
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableCrashReports.h"
+#include "livestatus/TableLabels.h"
 #include "livestatus/Triggers.h"
 
 #ifdef CMC
@@ -107,6 +108,9 @@ class DummyMonitoringCore : public MonitoringCore {
         const IService & /*service*/) const override {
         return {};
     }
+    void forEachDowntimeUntil(
+        const std::function<bool(const IDowntime &)> & /*f*/) const override {}
+
     [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IHost & /*host*/) const override {
         return {};
@@ -117,8 +121,10 @@ class DummyMonitoringCore : public MonitoringCore {
     }
     void forEachCommentUntil(
         const std::function<bool(const IComment &)> & /*f*/) const override {}
-    void forEachDowntimeUntil(
-        const std::function<bool(const IDowntime &)> & /*f*/) const override {}
+
+    void forEachLabelUntil(
+        const std::function<bool(const std::string &, const std::string &)>
+            & /*f*/) const override {}
 
     bool mkeventdEnabled() override { return {}; }
 
@@ -747,6 +753,17 @@ TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
               ColumnDefinitions(TableHostsByGroup{&mc_}));
 }
 
+static ColumnDefinitions labels_columns() {
+    return {
+        {"name", ColumnType::string},
+        {"value", ColumnType::string},
+    };
+}
+
+TEST_F(ColumnNamesAndTypesTest, TableLabels) {
+    EXPECT_EQ(labels_columns(),  //
+              ColumnDefinitions(TableLabels{&mc_}));
+}
 static ColumnDefinitions log_columns() {
     return {
         {"attempt", ColumnType::int_},

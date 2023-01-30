@@ -44,6 +44,7 @@
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableCrashReports.h"
+#include "livestatus/TableLabels.h"
 class Query;
 class InputBuffer;
 class Logger;
@@ -118,6 +119,7 @@ private:
     TableHostGroups _table_hostgroups;
     TableHosts _table_hosts;
     TableHostsByGroup _table_hostsbygroup;
+    TableLabels _table_labels;
     TableLog _table_log;
     TableServiceGroups _table_servicegroups;
     TableServices _table_services;

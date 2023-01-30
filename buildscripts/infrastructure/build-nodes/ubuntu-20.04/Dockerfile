@@ -74,6 +74,7 @@ RUN apt-get update \
     libssl-dev \
     libtool \
     libxml2-dev \
+    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \

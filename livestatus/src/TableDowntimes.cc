@@ -52,7 +52,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<BoolColumn<Downtime>>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,
-        [](const Downtime &r) { return r._is_service; }));
+        [](const Downtime &r) { return r._service != nullptr; }));
     addColumn(std::make_unique<TimeColumn<Downtime>>(
         "start_time", "The start time of the downtime as UNIX timestamp",
         offsets, [](const Downtime &r) { return r._start_time; }));

@@ -598,7 +598,6 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
                 ._fixed = dt->fixed != 0,
                 ._duration = std::chrono::seconds{dt->duration},
                 ._type = dt->downtime_type,
-                ._is_service = dt->service_description != nullptr,
                 ._host = hst,
                 ._service = svc,
                 ._triggered_by = dt->triggered_by,

@@ -25,7 +25,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.userdb.utils import (
-    connections_by_type,
     load_connection_config,
     save_connection_config,
     UserConnectionSpec,
@@ -111,7 +110,12 @@ def render_connections_page(
     connection_type: str, edit_mode_path: str, config_mode_path: str
 ) -> None:
     with table_element() as table:
-        for index, connection in enumerate(connections_by_type(connection_type)):
+        for index, connection in enumerate(load_connection_config(lock=False)):
+            if connection["type"] != connection_type:
+                # NOTE: We must iterate over all the connections so that the move operation works, as all
+                # connections are in the same list
+                continue
+
             table.row()
 
             table.cell("#", css=["narrow nowrap"])

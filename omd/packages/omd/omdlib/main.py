@@ -1233,7 +1233,16 @@ def update_file(  # pylint: disable=too-many-branches
 
         # Permissions are not correct: all other cases (where type is as expected)
         elif old_perm != new_perm:
-            if user_confirms(
+            if old_perm == user_perm:
+                # The skel permissions are changed but the old skel permissions
+                # are still in place. In 2.2 the permissions for other were
+                # removed (Werk #15062). This results in a lot of questions for
+                # the user. If the user has not adjusted the permissions from
+                # the previous default, let's not ask so much questions, just
+                # adhust it, a info that the permissions were adjusted will be
+                # logged anyways
+                what = "default"
+            elif user_confirms(
                 site,
                 conflict_mode,
                 "Wrong permission of " + relpath,

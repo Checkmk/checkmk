@@ -26,7 +26,6 @@ public:
     bool _fixed;
     std::chrono::nanoseconds _duration;
     // --------------------------------------------------
-    int _type;
     host *_host;
     service *_service;
     unsigned long _triggered_by;

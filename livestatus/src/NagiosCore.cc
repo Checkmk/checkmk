@@ -344,7 +344,7 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
                 ._fixed = dt->_fixed,
                 ._duration = dt->_duration,
                 ._recurring = 0,
-                ._pending = dt->_type != 0,
+                ._pending = !dt->_is_active,
             });
         }
     }

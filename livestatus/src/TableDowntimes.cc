@@ -45,10 +45,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<TimeColumn<Downtime>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
         [](const Downtime &r) { return r._entry_time; }));
+    // Totally redundant column...
     addColumn(std::make_unique<IntColumn<Downtime>>(
-        "type",
-        "The type of the downtime: 0 if it is active, 1 if it is pending",
-        offsets, [](const Downtime &r) { return r._type; }));
+        "type", "1 for a service downtime, 2 for a host downtime", offsets,
+        [](const Downtime &r) { return r._service != nullptr ? 1 : 2; }));
     addColumn(std::make_unique<BoolColumn<Downtime>>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,

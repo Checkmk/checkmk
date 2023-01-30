@@ -64,9 +64,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
-            ReplicationPath(
-                ty="dir", ident="saml2", site_path="etc/ssl/saml2", excludes=[".*new*"]
-            ),
         ]
 
     expected += [
@@ -133,9 +130,6 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
-            ReplicationPath(
-                ty="dir", ident="saml2", site_path="etc/ssl/saml2", excludes=[".*new*"]
-            ),
         ]
 
     if testlib.is_managed_repo() and edition is not cmk_version.Edition.CME:

@@ -310,8 +310,6 @@ def _get_expected_paths(
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",
             "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
-            "etc/ssl",
-            "etc/ssl/saml2",
         ]
 
     if edition is not cmk_version.Edition.CME:
@@ -349,9 +347,7 @@ def _get_expected_paths(
             ]
 
         expected_paths = [
-            p
-            for p in expected_paths
-            if p not in {"etc/check_mk/conf.d/wato/hosts.mk", "etc/ssl", "etc/ssl/saml2"}
+            p for p in expected_paths if p not in {"etc/check_mk/conf.d/wato/hosts.mk"}
         ]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
@@ -380,8 +376,6 @@ def _get_expected_paths(
             "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
             "etc/check_mk/liveproxyd.d",
             "etc/check_mk/liveproxyd.d/wato",
-            "etc/ssl",
-            "etc/ssl/saml2",
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:

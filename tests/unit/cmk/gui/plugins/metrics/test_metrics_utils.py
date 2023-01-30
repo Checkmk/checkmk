@@ -11,6 +11,7 @@ import cmk.utils.version
 import cmk.gui.metrics as metrics
 from cmk.gui.globals import config
 from cmk.gui.plugins.metrics import utils
+from cmk.gui.plugins.metrics.utils import hex_color_to_rgb_color
 from cmk.gui.type_defs import Perfdata
 
 
@@ -364,3 +365,14 @@ def test_horizontal_rules_from_thresholds(perf_string, result):
         )
         == result
     )
+
+
+@pytest.mark.parametrize(
+    "hex_color, expected_rgb",
+    [
+        ("#112233", (17, 34, 51)),
+        ("#123", (17, 34, 51)),
+    ],
+)
+def test_hex_color_to_rgb_color(hex_color, expected_rgb):
+    assert hex_color_to_rgb_color(hex_color) == expected_rgb

@@ -23,12 +23,19 @@ from cmk.base.plugins.agent_based.azure_app_registration import (
 )
 
 SECTION = {
+    "srv-whatever - MyKey": ClientSecret(
+        appId="9c677ced-6cb2-44b3-af54-65f768065fdf",
+        appName="srv-whatever",
+        endDateTime="2023-11-05T09:40:39.655Z",
+        keyId="724fd654-4440-4209-9a83-39b9bfd9d3a3",
+        customKeyIdentifier="MyKey",
+        displayName=None,
+    ),
     "srv-whatever - Very very secure": ClientSecret(
         appId="9c677ced-6cb2-44b3-af54-65f768065fdf",
         appName="srv-whatever",
         displayName="Very very secure",
         endDateTime="2023-11-05T09:40:39.655Z",
-        hint="hi0",
         keyId="724fd654-4440-4209-9a83-39b9bfd9d3a2",
     ),
     "srv-whatever - MyVault": ClientSecret(
@@ -36,7 +43,6 @@ SECTION = {
         appName="srv-whatever",
         displayName="MyVault",
         endDateTime="2022-04-05T08:25:51.097Z",
-        hint="gU1",
         keyId="0cc3fc97-d36a-43e8-a4fb-c9ed799a984e",
     ),
 }
@@ -48,7 +54,7 @@ SECTION = {
         (
             [
                 [
-                    '{"passwordCredentials": [{"customKeyIdentifier": null, "displayName": "Very very secure", "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a2", "secretText": null, "startDateTime": "2021-09-15T09:41:12.655Z"}, {"customKeyIdentifier": null, "displayName": "MyVault", "endDateTime": "2022-04-05T08:25:51.097Z", "hint": "gU1", "keyId": "0cc3fc97-d36a-43e8-a4fb-c9ed799a984e", "secretText": null, "startDateTime": "2022-04-05T08:25:51.097Z"}], "displayName": "srv-whatever", "id": "cd02b35f-c07b-40e2-82fb-e1f8b1907c4f", "appId": "9c677ced-6cb2-44b3-af54-65f768065fdf"}'
+                    '{"passwordCredentials": [{"customKeyIdentifier": null, "displayName": "Very very secure", "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a2", "secretText": null, "startDateTime": "2021-09-15T09:41:12.655Z"}, {"customKeyIdentifier": null, "displayName": "MyVault", "endDateTime": "2022-04-05T08:25:51.097Z", "hint": "gU1", "keyId": "0cc3fc97-d36a-43e8-a4fb-c9ed799a984e", "secretText": null, "startDateTime": "2022-04-05T08:25:51.097Z"}, {"customKeyIdentifier": "MyKey", "displayName": null, "endDateTime": "2023-11-05T09:40:39.655Z", "hint": "hi0", "keyId": "724fd654-4440-4209-9a83-39b9bfd9d3a3", "secretText": null, "startDateTime": "2021-09-15T09:41:12.655Z"}], "displayName": "srv-whatever", "id": "cd02b35f-c07b-40e2-82fb-e1f8b1907c4f", "appId": "9c677ced-6cb2-44b3-af54-65f768065fdf"}'
                 ],
             ],
             SECTION,
@@ -65,6 +71,7 @@ def test_parse_app_registration(string_table: StringTable, expcted_section: Sect
         (
             SECTION,
             [
+                Service(item="srv-whatever - MyKey"),
                 Service(item="srv-whatever - Very very secure"),
                 Service(item="srv-whatever - MyVault"),
             ],

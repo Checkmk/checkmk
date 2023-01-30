@@ -20,10 +20,10 @@ SEVEN_DAYS = 7 * 24 * 60 * 60
 class ClientSecret(BaseModel):
     appId: str
     appName: str
-    displayName: str
     endDateTime: str
-    hint: str
     keyId: str
+    customKeyIdentifier: str | None = None
+    displayName: str | None = None
 
 
 Section = Mapping[str, ClientSecret]
@@ -35,7 +35,12 @@ def parse_app_registration(string_table: StringTable) -> Section:
         app = json.loads(line[0])
         for credentials in app.get("passwordCredentials", []):
             secret = ClientSecret(appId=app["appId"], appName=app["displayName"], **credentials)
-            section[f"{secret.appName} - {secret.displayName}"] = secret
+            secret_name = (
+                f"{secret.appName} - {secret.displayName}"
+                if secret.displayName
+                else f"{secret.appName} - {secret.customKeyIdentifier}"
+            )
+            section[secret_name] = secret
 
     return section
 

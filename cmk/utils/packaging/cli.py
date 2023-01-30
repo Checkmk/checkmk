@@ -220,13 +220,13 @@ def _row(manifest: Manifest, state: str) -> list[str]:
     ]
 
 
-def _args_store(
+def _args_add(
     subparser: argparse.ArgumentParser,
 ) -> None:
     subparser.add_argument("file", type=Path, help="Path to an MKP file")
 
 
-def _command_store(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_add(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Add an MKP to the collection of managed MKPs"""
     file_path: Path = args.file
     try:
@@ -236,6 +236,7 @@ def _command_store(args: argparse.Namespace, _logger: logging.Logger) -> int:
 
     manifest = PackageStore().store(file_content)
 
+    # these are the required arguments for `mkp enable`!
     sys.stdout.write(f"{manifest.name} {manifest.version}\n")
     return 0
 
@@ -425,7 +426,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
     _add_command(subparsers, "files", _args_package_id, _command_files)
     _add_command(subparsers, "list", _args_list, _command_list)
-    _add_command(subparsers, "store", _args_store, _command_store)
+    _add_command(subparsers, "add", _args_add, _command_add)
     _add_command(subparsers, "release", _args_release, _command_release)
     _add_command(subparsers, "remove", _args_package_id, _command_remove)
     _add_command(subparsers, "enable", _args_package_id, _command_enable)

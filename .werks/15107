@@ -33,12 +33,12 @@ This is a new command that replaces <tt>list NAME</tt>.
 This command no longer accepts an argument.
 It will print a table of packages, similar to what the WATO setup page shows.
 
-<tt>store PATH_TO_FILE</tt>:
+<tt>add PATH_TO_FILE</tt>:
 This is a new command to add an MKP to the collection of MKPs managed by this tool.
 This command corresponds to the "<i>upload</i>" action in the GUI.
 
 <tt>install</tt>:
-This command is replaced by the commands <tt>store</tt> and <tt>enable</tt>, to reflect the GUI actions.
+This command is replaced by the commands <tt>add</tt> and <tt>enable</tt>, to reflect the GUI actions.
 
 <tt>update-active-packages</tt> is renamed to <tt>update-active</tt>.
 

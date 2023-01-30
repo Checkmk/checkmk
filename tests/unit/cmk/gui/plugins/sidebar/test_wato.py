@@ -75,17 +75,20 @@ def expected_items() -> dict[str, list[str]]:
         "wato.py?group=inventory&mode=rulesets",
     ]
 
-    users_items = [
-        "users",
-        "contact_groups",
-        "roles",
-        "ldap_config",
-        "saml_config",
-        "user_attrs",
-    ]
-
+    users_items = []
     if cmk_version.is_managed_edition():
-        users_items.insert(0, "customer_management")
+        users_items.append("customer_management")
+    users_items.extend(
+        [
+            "users",
+            "contact_groups",
+            "roles",
+            "ldap_config",
+        ]
+    )
+    if not cmk_version.is_raw_edition():
+        users_items.append("saml_config")
+    users_items.append("user_attrs")
 
     expected_items_dict = {
         "agents": agents_items,

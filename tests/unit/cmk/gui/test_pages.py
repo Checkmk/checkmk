@@ -108,9 +108,6 @@ def test_registered_pages() -> None:
         "mobile_view",
         "noauth:automation",
         "noauth:run_cron",
-        "noauth:saml_acs",
-        "noauth:saml_metadata",
-        "noauth:saml_sso",
         "message",
         "prediction_graph",
         "parent_child_topology",
@@ -224,6 +221,9 @@ def test_registered_pages() -> None:
             "ajax_ntop_past_alerts",
             "ajax_ntop_flow_alerts",
             "licensing_download_verification_request",
+            "noauth:saml_acs",
+            "noauth:saml_metadata",
+            "noauth:saml_sso",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

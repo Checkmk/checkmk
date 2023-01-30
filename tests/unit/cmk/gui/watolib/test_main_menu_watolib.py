@@ -39,7 +39,6 @@ def test_registered_modules() -> None:
         "diagnostics",
         "download_agents",
         "rule_search",
-        "saml_config",
         "wato.py?group=activechecks&mode=rulesets",
         "wato.py?group=agent&mode=rulesets",
         "wato.py?group=agents&mode=rulesets",
@@ -69,6 +68,7 @@ def test_registered_modules() -> None:
             "influxdb_connections",
             "licensing",
             "mkps",
+            "saml_config",
         ]
 
     if cmk_version.is_managed_edition():

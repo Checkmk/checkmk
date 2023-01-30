@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from tests.testlib.playwright.helpers import expect, PPage
 
 _backup_passphrase = "cmk"
@@ -63,12 +61,8 @@ def _restore_backup(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Restore").click()
     logged_in_page.main_area.get_link_from_title("Restore from this backup target").click()
     logged_in_page.main_area.get_link_from_title("Start restore of this backup").click()
-    expect(
-        logged_in_page.main_area.locator_via_xpath(
-            "div", "Do you really want to start the restore of this backup?"
-        )
-    ).to_be_visible()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    expect(logged_in_page.main_area.get_text("Start restore of backup")).to_be_visible()
+    logged_in_page.main_area.locator_via_xpath("button", "Start").click()
 
     logged_in_page.main_area.get_input("_key_p_passphrase").fill(_backup_passphrase)
 
@@ -92,25 +86,24 @@ def _cleanup(logged_in_page: PPage) -> None:
 
     # remove job
     logged_in_page.main_area.get_link_from_title("Delete this backup job").click()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
     logged_in_page.main_area.expect_no_entries()
 
     # remove target
     _go_to_backups_page(logged_in_page)
     logged_in_page.main_area.get_suggestion("Backup targets").click()
     logged_in_page.main_area.get_link_from_title("Delete this backup target").click()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
     logged_in_page.main_area.expect_no_entries()
 
     # remove encryption key
     _go_to_backups_page(logged_in_page)
     logged_in_page.main_area.get_suggestion("Backup encryption keys").click()
     logged_in_page.main_area.get_link_from_title("Delete this key").click()
-    logged_in_page.main_area.locator_via_xpath("button", "Yes").click()
+    logged_in_page.main_area.locator_via_xpath("button", "Delete").click()
     logged_in_page.main_area.expect_no_entries()
 
 
-@pytest.mark.skip(reason="skipping temporarily; changes in confirm messages")
 def test_backups(logged_in_page: PPage) -> None:
     _go_to_backups_page(logged_in_page)
     logged_in_page.main_area.expect_no_entries()

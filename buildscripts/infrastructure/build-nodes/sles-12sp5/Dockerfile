@@ -64,9 +64,6 @@ RUN zypper ref -s \
     libvpx-devel \
     libxml2-devel \
     libxslt-devel \
-    xmlsec1-devel \
-    xmlsec1-openssl-devel \
-    libxmlsec1-1 \
     make \
     mysql \
     openldap2-devel \

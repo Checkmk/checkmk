@@ -62,7 +62,6 @@ RUN apt-get update \
     libreadline-dev \
     libsqlite3-dev \
     libxml2-dev \
-    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \

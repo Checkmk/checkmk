@@ -61,7 +61,6 @@ RUN yum -y makecache \
     libtool-ltdl-devel \
     libuuid-devel \
     libxml2-devel \
-    libxmlsec1-devel \
     mariadb-devel \
     mpfr-devel \
     ncurses-devel \
@@ -89,8 +88,6 @@ RUN yum -y makecache \
     vim \
     wget \
     which \
-    xmlsec1-devel \
-    xmlsec1-openssl-devel \
     && yum clean all
 
 # Install our standard tool chain for building in seperate container

@@ -57,7 +57,6 @@ RUN yum -y makecache \
     libuuid-devel \
     libxml2-devel \
     libxcrypt-compat \
-    xmlsec1-devel \
     mariadb-devel \
     mpfr-devel \
     ncurses-devel \
@@ -86,8 +85,6 @@ RUN yum -y makecache \
     tk-devel \
     wget \
     which \
-    xmlsec1-devel \
-    xmlsec1-openssl-devel \
     && yum clean all
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \

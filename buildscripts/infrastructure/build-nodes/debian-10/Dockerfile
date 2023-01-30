@@ -64,7 +64,6 @@ RUN apt-get update \
     libsqlite3-dev \
     libssl-dev \
     libxml2-dev \
-    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \

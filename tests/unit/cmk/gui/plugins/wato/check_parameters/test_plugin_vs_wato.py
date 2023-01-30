@@ -262,6 +262,7 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:statgrab_mem"),
         ("check", "checkgroup_parameters:systemd_services"),
         ("check", "checkgroup_parameters:temperature_trends"),
+        ("check", "checkgroup_parameters:prism_container"),
         ("discovery", "discovery_systemd_units_services_rules"),
         ("inventory", "active_checks:cmk_inv"),
         ("inventory", "inv_parameters:inv_if"),

@@ -1,6 +1,6 @@
 title: Nutanix Prism: Alerts
 agents: nutanix
-catalog: os/misc
+catalog: virtual/nutanix
 license: GPLv2
 distribution: check_mk
 description:

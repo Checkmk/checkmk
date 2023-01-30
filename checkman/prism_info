@@ -1,6 +1,6 @@
 title: Nutanix Prism: General Info about a Cluster
 agents: nutanix
-catalog: os/misc
+catalog: virtual/nutanix
 license: GPLv2
 distribution: check_mk
 description:

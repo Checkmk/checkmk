@@ -1,0 +1,23 @@
+Title: Additional Nutanix Checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1677856748
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+We added the following checks for nutanix cluster
+
+LI: IO/CPU/Memory usage for the whole cluser
+LI: protection domain status
+LI: remote support status
+LI: VM State
+LI: status of hardware disks inside of every host
+LI: IO/CPU/Memory of every host
+LI: storage usage of every host
+LI: IO/CPU/Memory of every VM
+LI: VM tool status
+LI: VM configuration
+

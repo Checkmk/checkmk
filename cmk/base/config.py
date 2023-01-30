@@ -1208,6 +1208,10 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "vms_diskstat_df": lambda item: ("fs_%s", item),
     "wmic_process": lambda item: ("proc_%s", item),
     "zfsget": lambda item: ("fs_%s", item),
+    "prism_alerts": lambda item: ("Prism Alerts", None),
+    "prism_containers": lambda item: ("Containers %s", item),
+    "prism_info": lambda item: ("Prism Cluster", None),
+    "prism_storage_pools": lambda item: ("Storage Pool %s", item),
 }
 
 

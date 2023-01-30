@@ -220,6 +220,18 @@ def _row(manifest: Manifest, state: str) -> list[str]:
     ]
 
 
+def _args_install_deprecated(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("file", type=str, metavar="(DEPRECATED)")
+
+
+def _command_install_deprecated(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """This command is deprecated. Please use the `add` and `enable` commands."""
+    sys.stderr.write(f"{_command_install_deprecated.__doc__}\n")
+    return 1
+
+
 def _args_add(
     subparser: argparse.ArgumentParser,
 ) -> None:
@@ -418,7 +430,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--debug", "-d", action="store_true")
     parser.add_argument("--verbose", "-v", action="count", help="Be more verbose")
-    subparsers = parser.add_subparsers(required=True)
+    subparsers = parser.add_subparsers(required=True, title="available commands")
 
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
@@ -426,6 +438,8 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
     _add_command(subparsers, "files", _args_package_id, _command_files)
     _add_command(subparsers, "list", _args_list, _command_list)
+    # Can be dropped in 2.3
+    _add_command(subparsers, "install", _args_install_deprecated, _command_install_deprecated)
     _add_command(subparsers, "add", _args_add, _command_add)
     _add_command(subparsers, "release", _args_release, _command_release)
     _add_command(subparsers, "remove", _args_package_id, _command_remove)
@@ -449,7 +463,7 @@ def _add_command(
     args_adder: Callable[[argparse.ArgumentParser], None],
     handler: Callable[[argparse.Namespace, logging.Logger], int],
 ) -> None:
-    subparser = subparsers.add_parser(cmd, help=handler.__doc__)
+    subparser = subparsers.add_parser(cmd, help=handler.__doc__, description=handler.__doc__)
     args_adder(subparser)
     subparser.set_defaults(handler=handler)
 

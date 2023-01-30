@@ -10,10 +10,10 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, ListOfStrings, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, DictionaryEntry, Integer, ListOfStrings, TextInput, Tuple
 
 
-def __levels(key, title_upper, title_lower):
+def __levels(key: str, title_upper: str | None, title_lower: str | None) -> list[DictionaryEntry]:
     return [
         (
             key + "_levels_upper",
@@ -42,7 +42,7 @@ def __levels(key, title_upper, title_lower):
     ]
 
 
-def __control_plane_roles() -> list[tuple[str, ListOfStrings]]:
+def __control_plane_roles() -> list[DictionaryEntry]:
     return [
         (
             "control_plane_roles",

@@ -74,7 +74,6 @@ from cmk.base.agent_based.confcheckers import ConfiguredFetcher, ConfiguredParse
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.agent_based.utils import ConfiguredSummarizer
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
@@ -2129,10 +2128,10 @@ def mode_inventory_as_check(
     options: dict,
     hostname: HostName,
     *,
-    config_cache: ConfigCache,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> int:
+    config_cache = config.get_config_cache()
     file_cache_options = _handle_fetcher_options(options)
     parameters = HWSWInventoryParameters.from_raw(options)
 
@@ -2189,7 +2188,6 @@ def register_mode_inventory_as_check(
             long_option="inventory-as-check",
             handler_function=partial(
                 mode_inventory_as_check,
-                config_cache=config.get_config_cache(),
                 active_check_handler=active_check_handler,
                 keepalive=keepalive,
             ),

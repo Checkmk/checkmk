@@ -240,87 +240,86 @@ class AutomationTryDiscovery(Automation):
             not prevent_scan
         )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
 
-        return self._get_discovery_preview(
+        return _get_discovery_preview(
             HostName(args[0]), perform_scan, OnError.RAISE if raise_errors else OnError.WARN
         )
 
-    def _get_discovery_preview(
-        self, host_name: HostName, perform_scan: bool, on_error: OnError
-    ) -> TryDiscoveryResult:
-        buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
-            log.setup_console_logging()
-            check_preview_table, host_label_result = self._execute_discovery(
-                host_name, perform_scan, on_error
-            )
 
-            def make_discovered_host_labels(
-                labels: Sequence[HostLabel],
-            ) -> DiscoveredHostLabelsDict:
-                # this dict deduplicates label names! TODO: sort only if and where needed!
-                return {
-                    l.name: l.to_dict() for l in sorted(labels, key=operator.attrgetter("name"))
-                }
-
-            changed_labels = make_discovered_host_labels(
-                [
-                    l
-                    for l in host_label_result.vanished
-                    if l.name in make_discovered_host_labels(host_label_result.new)
-                ]
-            )
-
-            return TryDiscoveryResult(
-                output=buf.getvalue(),
-                check_table=check_preview_table,
-                host_labels=make_discovered_host_labels(host_label_result.present),
-                new_labels=make_discovered_host_labels(
-                    [l for l in host_label_result.new if l.name not in changed_labels]
-                ),
-                vanished_labels=make_discovered_host_labels(
-                    [l for l in host_label_result.vanished if l.name not in changed_labels]
-                ),
-                changed_labels=changed_labels,
-            )
-
-    def _execute_discovery(
-        self,
-        host_name: HostName,
-        perform_scan: bool,
-        on_error: OnError,
-    ) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
-        file_cache_options = FileCacheOptions(
-            use_outdated=not perform_scan, use_only_cache=not perform_scan
+def _get_discovery_preview(
+    host_name: HostName, perform_scan: bool, on_error: OnError
+) -> TryDiscoveryResult:
+    buf = io.StringIO()
+    with redirect_stdout(buf), redirect_stderr(buf):
+        log.setup_console_logging()
+        check_preview_table, host_label_result = _execute_discovery(
+            host_name, perform_scan, on_error
         )
 
-        config_cache = config.get_config_cache()
-        parser = ConfiguredParser(
-            config_cache,
-            selected_sections=NO_SELECTION,
-            keep_outdated=file_cache_options.keep_outdated,
-            logger=logging.getLogger("cmk.base.discovery"),
+        def make_discovered_host_labels(
+            labels: Sequence[HostLabel],
+        ) -> DiscoveredHostLabelsDict:
+            # this dict deduplicates label names! TODO: sort only if and where needed!
+            return {l.name: l.to_dict() for l in sorted(labels, key=operator.attrgetter("name"))}
+
+        changed_labels = make_discovered_host_labels(
+            [
+                l
+                for l in host_label_result.vanished
+                if l.name in make_discovered_host_labels(host_label_result.new)
+            ]
         )
-        fetcher = ConfiguredFetcher(
-            config_cache,
-            file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=perform_scan,
-            mode=Mode.DISCOVERY,
-            on_error=on_error,
-            selected_sections=NO_SELECTION,
-            simulation_mode=config.simulation_mode,
-            max_cachefile_age=config.max_cachefile_age(),
+
+        return TryDiscoveryResult(
+            output=buf.getvalue(),
+            check_table=check_preview_table,
+            host_labels=make_discovered_host_labels(host_label_result.present),
+            new_labels=make_discovered_host_labels(
+                [l for l in host_label_result.new if l.name not in changed_labels]
+            ),
+            vanished_labels=make_discovered_host_labels(
+                [l for l in host_label_result.vanished if l.name not in changed_labels]
+            ),
+            changed_labels=changed_labels,
         )
-        return discovery.get_check_preview(
-            host_name,
-            config_cache=config_cache,
-            parser=parser,
-            fetcher=fetcher,
-            section_plugins=SectionPluginMapper(),
-            check_plugins=CheckPluginMapper(),
-            find_service_description=config.service_description,
-            ignored_services=IgnoredServices(config_cache, host_name),
-            on_error=on_error,
-        )
+
+
+def _execute_discovery(
+    host_name: HostName,
+    perform_scan: bool,
+    on_error: OnError,
+) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
+    file_cache_options = FileCacheOptions(
+        use_outdated=not perform_scan, use_only_cache=not perform_scan
+    )
+
+    config_cache = config.get_config_cache()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
+    fetcher = ConfiguredFetcher(
+        config_cache,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=perform_scan,
+        mode=Mode.DISCOVERY,
+        on_error=on_error,
+        selected_sections=NO_SELECTION,
+        simulation_mode=config.simulation_mode,
+        max_cachefile_age=config.max_cachefile_age(),
+    )
+    return discovery.get_check_preview(
+        host_name,
+        config_cache=config_cache,
+        parser=parser,
+        fetcher=fetcher,
+        section_plugins=SectionPluginMapper(),
+        check_plugins=CheckPluginMapper(),
+        find_service_description=config.service_description,
+        ignored_services=IgnoredServices(config_cache, host_name),
+        on_error=on_error,
+    )
 
 
 automations.register(AutomationTryDiscovery())

@@ -19,6 +19,10 @@ from dateutil.relativedelta import relativedelta
 LicenseUsageReportVersion: Final[str] = "1.5"
 
 
+class LicenseUsageReportVersionError(Exception):
+    pass
+
+
 #   .--subscription details------------------------------------------------.
 #   |                 _                   _       _   _                    |
 #   |       ___ _   _| |__  ___  ___ _ __(_)_ __ | |_(_) ___  _ __         |
@@ -538,7 +542,7 @@ class LicenseUsageHistory:
             raise TypeError()
 
         if not isinstance(version := raw_report.get("VERSION"), str):
-            raise ValueError()
+            raise LicenseUsageReportVersionError()
 
         parser = LicenseUsageSample.get_parser(version)
         return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))

@@ -2051,6 +2051,14 @@ msgstr "Questa regola corrisponde e definisce nuovi parametri."
 msgid "A list of specific users"
 msgstr "Un elenco di utenti specifici"
 
+#, fuzzy
+msgid ""
+"A macro must begin and end with '$' and is allowed to contain only ASCII "
+"upper letters, digits and underscores."
+msgstr ""
+"Il nome della vista può contenere solo lettere, cifre e caratteri di "
+"sottolineatura."
+
 msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
 msgstr "Un utente ntopng che appartiene al gruppo 'Administrator' in ntopng."
 
@@ -2244,12 +2252,6 @@ msgstr ""
 #, python-format
 msgid "A user with the id \"%s\" does not exist."
 msgstr "Un utente con l'id \"%s\" non esiste."
-
-msgid ""
-"A user-friendly name to identify this connection. This will be used for the "
-"log-in button that is shown on the log-in page once the connection has been "
-"set up."
-msgstr ""
 
 msgid "A value in seconds"
 msgstr "Un valore in secondi"
@@ -5101,12 +5103,10 @@ msgstr ""
 
 msgid ""
 "An XML text (file) containing the metadata information of your "
-"organisation's Identity Provider. This is useful if the Checkmk server is "
-"not able to access the metadata endpoint of the Identity Provider. Please "
-"note that as a result, any configuration updates that are applied to the "
-"Identity Provider (e.g. updates to certificates) must be updated manually "
-"here as well. We therefore recommend using the metadata endpoint URL option "
-"where possible."
+"organisation's identity provider. This is useful if the Checkmk server is "
+"not able to access the identity provider's metadata endpoint. However, "
+"please note that this means any updates must be done manually. We therefore "
+"recommend using the URL option where possible."
 msgstr ""
 
 msgid "An absolute path to a CA certificate"
@@ -9343,11 +9343,11 @@ msgid "Checkmk server URL"
 msgstr "Controlla l'URL"
 
 #, fuzzy
-msgid "Checkmk service provider metadata"
+msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Checkmk con i dati sulle prestazioni dei tempi"
 
 msgid ""
-"Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
+"Checkmk signs its SAML 2.0 requests to your identity provider. You can use "
 "the certificate that is shipped with Checkmk. Alternatively, if your "
 "organisation manages its own certificates, you can also add a custom "
 "certificate. Note that the public certificate needs to be a single "
@@ -11155,10 +11155,6 @@ msgstr "Tempo di connessione"
 
 msgid "Connection timeout"
 msgstr "Timeout della connessione"
-
-#, fuzzy
-msgid "Connection timeout (seconds)"
-msgstr "Timeout della connessione in secondi"
 
 msgid "Connection timeout in seconds"
 msgstr "Timeout della connessione in secondi"
@@ -17622,6 +17618,13 @@ msgstr ""
 "per esempio 0x00000000."
 
 msgid ""
+"Enter the full URL to the identity provider's metadata endpoint. It will "
+"automatically detect the correct single sign-on endpoint and bindings for "
+"successful SAML communication with the identity provider. We only support "
+"HTTPS for this endpoint, which specifies a trusted certificate."
+msgstr ""
+
+msgid ""
 "Enter the full name of the project here. You can find the name in Jira "
 "within \"Projects\" - \"View all projects\" - column: \"Project\". This "
 "field is case insensitive"
@@ -23535,16 +23538,16 @@ msgstr ""
 msgid "Identity"
 msgstr "Identità"
 
-#, fuzzy
-msgid "Identity Provider connection timeout"
-msgstr "Impostare il timeout della connessione"
-
-#, fuzzy
-msgid "Identity Provider metadata"
-msgstr "Impostare il timeout della connessione"
-
 msgid "Identity of an authorized key"
 msgstr "Identità di una chiave autorizzata"
+
+#, fuzzy
+msgid "Identity provider connection timeout"
+msgstr "Impostare il timeout della connessione"
+
+#, fuzzy
+msgid "Identity provider metadata"
+msgstr "Impostare il timeout della connessione"
 
 msgid "Idle connections"
 msgstr "Connessioni inattive"
@@ -23631,6 +23634,11 @@ msgstr ""
 "evitare di processare i vecchi messaggi di log. Puoi abilitare questo flag "
 "per iniziare ad elaborare il file dall'inizio e vedere tutti i messaggi che "
 "potrebbero essere già presenti."
+
+msgid ""
+"If a node has any of these roles, then it is considered a control plane node "
+"by Checkmk. Otherwise, it is considered a worker node."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -23788,6 +23796,16 @@ msgid ""
 msgstr ""
 "Se i limiti sono abilitati, tutte le istanze sono recuperate "
 "indipendentemente da eventuali restrizioni configurate per i nomi o i tag"
+
+#, python-format
+msgid ""
+"If multiple entries are found, the first one of the sorted entries is used. "
+"If you use macros within inventory based views these macros are replaced "
+"<tt>before</tt> the regex evaluation.<br>Note: If a service description "
+"contains special characters like <tt>%s</tt> you have to escape them in "
+"order to get reliable results. Macros don't need to be escaped. If a macro "
+"could not be found then it stays as it is."
+msgstr ""
 
 msgid ""
 "If no ICMP or TCP-SYN/RST packet is being seen from the target host for a "
@@ -26255,11 +26273,6 @@ msgstr "Battito cardiaco intermittente"
 
 msgid "Internal ID"
 msgstr "ID interno"
-
-msgid ""
-"Internal ID that Checkmk uses to uniquely identify each connection to an "
-"Identity Provider."
-msgstr ""
 
 #, python-format
 msgid ""
@@ -29951,6 +29964,14 @@ msgstr ""
 "Rendi %s visibile e utilizzabile per gli utenti dei gruppi di contatto di "
 "cui l'utente che pubblica non è membro."
 
+#, fuzzy, python-format
+msgid ""
+"Make %s visible and usable for users of sites the publishing user has "
+"selected."
+msgstr ""
+"Rendi %s visibile e utilizzabile per gli utenti dei gruppi di contatto di "
+"cui l'utente che pubblica non è membro."
+
 msgid "Make backups of your whole site and restore previous backups."
 msgstr ""
 "Fate dei backup di tutto il vostro sito e ripristinate i backup precedenti."
@@ -31250,14 +31271,6 @@ msgstr "Uso del Meta"
 #, fuzzy
 msgid "Metadata endpoint"
 msgstr "URL dell'endpoint REST"
-
-msgid ""
-"Metadata information is exchanged between Checkmk and your Identity Provider "
-"and contains configuration information to enable a successful SAML "
-"communication. This includes the Single Sing-On endpoint and bindings used "
-"by the Identity Provider, as well as details to certificates used for "
-"signatures and encryption."
-msgstr ""
 
 msgid "Method"
 msgstr "Metodo"
@@ -37201,6 +37214,10 @@ msgstr ""
 "\"%s\">Escape HTML nell'output dell'host</a> invece di <a href=\"%s"
 "\">disabilitare l'escape a livello globale</a>"
 
+#, fuzzy
+msgid "Please contact your administrator."
+msgstr "Si prega di specificare la password."
+
 msgid "Please define at least one aggregation group"
 msgstr "Definire almeno un gruppo di aggregazione"
 
@@ -38446,10 +38463,18 @@ msgstr "Pubblicare %s ai gruppi di contatto stranieri"
 msgid "Publish to all users"
 msgstr "Pubblica a tutti gli utenti"
 
+#, fuzzy
+msgid "Publish to all users of sites"
+msgstr "Pubblica a tutti gli utenti"
+
 msgid "Publish to members of contact groups"
 msgstr "Pubblicare ai membri dei gruppi di contatto"
 
 msgid "Publish to other users"
+msgstr "Pubblicare ad altri utenti"
+
+#, fuzzy
+msgid "Publish to users of sites"
 msgstr "Pubblicare ad altri utenti"
 
 msgid "Pull: Checkmk server contacts the agent"
@@ -39016,6 +39041,10 @@ msgstr "Capacità di lettura"
 
 msgid "Read throughput per second"
 msgstr "Lettura al secondo"
+
+#, fuzzy
+msgid "Read timeout"
+msgstr "Timeout inattivo"
 
 #, fuzzy
 msgid "Read timeout (seconds)"
@@ -41939,6 +41968,12 @@ msgstr "Invia le metriche a Graphite / InfluxDB"
 msgid "Select packages"
 msgstr "Regola pacchetto %s"
 
+#, python-format
+msgid ""
+"Select sites the %s should be avalable on. It will become available for all "
+"users of that sites on the next activation of changes for the selected sites."
+msgstr ""
+
 msgid "Select sound"
 msgstr "Seleziona il suono"
 
@@ -44861,6 +44896,10 @@ msgstr ""
 
 msgid "Specify queue names that the rule should apply to"
 msgstr "Specificare i nomi delle code a cui applicare la regola"
+
+#, fuzzy
+msgid "Specify roles of a control plane node"
+msgstr "Numero di contenitori"
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
@@ -47875,6 +47914,10 @@ msgstr ""
 "L'ID dell'obiettivo deve essere un testo unico. Sarà usato come chiave "
 "interna quando gli oggetti si riferiscono all'obiettivo."
 
+#, fuzzy
+msgid "The ID of this connection."
+msgstr "Questa connessione"
+
 msgid ""
 "The ID will be used as internal identifier and the custom service attribute "
 "will be computed based on the ID. The custom service attribute will be named "
@@ -48066,6 +48109,11 @@ msgstr "Il meccanismo Piggyback"
 msgid "The Port Description"
 msgstr "La descrizione del porto"
 
+msgid ""
+"The SAML login button on the login page will display this name. Choose a "
+"clear and short name to help others identify this connection."
+msgstr ""
+
 msgid "The SAP system ID."
 msgstr "L'ID del sistema SAP."
 
@@ -48117,13 +48165,6 @@ msgstr ""
 
 msgid "The URL must begin with <tt>https</tt>."
 msgstr "L'URL deve iniziare con <tt>https</tt>."
-
-msgid ""
-"The URL of the server that hosts Checkmk. This is the URL your monitoring "
-"users use. It does not need to be accessible to your Identity Provider. For "
-"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
-"this endpoint, because it specifies certificate which should be trusted."
-msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
 msgstr ""
@@ -48459,7 +48500,7 @@ msgstr ""
 "L'attributo usato per identificare le appartenenze ai gruppi di utenti."
 
 msgid ""
-"The attribute used to map contact groups between your Identity Provider and "
+"The attribute used to map contact groups between your identity provider and "
 "Checkmk. Note that contact groups must exist in Checkmk so that a mapping "
 "can be done."
 msgstr ""
@@ -49912,9 +49953,6 @@ msgstr "Il file di registro non esiste sul sito."
 
 msgid "The login is currently locked"
 msgstr "Il login è attualmente bloccato"
-
-msgid "The macro must begin and end with '$'."
-msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
 msgstr "L'oggetto della posta è usato come appliazione syslog"
@@ -51517,7 +51555,7 @@ msgid "The timeout %s is not a valid integer number."
 msgstr "Il timeout %s non è un numero intero valido."
 
 msgid ""
-"The timeout applied to HTTP connections with the Identity Provider. Checkmk "
+"The timeout applied to HTTP connections with the identity provider. Checkmk "
 "sends requests to and receives responses from it regarding the "
 "authentication process of a user."
 msgstr ""
@@ -52265,6 +52303,10 @@ msgstr "Questa regola di BI non esiste"
 msgid "This BI rule does not exist."
 msgstr "Questa regola della BI non esiste."
 
+#, fuzzy
+msgid "This ID already exists."
+msgstr "L'host %s esiste già nella cartella %s"
+
 msgid "This ID can not be used as custom attribute"
 msgstr "Questo ID non può essere usato come attributo personalizzato"
 
@@ -52276,12 +52318,6 @@ msgstr "Questo ID è già usato da un altro lavoro di backup."
 
 msgid "This ID is already used by another backup target."
 msgstr "Questo ID è già usato da un'altra destinazione di backup."
-
-msgid ""
-"This ID is already used by another connection. Please choose another one."
-msgstr ""
-"Questo ID è già utilizzato da un'altra connessione. Per favore, sceglietene "
-"un altro."
 
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
@@ -54018,6 +54054,13 @@ msgstr "Questo problema è stato riconosciuto"
 
 msgid "This problem has been acknowledged."
 msgstr "Questo problema è stato riconosciuto."
+
+msgid ""
+"This refers to the URL of the server where Checkmk is running. For example: "
+"https://mycheckmkserver.com It does not need to be accessible by your "
+"identity provider. We only support HTTPS for this endpoint, which specifies "
+"a trusted certificate."
+msgstr ""
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -56283,11 +56326,11 @@ msgstr ""
 "valore predefinito di ADO."
 
 #, fuzzy
-msgid "Time to wait in seconds for a connection."
+msgid "Time to wait for a connection."
 msgstr "Numero di connessioni attuali"
 
 #, fuzzy
-msgid "Time to wait in seconds for a response."
+msgid "Time to wait for a response."
 msgstr "Tempo di attesa delle risposte SNMP"
 
 #, fuzzy
@@ -58042,6 +58085,10 @@ msgstr "Non specificato."
 
 msgid "Unspecified."
 msgstr "Non specificato."
+
+#, fuzzy
+msgid "Unsupported action"
+msgstr "Utente che ha eseguito l'azione"
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -64902,6 +64949,10 @@ msgstr "gli eventi riconosciuti non saranno onorati"
 msgid "act/pend"
 msgstr "agire/pendere"
 
+#, fuzzy
+msgid "activation ID is not set"
+msgstr "Stato di attivazione"
+
 msgid "active"
 msgstr "attivo"
 
@@ -66875,6 +66926,17 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "Connection timeout in seconds"
+#~ msgid "Connection timeout (seconds)"
+#~ msgstr "Timeout della connessione in secondi"
+
+#~ msgid ""
+#~ "This ID is already used by another connection. Please choose another one."
+#~ msgstr ""
+#~ "Questo ID è già utilizzato da un'altra connessione. Per favore, "
+#~ "sceglietene un altro."
 
 #, fuzzy
 #~| msgid "N#"
@@ -70041,11 +70103,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~| msgid "Number of retries"
 #~ msgid "Set lower levels of worker nodes"
 #~ msgstr "Numero di tentativi"
-
-#, fuzzy
-#~| msgid "Number of containers"
-#~ msgid "Set upper levels of control plane nodes"
-#~ msgstr "Numero di contenitori"
 
 #, fuzzy
 #~| msgid "Upper levels for indexes"

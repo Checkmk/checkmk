@@ -1735,6 +1735,11 @@ msgstr ""
 msgid "A list of specific users"
 msgstr "O listă cu utilizatori specifici"
 
+msgid ""
+"A macro must begin and end with '$' and is allowed to contain only ASCII "
+"upper letters, digits and underscores."
+msgstr ""
+
 msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
 msgstr ""
 
@@ -1871,12 +1876,6 @@ msgstr ""
 #, python-format
 msgid "A user with the id \"%s\" does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
-msgid ""
-"A user-friendly name to identify this connection. This will be used for the "
-"log-in button that is shown on the log-in page once the connection has been "
-"set up."
-msgstr ""
 
 #, fuzzy
 msgid "A value in seconds"
@@ -4793,12 +4792,10 @@ msgstr ""
 
 msgid ""
 "An XML text (file) containing the metadata information of your "
-"organisation's Identity Provider. This is useful if the Checkmk server is "
-"not able to access the metadata endpoint of the Identity Provider. Please "
-"note that as a result, any configuration updates that are applied to the "
-"Identity Provider (e.g. updates to certificates) must be updated manually "
-"here as well. We therefore recommend using the metadata endpoint URL option "
-"where possible."
+"organisation's identity provider. This is useful if the Checkmk server is "
+"not able to access the identity provider's metadata endpoint. However, "
+"please note that this means any updates must be done manually. We therefore "
+"recommend using the URL option where possible."
 msgstr ""
 
 #, fuzzy
@@ -8714,11 +8711,11 @@ msgid "Checkmk server URL"
 msgstr "Privire de ansamblu"
 
 #, fuzzy
-msgid "Checkmk service provider metadata"
+msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Starea porturilor pentru inventariere"
 
 msgid ""
-"Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
+"Checkmk signs its SAML 2.0 requests to your identity provider. You can use "
 "the certificate that is shipped with Checkmk. Alternatively, if your "
 "organisation manages its own certificates, you can also add a custom "
 "certificate. Note that the public certificate needs to be a single "
@@ -10358,10 +10355,6 @@ msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "Connection timeout"
-msgstr "Conexiune Noua"
-
-#, fuzzy
-msgid "Connection timeout (seconds)"
 msgstr "Conexiune Noua"
 
 #, fuzzy
@@ -16861,6 +16854,13 @@ msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
 
 msgid ""
+"Enter the full URL to the identity provider's metadata endpoint. It will "
+"automatically detect the correct single sign-on endpoint and bindings for "
+"successful SAML communication with the identity provider. We only support "
+"HTTPS for this endpoint, which specifies a trusted certificate."
+msgstr ""
+
+msgid ""
 "Enter the full name of the project here. You can find the name in Jira "
 "within \"Projects\" - \"View all projects\" - column: \"Project\". This "
 "field is case insensitive"
@@ -22439,16 +22439,16 @@ msgstr ""
 msgid "Identity"
 msgstr ""
 
-#, fuzzy
-msgid "Identity Provider connection timeout"
-msgstr "Conexiune Noua"
-
-#, fuzzy
-msgid "Identity Provider metadata"
-msgstr "Conexiune Noua"
-
 msgid "Identity of an authorized key"
 msgstr ""
+
+#, fuzzy
+msgid "Identity provider connection timeout"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Identity provider metadata"
+msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "Idle connections"
@@ -22506,6 +22506,11 @@ msgid ""
 "If a new logfile is found we usually skip to its end to avoid processing "
 "ancient log messages. You can enable this flag to start processing the file "
 "from the beginning and see all messages that may already be present."
+msgstr ""
+
+msgid ""
+"If a node has any of these roles, then it is considered a control plane node "
+"by Checkmk. Otherwise, it is considered a worker node."
 msgstr ""
 
 msgid ""
@@ -22611,6 +22616,16 @@ msgstr ""
 msgid ""
 "If limits are enabled all instances are fetched regardless of possibly "
 "configured restriction to names or tags"
+msgstr ""
+
+#, python-format
+msgid ""
+"If multiple entries are found, the first one of the sorted entries is used. "
+"If you use macros within inventory based views these macros are replaced "
+"<tt>before</tt> the regex evaluation.<br>Note: If a service description "
+"contains special characters like <tt>%s</tt> you have to escape them in "
+"order to get reliable results. Macros don't need to be escaped. If a macro "
+"could not be found then it stays as it is."
 msgstr ""
 
 msgid ""
@@ -24440,11 +24455,6 @@ msgid "Intermittent heartbeat"
 msgstr ""
 
 msgid "Internal ID"
-msgstr ""
-
-msgid ""
-"Internal ID that Checkmk uses to uniquely identify each connection to an "
-"Identity Provider."
 msgstr ""
 
 #, python-format
@@ -28195,6 +28205,12 @@ msgid ""
 "is not a member of."
 msgstr ""
 
+#, python-format
+msgid ""
+"Make %s visible and usable for users of sites the publishing user has "
+"selected."
+msgstr ""
+
 msgid "Make backups of your whole site and restore previous backups."
 msgstr ""
 
@@ -29536,14 +29552,6 @@ msgid "Meta usage"
 msgstr "% utilizare"
 
 msgid "Metadata endpoint"
-msgstr ""
-
-msgid ""
-"Metadata information is exchanged between Checkmk and your Identity Provider "
-"and contains configuration information to enable a successful SAML "
-"communication. This includes the Single Sing-On endpoint and bindings used "
-"by the Identity Provider, as well as details to certificates used for "
-"signatures and encryption."
 msgstr ""
 
 msgid "Method"
@@ -35449,6 +35457,9 @@ msgid ""
 "output</a> instead of <a href=\"%s\">disabling escaping globally</a>"
 msgstr ""
 
+msgid "Please contact your administrator."
+msgstr ""
+
 msgid "Please define at least one aggregation group"
 msgstr ""
 
@@ -36617,11 +36628,19 @@ msgstr ""
 msgid "Publish to all users"
 msgstr ""
 
+#, fuzzy
+msgid "Publish to all users of sites"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 msgid "Publish to members of contact groups"
 msgstr ""
 
 msgid "Publish to other users"
 msgstr ""
+
+#, fuzzy
+msgid "Publish to users of sites"
+msgstr "Numarul maxim de mesaje"
 
 msgid "Pull: Checkmk server contacts the agent"
 msgstr ""
@@ -37213,6 +37232,10 @@ msgstr ""
 #, fuzzy
 msgid "Read throughput per second"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Read timeout"
+msgstr "Nume tablespace"
 
 #, fuzzy
 msgid "Read timeout (seconds)"
@@ -40125,6 +40148,12 @@ msgstr ""
 msgid "Select packages"
 msgstr "Conexiune Noua"
 
+#, python-format
+msgid ""
+"Select sites the %s should be avalable on. It will become available for all "
+"users of that sites on the next activation of changes for the selected sites."
+msgstr ""
+
 #, fuzzy
 msgid "Select sound"
 msgstr "(selectează directorul)"
@@ -42862,6 +42891,10 @@ msgstr ""
 
 msgid "Specify queue names that the rule should apply to"
 msgstr ""
+
+#, fuzzy
+msgid "Specify roles of a control plane node"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
@@ -45674,6 +45707,10 @@ msgid ""
 "key when objects refer to the target."
 msgstr ""
 
+#, fuzzy
+msgid "The ID of this connection."
+msgstr "Conexiune Noua"
+
 msgid ""
 "The ID will be used as internal identifier and the custom service attribute "
 "will be computed based on the ID. The custom service attribute will be named "
@@ -45806,6 +45843,11 @@ msgstr "Agregare noua"
 msgid "The Port Description"
 msgstr "foloseste descrierea"
 
+msgid ""
+"The SAML login button on the login page will display this name. Choose a "
+"clear and short name to help others identify this connection."
+msgstr ""
+
 msgid "The SAP system ID."
 msgstr ""
 
@@ -45841,13 +45883,6 @@ msgid ""
 msgstr ""
 
 msgid "The URL must begin with <tt>https</tt>."
-msgstr ""
-
-msgid ""
-"The URL of the server that hosts Checkmk. This is the URL your monitoring "
-"users use. It does not need to be accessible to your Identity Provider. For "
-"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
-"this endpoint, because it specifies certificate which should be trusted."
 msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
@@ -46081,7 +46116,7 @@ msgid "The attribute used to identify users group memberships."
 msgstr ""
 
 msgid ""
-"The attribute used to map contact groups between your Identity Provider and "
+"The attribute used to map contact groups between your identity provider and "
 "Checkmk. Note that contact groups must exist in Checkmk so that a mapping "
 "can be done."
 msgstr ""
@@ -47215,9 +47250,6 @@ msgid "The logfile does not exist on site."
 msgstr ""
 
 msgid "The login is currently locked"
-msgstr ""
-
-msgid "The macro must begin and end with '$'."
 msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
@@ -48450,7 +48482,7 @@ msgid "The timeout %s is not a valid integer number."
 msgstr "%s nu este un număr întreg valid."
 
 msgid ""
-"The timeout applied to HTTP connections with the Identity Provider. Checkmk "
+"The timeout applied to HTTP connections with the identity provider. Checkmk "
 "sends requests to and receives responses from it regarding the "
 "authentication process of a user."
 msgstr ""
@@ -49020,6 +49052,10 @@ msgstr ""
 msgid "This BI rule does not exist."
 msgstr ""
 
+#, fuzzy
+msgid "This ID already exists."
+msgstr "Un director cu acest nume deja există."
+
 msgid "This ID can not be used as custom attribute"
 msgstr ""
 
@@ -49030,10 +49066,6 @@ msgid "This ID is already used by another backup job."
 msgstr ""
 
 msgid "This ID is already used by another backup target."
-msgstr ""
-
-msgid ""
-"This ID is already used by another connection. Please choose another one."
 msgstr ""
 
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
@@ -50249,6 +50281,13 @@ msgid "This problem has been acknowledged"
 msgstr ""
 
 msgid "This problem has been acknowledged."
+msgstr ""
+
+msgid ""
+"This refers to the URL of the server where Checkmk is running. For example: "
+"https://mycheckmkserver.com It does not need to be accessible by your "
+"identity provider. We only support HTTPS for this endpoint, which specifies "
+"a trusted certificate."
 msgstr ""
 
 msgid ""
@@ -51872,11 +51911,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Time to wait in seconds for a connection."
+msgid "Time to wait for a connection."
 msgstr "Numarul maxim de conexiuni"
 
-msgid "Time to wait in seconds for a response."
-msgstr ""
+#, fuzzy
+msgid "Time to wait for a response."
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr ""
@@ -53583,6 +53623,10 @@ msgstr ""
 
 msgid "Unspecified."
 msgstr ""
+
+#, fuzzy
+msgid "Unsupported action"
+msgstr "(nici un raport)"
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -59356,6 +59400,10 @@ msgstr ""
 msgid "act/pend"
 msgstr ""
 
+#, fuzzy
+msgid "activation ID is not set"
+msgstr " Activează această opțiune"
+
 msgid "active"
 msgstr ""
 
@@ -61404,6 +61452,10 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Connection timeout (seconds)"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
 #~ msgid "Are you sure that you want to delete this annotation?"
 #~ msgstr "O agregare legată de un singur element"
 
@@ -62298,10 +62350,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Set lower levels of worker nodes"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-#~ msgid "Set upper levels of control plane nodes"
 #~ msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy

@@ -1940,6 +1940,14 @@ msgstr "アラートマネージャで設定されたルール名のリスト。
 msgid "A list of specific users"
 msgstr "特定のユーザーのリスト"
 
+#, fuzzy
+msgid ""
+"A macro must begin and end with '$' and is allowed to contain only ASCII "
+"upper letters, digits and underscores."
+msgstr ""
+"ビューの名前には、文字、数字、およびアンダースコアのみを含めることができま"
+"す。"
+
 msgid "A ntopng user which belongs to the group 'Administrator' in ntopng."
 msgstr "ntopngのグループ 'Administrator'に属するntopngユーザー。"
 
@@ -2120,12 +2128,6 @@ msgstr ""
 #, python-format
 msgid "A user with the id \"%s\" does not exist."
 msgstr "IDが\"%s\"のユーザーは存在しません。"
-
-msgid ""
-"A user-friendly name to identify this connection. This will be used for the "
-"log-in button that is shown on the log-in page once the connection has been "
-"set up."
-msgstr ""
 
 msgid "A value in seconds"
 msgstr "秒単位の値"
@@ -4858,12 +4860,10 @@ msgstr ""
 
 msgid ""
 "An XML text (file) containing the metadata information of your "
-"organisation's Identity Provider. This is useful if the Checkmk server is "
-"not able to access the metadata endpoint of the Identity Provider. Please "
-"note that as a result, any configuration updates that are applied to the "
-"Identity Provider (e.g. updates to certificates) must be updated manually "
-"here as well. We therefore recommend using the metadata endpoint URL option "
-"where possible."
+"organisation's identity provider. This is useful if the Checkmk server is "
+"not able to access the identity provider's metadata endpoint. However, "
+"please note that this means any updates must be done manually. We therefore "
+"recommend using the URL option where possible."
 msgstr ""
 
 msgid "An absolute path to a CA certificate"
@@ -8845,11 +8845,11 @@ msgid "Checkmk server URL"
 msgstr "URLを確認する"
 
 #, fuzzy
-msgid "Checkmk service provider metadata"
+msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "時間パフォーマンスデータを使用したCheckmk"
 
 msgid ""
-"Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
+"Checkmk signs its SAML 2.0 requests to your identity provider. You can use "
 "the certificate that is shipped with Checkmk. Alternatively, if your "
 "organisation manages its own certificates, you can also add a custom "
 "certificate. Note that the public certificate needs to be a single "
@@ -10512,10 +10512,6 @@ msgstr "接続時間"
 
 msgid "Connection timeout"
 msgstr "接続タイムアウト"
-
-#, fuzzy
-msgid "Connection timeout (seconds)"
-msgstr "接続タイムアウト(秒単位)"
 
 msgid "Connection timeout in seconds"
 msgstr "秒単位の接続タイムアウト"
@@ -16732,6 +16728,13 @@ msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr "終了コードを10桁の小文字の16進値(0x00000000など)で入力します。"
 
 msgid ""
+"Enter the full URL to the identity provider's metadata endpoint. It will "
+"automatically detect the correct single sign-on endpoint and bindings for "
+"successful SAML communication with the identity provider. We only support "
+"HTTPS for this endpoint, which specifies a trusted certificate."
+msgstr ""
+
+msgid ""
 "Enter the full name of the project here. You can find the name in Jira "
 "within \"Projects\" - \"View all projects\" - column: \"Project\". This "
 "field is case insensitive"
@@ -22326,16 +22329,16 @@ msgstr ""
 msgid "Identity"
 msgstr "アイデンティティー"
 
-#, fuzzy
-msgid "Identity Provider connection timeout"
-msgstr "接続タイムアウトを設定する"
-
-#, fuzzy
-msgid "Identity Provider metadata"
-msgstr "接続タイムアウトを設定する"
-
 msgid "Identity of an authorized key"
 msgstr "許可されたキーのID"
+
+#, fuzzy
+msgid "Identity provider connection timeout"
+msgstr "接続タイムアウトを設定する"
+
+#, fuzzy
+msgid "Identity provider metadata"
+msgstr "接続タイムアウトを設定する"
 
 msgid "Idle connections"
 msgstr "アイドル接続"
@@ -22410,6 +22413,11 @@ msgstr ""
 "通常は最後までスキップします。このフラグを有効にすると、ファイルの処理を最初"
 "から開始して、すでに存在している可能性のあるすべてのメッセージを表示できま"
 "す。"
+
+msgid ""
+"If a node has any of these roles, then it is considered a control plane node "
+"by Checkmk. Otherwise, it is considered a worker node."
+msgstr ""
 
 msgid ""
 "If a selection is set to <i>This value differs between the selected hosts.</"
@@ -22547,6 +22555,16 @@ msgid ""
 msgstr ""
 "制限が有効になっている場合、名前またはタグに設定されている可能性のある制限に"
 "関係なく、すべてのインスタンスがフェッチされます"
+
+#, python-format
+msgid ""
+"If multiple entries are found, the first one of the sorted entries is used. "
+"If you use macros within inventory based views these macros are replaced "
+"<tt>before</tt> the regex evaluation.<br>Note: If a service description "
+"contains special characters like <tt>%s</tt> you have to escape them in "
+"order to get reliable results. Macros don't need to be escaped. If a macro "
+"could not be found then it stays as it is."
+msgstr ""
 
 msgid ""
 "If no ICMP or TCP-SYN/RST packet is being seen from the target host for a "
@@ -24773,11 +24791,6 @@ msgstr "断続的なハートビート"
 
 msgid "Internal ID"
 msgstr "内部ID"
-
-msgid ""
-"Internal ID that Checkmk uses to uniquely identify each connection to an "
-"Identity Provider."
-msgstr ""
 
 #, python-format
 msgid ""
@@ -28313,6 +28326,14 @@ msgstr ""
 "公開ユーザーがメンバーではない連絡先グループのユーザーが %s を表示して使用で"
 "きるようにします。"
 
+#, fuzzy, python-format
+msgid ""
+"Make %s visible and usable for users of sites the publishing user has "
+"selected."
+msgstr ""
+"公開ユーザーが所属する連絡先グループのユーザーが、 %s を表示して使用できるよ"
+"うにします。"
+
 msgid "Make backups of your whole site and restore previous backups."
 msgstr "サイト全体のバックアップを作成し、以前のバックアップを復元します。"
 
@@ -29540,14 +29561,6 @@ msgstr "メタ使用法"
 #, fuzzy
 msgid "Metadata endpoint"
 msgstr "RESTエンドポイントURL"
-
-msgid ""
-"Metadata information is exchanged between Checkmk and your Identity Provider "
-"and contains configuration information to enable a successful SAML "
-"communication. This includes the Single Sing-On endpoint and bindings used "
-"by the Identity Provider, as well as details to certificates used for "
-"signatures and encryption."
-msgstr ""
 
 msgid "Method"
 msgstr "方法"
@@ -35216,6 +35229,10 @@ msgstr ""
 "HTML in host output</a>を<a href=\"%s\">disabling escaping globally</a>の代わ"
 "りに、ホストまたはサービスルールセットに構成することを検討してください"
 
+#, fuzzy
+msgid "Please contact your administrator."
+msgstr "パスワードを指定してください。"
+
 msgid "Please define at least one aggregation group"
 msgstr "少なくとも1つの集計グループを定義してください"
 
@@ -36378,10 +36395,18 @@ msgstr "%s を別の連絡先グループに公開する"
 msgid "Publish to all users"
 msgstr "すべてのユーザーに公開"
 
+#, fuzzy
+msgid "Publish to all users of sites"
+msgstr "すべてのユーザーに公開"
+
 msgid "Publish to members of contact groups"
 msgstr "連絡先グループのメンバーに公開する"
 
 msgid "Publish to other users"
+msgstr "他のユーザーに公開する"
+
+#, fuzzy
+msgid "Publish to users of sites"
 msgstr "他のユーザーに公開する"
 
 msgid "Pull: Checkmk server contacts the agent"
@@ -36937,6 +36962,10 @@ msgstr "読み取りスループット"
 
 msgid "Read throughput per second"
 msgstr "1秒あたりのスループットを読み取る"
+
+#, fuzzy
+msgid "Read timeout"
+msgstr "アイドルタイムアウト"
 
 msgid "Read timeout (seconds)"
 msgstr "読み取りタイムアウト(秒)"
@@ -39723,6 +39752,12 @@ msgstr ""
 msgid "Select packages"
 msgstr "ルールパッケージ%s"
 
+#, python-format
+msgid ""
+"Select sites the %s should be avalable on. It will become available for all "
+"users of that sites on the next activation of changes for the selected sites."
+msgstr ""
+
 msgid "Select sound"
 msgstr "サウンドを選択"
 
@@ -42445,6 +42480,10 @@ msgstr ""
 
 msgid "Specify queue names that the rule should apply to"
 msgstr "ルールを適用するキュー名を指定します"
+
+#, fuzzy
+msgid "Specify roles of a control plane node"
+msgstr "コンテナの数"
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr "ルールを適用するストレージアカウント名を指定します"
@@ -45306,6 +45345,10 @@ msgstr ""
 "ターゲットのIDは一意のテキストである必要があります。オブジェクトがターゲット"
 "を参照するときに内部キーとして使用されます。"
 
+#, fuzzy
+msgid "The ID of this connection."
+msgstr "この接続"
+
 msgid ""
 "The ID will be used as internal identifier and the custom service attribute "
 "will be computed based on the ID. The custom service attribute will be named "
@@ -45484,6 +45527,11 @@ msgstr "ピギーバックメカニズム"
 msgid "The Port Description"
 msgstr "ポートの説明"
 
+msgid ""
+"The SAML login button on the login page will display this name. Choose a "
+"clear and short name to help others identify this connection."
+msgstr ""
+
 msgid "The SAP system ID."
 msgstr "SAPシステムID。"
 
@@ -45530,13 +45578,6 @@ msgstr ""
 
 msgid "The URL must begin with <tt>https</tt>."
 msgstr "URLは次から開始する必要があります。<tt>https</tt>"
-
-msgid ""
-"The URL of the server that hosts Checkmk. This is the URL your monitoring "
-"users use. It does not need to be accessible to your Identity Provider. For "
-"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
-"this endpoint, because it specifies certificate which should be trusted."
-msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
 msgstr "要素のリンクがリンクする必要のあるターゲットページのURL。"
@@ -45815,7 +45856,7 @@ msgid "The attribute used to identify users group memberships."
 msgstr "ユーザーグループのメンバーシップを識別するために使用される属性。"
 
 msgid ""
-"The attribute used to map contact groups between your Identity Provider and "
+"The attribute used to map contact groups between your identity provider and "
 "Checkmk. Note that contact groups must exist in Checkmk so that a mapping "
 "can be done."
 msgstr ""
@@ -47106,9 +47147,6 @@ msgstr "ログファイルがサイトに存在しません。"
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
-
-msgid "The macro must begin and end with '$'."
-msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
 msgstr "メールの件名はsyslogアプリケーションとして使用されます"
@@ -48528,7 +48566,7 @@ msgid "The timeout %s is not a valid integer number."
 msgstr "タイムアウト %s は有効な整数ではありません。"
 
 msgid ""
-"The timeout applied to HTTP connections with the Identity Provider. Checkmk "
+"The timeout applied to HTTP connections with the identity provider. Checkmk "
 "sends requests to and receives responses from it regarding the "
 "authentication process of a user."
 msgstr ""
@@ -49215,6 +49253,10 @@ msgstr "このBIルールは存在しません"
 msgid "This BI rule does not exist."
 msgstr "このBIルールは存在しません。"
 
+#, fuzzy
+msgid "This ID already exists."
+msgstr "ホストはすでに存在します"
+
 msgid "This ID can not be used as custom attribute"
 msgstr "このIDはカスタム属性として使用できません"
 
@@ -49226,10 +49268,6 @@ msgstr "このIDは、別のバックアップジョブですでに使用され�
 
 msgid "This ID is already used by another backup target."
 msgstr "このIDは、別のバックアップターゲットによってすでに使用されています。"
-
-msgid ""
-"This ID is already used by another connection. Please choose another one."
-msgstr "このIDはすでに別の接続で使用されています。別のものを選択してください。"
 
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
@@ -50737,6 +50775,13 @@ msgstr "この問題は認められています"
 
 msgid "This problem has been acknowledged."
 msgstr "この問題は承認済みです。"
+
+msgid ""
+"This refers to the URL of the server where Checkmk is running. For example: "
+"https://mycheckmkserver.com It does not need to be accessible by your "
+"identity provider. We only support HTTPS for this endpoint, which specifies "
+"a trusted certificate."
+msgstr ""
 
 msgid ""
 "This regex must match the <i>beginning</i> of the complete command line of "
@@ -52759,11 +52804,11 @@ msgstr ""
 "ていない場合、ADOのデフォルト値が使用されます。"
 
 #, fuzzy
-msgid "Time to wait in seconds for a connection."
+msgid "Time to wait for a connection."
 msgstr "TCP接続待ちの秒数"
 
 #, fuzzy
-msgid "Time to wait in seconds for a response."
+msgid "Time to wait for a response."
 msgstr "SNMP応答の待ち時間に費やされた時間"
 
 msgid "Time until alert, if AVAILABLE condition is false"
@@ -54424,6 +54469,10 @@ msgstr "不特定多数へのバックアップ"
 
 msgid "Unspecified."
 msgstr "不特定。"
+
+#, fuzzy
+msgid "Unsupported action"
+msgstr "アクションを実行したユーザー"
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -60667,6 +60716,10 @@ msgstr "承認されたイベントは、尊重されません"
 msgid "act/pend"
 msgstr "稼働/保留"
 
+#, fuzzy
+msgid "activation ID is not set"
+msgstr "アクティベーションステータス"
+
 msgid "active"
 msgstr "アクティブ"
 
@@ -62603,6 +62656,16 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Connect timeout (seconds)"
+#~ msgid "Connection timeout (seconds)"
+#~ msgstr "接続タイムアウト(秒単位)"
+
+#~ msgid ""
+#~ "This ID is already used by another connection. Please choose another one."
+#~ msgstr ""
+#~ "このIDはすでに別の接続で使用されています。別のものを選択してください。"
 
 #, fuzzy
 #~| msgid "N#"
@@ -65296,11 +65359,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~| msgid "Number of retries"
 #~ msgid "Set lower levels of worker nodes"
 #~ msgstr "再試行回数"
-
-#, fuzzy
-#~| msgid "Number of containers"
-#~ msgid "Set upper levels of control plane nodes"
-#~ msgstr "コンテナの数"
 
 #, fuzzy
 #~| msgid "Upper levels for indexes"

@@ -18,7 +18,22 @@ from cmk.special_agents.agent_azure_status import (
     write_section,
 )
 
-STATUS_RESPONSE = '<?xml version="1.0" encoding="utf-8"?>\r\n<rss xmlns:a10="http://www.w3.org/2005/Atom"\r\n  version="2.0">\r\n  <channel xmlns:slash="http://purl.org/rss/1.0/modules/slash/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/">\r\n    <title>Azure Status</title>\r\n    <link>https://status.azure.com/en-us/status/</link>\r\n    <description>Azure Status</description>\r\n    <language>en-us</language>\r\n    <lastBuildDate>Thu, 17 Nov 2022 08:36:00 Z</lastBuildDate>\r\n  <item> <title>Azure Key Vault issue affecting Azure China</title> <description>Description of the Azure Key Vault problem</description></item>  <item> <title>Azure Databricks - North Central US - Investigating</title><description>Description of the Azure Databricks problem</description></item></channel>\r\n</rss>'
+STATUS_RESPONSE = """
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:a10="http://www.w3.org/2005/Atom"
+  version="2.0">
+  <channel xmlns:slash="http://purl.org/rss/1.0/modules/slash/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <title>Azure Status</title>
+    <link>https://status.azure.com/en-us/status/</link>
+    <description>Azure Status</description>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 17 Nov 2022 08:36:00 Z</lastBuildDate>
+    <item> <title>Azure Key Vault issue affecting Azure China</title> <description>Description of the Azure Key Vault problem</description></item>
+    <item> <title>Azure Databricks - North Central US - Investigating</title><description>Description of the Azure Databricks problem</description></item>
+    <item> <category>Azure Synapse Analytics</category><category>West Europe</category><title>Azure Synapse Analytics Mitigating</title><description><p><strong>Impact Statement:</strong> Azure Synapse Analytics customers  may be experiencing connectivity issues</p></description></item>
+  </channel>
+</rss>
+"""
 
 
 class MockResponse:
@@ -111,7 +126,7 @@ def test_get_affected_regions(entry: FeedParserDict, expected_result: set[str]) 
     "cmk.special_agents.agent_azure_status.requests.get", mock.Mock(return_value=MockResponse)
 )
 def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
-    arg_list = ["eastus", "centralus", "northcentralus"]
+    arg_list = ["eastus", "centralus", "northcentralus", "westeurope"]
     args = parse_arguments(arg_list)
 
     write_section(args)
@@ -123,8 +138,11 @@ def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
         '"region": "Global", "title": "Azure Key Vault issue affecting Azure China"}, '
         '{"description": "Description of the Azure Databricks problem", "region": '
         '"North Central US", "title": "Azure Databricks - North Central US - '
-        'Investigating"}], "link": "https://status.azure.com/en-us/status/", '
-        '"regions": ["East US", "Central US", "North Central US", "Global"]}',
+        'Investigating"}, {"description": "Impact Statement: Azure Synapse Analytics '
+        'customers  may be experiencing connectivity issues", "region": "West '
+        'Europe", "title": "Azure Synapse Analytics Mitigating"}], "link": '
+        '"https://status.azure.com/en-us/status/", "regions": ["East US", "Central '
+        'US", "North Central US", "West Europe", "Global"]}',
     ]
     assert captured.err == ""
 

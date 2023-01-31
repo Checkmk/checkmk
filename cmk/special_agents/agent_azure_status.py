@@ -8,6 +8,7 @@ from collections.abc import Iterable, Iterator, Sequence
 import feedparser  # type: ignore[import]
 import requests
 from feedparser.util import FeedParserDict  # type: ignore[import]
+from lxml.html import fromstring, HtmlElement
 from pydantic import BaseModel
 
 from cmk.utils.azure_constants import AZURE_REGIONS
@@ -76,13 +77,17 @@ def get_azure_issues(
 
     for entry in entries:
         affected_regions = get_affected_regions(all_regions, entry)
+        parsed_html = fromstring(entry.summary)
+        summary = (
+            parsed_html.text_content() if isinstance(parsed_html, HtmlElement) else entry.summary
+        )
 
         if not affected_regions:
-            yield AzureIssue(region="Global", title=entry.title, description=entry.summary)
+            yield AzureIssue(region="Global", title=entry.title, description=summary)
 
         for region in affected_regions:
             if region in selected_regions:
-                yield AzureIssue(region=region, title=entry.title, description=entry.summary)
+                yield AzureIssue(region=region, title=entry.title, description=summary)
 
 
 def write_section(args: Args) -> int:

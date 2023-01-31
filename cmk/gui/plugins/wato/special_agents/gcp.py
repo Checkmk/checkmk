@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+from typing import Final
+
+from cmk.utils.version import is_cloud_edition
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import (
@@ -11,6 +16,27 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, ListChoice, TextInput
+
+RAW_GCP_SERVICES: Final = [
+    ("gcs", "Google Cloud Storage (GCS)"),
+    ("cloud_sql", "Cloud SQL"),
+    ("filestore", "Filestore"),
+    ("gce_storage", "GCE Storage"),
+    ("http_lb", "HTTP(S) load balancer"),
+]
+
+CCE_GCP_SERVICES: Final = [
+    ("cloud_run", "Cloud Run"),
+    ("cloud_functions", "Cloud Functions"),
+    ("redis", "Memorystore Redis"),
+]
+
+
+def get_gcp_services() -> Sequence[tuple[str, str]]:
+    if is_cloud_edition():
+        return RAW_GCP_SERVICES + CCE_GCP_SERVICES
+
+    return RAW_GCP_SERVICES
 
 
 def _valuespec_special_agents_gcp():
@@ -28,26 +54,8 @@ def _valuespec_special_agents_gcp():
                 "services",
                 ListChoice(
                     title=_("GCP services to monitor"),
-                    choices=[
-                        ("gcs", _("Google Cloud Storage (GCS)")),
-                        ("cloud_run", _("Cloud Run")),
-                        ("cloud_functions", _("Cloud Functions")),
-                        ("cloud_sql", _("Cloud SQL")),
-                        ("filestore", _("Filestore")),
-                        ("redis", _("Memorystore Redis")),
-                        ("gce_storage", _("GCE Storage")),
-                        ("http_lb", _("HTTP(S) load balancer")),
-                    ],
-                    default_value=[
-                        "gcs",
-                        "cloud_run",
-                        "cloud_functions",
-                        "cloud_sql",
-                        "filestore",
-                        "redis",
-                        "gce_storage",
-                        "http_lb",
-                    ],
+                    choices=get_gcp_services(),
+                    default_value=[s[0] for s in get_gcp_services()],
                     allow_empty=True,
                 ),
             ),
@@ -99,7 +107,9 @@ def _valuespec_special_agents_gcp():
             (
                 "health",
                 Checkbox(
-                    title="Monitor GCP health", help="Monitor health of GCP products in any region"
+                    title="Health",
+                    label="Monitor GCP health",
+                    help="Monitor health of GCP products in any region",
                 ),
             ),
         ],

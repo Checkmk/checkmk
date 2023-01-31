@@ -24,6 +24,8 @@ def test_registered_automations() -> None:
         "delete-hosts",
         "delete-hosts-known-remote",
         "diag-host",
+        "service-discovery",
+        "service-discovery-preview",
         "get-agent-output",
         "get-check-information",
         "get-configuration",

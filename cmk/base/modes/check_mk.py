@@ -1405,7 +1405,14 @@ def mode_automation(args: list[str]) -> None:
     # At least for the automation calls that buffer and handle the stdout/stderr on their own
     # we can now enable this. In the future we should remove this call for all automations calls and
     # handle the output in a common way.
-    if args[0] not in ["restart", "reload", "start", "create-diagnostics-dump", "try-inventory"]:
+    if args[0] not in [
+        "restart",
+        "reload",
+        "start",
+        "create-diagnostics-dump",
+        "try-inventory",
+        "service-discovery-preview",
+    ]:
         log.clear_console_logging()
 
     sys.exit(automations.automations.execute(args[0], args[1:]))

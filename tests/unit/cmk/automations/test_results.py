@@ -12,9 +12,9 @@ from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.automations.results import (
     ABCAutomationResult,
     CheckPreviewEntry,
-    DiscoveryResult,
     result_type_registry,
-    TryDiscoveryResult,
+    ServiceDiscoveryPreviewResult,
+    ServiceDiscoveryResult,
 )
 
 from cmk.base.automations import automations
@@ -24,9 +24,7 @@ def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
     automations_missing = {"bake-agents"} if cmk_version.is_raw_edition() else set()
-    assert sorted(set(result_type_registry) - automations_missing) == sorted(
-        automations._automations
-    )
+    assert set(result_type_registry) - automations_missing == set(automations._automations)
 
 
 @dataclass
@@ -92,14 +90,16 @@ class TestDiscoveryResult:
     }
 
     def test_serialization(self) -> None:
-        assert DiscoveryResult.deserialize(
-            DiscoveryResult(self.HOSTS).serialize(cmk_version.Version(cmk_version.__version__))
-        ) == DiscoveryResult(self.HOSTS)
+        assert ServiceDiscoveryResult.deserialize(
+            ServiceDiscoveryResult(self.HOSTS).serialize(
+                cmk_version.Version(cmk_version.__version__)
+            )
+        ) == ServiceDiscoveryResult(self.HOSTS)
 
 
 class TestTryDiscoveryResult:
     def test_serialization(self) -> None:
-        result = TryDiscoveryResult(
+        result = ServiceDiscoveryPreviewResult(
             output="output",
             check_table=[
                 CheckPreviewEntry(
@@ -123,7 +123,7 @@ class TestTryDiscoveryResult:
             changed_labels={},
         )
         assert (
-            TryDiscoveryResult.deserialize(
+            ServiceDiscoveryPreviewResult.deserialize(
                 result.serialize(cmk_version.Version(cmk_version.__version__))
             )
             == result

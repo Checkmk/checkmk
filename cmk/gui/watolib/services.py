@@ -19,7 +19,11 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import HostOrServiceConditions, Item
 
-from cmk.automations.results import CheckPreviewEntry, SetAutochecksTable, TryDiscoveryResult
+from cmk.automations.results import (
+    CheckPreviewEntry,
+    ServiceDiscoveryPreviewResult,
+    SetAutochecksTable,
+)
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (
@@ -37,9 +41,9 @@ from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automati
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import (
     discovery,
+    discovery_preview,
     get_services_labels,
     set_autochecks,
-    try_discovery,
     update_host_labels,
 )
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
@@ -768,9 +772,9 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
-        self._pre_try_discovery = (
+        self._pre_discovery_preview = (
             0,
-            TryDiscoveryResult(
+            ServiceDiscoveryPreviewResult(
                 output="",
                 check_table=[],
                 host_labels={},
@@ -785,7 +789,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     ) -> None:
         """Target function of the background job"""
         print("Starting job...")
-        self._pre_try_discovery = self._get_try_discovery(api_request)
+        self._pre_discovery_preview = self._get_discovery_preview(api_request)
 
         if api_request.options.action == DiscoveryAction.REFRESH:
             self._jobstatus_store.update({"title": _("Refresh")})
@@ -803,7 +807,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
         sys.stdout.write(
-            try_discovery(
+            discovery_preview(
                 api_request.host.site_id(),
                 api_request.host.name(),
                 prevent_fetching=False,
@@ -833,9 +837,9 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         job_status["is_active"] = self.is_active()
 
         if job_status["is_active"]:
-            check_table_created, result = self._pre_try_discovery
+            check_table_created, result = self._pre_discovery_preview
         else:
-            check_table_created, result = self._get_try_discovery(api_request)
+            check_table_created, result = self._get_discovery_preview(api_request)
             if job_status["state"] == JobStatusStates.EXCEPTION:
                 job_status.update(self._cleaned_up_status(job_status))
 
@@ -850,15 +854,15 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         )
 
     @staticmethod
-    def _get_try_discovery(
+    def _get_discovery_preview(
         api_request: StartDiscoveryRequest,
-    ) -> tuple[int, TryDiscoveryResult]:
+    ) -> tuple[int, ServiceDiscoveryPreviewResult]:
         # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         return (
             int(time.time()),
-            try_discovery(
+            discovery_preview(
                 api_request.host.site_id(),
                 api_request.host.name(),
                 prevent_fetching=True,

@@ -155,7 +155,8 @@ def _execute_automation(  # type:ignore[no-untyped-def]
     return None
 
 
-def test_automation_discovery_no_host(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+# old alias, drop after 2.2 release
+def test_automation_inventory_no_host(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
     p = site.execute(
         ["cmk", "--automation", "inventory", "@scan", "new"],
@@ -169,7 +170,22 @@ def test_automation_discovery_no_host(test_cfg, site: Site) -> None:  # type:ign
     assert p.wait() == 1
 
 
-def test_automation_discovery_single_host(  # type:ignore[no-untyped-def]
+def test_automation_discovery_no_host(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+    # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
+    p = site.execute(
+        ["cmk", "--automation", "service-discovery", "@scan", "new"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    stdout, stderr = p.communicate()
+    assert "Need two arguments:" in stderr
+    assert stdout == ""
+    assert p.wait() == 1
+
+
+# old alias, drop after 2.2 release
+def test_automation_inventory_single_host(  # type:ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -178,12 +194,27 @@ def test_automation_discovery_single_host(  # type:ignore[no-untyped-def]
         args=["@raiseerrors", "new", "modes-test-host"],
     )
 
-    assert isinstance(result, results.DiscoveryResult)
+    assert isinstance(result, results.ServiceDiscoveryResult)
     assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
     assert result.hosts["modes-test-host"].error_text is None
 
 
-def test_automation_discovery_multiple_hosts(  # type:ignore[no-untyped-def]
+def test_automation_discovery_single_host(  # type:ignore[no-untyped-def]
+    test_cfg, site: Site
+) -> None:
+    result = _execute_automation(
+        site,
+        "service-discovery",
+        args=["@raiseerrors", "new", "modes-test-host"],
+    )
+
+    assert isinstance(result, results.ServiceDiscoveryResult)
+    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host"].error_text is None
+
+
+# old alias, drop after 2.2 release
+def test_automation_inventory_multiple_hosts(  # type:ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -192,14 +223,31 @@ def test_automation_discovery_multiple_hosts(  # type:ignore[no-untyped-def]
         args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"],
     )
 
-    assert isinstance(result, results.DiscoveryResult)
+    assert isinstance(result, results.ServiceDiscoveryResult)
     assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
     assert result.hosts["modes-test-host"].error_text is None
     assert result.hosts["modes-test-host2"].diff_text == "Nothing was changed."
     assert result.hosts["modes-test-host2"].error_text is None
 
 
-def test_automation_discovery_not_existing_host(  # type:ignore[no-untyped-def]
+def test_automation_discovery_multiple_hosts(  # type:ignore[no-untyped-def]
+    test_cfg, site: Site
+) -> None:
+    result = _execute_automation(
+        site,
+        "service-discovery",
+        args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"],
+    )
+
+    assert isinstance(result, results.ServiceDiscoveryResult)
+    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host"].error_text is None
+    assert result.hosts["modes-test-host2"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host2"].error_text is None
+
+
+# old alias, drop after 2.2 release
+def test_automation_inventory_not_existing_host(  # type:ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -208,7 +256,7 @@ def test_automation_discovery_not_existing_host(  # type:ignore[no-untyped-def]
         args=["@raiseerrors", "new", "xxxhost"],
     )
 
-    assert isinstance(result, results.DiscoveryResult)
+    assert isinstance(result, results.ServiceDiscoveryResult)
     assert result.hosts == {
         "xxxhost": DiscoveryResult(
             clustered_new=0,
@@ -226,7 +274,35 @@ def test_automation_discovery_not_existing_host(  # type:ignore[no-untyped-def]
     }
 
 
-def test_automation_discovery_with_cache_option(  # type:ignore[no-untyped-def]
+def test_automation_discovery_not_existing_host(  # type:ignore[no-untyped-def]
+    test_cfg, site: Site
+) -> None:
+    result = _execute_automation(
+        site,
+        "service-discovery",
+        args=["@raiseerrors", "new", "xxxhost"],
+    )
+
+    assert isinstance(result, results.ServiceDiscoveryResult)
+    assert result.hosts == {
+        "xxxhost": DiscoveryResult(
+            clustered_new=0,
+            clustered_old=0,
+            clustered_vanished=0,
+            diff_text=None,
+            error_text="",
+            self_kept=0,
+            self_new=0,
+            self_new_host_labels=0,
+            self_removed=0,
+            self_total=0,
+            self_total_host_labels=0,
+        )
+    }
+
+
+# old alias, drop after 2.2 release
+def test_automation_inventory_with_cache_option(  # type:ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -235,7 +311,21 @@ def test_automation_discovery_with_cache_option(  # type:ignore[no-untyped-def]
         args=["new", "modes-test-host"],
     )
 
-    assert isinstance(result, results.DiscoveryResult)
+    assert isinstance(result, results.ServiceDiscoveryResult)
+    assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
+    assert result.hosts["modes-test-host"].error_text is None
+
+
+def test_automation_discovery_with_cache_option(  # type:ignore[no-untyped-def]
+    test_cfg, site: Site
+) -> None:
+    result = _execute_automation(
+        site,
+        "service-discovery",
+        args=["new", "modes-test-host"],
+    )
+
+    assert isinstance(result, results.ServiceDiscoveryResult)
     assert result.hosts["modes-test-host"].diff_text == "Nothing was changed."
     assert result.hosts["modes-test-host"].error_text is None
 
@@ -269,7 +359,8 @@ def test_automation_analyse_service_no_check(  # type:ignore[no-untyped-def]
     assert automation_result.label_sources == {}
 
 
-def test_automation_try_discovery_not_existing_host(  # type:ignore[no-untyped-def]
+# old alias, drop after 2.2 release
+def test_automation_try_inventory_not_existing_host(  # type:ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     _execute_automation(
@@ -288,13 +379,48 @@ def test_automation_try_discovery_not_existing_host(  # type:ignore[no-untyped-d
     )
 
 
-def test_automation_try_discovery_host(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_discovery_preview_not_existing_host(  # type:ignore[no-untyped-def]
+    test_cfg, site: Site
+) -> None:
+    _execute_automation(
+        site,
+        "service-discovery-preview",
+        args=["xxx-not-existing-host"],
+        expect_stderr_pattern=(
+            r"Failed to lookup IPv4 address of xxx-not-existing-host "
+            r"via DNS: (\[Errno -2\] Name or service not known"
+            r"|\[Errno -3\] Temporary failure in name resolution"
+            r"|\[Errno -5\] No address associated with hostname)\n"
+        ),
+        expect_stdout="",
+        expect_exit_code=2,
+        parse_data=False,
+    )
+
+
+# old alias, drop after 2.2 release
+def test_automation_try_inventory_host(  # type:ignore[no-untyped-def]
+    test_cfg, site: Site
+) -> None:
     result = _execute_automation(
         site,
         "try-inventory",
         args=["modes-test-host"],
     )
-    assert isinstance(result, results.TryDiscoveryResult)
+    assert isinstance(result, results.ServiceDiscoveryPreviewResult)
+    assert isinstance(result.output, str)
+    assert isinstance(result.check_table, list)
+
+
+def test_automation_discovery_preview_host(  # type:ignore[no-untyped-def]
+    test_cfg, site: Site
+) -> None:
+    result = _execute_automation(
+        site,
+        "service-discovery-preview",
+        args=["modes-test-host"],
+    )
+    assert isinstance(result, results.ServiceDiscoveryPreviewResult)
     assert isinstance(result.output, str)
     assert isinstance(result.check_table, list)
 

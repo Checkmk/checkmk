@@ -124,10 +124,10 @@ def discovery(
     raise_errors: bool,
     timeout: int | None = None,
     non_blocking_http: bool = False,
-) -> results.DiscoveryResult:
+) -> results.ServiceDiscoveryResult:
     return _deserialize(
         _automation_serialized(
-            "inventory",
+            "service-discovery",
             siteid=site_id,
             args=[
                 *(("@scan",) if scan else ()),
@@ -138,28 +138,28 @@ def discovery(
             timeout=timeout,
             non_blocking_http=non_blocking_http,
         ),
-        results.DiscoveryResult,
+        results.ServiceDiscoveryResult,
     )
 
 
-def try_discovery(
+def discovery_preview(
     site_id: SiteId,
     host_name: HostName,
     *,
     prevent_fetching: bool,
     raise_errors: bool,
-) -> results.TryDiscoveryResult:
+) -> results.ServiceDiscoveryPreviewResult:
     return _deserialize(
         _automation_serialized(
-            "try-inventory",
+            "service-discovery-preview",
             siteid=site_id,
             args=[
-                ("@noscan" if prevent_fetching else "@scan"),
+                *(("@nofetch",) if prevent_fetching else ()),
                 *(("@raiseerrors",) if raise_errors else ()),
                 host_name,
             ],
         ),
-        results.TryDiscoveryResult,
+        results.ServiceDiscoveryPreviewResult,
     )
 
 

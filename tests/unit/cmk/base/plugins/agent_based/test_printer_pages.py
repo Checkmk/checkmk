@@ -9,10 +9,11 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.printer_pages import parse_printer_pages
 from cmk.base.plugins.agent_based.printer_pages_canon import parse_printer_pages_canon
 from cmk.base.plugins.agent_based.printer_pages_ricoh import parse_printer_pages_ricoh
-from cmk.base.plugins.agent_based.utils.printer import check_printer_pages_types
+from cmk.base.plugins.agent_based.utils.printer import check_printer_pages_types, Section
 
 
 @pytest.mark.parametrize(
@@ -22,8 +23,8 @@ from cmk.base.plugins.agent_based.utils.printer import check_printer_pages_types
         ([[["585"]]], {"pages_total": 585}),
     ],
 )
-def test_parse_printer_pages(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_printer_pages(
+    string_table: list[StringTable], expected_parsed_data: Section | None
 ) -> None:
     assert parse_printer_pages(string_table) == expected_parsed_data
 
@@ -38,8 +39,8 @@ def test_parse_printer_pages(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_parse_printer_pages_canon(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_printer_pages_canon(
+    string_table: list[StringTable], expected_parsed_data: Section | None
 ) -> None:
     assert parse_printer_pages_canon(string_table) == expected_parsed_data
 
@@ -72,8 +73,8 @@ def test_parse_printer_pages_canon(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_parse_printer_pages_ricoh(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_printer_pages_ricoh(
+    string_table: list[StringTable], expected_parsed_data: Section | None
 ) -> None:
     assert parse_printer_pages_ricoh(string_table) == expected_parsed_data
 
@@ -94,9 +95,7 @@ def test_parse_printer_pages_ricoh(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_printer_pages_types(  # type:ignore[no-untyped-def]
-    section, expected_results
-) -> None:
+def test_check_printer_pages_types(section: Section, expected_results: CheckResult) -> None:
     assert list(check_printer_pages_types(section)) == expected_results
 
 

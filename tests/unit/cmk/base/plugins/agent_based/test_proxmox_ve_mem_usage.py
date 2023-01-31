@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.proxmox_ve_mem_usage import check_proxmox_ve_mem_usage
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.proxmox_ve_mem_usage import check_proxmox_ve_mem_usage, Section
 
 MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
 
@@ -38,8 +41,8 @@ MEM_DATA = {"mem": 1024**3, "max_mem": 2 * 1024**3}
         ),
     ],
 )
-def test_check_proxmox_ve_mem_usage(  # type:ignore[no-untyped-def]
-    params, section, expected_results
+def test_check_proxmox_ve_mem_usage(
+    params: Mapping[str, object], section: Section, expected_results: CheckResult
 ) -> None:
     results = tuple(check_proxmox_ve_mem_usage(params, section))
     print("\n" + "\n".join(map(str, results)))

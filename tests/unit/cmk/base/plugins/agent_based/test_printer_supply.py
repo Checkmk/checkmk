@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.printer_supply import (
     check_printer_supply,
     discovery_printer_supply,
     parse_printer_supply,
     PrinterSupply,
+    Section,
 )
 
 
@@ -29,7 +37,7 @@ from cmk.base.plugins.agent_based.printer_supply import (
         ),
     ],
 )
-def test_parse_printer_supply(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_printer_supply(string_table: list[StringTable], expected_result: Section) -> None:
     assert parse_printer_supply(string_table) == expected_result
 
 
@@ -45,7 +53,9 @@ def test_parse_printer_supply(string_table, expected_result) -> None:  # type:ig
         )
     ],
 )
-def test_inventory_printer_supply(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_printer_supply(
+    info: list[StringTable], expected_result: DiscoveryResult
+) -> None:
     section = parse_printer_supply(info)
     result = discovery_printer_supply(section)
     assert list(result) == expected_result
@@ -324,8 +334,8 @@ def test_inventory_printer_supply(info, expected_result) -> None:  # type:ignore
         ),
     ],
 )
-def test_check_printer_supply(  # type:ignore[no-untyped-def]
-    item, params, info, expected_result
+def test_check_printer_supply(
+    item: str, params: Mapping[str, object], info: list[StringTable], expected_result: CheckResult
 ) -> None:
     section = parse_printer_supply(info)
     result = check_printer_supply(item, params, section)

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+from collections.abc import Mapping
 
 import pytest
 
@@ -16,6 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
     TableRow,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.oracle_tablespaces import inventory_oracle_tablespaces
 from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
 
@@ -548,7 +550,7 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(item, params, expected) -> None:  # type:ignore[no-untyped-def]
+def test_check(item: str, params: Mapping[str, object], expected: CheckResult) -> None:
     assert expected == list(
         oracle_tablespaces.check_oracle_tablespaces(
             item,

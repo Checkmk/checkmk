@@ -6,7 +6,8 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.perle_chassis_slots import inventory_perle_chassis_slots
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from cmk.base.plugins.agent_based.perle_chassis_slots import inventory_perle_chassis_slots, Section
 
 from .utils_inventory import sort_inventory_result
 
@@ -79,8 +80,8 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_perle_chassis_slots(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_perle_chassis_slots(
+    string_table: Section, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_perle_chassis_slots(string_table)

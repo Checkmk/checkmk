@@ -3,9 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.printer_io import (
     check_printer_input,
     check_printer_output,
@@ -158,8 +165,11 @@ from cmk.base.plugins.agent_based.printer_io import (
         ),
     ],
 )
-def test_check_printer_input(  # type:ignore[no-untyped-def]
-    item, params, info, expected_result
+def test_check_printer_input(
+    item: str,
+    params: Mapping[str, object],
+    info: list[StringTable],
+    expected_result: CheckResult,
 ) -> None:
     data = parse_printer_io(info)
     result = check_printer_input(item, params, data)
@@ -239,8 +249,8 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
         ),
     ],
 )
-def test_check_priner_output(  # type:ignore[no-untyped-def]
-    item, params, info, expected_result
+def test_check_priner_output(
+    item: str, params: Mapping[str, object], info: list[StringTable], expected_result: CheckResult
 ) -> None:
     data = parse_printer_io(info)
     result = check_printer_output(item, params, data)
@@ -263,7 +273,7 @@ def test_check_priner_output(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_inventory_printer_io(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_printer_io(info: list[StringTable], expected_result: DiscoveryResult) -> None:
     data = parse_printer_io(info)
     result = discovery_printer_io(data)
     assert list(result) == expected_result

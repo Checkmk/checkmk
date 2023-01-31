@@ -47,24 +47,26 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
-    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
-    downtimes(const IHost &) const = 0;
-    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
-    downtimes(const IService &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IService &) const = 0;
     void virtual forEachCommentUntil(
         const std::function<bool(const IComment &)> &f) const = 0;
+
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
+    downtimes(const IHost &) const = 0;
+    [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
+    downtimes(const IService &) const = 0;
     void virtual forEachDowntimeUntil(
         const std::function<bool(const IDowntime &)> &f) const = 0;
-    void virtual forEachTimeperiodUntil(
-        const std::function<bool(const ITimeperiod &)> &f) const = 0;
 
     void virtual forEachLabelUntil(
         const std::function<bool(const std::string &name,
                                  const std::string &value)> &f) const = 0;
+
+    void virtual forEachTimeperiodUntil(
+        const std::function<bool(const ITimeperiod &)> &f) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

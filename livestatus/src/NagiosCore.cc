@@ -135,18 +135,6 @@ std::vector<Command> NagiosCore::commands() const {
     return commands;
 }
 
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
-    const IHost &hst) const {
-    return downtimes_for_object(static_cast<const host *>(hst.handle()),
-                                nullptr);
-}
-
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
-    const IService &svc) const {
-    const auto *s = static_cast<const service *>(svc.handle());
-    return downtimes_for_object(s->host_ptr, s);
-}
-
 std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
     const IHost &hst) const {
     // TODO(sp): Do we need a mutex here?
@@ -183,9 +171,31 @@ void NagiosCore::forEachCommentUntil(
     }
 }
 
-void NagiosCore::forEachLabelUntil(
-    const std::function<bool(const std::string &name, const std::string &value)>
-        & /*f*/) const {}
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+    const IHost &hst) const {
+    // TODO(sp): Do we need a mutex here?
+    std::vector<std::unique_ptr<const IDowntime>> result;
+    for (const auto &[id, dt] : _downtimes) {
+        if (dt->_host == static_cast<const host *>(hst.handle()) &&
+            dt->_service == nullptr) {
+            result.emplace_back(std::make_unique<NebDowntime>(*dt));
+        }
+    }
+    return result;
+}
+
+std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
+    const IService &svc) const {
+    // TODO(sp): Do we need a mutex here?
+    std::vector<std::unique_ptr<const IDowntime>> result;
+    for (const auto &[id, dt] : _downtimes) {
+        if (dt->_host == static_cast<const service *>(svc.handle())->host_ptr &&
+            dt->_service == static_cast<const service *>(svc.handle())) {
+            result.emplace_back(std::make_unique<NebDowntime>(*dt));
+        }
+    }
+    return result;
+}
 
 void NagiosCore::forEachDowntimeUntil(
     // TODO(sp): Do we need a mutex here?
@@ -196,6 +206,10 @@ void NagiosCore::forEachDowntimeUntil(
         }
     }
 }
+
+void NagiosCore::forEachLabelUntil(
+    const std::function<bool(const std::string &name, const std::string &value)>
+        & /*f*/) const {}
 
 void NagiosCore::forEachTimeperiodUntil(
     const std::function<bool(const ITimeperiod &)> &f) const {
@@ -353,15 +367,4 @@ bool NagiosCore::pnp4nagiosEnabled() const {
 
 bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     return _store.answerRequest(input, output);
-}
-
-std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes_for_object(
-    const ::host *h, const ::service *s) const {
-    std::vector<std::unique_ptr<const IDowntime>> result;
-    for (const auto &[id, dt] : _downtimes) {
-        if (dt->_host == h && dt->_service == s) {
-            result.emplace_back(std::make_unique<NebDowntime>(*dt));
-        }
-    }
-    return result;
 }

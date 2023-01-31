@@ -101,27 +101,31 @@ class DummyMonitoringCore : public MonitoringCore {
     }
     [[nodiscard]] std::vector<Command> commands() const override { return {}; }
 
-    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IHost & /*host*/) const override {
         return {};
     }
-    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
-        const IService & /*service*/) const override {
-        return {};
-    }
-    void forEachDowntimeUntil(
-        const std::function<bool(const IDowntime &)> & /*f*/) const override {}
 
     [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
-        const IHost & /*host*/) const override {
-        return {};
-    }
-    [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IService & /*service*/) const override {
         return {};
     }
+
     void forEachCommentUntil(
         const std::function<bool(const IComment &)> & /*f*/) const override {}
+
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
+        const IHost & /*host*/) const override {
+        return {};
+    }
+
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
+        const IService & /*service*/) const override {
+        return {};
+    }
+
+    void forEachDowntimeUntil(
+        const std::function<bool(const IDowntime &)> & /*f*/) const override {}
 
     void forEachLabelUntil(
         const std::function<bool(const std::string &, const std::string &)>

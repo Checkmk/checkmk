@@ -57,6 +57,11 @@ run_persisted() {
     UNTIL=$((NOW + INTERVAL + 600))
     LAST_RUN="$(cat "${FLAGFILE}" 2>/dev/null)" || LAST_RUN=0
 
+    if "${MK_FORCE_INVENTORY:-false}"; then
+        "$@" | _insert_persist_option "${UNTIL}"
+        return
+    fi
+
     if [ $((NOW - LAST_RUN)) -lt "${INTERVAL}" ]; then
         return
     fi

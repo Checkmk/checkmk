@@ -30,6 +30,8 @@ Options:
   -h, --help                 show this message and exit
   -d, --debug                emit debugging messages
   -p, --profile              create files containing the execution times
+  --force-inventory          get the output of the agent plugin 'mk_inventory'
+                             independent of the last run state.
 HERE
 }
 
@@ -74,6 +76,11 @@ set_up_process_commandline_arguments() {
                 LOG_SECTION_TIME=true
                 # disable caching to get the whole execution time
                 DISABLE_CACHING=true
+                shift
+                ;;
+
+            --force-inventory)
+                export MK_FORCE_INVENTORY=true
                 shift
                 ;;
 

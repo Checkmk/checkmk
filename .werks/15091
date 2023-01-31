@@ -1,0 +1,25 @@
+Title: check_mk_agent: Add option "--force-inventory" in order to collect the output of the mk_inventory agent plugin
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1675324834
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Sometimes the full agent output, ie. the output of the agent itself and of all
+installed agent plugins, of a host is needed for debugging or simulation
+purposes.
+
+Especially collecting the output of the agent plugin {{mk_inventory}} is not
+very user-friendly because the execution depends on a special flag file. A user
+has to delete or modified this flag file in order to get the output.
+In general this intervention is not a good idea because it steps in the Checkmk
+operations.
+
+With the new option "--force-inventory" the output of {{mk_inventory}} is
+collected and the Checkmk operations are not bothered anymore.
+
+Example:
+check_mk_agent --force-inventory > host.out

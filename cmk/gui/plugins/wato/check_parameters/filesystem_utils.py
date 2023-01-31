@@ -327,7 +327,7 @@ def _filesystem_inodes_elements() -> list[DictionaryEntry]:
                     ),
                     FixedValue(
                         value=None,
-                        totext="",
+                        totext=_("No levels on inodes"),
                         title=_("Ignore levels"),
                     ),
                 ],

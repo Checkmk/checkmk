@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
+
 import pytest
 
 from cmk.base.plugins.agent_based.utils.hitachi_hnas import (
@@ -20,7 +22,7 @@ from cmk.base.plugins.agent_based.utils.hitachi_hnas import (
         )
     ],
 )
-def test_parse_physical_volumes(volume_data, expected) -> None:  # type:ignore[no-untyped-def]
+def test_parse_physical_volumes(volume_data: Iterable[object], expected: tuple[dict, dict]) -> None:
     assert parse_physical_volumes(volume_data) == expected
 
 
@@ -37,5 +39,7 @@ def test_parse_physical_volumes(volume_data, expected) -> None:  # type:ignore[n
         )
     ],
 )
-def test_parse_virtual_volumes(volume_data, expected) -> None:  # type:ignore[no-untyped-def]
+def test_parse_virtual_volumes(
+    volume_data: tuple[dict[str, str], Iterable[object], Iterable[object]], expected: dict
+) -> None:
     assert parse_virtual_volumes(*volume_data) == expected

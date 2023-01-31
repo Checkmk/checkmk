@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 NOW_SIMULATED = "2019-01-01 22:00:00.000000"
 ITEM = "inst"
@@ -65,7 +66,9 @@ SECTION = {
         )
     ],
 )
-def test_parse(string_table_row, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
+def test_parse(
+    string_table_row: StringTable, expected_parsed_data: sap_hana_backup.Section
+) -> None:
     assert sap_hana_backup.parse_sap_hana_backup(string_table_row) == expected_parsed_data
 
 

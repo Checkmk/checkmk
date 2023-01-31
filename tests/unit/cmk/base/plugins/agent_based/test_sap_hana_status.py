@@ -12,6 +12,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.sap_hana import ParsedSection
 
 ITEM = "H90 33"
 SECTION = {
@@ -78,8 +80,8 @@ SECTION_ERROR = {
         ),
     ],
 )
-def test_sap_hana_status_parse(  # type:ignore[no-untyped-def]
-    string_table_row, expected_parsed_data
+def test_sap_hana_status_parse(
+    string_table_row: StringTable, expected_parsed_data: ParsedSection
 ) -> None:
     assert sap_hana_status.parse_sap_hana_status(string_table_row) == expected_parsed_data
 
@@ -118,14 +120,14 @@ def test_sap_hana_status_discovery() -> None:
         ),
     ],
 )
-def test_sap_hana_status_check(check_type, results, section) -> None:  # type:ignore[no-untyped-def]
+def test_sap_hana_status_check(check_type: str, results: Result, section: ParsedSection) -> None:
 
     yielded_results = list(sap_hana_status.check_sap_hana_status(f"{check_type} {ITEM}", section))
     assert yielded_results == [results]
 
 
 @pytest.mark.parametrize("section, item", [({"Status H62 10": {}}, "Status H62 10")])
-def test_sap_hana_status_check_stale(section, item) -> None:  # type:ignore[no-untyped-def]
+def test_sap_hana_status_check_stale(section: ParsedSection, item: str) -> None:
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_status.check_sap_hana_status(item, section))
 

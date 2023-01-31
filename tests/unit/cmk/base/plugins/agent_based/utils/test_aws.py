@@ -6,11 +6,13 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.aws import (
     check_aws_limits,
     CheckResult,
     CloudwatchInsightsSection,
     extract_aws_metrics_by_labels,
+    GenericAWSSection,
     LambdaFunctionConfiguration,
     LambdaInsightMetrics,
     LambdaSummarySection,
@@ -469,7 +471,7 @@ from cmk.base.plugins.agent_based.utils.aws import (
         ),
     ],
 )
-def test_parse_aws(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_aws(string_table: StringTable, expected_result: GenericAWSSection) -> None:
     assert parse_aws(string_table) == expected_result
 
 

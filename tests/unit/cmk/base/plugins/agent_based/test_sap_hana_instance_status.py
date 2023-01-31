@@ -3,11 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
+
+from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProcess, InstanceStatus
 
 
@@ -78,8 +83,8 @@ from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProces
         ),
     ],
 )
-def test_parse_sap_hana_instance_status(  # type:ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_parse_sap_hana_instance_status(
+    fix_register: FixRegister, info: StringTable, expected_result: Mapping[str, object]
 ) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_instance_status")]
     assert section_plugin.parse_function(info) == expected_result
@@ -125,8 +130,8 @@ def test_parse_sap_hana_instance_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_sap_hana_instance_status(  # type:ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_inventory_sap_hana_instance_status(
+    fix_register: FixRegister, info: StringTable, expected_result: Sequence[Service]
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_instance_status")].parse_function(
         info
@@ -202,8 +207,8 @@ def test_inventory_sap_hana_instance_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_sap_hana_instance_status(  # type:ignore[no-untyped-def]
-    fix_register, item, info, expected_result
+def test_check_sap_hana_instance_status(
+    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_instance_status")].parse_function(
         info

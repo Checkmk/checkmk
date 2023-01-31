@@ -165,7 +165,7 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_winperf_phydisk(item) -> None:  # type:ignore[no-untyped-def]
+def test_check_winperf_phydisk(item: str) -> None:
     section_1 = {
         item: DISK_HALF,
     }
@@ -184,7 +184,7 @@ def test_check_winperf_phydisk(item) -> None:  # type:ignore[no-untyped-def]
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_winperf_phydisk(item) -> None:  # type:ignore[no-untyped-def]
+def test_cluster_check_winperf_phydisk(item: str) -> None:
     section_1 = {
         item: DISK_HALF,
     }

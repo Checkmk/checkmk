@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.wut_webio import (
     AS_DISCOVERED,
     check_wut_webio,
@@ -17,7 +20,7 @@ from cmk.base.plugins.agent_based.wut_webio import (
     STATES_DURING_DISC_KEY,
 )
 
-STRING_TABLE = [
+STRING_TABLE: list[StringTable] = [
     [],
     [
         ["WEBIO-094849", "", "", ""],
@@ -31,7 +34,7 @@ STRING_TABLE = [
 ITEM = "WEBIO-094849 Input 0"
 
 
-def _parse_mandatory(string_table) -> Section:  # type:ignore[no-untyped-def]
+def _parse_mandatory(string_table: list[StringTable]) -> Section:
     section = parse_wut_webio(string_table)
     assert section
     return section
@@ -58,7 +61,7 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(params, expected) -> None:  # type:ignore[no-untyped-def]
+def test_check(params: Mapping[str, object], expected: CheckResult) -> None:
     assert list(check_wut_webio(ITEM, params, _parse_mandatory(STRING_TABLE))) == expected
 
 

@@ -6,6 +6,11 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.utils import hp_hh3c
 
 
@@ -18,7 +23,9 @@ from cmk.base.plugins.agent_based.utils import hp_hh3c
         )
     ],
 )
-def test_hp_device_discover(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_hp_device_discover(
+    string_table: list[StringTable], expected_result: DiscoveryResult
+) -> None:
     section = hp_hh3c.parse_hp_hh3c_device(string_table)
     assert list(hp_hh3c.discover_hp_hh3c_device(section)) == expected_result
 
@@ -43,8 +50,8 @@ def test_hp_device_discover(string_table, expected_result) -> None:  # type:igno
         ),
     ],
 )
-def test_hp_device_check(  # type:ignore[no-untyped-def]
-    string_table, item, expected_result
+def test_hp_device_check(
+    string_table: list[StringTable], item: str, expected_result: CheckResult
 ) -> None:
     section = hp_hh3c.parse_hp_hh3c_device(string_table)
     assert list(hp_hh3c.check_hp_hh3c_device(item, section)) == expected_result

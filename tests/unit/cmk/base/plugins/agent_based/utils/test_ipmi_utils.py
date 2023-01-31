@@ -280,14 +280,14 @@ from cmk.base.plugins.agent_based.utils import ipmi
         ),
     ],
 )
-def test_check_ipmi_detailed(  # type:ignore[no-untyped-def]
+def test_check_ipmi_detailed(
     item: str,
     params: Mapping[str, Any],
     sensor: ipmi.Sensor,
     temperature_metrics_only: bool,
     status_txt_mapping: ipmi.StatusTxtMapping,
     exp_result: CheckResult,
-):
+) -> None:
     assert (
         list(
             ipmi.check_ipmi_detailed(
@@ -486,8 +486,8 @@ SECTION = {
         ),
     ],
 )
-def test_check_ipmi_summarized(  # type:ignore[no-untyped-def]
-    params, status_txt_mapping, exp_result
+def test_check_ipmi_summarized(
+    params: Mapping[str, object], status_txt_mapping: ipmi.StatusTxtMapping, exp_result: CheckResult
 ) -> None:
     assert (
         list(

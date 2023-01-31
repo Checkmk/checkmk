@@ -8,12 +8,14 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.sentry_pdu import (
     check_sentry_pdu,
     check_sentry_pdu_v4,
     discovery_sentry_pdu,
     parse_sentry_pdu,
     PDU,
+    Section,
 )
 
 pytestmark = pytest.mark.checks
@@ -43,7 +45,7 @@ _SECTION_V4 = {
         ),
     ],
 )
-def test_parse_sentry_pdu(string_table, expected_section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_sentry_pdu(string_table: StringTable, expected_section: Section) -> None:
     section = parse_sentry_pdu(string_table)
     assert section == expected_section
 

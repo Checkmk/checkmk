@@ -13,6 +13,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.utils.sap_hana import ParsedSection
 
 SECTION = {
     "Y04 10": {
@@ -88,8 +90,8 @@ SECTION = {
         ),
     ],
 )
-def test_sap_hana_license_parse(  # type:ignore[no-untyped-def]
-    string_table_row, expected_parsed_data
+def test_sap_hana_license_parse(
+    string_table_row: StringTable, expected_parsed_data: ParsedSection
 ) -> None:
     assert sap_hana_license.parse_sap_hana_license(string_table_row) == expected_parsed_data
 
@@ -160,7 +162,7 @@ def test_sap_hana_license_discovery() -> None:
         ),
     ],
 )
-def test_sap_hana_license_check(cur_item, result) -> None:  # type:ignore[no-untyped-def]
+def test_sap_hana_license_check(cur_item: str, result: CheckResult) -> None:
     yielded_results = list(sap_hana_license.check_sap_hana_license(cur_item, {}, SECTION))
     assert yielded_results == result
 
@@ -171,6 +173,6 @@ def test_sap_hana_license_check(cur_item, result) -> None:  # type:ignore[no-unt
         ("Y04 10", {"Y04 10": {}}),
     ],
 )
-def test_sap_hana_license_check_stale(item, section) -> None:  # type:ignore[no-untyped-def]
+def test_sap_hana_license_check_stale(item: str, section: ParsedSection) -> None:
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_license.check_sap_hana_license(item, {}, section))

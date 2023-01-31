@@ -3,10 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Container, Sequence
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State
-from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensor, parse_entity_sensors
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.entity_sensors import (
+    EntitySensor,
+    EntitySensorSection,
+    parse_entity_sensors,
+)
 
 _STRIN_TABLE_fp1140 = [
     [
@@ -352,8 +359,10 @@ _SECTION_fp1140 = {
         ),
     ],
 )
-def test_parse_entity_sensors(  # type:ignore[no-untyped-def]
-    string_table, sensor_types_ignore, expected_section
+def test_parse_entity_sensors(
+    string_table: Sequence[StringTable],
+    sensor_types_ignore: Container[str],
+    expected_section: EntitySensorSection,
 ) -> None:
     assert (
         parse_entity_sensors(

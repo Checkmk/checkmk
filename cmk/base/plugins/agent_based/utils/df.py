@@ -398,42 +398,22 @@ def check_inodes(
     >>> for r in check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
     Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.00%)')
+
+    >>> levels["inodes_levels"] = None
+    >>> for r in check_inodes(levels, 80, 20): print(r)
+    Metric('inodes_used', 60.0, boundaries=(0.0, 80.0))
+    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.00%)')
     """
-    if (inodes_levels := levels.get("inodes_levels")) is None:
-        # inodes_levels is set as default for every check except network_fs_mounts
-        # this parameter could also be None if it's set to "ignore" by the user
-        inodes_warn_variant, inodes_crit_variant = None, None
-    else:
-        inodes_warn_variant, inodes_crit_variant = inodes_levels
-
-    inodes_abs: tuple[float, float] | None = None
-    human_readable_func: Callable[[float], str] = _render_integer
-    if isinstance(inodes_warn_variant, int) and isinstance(inodes_crit_variant, int):
-        # Levels in absolute numbers
-        inodes_abs = (
-            inodes_total - inodes_warn_variant,
-            inodes_total - inodes_crit_variant,
-        )
-    elif isinstance(inodes_warn_variant, float) and isinstance(inodes_crit_variant, float):
-        # Levels in percent
-        inodes_abs = (
-            (100 - inodes_warn_variant) / 100.0 * inodes_total,
-            (100 - inodes_crit_variant) / 100.0 * inodes_total,
-        )
-
-        def human_readable_func(x: float) -> str:
-            return render.percent(100.0 * x / inodes_total)
-
-    else:
-        raise TypeError(
-            "Expected tuple of int or tuple of float for inodes levels, got {type(inodes_warn_variant).__name__}/{type(inodes_crit_variant).__name__}"
-        )
+    levels_upper, render_func = _inodes_levels_and_render_func(
+        inodes_total,
+        levels.get("inodes_levels"),
+    )
 
     inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
-        levels_upper=inodes_abs,
+        levels_upper=levels_upper,
         metric_name="inodes_used",
-        render_func=human_readable_func,
+        render_func=render_func,
         boundaries=(0, inodes_total),
         label="Inodes used",
     )
@@ -457,6 +437,40 @@ def check_inodes(
         yield Result(state=inode_result.state, summary=inodes_info)
     else:
         yield Result(state=inode_result.state, notice=inodes_info)
+
+
+def _inodes_levels_and_render_func(
+    inodes_total: float,
+    configured_leves: tuple[float, float] | tuple[int, int] | None,
+) -> tuple[tuple[float, float] | None, Callable[[float], str]]:
+    if configured_leves is None:
+        return None, _render_integer
+
+    inodes_warn_variant, inodes_crit_variant = configured_leves
+
+    if isinstance(inodes_warn_variant, int) and isinstance(inodes_crit_variant, int):
+        # Levels in absolute numbers
+        return (
+            (
+                inodes_total - inodes_warn_variant,
+                inodes_total - inodes_crit_variant,
+            ),
+            _render_integer,
+        )
+
+    if isinstance(inodes_warn_variant, float) and isinstance(inodes_crit_variant, float):
+        # Levels in percent
+        return (
+            (
+                (100 - inodes_warn_variant) / 100.0 * inodes_total,
+                (100 - inodes_crit_variant) / 100.0 * inodes_total,
+            ),
+            lambda inodes: render.percent(100.0 * inodes / inodes_total),
+        )
+
+    raise TypeError(
+        f"Expected tuple of int or tuple of float for inodes levels, got {type(inodes_warn_variant).__name__}/{type(inodes_crit_variant).__name__}"
+    )
 
 
 _GroupingSpec = tuple[list[str], list[str]]

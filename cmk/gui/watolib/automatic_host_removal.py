@@ -21,7 +21,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import SuperUserContext
-from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, sitenames
+from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
 from cmk.gui.valuespec import Seconds
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -95,7 +95,8 @@ def _hosts_to_be_removed(
     job_interface: BackgroundProcessInterface,
 ) -> Iterator[tuple[SiteId, Iterator[CREHost]]]:
     yield from (
-        (site_id, _hosts_to_be_removed_for_site(job_interface, site_id)) for site_id in sitenames()
+        (site_id, _hosts_to_be_removed_for_site(job_interface, site_id))
+        for site_id in wato_site_ids()
     )
 
 

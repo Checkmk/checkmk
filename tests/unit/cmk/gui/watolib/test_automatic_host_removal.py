@@ -21,7 +21,7 @@ from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleO
 
 @pytest.fixture(scope="function", autouse=True)
 def fixture_sitenames(mocker: MockerFixture) -> None:
-    mocker.patch.object(automatic_host_removal, "sitenames", lambda: ["local"])
+    mocker.patch.object(automatic_host_removal, "wato_site_ids", lambda: ["local"])
 
 
 @pytest.fixture(name="activate_changes_mock")

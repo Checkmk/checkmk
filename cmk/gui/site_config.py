@@ -108,3 +108,10 @@ def is_single_local_site() -> bool:
     # Also use Multisite mode if the one and only site is not local
     sitename = list(active_config.sites.keys())[0]
     return site_is_local(sitename)
+
+
+def wato_site_ids() -> list[SiteId]:
+    return [
+        omd_site(),
+        *wato_slave_sites(),
+    ]

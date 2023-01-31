@@ -232,7 +232,7 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-unty
                 "ifspeed": _try_int(ifspeed),
                 "is_isl": index in isl_ports,
                 "islspeed": islspeed,  # Might be None
-                "bbcredits": bbcredits,  # Might be None
+                "bbcredits": int(bbcredits) if bbcredits is not None else None,
             }
         except ValueError:
             continue

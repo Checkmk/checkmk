@@ -101,6 +101,163 @@ STRING_TABLE_INDEX_1_MISSING = [
 ]
 
 
+_STRING_TABLE_WITH_IF64 = [
+    [
+        [
+            "1",
+            "6",
+            "1",
+            "1",
+            "",
+            "",
+            "446448961",
+            "2436700923",
+            "0",
+            "0",
+            "0",
+            "0",
+            "21",
+            "",
+            "VSP01_1A",
+        ],
+    ],
+    [["33", "512"], ["37", "512"], ["47", "128"], ["48", "128"]],
+    [
+        ["1073741824", "56", "8000"],
+    ],
+    [
+        [
+            "16.0.0.39.248.67.123.0.0.0.0.0.0.0.0.0.1",
+            [
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                55,
+                70,
+                32,
+                70,
+                51,
+                32,
+                50,
+                48,
+                32,
+                70,
+                66,
+            ],
+            [
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                50,
+                32,
+                53,
+                50,
+                32,
+                54,
+                52,
+                32,
+                67,
+                68,
+                32,
+                55,
+                67,
+            ],
+            [
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                49,
+                65,
+                32,
+                70,
+                68,
+                32,
+                52,
+                57,
+                32,
+                48,
+                53,
+                32,
+                50,
+                56,
+            ],
+            [
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                70,
+                32,
+                49,
+                56,
+                32,
+                56,
+                50,
+                32,
+                70,
+                50,
+                32,
+                56,
+                69,
+                32,
+                56,
+                48,
+            ],
+            [
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+                32,
+                48,
+                48,
+            ],
+        ],
+    ],
+]
+
+
 @pytest.fixture(name="section_idx", scope="module")
 def _get_section_idx() -> bf.Section:
     section = bf.parse_brocade_fcport(STRING_TABLE_INDEX_1_MISSING)
@@ -138,7 +295,7 @@ def test_discovery_idx(section_idx: bf.Section) -> None:
     )
 
 
-def test_check(section_idx: bf.Section) -> None:
+def test_check_idx(section_idx: bf.Section) -> None:
     assert list(
         bf._check_brocade_fcport(
             "44 ISL port44",
@@ -188,4 +345,69 @@ def test_check(section_idx: bf.Section) -> None:
         Metric("rxencinframes", 0.0),
         Metric("c3discards", 0.0),
         Metric("notxcredits", 60302705.81666667),
+    ]
+
+
+def test_check_with_if64() -> None:
+    section = bf.parse_brocade_fcport(_STRING_TABLE_WITH_IF64)
+    assert section
+    assert list(
+        bf._check_brocade_fcport(
+            "00 VSP01_1A",
+            {
+                "rxcrcs": (3.0, 20.0),
+                "rxencoutframes": (3.0, 20.0),
+                "rxencinframes": (3.0, 20.0),
+                "notxcredits": (3.0, 20.0),
+                "c3discards": (3.0, 20.0),
+                "assumed_speed": 2.0,
+            },
+            section,
+            1658523186,
+            {
+                "rxwords.1": (
+                    1658523126,
+                    1153873149468594998701126521378387743953450940829170014,
+                ),
+                "txwords.1": (
+                    1658523126,
+                    1153873149468594998701126521378387743953450940822270011,
+                ),
+                "rxframes.1": (
+                    1658523126,
+                    4615492597874380058774580909699558447955101321101508290,
+                ),
+                "txframes.1": (
+                    1658523126,
+                    4615492597874380058774580751245745719547952741547325697,
+                ),
+                "rxcrcs.1": (1658523126, 0),
+                "txcrcs.1": (1658523126, 0),
+                "rxencoutframes.1": (1658523126, 0),
+                "txencoutframes.1": (1658523126, 0),
+                "rxencinframes.1": (1658523126, 0),
+                "txencinframes.1": (1658523126, 0),
+                "c3discards.1": (1658523126, 18),
+                "notxcredits.1": (1658523126, 0),
+                "bbcredit.00 VSP01_1A": (
+                    1658523126,
+                    4615492597874380058774580751237179345161915702775304352,
+                ),
+            },
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            summary="Speed: 8 Gbit/s, In: 6.67 kB/s, Out: 467 kB/s, Physical: in sync, Operational: online, Administrative: online",
+        ),
+        Metric("in", 6666.8, boundaries=(0.0, 800000000.0)),
+        Metric("out", 466667.0, boundaries=(0.0, 800000000.0)),
+        Metric("rxframes", 1333.35),
+        Metric("txframes", 3333.35),
+        Metric("rxcrcs", 0.0),
+        Metric("rxencoutframes", 0.0),
+        Metric("rxencinframes", 0.0),
+        Metric("c3discards", 0.05),
+        Metric("notxcredits", 0.0),
+        Metric("fc_bbcredit_zero", 1500.0),
     ]

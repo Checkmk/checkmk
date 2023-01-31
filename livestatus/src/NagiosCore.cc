@@ -61,22 +61,25 @@ NagiosCore::NagiosCore(
 
 std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
-    return ToIHost(::find_host(const_cast<char *>(name.c_str())));
+    const auto *host = ::find_host(const_cast<char *>(name.c_str()));
+    return host == nullptr ? nullptr : std::make_unique<NebHost>(*host);
 }
 
 std::unique_ptr<const IHost> NagiosCore::getHostByDesignation(
     const std::string &designation) {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
-    auto *host = it == _hosts_by_designation.end() ? nullptr : it->second;
-    return ToIHost(host);
+    return it == _hosts_by_designation.end()
+               ? nullptr
+               : std::make_unique<NebHost>(*it->second);
 }
 
 std::unique_ptr<const IService> NagiosCore::find_service(
     const std::string &host_name, const std::string &service_description) {
     // Older Nagios headers are not const-correct... :-P
-    return ToIService(
+    const auto *svc =
         ::find_service(const_cast<char *>(host_name.c_str()),
-                       const_cast<char *>(service_description.c_str())));
+                       const_cast<char *>(service_description.c_str()));
+    return svc == nullptr ? nullptr : std::make_unique<NebService>(*svc);
 }
 
 std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(

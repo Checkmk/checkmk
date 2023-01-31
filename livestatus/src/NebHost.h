@@ -47,8 +47,4 @@ private:
     const ::host &host_;
 };
 
-inline std::unique_ptr<const IHost> ToIHost(const ::host *h) {
-    return h != nullptr ? std::make_unique<NebHost>(*h) : nullptr;
-}
-
 #endif  // NebHost_h

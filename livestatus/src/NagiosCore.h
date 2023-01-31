@@ -160,6 +160,7 @@ private:
     const NagiosAuthorization _authorization;
     Encoding _data_encoding;
     Store _store;
+    // host is never nullptr
     std::unordered_map<std::string, host *> _hosts_by_designation;
     Triggers _triggers;
 

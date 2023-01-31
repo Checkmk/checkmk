@@ -52,8 +52,4 @@ private:
     const ::service &service_;
 };
 
-inline std::unique_ptr<const IService> ToIService(::service *s) {
-    return s != nullptr ? std::make_unique<NebService>(*s) : nullptr;
-}
-
 #endif  // NebService_h

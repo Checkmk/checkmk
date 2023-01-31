@@ -42,6 +42,7 @@
 #include "livestatus/Average.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/InputBuffer.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Poller.h"
@@ -545,18 +546,19 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
                 ._id = co->comment_id,
                 ._author = co->author_name,
                 ._comment = co->comment_data,
-                ._entry_type = static_cast<uint32_t>(co->entry_type),
+                ._entry_type = static_cast<CommentType>(
+                    static_cast<int32_t>(co->entry_type)),
                 ._entry_time =
                     std::chrono::system_clock::from_time_t(co->entry_time),
-                ._type = co->comment_type,
                 ._is_service = co->service_description != nullptr,
                 ._host = hst,
                 ._service = svc,
                 ._expire_time =
                     std::chrono::system_clock::from_time_t(co->expire_time),
-                ._persistent = co->persistent,
-                ._source = co->source,
-                ._expires = co->expires});
+                ._persistent = co->persistent != 0,
+                ._source = static_cast<CommentSource>(
+                    static_cast<int32_t>(co->source)),
+                ._expires = co->expires != 0});
             break;
         }
         case NEBTYPE_COMMENT_DELETE:
@@ -585,7 +587,7 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
                     ? nullptr
                     : ::find_service(dt->host_name, dt->service_description);
             fl_downtimes[id] = std::make_unique<Downtime>(Downtime{
-                ._id = dt->downtime_id,
+                ._id = static_cast<int32_t>(dt->downtime_id),
                 ._author = dt->author_name,
                 ._comment = dt->comment_data,
                 ._origin_is_rule = false,
@@ -599,7 +601,7 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
                 ._duration = std::chrono::seconds{dt->duration},
                 ._host = hst,
                 ._service = svc,
-                ._triggered_by = dt->triggered_by,
+                ._triggered_by = static_cast<int32_t>(dt->triggered_by),
                 ._is_active = false,  // TODO(sp) initial state?
             });
             break;

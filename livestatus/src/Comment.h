@@ -11,6 +11,7 @@
 #include <chrono>
 #include <string>
 
+#include "livestatus/Interface.h"
 #include "nagios.h"
 
 class Comment {
@@ -18,17 +19,16 @@ public:
     unsigned long _id;
     std::string _author;
     std::string _comment;
-    uint32_t _entry_type;
+    CommentType _entry_type;
     std::chrono::system_clock::time_point _entry_time;
     // --------------------------------------------------
-    int _type;
     bool _is_service;
     host *_host;
     service *_service;
     std::chrono::system_clock::time_point _expire_time;
-    int _persistent;
-    int _source;
-    int _expires;
+    bool _persistent;
+    CommentSource _source;
+    bool _expires;
 };
 
 #endif  // Comment_h

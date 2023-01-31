@@ -9,13 +9,14 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <cstdint>
 #include <string>
 
 #include "nagios.h"
 
 class Downtime {
 public:
-    unsigned long _id;
+    int32_t _id;
     std::string _author;
     std::string _comment;
     bool _origin_is_rule;
@@ -27,7 +28,7 @@ public:
     // --------------------------------------------------
     host *_host;
     service *_service;
-    unsigned long _triggered_by;
+    int32_t _triggered_by;
     bool _is_active;
 };
 

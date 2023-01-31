@@ -174,9 +174,30 @@ def test_cron_job_status_with_pending_job() -> None:
         kube_cronjob_status._cron_job_status(
             current_time=Timestamp(300.0),
             pending_levels=(300, 600),
+            running_levels=None,
             job_status=kube_cronjob_status.JobStatusType.PENDING,
             job_pod=JobPodFactory.build(),
             job_start_time=Timestamp(0.0),
         )
     )[0]
     assert result.state == State.WARN
+
+
+def test_kube_cron_job_with_running_params() -> None:
+    current_time = 10.0
+    elapsed_running_time = 8.0
+    warn, crit = 8, 10
+
+    result = list(
+        kube_cronjob_status._cron_job_status(
+            current_time=Timestamp(current_time),
+            pending_levels=None,
+            running_levels=(warn, crit),
+            job_status=kube_cronjob_status.JobStatusType.RUNNING,
+            job_pod=JobPodFactory.build(),
+            job_start_time=Timestamp(current_time - elapsed_running_time),
+        )
+    )[0]
+
+    assert result.state == State.WARN
+    assert result.summary.startswith("Latest job: Running since")

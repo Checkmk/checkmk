@@ -22,8 +22,17 @@ def _parameter_valuespec():
                     _("Time until alert, if latest CronJob job is in pending state")
                 ),
             ),
+            (
+                "running",
+                age_levels_dropdown(
+                    _(
+                        "Time until alert, if the latest CronJob job has been running for "
+                        "longer than set time"
+                    )
+                ),
+            ),
         ],
-        optional_keys=["pending"],
+        optional_keys=["pending", "running"],
     )
 
 

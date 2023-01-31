@@ -110,6 +110,7 @@ def _check_cron_job_status(
     yield from _cron_job_status(
         current_time=current_time,
         pending_levels=get_age_levels_for(params, "pending"),
+        running_levels=get_age_levels_for(params, "running"),
         job_status=job_status,
         job_pod=job_pod,
         job_start_time=latest_job.status.start_time,
@@ -160,12 +161,14 @@ def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPo
 def _cron_job_status(
     current_time: Timestamp,
     pending_levels: tuple[int, int] | None,
+    running_levels: tuple[int, int] | None,
     job_status: JobStatusType,
     job_pod: JobPod,
     job_start_time: Timestamp | None,
 ) -> Iterable[Result]:
     if job_start_time is None:
-        return Result(state=State.UNKNOWN, summary="Latest job: Suspended")
+        yield Result(state=State.UNKNOWN, summary="Latest job: Suspended")
+        return
 
     match job_status:
         case JobStatusType.COMPLETED:
@@ -186,8 +189,15 @@ def _cron_job_status(
             state = result.state
             status_message = f"Pending since {result.summary}"
         case JobStatusType.RUNNING:
-            state = State.OK
-            status_message = f"Running since {render.timespan(time.time() - job_start_time)}"
+            result = list(
+                check_levels(
+                    current_time - job_start_time,
+                    render_func=render.timespan,
+                    levels_upper=running_levels,
+                )
+            )[0]
+            state = result.state
+            status_message = f"Running since {result.summary}"
         case JobStatusType.UNKNOWN:
             raise ValueError("Unknown status type for latest job")
         case _:
@@ -231,5 +241,5 @@ register.check_plugin(
     discovery_function=discovery_cron_job_status,
     check_function=check_cron_job_status,
     check_ruleset_name="kube_cronjob_status",
-    check_default_parameters={},
+    check_default_parameters=CRONJOB_DEFAULT_PARAMS,
 )

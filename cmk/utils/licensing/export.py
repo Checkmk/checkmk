@@ -116,7 +116,7 @@ class SubscriptionDetailsLimit(NamedTuple):
     def _parse(
         cls, raw_limit_type: str, raw_limit_value: str | int | float
     ) -> SubscriptionDetailsLimit:
-        if raw_limit_type in ["2000000+", "unlimited"]:
+        if raw_limit_type in ["2000000+", "unlimited"] or int(raw_limit_value) == -1:
             return SubscriptionDetailsLimit(
                 limit_type=SubscriptionDetailsLimitType.unlimited,
                 # '-1' means unlimited. This value is also used in Django DB

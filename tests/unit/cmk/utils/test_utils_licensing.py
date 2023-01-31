@@ -762,6 +762,20 @@ def test_subscription_details_source(raw_subscription_details_source: str) -> No
                 limit_value=3,
             ),
         ),
+        (
+            "-1",
+            SubscriptionDetailsLimit(
+                limit_type=SubscriptionDetailsLimitType.unlimited,
+                limit_value=-1,
+            ),
+        ),
+        (
+            -1,
+            SubscriptionDetailsLimit(
+                limit_type=SubscriptionDetailsLimitType.unlimited,
+                limit_value=-1,
+            ),
+        ),
     ],
 )
 def test_subscription_details_limit(

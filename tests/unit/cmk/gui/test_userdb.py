@@ -18,7 +18,8 @@ from tests.testlib import is_managed_repo, on_time
 
 import cmk.utils.paths
 import cmk.utils.version
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd

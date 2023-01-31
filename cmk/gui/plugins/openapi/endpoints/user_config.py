@@ -8,7 +8,7 @@ import datetime as dt
 import time
 from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd

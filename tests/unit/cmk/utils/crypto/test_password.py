@@ -7,7 +7,7 @@ from typing import Any, AnyStr
 
 import pytest
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 
 
 @pytest.mark.parametrize(

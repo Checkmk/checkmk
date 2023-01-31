@@ -12,7 +12,7 @@ from typing import Iterator, List, Optional, overload, Tuple, Type, Union
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import timeperiod_spec_alias, user_id_22_regex, UserId
 
 import cmk.gui.background_job as background_job

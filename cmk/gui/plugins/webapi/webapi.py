@@ -16,7 +16,7 @@ from six import ensure_str
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 

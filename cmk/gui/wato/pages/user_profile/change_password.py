@@ -7,7 +7,7 @@
 import time
 from typing import Optional
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 
 from cmk.gui import forms, login, userdb
 from cmk.gui.exceptions import MKUserError

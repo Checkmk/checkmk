@@ -6,7 +6,7 @@
 from typing import Optional
 
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 
 import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb

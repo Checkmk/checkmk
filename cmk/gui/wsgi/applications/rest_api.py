@@ -24,7 +24,7 @@ from werkzeug.routing import Map, Rule, Submount
 
 import cmk.utils.store
 from cmk.utils import crash_reporting, paths
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import UserId
 

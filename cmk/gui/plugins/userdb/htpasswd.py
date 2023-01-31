@@ -7,7 +7,8 @@
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 

@@ -7,8 +7,8 @@ from typing import AnyStr
 
 import pytest
 
-from cmk.utils.crypto import Password
 from cmk.utils.crypto import password_hashing as ph
+from cmk.utils.crypto.password import Password
 
 
 @pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72, b"bytes"])

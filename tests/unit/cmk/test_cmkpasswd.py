@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 
 from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, main
 

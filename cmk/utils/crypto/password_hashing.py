@@ -22,7 +22,7 @@ import passlib.context  # type: ignore[import]
 import passlib.exc  # type: ignore[import]
 from passlib import hash as passlib_hash
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKException
 
 # Using code should not be able to change the number of rounds (to unsafe values), but test code

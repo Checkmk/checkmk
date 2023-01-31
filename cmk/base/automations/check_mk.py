@@ -231,10 +231,28 @@ class AutomationTryDiscovery(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: list[str]) -> TryDiscoveryResult:
+        # Note: in the @noscan case we *must not* fetch live data (it must be fast)
+        # In the @scan case we *must* fetch live data (it must be up to date)
+        _scan, args = _extract_directive("@scan", args)
+        noscan, args = _extract_directive("@noscan", args)
+        raise_errors, args = _extract_directive("@raiseerrors", args)
+        perform_scan = (
+            not noscan
+        )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
+
+        return self._get_discovery_preview(
+            HostName(args[0]), perform_scan, OnError.RAISE if raise_errors else OnError.WARN
+        )
+
+    def _get_discovery_preview(
+        self, host_name: HostName, perform_scan: bool, on_error: OnError
+    ) -> TryDiscoveryResult:
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
-            check_preview_table, host_label_result = self._execute_discovery(args)
+            check_preview_table, host_label_result = self._execute_discovery(
+                host_name, perform_scan, on_error
+            )
 
             def make_discovered_host_labels(
                 labels: Sequence[HostLabel],
@@ -266,19 +284,11 @@ class AutomationTryDiscovery(Automation):
             )
 
     def _execute_discovery(
-        self, args: list[str]
+        self,
+        host_name: HostName,
+        perform_scan: bool,
+        on_error: OnError,
     ) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
-        # Note: in the @noscan case we *must not* fetch live data (it must be fast)
-        # In the @scan case we *must* fetch live data (it must be up to date)
-        _scan, args = _extract_directive("@scan", args)
-        noscan, args = _extract_directive("@noscan", args)
-        raise_errors, args = _extract_directive("@raiseerrors", args)
-        perform_scan = (
-            not noscan
-        )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
-
-        on_error = OnError.RAISE if raise_errors else OnError.WARN
-
         file_cache_options = FileCacheOptions(
             use_outdated=not perform_scan, use_only_cache=not perform_scan
         )
@@ -300,7 +310,6 @@ class AutomationTryDiscovery(Automation):
             simulation_mode=config.simulation_mode,
             max_cachefile_age=config.max_cachefile_age(),
         )
-        host_name = HostName(args[0])
         return discovery.get_check_preview(
             host_name,
             config_cache=config_cache,

@@ -13,7 +13,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 Capsys = pytest.CaptureFixture[str]
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 
 from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, InvalidUsernameError, main
 

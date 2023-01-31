@@ -15,7 +15,7 @@ from typing import Any, Literal, NamedTuple, TypedDict, Union
 from pydantic import BaseModel
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.crypto import PasswordHash
+from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.labels import Labels
 from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import (

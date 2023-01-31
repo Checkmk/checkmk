@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import MKUserError

@@ -6,7 +6,7 @@
 import time
 from datetime import datetime
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import MKUserError

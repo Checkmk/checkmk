@@ -13,7 +13,7 @@ from typing import Callable
 
 import cmk.utils.crypto.password_hashing as password_hashing
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.paths import htpasswd_file
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId

@@ -20,7 +20,7 @@ from fido2.ctap2 import (  # type: ignore[import]
 from fido2.server import Fido2Server  # type: ignore[import]
 from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui import forms

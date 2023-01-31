@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from datetime import datetime
 
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.object_diff import make_diff_text
 
 import cmk.gui.userdb as userdb

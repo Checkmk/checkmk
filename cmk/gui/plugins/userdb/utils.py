@@ -15,7 +15,7 @@ from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 

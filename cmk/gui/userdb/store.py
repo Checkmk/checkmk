@@ -18,7 +18,8 @@ from typing import Any, Literal, TypeVar
 from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.crypto import Password, password_hashing, PasswordHash
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.store import (
     acquire_lock,

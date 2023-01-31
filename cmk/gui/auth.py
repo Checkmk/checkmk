@@ -14,7 +14,7 @@ from pathlib import Path
 
 import cmk.utils
 import cmk.utils.paths
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb

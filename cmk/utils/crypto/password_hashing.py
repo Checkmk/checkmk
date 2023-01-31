@@ -22,7 +22,7 @@ import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module
 import passlib.exc  # type: ignore[import]  # pylint: disable=passlib-module-import
 from passlib import hash as passlib_hash  # pylint: disable=passlib-module-import
 
-from cmk.utils.crypto import Password, PasswordHash
+from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.exceptions import MKException
 
 # Using code should not be able to change the number of rounds (to unsafe values), but test code

@@ -19,7 +19,8 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password, password_hashing, PasswordHash
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages

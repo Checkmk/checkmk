@@ -51,7 +51,7 @@ import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site

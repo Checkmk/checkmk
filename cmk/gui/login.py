@@ -12,7 +12,7 @@ from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
 

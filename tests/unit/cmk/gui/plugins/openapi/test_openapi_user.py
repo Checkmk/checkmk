@@ -19,7 +19,7 @@ from tests.testlib.rest_api_client import RestApiClient
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
-from cmk.utils.crypto import PasswordHash
+from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb

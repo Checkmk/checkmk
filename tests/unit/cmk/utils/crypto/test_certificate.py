@@ -12,13 +12,13 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
-from cmk.utils.crypto import Password
 from cmk.utils.crypto.certificate import (
     CertificateWithPrivateKey,
     InvalidExpiryError,
     PersistedCertificateWithPrivateKey,
     RsaPrivateKey,
 )
+from cmk.utils.crypto.password import Password
 
 FROZEN_NOW = datetime(2023, 1, 1, 8, 0, 0)
 

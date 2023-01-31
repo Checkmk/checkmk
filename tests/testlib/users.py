@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from tests.testlib.utils import no_search_index_update_background
 
 import cmk.utils.paths
-from cmk.utils.crypto import PasswordHash
+from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config

@@ -8,7 +8,7 @@ from typing import Any, AnyStr
 import pytest
 from cryptography.hazmat.primitives import hashes
 
-from cmk.utils.crypto import HashAlgorithm, Password
+from cmk.utils.crypto.password import HashAlgorithm, Password
 
 
 @pytest.mark.parametrize(

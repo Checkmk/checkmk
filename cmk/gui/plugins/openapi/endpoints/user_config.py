@@ -8,7 +8,7 @@ import time
 from collections.abc import Mapping
 from typing import Any, Literal, TypedDict
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb

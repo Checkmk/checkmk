@@ -15,7 +15,7 @@ import urllib3
 
 from livestatus import LocalConnection
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import local_checks_dir, local_inventory_dir
 from cmk.utils.site import omd_site

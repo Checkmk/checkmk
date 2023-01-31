@@ -75,6 +75,31 @@ def test_parse_arguments() -> None:
             ),
             {"China North 2"},
         ),
+        (
+            FeedParserDict(
+                {
+                    "title": "Azure Synapse Analytics Mitigating",
+                    "title_detail": {
+                        "type": "text/plain",
+                        "language": None,
+                        "base": "",
+                        "value": "Issue affecting Azure Synapse Analytics",
+                    },
+                    "summary": "The problem is affecting Azure Synapse Analytics",
+                    "summary_detail": {
+                        "type": "text/html",
+                        "language": None,
+                        "base": "",
+                        "value": "The problem is affecting Azure Synapse Analytics",
+                    },
+                    "tags": [
+                        {"label": None, "scheme": None, "term": "Azure Synapse Analytics"},
+                        {"label": None, "scheme": None, "term": "West Europe"},
+                    ],
+                }
+            ),
+            {"West Europe"},
+        ),
     ],
 )
 def test_get_affected_regions(entry: FeedParserDict, expected_result: set[str]) -> None:

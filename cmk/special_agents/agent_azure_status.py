@@ -51,6 +51,7 @@ def get_affected_regions(all_regions: Iterable[str], entry: FeedParserDict) -> s
     """
     affected_regions = set()
     title, summary = entry.title, entry.summary
+    tags = entry.get("tags")
 
     for region in all_regions:
         if region in title:
@@ -60,6 +61,10 @@ def get_affected_regions(all_regions: Iterable[str], entry: FeedParserDict) -> s
         if region in summary:
             affected_regions.add(region)
             summary = summary.replace(region, "")
+
+        if tags is not None:
+            if any(t for t in tags if t["term"] == region):
+                affected_regions.add(region)
 
     return affected_regions
 

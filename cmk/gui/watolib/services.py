@@ -9,7 +9,7 @@ import json
 import os
 import sys
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 from hashlib import sha256
 from typing import Any, NamedTuple, TypedDict
 
@@ -799,14 +799,15 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             raise NotImplementedError()
         print("Completed.")
 
-    def _perform_service_scan(self, api_request):
+    def _perform_service_scan(self, api_request: StartDiscoveryRequest) -> None:
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
         sys.stdout.write(
             try_discovery(
                 api_request.host.site_id(),
-                self._get_automation_flags(api_request),
                 api_request.host.name(),
+                prevent_fetching=False,
+                raise_errors=not api_request.options.ignore_errors,
             ).output
         )
 
@@ -816,25 +817,15 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         discovery(
             api_request.host.site_id(),
             "refresh",
-            ["@scan"],
             [api_request.host.name()],
+            scan=True,
+            raise_errors=False,  # why is api_request ignored here?
             non_blocking_http=True,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
         # message = _("Refreshed check configuration of host '%s' with %d services") % \
         #            (api_request.host.name(), count_added)
         # _changes.add_service_change(api_request.host, "refresh-autochecks", message)
-
-    def _get_automation_flags(self, api_request: StartDiscoveryRequest) -> Iterable[str]:
-        if api_request.options.action == DiscoveryAction.REFRESH:
-            flags = ["@scan"]
-        else:
-            flags = ["@noscan"]
-
-        if not api_request.options.ignore_errors:
-            flags.append("@raiseerrors")
-
-        return flags
 
     def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
@@ -869,8 +860,9 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             int(time.time()),
             try_discovery(
                 api_request.host.site_id(),
-                ["@noscan"],
                 api_request.host.name(),
+                prevent_fetching=True,
+                raise_errors=False,  # why is api_request ignored here?
             ),
         )
 

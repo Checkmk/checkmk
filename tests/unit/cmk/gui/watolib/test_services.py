@@ -163,7 +163,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
 
     mock_try_discovery.assert_has_calls(
         [
-            call("NO_SITE", ["@noscan"], sample_host_name),
+            call("NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False),
         ]
     )
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
@@ -557,7 +557,9 @@ def test_perform_discovery_single_update(
             ("mem_linux", None): ("Memory", {}, {}, ["TODAY"]),
         },
     )
-    mock_try_discovery.assert_called_with("NO_SITE", ["@noscan"], sample_host_name)
+    mock_try_discovery.assert_called_with(
+        "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
+    )
     assert [
         entry.check_source
         for entry in discovery_result.check_table
@@ -753,7 +755,9 @@ def test_perform_discovery_action_update_services(
             )
         },
     )
-    mock_try_discovery.assert_called_with("NO_SITE", ["@noscan"], sample_host_name)
+    mock_try_discovery.assert_called_with(
+        "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
+    )
     assert [entry.check_source for entry in discovery_result.check_table] == ["old"]
 
     store = AuditLogStore(AuditLogStore.make_path())
@@ -861,7 +865,9 @@ def test_perform_discovery_action_update_host_labels(
         },
     )
     mock_set_autochecks.assert_not_called()
-    mock_try_discovery.assert_called_with("NO_SITE", ["@noscan"], sample_host_name)
+    mock_try_discovery.assert_called_with(
+        "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
+    )
     assert "cmk/check_mk_server" not in discovery_result.host_labels
 
     store = AuditLogStore(AuditLogStore.make_path())

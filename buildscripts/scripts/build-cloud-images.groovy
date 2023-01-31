@@ -35,6 +35,7 @@ def main() {
     }
     shout("Building cloud images for version: ${cmk_version}")
 
+    def version_suffix = "${cmk_version}-build-${env.BUILD_NUMBER}"
     def cloud_targets = ["amazon-ebs", "azure-arm"]
     def env_secret_map = [
             "env"    : [
@@ -43,14 +44,14 @@ def main() {
                 // ~~~ QUEMU ~~~
                 "PKR_VAR_qemu_output_dir_name=cmk",
                 // ~~~ AWS ~~~
-                "PKR_VAR_aws_ami_name=cmk-ami-https-${cmk_version}",
+                "PKR_VAR_aws_ami_name=cmk-ami-https-${version_suffix}",
                 // ~~~ AZURE ~~~
                 "PKR_VAR_azure_resource_group=rg-packer-dev-weu",
                 "PKR_VAR_azure_build_resource_group_name=rg-packer-dev-weu",
                 "PKR_VAR_azure_virtual_network_resource_group_name=rg-spokes-network-weu",
                 "PKR_VAR_azure_virtual_network_name=vnet-spoke-packer-dev-weu",
                 "PKR_VAR_azure_virtual_network_subnet_name=snet-spoke-packer-dev-default-weu",
-                "PKR_VAR_azure_image_name=cmk-azure-${cmk_version}"
+                "PKR_VAR_azure_image_name=cmk-azure-${version_suffix}"
             ],
             "secrets": [
                 // ~~~ COMMON ~~~

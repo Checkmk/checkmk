@@ -39,8 +39,10 @@ public:
         const std::string &name) = 0;
     virtual std::unique_ptr<User> find_user(const std::string &name) = 0;
 
-    virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
-    virtual std::chrono::system_clock::time_point last_config_change() = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point
+    last_logfile_rotation() const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point
+    last_config_change() const = 0;
     [[nodiscard]] virtual size_t maxLinesPerLogFile() const = 0;
 
     [[nodiscard]] virtual Command find_command(
@@ -83,6 +85,60 @@ public:
     [[nodiscard]] virtual std::filesystem::path historyFilePath() const = 0;
     [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;
     [[nodiscard]] virtual std::filesystem::path rrdcachedSocketPath() const = 0;
+
+    [[nodiscard]] virtual int32_t pid() const = 0;
+    [[nodiscard]] virtual bool isEnableNotifications() const = 0;
+    [[nodiscard]] virtual bool isExecuteServiceChecks() const = 0;
+    [[nodiscard]] virtual bool isAcceptPassiveServiceChecks() const = 0;
+    [[nodiscard]] virtual bool isExecuteHostChecks() const = 0;
+    [[nodiscard]] virtual bool isAcceptPassiveHostChecks() const = 0;
+    [[nodiscard]] virtual bool isObsessOverServices() const = 0;
+    [[nodiscard]] virtual bool isObsessOverHosts() const = 0;
+    [[nodiscard]] virtual bool isCheckServiceFreshness() const = 0;
+    [[nodiscard]] virtual bool isCheckHostFreshness() const = 0;
+    [[nodiscard]] virtual bool isEnableFlapDetection() const = 0;
+    [[nodiscard]] virtual bool isProcessPerformanceData() const = 0;
+    [[nodiscard]] virtual bool isEnableEventHandlers() const = 0;
+    [[nodiscard]] virtual bool isCheckExternalCommands() const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point
+    programStartTime() const = 0;
+    [[nodiscard]] virtual std::chrono::system_clock::time_point
+    lastCommandCheckTime() const = 0;
+    [[nodiscard]] virtual int32_t intervalLength() const = 0;
+    [[nodiscard]] virtual int32_t numHosts() const = 0;
+    [[nodiscard]] virtual int32_t numServices() const = 0;
+    [[nodiscard]] virtual std::string programVersion() const = 0;
+
+    [[nodiscard]] virtual int32_t externalCommandBufferSlots() const = 0;
+    [[nodiscard]] virtual int32_t externalCommandBufferUsage() const = 0;
+    [[nodiscard]] virtual int32_t externalCommandBufferMax() const = 0;
+
+    [[nodiscard]] virtual int32_t livestatusActiveConnectionsNum() const = 0;
+    [[nodiscard]] virtual std::string livestatusVersion() const = 0;
+    [[nodiscard]] virtual int32_t livestatusQueuedConnectionsNum() const = 0;
+    [[nodiscard]] virtual int32_t livestatusThreadsNum() const = 0;
+    [[nodiscard]] virtual double livestatusUsage() const = 0;
+
+    [[nodiscard]] virtual double averageLatencyGeneric() const = 0;
+    [[nodiscard]] virtual double averageLatencyCmk() const = 0;
+    [[nodiscard]] virtual double averageLatencyFetcher() const = 0;
+    [[nodiscard]] virtual double averageLatencyRealTime() const = 0;
+
+    [[nodiscard]] virtual double helperUsageGeneric() const = 0;
+    [[nodiscard]] virtual double helperUsageCmk() const = 0;
+    [[nodiscard]] virtual double helperUsageFetcher() const = 0;
+    [[nodiscard]] virtual double helperUsageChecker() const = 0;
+    [[nodiscard]] virtual double helperUsageRealTime() const = 0;
+
+    [[nodiscard]] virtual bool hasEventHandlers() const = 0;
+
+    [[nodiscard]] virtual bool isTrialExpired() const = 0;
+
+    [[nodiscard]] virtual double averageRunnableJobsFetcher() const = 0;
+    [[nodiscard]] virtual double averageRunnableJobsChecker() const = 0;
+
+    [[nodiscard]] virtual std::chrono::system_clock::time_point
+    stateFileCreatedTime() const = 0;
 
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;

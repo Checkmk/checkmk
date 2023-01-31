@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -87,8 +88,9 @@ public:
         const std::string &name) override;
     std::unique_ptr<User> find_user(const std::string &name) override;
 
-    std::chrono::system_clock::time_point last_logfile_rotation() override;
-    std::chrono::system_clock::time_point last_config_change() override;
+    std::chrono::system_clock::time_point last_logfile_rotation()
+        const override;
+    std::chrono::system_clock::time_point last_config_change() const override;
     size_t maxLinesPerLogFile() const override;
 
     Command find_command(const std::string &name) const override;
@@ -128,6 +130,57 @@ public:
     std::filesystem::path historyFilePath() const override;
     std::filesystem::path logArchivePath() const override;
     std::filesystem::path rrdcachedSocketPath() const override;
+
+    int32_t pid() const override;
+    bool isEnableNotifications() const override;
+    bool isExecuteServiceChecks() const override;
+    bool isAcceptPassiveServiceChecks() const override;
+    bool isExecuteHostChecks() const override;
+    bool isAcceptPassiveHostChecks() const override;
+    bool isObsessOverServices() const override;
+    bool isObsessOverHosts() const override;
+    bool isCheckServiceFreshness() const override;
+    bool isCheckHostFreshness() const override;
+    bool isEnableFlapDetection() const override;
+    bool isProcessPerformanceData() const override;
+    bool isEnableEventHandlers() const override;
+    bool isCheckExternalCommands() const override;
+    std::chrono::system_clock::time_point programStartTime() const override;
+    std::chrono::system_clock::time_point lastCommandCheckTime() const override;
+    int32_t intervalLength() const override;
+    int32_t numHosts() const override;
+    int32_t numServices() const override;
+    std::string programVersion() const override;
+
+    int32_t externalCommandBufferSlots() const override;
+    int32_t externalCommandBufferUsage() const override;
+    int32_t externalCommandBufferMax() const override;
+
+    int32_t livestatusActiveConnectionsNum() const override;
+    std::string livestatusVersion() const override;
+    int32_t livestatusQueuedConnectionsNum() const override;
+    int32_t livestatusThreadsNum() const override;
+    double livestatusUsage() const override;
+
+    double averageLatencyGeneric() const override;
+    double averageLatencyCmk() const override;
+    double averageLatencyFetcher() const override;
+    double averageLatencyRealTime() const override;
+
+    double helperUsageGeneric() const override;
+    double helperUsageCmk() const override;
+    double helperUsageFetcher() const override;
+    double helperUsageChecker() const override;
+    double helperUsageRealTime() const override;
+
+    bool hasEventHandlers() const override;
+
+    bool isTrialExpired() const override;
+
+    double averageRunnableJobsFetcher() const override;
+    double averageRunnableJobsChecker() const override;
+
+    std::chrono::system_clock::time_point stateFileCreatedTime() const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;

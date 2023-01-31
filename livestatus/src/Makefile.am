@@ -124,7 +124,6 @@ liblivestatusneb_a_SOURCES = \
         TableServicesByGroup.cc \
         TableServicesByHostGroup.cc \
         TableStateHistory.cc \
-        TableStatus.cc \
         TimeperiodsCache.cc \
         module.cc \
         pnp4nagios.cc

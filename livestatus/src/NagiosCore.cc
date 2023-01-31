@@ -5,6 +5,7 @@
 
 #include "NagiosCore.h"
 
+#include <atomic>
 #include <cstdlib>
 #include <sstream>
 #include <utility>
@@ -17,10 +18,28 @@
 #include "NebHost.h"
 #include "NebService.h"
 #include "NebTimeperiod.h"
+#include "livestatus/Average.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/PnpUtils.h"
 #include "livestatus/StringUtils.h"
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern int g_num_hosts;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern int g_num_services;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern bool g_any_event_handler_enabled;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern double g_average_active_latency;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern Average g_avg_livestatus_usage;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern int g_livestatus_threads;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern int g_num_queued_connections;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+extern std::atomic_int32_t g_livestatus_active_connections;
 
 void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "socket path = '" << _socket << "'";
@@ -106,13 +125,14 @@ std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
     return std::make_unique<UnknownUser>();
 }
 
-std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation() {
+std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation()
+    const {
     // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
     // instead of this 'extern' hack...
     return std::chrono::system_clock::from_time_t(last_log_rotation);
 }
 
-std::chrono::system_clock::time_point NagiosCore::last_config_change() {
+std::chrono::system_clock::time_point NagiosCore::last_config_change() const {
     // NOTE: Nagios doesn't reload, it restarts for config changes.
     return std::chrono::system_clock::from_time_t(program_start);
 }
@@ -268,6 +288,106 @@ std::filesystem::path NagiosCore::logArchivePath() const {
 
 std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
+}
+
+int32_t NagiosCore::pid() const { return nagios_pid; }
+bool NagiosCore::isEnableNotifications() const {
+    return enable_notifications != 0;
+}
+bool NagiosCore::isExecuteServiceChecks() const {
+    return execute_service_checks != 0;
+}
+bool NagiosCore::isAcceptPassiveServiceChecks() const {
+    return accept_passive_service_checks != 0;
+}
+bool NagiosCore::isExecuteHostChecks() const {
+    return execute_host_checks != 0;
+}
+bool NagiosCore::isAcceptPassiveHostChecks() const {
+    return accept_passive_host_checks != 0;
+}
+bool NagiosCore::isObsessOverServices() const {
+    return obsess_over_services != 0;
+}
+bool NagiosCore::isObsessOverHosts() const { return obsess_over_hosts != 0; }
+bool NagiosCore::isCheckServiceFreshness() const {
+    return check_service_freshness != 0;
+}
+bool NagiosCore::isCheckHostFreshness() const {
+    return check_host_freshness != 0;
+}
+bool NagiosCore::isEnableFlapDetection() const {
+    return enable_flap_detection != 0;
+}
+bool NagiosCore::isProcessPerformanceData() const {
+    return process_performance_data != 0;
+}
+bool NagiosCore::isEnableEventHandlers() const {
+    return enable_event_handlers != 0;
+}
+bool NagiosCore::isCheckExternalCommands() const {
+    return check_external_commands != 0;
+}
+std::chrono::system_clock::time_point NagiosCore::programStartTime() const {
+    return std::chrono::system_clock::from_time_t(program_start);
+}
+std::chrono::system_clock::time_point NagiosCore::lastCommandCheckTime() const {
+    return std::chrono::system_clock::from_time_t(
+        nagios_compat_last_command_check());
+}
+int32_t NagiosCore::intervalLength() const { return interval_length; }
+int32_t NagiosCore::numHosts() const { return g_num_hosts; }
+int32_t NagiosCore::numServices() const { return g_num_services; }
+std::string NagiosCore::programVersion() const { return get_program_version(); }
+
+int32_t NagiosCore::externalCommandBufferSlots() const {
+    return nagios_compat_external_command_buffer_slots();
+}
+int32_t NagiosCore::externalCommandBufferUsage() const {
+    return nagios_compat_external_command_buffer_items();
+}
+int32_t NagiosCore::externalCommandBufferMax() const {
+    return nagios_compat_external_command_buffer_high();
+}
+
+int32_t NagiosCore::livestatusActiveConnectionsNum() const {
+    return g_livestatus_active_connections.load();
+}
+std::string NagiosCore::livestatusVersion() const { return VERSION; }
+int32_t NagiosCore::livestatusQueuedConnectionsNum() const {
+    return g_num_queued_connections;
+}
+int32_t NagiosCore::livestatusThreadsNum() const {
+    return g_livestatus_threads;
+}
+double NagiosCore::livestatusUsage() const {
+    return g_avg_livestatus_usage.get();
+}
+
+double NagiosCore::averageLatencyGeneric() const {
+    return g_average_active_latency;
+}
+double NagiosCore::averageLatencyCmk() const { return 0.0; }
+double NagiosCore::averageLatencyFetcher() const { return 0.0; }
+double NagiosCore::averageLatencyRealTime() const { return 0.0; }
+
+double NagiosCore::helperUsageGeneric() const { return 0.0; }
+double NagiosCore::helperUsageCmk() const { return 0.0; }
+double NagiosCore::helperUsageFetcher() const { return 0.0; }
+double NagiosCore::helperUsageChecker() const { return 0.0; }
+double NagiosCore::helperUsageRealTime() const { return 0.0; }
+
+bool NagiosCore::hasEventHandlers() const {
+    return g_any_event_handler_enabled;
+}
+
+bool NagiosCore::isTrialExpired() const { return false; }
+
+double NagiosCore::averageRunnableJobsFetcher() const { return 0.0; }
+double NagiosCore::averageRunnableJobsChecker() const { return 0.0; }
+
+std::chrono::system_clock::time_point NagiosCore::stateFileCreatedTime() const {
+    return {};
 }
 
 Encoding NagiosCore::dataEncoding() { return _data_encoding; }

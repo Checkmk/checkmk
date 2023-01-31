@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <initializer_list>
@@ -33,7 +34,6 @@
 #include "TableServicesByGroup.h"
 #include "TableServicesByHostGroup.h"
 #include "TableStateHistory.h"
-#include "TableStatus.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/LogCache.h"
@@ -46,6 +46,7 @@
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableLabels.h"
+#include "livestatus/TableStatus.h"
 #include "livestatus/TableTimeperiods.h"
 #include "livestatus/Triggers.h"
 
@@ -87,10 +88,12 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
 
-    std::chrono::system_clock::time_point last_logfile_rotation() override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_logfile_rotation()
+        const override {
         return {};
     }
-    std::chrono::system_clock::time_point last_config_change() override {
+    [[nodiscard]] std::chrono::system_clock::time_point last_config_change()
+        const override {
         return {};
     }
     [[nodiscard]] size_t maxLinesPerLogFile() const override { return {}; }
@@ -167,6 +170,81 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
     [[nodiscard]] std::filesystem::path rrdcachedSocketPath() const override {
+        return {};
+    }
+    [[nodiscard]] int32_t pid() const override { return {}; }
+    [[nodiscard]] bool isEnableNotifications() const override { return {}; }
+    [[nodiscard]] bool isExecuteServiceChecks() const override { return {}; }
+    [[nodiscard]] bool isAcceptPassiveServiceChecks() const override {
+        return {};
+    }
+    [[nodiscard]] bool isExecuteHostChecks() const override { return {}; }
+    [[nodiscard]] bool isAcceptPassiveHostChecks() const override { return {}; }
+    [[nodiscard]] bool isObsessOverServices() const override { return {}; }
+    [[nodiscard]] bool isObsessOverHosts() const override { return {}; }
+    [[nodiscard]] bool isCheckServiceFreshness() const override { return {}; }
+    [[nodiscard]] bool isCheckHostFreshness() const override { return {}; }
+    [[nodiscard]] bool isEnableFlapDetection() const override { return {}; }
+    [[nodiscard]] bool isProcessPerformanceData() const override { return {}; }
+    [[nodiscard]] bool isEnableEventHandlers() const override { return {}; }
+    [[nodiscard]] bool isCheckExternalCommands() const override { return {}; }
+    [[nodiscard]] std::chrono::system_clock::time_point programStartTime()
+        const override {
+        return {};
+    }
+    [[nodiscard]] std::chrono::system_clock::time_point lastCommandCheckTime()
+        const override {
+        return {};
+    }
+    [[nodiscard]] int32_t intervalLength() const override { return {}; }
+    [[nodiscard]] int32_t numHosts() const override { return {}; }
+    [[nodiscard]] int32_t numServices() const override { return {}; }
+    [[nodiscard]] std::string programVersion() const override { return {}; }
+
+    [[nodiscard]] int32_t externalCommandBufferSlots() const override {
+        return {};
+    }
+    [[nodiscard]] int32_t externalCommandBufferUsage() const override {
+        return {};
+    }
+    [[nodiscard]] int32_t externalCommandBufferMax() const override {
+        return {};
+    }
+
+    [[nodiscard]] int32_t livestatusActiveConnectionsNum() const override {
+        return {};
+    }
+    [[nodiscard]] std::string livestatusVersion() const override { return {}; }
+    [[nodiscard]] int32_t livestatusQueuedConnectionsNum() const override {
+        return {};
+    }
+    [[nodiscard]] int32_t livestatusThreadsNum() const override { return {}; }
+    [[nodiscard]] double livestatusUsage() const override { return {}; }
+
+    [[nodiscard]] double averageLatencyGeneric() const override { return {}; }
+    [[nodiscard]] double averageLatencyCmk() const override { return {}; }
+    [[nodiscard]] double averageLatencyFetcher() const override { return {}; }
+    [[nodiscard]] double averageLatencyRealTime() const override { return {}; }
+
+    [[nodiscard]] double helperUsageGeneric() const override { return {}; }
+    [[nodiscard]] double helperUsageCmk() const override { return {}; }
+    [[nodiscard]] double helperUsageFetcher() const override { return {}; }
+    [[nodiscard]] double helperUsageChecker() const override { return {}; }
+    [[nodiscard]] double helperUsageRealTime() const override { return {}; }
+
+    [[nodiscard]] bool hasEventHandlers() const override { return {}; }
+
+    [[nodiscard]] bool isTrialExpired() const override { return {}; }
+
+    [[nodiscard]] double averageRunnableJobsFetcher() const override {
+        return {};
+    }
+    [[nodiscard]] double averageRunnableJobsChecker() const override {
+        return {};
+    }
+
+    [[nodiscard]] std::chrono::system_clock::time_point stateFileCreatedTime()
+        const override {
         return {};
     }
 

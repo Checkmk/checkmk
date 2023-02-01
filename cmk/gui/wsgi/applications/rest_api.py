@@ -11,18 +11,17 @@ import http.client
 import json
 import logging
 import mimetypes
-import os
-import re
 import traceback
 import typing
 import urllib.parse
 from collections.abc import Callable, Mapping
 from datetime import datetime
+from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
-from flask import g
-from werkzeug.exceptions import HTTPException, NotFound
+from flask import g, send_from_directory
+from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule, Submount
 
 from cmk.utils import crash_reporting, paths
@@ -280,6 +279,23 @@ def get_url(environ: WSGIEnvironment) -> str:
     return f"//{host_name}{urllib.parse.quote(environ.get('PATH_INFO', ''))}"
 
 
+def get_filename_from_url(url: str) -> str:
+    """return the filename of a url
+
+    >>> get_filename_from_url("//foo/")
+    ''
+    >>> get_filename_from_url("//foo/bar/")
+    ''
+    >>> get_filename_from_url("//foo/bar?foo=bar")
+    'bar'
+    >>> get_filename_from_url("//foo/../foo/bar?foo=bar")
+    'bar'
+    """
+    if url.endswith("/"):
+        return ""
+    return Path(urllib.parse.urlparse(url).path).name
+
+
 @functools.lru_cache(maxsize=512)
 def serve_spec(
     site: str,
@@ -339,45 +355,12 @@ class ServeSwaggerUI(AbstractWSGIApp):
         self.prefix = prefix
         self.data: dict[str, Any] | None = None
 
-    def _relative_path(self, environ: WSGIEnvironment) -> str:
-        path_info = environ["PATH_INFO"]
-        relative_path = re.sub(self.prefix, "", path_info)
-        if relative_path == "/":
-            relative_path = "/index.html"
-        return relative_path
-
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        current_url = get_url(environ)
-        yaml_filename = "openapi-swagger-ui.yaml"
-        if current_url.endswith("/ui/"):
-            current_url = current_url[:-4]
+        filename = get_filename_from_url(get_url(environ)) or "index.html"
 
-        yaml_file = f"{current_url}/{yaml_filename}"
-        file_path = f"{paths.web_dir}/htdocs/openapi/swagger-ui-3/{self._relative_path(environ)}"
-
-        if not os.path.exists(file_path):
-            return NotFound()(environ, start_response)
-
-        with open(file_path, "rb") as fh:
-            content: bytes = fh.read()
-
-        if file_path.endswith("/index.html"):
-            page = []
-            for line in content.splitlines():
-                if b"<title>" in line:
-                    page.append(b"<title>REST-API Interactive GUI - Checkmk</title>")
-                elif b"favicon" in line:
-                    continue
-                elif b"petstore.swagger.io" in line:
-                    page.append(f'        url: "{yaml_file}",'.encode())
-                    page.append(b"        validatorUrl: null,")
-                    page.append(b"        displayOperationId: false,")
-                else:
-                    page.append(line)
-
-            content = b"\n".join(page)
-
-        return serve_file(file_path, content)(environ, start_response)
+        return send_from_directory(f"{paths.web_dir}/htdocs/openapi/swagger-ui-3/", filename)(
+            environ, start_response
+        )
 
 
 class CheckmkRESTAPI(AbstractWSGIApp):

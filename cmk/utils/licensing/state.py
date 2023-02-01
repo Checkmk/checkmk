@@ -15,11 +15,11 @@ from cmk.utils.i18n import _
 from cmk.utils.version import is_raw_edition
 
 
-class TrialState(enum.Enum):
-    """All possible states of the free version"""
+class LicenseState(enum.Enum):
+    """All possible license states of the Checkmk site"""
 
-    VALID = enum.auto()
-    EXPIRED = enum.auto()
+    TRIAL = enum.auto()
+    FREE = enum.auto()
     NO_LIVESTATUS = enum.auto()  # special case, no cmc impossible to determine status
 
 
@@ -45,16 +45,16 @@ def license_status_message() -> str:
     )
 
 
-def _get_expired_status() -> TrialState:
+def _get_expired_status() -> LicenseState:
     try:
         query = "GET status\nColumns: is_trial_expired\n"
         response = livestatus.LocalConnection().query(query)
-        return TrialState.EXPIRED if response[0][0] == 1 else TrialState.VALID
+        return LicenseState.FREE if response[0][0] == 1 else LicenseState.TRIAL
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         # NOTE: If livestatus is absent we assume that trial is expired.
         # Livestatus may be absent only when the cmc missing and this case for free version means
         # just expiration(impossibility to check)
-        return TrialState.NO_LIVESTATUS
+        return LicenseState.NO_LIVESTATUS
 
 
 def _get_timestamp_trial() -> int:
@@ -76,4 +76,4 @@ def _get_age_trial() -> int:
 def is_expired_trial() -> bool:
     if is_raw_edition():
         return False
-    return _get_expired_status() is TrialState.EXPIRED
+    return _get_expired_status() is LicenseState.FREE

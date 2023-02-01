@@ -109,12 +109,8 @@ liblivestatusneb_a_SOURCES = \
         TableContactGroups.cc \
         TableContacts.cc \
         TableDowntimes.cc \
-        TableEventConsole.cc \
         TableEventConsoleEvents.cc \
         TableEventConsoleHistory.cc \
-        TableEventConsoleReplication.cc \
-        TableEventConsoleRules.cc \
-        TableEventConsoleStatus.cc \
         TableHostGroups.cc \
         TableHosts.cc \
         TableHostsByGroup.cc \

@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "TableEventConsoleStatus.h"
+#include "livestatus/TableEventConsoleStatus.h"
 
 #include <memory>
 #include <vector>

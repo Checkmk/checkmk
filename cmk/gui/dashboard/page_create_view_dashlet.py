@@ -7,8 +7,6 @@
 
 from typing import Callable
 
-from cmk.utils.type_defs import UserId
-
 import cmk.gui.visuals as visuals
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -80,25 +78,17 @@ def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDas
         {
             "type": "view",
             "datasource": "hosts",
-            "description": "",
             "position": dashlet_registry["linked_view"].initial_position(),
             "size": dashlet_registry["linked_view"].initial_size(),
-            "hidden": False,
-            "public": True,
             "show_title": True,
             "layout": "table",
             "browser_reload": 30,
             "num_columns": 1,
             "column_headers": "pergroup",
             "name": "",
-            "owner": UserId.builtin(),
-            "hidebutton": False,
             "group_painters": [],
             "painters": [],
             "sorters": [],
-            "topic": "",
-            "link_from": {},
-            "icon": None,
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,

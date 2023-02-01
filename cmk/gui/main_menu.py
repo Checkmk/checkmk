@@ -13,10 +13,12 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.version import __version__, edition
 
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 
 
 def any_show_more_items(topics: list[TopicMenuTopic]) -> bool:
@@ -210,7 +212,13 @@ mega_menu_registry.register(
 
 
 def license_status() -> HTML | str:
-    status_message = license_status_message()
+    status_message: HTML | str = license_status_message()
     if not status_message:
         return ""
+    if user.may("wato.licensing"):
+        status_message = HTMLWriter.render_a(
+            status_message,
+            makeuri_contextless(request, [("mode", "licensing")], filename="wato.py"),
+            target="main",
+        )
     return HTMLWriter.render_br() + status_message

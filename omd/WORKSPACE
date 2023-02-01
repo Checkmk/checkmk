@@ -71,3 +71,9 @@ freetds(
     version_str="0.95.95",
     sha256="be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
 )
+
+load("//packages/Python:Python_http.bzl", "python")
+python(
+    version_str="3.11.2",  # version also listed in Python.make
+    sha256="29e4b8f5f1658542a8c13e2dd277358c9c48f2b2f7318652ef1675e402b9d2af",
+)

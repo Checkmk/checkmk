@@ -1,0 +1,66 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+package(default_visibility=["//visibility:public"])
+
+filegroup(
+    name="all_srcs",
+    srcs=glob(
+        include=["**/*"],
+        exclude=["*.bazel"],
+    ),
+)
+
+#
+# This should be put somewhere toplevel, also avoiding the deprecated
+# --define syntax, see
+# https://bazel.build/docs/configurable-attributes
+#
+config_setting(
+    name="no_own_openssl",
+    values={"define": "no-own-openssl=true"},
+)
+
+configure_make(
+    name="python",
+    lib_source=":all_srcs",
+
+    configure_command="configure",
+    configure_in_place=True,
+
+    configure_options=select({
+            ":no_own_openssl": [],
+            "//conditions:default": [
+                "--with-openssl=$EXT_BUILD_DEPS/openssl",
+                "--with-openssl-rpath=auto",
+            ],
+    }) + [
+        "CFLAGS='-Dredacted=\"redacted\"'",
+        "--enable-optimizations",
+        "--enable-shared",
+        "DESTDIR=py_install",
+    ],
+
+    deps=select(
+        {
+            ":no_own_openssl": [],
+            "//conditions:default": ["@openssl"],
+        }
+    ),
+
+    args=["-j6"],
+
+    # rules_foreign_cc defaults the install_prefix to "python". This conflicts with the "python" executable that is generated.
+    install_prefix="py_install",
+
+    out_binaries=[
+        "python3.11",
+        "pip3",
+        "pip3.11",
+        "2to3-3.11",
+        "idle3.11",
+        "pydoc3.11",
+        "python3.11-config",
+    ],
+
+    out_data_dirs=["lib", "share"],
+)

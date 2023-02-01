@@ -20,7 +20,6 @@ class LicenseState(enum.Enum):
 
     TRIAL = enum.auto()
     FREE = enum.auto()
-    NO_LIVESTATUS = enum.auto()  # special case, no cmc impossible to determine status
 
 
 def license_status_message() -> str:
@@ -51,10 +50,10 @@ def _get_expired_status() -> LicenseState:
         response = livestatus.LocalConnection().query(query)
         return LicenseState.FREE if response[0][0] == 1 else LicenseState.TRIAL
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        # NOTE: If livestatus is absent we assume that trial is expired.
-        # Livestatus may be absent only when the cmc missing and this case for free version means
-        # just expiration(impossibility to check)
-        return LicenseState.NO_LIVESTATUS
+        # NOTE: If livestatus is absent we assume that trial is expired. Livestatus may be absent
+        # only when the cmc missing and this case for free version means just
+        # expiration(impossibility to check)
+        return LicenseState.FREE
 
 
 def _get_timestamp_trial() -> int:
@@ -63,9 +62,9 @@ def _get_timestamp_trial() -> int:
         response = livestatus.LocalConnection().query(query)
         return int(response[0][0])
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        # NOTE: If livestatus is absent we assume that trial is expired.
-        # Livestatus may be absent only when the cmc missing and this case for free version means
-        # just expiration(impossibility to check)
+        # NOTE: If livestatus is absent we assume that trial is expired. Livestatus may be absent
+        # only when the cmc missing and this case for free version means just
+        # expiration(impossibility to check)
         return 0
 
 

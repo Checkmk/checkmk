@@ -16,6 +16,7 @@ from cmk.special_agents.agent_aws import (
     EC2Limits,
     EC2SecurityGroups,
     EC2Summary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -123,7 +124,7 @@ def get_ec2_sections() -> EC2Sections:
         skip_entities: Mapping[str, object] | None = None,
     ) -> tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)

@@ -13,6 +13,7 @@ import pytest
 from cmk.special_agents import agent_aws
 from cmk.special_agents.agent_aws import (
     AWSConfig,
+    NamingConvention,
     ResultDistributor,
     S3,
     S3Limits,
@@ -61,7 +62,7 @@ def get_s3_sections(monkeypatch):
         )
 
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("s3_names", names)
         config.add_service_tags("s3_tags", tags)
 

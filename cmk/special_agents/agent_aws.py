@@ -18,10 +18,10 @@ from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import StrEnum
+from enum import Enum, StrEnum
 from pathlib import Path
 from time import sleep
-from typing import Any, Literal, NamedTuple, Type, TypedDict, TypeVar
+from typing import Any, assert_never, Literal, NamedTuple, Type, TypedDict, TypeVar
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -107,6 +107,17 @@ T = TypeVar("T")
 class Quota(BaseModel):
     QuotaName: str
     Value: float
+
+
+class NamingConvention(Enum):
+    ip_region_instance = "ip_region_instance"
+    private_dns_name = "private_dns_name"
+
+
+class Instance(BaseModel):
+    private_ip_address: str | None = Field(None, alias="PrivateIpAddress")
+    private_dns_name: str | None = Field(None, alias="PrivateDnsName")
+    instance_id: str = Field(..., alias="InstanceId")
 
 
 # TODO
@@ -235,12 +246,19 @@ class Quota(BaseModel):
 
 
 class AWSConfig:
-    def __init__(self, hostname: str, sys_argv: Sequence[str], overall_tags: OverallTags) -> None:
+    def __init__(
+        self,
+        hostname: str,
+        sys_argv: Sequence[str],
+        overall_tags: OverallTags,
+        piggyback_naming_convention: NamingConvention,
+    ) -> None:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config: dict = {}
         self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
         self._current_config_hash = self._compute_config_hash(sys_argv)
+        self.piggyback_naming_convention = piggyback_naming_convention
 
     def add_service_tags(self, tags_key: str, tags: OverallTags) -> None:
         """Convert commandline input
@@ -334,7 +352,9 @@ def _chunks(list_: Sequence[T], length: int = 100) -> Sequence[Sequence[T]]:
     return [list_[i : i + length] for i in range(0, len(list_), length)]
 
 
-def _get_ec2_piggyback_hostname(inst: Mapping[str, object], region: str) -> str | None:
+def _get_ec2_piggyback_hostname(
+    piggyback_naming_convention: NamingConvention, inst: Mapping[str, object], region: str
+) -> str | None:
     # PrivateIpAddress and InstanceId is available although the instance is stopped
     # When we terminate an instance, the instance gets the state "terminated":
     # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html
@@ -342,10 +362,18 @@ def _get_ec2_piggyback_hostname(inst: Mapping[str, object], region: str) -> str 
     # instance is no longer visible in the console.
     # In this case we do not deliever any data for this piggybacked host such that
     # the services go stable and Check_MK service reports "CRIT - Got not information".
-    try:
-        return f"{inst['PrivateIpAddress']}-{region}-{inst['InstanceId']}"
-    except KeyError:
-        return None
+    parsed_instance = Instance.parse_obj(inst)
+    match piggyback_naming_convention:
+        case NamingConvention.private_dns_name:
+            return parsed_instance.private_dns_name
+        case NamingConvention.ip_region_instance:
+            if parsed_instance.private_ip_address and parsed_instance.instance_id:
+                return (
+                    f"{parsed_instance.private_ip_address}-{region}-{parsed_instance.instance_id}"
+                )
+            return None
+        case _:
+            assert_never(piggyback_naming_convention)
 
 
 def _hostname_from_name_and_region(name: str, region: str) -> str:
@@ -1446,7 +1474,9 @@ class EC2Summary(AWSSection):
     def _format_instances(self, instances):
         formatted_instances = {}
         for inst in instances:
-            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
+            inst_id = _get_ec2_piggyback_hostname(
+                self._config.piggyback_naming_convention, inst, self._region
+            )
             if inst_id:
                 formatted_instances[inst_id] = inst
         return formatted_instances
@@ -6993,6 +7023,16 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help="Assign CloudFront services to the AWS host or to the origin domain host",
     )
     parser.add_argument("--hostname", required=True)
+    parser.add_argument(
+        "--piggyback-naming-convention",
+        type=NamingConvention,
+        required=True,
+        help="For each running EC2 instance a piggyback host is created. This option changes the "
+        "naming of these hosts. Note, that not every host name is pingable. Moreover, "
+        "changes in the piggyback name will cause the piggyback host to be reset. "
+        "If you choose `ip_region_instance`, then the name includes the private IP "
+        "address, the region and the instance ID: {Private IPv4 address}-{region}-{Instance ID}. ",
+    )
 
     for service in AWSServices:
         if service.filter_by_names:
@@ -7161,7 +7201,12 @@ def _get_proxy(args: argparse.Namespace) -> botocore.config.Config | None:
 
 
 def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
-    aws_config = AWSConfig(args.hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
+    aws_config = AWSConfig(
+        args.hostname,
+        sys_argv,
+        (args.overall_tag_key, args.overall_tag_values),
+        args.piggyback_naming_convention,
+    )
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),

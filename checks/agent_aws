@@ -137,6 +137,7 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
         "--hostname",
         hostname,
     ]
+    args.extend(("--piggyback-naming-convention", params["piggyback_naming_convention"]))
     return args
 
 

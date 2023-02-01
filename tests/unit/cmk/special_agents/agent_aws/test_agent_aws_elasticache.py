@@ -20,6 +20,7 @@ from cmk.special_agents.agent_aws import (
     ElastiCache,
     ElastiCacheLimits,
     ElastiCacheSummary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -363,7 +364,7 @@ def get_elasticache_sections() -> GetSectionsCallable:
         names: Sequence[str] | None, tags: OverallTags
     ) -> tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("elasticache_names", names)
         config.add_service_tags("elasticache_tags", tags)
         fake_elasticache_client1 = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
@@ -428,7 +429,7 @@ def test_agent_aws_elasticache_limits(
 
 def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
-    config = AWSConfig("hostname", [], ([], []))
+    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
     elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)
 

@@ -19,6 +19,7 @@ from cmk.special_agents.agent_aws import (
     LambdaProvisionedConcurrency,
     LambdaRegionLimits,
     LambdaSummary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -80,7 +81,7 @@ class FakeLambdaClient:
 
 
 def create_config(names: Sequence[str], tags: OverallTags) -> AWSConfig:
-    config = AWSConfig("hostname", [], ([], []))
+    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     config.add_single_service_config("lambda_names", names)
     config.add_service_tags("lambda_tags", tags)
     return config

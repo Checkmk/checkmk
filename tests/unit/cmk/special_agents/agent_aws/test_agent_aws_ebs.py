@@ -15,6 +15,7 @@ from cmk.special_agents.agent_aws import (
     EBSLimits,
     EBSSummary,
     EC2Summary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -73,7 +74,7 @@ def get_ebs_sections() -> EBSSections:
         names: object | None, tags: OverallTags
     ) -> tuple[EC2Summary, EBSLimits, EBSSummary, EBS]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("ebs_names", names)
         config.add_service_tags("ebs_tags", tags)
         config.add_single_service_config("ec2_names", None)

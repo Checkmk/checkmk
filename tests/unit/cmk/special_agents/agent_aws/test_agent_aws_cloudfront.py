@@ -16,6 +16,7 @@ from cmk.special_agents.agent_aws import (
     AWSConfig,
     CloudFront,
     CloudFrontSummary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -226,7 +227,7 @@ def get_cloudfront_sections() -> Callable[
         names: object | None, tags: OverallTags, assign_to_domain_host: bool
     ) -> tuple[CloudFrontSummary, CloudFront]:
         region = "us-east-1"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
 

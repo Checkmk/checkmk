@@ -16,6 +16,7 @@ from cmk.special_agents.agent_aws import (
     ELBLabelsGeneric,
     ELBLimits,
     ELBSummaryGeneric,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -80,7 +81,7 @@ def get_elb_sections() -> ELBSections:
         names: object | None, tags: OverallTags
     ) -> tuple[ELBLimits, ELBSummaryGeneric, ELBLabelsGeneric, ELBHealth, ELB]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("elb_names", names)
         config.add_service_tags("elb_tags", tags)
 

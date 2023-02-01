@@ -14,6 +14,7 @@ from cmk.special_agents.agent_aws import (
     Glacier,
     GlacierLimits,
     GlacierSummary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -52,7 +53,7 @@ def get_glacier_sections() -> GlacierSections:
         names: object | None, tags: OverallTags
     ) -> tuple[GlacierLimits, GlacierSummary, Glacier]:
         region = "eu-central-1"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("glacier_names", names)
         config.add_service_tags("glacier_tags", tags)
 

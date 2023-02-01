@@ -53,6 +53,8 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
         "SECRET_ACCESS_KEY",
         "--hostname",
         "HOSTNAME",
+        "--piggyback-naming-convention",
+        "ip_region_instance",
     ],
     "agent_azure": [
         "--subscription",

@@ -18,6 +18,7 @@ from cmk.special_agents.agent_aws import (
     ECS,
     ECSLimits,
     ECSSummary,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
     StatusEnum,
@@ -176,7 +177,7 @@ def get_ecs_sections() -> GetSectionsCallable:
         names: Sequence[str] | None, tags: OverallTags
     ) -> tuple[ECSLimits, ECSSummary, ECS]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("ecs_names", names)
         config.add_service_tags("ecs_tags", tags)
         fake_ecs_client1 = FakeECSClient(CLUSTERS_CLIENT_RESPONSE1)
@@ -310,7 +311,7 @@ def test_agent_aws_ecs_limits_without_quota_client(
     get_ecs_sections: GetSectionsCallable,
 ) -> None:
     region = "region"
-    config = AWSConfig("hostname", [], ([], []))
+    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)
 
     ecs_limits = ECSLimits(fake_ecs_client, region, config)

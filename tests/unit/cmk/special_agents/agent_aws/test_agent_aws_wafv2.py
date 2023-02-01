@@ -11,6 +11,7 @@ import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
+    NamingConvention,
     ResultDistributor,
     WAFV2Limits,
     WAFV2Summary,
@@ -58,7 +59,7 @@ def create_sections(names, tags, is_regional):
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
-    config = AWSConfig("hostname", [], ([], []))
+    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
 
@@ -135,7 +136,7 @@ wafv2_params = [
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
 
-    config = AWSConfig("hostname", [], ([], []))
+    config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
     wafv2_limits_regional = WAFV2Limits(None, region, config, "REGIONAL")

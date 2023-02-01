@@ -17,6 +17,7 @@ from cmk.special_agents.agent_aws import (
     ELBv2Limits,
     ELBv2Network,
     ELBv2TargetGroups,
+    NamingConvention,
     ResultDistributor,
 )
 
@@ -95,7 +96,7 @@ class FakeELBv2Client:
 def get_elbv2_sections():
     def _create_elbv2_sections(names, tags):
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("elbv2_names", names)
         config.add_service_tags("elbv2_tags", tags)
 

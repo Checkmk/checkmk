@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.special_agents.agent_aws import AWSConfig
+from cmk.special_agents.agent_aws import AWSConfig, NamingConvention
 
 
 @pytest.mark.parametrize(
@@ -27,8 +27,8 @@ from cmk.special_agents.agent_aws import AWSConfig
 def test_agent_aws_config_hash_names(
     sys_argv_1: Sequence[str], sys_argv_2: Sequence[str], expected_result: bool
 ) -> None:
-    aws_config_1 = AWSConfig("heute1", sys_argv_1, ([], []))
-    aws_config_2 = AWSConfig("heute1", sys_argv_2, ([], []))
+    aws_config_1 = AWSConfig("heute1", sys_argv_1, ([], []), NamingConvention.ip_region_instance)
+    aws_config_2 = AWSConfig("heute1", sys_argv_2, ([], []), NamingConvention.ip_region_instance)
     assert (
         bool(
             aws_config_1._compute_config_hash(sys_argv_1)
@@ -59,5 +59,5 @@ def test_agent_aws_config_hash_processes(
     sys_argv: Sequence[str], hashed_val: str, expected_result: bool
 ) -> None:
     """Test whether the hash is the same across different python processes"""
-    aws_config_1 = AWSConfig("heute1", sys_argv, ([], []))
+    aws_config_1 = AWSConfig("heute1", sys_argv, ([], []), NamingConvention.ip_region_instance)
     assert bool(aws_config_1._compute_config_hash(sys_argv) == hashed_val) is expected_result

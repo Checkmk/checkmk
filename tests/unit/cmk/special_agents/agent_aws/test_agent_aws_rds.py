@@ -11,6 +11,7 @@ import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
+    NamingConvention,
     OverallTags,
     RDS,
     RDSLimits,
@@ -83,7 +84,7 @@ def get_rds_sections() -> RDSSections:
         names: object | None, tags: OverallTags
     ) -> tuple[RDSLimits, RDSSummary, RDS]:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("rds_names", names)
         config.add_service_tags("rds_tags", tags)
 

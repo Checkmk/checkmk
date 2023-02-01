@@ -14,6 +14,7 @@ from cmk.special_agents.agent_aws import (
     DynamoDBLimits,
     DynamoDBSummary,
     DynamoDBTable,
+    NamingConvention,
     OverallTags,
     ResultDistributor,
 )
@@ -90,7 +91,7 @@ def get_dynamodb_sections() -> DynamobSections:
     ) -> dict[str, DynamoDBLimits | DynamoDBSummary | DynamoDBTable]:
 
         region = "region"
-        config = AWSConfig("hostname", [], ([], []))
+        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("dynamodb_names", names)
         config.add_service_tags("dynamodb_tags", tags)
 

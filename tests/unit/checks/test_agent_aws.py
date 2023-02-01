@@ -40,6 +40,7 @@ from tests.testlib import SpecialAgent
                     },
                     "cloudfront": None,
                 },
+                "piggyback_naming_convention": "checkmk_mix",
             },
             [
                 "--access-key-id",
@@ -64,6 +65,8 @@ from tests.testlib import SpecialAgent
                 "--ebs-limits",
                 "--hostname",
                 "testhost",
+                "--piggyback-naming-convention",
+                "checkmk_mix",
             ],
             id="explicit_passwords",
         ),
@@ -80,6 +83,7 @@ from tests.testlib import SpecialAgent
                 "global_services": {},
                 "regions": [],
                 "services": {},
+                "piggyback_naming_convention": "checkmk_mix",
             },
             [
                 "--access-key-id",
@@ -94,6 +98,8 @@ from tests.testlib import SpecialAgent
                 ("store", "banana123", "%s"),
                 "--hostname",
                 "testhost",
+                "--piggyback-naming-convention",
+                "checkmk_mix",
             ],
             id="passwords_from_store",
         ),

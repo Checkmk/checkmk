@@ -8,8 +8,9 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
+from cmk.utils.licensing.state import license_status_message
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.version import __version__, edition, license_status_message
+from cmk.utils.version import __version__, edition
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l

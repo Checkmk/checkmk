@@ -49,6 +49,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing import save_extensions
 from cmk.utils.licensing.export import LicenseUsageExtensions
+from cmk.utils.licensing.state import is_expired_trial
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -1568,7 +1569,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             log_audit("activate-changes", "Started activation of site %s" % self._site_id)
 
-            if cmk_version.is_expired_trial() and self._site_id != omd_site():
+            if is_expired_trial() and self._site_id != omd_site():
                 raise MKGeneralException(get_trial_expired_message())
 
             if self.is_sync_needed(self._site_id):

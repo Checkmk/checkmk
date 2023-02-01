@@ -17,9 +17,9 @@ from typing import Any, cast, NamedTuple, overload
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.state import is_expired_trial
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -140,7 +140,7 @@ class ModeEditSite(WatoMode):
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
 
-        if cmk_version.is_expired_trial() and (self._new or self._site_id != omd_site()):
+        if is_expired_trial() and (self._new or self._site_id != omd_site()):
             raise MKUserError(None, get_trial_expired_message())
 
         configured_sites = self._site_mgmt.load_sites()
@@ -738,7 +738,7 @@ class ModeDistributedMonitoring(WatoMode):
     def page(self) -> None:
         sites = sort_sites(self._site_mgmt.load_sites())
 
-        if cmk_version.is_expired_trial():
+        if is_expired_trial():
             html.show_message(get_trial_expired_message())
 
         html.div("", id_="message_container")

@@ -35,8 +35,6 @@ from tests.testlib.site import Site
         "check_http",
         "check_icmp",
         "check_ide_smart",
-        "check_ifoperstatus",
-        "check_ifstatus",
         "check_imap",
         "check_ircd",
         "check_jabber",

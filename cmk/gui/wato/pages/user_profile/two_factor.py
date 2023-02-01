@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.wato.utils.base_modes import redirect
-from cmk.gui.session import session, set_two_factor_completed
+from cmk.gui.session import session
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.userdb import (
@@ -485,7 +485,7 @@ class UserLoginTwoFactor(Page):
 
         if backup_code := request.get_validated_type_input(Password, "_backup_code"):
             if is_two_factor_backup_code_valid(user.id, backup_code):
-                set_two_factor_completed()
+                session.session_info.two_factor_completed = True
                 raise HTTPRedirect(origtarget)
 
         html.label(
@@ -580,5 +580,5 @@ class UserWebAuthnLoginComplete(CBORPage):
             signature,
         )
         session.session_info.webauthn_action_state = None
-        set_two_factor_completed()
+        session.session_info.two_factor_completed = True
         return {"status": "OK"}

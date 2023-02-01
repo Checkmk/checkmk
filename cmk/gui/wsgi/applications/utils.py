@@ -77,7 +77,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             if (
                 not two_factor_ok
                 and userdb.is_two_factor_login_enabled(user_id)
-                and not cmk.gui.session.is_two_factor_completed()
+                and not session.session_info.two_factor_completed
             ):
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))

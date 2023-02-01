@@ -397,14 +397,14 @@ def reduce_password_hashing_rounds(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
 
 
-@pytest.fixture(name="monkeypatch_session", scope="session")
-def fixture_monkeypatch_session() -> Iterator[pytest.MonkeyPatch]:
+@pytest.fixture(name="monkeypatch_module", scope="module")
+def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
     with pytest.MonkeyPatch.context() as mp:
         yield mp
 
 
-@pytest.fixture(name="is_in_trial_state", scope="session")
-def fixture_is_in_trial_state(monkeypatch_session: pytest.MonkeyPatch) -> None:
-    monkeypatch_session.setattr(
+@pytest.fixture(name="is_in_trial_state", scope="module")
+def fixture_is_in_trial_state(monkeypatch_module: pytest.MonkeyPatch) -> None:
+    monkeypatch_module.setattr(
         "cmk.utils.licensing.state._get_expired_status", lambda: LicenseState.TRIAL
     )

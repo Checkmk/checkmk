@@ -84,10 +84,16 @@ def dialog_regex(
             return True, new_value
 
 
-def dialog_yesno(text: str, yeslabel: str = "yes", nolabel: str = "no") -> bool:
-    state, _response = _run_dialog(
-        ["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"]
-    )
+def dialog_yesno(
+    text: str,
+    yeslabel: str = "yes",
+    nolabel: str = "no",
+    default_no: bool = False,
+) -> bool:
+    command: list[str] = ["--yes-label", yeslabel, "--no-label", nolabel]
+    if default_no:
+        command += ["--defaultno"]
+    state, _response = _run_dialog(command + ["--yesno", text, "0", "0"])
     return state
 
 

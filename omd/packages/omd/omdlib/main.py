@@ -2749,8 +2749,9 @@ def main_update(  # pylint: disable=too-many-branches
         from_edition != to_edition
         and not global_opts.force
         and not dialog_yesno(
-            "You are updating from %s Edition to %s Edition. Is this intended?"
-            % (from_edition.title(), to_edition.title())
+            text="You are updating from %s Edition to %s Edition. Is this intended?"
+            % (from_edition.title(), to_edition.title()),
+            default_no=True,
         )
     ):
         bail_out("Aborted.")

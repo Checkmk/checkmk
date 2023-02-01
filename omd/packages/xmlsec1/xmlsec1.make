@@ -20,8 +20,5 @@ endif
 
 $(XMLSEC1_INSTALL): $(XMLSEC1_BUILD)
 	rsync -r --chmod=u+w "bazel-bin/external/xmlsec1/xmlsec1/" "$(DESTDIR)$(OMD_ROOT)/"
-	patchelf --set-rpath "\$$ORIGIN/../lib" "$(DESTDIR)$(OMD_ROOT)/bin/xmlsec1"
 	$(TOUCH) $@
-
-
 

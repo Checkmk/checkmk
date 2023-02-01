@@ -24,7 +24,7 @@ from cmk.base.plugins.agent_based.utils import synology
 _STATES: Mapping[int, str] = {
     1: "Available",
     2: "Unavailable",
-    3: "Connection",
+    3: "Connecting",
     4: "Disconnected",
     5: "Others",
 }
@@ -55,7 +55,7 @@ register.snmp_section(
     detect=synology.DETECT,
     parse_function=parse,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.6574.3.1.1",
+        base=".1.3.6.1.4.1.6574.1.5",
         oids=[
             "3",  # Version
             "4",  # Status

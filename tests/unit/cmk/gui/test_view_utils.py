@@ -55,6 +55,13 @@ from cmk.gui.view_utils import format_plugin_output
             ),
             id="The comma is not part of the URL",
         ),
+        pytest.param(
+            "Link with a state marker: https://bitly.com/98K8eH(!), This is another summary(!!), Another summary with a link https://bitly.com/98K8eH(.)",
+            HTML(
+                """Link with a state marker: <a href="https://bitly.com/98K8eH" title="https://bitly.com/98K8eH" target="_blank" onfocus="if (this.blur) this.blur();"><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a><b class="stmark state1">WARN</b>, This is another summary<b class="stmark state2">CRIT</b>, Another summary with a link <a href="https://bitly.com/98K8eH" title="https://bitly.com/98K8eH" target="_blank" onfocus="if (this.blur) this.blur();"><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a><b class="stmark state0">OK</b>"""
+            ),
+            id="The link has appended state marker",
+        ),
     ],
 )
 def test_button_url(args: str, expected: HTML) -> None:

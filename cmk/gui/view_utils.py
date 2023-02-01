@@ -54,6 +54,7 @@ _URL_PATTERN = (
     r")"
 )
 # fmt: on
+_STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
 def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
@@ -113,7 +114,15 @@ def _render_icon_button(output: str) -> str:
             case 0:
                 buffer.append(escaping.escape_attribute(token))
             case 2:
-                buffer.append(str(html.render_icon_button(token, token, "link", target="_blank")))
+                # if a url is directly followed by a state marker, separate them
+                if match := re.match(_STATE_MARKER_PATTERN, token):
+                    url, state_marker = match.group(1), match.group(2)
+                    buffer.append(str(html.render_icon_button(url, url, "link", target="_blank")))
+                    buffer.append(escaping.escape_attribute(state_marker))
+                else:
+                    buffer.append(
+                        str(html.render_icon_button(token, token, "link", target="_blank"))
+                    )
     return "".join(buffer)
 
 

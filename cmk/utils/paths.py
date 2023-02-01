@@ -141,22 +141,6 @@ r4r_declined_bundles_dir = _r4r_base_dir.joinpath("DECLINED-BUNDLES")
 r4r_ready_dir = _r4r_base_dir.joinpath("READY")
 r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
-# SAML 2.0 certificates
-saml2_cert_dir = _omd_path("etc/ssl/saml2")
-
-saml2_builtin_cert_dir = saml2_cert_dir / "builtin"
-saml2_builtin_signature_cert_dir = saml2_builtin_cert_dir / "signature"
-saml2_signature_private_keyfile = saml2_builtin_signature_cert_dir / "private.pem"
-saml2_signature_public_keyfile = saml2_builtin_signature_cert_dir / "public.pem"
-
-saml2_custom_cert_dir = saml2_cert_dir / "custom"
-
-# pysaml2 config files
-saml2_attribute_mappings_dir = _omd_path("share/saml2/attribute_mappings")
-
-# binary used for pysaml2 signatures/encryption
-xmlsec1_binary_path = _omd_path("bin/xmlsec1")
-
 
 def make_experimental_config_file() -> Path:
     """Returns file with experimental settings to be used.

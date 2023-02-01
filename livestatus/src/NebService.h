@@ -6,6 +6,7 @@
 #ifndef NebService_h
 #define NebService_h
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -48,8 +49,32 @@ public:
             .value_or("");
     }
 
+    bool all_labels(const std::function<bool(const std::string &name,
+                                             const std::string &value)> &pred)
+        const override {
+        // TODO(sp) Avoid construction of temporary map
+        auto labels = CustomAttributeMap{AttributeKind::labels}(service_);
+        return std::all_of(
+            labels.cbegin(), labels.cend(),
+            [&pred](const std::pair<std::string, std::string> &label) {
+                return pred(label.first, label.second);
+            });
+    }
+
 private:
     const ::service &service_;
 };
+
+// TODO(sp) Fix cruel workaround for circular header includes.
+inline bool NebHost::all_services(
+    std::function<bool(const IService &)> pred) const {
+    for (servicesmember *mem = host_.services; mem != nullptr;
+         mem = mem->next) {
+        if (!pred(NebService{*mem->service_ptr})) {
+            return false;
+        }
+    }
+    return true;
+}
 
 #endif  // NebService_h

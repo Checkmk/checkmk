@@ -84,6 +84,15 @@ std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
     return host == nullptr ? nullptr : std::make_unique<NebHost>(*host);
 }
 
+bool NagiosCore::all_hosts(std::function<bool(const IHost &)> pred) const {
+    for (const auto *hst = host_list; hst != nullptr; hst = hst->next) {
+        if (!pred(NebHost{*hst})) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::unique_ptr<const IHost> NagiosCore::getHostByDesignation(
     const std::string &designation) {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
@@ -107,10 +116,20 @@ std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(
 }
 
 std::unique_ptr<const IContact> NagiosCore::find_contact(
-    const std::string &name) {
+    const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     const auto *c = ::find_contact(const_cast<char *>(name.c_str()));
     return c == nullptr ? nullptr : std::make_unique<NebContact>(*c);
+}
+
+bool NagiosCore::all_contacts(
+    std::function<bool(const IContact &)> pred) const {
+    for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
+        if (!pred(NebContact{*ctc})) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
@@ -229,10 +248,6 @@ void NagiosCore::forEachDowntimeUntil(
         }
     }
 }
-
-void NagiosCore::forEachLabelUntil(
-    const std::function<bool(const std::string &name, const std::string &value)>
-        & /*f*/) const {}
 
 void NagiosCore::forEachTimeperiodUntil(
     const std::function<bool(const ITimeperiod &)> &f) const {

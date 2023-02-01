@@ -71,6 +71,9 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::string & /*designation*/) override {
         return {};
     }
+    bool all_hosts(std::function<bool(const IHost &)> /*pred*/) const override {
+        return true;
+    }
     std::unique_ptr<const IService> find_service(
         const std::string & /*host_name*/,
         const std::string & /*service_description*/) override {
@@ -80,9 +83,14 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::string & /*name*/) override {
         return {};
     }
-    std::unique_ptr<const IContact> find_contact(
-        const std::string & /*name*/) override {
+
+    [[nodiscard]] std::unique_ptr<const IContact> find_contact(
+        const std::string & /*name*/) const override {
         return {};
+    }
+    bool all_contacts(
+        std::function<bool(const IContact &)> /*pred*/) const override {
+        return true;
     }
     std::unique_ptr<User> find_user(const std::string & /*name*/) override {
         return {};
@@ -129,10 +137,6 @@ class DummyMonitoringCore : public MonitoringCore {
 
     void forEachDowntimeUntil(
         const std::function<bool(const IDowntime &)> & /*f*/) const override {}
-
-    void forEachLabelUntil(
-        const std::function<bool(const std::string &, const std::string &)>
-            & /*f*/) const override {}
 
     void forEachTimeperiodUntil(
         const std::function<bool(const ITimeperiod &)> & /*f*/) const override {

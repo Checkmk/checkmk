@@ -30,13 +30,19 @@ public:
     virtual std::unique_ptr<const IHost> find_host(const std::string &name) = 0;
     virtual std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) = 0;
+    virtual bool all_hosts(std::function<bool(const IHost &)> pred) const = 0;
+
     virtual std::unique_ptr<const IService> find_service(
         const std::string &host_name,
         const std::string &service_description) = 0;
     virtual std::unique_ptr<const IContactGroup> find_contactgroup(
         const std::string &name) = 0;
+
     virtual std::unique_ptr<const IContact> find_contact(
-        const std::string &name) = 0;
+        const std::string &name) const = 0;
+    virtual bool all_contacts(
+        std::function<bool(const IContact &)> pred) const = 0;
+
     virtual std::unique_ptr<User> find_user(const std::string &name) = 0;
 
     [[nodiscard]] virtual std::chrono::system_clock::time_point
@@ -62,10 +68,6 @@ public:
     downtimes(const IService &) const = 0;
     void virtual forEachDowntimeUntil(
         const std::function<bool(const IDowntime &)> &f) const = 0;
-
-    void virtual forEachLabelUntil(
-        const std::function<bool(const std::string &name,
-                                 const std::string &value)> &f) const = 0;
 
     void virtual forEachTimeperiodUntil(
         const std::function<bool(const ITimeperiod &)> &f) const = 0;

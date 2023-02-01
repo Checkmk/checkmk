@@ -60,6 +60,7 @@ Store::Store(MonitoringCore *mc)
     addTable(_table_hostgroups);
     addTable(_table_hostsbygroup);
     addTable(_table_hosts);
+    addTable(_table_labels);
     addTable(_table_log);
     addTable(_table_servicegroups);
     addTable(_table_servicesbygroup);

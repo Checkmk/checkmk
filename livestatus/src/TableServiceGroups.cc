@@ -5,6 +5,7 @@
 
 #include "TableServiceGroups.h"
 
+#include <algorithm>
 #include <memory>
 #include <variant>  // IWYU pragma: keep
 #include <vector>

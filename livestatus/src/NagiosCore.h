@@ -79,13 +79,19 @@ public:
     std::unique_ptr<const IHost> find_host(const std::string &name) override;
     std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) override;
+    bool all_hosts(std::function<bool(const IHost &)> pred) const override;
+
     std::unique_ptr<const IService> find_service(
         const std::string &host_name,
         const std::string &service_description) override;
     std::unique_ptr<const IContactGroup> find_contactgroup(
         const std::string &name) override;
+
     std::unique_ptr<const IContact> find_contact(
-        const std::string &name) override;
+        const std::string &name) const override;
+    bool all_contacts(
+        std::function<bool(const IContact &)> pred) const override;
+
     std::unique_ptr<User> find_user(const std::string &name) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation()
@@ -109,10 +115,6 @@ public:
         const IService &svc) const override;
     void forEachDowntimeUntil(
         const std::function<bool(const IDowntime &)> &f) const override;
-
-    void forEachLabelUntil(
-        const std::function<bool(const std::string &name,
-                                 const std::string &value)> &f) const override;
 
     void forEachTimeperiodUntil(
         const std::function<bool(const ITimeperiod &)> &f) const override;

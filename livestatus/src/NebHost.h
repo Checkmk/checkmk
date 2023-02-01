@@ -6,11 +6,13 @@
 #ifndef NebHost_h
 #define NebHost_h
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 
+#include "CustomAttributeMap.h"
 #include "NagiosCore.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Interface.h"
@@ -41,6 +43,21 @@ public:
                                         AttributeKind::custom_variables,
                                         "SERVICE_PERIOD")
             .value_or("");
+    }
+
+    bool all_services(
+        std::function<bool(const IService &)> pred) const override;
+
+    bool all_labels(const std::function<bool(const std::string &name,
+                                             const std::string &value)> &pred)
+        const override {
+        // TODO(sp) Avoid construction of temporary map
+        auto labels = CustomAttributeMap{AttributeKind::labels}(host_);
+        return std::all_of(
+            labels.cbegin(), labels.cend(),
+            [&pred](const std::pair<std::string, std::string> &label) {
+                return pred(label.first, label.second);
+            });
     }
 
 private:

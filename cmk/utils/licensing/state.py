@@ -20,18 +20,19 @@ class LicenseState(enum.Enum):
 
     TRIAL = enum.auto()
     FREE = enum.auto()
+    LICENSED = enum.auto()
 
 
 def license_status_message() -> str:
     if is_raw_edition():
         return ""
 
+    if is_licensed():
+        return _("Licensed")
+
     passed_time = _get_age_trial()
     # Hardcoded 30 days of trial. For dynamic trial time change the 30 days
     remaining_time = timedelta(seconds=30 * 24 * 60 * 60 - passed_time)
-
-    # TODO: Handle the "licensed" case
-    # TODO: Handle the "license expired" case
 
     if is_expired_trial() or remaining_time.days < 0:
         return _("Trial expired")
@@ -44,10 +45,30 @@ def license_status_message() -> str:
     )
 
 
+def is_licensed() -> bool:
+    return get_license_status() is LicenseState.LICENSED
+
+
+def is_expired_trial() -> bool:
+    return get_license_status() is LicenseState.FREE
+
+
+def get_license_status() -> LicenseState:
+    if is_raw_edition():
+        return (
+            LicenseState.LICENSED
+        )  # There is no license management for the CRE -> Always licensed
+    # TODO: Implement detection of "licensed" case here
+    return _get_expired_status()
+
+
+def _query(query: str) -> livestatus.LivestatusResponse:
+    return livestatus.LocalConnection().query(query)
+
+
 def _get_expired_status() -> LicenseState:
     try:
-        query = "GET status\nColumns: is_trial_expired\n"
-        response = livestatus.LocalConnection().query(query)
+        response = _query("GET status\nColumns: is_trial_expired\n")
         return LicenseState.FREE if response[0][0] == 1 else LicenseState.TRIAL
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         # NOTE: If livestatus is absent we assume that trial is expired. Livestatus may be absent
@@ -58,8 +79,7 @@ def _get_expired_status() -> LicenseState:
 
 def _get_timestamp_trial() -> int:
     try:
-        query = "GET status\nColumns: state_file_created\n"
-        response = livestatus.LocalConnection().query(query)
+        response = _query("GET status\nColumns: state_file_created\n")
         return int(response[0][0])
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         # NOTE: If livestatus is absent we assume that trial is expired. Livestatus may be absent
@@ -70,9 +90,3 @@ def _get_timestamp_trial() -> int:
 
 def _get_age_trial() -> int:
     return int(time.time()) - _get_timestamp_trial()
-
-
-def is_expired_trial() -> bool:
-    if is_raw_edition():
-        return False
-    return _get_expired_status() is LicenseState.FREE

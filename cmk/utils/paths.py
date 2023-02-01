@@ -154,6 +154,9 @@ saml2_custom_cert_dir = saml2_cert_dir / "custom"
 # pysaml2 config files
 saml2_attribute_mappings_dir = _omd_path("share/saml2/attribute_mappings")
 
+# binary used for pysaml2 signatures/encryption
+xmlsec1_binary_path = _omd_path("bin/xmlsec1")
+
 
 def make_experimental_config_file() -> Path:
     """Returns file with experimental settings to be used.

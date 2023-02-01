@@ -11,6 +11,8 @@ import pytest
 
 from tests.testlib.site import Site
 
+from cmk.utils.paths import xmlsec1_binary_path
+
 
 class TestXmlsec1:
     @pytest.fixture
@@ -161,7 +163,7 @@ XML Security Library example: Original XML
 
     def test_xmlsec1_is_available(self, site: Site) -> None:
         p = site.execute(
-            ["xmlsec1", "--version"],
+            [str(xmlsec1_binary_path), "--version"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
@@ -178,7 +180,7 @@ XML Security Library example: Original XML
     ) -> None:
         p = site.execute(
             [
-                "xmlsec1",
+                str(xmlsec1_binary_path),
                 "--sign",
                 "--privkey-pem",
                 private_key_file,
@@ -200,7 +202,7 @@ XML Security Library example: Original XML
     ) -> None:
         p = site.execute(
             [
-                "xmlsec1",
+                str(xmlsec1_binary_path),
                 "--encrypt",
                 "--pubkey",
                 public_key_file,

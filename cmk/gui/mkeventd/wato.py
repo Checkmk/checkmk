@@ -1530,7 +1530,8 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             {}
             if cmk_version.is_raw_edition()
             else cmk.utils.packaging.rule_pack_id_to_mkp(
-                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir)
+                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
+                cmk.utils.packaging.all_rule_pack_files(ec.mkp_rule_pack_dir()),
             )
         )
 

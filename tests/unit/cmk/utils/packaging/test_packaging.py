@@ -21,6 +21,28 @@ import cmk.utils.packaging._installed
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
+import cmk.ec.export as ec
+
+_PATH_CONFIG = packaging.PathConfig(
+    local_root=cmk.utils.paths.local_root,
+    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+    agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
+    checks_dir=cmk.utils.paths.local_checks_dir,
+    inventory_dir=cmk.utils.paths.local_inventory_dir,
+    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
+    agents_dir=cmk.utils.paths.local_agents_dir,
+    notifications_dir=cmk.utils.paths.local_notifications_dir,
+    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+    web_dir=cmk.utils.paths.local_web_dir,
+    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+    doc_dir=cmk.utils.paths.local_doc_dir,
+    locale_dir=cmk.utils.paths.local_locale_dir,
+    bin_dir=cmk.utils.paths.local_bin_dir,
+    lib_dir=cmk.utils.paths.local_lib_dir,
+    mib_dir=cmk.utils.paths.local_mib_dir,
+    alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
+)
+
 
 @pytest.fixture(name="installer", scope="function")
 def _get_installer() -> Iterator[packaging.Installer]:
@@ -39,7 +61,7 @@ def _read_manifest(
 
 @pytest.fixture(autouse=True)
 def clean_dirs() -> Iterable[None]:
-    paths = [packaging.site_path(p) for p in packaging.PackagePart] + [
+    paths = [_PATH_CONFIG.get_path(p) for p in packaging.PackagePart] + [
         cmk.utils.paths.local_optional_packages_dir,
         cmk.utils.paths.local_enabled_packages_dir,
     ]
@@ -59,10 +81,10 @@ def fixture_mkp_bytes(build_setup_search_index: Mock, installer: packaging.Insta
     manifest = _read_manifest(installer, packaging.PackageName("aaa"))
 
     # Build MKP in memory
-    mkp = packaging.create_mkp_object(manifest)
+    mkp = packaging.create_mkp_object(manifest, _PATH_CONFIG)
 
     # Remove files from local hierarchy
-    packaging.uninstall(installer, manifest)
+    packaging.uninstall(installer, _PATH_CONFIG, manifest)
     build_setup_search_index.assert_called_once()
     build_setup_search_index.reset_mock()
     assert installer.is_installed(packaging.PackageName("aaa")) is False
@@ -111,7 +133,7 @@ def _create_simple_test_package(
         },
     )
 
-    packaging.create(installer, manifest)
+    packaging.create(installer, manifest, _PATH_CONFIG)
     return _read_manifest(installer, pacname)
 
 
@@ -143,7 +165,7 @@ def test_edit_not_existing(installer: packaging.Installer) -> None:
     )
 
     with pytest.raises(packaging.PackageException):
-        packaging.edit(installer, packaging.PackageName("aaa"), new_manifest)
+        packaging.edit(installer, packaging.PackageName("aaa"), new_manifest, _PATH_CONFIG)
 
 
 def test_edit(installer: packaging.Installer) -> None:
@@ -156,7 +178,7 @@ def test_edit(installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
     assert manifest.version == packaging.PackageVersion("1.0.0")
 
-    packaging.edit(installer, packaging.PackageName("aaa"), new_manifest)
+    packaging.edit(installer, packaging.PackageName("aaa"), new_manifest, _PATH_CONFIG)
 
     assert _read_manifest(
         installer, packaging.PackageName("aaa")
@@ -171,7 +193,7 @@ def test_edit_rename(installer: packaging.Installer) -> None:
 
     _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
-    packaging.edit(installer, packaging.PackageName("aaa"), new_manifest)
+    packaging.edit(installer, packaging.PackageName("aaa"), new_manifest, _PATH_CONFIG)
 
     assert _read_manifest(installer, packaging.PackageName("bbb")).name == packaging.PackageName(
         "bbb"
@@ -190,13 +212,15 @@ def test_edit_rename_conflict(installer: packaging.Installer) -> None:
     _create_simple_test_package(installer, packaging.PackageName("bbb"))
 
     with pytest.raises(packaging.PackageException):
-        packaging.edit(installer, packaging.PackageName("aaa"), new_manifest)
+        packaging.edit(installer, packaging.PackageName("aaa"), new_manifest, _PATH_CONFIG)
 
 
 def test_install(
     mkp_bytes: bytes, build_setup_search_index: Mock, installer: packaging.Installer
 ) -> None:
-    packaging._install(installer, mkp_bytes, allow_outdated=False, post_package_change_actions=True)
+    packaging._install(
+        installer, mkp_bytes, _PATH_CONFIG, allow_outdated=False, post_package_change_actions=True
+    )
     build_setup_search_index.assert_called_once()
 
     assert installer.is_installed(packaging.PackageName("aaa")) is True
@@ -225,7 +249,7 @@ def test_release(installer: packaging.Installer) -> None:
 def test_write_file(installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
-    mkp = packaging.create_mkp_object(manifest)
+    mkp = packaging.create_mkp_object(manifest, _PATH_CONFIG)
 
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
@@ -244,14 +268,15 @@ def test_write_file(installer: packaging.Installer) -> None:
 
 def test_uninstall(build_setup_search_index: Mock, installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
-    packaging.uninstall(installer, manifest)
+    packaging.uninstall(installer, _PATH_CONFIG, manifest)
     build_setup_search_index.assert_called_once()
     assert not installer.is_installed(packaging.PackageName("aaa"))
 
 
 def test_unpackaged_files_none(installer: packaging.Installer) -> None:
     assert {
-        part.ident: files for part, files in packaging.get_unpackaged_files(installer).items()
+        part.ident: files
+        for part, files in packaging.get_unpackaged_files(installer, _PATH_CONFIG).items()
     } == {
         "agent_based": [],
         "agents": [],
@@ -284,7 +309,8 @@ def test_unpackaged_files(installer: packaging.Installer) -> None:
         f.write("huhu\n")
 
     assert {
-        part.ident: files for part, files in packaging.get_unpackaged_files(installer).items()
+        part.ident: files
+        for part, files in packaging.get_unpackaged_files(installer, _PATH_CONFIG).items()
     } == {
         packaging.PackagePart.AGENT_BASED: [Path("dada")],
         packaging.PackagePart.AGENTS: [],
@@ -404,7 +430,7 @@ def test_raise_for_too_new_cmk_version_ok(until_version: str | None, site_versio
 def _setup_local_files_structure() -> None:
     """Let's hope this gets easier during the upcomming changes."""
     for part in packaging.PackagePart:
-        part_path = packaging.site_path(part)
+        part_path = _PATH_CONFIG.get_path(part)
         subdir = part_path / "subdir"
         subdir.mkdir(parents=True)
         (part_path / f"regular_file_of_{part.ident}.py").touch()
@@ -430,4 +456,4 @@ def test_get_local_files_by_part() -> None:
             cmk.utils.paths.local_root / "some" / "other" / "file.sh",
         },
     }
-    assert packaging.all_local_files(cmk.utils.paths.local_root) == expected
+    assert packaging.all_local_files(_PATH_CONFIG) == expected

@@ -2136,7 +2136,27 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         if _need_to_update_config_after_sync():
             logger.debug("Updating active packages")
             cmk.utils.packaging.update_active_packages(
-                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir), logger
+                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
+                logger,
+                cmk.utils.packaging.PathConfig(
+                    local_root=cmk.utils.paths.local_root,
+                    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+                    agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
+                    checks_dir=cmk.utils.paths.local_checks_dir,
+                    inventory_dir=cmk.utils.paths.local_inventory_dir,
+                    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
+                    agents_dir=cmk.utils.paths.local_agents_dir,
+                    notifications_dir=cmk.utils.paths.local_notifications_dir,
+                    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+                    web_dir=cmk.utils.paths.local_web_dir,
+                    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+                    doc_dir=cmk.utils.paths.local_doc_dir,
+                    locale_dir=cmk.utils.paths.local_locale_dir,
+                    bin_dir=cmk.utils.paths.local_bin_dir,
+                    lib_dir=cmk.utils.paths.local_lib_dir,
+                    mib_dir=cmk.utils.paths.local_mib_dir,
+                    alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
+                ),
             )
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()

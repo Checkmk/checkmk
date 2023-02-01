@@ -13,10 +13,10 @@ from typing import TypedDict
 
 from ._installed import Installer
 from ._mkp import PackagePart
-from ._parts import get_package_part, site_path, ui_title
+from ._parts import PathConfig, ui_title
 
 
-def all_local_files(local_root: Path) -> Mapping[PackagePart | None, set[Path]]:
+def all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[Path]]:
     """Return a map of categorized local files
 
     Remove duplicates caused by symlinks, but keep the symlinks.
@@ -27,7 +27,7 @@ def all_local_files(local_root: Path) -> Mapping[PackagePart | None, set[Path]]:
     """
     local_files_including_symlinks = {
         Path(root, f)
-        for root, _dir, files in os.walk(local_root, followlinks=True)
+        for root, _dir, files in os.walk(path_config.local_root, followlinks=True)
         for f in files
         if not (f.startswith(".") or f.endswith(("~", ".pyc")))
     }
@@ -38,8 +38,10 @@ def all_local_files(local_root: Path) -> Mapping[PackagePart | None, set[Path]]:
 
     categorized_files: dict[PackagePart | None, set[Path]] = defaultdict(set)
     for full_path in sorted(local_files_including_symlinks - resolved_symlinks):
-        if (package_part := get_package_part(full_path)) is not None:
-            categorized_files[package_part].add(_relative_path(package_part, full_path))
+        if (package_part := path_config.get_part(full_path)) is not None:
+            categorized_files[package_part].add(
+                _relative_path(package_part, full_path, path_config)
+            )
         else:
             # These are rogue files that do not belong to a PackagePart.
             # Worth reporting nevertheless:
@@ -48,12 +50,11 @@ def all_local_files(local_root: Path) -> Mapping[PackagePart | None, set[Path]]:
     return categorized_files
 
 
-def _relative_path(package_part: PackagePart, full_path: Path) -> Path:
-    return full_path.resolve().relative_to(site_path(package_part).resolve())
+def _relative_path(package_part: PackagePart, full_path: Path, path_config: PathConfig) -> Path:
+    return full_path.resolve().relative_to(path_config.get_path(package_part).resolve())
 
 
-def all_rule_pack_files() -> set[Path]:
-    ec_path = site_path(PackagePart.EC_RULE_PACKS)
+def all_rule_pack_files(ec_path: Path) -> set[Path]:
     with suppress(FileNotFoundError):
         return {f.relative_to(ec_path) for f in ec_path.iterdir()}
     return set()
@@ -68,7 +69,7 @@ class FileMetaInfo(TypedDict):
     mode: str
 
 
-def files_inventory(local_root: Path, installer: Installer) -> Sequence[FileMetaInfo]:
+def files_inventory(installer: Installer, path_config: PathConfig) -> Sequence[FileMetaInfo]:
     """return an overview of all relevant files found on disk"""
     package_map = {
         (part / file): manifest.id
@@ -81,8 +82,13 @@ def files_inventory(local_root: Path, installer: Installer) -> Sequence[FileMeta
         (
             (part, file, package_map.get((part / file) if part else file))
             for part, files in chain(
-                all_local_files(local_root).items(),
-                ((PackagePart.EC_RULE_PACKS, all_rule_pack_files()),),
+                all_local_files(path_config).items(),
+                (
+                    (
+                        PackagePart.EC_RULE_PACKS,
+                        all_rule_pack_files(path_config.get_path(PackagePart.EC_RULE_PACKS)),
+                    ),
+                ),
             )
             for file in files
         ),
@@ -95,7 +101,7 @@ def files_inventory(local_root: Path, installer: Installer) -> Sequence[FileMeta
             version=package_id.version if package_id else "",
             part_id=part.ident if part else "",
             part_title=ui_title(part) if part else "",
-            mode=_get_mode((site_path(part) / file) if part else file),
+            mode=_get_mode((path_config.get_path(part) / file) if part else file),
         )
         for part, file, package_id in files_and_packages
     ]

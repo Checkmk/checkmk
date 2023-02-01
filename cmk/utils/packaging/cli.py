@@ -34,7 +34,7 @@ from ._mkp import (
     PackagePart,
     read_manifest_optionally,
 )
-from ._parts import site_path, ui_title
+from ._parts import PathConfig, ui_title
 from ._reporter import files_inventory
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
@@ -75,11 +75,11 @@ def _args_find(
     )
 
 
-def _command_find(args: argparse.Namespace, logger: logging.Logger) -> int:
+def _command_find(args: argparse.Namespace, logger: logging.Logger, path_config: PathConfig) -> int:
     """Show information about local files"""
     installer = Installer(paths.installed_packages_dir)
 
-    files = files_inventory(paths.local_root, installer)
+    files = files_inventory(installer, path_config)
 
     if not args.all:
         files = [f for f in files if not f["package"]]
@@ -103,7 +103,9 @@ def _args_inspect(
     subparser.add_argument("file", type=Path, help="Path to an MKP file")
 
 
-def _command_inspect(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_inspect(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Show manifest of an MKP file"""
     file_path: Path = args.file
     try:
@@ -123,7 +125,9 @@ def _args_show_all(
     subparser.add_argument("--json", action="store_true", help="format output as json")
 
 
-def _command_show_all(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_show_all(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Show all manifests"""
     stored_manifests = get_stored_manifests(PackageStore())
 
@@ -146,7 +150,9 @@ def _args_show(
     _args_package_id(subparser)
 
 
-def _command_show(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_show(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Show manifest of a stored package"""
     manifest = extract_manifest(
         PackageStore()
@@ -157,7 +163,9 @@ def _command_show(args: argparse.Namespace, _logger: logging.Logger) -> int:
     return 0
 
 
-def _command_files(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_files(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Show all files beloning to a package"""
     manifest = extract_manifest(
         PackageStore()
@@ -166,7 +174,7 @@ def _command_files(args: argparse.Namespace, _logger: logging.Logger) -> int:
     )
     sys.stdout.write(
         "".join(
-            f"{site_path(part) / rel_path}\n"
+            f"{path_config.get_path(part) / rel_path}\n"
             for part, rel_paths in manifest.files.items()
             for rel_path in rel_paths
         )
@@ -180,7 +188,7 @@ def _args_list(
     subparser.add_argument("--json", action="store_true", help="format output as json")
 
 
-def _command_list(args: argparse.Namespace, logger: logging.Logger) -> int:
+def _command_list(args: argparse.Namespace, logger: logging.Logger, path_config: PathConfig) -> int:
     """Show a table of all known files, including the deployment state"""
     installer = Installer(paths.installed_packages_dir)
     classified_manifests = get_classified_manifests(PackageStore(), installer, logger)
@@ -229,7 +237,9 @@ def _args_install_deprecated(
     subparser.add_argument("file", type=str, metavar="(DEPRECATED)")
 
 
-def _command_install_deprecated(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_install_deprecated(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """This command is deprecated. Please use the `add` and `enable` commands."""
     sys.stderr.write(f"{_command_install_deprecated.__doc__}\n")
     return 1
@@ -241,7 +251,7 @@ def _args_add(
     subparser.add_argument("file", type=Path, help="Path to an MKP file")
 
 
-def _command_add(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_add(args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig) -> int:
     """Add an MKP to the collection of managed MKPs"""
     file_path: Path = args.file
     try:
@@ -266,13 +276,17 @@ def _args_release(
     )
 
 
-def _command_release(args: argparse.Namespace, logger: logging.Logger) -> int:
+def _command_release(
+    args: argparse.Namespace, logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Remove the package and leave its contained files as unpackaged files behind."""
     release(Installer(paths.installed_packages_dir), args.name, logger)
     return 0
 
 
-def _command_remove(args: argparse.Namespace, logger: logging.Logger) -> int:
+def _command_remove(
+    args: argparse.Namespace, logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Remove a package from the site"""
     package_id = _get_package_id(args.name, args.version)
     if package_id in get_enabled_manifests():
@@ -284,26 +298,30 @@ def _command_remove(args: argparse.Namespace, logger: logging.Logger) -> int:
     return 0
 
 
-def _command_disable_outdated(_args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_disable_outdated(
+    _args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Disable MKP packages that are declared to be outdated with the new version.
 
     Since 1.6 there is the option version.usable_until available in MKP packages.
     For all installed packages, this command compares that version with the Checkmk version.
     In case it is outdated, the package is disabled.
     """
-    disable_outdated(Installer(paths.installed_packages_dir))
+    disable_outdated(Installer(paths.installed_packages_dir), path_config)
     return 0
 
 
-def _command_update_active(_args: argparse.Namespace, logger: logging.Logger) -> int:
-    """Deactivate MKP packages that are not suitable for this version, and activate others.
+def _command_update_active(
+    _args: argparse.Namespace, logger: logging.Logger, path_config: PathConfig
+) -> int:
+    """Disable MKP packages that are not suitable for this version, and enable others.
 
     Packages can declare their minimum or maximum required Checkmk versions.
     Also packages can collide with one another or fail to load for other reasons.
 
     This command deactivates all packages that are not applicable, and then activates the ones that are.
     """
-    update_active_packages(Installer(paths.installed_packages_dir), logger)
+    update_active_packages(Installer(paths.installed_packages_dir), logger, path_config)
     return 0
 
 
@@ -324,16 +342,20 @@ def _args_package_id(
     )
 
 
-def _command_enable(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_enable(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Enable a disabled package"""
     installer = Installer(paths.installed_packages_dir)
-    install(installer, PackageStore(), _get_package_id(args.name, args.version))
+    install(installer, PackageStore(), _get_package_id(args.name, args.version), path_config)
     return 0
 
 
-def _command_disable(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_disable(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Disable an enabled package"""
-    disable(Installer(paths.installed_packages_dir), args.name, args.version)
+    disable(Installer(paths.installed_packages_dir), path_config, args.name, args.version)
     return 0
 
 
@@ -347,11 +369,13 @@ def _args_template(
     )
 
 
-def _command_template(args: argparse.Namespace, _logger: logging.Logger) -> int:
+def _command_template(
+    args: argparse.Namespace, _logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Create a template of a package manifest"""
     installer = Installer(paths.installed_packages_dir)
 
-    unpackaged = get_unpackaged_files(installer)
+    unpackaged = get_unpackaged_files(installer, path_config)
 
     package = manifest_template(
         name=args.name,
@@ -379,7 +403,9 @@ def _args_package(
     )
 
 
-def _command_package(args: argparse.Namespace, logger: logging.Logger) -> int:
+def _command_package(
+    args: argparse.Namespace, logger: logging.Logger, path_config: PathConfig
+) -> int:
     """Create an .mkp file from the provided manifest.
 
     You can use the `template` command ot create a manifest template.
@@ -396,8 +422,8 @@ def _command_package(args: argparse.Namespace, logger: logging.Logger) -> int:
     store = PackageStore()
     installer = Installer(paths.installed_packages_dir)
     try:
-        manifest = store.store(create_mkp_object(package))
-        install(installer, store, manifest.id)
+        manifest = store.store(create_mkp_object(package, path_config))
+        install(installer, store, manifest.id, path_config)
     except PackageException as exc:
         sys.stderr.write(f"{exc}\n")
         return 1
@@ -467,7 +493,7 @@ def _add_command(
     subparsers: argparse._SubParsersAction,
     cmd: str,
     args_adder: Callable[[argparse.ArgumentParser], None],
-    handler: Callable[[argparse.Namespace, logging.Logger], int],
+    handler: Callable[[argparse.Namespace, logging.Logger, PathConfig], int],
 ) -> None:
     subparser = subparsers.add_parser(cmd, help=handler.__doc__, description=handler.__doc__)
     args_adder(subparser)
@@ -482,10 +508,10 @@ def set_up_logging(verbosity: int) -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str], path_config: PathConfig) -> int:
     args = _parse_arguments(argv)
     try:
-        return args.handler(args, set_up_logging(args.verbose))
+        return args.handler(args, set_up_logging(args.verbose), path_config)
     except PackageException as exc:
         if args.debug:
             raise

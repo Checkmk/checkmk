@@ -210,6 +210,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 check_plugins=CheckPluginMapper(),
                 find_service_description=config.service_description,
                 mode=mode,
+                keep_clustered_vanished_services=True,
                 service_filters=None,
                 on_error=on_error,
             )

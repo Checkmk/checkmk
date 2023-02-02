@@ -388,6 +388,7 @@ def test__get_post_discovery_services(
             result,
             find_service_description=lambda *args: f"Test Description {args[-1]}",
             mode=mode,
+            keep_clustered_vanished_services=True,
         ).values()
     ]
 

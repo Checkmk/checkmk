@@ -388,6 +388,7 @@ setup:
 	    libsasl2-dev \
 	    libtool-bin \
 	    libxml2-dev \
+	    libreadline-dev \
 	    lld-$(CLANG_VERSION) \
 	    lldb-$(CLANG_VERSION) \
 	    musl-tools \

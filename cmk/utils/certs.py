@@ -122,6 +122,16 @@ def root_cert_path(ca_dir: Path) -> Path:
     return ca_dir / "ca.pem"
 
 
+def write_cert_store(source_dir: Path, store_path: Path) -> None:
+    """Extract certificate part out of PEM files and concat
+    to single cert store file."""
+    pem_certs = (
+        load_pem_x509_certificate(pem_path.read_bytes()).public_bytes(Encoding.PEM)
+        for pem_path in source_dir.glob("*.pem")
+    )
+    store_path.write_bytes(b"".join(pem_certs))
+
+
 def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
     return (
         load_pem_x509_certificate(

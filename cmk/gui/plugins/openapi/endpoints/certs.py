@@ -57,13 +57,17 @@ def _get_root_ca() -> RootCA:
     return RootCA.load(root_cert_path(cert_dir(Path(omd_root))))
 
 
+def _get_agent_ca() -> RootCA:
+    return RootCA.load(root_cert_path(cert_dir(Path(omd_root)) / "agents"))
+
+
 def _serialized_root_cert() -> str:
     return _get_root_ca().cert.public_bytes(Encoding.PEM).decode()
 
 
 def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
     return (
-        _get_root_ca()
+        _get_agent_ca()
         .sign_csr(
             csr,
             validity=relativedelta(

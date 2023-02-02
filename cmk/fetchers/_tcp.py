@@ -17,6 +17,7 @@ from typing_extensions import assert_never
 import cmk.utils.debug
 from cmk.utils import paths
 from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.certs import write_cert_store
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
@@ -199,8 +200,12 @@ class TCPFetcher(Fetcher[AgentRawData]):
             raise MKFetcherError("Agent controller not registered")
 
         self._logger.debug("Reading data from agent via TLS socket")
+        if not paths.agent_cert_store.exists():
+            # agent cert store should be written on agent receiver startup.
+            # However, if it's missing for some reason, we have to write it.
+            write_cert_store(source_dir=paths.agent_cas_dir, store_path=paths.agent_cert_store)
         try:
-            ctx = ssl.create_default_context(cafile=str(paths.root_cert_file))
+            ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
             ctx.load_cert_chain(certfile=paths.site_cert_file)
             return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
         except ssl.SSLError as e:

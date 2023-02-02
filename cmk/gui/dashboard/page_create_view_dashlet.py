@@ -52,6 +52,8 @@ def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedV
             "size": dashlet_registry["linked_view"].initial_size(),
             "show_title": True,
             "name": view_name,
+            "context": {},
+            "single_infos": dashlet_registry["linked_view"].single_infos(),
         }
     )
 

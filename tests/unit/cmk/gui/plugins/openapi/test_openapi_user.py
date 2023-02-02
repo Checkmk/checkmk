@@ -34,7 +34,55 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 
 @managedtest
-def test_openapi_customer(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch):
+def test_idle_timeout(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+    user_detail = {
+        "username": "user",
+        "fullname": "User Name",
+        "customer": "global",
+        "idle_timeout": {"option": "individual", "duration": 666},
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    with freeze_time("2010-02-01 08:00:00"):
+        resp = aut_user_auth_wsgi_app.call_method(
+            "post",
+            base + "/domain-types/user_config/collections/all",
+            params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
+            status=200,
+            content_type="application/json",
+        )
+
+    assert resp.json_body["extensions"]["idle_timeout"]["duration"] == 666
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/user_config/user",
+        params=json.dumps({"idle_timeout": {"option": "individual", "duration": 999}}),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+    assert resp.json_body["extensions"]["idle_timeout"]["duration"] == 999
+
+    resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/user_config/user",
+        params=json.dumps({"idle_timeout": {"option": "disable"}}),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+    assert resp.json_body["extensions"]["idle_timeout"]["option"] == "disable"
+
+
+@managedtest
+def test_openapi_customer(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )

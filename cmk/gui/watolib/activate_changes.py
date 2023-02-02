@@ -2137,7 +2137,6 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
             logger.debug("Updating active packages")
             cmk.utils.packaging.update_active_packages(
                 cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
-                logger,
                 cmk.utils.packaging.PathConfig(
                     local_root=cmk.utils.paths.local_root,
                     mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),

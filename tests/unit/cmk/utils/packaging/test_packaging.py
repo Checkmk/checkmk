@@ -5,7 +5,6 @@
 
 import ast
 import json
-import logging
 import shutil
 import tarfile
 from collections.abc import Iterable, Iterator, Mapping
@@ -198,9 +197,7 @@ def test_edit_rename(installer: packaging.Installer) -> None:
     assert _read_manifest(installer, packaging.PackageName("bbb")).name == packaging.PackageName(
         "bbb"
     )
-    assert (
-        installer.get_installed_manifest(packaging.PackageName("aaa"), logging.getLogger()) is None
-    )
+    assert installer.get_installed_manifest(packaging.PackageName("aaa")) is None
 
 
 def test_edit_rename_conflict(installer: packaging.Installer) -> None:
@@ -232,7 +229,7 @@ def test_install(
 
 def test_release_not_existing(installer: packaging.Installer) -> None:
     with pytest.raises(packaging.PackageException):
-        packaging.release(installer, packaging.PackageName("abc"), packaging.g_logger)
+        packaging.release(installer, packaging.PackageName("abc"))
 
 
 def test_release(installer: packaging.Installer) -> None:
@@ -240,7 +237,7 @@ def test_release(installer: packaging.Installer) -> None:
     assert installer.is_installed(packaging.PackageName("aaa")) is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
-    packaging.release(installer, packaging.PackageName("aaa"), packaging.g_logger)
+    packaging.release(installer, packaging.PackageName("aaa"))
 
     assert installer.is_installed(packaging.PackageName("aaa")) is False
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()

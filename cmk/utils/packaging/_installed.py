@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Final
@@ -25,16 +24,14 @@ class Installer:
     ) -> Sequence[PackageName]:
         return sorted(PackageName(p.name) for p in self._manifests_dir.iterdir())
 
-    def get_installed_manifest(
-        self, package_name: PackageName, log: logging.Logger | None = None
-    ) -> Manifest | None:
-        return read_manifest_optionally(self._path_for(package_name), log)
+    def get_installed_manifest(self, package_name: PackageName) -> Manifest | None:
+        return read_manifest_optionally(self._path_for(package_name))
 
-    def get_installed_manifests(self, log: logging.Logger | None = None) -> Sequence[Manifest]:
+    def get_installed_manifests(self) -> Sequence[Manifest]:
         return [
             manifest
             for name in self._installed_names()
-            if (manifest := self.get_installed_manifest(name, log)) is not None
+            if (manifest := self.get_installed_manifest(name)) is not None
         ]
 
     def get_packaged_files(

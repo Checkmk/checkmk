@@ -8,13 +8,88 @@ import json
 
 import pytest
 
-from cmk.gui.watolib.timeperiods import load_timeperiod
-
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+from cmk.gui.watolib.timeperiods import load_timeperiod
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_time_period(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_time_period_time_ranges(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/time_period/collections/all",
+        params=json.dumps(
+            {
+                "name": "foo",
+                "alias": "foobar",
+                "active_time_ranges": [
+                    {
+                        "day": "all",
+                    }
+                ],
+                "exceptions": [
+                    {
+                        "date": "2020-01-01",
+                    }
+                ],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/time_period/foo",
+        params=json.dumps(
+            {
+                "active_time_ranges": [
+                    {
+                        "day": "friday",
+                        "time_ranges": [{"start": "11:26", "end": "19:07"}],
+                    }
+                ],
+                "exceptions": [
+                    {
+                        "date": "2023-02-02",
+                        "time_ranges": [{"start": "18:32", "end": "21:15"}],
+                    }
+                ],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=204,
+        content_type="application/json",
+    )
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/time_period/foo",
+        params=json.dumps(
+            {
+                "active_time_ranges": [
+                    {
+                        "day": "saturday",
+                    }
+                ],
+                "exceptions": [
+                    {
+                        "date": "2023-02-03",
+                    }
+                ],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=204,
+        content_type="application/json",
+    )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_time_period(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = aut_user_auth_wsgi_app.call_method(

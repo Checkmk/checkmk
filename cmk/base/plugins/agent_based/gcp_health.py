@@ -134,7 +134,7 @@ def discovery(section: Section) -> DiscoveryResult:
 
 register.check_plugin(
     name="gcp_health",
-    service_name="GCP Status",
+    service_name="GCP Health",
     discovery_function=discovery,
     check_function=check,
     check_ruleset_name="gcp_health",

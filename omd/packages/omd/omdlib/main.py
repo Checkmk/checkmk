@@ -981,17 +981,17 @@ def update_file(  # pylint: disable=too-many-branches
             "The %s %s has become obsolete in "
             "this version, but you have changed it into a "
             "%s. Do you want to keep your %s or "
-            "may I delete it for you, please?" % (old_type, relpath, user_type, user_type),
+            "may I remove it for you, please?" % (old_type, relpath, user_type, user_type),
             relpath,
             "keep",
             "Keep your %s" % user_type,
-            "delete",
-            "Delete it",
+            "remove",
+            "Remove it",
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
-            sys.stdout.write(StateMarkers.warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Removed        %s\n" % fn)
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
@@ -1002,17 +1002,17 @@ def update_file(  # pylint: disable=too-many-branches
             "The %s %s has become obsolete in "
             "the new version, but you have changed its contents. "
             "Do you want to keep your %s or "
-            "may I delete it for you, please?" % (old_type, relpath, user_type),
+            "may I remove it for you, please?" % (old_type, relpath, user_type),
             relpath,
             "keep",
             "keep your %s, though it is obsolete" % user_type,
-            "delete",
-            "delete your %s" % user_type,
+            "remove",
+            "remove your %s" % user_type,
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
-            sys.stdout.write(StateMarkers.warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Removed        %s\n" % fn)
 
     # 3d) same, but it is a directory which is not empty
     elif not new_type and non_empty_directory:
@@ -1023,17 +1023,17 @@ def update_file(  # pylint: disable=too-many-branches
             "The directory %s has become obsolete in "
             "the new version, but you have contents in it. "
             "Do you want to keep your directory or "
-            "may I delete it for you, please?" % (relpath),
+            "may I remove it for you, please?" % (relpath),
             relpath,
             "keep",
             "keep your directory, though it is obsolete",
-            "delete",
-            "delete your directory",
+            "remove",
+            "remove your directory",
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
-            sys.stdout.write(StateMarkers.warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(StateMarkers.warn + " Removed        %s\n" % fn)
 
     # 3e) same, but user hasn't changed anything -> silently delete
     elif not new_type:
@@ -1045,7 +1045,7 @@ def update_file(  # pylint: disable=too-many-branches
     #    a good reason why he deleted the file.
     elif not user_type and not we_changed:
         sys.stdout.write(
-            StateMarkers.good + " Unwanted       %s (unchanged, deleted by you)\n" % fn
+            StateMarkers.good + " Unwanted       %s (unchanged, removed by you)\n" % fn
         )
 
     # 4b) File changed in new version. Simply warn if user has deleted it.
@@ -2646,7 +2646,7 @@ def print_diff(
                 sys.stdout.write(f"    {source_type} {arrow} {target_type}\n")
 
     if not target_type:
-        print_status(StateMarkers.good, fn, "d", "Deleted")
+        print_status(StateMarkers.good, fn, "r", "Removed")
         return
 
     if changed_type and changed_content:

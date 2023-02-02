@@ -71,19 +71,21 @@ class RulesetSearchOptions(base.BaseSchema):
 
     fulltext = fields.String(
         description=(
-            "Search all keys (like `name`, `title`, `help`, etc.) for this text. " "Regex allowed."
+            "Search all keys (like `name`, `title`, `help`, etc.) for this text. Regex allowed."
         ),
     )
     folder = gui_fields.FolderField(
         description="The folder in which to search for rules.",
     )
-    deprecated = fields.String(
+    deprecated = fields.Boolean(
         attribute="ruleset_deprecated",
         description="Also show deprecated rulesets. Defaults to False.",
+        load_default=False,
     )
-    used = fields.String(
+    used = fields.Boolean(
         attribute="ruleset_used",
         description="Only show used rulesets. Defaults to True.",
+        load_default=True,
     )
     group = fields.String(
         attribute="ruleset_group",

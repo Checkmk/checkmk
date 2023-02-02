@@ -68,8 +68,7 @@ class TagConfigFile:
 
 def load_tag_config() -> TagConfig:
     """Load the tag config object based upon the most recently saved tag config file"""
-    tag_config = TagConfig.from_config(TagConfigFile().load_for_modification())
-    return tag_config
+    return TagConfig.from_config(TagConfigFile().load_for_modification())
 
 
 def load_tag_config_read_only() -> TagConfig:

@@ -28,6 +28,7 @@ from werkzeug.test import create_environ
 
 from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import (
+    AuxTagTestClient,
     expand_rel,
     get_link,
     RequestHandler,
@@ -553,3 +554,8 @@ class WebTestAppRequestHandler(RequestHandler):
 @pytest.fixture()
 def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
     return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def auxtag_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AuxTagTestClient:
+    return AuxTagTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

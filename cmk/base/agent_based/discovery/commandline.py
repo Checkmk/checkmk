@@ -5,7 +5,7 @@
 
 
 from collections import Counter
-from collections.abc import Callable, Container
+from collections.abc import Callable, Container, Mapping
 from functools import partial
 
 import cmk.utils.cleanup
@@ -16,7 +16,14 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName, ServiceState
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostName,
+    Item,
+    SectionName,
+    ServiceName,
+    ServiceState,
+)
 
 from cmk.fetchers import FetcherFunction
 
@@ -34,6 +41,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
@@ -55,6 +63,7 @@ def commandline_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -75,7 +84,7 @@ def commandline_discovery(
             fetched = fetcher(host_name, ip_address=None)
             host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
             store_piggybacked_sections(host_sections)
-            parsed_sections_broker = make_broker(host_sections)
+            parsed_sections_broker = make_broker(host_sections, section_plugins)
             _commandline_discovery_on_host(
                 host_name=host_name,
                 config_cache=config_cache,
@@ -234,6 +243,7 @@ def commandline_check_discovery(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     active_check_handler: Callable[[HostName, str], object],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     keepalive: bool,
 ) -> ServiceState:
@@ -245,6 +255,7 @@ def commandline_check_discovery(
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,
+            section_plugins=section_plugins,
             find_service_description=find_service_description,
         ),
         exit_spec=config_cache.exit_code_spec(host_name),
@@ -265,6 +276,7 @@ def _commandline_check_discovery(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     fetched = fetcher(host_name, ip_address=None)
@@ -274,5 +286,6 @@ def _commandline_check_discovery(
         fetched=((f[0], f[1]) for f in fetched),
         parser=parser,
         summarizer=summarizer,
+        section_plugins=section_plugins,
         find_service_description=find_service_description,
     )

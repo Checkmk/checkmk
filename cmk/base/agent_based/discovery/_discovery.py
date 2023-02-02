@@ -5,13 +5,21 @@
 
 import itertools
 from collections import Counter
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, Item, result, ServiceName
+from cmk.utils.type_defs import (
+    AgentRawData,
+    CheckPluginName,
+    HostName,
+    Item,
+    result,
+    SectionName,
+    ServiceName,
+)
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -26,6 +34,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters
@@ -43,6 +52,7 @@ def execute_check_discovery(
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -57,7 +67,7 @@ def execute_check_discovery(
     host_sections = parser(fetched)
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)
-    parsed_sections_broker = make_broker(host_sections_no_error)
+    parsed_sections_broker = make_broker(host_sections_no_error, section_plugins)
 
     host_labels = analyse_host_labels(
         host_name,

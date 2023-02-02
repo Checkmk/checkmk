@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container
+from collections.abc import Container, Mapping
 from pathlib import Path
 from typing import Callable
 
@@ -18,12 +18,14 @@ from cmk.utils.type_defs import (
     HWSWInventoryParameters,
     InventoryPluginName,
     RuleSetName,
+    SectionName,
 )
 
 from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction, SummarizerFunction
 
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 from ._inventory import check_inventory_tree
@@ -39,6 +41,7 @@ def commandline_inventory(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     parameters: HWSWInventoryParameters,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     section.section_begin(hostname)
@@ -51,6 +54,7 @@ def commandline_inventory(
             summarizer=summarizer,
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
+            section_plugins=section_plugins,
             run_plugin_names=run_plugin_names,
         )
 
@@ -71,6 +75,7 @@ def _commandline_inventory_on_host(
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> None:
     section.section_step("Inventorizing")
@@ -84,6 +89,7 @@ def _commandline_inventory_on_host(
         parser=parser,
         summarizer=summarizer,
         inventory_parameters=inventory_parameters,
+        section_plugins=section_plugins,
         run_plugin_names=run_plugin_names,
         parameters=parameters,
         old_tree=old_tree,

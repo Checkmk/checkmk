@@ -28,6 +28,7 @@ from cmk.utils.type_defs import (
     MetricTuple,
     ParsedSectionName,
     RuleSetName,
+    SectionName,
     ServiceName,
     state_markers,
     TimeperiodName,
@@ -61,7 +62,7 @@ from cmk.base.agent_based.utils import (
 )
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
-from cmk.base.api.agent_based.type_defs import Parameters
+from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
 from cmk.base.config import ConfigCache
 
 from . import _cluster_modes
@@ -84,6 +85,7 @@ def execute_checkmk_checks(
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -93,7 +95,7 @@ def execute_checkmk_checks(
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)
-    broker = make_broker(host_sections_no_error)
+    broker = make_broker(host_sections_no_error, section_plugins)
     with CPUTracker() as tracker:
         service_results = check_host_services(
             hostname,

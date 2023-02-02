@@ -17,7 +17,6 @@ from cmk.fetchers import SourceInfo, SourceType
 from cmk.checkers import HostKey
 from cmk.checkers.host_sections import HostSections
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import AgentParseFunction, SectionPlugin, SNMPParseFunction
 from cmk.base.crash_reporting import create_section_crash_dump
 
@@ -304,14 +303,14 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
 
 def make_broker(
     host_sections: Mapping[HostKey, HostSections],
+    section_plugins: Mapping[SectionName, SectionPlugin],
 ) -> ParsedSectionsBroker:
     return ParsedSectionsBroker(
         {
             host_key: (
                 ParsedSectionsResolver(
                     section_plugins=[
-                        agent_based_register.get_section_plugin(section_name)
-                        for section_name in host_sections.sections
+                        section_plugins[section_name] for section_name in host_sections.sections
                     ],
                 ),
                 SectionsParser(host_sections=host_sections, host_name=host_key.hostname),

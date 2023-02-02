@@ -3,12 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Container
+from collections.abc import Callable, Container, Mapping
 from functools import partial
 
 import cmk.utils.version as cmk_version
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    EVERYTHING,
+    HostAddress,
+    HostName,
+    SectionName,
+    ServiceState,
+)
 
 from cmk.fetchers import FetcherFunction
 
@@ -17,6 +24,7 @@ from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.submitters import Submitter
 
 import cmk.base.agent_based.error_handling as error_handling
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 from ._checking import execute_checkmk_checks
@@ -32,6 +40,7 @@ def commandline_checking(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     submitter: Submitter,
     active_check_handler: Callable[[HostName, str], object],
@@ -48,6 +57,7 @@ def commandline_checking(
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,
+            section_plugins=section_plugins,
             run_plugin_names=run_plugin_names,
             perfdata_with_times=perfdata_with_times,
             submitter=submitter,
@@ -71,6 +81,7 @@ def _commandline_checking(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -83,6 +94,7 @@ def _commandline_checking(
         fetched=fetched,
         parser=parser,
         summarizer=summarizer,
+        section_plugins=section_plugins,
         run_plugin_names=run_plugin_names,
         perfdata_with_times=perfdata_with_times,
         submitter=submitter,

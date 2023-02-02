@@ -70,7 +70,11 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.agent_based.confcheckers import ConfiguredFetcher, ConfiguredParser
+from cmk.base.agent_based.confcheckers import (
+    ConfiguredFetcher,
+    ConfiguredParser,
+    SectionPluginMapper,
+)
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.agent_based.utils import ConfiguredSummarizer
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
@@ -1502,6 +1506,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        section_plugins=SectionPluginMapper(),
         find_service_description=config.service_description,
         on_error=OnError.IGNORE,
     )
@@ -1573,6 +1578,7 @@ def mode_check_discovery(
         parser=parser,
         summarizer=summarizer,
         active_check_handler=active_check_handler,
+        section_plugins=SectionPluginMapper(),
         find_service_description=config.service_description,
         keepalive=keepalive,
     )
@@ -1789,6 +1795,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        section_plugins=SectionPluginMapper(),
         run_plugin_names=run_plugin_names,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
@@ -1933,6 +1940,7 @@ def mode_check(
         fetcher=fetcher,
         parser=parser,
         summarizer=summarizer,
+        section_plugins=SectionPluginMapper(),
         run_plugin_names=run_plugin_names,
         submitter=get_submitter_(
             check_submission=config.check_submission,
@@ -2081,6 +2089,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             parser=parser,
             summarizer=summarizer,
             parameters=parameters,
+            section_plugins=SectionPluginMapper(),
             run_plugin_names=run_plugin_names,
         )
 
@@ -2164,6 +2173,7 @@ def mode_inventory_as_check(
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
         ),
@@ -2291,6 +2301,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         parser=parser,
         fetcher=fetcher,
         summarizer=summarizer,
+        section_plugins=SectionPluginMapper(),
     )
 
 

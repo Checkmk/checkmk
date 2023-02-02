@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Container, Sequence
+from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Any, Literal
 
 import cmk.utils.cleanup
@@ -14,7 +14,7 @@ from cmk.utils.labels import HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -35,6 +35,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
@@ -53,6 +54,7 @@ def get_check_preview(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
     on_error: OnError,
@@ -72,7 +74,7 @@ def get_check_preview(
     fetched = fetcher(host_name, ip_address=ip_address)
     host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
     store_piggybacked_sections(host_sections)
-    parsed_sections_broker = make_broker(host_sections)
+    parsed_sections_broker = make_broker(host_sections, section_plugins)
 
     host_labels = analyse_host_labels(
         host_name,

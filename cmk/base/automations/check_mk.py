@@ -107,7 +107,11 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
-from cmk.base.agent_based.confcheckers import ConfiguredFetcher, ConfiguredParser
+from cmk.base.agent_based.confcheckers import (
+    ConfiguredFetcher,
+    ConfiguredParser,
+    SectionPluginMapper,
+)
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.config import ConfigCache, IgnoredServices
@@ -200,6 +204,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
+                section_plugins=SectionPluginMapper(),
                 find_service_description=config.service_description,
                 mode=mode,
                 service_filters=None,
@@ -304,6 +309,7 @@ class AutomationTryDiscovery(Automation):
             config_cache=config_cache,
             parser=parser,
             fetcher=fetcher,
+            section_plugins=SectionPluginMapper(),
             find_service_description=config.service_description,
             ignored_services=IgnoredServices(config_cache, host_name),
             on_error=on_error,

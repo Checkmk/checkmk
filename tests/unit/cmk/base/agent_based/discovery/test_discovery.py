@@ -41,7 +41,11 @@ from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-from cmk.base.agent_based.confcheckers import ConfiguredFetcher, ConfiguredParser
+from cmk.base.agent_based.confcheckers import (
+    ConfiguredFetcher,
+    ConfiguredParser,
+    SectionPluginMapper,
+)
 from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     ParsedSectionsResolver,
@@ -889,6 +893,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        section_plugins=SectionPluginMapper(),
         run_plugin_names=EVERYTHING,
         arg_only_new=False,
         on_error=OnError.RAISE,

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import itertools
 import time
-from collections.abc import Collection, Container, Iterable, Iterator
+from collections.abc import Collection, Container, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Literal
@@ -33,7 +33,13 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import HostName, HWSWInventoryParameters, InventoryPluginName, RuleSetName
+from cmk.utils.type_defs import (
+    HostName,
+    HWSWInventoryParameters,
+    InventoryPluginName,
+    RuleSetName,
+    SectionName,
+)
 
 from cmk.fetchers import FetcherFunction, SourceType
 
@@ -50,6 +56,7 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors, get_section_kwargs
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 __all__ = [
@@ -75,6 +82,7 @@ def check_inventory_tree(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    section_plugins: Mapping[SectionName, SectionPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
     old_tree: StructuredDataNode,
@@ -101,7 +109,7 @@ def check_inventory_tree(
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)
 
-    broker = make_broker(host_sections_no_error)
+    broker = make_broker(host_sections_no_error, section_plugins)
     parsing_errors = broker.parsing_errors()
 
     trees, update_result = _inventorize_real_host(

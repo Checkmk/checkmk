@@ -9,14 +9,14 @@ from __future__ import annotations
 
 import itertools
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Final
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -27,7 +27,9 @@ from cmk.checkers import parse_raw_data
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
+import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
 
@@ -158,4 +160,23 @@ class ConfiguredFetcher:
                 for host_name_, ip_address_ in hosts
             ),
             mode=self.mode,
+        )
+
+
+class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
+    # We should probably not tap into the private `register._config` module but
+    # the data we need doesn't seem to be available elsewhere.  Anyway, this is
+    # an *immutable* Mapping so we are actually on the safe side.
+
+    def __getitem__(self, __key: SectionName) -> SectionPlugin:
+        return _api.get_section_plugin(__key)
+
+    def __iter__(self) -> Iterator[SectionName]:
+        return iter(
+            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
+        )
+
+    def __len__(self) -> int:
+        return len(
+            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
         )

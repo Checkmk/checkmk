@@ -31,7 +31,7 @@ from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
-from cmk.base.agent_based.confcheckers import ConfiguredParser
+from cmk.base.agent_based.confcheckers import ConfiguredParser, SectionPluginMapper
 from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
     _parse_inventory_plugin_item,
@@ -1242,6 +1242,7 @@ def test_check_inventory_tree(
         parser=parser,
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=config_cache.inventory_parameters,
+        section_plugins=SectionPluginMapper(),
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
             {} if failed_state is None else {"inv-fail-status": failed_state}
@@ -1267,6 +1268,7 @@ def test_check_inventory_tree_no_data_or_files(
         parser=lambda *args, **kwargs: [],
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=config_cache.inventory_parameters,
+        section_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),
         old_tree=StructuredDataNode(),

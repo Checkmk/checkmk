@@ -27,6 +27,7 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     HostName,
     Item,
+    SectionName,
     ServiceID,
     ServiceName,
 )
@@ -45,6 +46,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
+from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 
@@ -101,6 +103,7 @@ def automation_discovery(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
     service_filters: _ServiceFilters | None,
@@ -124,7 +127,7 @@ def automation_discovery(
         fetched = fetcher(host_name, ip_address=None)
         host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
         store_piggybacked_sections(host_sections)
-        parsed_sections_broker = make_broker(host_sections)
+        parsed_sections_broker = make_broker(host_sections, section_plugins)
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
@@ -347,6 +350,7 @@ def discover_marked_hosts(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> None:
@@ -376,6 +380,7 @@ def discover_marked_hosts(
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
+                section_plugins=section_plugins,
                 find_service_description=find_service_description,
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
@@ -419,6 +424,7 @@ def _discover_marked_host(
     config_cache: ConfigCache,
     fetcher: FetcherFunction,
     parser: ParserFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     autodiscovery_queue: AutoQueue,
     reference_time: float,
@@ -445,6 +451,7 @@ def _discover_marked_host(
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        section_plugins=section_plugins,
         find_service_description=find_service_description,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
         service_filters=_ServiceFilters.from_settings(params.rediscovery),

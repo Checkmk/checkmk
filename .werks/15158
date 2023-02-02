@@ -1,0 +1,13 @@
+Title: Restart periodic notifications after FLAPPINGSTOP
+Class: fix
+Compatible: compat
+Component: core
+Date: 1675264303
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p34
+
+In some cases, periodic notifications would still be halted
+after FLAPPINGSTOP.

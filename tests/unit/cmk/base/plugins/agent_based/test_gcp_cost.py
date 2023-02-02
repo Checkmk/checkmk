@@ -80,6 +80,11 @@ def test_gcp_cost_check_data_only_one_month(section: Section) -> None:
     ]
 
 
+def test_item_not_in_section_yields_no_result(section: Section) -> None:
+    results = list(check(item="notthere", params={"levels": None}, section=section))
+    assert len(results) == 0
+
+
 @pytest.mark.parametrize(
     "state, params",
     [

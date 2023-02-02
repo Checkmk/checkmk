@@ -308,7 +308,7 @@ def _idle_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict
     if "idle_timeout" in internal_attributes:
         idle_option = internal_attributes["idle_timeout"]
         if idle_option:
-            idle_details = {"option": "individual", "duration": idle_option["duration"]}
+            idle_details = {"option": "individual", "duration": idle_option}
         else:  # False
             idle_details = {"option": "disable"}
     else:

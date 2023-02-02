@@ -10,32 +10,27 @@ from dataclasses import dataclass
 from itertools import groupby
 from typing import Any
 
+from pydantic import BaseModel, validator
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 ProjectId = str
 
 
-@dataclass(frozen=True)
-class Cost:
+class Cost(BaseModel):
     month: datetime.datetime
     amount: float
     currency: str
     project: str
 
+    @validator("month", pre=True)
     @classmethod
-    def from_dict(cls, data: Mapping[str, str | float]) -> "Cost":
-        month = data["month"]
-        amount = data["amount"]
-        currency = data["currency"]
-        project = data["project"]
-        assert isinstance(month, str)
-        assert isinstance(amount, float)
-        assert isinstance(currency, str)
-        assert isinstance(project, str)
+    def parse_month(cls, value: str) -> datetime.datetime:
+        return datetime.datetime.strptime(value, "%Y%m")
 
-        date = datetime.datetime.strptime(month, "%Y%m")
-        return cls(month=date, amount=amount, currency=currency, project=project)
+    class Config:
+        frozen = True
 
     def to_details(self) -> str:
         return f"{self.month.strftime('%B %Y')}: {self.amount:.2f} {self.currency}"
@@ -60,7 +55,7 @@ def parse(string_table: StringTable) -> Section:
     all_rows = sorted([json.loads(line[0]) for line in string_table[1:]], key=keyfunc)
     section = {}
     for project_id, rows in groupby(all_rows, key=keyfunc):
-        month_costs = sorted([Cost.from_dict(r) for r in rows], key=lambda c: c.month)
+        month_costs = sorted([Cost.parse_obj(r) for r in rows], key=lambda c: c.month)
         if len(month_costs) > 1:
             cost = ProjectCost(
                 current_month=month_costs[1],

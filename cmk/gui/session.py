@@ -162,12 +162,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             userdb.session.load_session_infos(self.user.ident, lock=True),
             datetime.now(),
         )
-        if self.session_info.logged_out and self.session_info.session_id in session_infos:
-            # Logged out but still saved. We remove the entry and save it.
-            del session_infos[self.session_info.session_id]
-        else:
-            session_infos[self.session_info.session_id] = self.session_info
-
+        session_infos[self.session_info.session_id] = self.session_info
         userdb.session.save_session_infos(self.user.ident, session_infos)
 
     def invalidate(self):

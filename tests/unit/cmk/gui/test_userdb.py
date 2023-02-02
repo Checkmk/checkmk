@@ -246,7 +246,7 @@ def test_on_logout_invalidate_session(single_auth_request: SingleRequest) -> Non
     session_info.invalidate()
     userdb.session.save_session_infos(user_id, {session_info.session_id: session_info})
 
-    assert not userdb.load_session_infos(user_id)
+    assert userdb.load_session_infos(user_id)[session_info.session_id].logged_out
 
 
 def test_access_denied_with_invalidated_session(single_auth_request: SingleRequest) -> None:
@@ -261,7 +261,7 @@ def test_access_denied_with_invalidated_session(single_auth_request: SingleReque
     session.session_info.invalidate()
     userdb.session.save_session_infos(user_id, {session_id: session.session_info})
 
-    assert not userdb.load_session_infos(user_id)
+    assert userdb.load_session_infos(user_id)[session_info.session_id].logged_out
 
     with pytest.raises(MKAuthException, match="Invalid user session"):
         userdb.on_access(user_id, session_id, now)
@@ -498,7 +498,7 @@ def test_invalidate_session(single_auth_request: SingleRequest) -> None:
     assert session_id in userdb.load_session_infos(user_id)
     session_info.invalidate()
     userdb.session.save_session_infos(user_id, {session_id: session_info})
-    assert not userdb.load_session_infos(user_id)
+    assert userdb.load_session_infos(user_id)[session_info.session_id].logged_out
 
 
 def test_get_last_activity(single_auth_request: SingleRequest) -> None:

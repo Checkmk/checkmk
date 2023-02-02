@@ -166,7 +166,7 @@ def _load_failed_logins(username: UserId) -> int:
 def active_sessions(
     session_infos: Mapping[str, SessionInfo], now: datetime
 ) -> dict[str, SessionInfo]:
-    """Return sessions that are not invalid / outdated
+    """Return only valid (not outdated) session
 
     In single user session mode no sessions are returned. In regular mode, the sessions are limited
     to 20 per user. Sessions with an inactivity > 7 days are also not returned.
@@ -176,6 +176,13 @@ def active_sessions(
         # reach this place, we can be sure that we are allowed to remove all existing ones.
         return {}
 
+    # NOTE
+    # We intentionally don't remove any session which has been logged out, and rely on that fact
+    # to be checked elsewhere, because that would lead to the session being removed directly after
+    # logout. This would lead to some information in the GUI no longer displaying.
+    #
+    # Once "last_login" got moved from the session_info struct to the user object, we can clean
+    # this up thoroughly.
     return {
         s.session_id: s
         for s in sorted(session_infos.values(), key=lambda s: s.last_activity, reverse=True)[:20]
@@ -193,7 +200,7 @@ def save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) 
     save_custom_attr(
         username,
         "session_info",
-        repr({k: asdict(v) for k, v in session_infos.items() if not v.logged_out}),
+        repr({k: asdict(v) for k, v in session_infos.items()}),
     )
 
 
@@ -208,7 +215,7 @@ def is_valid_user_session(
     if not session_infos:
         return False  # no session active
 
-    if session_id not in session_infos:
+    if session_id not in session_infos or session_infos[session_id].logged_out:
         auth_logger.debug(
             "%s session_id %s not valid (logged out or timed out?)", username, session_id
         )

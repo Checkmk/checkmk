@@ -175,8 +175,7 @@ class LoginPage(Page):
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                session.user = LoggedInUser(username)
-                session.persist()
+                session.login(LoggedInUser(username))
 
                 # This must happen before the enforced password change is
                 # checked in order to have the redirects correct...

@@ -138,6 +138,10 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         sess["_flashes"] = info.flashes
         return sess
 
+    def login(self, user_obj: LoggedInUser) -> None:
+        userdb.session.on_succeeded_login(user_obj.ident, datetime.now())
+        self.user = user_obj
+
     @classmethod
     def from_cookie(cls, cookie_string: str) -> CheckmkFileBasedSession:
         user_name, session_id, _cookie_hash = user_from_cookie(cookie_string)

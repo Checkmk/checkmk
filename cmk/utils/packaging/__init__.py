@@ -10,6 +10,7 @@ import subprocess
 from collections.abc import Iterable, Mapping
 from itertools import groupby
 from pathlib import Path
+from stat import filemode
 from typing import Final
 
 from pydantic import BaseModel
@@ -18,7 +19,6 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.i18n import _  # noqa: F401
-from cmk.utils.log import VERBOSE
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
 # It's OK to import centralized config load logic
@@ -71,11 +71,11 @@ def release(installer: Installer, pacname: PackageName, logger: logging.Logger) 
     if (manifest := installer.get_installed_manifest(pacname)) is None:
         raise PackageException(f"Package {pacname} not installed or corrupt.")
 
-    logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
+    logger.info("Releasing files of package %s into freedom...", pacname)
     for part, files in manifest.files.items():
-        logger.log(VERBOSE, "  Part '%s':", part.ident)
+        logger.info("  Part '%s':", part.ident)
         for f in files:
-            logger.log(VERBOSE, "    %s", f)
+            logger.info("    %s", f)
 
     if filenames := manifest.files.get(PackagePart.EC_RULE_PACKS):
         ec.release_packaged_rule_packs([str(f) for f in filenames])
@@ -94,13 +94,13 @@ def uninstall(
     post_package_change_actions: bool = True,
 ) -> None:
     for part, filenames in manifest.files.items():
-        g_logger.log(VERBOSE, "  Part '%s':", part.ident)
+        g_logger.info("  Part '%s':", part.ident)
         if part is PackagePart.EC_RULE_PACKS:
             _remove_packaged_rule_packs(filenames)
             continue
 
         for fn in filenames:
-            g_logger.log(VERBOSE, "    %s", fn)
+            g_logger.info("    %s", fn)
             try:
                 (path_config.get_path(part) / fn).unlink(missing_ok=True)
             except Exception as exc:
@@ -345,15 +345,14 @@ def _install(  # pylint: disable=too-many-branches
     manifest = extract_manifest(mkp)
 
     if old_manifest := installer.get_installed_manifest(manifest.name):
-        g_logger.log(
-            VERBOSE,
-            "Updating %s from version %s to %s.",
+        g_logger.info(
+            "[%s %s]: Updating from %s",
             manifest.name,
-            old_manifest.version,
             manifest.version,
+            old_manifest.version,
         )
     else:
-        g_logger.log(VERBOSE, "Installing %s version %s.", manifest.name, manifest.version)
+        g_logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
     _raise_for_installability(
         installer, path_config, manifest, old_manifest, cmk_version.__version__, allow_outdated
@@ -373,11 +372,20 @@ def _install(  # pylint: disable=too-many-branches
             remove_files = set(old_files) - new_files
             for fn in remove_files:
                 path = path_config.get_path(part) / fn
-                g_logger.log(VERBOSE, "Removing outdated file %s.", path)
                 try:
                     path.unlink(missing_ok=True)
                 except OSError as e:
-                    g_logger.error("Error removing %s: %s", path, e)
+                    g_logger.error(
+                        "[%s %s]: Error removing %s: %s",
+                        old_manifest.name,
+                        old_manifest.version,
+                        path,
+                        e,
+                    )
+                else:
+                    g_logger.info(
+                        "[%s %s]: Removed %s", old_manifest.name, old_manifest.version, path
+                    )
 
             if part is PackagePart.EC_RULE_PACKS:
                 _remove_packaged_rule_packs(list(remove_files), delete_export=False)
@@ -455,12 +463,8 @@ def _fix_files_permissions(
             desired_perm = _get_permissions(part, filename)
             has_perm = path.stat().st_mode & 0o7777
             if has_perm != desired_perm:
-                logger.log(
-                    VERBOSE,
-                    "    Fixing permissions of %s: %04o -> %04o",
-                    path,
-                    has_perm,
-                    desired_perm,
+                logger.debug(
+                    "Fixing %s: %s -> %s", path, filemode(has_perm), filemode(desired_perm)
                 )
                 path.chmod(desired_perm)
 
@@ -674,7 +678,7 @@ def _deinstall_inapplicable_active_packages(
                 allow_outdated=False,
             )
         except PackageException as exc:
-            log.log(VERBOSE, "[%s %s]: Uninstalling (%s)", manifest.name, manifest.version, exc)
+            log.info("[%s %s]: Uninstalling: %s", manifest.name, manifest.version, exc)
             uninstall(
                 installer,
                 path_config,
@@ -682,7 +686,7 @@ def _deinstall_inapplicable_active_packages(
                 post_package_change_actions=post_package_change_actions,
             )
         else:
-            log.log(VERBOSE, "[%s %s]: Kept", manifest.name, manifest.version)
+            log.info("[%s %s]: Not uninstalling", manifest.name, manifest.version)
 
 
 def _install_applicable_inactive_packages(
@@ -705,9 +709,9 @@ def _install_applicable_inactive_packages(
                     post_package_change_actions=post_package_change_actions,
                 )
             except PackageException as exc:
-                log.log(VERBOSE, "[%s]: Version %s not installed (%s)", name, manifest.version, exc)
+                log.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
             else:
-                log.log(VERBOSE, "[%s]: Version %s installed", name, manifest.version)
+                log.info("[%s %s]: Installed", name, manifest.version)
                 # We're done with this package.
                 # Do not try to install older versions, or the installation function will
                 # silently downgrade the package.
@@ -735,21 +739,18 @@ def disable_outdated(installer: Installer, path_config: PathConfig) -> None:
     using this function. Others are not disabled.
     """
     for manifest in installer.get_installed_manifests(g_logger):
-        g_logger.log(VERBOSE, "[%s %s]: Is it outdated?", manifest.name, manifest.version)
-
         try:
             _raise_for_too_new_cmk_version(manifest.version_usable_until, cmk_version.__version__)
         except PackageException as exc:
-            g_logger.log(
-                VERBOSE,
-                "[%s %s]: Disable outdated package: %s",
+            g_logger.info(
+                "[%s %s]: Disabling: %s",
                 manifest.name,
                 manifest.version,
                 exc,
             )
             disable(installer, path_config, manifest.name, manifest.version)
         else:
-            g_logger.log(VERBOSE, "[%s %s]: Not disabling", manifest.name, manifest.version)
+            g_logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
 
 
 def _execute_post_package_change_actions(package: Manifest | None) -> None:

@@ -4,24 +4,94 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.testlib.rest_api_client import AuxTagJSON, RestApiClient
+from tests.testlib.rest_api_client import AuxTagTestClient
 
 
-def get_test_data() -> list[AuxTagJSON]:
-    return [
-        AuxTagJSON(
-            **{
-                "aux_tag_id": f"aux_tag_id_{i}",
-                "title": f"aux_tag_{i}",
-                "topic": f"topic_{i}",
-            }
+def test_create_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
+    auxtag_client.create(
+        expect_ok=False,
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="",
+            topic="topic_1",
+        ),
+    ).assert_status_code(400)
+
+    auxtag_client.create(
+        expect_ok=False,
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title=None,
+            topic="topic_1",
+        ),
+    ).assert_status_code(400)
+
+    auxtag_client.create(
+        expect_ok=False,
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="",
+        ),
+    ).assert_status_code(400)
+
+    auxtag_client.create(
+        expect_ok=False,
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic=None,
+        ),
+    ).assert_status_code(400)
+
+
+def test_update_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
+    auxtag_client.create(
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="topic_1",
         )
-        for i in range(3)
-    ]
+    )
+    auxtag_client.edit(
+        expect_ok=False,
+        aux_tag_id="aux_tag_id_1",
+        tag_data=auxtag_client.edit_model(
+            title="",
+            topic="topic_1",
+        ),
+    ).assert_status_code(400)
+
+    auxtag_client.edit(
+        expect_ok=False,
+        aux_tag_id="aux_tag_id_1",
+        tag_data=auxtag_client.edit_model(
+            title=None,
+            topic="topic_1",
+        ),
+    ).assert_status_code(400)
+
+    auxtag_client.edit(
+        expect_ok=False,
+        aux_tag_id="aux_tag_id_1",
+        tag_data=auxtag_client.edit_model(
+            title="aux_tag_1",
+            topic="",
+        ),
+    ).assert_status_code(400)
+
+    auxtag_client.edit(
+        expect_ok=False,
+        aux_tag_id="aux_tag_id_1",
+        tag_data=auxtag_client.edit_model(
+            title="aux_tag_1",
+            topic=None,
+        ),
+    ).assert_status_code(400)
 
 
-def test_get_auxtag(api_client: RestApiClient) -> None:
-    resp = api_client.get_aux_tag(tag_id="ping")
+def test_get_auxtag(auxtag_client: AuxTagTestClient) -> None:
+    resp = auxtag_client.get(aux_tag_id="ping")
     assert resp.json["extensions"].keys() == {"topic"}
     assert {link["method"] for link in resp.json["links"]} == {
         "GET",
@@ -30,8 +100,8 @@ def test_get_auxtag(api_client: RestApiClient) -> None:
     }
 
 
-def test_get_builtin_auxtags(api_client: RestApiClient) -> None:
-    assert {t["id"] for t in api_client.get_aux_tags().json["value"]} == {
+def test_get_builtin_auxtags(auxtag_client: AuxTagTestClient) -> None:
+    assert {t["id"] for t in auxtag_client.get_all().json["value"]} == {
         "ip-v4",
         "ip-v6",
         "snmp",
@@ -41,14 +111,17 @@ def test_get_builtin_auxtags(api_client: RestApiClient) -> None:
     }
 
 
-def test_get_builtin_and_custom_auxtags(api_client: RestApiClient) -> None:
-    for tag_data in get_test_data():
-        api_client.create_aux_tag(tag_data=tag_data)
+def test_get_builtin_and_custom_auxtags(auxtag_client: AuxTagTestClient) -> None:
+    auxtag_client.create(
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="topic_1",
+        )
+    )
 
-    assert {t["id"] for t in api_client.get_aux_tags().json["value"]} == {
-        "aux_tag_id_0",
+    assert {t["id"] for t in auxtag_client.get_all().json["value"]} == {
         "aux_tag_id_1",
-        "aux_tag_id_2",
         "ip-v4",
         "ip-v6",
         "snmp",
@@ -58,25 +131,57 @@ def test_get_builtin_and_custom_auxtags(api_client: RestApiClient) -> None:
     }
 
 
-def test_update_custom_aux_tag_title(api_client: RestApiClient) -> None:
-    aux_tag = get_test_data()[0]
-    api_client.create_aux_tag(tag_data=aux_tag)
-    aux_tag.title = "edited_title"
-    assert api_client.edit_aux_tag(tag_data=aux_tag).json["title"] == "edited_title"
+def test_update_custom_aux_tag_title(auxtag_client: AuxTagTestClient) -> None:
+    auxtag_client.create(
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="topic_1",
+        )
+    )
+    assert (
+        auxtag_client.edit(
+            aux_tag_id="aux_tag_id_1",
+            tag_data=auxtag_client.edit_model(
+                title="edited_title",
+                topic="topic_1",
+            ),
+        ).json["title"]
+        == "edited_title"
+    )
 
 
-def test_update_custom_aux_tag_topic(api_client: RestApiClient) -> None:
-    aux_tag = get_test_data()[0]
-    api_client.create_aux_tag(tag_data=aux_tag)
-    aux_tag.topic = "edited_topic"
-    assert api_client.edit_aux_tag(tag_data=aux_tag).json["extensions"]["topic"] == "edited_topic"
+def test_update_custom_aux_tag_topic(auxtag_client: AuxTagTestClient) -> None:
+    auxtag_client.create(
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="topic_1",
+        )
+    )
+    assert (
+        auxtag_client.edit(
+            aux_tag_id="aux_tag_id_1",
+            tag_data=auxtag_client.edit_model(
+                title="edited_title",
+                topic="edited_topic",
+            ),
+        ).json["extensions"]["topic"]
+        == "edited_topic"
+    )
 
 
-def test_delete_custom_aux_tag(api_client: RestApiClient) -> None:
-    aux_tag = get_test_data()[0]
-    api_client.create_aux_tag(tag_data=aux_tag)
-    api_client.get_aux_tag(tag_id=aux_tag.aux_tag_id)
-    api_client.delete_aux_tag(tag_id=aux_tag.aux_tag_id).assert_status_code(status_code=204)
-    api_client.get_aux_tag(tag_id=aux_tag.aux_tag_id, expect_ok=False).assert_status_code(
+def test_delete_custom_aux_tag(auxtag_client: AuxTagTestClient) -> None:
+    auxtag_client.create(
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="topic_1",
+        )
+    )
+
+    auxtag_client.get(aux_tag_id="aux_tag_id_1")
+    auxtag_client.delete(aux_tag_id="aux_tag_id_1").assert_status_code(status_code=204)
+    auxtag_client.get(aux_tag_id="aux_tag_id_1", expect_ok=False).assert_status_code(
         status_code=404
     )

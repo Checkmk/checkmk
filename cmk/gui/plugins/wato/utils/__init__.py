@@ -437,6 +437,9 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     )
 
 
+PasswordFromStore = IndividualOrStoredPassword  # CMK-12228
+
+
 def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,

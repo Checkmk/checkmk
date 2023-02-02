@@ -500,6 +500,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
             "Alternative": cmk.gui.valuespec.Alternative,
             "Dictionary": cmk.gui.valuespec.Dictionary,
             "FixedValue": cmk.gui.valuespec.FixedValue,
+            "Filesize": cmk.gui.valuespec.Filesize,
             "ListOfStrings": cmk.gui.valuespec.ListOfStrings,
             "MonitoredHostname": cmk.gui.valuespec.MonitoredHostname,
             "Password": cmk.gui.valuespec.Password,

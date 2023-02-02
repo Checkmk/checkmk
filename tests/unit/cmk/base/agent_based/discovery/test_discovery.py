@@ -42,6 +42,7 @@ import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.agent_based.confcheckers import (
+    CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
     SectionPluginMapper,
@@ -779,6 +780,7 @@ def test__find_candidates() -> None:
     assert discovery._discovered_services._find_candidates(
         broker,
         run_plugin_names=EVERYTHING,
+        check_plugins=CheckPluginMapper(),
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),
@@ -894,6 +896,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
+        check_plugins=CheckPluginMapper(),
         run_plugin_names=EVERYTHING,
         arg_only_new=False,
         on_error=OnError.RAISE,
@@ -1527,6 +1530,7 @@ def test__discover_host_labels_and_services_on_realhost(
         scenario.config_cache,
         scenario.hostname,
         parsed_sections_broker=scenario.parsed_sections_broker,
+        check_plugins=CheckPluginMapper(),
         on_error=OnError.RAISE,
         run_plugin_names=EVERYTHING,
     )
@@ -1605,6 +1609,7 @@ def test__discover_services_on_cluster(
         scenario.parent,
         config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
+        check_plugins=CheckPluginMapper(),
         find_service_description=config.service_description,
         on_error=OnError.RAISE,
     )
@@ -1700,6 +1705,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         config_cache,
         HostName("horst"),
         parsed_sections_broker=ParsedSectionsBroker({}),
+        check_plugins={},
         find_service_description=lambda *_args: "desc",
         host_of_clustered_service=lambda hn, _svcdescr: hn,
         on_error=OnError.RAISE,

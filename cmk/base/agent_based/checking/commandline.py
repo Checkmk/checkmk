@@ -24,6 +24,7 @@ from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.submitters import Submitter
 
 import cmk.base.agent_based.error_handling as error_handling
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -41,6 +42,7 @@ def commandline_checking(
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     submitter: Submitter,
     active_check_handler: Callable[[HostName, str], object],
@@ -58,6 +60,7 @@ def commandline_checking(
             parser=parser,
             summarizer=summarizer,
             section_plugins=section_plugins,
+            check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
             perfdata_with_times=perfdata_with_times,
             submitter=submitter,
@@ -82,6 +85,7 @@ def _commandline_checking(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -95,6 +99,7 @@ def _commandline_checking(
         parser=parser,
         summarizer=summarizer,
         section_plugins=section_plugins,
+        check_plugins=check_plugins,
         run_plugin_names=run_plugin_names,
         perfdata_with_times=perfdata_with_times,
         submitter=submitter,

@@ -24,7 +24,6 @@ from cmk.checkers import ParserFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 
 import cmk.base.agent_based.checking as checking
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -35,6 +34,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache, ObjectAttributes
@@ -55,6 +55,7 @@ def get_check_preview(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
     on_error: OnError,
@@ -96,6 +97,7 @@ def get_check_preview(
         host_name,
         config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
+        check_plugins=check_plugins,
         find_service_description=find_service_description,
         on_error=on_error,
     )
@@ -105,6 +107,7 @@ def get_check_preview(
             _check_preview_table_row(
                 host_name,
                 config_cache=config_cache,
+                check_plugins=check_plugins,
                 service=ConfiguredService(
                     check_plugin_name=entry.check_plugin_name,
                     item=entry.item,
@@ -130,6 +133,7 @@ def get_check_preview(
                 host_name,
                 config_cache=config_cache,
                 service=service,
+                check_plugins=check_plugins,
                 check_source="manual",  # "enforced" would be nicer
                 parsed_sections_broker=parsed_sections_broker,
                 found_on_nodes=[host_name],
@@ -158,20 +162,25 @@ def _check_preview_table_row(
     *,
     config_cache: ConfigCache,
     service: ConfiguredService,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
     parsed_sections_broker: ParsedSectionsBroker,
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
-    plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
-    ruleset_name = str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
+    check_plugin = check_plugins.get(service.check_plugin_name)
+    ruleset_name = (
+        str(check_plugin.check_ruleset_name)
+        if check_plugin and check_plugin.check_ruleset_name
+        else None
+    )
 
     result = checking.get_aggregated_result(
         host_name,
         config_cache,
         parsed_sections_broker,
         service,
-        plugin,
+        check_plugin,
         value_store_manager=value_store_manager,
         rtc_package=None,
     ).result

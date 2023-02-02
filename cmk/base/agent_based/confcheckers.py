@@ -16,7 +16,14 @@ import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result, SectionName
+from cmk.utils.type_defs import (
+    AgentRawData,
+    CheckPluginName,
+    HostAddress,
+    HostName,
+    result,
+    SectionName,
+)
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -29,6 +36,7 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
@@ -180,3 +188,18 @@ class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
         return len(
             frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
         )
+
+
+class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
+    # See comment to SectionPluginMapper.
+    def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
+        value = _api.get_check_plugin(__key)
+        if value is None:
+            raise KeyError(__key)
+        return value
+
+    def __iter__(self) -> Iterator[CheckPluginName]:
+        return iter(_api.registered_check_plugins)
+
+    def __len__(self) -> int:
+        return len(_api.registered_check_plugins)

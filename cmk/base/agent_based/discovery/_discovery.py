@@ -34,6 +34,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
@@ -53,6 +54,7 @@ def execute_check_discovery(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -84,6 +86,7 @@ def execute_check_discovery(
         host_name,
         config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
+        check_plugins=check_plugins,
         find_service_description=find_service_description,
         on_error=OnError.RAISE,
     )

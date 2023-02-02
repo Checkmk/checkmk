@@ -108,6 +108,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
 from cmk.base.agent_based.confcheckers import (
+    CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
     SectionPluginMapper,
@@ -205,6 +206,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 parser=parser,
                 fetcher=fetcher,
                 section_plugins=SectionPluginMapper(),
+                check_plugins=CheckPluginMapper(),
                 find_service_description=config.service_description,
                 mode=mode,
                 service_filters=None,
@@ -310,6 +312,7 @@ class AutomationTryDiscovery(Automation):
             parser=parser,
             fetcher=fetcher,
             section_plugins=SectionPluginMapper(),
+            check_plugins=CheckPluginMapper(),
             find_service_description=config.service_description,
             ignored_services=IgnoredServices(config_cache, host_name),
             on_error=on_error,

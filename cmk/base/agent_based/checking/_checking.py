@@ -44,7 +44,6 @@ from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.utils
@@ -61,6 +60,7 @@ from cmk.base.agent_based.utils import (
     get_section_kwargs,
 )
 from cmk.base.api.agent_based import checking_classes, value_store
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
 from cmk.base.config import ConfigCache
@@ -86,6 +86,7 @@ def execute_checkmk_checks(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -102,6 +103,7 @@ def execute_checkmk_checks(
             config_cache=config_cache,
             parsed_sections_broker=broker,
             services=services,
+            check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
             submitter=submitter,
             rtc_package=None,
@@ -252,6 +254,7 @@ def check_host_services(
     config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     services: Sequence[ConfiguredService],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     rtc_package: AgentRawData | None,
@@ -272,7 +275,7 @@ def check_host_services(
                     config_cache,
                     parsed_sections_broker,
                     service,
-                    agent_based_register.get_check_plugin(service.check_plugin_name),
+                    check_plugins.get(service.check_plugin_name),
                     value_store_manager=value_store_manager,
                     rtc_package=rtc_package,
                 )

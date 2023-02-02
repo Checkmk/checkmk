@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from collections.abc import Container, Iterable, Iterator, MutableMapping, Sequence
+from collections.abc import Container, Iterable, Iterator, Mapping, MutableMapping, Sequence
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -19,10 +19,10 @@ from cmk.fetchers import SourceType
 from cmk.checkers import HostKey, plugin_contexts
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery
@@ -33,6 +33,7 @@ def analyse_discovered_services(
     host_name: HostName,
     *,
     parsed_sections_broker: ParsedSectionsBroker,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
@@ -45,6 +46,7 @@ def analyse_discovered_services(
             config_cache,
             host_name,
             parsed_sections_broker=parsed_sections_broker,
+            check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
             on_error=on_error,
         ),
@@ -125,10 +127,15 @@ def _discover_services(
     *,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     on_error: OnError,
 ) -> list[AutocheckEntry]:
     # find out which plugins we need to discover
-    plugin_candidates = _find_candidates(parsed_sections_broker, run_plugin_names)
+    plugin_candidates = _find_candidates(
+        parsed_sections_broker,
+        run_plugin_names,
+        check_plugins,
+    )
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
     # The host name must be set for the host_name() calls commonly used to determine the
@@ -145,6 +152,7 @@ def _discover_services(
                             for entry in _discover_plugins_services(
                                 config_cache,
                                 check_plugin_name=check_plugin_name,
+                                check_plugins=check_plugins,
                                 host_key=HostKey(
                                     host_name,
                                     (
@@ -175,6 +183,7 @@ def _discover_services(
 def _find_candidates(
     broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
     contain data for.
@@ -192,9 +201,7 @@ def _find_candidates(
 
     """
     preliminary_candidates: Sequence[tuple[CheckPluginName, list[ParsedSectionName]]] = list(
-        (p.name, p.sections)
-        for p in agent_based_register.iter_all_check_plugins()
-        if p.name in run_plugin_names
+        (p.name, p.sections) for p in check_plugins.values() if p.name in run_plugin_names
     )
 
     # Flattened list of ParsedSectionName, optimization only.
@@ -252,6 +259,7 @@ def _discover_plugins_services(
     config_cache: ConfigCache,
     *,
     check_plugin_name: CheckPluginName,
+    check_plugins: Mapping[CheckPluginName, CheckPlugin],
     host_key: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
@@ -261,8 +269,9 @@ def _discover_plugins_services(
         console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
         return
 
-    check_plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if check_plugin is None:
+    try:
+        check_plugin = check_plugins[check_plugin_name]
+    except KeyError:
         console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
         return
 

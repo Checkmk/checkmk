@@ -293,12 +293,12 @@ def _command_disable_outdated(_args: argparse.Namespace, _logger: logging.Logger
 
 
 def _command_update_active(_args: argparse.Namespace, logger: logging.Logger) -> int:
-    """Disable MKP packages that are not suitable for this version, and enable others.
+    """Deactivate MKP packages that are not suitable for this version, and activate others.
 
     Packages can declare their minimum or maximum required Checkmk versions.
     Also packages can collide with one another or fail to load for other reasons.
 
-    This command disables all packages that are not applicable, and then enables the ones that are.
+    This command deactivates all packages that are not applicable, and then activates the ones that are.
     """
     update_active_packages(logger)
     return 0

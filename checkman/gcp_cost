@@ -4,7 +4,7 @@ catalog: cloud/gcp
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors cost of gcp projects
+ This check monitors cost of gcp projects.
 
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.
@@ -13,4 +13,4 @@ description:
  are configurable via the rule "GCP Cost".
 
 discovery:
- One service is created for each project in cost data.
+ One service is created for each project id in cost data.

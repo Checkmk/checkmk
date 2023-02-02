@@ -389,6 +389,10 @@ setup:
 	    libtool-bin \
 	    libxml2-dev \
 	    libreadline-dev \
+	    libxml2-dev \
+	    libxslt-dev \
+	    libpq-dev \
+	    libreadline-dev \
 	    lld-$(CLANG_VERSION) \
 	    lldb-$(CLANG_VERSION) \
 	    musl-tools \

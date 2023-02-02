@@ -12,6 +12,8 @@ import urllib
 import pytest
 import webtest  # type: ignore[import]
 
+from tests.testlib.rest_api_client import RestApiClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import paths, version
@@ -168,7 +170,7 @@ def test_openapi_rules_href_escaped(
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
-        base + "/domain-types/ruleset/collections/all",
+        base + "/domain-types/ruleset/collections/all?used=0",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
         status=200,
     )
@@ -391,7 +393,7 @@ def test_openapi_list_rulesets(logged_in_admin_wsgi_app: WebTestAppForCMK) -> No
 
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
-        base + "/domain-types/ruleset/collections/all?fulltext=cisco_qos",
+        base + "/domain-types/ruleset/collections/all?fulltext=cisco_qos&used=False",
         headers={"Accept": "application/json", "Content-Type": "application/json"},
     )
     assert len(resp.json["value"]) == 2
@@ -642,3 +644,36 @@ def _make_folder_inaccessible(wsgi_app: WebTestAppForCMK, base: str, folder: str
         },
         status=200,
     )
+
+
+def test_openapi_only_show_used_rulesets_by_default_regression(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, api_client: RestApiClient
+) -> None:
+    """With default parameters, the 'list rulesets' endpoint should only show rulessets that are in use."""
+    # make one ruleset used, so this tests won't pass on an empty result
+    _create_rule(aut_user_auth_wsgi_app, "~")
+    rulesets = api_client.list_rulesets().json["value"]
+
+    assert len(rulesets) > 0
+
+    for ruleset in rulesets:
+        assert ruleset["extensions"]["number_of_rules"] > 0
+
+
+def test_openapi_fulltext_crash_regression(api_client: RestApiClient) -> None:
+    """A fulltext search shouldn't crash the endpoint."""
+    api_client.list_rulesets(fulltext="cluster").assert_status_code(200)
+
+
+def test_openapi_deprecated_filter_regression(api_client: RestApiClient) -> None:
+    """No deprecated rules should be shown when they are filtered out."""
+    # checkgroup_parameters:jvm_threads is deprecated.
+    api_client.create_rule(
+        ruleset="checkgroup_parameters:jvm_threads",
+        value_raw="'(80, 100)'",
+        conditions={"host_name": {"match_on": ["heute"], "operator": "one_of"}},
+        properties={},
+    )
+    resp = api_client.list_rulesets(deprecated=False)
+
+    assert len(resp.json["value"]) == 0

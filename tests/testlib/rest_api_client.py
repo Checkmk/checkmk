@@ -10,6 +10,7 @@ import json
 import multiprocessing
 import pprint
 import queue
+import urllib.parse
 from collections.abc import Mapping
 from typing import Any, Literal, NoReturn, Sequence, Type, TypedDict
 
@@ -20,6 +21,10 @@ from cmk.utils.type_defs import HTTPMethod
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
+
+
+def _only_set_keys(body: dict[str, Any | None]) -> dict[str, Any]:
+    return {k: v for k, v in body.items() if v is not None}
 
 
 class Link(BaseModel):
@@ -132,6 +137,42 @@ class RequestHandler(abc.ABC):
 class TimeRange(TypedDict):
     start: str
     end: str
+
+
+class RuleProperties(TypedDict, total=False):
+    description: str
+    comment: str
+    documentation_url: str
+    disabled: bool
+
+
+def default_rule_properties() -> RuleProperties:
+    return {"disabled": False}
+
+
+class StringMatcher(TypedDict):
+    match_on: list[str]
+    operator: Literal["one_of", "none_of"]
+
+
+class HostTagMatcher(TypedDict):
+    key: list[str]
+    operator: Literal["is", "is_not", "none_of", "one_if"]
+    value: str
+
+
+class LabelMatcher(TypedDict):
+    key: str
+    operator: Literal["is", "is_not"]
+    value: str
+
+
+class RuleConditions(TypedDict, total=False):
+    host_name: StringMatcher
+    host_tags: list[HostTagMatcher]
+    host_labels: list[LabelMatcher]
+    service_labels: list[LabelMatcher]
+    service_description: StringMatcher
 
 
 class RestApiClient:
@@ -484,6 +525,63 @@ class RestApiClient:
             url="/domain-types/user_config/collections/all",
             body=body,
             expect_ok=expect_ok,
+        )
+
+    def list_rulesets(
+        self,
+        fulltext: str | None = None,
+        folder: str | None = None,
+        deprecated: bool | None = None,
+        used: bool | None = None,
+        group: str | None = None,
+        name: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query_params = urllib.parse.urlencode(
+            _only_set_keys(
+                {
+                    "fulltext": fulltext,
+                    "folder": folder,
+                    "deprecated": deprecated,
+                    "used": used,
+                    "group": group,
+                    "name": name,
+                }
+            )
+        )
+
+        return self._request(
+            "get", url="/domain-types/ruleset/collections/all?" + query_params, expect_ok=expect_ok
+        )
+
+    def list_rules(self, ruleset: str, expect_ok: bool = True) -> Response:
+        return self._request(
+            "get",
+            url=f"/domain-types/rule/collections/all?ruleset_name={ruleset}",
+            expect_ok=expect_ok,
+        )
+
+    def create_rule(
+        self,
+        ruleset: str,
+        value_raw: str,
+        conditions: RuleConditions,
+        folder: str = "~",
+        properties: RuleProperties | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = _only_set_keys(
+            {
+                "ruleset": ruleset,
+                "folder": folder,
+                "properties": properties,
+                "value_raw": value_raw,
+                "conditions": conditions,
+            }
+        )
+
+        return self._request(
+            "post", url="/domain-types/rule/collections/all", body=body, expect_ok=expect_ok
         )
 
     def show_user(self, username: str, expect_ok: bool = True) -> Response:

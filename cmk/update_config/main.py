@@ -36,6 +36,7 @@ from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.hosts_and_folders import disable_redis
+from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 from .registry import update_action_registry
 from .update_state import UpdateState
@@ -135,6 +136,9 @@ class ConfigUpdater:
 
         # Note: Redis has to be disabled first, the other contexts depend on it
         with disable_redis(), gui_context(), SuperUserContext():
+            # TODO this is a HACK to set a theme because of AttributeError:
+            # 'NoneType' object has no attribute 'icon_themes'
+            set_global_vars()
             self._check_failed_gui_plugins()
             self._initialize_base_environment()
 

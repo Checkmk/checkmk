@@ -1818,7 +1818,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
         rep_mode = replication_mode()
-        if rep_mode in ["master", "takeover"]:
+        if rep_mode in ["sync", "takeover"]:
             copy_url = make_confirm_delete_link(
                 url=make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]),
                 title=_("Copy all event rules from the central site"),

@@ -64,7 +64,6 @@ from six import ensure_binary, ensure_str
 
 from livestatus import SiteId
 
-import cmk.utils.crypto.certificate as certificate
 import cmk.utils.defines as defines
 import cmk.utils.log
 import cmk.utils.paths
@@ -7712,7 +7711,6 @@ class AjaxFetchCA(AjaxPage):
 
 def analyse_cert(value: Any) -> dict[str, dict[str, str]]:
     # ? type of the value argument is unclear
-    # TODO(hannes): use utils.crypto.certificate instead
     cert = crypto.load_certificate(
         crypto.FILETYPE_PEM, ensure_binary(value)  # pylint: disable= six-ensure-str-bin-call
     )
@@ -7750,20 +7748,20 @@ def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
 ) -> Tuple:
     """A single certificate with a matching private key."""
 
-    def _validate_private_key(value: str, varprefix: str) -> None:
-        if value.startswith("-----BEGIN ENCRYPTED PRIVATE KEY"):
-            raise MKUserError(varprefix, _("Encrypted private keys are not supported"))
+    def _validate_is_single_cert(value: str, varprefix: str) -> None:
+        header_occurances = len([s for s in value.split("\n") if s.startswith("-----BEGIN")])
+        if header_occurances == 1:
+            return
+        raise MKUserError(varprefix, _("Cannot be a certificate chain"))
 
-        try:
-            certificate.RsaPrivateKey.load_pem(certificate.PlaintextPrivateKeyPEM(value))
-        except Exception:
+    def _validate_private_key(value: str, varprefix: str) -> None:
+        if not value.startswith("-----BEGIN PRIVATE"):
             raise MKUserError(varprefix, _("Invalid private key"))
+        _validate_is_single_cert(value, varprefix)
 
     def _validate_certificate(value: str, varprefix: str) -> None:
-        try:
-            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
-        except Exception:
-            raise MKUserError(varprefix, _("Invalid certificate"))
+        validate_certificate(value, varprefix)
+        _validate_is_single_cert(value, varprefix)
 
     return Tuple(
         elements=[

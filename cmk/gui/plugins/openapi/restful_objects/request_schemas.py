@@ -1695,6 +1695,7 @@ class HostTag(BaseSchema):
 
 class InputHostTagGroup(BaseSchema):
     ident = HostTagGroupId(
+        required=True,
         example="group_id",
         description="An id for the host tag group",
         attribute="id",

@@ -460,7 +460,7 @@ class CollectionItem(OneOfSchema):
 
 
 class HostTag(BaseSchema):
-    id = fields.String(description="The unique identifier of this host tag")
+    id = fields.String(description="The unique identifier of this host tag", allow_none=True)
     title = fields.String(description="The title of this host tag")
     aux_tags = fields.List(fields.String(), description="The auxiliary tags this tag included in.")
 

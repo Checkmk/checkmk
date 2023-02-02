@@ -365,6 +365,7 @@ def test__get_post_discovery_services(
             service_filters,
             result,
             mode,
+            keep_clustered_vanished_services=True,
         ).values()
     ]
 

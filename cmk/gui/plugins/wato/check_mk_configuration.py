@@ -4192,6 +4192,25 @@ def _valuespec_automatic_rediscover_parameters() -> Transform:
                     ),
                 ),
                 (
+                    "keep_clustered_vanished_services",
+                    DropdownChoice(
+                        title=_("Vanished clustered services"),
+                        help=_(
+                            "By default we keep a record of vanished services on the node if they are assigned to a cluster."
+                            " When a clustered service switches from one node to another, it might not be seen on either node for one check cycle."
+                            " Keeping clustered services indefinitely keeps us from loosing them in this case."
+                            " However this means that truly vanished clustered servces will never be removed from the cluster."
+                            " If you choose to include clustered service in the removal operation, vanished services will be removed from clusters,"
+                            " at the risk of loosing services due to the described race condition."
+                        ),
+                        choices=[
+                            (True, _("Always keep vanished clustered services")),
+                            (False, _("Include vanished clustered services during removal")),
+                        ],
+                        default_value=True,
+                    ),
+                ),
+                (
                     "group_time",
                     Age(
                         title=_("Group discovery and activation for up to"),
@@ -4285,7 +4304,7 @@ def _valuespec_automatic_rediscover_parameters() -> Transform:
                     ),
                 ),
             ],
-            optional_keys=["service_filters"],
+            optional_keys=["service_filters", "keep_clustered_vanished_services"],
         ),
         forth=_transform_automatic_rediscover_parameters,
     )

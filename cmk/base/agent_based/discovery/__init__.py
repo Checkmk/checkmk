@@ -299,6 +299,7 @@ def automation_discovery(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     mode: DiscoveryMode,
+    keep_clustered_vanished_services: bool,
     service_filters: Optional[_ServiceFilters],
     on_error: OnError,
     use_cached_snmp_data: bool,
@@ -367,7 +368,12 @@ def automation_discovery(
 
         # Create new list of checks
         final_services = _get_post_discovery_autocheck_services(
-            host_name, services, service_filters or _ServiceFilters.accept_all(), result, mode
+            host_name,
+            services,
+            service_filters or _ServiceFilters.accept_all(),
+            result,
+            mode,
+            keep_clustered_vanished_services,
         )
         host_config.set_autochecks(list(final_services.values()))
 
@@ -396,9 +402,10 @@ def _get_post_discovery_autocheck_services(
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
     mode: DiscoveryMode,
+    keep_clustered_vanished_services: bool,
 ) -> Mapping[ServiceID, autochecks.AutocheckServiceWithNodes]:
     """
-    The output contains a selction of services in the states "new", "old", "ignored", "vanished"
+    The output contains a selection of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
 
     Service in with the state "custom", "active" and "manual" are currently not checked.
@@ -446,10 +453,11 @@ def _get_post_discovery_autocheck_services(
                     result.self_kept += 1
 
         else:
-            # Silently keep clustered services
-            post_discovery_services.update(
-                (s.service.id(), s) for s in discovered_services_with_nodes
-            )
+            if check_source != "clustered_vanished" or keep_clustered_vanished_services:
+                # Silently keep clustered services
+                post_discovery_services.update(
+                    (s.service.id(), s) for s in discovered_services_with_nodes
+                )
             if check_source == "clustered_new":
                 result.clustered_new += len(discovered_services_with_nodes)
             elif check_source == "clustered_old":
@@ -877,6 +885,9 @@ def _discover_marked_host(
         config_cache=config_cache,
         host_config=host_config,
         mode=DiscoveryMode(rediscovery_parameters.get("mode")),
+        keep_clustered_vanished_services=rediscovery_parameters.get(
+            "keep_clustered_vanished_services", True
+        ),
         service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
         on_error=OnError.IGNORE,
         use_cached_snmp_data=True,

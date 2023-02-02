@@ -1250,7 +1250,7 @@ def test_check_inventory_tree(
     ).check_result
 
     assert expected == check_result.state
-    assert "Cannot update tree" in check_result.summary
+    assert "Did not update the tree due to at least one error" in check_result.summary
 
 
 def test_check_inventory_tree_no_data_or_files(
@@ -1288,7 +1288,12 @@ def test_check_inventory_tree_no_data_or_files(
                 }
             ),
             [
-                ActiveCheckResult(state=1, summary="Cannot update tree", details=(), metrics=()),
+                ActiveCheckResult(
+                    state=1,
+                    summary="Did not update the tree due to at least one error",
+                    details=(),
+                    metrics=(),
+                ),
                 ActiveCheckResult(state=0, summary="Found no data", details=(), metrics=()),
             ],
         ),
@@ -1327,7 +1332,12 @@ def test_check_inventory_tree_no_data_or_files(
                 }
             ),
             [
-                ActiveCheckResult(state=1, summary="Cannot update tree", details=(), metrics=()),
+                ActiveCheckResult(
+                    state=1,
+                    summary="Did not update the tree due to at least one error",
+                    details=(),
+                    metrics=(),
+                ),
                 ActiveCheckResult(
                     state=0, summary="Found 2 inventory entries", details=(), metrics=()
                 ),

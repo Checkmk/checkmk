@@ -589,7 +589,10 @@ def _check_fetched_data_or_trees(
         ):
             yield ActiveCheckResult(0, "No further data for tree update")
         else:
-            yield ActiveCheckResult(parameters.fail_status, "Cannot update tree")
+            yield ActiveCheckResult(
+                parameters.fail_status,
+                "Did not update the tree due to at least one error",
+            )
 
     yield from _check_trees(
         parameters=parameters,

@@ -322,7 +322,7 @@ class WebTestAppForCMK(webtest.TestApp):
 
     def login(self, username: UserId, password: str) -> webtest.TestResponse:
         self.username = username
-        login = self.get("/NO_SITE/check_mk/login.py")
+        login = self.get("/NO_SITE/check_mk/login.py", status=200)
         login.form["_username"] = username
         login.form["_password"] = password
         resp = login.form.submit("_login", index=1)
@@ -418,6 +418,7 @@ def logged_in_wsgi_app(
 def logged_in_admin_wsgi_app(
     wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
 ) -> WebTestAppForCMK:
+    wsgi_app.set_authorization(None)
     _ = wsgi_app.login(with_admin[0], with_admin[1])
     return wsgi_app
 

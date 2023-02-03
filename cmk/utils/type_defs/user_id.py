@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import re
 
+__all__ = ["UserId"]
+
 
 class UserId(str):
     """

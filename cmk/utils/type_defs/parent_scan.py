@@ -5,4 +5,6 @@
 
 from ._misc import HostAddress, HostName
 
+__all__ = ["Gateways"]
+
 Gateways = list[tuple[tuple[HostName | None, HostAddress, HostName | None] | None, str, int, str]]

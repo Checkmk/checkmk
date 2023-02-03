@@ -5,4 +5,6 @@
 
 from ._misc import HostName
 
+__all__ = ["UpdateDNSCacheResult"]
+
 UpdateDNSCacheResult = tuple[int, list[HostName]]

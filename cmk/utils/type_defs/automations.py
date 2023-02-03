@@ -6,6 +6,17 @@
 from collections.abc import Sequence
 from typing import Any, Literal, TypedDict
 
+__all__ = [
+    "PiggybackHostsConnectorAttributes",
+    "ExecutionStepAttributes",
+    "ExecutionStep",
+    "ExecutionStatusAttributes",
+    "ExecutionStatus",
+    "ConnectorObj",
+    "PhaseOneAttributes",
+    "PhaseOneResult",
+]
+
 
 class PiggybackHostsConnectorAttributes(TypedDict):
     hosts: Sequence[str]

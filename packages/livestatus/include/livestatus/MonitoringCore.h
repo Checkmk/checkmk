@@ -66,8 +66,8 @@ public:
     downtimes(const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
     downtimes(const IService &) const = 0;
-    void virtual forEachDowntimeUntil(
-        const std::function<bool(const IDowntime &)> &f) const = 0;
+    bool virtual all_of_downtimes(
+        const std::function<bool(const IDowntime &)> &pred) const = 0;
 
     void virtual forEachTimeperiodUntil(
         const std::function<bool(const ITimeperiod &)> &f) const = 0;

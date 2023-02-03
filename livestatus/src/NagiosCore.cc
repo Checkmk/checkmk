@@ -239,14 +239,13 @@ std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
     return result;
 }
 
-void NagiosCore::forEachDowntimeUntil(
+bool NagiosCore::all_of_downtimes(
     // TODO(sp): Do we need a mutex here?
-    const std::function<bool(const IDowntime &)> &f) const {
-    for (const auto &[id, dt] : _downtimes) {
-        if (f(NebDowntime{*dt})) {
-            break;
-        }
-    }
+    const std::function<bool(const IDowntime &)> &pred) const {
+    return std::all_of(_downtimes.cbegin(), _downtimes.cend(),
+                       [&pred](const auto &downtime) {
+                           return pred(NebDowntime{*downtime.second});
+                       });
 }
 
 void NagiosCore::forEachTimeperiodUntil(

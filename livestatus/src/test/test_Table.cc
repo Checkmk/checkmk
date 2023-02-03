@@ -137,8 +137,10 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
 
-    void forEachDowntimeUntil(
-        const std::function<bool(const IDowntime &)> & /*f*/) const override {}
+    bool all_of_downtimes(const std::function<bool(const IDowntime &)>
+                              & /*pred*/) const override {
+        return true;
+    }
 
     void forEachTimeperiodUntil(
         const std::function<bool(const ITimeperiod &)> & /*f*/) const override {

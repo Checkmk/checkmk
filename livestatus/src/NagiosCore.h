@@ -113,8 +113,8 @@ public:
         const IHost &hst) const override;
     std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IService &svc) const override;
-    void forEachDowntimeUntil(
-        const std::function<bool(const IDowntime &)> &f) const override;
+    bool all_of_downtimes(
+        const std::function<bool(const IDowntime &)> &pred) const override;
 
     void forEachTimeperiodUntil(
         const std::function<bool(const ITimeperiod &)> &f) const override;

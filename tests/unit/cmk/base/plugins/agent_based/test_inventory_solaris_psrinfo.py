@@ -9,7 +9,7 @@ from typing import NamedTuple, TypeVar
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_solaris_psrinfo import (
     inventory_solaris_cpus,
     parse_solaris_psrinfo_physical,
@@ -180,7 +180,7 @@ def _section(section_function: Callable[[StringTable], T], agent_output: str | N
         ),
     ],
 )
-def test_inventory_solaris_cpus(test_set, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_solaris_cpus(test_set: PsrInfo, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
         inventory_solaris_cpus(
             _section(parse_solaris_psrinfo_physical, test_set.psrinfo_p),

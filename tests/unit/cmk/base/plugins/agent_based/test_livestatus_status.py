@@ -5,11 +5,13 @@
 
 # pylint: disable=protected-access
 
+
 import pytest
 
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 STRING_TABLE_STATUS = [
     ["[heute]"],
@@ -667,8 +669,8 @@ def fixture_fetcher_checker_counters_list():
 
 
 @pytest.mark.usefixtures("fetcher_checker_counters")
-def test_check_new_counters_in_oldstabe(  # type:ignore[no-untyped-def]
-    fetcher_checker_counters,
+def test_check_new_counters_in_oldstabe(
+    fetcher_checker_counters: CheckResult,
 ) -> None:
     yielded_results = list(
         livestatus_status._generate_livestatus_results(

@@ -6,9 +6,11 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.kaspersky_av_updates import (
     check_kaspersky_av_updates,
     parse_kaspersky_av_updates,
+    Section,
 )
 
 
@@ -20,9 +22,7 @@ from cmk.base.plugins.agent_based.kaspersky_av_updates import (
         ([["stripped_field", "  stripped   "]], dict(stripped_field="stripped")),
     ],
 )
-def test_parse_kaspersky_av_updates(  # type:ignore[no-untyped-def]
-    string_table, expected_section
-) -> None:
+def test_parse_kaspersky_av_updates(string_table: StringTable, expected_section: Section) -> None:
     assert parse_kaspersky_av_updates(string_table) == expected_section
 
 
@@ -55,5 +55,5 @@ def test_parse_kaspersky_av_updates(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_kaskpersky_av_updates(section, results) -> None:  # type:ignore[no-untyped-def]
+def test_check_kaskpersky_av_updates(section: Section, results: CheckResult) -> None:
     assert list(check_kaspersky_av_updates(section)) == results

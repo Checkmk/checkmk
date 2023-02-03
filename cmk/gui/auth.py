@@ -184,6 +184,8 @@ auth_logger = logger.getChild("auth")
 def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
     try:
         username, session_id, cookie_hash = raw_cookie.split(":", 2)
+        # Careful. Instantiating UserId may raise as well.
+        user_id = UserId(username)
     except ValueError:
         raise MKAuthException("Invalid auth cookie.")
 
@@ -192,7 +194,7 @@ def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
         float(session_id)
         raise MKAuthException("Refusing pre 2.0 auth cookie")
 
-    return UserId(username), session_id, cookie_hash
+    return user_id, session_id, cookie_hash
 
 
 def _fetch_cookie(cookie_name: str) -> str:

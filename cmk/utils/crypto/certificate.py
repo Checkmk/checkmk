@@ -210,6 +210,8 @@ class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
         private key.
         """
 
+        self.certificate_path.touch(mode=0o600)
+        self.private_key_path.touch(mode=0o600)
         self.certificate_path.write_bytes(self.certificate.dump_pem().bytes)
         self.private_key_path.write_bytes(self.private_key.dump_pem(private_key_password).bytes)
 

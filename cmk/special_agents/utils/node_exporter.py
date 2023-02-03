@@ -277,7 +277,7 @@ class NodeExporter:
                 device[entity_name] = int(float(node_info["value"]))
         return result
 
-    def memory_summary(self) -> tuple[MemUsed, dict[str, SectionStr]]:
+    def memory_summary(self) -> tuple[MemUsed | None, dict[str, SectionStr]]:
         result: dict[str, list[str]] = {}
         memory = self._retrieve_memory()
         for query_name, query in memory:
@@ -290,6 +290,8 @@ class NodeExporter:
         cluster_section = MemUsed.parse_obj(
             {key: sum(sample["value"] for sample in samples) for key, samples in memory}
         )
+        if cluster_section.MemTotal == 0:
+            return None, node_sections
         return cluster_section, node_sections
 
     def _retrieve_memory(self) -> list[tuple[str, list[PromQLMetric]]]:
@@ -420,7 +422,7 @@ class NodeExporter:
     def _retrieve_uptime(self) -> list[PromQLMetric]:
         return self.get_promql(NodeExporterQuery.node_uptime_seconds)
 
-    def cpu_summary(self) -> tuple[CPULoad, dict[str, SectionStr]]:
+    def cpu_summary(self) -> tuple[CPULoad | None, dict[str, SectionStr]]:
         cpu = self._retrieve_cpu()
         node_to_raw: dict[str, dict[str, float]] = {}
         for key, samples in cpu:
@@ -431,13 +433,13 @@ class NodeExporter:
         cluster_section = CPULoad.parse_obj(
             {key: sum(sample["value"] for sample in samples) for key, samples in cpu}
         )
-        return (
-            cluster_section,
-            {
-                node: _create_section("prometheus_cpu_v1:sep(0)", [CPULoad.parse_obj(raw).json()])
-                for node, raw in node_to_raw.items()
-            },
-        )
+        node_sections = {
+            node: _create_section("prometheus_cpu_v1:sep(0)", [CPULoad.parse_obj(raw).json()])
+            for node, raw in node_to_raw.items()
+        }
+        if cluster_section.num_cpus == 0:
+            return None, node_sections
+        return cluster_section, node_sections
 
     def _retrieve_cpu(self) -> list[tuple[str, list[PromQLMetric]]]:
         return [

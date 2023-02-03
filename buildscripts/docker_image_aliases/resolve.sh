@@ -4,9 +4,6 @@
 # echo "$(grep $1 $SCRIPT_DIR/docker_image_aliases.txt | awk '{print $2}')"
 #
 
-# TODO: the legacy buildkit will be removed in a future docker relase, migrate asap!
-export DOCKER_BUILDKIT=0
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 RESOLVE_ERROR_FILE="docker-image-alias-resolve-error.txt"

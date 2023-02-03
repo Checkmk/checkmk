@@ -12,6 +12,7 @@
 
 #include "NagiosCore.h"
 #include "livestatus/Attributes.h"
+#include "livestatus/Interface.h"
 #include "livestatus/RegExp.h"
 #include "livestatus/StringUtils.h"
 

@@ -23,6 +23,7 @@
 #include "Downtime.h"  // IWYU pragma: keep
 #include "Store.h"
 #include "livestatus/Attributes.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Renderer.h"
@@ -33,14 +34,6 @@ class Comment;
 class InputBuffer;
 class Logger;
 class OutputBuffer;
-
-class IComment;
-class IContact;
-class IContactGroup;
-class IDowntime;
-class IHost;
-class IService;
-class ITimeperiod;
 
 struct NagiosPaths {
     std::string _socket{"/usr/local/nagios/var/rw/live"};

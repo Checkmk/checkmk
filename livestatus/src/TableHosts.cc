@@ -31,7 +31,6 @@
 #include "TimeperiodsCache.h"
 #include "livestatus/AttributeBitmaskColumn.h"
 #include "livestatus/AttributeListColumn.h"
-#include "livestatus/Attributes.h"
 #include "livestatus/BlobColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/CommentRenderer.h"

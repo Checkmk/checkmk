@@ -14,6 +14,8 @@
 
 class IService;
 
+enum class AttributeKind { custom_variables, tags, labels, label_sources };
+
 struct Attribute {
     const std::string &name;
     const std::string &value;

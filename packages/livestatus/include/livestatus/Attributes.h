@@ -9,11 +9,10 @@
 #include <string>
 #include <unordered_map>
 
+#include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
 
 using Attributes = std::unordered_map<std::string, std::string>;
-
-enum class AttributeKind { custom_variables, tags, labels, label_sources };
 
 inline std::tuple<AttributeKind, std::string> to_attribute_kind(
     const std::string &name) {

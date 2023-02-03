@@ -11,11 +11,11 @@
 #include "Comment.h"  // IWYU pragma: keep
 #include "CustomAttributeMap.h"
 #include "gtest/gtest.h"
-#include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/DictColumn.h"
 #include "livestatus/DictFilter.h"
 #include "livestatus/Filter.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"

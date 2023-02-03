@@ -11,6 +11,7 @@ from types import TracebackType
 __all__ = [
     "MKAgentError",
     "MKBailOut",
+    "MKConfigLockTimeout",
     "MKIPAddressLookupError",
     "MKException",
     "MKFetcherError",
@@ -104,3 +105,7 @@ class OnError(enum.Enum):
     RAISE = "raise"
     WARN = "warn"
     IGNORE = "ignore"
+
+
+class MKConfigLockTimeout(MKTimeout):
+    """Special exception to signalize timeout waiting for the global configuration lock"""

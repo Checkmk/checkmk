@@ -17,7 +17,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKException
 
 from cmk.gui import http, pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -225,7 +225,7 @@ def _process_request(  # pylint: disable=too-many-branches
         resp = _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
-    except (MKGeneralException, cmk.utils.store.MKConfigLockTimeout) as e:
+    except MKException as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
 

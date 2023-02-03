@@ -510,3 +510,28 @@ class RestApiClient:
             body=body,
             expect_ok=expect_ok,
         )
+
+    def show_user(self, username: str, expect_ok: bool = True) -> Response:
+        return self._request("get", url=f"/objects/user_config/{username}", expect_ok=expect_ok)
+
+    # TODO: add additional parameters
+    def edit_user(
+        self, username: str, fullname: str | None = None, expect_ok: bool = True
+    ) -> Response:
+        body = {"fullname": fullname} if fullname is not None else {}
+
+        # if there is no object, there's probably no etag.
+        # But we want the 404 from the request below!
+        etag = self.show_user(username, expect_ok=expect_ok).headers.get("E-Tag")
+        if etag is not None:
+            headers = {"If-Match": etag}
+        else:
+            headers = {}
+
+        return self._request(
+            "put",
+            url=f"/objects/user_config/{username}",
+            body=body,
+            headers=headers,
+            expect_ok=expect_ok,
+        )

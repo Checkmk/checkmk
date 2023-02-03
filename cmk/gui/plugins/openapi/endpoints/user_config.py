@@ -176,7 +176,15 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     # last_pw_change & serial must be changed manually if edit happens
     username = params["username"]
     api_attrs = params["body"]
-    internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
+
+    try:
+        internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
+    except KeyError:
+        return problem(
+            status=404,
+            title=f'User "{username}" is not known.',
+            detail="The user to edit does not exist. Please check for eventual misspellings.",
+        )
 
     edit_users(
         {

@@ -1257,3 +1257,9 @@ def test_user_with_invalid_id(api_client: RestApiClient) -> None:
     api_client.create_user(
         username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
     ).assert_status_code(400)
+
+
+def test_openapi_edit_non_existing_user_regression(api_client: RestApiClient) -> None:
+    api_client.edit_user(
+        "i_do_not_exists", fullname="I hopefully won't crash the site!", expect_ok=False
+    ).assert_status_code(404)

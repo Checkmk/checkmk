@@ -122,8 +122,10 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
 
-    void forEachCommentUntil(
-        const std::function<bool(const IComment &)> & /*f*/) const override {}
+    bool all_of_comments(
+        const std::function<bool(const IComment &)> & /*pred*/) const override {
+        return true;
+    }
 
     [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost & /*host*/) const override {

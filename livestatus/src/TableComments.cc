@@ -80,8 +80,8 @@ std::string TableComments::name() const { return "comments"; }
 std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query &query, const User &user) {
-    core()->forEachCommentUntil([&query, &user](const IComment &r) {
-        return user.is_authorized_for_object(&r.host(), r.service(), false) &&
-               !query.processDataset(Row{&r});
+    core()->all_of_comments([&query, &user](const IComment &r) {
+        return !user.is_authorized_for_object(&r.host(), r.service(), false) ||
+               query.processDataset(Row{&r});
     });
 }

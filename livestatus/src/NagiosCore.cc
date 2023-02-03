@@ -5,6 +5,7 @@
 
 #include "NagiosCore.h"
 
+#include <algorithm>
 #include <atomic>
 #include <cstdlib>
 #include <sstream>
@@ -203,14 +204,13 @@ std::vector<std::unique_ptr<const IComment>> NagiosCore::comments(
     return result;
 }
 
-void NagiosCore::forEachCommentUntil(
+bool NagiosCore::all_of_comments(
+    const std::function<bool(const IComment &)> &pred) const {
     // TODO(sp): Do we need a mutex here?
-    const std::function<bool(const IComment &)> &f) const {
-    for (const auto &[id, co] : _comments) {
-        if (f(NebComment{*co})) {
-            break;
-        }
-    }
+    return std::all_of(_comments.cbegin(), _comments.cend(),
+                       [&pred](const auto &comment) {
+                           return pred(NebComment{*comment.second});
+                       });
 }
 
 std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(

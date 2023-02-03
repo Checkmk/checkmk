@@ -38,7 +38,7 @@ public:
     virtual std::unique_ptr<const IContactGroup> find_contactgroup(
         const std::string &name) = 0;
 
-    virtual std::unique_ptr<const IContact> find_contact(
+    [[nodiscard]] virtual std::unique_ptr<const IContact> find_contact(
         const std::string &name) const = 0;
     virtual bool all_contacts(
         std::function<bool(const IContact &)> pred) const = 0;
@@ -59,8 +59,8 @@ public:
         const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IComment>> comments(
         const IService &) const = 0;
-    void virtual forEachCommentUntil(
-        const std::function<bool(const IComment &)> &f) const = 0;
+    bool virtual all_of_comments(
+        const std::function<bool(const IComment &)> &pred) const = 0;
 
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
     downtimes(const IHost &) const = 0;

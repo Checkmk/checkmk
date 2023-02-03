@@ -193,25 +193,21 @@ def _find_path_and_package_info(
     package_name: PackageName, package_version: PackageVersion | None
 ) -> tuple[Path, Manifest]:
 
-    # not sure if we need this, but better safe than sorry.
-    def filename_matches(manifest: Manifest, name: str) -> bool:
-        return format_file_name(manifest.id) == name
+    if package_version is None:
 
-    def package_matches(
-        manifest: Manifest, package_name: PackageName, package_version: PackageVersion | None
-    ) -> bool:
-        return manifest.name == package_name and (
-            package_version is None or manifest.version == package_version
-        )
+        def package_matches(manifest: Manifest) -> bool:
+            return manifest.name == package_name
+
+    else:
+
+        def package_matches(manifest: Manifest) -> bool:
+            return manifest.name == package_name and manifest.version == package_version
 
     matching_packages = [
         (package_path, manifest)
         for package_path in _get_enabled_package_paths()
         if (manifest := extract_manifest_optionally(package_path)) is not None
-        and (
-            package_matches(manifest, package_name, package_version)
-            or filename_matches(manifest, package_name)
-        )
+        and package_matches(manifest)
     ]
 
     package_str = f"{package_name}" + ("" if package_version is None else f" {package_version}")

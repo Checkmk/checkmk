@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK base specific code of the crash reporting"""
 
-import os
-import sys
 import traceback
 from collections.abc import Mapping
 from pathlib import Path
@@ -27,26 +25,6 @@ from cmk.utils.type_defs import (
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
 CrashReportStore = crash_reporting.CrashReportStore
-
-
-@crash_reporting.crash_report_registry.register
-class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
-    @classmethod
-    def type(cls) -> str:
-        return "base"
-
-    @classmethod
-    def from_exception(
-        cls,
-        details: Mapping[str, Any] | None = None,
-        type_specific_attributes: Mapping[str, Any] | None = None,
-    ) -> crash_reporting.ABCCrashReport:
-        return super().from_exception(
-            details={
-                "argv": sys.argv,
-                "env": dict(os.environ),
-            }
-        )
 
 
 def create_section_crash_dump(

@@ -29,12 +29,12 @@ import cmk.utils.caching
 import cmk.utils.debug
 import cmk.utils.log
 import cmk.utils.paths
+from cmk.utils.crash_reporting import ABCCrashReport, crash_report_registry, CrashReportStore
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTerminate
 from cmk.utils.log import console
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-import cmk.base.crash_reporting
 import cmk.base.profiling as profiling
 import cmk.base.utils
 from cmk.base.modes import modes
@@ -45,6 +45,25 @@ logger = logging.getLogger("cmk.base")
 cmk.base.utils.register_sigint_handler()
 
 help_function = modes.get("help").handler_function
+
+# We probably don't really need to register that here, do we?
+@crash_report_registry.register
+class CrashReport(ABCCrashReport):
+    @classmethod
+    def type(cls) -> str:
+        return "base"
+
+    @classmethod
+    def from_exception(
+        cls, details: object = None, type_specific_attributes: object = None
+    ) -> ABCCrashReport:
+        return super().from_exception(
+            details={
+                "argv": sys.argv,
+                "env": dict(os.environ),
+            }
+        )
+
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
@@ -120,13 +139,13 @@ except socket.error as e:
     if e.errno == errno.EPIPE:
         # this is not an error, caller closes socket(s) and will kill cmk too
         sys.exit(4)
-    crash = cmk.base.crash_reporting.CMKBaseCrashReport.from_exception()
-    cmk.base.crash_reporting.CrashReportStore().save(crash)
+    crash = CrashReport.from_exception()
+    CrashReportStore().save(crash)
     raise
 
 except Exception:
-    crash = cmk.base.crash_reporting.CMKBaseCrashReport.from_exception()
-    cmk.base.crash_reporting.CrashReportStore().save(crash)
+    crash = CrashReport.from_exception()
+    CrashReportStore().save(crash)
     raise
 
 finally:

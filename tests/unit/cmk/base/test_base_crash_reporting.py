@@ -8,17 +8,9 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-import cmk.utils.crash_reporting
 from cmk.utils.type_defs import HostName
 
 import cmk.base.crash_reporting as crash_reporting
-
-
-def test_base_crash_report_registry() -> None:
-    assert (
-        cmk.utils.crash_reporting.crash_report_registry["base"]
-        == crash_reporting.CMKBaseCrashReport
-    )
 
 
 def _check_generic_crash_info(crash):
@@ -41,36 +33,6 @@ def _check_generic_crash_info(crash):
             key,
             type(crash.crash_info[key]),
         )
-
-
-def test_base_crash_report_from_exception() -> None:
-    crash = None
-    try:
-        raise ValueError("DING")
-    except Exception:
-        crash = crash_reporting.CMKBaseCrashReport.from_exception()
-
-    _check_generic_crash_info(crash)
-    assert crash.type() == "base"
-    assert isinstance(crash.crash_info["details"]["argv"], list)
-    assert isinstance(crash.crash_info["details"]["env"], dict)
-
-    assert crash.crash_info["exc_type"] == "ValueError"
-    assert crash.crash_info["exc_value"] == "DING"
-
-
-def test_base_crash_report_save() -> None:
-    store = crash_reporting.CrashReportStore()
-    try:
-        raise ValueError("DINGELING")
-    except Exception:
-        crash = crash_reporting.CMKBaseCrashReport.from_exception()
-        store.save(crash)
-
-    crash2 = store.load_from_directory(crash.crash_dir())
-
-    assert crash.crash_info["exc_type"] == crash2.crash_info["exc_type"]
-    assert crash.crash_info["time"] == crash2.crash_info["time"]
 
 
 def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:

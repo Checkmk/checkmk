@@ -53,15 +53,6 @@ except ImportError:
     pass
 
 
-# For Python 3 sys.stdout creates \r\n as newline for Windows.
-# Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
-# If you want to use the old behaviour just use old_stdout.
-if sys.version_info[0] >= 3:
-    new_stdout = io.TextIOWrapper(
-        sys.stdout.buffer, newline="\n", encoding=sys.stdout.encoding, errors=sys.stdout.errors
-    )
-    old_stdout, sys.stdout = sys.stdout, new_stdout
-
 DEFAULT_LOG_LEVEL = "."
 
 DUPLICATE_LINE_MESSAGE_FMT = "[the above message was repeated %d times]"
@@ -108,6 +99,20 @@ else:
     text_type = unicode  # pylint: disable=undefined-variable
     binary_type = str
 
+
+if PY3:
+    # For Python 3 sys.stdout creates \r\n as newline for Windows.
+    # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
+    # If you want to use the old behaviour just use old_stdout.
+    new_stdout = io.TextIOWrapper(
+        sys.stdout.buffer,
+        newline="\n",
+        # Write out in utf-8, independently of any encodings preferred on the system. For Python 2,
+        # this is the case because we write str (aka encoded) to sys.stdout and we encode in UTF-8.
+        encoding="utf-8",
+        errors=sys.stdout.errors,
+    )
+    old_stdout, sys.stdout = sys.stdout, new_stdout
 
 # Borrowed from six
 def ensure_str(s, encoding="utf-8", errors="strict"):
@@ -1191,7 +1196,9 @@ def _is_outdated_batch(batch_file, retention_period, now):
 
 def write_batch_file(lines, batch_id, batch_dir):
     # type: (Iterable[str], str, str) -> None
-    with open(os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w") as handle:
+    with open(
+        os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w", encoding="utf-8"
+    ) as handle:
         handle.writelines([ensure_text_type(l, errors="replace") for l in lines])
 
 
@@ -1222,7 +1229,7 @@ def process_batches(current_batch, current_batch_id, remote, retention_period, n
             if _is_outdated_batch(batch_file, retention_period, now):
                 os.unlink(batch_file)
             else:
-                with open(batch_file) as fh:
+                with open(batch_file, encoding="utf-8", errors="replace") as fh:
                     sys.stdout.writelines([ensure_str(l) for l in fh])
                 continue
         except EnvironmentError:

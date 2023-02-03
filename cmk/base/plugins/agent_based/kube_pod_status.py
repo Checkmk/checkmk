@@ -135,7 +135,7 @@ def _check_kube_pod_status(
         yield Result(state=State.OK, summary=status_message)
     else:
         for result in check_levels(
-            sum(time for time in value_store["duration_per_status"].values()),
+            sum(value_store["duration_per_status"].values()),
             render_func=render.timespan,
             levels_upper=levels,
         ):

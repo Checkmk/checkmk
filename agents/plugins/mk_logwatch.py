@@ -427,9 +427,9 @@ class State(object):  # pylint: disable=useless-object-inheritance
         if not os.path.exists(self.filename):
             return self
 
-        with open(self.filename) as stat_fh:
+        with open(self.filename, "rb") as stat_fh:
             for line in stat_fh:
-                line_data = self._load_line(line)
+                line_data = self._load_line(ensure_text_type(line))
                 self._data[line_data["file"]] = line_data
 
         LOGGER.info("Read state: %r", self._data)
@@ -442,7 +442,7 @@ class State(object):  # pylint: disable=useless-object-inheritance
 
         with open(self.filename, "wb") as stat_fh:
             for data in self._data.values():
-                stat_fh.write(repr(data).encode("ascii") + b"\n")
+                stat_fh.write(repr(data).encode("utf-8") + b"\n")
 
     def get(self, key):
         # type: (text_type | binary_type) -> dict[str, Any]

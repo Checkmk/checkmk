@@ -1787,6 +1787,7 @@ def pipe_pager() -> str:
 
 
 def call_scripts(site: SiteContext, phase: str) -> None:
+    """Calls scripts in defined directories on update."""
     path = Path(site.dir, "lib", "omd", "scripts", phase)
     if path.exists():
         putenv("OMD_ROOT", site.dir)
@@ -2876,6 +2877,9 @@ def main_update(  # pylint: disable=too-many-branches
     # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
     # initialized tmpfs.
     prepare_and_populate_tmpfs(version_info, site)
+
+    # Needed for update-pre-hooks scripts
+    putenv("OMD_CONFLICT_MODE", conflict_mode)
 
     call_scripts(site, "update-pre-hooks")
 

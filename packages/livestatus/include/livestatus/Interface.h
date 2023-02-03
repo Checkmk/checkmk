@@ -18,7 +18,7 @@ class IContact {
 public:
     virtual ~IContact() = default;
     [[nodiscard]] virtual const void *handle() const = 0;
-    virtual bool all_labels(
+    virtual bool all_of_labels(
         const std::function<bool(const std::string &name,
                                  const std::string &value)> &pred) const = 0;
 };
@@ -30,9 +30,9 @@ public:
     [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;
-    virtual bool all_services(
+    virtual bool all_of_services(
         std::function<bool(const IService &)> pred) const = 0;
-    virtual bool all_labels(
+    virtual bool all_of_labels(
         const std::function<bool(const std::string &name,
                                  const std::string &value)> &pred) const = 0;
 };
@@ -45,7 +45,7 @@ public:
     [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;
-    virtual bool all_labels(
+    virtual bool all_of_labels(
         const std::function<bool(const std::string &name,
                                  const std::string &value)> &pred) const = 0;
 };

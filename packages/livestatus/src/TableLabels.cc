@@ -94,21 +94,21 @@ void TableLabels::answerQuery(Query &query, const User &user) {
 
     auto processHost = [&processLabel, &user](const IHost &host) {
         return !user.is_authorized_for_host(host) ||
-               host.all_labels(processLabel);
+               host.all_of_labels(processLabel);
     };
 
     auto processService = [&processLabel, &user](const IService &service) {
         return !user.is_authorized_for_service(service) ||
-               service.all_labels(processLabel);
+               service.all_of_labels(processLabel);
     };
 
     auto processHostAndServices = [&processHost,
                                    &processService](const IHost &host) {
-        return processHost(host) && host.all_services(processService);
+        return processHost(host) && host.all_of_services(processService);
     };
 
     auto processContact = [&processLabel](const IContact &contact) {
-        return contact.all_labels(processLabel);
+        return contact.all_of_labels(processLabel);
     };
 
     core()->all_hosts(processHostAndServices) &&

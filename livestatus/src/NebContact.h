@@ -18,9 +18,9 @@ public:
 
     [[nodiscard]] const void *handle() const override { return &contact_; };
 
-    bool all_labels(const std::function<bool(const std::string &name,
-                                             const std::string &value)> &pred)
-        const override {
+    bool all_of_labels(const std::function<bool(const std::string &name,
+                                                const std::string &value)>
+                           &pred) const override {
         // TODO(sp) Avoid construction of temporary map
         auto labels = CustomAttributeMap{AttributeKind::labels}(contact_);
         return std::all_of(

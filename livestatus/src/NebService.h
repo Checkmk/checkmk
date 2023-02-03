@@ -49,9 +49,9 @@ public:
             .value_or("");
     }
 
-    bool all_labels(const std::function<bool(const std::string &name,
-                                             const std::string &value)> &pred)
-        const override {
+    bool all_of_labels(const std::function<bool(const std::string &name,
+                                                const std::string &value)>
+                           &pred) const override {
         // TODO(sp) Avoid construction of temporary map
         auto labels = CustomAttributeMap{AttributeKind::labels}(service_);
         return std::all_of(
@@ -66,7 +66,7 @@ private:
 };
 
 // TODO(sp) Fix cruel workaround for circular header includes.
-inline bool NebHost::all_services(
+inline bool NebHost::all_of_services(
     std::function<bool(const IService &)> pred) const {
     for (servicesmember *mem = host_.services; mem != nullptr;
          mem = mem->next) {

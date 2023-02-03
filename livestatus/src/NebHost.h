@@ -45,12 +45,12 @@ public:
             .value_or("");
     }
 
-    bool all_services(
+    bool all_of_services(
         std::function<bool(const IService &)> pred) const override;
 
-    bool all_labels(const std::function<bool(const std::string &name,
-                                             const std::string &value)> &pred)
-        const override {
+    bool all_of_labels(const std::function<bool(const std::string &name,
+                                                const std::string &value)>
+                           &pred) const override {
         // TODO(sp) Avoid construction of temporary map
         auto labels = CustomAttributeMap{AttributeKind::labels}(host_);
         return std::all_of(

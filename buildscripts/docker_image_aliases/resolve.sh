@@ -8,8 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 RESOLVE_ERROR_FILE="docker-image-alias-resolve-error.txt"
 
-DOCKER_RESULT=$(docker build "${SCRIPT_DIR}/$1" 2> ${RESOLVE_ERROR_FILE})
-RESULT_IMAGE_ID=$(awk '/Successfully built/{print $3}' <<< "${DOCKER_RESULT}")
+RESULT_IMAGE_ID=$(docker build -q "${SCRIPT_DIR}/$1" 2> ${RESOLVE_ERROR_FILE})
 
 if [ -n "$RESULT_IMAGE_ID" ] ; then
     echo $RESULT_IMAGE_ID
@@ -33,7 +32,7 @@ REPO_TAG=$(grep "tag:" "${SCRIPT_DIR}/$1/meta.yml" | awk '{ print $2}')
 
 if [ -z "$REPO_TAG" ]; then
     exit
-fi 
+fi
 
 # We need to pull also the tag, otherwise Nexus may delete those images
 docker pull --quiet "${REPO_TAG}" | true

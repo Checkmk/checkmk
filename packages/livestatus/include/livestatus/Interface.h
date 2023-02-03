@@ -14,13 +14,37 @@
 
 class IService;
 
+struct Attribute {
+    const std::string &name;
+    const std::string &value;
+
+    bool operator==(const Attribute &other) const {
+        return name == other.name && value == other.value;
+    }
+    bool operator!=(const Attribute &other) const { return !(*this == other); }
+};
+
+template <>
+struct std::hash<Attribute> {
+    std::size_t operator()(const Attribute &a) const {
+        std::size_t seed{0};
+        // Taken from WG21 P0814R2, an epic story about a triviality...
+        auto hash_combine = [&seed](const std::string &val) {
+            seed ^= std::hash<std::string>{}(val) + 0x9e3779b9 + (seed << 6) +
+                    (seed >> 2);
+        };
+        hash_combine(a.name);
+        hash_combine(a.value);
+        return seed;
+    }
+};
+
 class IContact {
 public:
     virtual ~IContact() = default;
     [[nodiscard]] virtual const void *handle() const = 0;
     virtual bool all_of_labels(
-        const std::function<bool(const std::string &name,
-                                 const std::string &value)> &pred) const = 0;
+        const std::function<bool(const Attribute &)> &pred) const = 0;
 };
 
 class IHost {
@@ -33,8 +57,7 @@ public:
     virtual bool all_of_services(
         std::function<bool(const IService &)> pred) const = 0;
     virtual bool all_of_labels(
-        const std::function<bool(const std::string &name,
-                                 const std::string &value)> &pred) const = 0;
+        const std::function<bool(const Attribute &)> &pred) const = 0;
 };
 
 class IService {
@@ -46,8 +69,7 @@ public:
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;
     virtual bool all_of_labels(
-        const std::function<bool(const std::string &name,
-                                 const std::string &value)> &pred) const = 0;
+        const std::function<bool(const Attribute &)> &pred) const = 0;
 };
 
 class IHostGroup {

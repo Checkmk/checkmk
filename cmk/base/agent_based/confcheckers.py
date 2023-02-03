@@ -16,14 +16,17 @@ import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
+from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginName,
+    ExitSpec,
     HostAddress,
     HostName,
     InventoryPluginName,
     result,
     SectionName,
+    ServiceState,
 )
 
 from cmk.snmplib.type_defs import SNMPRawData
@@ -32,7 +35,9 @@ from cmk.fetchers import Fetcher, get_raw_data, Mode, SourceInfo
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkers import parse_raw_data
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
+from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register._config as _api
@@ -110,6 +115,80 @@ class ConfiguredParser:
             )
             output.append((source, source_result))
         return output
+
+
+class ConfiguredSummarizer:
+    def __init__(
+        self,
+        config_cache: ConfigCache,
+        host_name: HostName,
+        *,
+        include_ok_results: bool,
+        override_non_ok_state: ServiceState | None = None,
+    ) -> None:
+        self.config_cache: Final = config_cache
+        self.host_name: Final = host_name
+        self.include_ok_results: Final = include_ok_results
+        self.override_non_ok_state: Final = override_non_ok_state
+
+    def __call__(
+        self,
+        host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
+    ) -> Iterable[ActiveCheckResult]:
+        return next(
+            summarize_host_sections(
+                host_sections,
+                source,
+                include_ok_results=self.include_ok_results,
+                override_non_ok_state=self.override_non_ok_state,
+                exit_spec=self.config_cache.exit_code_spec(source.hostname, source.ident),
+                time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
+                    piggybacked_hostname=source.hostname
+                ),
+                is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
+            )
+            for source, host_sections in host_sections
+        )
+
+
+def summarize_host_sections(
+    host_sections: result.Result[HostSections, Exception],
+    source: SourceInfo,
+    *,
+    include_ok_results: bool = False,
+    override_non_ok_state: ServiceState | None = None,
+    exit_spec: ExitSpec,
+    time_settings: PiggybackTimeSettings,
+    is_piggyback: bool,
+) -> Iterable[ActiveCheckResult]:
+    subresults = summarize(
+        source.hostname,
+        source.ipaddress,
+        host_sections,
+        exit_spec=exit_spec,
+        time_settings=time_settings,
+        is_piggyback=is_piggyback,
+        fetcher_type=source.fetcher_type,
+    )
+    if include_ok_results or any(s.state != 0 for s in subresults):
+        yield from (
+            ActiveCheckResult(
+                s.state if override_non_ok_state is None else override_non_ok_state,
+                f"[{source.ident}] {s.summary}",
+                s.details,
+                s.metrics,
+            )
+            for s in subresults[:1]
+        )
+        yield from (
+            ActiveCheckResult(
+                s.state if override_non_ok_state is None else override_non_ok_state,
+                s.summary,
+                s.details,
+                s.metrics,
+            )
+            for s in subresults[1:]
+        )
 
 
 class ConfiguredFetcher:

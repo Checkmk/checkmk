@@ -73,11 +73,11 @@ from cmk.base.agent_based.confcheckers import (
     CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
+    ConfiguredSummarizer,
     InventoryPluginMapper,
     SectionPluginMapper,
 )
 from cmk.base.agent_based.inventory import execute_active_check_inventory
-from cmk.base.agent_based.utils import ConfiguredSummarizer
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option

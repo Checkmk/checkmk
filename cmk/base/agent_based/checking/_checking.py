@@ -44,6 +44,7 @@ from cmk.checkers import (
     crash_reporting,
     HostKey,
     ParserFunction,
+    PInventoryPlugin,
     plugin_contexts,
     SourceInfo,
     SourceType,
@@ -75,7 +76,6 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -99,7 +99,7 @@ def execute_checkmk_checks(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -152,8 +152,8 @@ def execute_checkmk_checks(
 def _do_inventory_actions_during_checking_for(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
+    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     params: HWSWInventoryParameters,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:

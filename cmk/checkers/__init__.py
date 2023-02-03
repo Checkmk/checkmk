@@ -27,7 +27,14 @@ See Also:
 
 """
 
-from ._api import FetcherFunction, parse_raw_data, ParserFunction, SummarizerFunction
+from ._api import (
+    FetcherFunction,
+    parse_raw_data,
+    ParserFunction,
+    PInventoryPlugin,
+    PInventoryResult,
+    SummarizerFunction,
+)
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import Parser
 from ._parseragent import AgentParser
@@ -43,6 +50,8 @@ __all__ = [
     "Parser",
     "ParserFunction",
     "PiggybackMarker",
+    "PInventoryPlugin",
+    "PInventoryResult",
     "SectionMarker",
     "SNMPParser",
     "SourceInfo",

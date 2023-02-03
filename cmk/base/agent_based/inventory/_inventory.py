@@ -36,7 +36,14 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.type_defs import HostName, HWSWInventoryParameters, InventoryPluginName, SectionName
 
-from cmk.checkers import FetcherFunction, HostKey, ParserFunction, SourceType, SummarizerFunction
+from cmk.checkers import (
+    FetcherFunction,
+    HostKey,
+    ParserFunction,
+    PInventoryPlugin,
+    SourceType,
+    SummarizerFunction,
+)
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 
@@ -47,7 +54,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, get_section_kwargs
-from cmk.base.api.agent_based.inventory_classes import Attributes, InventoryPlugin, TableRow
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -73,9 +80,9 @@ def check_inventory_tree(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
     section_plugins: Mapping[SectionName, SectionPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
     old_tree: StructuredDataNode,
@@ -256,9 +263,9 @@ def _inventorize_real_host(
 def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
     return _create_trees_from_inventory_plugin_items(
@@ -298,16 +305,16 @@ class ItemsOfInventoryPlugin:
 def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
     section.section_step("Executing inventory plugins")
 
     class_mutex: dict[tuple[str, ...], str] = {}
-    for name, inventory_plugin in inventory_plugins.items():
-        if name not in run_plugin_names:
+    for plugin_name, inventory_plugin in inventory_plugins.items():
+        if plugin_name not in run_plugin_names:
             continue
 
         for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
@@ -319,8 +326,7 @@ def _collect_inventory_plugin_items(
                 )
             ):
                 console.vverbose(
-                    f" {tty.yellow}{tty.bold}{inventory_plugin.name}{tty.normal}:"
-                    f" skipped (no data)\n"
+                    f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)\n"
                 )
                 continue
 
@@ -346,8 +352,7 @@ def _collect_inventory_plugin_items(
                     raise
 
                 console.warning(
-                    f" {tty.red}{tty.bold}{inventory_plugin.name}{tty.normal}:"
-                    f" failed: {exception}\n"
+                    f" {tty.red}{tty.bold}{plugin_name}{tty.normal}: failed: {exception}\n"
                 )
                 continue
 
@@ -356,7 +361,7 @@ def _collect_inventory_plugin_items(
                 raw_cache_info=parsed_sections_broker.get_cache_info(inventory_plugin.sections),
             )
 
-            console.verbose(f" {tty.green}{tty.bold}{inventory_plugin.name}{tty.normal}: ok\n")
+            console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")
 
 
 def _parse_inventory_plugin_item(item: object, expected_class_name: str) -> Attributes | TableRow:

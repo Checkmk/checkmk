@@ -34,7 +34,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkers import parse_raw_data, SourceInfo
+from cmk.checkers import parse_raw_data, PInventoryPlugin, SourceInfo
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.summarize import summarize
@@ -43,7 +43,6 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
@@ -294,9 +293,9 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         return len(_api.registered_check_plugins)
 
 
-class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
+class InventoryPluginMapper(Mapping[InventoryPluginName, PInventoryPlugin]):
     # See comment to SectionPluginMapper.
-    def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
+    def __getitem__(self, __key: InventoryPluginName) -> PInventoryPlugin:
         return _api.registered_inventory_plugins[__key]
 
     def __iter__(self) -> Iterator[InventoryPluginName]:

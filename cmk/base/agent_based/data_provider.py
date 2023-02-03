@@ -220,7 +220,7 @@ class ParsedSectionsBroker:
 
     def get_cache_info(
         self,
-        parsed_section_names: list[ParsedSectionName],
+        parsed_section_names: Iterable[ParsedSectionName],
     ) -> _CacheInfo | None:
         # TODO: should't the host key be provided here?
         """Aggregate information about the age of the data in the agent sections

@@ -11,9 +11,8 @@ from cmk.utils.type_defs import ExitSpec, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
+from cmk.checkers import error_handling
 from cmk.checkers.checkresults import ActiveCheckResult
-
-import cmk.base.agent_based.error_handling as error_handling
 
 
 def test_no_error_keeps_returns_status_from_callee(capsys) -> None:  # type:ignore[no-untyped-def]

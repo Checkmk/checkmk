@@ -20,11 +20,10 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction, SummarizerFunction
+from cmk.checkers import error_handling, ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.submitters import Submitter
 
-import cmk.base.agent_based.error_handling as error_handling
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin

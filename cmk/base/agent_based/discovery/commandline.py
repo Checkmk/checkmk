@@ -27,11 +27,10 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction, SummarizerFunction
+from cmk.checkers import error_handling, ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.discovery import AutochecksStore
 
-import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.core
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,

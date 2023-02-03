@@ -21,7 +21,14 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName, ServiceID
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostName,
+    InventoryPluginName,
+    RuleSetName,
+    SectionName,
+    ServiceID,
+)
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
@@ -33,6 +40,7 @@ from cmk.checkers.discovery import AutocheckEntry
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -972,7 +980,15 @@ def test_host_config_inventory_parameters(
             ],
         },
     )
-    assert ts.apply(monkeypatch).inventory_parameters(hostname, RuleSetName("if")) == result
+    plugin = InventoryPlugin(
+        name=InventoryPluginName("name"),
+        sections=[],
+        inventory_function=lambda *_args: (),
+        inventory_default_parameters={},
+        inventory_ruleset_name=RuleSetName("if"),
+        module="",
+    )
+    assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 
 
 @pytest.mark.parametrize(

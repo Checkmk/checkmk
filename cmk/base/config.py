@@ -138,6 +138,7 @@ import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base._autochecks import AutochecksManager
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
@@ -3249,11 +3250,14 @@ class ConfigCache:
         )
 
     def inventory_parameters(
-        self, host_name: HostName, ruleset_name: RuleSetName
+        self, host_name: HostName, plugin: InventoryPlugin
     ) -> dict[str, object]:
+        if plugin.inventory_ruleset_name is None:
+            raise ValueError(plugin)
+
         default: Ruleset[object] = []
         return self.host_extra_conf_merged(
-            host_name, inv_parameters.get(str(ruleset_name), default)
+            host_name, inv_parameters.get(str(plugin.inventory_ruleset_name), default)
         )
 
     def custom_checks(self, host_name: HostName) -> list[dict]:

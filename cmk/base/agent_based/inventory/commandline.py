@@ -17,7 +17,6 @@ from cmk.utils.type_defs import (
     HostName,
     HWSWInventoryParameters,
     InventoryPluginName,
-    RuleSetName,
     SectionName,
 )
 
@@ -76,7 +75,7 @@ def _commandline_inventory_on_host(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
     section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],

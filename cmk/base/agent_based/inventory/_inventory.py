@@ -13,6 +13,7 @@ CL:
 
 from __future__ import annotations
 
+import contextlib
 import itertools
 import time
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping
@@ -33,13 +34,7 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    HostName,
-    HWSWInventoryParameters,
-    InventoryPluginName,
-    RuleSetName,
-    SectionName,
-)
+from cmk.utils.type_defs import HostName, HWSWInventoryParameters, InventoryPluginName, SectionName
 
 from cmk.fetchers import FetcherFunction, SourceType
 
@@ -80,7 +75,7 @@ def check_inventory_tree(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
@@ -259,7 +254,7 @@ def _inventorize_real_host(
 def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
@@ -301,7 +296,7 @@ class ItemsOfInventoryPlugin:
 def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
@@ -329,12 +324,10 @@ def _collect_inventory_plugin_items(
 
             # Inventory functions can optionally have a second argument: parameters.
             # These are configured via rule sets (much like check parameters).
-            if inventory_plugin.inventory_ruleset_name is not None:
+            with contextlib.suppress(ValueError):
                 kwargs = {
                     **kwargs,
-                    "params": inventory_parameters(
-                        host_name, inventory_plugin.inventory_ruleset_name
-                    ),
+                    "params": inventory_parameters(host_name, inventory_plugin),
                 }
 
             try:

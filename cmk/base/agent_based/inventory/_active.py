@@ -14,7 +14,6 @@ from cmk.utils.type_defs import (
     HostName,
     HWSWInventoryParameters,
     InventoryPluginName,
-    RuleSetName,
     SectionName,
 )
 
@@ -41,7 +40,7 @@ def execute_active_check_inventory(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
-    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
 ) -> ActiveCheckResult:
     tree_or_archive_store = TreeOrArchiveStore(

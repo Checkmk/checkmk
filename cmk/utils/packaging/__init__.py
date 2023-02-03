@@ -230,7 +230,7 @@ def create(installer: Installer, manifest: Manifest, path_config: PathConfig) ->
     package_store = PackageStore()
 
     _raise_for_nonexisting_files(manifest, path_config)
-    _validate_package_files(manifest, installer, path_config)
+    _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(package_store, manifest, path_config)
 
@@ -250,7 +250,7 @@ def edit(
     package_store = PackageStore()
 
     _raise_for_nonexisting_files(new_manifest, path_config)
-    _validate_package_files(new_manifest, installer, path_config)
+    _validate_package_files(new_manifest, installer)
 
     _create_enabled_mkp_from_installed_package(package_store, new_manifest, path_config)
     installer.remove_installed_manifest(pacname)
@@ -469,28 +469,28 @@ def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
                 path.chmod(desired_perm)
 
 
-def _validate_package_files(
-    manifest: Manifest, installer: Installer, path_config: PathConfig
-) -> None:
+def _validate_package_files(manifest: Manifest, installer: Installer) -> None:
     """Packaged files must not already belong to another package"""
     for other_manifest in installer.get_installed_manifests():
         if manifest.name == other_manifest.name:
             continue
-        _raise_for_collision(path_config, manifest, other_manifest)
+        _raise_for_collision(manifest, other_manifest)
 
 
-def _raise_for_collision(
-    path_config: PathConfig, manifest: Manifest, other_manifest: Manifest
-) -> None:
+def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
     """Packaged files must not already belong to another package"""
     if collisions := set(
-        str(path_config.get_path(part) / fn)
+        (part, fn)
         for part in PackagePart
-        for fn in manifest.files.get(part, ())
-        if fn in other_manifest.files.get(part, ())
+        for fn in (set(manifest.files.get(part, ())) & set(other_manifest.files.get(part, ())))
     ):
         raise PackageException(
-            f"Files already belong to {other_manifest.name} {other_manifest.version}: {', '.join(collisions)}"
+            "Files already belong to %s %s: %s"
+            % (
+                other_manifest.name,
+                other_manifest.version,
+                ", ".join(f"{fn} ({part})" for part, fn in collisions),
+            )
         )
 
 

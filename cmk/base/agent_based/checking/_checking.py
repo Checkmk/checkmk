@@ -12,6 +12,7 @@ from typing import Callable, DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils.check_utils import wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
@@ -61,7 +62,6 @@ from cmk.base.agent_based.utils import (
 )
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
 from cmk.base.config import ConfigCache
 

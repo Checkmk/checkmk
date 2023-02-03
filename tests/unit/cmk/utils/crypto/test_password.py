@@ -9,7 +9,7 @@ import pytest
 from cryptography.hazmat.primitives import hashes
 
 from cmk.utils.crypto import HashAlgorithm
-from cmk.utils.crypto.password import Password
+from cmk.utils.crypto.password import Password, PasswordPolicy
 
 
 @pytest.mark.parametrize(
@@ -57,3 +57,27 @@ def test_hash_algorithms_from_cryptography() -> None:
 def test_hash_algorithms_from_cryptography_unsupported() -> None:
     with pytest.raises(ValueError):
         HashAlgorithm.from_cryptography(hashes.MD5())
+
+
+OK = PasswordPolicy.Result.OK
+TooShort = PasswordPolicy.Result.TooShort
+TooSimple = PasswordPolicy.Result.TooSimple
+
+
+@pytest.mark.parametrize(
+    "password,min_len,min_grp,expected",
+    [
+        ("", 0, 0, OK),
+        ("", None, None, OK),
+        ("cmk", 3, 1, OK),
+        ("cmk", 4, 1, TooShort),
+        ("", None, 1, TooSimple),
+        ("abc123", None, 3, TooSimple),
+        ("abc123", 10, 3, TooShort),  # too short takes precedence
+        ("aB1!", 4, 4, OK),
+    ],
+)
+def test_password_policy(
+    password: str, min_len: int, min_grp: int, expected: PasswordPolicy.Result
+) -> None:
+    assert Password(password).verify_policy(PasswordPolicy(min_len, min_grp)) == expected

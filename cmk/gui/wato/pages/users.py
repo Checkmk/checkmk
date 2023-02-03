@@ -71,6 +71,7 @@ from cmk.gui.watolib.users import (
     edit_users,
     get_vs_user_idle_timeout,
     make_user_object_ref,
+    verify_password_policy,
 )
 
 if cmk_version.is_managed_edition():
@@ -756,6 +757,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"]  # which was the encrypted automation password!
 
             if password:
+                verify_password_policy(password)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True  # password changed, reflect in auth serial

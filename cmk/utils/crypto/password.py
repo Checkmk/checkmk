@@ -8,9 +8,21 @@ from __future__ import annotations
 
 import secrets
 import string
+from dataclasses import dataclass
+from enum import Enum
 from typing import AnyStr, Final, Generic, NewType
 
 from typing_extensions import assert_never
+
+
+@dataclass
+class PasswordPolicy:
+    """A Password policy"""
+
+    min_length: int | None
+    min_groups: int | None
+
+    Result = Enum("Result", ["OK", "TooShort", "TooSimple"])
 
 
 class Password(Generic[AnyStr]):
@@ -46,6 +58,29 @@ class Password(Generic[AnyStr]):
         if nul in password:
             raise ValueError(f"Invalid password: {password!r}")
         self.raw: Final[AnyStr] = password
+
+    def verify_policy(self, policy: PasswordPolicy) -> PasswordPolicy.Result:
+        # TooShort takes precedence over TooSimple
+        if policy.min_length and self.char_count() < policy.min_length:
+            return PasswordPolicy.Result.TooShort
+
+        if min_groups := policy.min_groups:
+            groups = {}
+            # pylint seems to think as_string() might return None (match/case is hard?)
+            for c in self.as_string():  # pylint: disable=not-an-iterable
+                if c in "abcdefghijklmnopqrstuvwxyz":
+                    groups["lcase"] = 1
+                elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                    groups["ucase"] = 1
+                elif c in "0123456789":
+                    groups["numbers"] = 1
+                else:
+                    groups["special"] = 1
+
+            if sum(groups.values()) < min_groups:
+                return PasswordPolicy.Result.TooSimple
+
+        return PasswordPolicy.Result.OK
 
     @property
     def raw_bytes(self) -> bytes:

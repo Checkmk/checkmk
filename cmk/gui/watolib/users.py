@@ -141,16 +141,13 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
     if user_id == config.user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
-    # Authentication: Password or Secret
+    # Automation Secret
+    # Note: if a password is used it is verified before this; we only know the hash here
     if "automation_secret" in user_attrs:
         secret = user_attrs["automation_secret"]
         if len(secret) < 10:
             raise MKUserError('secret',
                               _("Please specify a secret of at least 10 characters length."))
-    else:
-        password = user_attrs.get("password")
-        if password:
-            verify_password_policy(password)
 
     # Email
     email = user_attrs.get("email")

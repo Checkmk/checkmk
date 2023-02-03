@@ -23,7 +23,7 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
 
 from cmk.gui import userdb
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
-from cmk.gui.watolib.users import edit_users, delete_users
+from cmk.gui.watolib.users import edit_users, delete_users, verify_password_policy
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 
 TIMESTAMP_RANGE = Tuple[float, float]
@@ -367,9 +367,6 @@ def _auth_options_to_internal_format(auth_details: AuthOptions,
     Example:
     >>> _auth_options_to_internal_format({"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"})  # doctest:+ELLIPSIS
     {'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'password': ...}
-
-    >>> _auth_options_to_internal_format({"auth_type": "password", "password": "password"})  # doctest:+ELLIPSIS
-    {'password': ..., 'last_pw_change': ...}
     """
     internal_options: Dict[str, Union[str, bool, int]] = {}
     if not auth_details:
@@ -381,6 +378,7 @@ def _auth_options_to_internal_format(auth_details: AuthOptions,
         internal_options["password"] = htpasswd.hash_password(secret)
     else:  # password
         if new_user or "password" in auth_details:
+            verify_password_policy(auth_details["password"])
             internal_options["password"] = htpasswd.hash_password(auth_details["password"])
             internal_options["last_pw_change"] = int(time.time())
 

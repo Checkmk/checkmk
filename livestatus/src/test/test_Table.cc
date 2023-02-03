@@ -142,8 +142,9 @@ class DummyMonitoringCore : public MonitoringCore {
         return true;
     }
 
-    void forEachTimeperiodUntil(
-        const std::function<bool(const ITimeperiod &)> & /*f*/) const override {
+    bool all_of_timeperiods(const std::function<bool(const ITimeperiod &)>
+                                & /*pred*/) const override {
+        return true;
     }
 
     bool mkeventdEnabled() override { return {}; }

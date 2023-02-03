@@ -248,13 +248,15 @@ bool NagiosCore::all_of_downtimes(
                        });
 }
 
-void NagiosCore::forEachTimeperiodUntil(
-    const std::function<bool(const ITimeperiod &)> &f) const {
+bool NagiosCore::all_of_timeperiods(
+    const std::function<bool(const ITimeperiod &)> &pred) const {
+    // TODO(sp): Do we need a mutex here?
     for (const timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        if (f(NebTimeperiod{*tp})) {
-            break;
+        if (!pred(NebTimeperiod{*tp})) {
+            return false;
         }
     }
+    return true;
 }
 
 bool NagiosCore::mkeventdEnabled() {

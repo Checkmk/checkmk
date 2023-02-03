@@ -13,6 +13,8 @@ import pytest
 from freezegun import freeze_time
 from pytest import MonkeyPatch
 
+from tests.testlib.rest_api_client import RestApiClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
@@ -1194,3 +1196,15 @@ def test_create_user_with_non_existing_custom_attribute(
         content_type="application/json",
         params=json.dumps(params),
     )
+
+
+def test_user_with_invalid_id(api_client: RestApiClient) -> None:
+    api_client.create_user(
+        username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
+    ).assert_status_code(400)
+
+
+def test_openapi_edit_non_existing_user_regression(api_client: RestApiClient) -> None:
+    api_client.edit_user(
+        "i_do_not_exists", fullname="I hopefully won't crash the site!", expect_ok=False
+    ).assert_status_code(404)

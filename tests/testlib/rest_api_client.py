@@ -15,6 +15,7 @@ from typing import Any, NoReturn, Sequence, Union
 
 from pydantic import BaseModel, StrictStr
 
+from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
 
 
@@ -450,4 +451,46 @@ class RestApiClient:
         return self._request(
             "post",
             url=f"/objects/aux_tag/{tag_id}/actions/delete/invoke",
+        )
+
+    # TODO: add optional parameters
+    def create_user(self, username: str, fullname: str, expect_ok: bool = True) -> Response:
+        body = {
+            "username": username,
+            "fullname": fullname,
+        }
+
+        if version.is_managed_edition():
+            body["customer"] = "provider"
+
+        return self._request(
+            "post",
+            url="/domain-types/user_config/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def show_user(self, username: str, expect_ok: bool = True) -> Response:
+        return self._request("get", url=f"/objects/user_config/{username}", expect_ok=expect_ok)
+
+    # TODO: add additional parameters
+    def edit_user(
+        self, username: str, fullname: str | None = None, expect_ok: bool = True
+    ) -> Response:
+        body = {"fullname": fullname} if fullname is not None else {}
+
+        # if there is no object, there's probably no etag.
+        # But we want the 404 from the request below!
+        etag = self.show_user(username, expect_ok=expect_ok).headers.get("E-Tag")
+        if etag is not None:
+            headers = {"If-Match": etag}
+        else:
+            headers = {}
+
+        return self._request(
+            "put",
+            url=f"/objects/user_config/{username}",
+            body=body,
+            headers=headers,
+            expect_ok=expect_ok,
         )

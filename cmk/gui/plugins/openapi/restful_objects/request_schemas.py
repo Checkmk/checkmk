@@ -3,6 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import re
 import urllib.parse
 from typing import Any, MutableMapping
 
@@ -1048,6 +1049,7 @@ class Username(fields.String):
     default_error_messages = {
         "should_exist": "Username missing: {username!r}",
         "should_not_exist": "Username {username!r} already exists",
+        "invalid_name": "Username {username!r} is not a valid checkmk username",
     }
 
     def __init__(
@@ -1068,6 +1070,9 @@ class Username(fields.String):
 
     def _validate(self, value):
         super()._validate(value)
+
+        if not re.match(r"^[\w$][-@.\w$]*$", value):
+            raise self.make_error("invalid_name", username=value)
 
         # TODO: change to names list only
         usernames = load_users()

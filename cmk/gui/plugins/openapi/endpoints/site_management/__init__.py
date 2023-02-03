@@ -29,7 +29,6 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.site_management.request_schemas import (
     SITE_ID,
-    SITE_ID_DOESNT_EXIST,
     SITE_ID_EXISTS,
     SiteConnectionRequestCreate,
     SiteConnectionRequestUpdate,

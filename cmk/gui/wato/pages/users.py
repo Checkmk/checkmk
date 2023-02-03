@@ -62,7 +62,12 @@ from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedVa
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
+from cmk.gui.watolib.users import (
+    delete_users,
+    edit_users,
+    make_user_object_ref,
+    verify_password_policy,
+)
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -787,6 +792,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"]  # which was the encrypted automation password!
 
             if password:
+                verify_password_policy(password)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True  # password changed, reflect in auth serial

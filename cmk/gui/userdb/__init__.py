@@ -554,7 +554,7 @@ def _clear_config_based_user_attributes() -> None:
 
 
 def check_credentials(
-    username: UserId, password: Password[str], now: datetime
+    username: UserId, password: Password, now: datetime
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():

@@ -14,8 +14,6 @@ a salt, and the actual checksum -- which is all the information needed to verify
 given password (see `verify`).
 """
 
-from typing import AnyStr
-
 # Import errors from passlib are suppressed since stub files for mypy are not available.
 # pylint errors are suppressed since this is the only module that should import passlib.
 import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module-import
@@ -44,7 +42,7 @@ class PasswordInvalidError(MKException):
     """Indicates that the provided password could not be verified"""
 
 
-def hash_password(password: Password[AnyStr], *, allow_truncation: bool = False) -> PasswordHash:
+def hash_password(password: Password, *, allow_truncation: bool = False) -> PasswordHash:
     """Hash a password using the preferred algorithm
 
     Uses bcrypt with 12 rounds to hash a password.
@@ -84,7 +82,7 @@ _context = passlib.context.CryptContext(
 )
 
 
-def verify(password: Password[AnyStr], password_hash: PasswordHash) -> None:
+def verify(password: Password, password_hash: PasswordHash) -> None:
     """Verify if a password matches a password hash.
 
     :param password: The password to check.

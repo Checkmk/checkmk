@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import AnyStr
-
 import pytest
 
 from cmk.utils.crypto import password_hashing as ph
 from cmk.utils.crypto.password import Password, PasswordHash
 
 
-@pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72, b"bytes"])
-def test_hash_verify_roundtrip(password: AnyStr) -> None:
+@pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72])
+def test_hash_verify_roundtrip(password: str) -> None:
     pw_hash = ph.hash_password(Password(password))
     assert pw_hash.startswith("$2y$04$")  # bcrypt 4 rounds
     ph.verify(Password(password), pw_hash)

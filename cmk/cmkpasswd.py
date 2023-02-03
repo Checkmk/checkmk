@@ -70,7 +70,7 @@ For other tasks, such as deleting or deactivating users, use the web interface.
     return parser.parse_args(args)
 
 
-def _ask_password() -> Password[str]:
+def _ask_password() -> Password:
     """Prompt the user to enter the password and re-type it for verification"""
     pw = Password(getpass("New password: "))
     if pw.raw != getpass("Re-type new password: "):
@@ -78,13 +78,13 @@ def _ask_password() -> Password[str]:
     return pw
 
 
-def _read_password() -> Password[str]:
+def _read_password() -> Password:
     """Read password from stdin without prompt and confirmation"""
     return Password(input())
 
 
 def _run_cmkpasswd(
-    username: str, get_password: Callable[[], Password[str]], dst_file: Path | None
+    username: str, get_password: Callable[[], Password], dst_file: Path | None
 ) -> None:
     try:
         user_id = UserId(username)

@@ -217,7 +217,7 @@ def check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: str
         raise MKAuthException(_("Invalid credentials"))
 
 
-def user_from_bearer_header(auth_header: str) -> tuple[UserId, Password[str]]:
+def user_from_bearer_header(auth_header: str) -> tuple[UserId, Password]:
     """
 
     Examples:
@@ -250,14 +250,14 @@ def user_from_bearer_header(auth_header: str) -> tuple[UserId, Password[str]]:
     return UserId(user_id), Password(secret)
 
 
-def automation_auth(user_id: UserId, secret: Password[str]) -> RFC7662 | None:
+def automation_auth(user_id: UserId, secret: Password) -> RFC7662 | None:
     if verify_automation_secret(user_id, secret.raw):
         return rfc7662_subject(user_id, "bearer")
 
     return None
 
 
-def gui_user_auth(user_id: UserId, secret: Password[str], now: datetime) -> RFC7662 | None:
+def gui_user_auth(user_id: UserId, secret: Password, now: datetime) -> RFC7662 | None:
     try:
         if userdb.check_credentials(user_id, secret, now):
             return rfc7662_subject(user_id, "bearer")

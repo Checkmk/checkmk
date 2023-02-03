@@ -18,7 +18,7 @@ from cmk.utils.crypto.password import Password
 from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, InvalidUsernameError, main
 
 
-def _get_pw(pw: str = "hunter2") -> Callable[[], Password[str]]:
+def _get_pw(pw: str = "hunter2") -> Callable[[], Password]:
     return lambda: Password(pw)
 
 
@@ -58,7 +58,7 @@ def test_filenotfound(tmp_path: Path) -> None:
 
 
 def test_verification_error() -> None:
-    def raise_err() -> Password[str]:
+    def raise_err() -> Password:
         raise ValueError("test error")
 
     # This basically only tests that the error is propagated from the get_password function

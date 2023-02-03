@@ -61,5 +61,11 @@ $(OPENSSL_INSTALL): $(OPENSSL_CACHE_PKG_PROCESS)
 else
 $(OPENSSL_INSTALL): $(OPENSSL_CACHE_PKG_PROCESS)
 	rsync -r --perms "$(OPENSSL_INSTALL_DIR)/" "$(DESTDIR)$(OMD_ROOT)/"
+	patchelf --set-rpath "\$$ORIGIN/../lib" \
+	    "$(DESTDIR)$(OMD_ROOT)/bin/openssl" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so.1.1" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.1.1"
 	$(TOUCH) $@
 endif

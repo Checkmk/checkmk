@@ -19,6 +19,12 @@ else
 endif
 
 $(XMLSEC1_INSTALL): $(XMLSEC1_BUILD)
-	rsync -r --chmod=u+w "bazel-bin/external/xmlsec1/xmlsec1/" "$(DESTDIR)$(OMD_ROOT)/"
+	$(RSYNC) -r --chmod=u+w "bazel-bin/external/xmlsec1/xmlsec1/" "$(DESTDIR)$(OMD_ROOT)/"
+	patchelf --set-rpath "\$$ORIGIN/../lib" \
+	    "$(DESTDIR)$(OMD_ROOT)/bin/xmlsec1" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1.so" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1.so.1" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1-openssl.so" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libxmlsec1-openssl.so.1"
 	$(TOUCH) $@
 

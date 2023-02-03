@@ -39,6 +39,10 @@ configure_make(
     #   when built in an exact same environment
     # This can be worked around by setting RPATH again after `bazel build` still
     # leaving us with RPATH placeholders of different size
+    # Unfortunately this does not work for dynamic libraries, since strangely
+    # for those the flags definded with `copts` will be appended rather than
+    # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
+    # For that reason we need to manually set RPATH outside Bazel (during `make`)
     env={"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
     copts=["-Wl,--rpath,$ORIGIN_VAR/../lib"],
 

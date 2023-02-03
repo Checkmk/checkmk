@@ -63,6 +63,8 @@ CLUSTER empty
 
 @pytest.fixture(name="lw", scope="module")
 def _mk_logwatch():
+    if sys.version_info[0] == 2:
+        return import_module("mk_logwatch_2.py")
     return import_module("mk_logwatch.py")
 
 

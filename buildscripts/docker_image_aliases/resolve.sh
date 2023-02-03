@@ -4,6 +4,9 @@
 # echo "$(grep $1 $SCRIPT_DIR/docker_image_aliases.txt | awk '{print $2}')"
 #
 
+# TODO: the legacy buildkit will be removed in a future docker relase, migrate asap!
+export DOCKER_BUILDKIT=0
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 RESOLVE_ERROR_FILE="docker-image-alias-resolve-error.txt"
@@ -33,7 +36,7 @@ REPO_TAG=$(grep "tag:" "${SCRIPT_DIR}/$1/meta.yml" | awk '{ print $2}')
 
 if [ -z "$REPO_TAG" ]; then
     exit
-fi 
+fi
 
 # We need to pull also the tag, otherwise Nexus may delete those images
 docker pull --quiet "${REPO_TAG}" | true

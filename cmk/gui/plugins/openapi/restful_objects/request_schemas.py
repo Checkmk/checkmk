@@ -144,7 +144,7 @@ class UpdateHost(BaseSchema):
 
       * `attributes`
       * `update_attributes`
-      * `nodes`
+      * `remove_attributes`
     """
 
     attributes = gui_fields.host_attributes_field(
@@ -164,7 +164,7 @@ class UpdateHost(BaseSchema):
         "inbound",
         description=(
             "Just update the hosts attributes with these attributes. The previously set "
-            "attributes will not be touched."
+            "attributes will be overwritten."
         ),
         example={"ipaddress": "192.168.0.123"},
         required=False,

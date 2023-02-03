@@ -157,6 +157,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 host_config=host_config,
                 mode=mode,
                 service_filters=service_filters,
+                keep_clustered_vanished_services=True,
                 on_error=on_error,
                 use_cached_snmp_data=use_cached_snmp_data,
                 max_cachefile_age=config.max_cachefile_age(),

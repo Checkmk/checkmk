@@ -413,6 +413,7 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
             service_filters,
             result,
             mode,
+            keep_clustered_vanished_services=True,
         )
     ]
 

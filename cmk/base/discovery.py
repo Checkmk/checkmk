@@ -505,6 +505,7 @@ def discover_on_host(
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     mode: str,
+    keep_clustered_vanished_services: bool,
     service_filters: ServiceFilters,
     on_error: str,
     use_cached_snmp_data: bool,
@@ -591,7 +592,7 @@ def discover_on_host(
 
         # Create new list of checks
         new_services = _get_post_discovery_services(hostname, services, service_filters, result,
-                                                    mode)
+                                                    mode, keep_clustered_vanished_services)
         host_config.set_autochecks(new_services)
 
         result.diff_text = make_object_diff(
@@ -641,6 +642,7 @@ def _get_post_discovery_services(
     service_filters: ServiceFilters,
     result: DiscoveryResult,
     mode: str,
+    keep_clustered_vanished_services: bool,
 ) -> List[ServiceWithNodes]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
@@ -690,8 +692,9 @@ def _get_post_discovery_services(
             continue
 
         if check_source.startswith("clustered_"):
-            # Silently keep clustered services
-            post_discovery_services.extend(discovered_services_with_nodes)
+            if check_source != "clustered_vanished" or keep_clustered_vanished_services:
+                # Silently keep clustered services
+                post_discovery_services.extend(discovered_services_with_nodes)
             if check_source == "clustered_new":
                 result.clustered_new += len(discovered_services_with_nodes)
             elif check_source == "clustered_old":
@@ -1057,6 +1060,8 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
             config_cache=config_cache,
             host_config=host_config,
             mode=_get_rediscovery_mode(params),
+            keep_clustered_vanished_services=_get_rediscovery_parameters(params).get(
+                "keep_clustered_vanished_services", True),
             service_filters=service_filters,
             on_error="ignore",
             use_cached_snmp_data=True,

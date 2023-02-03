@@ -10,10 +10,10 @@ import pytest
 import cmk.utils.debug
 from cmk.utils.type_defs import HostName, SectionName
 
+from cmk.checkers import crash_reporting
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection
 
-from cmk.base import crash_reporting
 from cmk.base.agent_based.data_provider import SectionParser, SectionsParser
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 

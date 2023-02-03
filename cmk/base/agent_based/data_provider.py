@@ -15,10 +15,10 @@ from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
 from cmk.fetchers import SourceInfo, SourceType
 
 from cmk.checkers import HostKey
+from cmk.checkers.crash_reporting import create_section_crash_dump
 from cmk.checkers.host_sections import HostSections
 
 from cmk.base.api.agent_based.type_defs import AgentParseFunction, SectionPlugin, SNMPParseFunction
-from cmk.base.crash_reporting import create_section_crash_dump
 
 _CacheInfo = tuple[int, int]
 

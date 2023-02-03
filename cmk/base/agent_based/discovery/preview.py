@@ -26,7 +26,6 @@ from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.core
-import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_broker,

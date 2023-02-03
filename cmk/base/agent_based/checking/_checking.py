@@ -40,13 +40,18 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
-from cmk.checkers import HostKey, ParserFunction, plugin_contexts, SummarizerFunction
+from cmk.checkers import (
+    crash_reporting,
+    HostKey,
+    ParserFunction,
+    plugin_contexts,
+    SummarizerFunction,
+)
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
 
 import cmk.base.core
-import cmk.base.crash_reporting
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
@@ -417,7 +422,7 @@ def get_aggregated_result(
         table = config_cache.check_table(host_name, skip_autochecks=True)
         result = ServiceCheckResult(
             3,
-            cmk.base.crash_reporting.create_check_crash_dump(
+            crash_reporting.create_check_crash_dump(
                 host_name,
                 service.description,
                 plugin_name=service.check_plugin_name,

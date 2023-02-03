@@ -28,9 +28,8 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
+from cmk.checkers import crash_reporting
 from cmk.checkers.checkresults import ActiveCheckResult
-
-import cmk.base.crash_reporting
 
 
 def check_result(
@@ -104,7 +103,7 @@ def _handle_failure(
         raise exc
     return (
         exit_spec.get("exception", 3),
-        cmk.base.crash_reporting.create_check_crash_dump(
+        crash_reporting.create_check_crash_dump(
             host_name,
             service_name,
             plugin_name=plugin_name,

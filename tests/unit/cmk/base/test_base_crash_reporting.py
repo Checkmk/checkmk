@@ -8,9 +8,10 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.crash_reporting import CrashReportStore
 from cmk.utils.type_defs import HostName
 
-import cmk.base.crash_reporting as crash_reporting
+from cmk.checkers.crash_reporting import CheckCrashReport
 
 
 def _check_generic_crash_info(crash):
@@ -42,7 +43,7 @@ def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception(
+        crash = CheckCrashReport.from_exception(
             details={
                 "check_output": "Output",
                 "host": hostname,
@@ -64,11 +65,11 @@ def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
 def test_check_crash_report_save(monkeypatch: MonkeyPatch) -> None:
     hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
-    store = crash_reporting.CrashReportStore()
+    store = CrashReportStore()
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_exception(
+        crash = CheckCrashReport.from_exception(
             details={
                 "check_output": "Output",
                 "host": hostname,

@@ -39,7 +39,6 @@ from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
 import cmk.base.config as config
 import cmk.base.core
-import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_broker,

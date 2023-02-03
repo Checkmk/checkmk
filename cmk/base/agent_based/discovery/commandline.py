@@ -33,7 +33,6 @@ from cmk.checkers.discovery import AutochecksStore
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.core
-import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_broker,

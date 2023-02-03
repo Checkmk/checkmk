@@ -182,6 +182,12 @@ auth_logger = logger.getChild("auth")
 
 
 def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
+    """
+
+    Raises:
+        - MKAuthException: when the cookie is malformed
+        - MKAuthException: when the session_id is of an old format
+    """
     try:
         username, session_id, cookie_hash = raw_cookie.split(":", 2)
         # Careful. Instantiating UserId may raise as well.

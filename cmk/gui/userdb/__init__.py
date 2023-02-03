@@ -408,6 +408,13 @@ def on_failed_login(username: UserId, now: datetime) -> None:
 
 
 def on_access(username: UserId, session_id: str, now: datetime) -> None:
+    """
+
+    Raises:
+        - MKAuthException: when the session given by session_id is not valid
+        - MKAuthException: when the user has been idle for too long
+
+    """
     session_infos = load_session_infos(username)
     if not is_valid_user_session(username, session_infos, session_id):
         raise MKAuthException("Invalid user session")

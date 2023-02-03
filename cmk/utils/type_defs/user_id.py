@@ -123,5 +123,10 @@ class UserId(str):
         return UserId("")
 
     def __new__(cls, text: str) -> UserId:
+        """Construct a new UserId object
+
+        Raises:
+            - ValueError: whenever the given text contains special characters. See `validate`.
+        """
         cls.validate(text)
         return super().__new__(cls, text)

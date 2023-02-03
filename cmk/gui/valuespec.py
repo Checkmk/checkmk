@@ -6150,8 +6150,12 @@ class Transform(ValueSpec[T]):
         self,
         valuespec: ValueSpec[T],
         *,
-        to_valuespec: Callable[[Any], T],
-        from_valuespec: Callable[[T], Any],
+        # we would like to remove forth and back and make to_valuespec and from_valuespec mandatory,
+        # however, this change is too incompatible (cf. CMK-12242)
+        to_valuespec: Callable[[Any], T] | None = None,
+        from_valuespec: Callable[[T], Any] | None = None,
+        forth: Callable[[Any], T] | None = None,
+        back: Callable[[T], Any] | None = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
@@ -6159,8 +6163,8 @@ class Transform(ValueSpec[T]):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec: Final = valuespec
-        self.to_valuespec: Final = to_valuespec
-        self.from_valuespec: Final = from_valuespec
+        self.to_valuespec: Final = to_valuespec or forth or (lambda v: v)
+        self.from_valuespec: Final = from_valuespec or back or (lambda v: v)
 
     def allow_empty(self) -> bool:
         return self._valuespec.allow_empty()

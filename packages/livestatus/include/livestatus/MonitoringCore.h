@@ -72,6 +72,9 @@ public:
     bool virtual all_of_timeperiods(
         const std::function<bool(const ITimeperiod &)> &pred) const = 0;
 
+    virtual bool all_of_contact_groups(
+        const std::function<bool(const IContactGroup &)> &pred) const = 0;
+
     virtual bool mkeventdEnabled() = 0;
 
     [[nodiscard]] virtual std::filesystem::path mkeventdSocketPath() const = 0;

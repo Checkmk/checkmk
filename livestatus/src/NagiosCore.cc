@@ -259,6 +259,16 @@ bool NagiosCore::all_of_timeperiods(
     return true;
 }
 
+bool NagiosCore::all_of_contact_groups(
+    const std::function<bool(const IContactGroup &)> &pred) const {
+    for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
+        if (!pred(NebContactGroup{*cg})) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool NagiosCore::mkeventdEnabled() {
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
         return config_mkeventd == std::string("on");

@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "TableComments.h"
-#include "TableContactGroups.h"
 #include "TableContacts.h"
 #include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
@@ -42,6 +41,7 @@
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
+#include "livestatus/TableContactGroups.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableEventConsoleRules.h"
 #include "livestatus/TableEventConsoleStatus.h"
@@ -145,6 +145,11 @@ class DummyMonitoringCore : public MonitoringCore {
     bool all_of_timeperiods(const std::function<bool(const ITimeperiod &)>
                                 & /*pred*/) const override {
         return true;
+    }
+
+    bool all_of_contact_groups(const std::function<bool(const IContactGroup &)>
+                                   & /* f */) const override {
+        return {};
     }
 
     bool mkeventdEnabled() override { return {}; }

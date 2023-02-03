@@ -18,6 +18,12 @@ def parse_aix_lparstat_inventory(string_table: StringTable) -> Section:
     return parsed
 
 
+register.agent_section(
+    name="aix_lparstat_inventory",
+    parse_function=parse_aix_lparstat_inventory,
+)
+
+
 def inventory_aix_lparstat_inventory(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "cpu"],

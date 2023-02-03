@@ -106,7 +106,6 @@ def test_no_plugins_with_trivial_sections(fix_register) -> None:  # type:ignore[
         ParsedSectionName(s)
         for s in [
             "aix_baselevel",
-            "aix_lparstat_inventory",
             "aix_packages",
             "aix_service_packs",
             "couchbase_nodes_ports",

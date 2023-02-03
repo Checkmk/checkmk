@@ -19,14 +19,14 @@ from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.wsgi.type_defs import RFC7662
 
 
-def automation_auth(user_id: UserId, secret: Password[str]) -> Optional[RFC7662]:
+def automation_auth(user_id: UserId, secret: Password) -> Optional[RFC7662]:
     if verify_automation_secret(user_id, secret.raw):
         return rfc7662_subject(user_id, "bearer")
 
     return None
 
 
-def gui_user_auth(user_id: UserId, secret: Password[str]) -> Optional[RFC7662]:
+def gui_user_auth(user_id: UserId, secret: Password) -> Optional[RFC7662]:
     try:
         if userdb.check_credentials(user_id, secret):
             return rfc7662_subject(user_id, "bearer")

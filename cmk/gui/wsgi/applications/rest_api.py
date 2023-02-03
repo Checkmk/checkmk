@@ -176,7 +176,7 @@ def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
     return UserId(user_id), secret
 
 
-def user_from_bearer_header(auth_header: str) -> Tuple[UserId, Password[str]]:
+def user_from_bearer_header(auth_header: str) -> Tuple[UserId, Password]:
     """
 
     Examples:

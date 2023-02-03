@@ -5,11 +5,10 @@
 
 
 import secrets
+import string
 from dataclasses import dataclass
 from enum import Enum
-from typing import AnyStr, Final, Generic, Union
-
-from cmk.utils.type_defs import assert_never
+from typing import Final, Union
 
 
 @dataclass
@@ -22,44 +21,36 @@ class PasswordPolicy:
     Result = Enum("Result", ["OK", "TooShort", "TooSimple"])
 
 
-class Password(Generic[AnyStr]):
+class Password:
     """A human-readable password
 
     The plaintext password can be accessed via `.raw`. Note that raw passwords should never be
     logged without masking.
     """
 
-    def __init__(self, password: AnyStr) -> None:
-        if isinstance(password, bytes):
-            nul = b"\0"
-        elif isinstance(password, str):
-            nul = "\0"
-        else:
-            assert_never(password)
-
-        if nul in password:
-            raise ValueError(f"Invalid password: {password!r}")
-        self.raw: Final[AnyStr] = password
+    def __init__(self, password: str) -> None:
+        if "\0" in password:
+            raise ValueError("Password must not contain null bytes")
+        self.raw: Final[str] = password
 
     def verify_policy(self, policy: PasswordPolicy) -> PasswordPolicy.Result:
         # TooShort takes precedence over TooSimple
-        if policy.min_length and self.char_count() < policy.min_length:
+        if policy.min_length and len(self) < policy.min_length:
             return PasswordPolicy.Result.TooShort
 
         if min_groups := policy.min_groups:
-            groups = {}
-            # pylint seems to think as_string() might return None (match/case is hard?)
-            for c in self.as_string():  # pylint: disable=not-an-iterable
-                if c in "abcdefghijklmnopqrstuvwxyz":
-                    groups["lcase"] = 1
-                elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                    groups["ucase"] = 1
-                elif c in "0123456789":
-                    groups["numbers"] = 1
+            groups = set()
+            for c in self.raw:
+                if c in string.ascii_lowercase:
+                    groups.add("lowercase")
+                elif c in string.ascii_uppercase:
+                    groups.add("uppercase")
+                elif c in string.digits:
+                    groups.add("digit")
                 else:
-                    groups["special"] = 1
+                    groups.add("special")
 
-            if sum(groups.values()) < min_groups:
+            if len(groups) < min_groups:
                 return PasswordPolicy.Result.TooSimple
 
         return PasswordPolicy.Result.OK
@@ -71,53 +62,36 @@ class Password(Generic[AnyStr]):
 
             >>> Password("💚✅").raw_bytes
             b'\\xf0\\x9f\\x92\\x9a\\xe2\\x9c\\x85'
-
-        """
-        if isinstance(self.raw, str):
-            return self.raw.encode("utf-8")
-        return self.raw
-
-    def as_string(self) -> str:
-        """
-        Return the string representation of the password, UTF-8 decoded in case it's based on bytes.
-
-            >>> Password(b"\\xf0\\x9f\\x92\\x9a\\xe2\\x9c\\x85").as_string()
+            >>> Password("💚✅").raw
             '💚✅'
 
         """
-        if isinstance(self.raw, bytes):
-            return self.raw.decode("utf-8")
-        return self.raw
+        return self.raw.encode("utf-8")
 
-    def char_count(self) -> int:
+    def __len__(self) -> int:
         """
         Return the length of password as the number of characters.
 
-        Byte-based Passwords will be UTF-8 decoded to count the characters. This might not make
-        sense for randomly generated passwords based on bytes. Use `len(self.raw_bytes)` if you
-        care for the number of bytes.
+        Note that unicode characters represented by multiple bytes still only count as one
+        character. Use `len(self.raw_bytes)` if you care for the number of bytes.
 
         This means:
 
-            >>> Password("💚✅").char_count()
-            2
-            >>> Password(b"\\xf0\\x9f\\x92\\x9a\\xe2\\x9c\\x85").char_count()  # "💚✅" as well
+            >>> len(Password("💚✅"))
             2
             >>> len(Password("💚✅").raw_bytes)
             7
 
         More examples:
 
-            >>> Password("abc").char_count()
+            >>> len(Password("abc"))
             3
-            >>> Password(b"abc").char_count()
-            3
-            >>> Password("").char_count()
+            >>> len(Password(""))
             0
         """
-        return len(self.as_string())
+        return len(self.raw)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Password):
-            return NotImplemented
+            return False
         return secrets.compare_digest(self.raw_bytes, other.raw_bytes)

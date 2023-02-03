@@ -1356,7 +1356,7 @@ register_post_config_load_hook(update_config_based_user_attributes)
 #   +----------------------------------------------------------------------+
 
 
-def check_credentials(username: UserId, password: Password[str]) -> Union[UserId, Literal[False]]:
+def check_credentials(username: UserId, password: Password) -> Union[UserId, Literal[False]]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
         # None        -> User unknown, means continue with other connectors

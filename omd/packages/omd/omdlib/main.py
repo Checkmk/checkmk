@@ -269,13 +269,13 @@ def create_version_symlink(site: SiteContext, version: str) -> None:
     os.symlink("../../versions/%s" % version, linkname)
 
 
-def calculate_admin_password(options: CommandOptions) -> Password[str]:
+def calculate_admin_password(options: CommandOptions) -> Password:
     if pw := options.get("admin-password"):
         return Password(pw)
     return Password(random_password())
 
 
-def set_admin_password(site: SiteContext, pw: Password[str]) -> None:
+def set_admin_password(site: SiteContext, pw: Password) -> None:
     with open("%s/etc/htpasswd" % site.dir, "w") as f:
         f.write("cmkadmin:%s\n" % hash_password(pw))
 
@@ -2074,7 +2074,7 @@ def main_create(
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 
-def welcome_message(site: SiteContext, admin_password: Password[str]) -> None:
+def welcome_message(site: SiteContext, admin_password: Password) -> None:
     sys.stdout.write("Created new site %s with version %s.\n\n" % (site.name, omdlib.__version__))
     sys.stdout.write(
         "  The site can be started with %somd start %s%s.\n" % (tty.bold, site.name, tty.normal)
@@ -2149,7 +2149,7 @@ def init_site(
     global_opts: "GlobalOptions",
     config_settings: Config,
     options: CommandOptions,
-) -> Password[str]:
+) -> Password:
     apache_reload = "apache-reload" in options
 
     # Create symbolic link to version

@@ -355,7 +355,7 @@ class UserConnector(abc.ABC):
     #     False       -> Login failed
     #     None        -> Unknown user
     @abc.abstractmethod
-    def check_credentials(self, user_id: UserId, password: Password[str]) -> CheckCredentialsResult:
+    def check_credentials(self, user_id: UserId, password: Password) -> CheckCredentialsResult:
         return None
 
     # Optional: Hook function can be registered here to be executed

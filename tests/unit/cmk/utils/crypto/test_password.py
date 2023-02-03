@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, AnyStr
+from typing import Any
 
 import pytest
 
@@ -16,27 +16,21 @@ from cmk.utils.crypto.password import Password, PasswordPolicy
         "",
         "test 😹",
         "long" * 100,
-        b"\xf0\x9f\x98\xb9",
     ],
 )
-def test_valid_password(password: AnyStr) -> None:
+def test_valid_password(password: str) -> None:
     Password(password)
 
 
-@pytest.mark.parametrize(
-    "password",
-    ["\0", b"\0", b"\0".decode()],
-)
-def test_invalid_password(password: AnyStr) -> None:
-    with pytest.raises(ValueError, match="Invalid password"):
-        Password(password)
+def test_invalid_password() -> None:
+    with pytest.raises(ValueError, match="null byte"):
+        Password("foo\0bar")
 
 
 @pytest.mark.parametrize(
     "a,b,expected",
     [
         (Password("😹"), Password("😹"), True),
-        (Password("😹"), Password(b"\xf0\x9f\x98\xb9"), True),
         (Password("     "), Password(" "), False),
         (Password(""), "", False),
         (Password("123"), 123, False),

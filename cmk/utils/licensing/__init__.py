@@ -10,12 +10,13 @@ import json
 import logging
 import random
 import time
-from collections import deque
-from collections.abc import Iterable, Iterator
+from collections import defaultdict, deque
+from collections.abc import Iterable, Iterator, Sequence
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import NamedTuple, TypedDict
+from typing import Any, NamedTuple, TypedDict
 from uuid import UUID
 
 import livestatus
@@ -166,6 +167,7 @@ def _create_sample() -> LicenseUsageSample:
     hosts_counter = _get_hosts_counter()
     shadow_hosts_counter = _get_shadow_hosts_counter()
     services_counter = _get_services_counter()
+    cloud_counter = _get_cloud_counter()
 
     general_infos = cmk_version.get_general_version_infos()
     extensions = _load_extensions()
@@ -178,9 +180,11 @@ def _create_sample() -> LicenseUsageSample:
         platform=general_infos["os"],
         is_cma=cmk_version.is_cma(),
         num_hosts=hosts_counter.included,
+        num_hosts_cloud=cloud_counter.hosts,
         num_hosts_excluded=hosts_counter.excluded,
         num_shadow_hosts=shadow_hosts_counter,
         num_services=services_counter.included,
+        num_services_cloud=cloud_counter.services,
         num_services_excluded=services_counter.excluded,
         sample_time=int(time.time()),
         timezone=time.localtime().tm_zone,
@@ -203,6 +207,12 @@ def _get_instance_id_filepath() -> Path:
 class EntityCounter(NamedTuple):
     included: int
     excluded: int
+
+
+@dataclass
+class CCECounter:
+    hosts: int
+    services: int
 
 
 def _get_hosts_counter() -> EntityCounter:
@@ -250,9 +260,43 @@ def _get_services_counter() -> EntityCounter:
     )
 
 
+def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
+    return livestatus.LocalConnection().query(query)
+
+
 def _get_stats_from_livestatus(query: str) -> tuple[int, int]:
-    stats = livestatus.LocalConnection().query(query)[0]
+    stats = _get_from_livestatus(query)[0]
     return int(stats[0]), int(stats[1])
+
+
+def _get_services_from_livestatus() -> Sequence[Sequence[Any]]:
+    query_table = "services"
+    query_columns = "host_name service_check_command"
+    query = (
+        f"GET {query_table}"
+        f"\nColumns: {query_columns}"
+        f"\nFilter: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+        f"\nFilter: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
+    )
+    return _get_from_livestatus(query)
+
+
+def _parse_services_livestatus_response(response: Sequence[Sequence[Any]]) -> CCECounter:
+    services_per_host = defaultdict(list)
+    for result in response:
+        services_per_host[result[0]].append(result[1].removeprefix("check_mk-"))
+
+    cloud_services = {
+        host: len(services)
+        for host, services in services_per_host.items()
+        if set(services).intersection(_CCE_SERVICES)
+    }
+    return CCECounter(hosts=len(cloud_services), services=sum(cloud_services.values()))
+
+
+def _get_cloud_counter() -> CCECounter:
+    response = _get_services_from_livestatus()
+    return _parse_services_livestatus_response(response)
 
 
 def _get_next_run_ts(next_run_filepath: Path) -> int:

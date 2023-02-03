@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 from uuid import UUID
 
@@ -15,6 +15,7 @@ import livestatus
 
 import cmk.utils.licensing as licensing
 from cmk.utils.licensing import (
+    _get_cloud_counter,
     _serialize_dump,
     get_license_usage_report_filepath,
     LicenseUsageReportVersion,
@@ -39,6 +40,9 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
             return 10, 5
         return 100, 10
 
+    def _mock_service_livestatus() -> list[list[str]]:
+        return [["host", "services"]]
+
     monkeypatch.setattr(
         licensing,
         "_get_shadow_hosts_counter",
@@ -49,6 +53,12 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
         licensing,
         "_get_stats_from_livestatus",
         _mock_livestatus,
+    )
+
+    monkeypatch.setattr(
+        licensing,
+        "_get_services_from_livestatus",
+        _mock_service_livestatus,
     )
 
     monkeypatch.setattr(
@@ -155,6 +165,9 @@ def test_update_license_usage_next_run_ts_not_reached(
             return 10, 5
         return 100, 10
 
+    def _mock_service_livestatus() -> list[list[str]]:
+        return [["host", "services"]]
+
     monkeypatch.setattr(
         licensing,
         "_get_shadow_hosts_counter",
@@ -167,6 +180,11 @@ def test_update_license_usage_next_run_ts_not_reached(
         _mock_livestatus,
     )
 
+    monkeypatch.setattr(
+        licensing,
+        "_get_services_from_livestatus",
+        _mock_service_livestatus,
+    )
     monkeypatch.setattr(
         licensing,
         "_load_extensions",
@@ -185,6 +203,34 @@ def test_update_license_usage_next_run_ts_not_reached(
 
     assert update_license_usage() == 0
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
+
+
+@pytest.mark.parametrize(
+    "livestatus_response,expected_hosts,excepted_services",
+    [
+        pytest.param([["host", "not_cloud_check"]], 0, 0, id="no_cloud"),
+        pytest.param([["host", "gcp_run_cpu"], ["host", "gcp_run_cpu"]], 1, 2, id="cloud"),
+        pytest.param([["host", "gcp_run_cpu"], ["host", "not_cloud_check"]], 1, 2, id="mixed"),
+    ],
+)
+def test_get_cloud_counter(
+    monkeypatch: MonkeyPatch,
+    livestatus_response: Sequence[Sequence[Any]],
+    expected_hosts: int,
+    excepted_services: int,
+) -> None:
+    def _mock_service_livestatus() -> Sequence[Sequence[Any]]:
+        return livestatus_response
+
+    monkeypatch.setattr(
+        licensing,
+        "_get_services_from_livestatus",
+        _mock_service_livestatus,
+    )
+
+    counter = _get_cloud_counter()
+    assert counter.hosts == expected_hosts
+    assert counter.services == excepted_services
 
 
 def test_serialize_license_usage_report() -> None:
@@ -218,7 +264,7 @@ def test_serialize_license_usage_report() -> None:
                 history=history.for_report(),
             )
         )
-        == b"LQ't#$x~}Qi Q`]dQ[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
+        == b"LQ't#$x~}Qi Q`]dQ[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 
@@ -267,6 +313,8 @@ def test_serialize_license_usage_report() -> None:
                         num_services=4,
                         num_hosts_excluded=0,
                         num_services_excluded=0,
+                        num_hosts_cloud=0,
+                        num_services_cloud=0,
                         extension_ntop=False,
                     ),
                 ]
@@ -309,6 +357,8 @@ def test_serialize_license_usage_report() -> None:
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
+                        num_hosts_cloud=0,
+                        num_services_cloud=0,
                         extension_ntop=False,
                     ),
                 ]
@@ -354,6 +404,8 @@ def test_serialize_license_usage_report() -> None:
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
+                        num_hosts_cloud=0,
+                        num_services_cloud=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -396,6 +448,8 @@ def test_serialize_license_usage_report() -> None:
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
+                        num_hosts_cloud=0,
+                        num_services_cloud=0,
                         extension_ntop=False,
                     ),
                 ]
@@ -441,6 +495,8 @@ def test_serialize_license_usage_report() -> None:
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
+                        num_hosts_cloud=0,
+                        num_services_cloud=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -484,6 +540,8 @@ def test_serialize_license_usage_report() -> None:
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
+                        num_hosts_cloud=0,
+                        num_services_cloud=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -528,6 +586,8 @@ def test_serialize_license_usage_report() -> None:
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
+                        num_hosts_cloud=0,
+                        num_services_cloud=0,
                         extension_ntop=True,
                     ),
                 ]
@@ -553,6 +613,8 @@ def test_serialize_license_usage_report() -> None:
                         "num_hosts_excluded": 3,
                         "num_services": 4,
                         "num_services_excluded": 5,
+                        "num_hosts_cloud": 1,
+                        "num_services_cloud": 2,
                         "extension_ntop": True,
                     },
                 ],
@@ -573,6 +635,8 @@ def test_serialize_license_usage_report() -> None:
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
+                        num_hosts_cloud=1,
+                        num_services_cloud=2,
                         extension_ntop=True,
                     ),
                 ]
@@ -627,6 +691,8 @@ def test_history_add_sample() -> None:
                 num_services=3,
                 num_hosts_excluded=4,
                 num_services_excluded=5,
+                num_hosts_cloud=0,
+                num_services_cloud=0,
                 extension_ntop=False,
             ),
         )
@@ -645,6 +711,8 @@ def test_history_add_sample() -> None:
         num_services=3,
         num_hosts_excluded=4,
         num_services_excluded=5,
+        num_hosts_cloud=0,
+        num_services_cloud=0,
         extension_ntop=False,
     )
 

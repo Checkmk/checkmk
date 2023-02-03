@@ -6,7 +6,8 @@
 import re
 import shutil
 import socket
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
@@ -22,29 +23,29 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    InventoryPluginName,
-    RuleSetName,
-    SectionName,
-    ServiceID,
-)
+from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName, ServiceID
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
+from cmk.checkers import PInventoryResult
 from cmk.checkers.check_table import ConfiguredService
 from cmk.checkers.discovery import AutocheckEntry
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
+
+
+@dataclass(frozen=True)
+class TestInventoryPlugin:
+    sections: Sequence[ParsedSectionName]
+    inventory_function: Callable[..., Iterable[PInventoryResult]]
+    inventory_ruleset_name: RuleSetName | None
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1033,13 +1034,10 @@ def test_host_config_inventory_parameters(
             ],
         },
     )
-    plugin = InventoryPlugin(
-        name=InventoryPluginName("name"),
+    plugin = TestInventoryPlugin(
         sections=[],
         inventory_function=lambda *_args: (),
-        inventory_default_parameters={},
         inventory_ruleset_name=RuleSetName("if"),
-        module="",
     )
     assert ts.apply(monkeypatch).inventory_parameters(hostname, plugin) == result
 

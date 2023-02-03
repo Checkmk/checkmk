@@ -123,7 +123,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser
+from cmk.checkers import AgentParser, PInventoryPlugin
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -139,7 +139,6 @@ import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base._autochecks import AutochecksManager
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
@@ -3228,7 +3227,7 @@ class ConfigCache:
         )
 
     def inventory_parameters(
-        self, host_name: HostName, plugin: InventoryPlugin
+        self, host_name: HostName, plugin: PInventoryPlugin
     ) -> dict[str, object]:
         if plugin.inventory_ruleset_name is None:
             raise ValueError(plugin)

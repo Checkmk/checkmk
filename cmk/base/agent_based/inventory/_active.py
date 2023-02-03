@@ -18,10 +18,9 @@ from cmk.utils.type_defs import (
     SectionName,
 )
 
-from cmk.checkers import FetcherFunction, ParserFunction, SummarizerFunction
+from cmk.checkers import FetcherFunction, ParserFunction, PInventoryPlugin, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -38,8 +37,8 @@ def execute_active_check_inventory(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
+    inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
     parameters: HWSWInventoryParameters,
 ) -> ActiveCheckResult:
     tree_or_archive_store = TreeOrArchiveStore(

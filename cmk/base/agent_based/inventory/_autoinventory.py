@@ -7,13 +7,14 @@ from collections.abc import Callable, Mapping
 
 from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.log import console
-from cmk.utils.type_defs import EVERYTHING, HostName, SectionName
+from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, SectionName
 
 from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction, SummarizerFunction
 
 import cmk.base.config as config
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 
 from ._active import execute_active_check_inventory
@@ -29,6 +30,7 @@ def inventorize_marked_hosts(
     fetcher: FetcherFunction,
     summarizer: Callable[[HostName], SummarizerFunction],
     section_plugins: Mapping[SectionName, SectionPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
 ) -> None:
     autoinventory_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),
@@ -52,6 +54,7 @@ def inventorize_marked_hosts(
                     fetcher=fetcher,
                     summarizer=summarizer(host_name),
                     section_plugins=section_plugins,
+                    inventory_plugins=inventory_plugins,
                     inventory_parameters=config_cache.inventory_parameters,
                     parameters=config_cache.hwsw_inventory_parameters(host_name),
                 )

@@ -26,6 +26,7 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostName,
     HWSWInventoryParameters,
+    InventoryPluginName,
     MetricTuple,
     ParsedSectionName,
     RuleSetName,
@@ -62,6 +63,7 @@ from cmk.base.agent_based.utils import (
 )
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -87,6 +89,7 @@ def execute_checkmk_checks(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -112,6 +115,7 @@ def execute_checkmk_checks(
             _do_inventory_actions_during_checking_for(
                 hostname,
                 inventory_parameters=config_cache.inventory_parameters,
+                inventory_plugins=inventory_plugins,
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 parsed_sections_broker=broker,
             )
@@ -139,6 +143,7 @@ def _do_inventory_actions_during_checking_for(
     host_name: HostName,
     *,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     params: HWSWInventoryParameters,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
@@ -153,6 +158,7 @@ def _do_inventory_actions_during_checking_for(
         host_name,
         inventory_parameters=inventory_parameters,
         parsed_sections_broker=parsed_sections_broker,
+        inventory_plugins=inventory_plugins,
         run_plugin_names=EVERYTHING,
     )
 

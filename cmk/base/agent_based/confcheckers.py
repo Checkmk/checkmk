@@ -21,6 +21,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     HostAddress,
     HostName,
+    InventoryPluginName,
     result,
     SectionName,
 )
@@ -37,6 +38,7 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
@@ -203,3 +205,15 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
 
     def __len__(self) -> int:
         return len(_api.registered_check_plugins)
+
+
+class InventoryPluginMapper(Mapping[InventoryPluginName, InventoryPlugin]):
+    # See comment to SectionPluginMapper.
+    def __getitem__(self, __key: InventoryPluginName) -> InventoryPlugin:
+        return _api.registered_inventory_plugins[__key]
+
+    def __iter__(self) -> Iterator[InventoryPluginName]:
+        return iter(_api.registered_inventory_plugins)
+
+    def __len__(self) -> int:
+        return len(_api.registered_inventory_plugins)

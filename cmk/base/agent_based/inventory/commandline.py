@@ -25,6 +25,7 @@ from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction, SummarizerFunction
 
+from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -42,6 +43,7 @@ def commandline_inventory(
     summarizer: SummarizerFunction,
     parameters: HWSWInventoryParameters,
     section_plugins: Mapping[SectionName, SectionPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     section.section_begin(hostname)
@@ -55,6 +57,7 @@ def commandline_inventory(
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
             section_plugins=section_plugins,
+            inventory_plugins=inventory_plugins,
             run_plugin_names=run_plugin_names,
         )
 
@@ -76,6 +79,7 @@ def _commandline_inventory_on_host(
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
     section_plugins: Mapping[SectionName, SectionPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> None:
     section.section_step("Inventorizing")
@@ -90,6 +94,7 @@ def _commandline_inventory_on_host(
         summarizer=summarizer,
         inventory_parameters=inventory_parameters,
         section_plugins=section_plugins,
+        inventory_plugins=inventory_plugins,
         run_plugin_names=run_plugin_names,
         parameters=parameters,
         old_tree=old_tree,

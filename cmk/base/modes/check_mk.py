@@ -74,6 +74,7 @@ from cmk.base.agent_based.confcheckers import (
     CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
+    InventoryPluginMapper,
     SectionPluginMapper,
 )
 from cmk.base.agent_based.inventory import execute_active_check_inventory
@@ -1946,6 +1947,7 @@ def mode_check(
         summarizer=summarizer,
         section_plugins=SectionPluginMapper(),
         check_plugins=CheckPluginMapper(),
+        inventory_plugins=InventoryPluginMapper(),
         run_plugin_names=run_plugin_names,
         submitter=get_submitter_(
             check_submission=config.check_submission,
@@ -2095,6 +2097,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             summarizer=summarizer,
             parameters=parameters,
             section_plugins=SectionPluginMapper(),
+            inventory_plugins=InventoryPluginMapper(),
             run_plugin_names=run_plugin_names,
         )
 
@@ -2179,6 +2182,7 @@ def mode_inventory_as_check(
             parser=parser,
             summarizer=summarizer,
             section_plugins=SectionPluginMapper(),
+            inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
         ),
@@ -2307,6 +2311,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         fetcher=fetcher,
         summarizer=summarizer,
         section_plugins=SectionPluginMapper(),
+        inventory_plugins=InventoryPluginMapper(),
     )
 
 

@@ -47,7 +47,6 @@ from cmk.checkers import HostKey, ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_broker,
@@ -55,7 +54,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, get_section_kwargs
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.base.api.agent_based.inventory_classes import Attributes, InventoryPlugin, TableRow
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
@@ -83,6 +82,7 @@ def check_inventory_tree(
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     section_plugins: Mapping[SectionName, SectionPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
     old_tree: StructuredDataNode,
@@ -119,6 +119,7 @@ def check_inventory_tree(
                 host_name,
                 inventory_parameters=inventory_parameters,
                 parsed_sections_broker=broker,
+                inventory_plugins=inventory_plugins,
                 run_plugin_names=run_plugin_names,
             )
         ),
@@ -260,6 +261,7 @@ def inventorize_status_data_of_real_host(
     *,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
     return _create_trees_from_inventory_plugin_items(
@@ -267,6 +269,7 @@ def inventorize_status_data_of_real_host(
             host_name,
             inventory_parameters=inventory_parameters,
             parsed_sections_broker=parsed_sections_broker,
+            inventory_plugins=inventory_plugins,
             run_plugin_names=run_plugin_names,
         )
     ).status_data
@@ -300,13 +303,14 @@ def _collect_inventory_plugin_items(
     *,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
     section.section_step("Executing inventory plugins")
 
     class_mutex: dict[tuple[str, ...], str] = {}
-    for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
-        if inventory_plugin.name not in run_plugin_names:
+    for name, inventory_plugin in inventory_plugins.items():
+        if name not in run_plugin_names:
             continue
 
         for source_type in (SourceType.HOST, SourceType.MANAGEMENT):

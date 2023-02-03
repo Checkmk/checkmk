@@ -1243,6 +1243,7 @@ def test_check_inventory_tree(
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=config_cache.inventory_parameters,
         section_plugins=SectionPluginMapper(),
+        inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
             {} if failed_state is None else {"inv-fail-status": failed_state}
@@ -1269,6 +1270,7 @@ def test_check_inventory_tree_no_data_or_files(
         summarizer=lambda *args, **kwargs: [],
         inventory_parameters=config_cache.inventory_parameters,
         section_plugins={},
+        inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),
         old_tree=StructuredDataNode(),

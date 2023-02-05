@@ -19,6 +19,7 @@ _PATH_CONFIG = PathConfig(
     checks_dir=cmk.utils.paths.local_checks_dir,
     doc_dir=cmk.utils.paths.local_doc_dir,
     gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+    installed_packages_dir=cmk.utils.paths.installed_packages_dir,
     inventory_dir=cmk.utils.paths.local_inventory_dir,
     lib_dir=cmk.utils.paths.local_lib_dir,
     locale_dir=cmk.utils.paths.local_locale_dir,
@@ -27,6 +28,7 @@ _PATH_CONFIG = PathConfig(
     mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
     notifications_dir=cmk.utils.paths.local_notifications_dir,
     pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+    tmp_dir=cmk.utils.paths.tmp_dir,
     web_dir=cmk.utils.paths.local_web_dir,
 )
 

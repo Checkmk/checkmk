@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Callable
 
-from cmk.utils import paths, tty
+from cmk.utils import tty
 from cmk.utils import version as cmk_version
 
 from . import (
@@ -79,7 +79,7 @@ def _args_find(
 
 def _command_find(args: argparse.Namespace, path_config: PathConfig) -> int:
     """Show information about local files"""
-    installer = Installer(paths.installed_packages_dir)
+    installer = Installer(path_config.installed_packages_dir)
 
     files = files_inventory(installer, path_config)
 
@@ -184,7 +184,7 @@ def _args_list(
 
 def _command_list(args: argparse.Namespace, path_config: PathConfig) -> int:
     """Show a table of all known files, including the deployment state"""
-    installer = Installer(paths.installed_packages_dir)
+    installer = Installer(path_config.installed_packages_dir)
     classified_manifests = get_classified_manifests(PackageStore(), installer)
 
     if args.json:
@@ -270,7 +270,7 @@ def _args_release(
 
 def _command_release(args: argparse.Namespace, path_config: PathConfig) -> int:
     """Remove the package and leave its contained files as unpackaged files behind."""
-    release(Installer(paths.installed_packages_dir), args.name)
+    release(Installer(path_config.installed_packages_dir), args.name)
     return 0
 
 
@@ -293,7 +293,7 @@ def _command_disable_outdated(_args: argparse.Namespace, path_config: PathConfig
     For all installed packages, this command compares that version with the Checkmk version.
     In case it is outdated, the package is disabled.
     """
-    disable_outdated(Installer(paths.installed_packages_dir), path_config)
+    disable_outdated(Installer(path_config.installed_packages_dir), path_config)
     return 0
 
 
@@ -305,7 +305,7 @@ def _command_update_active(_args: argparse.Namespace, path_config: PathConfig) -
 
     This command deactivates all packages that are not applicable, and then activates the ones that are.
     """
-    update_active_packages(Installer(paths.installed_packages_dir), path_config)
+    update_active_packages(Installer(path_config.installed_packages_dir), path_config)
     return 0
 
 
@@ -328,14 +328,14 @@ def _args_package_id(
 
 def _command_enable(args: argparse.Namespace, path_config: PathConfig) -> int:
     """Enable a disabled package"""
-    installer = Installer(paths.installed_packages_dir)
+    installer = Installer(path_config.installed_packages_dir)
     install(installer, PackageStore(), _get_package_id(args.name, args.version), path_config)
     return 0
 
 
 def _command_disable(args: argparse.Namespace, path_config: PathConfig) -> int:
     """Disable an enabled package"""
-    disable(Installer(paths.installed_packages_dir), path_config, args.name, args.version)
+    disable(Installer(path_config.installed_packages_dir), path_config, args.name, args.version)
     return 0
 
 
@@ -351,7 +351,7 @@ def _args_template(
 
 def _command_template(args: argparse.Namespace, path_config: PathConfig) -> int:
     """Create a template of a package manifest"""
-    installer = Installer(paths.installed_packages_dir)
+    installer = Installer(path_config.installed_packages_dir)
 
     unpackaged = get_unpackaged_files(installer, path_config)
 
@@ -361,7 +361,7 @@ def _command_template(args: argparse.Namespace, path_config: PathConfig) -> int:
         files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
     )
 
-    temp_file = paths.tmp_dir / f"{args.name}.manifest.temp"
+    temp_file = path_config.tmp_dir / f"{args.name}.manifest.temp"
     temp_file.write_text(package.file_content())
     sys.stdout.write(
         f"Created '{temp_file}'.\n"
@@ -396,7 +396,7 @@ def _command_package(args: argparse.Namespace, path_config: PathConfig) -> int:
         return 1
 
     store = PackageStore()
-    installer = Installer(paths.installed_packages_dir)
+    installer = Installer(path_config.installed_packages_dir)
     try:
         manifest = store.store(create_mkp_object(package, path_config))
         install(installer, store, manifest.id, path_config)

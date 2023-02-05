@@ -22,6 +22,7 @@ _PATH_CONFIG = PathConfig(
     checks_dir=paths.local_checks_dir,
     doc_dir=paths.local_doc_dir,
     gui_plugins_dir=paths.local_gui_plugins_dir,
+    installed_packages_dir=paths.installed_packages_dir,
     inventory_dir=paths.local_inventory_dir,
     lib_dir=paths.local_lib_dir,
     locale_dir=paths.local_locale_dir,
@@ -30,6 +31,7 @@ _PATH_CONFIG = PathConfig(
     mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
     notifications_dir=paths.local_notifications_dir,
     pnp_templates_dir=paths.local_pnp_templates_dir,
+    tmp_dir=paths.tmp_dir,
     web_dir=paths.local_web_dir,
 )
 

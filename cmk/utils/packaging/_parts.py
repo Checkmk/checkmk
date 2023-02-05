@@ -16,23 +16,25 @@ from ._mkp import PackagePart
 
 @dataclass(frozen=True)
 class PathConfig:
-    local_root: Path
-    mkp_rule_pack_dir: Path
     agent_based_plugins_dir: Path
-    checks_dir: Path
-    inventory_dir: Path
-    check_manpages_dir: Path
     agents_dir: Path
-    notifications_dir: Path
-    gui_plugins_dir: Path
-    web_dir: Path
-    pnp_templates_dir: Path
-    doc_dir: Path
-    locale_dir: Path
-    bin_dir: Path
-    lib_dir: Path
-    mib_dir: Path
     alert_handlers_dir: Path
+    bin_dir: Path
+    check_manpages_dir: Path
+    checks_dir: Path
+    doc_dir: Path
+    gui_plugins_dir: Path
+    installed_packages_dir: Path
+    inventory_dir: Path
+    lib_dir: Path
+    locale_dir: Path
+    local_root: Path
+    mib_dir: Path
+    mkp_rule_pack_dir: Path
+    notifications_dir: Path
+    pnp_templates_dir: Path
+    tmp_dir: Path
+    web_dir: Path
 
     def get_path(self, part: PackagePart) -> Path:
         match part:

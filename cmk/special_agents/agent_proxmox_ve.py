@@ -28,7 +28,6 @@ import sys
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime, timedelta
 from json import JSONDecodeError
-from pathlib import Path
 from typing import Any
 
 import pytz
@@ -51,7 +50,7 @@ TaskInfo = Mapping[str, Any]
 BackupInfo = MutableMapping[str, Any]
 LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 
-LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
+LogCacheFilePath = tmp_dir / "special_agents" / "agent_proxmox_ve"
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:

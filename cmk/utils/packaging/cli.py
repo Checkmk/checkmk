@@ -359,7 +359,7 @@ def _command_template(args: argparse.Namespace, _logger: logging.Logger) -> int:
         files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
     )
 
-    temp_file = Path(paths.tmp_dir, f"{args.name}.manifest.temp")
+    temp_file = paths.tmp_dir / f"{args.name}.manifest.temp"
     temp_file.write_text(package.file_content())
     sys.stdout.write(
         "Created '{temp_file}'.\n"

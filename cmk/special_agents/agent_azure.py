@@ -19,7 +19,6 @@ import time
 from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
-from pathlib import Path
 from queue import Empty as QueueEmpty
 from typing import Any
 
@@ -36,7 +35,7 @@ GroupLabels = Mapping[str, Mapping[str, str]]
 
 LOGGER = logging.getLogger()  # root logger for now
 
-AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
+AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
 
 NOW = datetime.datetime.utcnow()
 

@@ -104,7 +104,7 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.var_dir + "/php-api")
     store.makedirs(cmk.utils.paths.var_dir + "/wato/php-api")
     store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
-    store.makedirs(cmk.utils.paths.tmp_dir + "/wato/activation")
+    store.makedirs(cmk.utils.paths.tmp_dir / "wato/activation")
     store.makedirs(cmk.utils.paths.omd_root / "var/log")
     store.makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
     store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")

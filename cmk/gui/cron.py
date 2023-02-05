@@ -27,7 +27,7 @@ def register_job(cron_job: Callable[[], Any]) -> None:
 
 
 def _lock_file() -> Path:
-    return Path(cmk.utils.paths.tmp_dir) / "cron.lastrun"
+    return cmk.utils.paths.tmp_dir / "cron.lastrun"
 
 
 def load_plugins() -> None:

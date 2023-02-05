@@ -461,7 +461,7 @@ class LDAPUserConnector(UserConnector):
 
     @classmethod
     def _ldap_caches_filepath(cls) -> Path:
-        return Path(cmk.utils.paths.tmp_dir) / "ldap_caches"
+        return cmk.utils.paths.tmp_dir / "ldap_caches"
 
     @classmethod
     def config_changed(cls) -> None:

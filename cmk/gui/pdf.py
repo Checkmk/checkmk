@@ -1612,7 +1612,7 @@ def pdf2png(pdf_source: bytes) -> bytes:
     # Older version of pdftoppm cannot read pipes. The need to seek around
     # in the file. Therefore we need to save the PDF source into a temporary file.
     with tempfile.NamedTemporaryFile(
-        dir=cmk.utils.paths.tmp_dir,
+        dir=str(cmk.utils.paths.tmp_dir),
         delete=False,
     ) as temp_file:
         temp_file.write(pdf_source)

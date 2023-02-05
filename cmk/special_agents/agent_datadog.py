@@ -374,7 +374,7 @@ class EventsQuerier:
     ) -> None:
         self.datadog_api: Final = datadog_api
         self.id_store: Final = IDStore[int](
-            Path(paths.tmp_dir) / "agents" / "agent_datadog" / (host_name + ".json")
+            paths.tmp_dir / "agents" / "agent_datadog" / f"{host_name}.json"
         )
         self.max_age: Final = max_age
 
@@ -522,7 +522,7 @@ class LogsQuerier:
     ) -> None:
         self.datadog_api: Final = datadog_api
         self.id_store: Final = IDStore[str](
-            Path(paths.tmp_dir) / "agents" / "agent_datadog" / f"{hostname}_logs.json"
+            paths.tmp_dir / "agents" / "agent_datadog" / f"{hostname}_logs.json"
         )
         self.max_age: Final = max_age
         self.indexes: Final = indexes

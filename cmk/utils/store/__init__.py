@@ -208,7 +208,7 @@ def save_bytes_to_file(path: Path | str, content: bytes) -> None:
         ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content)
 
 
-_pickled_files_base_dir = Path(cmk.utils.paths.tmp_dir) / "pickled_files_cache"
+_pickled_files_base_dir = cmk.utils.paths.tmp_dir / "pickled_files_cache"
 _pickle_serializer = PickleSerializer[Any]()
 
 

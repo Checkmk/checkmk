@@ -24,9 +24,10 @@ import cmk.utils
 from cmk.special_agents.utils_kubernetes import common
 from cmk.special_agents.utils_kubernetes.schemata import section
 
-AGENT_TMP_PATH = Path(
-    cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else tempfile.gettempdir(), "agent_kube"
-)
+AGENT_TMP_PATH = (
+    cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else Path(tempfile.gettempdir())
+) / "agent_kube"
+
 ContainerName = NewType("ContainerName", str)
 
 

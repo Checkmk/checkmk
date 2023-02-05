@@ -519,14 +519,14 @@ class AutomationRenameHosts(Automation):
 
         # Rename temporary files of the host
         for d in ["cache", "counters"]:
-            if self._rename_host_file(tmp_dir + "/" + d + "/", oldname, newname):
+            if self._rename_host_file(str(tmp_dir / d), oldname, newname):
                 actions.append(d)
 
-        if self._rename_host_dir(tmp_dir + "/piggyback/", oldname, newname):
+        if self._rename_host_dir(str(tmp_dir / "piggyback"), oldname, newname):
             actions.append("piggyback-load")
 
         # Rename piggy files *created* by the host
-        piggybase = tmp_dir + "/piggyback/"
+        piggybase = str(tmp_dir) + "/piggyback/"
         if os.path.exists(piggybase):
             for piggydir in os.listdir(piggybase):
                 if self._rename_host_file(piggybase + piggydir, oldname, newname):
@@ -985,7 +985,7 @@ class ABCDeleteHosts:
         # logwatch and piggyback folders
         for what_dir in [
             f"{logwatch_dir}/{hostname}",
-            f"{tmp_dir}/piggyback/{hostname}",
+            str(tmp_dir / f"piggyback{hostname}"),
         ]:
             try:
                 shutil.rmtree(what_dir)

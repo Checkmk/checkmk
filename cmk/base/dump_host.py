@@ -5,7 +5,6 @@
 
 import socket
 import time
-from pathlib import Path
 
 import cmk.utils.render
 import cmk.utils.tty as tty
@@ -50,7 +49,7 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
         return description
 
     if isinstance(fetcher, PiggybackFetcher):
-        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / fetcher.hostname)
+        return f"Process piggyback data from {tmp_dir / 'piggyback' / str(fetcher.hostname)}"
 
     if isinstance(fetcher, ProgramFetcher):
         response = [f"Program: {fetcher.cmdline}"]

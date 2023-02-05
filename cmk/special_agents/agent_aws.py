@@ -19,7 +19,6 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
-from pathlib import Path
 from time import sleep
 from typing import Any, assert_never, Literal, NamedTuple, Type, TypedDict, TypeVar
 
@@ -658,7 +657,7 @@ class AWSComputedContent(NamedTuple):
     cache_timestamp: float
 
 
-AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
+AWSCacheFilePath = tmp_dir / "agents" / "agent_aws"
 
 
 class AWSSection(DataCache):

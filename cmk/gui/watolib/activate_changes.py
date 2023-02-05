@@ -133,7 +133,7 @@ ACTIVATION_TIME_RESTART = "restart"
 ACTIVATION_TIME_SYNC = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
-ACTIVATION_TMP_BASE_DIR = cmk.utils.paths.tmp_dir + "/wato/activation"
+ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
 ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
@@ -2587,6 +2587,7 @@ def get_activation_ids() -> list[str]:
     Returns:
         A list of activation ids found in the tmp activation directory
     """
+
     if os.path.exists(ACTIVATION_TMP_BASE_DIR):
         return os.listdir(ACTIVATION_TMP_BASE_DIR)
     return []

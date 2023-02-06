@@ -245,12 +245,11 @@ def commandline_check_discovery(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    active_check_handler: Callable[[HostName, str], object],
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     keepalive: bool,
-) -> ServiceState:
+) -> tuple[ServiceState, str]:
     return error_handling.check_result(
         partial(
             _commandline_check_discovery,
@@ -269,7 +268,6 @@ def commandline_check_discovery(
         plugin_name="discover",
         is_cluster=config_cache.is_cluster(host_name),
         snmp_backend=config_cache.get_snmp_backend(host_name),
-        active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
 

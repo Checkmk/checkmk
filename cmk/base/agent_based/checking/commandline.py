@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Container, Mapping
+from collections.abc import Container, Mapping
 from functools import partial
 
 import cmk.utils.version as cmk_version
@@ -47,10 +47,9 @@ def commandline_checking(
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     submitter: Submitter,
-    active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
     perfdata_with_times: bool,
-) -> ServiceState:
+) -> tuple[ServiceState, str]:
     # The error handling is required for the Nagios core.
     return error_handling.check_result(
         partial(
@@ -74,7 +73,6 @@ def commandline_checking(
         plugin_name="mk",
         is_cluster=config_cache.is_cluster(host_name),
         snmp_backend=config_cache.get_snmp_backend(host_name),
-        active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
 

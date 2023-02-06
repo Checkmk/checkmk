@@ -15,8 +15,7 @@ from cmk.checkers import error_handling
 from cmk.checkers.checkresults import ActiveCheckResult
 
 
-def test_no_error_keeps_returns_status_from_callee(capsys) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("host_name")
+def test_no_error_keeps_returns_status_from_callee() -> None:
     state, text = error_handling._handle_success(
         ActiveCheckResult(
             0,
@@ -25,15 +24,11 @@ def test_no_error_keeps_returns_status_from_callee(capsys) -> None:  # type:igno
             ("metrics", "x"),
         )
     )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
-
     assert state == 0
-    assert capsys.readouterr().out == "summary | metrics x\ndetails\nlots of\n"
+    assert text == "summary | metrics x\ndetails\nlots of\n"
 
 
-def test_MKTimeout_exception_returns_2(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_MKTimeout_exception_returns_2() -> None:
     hostname = HostName("host_name")
     state, text = error_handling._handle_failure(
         MKTimeout("oops!"),
@@ -46,15 +41,11 @@ def test_MKTimeout_exception_returns_2(capsys) -> None:  # type:ignore[no-untype
         rtc_package=None,
         keepalive=False,
     )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
-
     assert state == 2
-    assert capsys.readouterr().out == "Timed out\n"
+    assert text == "Timed out\n"
 
 
-def test_MKAgentError_exception_returns_2(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_MKAgentError_exception_returns_2() -> None:
     hostname = "host_name"
     state, text = error_handling._handle_failure(
         MKAgentError("oops!"),
@@ -67,15 +58,11 @@ def test_MKAgentError_exception_returns_2(capsys) -> None:  # type:ignore[no-unt
         rtc_package=None,
         keepalive=False,
     )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
-
     assert state == 2
-    assert capsys.readouterr().out == "oops!\n"
+    assert text == "oops!\n"
 
 
-def test_MKGeneralException_returns_3(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_MKGeneralException_returns_3() -> None:
     hostname = "host_name"
     state, text = error_handling._handle_failure(
         MKGeneralException("kaputt!"),
@@ -88,16 +75,12 @@ def test_MKGeneralException_returns_3(capsys) -> None:  # type:ignore[no-untyped
         rtc_package=None,
         keepalive=False,
     )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
-
     assert state == 3
-    assert capsys.readouterr().out == "kaputt!\n"
+    assert text == "kaputt!\n"
 
 
 @pytest.mark.usefixtures("disable_debug")
-def test_unhandled_exception_returns_3(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_unhandled_exception_returns_3() -> None:
     hostname = "host_name"
     state, text = error_handling._handle_failure(
         ValueError("unexpected :/"),
@@ -110,9 +93,5 @@ def test_unhandled_exception_returns_3(capsys) -> None:  # type:ignore[no-untype
         rtc_package=None,
         keepalive=False,
     )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
-
     assert state == 3
-    assert capsys.readouterr().out.startswith("check failed - please submit a crash report!")
+    assert text.startswith("check failed - please submit a crash report!")

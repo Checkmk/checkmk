@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 from collections.abc import Callable
-from contextlib import suppress
 
 import cmk.utils.debug
 from cmk.utils.exceptions import (
@@ -16,7 +14,6 @@ from cmk.utils.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
-from cmk.utils.log import console
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginNameStr,
@@ -41,13 +38,12 @@ def check_result(
     plugin_name: CheckPluginNameStr,
     is_cluster: bool,
     snmp_backend: SNMPBackendEnum,
-    active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
-) -> ServiceState:
+) -> tuple[ServiceState, str]:
     try:
-        state, text = _handle_success(callback())
+        return _handle_success(callback())
     except Exception as exc:
-        state, text = _handle_failure(
+        return _handle_failure(
             exc,
             exit_spec,
             host_name=host_name,
@@ -58,13 +54,6 @@ def check_result(
             keepalive=keepalive,
             rtc_package=None,
         )
-    _handle_output(
-        text,
-        host_name,
-        active_check_handler=active_check_handler,
-        keepalive=keepalive,
-    )
-    return state
 
 
 def _handle_success(result: ActiveCheckResult) -> tuple[ServiceState, str]:
@@ -114,19 +103,3 @@ def _handle_failure(
             rtc_package=rtc_package,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )
-
-
-def _handle_output(
-    output_text: str,
-    hostname: HostName,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-) -> None:
-    active_check_handler(hostname, output_text)
-    if keepalive:
-        console.verbose(output_text)
-        return
-    with suppress(IOError):
-        sys.stdout.write(output_text)
-        sys.stdout.flush()

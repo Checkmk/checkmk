@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 from collections.abc import Callable, Container, Mapping, Sequence
+from contextlib import suppress
 from functools import partial
 from pathlib import Path
 from typing import Final, Literal, overload, Protocol, TypedDict, TypeVar, Union
@@ -1573,18 +1574,25 @@ def mode_check_discovery(
         include_ok_results=False,
         override_non_ok_state=None,
     )
-    return discovery.commandline_check_discovery(
+    state, text = discovery.commandline_check_discovery(
         hostname,
         config_cache=config_cache,
         fetcher=fetcher,
         parser=parser,
         summarizer=summarizer,
-        active_check_handler=active_check_handler,
         section_plugins=SectionPluginMapper(),
         check_plugins=CheckPluginMapper(),
         find_service_description=config.service_description,
         keepalive=keepalive,
     )
+    active_check_handler(hostname, text)
+    if keepalive:
+        console.verbose(text)
+    else:
+        with suppress(IOError):
+            sys.stdout.write(text)
+            sys.stdout.flush()
+    return state
 
 
 def register_mode_check_discovery(
@@ -1937,7 +1945,7 @@ def mode_check(
         include_ok_results=True,
         override_non_ok_state=None,
     )
-    return checking.commandline_checking(
+    state, text = checking.commandline_checking(
         hostname,
         ipaddress,
         config_cache=config_cache,
@@ -1956,10 +1964,17 @@ def mode_check(
             perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
             show_perfdata=options.get("perfdata", False),
         ),
-        active_check_handler=active_check_handler,
         keepalive=keepalive,
         perfdata_with_times=config.check_mk_perfdata_with_times,
     )
+    active_check_handler(hostname, text)
+    if keepalive:
+        console.verbose(text)
+    else:
+        with suppress(IOError):
+            sys.stdout.write(text)
+            sys.stdout.flush()
+    return state
 
 
 def register_mode_check(
@@ -2146,7 +2161,7 @@ def mode_inventory_as_check(
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
-) -> int:
+) -> ServiceState:
     config_cache = config.get_config_cache()
     file_cache_options = _handle_fetcher_options(options)
     parameters = HWSWInventoryParameters.from_raw(options)
@@ -2172,7 +2187,7 @@ def mode_inventory_as_check(
         include_ok_results=False,
         override_non_ok_state=parameters.fail_status,
     )
-    return error_handling.check_result(
+    state, text = error_handling.check_result(
         partial(
             execute_active_check_inventory,
             hostname,
@@ -2191,9 +2206,16 @@ def mode_inventory_as_check(
         plugin_name="check_mk_active-cmk_inv",
         is_cluster=config_cache.is_cluster(hostname),
         snmp_backend=config_cache.get_snmp_backend(hostname),
-        active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
+    active_check_handler(hostname, text)
+    if keepalive:
+        console.verbose(text)
+    else:
+        with suppress(IOError):
+            sys.stdout.write(text)
+            sys.stdout.flush()
+    return state
 
 
 def register_mode_inventory_as_check(

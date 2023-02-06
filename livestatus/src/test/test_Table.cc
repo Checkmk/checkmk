@@ -243,7 +243,10 @@ class DummyMonitoringCore : public MonitoringCore {
 
     [[nodiscard]] bool hasEventHandlers() const override { return {}; }
 
-    [[nodiscard]] bool isTrialExpired() const override { return {}; }
+    [[nodiscard]] bool isTrialExpired(
+        std::chrono::system_clock::time_point /*now*/) const override {
+        return {};
+    }
 
     [[nodiscard]] double averageRunnableJobsFetcher() const override {
         return {};

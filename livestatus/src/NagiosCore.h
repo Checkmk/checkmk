@@ -170,7 +170,8 @@ public:
 
     bool hasEventHandlers() const override;
 
-    bool isTrialExpired() const override;
+    bool isTrialExpired(
+        std::chrono::system_clock::time_point now) const override;
 
     double averageRunnableJobsFetcher() const override;
     double averageRunnableJobsChecker() const override;

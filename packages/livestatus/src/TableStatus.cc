@@ -5,6 +5,7 @@
 
 #include "livestatus/TableStatus.h"
 
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -306,8 +307,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 
     addColumn(std::make_unique<BoolColumn<TableStatus>>(
         "is_trial_expired", "Whether or not expired trial of demo version",
-        offsets,
-        [mc](const TableStatus & /*r*/) { return mc->isTrialExpired(); }));
+        offsets, [mc](const TableStatus & /*r*/) {
+            return mc->isTrialExpired(std::chrono::system_clock::now());
+        }));
 
     // Special stuff for Check_MK
     addColumn(std::make_unique<TimeColumn<TableStatus>>(

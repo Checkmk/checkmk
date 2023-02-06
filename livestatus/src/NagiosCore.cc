@@ -397,7 +397,10 @@ bool NagiosCore::hasEventHandlers() const {
     return g_any_event_handler_enabled;
 }
 
-bool NagiosCore::isTrialExpired() const { return false; }
+bool NagiosCore::isTrialExpired(
+    std::chrono::system_clock::time_point /*now*/) const {
+    return false;
+}
 
 double NagiosCore::averageRunnableJobsFetcher() const { return 0.0; }
 double NagiosCore::averageRunnableJobsChecker() const { return 0.0; }

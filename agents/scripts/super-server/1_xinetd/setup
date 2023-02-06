@@ -68,7 +68,7 @@ deploy() {
 cleanup() {
 
     # migrate CRE pre 2.1 xinetd service
-    if [ ! -e "${TEMPLATE}" ] && [ -e "/etc/xinetd.d/check_mk" ]; then
+    if [ -e "/etc/xinetd.d/check_mk" ]; then
         printf "migrating old /etc/xinetd.d/check_mk ... "
         sed 's/service check_mk/service check-mk-agent/' "/etc/xinetd.d/check_mk" >"${TEMPLATE}" && rm "/etc/xinetd.d/check_mk" && printf "OK\n"
     fi

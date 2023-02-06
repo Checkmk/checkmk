@@ -159,8 +159,8 @@ class AutomationDiscovery(DiscoveryAutomation):
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
     def execute(self, args: list[str]) -> DiscoveryResult:
-        scan, args = _extract_directive("@scan", args)
-        _noscan, args = _extract_directive("@noscan", args)
+        force_snmp_cache_refresh, args = _extract_directive("@scan", args)
+        _prevent_scan, args = _extract_directive("@noscan", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
         # Error sensitivity
         if raise_errors:
@@ -193,7 +193,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         fetcher = ConfiguredFetcher(
             config_cache,
             file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=scan,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
             mode=Mode.DISCOVERY,
             on_error=on_error,
             selected_sections=NO_SELECTION,
@@ -233,11 +233,11 @@ class AutomationTryDiscovery(Automation):
     def execute(self, args: list[str]) -> TryDiscoveryResult:
         # Note: in the @noscan case we *must not* fetch live data (it must be fast)
         # In the @scan case we *must* fetch live data (it must be up to date)
-        _scan, args = _extract_directive("@scan", args)
-        noscan, args = _extract_directive("@noscan", args)
+        _do_scan, args = _extract_directive("@scan", args)
+        prevent_scan, args = _extract_directive("@noscan", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
         perform_scan = (
-            not noscan
+            not prevent_scan
         )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
 
         return self._get_discovery_preview(

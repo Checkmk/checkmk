@@ -467,14 +467,6 @@ section_statgrab() {
     fi
 }
 
-section_ipmitool() {
-    if inpath ipmitool; then
-        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; timeout 300 ipmitool sensor list | grep -v 'command failed' | grep -v '^[^ ]+ na ' | grep -v ' discrete '"
-        # readable discrete sensor states
-        run_cached "ipmi_discrete" 300 "echo '<<<ipmi_discrete:sep(124)>>>'; ipmitool sdr elist compact"
-    fi
-}
-
 section_cpu() {
     # /proc/cpu
     # Simulated Output of Linux /proc/cpu
@@ -551,6 +543,14 @@ section_multipathing() {
 #
 # BEGIN COMMON AGENT CODE
 #
+
+section_ipmitool() {
+    if inpath ipmitool; then
+        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; timeout 300 ipmitool sensor list | grep -v 'command failed' | grep -v '^[^ ]+ na ' | grep -v ' discrete '"
+        # readable discrete sensor states
+        run_cached "ipmi_discrete" 300 "echo '<<<ipmi_discrete:sep(124)>>>'; timeout 300 ipmitool sdr elist compact"
+    fi
+}
 
 section_job() {
     # Get statistics about monitored jobs.

@@ -252,6 +252,63 @@ class TestLinux:
             ]
         )
 
+    @pytest.mark.parametrize(
+        "instance_name,ps_instances,exp_instance",
+        [
+            pytest.param("TEST", ["test", "TEST"], "TEST", id="case sensitive upper case"),
+            pytest.param("test", ["test", "TEST"], "test", id="case sensitive lower case"),
+            pytest.param("test", ["TEST"], "TEST", id="not case sensitive 1"),
+            pytest.param("TEST", ["test"], "test", id="not case sensitive 2"),
+        ],
+    )
+    @patch("subprocess.Popen")
+    def test_get_instances_case_sensitivity(
+        self, mock_Popen, instance_name, ps_instances, exp_instance
+    ):
+        instance = {
+            "pg_database": "mydb",
+            "pg_port": "1234",
+            "name": instance_name,
+            "pg_user": "myuser",
+            "pg_passfile": "/home/.pgpass",
+            "pg_version": "12.3",
+        }
+
+        process_mock = Mock()
+        attrs = {
+            "communicate.side_effect": [
+                ("/usr/lib/postgres/psql", None),
+                ("postgres\ndb1", None),
+                ("12.3.6", None),
+            ]
+        }
+        process_mock.configure_mock(**attrs)
+        mock_Popen.return_value = process_mock
+
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        process_mock = Mock()
+
+        proc_list = []
+        for ps_instance in ps_instances:
+            proc_list.extend(
+                [
+                    "3190 postgres: 13/%s logger" % ps_instance,
+                    "785150 /usr/lib/postgresql/13/bin/postgres -D /var/lib/postgresql/13/%s "
+                    % ps_instance,
+                ]
+            )
+        attrs = {"communicate.side_effect": [("\n".join(proc_list), None)]}
+        process_mock.configure_mock(**attrs)
+        mock_Popen.return_value = process_mock
+
+        assert myPostgresOnLinux.get_instances() == "\n".join(
+            [
+                "3190 postgres: 13/%s logger" % exp_instance,
+                "785150 /usr/lib/postgresql/13/bin/postgres -D /var/lib/postgresql/13/%s"
+                % exp_instance,
+            ]
+        )
+
 
 class TestWindows:
     @pytest.fixture(autouse=True)

@@ -35,7 +35,6 @@ from cmk.utils.paths import licensing_dir, log_dir, omd_root
 from cmk.utils.site import omd_site
 
 _CCE_SERVICES = {
-    "azure_resource_health",
     "aws_route53",
     "aws_cloudfront",
     "aws_ecs_cpu_reservation",
@@ -58,6 +57,8 @@ _CCE_SERVICES = {
     "aws_sns_sms_spend",
     "aws_sns_sms_success_rate",
     "aws_sns_summary",
+    "azure_app_gateway",
+    "azure_resource_health",
     "azure_vault_backup_containers",
     "gcp_function_execution",
     "gcp_function_instances",

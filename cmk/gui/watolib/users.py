@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional
+from typing import cast, Optional
 
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password, PasswordPolicy
@@ -15,7 +15,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
-from cmk.gui.type_defs import UserId
+from cmk.gui.type_defs import UserId, UserSpec
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -140,7 +140,22 @@ def edit_users(changed_users):
     userdb.save_users(all_users)
 
 
-def make_user_audit_log_object(attributes):
+def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
+    edit_users(
+        {
+            user_id: {
+                "attributes": cast(
+                    UserSpec,
+                    {k: v for k, v in settings.items() if k != custom_attribute_name},
+                ),
+                "is_new_user": False,
+            }
+            for user_id, settings in userdb.load_users(lock=True).items()
+        }
+    )
+
+
+def make_user_audit_log_object(attributes: UserSpec) -> UserSpec:
     """The resulting object is used for building object diffs"""
     obj = attributes.copy()
 

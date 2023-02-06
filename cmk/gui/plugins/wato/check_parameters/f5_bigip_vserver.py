@@ -125,6 +125,14 @@ def _parameter_valuespec_f5_bigip_vserver():
                 ),
             ),
             (
+                "connections",
+                Levels(
+                    title=_("Total Connections Maximum"),
+                    unit=_("connections"),
+                    default_value=None,
+                ),
+            ),
+            (
                 "state",
                 Dictionary(
                     title=_("Map states"),

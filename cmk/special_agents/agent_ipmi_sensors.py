@@ -6,7 +6,6 @@
 Special agent for collecting data from IPMI sensors via freeipmi or ipmitool.
 """
 
-import errno
 import os
 import subprocess
 import sys
@@ -271,13 +270,11 @@ def _main(args: Args) -> int:
                     encoding="utf-8",
                     check=False,
                 )
-            except OSError as e:
-                if e.errno == errno.ENOENT:  # No such file or directory
-                    raise Exception(
-                        "Could not find '%s' command (PATH: %s)"
-                        % (args.ipmi_cmd, os.environ.get("PATH"))
-                    )
-                raise
+            except FileNotFoundError as e:
+                raise Exception(
+                    "Could not find '%s' command (PATH: %s)"
+                    % (args.ipmi_cmd, os.environ.get("PATH"))
+                ) from e
 
             if completed_process.stderr:
                 errors.append(completed_process.stderr)

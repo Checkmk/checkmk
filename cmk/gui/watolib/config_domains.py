@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
 import logging
 import os
 import signal
@@ -182,11 +181,12 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                     pid = int(f.read().strip())
 
                 os.kill(pid, signal.SIGHUP)
-            except OSError as e:
-                # ENOENT: No liveproxyd running: No reload needed.
+            except ProcessLookupError:
                 # ESRCH: PID in pidfiles does not exist: No reload needed.
-                if e.errno not in (errno.ENOENT, errno.ESRCH):
-                    raise
+                pass
+            except FileNotFoundError:
+                # ENOENT: No liveproxyd running: No reload needed.
+                pass
             except ValueError:
                 # ignore empty pid file (may happen during locking in
                 # cmk.utils.daemon.lock_with_pid_file().  We are in the

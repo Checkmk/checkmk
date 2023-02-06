@@ -5,7 +5,6 @@
 
 import abc
 import ast
-import errno
 import glob
 import io
 import logging
@@ -963,11 +962,8 @@ class ABCDeleteHosts:
     def _delete_datasource_dirs(self, hostname: HostName) -> None:
         try:
             ds_directories = os.listdir(data_source_cache_dir)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                ds_directories = []
-            else:
-                raise
+        except FileNotFoundError:
+            ds_directories = []
 
         for data_source_name in ds_directories:
             filename = f"{data_source_cache_dir}/{data_source_name}/{hostname}"
@@ -989,9 +985,8 @@ class ABCDeleteHosts:
         ]:
             try:
                 shutil.rmtree(what_dir)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+            except FileNotFoundError:
+                continue
 
     def _delete_if_exists(self, path: str) -> None:
         """Delete the given file or folder in case it exists"""
@@ -1508,10 +1503,8 @@ class AutomationDiagHost(Automation):
                 encoding="utf-8",
                 check=False,
             )
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return 1, "Cannot find binary <tt>traceroute</tt>."
-            raise
+        except FileNotFoundError:
+            return 1, "Cannot find binary <tt>traceroute</tt>."
         return completed_process.returncode, completed_process.stdout
 
     def _execute_snmp(  # type: ignore[no-untyped-def]  # pylint: disable=too-many-branches

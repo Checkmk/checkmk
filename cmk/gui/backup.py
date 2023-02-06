@@ -266,27 +266,18 @@ class MKBackupJob(abc.ABC):
         ...
 
     def cleanup(self) -> None:
-        try:
-            self.state_file_path().unlink()
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass
-            else:
-                raise
+        self.state_file_path().unlink(missing_ok=True)
 
     def state(self) -> StateConfig:
         try:
             with self.state_file_path().open(encoding="utf-8") as f:
                 state = json.load(f)
-        except OSError as e:
-            if e.errno == errno.ENOENT:  # not existant
-                state = {
-                    "state": None,
-                    "started": None,
-                    "output": "",
-                }
-            else:
-                raise
+        except FileNotFoundError:
+            state = {
+                "state": None,
+                "started": None,
+                "output": "",
+            }
         except Exception as e:
             raise MKGeneralException(
                 _('Failed to parse state file "%s": %s') % (self.state_file_path(), e)

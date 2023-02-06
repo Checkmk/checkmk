@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import abc
-import errno
 import operator
 import os
 import pickle
@@ -2033,10 +2032,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def delete_host_lookup_cache():
         try:
             os.unlink(Folder.host_lookup_cache_path())
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return  # Not existant -> OK
-            raise
+        except FileNotFoundError:
+            return  # Not existant -> OK
 
     @staticmethod
     def add_hosts_to_lookup_cache(host2path_list):

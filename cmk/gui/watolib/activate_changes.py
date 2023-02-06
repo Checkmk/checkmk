@@ -328,11 +328,8 @@ def _update_replication_status(site_id, vars_):
 def clear_site_replication_status(site_id):
     try:
         os.unlink(_site_replication_status_path(site_id))
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            pass  # Not existant -> OK
-        else:
-            raise
+    except FileNotFoundError:
+        pass  # Not existant -> OK
 
     ActivateChanges().confirm_site_changes(site_id)
 
@@ -1319,9 +1316,8 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
         ):
             try:
                 files.update(os.listdir(base_dir))
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+            except FileNotFoundError:
+                pass
 
         ids = []
         for activation_id in files:
@@ -2573,11 +2569,12 @@ class AutomationReceiveConfigSync(AutomationCommand):
             site_file = base_dir.joinpath(site_path)
             try:
                 site_file.unlink()
-            except OSError as e:
+            except FileNotFoundError:
                 # errno.ENOENT - File already removed. Fine
+                pass
+            except NotADirectoryError:
                 # errno.ENOTDIR - dir with files was replaced by e.g. symlink
-                if e.errno not in [errno.ENOENT, errno.ENOTDIR]:
-                    raise
+                pass
 
         _unpack_sync_archive(sync_archive, base_dir)
 

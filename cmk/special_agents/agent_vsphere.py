@@ -6,7 +6,6 @@
 
 import argparse
 import collections
-import errno
 import json
 import re
 import socket
@@ -1228,9 +1227,8 @@ class ESXConnection:
     def delete_server_cookie(self):
         try:
             self._server_cookie_path.unlink()
-        except OSError as exc:
-            if exc.errno != errno.ENOENT:
-                raise
+        except FileNotFoundError:
+            pass
 
 
 # .

@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import errno
 import io
 import logging
 import multiprocessing
@@ -565,11 +564,8 @@ class BackgroundJob:
             # We didn't manage to reproduce the issue with the code and it seems to be really rare.
             # More details in SUP-10240
             shutil.rmtree(self._work_dir)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass
-            else:
-                raise
+        except FileNotFoundError:
+            pass
 
     def _terminate_processes(self) -> None:
         job_status = self.get_status()

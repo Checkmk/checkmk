@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import abc
-import errno
 import json
 import os
 import platform
@@ -244,11 +243,7 @@ class DiagnosticsDump:
             self._remove_file(filepath)
 
     def _remove_file(self, filepath: Path) -> None:
-        try:
-            filepath.unlink()
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
+        filepath.unlink(missing_ok=True)
 
 
 # .

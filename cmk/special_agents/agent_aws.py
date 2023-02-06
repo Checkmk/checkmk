@@ -8,7 +8,6 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 
 import abc
 import argparse
-import errno
 import hashlib
 import itertools
 import json
@@ -329,10 +328,7 @@ class AWSConfig:
         try:
             with self._config_hash_file.open(mode="r", encoding="utf-8") as f:
                 return f.read().strip()
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                # No such file or directory
-                raise
+        except FileNotFoundError:
             return None
 
     def _write_config_hash(self) -> None:

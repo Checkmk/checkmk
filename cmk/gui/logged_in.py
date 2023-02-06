@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import errno
 import logging
 import os
 import time
@@ -411,10 +410,8 @@ class LoggedInUser:
 
         try:
             return os.stat(self.confdir + "/" + name + ".mk").st_mtime
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return 0
-            raise
+        except FileNotFoundError:
+            return 0
 
     def get_docs_base_url(self) -> str:
         version = Version(__version__).version_base

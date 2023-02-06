@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import abc
 import copy
-import errno
 import logging
 import os
 import shutil
@@ -471,9 +470,8 @@ class LDAPUserConnector(UserConnector):
     def clear_all_ldap_caches(cls) -> None:
         try:
             shutil.rmtree(str(cls._ldap_caches_filepath()))
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
+        except FileNotFoundError:
+            pass
 
     # Bind with the default credentials
     def _default_bind(self, conn):

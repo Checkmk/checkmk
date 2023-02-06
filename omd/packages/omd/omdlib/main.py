@@ -333,9 +333,8 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
     """
     try:
         shutil.rmtree(site.version_meta_dir)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise
+    except FileNotFoundError:
+        pass
 
     skelroot = "/omd/versions/%s/skel" % version
     shutil.copytree(skelroot, "%s/skel" % site.version_meta_dir, symlinks=True)
@@ -2004,10 +2003,8 @@ def omd_versions() -> Iterable[str]:
                 if v != "default"
             ]
         )
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return []
-        raise
+    except FileNotFoundError:
+        return []
 
 
 def version_exists(v: str) -> bool:
@@ -3695,11 +3692,8 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
     ]:
         try:
             os.unlink(path)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass
-            else:
-                raise
+        except FileNotFoundError:
+            pass
 
     if group_exists("omd"):
         groupdel("omd")
@@ -4673,7 +4667,5 @@ def _get_command(
 def _get_orig_working_directory() -> str:
     try:
         return os.getcwd()
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return "/"
-        raise
+    except FileNotFoundError:
+        return "/"

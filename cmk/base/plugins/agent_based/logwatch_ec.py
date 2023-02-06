@@ -14,7 +14,6 @@
 #########################################################################################
 
 import ast
-import errno
 import socket
 import time
 from pathlib import Path
@@ -620,9 +619,7 @@ def logwatch_load_spooled_messages(  # type:ignore[no-untyped-def]
 
     try:
         spool_files = sorted(spool_path.iterdir())
-    except OSError as exc:
-        if exc.errno != errno.ENOENT:
-            raise
+    except FileNotFoundError:
         return []
 
     message_chunks = []
@@ -666,9 +663,7 @@ def logwatch_load_spooled_messages(  # type:ignore[no-untyped-def]
 
         try:
             messages = ast.literal_eval(path.read_text())
-        except IOError as exc:
-            if exc.errno != errno.ENOENT:
-                raise
+        except FileNotFoundError:
             continue
 
         message_chunks.append((time_spooled, len(messages), messages))

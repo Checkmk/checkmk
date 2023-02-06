@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
 import glob
 import io
 import os
@@ -697,6 +696,5 @@ def _wipe_directory(path: str) -> None:
         else:
             try:
                 os.remove(p)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+            except FileNotFoundError:
+                pass

@@ -8,7 +8,6 @@
 
 import collections
 import enum
-import errno
 import os
 import shutil
 from pathlib import Path
@@ -141,9 +140,8 @@ def cleanup_cmk():
 
     try:
         shutil.rmtree(str(cmk.utils.paths.tmp_dir))
-    except OSError as exc:
-        if exc.errno != errno.ENOENT:
-            raise  # re-raise exception
+    except FileNotFoundError:
+        pass
 
 
 def pytest_cmdline_main(config):

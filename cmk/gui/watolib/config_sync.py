@@ -6,7 +6,6 @@
 
 import abc
 import ast
-import errno
 import hashlib
 import io
 import itertools
@@ -522,9 +521,8 @@ def _wipe_directory(path: str) -> None:
         else:
             try:
                 os.remove(p)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+            except FileNotFoundError:
+                pass
 
 
 def _get_local_users(tar_file) -> dict[str, str | None]:  # type:ignore[no-untyped-def]

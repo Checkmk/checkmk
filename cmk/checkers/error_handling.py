@@ -21,7 +21,6 @@ from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceN
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.checkers import crash_reporting
-from cmk.checkers.checkresults import ActiveCheckResult
 
 
 class CheckResultErrorHandler:
@@ -68,15 +67,6 @@ class CheckResultErrorHandler:
             keepalive=self.keepalive,
         )
         return True
-
-
-def handle_success(result: ActiveCheckResult) -> tuple[ServiceState, str]:
-    return result.state, "\n".join(
-        (
-            " | ".join((result.summary, " ".join(result.metrics))),
-            "".join(f"{line}\n" for line in result.details),
-        )
-    )
 
 
 def _handle_failure(

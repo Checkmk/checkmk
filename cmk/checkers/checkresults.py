@@ -51,6 +51,14 @@ class ActiveCheckResult:
     details: tuple[str, ...] | list[str] = ()  # Sequence, but not str...
     metrics: tuple[str, ...] | list[str] = ()
 
+    def as_text(self) -> str:
+        return "\n".join(
+            (
+                " | ".join((self.summary, " ".join(self.metrics))),
+                "".join(f"{line}\n" for line in self.details),
+            )
+        )
+
     @classmethod
     def from_subresults(cls, *subresults: ActiveCheckResult) -> ActiveCheckResult:
         return cls(

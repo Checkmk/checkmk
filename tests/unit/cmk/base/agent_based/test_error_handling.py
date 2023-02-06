@@ -11,7 +11,6 @@ from cmk.utils.type_defs import ExitSpec, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.checkers import error_handling
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.error_handling import CheckResultErrorHandler
 
@@ -33,14 +32,13 @@ def test_no_error_keeps_returns_status_from_callee() -> None:
     result = handler.result
 
     with handler:
-        result = error_handling.handle_success(
-            ActiveCheckResult(
-                0,
-                "summary",
-                ("details", "lots of"),
-                ("metrics", "x"),
-            )
+        check_result = ActiveCheckResult(
+            0,
+            "summary",
+            ("details", "lots of"),
+            ("metrics", "x"),
         )
+        result = check_result.state, check_result.as_text()
 
     assert result == (0, "summary | metrics x\ndetails\nlots of\n")
     assert handler.result is None

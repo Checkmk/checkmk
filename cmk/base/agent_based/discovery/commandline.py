@@ -28,7 +28,7 @@ from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.discovery import AutochecksStore
-from cmk.checkers.error_handling import CheckResultErrorHandler, handle_success
+from cmk.checkers.error_handling import CheckResultErrorHandler
 
 import cmk.base.core
 from cmk.base.agent_based.data_provider import (
@@ -251,18 +251,17 @@ def commandline_check_discovery(
 ) -> tuple[ServiceState, str]:
     with error_handler:
         fetched = fetcher(host_name, ip_address=None)
-        return handle_success(
-            execute_check_discovery(
-                host_name,
-                config_cache=config_cache,
-                fetched=((f[0], f[1]) for f in fetched),
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=section_plugins,
-                check_plugins=check_plugins,
-                find_service_description=find_service_description,
-            )
+        check_result = execute_check_discovery(
+            host_name,
+            config_cache=config_cache,
+            fetched=((f[0], f[1]) for f in fetched),
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=section_plugins,
+            check_plugins=check_plugins,
+            find_service_description=find_service_description,
         )
+        return check_result.state, check_result.as_text()
 
     if error_handler.result is not None:
         return error_handler.result

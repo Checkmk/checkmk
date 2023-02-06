@@ -20,7 +20,7 @@ from cmk.utils.type_defs import (
 from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction, SummarizerFunction
-from cmk.checkers.error_handling import CheckResultErrorHandler, handle_success
+from cmk.checkers.error_handling import CheckResultErrorHandler
 from cmk.checkers.submitters import Submitter
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -52,21 +52,20 @@ def commandline_checking(
     with error_handler:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(host_name, ip_address=ipaddress)
-        return handle_success(
-            execute_checkmk_checks(
-                hostname=host_name,
-                config_cache=config_cache,
-                fetched=fetched,
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=section_plugins,
-                check_plugins=check_plugins,
-                inventory_plugins=inventory_plugins,
-                run_plugin_names=run_plugin_names,
-                perfdata_with_times=perfdata_with_times,
-                submitter=submitter,
-            )
+        check_result = execute_checkmk_checks(
+            hostname=host_name,
+            config_cache=config_cache,
+            fetched=fetched,
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=section_plugins,
+            check_plugins=check_plugins,
+            inventory_plugins=inventory_plugins,
+            run_plugin_names=run_plugin_names,
+            perfdata_with_times=perfdata_with_times,
+            submitter=submitter,
         )
+        return check_result.state, check_result.as_text()
 
     if error_handler.result is not None:
         return error_handler.result

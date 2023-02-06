@@ -53,7 +53,7 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import parse_raw_data
-from cmk.checkers.error_handling import CheckResultErrorHandler, handle_success
+from cmk.checkers.error_handling import CheckResultErrorHandler
 from cmk.checkers.submitters import get_submitter, Submitter
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
@@ -2218,19 +2218,18 @@ def mode_inventory_as_check(
     )
     state, text = (3, "unknown error")
     with error_handler:
-        state, text = handle_success(
-            execute_active_check_inventory(
-                hostname,
-                config_cache=config_cache,
-                fetcher=fetcher,
-                parser=parser,
-                summarizer=summarizer,
-                section_plugins=SectionPluginMapper(),
-                inventory_plugins=InventoryPluginMapper(),
-                inventory_parameters=config_cache.inventory_parameters,
-                parameters=parameters,
-            )
+        check_result = execute_active_check_inventory(
+            hostname,
+            config_cache=config_cache,
+            fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
+            inventory_plugins=InventoryPluginMapper(),
+            inventory_parameters=config_cache.inventory_parameters,
+            parameters=parameters,
         )
+        state, text = check_result.state, check_result.as_text()
     if error_handler.result is not None:
         state, text = error_handler.result
 

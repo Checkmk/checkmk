@@ -1584,17 +1584,24 @@ def mode_check_discovery(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    state, text = discovery.commandline_check_discovery(
-        hostname,
-        config_cache=config_cache,
-        fetcher=fetcher,
-        parser=parser,
-        summarizer=summarizer,
-        error_handler=error_handler,
-        section_plugins=SectionPluginMapper(),
-        check_plugins=CheckPluginMapper(),
-        find_service_description=config.service_description,
-    )
+    state, text = 3, "unknown error"
+    with error_handler:
+        fetched = fetcher(hostname, ip_address=None)
+        check_result = discovery.execute_check_discovery(
+            hostname,
+            config_cache=config_cache,
+            fetched=((f[0], f[1]) for f in fetched),
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
+            check_plugins=CheckPluginMapper(),
+            find_service_description=config.service_description,
+        )
+        state, text = check_result.state, check_result.as_text()
+
+    if error_handler.result is not None:
+        state, text = error_handler.result
+
     active_check_handler(hostname, text)
     if keepalive:
         console.verbose(text)
@@ -1964,28 +1971,34 @@ def mode_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    state, text = checking.commandline_checking(
-        hostname,
-        ipaddress,
-        config_cache=config_cache,
-        fetcher=fetcher,
-        parser=parser,
-        summarizer=summarizer,
-        error_handler=error_handler,
-        section_plugins=SectionPluginMapper(),
-        check_plugins=CheckPluginMapper(),
-        inventory_plugins=InventoryPluginMapper(),
-        run_plugin_names=run_plugin_names,
-        submitter=get_submitter_(
-            check_submission=config.check_submission,
-            monitoring_core=config.monitoring_core,
-            dry_run=options.get("no-submit", False),
-            host_name=hostname,
-            perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
-            show_perfdata=options.get("perfdata", False),
-        ),
-        perfdata_with_times=config.check_mk_perfdata_with_times,
-    )
+    state, text = (3, "unknown error")
+    with error_handler:
+        console.vverbose("Checkmk version %s\n", cmk_version.__version__)
+        fetched = fetcher(hostname, ip_address=ipaddress)
+        check_result = checking.execute_checkmk_checks(
+            hostname=hostname,
+            config_cache=config_cache,
+            fetched=fetched,
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
+            check_plugins=CheckPluginMapper(),
+            inventory_plugins=InventoryPluginMapper(),
+            run_plugin_names=run_plugin_names,
+            submitter=get_submitter_(
+                check_submission=config.check_submission,
+                monitoring_core=config.monitoring_core,
+                dry_run=options.get("no-submit", False),
+                host_name=hostname,
+                perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+                show_perfdata=options.get("perfdata", False),
+            ),
+            perfdata_with_times=config.check_mk_perfdata_with_times,
+        )
+        state, text = check_result.state, check_result.as_text()
+
+    if error_handler.result is not None:
+        state, text = error_handler.result
 
     active_check_handler(hostname, text)
     if keepalive:

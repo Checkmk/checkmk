@@ -5,7 +5,7 @@
 
 
 from collections import Counter
-from collections.abc import Callable, Container, Mapping
+from collections.abc import Container, Mapping
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -15,20 +15,12 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    Item,
-    SectionName,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import ParserFunction, SummarizerFunction
+from cmk.checkers import ParserFunction
 from cmk.checkers.discovery import AutochecksStore
-from cmk.checkers.error_handling import CheckResultErrorHandler
 
 import cmk.base.core
 from cmk.base.agent_based.data_provider import (
@@ -43,7 +35,6 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._discovery import execute_check_discovery
 from ._host_labels import (
     analyse_host_labels,
     discover_cluster_labels,
@@ -52,7 +43,7 @@ from ._host_labels import (
 )
 from .utils import QualifiedDiscovery
 
-__all__ = ["commandline_discovery", "commandline_check_discovery"]
+__all__ = ["commandline_discovery"]
 
 
 def commandline_discovery(
@@ -235,35 +226,3 @@ def _commandline_discovery_on_host(
     for result in check_parsing_errors(parsed_sections_broker.parsing_errors()):
         for line in result.details:
             console.warning(line)
-
-
-def commandline_check_discovery(
-    host_name: HostName,
-    *,
-    config_cache: ConfigCache,
-    fetcher: FetcherFunction,
-    parser: ParserFunction,
-    summarizer: SummarizerFunction,
-    error_handler: CheckResultErrorHandler,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-) -> tuple[ServiceState, str]:
-    with error_handler:
-        fetched = fetcher(host_name, ip_address=None)
-        check_result = execute_check_discovery(
-            host_name,
-            config_cache=config_cache,
-            fetched=((f[0], f[1]) for f in fetched),
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=section_plugins,
-            check_plugins=check_plugins,
-            find_service_description=find_service_description,
-        )
-        return check_result.state, check_result.as_text()
-
-    if error_handler.result is not None:
-        return error_handler.result
-
-    return (3, "unknown error")

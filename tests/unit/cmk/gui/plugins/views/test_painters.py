@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -18,7 +19,7 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
-from cmk.gui.type_defs import ColumnSpec, Literal, Row
+from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource

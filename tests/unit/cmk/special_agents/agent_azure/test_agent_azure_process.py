@@ -399,6 +399,7 @@ def test_process_resource(
             ["BurningMan"],
             {
                 "BurningMan": {
+                    "cmk/azure/resource_group": "BurningMan",
                     "my-resource-tag": "my-resource-value",
                     "resource_group": "BurningMan",
                 }

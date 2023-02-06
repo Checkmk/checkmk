@@ -48,7 +48,14 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
 
-__all__ = ["ConfiguredParser", "ConfiguredFetcher"]
+__all__ = [
+    "CheckPluginMapper",
+    "ConfiguredFetcher",
+    "ConfiguredParser",
+    "ConfiguredSummarizer",
+    "InventoryPluginMapper",
+    "SectionPluginMapper",
+]
 
 
 def _fetch_all(

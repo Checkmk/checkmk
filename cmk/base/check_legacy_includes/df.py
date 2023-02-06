@@ -10,7 +10,7 @@ from typing import Any
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 from cmk.base.config import Ruleset
-from cmk.base.plugins.agent_based.utils.df import (
+from cmk.base.plugins.agent_based.utils.df import (  # noqa: 401
     check_filesystem_levels,
     check_inodes,
     FILESYSTEM_DEFAULT_LEVELS,

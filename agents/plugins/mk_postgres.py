@@ -24,7 +24,7 @@ import subprocess
 import sys
 
 try:
-    from typing import Any, Dict, Iterable, List, Optional, Tuple
+    from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 except ImportError:
     # We need typing only for testing
     pass
@@ -767,6 +767,25 @@ class PostgresLinux(PostgresBase):
         # type: () -> str
         return self.psql_binary_path.rsplit("/", 1)[0]
 
+    def _matches_postgres_process(self, proc, procs_to_match):
+        # type: (str, List[re.Pattern]) -> bool
+        return any(pat.search(proc) for pat in procs_to_match)
+
+    def _matches_main(self, proc):
+        # type: (str) -> bool
+        # the data directory for the instance "main" is not called "main" but "data" on some
+        # platforms
+        return self.name == "main" and "data" in proc
+
+    def _filter_instances(self, procs_list, procs_to_match, proc_sensitive_filter):
+        # type: (List[str], List[re.Pattern], Callable[[str], bool]) -> List[str]
+        return [
+            proc
+            for proc in procs_list
+            if self._matches_postgres_process(proc, procs_to_match)
+            and (proc_sensitive_filter(proc) or self._matches_main(proc))
+        ]
+
     def get_instances(self):
         # type: () -> str
 
@@ -785,12 +804,20 @@ class PostgresLinux(PostgresBase):
         procs_list = ensure_str(
             subprocess_check_output(["ps", "h", "-eo", "pid:1,command:1"])
         ).split("\n")
-        out = ""
-        for proc in procs_list:
-            if any(pat.search(proc) for pat in procs_to_match):
-                # the data directory for the instance "main" is not called "main" but "data" on some platforms
-                if self.name in proc.lower() or (self.name == "main" and "data" in proc):
-                    out += proc + "\n"
+
+        # trying to address setups in SUP-12878 (instance "A01" -> process "A01") and SUP-12539
+        # (instance "epcomt" -> process "EPCOMT") as well as possible future setups (containing
+        # instances where the names only differ in case (e.g. "instance" and "INSTANCE"))
+        procs = self._filter_instances(
+            procs_list, procs_to_match, proc_sensitive_filter=lambda p: self.name in p
+        )
+        if not procs:
+            procs = self._filter_instances(
+                procs_list,
+                procs_to_match,
+                proc_sensitive_filter=lambda p: self.name.lower() in p.lower(),
+            )
+        out = "\n".join(procs)
         return out.rstrip()
 
     def get_query_duration(self, numeric_version):

@@ -43,7 +43,8 @@ import cryptography.x509 as x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.crypto.password import HashAlgorithm, Password
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 

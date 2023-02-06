@@ -8,10 +8,8 @@ from __future__ import annotations
 
 import secrets
 import string
-from enum import Enum
 from typing import AnyStr, Final, Generic, NewType
 
-from cryptography.hazmat.primitives import hashes as crypto_hashes
 from typing_extensions import assert_never
 
 
@@ -113,22 +111,3 @@ class Password(Generic[AnyStr]):
 
 
 PasswordHash = NewType("PasswordHash", str)
-
-
-class HashAlgorithm(Enum):
-    """This is just a facade to selected hash algorithms from cryptography"""
-
-    Sha256 = crypto_hashes.SHA256()
-    Sha384 = crypto_hashes.SHA384()
-    Sha512 = crypto_hashes.SHA512()
-
-    @classmethod
-    def from_cryptography(cls, algo: crypto_hashes.HashAlgorithm) -> HashAlgorithm:
-        match algo:
-            case crypto_hashes.SHA256():
-                return HashAlgorithm.Sha256
-            case crypto_hashes.SHA384():
-                return HashAlgorithm.Sha384
-            case crypto_hashes.SHA512():
-                return HashAlgorithm.Sha512
-        raise ValueError(f"Unsupported hash algorithm: '{algo.name}'")

@@ -1,0 +1,17 @@
+Title: mk_oracle: change host and port to required fields in auth choices
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1675686406
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b3
+
+The Oracle plugin allowed the user to configure Login options without
+actually configuring any details. This also resulted in the default values
+for 'Hostname' or 'TCP-Port for Listener' to be ignored. This werk fixes
+this issue.
+
+

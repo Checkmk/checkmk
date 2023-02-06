@@ -7,7 +7,7 @@ import time
 from typing import AnyStr, Union
 
 from cmk.base.check_api import check_levels, get_average, get_rate, MKCounterWrapped, state_markers
-from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import; # reimported from checks!; See warning below
+from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import  # noqa: F401  # reimported from checks!; See warning below
     _migrate_params,
     fahrenheit_to_celsius,
     render_temp,

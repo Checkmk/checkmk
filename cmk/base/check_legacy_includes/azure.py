@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import json  # pylint: disable=unused-import
+import json  # pylint: disable=unused-import  # noqa: F401
 import time
 
 from cmk.base.check_api import (
@@ -15,7 +15,7 @@ from cmk.base.check_api import (
     MKCounterWrapped,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused-import
+from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused-import  # noqa: F401
     AZURE_AGENT_SEPARATOR,
     iter_resource_attributes,
     parse_resources,

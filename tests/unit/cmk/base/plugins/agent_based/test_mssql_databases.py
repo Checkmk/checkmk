@@ -10,6 +10,7 @@ from cmk.base.plugins.agent_based.mssql_databases import (
     check_mssql_databases,
     discover_mssql_databases,
     parse_mssql_databases,
+    SectionDatabases,
 )
 
 
@@ -28,7 +29,7 @@ def _get_section():
     )
 
 
-def test_discover_mssql_databases(section) -> None:  # type:ignore[no-untyped-def]
+def test_discover_mssql_databases(section: SectionDatabases) -> None:
 
     assert sorted(discover_mssql_databases(section), key=lambda s: s.item or "") == [
         Service(item="MSSQL_MSSQL46 CorreLog_Report_T"),
@@ -40,14 +41,14 @@ def test_discover_mssql_databases(section) -> None:  # type:ignore[no-untyped-de
     ]
 
 
-def test_check_error(section) -> None:  # type:ignore[no-untyped-def]
+def test_check_error(section: SectionDatabases) -> None:
 
     assert list(check_mssql_databases("MSSQL_Mouse -", {}, section)) == [
         Result(state=State.CRIT, summary="We are out of cheese!"),
     ]
 
 
-def test_check_warn_auto_shrink(section) -> None:  # type:ignore[no-untyped-def]
+def test_check_warn_auto_shrink(section: SectionDatabases) -> None:
 
     assert list(check_mssql_databases("MSSQL_MSSQL46 NOC_ALARM_T", {}, section)) == [
         Result(state=State.OK, summary="Status: ONLINE"),

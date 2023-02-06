@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Mapping
 from datetime import datetime
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.proxmox_ve_backup_status import (
     check_proxmox_ve_vm_backup_status,
     parse_proxmox_ve_vm_backup_status,
+    Section,
 )
 
 FROZEN_TIME = datetime.strptime("2020-04-17 17:00:00+0000", "%Y-%m-%d %H:%M:%S%z")
@@ -244,8 +247,8 @@ def set_null_values(backup_data):
         ),
     ),
 )
-def test_check_proxmox_ve_vm_backup_status(  # type:ignore[no-untyped-def]
-    params, section, expected_results
+def test_check_proxmox_ve_vm_backup_status(
+    params: Mapping[str, object], section: Section, expected_results: CheckResult
 ) -> None:
     results = tuple(check_proxmox_ve_vm_backup_status(FROZEN_TIME, params, section))
     print("\n" + ",\n".join(map(str, results)))

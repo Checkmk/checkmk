@@ -5,9 +5,17 @@
 
 import pytest
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.oracle_dataguard_stats import (
     inventory_oracle_dataguard_stats,
     parse_oracle_dataguard_stats,
@@ -55,8 +63,8 @@ _AGENT_OUTPUT = [
         ),
     ],
 )
-def test_discover_oracle_dataguard_stats(  # type:ignore[no-untyped-def]
-    fix_register, string_table, expected_result
+def test_discover_oracle_dataguard_stats(
+    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
@@ -103,8 +111,8 @@ def test_discover_oracle_dataguard_stats(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_oracle_dataguard_stats(  # type:ignore[no-untyped-def]
-    fix_register, string_table, item, expected_result
+def test_check_oracle_dataguard_stats(
+    fix_register: FixRegister, string_table: StringTable, item: str, expected_result: CheckResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("oracle_dataguard_stats")]
     section = parse_oracle_dataguard_stats(string_table)
@@ -165,8 +173,8 @@ def test_check_oracle_dataguard_stats(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_oracle_dataguard_stats(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_oracle_dataguard_stats(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_oracle_dataguard_stats(parse_oracle_dataguard_stats(string_table))

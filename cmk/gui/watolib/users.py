@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from datetime import datetime
+from typing import cast
 
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password, PasswordPolicy
@@ -123,6 +124,21 @@ def edit_users(changed_users: UserObject) -> None:
             _add_dcd_change(affected_user)
 
     userdb.save_users(all_users, datetime.now())
+
+
+def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
+    edit_users(
+        {
+            user_id: {
+                "attributes": cast(
+                    UserSpec,
+                    {k: v for k, v in settings.items() if k != custom_attribute_name},
+                ),
+                "is_new_user": False,
+            }
+            for user_id, settings in userdb.load_users(lock=True).items()
+        }
+    )
 
 
 def make_user_audit_log_object(attributes: UserSpec) -> UserSpec:

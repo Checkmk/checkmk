@@ -7,10 +7,10 @@ import argparse
 import json
 import logging
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Callable
 
-from cmk.utils import tty
 from cmk.utils import version as cmk_version
 
 from . import (
@@ -39,6 +39,27 @@ from ._reporter import files_inventory
 from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
 _logger = logging.getLogger(__name__)
+
+
+def _render_table(headers: list[str], rows: Iterable[list[str]]) -> str:
+    """
+    >>> for line in _render_table(['This', 'that'], [['row11', 'row12__', 'row13'], ['row22_', 'row23']]).splitlines():
+    ...     line
+    'This   that   '
+    '------ -------'
+    'row11  row12__'
+    'row22_ row23  '
+    """
+    header, *table = zip(
+        *([f"%-{max(len(i) for i in e)}s" % i for i in e] for e in zip(headers, *rows))
+    )
+    return "\n".join(
+        (
+            " ".join(header),
+            " ".join("-" * len(i) for i in header),
+            *(" ".join(row) for row in table),
+        )
+    )
 
 
 def _to_text(manifest: Manifest) -> str:
@@ -90,11 +111,11 @@ def _command_find(args: argparse.Namespace, path_config: PathConfig) -> int:
         sys.stdout.write(f"{json.dumps(files, indent='  ')}\n")
         return 0
 
-    tty.print_table(
+    table = _render_table(
         ["File", "Package", "Version", "Part", "Mode"],
-        ["", "", "", "", ""],
         [[f["file"], f["package"], f["version"], f["part_title"], f["mode"]] for f in files],
     )
+    sys.stdout.write(f"{table}\n")
     return 0
 
 
@@ -200,15 +221,15 @@ def _command_list(args: argparse.Namespace, path_config: PathConfig) -> int:
         ]
         if m.id not in enabled_ids
     ]
-    tty.print_table(
+    table = _render_table(
         ["Name", "Version", "Title", "Author", "Req. Version", "Until Version", "Files", "State"],
-        ["", "", "", "", "", "", "", ""],
         [
             *(_row(m, "Enabled (active on this site)") for m in classified_manifests.installed),
             *(_row(m, "Enabled (inactive on this site)") for m in classified_manifests.inactive),
             *(_row(m, "Disabled") for m in disabled),
         ],
     )
+    sys.stdout.write(f"{table}\n")
     return 0
 
 

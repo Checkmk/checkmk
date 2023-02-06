@@ -74,6 +74,7 @@ set(livestatus_headers
     ${header_location}/Table.h
     ${header_location}/TableColumns.h
     ${header_location}/TableCommands.h
+    ${header_location}/TableContacts.h
     ${header_location}/TableContactGroups.h
     ${header_location}/TableCrashReports.h
     ${header_location}/TableEventConsole.h
@@ -139,6 +140,7 @@ set(livestatus_sources
     Table.cc
     TableColumns.cc
     TableCommands.cc
+    TableContacts.cc
     TableContactGroups.cc
     TableCrashReports.cc
     TableEventConsole.cc

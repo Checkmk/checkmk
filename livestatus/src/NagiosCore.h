@@ -22,7 +22,6 @@
 
 #include "Downtime.h"  // IWYU pragma: keep
 #include "Store.h"
-#include "livestatus/Attributes.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
@@ -101,6 +100,8 @@ public:
         const IService &svc) const override;
     bool all_of_comments(
         const std::function<bool(const IComment &)> &pred) const override;
+    bool all_of_contacts(
+        const std::function<bool(const IContact &)> &pred) const override;
 
     std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost &hst) const override;

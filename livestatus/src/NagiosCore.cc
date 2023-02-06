@@ -19,6 +19,7 @@
 #include "NebHost.h"
 #include "NebService.h"
 #include "NebTimeperiod.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
@@ -211,6 +212,17 @@ bool NagiosCore::all_of_comments(
                        [&pred](const auto &comment) {
                            return pred(NebComment{*comment.second});
                        });
+}
+
+bool NagiosCore::all_of_contacts(
+    const std::function<bool(const IContact &)> &pred) const {
+    // TODO(sp): Do we need a mutex here?
+    for (const contact *ct = contact_list; ct != nullptr; ct = ct->next) {
+        if (!pred(NebContact{*ct})) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(
@@ -438,9 +450,9 @@ size_t NagiosCore::numCachedLogMessages() {
 
 namespace {
 // Nagios converts custom attribute names to uppercase, splits name/value at
-// space, uses ';' as a comment character, is line-oriented, etc. etc. So we use
-// a base16 encoding for names and values of tags, labels, and label sources,
-// e.g. "48656C6C6F2C20776F726C6421" => "Hello, world!".
+// space, uses ';' as a comment character, is line-oriented, etc. etc. So we
+// use a base16 encoding for names and values of tags, labels, and label
+// sources, e.g. "48656C6C6F2C20776F726C6421" => "Hello, world!".
 std::string b16decode(const std::string &hex) {
     auto len = hex.length() & ~1;
     std::string result;

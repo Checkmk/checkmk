@@ -10,10 +10,12 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class IService;
 
+using Attributes = std::unordered_map<std::string, std::string>;
 enum class AttributeKind { custom_variables, tags, labels, label_sources };
 
 struct Attribute {
@@ -45,6 +47,23 @@ class IContact {
 public:
     virtual ~IContact() = default;
     [[nodiscard]] virtual const void *handle() const = 0;
+    [[nodiscard]] virtual std::string name() const = 0;
+    [[nodiscard]] virtual std::string alias() const = 0;
+    [[nodiscard]] virtual std::string email() const = 0;
+    [[nodiscard]] virtual std::string pager() const = 0;
+    [[nodiscard]] virtual std::string hostNotificationPeriod() const = 0;
+    [[nodiscard]] virtual std::string serviceNotificationPeriod() const = 0;
+    [[nodiscard]] virtual std::string address(int32_t index) const = 0;
+    [[nodiscard]] virtual bool canSubmitCommands() const = 0;
+    [[nodiscard]] virtual bool isHostNotificationsEnabled() const = 0;
+    [[nodiscard]] virtual bool isServiceNotificationsEnabled() const = 0;
+    [[nodiscard]] virtual bool isInHostNotificationPeriod() const = 0;
+    [[nodiscard]] virtual bool isInServiceNotificationPeriod() const = 0;
+    [[nodiscard]] virtual Attributes customVariables() const = 0;
+    [[nodiscard]] virtual Attributes tags() const = 0;
+    [[nodiscard]] virtual Attributes labels() const = 0;
+    [[nodiscard]] virtual Attributes labelSources() const = 0;
+    [[nodiscard]] virtual uint32_t modifiedAttributes() const = 0;
     virtual bool all_of_labels(
         const std::function<bool(const Attribute &)> &pred) const = 0;
 };

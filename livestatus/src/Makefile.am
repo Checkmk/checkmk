@@ -106,7 +106,6 @@ liblivestatusneb_a_SOURCES = \
         ServiceListState.cc \
         Store.cc \
         TableComments.cc \
-        TableContacts.cc \
         TableDowntimes.cc \
         TableEventConsoleEvents.cc \
         TableEventConsoleHistory.cc \

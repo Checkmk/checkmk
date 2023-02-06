@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "TableComments.h"
-#include "TableContacts.h"
 #include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
@@ -42,6 +41,7 @@
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
 #include "livestatus/TableContactGroups.h"
+#include "livestatus/TableContacts.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableEventConsoleRules.h"
 #include "livestatus/TableEventConsoleStatus.h"
@@ -127,6 +127,10 @@ class DummyMonitoringCore : public MonitoringCore {
         return true;
     }
 
+    bool all_of_contacts(
+        const std::function<bool(const IContact &)> & /*pred*/) const override {
+        return true;
+    }
     [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost & /*host*/) const override {
         return {};

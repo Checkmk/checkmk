@@ -6,7 +6,6 @@
 
 from collections import Counter
 from collections.abc import Callable, Container, Mapping
-from functools import partial
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -27,9 +26,9 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import error_handling, ParserFunction, SummarizerFunction
-from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers import ParserFunction, SummarizerFunction
 from cmk.checkers.discovery import AutochecksStore
+from cmk.checkers.error_handling import CheckResultErrorHandler, handle_success
 
 import cmk.base.core
 from cmk.base.agent_based.data_provider import (
@@ -245,52 +244,27 @@ def commandline_check_discovery(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
+    error_handler: CheckResultErrorHandler,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    keepalive: bool,
 ) -> tuple[ServiceState, str]:
-    return error_handling.check_result(
-        partial(
-            _commandline_check_discovery,
-            host_name,
-            config_cache=config_cache,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=section_plugins,
-            check_plugins=check_plugins,
-            find_service_description=find_service_description,
-        ),
-        exit_spec=config_cache.exit_code_spec(host_name),
-        host_name=host_name,
-        service_name="Check_MK Discovery",
-        plugin_name="discover",
-        is_cluster=config_cache.is_cluster(host_name),
-        snmp_backend=config_cache.get_snmp_backend(host_name),
-        keepalive=keepalive,
-    )
+    with error_handler:
+        fetched = fetcher(host_name, ip_address=None)
+        return handle_success(
+            execute_check_discovery(
+                host_name,
+                config_cache=config_cache,
+                fetched=((f[0], f[1]) for f in fetched),
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=section_plugins,
+                check_plugins=check_plugins,
+                find_service_description=find_service_description,
+            )
+        )
 
+    if error_handler.result is not None:
+        return error_handler.result
 
-def _commandline_check_discovery(
-    host_name: HostName,
-    *,
-    config_cache: ConfigCache,
-    fetcher: FetcherFunction,
-    parser: ParserFunction,
-    summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-) -> ActiveCheckResult:
-    fetched = fetcher(host_name, ip_address=None)
-    return execute_check_discovery(
-        host_name,
-        config_cache=config_cache,
-        fetched=((f[0], f[1]) for f in fetched),
-        parser=parser,
-        summarizer=summarizer,
-        section_plugins=section_plugins,
-        check_plugins=check_plugins,
-        find_service_description=find_service_description,
-    )
+    return (3, "unknown error")

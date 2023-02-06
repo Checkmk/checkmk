@@ -52,7 +52,8 @@ from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import error_handling, parse_raw_data
+from cmk.checkers import parse_raw_data
+from cmk.checkers.error_handling import CheckResultErrorHandler, handle_success
 from cmk.checkers.submitters import get_submitter, Submitter
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
@@ -1574,16 +1575,25 @@ def mode_check_discovery(
         include_ok_results=False,
         override_non_ok_state=None,
     )
+    error_handler = CheckResultErrorHandler(
+        exit_spec=config_cache.exit_code_spec(hostname),
+        host_name=hostname,
+        service_name="Check_MK Discovery",
+        plugin_name="discover",
+        is_cluster=config_cache.is_cluster(hostname),
+        snmp_backend=config_cache.get_snmp_backend(hostname),
+        keepalive=keepalive,
+    )
     state, text = discovery.commandline_check_discovery(
         hostname,
         config_cache=config_cache,
         fetcher=fetcher,
         parser=parser,
         summarizer=summarizer,
+        error_handler=error_handler,
         section_plugins=SectionPluginMapper(),
         check_plugins=CheckPluginMapper(),
         find_service_description=config.service_description,
-        keepalive=keepalive,
     )
     active_check_handler(hostname, text)
     if keepalive:
@@ -1945,6 +1955,15 @@ def mode_check(
         include_ok_results=True,
         override_non_ok_state=None,
     )
+    error_handler = CheckResultErrorHandler(
+        config_cache.exit_code_spec(hostname),
+        host_name=hostname,
+        service_name="Check_MK",
+        plugin_name="mk",
+        is_cluster=config_cache.is_cluster(hostname),
+        snmp_backend=config_cache.get_snmp_backend(hostname),
+        keepalive=keepalive,
+    )
     state, text = checking.commandline_checking(
         hostname,
         ipaddress,
@@ -1952,6 +1971,7 @@ def mode_check(
         fetcher=fetcher,
         parser=parser,
         summarizer=summarizer,
+        error_handler=error_handler,
         section_plugins=SectionPluginMapper(),
         check_plugins=CheckPluginMapper(),
         inventory_plugins=InventoryPluginMapper(),
@@ -1964,9 +1984,9 @@ def mode_check(
             perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
             show_perfdata=options.get("perfdata", False),
         ),
-        keepalive=keepalive,
         perfdata_with_times=config.check_mk_perfdata_with_times,
     )
+
     active_check_handler(hostname, text)
     if keepalive:
         console.verbose(text)
@@ -2187,19 +2207,7 @@ def mode_inventory_as_check(
         include_ok_results=False,
         override_non_ok_state=parameters.fail_status,
     )
-    state, text = error_handling.check_result(
-        partial(
-            execute_active_check_inventory,
-            hostname,
-            config_cache=config_cache,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=SectionPluginMapper(),
-            inventory_plugins=InventoryPluginMapper(),
-            inventory_parameters=config_cache.inventory_parameters,
-            parameters=parameters,
-        ),
+    error_handler = CheckResultErrorHandler(
         exit_spec=config_cache.exit_code_spec(hostname),
         host_name=hostname,
         service_name="Check_MK HW/SW Inventory",
@@ -2208,6 +2216,24 @@ def mode_inventory_as_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
+    state, text = (3, "unknown error")
+    with error_handler:
+        state, text = handle_success(
+            execute_active_check_inventory(
+                hostname,
+                config_cache=config_cache,
+                fetcher=fetcher,
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=SectionPluginMapper(),
+                inventory_plugins=InventoryPluginMapper(),
+                inventory_parameters=config_cache.inventory_parameters,
+                parameters=parameters,
+            )
+        )
+    if error_handler.result is not None:
+        state, text = error_handler.result
+
     active_check_handler(hostname, text)
     if keepalive:
         console.verbose(text)

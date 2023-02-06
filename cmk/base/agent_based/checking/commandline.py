@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Container, Mapping
-from functools import partial
 
 import cmk.utils.version as cmk_version
 from cmk.utils.log import console
@@ -20,8 +19,8 @@ from cmk.utils.type_defs import (
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import error_handling, ParserFunction, SummarizerFunction
-from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers import ParserFunction, SummarizerFunction
+from cmk.checkers.error_handling import CheckResultErrorHandler, handle_success
 from cmk.checkers.submitters import Submitter
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -39,71 +38,37 @@ def commandline_checking(
     ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
-    parser: ParserFunction,
     fetcher: FetcherFunction,
+    parser: ParserFunction,
     summarizer: SummarizerFunction,
+    error_handler: CheckResultErrorHandler,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
-    submitter: Submitter,
-    keepalive: bool,
     perfdata_with_times: bool,
+    submitter: Submitter,
 ) -> tuple[ServiceState, str]:
-    # The error handling is required for the Nagios core.
-    return error_handling.check_result(
-        partial(
-            _commandline_checking,
-            host_name,
-            ipaddress,
-            config_cache=config_cache,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=section_plugins,
-            check_plugins=check_plugins,
-            inventory_plugins=inventory_plugins,
-            run_plugin_names=run_plugin_names,
-            perfdata_with_times=perfdata_with_times,
-            submitter=submitter,
-        ),
-        exit_spec=config_cache.exit_code_spec(host_name),
-        host_name=host_name,
-        service_name="Check_MK",
-        plugin_name="mk",
-        is_cluster=config_cache.is_cluster(host_name),
-        snmp_backend=config_cache.get_snmp_backend(host_name),
-        keepalive=keepalive,
-    )
+    with error_handler:
+        console.vverbose("Checkmk version %s\n", cmk_version.__version__)
+        fetched = fetcher(host_name, ip_address=ipaddress)
+        return handle_success(
+            execute_checkmk_checks(
+                hostname=host_name,
+                config_cache=config_cache,
+                fetched=fetched,
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=section_plugins,
+                check_plugins=check_plugins,
+                inventory_plugins=inventory_plugins,
+                run_plugin_names=run_plugin_names,
+                perfdata_with_times=perfdata_with_times,
+                submitter=submitter,
+            )
+        )
 
+    if error_handler.result is not None:
+        return error_handler.result
 
-def _commandline_checking(
-    host_name: HostName,
-    ipaddress: HostAddress | None,
-    *,
-    config_cache: ConfigCache,
-    fetcher: FetcherFunction,
-    parser: ParserFunction,
-    summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
-    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
-    perfdata_with_times: bool,
-    submitter: Submitter,
-) -> ActiveCheckResult:
-    console.vverbose("Checkmk version %s\n", cmk_version.__version__)
-    fetched = fetcher(host_name, ip_address=ipaddress)
-    return execute_checkmk_checks(
-        hostname=host_name,
-        config_cache=config_cache,
-        fetched=fetched,
-        parser=parser,
-        summarizer=summarizer,
-        section_plugins=section_plugins,
-        check_plugins=check_plugins,
-        inventory_plugins=inventory_plugins,
-        run_plugin_names=run_plugin_names,
-        perfdata_with_times=perfdata_with_times,
-        submitter=submitter,
-    )
+    return (3, "unknown error")

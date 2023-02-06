@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from __future__ import annotations
+
+from typing import Final, Literal
 
 import cmk.utils.debug
 from cmk.utils.exceptions import (
@@ -14,14 +16,7 @@ from cmk.utils.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
-from cmk.utils.type_defs import (
-    AgentRawData,
-    CheckPluginNameStr,
-    ExitSpec,
-    HostName,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceName, ServiceState
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
@@ -29,34 +24,53 @@ from cmk.checkers import crash_reporting
 from cmk.checkers.checkresults import ActiveCheckResult
 
 
-def check_result(
-    callback: Callable[[], ActiveCheckResult],
-    *,
-    exit_spec: ExitSpec,
-    host_name: HostName,
-    service_name: ServiceName,
-    plugin_name: CheckPluginNameStr,
-    is_cluster: bool,
-    snmp_backend: SNMPBackendEnum,
-    keepalive: bool,
-) -> tuple[ServiceState, str]:
-    try:
-        return _handle_success(callback())
-    except Exception as exc:
-        return _handle_failure(
-            exc,
-            exit_spec,
-            host_name=host_name,
-            service_name=service_name,
-            plugin_name=plugin_name,
-            is_cluster=is_cluster,
-            snmp_backend=snmp_backend,
-            keepalive=keepalive,
-            rtc_package=None,
+class CheckResultErrorHandler:
+    def __init__(
+        self,
+        exit_spec: ExitSpec,
+        *,
+        host_name: HostName,
+        service_name: ServiceName,
+        plugin_name: CheckPluginNameStr,
+        is_cluster: bool,
+        snmp_backend: SNMPBackendEnum,
+        keepalive: bool,
+    ) -> None:
+        self.exit_spec: Final = exit_spec
+        self.host_name: Final = host_name
+        self.service_name: Final = service_name
+        self.plugin_name: Final = plugin_name
+        self.is_cluster: Final = is_cluster
+        self.snmp_backend: Final = snmp_backend
+        self.keepalive: Final = keepalive
+        # return value
+        self._result: tuple[ServiceState, str] | None = None
+
+    @property
+    def result(self) -> tuple[ServiceState, str] | None:
+        return self._result
+
+    def __enter__(self) -> CheckResultErrorHandler:
+        return self
+
+    def __exit__(self, type_: object, value: Exception | None, traceback: object) -> Literal[True]:
+        if type_ is None:
+            return True
+        assert value is not None
+        self._result = _handle_failure(
+            value,
+            self.exit_spec,
+            host_name=self.host_name,
+            service_name=self.service_name,
+            plugin_name=self.plugin_name,
+            is_cluster=self.is_cluster,
+            snmp_backend=self.snmp_backend,
+            keepalive=self.keepalive,
         )
+        return True
 
 
-def _handle_success(result: ActiveCheckResult) -> tuple[ServiceState, str]:
+def handle_success(result: ActiveCheckResult) -> tuple[ServiceState, str]:
     return result.state, "\n".join(
         (
             " | ".join((result.summary, " ".join(result.metrics))),
@@ -74,7 +88,6 @@ def _handle_failure(
     plugin_name: CheckPluginNameStr,
     is_cluster: bool,
     snmp_backend: SNMPBackendEnum,
-    rtc_package: AgentRawData | None,
     keepalive: bool,
 ) -> tuple[ServiceState, str]:
     if isinstance(exc, MKTimeout):
@@ -100,6 +113,6 @@ def _handle_failure(
             is_cluster=is_cluster,
             is_enforced=False,
             snmp_backend=snmp_backend,
-            rtc_package=rtc_package,
+            rtc_package=None,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )

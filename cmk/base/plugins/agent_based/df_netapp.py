@@ -48,7 +48,7 @@ register.snmp_section(
     name="df_netapp",
     parse_function=parse_df_netapp,
     fetch=SNMPTree(base=".1.3.6.1.4.1.789.1.5.4.1", oids=["2", "29", "30"]),
-    detect=all_of(IS_NETAPP_FILER, exists(".1.3.6.1.4.1.789.1.5.4.1.29")),
+    detect=all_of(IS_NETAPP_FILER, exists(".1.3.6.1.4.1.789.1.5.4.1.29.*")),
 )
 
 
@@ -57,7 +57,7 @@ register.snmp_section(
     parsed_section_name="df_netapp",
     parse_function=parse_df_netapp,
     fetch=SNMPTree(base=".1.3.6.1.4.1.789.1.5.4.1", oids=["2", "3", "4"]),
-    detect=all_of(IS_NETAPP_FILER, not_exists(".1.3.6.1.4.1.789.1.5.4.1.29")),
+    detect=all_of(IS_NETAPP_FILER, not_exists(".1.3.6.1.4.1.789.1.5.4.1.29.*")),
 )
 
 

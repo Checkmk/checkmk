@@ -180,7 +180,15 @@ def check_f5_bigip_vserver(_item, params, data):
     aggregation = get_aggregated_values(data)
 
     if "connections" in aggregation:
-        yield 0, "Client connections: %d" % aggregation["connections"], sorted(aggregation.items())
+        connections = aggregation["connections"]
+        state = 0
+        if "connections" in params and params["connections"]:
+            warn, crit = params["connections"]
+            if connections >= crit:
+                state = 2
+            elif connections >= warn:
+                state = 1
+        yield state, "Client connections: %d" % connections, sorted(aggregation.items())
     if "connections_rate" in aggregation:
         yield 0, "Connections rate: %.2f/sec" % aggregation["connections_rate"]
 

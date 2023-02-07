@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-import sys
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, NamedTuple, TypeVar
+from typing import Any, cast, Generic, NamedTuple, Required, TypedDict, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, Labels
@@ -27,13 +26,6 @@ from cmk.utils.type_defs import (
     HostOrServiceConditionsSimple,
     ServiceName,
 )
-
-if sys.version_info < (3, 11):
-    # Generic typed dict
-    from typing_extensions import TypedDict
-else:
-    from typing import TypedDict
-
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
@@ -102,12 +94,9 @@ class RuleConditionsSpec(TypedDict, total=False):
     host_folder: Any
 
 
-class _RuleSpecBase(TypedDict, Generic[TRuleValue]):
-    value: TRuleValue
-    condition: RuleConditionsSpec
-
-
-class RuleSpec(Generic[TRuleValue], _RuleSpecBase[TRuleValue], total=False):
+class RuleSpec(Generic[TRuleValue], TypedDict, total=False):
+    value: Required[TRuleValue]
+    condition: Required[RuleConditionsSpec]
     id: str  # Should not be optional but nearly not test has that attribute set!
     options: RuleOptionsSpec
 

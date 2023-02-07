@@ -1551,7 +1551,11 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
         custom_field_handler(visual)
 
     render_context_specs(
-        visual["context"],
+        # During view configuration: if a MKUserError is raised BEFORE the visual context is set
+        # via 'visual["context"] = process_context_specs(context_specs)' from above then we get a
+        # KeyError here and the whole configuration is lost and has to be started from scratch.
+        # Example: If no column is choosen.
+        visual.get("context", {}),
         context_specs,
         isopen=what != "dashboards",
         help_text=help_text_context,

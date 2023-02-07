@@ -1318,7 +1318,7 @@ def main(argv=None):  # pylint: disable=too-many-branches
         except Exception as exc:
             if args.debug:
                 raise
-        LOGGER.warning("Exception writing status file: %s", str(exc))
+            LOGGER.warning("Exception writing status file: %s", str(exc))
 
 
 if __name__ == "__main__":

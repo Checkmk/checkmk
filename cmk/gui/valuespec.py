@@ -6959,9 +6959,6 @@ ListOfAndOrNotDropdownValue = Sequence[AndOrNotDropdownValue]
 
 
 class AndOrNotDropdown(DropdownChoice):
-    _bool: str = "_bool"
-    _vs: str = "_vs"
-
     def __init__(  # pylint: disable=redefined-builtin
         self,
         valuespec: ValueSpec,
@@ -6975,8 +6972,11 @@ class AndOrNotDropdown(DropdownChoice):
         self._valuespec = valuespec
         self._default_value: AndOrNotDropdownValue = ("and", valuespec.default_value())
 
+    def _varprefixes(self, varprefix: str) -> tuple[str, str]:
+        return (varprefix + "_bool", varprefix + "_vs")
+
     def render_input(self, varprefix: str, value: AndOrNotDropdownValue | None) -> None:
-        varprefix_bool, varprefix_vs = [varprefix + self._bool, varprefix + self._vs]
+        varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
         value = value if value else self._default_value
 
         html.open_div(class_=["bool"])
@@ -6987,10 +6987,23 @@ class AndOrNotDropdown(DropdownChoice):
         self._valuespec.render_input(varprefix_vs, value[1])
 
     def from_html_vars(self, varprefix: str) -> AndOrNotDropdownValue | None:
-        varprefix_bool, varprefix_vs = [varprefix + self._bool, varprefix + self._vs]
+        varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
         bool_val: AndOrNotLiteral = super().from_html_vars(varprefix_bool)  # type: ignore
         vs_val = self._valuespec.from_html_vars(varprefix_vs)
         return (bool_val, vs_val)
+
+    def _validate_value(self, value: AndOrNotDropdownValue | None, varprefix: str) -> None:
+        if value is None:
+            return
+
+        varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
+        # Validate AndOrNotLiteral: value[0]
+        super()._validate_value(value[0], varprefix_bool)
+
+        # Validate valuespec value: value[1]
+        vs_validate_value = getattr(self._valuespec, "_validate_value", None)
+        if callable(vs_validate_value):
+            vs_validate_value(value[1], varprefix_vs)
 
 
 # TODO: Nuke this, there is only a single call site, and we just fix a single kwarg.

@@ -1191,7 +1191,7 @@ def _is_outdated_batch(batch_file, retention_period, now):
 
 def write_batch_file(lines, batch_id, batch_dir):
     # type: (Iterable[str], str, str) -> None
-    with open(os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w") as handle:
+    with io.open(os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w", encoding="utf-8") as handle:
         handle.writelines([ensure_text_type(l, errors="replace") for l in lines])
 
 
@@ -1285,7 +1285,7 @@ def main(argv=None):  # pylint: disable=too-many-branches
         except Exception as exc:
             if args.debug:
                 raise
-            LOGGER.debug("Exception when processing %r: %s", section.name_fs, exc)
+            LOGGER.debug("Exception when processing %r: %s", section.name_fs, str(exc))
 
         output = itertools.chain(
             output,
@@ -1296,19 +1296,27 @@ def main(argv=None):  # pylint: disable=too-many-branches
             filtered_log_lines,
         )
 
-    process_batches(
-        [ensure_str(l) for l in output],
-        batch_id,
-        REMOTE,
-        global_options.retention_period,
-        now,
-    )
+    try:
+        process_batches(
+            [ensure_str(l) for l in output],
+            batch_id,
+            REMOTE,
+            global_options.retention_period,
+            now,
+        )
+    except Exception as exc:
+        LOGGER.critical("Exception writing batch file: %s", str(exc))
 
     if args.debug:
         LOGGER.debug("State file not written (debug mode)")
         return
     if not args.no_state:
-        state.write()
+        try:
+            state.write()
+        except Exception as exc:
+            if args.debug:
+                raise
+        LOGGER.warning("Exception writing status file: %s", str(exc))
 
 
 if __name__ == "__main__":

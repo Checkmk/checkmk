@@ -21,9 +21,9 @@ from cmk.gui import http
 
 @pytest.fixture(autouse=True)
 def post_rename_request_context(  # pylint: disable=redefined-outer-name
-    flask_app: Flask,
-    gui_cleanup_after_test: None,
-    admin_auth_request: http.Request,
+    flask_app: Flask,  # noqa: F811
+    gui_cleanup_after_test: None,  # noqa: F811
+    admin_auth_request: http.Request,  # noqa: F811
 ) -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     with flask_app.test_client() as client:

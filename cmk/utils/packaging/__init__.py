@@ -22,7 +22,11 @@ from cmk.utils.i18n import _  # noqa: F401
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
+    add_rule_pack_proxies,
+    release_packaged_rule_packs,
+    remove_packaged_rule_packs,
+)
 
 from ._installed import Installer
 from ._mkp import (  # noqa: F401
@@ -78,7 +82,7 @@ def release(installer: Installer, pacname: PackageName) -> None:
             _logger.info("    %s", f)
 
     if filenames := manifest.files.get(PackagePart.EC_RULE_PACKS):
-        ec.release_packaged_rule_packs([str(f) for f in filenames])
+        release_packaged_rule_packs([str(f) for f in filenames])
 
     installer.remove_installed_manifest(pacname)
 
@@ -96,7 +100,7 @@ def uninstall(
     for part, filenames in manifest.files.items():
         _logger.info("  Part '%s':", part.ident)
         if part is PackagePart.EC_RULE_PACKS:
-            _remove_packaged_rule_packs(filenames)
+            remove_packaged_rule_packs(filenames)
             continue
 
         for fn in filenames:
@@ -330,7 +334,7 @@ def install(
         mark_as_enabled(package_store, package_id)
 
 
-def _install(  # pylint: disable=too-many-branches
+def _install(
     installer: Installer,
     mkp: bytes,
     path_config: PathConfig,
@@ -363,7 +367,7 @@ def _install(  # pylint: disable=too-many-branches
     _fix_files_permissions(manifest, path_config)
 
     if ecfiles := manifest.files.get(PackagePart.EC_RULE_PACKS):
-        ec.add_rule_pack_proxies((str(f) for f in ecfiles))
+        add_rule_pack_proxies((str(f) for f in ecfiles))
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -388,7 +392,7 @@ def _install(  # pylint: disable=too-many-branches
                     )
 
             if part is PackagePart.EC_RULE_PACKS:
-                _remove_packaged_rule_packs(list(remove_files), delete_export=False)
+                remove_packaged_rule_packs(list(remove_files), delete_export=False)
 
         remove_enabled_mark(old_manifest)
 
@@ -465,29 +469,6 @@ def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
                     "Fixing %s: %s -> %s", path, filemode(has_perm), filemode(desired_perm)
                 )
                 path.chmod(desired_perm)
-
-
-def _remove_packaged_rule_packs(file_names: Iterable[Path], delete_export: bool = True) -> None:
-    """
-    This function synchronizes the rule packs in rules.mk and the packaged rule packs
-    of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
-    deleted the exported rule pack and the rule pack in rules.mk are both deleted.
-    """
-    if not file_names:
-        return
-
-    rule_packs = list(ec.load_rule_packs())
-    rule_pack_ids = [rp["id"] for rp in rule_packs]
-    affected_ids = [fn.stem for fn in file_names]
-
-    for id_ in affected_ids:
-        index = rule_pack_ids.index(id_)
-        del rule_packs[index]
-        if delete_export:
-            ec.remove_exported_rule_pack(id_)
-        rule_pack_ids.remove(id_)
-
-    ec.save_rule_packs(rule_packs)
 
 
 def _validate_package_files(

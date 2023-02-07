@@ -32,6 +32,7 @@ from .rule_packs import (
     override_rule_pack_proxy,
     release_packaged_rule_packs,
     remove_exported_rule_pack,
+    remove_packaged_rule_packs,
     rule_pack_dir,
     RulePackType,
     save_rule_packs,

@@ -25,6 +25,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.checkers import (
     ParserFunction,
+    PCheckPlugin,
     PHostLabelDiscoveryPlugin,
     PSectionPlugin,
     SourceInfo,
@@ -38,7 +39,6 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters
@@ -58,7 +58,7 @@ def execute_check_discovery(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:

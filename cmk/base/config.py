@@ -122,7 +122,13 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser, PHostLabelDiscoveryPlugin, PInventoryPlugin, SourceType
+from cmk.checkers import (
+    AgentParser,
+    PCheckPlugin,
+    PHostLabelDiscoveryPlugin,
+    PInventoryPlugin,
+    SourceType,
+)
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -137,7 +143,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base._autochecks import AutochecksManager
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
@@ -1208,14 +1213,16 @@ def service_description(
 
     return get_final_service_description(
         hostname,
-        _format_item_with_template(*_get_service_description_template_and_item(plugin, item)),
+        _format_item_with_template(
+            *_get_service_description_template_and_item(check_plugin_name, plugin, item)
+        ),
     )
 
 
 def _get_service_description_template_and_item(
-    plugin: CheckPlugin, item: Item
+    plugin_name: CheckPluginName, plugin: PCheckPlugin, item: Item
 ) -> tuple[ServiceName, Item]:
-    plugin_name_str = str(plugin.name)
+    plugin_name_str = str(plugin_name)
 
     # use user-supplied service description, if available
     descr_format: ServiceName | None = service_descriptions.get(plugin_name_str)
@@ -2164,7 +2171,7 @@ def _get_plugin_parameters(
 
 def get_discovery_parameters(
     host_name: HostName,
-    check_plugin: CheckPlugin,
+    check_plugin: PCheckPlugin,
 ) -> None | Parameters | list[Parameters]:
     return _get_plugin_parameters(
         host_name=host_name,
@@ -2203,7 +2210,7 @@ def compute_check_parameters(
         return TimespecificParameters()
 
     if configured_parameters is None:
-        configured_parameters = _get_configured_parameters(host, plugin, item)
+        configured_parameters = _get_configured_parameters(host, plugin_name, plugin, item)
 
     return _update_with_configured_check_parameters(
         _update_with_default_check_parameters(plugin.check_default_parameters, params),
@@ -2256,11 +2263,12 @@ def _update_with_configured_check_parameters(
 
 def _get_configured_parameters(
     host: HostName,
-    plugin: CheckPlugin,
+    plugin_name: CheckPluginName,
+    plugin: PCheckPlugin,
     item: Item,
 ) -> TimespecificParameters:
     config_cache = get_config_cache()
-    descr = service_description(host, plugin.name, item)
+    descr = service_description(host, plugin_name, item)
 
     # parameters configured via check_parameters
     extra = [

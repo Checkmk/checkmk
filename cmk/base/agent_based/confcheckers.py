@@ -36,6 +36,7 @@ from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkers import (
     parse_raw_data,
+    PCheckPlugin,
     PHostLabelDiscoveryPlugin,
     PInventoryPlugin,
     PSectionPlugin,
@@ -49,7 +50,6 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
 
@@ -304,9 +304,9 @@ class HostLabelPluginMapper(Mapping[SectionName, PHostLabelDiscoveryPlugin]):
         )
 
 
-class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
+class CheckPluginMapper(Mapping[CheckPluginName, PCheckPlugin]):
     # See comment to SectionPluginMapper.
-    def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
+    def __getitem__(self, __key: CheckPluginName) -> PCheckPlugin:
         value = _api.get_check_plugin(__key)
         if value is None:
             raise KeyError(__key)

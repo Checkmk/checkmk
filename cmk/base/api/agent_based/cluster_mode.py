@@ -11,9 +11,9 @@ from typing import Any, Final, NamedTuple, Protocol
 
 from cmk.utils.type_defs import ClusterMode, ServiceID, state_markers
 
+from cmk.checkers import PCheckPlugin
+
 from cmk.base.api.agent_based.checking_classes import (
-    CheckFunction,
-    CheckPlugin,
     CheckResult,
     IgnoreResults,
     IgnoreResultsError,
@@ -52,9 +52,9 @@ def get_cluster_check_function(
     clusterization_parameters: Mapping[str, Any],
     *,
     service_id: ServiceID,
-    plugin: CheckPlugin,
+    plugin: PCheckPlugin,
     value_store_manager: ValueStoreManager,
-) -> CheckFunction:
+) -> Callable[..., Iterable[object]]:
     if mode == "native":
         return plugin.cluster_check_function or _unfit_for_clustering
 

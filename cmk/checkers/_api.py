@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Callable, Generator, Iterable, Sequence, Set
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence, Set
 from functools import partial
 from typing import Generic, Literal, NamedTuple, Protocol
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import (
     AgentRawData,
+    CheckPluginName,
     HostAddress,
     HostName,
     ParametersTypeAlias,
@@ -28,11 +29,13 @@ from cmk.fetchers.filecache import FileCache, FileCacheOptions
 from ._parser import Parser
 from ._typedefs import SourceInfo
 from .checkresults import ActiveCheckResult
+from .discovery import AutocheckEntry
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
 __all__ = [
     "HostLabel",
+    "PCheckPlugin",
     "parse_raw_data",
     "ParserFunction",
     "PHostLabelDiscoveryPlugin",
@@ -128,6 +131,57 @@ class HostLabel(PluginSuppliedLabel):
         >>> my_label = HostLabel("my_key", "my_value")
 
     """
+
+
+class PService(Protocol):
+    def as_autocheck_entry(self, name: CheckPluginName) -> AutocheckEntry:
+        ...
+
+
+class PCheckPlugin(Protocol):
+    @property
+    def service_name(self) -> str:
+        # There is a single caller for this attribute.  Is it *really* needed?
+        # Does it *really* belong to the check plugin?  This doesn't feel right.
+        ...
+
+    @property
+    def sections(self) -> Sequence[ParsedSectionName]:
+        ...
+
+    @property
+    def check_default_parameters(self) -> Mapping[str, object] | None:
+        ...
+
+    @property
+    def check_function(self) -> Callable[..., Iterable[object]]:
+        ...
+
+    @property
+    def cluster_check_function(self) -> Callable[..., Iterable[object]] | None:
+        ...
+
+    @property
+    def check_ruleset_name(self) -> RuleSetName | None:
+        ...
+
+    # The discovery_* attributes belong elsewhere.
+
+    @property
+    def discovery_default_parameters(self) -> ParametersTypeAlias | None:
+        ...
+
+    @property
+    def discovery_function(self) -> Callable[..., Iterable[PService]]:
+        ...
+
+    @property
+    def discovery_ruleset_name(self) -> RuleSetName | None:
+        ...
+
+    @property
+    def discovery_ruleset_type(self) -> Literal["merged", "all"]:
+        ...
 
 
 class PInventoryResult(Protocol):

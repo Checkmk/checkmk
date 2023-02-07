@@ -13,13 +13,12 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, ServiceID
 
-from cmk.checkers import HostKey, plugin_contexts, SourceType
+from cmk.checkers import HostKey, PCheckPlugin, plugin_contexts, SourceType
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import Provider
 from cmk.base.agent_based.utils import get_section_kwargs
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery
@@ -30,7 +29,7 @@ def analyse_discovered_services(
     host_name: HostName,
     *,
     providers: Mapping[HostKey, Provider],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
@@ -124,7 +123,7 @@ def _discover_services(
     *,
     providers: Mapping[HostKey, Provider],
     run_plugin_names: Container[CheckPluginName],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     on_error: OnError,
 ) -> list[AutocheckEntry]:
     # find out which plugins we need to discover
@@ -267,7 +266,7 @@ def _discover_plugins_services(
     config_cache: ConfigCache,
     *,
     check_plugin_name: CheckPluginName,
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -301,7 +300,7 @@ def _discover_plugins_services(
 
     try:
         yield from (
-            service.as_autocheck_entry(check_plugin.name)
+            service.as_autocheck_entry(check_plugin_name)
             for service in check_plugin.discovery_function(**kwargs)
         )
     except Exception as e:
@@ -310,5 +309,5 @@ def _discover_plugins_services(
         if on_error is OnError.WARN:
             console.warning(
                 "  Exception in discovery function of check plugin '%s': %s"
-                % (check_plugin.name, e)
+                % (check_plugin_name, e)
             )

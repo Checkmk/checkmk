@@ -7,7 +7,7 @@
 
 import re
 from collections.abc import Iterable, Mapping
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 
 import pytest
 
@@ -71,7 +71,7 @@ def _simple_check(section: Iterable[int]) -> CheckResult:
                 yield Metric("n", value)
 
 
-def _is_ok(*elements: Result | Metric | IgnoreResults) -> bool:
+def _is_ok(*elements: object) -> bool:
     return State.worst(*(r.state for r in elements if isinstance(r, Result))) is State.OK
 
 
@@ -110,7 +110,7 @@ def _get_cluster_check_function(
     mode: Literal["native", "failover", "worst", "best"],
     vsm: ValueStoreManager,
     clusterization_parameters: Mapping[str, Any] | None = None,
-) -> CheckFunction:
+) -> Callable[..., Iterable[object]]:
     """small wrapper for cluster_mode.get_cluster_check_function"""
     plugin = _get_test_check_plugin(check_function=check_function)
     return cluster_mode.get_cluster_check_function(

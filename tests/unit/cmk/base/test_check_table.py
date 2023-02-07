@@ -63,7 +63,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         config,
         "_get_configured_parameters",
-        lambda host, plugin, item: (
+        lambda host, plugin_name, plugin, item: (
             TimespecificParameters(
                 (TimespecificParameterSet.from_parameters({"levels_for_node": (1, 2)}),)
             )

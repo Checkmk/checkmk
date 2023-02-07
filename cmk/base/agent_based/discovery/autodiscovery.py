@@ -36,6 +36,7 @@ from cmk.checkers import (
     FetcherFunction,
     HostKey,
     ParserFunction,
+    PCheckPlugin,
     PHostLabelDiscoveryPlugin,
     PSectionPlugin,
     SummarizerFunction,
@@ -51,7 +52,6 @@ from cmk.base.agent_based.data_provider import (
     Provider,
     store_piggybacked_sections,
 )
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 
@@ -111,7 +111,7 @@ def automation_discovery(
     failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
     keep_clustered_vanished_services: bool,
@@ -211,7 +211,7 @@ def _get_host_services(
     host_name: HostName,
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -373,7 +373,7 @@ def discover_marked_hosts(
     fetcher: FetcherFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> None:
@@ -458,7 +458,7 @@ def _discover_marked_host(
     failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     autodiscovery_queue: AutoQueue,
     reference_time: float,
@@ -605,7 +605,7 @@ def get_host_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     providers: Mapping[HostKey, Provider],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
@@ -650,7 +650,7 @@ def _get_node_services(
     host_name: HostName,
     *,
     providers: Mapping[HostKey, Provider],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     on_error: OnError,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
@@ -742,7 +742,7 @@ def _get_cluster_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     providers: Mapping[HostKey, Provider],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,

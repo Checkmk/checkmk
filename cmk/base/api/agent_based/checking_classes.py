@@ -485,7 +485,11 @@ DiscoveryFunction = Callable[..., DiscoveryResult]
 
 
 def consume_check_results(
-    subresults: CheckResult,
+    # TODO(ml):  We should limit the type to `CheckResult` but that leads to
+    # layering violations.  We could also go with dependency inversion or some
+    # other slightly higher abstraction.  The code here is really concrete.
+    # Investigate and find a solution later.
+    subresults: Iterable[object],
 ) -> tuple[Sequence[MetricTuple], Sequence[Result]]:
     """Impedance matching between the Check API and the Check Engine."""
     ignore_results: list[IgnoreResults] = []
@@ -496,8 +500,10 @@ def consume_check_results(
             ignore_results.append(subr)
         elif isinstance(subr, Metric):
             perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
-        else:
+        elif isinstance(subr, Result):
             results.append(subr)
+        else:
+            raise TypeError(subr)
 
     # Consume *all* check results, and *then* raise, if we encountered
     # an IgnoreResults instance.

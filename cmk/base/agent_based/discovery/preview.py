@@ -23,6 +23,7 @@ from cmk.checkers import (
     FetcherFunction,
     HostKey,
     ParserFunction,
+    PCheckPlugin,
     PHostLabelDiscoveryPlugin,
     PSectionPlugin,
     SummarizerFunction,
@@ -40,7 +41,6 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
@@ -65,7 +65,7 @@ def get_check_preview(
     failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
     on_error: OnError,
@@ -179,7 +179,7 @@ def _check_preview_table_row(
     *,
     config_cache: ConfigCache,
     service: ConfiguredService,
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],

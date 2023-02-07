@@ -22,6 +22,7 @@ from cmk.checkers import (
     FetcherFunction,
     HostKey,
     ParserFunction,
+    PCheckPlugin,
     PHostLabelDiscoveryPlugin,
     PSectionPlugin,
 )
@@ -35,7 +36,6 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
@@ -58,7 +58,7 @@ def commandline_discovery(
     config_cache: ConfigCache,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -180,7 +180,7 @@ def _commandline_discovery_on_host(
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
     load_labels: bool,

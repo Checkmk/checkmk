@@ -44,6 +44,7 @@ from cmk.checkers import (
     crash_reporting,
     HostKey,
     ParserFunction,
+    PCheckPlugin,
     PInventoryPlugin,
     plugin_contexts,
     PSectionPlugin,
@@ -72,11 +73,7 @@ from cmk.base.agent_based.utils import (
     get_section_kwargs,
 )
 from cmk.base.api.agent_based import cluster_mode, value_store
-from cmk.base.api.agent_based.checking_classes import (
-    CheckPlugin,
-    consume_check_results,
-    IgnoreResultsError,
-)
+from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.api.agent_based.type_defs import Parameters
@@ -101,7 +98,7 @@ def execute_checkmk_checks(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
@@ -275,7 +272,7 @@ def check_host_services(
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     rtc_package: AgentRawData | None,
@@ -366,7 +363,7 @@ def get_aggregated_result(
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
-    plugin: CheckPlugin,
+    plugin: PCheckPlugin,
     *,
     rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,

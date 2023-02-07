@@ -268,7 +268,7 @@ STAGES:
     - NAME: 'Test - Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/livestatus'
-      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --all &> ${RESULTS}/livestatus.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/livestatus.txt"
       TEXT_ON_SKIP: 'No Livestatus files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
@@ -343,6 +343,6 @@ STAGES:
     - NAME: 'Test - Agent Controller'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_CONTROLLER_FILES
       DIR: 'packages/cmk-agent-ctl'
-      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --setup-environment --all &> ${RESULTS}/agent-controller.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/agent-controller.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller.txt"

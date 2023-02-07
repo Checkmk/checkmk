@@ -15,7 +15,7 @@ from mock import Mock, patch
 import agents.plugins.mk_postgres as mk_postgres
 
 try:
-    from typing import Dict, Optional
+    from typing import Dict, Optional  # noqa: F401
 except ImportError:
     # We need typing only for testing
     pass

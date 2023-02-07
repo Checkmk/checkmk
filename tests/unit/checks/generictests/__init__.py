@@ -64,3 +64,5 @@ Some more advanced ones are
 from .checkhandler import checkhandler
 from .run import run
 from .utils import DATASET_FILES, DATASET_NAMES
+
+__all__ = ["checkhandler", "run", "DATASET_FILES", "DATASET_NAMES"]

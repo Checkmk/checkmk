@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any, Dict, Mapping
 
 from .agent_based_api.v1 import (
@@ -40,7 +41,7 @@ register.agent_section(
 )
 
 
-def _extract_size_and_used_from_line(line: str) -> Dict[str, float]:
+def _extract_size_and_used_from_line(line: Sequence[str]) -> Dict[str, float]:
     # Values are measured in GB. Are other factors possible? (Query)
     inst_values: Dict[str, float] = {}
     splitted_line = line[-1].split()

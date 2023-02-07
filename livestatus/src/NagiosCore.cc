@@ -86,7 +86,8 @@ std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
     return host == nullptr ? nullptr : std::make_unique<NebHost>(*host);
 }
 
-bool NagiosCore::all_hosts(std::function<bool(const IHost &)> pred) const {
+bool NagiosCore::all_of_hosts(
+    const std::function<bool(const IHost &)> &pred) const {
     for (const auto *hst = host_list; hst != nullptr; hst = hst->next) {
         if (!pred(NebHost{*hst})) {
             return false;

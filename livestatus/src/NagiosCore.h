@@ -71,7 +71,8 @@ public:
     std::unique_ptr<const IHost> find_host(const std::string &name) override;
     std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) override;
-    bool all_hosts(std::function<bool(const IHost &)> pred) const override;
+    bool all_of_hosts(
+        const std::function<bool(const IHost &)> &pred) const override;
 
     std::unique_ptr<const IService> find_service(
         const std::string &host_name,

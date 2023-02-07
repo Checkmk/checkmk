@@ -30,7 +30,8 @@ public:
     virtual std::unique_ptr<const IHost> find_host(const std::string &name) = 0;
     virtual std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) = 0;
-    virtual bool all_hosts(std::function<bool(const IHost &)> pred) const = 0;
+    virtual bool all_of_hosts(
+        const std::function<bool(const IHost &)> &pred) const = 0;
 
     virtual std::unique_ptr<const IService> find_service(
         const std::string &host_name,

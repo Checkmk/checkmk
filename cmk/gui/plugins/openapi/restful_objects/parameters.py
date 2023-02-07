@@ -48,7 +48,7 @@ NAME_FIELD = {
     "name": String(
         description="A name used as an identifier. Can be of arbitrary (sensible) length.",
         example="pathname",
-        pattern="[a-zA-Z0-9][a-zA-Z0-9_-]+",
+        pattern="[a-zA-Z0-9][a-zA-Z0-9_-]*",
     )
 }
 

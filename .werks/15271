@@ -1,0 +1,11 @@
+Title: solaris agent did not report zpool status
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1675781857
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p21
+
+

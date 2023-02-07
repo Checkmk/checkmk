@@ -395,7 +395,6 @@ def _register_pre_21_plugin_api() -> None:
         "flash",
         "folder_preserving_link",
         "FullPathFolderChoice",
-        "get_check_information",
         "get_hostnames_from_checkboxes",
         "get_hosts_from_checkboxes",
         "get_search_expression",

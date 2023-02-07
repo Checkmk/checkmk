@@ -21,10 +21,17 @@ from livestatus import SiteId
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import DiscoveredHostLabelsDict, HostName, ServiceName, SetAutochecksTable
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    DiscoveredHostLabelsDict,
+    HostName,
+    ServiceName,
+    SetAutochecksTable,
+)
 
 from cmk.automations import results
 
+from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.sites import site_is_local
 from cmk.gui.watolib.automations import (
@@ -294,6 +301,12 @@ def get_check_information() -> results.GetCheckInformationResult:
         _automation_serialized("get-check-information"),
         results.GetCheckInformationResult,
     )
+
+
+@request_memoize()
+def get_check_information_cached() -> Mapping[CheckPluginName, Mapping[str, str]]:
+    raw_check_dict = get_check_information().plugin_infos
+    return {CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())}
 
 
 def get_section_information() -> results.GetSectionInformationResult:

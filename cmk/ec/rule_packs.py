@@ -286,7 +286,7 @@ def override_rule_pack_proxy(rule_pack_nr: int, rule_packs: list[ECRulePack]) ->
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 
-def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
+def release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     """
     This function synchronizes the rule packs in rules.mk and the rule packs
     packaged in a MKP upon release of that MKP. The following cases have
@@ -300,10 +300,9 @@ def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
     if not file_names:
         return
 
-    rule_packs: list[ECRulePack] = []
-    rule_packs += load_rule_packs()
+    rule_packs = list(load_rule_packs())
     rule_pack_ids = [rp["id"] for rp in rule_packs]
-    affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
+    affected_ids = [fn.stem for fn in file_names]
 
     save = False
     for id_ in affected_ids:

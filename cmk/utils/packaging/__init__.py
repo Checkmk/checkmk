@@ -82,7 +82,7 @@ def release(installer: Installer, pacname: PackageName) -> None:
             _logger.info("    %s", f)
 
     if filenames := manifest.files.get(PackagePart.EC_RULE_PACKS):
-        release_packaged_rule_packs([str(f) for f in filenames])
+        release_packaged_rule_packs(filenames)
 
     installer.remove_installed_manifest(pacname)
 

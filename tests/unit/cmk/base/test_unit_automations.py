@@ -6,7 +6,7 @@
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
-from cmk.utils.rulesets.ruleset_matcher import Ruleset
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
@@ -80,7 +80,7 @@ def test_service_labels(monkeypatch):
     ts.add_host("test-host")
     ts.set_ruleset(
         "service_label_rules",
-        Ruleset[dict[str, str]](
+        list[RuleSpec[dict[str, str]]](
             [
                 {
                     "condition": {"service_description": [{"$regex": "CPU load"}]},

@@ -16,7 +16,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.rulesets.ruleset_matcher import Ruleset
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
@@ -933,7 +933,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
-        Ruleset[dict[str, list[str]]](
+        list[RuleSpec[dict[str, list[str]]]](
             [
                 {
                     "id": "nobody-cares-about-the-id-in-this-test",
@@ -1041,7 +1041,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
-        Ruleset[dict[str, list[str]]](
+        list[RuleSpec[dict[str, list[str]]]](
             [
                 {
                     "id": "nobody-cares-about-the-id-in-this-test",

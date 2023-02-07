@@ -67,9 +67,9 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import (
     LabelManager,
     LabelSources,
-    Ruleset,
     RulesetMatchObject,
     RulesetName,
+    RuleSpec,
     TagIDToTaggroupID,
 )
 from cmk.utils.site import omd_site
@@ -2327,7 +2327,7 @@ def _get_plugin_parameters(
     default_parameters: ParametersTypeAlias | None,
     ruleset_name: RuleSetName | None,
     ruleset_type: Literal["all", "merged"],
-    rules_getter_function: Callable[[RuleSetName], Ruleset],
+    rules_getter_function: Callable[[RuleSetName], Sequence[RuleSpec]],
 ) -> None | Parameters | list[Parameters]:
     if default_parameters is None:
         # This means the function will not accept any params.
@@ -3119,7 +3119,7 @@ class ConfigCache:
             return alias_
 
         # Alias by rule matching
-        default: Ruleset[HostName] = []
+        default: Sequence[RuleSpec[HostName]] = []
         aliases = self.host_extra_conf(host_name, extra_host_conf.get("alias", default))
 
         # Fallback alias
@@ -3255,7 +3255,7 @@ class ConfigCache:
         if plugin.inventory_ruleset_name is None:
             raise ValueError(plugin)
 
-        default: Ruleset[object] = []
+        default: Sequence[RuleSpec[object]] = []
         return self.host_extra_conf_merged(
             host_name, inv_parameters.get(str(plugin.inventory_ruleset_name), default)
         )
@@ -3548,7 +3548,7 @@ class ConfigCache:
         self, host_name: HostName, plugin_name: CheckPluginNameStr
     ) -> dict:
         def _impl() -> dict:
-            default: Ruleset[object] = []
+            default: Sequence[RuleSpec[object]] = []
             return self.host_extra_conf_merged(
                 host_name, notification_parameters.get(plugin_name, default)
             )
@@ -4362,13 +4362,15 @@ class ConfigCache:
 
         return _translate_host_macros(_translate_legacy_macros(template))
 
-    def host_extra_conf_merged(self, hostname: HostName, ruleset: Ruleset) -> dict[str, Any]:
+    def host_extra_conf_merged(
+        self, hostname: HostName, ruleset: Iterable[RuleSpec]
+    ) -> dict[str, Any]:
         return self.ruleset_matcher.get_host_ruleset_merged_dict(
             self.ruleset_match_object_of_host(hostname),
             ruleset,
         )
 
-    def host_extra_conf(self, hostname: HostName, ruleset: Ruleset) -> list:
+    def host_extra_conf(self, hostname: HostName, ruleset: Iterable[RuleSpec]) -> list:
         return list(
             self.ruleset_matcher.get_host_ruleset_values(
                 self.ruleset_match_object_of_host(hostname),
@@ -4378,13 +4380,13 @@ class ConfigCache:
         )
 
     # TODO: Cleanup external in_binary_hostlist call sites
-    def in_binary_hostlist(self, hostname: HostName, ruleset: Ruleset) -> bool:
+    def in_binary_hostlist(self, hostname: HostName, ruleset: Iterable[RuleSpec]) -> bool:
         return self.ruleset_matcher.is_matching_host_ruleset(
             self.ruleset_match_object_of_host(hostname), ruleset
         )
 
     def service_extra_conf(
-        self, hostname: HostName, description: ServiceName, ruleset: Ruleset
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
     ) -> list:
         """Compute outcome of a service rule set that has an item."""
         return list(
@@ -4396,7 +4398,7 @@ class ConfigCache:
         )
 
     def get_service_ruleset_value(
-        self, hostname: HostName, description: ServiceName, ruleset: Ruleset, deflt: Any
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec], deflt: Any
     ) -> Any:
         """Compute first match service ruleset outcome with fallback to a default value"""
         return next(
@@ -4409,14 +4411,14 @@ class ConfigCache:
         )
 
     def service_extra_conf_merged(
-        self, hostname: HostName, description: ServiceName, ruleset: Ruleset
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
     ) -> dict[str, Any]:
         return self.ruleset_matcher.get_service_ruleset_merged_dict(
             self.ruleset_match_object_of_service(hostname, description), ruleset
         )
 
     def in_boolean_serviceconf_list(
-        self, hostname: HostName, description: ServiceName, ruleset: Ruleset
+        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec]
     ) -> bool:
         """Compute outcome of a service rule set that just say yes/no"""
         return self.ruleset_matcher.is_matching_service_ruleset(
@@ -4946,13 +4948,13 @@ class CEEHostConfig:
 
     @property
     def lnx_remote_alert_handlers(self) -> list[dict[str, str]]:
-        default: Ruleset[object] = []
+        default: Sequence[RuleSpec[object]] = []
         return self._config_cache.host_extra_conf(
             self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
         )
 
     def rtc_secret(self) -> str | None:
-        default: Ruleset[object] = []
+        default: Sequence[RuleSpec[object]] = []
         if not (
             settings := self._config_cache.host_extra_conf(
                 self.hostname, agent_config.get("real_time_checks", default)

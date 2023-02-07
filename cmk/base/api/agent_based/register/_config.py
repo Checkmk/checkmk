@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
+from collections.abc import Sequence
 from typing import Dict, Iterable, List, Optional, Set
 
-from cmk.utils.rulesets.ruleset_matcher import Ruleset
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.type_defs import (
     CheckPluginName,
     InventoryPluginName,
@@ -32,7 +33,7 @@ registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
 # the host_label_function and the discovery_function to share a ruleset.
 # We provide seperate API functions however, should the need arise to
 # seperate them.
-stored_rulesets: Dict[RuleSetName, Ruleset] = {}
+stored_rulesets: Dict[RuleSetName, Sequence[RuleSpec]] = {}
 
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
 _check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
@@ -89,12 +90,12 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
     return None
 
 
-def get_discovery_ruleset(ruleset_name: RuleSetName) -> Ruleset:
+def get_discovery_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
     """Returns all rulesets of a given name"""
     return stored_rulesets.get(ruleset_name, [])
 
 
-def get_host_label_ruleset(ruleset_name: RuleSetName) -> Ruleset:
+def get_host_label_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
     """Returns all rulesets of a given name"""
     return stored_rulesets.get(ruleset_name, [])
 
@@ -192,16 +193,13 @@ def len_snmp_sections() -> int:
 
 def set_discovery_ruleset(
     ruleset_name: RuleSetName,
-    rules: Ruleset,
+    rules: Sequence[RuleSpec],
 ) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules
 
 
-def set_host_label_ruleset(
-    ruleset_name: RuleSetName,
-    rules: Ruleset,
-) -> None:
+def set_host_label_ruleset(ruleset_name: RuleSetName, rules: Sequence[RuleSpec]) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules
 

@@ -6,12 +6,12 @@
 import itertools
 import json
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from typing import Literal, TypedDict
 
 from livestatus import LocalConnection, SiteId
 
-from cmk.utils.rulesets.ruleset_matcher import Ruleset, RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 from cmk.utils.type_defs import HostName
 
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
@@ -145,7 +145,7 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
             yield hostname
 
 
-def _load_automatic_host_removal_ruleset() -> Ruleset:
+def _load_automatic_host_removal_ruleset() -> Sequence[RuleSpec]:
     return [
         rule.to_config()
         for _folder, _idx, rule in SingleRulesetRecursively.load_single_ruleset_recursively(

@@ -101,7 +101,6 @@ def uninstall(
         _logger.info("  Part '%s':", part.ident)
         if part is PackagePart.EC_RULE_PACKS:
             remove_packaged_rule_packs(filenames)
-            continue
 
         for fn in filenames:
             _logger.info("    %s", fn)
@@ -392,7 +391,7 @@ def _install(
                     )
 
             if part is PackagePart.EC_RULE_PACKS:
-                remove_packaged_rule_packs(list(remove_files), delete_export=False)
+                remove_packaged_rule_packs(list(remove_files))
 
         remove_enabled_mark(old_manifest)
 

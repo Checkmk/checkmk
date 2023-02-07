@@ -6,7 +6,7 @@
 import glob
 import logging
 import subprocess
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -100,16 +100,8 @@ def uninstall(
     manifest: Manifest,
     post_package_change_actions: bool = True,
 ) -> None:
-    for part, filenames in manifest.files.items():
-        _logger.info("  Part '%s':", part.ident)
-        for fn in filenames:
-            _logger.info("    %s", fn)
-            try:
-                (path_config.get_path(part) / fn).unlink(missing_ok=True)
-            except Exception as exc:
-                raise PackageError(
-                    f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
-                ) from exc
+    if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
+        raise PackageError(", ".join(err))
 
     for part in set(manifest.files) & set(callbacks):
         callbacks[part].uninstall(manifest.files[part])
@@ -355,25 +347,8 @@ def _install(
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
-        for part, old_files in old_manifest.files.items():
-            new_files = set(manifest.files.get(part, []))
-            remove_files = set(old_files) - new_files
-            for fn in remove_files:
-                path = path_config.get_path(part) / fn
-                try:
-                    path.unlink(missing_ok=True)
-                except OSError as e:
-                    _logger.error(
-                        "[%s %s]: Error removing %s: %s",
-                        old_manifest.name,
-                        old_manifest.version,
-                        path,
-                        e,
-                    )
-                else:
-                    _logger.info(
-                        "[%s %s]: Removed %s", old_manifest.name, old_manifest.version, path
-                    )
+        for err in _remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
+            _logger.error(err)
 
         for part in set(old_manifest.files) & set(callbacks):
             new_files = set(manifest.files.get(part, []))
@@ -388,6 +363,22 @@ def _install(
         _execute_post_package_change_actions(manifest)
 
     return manifest
+
+
+def _remove_files(
+    manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
+) -> Iterator[str]:
+    for part, files in manifest.files.items():
+        _logger.debug("  Part '%s':", part.ident)
+        remove_files = set(files) - set(keep_files.get(part, []))
+        for fn in remove_files:
+            path = path_config.get_path(part) / fn
+            try:
+                path.unlink(missing_ok=True)
+            except OSError as e:
+                yield f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}"
+            else:
+                _logger.info("[%s %s]: Removed %s", manifest.name, manifest.version, path)
 
 
 def _raise_for_installability(

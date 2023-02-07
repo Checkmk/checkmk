@@ -81,8 +81,8 @@ public:
 
     std::unique_ptr<const IContact> find_contact(
         const std::string &name) const override;
-    bool all_contacts(
-        std::function<bool(const IContact &)> pred) const override;
+    bool all_of_contacts(
+        const std::function<bool(const IContact &)> &pred) const override;
 
     std::unique_ptr<User> find_user(const std::string &name) override;
 
@@ -100,8 +100,6 @@ public:
         const IService &svc) const override;
     bool all_of_comments(
         const std::function<bool(const IComment &)> &pred) const override;
-    bool all_of_contacts(
-        const std::function<bool(const IContact &)> &pred) const override;
 
     std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost &hst) const override;

@@ -124,8 +124,8 @@ std::unique_ptr<const IContact> NagiosCore::find_contact(
     return c == nullptr ? nullptr : std::make_unique<NebContact>(*c);
 }
 
-bool NagiosCore::all_contacts(
-    std::function<bool(const IContact &)> pred) const {
+bool NagiosCore::all_of_contacts(
+    const std::function<bool(const IContact &)> &pred) const {
     for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
         if (!pred(NebContact{*ctc})) {
             return false;
@@ -212,17 +212,6 @@ bool NagiosCore::all_of_comments(
                        [&pred](const auto &comment) {
                            return pred(NebComment{*comment.second});
                        });
-}
-
-bool NagiosCore::all_of_contacts(
-    const std::function<bool(const IContact &)> &pred) const {
-    // TODO(sp): Do we need a mutex here?
-    for (const contact *ct = contact_list; ct != nullptr; ct = ct->next) {
-        if (!pred(NebContact{*ct})) {
-            return false;
-        }
-    }
-    return true;
 }
 
 std::vector<std::unique_ptr<const IDowntime>> NagiosCore::downtimes(

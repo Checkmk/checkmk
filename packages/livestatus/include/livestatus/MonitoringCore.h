@@ -40,8 +40,8 @@ public:
 
     [[nodiscard]] virtual std::unique_ptr<const IContact> find_contact(
         const std::string &name) const = 0;
-    virtual bool all_contacts(
-        std::function<bool(const IContact &)> pred) const = 0;
+    virtual bool all_of_contacts(
+        const std::function<bool(const IContact &)> &pred) const = 0;
 
     virtual std::unique_ptr<User> find_user(const std::string &name) = 0;
 
@@ -61,8 +61,6 @@ public:
         const IService &) const = 0;
     bool virtual all_of_comments(
         const std::function<bool(const IComment &)> &pred) const = 0;
-    bool virtual all_of_contacts(
-        const std::function<bool(const IContact &)> &pred) const = 0;
 
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
     downtimes(const IHost &) const = 0;

@@ -88,8 +88,8 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::string & /*name*/) const override {
         return {};
     }
-    bool all_contacts(
-        std::function<bool(const IContact &)> /*pred*/) const override {
+    bool all_of_contacts(
+        const std::function<bool(const IContact &)> & /*pred*/) const override {
         return true;
     }
     std::unique_ptr<User> find_user(const std::string & /*name*/) override {
@@ -127,10 +127,6 @@ class DummyMonitoringCore : public MonitoringCore {
         return true;
     }
 
-    bool all_of_contacts(
-        const std::function<bool(const IContact &)> & /*pred*/) const override {
-        return true;
-    }
     [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost & /*host*/) const override {
         return {};

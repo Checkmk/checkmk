@@ -77,5 +77,5 @@ void TableLabels::answerQuery(Query &query, const User &user) {
     };
 
     core()->all_hosts(processHostAndServices) &&
-        core()->all_contacts(processContact);
+        core()->all_of_contacts(processContact);
 }

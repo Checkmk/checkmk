@@ -48,13 +48,13 @@ public:
                                                   : contact_.address[index];
     }
     [[nodiscard]] bool canSubmitCommands() const override {
-        return contact_.can_submit_commands;
+        return contact_.can_submit_commands != 0;
     }
     [[nodiscard]] bool isHostNotificationsEnabled() const override {
-        return contact_.host_notifications_enabled;
+        return contact_.host_notifications_enabled != 0;
     }
     [[nodiscard]] bool isServiceNotificationsEnabled() const override {
-        return contact_.service_notifications_enabled;
+        return contact_.service_notifications_enabled != 0;
     }
     [[nodiscard]] bool isInHostNotificationPeriod() const override {
         return g_timeperiods_cache->inTimeperiod(

@@ -765,7 +765,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
         for (const auto &sc : _stats_columns) {
             aggrs.push_back(sc->createAggregator(_logger));
         }
-        it = _stats_groups.emplace(groupspec, move(aggrs)).first;
+        it = _stats_groups.emplace(groupspec, std::move(aggrs)).first;
     }
     return it->second;
 }

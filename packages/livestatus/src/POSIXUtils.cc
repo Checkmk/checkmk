@@ -134,7 +134,7 @@ void setThreadName(std::string name) {
     }
 
     // ... and here invisible to ps/pstree/..., but in its full glory:
-    thread_name = move(name);
+    thread_name = std::move(name);
 }
 
 std::string getThreadName() { return thread_name; }

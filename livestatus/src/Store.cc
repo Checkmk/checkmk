@@ -252,7 +252,7 @@ namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(Logger *logger, std::string path, std::string command)
-        : EventConsoleConnection(logger, move(path))
+        : EventConsoleConnection(logger, std::move(path))
         , command_(std::move(command)) {}
 
 private:

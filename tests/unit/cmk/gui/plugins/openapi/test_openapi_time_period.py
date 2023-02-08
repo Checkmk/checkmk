@@ -133,7 +133,7 @@ def test_openapi_time_period(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         headers={"Accept": "application/json"},
         status=200,
     )
-    assert resp.json == {
+    assert resp.json["extensions"] == {
         "alias": "foo",
         "active_time_ranges": [
             {"day": "monday", "time_ranges": [{"start": "12:00", "end": "14:00"}]}
@@ -247,7 +247,7 @@ def test_openapi_timeperiod_unmodified_update(aut_user_auth_wsgi_app: WebTestApp
         headers={"Accept": "application/json"},
         status=200,
     )
-    assert resp.json == {
+    assert resp.json["extensions"] == {
         "active_time_ranges": [
             {
                 "day": "monday",
@@ -319,7 +319,7 @@ def test_openapi_timeperiod_unmodified_update(aut_user_auth_wsgi_app: WebTestApp
         headers={"Accept": "application/json"},
         status=200,
     )
-    assert resp.json == {
+    assert resp.json["extensions"] == {
         "active_time_ranges": [
             {
                 "day": "monday",
@@ -481,7 +481,7 @@ def test_openapi_timeperiod_excluding_exclude(
         headers={"Accept": "application/json"},
         status=200,
     )
-    assert resp.json_body == {
+    assert resp.json["extensions"] == {
         "active_time_ranges": [
             {
                 "day": "monday",

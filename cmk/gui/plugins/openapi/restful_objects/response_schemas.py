@@ -910,6 +910,70 @@ class ConcreteTimePeriod(BaseSchema):
     )
 
 
+EXAMPLE_TIME_PERIOD = {
+    "alias": "holidays",
+    "active_time_ranges": [
+        {
+            "day": "monday",
+            "time_ranges": [{"start": "12:00", "end": "15:00"}],
+        },
+    ],
+    "exceptions": [
+        {
+            "date": "2023-01-01",
+            "time_ranges": [{"start": "12:30", "end": "13:30"}],
+        },
+    ],
+    "exclude": [
+        "time_period_1",
+        "time_period_2",
+        "time_period_3",
+    ],
+}
+
+
+class TimePeriodResponse(Linkable):
+    domainType = fields.Constant(
+        "time_period",
+        description="The domain type of the object.",
+    )
+    id = fields.String(
+        description="The unique identifier for this time period.", example="time_period_name"
+    )
+    title = fields.String(
+        description="The time period name.",
+        example="time_period_alias.",
+    )
+    members: gui_fields.Field = fields.Dict(
+        description="The container for external resources, like linked foreign objects or actions.",
+    )
+    extensions = fields.Nested(
+        ConcreteTimePeriod,
+        description="The time period attributes.",
+        example=EXAMPLE_TIME_PERIOD,
+    )
+
+
+class TimePeriodResponseCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "time_period",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(TimePeriodResponse),
+        description="A list of time period objects.",
+        example=[
+            {
+                "links": [],
+                "domainType": "time_period",
+                "id": "time_period",
+                "members": {},
+                "extensions": EXAMPLE_TIME_PERIOD,
+            }
+        ],
+    )
+
+
 class PasswordExtension(BaseSchema):
     ident = fields.String(
         example="pass",

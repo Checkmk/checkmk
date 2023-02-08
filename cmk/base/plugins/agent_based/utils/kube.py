@@ -444,6 +444,30 @@ class ClusterInfo(Section):
 VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
 
 
+def get_age_levels_for(params: Mapping[str, VSResultAge], key: str) -> Optional[Tuple[int, int]]:
+    """Get the levels for the given key from the params
+
+    Examples:
+        >>> params = dict(
+        ...     initialized="no_levels",
+        ...     scheduled=("levels", (89, 179)),
+        ...     containersready="no_levels",
+        ...     ready=("levels", (359, 719)),
+        ... )
+        >>> get_age_levels_for(params, "initialized")
+        >>> get_age_levels_for(params, "scheduled")
+        (89, 179)
+        >>> get_age_levels_for(params, "containersready")
+        >>> get_age_levels_for(params, "ready")
+        (359, 719)
+        >>> get_age_levels_for({}, "ready")
+    """
+    levels = params.get(key, "no_levels")
+    if levels == "no_levels":
+        return None
+    return levels[1]
+
+
 class NodeAddress(BaseModel):
     address: IpAddress
     # according to the docs type_ is "Hostname", "ExternalIP", "InternalIP", but we also saw

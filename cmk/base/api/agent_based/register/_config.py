@@ -169,7 +169,16 @@ def is_registered_inventory_plugin(inventory_plugin_name: InventoryPluginName) -
 
 
 def is_registered_section_plugin(section_name: SectionName) -> bool:
-    return section_name in registered_agent_sections or section_name in registered_snmp_sections
+    return is_registered_snmp_section_plugin(section_name) or is_registered_agent_section_plugin(
+        section_name)
+
+
+def is_registered_agent_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_agent_sections
+
+
+def is_stored_ruleset(ruleset_name: RuleSetName) -> bool:
+    return ruleset_name in stored_rulesets
 
 
 def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:

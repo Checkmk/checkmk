@@ -11,6 +11,7 @@ Currently we aim for V4.0.3 L1
 See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
 
+import pytest
 from playwright.sync_api import BrowserContext
 
 from tests.testlib.playwright.helpers import PPage
@@ -63,8 +64,10 @@ def test_password_truncation_error(logged_in_page: PPage) -> None:
     )
 
 
-def test_cookie_flags(context: BrowserContext, test_site: Site) -> None:
+def test_cookie_flags(context: BrowserContext, test_site: Site, is_chromium: bool) -> None:
     """tests for 3.4.X"""
+    if not is_chromium:
+        pytest.skip("Test currently working with the chromium engine only.")
 
     username = "cmkadmin"
     password = "cmk"

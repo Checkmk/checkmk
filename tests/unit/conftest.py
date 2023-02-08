@@ -408,3 +408,11 @@ def fixture_is_in_trial_state(monkeypatch_module: pytest.MonkeyPatch) -> None:
     monkeypatch_module.setattr(
         "cmk.utils.licensing.state._get_expired_status", lambda: LicenseState.TRIAL
     )
+
+
+@pytest.fixture(name="suppress_license_expiry_header")
+def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatch) -> None:
+    """Don't check if message about license expiration should be shown"""
+    monkeypatch_module.setattr(
+        "cmk.gui.htmllib.top_heading._may_show_license_expiry", lambda x: None
+    )

@@ -5,6 +5,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from cmk.utils.licensing.state import is_licensed
+from cmk.utils.version import is_raw_edition
+
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.config import active_config
@@ -19,6 +24,14 @@ from cmk.gui.utils.html import HTML
 from .debug_vars import debug_vars
 from .generator import HTMLWriter
 
+if not is_raw_edition():  # TODO solve this via registration
+    from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
+        get_days_until_expiration,
+        in_admin_warning_header_phase,
+        in_user_warning_header_phase,
+        load_verification_response,
+    )
+
 
 def top_heading(
     writer: HTMLWriter,
@@ -30,6 +43,8 @@ def top_heading(
     *,
     browser_reload: float,
 ) -> None:
+    _may_show_license_expiry(writer)
+
     writer.open_div(id_="top_heading")
     writer.open_div(class_="titlebar")
 
@@ -75,6 +90,30 @@ def top_heading(
         _dump_get_vars(
             writer,
             request,
+        )
+
+
+def _may_show_license_expiry(writer: HTMLWriter) -> None:
+    if is_raw_edition():  # TODO: cleanup conditional imports and solve this via registration
+        return
+    now = int(datetime.now().timestamp())
+    if not is_licensed():
+        return
+    if (response := load_verification_response()) is None:
+        return
+
+    if in_user_warning_header_phase(now, response):
+        writer.show_warning(
+            # TODO which link for what to do as next step
+            _("Your license is expired since %s. See here how to proceed: link_tbd")
+            % datetime.fromtimestamp(response.subscription_expiration_ts).strftime("%Y-%m-%d")
+        )
+        return
+
+    if "admin" in user.role_ids and in_admin_warning_header_phase(now, response):
+        writer.show_warning(
+            _("Your license expires in %i days")
+            % get_days_until_expiration(now, response.subscription_expiration_ts)
         )
 
 

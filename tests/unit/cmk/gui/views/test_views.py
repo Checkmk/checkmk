@@ -2577,6 +2577,7 @@ def test_get_inventory_display_hint() -> None:
     assert isinstance(hint, dict)
 
 
+@pytest.mark.usefixtures("suppress_license_expiry_header")
 def test_view_page(
     logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:

@@ -36,7 +36,6 @@ class AuxTagTopicField(fields.String):
         super().__init__(
             description="Different tags can be grouped in topics to make the visualization and selections in the GUI more comfortable",
             example="Monitoring agents",
-            minLength=1,
             **kwargs,
         )
 
@@ -46,7 +45,6 @@ class AuxTagTitleField(fields.String):
         super().__init__(
             description="The title of the Auxiliary tag",
             example="AuxTagExampleTitle",
-            minLength=1,
             **kwargs,
         )
 

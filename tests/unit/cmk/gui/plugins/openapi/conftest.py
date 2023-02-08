@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 
 import pytest
 
-from tests.testlib.rest_api_client import AuxTagTestClient, RequestHandler, Response, RestApiClient
+from tests.testlib.rest_api_client import RequestHandler, Response, RestApiClient
 
 from tests.unit.cmk.gui.conftest import HTTPMethod, WebTestAppForCMK
 
@@ -60,8 +60,3 @@ class WebTestAppRequestHandler(RequestHandler):
 @pytest.fixture()
 def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
     return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
-
-
-@pytest.fixture()
-def auxtag_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AuxTagTestClient:
-    return AuxTagTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

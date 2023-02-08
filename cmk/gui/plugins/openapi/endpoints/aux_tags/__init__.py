@@ -128,11 +128,10 @@ def put_aux_tag(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.hosttags")
 
     tag_config = load_tag_config()
-    existing_tag = tag_config.aux_tag_list.get_aux_tag(TagID(params["aux_tag_id"]))
     aux_tag = AuxTag(
         tag_id=params["aux_tag_id"],
-        title=params["body"].get("title", existing_tag.title),
-        topic=params["body"].get("topic", existing_tag.topic),
+        title=params["body"].get("title"),
+        topic=params["body"].get("topic"),
     )
     tag_config.update_aux_tag(TagID(params["aux_tag_id"]), aux_tag)
     update_tag_config(tag_config)

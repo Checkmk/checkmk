@@ -11,33 +11,22 @@ import multiprocessing
 import pprint
 import queue
 from collections.abc import Mapping
-from typing import Any, Literal, NoReturn, Optional, Sequence, Type, Union
+from typing import Any, NoReturn, Sequence, Union
 
 from pydantic import BaseModel, StrictStr
 
 from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
 
+
+class AuxTagJSON(BaseModel):
+    aux_tag_id: StrictStr
+    title: StrictStr
+    topic: StrictStr
+
+
 JSON = Union[int, str, bool, list[Any], dict[str, Any], None]
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
-
-
-class Link(BaseModel):
-    domainType: Literal["link"]
-    rel: StrictStr
-    href: StrictStr
-    method: Literal["GET", "PUT", "DELETE"]
-    type: Literal["application/json"]
-
-
-class ObjectResponse(BaseModel):
-    links: list[Link]
-    members: dict
-
-
-class CollectionResponse(BaseModel):
-    links: list[Link]
-    extensions: dict
 
 
 @dataclasses.dataclass(frozen=True)
@@ -428,106 +417,40 @@ class RestApiClient:
 
         return result
 
-
-# === AuxTags Endpoint Client ===
-
-
-class AuxTagEditRequest(BaseModel):
-    title: Optional[StrictStr]
-    topic: Optional[StrictStr]
-
-
-class AuxTagCreateRequest(AuxTagEditRequest):
-    aux_tag_id: Optional[StrictStr]
-
-
-class AuxTagResponseObject(BaseModel):
-    topic: StrictStr
-
-
-class AuxTagObjectResponse(ObjectResponse):
-    domainType: Literal["aux_tag"]
-    id: StrictStr
-    title: StrictStr
-    extensions: AuxTagResponseObject
-
-
-class AuxTagCollectionResponse(CollectionResponse):
-    id: Literal["aux_tag"]
-    domainType: Literal["aux_tag"]
-    value: list[AuxTagObjectResponse]
-
-
-class AuxTagTestClient(RestApiClient):
-    domain: Literal["aux_tag"] = "aux_tag"
-
-    @property
-    def create_model(self) -> Type[AuxTagCreateRequest]:
-        return AuxTagCreateRequest
-
-    @property
-    def edit_model(self) -> Type[AuxTagEditRequest]:
-        return AuxTagEditRequest
-
-    def get(self, aux_tag_id: str, expect_ok: bool = True) -> Response:
-        resp = self._request(
+    def get_aux_tag(self, tag_id: str, expect_ok: bool = True) -> Response:
+        return self._request(
             "get",
-            url=f"/objects/{self.domain}/{aux_tag_id}",
+            url=f"/objects/aux_tag/{tag_id}",
             expect_ok=expect_ok,
         )
 
-        if expect_ok:
-            AuxTagObjectResponse(**resp.json)
-        return resp
-
-    def get_all(self, expect_ok: bool = True) -> Response:
-        resp = self._request(
+    def get_aux_tags(self, expect_ok: bool = True) -> Response:
+        return self._request(
             "get",
-            url=f"/domain-types/{self.domain}/collections/all",
+            url="/domain-types/aux_tag/collections/all",
             expect_ok=expect_ok,
         )
-        if expect_ok:
-            AuxTagCollectionResponse(**resp.json)
-        return resp
 
-    def create(self, tag_data: AuxTagCreateRequest, expect_ok: bool = True) -> Response:
-        resp = self._request(
-            "post",
-            url=f"/domain-types/{self.domain}/collections/all",
-            pydantic_basemodel_body=tag_data,
-            expect_ok=expect_ok,
-        )
-        if expect_ok:
-            create_response = AuxTagObjectResponse(**resp.json)
-            assert tag_data.aux_tag_id == create_response.id
-            assert tag_data.topic == create_response.extensions.topic
-            assert tag_data.title == create_response.title
-        return resp
-
-    def edit(
-        self, aux_tag_id: str, tag_data: AuxTagEditRequest, expect_ok: bool = True
-    ) -> Response:
-        etag = self.get(aux_tag_id).headers["ETag"]
-        resp = self._request(
-            "put",
-            url=f"/objects/{self.domain}/{aux_tag_id}",
-            pydantic_basemodel_body=tag_data,
-            headers={"If-Match": etag, "Accept": "application/json"},
-            expect_ok=expect_ok,
-        )
-        if expect_ok:
-            edit_response = AuxTagObjectResponse(**resp.json)
-            assert aux_tag_id == edit_response.id
-            assert tag_data.topic == edit_response.extensions.topic
-            assert tag_data.title == edit_response.title
-        return resp
-
-    def delete(self, aux_tag_id: str) -> Response:
-        etag = self.get(aux_tag_id).headers["ETag"]
+    def create_aux_tag(self, tag_data: AuxTagJSON, expect_ok: bool = True) -> Response:
         return self._request(
             "post",
-            url=f"/objects/{self.domain}/{aux_tag_id}/actions/delete/invoke",
-            headers={"If-Match": etag, "Accept": "application/json"},
+            url="/domain-types/aux_tag/collections/all",
+            pydantic_basemodel_body=tag_data,
+            expect_ok=expect_ok,
+        )
+
+    def edit_aux_tag(self, tag_data: AuxTagJSON, expect_ok: bool = True) -> Response:
+        return self._request(
+            "put",
+            url=f"/objects/aux_tag/{tag_data.aux_tag_id}",
+            body={"title": tag_data.title, "topic": tag_data.topic},
+            expect_ok=expect_ok,
+        )
+
+    def delete_aux_tag(self, tag_id: str) -> Response:
+        return self._request(
+            "post",
+            url=f"/objects/aux_tag/{tag_id}/actions/delete/invoke",
         )
 
     # TODO: add optional parameters

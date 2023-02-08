@@ -254,6 +254,7 @@ class InputHostGroup(InputGroup):
         description="A name used as identifier",
     )
     alias = fields.String(
+        required=True,
         description="The name used for displaying in the GUI.",
         example="Windows Servers",
     )

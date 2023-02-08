@@ -4,9 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import time
-from typing import Any, Iterator, Mapping, MutableMapping
+from typing import Any, Iterator, Mapping, MutableMapping, TypedDict
 
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import (
     df_check_filesystem_single,
@@ -17,18 +25,30 @@ from .utils.df import (
 from .utils.kube import (
     AttachedPersistentVolumes,
     AttachedVolume,
+    get_age_levels_for,
     PersistentVolume,
     PersistentVolumeClaim,
     PersistentVolumeClaimAttachedVolumes,
     PersistentVolumeClaimPhase,
     PersistentVolumeClaims,
+    VSResultAge,
 )
 
 VOLUME_DEFAULT_PARAMS: Mapping[str, Any] = {
-    **FILESYSTEM_DEFAULT_LEVELS,
-    **MAGIC_FACTOR_DEFAULT_PARAMS,
-    **TREND_DEFAULT_PARAMS,
+    "pending": ("levels", (300, 600)),
+    "lost": State.CRIT.value,
+    "filesystem": {
+        **FILESYSTEM_DEFAULT_LEVELS,
+        **MAGIC_FACTOR_DEFAULT_PARAMS,
+        **TREND_DEFAULT_PARAMS,
+    },
 }
+
+
+class Params(TypedDict, total=False):
+    pending: VSResultAge
+    lost: Mapping[str, int]
+    filesystem: Mapping[str, Any]
 
 
 def parse_persistent_volume_claims(string_table: StringTable) -> PersistentVolumeClaims:
@@ -56,7 +76,6 @@ register.agent_section(
     parsed_section_name="kube_pvc",
 )
 
-
 register.agent_section(
     name="kube_pvc_volumes_v1",
     parse_function=parse_persistent_volume_claims_attached_volumes,
@@ -82,7 +101,7 @@ def discovery_kube_pvc(
 
 def check_kube_pvc(
     item: str,
-    params: Mapping[str, Any],
+    params: Params,
     section_kube_pvc: PersistentVolumeClaims | None,
     section_kube_pvc_volumes: PersistentVolumeClaimAttachedVolumes | None,
     section_kube_pvc_pvs: AttachedPersistentVolumes | None,
@@ -116,14 +135,23 @@ def _check_kube_pvc(
     pvc: PersistentVolumeClaim,
     persistent_volume: PersistentVolume | None,
     volume: AttachedVolume | None,
-    timestamp: None | float,
+    timestamp: float,
 ) -> CheckResult:
-
     if (status_phase := pvc.status.phase) is None:
         yield Result(state=State.CRIT, summary="Status: not reported")
         return
 
-    yield from _output_status_and_pv_details(status_phase, persistent_volume)
+    yield from _output_status(
+        pending_age_levels=get_age_levels_for(params, "pending"),
+        lost_state=params["lost"],
+        status_phase=status_phase,
+        value_store=value_store,
+        timestamp=timestamp,
+    )
+    yield from _output_pv_details(
+        status_phase=status_phase,
+        persistent_volume=persistent_volume,
+    )
 
     if volume is None:
         yield from _output_status_capacity_result(pvc)
@@ -137,17 +165,44 @@ def _check_kube_pvc(
         reserved_space=0.0,
         inodes_total=None,
         inodes_avail=None,
-        params=params,
+        params=params["filesystem"],
         this_time=timestamp,
     )
 
 
-def _output_status_and_pv_details(
-    status_phase: PersistentVolumeClaimPhase, persistent_volume: PersistentVolume | None
+def _output_status(
+    pending_age_levels: tuple[int, int] | None,
+    lost_state: int,
+    status_phase: PersistentVolumeClaimPhase,
+    value_store: MutableMapping[str, Any],
+    timestamp: float,
 ) -> Iterator[Result]:
     status_output = f"Status: {status_phase.value}"
-    yield Result(state=State.OK, summary=status_output)
+    if status_phase is not PersistentVolumeClaimPhase.CLAIM_PENDING:
+        # remove pending entry so the timestamp is reset if the PVC reenters a pending state
+        value_store.pop("pending", None)
+        if status_phase is PersistentVolumeClaimPhase.CLAIM_LOST:
+            state = State(lost_state)
+        else:
+            state = State.OK
+        yield Result(state=state, summary=status_output)
+        return
 
+    pending_start_timestamp = value_store.setdefault("pending", timestamp)
+    check_result = list(
+        check_levels(
+            timestamp - pending_start_timestamp,
+            levels_upper=pending_age_levels,
+            render_func=render.timespan,
+        )
+    )[0]
+    yield Result(state=check_result.state, summary=f"{status_output} for {check_result.summary}")
+
+
+def _output_pv_details(
+    status_phase: PersistentVolumeClaimPhase,
+    persistent_volume: PersistentVolume | None,
+) -> Iterator[Result]:
     if status_phase is not PersistentVolumeClaimPhase.CLAIM_BOUND or persistent_volume is None:
         return
 

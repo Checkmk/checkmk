@@ -2,8 +2,7 @@
 # Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=comparison-with-callable,redefined-outer-name
+from typing import Any, MutableMapping
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -21,6 +20,8 @@ from cmk.base.plugins.agent_based.utils.kube import (
     PersistentVolumeClaimStatus,
     StorageRequirement,
 )
+
+# pylint: disable=comparison-with-callable,redefined-outer-name
 
 
 class PVCStatusFactory(ModelFactory):
@@ -56,7 +57,7 @@ def test_pvc_with_no_volume(bound_pvc: PersistentVolumeClaim) -> None:
         pvc=bound_pvc,
         persistent_volume=None,
         volume=None,
-        params={},
+        params=VOLUME_DEFAULT_PARAMS,
         timestamp=60,
     )
 
@@ -132,7 +133,7 @@ def test_pvc_with_persistent_volume(bound_pvc: PersistentVolumeClaim) -> None:
         volume=None,
         persistent_volume=persistent_volume,
         params=VOLUME_DEFAULT_PARAMS,
-        timestamp=None,
+        timestamp=60,
     )
 
     details = " ".join([r.details for r in check_result if isinstance(r, Result)])
@@ -141,3 +142,75 @@ def test_pvc_with_persistent_volume(bound_pvc: PersistentVolumeClaim) -> None:
     assert "Access Modes" in details
     assert "VolumeMode" in details
     assert "Mounted Volume" in details
+
+
+def test_pvc_first_time_pending_status():
+    """Test that the value store is updated when PVC with pending status is seen for first time."""
+    pending_pvc = PVCFactory.build(
+        status=PVCStatusFactory.build(
+            phase=PersistentVolumeClaimPhase.CLAIM_PENDING,
+            capacity=StorageRequirement(storage=1000.0),
+        )
+    )
+    value_store: MutableMapping[str, Any] = {}
+    timestamp = 300
+    _ = list(
+        _check_kube_pvc(
+            pending_pvc.metadata.name,
+            value_store=value_store,
+            pvc=pending_pvc,
+            volume=None,
+            persistent_volume=None,
+            params={**VOLUME_DEFAULT_PARAMS, "pending": ("levels", (300, 600))},
+            timestamp=timestamp,
+        )
+    )
+    assert value_store == {"pending": timestamp}
+
+
+def test_pvc_warn_pending_status():
+    """Test that PVC with pending status is in warning state due to matching WARN threshold."""
+    pending_pvc = PVCFactory.build(
+        status=PVCStatusFactory.build(
+            phase=PersistentVolumeClaimPhase.CLAIM_PENDING,
+            capacity=StorageRequirement(storage=1000.0),
+        )
+    )
+    check_result = list(
+        _check_kube_pvc(
+            pending_pvc.metadata.name,
+            value_store={"pending": 0},
+            pvc=pending_pvc,
+            volume=None,
+            persistent_volume=None,
+            params={**VOLUME_DEFAULT_PARAMS, "pending": ("levels", (300, 600))},
+            timestamp=300,
+        )
+    )
+    assert [
+        r.state for r in check_result if isinstance(r, Result) and r.summary.startswith("Status")
+    ] == [State.WARN]
+
+
+def test_pvc_lost_status_as_ok_state():
+    """Test that PVC with lost phase status is reported as OK due params."""
+    lost_pvc = PVCFactory.build(
+        status=PVCStatusFactory.build(
+            phase=PersistentVolumeClaimPhase.CLAIM_LOST,
+            capacity=StorageRequirement(storage=1000.0),
+        )
+    )
+    check_result = list(
+        _check_kube_pvc(
+            lost_pvc.metadata.name,
+            value_store={},
+            pvc=lost_pvc,
+            volume=None,
+            persistent_volume=None,
+            params={**VOLUME_DEFAULT_PARAMS, "lost": 0},
+            timestamp=0,
+        )
+    )
+    assert [
+        r.state for r in check_result if isinstance(r, Result) and r.summary.startswith("Status")
+    ] == [State.OK]

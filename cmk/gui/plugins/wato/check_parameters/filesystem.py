@@ -158,6 +158,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                     "group_name",
                     TextInput(
                         title=_("Group name"),
+                        size=49,
                     ),
                 ),
                 (
@@ -165,6 +166,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                     ListOfStrings(
                         title=_("Inclusion patterns"),
                         orientation="horizontal",
+                        size=49,
                         help=_(
                             "You can specify one or several globbing patterns containing "
                             "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "
@@ -184,6 +186,7 @@ def _list_of_filesystem_groups_specs_elements() -> DictionaryEntry:
                     ListOfStrings(
                         title=_("Exclusion patterns"),
                         orientation="horizontal",
+                        size=49,
                         help=_(
                             "You can specify one or several globbing patterns containing "
                             "<tt>*</tt>, <tt>?</tt> and <tt>[...]</tt>, for example "

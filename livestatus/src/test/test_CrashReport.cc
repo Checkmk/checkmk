@@ -62,9 +62,8 @@ TEST_F(CrashReportFixture, ForEachCrashReport) {
         result = cr;
         return true;
     });
-    ASSERT_NE(std::nullopt, result);
-    EXPECT_EQ(uuid, result->id());
-    EXPECT_EQ(component, result->component());
+    EXPECT_TRUE(result && uuid == result->id());
+    EXPECT_TRUE(result && component == result->component());
 }
 
 TEST_F(CrashReportFixture, TestDeleteId) {

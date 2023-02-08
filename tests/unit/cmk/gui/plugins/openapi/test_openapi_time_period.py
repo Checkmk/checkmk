@@ -307,3 +307,61 @@ def test_openapi_timeperiod_excluding_exclude(timeperiod_client: TimePeriodTestC
         "exceptions": [],
         "exclude": [],
     }
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_timeperiod_exclude_builtin(timeperiod_client: TimePeriodTestClient) -> None:
+    timeperiod_client.create(
+        time_period_data={
+            "name": "exclude_test_1",
+            "alias": "exclude_test_alias_1",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [
+                        {"end": "12:30", "start": "08:00"},
+                        {"end": "17:00", "start": "13:30"},
+                    ],
+                },
+            ],
+            "exceptions": [],
+            "exclude": [],
+        },
+    )
+
+    timeperiod_client.create(
+        time_period_data={
+            "name": "exclude_test_2",
+            "alias": "exclude_test_alias_2",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [
+                        {"end": "12:30", "start": "08:00"},
+                        {"end": "17:00", "start": "13:30"},
+                    ],
+                },
+            ],
+            "exceptions": [],
+            "exclude": ["exclude_test_alias_1"],
+        },
+    )
+
+    assert timeperiod_client.create(
+        expect_ok=False,
+        time_period_data={
+            "name": "exclude_test_3",
+            "alias": "exclude_test_alias_3",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [
+                        {"end": "12:30", "start": "08:00"},
+                        {"end": "17:00", "start": "13:30"},
+                    ],
+                },
+            ],
+            "exceptions": [],
+            "exclude": ["Always"],
+        },
+    ).assert_status_code(400)

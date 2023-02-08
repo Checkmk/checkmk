@@ -423,7 +423,8 @@ def validate_process_discovery_descr_option(description, varprefix):
 
 def process_discovery_descr_option():
     return TextInput(
-        title=_("Process Name"),
+        title=_("Process name"),
+        size=49,
         allow_empty=False,
         validate=validate_process_discovery_descr_option,
         help=_(
@@ -454,7 +455,7 @@ def process_match_options():
             TextInput(
                 title=_("Exact name of the process without arguments"),
                 label=_("Executable:"),
-                size=50,
+                size=86,
             ),
             Transform(
                 valuespec=RegExp(
@@ -501,7 +502,7 @@ def user_match_options(extra_elements=None):
             ),
             Transform(
                 valuespec=RegExp(
-                    size=50,
+                    size=86,
                     mode=RegExp.prefix,
                 ),
                 title=_("Regular expression matching username"),
@@ -543,7 +544,7 @@ def cgroup_match_options():
                     ),
                     Transform(
                         valuespec=RegExp(
-                            size=50,
+                            size=86,
                             mode=RegExp.prefix,
                         ),
                         title=_("Regular expression matching control group info"),
@@ -605,7 +606,7 @@ rulespec_registry.register(
 # Rule for static process checks
 def _manual_item_spec_ps():
     return TextInput(
-        title=_("Process Name"),
+        title=_("Process name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
         regex="^[a-zA-Z_0-9 _./-]*$",
@@ -739,16 +740,16 @@ def match_hr_alternative(x):
 
 def hr_process_match_name_option():
     return Alternative(
-        title=_("Process Name Matching"),
+        title=_("Process name matching"),
         elements=[
             TextInput(
                 title=_("Exact name of the textual description"),
-                size=50,
+                size=86,
                 allow_empty=False,
             ),
             Transform(
                 valuespec=RegExp(
-                    size=50,
+                    size=86,
                     mode=RegExp.prefix,
                     validate=forbid_re_delimiters_inside_groups,
                     allow_empty=False,
@@ -969,7 +970,7 @@ rulespec_registry.register(
 # Rule for static process checks
 def _manual_item_spec_hr_ps():
     return TextInput(
-        title=_("Process Name"),
+        title=_("Process name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
         regex="^[a-zA-Z_0-9 _./-]*$",

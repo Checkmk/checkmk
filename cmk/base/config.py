@@ -2546,6 +2546,8 @@ def lookup_ip_address(
     *,
     family: socket.AddressFamily | None = None,
 ) -> HostAddress | None:
+    if ConfigCache.is_no_ip_host(host_name):
+        return None
     if family is None:
         family = config_cache.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(

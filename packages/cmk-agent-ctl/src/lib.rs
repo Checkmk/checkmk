@@ -52,12 +52,12 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
         &paths.config_path, &paths.registry_path
     );
     match cli.mode {
-        cli::Mode::Register(reg_opts) => registration::register_host_name(
-            &config::RegistrationConfigHostName::new(runtime_config, reg_opts)?,
+        cli::Mode::Register(reg_opts) => registration::register_existing(
+            &config::RegisterExistingConfig::new(runtime_config, reg_opts)?,
             &mut registry,
         ),
-        cli::Mode::RegisterNew(reg_new_opts) => registration::register_agent_labels(
-            &config::RegistrationConfigAgentLabels::new(
+        cli::Mode::RegisterNew(reg_new_opts) => registration::register_new(
+            &config::RegisterNewConfig::new(
                 config::RegistrationConnectionConfig::new(
                     runtime_config,
                     reg_new_opts.connection_opts,
@@ -67,7 +67,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
             &mut registry,
         ),
         cli::Mode::ProxyRegister(reg_opts) => registration::proxy_register(
-            &config::RegistrationConfigHostName::new(runtime_config, reg_opts)?,
+            &config::RegisterExistingConfig::new(runtime_config, reg_opts)?,
         ),
         cli::Mode::Import(import_opts) => import(&mut registry, &import_opts),
         cli::Mode::Push(client_opts) => push(

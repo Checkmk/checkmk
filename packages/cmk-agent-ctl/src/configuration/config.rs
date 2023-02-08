@@ -47,12 +47,12 @@ pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
     }
 }
 
-pub struct RegistrationConfigHostName {
+pub struct RegisterExistingConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub host_name: String,
 }
 
-impl RegistrationConfigHostName {
+impl RegisterExistingConfig {
     pub fn new(
         runtime_config: RuntimeConfig,
         register_opts: cli::RegisterOpts,
@@ -67,12 +67,12 @@ impl RegistrationConfigHostName {
     }
 }
 
-pub struct RegistrationConfigAgentLabels {
+pub struct RegisterNewConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub agent_labels: types::AgentLabels,
 }
 
-impl RegistrationConfigAgentLabels {
+impl RegisterNewConfig {
     pub fn new(
         connection_config: RegistrationConnectionConfig,
         agent_labels: types::AgentLabels,
@@ -782,7 +782,7 @@ mod test_registration_config {
     #[test]
     fn test_host_name_config() {
         assert_eq!(
-            RegistrationConfigHostName::new(
+            RegisterExistingConfig::new(
                 runtime_config(),
                 cli::RegisterOpts {
                     connection_opts: registration_connection_opts(),
@@ -797,7 +797,7 @@ mod test_registration_config {
 
     #[test]
     fn test_automatic_agent_labels() {
-        let agent_labels = RegistrationConfigAgentLabels::new(
+        let agent_labels = RegisterNewConfig::new(
             RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
                 .unwrap(),
             types::AgentLabels::new(),
@@ -812,7 +812,7 @@ mod test_registration_config {
 
     #[test]
     fn test_user_defined_labels() {
-        let agent_labels = RegistrationConfigAgentLabels::new(
+        let agent_labels = RegisterNewConfig::new(
             RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
                 .unwrap(),
             types::AgentLabels::from([

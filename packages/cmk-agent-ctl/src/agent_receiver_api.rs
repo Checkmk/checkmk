@@ -10,14 +10,8 @@ use serde_with::DisplayFromStr;
 use string_enum::StringEnum;
 
 #[derive(Serialize)]
-struct CsrBody {
+struct RenewCertificateBody {
     csr: String,
-}
-
-#[derive(Deserialize)]
-pub struct PairingResponse {
-    pub root_cert: String,
-    pub client_cert: String,
 }
 
 #[derive(Deserialize)]
@@ -27,18 +21,51 @@ pub struct RenewCertificateResponse {
 
 #[serde_with::serde_as]
 #[derive(Serialize)]
-struct RegistrationWithHNBody {
+struct RegisterExistingBody {
     #[serde_as(as = "DisplayFromStr")]
     uuid: uuid::Uuid,
+    csr: String,
     host_name: String,
+}
+
+#[derive(Deserialize)]
+pub struct RegisterExisitingResponse {
+    pub root_cert: String,
+    pub agent_cert: String,
+    pub connection_mode: config::ConnectionType,
 }
 
 #[serde_with::serde_as]
 #[derive(Serialize)]
-struct RegistrationWithALBody {
+struct RegisterNewBody {
     #[serde_as(as = "DisplayFromStr")]
     uuid: uuid::Uuid,
+    csr: String,
     agent_labels: types::AgentLabels,
+}
+
+#[derive(Deserialize)]
+pub struct RegisterNewResponse {
+    pub root_cert: String,
+}
+
+#[derive(Deserialize)]
+pub struct RegisterNewOngoingResponseDeclined {
+    pub reason: String,
+}
+
+#[derive(Deserialize)]
+pub struct RegisterNewOngoingResponseSuccess {
+    pub agent_cert: String,
+    pub connection_mode: config::ConnectionType,
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "status")]
+pub enum RegisterNewOngoingResponse {
+    InProgress,
+    Declined(RegisterNewOngoingResponseDeclined),
+    Success(RegisterNewOngoingResponseSuccess),
 }
 
 #[derive(StringEnum)]
@@ -69,34 +96,34 @@ struct ErrorResponse {
     pub detail: String,
 }
 
-pub trait Pairing {
-    fn pair(
-        &self,
-        base_url: &reqwest::Url,
-        root_cert: Option<&str>,
-        csr: String,
-        credentials: &types::Credentials,
-    ) -> AnyhowResult<PairingResponse>;
-}
-
 pub trait Registration {
-    fn register_with_hostname(
+    fn register_existing(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
+        root_cert: &Option<&str>,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
+        csr: &str,
         host_name: &str,
-    ) -> AnyhowResult<()>;
+    ) -> AnyhowResult<RegisterExisitingResponse>;
 
-    fn register_with_agent_labels(
+    fn register_new(
+        &self,
+        base_url: &reqwest::Url,
+        root_cert: &Option<&str>,
+        credentials: &types::Credentials,
+        uuid: &uuid::Uuid,
+        csr: &str,
+        agent_labels: &types::AgentLabels,
+    ) -> AnyhowResult<RegisterNewResponse>;
+
+    fn register_new_ongoing(
         &self,
         base_url: &reqwest::Url,
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
-        agent_labels: &types::AgentLabels,
-    ) -> AnyhowResult<()>;
+    ) -> AnyhowResult<RegisterNewOngoingResponse>;
 }
 
 pub trait AgentData {
@@ -190,31 +217,6 @@ impl Api {
     }
 }
 
-impl Pairing for Api {
-    fn pair(
-        &self,
-        base_url: &reqwest::Url,
-        root_cert: Option<&str>,
-        csr: String,
-        credentials: &types::Credentials,
-    ) -> AnyhowResult<PairingResponse> {
-        Self::deserialize_json_response(
-            certs::client(
-                root_cert.map(|r| certs::HandshakeCredentials {
-                    server_root_cert: r,
-                    client_identity: None,
-                }),
-                self.use_proxy,
-            )?
-            .post(Self::endpoint_url(base_url, &["pairing"])?)
-            .basic_auth(&credentials.username, Some(&credentials.password))
-            .json(&CsrBody { csr })
-            .send()?,
-            |body| serde_json::from_str::<PairingResponse>(body),
-        )
-    }
-}
-
 impl RenewCertificate for Api {
     fn renew_certificate(
         &self,
@@ -231,7 +233,7 @@ impl RenewCertificate for Api {
                 base_url,
                 &["renew_certificate", &connection.uuid.to_string()],
             )?)
-            .json(&CsrBody { csr })
+            .json(&RenewCertificateBody { csr })
             .send()?,
             |body| serde_json::from_str::<RenewCertificateResponse>(body),
         )
@@ -239,54 +241,58 @@ impl RenewCertificate for Api {
 }
 
 impl Registration for Api {
-    fn register_with_hostname(
+    fn register_existing(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &str,
+        root_cert: &Option<&str>,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
+        csr: &str,
         host_name: &str,
-    ) -> AnyhowResult<()> {
-        self.call_registration_endpoint(
-            Self::endpoint_url(base_url, &["register_with_hostname"])?,
+    ) -> AnyhowResult<RegisterExisitingResponse> {
+        self.call_registration_init_endpoint(
+            Self::endpoint_url(base_url, &["register_existing"])?,
             root_cert,
             credentials,
-            &RegistrationWithHNBody {
+            &RegisterExistingBody {
                 uuid: uuid.to_owned(),
+                csr: csr.to_owned(),
                 host_name: String::from(host_name),
             },
+            |body| serde_json::from_str::<RegisterExisitingResponse>(body),
         )
     }
 
-    fn register_with_agent_labels(
+    fn register_new(
+        &self,
+        base_url: &reqwest::Url,
+        root_cert: &Option<&str>,
+        credentials: &types::Credentials,
+        uuid: &uuid::Uuid,
+        csr: &str,
+        agent_labels: &types::AgentLabels,
+    ) -> AnyhowResult<RegisterNewResponse> {
+        self.call_registration_init_endpoint(
+            Self::endpoint_url(base_url, &["register_new"])?,
+            root_cert,
+            credentials,
+            &RegisterNewBody {
+                uuid: uuid.to_owned(),
+                csr: csr.to_owned(),
+                agent_labels: agent_labels.clone(),
+            },
+            |body| serde_json::from_str::<RegisterNewResponse>(body),
+        )
+    }
+
+    fn register_new_ongoing(
         &self,
         base_url: &reqwest::Url,
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
-        agent_labels: &types::AgentLabels,
-    ) -> AnyhowResult<()> {
-        self.call_registration_endpoint(
-            Self::endpoint_url(base_url, &["register_with_labels"])?,
-            root_cert,
-            credentials,
-            &RegistrationWithALBody {
-                uuid: uuid.to_owned(),
-                agent_labels: agent_labels.clone(),
-            },
-        )
-    }
-}
-
-impl Api {
-    fn call_registration_endpoint(
-        &self,
-        url: reqwest::Url,
-        root_cert: &str,
-        credentials: &types::Credentials,
-        body: &impl Serialize,
-    ) -> AnyhowResult<()> {
-        Self::check_response_204(
+    ) -> AnyhowResult<RegisterNewOngoingResponse> {
+        Self::deserialize_json_response(
             certs::client(
                 Some(certs::HandshakeCredentials {
                     server_root_cert: root_cert,
@@ -294,10 +300,44 @@ impl Api {
                 }),
                 self.use_proxy,
             )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["register_new_ongoing", &uuid.to_string()],
+            )?)
+            .basic_auth(&credentials.username, Some(&credentials.password))
+            .send()
+            .context("Calling register_new_ongoing endpoint failed")?,
+            |body| serde_json::from_str::<RegisterNewOngoingResponse>(body),
+        )
+    }
+}
+
+impl Api {
+    fn call_registration_init_endpoint<'a, T>(
+        &self,
+        url: reqwest::Url,
+        root_cert: &Option<&str>,
+        credentials: &types::Credentials,
+        body: &impl Serialize,
+        deserializer: fn(&str) -> serde_json::Result<T>,
+    ) -> AnyhowResult<T>
+    where
+        T: Deserialize<'a>,
+    {
+        Self::deserialize_json_response(
+            certs::client(
+                root_cert.map(|r| certs::HandshakeCredentials {
+                    server_root_cert: r,
+                    client_identity: None,
+                }),
+                self.use_proxy,
+            )?
             .post(url)
             .basic_auth(&credentials.username, Some(&credentials.password))
             .json(body)
-            .send()?,
+            .send()
+            .context("Calling registration endpoint failed")?,
+            deserializer,
         )
     }
 }

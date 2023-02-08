@@ -84,7 +84,7 @@ fn registration_server_cert<'a>(
                      given in the configuration and will be used to verify the server certificate."
                 );
             }
-            Ok(Some(cert.as_str()))
+            Ok(Some(cert))
         }
         None => {
             if !config.trust_server_cert {
@@ -96,11 +96,18 @@ fn registration_server_cert<'a>(
     }
 }
 
-fn prepare_registration(
-    config: &config::RegistrationConnectionConfig,
-    agent_rec_api: &impl agent_receiver_api::Pairing,
+struct RegistrationInput<'a> {
+    root_cert: Option<&'a str>,
+    credentials: types::Credentials,
+    uuid: uuid::Uuid,
+    private_key: String,
+    csr: String,
+}
+
+fn prepare_registration<'a>(
+    config: &'a config::RegistrationConnectionConfig,
     trust_establisher: &impl TrustEstablishing,
-) -> AnyhowResult<(types::Credentials, PairingResult)> {
+) -> AnyhowResult<RegistrationInput<'a>> {
     let uuid = uuid::Uuid::new_v4();
     let (csr, private_key) = certs::make_csr(&uuid.to_string()).context("Error creating CSR.")?;
     let root_cert = registration_server_cert(config, trust_establisher)?;
@@ -112,153 +119,149 @@ fn prepare_registration(
             trust_establisher.prompt_password(&config.username)?
         },
     };
-    let pairing_response = agent_rec_api
-        .pair(
-            &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
-            root_cert,
-            csr,
-            &credentials,
-        )
-        .context(format!(
-            "Error pairing with {}, port {}",
-            &config.site_id, &config.receiver_port
-        ))?;
-    Ok((
+    Ok(RegistrationInput {
+        root_cert,
         credentials,
-        PairingResult {
-            uuid,
-            private_key,
-            pairing_response,
-        },
-    ))
+        uuid,
+        private_key,
+        csr,
+    })
 }
 
-struct PairingResult {
-    uuid: uuid::Uuid,
-    private_key: String,
-    pairing_response: agent_receiver_api::PairingResponse,
+struct RegistrationResult {
+    root_cert: String,
+    agent_cert: String,
+    connection_mode: config::ConnectionType,
+}
+
+impl std::convert::From<agent_receiver_api::RegisterExisitingResponse> for RegistrationResult {
+    fn from(register_existing_response: agent_receiver_api::RegisterExisitingResponse) -> Self {
+        Self {
+            root_cert: register_existing_response.root_cert,
+            agent_cert: register_existing_response.agent_cert,
+            connection_mode: register_existing_response.connection_mode,
+        }
+    }
 }
 
 trait RegistrationEndpointCall {
     fn call(
         &self,
-        config: &config::RegistrationConnectionConfig,
-        credentials: &types::Credentials,
-        pairing_result: &PairingResult,
+        site_url: &reqwest::Url,
+        registration_input: &RegistrationInput,
         agent_rec_api: &impl agent_receiver_api::Registration,
-    ) -> AnyhowResult<()>;
+    ) -> AnyhowResult<RegistrationResult>;
 }
 
-struct HostNameRegistration<'a> {
+struct RegistrationCallExisting<'a> {
     host_name: &'a str,
 }
 
-impl RegistrationEndpointCall for HostNameRegistration<'_> {
+impl RegistrationEndpointCall for RegistrationCallExisting<'_> {
     fn call(
         &self,
-        config: &config::RegistrationConnectionConfig,
-        credentials: &types::Credentials,
-        pairing_result: &PairingResult,
+        site_url: &reqwest::Url,
+        registration_input: &RegistrationInput,
         agent_rec_api: &impl agent_receiver_api::Registration,
-    ) -> AnyhowResult<()> {
-        agent_rec_api
-            .register_with_hostname(
-                &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
-                &pairing_result.pairing_response.root_cert,
-                credentials,
-                &pairing_result.uuid,
-                self.host_name,
-            )
-            .context(format!(
-                "Error registering with host name at {}, port {}",
-                &config.site_id, &config.receiver_port
-            ))
+    ) -> AnyhowResult<RegistrationResult> {
+        Ok(RegistrationResult::from(
+            agent_rec_api
+                .register_existing(
+                    site_url,
+                    &registration_input.root_cert,
+                    &registration_input.credentials,
+                    &registration_input.uuid,
+                    &registration_input.csr,
+                    self.host_name,
+                )
+                .context(format!("Error registering exisiting host at {}", site_url))?,
+        ))
     }
 }
 
-struct AgentLabelsRegistration<'a> {
+struct RegistrationCallNew<'a> {
     agent_labels: &'a types::AgentLabels,
 }
 
-impl RegistrationEndpointCall for AgentLabelsRegistration<'_> {
+impl RegistrationEndpointCall for RegistrationCallNew<'_> {
     fn call(
         &self,
-        config: &config::RegistrationConnectionConfig,
-        credentials: &types::Credentials,
-        pairing_result: &PairingResult,
+        site_url: &reqwest::Url,
+        registration_input: &RegistrationInput,
         agent_rec_api: &impl agent_receiver_api::Registration,
-    ) -> AnyhowResult<()> {
-        agent_rec_api
-            .register_with_agent_labels(
-                &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
-                &pairing_result.pairing_response.root_cert,
-                credentials,
-                &pairing_result.uuid,
+    ) -> AnyhowResult<RegistrationResult> {
+        let reg_new_response = agent_rec_api
+            .register_new(
+                site_url,
+                &registration_input.root_cert,
+                &registration_input.credentials,
+                &registration_input.uuid,
+                &registration_input.csr,
                 self.agent_labels,
             )
-            .context(format!(
-                "Error registering with host name at {}, port {}",
-                &config.site_id, &config.receiver_port
-            ))
-    }
-}
+            .context(format!("Error registering new host at {}", site_url))?;
 
-fn post_registration_conn_type(
-    site_id: &site_spec::SiteID,
-    connection: &config::TrustedConnectionWithRemote,
-    agent_rec_api: &impl agent_receiver_api::Status,
-) -> AnyhowResult<config::ConnectionType> {
-    loop {
-        let status_resp = agent_rec_api.status(
-            &site_spec::make_site_url(site_id, &connection.receiver_port)?,
-            &connection.trust,
-        )?;
-        if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
-            bail!(
-                "Registration declined by Checkmk instance{}",
-                if let Some(msg) = status_resp.message {
-                    format!(": {msg}")
-                } else {
-                    "".to_string()
+        loop {
+            match agent_rec_api
+                .register_new_ongoing(
+                    site_url,
+                    &reg_new_response.root_cert,
+                    &registration_input.credentials,
+                    &registration_input.uuid,
+                )
+                .context(format!(
+                    "Error querying registration progress at {}",
+                    site_url
+                ))? {
+                agent_receiver_api::RegisterNewOngoingResponse::InProgress => {
+                    println!(
+                        "Waiting for registration to complete on Checkmk instance, sleeping 20 s"
+                    );
+                    std::thread::sleep(std::time::Duration::from_secs(20));
                 }
-            );
+                agent_receiver_api::RegisterNewOngoingResponse::Declined(declined_resp) => bail!(
+                    "Registration declined by Checkmk instance: {}",
+                    declined_resp.reason
+                ),
+                agent_receiver_api::RegisterNewOngoingResponse::Success(success_resp) => {
+                    return Ok(RegistrationResult {
+                        root_cert: reg_new_response.root_cert,
+                        agent_cert: success_resp.agent_cert,
+                        connection_mode: success_resp.connection_mode,
+                    })
+                }
+            }
         }
-        if let Some(ct) = status_resp.connection_type {
-            return Ok(ct);
-        }
-        println!("Waiting for registration to complete on Checkmk instance, sleeping 20 s");
-        std::thread::sleep(std::time::Duration::from_secs(20));
     }
 }
 
 fn direct_registration(
     config: &config::RegistrationConnectionConfig,
     registry: &mut config::Registry,
-    agent_rec_api: &(impl agent_receiver_api::Pairing
-          + agent_receiver_api::Registration
-          + agent_receiver_api::Status),
+    agent_rec_api: &impl agent_receiver_api::Registration,
     trust_establisher: &impl TrustEstablishing,
     endpoint_call: &impl RegistrationEndpointCall,
 ) -> AnyhowResult<()> {
-    let (credentials, pairing_result) =
-        prepare_registration(config, agent_rec_api, trust_establisher)?;
+    let registration_input = prepare_registration(config, trust_establisher)?;
 
-    endpoint_call.call(config, &credentials, &pairing_result, agent_rec_api)?;
-
-    let connection = config::TrustedConnectionWithRemote {
-        trust: config::TrustedConnection {
-            uuid: pairing_result.uuid,
-            private_key: pairing_result.private_key,
-            certificate: pairing_result.pairing_response.client_cert,
-            root_cert: pairing_result.pairing_response.root_cert,
-        },
-        receiver_port: config.receiver_port,
-    };
+    let registration_result = endpoint_call.call(
+        &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
+        &registration_input,
+        agent_rec_api,
+    )?;
 
     registry.register_connection(
-        &post_registration_conn_type(&config.site_id, &connection, agent_rec_api)?,
+        &registration_result.connection_mode,
         &config.site_id,
-        connection,
+        config::TrustedConnectionWithRemote {
+            trust: config::TrustedConnection {
+                uuid: registration_input.uuid,
+                private_key: registration_input.private_key,
+                certificate: registration_result.agent_cert,
+                root_cert: registration_result.root_cert,
+            },
+            receiver_port: config.receiver_port,
+        },
     );
 
     registry.save()?;
@@ -267,32 +270,40 @@ fn direct_registration(
 }
 
 fn proxy_registration(
-    config: &config::RegistrationConfigHostName,
-    agent_rec_api: &(impl agent_receiver_api::Pairing + agent_receiver_api::Registration),
+    config: &config::RegisterExistingConfig,
+    agent_rec_api: &impl agent_receiver_api::Registration,
     trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<()> {
-    let (credentials, pairing_result) =
-        prepare_registration(&config.connection_config, agent_rec_api, trust_establisher)?;
+    let registration_input = prepare_registration(&config.connection_config, trust_establisher)?;
 
-    HostNameRegistration {
+    let registration_result = RegistrationCallExisting {
         host_name: &config.host_name,
     }
     .call(
-        &config.connection_config,
-        &credentials,
-        &pairing_result,
+        &site_spec::make_site_url(
+            &config.connection_config.site_id,
+            &config.connection_config.receiver_port,
+        )?,
+        &registration_input,
         agent_rec_api,
     )?;
+
+    if registration_result.connection_mode == config::ConnectionType::Push {
+        eprintln!(
+            "WARNING: The host you just registered is configured to be a push host. The imported \
+             connection will only work if the monitored host can connect to the monitoring server."
+        )
+    }
 
     println!(
         "{}",
         serde_json::to_string(&ProxyPullData {
             agent_controller_version: String::from(constants::VERSION),
             connection: config::TrustedConnection {
-                uuid: pairing_result.uuid,
-                private_key: pairing_result.private_key,
-                certificate: pairing_result.pairing_response.client_cert,
-                root_cert: pairing_result.pairing_response.root_cert,
+                uuid: registration_input.uuid,
+                private_key: registration_input.private_key,
+                certificate: registration_result.agent_cert,
+                root_cert: registration_result.root_cert,
             }
         })?
     );
@@ -307,8 +318,8 @@ pub struct ProxyPullData {
 
 impl config::JSONLoader for ProxyPullData {}
 
-pub fn register_host_name(
-    config: &config::RegistrationConfigHostName,
+pub fn register_existing(
+    config: &config::RegisterExistingConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
     direct_registration(
@@ -318,7 +329,7 @@ pub fn register_host_name(
             use_proxy: config.connection_config.client_config.use_proxy,
         },
         &InteractiveTrust {},
-        &HostNameRegistration {
+        &RegistrationCallExisting {
             host_name: &config.host_name,
         },
     )?;
@@ -326,8 +337,8 @@ pub fn register_host_name(
     Ok(())
 }
 
-pub fn register_agent_labels(
-    config: &config::RegistrationConfigAgentLabels,
+pub fn register_new(
+    config: &config::RegisterNewConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
     direct_registration(
@@ -337,7 +348,7 @@ pub fn register_agent_labels(
             use_proxy: config.connection_config.client_config.use_proxy,
         },
         &InteractiveTrust {},
-        &AgentLabelsRegistration {
+        &RegistrationCallNew {
             agent_labels: &config.agent_labels,
         },
     )?;
@@ -354,7 +365,7 @@ pub fn register_pre_configured(
         pre_configured_connections,
         client_config,
         registry,
-        &RegistrationWithAgentLabelsImpl {},
+        &RegistrationNewImpl {},
     )
 }
 
@@ -362,7 +373,7 @@ fn _register_pre_configured(
     pre_configured_connections: &config::PreConfiguredConnections,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
-    registration_with_labels: &impl RegistrationWithAgentLabels,
+    registration_with_labels: &impl RegistrationNew,
 ) -> AnyhowResult<()> {
     for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
         if let Err(error) = process_pre_configured_connection(
@@ -398,23 +409,23 @@ fn _register_pre_configured(
         .context("Failed to save registered connections")
 }
 
-trait RegistrationWithAgentLabels {
+trait RegistrationNew {
     fn register(
         &self,
-        config: &config::RegistrationConfigAgentLabels,
+        config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
     ) -> AnyhowResult<()>;
 }
 
-struct RegistrationWithAgentLabelsImpl;
+struct RegistrationNewImpl;
 
-impl RegistrationWithAgentLabels for RegistrationWithAgentLabelsImpl {
+impl RegistrationNew for RegistrationNewImpl {
     fn register(
         &self,
-        config: &config::RegistrationConfigAgentLabels,
+        config: &config::RegisterNewConfig,
         registry: &mut config::Registry,
     ) -> AnyhowResult<()> {
-        register_agent_labels(config, registry)
+        register_new(config, registry)
     }
 }
 
@@ -424,7 +435,7 @@ fn process_pre_configured_connection(
     agent_labels: &types::AgentLabels,
     client_config: &config::ClientConfig,
     registry: &mut config::Registry,
-    registration_with_labels: &impl RegistrationWithAgentLabels,
+    registration_with_labels: &impl RegistrationNew,
 ) -> AnyhowResult<()> {
     let receiver_port = match pre_configured.port {
         Some(receiver_port) => receiver_port,
@@ -440,7 +451,7 @@ fn process_pre_configured_connection(
         return Ok(());
     }
 
-    let registration_config = config::RegistrationConfigAgentLabels::new(
+    let registration_config = config::RegisterNewConfig::new(
         config::RegistrationConnectionConfig {
             site_id: site_id.clone(),
             receiver_port,
@@ -476,7 +487,7 @@ fn delete_vanished_connections<'a>(
     registry.clear_imported();
 }
 
-pub fn proxy_register(config: &config::RegistrationConfigHostName) -> AnyhowResult<()> {
+pub fn proxy_register(config: &config::RegisterExistingConfig) -> AnyhowResult<()> {
     proxy_registration(
         config,
         &agent_receiver_api::Api {
@@ -510,81 +521,78 @@ mod tests {
     }
 
     enum RegistrationMethod {
-        HostName,
-        AgentLabels,
+        Existing,
+        New,
     }
 
     struct MockApi {
-        expect_root_cert_for_pairing: bool,
+        expect_root_cert: bool,
         expected_registration_method: Option<RegistrationMethod>,
     }
 
-    impl agent_receiver_api::Pairing for MockApi {
-        fn pair(
-            &self,
-            base_url: &reqwest::Url,
-            root_cert: Option<&str>,
-            _csr: String,
-            _credentials: &types::Credentials,
-        ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
-            assert!(base_url == &expected_url());
-            assert!(root_cert.is_some() == self.expect_root_cert_for_pairing);
-            Ok(agent_receiver_api::PairingResponse {
-                root_cert: String::from("root_cert"),
-                client_cert: String::from("client_cert"),
-            })
-        }
-    }
-
     impl agent_receiver_api::Registration for MockApi {
-        fn register_with_hostname(
+        fn register_existing(
             &self,
             base_url: &reqwest::Url,
-            _root_cert: &str,
+            root_cert: &Option<&str>,
             _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
+            _csr: &str,
             host_name: &str,
-        ) -> AnyhowResult<()> {
+        ) -> AnyhowResult<agent_receiver_api::RegisterExisitingResponse> {
             assert!(matches!(
                 self.expected_registration_method.as_ref().unwrap(),
-                RegistrationMethod::HostName
+                RegistrationMethod::Existing
             ));
             assert!(base_url == &expected_url());
+            assert!(root_cert.is_some() == self.expect_root_cert);
             assert!(host_name == HOST_NAME);
-            Ok(())
+            Ok(agent_receiver_api::RegisterExisitingResponse {
+                root_cert: String::from("root_cert"),
+                agent_cert: String::from("agent_cert"),
+                connection_mode: config::ConnectionType::Pull,
+            })
         }
 
-        fn register_with_agent_labels(
+        fn register_new(
+            &self,
+            base_url: &reqwest::Url,
+            root_cert: &Option<&str>,
+            _credentials: &types::Credentials,
+            _uuid: &uuid::Uuid,
+            _csr: &str,
+            ag_labels: &types::AgentLabels,
+        ) -> AnyhowResult<agent_receiver_api::RegisterNewResponse> {
+            assert!(matches!(
+                self.expected_registration_method.as_ref().unwrap(),
+                RegistrationMethod::New
+            ));
+            assert!(base_url == &expected_url());
+            assert!(root_cert.is_some() == self.expect_root_cert);
+            assert!(ag_labels == &agent_labels());
+            Ok(agent_receiver_api::RegisterNewResponse {
+                root_cert: String::from("root_cert"),
+            })
+        }
+
+        fn register_new_ongoing(
             &self,
             base_url: &reqwest::Url,
             _root_cert: &str,
             _credentials: &types::Credentials,
             _uuid: &uuid::Uuid,
-            ag_labels: &types::AgentLabels,
-        ) -> AnyhowResult<()> {
+        ) -> AnyhowResult<agent_receiver_api::RegisterNewOngoingResponse> {
             assert!(matches!(
                 self.expected_registration_method.as_ref().unwrap(),
-                RegistrationMethod::AgentLabels
+                RegistrationMethod::New
             ));
             assert!(base_url == &expected_url());
-            assert!(ag_labels == &agent_labels());
-            Ok(())
-        }
-    }
-
-    impl agent_receiver_api::Status for MockApi {
-        fn status(
-            &self,
-            base_url: &reqwest::Url,
-            _connection: &config::TrustedConnection,
-        ) -> AnyhowResult<agent_receiver_api::StatusResponse> {
-            assert!(base_url == &expected_url());
-            Ok(agent_receiver_api::StatusResponse {
-                hostname: Some(String::from(HOST_NAME)),
-                status: None,
-                connection_type: Some(config::ConnectionType::Pull),
-                message: None,
-            })
+            Ok(agent_receiver_api::RegisterNewOngoingResponse::Success(
+                agent_receiver_api::RegisterNewOngoingResponseSuccess {
+                    agent_cert: String::from("agent_cert"),
+                    connection_mode: config::ConnectionType::Push,
+                },
+            ))
         }
     }
 
@@ -633,17 +641,13 @@ mod tests {
         }
     }
 
-    mod test_pair {
+    mod test_prepare_registration {
         use super::*;
 
         #[test]
         fn test_interactive_trust() {
             assert!(prepare_registration(
                 &registration_connection_config(None, None, false),
-                &MockApi {
-                    expect_root_cert_for_pairing: false,
-                    expected_registration_method: None,
-                },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: true,
                     expect_password_prompt: true,
@@ -656,10 +660,6 @@ mod tests {
         fn test_blind_trust() {
             assert!(prepare_registration(
                 &registration_connection_config(None, Some(String::from("password")), true),
-                &MockApi {
-                    expect_root_cert_for_pairing: false,
-                    expected_registration_method: None,
-                },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
                     expect_password_prompt: false,
@@ -676,10 +676,6 @@ mod tests {
                     Some(String::from("password")),
                     false
                 ),
-                &MockApi {
-                    expect_root_cert_for_pairing: true,
-                    expected_registration_method: None,
-                },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
                     expect_password_prompt: false,
@@ -692,10 +688,6 @@ mod tests {
         fn test_root_cert_from_config_and_blind_trust() {
             assert!(prepare_registration(
                 &registration_connection_config(Some(String::from("root_certificate")), None, true),
-                &MockApi {
-                    expect_root_cert_for_pairing: true,
-                    expected_registration_method: None,
-                },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
                     expect_password_prompt: true,
@@ -709,7 +701,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_host_name() {
+        fn test_existing() {
             let reg_dir = TestRegistryDir::new();
             let mut registry = reg_dir.registry();
             assert!(!registry.path().exists());
@@ -717,14 +709,14 @@ mod tests {
                 &registration_connection_config(None, None, false),
                 &mut registry,
                 &MockApi {
-                    expect_root_cert_for_pairing: false,
-                    expected_registration_method: Some(RegistrationMethod::HostName),
+                    expect_root_cert: false,
+                    expected_registration_method: Some(RegistrationMethod::Existing),
                 },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: true,
                     expect_password_prompt: true,
                 },
-                &HostNameRegistration {
+                &RegistrationCallExisting {
                     host_name: HOST_NAME
                 },
             )
@@ -734,7 +726,7 @@ mod tests {
         }
 
         #[test]
-        fn test_agent_labels() {
+        fn test_new() {
             let reg_dir = TestRegistryDir::new();
             let mut registry = reg_dir.registry();
             assert!(!registry.path().exists());
@@ -746,14 +738,14 @@ mod tests {
                 ),
                 &mut registry,
                 &MockApi {
-                    expect_root_cert_for_pairing: true,
-                    expected_registration_method: Some(RegistrationMethod::AgentLabels),
+                    expect_root_cert: true,
+                    expected_registration_method: Some(RegistrationMethod::New),
                 },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
                     expect_password_prompt: false,
                 },
-                &AgentLabelsRegistration {
+                &RegistrationCallNew {
                     agent_labels: &agent_labels()
                 },
             )
@@ -765,13 +757,13 @@ mod tests {
         #[test]
         fn test_proxy() {
             assert!(proxy_registration(
-                &config::RegistrationConfigHostName {
+                &config::RegisterExistingConfig {
                     connection_config: registration_connection_config(None, None, true),
                     host_name: String::from(HOST_NAME),
                 },
                 &MockApi {
-                    expect_root_cert_for_pairing: false,
-                    expected_registration_method: Some(RegistrationMethod::HostName),
+                    expect_root_cert: false,
+                    expected_registration_method: Some(RegistrationMethod::Existing),
                 },
                 &MockInteractiveTrust {
                     expect_server_cert_prompt: false,
@@ -874,10 +866,10 @@ mod tests {
 
         struct MockRegistrationWithAgentLabelsImpl;
 
-        impl RegistrationWithAgentLabels for MockRegistrationWithAgentLabelsImpl {
+        impl RegistrationNew for MockRegistrationWithAgentLabelsImpl {
             fn register(
                 &self,
-                config: &config::RegistrationConfigAgentLabels,
+                config: &config::RegisterNewConfig,
                 registry: &mut config::Registry,
             ) -> AnyhowResult<()> {
                 assert!(config.connection_config.password.is_some());

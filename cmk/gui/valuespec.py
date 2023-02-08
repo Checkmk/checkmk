@@ -6814,13 +6814,18 @@ class TextOrRegExp(Alternative):
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
         vs_text = (
-            TextInput(title=_("Explicit match"), allow_empty=allow_empty)
+            TextInput(
+                title=_("Explicit match"),
+                size=49,
+                allow_empty=allow_empty,
+            )
             if text_valuespec is None
             else text_valuespec
         )
         vs_regex = RegExp(
             mode=RegExp.prefix,
             title=_("Regular expression match"),
+            size=49,
             allow_empty=allow_empty,
         )
         super().__init__(

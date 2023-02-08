@@ -657,6 +657,7 @@ class TimePeriodAlias(fields.String):
     default_error_messages = {
         "should_exist": "Time period alias does not exist: {name!r}",
         "should_not_exist": "Time period alias {name!r} already exists.",
+        "should_not_be_builtin": "Time period alias {name!r} can't be a builtin",
     }
 
     def __init__(  # type:ignore[no-untyped-def]
@@ -664,10 +665,14 @@ class TimePeriodAlias(fields.String):
         example,
         required=True,
         validate=None,
-        should_exist: bool = True,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "should_exist_and_should_not_be_builtin",
+        ] = "should_exist",
         **kwargs,
     ):
-        self._should_exist = should_exist
+        self._presence = presence
         super().__init__(
             example=example,
             required=required,
@@ -681,10 +686,18 @@ class TimePeriodAlias(fields.String):
         # Empty String because validation works for non-timeperiod alias & time period name is
         # verified separately
         _new_entry, _ = is_alias_used("timeperiods", "", value)
-        if self._should_exist and _new_entry:
+
+        if self._presence == "should_exist" and _new_entry:
             raise self.make_error("should_exist", name=value)
-        if not self._should_exist and not _new_entry:
+
+        if self._presence == "should_not_exist" and not _new_entry:
             raise self.make_error("should_not_exist", name=value)
+
+        if self._presence == "should_exist_and_should_not_be_builtin":
+            if _new_entry:
+                raise self.make_error("should_exist", name=value)
+            if value == "Always":
+                raise self.make_error("should_not_be_builtin", name=value)
 
 
 class TimeRange(BaseSchema):
@@ -741,7 +754,7 @@ class InputTimePeriod(BaseSchema):
         example="alias",
         description="An alias for the time period.",
         required=True,
-        should_exist=False,
+        presence="should_not_exist",
     )
     active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),
@@ -755,13 +768,12 @@ class InputTimePeriod(BaseSchema):
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
         description="A list of additional time ranges to be added.",
     )
-
     exclude = fields.List(  # type: ignore[assignment]
         TimePeriodAlias(
             example="alias",
             description="The alias for a time period.",
             required=True,
-            should_exist=True,
+            presence="should_exist_and_should_not_be_builtin",
         ),
         example=["alias"],
         description="A list of time period aliases whose periods are excluded.",
@@ -774,7 +786,7 @@ class UpdateTimePeriod(BaseSchema):
         example="alias",
         description="An alias for the time period",
         required=False,
-        should_exist=False,
+        presence="should_not_exist",
     )
     active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),

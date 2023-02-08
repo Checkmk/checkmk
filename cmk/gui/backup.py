@@ -2140,7 +2140,10 @@ class PageBackupRestore:
                     passphrase = PasswordType(value["passphrase"])
 
                     # Validate the passphrase
-                    key_mgmt.decrypt_private_key(key.private_key, passphrase)
+                    try:
+                        key.to_certificate_with_private_key(passphrase)
+                    except ValueError:
+                        raise MKUserError("_key_p_passphrase", _("Invalid pass phrase"))
 
                     transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()

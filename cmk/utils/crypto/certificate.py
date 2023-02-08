@@ -32,6 +32,7 @@ RsaPublicKey/RsaPrivateKey
 from __future__ import annotations
 
 import contextlib
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple, NewType, overload
@@ -94,6 +95,14 @@ class InvalidExpiryError(MKException):
     """The certificate is either not yet valid or not valid anymore"""
 
 
+class WrongPasswordError(MKException):
+    """The private key could not be decrypted, probably due to a wrong password"""
+
+
+class InvalidPEMError(MKException):
+    """The PEM is invalid"""
+
+
 class CertificateWithPrivateKey(NamedTuple):
     """A bundle of a certificate and its matching private key"""
 
@@ -133,6 +142,43 @@ class CertificateWithPrivateKey(NamedTuple):
         This _should_ be the public key that belongs to the private key as well.
         """
         return self.certificate.public_key
+
+    @classmethod
+    def load_combined_file_content(
+        cls, content: str, passphrase: Password | None
+    ) -> CertificateWithPrivateKey:
+        """load a keypair from the contents of a "combined" file (a file
+        containing cert and private key"""
+        if (
+            cert_match := re.search(
+                r"-----BEGIN CERTIFICATE-----[\s\w+/=]+-----END CERTIFICATE-----", content
+            )
+        ) is None:
+            raise ValueError("Could not find certificate")
+        cert = Certificate.load_pem(CertificatePEM(cert_match.group(0)))
+
+        if passphrase is not None:
+            if (
+                key_match := re.search(
+                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",
+                    content,
+                )
+            ) is None:
+                raise ValueError("Could not find encrypted private key")
+            key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
+        else:
+            if (
+                key_match := re.search(
+                    r"-----BEGIN PRIVATE KEY-----[\s\w+/=]+-----END PRIVATE KEY-----", content
+                )
+            ) is None:
+                raise ValueError("Could not find private key")
+            key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
+
+        return cls(
+            certificate=cert,
+            private_key=key,
+        )
 
 
 class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
@@ -340,6 +386,10 @@ class Certificate:
     def organization_name(self) -> str:
         return self._get_name_attribute(x509.oid.NameOID.ORGANIZATION_NAME)
 
+    @property
+    def not_valid_before(self) -> datetime:
+        return self._cert.not_valid_before
+
     def verify_is_signed_by(self, signer: Certificate) -> None:
         """
         Verify that this certificate was signed by `signer`.
@@ -509,10 +559,47 @@ class RsaPrivateKey:
         Decode a PKCS8 PEM encoded RSA private key.
 
         `password` can be given if the key is encrypted.
+        >>> RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
+        Traceback (most recent call last):
+            ...
+        cmk.utils.crypto.certificate.InvalidPEMError
+        >>> pem = EncryptedPrivateKeyPEM(
+        ...     "\\n".join([
+        ...         "-----BEGIN ENCRYPTED PRIVATE KEY-----",
+        ...         "MIIC3TBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIMRfolchikB0CAggA",
+        ...         "MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBBvZ2ZdTgc5U+OgzNvBs3cXBIIC",
+        ...         "gBe7tt6aHu+sfCvU8EzFqVbkf3f3qt6P/YEJZu4zXeGXrE+4D7E64PYooqGk+ZvU",
+        ...         "/xyqHNoRzbAGEAqqEsMhZxjhQbgLmWVqGCJrqkkl8d5UlcG661AuevhYqIW8D3Bk",
+        ...         "PfezIOnL+tDJuNb8y3KgQU0mqjUZ/BFLy6uTm6hQWeBluU5xtJ3C59o2JCP3pQwz",
+        ...         "5V/EuLu0nLRSxCxDGcZqCr0s5A0AGv4U7xA9LEgER+ZuXLa2m+zp8VI8aR+1zUp+",
+        ...         "lWq4rFY2UnA3DNayS/5QV0ljgDbE8Bzje6dwDhRiFUhgIwHa4C6EEDTajAXxbJEz",
+        ...         "JebDaz9HLUMbfFdE2LYjagQx/kopb35eZUihZs3uHZXgXCQzeaaG7bunPBdiCuML",
+        ...         "n0Cg+h13PmuH4eXuzcLEvwGzJrBrhenuYs/Vp9PYhwI7gIq+pqx7cgBprOge4xqM",
+        ...         "gZbyhYoWCITEMg6lMYga1uZuBtvkel7/0PtC35qxdJyo5AEUCwSisY//t7oZownH",
+        ...         "e8RlioxKnCisNxtcMYkPLmU68HNklZSX4/FrSd9zrWrpxC9XKKYeixe/RZPApeXO",
+        ...         "phVLXl8KaX/xEAuonEZXH9XaZRnYA1Lg4Hl3lfbbHVffet9X1jpRRo4RCuQ+yQrJ",
+        ...         "+YvX8SvnNAYHB1Pfp6aEqauUBR6FisUhHx2xahvnJ8y1GFNwY1VUEDdB63Ai0JVK",
+        ...         "zIzEXU8/psX8xDh5Gm+n4ZVkgbuJQdvQgYLNT6vEglytEuJXYKFZQY4zX8J+vc3N",
+        ...         "AVqHeoR61JEG+AcMdUgg2bO3vYorcQ8b3kwKkZzoBNeghMl6IS0Lj5tLVixweS5d",
+        ...         "Rnp7GPpozA4jOM89/WEk+LE=",
+        ...         "-----END ENCRYPTED PRIVATE KEY-----"
+        ...     ])
+        ... )
+        >>> RsaPrivateKey.load_pem(pem, Password("foo"))
+        <cmk.utils.crypto.certificate.RsaPrivateKey object at 0x...>
+        >>> RsaPrivateKey.load_pem(pem, Password("not foo"))
+        Traceback (most recent call last):
+            ...
+        cmk.utils.crypto.certificate.WrongPasswordError
         """
 
         pw = password.raw_bytes if password is not None else None
-        return RsaPrivateKey(serialization.load_pem_private_key(pem_data.bytes, password=pw))
+        try:
+            return RsaPrivateKey(serialization.load_pem_private_key(pem_data.bytes, password=pw))
+        except ValueError as exception:
+            if str(exception) == "Bad decrypt. Incorrect password?":
+                raise WrongPasswordError
+            raise InvalidPEMError
 
     @overload
     def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM:

@@ -20,6 +20,7 @@ from cmk.utils.crypto.certificate import (
     PersistedCertificateWithPrivateKey,
     RsaPrivateKey,
     Signature,
+    WrongPasswordError,
 )
 from cmk.utils.crypto.password import Password
 
@@ -140,7 +141,7 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
     pem_enc = key.dump_pem(Password("verysecure"))
     assert pem_enc.bytes.startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(WrongPasswordError):
         RsaPrivateKey.load_pem(pem_enc, Password("wrong"))
 
     loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))
@@ -156,3 +157,37 @@ def test_verify_rsa_key(data: bytes) -> None:
 
     with pytest.raises(InvalidSignatureError):
         private_key.public_key.verify(Signature(b"nope"), data, HashAlgorithm.Sha512)
+
+
+def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
+    pw = Password("unittest")
+    with pytest.raises(ValueError, match="Could not find certificate"):
+        CertificateWithPrivateKey.load_combined_file_content("", None)
+
+    with pytest.raises(ValueError, match="Unable to load certificate."):
+        CertificateWithPrivateKey.load_combined_file_content(
+            "-----BEGIN CERTIFICATE-----a-----END CERTIFICATE-----", None
+        )
+
+    file_content = self_signed_cert.certificate.dump_pem().str
+    with pytest.raises(ValueError, match="Could not find private key"):
+        CertificateWithPrivateKey.load_combined_file_content(file_content, None)
+    with pytest.raises(ValueError, match="Could not find encrypted private key"):
+        CertificateWithPrivateKey.load_combined_file_content(file_content, pw)
+
+    assert (
+        CertificateWithPrivateKey.load_combined_file_content(
+            file_content + "\n" + self_signed_cert.private_key.dump_pem(None).str, None
+        )
+        .certificate.dump_pem()
+        .str
+        == self_signed_cert.certificate.dump_pem().str
+    )
+    assert (
+        CertificateWithPrivateKey.load_combined_file_content(
+            file_content + "\n" + self_signed_cert.private_key.dump_pem(pw).str, pw
+        )
+        .certificate.dump_pem()
+        .str
+        == self_signed_cert.certificate.dump_pem().str
+    )

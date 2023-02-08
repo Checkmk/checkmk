@@ -15,7 +15,15 @@ from typing import Any, Literal, NamedTuple, TypedDict, Union
 from pydantic import BaseModel
 
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.crypto.password import PasswordHash
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+    EncryptedPrivateKeyPEM,
+    RsaPrivateKey,
+)
+from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.labels import Labels
 from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import (
@@ -746,6 +754,20 @@ class Key(BaseModel):
     # to initialize it for all existing keys assuming it was already downloaded. It is still only
     # used in the context of the backup keys.
     not_downloaded: bool = False
+
+    def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
+        return CertificateWithPrivateKey(
+            certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
+            private_key=RsaPrivateKey.load_pem(
+                EncryptedPrivateKeyPEM(self.private_key), passphrase
+            ),
+        )
+
+    def fingerprint(self, algorithm: HashAlgorithm) -> str:
+        """return the fingerprint aka hash of the certificate as a hey string"""
+        return (
+            Certificate.load_pem(CertificatePEM(self.certificate)).fingerprint(algorithm).hex(":")
+        )
 
 
 GlobalSettings = Mapping[str, Any]

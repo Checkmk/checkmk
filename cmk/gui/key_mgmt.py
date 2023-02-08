@@ -9,13 +9,16 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-from OpenSSL import crypto
-
 from livestatus import SiteId
 
 import cmk.utils.render
 import cmk.utils.store as store
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.certificate import (
+    CertificateWithPrivateKey,
+    InvalidPEMError,
+    WrongPasswordError,
+)
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -78,21 +81,30 @@ class KeypairStore:
     def choices(self) -> list[tuple[str, str]]:
         choices = []
         for key in self.load().values():
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
-            digest = cert.digest("md5").decode("ascii")
-            choices.append((digest, key.alias))
-
+            choices.append((key.fingerprint(HashAlgorithm.MD5), key.alias))
         return sorted(choices, key=lambda x: x[1])
 
     def get_key_by_digest(self, digest: str) -> tuple[int, Key]:
         for key_id, key in self.load().items():
-            other_cert = crypto.load_certificate(
-                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
-            )
-            other_digest = other_cert.digest("md5").decode("ascii")
-            if other_digest == digest:
+            if key.fingerprint(HashAlgorithm.MD5) == digest:
                 return key_id, key
         raise KeyError()
+
+    def add(self, key: Key) -> None:
+        keys = self.load()
+        new_id = max(keys, default=0) + 1
+
+        this_digest = key.fingerprint(HashAlgorithm.MD5)
+        for key_id, stored_key in keys.items():
+            if stored_key.fingerprint(HashAlgorithm.MD5) == this_digest:
+                raise MKUserError(
+                    None,
+                    _("The key / certificate already exists (Key: %d, Description: %s)")
+                    % (key_id, stored_key.alias),
+                )
+
+        keys[new_id] = key
+        self.save(keys)
 
 
 class PageKeyManagement:
@@ -188,8 +200,6 @@ class PageKeyManagement:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
-                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
-
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
@@ -218,7 +228,7 @@ class PageKeyManagement:
                 table.cell(_("Description"), key.alias)
                 table.cell(_("Created"), cmk.utils.render.date(key.date))
                 table.cell(_("By"), key.owner)
-                table.cell(_("Digest (MD5)"), cert.digest("md5").decode("ascii"))
+                table.cell(_("Digest (MD5)"), key.fingerprint(HashAlgorithm.MD5))
 
 
 class PageEditKey:
@@ -327,15 +337,11 @@ class PageUploadKey:
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
-            if (
-                not key_file.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----\n")
-                or "-----END ENCRYPTED PRIVATE KEY-----\n" not in key_file
-                or "-----BEGIN CERTIFICATE-----\n" not in key_file
-                or not key_file.endswith("-----END CERTIFICATE-----\n")
-            ):
+            try:
+                self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
+            except InvalidPEMError:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
-            self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -356,54 +362,21 @@ class PageUploadKey:
         return cert_spec[1]
 
     def _upload_key(self, key_file: str, alias: str, passphrase: PasswordType) -> None:
-        keys = self.key_store.load()
-
-        new_id = 1
-        for key_id in keys:
-            new_id = max(new_id, key_id + 1)
-
-        certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file.encode("ascii"))
-
-        this_digest = certificate.digest("md5").decode("ascii")
-        for key_id, key in keys.items():
-            other_cert = crypto.load_certificate(
-                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
-            )
-            other_digest = other_cert.digest("md5").decode("ascii")
-            if other_digest == this_digest:
-                raise MKUserError(
-                    None,
-                    _("The key / certificate already exists (Key: %d, Description: %s)")
-                    % (key_id, key.alias),
-                )
-
-        # Use time from certificate
-        def parse_asn1_generalized_time(timestr: str) -> time.struct_time:
-            return time.strptime(timestr, "%Y%m%d%H%M%SZ")
-
-        not_before = certificate.get_notBefore()
-        assert not_before is not None  # TODO: Why is this true?
-        created = time.mktime(parse_asn1_generalized_time(not_before.decode("ascii")))
-
-        # Check for valid passphrase
-        decrypt_private_key(key_file, passphrase)
-
-        # Split PEM for storing separated
-        parts = key_file.split("-----END ENCRYPTED PRIVATE KEY-----\n", 1)
-        key_pem = parts[0] + "-----END ENCRYPTED PRIVATE KEY-----\n"
-        cert_pem = parts[1]
+        # This will raise various ValueErrors, if the cert is not valid, if the passphrase is wrong, etc.
+        try:
+            key_pair = CertificateWithPrivateKey.load_combined_file_content(key_file, passphrase)
+        except WrongPasswordError:
+            raise MKUserError("key_p_passphrase", "Invalid pass phrase")
 
         key = Key(
-            certificate=cert_pem,
-            private_key=key_pem,
+            certificate=key_pair.certificate.dump_pem().str,
+            private_key=key_pair.private_key.dump_pem(passphrase).str,
             alias=alias,
             owner=user.ident,
-            date=created,
+            date=key_pair.certificate.not_valid_before.timestamp(),
             not_downloaded=False,
         )
-
-        keys[new_id] = key
-        self.key_store.save(keys)
+        self.key_store.add(key)
 
     def page(self) -> None:
         html.begin_form("key", method="POST")
@@ -481,11 +454,13 @@ class PageDownloadKey:
             if key_id not in keys:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 
-            private_key = keys[key_id].private_key
-
             value = self._vs_key().from_html_vars("key")
             self._vs_key().validate_value(value, "key")
-            decrypt_private_key(private_key, value["passphrase"])
+
+            try:
+                keys[key_id].to_certificate_with_private_key(PasswordType(value["passphrase"]))
+            except ValueError:
+                raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))
 
             self._send_download(keys, key_id)
             return FinalizeRequest(code=200)
@@ -548,35 +523,3 @@ def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id:
         date=time.time(),
         not_downloaded=True,
     )
-
-
-def decrypt_private_key(encrypted_private_key: str, passphrase: PasswordType) -> crypto.PKey:
-    """return pyopenssl private key or raise an exception if the something went wrong
-
-    >>> private_key_str = "\\n".join([
-    ...   "-----BEGIN ENCRYPTED PRIVATE KEY-----",
-    ...   "MIIBvTBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQImGYj+dTTBg4CAggA",
-    ...   "MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBCcp71rLl7Qsn2ZpZmBn+dcBIIB",
-    ...   "YBGrPAdBbP+5j9iEeRgHaBSVVybjSAYr+OcsATuQR8gtIxO3q8knOFbvMv6mFqvx",
-    ...   "Lgg+urlyEfmsnzXDXD5JDBWFY9M3m9UvbcW/65o9x4Wt5fwfU3GoJIBeNgxIrYOT",
-    ...   "qYzWUnFkUocAuQt3zFK3gWgpnad3Dft/OtHRmEGjMqgVUO6Q/nJishSAQd/asB7q",
-    ...   "q+RGBQnMFHvyHJmcG6Dw/Lq8zxap9iIHpjAKM74Rv0bXwg4f1ewXW1gCQTMnNzMw",
-    ...   "vcrONRQM8nxkLjDErGiUXBtmeaenH5IJYwsg/yJxn9SXNt3RV0SbCt7T8Be4DDTd",
-    ...   "7CKc4FVjpUm1cOtutMWQDBCFlxyNtwGmG124oWKHkfTDJ+DEe5kBbBQCiLmwxJiu",
-    ...   "qQ1V2ZNUGmQhM/kDYBVX8qFo5xOrdIe25aAS2ommhxk8F8az4m7t1Wb+xJ7CIX20",
-    ...   "IpwUtjhTGLBmA3sUN/k7Bk4=",
-    ...   "-----END ENCRYPTED PRIVATE KEY-----",
-    ... ])
-    >>> decrypt_private_key(private_key_str, PasswordType("right"))
-    <OpenSSL.crypto.PKey object at ...>
-    >>> decrypt_private_key(private_key_str, PasswordType("wrong"))
-    Traceback (most recent call last):
-        ...
-    cmk.gui.exceptions.MKUserError: Invalid pass phrase
-    """
-    try:
-        return crypto.load_privatekey(
-            crypto.FILETYPE_PEM, encrypted_private_key, passphrase.raw_bytes
-        )
-    except crypto.Error:
-        raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

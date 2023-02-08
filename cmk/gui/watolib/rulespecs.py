@@ -1121,7 +1121,7 @@ class CheckTypeGroupSelection(ElementSelection):
         self._checkgroup = checkgroup
 
     def get_elements(self):
-        checks = get_check_information_cached().plugin_infos
+        checks = get_check_information_cached()
         elements = {
             cn: "%s - %s" % (cn, c["title"])
             for (cn, c) in checks.items()

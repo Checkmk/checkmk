@@ -131,11 +131,9 @@ def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str
     )
 
 
-def test_normal_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
+def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, password = with_user
-    wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
-    )
+    wsgi_app.get(f"{base}/version", headers={"Accept": "application/json"}, status=401)
 
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))

@@ -1123,7 +1123,7 @@ class CheckTypeGroupSelection(ElementSelection):
     def get_elements(self):
         checks = get_check_information_cached()
         elements = {
-            cn: "%s - %s" % (cn, c["title"])
+            str(cn): "%s - %s" % (cn, c["title"])
             for (cn, c) in checks.items()
             if c.get("group") == self._checkgroup
         }

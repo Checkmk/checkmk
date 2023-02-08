@@ -12,7 +12,7 @@ fn delete_by_uuid(uuid: &uuid::Uuid, registry: &mut config::Registry) -> AnyhowR
         Some(site_id) => registry.delete_standard_connection(&site_id),
         None => registry
             .delete_imported_connection(uuid)
-            .context(format!("No connection with UUID '{}'", uuid)),
+            .context(format!("No connection with UUID '{uuid}'")),
     }
 }
 

@@ -83,8 +83,7 @@ pub fn make_site_url(site_id: &SiteID, port: &u16) -> AnyhowResult<reqwest::Url>
         site_id.server, port, site_id.site
     ))
     .context(format!(
-        "Failed to construct a URL from {} with port {}",
-        site_id, port,
+        "Failed to construct a URL from {site_id} with port {port}",
     ))
 }
 

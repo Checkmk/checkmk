@@ -157,7 +157,7 @@ fn parse_agent_labels(s: &str) -> Result<(String, String), String> {
     // TODO(sk): better to use something more rust, splitn: split_once and collect_tuple
     match s.splitn(2, '=').collect::<Vec<&str>>()[..] {
         [a, b] => Ok((a.to_owned(), b.to_owned())),
-        _ => Err(format!("invalid KEY=VALUE: no `=` found in `{}`", s)),
+        _ => Err(format!("invalid KEY=VALUE: no `=` found in `{s}`")),
     }
 }
 

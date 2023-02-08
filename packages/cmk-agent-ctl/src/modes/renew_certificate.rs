@@ -235,7 +235,7 @@ mod test_renew_certificate {
         _renew_certificate(&mut reg, &uuid_push.to_string(), &test_api).unwrap();
         assert!(
             reg.push_connections().next().unwrap().1.trust.certificate
-                == format!("new_cert_for_{}", uuid_push)
+                == format!("new_cert_for_{uuid_push}")
         );
         _renew_certificate(&mut reg, "server/pull-site", &test_api).unwrap();
         assert!(
@@ -245,7 +245,7 @@ mod test_renew_certificate {
                 .1
                 .trust
                 .certificate
-                == format!("new_cert_for_{}", uuid_pull)
+                == format!("new_cert_for_{uuid_pull}")
         );
         assert!(_renew_certificate(&mut reg, &uuid_imported.to_string(), &test_api).is_err());
         assert!(_renew_certificate(&mut reg, "not_a_uuid", &test_api).is_err());
@@ -306,21 +306,21 @@ mod test_renew_certificate {
             .unwrap()
             .trust;
         let (cert, uuid) = (&conn.certificate, conn.uuid);
-        assert!(cert == &format!("new_cert_for_{}", uuid));
+        assert!(cert == &format!("new_cert_for_{uuid}"));
 
         let conn = &registry
             .get(&site_spec::SiteID::from_str("server/push-site_2").unwrap())
             .unwrap()
             .trust;
         let (cert, uuid) = (&conn.certificate, conn.uuid);
-        assert!(cert == &format!("new_cert_for_{}", uuid));
+        assert!(cert == &format!("new_cert_for_{uuid}"));
 
         let conn = &registry
             .get(&site_spec::SiteID::from_str("server/pull-site_1").unwrap())
             .unwrap()
             .trust;
         let (cert, uuid) = (&conn.certificate, conn.uuid);
-        assert!(cert == &format!("new_cert_for_{}", uuid));
+        assert!(cert == &format!("new_cert_for_{uuid}"));
 
         let conn = &registry
             .get(&site_spec::SiteID::from_str("server/pull-site_2").unwrap())

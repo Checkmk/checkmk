@@ -20,7 +20,7 @@ impl InteractiveTrust {
         let x509 = pem.parse_x509()?;
         let validity = x509.validity();
 
-        eprintln!("PEM-encoded certificate:\n{}", pem_str);
+        eprintln!("PEM-encoded certificate:\n{pem_str}");
         eprintln!(
             "Issued by:\n\t{}",
             certs::common_names(x509.issuer())?.join(", ")
@@ -40,10 +40,7 @@ impl InteractiveTrust {
 
 impl TrustEstablishing for InteractiveTrust {
     fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()> {
-        eprintln!(
-            "Attempting to register at {}, port {}. Server certificate details:\n",
-            server, port,
-        );
+        eprintln!("Attempting to register at {server}, port {port}. Server certificate details:\n",);
         InteractiveTrust::display_cert(server, port)?;
         eprintln!();
         eprintln!("Do you want to establish this connection? [Y/n]");
@@ -57,8 +54,7 @@ impl TrustEstablishing for InteractiveTrust {
                 "y" | "" => return Ok(()),
                 "n" => {
                     bail!(format!(
-                        "Cannot continue without trusting {}, port {}",
-                        server, port
+                        "Cannot continue without trusting {server}, port {port}"
                     ))
                 }
                 _ => {
@@ -71,7 +67,7 @@ impl TrustEstablishing for InteractiveTrust {
 
     fn prompt_password(&self, user: &str) -> AnyhowResult<String> {
         eprintln!();
-        eprint!("Please enter password for '{}'\n> ", user);
+        eprint!("Please enter password for '{user}'\n> ");
         rpassword::read_password().context("Failed to obtain API password")
     }
 }
@@ -221,7 +217,7 @@ fn post_registration_conn_type(
             bail!(
                 "Registration declined by Checkmk instance{}",
                 if let Some(msg) = status_resp.message {
-                    format!(": {}", msg)
+                    format!(": {msg}")
                 } else {
                     "".to_string()
                 }

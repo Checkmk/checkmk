@@ -184,8 +184,7 @@ fn init_logging(
 #[cfg(unix)]
 fn become_user(username: &str) -> AnyhowResult<unistd::User> {
     let target_user = unistd::User::from_name(username)?.context(format!(
-        "Could not find dedicated Checkmk agent user {}",
-        username
+        "Could not find dedicated Checkmk agent user {username}"
     ))?;
 
     // If we already are the right user, return early. Otherwise, eg. setting the supplementary
@@ -234,7 +233,7 @@ fn determine_paths() -> AnyhowResult<PathResolver> {
 fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
     if let Err(err) = init_logging(&cli.logging_level()) {
         io::stderr()
-            .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
+            .write_all(format!("Failed to initialize logging: {err:?}").as_bytes())
             .unwrap_or(());
     }
 

@@ -490,7 +490,7 @@ mod tests {
                 .local_addr()
                 .unwrap()
                 .to_string(),
-            format!("[::]:{}", port)
+            format!("[::]:{port}")
         );
     }
 
@@ -543,7 +543,7 @@ mod tests {
         }
 
         fn to_sock_addr(addr: &str) -> SocketAddr {
-            format!("{}:80", addr).parse::<SocketAddr>().unwrap()
+            format!("{addr}:80").parse::<SocketAddr>().unwrap()
         }
 
         fn to_ip_addr(addr: &str) -> IpAddr {

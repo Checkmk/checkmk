@@ -15,7 +15,7 @@ pub async fn async_collect(
 ) -> IoResult<Vec<u8>> {
     let mut agent_stream = AsyncUnixStream::connect(agent_channel).await?;
     agent_stream
-        .write_all(format!("{}\n", remote_ip).as_bytes())
+        .write_all(format!("{remote_ip}\n").as_bytes())
         .await?;
     let mut data: Vec<u8> = vec![];
     agent_stream.read_to_end(&mut data).await?;

@@ -420,11 +420,11 @@ impl Registry {
 
     pub fn delete_standard_connection(&mut self, site_id: &site_spec::SiteID) -> AnyhowResult<()> {
         if self.connections.push.remove(site_id).is_some() {
-            println!("Deleted push connection '{}'", site_id);
+            println!("Deleted push connection '{site_id}'");
             return Ok(());
         }
         if self.connections.pull.remove(site_id).is_some() {
-            println!("Deleted pull connection '{}'", site_id);
+            println!("Deleted pull connection '{site_id}'");
             return Ok(());
         }
         bail!("Connection '{}' not found", site_id)
@@ -432,7 +432,7 @@ impl Registry {
 
     pub fn delete_imported_connection(&mut self, uuid: &uuid::Uuid) -> AnyhowResult<()> {
         if self.connections.pull_imported.remove(uuid) {
-            println!("Deleted imported connection '{}'", uuid);
+            println!("Deleted imported connection '{uuid}'");
             return Ok(());
         };
         bail!("Imported pull connection with UUID {} not found", uuid)
@@ -1144,7 +1144,7 @@ mod test_registry {
         let uuid = uuid::Uuid::new_v4();
         assert_eq!(
             format!("{}", reg.delete_imported_connection(&uuid).unwrap_err()),
-            format!("Imported pull connection with UUID {} not found", uuid),
+            format!("Imported pull connection with UUID {uuid} not found"),
         );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);

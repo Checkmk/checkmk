@@ -762,6 +762,7 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
         std::vector<std::unique_ptr<Aggregator>> aggrs;
+        aggrs.reserve(_stats_columns.size());
         for (const auto &sc : _stats_columns) {
             aggrs.push_back(sc->createAggregator(_logger));
         }

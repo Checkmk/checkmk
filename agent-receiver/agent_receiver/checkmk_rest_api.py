@@ -25,11 +25,11 @@ class CMKEdition(Enum):
     cme = "Managed Services"
     cce = "Cloud"
 
-    def supports_registration_with_labels(self) -> bool:
+    def supports_register_new(self) -> bool:
         """
-        >>> CMKEdition["cre"].supports_registration_with_labels()
+        >>> CMKEdition.cre.supports_register_new()
         False
-        >>> CMKEdition["cce"].supports_registration_with_labels()
+        >>> CMKEdition.cce.supports_register_new()
         True
         """
         return self is CMKEdition.cce

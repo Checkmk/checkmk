@@ -49,6 +49,7 @@ def test_r4r(uuid: UUID) -> None:
             uuid=uuid,
             username="harry",
             agent_labels={"a": "b"},
+            agent_cert="cert",
         ),
     )
     r4r.write()

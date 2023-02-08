@@ -31,10 +31,11 @@ from agent_receiver.models import (
     PairingResponse,
     RegisterExistingBody,
     RegisterExistingResponse,
+    RegisterNewBody,
+    RegisterNewResponse,
     RegistrationStatus,
     RegistrationStatusEnum,
     RegistrationWithHNBody,
-    RegistrationWithLabelsBody,
     RenewCertResponse,
     RequestForRegistration,
 )
@@ -195,41 +196,56 @@ async def register_with_hostname(
 
 
 @AGENT_RECEIVER_APP.post(
-    "/register_with_labels",
-    status_code=HTTP_204_NO_CONTENT,
+    "/register_new",
+    response_model=RegisterNewResponse,
 )
-async def register_with_labels(
+async def register_new(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
-    registration_body: RegistrationWithLabelsBody,
-) -> Response:
-    if not (
-        edition := cmk_edition(
-            f"uuid={registration_body.uuid} Querying Checkmk edition failed",
-            credentials,
-        )
-    ).supports_registration_with_labels():
-        logger.error(
-            "uuid=%s Registration with labels not supported",
-            registration_body.uuid,
-        )
-        raise HTTPException(
-            status_code=HTTP_501_NOT_IMPLEMENTED,
-            detail=f"The Checkmk {edition.value} edition does not support registration with agent labels",
-        )
+    registration_body: RegisterNewBody,
+) -> RegisterNewResponse:
+    _validate_is_cce(credentials, registration_body.uuid)
+    _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
+
+    root_cert = _pem_serizialized_site_root_cert()
+
     R4R(
         status=RegistrationStatusEnum.NEW,
         request=RequestForRegistration(
             uuid=registration_body.uuid,
             username=credentials.username,
             agent_labels=registration_body.agent_labels,
+            agent_cert=serialize_to_pem(
+                _sign_agent_csr(
+                    registration_body.uuid,
+                    registration_body.csr,
+                )
+            ),
         ),
     ).write()
     logger.info(
         "uuid=%s Stored new request for registration",
         registration_body.uuid,
     )
-    return Response(status_code=HTTP_204_NO_CONTENT)
+
+    return RegisterNewResponse(root_cert=root_cert)
+
+
+def _validate_is_cce(credentials: HTTPBasicCredentials, uuid: UUID) -> None:
+    if not (
+        edition := cmk_edition(
+            f"uuid={uuid} Querying Checkmk edition failed",
+            credentials,
+        )
+    ).supports_register_new():
+        logger.error(
+            "uuid=%s Registration of new hosts not suppored",
+            uuid,
+        )
+        raise HTTPException(
+            status_code=HTTP_501_NOT_IMPLEMENTED,
+            detail=f"The Checkmk {edition.value} edition does not support registration of new hosts",
+        )
 
 
 def _store_agent_data(

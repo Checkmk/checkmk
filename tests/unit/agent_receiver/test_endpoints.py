@@ -266,10 +266,11 @@ def test_register_register_with_hostname_invalid(
     assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
 
 
-def test_register_with_labels_unauthenticated(
+def test_register_new_unauthenticated(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID,
+    serialized_csr: str,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
@@ -279,51 +280,77 @@ def test_register_with_labels_unauthenticated(
         ),
     )
     response = client.post(
-        "/register_with_labels",
+        "/register_new",
         auth=("herbert", "joergl"),
         json={
             "uuid": str(uuid),
             "agent_labels": {},
+            "csr": serialized_csr,
         },
     )
     assert response.status_code == 401
     assert response.json() == {"detail": "User authentication failed"}
 
 
-def test_register_with_labels_cre(
+def test_register_new_cre(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID,
+    serialized_csr: str,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.cre,
     )
     response = client.post(
-        "/register_with_labels",
+        "/register_new",
         auth=("herbert", "joergl"),
         json={
             "uuid": str(uuid),
             "agent_labels": {"a": "b"},
+            "csr": serialized_csr,
         },
     )
     assert response.status_code == 501
     assert response.json() == {
-        "detail": "The Checkmk Raw edition does not support registration with agent labels"
+        "detail": "The Checkmk Raw edition does not support registration of new hosts"
     }
 
 
-def _test_register_with_labels(
+def test_register_new_uuid_csr_mismatch(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    serialized_csr: str,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.cce,
     )
     response = client.post(
-        "/register_with_labels",
+        "/register_new",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid4()),
+            "agent_labels": {},
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 400
+    assert "does not match" in response.json()["detail"]
+
+
+def _test_register_new(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+    serialized_csr: str,
+) -> None:
+    mocker.patch(
+        "agent_receiver.endpoints.cmk_edition",
+        return_value=CMKEdition.cce,
+    )
+    response = client.post(
+        "/register_new",
         auth=("monitoring", "supersafe"),
         json={
             "uuid": str(uuid),
@@ -331,9 +358,12 @@ def _test_register_with_labels(
                 "a": "b",
                 "c": "d",
             },
+            "csr": serialized_csr,
         },
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
+    assert set(response.json()) == {"root_cert"}
+
     triggered_r4r = R4R.read(uuid)
     assert triggered_r4r
     assert triggered_r4r.status is RegistrationStatusEnum.NEW
@@ -343,32 +373,37 @@ def _test_register_with_labels(
         "a": "b",
         "c": "d",
     }
+    assert triggered_r4r.request.agent_cert.startswith("-----BEGIN CERTIFICATE-----")
 
 
-def test_register_with_labels_folder_missing(
+def test_register_new_folder_missing(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID,
+    serialized_csr: str,
 ) -> None:
     assert not (site_context.r4r_dir() / "NEW").exists()
-    _test_register_with_labels(
+    _test_register_new(
         mocker,
         client,
         uuid,
+        serialized_csr,
     )
     assert oct(stat.S_IMODE((site_context.r4r_dir() / "NEW").stat().st_mode)) == "0o770"
 
 
-def test_register_with_labels_folder_exists(
+def test_register_new_folder_exists(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID,
+    serialized_csr: str,
 ) -> None:
     (site_context.r4r_dir() / "NEW").mkdir(parents=True)
-    _test_register_with_labels(
+    _test_register_new(
         mocker,
         client,
         uuid,
+        serialized_csr,
     )
 
 
@@ -573,6 +608,7 @@ def test_registration_status_declined(
                 "value": "BAR",
                 "readable": "Registration request declined",
             },
+            agent_cert="cert",
         ),
     ).write()
 
@@ -616,6 +652,7 @@ def test_registration_status_push_host(
             uuid=uuid,
             username="harry",
             agent_labels={},
+            agent_cert="cert",
         ),
     ).write()
 

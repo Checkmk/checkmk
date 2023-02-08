@@ -37,13 +37,19 @@ rest_api -> agent_receiver: OK
 agent_receiver -> agent: OK
 
 
-== register_with_labels ==
+== register_new ==
 
-agent -> agent_receiver: /register_with_labels (Credentials, uuid, agent_labels)
+agent -> agent_receiver: /register_new (Credentials, uuid, csr, agent_labels)
 agent_receiver -> rest_api: /version (Credentials)
 rest_api -> agent_receiver: Version
-agent_receiver -> agent_receiver: Write registration file (uuid, agent_labels)
-agent_receiver -> agent: OK
+agent_receiver -> agent_receiver: Edition supports register_new?
+agent_receiver -> agent_receiver: Root Certificate
+agent_receiver -> rest_api: /agent_controller_certificates_settings (Credentials)
+rest_api -> agent_receiver: Agent controller certificate settings
+agent_receiver -> agent_receiver: Sign CSR (Agent controller certificate settings)
+agent_receiver -> agent_receiver: Signed Certificate
+agent_receiver -> agent_receiver: Write registration file (Username, uuid, agent_labels, signed certificate)
+agent_receiver -> agent: Root Certificate
 
 
 == agent_data ==

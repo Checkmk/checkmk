@@ -126,15 +126,21 @@ class RegisterExistingResponse(BaseModel):
     connection_mode: ConnectionMode
 
 
-class RegistrationWithLabelsBody(BaseModel):
+class RegisterNewBody(BaseModel):
     uuid: UUID
+    csr: CsrField
     agent_labels: Mapping[str, str]
+
+
+class RegisterNewResponse(BaseModel):
+    root_cert: str
 
 
 class RequestForRegistration(BaseModel):
     uuid: UUID
     username: str
     agent_labels: Mapping[str, str]
+    agent_cert: str
     state: Mapping[str, str] | None = None
 
     def rejection_notice(self) -> str | None:

@@ -4992,6 +4992,10 @@ msgstr "Sempre a granel"
 msgid "Always install Python with agent"
 msgstr "Sempre instalar o Python com o agente"
 
+#, fuzzy
+msgid "Always keep vanished clustered services"
+msgstr "Serviços agrupados indecisos"
+
 msgid "Always report OK"
 msgstr "Sempre informe OK"
 
@@ -7560,6 +7564,17 @@ msgstr ""
 "configuradas. Mas você pode configurar cada site para sincronizar os "
 "usuários com todas as conexões configuradas ou com uma lista específica de "
 "conexões."
+
+msgid ""
+"By default we keep a record of vanished services on the node if they are "
+"assigned to a cluster. When a clustered service switches from one node to "
+"another, it might not be seen on either node for one check cycle. Keeping "
+"clustered services indefinitely keeps us from loosing them in this case. "
+"However this means that truly vanished clustered servces will never be "
+"removed from the cluster. If you choose to include clustered service in the "
+"removal operation, vanished services will be removed from clusters, at the "
+"risk of loosing services due to the described race condition."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -15410,6 +15425,10 @@ msgstr ""
 
 msgid "Distinguished name for binding"
 msgstr "Nome distinto para encadernação"
+
+#, fuzzy
+msgid "Distribute response"
+msgstr "resposta de ocultação"
 
 msgid "Distributed monitoring"
 msgstr "Monitoramento distribuído"
@@ -25576,6 +25595,10 @@ msgstr ""
 
 msgid "Include unmonitored time"
 msgstr "Incluir o tempo não monitorado"
+
+#, fuzzy
+msgid "Include vanished clustered services during removal"
+msgstr "Serviços agrupados indecisos"
 
 msgid "Inclusion patterns"
 msgstr "Padrões de inclusão"
@@ -41309,6 +41332,10 @@ msgstr "Salvar e testar"
 msgid "Save filters & go to designer"
 msgstr "Guardar filtros & ir para designer"
 
+#, fuzzy
+msgid "Save response"
+msgstr "resposta de ocultação"
+
 #, python-format
 msgid "Save this %s and go to"
 msgstr "Guarde esta %s e vá para"
@@ -46302,8 +46329,8 @@ msgid "Submit report"
 msgstr "Submeter relatório"
 
 #, fuzzy
-msgid "Submit verification request"
-msgstr "Regras de notificação global"
+msgid "Submit request and get response"
+msgstr "Submeter relatório de utilização da licença"
 
 msgid "Submitting crash report..."
 msgstr "Apresentar relatório de acidente..."
@@ -59931,6 +59958,10 @@ msgid "Vanished (checked, but no longer exist)"
 msgstr "Serviços desaparecidos (monitorados, mas que já não existem)"
 
 #, fuzzy
+msgid "Vanished clustered services"
+msgstr "Serviços agrupados indecisos"
+
+#, fuzzy
 msgid "Vanished clustered services - located on cluster host"
 msgstr "Serviços em cluster desaparecidos (localizados em cluster host)"
 
@@ -66452,6 +66483,11 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
+#, fuzzy
+#~| msgid "Global notification rules"
+#~ msgid "Submit verification request"
+#~ msgstr "Regras de notificação global"
+
 #~ msgid "Physical memory usage"
 #~ msgstr "Uso de memória física"
 
@@ -67416,9 +67452,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Report usage"
 #~ msgstr "Relatar a utilização"
-
-#~ msgid "Submit license usage report"
-#~ msgstr "Submeter relatório de utilização da licença"
 
 #~ msgid "Submit or download"
 #~ msgstr "Submeter ou descarregar"

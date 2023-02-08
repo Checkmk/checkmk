@@ -5002,6 +5002,10 @@ msgstr "Altijd bulk"
 msgid "Always install Python with agent"
 msgstr "Installeer Python altijd met agent"
 
+#, fuzzy
+msgid "Always keep vanished clustered services"
+msgstr "Niet-besloten geclusterde diensten"
+
 msgid "Always report OK"
 msgstr "Altijd OK melden"
 
@@ -7556,6 +7560,17 @@ msgstr ""
 "verbindingen. Maar u kunt elke site zo instellen dat de gebruikers worden "
 "gesynchroniseerd met alle geconfigureerde verbindingen of met een specifieke "
 "lijst van verbindingen."
+
+msgid ""
+"By default we keep a record of vanished services on the node if they are "
+"assigned to a cluster. When a clustered service switches from one node to "
+"another, it might not be seen on either node for one check cycle. Keeping "
+"clustered services indefinitely keeps us from loosing them in this case. "
+"However this means that truly vanished clustered servces will never be "
+"removed from the cluster. If you choose to include clustered service in the "
+"removal operation, vanished services will be removed from clusters, at the "
+"risk of loosing services due to the described race condition."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -15319,6 +15334,10 @@ msgstr ""
 
 msgid "Distinguished name for binding"
 msgstr "Onderscheidende naam voor binding"
+
+#, fuzzy
+msgid "Distribute response"
+msgstr "antwoord verbergen"
 
 msgid "Distributed monitoring"
 msgstr "Gedistribueerde bewaking"
@@ -25450,6 +25469,10 @@ msgstr ""
 
 msgid "Include unmonitored time"
 msgstr "Niet-gecontroleerde tijd opnemen"
+
+#, fuzzy
+msgid "Include vanished clustered services during removal"
+msgstr "Niet-besloten geclusterde diensten"
 
 msgid "Inclusion patterns"
 msgstr "Insluitingspatronen"
@@ -40922,6 +40945,10 @@ msgstr "Opslaan en testen"
 msgid "Save filters & go to designer"
 msgstr "Bewaar filters & ga naar ontwerper"
 
+#, fuzzy
+msgid "Save response"
+msgstr "antwoord verbergen"
+
 #, python-format
 msgid "Save this %s and go to"
 msgstr "Sla deze %s op en ga naar"
@@ -45904,8 +45931,8 @@ msgid "Submit report"
 msgstr "Verslag indienen"
 
 #, fuzzy
-msgid "Submit verification request"
-msgstr "Globale kennisgevingsregels"
+msgid "Submit request and get response"
+msgstr "Rapportage licentiegebruik indienen"
 
 msgid "Submitting crash report..."
 msgstr "Het indienen van een crash rapport..."
@@ -59585,6 +59612,10 @@ msgstr "Verdwenen"
 msgid "Vanished (checked, but no longer exist)"
 msgstr "Verdwenen (gecontroleerd, maar bestaat niet meer)"
 
+#, fuzzy
+msgid "Vanished clustered services"
+msgstr "Niet-besloten geclusterde diensten"
+
 msgid "Vanished clustered services - located on cluster host"
 msgstr "Verdwenen geclusterde diensten - gelokaliseerd op cluster host"
 
@@ -66151,6 +66182,11 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
+#, fuzzy
+#~| msgid "Global notification rules"
+#~ msgid "Submit verification request"
+#~ msgstr "Globale kennisgevingsregels"
+
 #~ msgid "Physical memory usage"
 #~ msgstr "Fysiek geheugengebruik"
 
@@ -67082,9 +67118,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Report usage"
 #~ msgstr "Gebruik rapporteren"
-
-#~ msgid "Submit license usage report"
-#~ msgstr "Rapportage licentiegebruik indienen"
 
 #~ msgid "Submit or download"
 #~ msgstr "Verzenden of downloaden"

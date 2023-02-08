@@ -4801,6 +4801,10 @@ msgstr "常にバルク"
 msgid "Always install Python with agent"
 msgstr "常にエージェントと一緒にPythonをインストールする"
 
+#, fuzzy
+msgid "Always keep vanished clustered services"
+msgstr "未定のクラスター化されたサービス"
+
 msgid "Always report OK"
 msgstr "常にOKを報告する"
 
@@ -7258,6 +7262,17 @@ msgstr ""
 "とに注意してください。<br>リモートサイトは、構成された接続との自動ユーザー同"
 "期を実行しません。ただし、構成済みのすべての接続または特定の接続リストとユー"
 "ザーを同期するように各サイトを構成できます。"
+
+msgid ""
+"By default we keep a record of vanished services on the node if they are "
+"assigned to a cluster. When a clustered service switches from one node to "
+"another, it might not be seen on either node for one check cycle. Keeping "
+"clustered services indefinitely keeps us from loosing them in this case. "
+"However this means that truly vanished clustered servces will never be "
+"removed from the cluster. If you choose to include clustered service in the "
+"removal operation, vanished services will be removed from clusters, at the "
+"risk of loosing services due to the described race condition."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -14727,6 +14742,10 @@ msgstr ""
 
 msgid "Distinguished name for binding"
 msgstr "バインディングの識別名"
+
+#, fuzzy
+msgid "Distribute response"
+msgstr "応答を非表示"
 
 msgid "Distributed monitoring"
 msgstr "分散監視"
@@ -24364,6 +24383,10 @@ msgstr ""
 
 msgid "Include unmonitored time"
 msgstr "監視されていない時間を含める"
+
+#, fuzzy
+msgid "Include vanished clustered services during removal"
+msgstr "未定のクラスター化されたサービス"
 
 msgid "Inclusion patterns"
 msgstr "包含パターン"
@@ -39417,6 +39440,10 @@ msgstr "保存してテストする"
 msgid "Save filters & go to designer"
 msgstr "フィルタを保存してデザイナーに移動"
 
+#, fuzzy
+msgid "Save response"
+msgstr "応答を非表示"
+
 #, python-format
 msgid "Save this %s and go to"
 msgstr "この %s を保存して、"
@@ -44176,8 +44203,8 @@ msgid "Submit report"
 msgstr "レポートを送信する"
 
 #, fuzzy
-msgid "Submit verification request"
-msgstr "グローバル通知ルール"
+msgid "Submit request and get response"
+msgstr "ライセンス使用状況レポートを送信する"
 
 msgid "Submitting crash report..."
 msgstr "クラッシュレポートを送信しています..."
@@ -56737,6 +56764,10 @@ msgstr "消えた"
 msgid "Vanished (checked, but no longer exist)"
 msgstr "消失(監視されていますが、存在しません)"
 
+#, fuzzy
+msgid "Vanished clustered services"
+msgstr "未定のクラスター化されたサービス"
+
 msgid "Vanished clustered services - located on cluster host"
 msgstr "消失したクラスター化サービス -クラスターホスト上にあります"
 
@@ -62819,6 +62850,11 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, fuzzy
+#~| msgid "Global notification rules"
+#~ msgid "Submit verification request"
+#~ msgstr "グローバル通知ルール"
+
 #~ msgid "Physical memory usage"
 #~ msgstr "物理メモリ使用量"
 
@@ -63632,9 +63668,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Report usage"
 #~ msgstr "使用状況を報告する"
-
-#~ msgid "Submit license usage report"
-#~ msgstr "ライセンス使用状況レポートを送信する"
 
 #~ msgid "Submit or download"
 #~ msgstr "サブミットまたはダウンロード"

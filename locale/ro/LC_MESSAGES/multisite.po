@@ -4735,6 +4735,10 @@ msgstr ""
 msgid "Always install Python with agent"
 msgstr ""
 
+#, fuzzy
+msgid "Always keep vanished clustered services"
+msgstr "Vizibilitatea Elementelor/Serviciilor"
+
 msgid "Always report OK"
 msgstr ""
 
@@ -7139,6 +7143,17 @@ msgid ""
 "sites don't perform automatic user synchronizations with the configured "
 "connections. But you can configure each site to either synchronize the users "
 "with all configured connections or a specific list of connections."
+msgstr ""
+
+msgid ""
+"By default we keep a record of vanished services on the node if they are "
+"assigned to a cluster. When a clustered service switches from one node to "
+"another, it might not be seen on either node for one check cycle. Keeping "
+"clustered services indefinitely keeps us from loosing them in this case. "
+"However this means that truly vanished clustered servces will never be "
+"removed from the cluster. If you choose to include clustered service in the "
+"removal operation, vanished services will be removed from clusters, at the "
+"risk of loosing services due to the described race condition."
 msgstr ""
 
 #, python-brace-format
@@ -14799,6 +14814,10 @@ msgstr ""
 
 msgid "Distinguished name for binding"
 msgstr ""
+
+#, fuzzy
+msgid "Distribute response"
+msgstr "Notificari"
 
 # georgem ##############
 #, fuzzy
@@ -23967,6 +23986,10 @@ msgstr ""
 
 msgid "Include unmonitored time"
 msgstr ""
+
+#, fuzzy
+msgid "Include vanished clustered services during removal"
+msgstr "Grup nou"
 
 #, fuzzy
 msgid "Inclusion patterns"
@@ -39773,6 +39796,10 @@ msgstr "Salveaza si Testeaza"
 msgid "Save filters & go to designer"
 msgstr "Salveaza si mergi la"
 
+#, fuzzy
+msgid "Save response"
+msgstr "Notificari"
+
 #, python-format
 msgid "Save this %s and go to"
 msgstr ""
@@ -44521,8 +44548,8 @@ msgid "Submit report"
 msgstr "Adaugă element"
 
 #, fuzzy
-msgid "Submit verification request"
-msgstr "Notificari"
+msgid "Submit request and get response"
+msgstr "% utilizare"
 
 msgid "Submitting crash report..."
 msgstr ""
@@ -55915,6 +55942,10 @@ msgid "Vanished (checked, but no longer exist)"
 msgstr ""
 
 #, fuzzy
+msgid "Vanished clustered services"
+msgstr "Vizibilitatea Elementelor/Serviciilor"
+
+#, fuzzy
 msgid "Vanished clustered services - located on cluster host"
 msgstr "Grup nou"
 
@@ -61576,6 +61607,10 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Submit verification request"
+#~ msgstr "Notificari"
+
+#, fuzzy
 #~ msgid "Cannot be a certificate chain"
 #~ msgstr "Notificari"
 
@@ -61863,10 +61898,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Report usage"
-#~ msgstr "% utilizare"
-
-#, fuzzy
-#~ msgid "Submit license usage report"
 #~ msgstr "% utilizare"
 
 #, fuzzy

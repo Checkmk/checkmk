@@ -103,6 +103,7 @@ public:
 class IServiceGroup {
 public:
     virtual ~IServiceGroup() = default;
+    [[nodiscard]] virtual const void *handle() const = 0;
     virtual bool all(
         const std::function<bool(const IService &)> &pred) const = 0;
 };

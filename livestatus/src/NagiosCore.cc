@@ -19,6 +19,7 @@
 #include "NebHost.h"
 #include "NebHostGroup.h"
 #include "NebService.h"
+#include "NebServiceGroup.h"
 #include "NebTimeperiod.h"
 #include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
@@ -117,6 +118,13 @@ std::unique_ptr<const IService> NagiosCore::find_service(
 std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(
     const std::string &name) {
     return std::make_unique<NebContactGroup>(name);
+}
+
+std::unique_ptr<const IServiceGroup> NagiosCore::find_servicegroup(
+    const std::string &name) {
+    const auto *group = ::find_servicegroup(const_cast<char *>(name.c_str()));
+    return group == nullptr ? nullptr
+                            : std::make_unique<NebServiceGroup>(*group);
 }
 
 std::unique_ptr<const IContact> NagiosCore::find_contact(
@@ -276,6 +284,16 @@ bool NagiosCore::all_of_host_groups(
     const std::function<bool(const IHostGroup &)> &pred) const {
     for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
         if (!pred(NebHostGroup{*hg})) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool NagiosCore::all_of_service_groups(
+    const std::function<bool(const IServiceGroup &)> &pred) const {
+    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
+        if (!pred(NebServiceGroup{*sg})) {
             return false;
         }
     }

@@ -39,6 +39,9 @@ public:
     virtual std::unique_ptr<const IContactGroup> find_contactgroup(
         const std::string &name) = 0;
 
+    virtual std::unique_ptr<const IServiceGroup> find_servicegroup(
+        const std::string &name) = 0;
+
     [[nodiscard]] virtual std::unique_ptr<const IContact> find_contact(
         const std::string &name) const = 0;
     virtual bool all_of_contacts(
@@ -77,6 +80,9 @@ public:
 
     virtual bool all_of_host_groups(
         const std::function<bool(const IHostGroup &)> &pred) const = 0;
+
+    virtual bool all_of_service_groups(
+        const std::function<bool(const IServiceGroup &)> &pred) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

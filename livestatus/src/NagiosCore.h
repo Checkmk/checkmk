@@ -79,6 +79,8 @@ public:
         const std::string &service_description) override;
     std::unique_ptr<const IContactGroup> find_contactgroup(
         const std::string &name) override;
+    std::unique_ptr<const IServiceGroup> find_servicegroup(
+        const std::string &name) override;
 
     std::unique_ptr<const IContact> find_contact(
         const std::string &name) const override;
@@ -117,6 +119,9 @@ public:
 
     bool all_of_host_groups(
         const std::function<bool(const IHostGroup &)> &pred) const override;
+
+    bool all_of_service_groups(
+        const std::function<bool(const IServiceGroup &)> &pred) const override;
 
     bool mkeventdEnabled() override;
 

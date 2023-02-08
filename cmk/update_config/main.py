@@ -15,12 +15,10 @@ import sys
 from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
-from cmk.utils.packaging import disable, Installer, PackageName, PackagePart, PackageVersion
-from cmk.utils.packaging._reporter import files_inventory
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.version import is_raw_edition
 
@@ -32,7 +30,6 @@ from cmk.base import config as base_config
 from cmk.base.check_api import get_check_api_context
 
 from cmk.gui import main_modules
-from cmk.gui.cee.plugins.wato.mkpmanager import _PATH_CONFIG
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
@@ -42,6 +39,7 @@ from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
+from .pre_update_check import passed_pre_checks
 from .registry import update_action_registry
 from .update_state import UpdateState
 
@@ -49,7 +47,7 @@ from .update_state import UpdateState
 def main(args: Sequence[str]) -> bool:
     arguments = _parse_arguments(args)
 
-    if not _passed_pre_checks(arguments.conflict):
+    if not passed_pre_checks(arguments.conflict):
         sys.exit(
             "\nUpdate aborted due incompatible local files.\n"
             "The Checkmk configuration has not been modified.\n\n"
@@ -210,63 +208,3 @@ class ConfigUpdater:
         # EDIT: This is no longer the case; but we probably need the config for other reasons?
         base_config.load()
         base_config.load_all_agent_based_plugins(get_check_api_context)
-
-
-def _passed_pre_checks(
-    conflict_mode: Literal["ask", "install", "keepold", "abort"],
-) -> bool:
-    return _all_ui_extensions_compatible(conflict_mode)
-
-
-def _all_ui_extensions_compatible(
-    conflict_mode: Literal["ask", "install", "keepold", "abort"],
-) -> bool:
-    main_modules.load_plugins()
-    installer = Installer(paths.installed_packages_dir)
-    for mkp in files_inventory(installer, _PATH_CONFIG):
-        # mkp package file
-        if not mkp["part_id"]:
-            continue
-
-        for file, error in get_failed_plugins():
-            file_path = (
-                str(_PATH_CONFIG.get_path(PackagePart(mkp["part_id"]))) + "/" + str(mkp["file"])
-            )
-            if file_path == file:
-                # unpackaged files
-                if not (package_name := mkp["package"]):
-                    if conflict_mode in ["install", "keepold"] or (
-                        conflict_mode == "ask"
-                        and input(
-                            "Incompatible local file '%s'.\n"
-                            "Error: %s\n\n"
-                            "You can abort the update process (A) and try to fix "
-                            "the incompatibilities or continue the update (c).\n\n"
-                            "Abort the update process? [A/c] \n" % (mkp["file"], error)
-                        ).lower()
-                        in ["c", "continue"]
-                    ):
-                        continue
-                    return False
-
-                if conflict_mode in ["install", "keepold"] or (
-                    conflict_mode == "ask"
-                    and input(
-                        "Incompatible file '%s' of extension package '%s'\n"
-                        "Error: %s\n\n"
-                        "You can abort the update process (A) or disable the "
-                        "extension package (d) and continue the update process.\n"
-                        "Abort the update process? [A/d] \n" % (mkp["file"], package_name, error),
-                    ).lower()
-                    in ["d", "disable"]
-                ):
-                    disable(
-                        installer,
-                        _PATH_CONFIG,
-                        PackageName(mkp["package"]),
-                        PackageVersion(mkp["version"]),
-                    )
-                    sys.stdout.write("Disabled extension package: %s" % package_name)
-                else:
-                    return False
-    return True

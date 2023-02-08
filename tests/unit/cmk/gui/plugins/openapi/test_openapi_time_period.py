@@ -32,7 +32,7 @@ def test_openapi_time_period_time_ranges(timeperiod_client: TimePeriodTestClient
         }
     )
 
-    timeperiod_client.edit(
+    resp1 = timeperiod_client.edit(
         time_period_id="foo",
         time_period_data={
             "active_time_ranges": [{"day": "friday"}],
@@ -41,15 +41,13 @@ def test_openapi_time_period_time_ranges(timeperiod_client: TimePeriodTestClient
             ],
         },
     )
-    resp1 = timeperiod_client.get("foo")
-
     assert resp1.json["extensions"]["active_time_ranges"] == []
     assert resp1.json["extensions"]["exceptions"][0] == {
         "date": "2023-02-02",
         "time_ranges": [{"start": "18:32", "end": "21:15"}],
     }
 
-    timeperiod_client.edit(
+    resp2 = timeperiod_client.edit(
         time_period_id="foo",
         time_period_data={
             "active_time_ranges": [
@@ -59,7 +57,6 @@ def test_openapi_time_period_time_ranges(timeperiod_client: TimePeriodTestClient
         },
     )
 
-    resp2 = timeperiod_client.get("foo")
     assert resp2.json["extensions"]["active_time_ranges"][0] == {
         "day": "saturday",
         "time_ranges": [{"start": "18:11", "end": "23:45"}],
@@ -213,13 +210,11 @@ def test_openapi_timeperiod_unmodified_update(timeperiod_client: TimePeriodTestC
     resp = timeperiod_client.get(time_period_id="test_all_8x5")
     assert resp.json["extensions"] == expected_data
 
-    timeperiod_client.edit(
+    resp2 = timeperiod_client.edit(
         time_period_id="test_all_8x5",
         time_period_data={},
     )
-
-    resp = timeperiod_client.get(time_period_id="test_all_8x5")
-    assert resp.json["extensions"] == expected_data
+    assert resp2.json["extensions"] == expected_data
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

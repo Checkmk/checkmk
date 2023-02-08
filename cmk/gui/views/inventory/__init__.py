@@ -1311,7 +1311,11 @@ def _register_attribute_column(
         name,
         {
             "title": long_inventory_title,
-            "short": hint.title,
+            # For table columns or attributes we always use the long_title for the column title
+            # in order to avoid overlaps with other titles, eg.:
+            # - BIOS > Version
+            # - Firmware > Version
+            "short": hint.long_title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
             "params": Dictionary(
@@ -1417,7 +1421,11 @@ def _register_table_column(
         column,
         {
             "title": long_inventory_title,
-            "short": hint.title,
+            # For table columns or attributes we always use the long_title for the column title
+            # in order to avoid overlaps with other titles, eg.:
+            # - BIOS > Version
+            # - Firmware > Version
+            "short": hint.long_title,
             "columns": [column],
             "paint": lambda row: hint.paint_function(row.get(column)),
             "sorter": column,

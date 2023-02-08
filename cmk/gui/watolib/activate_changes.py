@@ -2339,8 +2339,20 @@ class AutomationReceiveConfigSync(AutomationCommand):
 
             self._update_config_on_remote_site(request.sync_archive, request.to_delete)
 
+            if self._need_to_update_mkps_after_sync():
+                cmk.utils.packaging.pre_update_config_actions(logger)
+
             _execute_post_config_sync_actions(request.site_id)
             return True
+
+    def _need_to_update_mkps_after_sync(self) -> bool:
+        central_version = _request.headers.get("x-checkmk-version")
+        if not central_version:
+            # should never happen (we should not be here in case of a 1.6 central)
+            raise ValueError("Request header x-checkmk-version is missing")
+        logger.debug("Local version: %s, Central version: %s", cmk_version.__version__,
+                     central_version)
+        return cmk_version.__version__ != central_version
 
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""

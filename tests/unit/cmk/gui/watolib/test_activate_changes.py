@@ -533,6 +533,9 @@ class TestAutomationReceiveConfigSync:
         # Disable for the moment, because the unit test fake environment is not ready for this yet
         monkeypatch.setattr(cmk.gui.watolib.activate_changes, "_execute_post_config_sync_actions",
                             lambda site_id: None)
+        request = Request({})
+        request.headers = {"x-checkmk-version": cmk_version.__version__}  # type: ignore[assignment]
+        monkeypatch.setattr(activate_changes, "_request", request)
 
         remote_path.mkdir(parents=True, exist_ok=True)
 

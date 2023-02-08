@@ -12,6 +12,7 @@ from uuid import UUID
 
 import requests
 from agent_receiver.log import logger
+from agent_receiver.models import ConnectionMode
 from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
@@ -134,6 +135,33 @@ def controller_certificate_settings(credentials: HTTPBasicCredentials) -> Contro
     )
     _verify_response(response, HTTPStatus.OK)
     return ControllerCertSettings.parse_obj(response.json())
+
+
+class RegisterResponse(BaseModel, frozen=True):
+    connection_mode: ConnectionMode
+
+
+@log_http_exception
+def register(
+    credentials: HTTPBasicCredentials,
+    uuid: UUID,
+    host_name: str,
+) -> RegisterResponse:
+    response = _forward_put(
+        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register/invoke",
+        credentials,
+        {
+            "uuid": str(uuid),
+        },
+    )
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        # The REST API error message is a bit obscure in this case
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Host {host_name} does not exist.",
+        )
+    _verify_response(response, HTTPStatus.OK)
+    return RegisterResponse.parse_obj(response.json())
 
 
 @log_http_exception

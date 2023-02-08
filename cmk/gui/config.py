@@ -57,9 +57,7 @@ else:
 
 # hard coded in various permissions
 default_authorized_builtin_role_ids: Final[list[RoleName]] = ["user", "admin", "guest"]
-default_unauthorized_builtin_role_ids: Final[list[RoleName]] = (
-    ["agent_registration"] if cmk_version.is_cloud_edition() else []
-)
+default_unauthorized_builtin_role_ids: Final[list[RoleName]] = ["agent_registration"]
 builtin_role_ids: Final[list[RoleName]] = [
     *default_authorized_builtin_role_ids,
     *default_unauthorized_builtin_role_ids,

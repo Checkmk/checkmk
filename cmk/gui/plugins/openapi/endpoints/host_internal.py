@@ -39,7 +39,7 @@ permission_registry.register(
         name="register_any_existing_host",
         title=_l("Register any existing host"),
         description=_l("This permission allows the registration of any existing host."),
-        defaults=["admin"],
+        defaults=["admin", "agent_registration"],
     )
 )
 
@@ -52,7 +52,7 @@ permission_registry.register(
         description=_l(
             "This permission allows the registration of any existing host the user is a contact of."
         ),
-        defaults=["admin"],
+        defaults=["admin", "agent_registration"],
     )
 )
 

@@ -16,7 +16,7 @@ from zlib import compress
 import pytest
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
-from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration
+from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
 from agent_receiver.models import ConnectionMode
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -32,6 +32,13 @@ def fixture_symlink_push_host(
     tmp_path: Path,
     uuid: UUID,
 ) -> None:
+    _symlink_push_host(tmp_path, uuid)
+
+
+def _symlink_push_host(
+    tmp_path: Path,
+    uuid: UUID,
+) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
     source.symlink_to(target_dir)
@@ -41,6 +48,70 @@ def fixture_symlink_push_host(
 def fixture_serialized_csr(uuid: UUID) -> str:
     _key, csr = generate_csr_pair(str(uuid), 512)
     return serialize_to_pem(csr)
+
+
+def test_register_existing_ok(
+    tmp_path: Path,
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+    serialized_csr: str,
+) -> None:
+    def rest_api_register_mock(*args: object, **kwargs: object) -> RegisterResponse:
+        _symlink_push_host(tmp_path, uuid)
+        return RegisterResponse(connection_mode=ConnectionMode.PULL)
+
+    mocker.patch(
+        "agent_receiver.endpoints.register",
+        rest_api_register_mock,
+    )
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "myhost",
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 200
+    assert set(response.json()) == {"root_cert", "agent_cert", "connection_mode"}
+
+
+def test_register_existing_uuid_csr_mismatch(
+    client: TestClient,
+    serialized_csr: str,
+) -> None:
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid4()),
+            "host_name": "myhost",
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 400
+    assert "does not match" in response.json()["detail"]
+
+
+# this is a regression test for CMK-11202
+def test_register_existing_hostname_invalid(
+    client: TestClient,
+    uuid: UUID,
+    serialized_csr: str,
+) -> None:
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "my/../host",
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
 
 
 def test_register_register_with_hostname_host_missing(

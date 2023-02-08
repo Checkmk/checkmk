@@ -99,6 +99,33 @@ class RegistrationWithHNBody(BaseModel):
         return v
 
 
+class RegisterExistingBody(RegistrationWithHNBody):
+    uuid: UUID
+    csr: CsrField
+    host_name: str
+
+    @validator("host_name")
+    @classmethod
+    def valid_hostname(cls, v):
+        if not _is_valid_host_name(v):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid hostname: '{v}'",
+            )
+        return v
+
+
+class ConnectionMode(Enum):
+    PULL = "pull-agent"
+    PUSH = "push-agent"
+
+
+class RegisterExistingResponse(BaseModel):
+    root_cert: str
+    agent_cert: str
+    connection_mode: ConnectionMode
+
+
 class RegistrationWithLabelsBody(BaseModel):
     uuid: UUID
     agent_labels: Mapping[str, str]
@@ -115,11 +142,6 @@ class RegistrationStatusEnum(Enum):
 class RegistrationData(NamedTuple):
     status: RegistrationStatusEnum
     message: str | None
-
-
-class ConnectionMode(Enum):
-    PULL = "pull-agent"
-    PUSH = "push-agent"
 
 
 class RegistrationStatus(BaseModel):

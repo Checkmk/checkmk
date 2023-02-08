@@ -7,6 +7,7 @@ import json
 import os
 import tempfile
 from contextlib import suppress
+from functools import lru_cache
 from pathlib import Path
 from uuid import UUID
 
@@ -19,6 +20,7 @@ from agent_receiver.checkmk_rest_api import (
     HostConfiguration,
     link_host_with_uuid,
     post_csr,
+    register,
 )
 from agent_receiver.decompression import DecompressionError, Decompressor
 from agent_receiver.log import logger
@@ -28,6 +30,8 @@ from agent_receiver.models import (
     CsrField,
     PairingBody,
     PairingResponse,
+    RegisterExistingBody,
+    RegisterExistingResponse,
     RegistrationStatus,
     RegistrationStatusEnum,
     RegistrationWithHNBody,
@@ -52,7 +56,7 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-from .certs import extract_cn_from_csr, serialize_to_pem, sign_agent_csr
+from .certs import extract_cn_from_csr, serialize_to_pem, sign_agent_csr, site_root_certificate
 
 # pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
 # pylint: disable=too-many-function-args
@@ -75,6 +79,46 @@ def _sign_agent_csr(uuid: UUID, csr_field: CsrField) -> Certificate:
             f"uuid={uuid} Querying agent controller certificate settings failed",
             internal_credentials(),
         ).lifetime_in_months,
+    )
+
+
+@lru_cache
+def _pem_serizialized_site_root_cert() -> str:
+    return serialize_to_pem(site_root_certificate())
+
+
+@AGENT_RECEIVER_APP.post(
+    "/register_existing",
+    response_model=RegisterExistingResponse,
+)
+async def register_existing(
+    *,
+    credentials: HTTPBasicCredentials = Depends(security),
+    registration_body: RegisterExistingBody,
+) -> RegisterExistingResponse:
+    _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
+    root_cert = _pem_serizialized_site_root_cert()
+    agent_cert = serialize_to_pem(
+        _sign_agent_csr(
+            registration_body.uuid,
+            registration_body.csr,
+        )
+    )
+    register_response = register(
+        f"uuid={registration_body.uuid} Registration failed",
+        credentials,
+        registration_body.uuid,
+        registration_body.host_name,
+    )
+    logger.info(
+        "uuid=%s registered host %s",
+        registration_body.uuid,
+        registration_body.host_name,
+    )
+    return RegisterExistingResponse(
+        root_cert=root_cert,
+        agent_cert=agent_cert,
+        connection_mode=register_response.connection_mode,
     )
 
 

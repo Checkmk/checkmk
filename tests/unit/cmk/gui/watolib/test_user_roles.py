@@ -67,14 +67,12 @@ def test_cloning_user_roles() -> None:
 
 def test_get_default_user_roles() -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert {role.name for role in default_roles.values()} == set(
-        (
-            "admin",
-            "guest",
-            "user",
-        )
-        + (("agent_registration",) if cmk_version.is_cloud_edition() else ())
-    )
+    assert {role.name for role in default_roles.values()} == {
+        "admin",
+        "guest",
+        "user",
+        "agent_registration",
+    }
 
 
 def test_get_non_existent_user_roles() -> None:

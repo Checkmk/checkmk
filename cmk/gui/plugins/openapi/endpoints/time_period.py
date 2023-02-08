@@ -108,7 +108,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     path_params=[NAME_FIELD],
     additional_status_codes=[405],
     request_schema=UpdateTimePeriod,
-    output_empty=True,
+    response_schema=TimePeriodResponse,
     permissions_required=RW_PERMISSIONS,
 )
 def update_timeperiod(params: Mapping[str, Any]) -> Response:
@@ -136,8 +136,9 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         exceptions=_format_exceptions(body.get("exceptions", parsed_time_period["exceptions"])),
         exclude=body.get("exclude", parsed_time_period["exclude"]),
     )
+    api_format_response = _to_api_format(updated_time_period)
     save_timeperiod(name, updated_time_period)
-    return Response(status=204)
+    return _serve_time_period(_get_time_period_domain_object(name, api_format_response))
 
 
 @Endpoint(

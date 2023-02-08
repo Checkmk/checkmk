@@ -147,6 +147,21 @@ impl Api {
         ))
     }
 
+    fn deserialize_json_response<T>(
+        response: reqwest::blocking::Response,
+        deserializer: fn(&str) -> serde_json::Result<T>,
+    ) -> AnyhowResult<T> {
+        let status = response.status();
+        if status != StatusCode::OK {
+            bail!(Api::error_response_description(
+                status,
+                response.text().ok()
+            ))
+        }
+        let body = response.text().context("Failed to obtain response body")?;
+        deserializer(&body).context(format!("Error parsing this response body: {body}"))
+    }
+
     fn error_response_description(status: StatusCode, body: Option<String>) -> String {
         match body {
             None => format!("Request failed with code {status}, could not obtain response body"),
@@ -183,29 +198,20 @@ impl Pairing for Api {
         csr: String,
         credentials: &types::Credentials,
     ) -> AnyhowResult<PairingResponse> {
-        let response = certs::client(
-            root_cert.map(|r| certs::HandshakeCredentials {
-                server_root_cert: r,
-                client_identity: None,
-            }),
-            self.use_proxy,
-        )?
-        .post(Self::endpoint_url(base_url, &["pairing"])?)
-        .basic_auth(&credentials.username, Some(&credentials.password))
-        .json(&CsrBody { csr })
-        .send()?;
-        let status = response.status();
-
-        if status == StatusCode::OK {
-            let body = response.text().context("Failed to obtain response body")?;
-            serde_json::from_str::<PairingResponse>(&body)
-                .context(format!("Error parsing this response body: {body}"))
-        } else {
-            bail!(Api::error_response_description(
-                status,
-                response.text().ok()
-            ))
-        }
+        Self::deserialize_json_response(
+            certs::client(
+                root_cert.map(|r| certs::HandshakeCredentials {
+                    server_root_cert: r,
+                    client_identity: None,
+                }),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(base_url, &["pairing"])?)
+            .basic_auth(&credentials.username, Some(&credentials.password))
+            .json(&CsrBody { csr })
+            .send()?,
+            |body| serde_json::from_str::<PairingResponse>(body),
+        )
     }
 }
 
@@ -216,28 +222,19 @@ impl RenewCertificate for Api {
         connection: &config::TrustedConnection,
         csr: String,
     ) -> AnyhowResult<RenewCertificateResponse> {
-        let response = certs::client(
-            Some(connection.tls_handshake_credentials()?),
-            self.use_proxy,
-        )?
-        .post(Self::endpoint_url(
-            base_url,
-            &["renew_certificate", &connection.uuid.to_string()],
-        )?)
-        .json(&CsrBody { csr })
-        .send()?;
-        let status = response.status();
-
-        if status == StatusCode::OK {
-            let body = response.text().context("Failed to obtain response body")?;
-            serde_json::from_str::<RenewCertificateResponse>(&body)
-                .context(format!("Error parsing this response body: {body}"))
-        } else {
-            bail!(Api::error_response_description(
-                status,
-                response.text().ok()
-            ))
-        }
+        Self::deserialize_json_response(
+            certs::client(
+                Some(connection.tls_handshake_credentials()?),
+                self.use_proxy,
+            )?
+            .post(Self::endpoint_url(
+                base_url,
+                &["renew_certificate", &connection.uuid.to_string()],
+            )?)
+            .json(&CsrBody { csr })
+            .send()?,
+            |body| serde_json::from_str::<RenewCertificateResponse>(body),
+        )
     }
 }
 
@@ -343,26 +340,18 @@ impl Status for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
     ) -> AnyhowResult<StatusResponse> {
-        let response = certs::client(
-            Some(connection.tls_handshake_credentials()?),
-            self.use_proxy,
-        )?
-        .get(Self::endpoint_url(
-            base_url,
-            &["registration_status", &connection.uuid.to_string()],
-        )?)
-        .send()?;
-
-        if response.status() == StatusCode::OK {
-            let body = response.text()?;
-            Ok(serde_json::from_str::<StatusResponse>(&body)
-                .context(format!("Failed to deserialize response body: {body}"))?)
-        } else {
-            bail!(Api::error_response_description(
-                response.status(),
-                response.text().ok()
-            ))
-        }
+        Self::deserialize_json_response(
+            certs::client(
+                Some(connection.tls_handshake_credentials()?),
+                self.use_proxy,
+            )?
+            .get(Self::endpoint_url(
+                base_url,
+                &["registration_status", &connection.uuid.to_string()],
+            )?)
+            .send()?,
+            |body| serde_json::from_str::<StatusResponse>(body),
+        )
     }
 }
 

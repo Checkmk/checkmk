@@ -13,6 +13,7 @@ import io
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 from textwrap import wrap
 from typing import Any, List, Optional, Tuple, Union
 
@@ -1435,8 +1436,10 @@ def is_pdf2png_possible():
 def pdf2png(pdf_source):
     # Older version of pdftoppm cannot read pipes. The need to seek around
     # in the file. Therefore we need to save the PDF source into a temporary file.
+    pdf_tmp_dir = Path(cmk.utils.paths.tmp_dir) / "pdf"
+    pdf_tmp_dir.mkdir(exist_ok=True)
     with tempfile.NamedTemporaryFile(
-        dir=cmk.utils.paths.tmp_dir,
+        dir=str(pdf_tmp_dir),
         delete=False,
     ) as temp_file:
         temp_file.write(pdf_source)

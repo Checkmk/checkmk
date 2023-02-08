@@ -61,6 +61,7 @@ class IDowntime;
 class IHost;
 class IService;
 class ITimeperiod;
+class IHostGroup;
 
 class DummyMonitoringCore : public MonitoringCore {
     std::unique_ptr<const IHost> find_host(
@@ -150,6 +151,11 @@ class DummyMonitoringCore : public MonitoringCore {
 
     bool all_of_contact_groups(const std::function<bool(const IContactGroup &)>
                                    & /* f */) const override {
+        return {};
+    }
+
+    bool all_of_host_groups(const std::function<bool(const IHostGroup &)>
+                                & /* f */) const override {
         return {};
     }
 

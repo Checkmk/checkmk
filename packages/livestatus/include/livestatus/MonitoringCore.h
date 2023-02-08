@@ -62,7 +62,6 @@ public:
         const IService &) const = 0;
     bool virtual all_of_comments(
         const std::function<bool(const IComment &)> &pred) const = 0;
-
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
     downtimes(const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
@@ -75,6 +74,9 @@ public:
 
     virtual bool all_of_contact_groups(
         const std::function<bool(const IContactGroup &)> &pred) const = 0;
+
+    virtual bool all_of_host_groups(
+        const std::function<bool(const IHostGroup &)> &pred) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

@@ -115,6 +115,9 @@ public:
     bool all_of_contact_groups(
         const std::function<bool(const IContactGroup &)> &pred) const override;
 
+    bool all_of_host_groups(
+        const std::function<bool(const IHostGroup &)> &pred) const override;
+
     bool mkeventdEnabled() override;
 
     std::filesystem::path mkeventdSocketPath() const override;

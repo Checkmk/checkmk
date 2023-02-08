@@ -17,6 +17,7 @@
 #include "NebContactGroup.h"
 #include "NebDowntime.h"
 #include "NebHost.h"
+#include "NebHostGroup.h"
 #include "NebService.h"
 #include "NebTimeperiod.h"
 #include "livestatus/Attributes.h"
@@ -265,6 +266,16 @@ bool NagiosCore::all_of_contact_groups(
     const std::function<bool(const IContactGroup &)> &pred) const {
     for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
         if (!pred(NebContactGroup{*cg})) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool NagiosCore::all_of_host_groups(
+    const std::function<bool(const IHostGroup &)> &pred) const {
+    for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
+        if (!pred(NebHostGroup{*hg})) {
             return false;
         }
     }

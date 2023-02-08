@@ -17,6 +17,8 @@ public:
     explicit NebHostGroup(const hostgroup &host_group)
         : host_group_{host_group} {}
 
+    [[nodiscard]] const void *handle() const override { return &host_group_; }
+
     bool all(const std::function<bool(const IHost &)> &pred) const override {
         for (const auto *member = host_group_.members; member != nullptr;
              member = member->next) {

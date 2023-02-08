@@ -96,6 +96,7 @@ public:
 class IHostGroup {
 public:
     virtual ~IHostGroup() = default;
+    [[nodiscard]] virtual const void *handle() const = 0;
     virtual bool all(const std::function<bool(const IHost &)> &pred) const = 0;
 };
 

@@ -17,7 +17,6 @@ from agent_receiver.checkmk_rest_api import (
     host_configuration,
     HostConfiguration,
     link_host_with_uuid,
-    parse_error_response_body,
     post_csr,
 )
 from agent_receiver.decompression import DecompressionError, Decompressor
@@ -43,6 +42,9 @@ from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_NOT_IMPLEMENTED
 
+# pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
+# pylint: disable=too-many-function-args
+
 security = HTTPBasic()
 
 
@@ -54,44 +56,24 @@ async def pairing(
 ) -> PairingResponse:
     uuid = uuid_from_pem_csr(pairing_body.csr)
 
-    if not (rest_api_root_cert_resp := get_root_cert(credentials)).ok:
-        logger.error(
-            "uuid=%s Getting root cert failed with %s",
-            uuid,
-            rest_api_root_cert_resp.text,
-        )
-        raise HTTPException(
-            status_code=rest_api_root_cert_resp.status_code,
-            detail=parse_error_response_body(rest_api_root_cert_resp.text),
-        )
-    logger.info(
-        "uuid=%s Got root cert",
-        uuid,
+    root_cert = get_root_cert(
+        f"uuid={uuid} Getting root cert failed",
+        credentials,
+    )
+    client_cert = post_csr(
+        f"uuid={uuid} CSR signing failed",
+        credentials,
+        pairing_body.csr,
     )
 
-    if not (
-        rest_api_csr_resp := post_csr(
-            credentials,
-            pairing_body.csr,
-        )
-    ).ok:
-        logger.error(
-            "uuid=%s CSR failed with %s",
-            uuid,
-            rest_api_csr_resp.text,
-        )
-        raise HTTPException(
-            status_code=rest_api_csr_resp.status_code,
-            detail=parse_error_response_body(rest_api_csr_resp.text),
-        )
     logger.info(
-        "uuid=%s CSR signed",
+        "uuid=%s Pairing succesful",
         uuid,
     )
 
     return PairingResponse(
-        root_cert=rest_api_root_cert_resp.json()["cert"],
-        client_cert=rest_api_csr_resp.json()["cert"],
+        root_cert=root_cert,
+        client_cert=client_cert,
     )
 
 
@@ -119,11 +101,13 @@ async def register_with_hostname(
 ) -> Response:
     _validate_registration_request(
         host_configuration(
+            f"uuid={registration_body.uuid} Getting host configuration failed",
             credentials,
             registration_body.host_name,
         )
     )
     link_host_with_uuid(
+        f"uuid={registration_body.uuid} Linking host with UUID failed",
         credentials,
         registration_body.host_name,
         registration_body.uuid,
@@ -170,7 +154,12 @@ async def register_with_labels(
     credentials: HTTPBasicCredentials = Depends(security),
     registration_body: RegistrationWithLabelsBody,
 ) -> Response:
-    if not (edition := cmk_edition(credentials)).supports_registration_with_labels():
+    if not (
+        edition := cmk_edition(
+            f"uuid={registration_body.uuid} Querying Checkmk edition failed",
+            credentials,
+        )
+    ).supports_registration_with_labels():
         logger.error(
             "uuid=%s Registration with labels not supported",
             registration_body.uuid,
@@ -335,21 +324,11 @@ async def renew_certificate(
             detail="Host is not registered",
         )
 
-    if not (
-        rest_api_csr_resp := post_csr(
-            internal_credentials(),
-            csr_body.csr,
-        )
-    ).ok:
-        logger.error(
-            "uuid=%s Certificate renewal failed with %s",
-            uuid,
-            rest_api_csr_resp.text,
-        )
-        raise HTTPException(
-            status_code=rest_api_csr_resp.status_code,
-            detail=parse_error_response_body(rest_api_csr_resp.text),
-        )
+    client_cert = post_csr(
+        f"uuid={uuid} Certificate renewal failed",
+        internal_credentials(),
+        csr_body.csr,
+    )
 
     logger.info(
         "uuid=%s Certificate renewal succeeded",
@@ -357,5 +336,5 @@ async def renew_certificate(
     )
 
     return CertResponse(
-        client_cert=rest_api_csr_resp.json()["cert"],
+        client_cert=client_cert,
     )

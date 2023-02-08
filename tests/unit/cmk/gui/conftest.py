@@ -34,6 +34,7 @@ from tests.testlib.rest_api_client import (
     RequestHandler,
     Response,
     RestApiClient,
+    TimePeriodTestClient,
 )
 from tests.testlib.users import create_and_destroy_user
 from tests.testlib.utils import no_search_index_update_background
@@ -559,3 +560,8 @@ def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiCl
 @pytest.fixture()
 def auxtag_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AuxTagTestClient:
     return AuxTagTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def timeperiod_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> TimePeriodTestClient:
+    return TimePeriodTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

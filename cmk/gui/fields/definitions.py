@@ -192,7 +192,7 @@ class FolderField(base.String):
         if folder_id == "/":
             folder = Folder.root_folder()
         elif _ishexdigit(folder_id):
-            folder = Folder.by_id(folder_id)
+            folder = Folder._by_id(folder_id)
         else:
             folder_id = cls._normalize_folder(folder_id)
             folder = Folder.folder(folder_id[1:])

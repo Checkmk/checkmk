@@ -743,8 +743,10 @@ class WithUniqueIdentifier(abc.ABC):
         return self._id
 
     @classmethod
-    def by_id(cls, identifier: str) -> Any:
+    def _by_id(cls, identifier: str) -> CREFolder:
         """Return the Folder instance of this particular identifier.
+
+        WARNING: This is very slow, don't use it in client code.
 
         Args:
             identifier (str): The unique key.

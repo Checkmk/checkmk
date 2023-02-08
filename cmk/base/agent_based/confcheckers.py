@@ -142,7 +142,7 @@ class ConfiguredSummarizer:
         self,
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     ) -> Iterable[ActiveCheckResult]:
-        return next(
+        return itertools.chain.from_iterable(
             summarize_host_sections(
                 host_sections,
                 source,

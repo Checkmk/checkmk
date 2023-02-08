@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -906,13 +906,16 @@ def _run_num_host_test(structure, user_test, expected_host_count, is_admin, monk
         )
 
         # Old mechanism
-        monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: user_test.contactgroups)
-        assert (
-            wato_folder.num_hosts_recursively()
-            == expected_host_count + legacy_base_folder_host_offset
-        )
+        with patch.dict(
+            hosts_and_folders.user._attributes, {"contactgroups": user_test.contactgroups}
+        ):
+            assert (
+                wato_folder.num_hosts_recursively()
+                == expected_host_count + legacy_base_folder_host_offset
+            )
 
         # New mechanism
+        monkeypatch.setattr(userdb, "contactgroups_of_user", lambda u: user_test.contactgroups)
         with get_fake_setup_redis_client(
             monkeypatch,
             _convert_folder_tree_to_all_folders(wato_folder),

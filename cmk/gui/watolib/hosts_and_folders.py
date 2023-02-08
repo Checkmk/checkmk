@@ -18,7 +18,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, NamedTuple, TypedDict
+from typing import Any, Final, Literal, NamedTuple, TypedDict
 
 import psutil  # type: ignore[import]
 
@@ -67,7 +67,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.plugins.watolib.utils import generate_hosts_to_update_settings, SerializedSettings
 from cmk.gui.site_config import enabled_sites, is_wato_slave_site
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
@@ -166,24 +166,24 @@ class FolderMetaData:
 
 
 class WithPermissions:
-    def may(self, how: str) -> bool:  # how is "read" or "write"
+    def may(self, how: Literal["read", "write"]) -> bool:
         try:
             self._user_needs_permission(how)
             return True
         except MKAuthException:
             return False
 
-    def reason_why_may_not(self, how: str) -> str | None:
+    def reason_why_may_not(self, how: Literal["read", "write"]) -> str | None:
         try:
             self._user_needs_permission(how)
             return None
         except MKAuthException as e:
             return str(e)
 
-    def need_permission(self, how: str) -> None:
+    def need_permission(self, how: Literal["read", "write"]) -> None:
         self._user_needs_permission(how)
 
-    def _user_needs_permission(self, how: str) -> None:
+    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
         raise NotImplementedError()
 
 
@@ -1802,7 +1802,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._choices_for_moving_host = self._choices_for_moving("host")
         return self._choices_for_moving_host
 
-    def folder_should_be_shown(self, how: str) -> bool:
+    def folder_should_be_shown(self, how: Literal["read", "write"]) -> bool:
         if not active_config.wato_hide_folders_without_read_permissions:
             return True
 
@@ -2057,21 +2057,17 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 pass
         Folder.save_host_lookup_cache(cache_path, folder_lookup_cache)
 
-    def _user_needs_permission(self, how: str) -> None:
+    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
         if how == "write" and user.may("wato.all_folders"):
             return
 
         if how == "read" and user.may("wato.see_all_folders"):
             return
 
-        permitted_groups, _folder_contactgroups, _use_for_services = self.groups()
-        assert user.id is not None
-        # TODO: this groups are loaded anew for EVERY folder..
-        user_contactgroups = userdb.contactgroups_of_user(user.id)
+        if self.is_contact(user):
+            return
 
-        for c in user_contactgroups:
-            if c in permitted_groups:
-                return
+        permitted_groups, _folder_contactgroups, _use_for_services = self.groups()
 
         reason = _("Sorry, you have no permissions to the folder <b>%s</b>.") % self.alias_path()
         if not permitted_groups:
@@ -2080,7 +2076,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             reason += " " + _("The folder's permitted contact groups are <b>%s</b>.") % ", ".join(
                 permitted_groups
             )
-            if user_contactgroups:
+            if user_contactgroups := user.contact_groups:
                 reason += " " + _("Your contact groups are <b>%s</b>.") % ", ".join(
                     user_contactgroups
                 )
@@ -2091,7 +2087,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         )
         raise MKAuthException(reason)
 
-    def need_recursive_permission(self, how: str) -> None:
+    def is_contact(self, user_: LoggedInUser) -> bool:
+        permitted_groups, _host_contact_groups, _use_for_services = self.groups()
+        return any(group in permitted_groups for group in user_.contact_groups)
+
+    def need_recursive_permission(self, how: Literal["read", "write"]) -> None:
         self.need_permission(how)
         if how == "write":
             self.need_unlocked()
@@ -2883,7 +2883,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     def is_search_folder(self) -> bool:
         return True
 
-    def _user_needs_permission(self, how: str) -> None:
+    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
         pass
 
     def title(self) -> str:
@@ -3212,7 +3212,7 @@ class CREHost(WithPermissions, WithAttributes):
     def groups(self):
         return self.folder().groups(self)
 
-    def _user_needs_permission(self, how: str) -> None:
+    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
         if how == "write" and user.may("wato.all_folders"):
             return
 
@@ -3222,19 +3222,24 @@ class CREHost(WithPermissions, WithAttributes):
         if how == "write":
             user.need_permission("wato.edit_hosts")
 
+        if self.is_contact(user):
+            return
+
+        raise MKAuthException(
+            _(
+                "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+                "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+            )
+            % (
+                self.name(),
+                ", ".join(self.groups()[0]),
+                ", ".join(user.contact_groups),
+            )
+        )
+
+    def is_contact(self, user_: LoggedInUser) -> bool:
         permitted_groups, _host_contact_groups, _use_for_services = self.groups()
-        assert user.id is not None
-        user_contactgroups = userdb.contactgroups_of_user(user.id)
-
-        for c in user_contactgroups:
-            if c in permitted_groups:
-                return
-
-        reason = _(
-            "Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
-            "groups are <b>%s</b>, your contact groups are <b>%s</b>."
-        ) % (self.name(), ", ".join(permitted_groups), ", ".join(user_contactgroups))
-        raise MKAuthException(reason)
+        return any(group in permitted_groups for group in user_.contact_groups)
 
     def edit_url(self) -> str:
         return urls.makeuri_contextless(

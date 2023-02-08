@@ -11,13 +11,13 @@ import logging
 import os
 import time
 from collections.abc import Container
-from typing import Any, Final
+from typing import Any, Final, Sequence
 
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import ContactgroupName, UserId
 from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
@@ -129,8 +129,8 @@ class LoggedInUser:
         return self.get_attribute("customer")
 
     @property
-    def contact_groups(self) -> list:
-        return self.get_attribute("contactgroups", [])
+    def contact_groups(self) -> Sequence[ContactgroupName]:
+        return [ContactgroupName(raw) for raw in self.get_attribute("contactgroups", [])]
 
     @property
     def start_url(self) -> str | None:

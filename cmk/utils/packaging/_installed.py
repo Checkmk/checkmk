@@ -25,6 +25,9 @@ class Installer:
         return sorted(PackageName(p.name) for p in self._manifests_dir.iterdir())
 
     def get_installed_manifest(self, package_name: PackageName) -> Manifest | None:
+        if not self.is_installed(package_name):
+            # LBYL prevents an error being logged if the package is not installed
+            return None
         return read_manifest_optionally(self._path_for(package_name))
 
     def get_installed_manifests(self) -> Sequence[Manifest]:

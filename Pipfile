@@ -70,6 +70,7 @@ pipfile = "*" # for generating import names during int tests
 py-import-cycles = "*"  # used in tests/Makefile
 types-pysaml2 = "*"  # typing extension for pysaml2
 telnetlib3 = "*"  # used by Windows Agent tests
+ruff = "==0.0.240"  # newer versions have problems with the match statement
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py

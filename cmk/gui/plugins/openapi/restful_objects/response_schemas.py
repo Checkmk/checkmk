@@ -15,6 +15,7 @@ from cmk.utils.defines import weekday_ids
 
 import cmk.gui.userdb as userdb
 from cmk.gui import fields as gui_fields
+from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
@@ -1082,6 +1083,10 @@ class Version(LinkSchema):
         required=False,
     )
     additionalCapabilities = fields.Nested(VersionCapabilities)
+
+
+class ConnectionMode(BaseSchema):
+    connection_mode = CONNECTION_MODE_FIELD
 
 
 class X509PEM(BaseSchema):

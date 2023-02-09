@@ -74,6 +74,8 @@ def test_registered_permissions() -> None:
         "action.reschedule",
         "action.star",
         "action.delete_crash_report",
+        "agent_registration.register_any_existing_host",
+        "agent_registration.register_managed_existing_host",
         "background_jobs.delete_foreign_jobs",
         "background_jobs.delete_jobs",
         "background_jobs.manage_jobs",

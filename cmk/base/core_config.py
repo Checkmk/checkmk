@@ -24,7 +24,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.store import load_object_from_file, save_object_to_file
+from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     HostAddress,
@@ -258,17 +258,24 @@ def do_create_config(
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
-    _bake_on_restart()
+    _bake_on_restart(config_cache)
 
 
-def _bake_on_restart() -> None:
+def _bake_on_restart(config_cache: config.ConfigCache) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
-
-        agent_bakery.bake_on_restart()
     except ImportError:
-        pass
+        return
+
+    assert isinstance(config_cache, config.CEEConfigCache)
+
+    with lock_checkmk_configuration():
+        target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
+            config_cache, selected_hosts=None
+        )
+
+    agent_bakery.bake_on_restart(target_configs)
 
 
 @contextmanager

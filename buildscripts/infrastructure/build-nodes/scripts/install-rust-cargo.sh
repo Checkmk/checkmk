@@ -14,7 +14,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-DEFAULT_TOOLCHAIN="stable-x86_64-unknown-linux-gnu"
+# define toolchain version explicitly
+# 'stable' is allowed only for main(master) branch
+TOOLCHAIN_VERSION="stable"
+
+DEFAULT_TOOLCHAIN="${TOOLCHAIN_VERSION}-x86_64-unknown-linux-gnu"
 DIR_NAME="rust"
 TARGET_DIR=/opt
 
@@ -24,7 +28,7 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=7
+BUILD_ID=8
 
 build_package() {
     WORK_DIR=$(mktemp -d)
@@ -46,6 +50,8 @@ build_package() {
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
     ${CARGO_HOME}/bin/rustup target add x86_64-unknown-linux-musl
+    ${CARGO_HOME}/bin/rustup default $TOOLCHAIN_VERSION
+    ${CARGO_HOME}/bin/rustup update
     # saves space
     rm -rf "$RUSTUP_HOME/toolchains/$DEFAULT_TOOLCHAIN/share/doc/"
 }

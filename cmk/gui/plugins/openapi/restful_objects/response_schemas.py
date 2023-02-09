@@ -1147,3 +1147,11 @@ class CommentCollection(DomainObjectCollection):
         fields.Nested(CommentObject),
         description="A list of comment objects.",
     )
+
+
+class AgentControllerCertificateSettings(BaseSchema):
+    lifetime_in_months = fields.Integer(
+        description="Lifetime of agent controller certificates in months",
+        required=True,
+        example=60,
+    )

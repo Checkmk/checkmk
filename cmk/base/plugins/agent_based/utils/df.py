@@ -606,15 +606,16 @@ def df_check_filesystem_single(  # type:ignore[no-untyped-def]
     if subtract_reserved:
         yield Metric("reserved", reserved_space)
 
-    yield from size_trend(
-        value_store=value_store,
-        value_store_key=mountpoint,
-        resource="disk",
-        levels=params,
-        used_mb=used_space,
-        size_mb=filesystem_size,
-        timestamp=this_time,
-    )
+    if params.get("trend_perfdata"):
+        yield from size_trend(
+            value_store=value_store,
+            value_store_key=mountpoint,
+            resource="disk",
+            levels=params,
+            used_mb=used_space,
+            size_mb=filesystem_size,
+            timestamp=this_time,
+        )
 
     if inodes_total and inodes_avail is not None:
         yield from check_inodes(params, inodes_total, inodes_avail)

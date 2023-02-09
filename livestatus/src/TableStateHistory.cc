@@ -389,8 +389,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         }
 
         if (in_nagios_initial_states &&
-            !(entry->kind() == LogEntryKind::state_service_initial ||
-              entry->kind() == LogEntryKind::state_host_initial)) {
+            entry->kind() != LogEntryKind::state_service_initial &&
+            entry->kind() != LogEntryKind::state_host_initial) {
             // Set still unknown hosts / services to unmonitored
             for (auto &it_hst : state_info) {
                 HostServiceState *hst = it_hst.second;

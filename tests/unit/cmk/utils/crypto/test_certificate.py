@@ -12,6 +12,7 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
+from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import (
     CertificateWithPrivateKey,
     InvalidExpiryError,
@@ -141,3 +142,15 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
 
     loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))
     assert loaded_enc._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
+
+
+def test_verify_rsa_key() -> None:
+    private_key = RsaPrivateKey.generate(2048)
+    try:
+        private_key.public_key.verify(
+            private_key.sign_data(b"test"),
+            b"test",
+            HashAlgorithm.Sha512,
+        )
+    except Exception as e:
+        assert False, str(e)

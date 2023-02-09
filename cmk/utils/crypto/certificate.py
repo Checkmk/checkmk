@@ -518,7 +518,7 @@ class RsaPrivateKey:
     def sign_data(
         self, data: bytes, hash_algorithm: HashAlgorithm = HashAlgorithm.Sha512
     ) -> Signature:
-        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value()))
+        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value))
 
 
 class RsaPublicKey:

@@ -420,6 +420,27 @@ class Certificate:
             )
         return attr[0].value
 
+    def fingerprint(self, algorithm: HashAlgorithm) -> bytes:
+        """return the fingerprint
+
+        >>> Certificate.load_pem(
+        ...     CertificatePEM("\\n".join([
+        ...         "-----BEGIN CERTIFICATE-----",
+        ...         "MIIBYzCCAQ2gAwIBAgIUbPnfSpiyrseGMfzqs9QZF/QQWakwDQYJKoZIhvcNAQEF",
+        ...         "BQAwHjENMAsGA1UEAwwEdW5pdDENMAsGA1UECgwEdGVzdDAeFw0yMzAyMDgwOTMw",
+        ...         "NDRaFw0zMzAyMDgwOTMwNDRaMB4xDTALBgNVBAMMBHVuaXQxDTALBgNVBAoMBHRl",
+        ...         "c3QwXDANBgkqhkiG9w0BAQEFAANLADBIAkEA0oU0G0Um+IztvdGmwgLiAf1srMCu",
+        ...         "xi5SbZO+TyX6/e/yaTmRAvJv1159j+SYurqhKw6/UqI9PVhRyn/F+bkC2QIDAQAB",
+        ...         "oyMwITAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBxjANBgkqhkiG9w0B",
+        ...         "AQUFAANBALxBKfv6Z8zYbyGl4E5GqBSTltOwAOApoFCD1G+JJffwJ7axDstcYMPy",
+        ...         "4Xll7GthxPWvXF+of3VAkEhv5qhIrKM=",
+        ...         "-----END CERTIFICATE-----",
+        ...     ]))
+        ... ).fingerprint(HashAlgorithm.Sha256).hex()
+        '9b567eaf29173dfddbc2e42e00023e65998a22475bc4a728fe0abdaaff364989'
+        """
+        return self._cert.fingerprint(algorithm.value)
+
 
 class RsaPrivateKey:
     """

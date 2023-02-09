@@ -34,52 +34,7 @@ from cmk.utils.licensing.export import (
 from cmk.utils.paths import licensing_dir, log_dir, omd_root
 from cmk.utils.site import omd_site
 
-_CCE_SERVICES = {
-    "aws_route53",
-    "aws_cloudfront",
-    "aws_ecs_cpu_reservation",
-    "aws_ecs_cpu_utilization",
-    "aws_ecs_limits",
-    "aws_ecs_memory_reservation",
-    "aws_ecs_memory_utilization",
-    "aws_ecs_summary",
-    "aws_elasticache_limits",
-    "aws_elasticache_memory",
-    "aws_elasticache_cpu_utilization",
-    "aws_elasticache_connections",
-    "aws_elasticache_replication",
-    "aws_elasticache_summary",
-    "aws_lambda_memory",
-    "aws_lambda_performance",
-    "aws_lambda_concurrency",
-    "aws_sns_notification",
-    "aws_sns_limits",
-    "aws_sns_sms_spend",
-    "aws_sns_sms_success_rate",
-    "aws_sns_summary",
-    "azure_app_gateway",
-    "azure_resource_health",
-    "azure_vault_backup_containers",
-    "gcp_function_execution",
-    "gcp_function_instances",
-    "gcp_function_network",
-    "gcp_function_summary",
-    "gcp_redis_cpu",
-    "gcp_redis_hitratio",
-    "gcp_redis_memory",
-    "gcp_redis_summary",
-    "gcp_redis_clients_blocked",
-    "gcp_redis_clients_connected",
-    "gcp_redis_clients_rejected",
-    "gcp_redis_replication",
-    "gcp_run_cpu",
-    "gcp_run_memory",
-    "gcp_run_network",
-    "gcp_run_instance",
-    "gcp_run_performance",
-    "gcp_run_requests",
-    "gcp_run_summary",
-}
+CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 
 
 def init_logging() -> logging.Logger:
@@ -283,6 +238,9 @@ def _get_services_from_livestatus() -> Sequence[Sequence[Any]]:
 
 
 def _parse_services_livestatus_response(response: Sequence[Sequence[Any]]) -> CCECounter:
+    def contains_cloud_service(services: Sequence[str]) -> bool:
+        return any(service.startswith(tuple(CLOUD_SERVICE_PREFIXES)) for service in services)
+
     services_per_host = defaultdict(list)
     for result in response:
         services_per_host[result[0]].append(result[1].removeprefix("check_mk-"))
@@ -290,7 +248,7 @@ def _parse_services_livestatus_response(response: Sequence[Sequence[Any]]) -> CC
     cloud_services = {
         host: len(services)
         for host, services in services_per_host.items()
-        if set(services).intersection(_CCE_SERVICES)
+        if contains_cloud_service(services)
     }
     return CCECounter(hosts=len(cloud_services), services=sum(cloud_services.values()))
 

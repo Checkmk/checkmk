@@ -17,6 +17,7 @@ import cmk.utils.licensing as licensing
 from cmk.utils.licensing import (
     _get_cloud_counter,
     _serialize_dump,
+    CLOUD_SERVICE_PREFIXES,
     get_license_usage_report_filepath,
     LicenseUsageReportVersion,
     load_license_usage_history,
@@ -32,6 +33,7 @@ from cmk.utils.licensing.export import (
     SubscriptionDetailsLimit,
     SubscriptionDetailsLimitType,
 )
+from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
 
 
 def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
@@ -973,3 +975,25 @@ def test_subscription_details_for_config(
     subscription_details: SubscriptionDetails, expected_raw_subscription_details: Mapping[str, Any]
 ) -> None:
     assert subscription_details.for_config() == expected_raw_subscription_details
+
+
+def test_cloud_service_prefixes_up_to_date():
+    """Test if there are services that do not begin with the prefix indicating a cloud service based
+    on the categorisation in their manpage. Either rename your service to conform to the given
+     prefixes, update the prefix list or update the manpage catalog"""
+    not_cloud_for_licensing_purposes = ["datadog"]
+
+    def is_cloud_manpage(catalog_path: ManPageCatalogPath) -> bool:
+        return (
+            catalog_path[0] == "cloud" and catalog_path[1] not in not_cloud_for_licensing_purposes
+        )
+
+    catalog = load_man_page_catalog()
+    cloud_man_pages = [
+        manpage
+        for catalog_path, man_pages in catalog.items()
+        for manpage in man_pages
+        if is_cloud_manpage(catalog_path)
+    ]
+    for manpage in cloud_man_pages:
+        assert manpage.name.startswith(tuple(CLOUD_SERVICE_PREFIXES))

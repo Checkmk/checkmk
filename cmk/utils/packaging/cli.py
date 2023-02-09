@@ -437,7 +437,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--debug", "-d", action="store_true")
-    parser.add_argument("--verbose", "-v", action="count", help="Be more verbose")
+    parser.add_argument("--verbose", "-v", action="count", default=0, help="Be more verbose")
     subparsers = parser.add_subparsers(required=True, title="available commands")
 
     _add_command(subparsers, "find", _args_find, _command_find)

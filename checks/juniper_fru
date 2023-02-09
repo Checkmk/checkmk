@@ -83,11 +83,11 @@ def parse_juniper_fru(info):
     return parsed
 
 
-def inventory_juniper_fru(parsed, fru_type):
+def inventory_juniper_fru(parsed, fru_types):
     return [
         (fru_name, None)
         for fru_name, fru_data in parsed.items()
-        if fru_data["fru_type"] == fru_type and fru_data["fru_state"] != "2"
+        if fru_data["fru_type"] in fru_types and fru_data["fru_state"] != "2"
     ]  # ignore "empty" states
 
 
@@ -114,7 +114,7 @@ def check_juniper_fru(item, _no_params, parsed):
 
 check_info["juniper_fru"] = {
     "parse_function": parse_juniper_fru,
-    "inventory_function": lambda info: inventory_juniper_fru(info, "7"),
+    "inventory_function": lambda info: inventory_juniper_fru(info, ("7", "18")),
     "check_function": check_juniper_fru,
     "service_description": "Power Supply FRU %s",
     # Use utils.juniper.DETECT when migrating
@@ -142,7 +142,7 @@ check_info["juniper_fru"] = {
 #   '----------------------------------------------------------------------'
 
 check_info["juniper_fru.fan"] = {
-    "inventory_function": lambda info: inventory_juniper_fru(info, "13"),
+    "inventory_function": lambda info: inventory_juniper_fru(info, ("13",)),
     "check_function": check_juniper_fru,
     "service_description": "Fan FRU %s",
 }

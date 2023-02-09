@@ -13,7 +13,7 @@ import pytest
 
 from cmk.utils.type_defs import CheckPluginName, ServiceID
 
-from cmk.base.agent_based.checking import _cluster_modes as cluster_modes
+from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
@@ -78,7 +78,7 @@ def _is_ok(*elements: Result | Metric | IgnoreResults) -> bool:
 def test_get_cluster_check_function_native_missing(vsm: ValueStoreManager) -> None:
     plugin = _get_test_check_plugin(cluster_check_function=None)
 
-    cc_function = cluster_modes.get_cluster_check_function(
+    cc_function = cluster_mode.get_cluster_check_function(
         mode="native",
         clusterization_parameters={},
         service_id=TEST_SERVICE_ID,
@@ -93,7 +93,7 @@ def test_get_cluster_check_function_native_missing(vsm: ValueStoreManager) -> No
 def test_get_cluster_check_function_native_ok(vsm: ValueStoreManager) -> None:
     plugin = _get_test_check_plugin(cluster_check_function=_simple_check)
 
-    cc_function = cluster_modes.get_cluster_check_function(
+    cc_function = cluster_mode.get_cluster_check_function(
         mode="native",
         clusterization_parameters={},
         service_id=TEST_SERVICE_ID,
@@ -111,9 +111,9 @@ def _get_cluster_check_function(
     vsm: ValueStoreManager,
     clusterization_parameters: Mapping[str, Any] | None = None,
 ) -> CheckFunction:
-    """small wrapper for cluster_modes.get_cluster_check_function"""
+    """small wrapper for cluster_mode.get_cluster_check_function"""
     plugin = _get_test_check_plugin(check_function=check_function)
-    return cluster_modes.get_cluster_check_function(
+    return cluster_mode.get_cluster_check_function(
         mode=mode,
         clusterization_parameters=clusterization_parameters or {},
         service_id=TEST_SERVICE_ID,
@@ -359,7 +359,7 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager
     "node_results, expected_primary_result, expected_secondary_result",
     [
         pytest.param(
-            cluster_modes.NodeResults(
+            cluster_mode.NodeResults(
                 results={
                     "Nodebert": [Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")],
                     "Nodett": [Result(state=State.OK, notice="[Nodett]: CPU load: 0.00")],
@@ -383,12 +383,12 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager
     ],
 )
 def test_summarizer_result_generation(
-    node_results: cluster_modes.NodeResults,
+    node_results: cluster_mode.NodeResults,
     expected_primary_result: CheckResult,
     expected_secondary_result: CheckResult,
 ) -> None:
     clusterization_parameters = {"primary_node": "Nodebert"}
-    summarizer = cluster_modes.Summarizer(
+    summarizer = cluster_mode.Summarizer(
         node_results=node_results,
         label="Best",
         selector=State.best,

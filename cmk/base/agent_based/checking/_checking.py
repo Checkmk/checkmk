@@ -65,7 +65,7 @@ from cmk.base.agent_based.utils import (
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.base.api.agent_based import value_store
+from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import (
     CheckPlugin,
     CheckResult,
@@ -78,8 +78,6 @@ from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
 from cmk.base.config import ConfigCache
-
-from . import _cluster_modes
 
 __all__ = ["execute_checkmk_checks", "check_host_services"]
 
@@ -373,7 +371,7 @@ def get_aggregated_result(
     This function is also called during discovery.
     """
     check_function = (
-        _cluster_modes.get_cluster_check_function(
+        cluster_mode.get_cluster_check_function(
             *config_cache.get_clustered_service_configuration(host_name, service.description),
             plugin=plugin,
             service_id=service.id(),

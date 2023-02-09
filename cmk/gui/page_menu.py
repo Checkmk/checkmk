@@ -691,7 +691,7 @@ class SuggestedEntryRenderer:
             id_=("menu_suggestion_%s" % entry.name if entry.name else None),
         )
         html.icon(entry.icon_name or "trans")
-        html.write_text(entry.shortcut_title or entry.title)
+        html.span(entry.shortcut_title or entry.title)
         html.close_a()
 
 

@@ -349,7 +349,7 @@ class BaseApiClient(abc.ABC):
         rows = self._lookup(data, "rows")
 
         next_link = data.get("nextLink")
-        while next_link is not None:
+        while next_link:
             new_json_data = self._request_json_from_url("POST", next_link, body=body)
             data = self._lookup(new_json_data, "properties")
             rows += self._lookup(data, "rows")

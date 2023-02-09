@@ -96,6 +96,22 @@ CONTENT_TYPE = {
     )
 }
 
+HEADER_CHECKMK_EDITION = {
+    "X-Checkmk-Edition": String(
+        required=True,
+        description=("The checkmk edition."),
+        example="cre",
+    ),
+}
+
+HEADER_CHECKMK_VERSION = {
+    "X-Checkmk-Version": String(
+        required=True,
+        description=("The checkmk version."),
+        example="2.2.0p10",
+    ),
+}
+
 SERVICE_DESCRIPTION = {
     "service_description": String(
         description="The service description.",

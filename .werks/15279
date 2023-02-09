@@ -1,0 +1,14 @@
+Title: Expose version and edition via HTTP-headers
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1677588916
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The HTTP-headers "x-checkmk-edition" and "x-checkmk-version" are used to expose
+the checkmk version and edition on all authenticated REST-API HTTP-responses.
+
+

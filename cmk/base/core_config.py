@@ -9,7 +9,7 @@ import os
 import shlex
 import shutil
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, Union
 
@@ -241,6 +241,7 @@ def do_create_config(
     hosts_to_update: HostsToUpdate = None,
     *,
     duplicates: Sequence[HostName],
+    skip_config_locking_for_bakery: bool = False,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -258,10 +259,10 @@ def do_create_config(
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
-    _bake_on_restart(config_cache)
+    _bake_on_restart(config_cache, skip_config_locking_for_bakery)
 
 
-def _bake_on_restart(config_cache: config.ConfigCache) -> None:
+def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
@@ -270,7 +271,7 @@ def _bake_on_restart(config_cache: config.ConfigCache) -> None:
 
     assert isinstance(config_cache, config.CEEConfigCache)
 
-    with lock_checkmk_configuration():
+    with nullcontext() if skip_locking else lock_checkmk_configuration():
         target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
             config_cache, selected_hosts=None
         )

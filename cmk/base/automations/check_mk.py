@@ -500,7 +500,10 @@ class AutomationRenameHosts(Automation):
                 # force config generation to succeed. The core *must* start.
                 # TODO: Can't we drop this hack since we have config warnings now?
                 config.ignore_ip_lookup_failures()
-                _execute_silently(CoreAction.START)
+                # In this case the configuration is already locked by the caller of the automation.
+                # If that is on the local site, we can not lock the configuration again during baking!
+                # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
+                _execute_silently(CoreAction.START, skip_config_locking_for_bakery=True)
 
                 for hostname in config.failed_ip_lookups():
                     actions.append("dnsfail-" + hostname)
@@ -1166,6 +1169,7 @@ automations.register(AutomationReload())
 def _execute_silently(
     action: CoreAction,
     hosts_to_update: set[str] | None = None,
+    skip_config_locking_for_bakery: bool = False,
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         log.setup_console_logging()
@@ -1176,6 +1180,7 @@ def _execute_silently(
                 hosts_to_update=hosts_to_update,
                 locking_mode=config.restart_locking,
                 duplicates=config.duplicate_hosts(),
+                skip_config_locking_for_bakery=skip_config_locking_for_bakery,
             )
         except (MKBailOut, MKGeneralException) as e:
             raise MKAutomationError(str(e))

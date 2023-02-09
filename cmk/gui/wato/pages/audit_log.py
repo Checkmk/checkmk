@@ -199,7 +199,37 @@ class ModeAuditLog(WatoMode):
                         ),
                         name="show_details",
                         css_classes=["toggle"],
-                    )
+                    ),
+                    PageMenuEntry(
+                        title=_("Show object type"), 
+                        icon_name="checked_checkbox" if self._show_object_type else "checkbox",
+                        item=make_simple_link(
+                            makeactionuri(
+                                request,
+                                transactions,
+                                [
+                                    ("show_object_type", "0" if self._show_object_type else "1"),
+                                ],
+                            )
+                        ),
+                        name="show_object_type",
+                        css_classes=["toggle"],
+                    ),
+                    PageMenuEntry(
+                        title=_("Show object"),
+                        icon_name="checked_checkbox" if self._show_object else "checkbox",
+                        item=make_simple_link(
+                            makeactionuri(
+                                request,
+                                transactions,
+                                [
+                                    ("show_object", "0" if self._show_object else "1"),
+                                ],
+                            )
+                        ),
+                        name="show_object",
+                        css_classes=["toggle"],
+                    ),
                 ],
             ),
         )

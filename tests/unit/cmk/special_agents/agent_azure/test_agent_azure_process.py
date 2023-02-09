@@ -4,13 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock
 
-import freezegun
 import pytest
-from mock import patch
 
 from cmk.special_agents.agent_azure import (
     ApiError,
@@ -25,10 +22,9 @@ from cmk.special_agents.agent_azure import (
     process_resource,
     process_vm,
     Section,
-    UsageClient,
+    usage_details,
     write_group_info,
     write_section_ad,
-    write_usage_section_if_enabled,
 )
 
 pytestmark = pytest.mark.checks
@@ -503,44 +499,29 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
 
 
 @pytest.mark.parametrize(
-    "enabled_services",
-    [
-        ["non_existing_service"],
-        ["usage_details", "another_service"],
-    ],
-)
-def test_write_usage_section(enabled_services: list[str]) -> None:
-    usage_client = MagicMock()
-    write_usage_section_if_enabled(
-        usage_client, ["group1", "group2"], Args(services=enabled_services, debug=False)
-    )
-    if "usage_details" in enabled_services:
-        usage_client.write_sections.assert_called()
-    else:
-        usage_client.write_sections.assert_not_called()
-
-
-@pytest.mark.parametrize(
     "args, usage_data, exception, expected_result",
     [
         pytest.param(
-            Args(
-                debug=False,
-            ),
+            Args(debug=False, services=[]),
+            None,
+            None,
+            "",
+            id="usage section not enabled",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
             None,
             ApiError("offer MS-AZR-0145P"),
             "",
             id="api error no consumption offer",
         ),
         pytest.param(
-            Args(
-                debug=False,
-            ),
+            Args(debug=False, services=["usage_details"]),
             None,
             ApiError("unknown offer"),
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "Usage client: unknown offer"]\n'
+            'agent-bailout|[2, "get_usage_data: unknown offer"]\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -552,14 +533,12 @@ def test_write_usage_section(enabled_services: list[str]) -> None:
             id="api error unknown offer",
         ),
         pytest.param(
-            Args(
-                debug=False,
-            ),
+            Args(debug=False, services=["usage_details"]),
             None,
             Exception(),
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "Usage client: "]\n'
+            'agent-bailout|[2, "get_usage_data: "]\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -571,14 +550,12 @@ def test_write_usage_section(enabled_services: list[str]) -> None:
             id="exception in the api call",
         ),
         pytest.param(
-            Args(
-                debug=False,
-            ),
+            Args(debug=False, services=["usage_details"]),
             [],
             None,
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "Usage client: Azure API did not return any usage details"]\n'
+            'agent-bailout|[2, "get_usage_data: Azure API did not return any usage details"]\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -590,9 +567,7 @@ def test_write_usage_section(enabled_services: list[str]) -> None:
             id="empty usage data",
         ),
         pytest.param(
-            Args(
-                debug=False,
-            ),
+            Args(debug=False, services=["usage_details"]),
             [
                 {
                     "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
@@ -645,14 +620,14 @@ def test_write_usage_section(enabled_services: list[str]) -> None:
             ],
             None,
             "<<<<test1>>>>\n"
-            "<<<azure_usagedetails:sep(124):cached(1672556400,1000)>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 7.349267385987696, "CostUSD": 7.97158038308434, "ResourceType": "microsoft.network/applicationgateways", '
             '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
-            "<<<azure_usagedetails:sep(124):cached(1672556400,1000)>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": '
             '"subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
@@ -661,14 +636,14 @@ def test_write_usage_section(enabled_services: list[str]) -> None:
             '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
-            "<<<azure_usagedetails:sep(124):cached(1672556400,1000)>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.5107556132017598, "CostUSD": 0.5539016353215431, "ResourceType": "microsoft.network/loadbalancers", '
             '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
-            "<<<azure_usagedetails:sep(124):cached(1672556400,1000)>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
@@ -676,14 +651,14 @@ def test_write_usage_section(enabled_services: list[str]) -> None:
             '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
-            "<<<azure_usagedetails:sep(124):cached(1672556400,1000)>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
             'null, "properties": {"Cost": 0.12006320596267346, "CostUSD": 0.1315116481025144, "ResourceType": "microsoft.recoveryservices/vaults", '
             '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
             "<<<<>>>>\n"
-            "<<<azure_usagedetails:sep(124):cached(1672556400,1000)>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
             "Resource\n"
             '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
             '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
@@ -694,13 +669,9 @@ def test_write_usage_section(enabled_services: list[str]) -> None:
         ),
     ],
 )
-@patch.object(UsageClient, "get_data")
-@patch.object(UsageClient, "cache_interval", 1000)
-@freezegun.freeze_time(datetime(2023, 1, 1, 7, 0, 0, 0))
-def test_usage_client_write_sections(
-    fake_get_data: MagicMock,
+def test_usage_details(
     args: Args,
-    usage_data: Sequence,
+    usage_data: Sequence[object],
     exception: Exception,
     expected_result: str,
     capsys: pytest.CaptureFixture[str],
@@ -708,12 +679,9 @@ def test_usage_client_write_sections(
     mgmt_client = MockMgmtApiClient(
         [], {}, 0, usage_data=usage_data, usage_details_exception=exception
     )
-    usage_client = UsageClient(mgmt_client, "1234", args.debug)
-    fake_get_data.side_effect = usage_client.get_live_data
-
     monitored_groups = ["test1", "test2"]
 
-    usage_client.write_sections(monitored_groups)
+    usage_details(mgmt_client, monitored_groups, args)  # type: ignore[arg-type]
 
     captured = capsys.readouterr()
     assert captured.out == expected_result

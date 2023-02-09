@@ -13,7 +13,6 @@ import json
 import logging
 import string
 import sys
-import time
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
@@ -25,7 +24,7 @@ import requests
 import cmk.utils.password_store
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrtrace
+from cmk.special_agents.utils import DataCache, vcrtrace
 
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
@@ -185,6 +184,10 @@ class ApiError(RuntimeError):
 
 
 class ApiErrorMissingData(ApiError):
+    pass
+
+
+class NoConsumptionAPIError(ApiError):
     pass
 
 
@@ -580,15 +583,6 @@ class LabelsSection(Section):
         super().__init__("labels", [piggytarget], separator=0, options=[])
 
 
-class UsageSection(Section):
-    def __init__(self, usage_details, piggytargets, cacheinfo):
-        options = ["cached(%d,%d)" % cacheinfo]
-        super().__init__(
-            "azure_%s" % usage_details.section, piggytargets, separator=124, options=options
-        )
-        self.add(usage_details.dumpinfo())
-
-
 class IssueCollecter:
     def __init__(self):
         super().__init__()
@@ -749,74 +743,6 @@ class MetricCache(DataCache):
                 LOGGER.info(msg)
 
         return metrics
-
-
-class UsageClient(DataCache):
-    NO_CONSUPTION_API = (
-        "offer MS-AZR-0145P",
-        "offer MS-AZR-0146P",
-        "offer MS-AZR-159P",
-        "offer MS-AZR-0036P",
-        "offer MS-AZR-0143P",
-        "offer MS-AZR-0015P",
-        "offer MS-AZR-0144P",
-    )
-
-    def __init__(self, client, subscription, debug=False):
-        super().__init__(AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
-        self._client = client
-
-    @property
-    def cache_interval(self) -> int:
-        """Return the upper limit for allowed cache age.
-
-        Data is updated at midnight, so the cache should not be older than the day.
-        """
-        cache_interval = int(get_seconds_since_midnight(NOW))
-        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
-        return cache_interval
-
-    @classmethod
-    def offerid_has_no_consuption_api(cls, errmsg):
-        return any(s in errmsg for s in cls.NO_CONSUPTION_API)
-
-    def get_validity_from_args(self, *args: Any) -> bool:
-        return True
-
-    def get_live_data(self, *args: Any) -> Any:
-        LOGGER.debug("UsageClient: get live data")
-
-        try:
-            usages = self._client.usagedetails()
-        except ApiError as exc:
-            if self.offerid_has_no_consuption_api(exc.args[0]):
-                return []
-            raise
-        if not usages:  # do not save this in the cache!
-            raise ApiErrorMissingData("Azure API did not return any usage details")
-        LOGGER.debug("yesterdays usage details: %d", len(usages))
-
-        # add group info and name
-        for usage in usages:
-            usage["group"] = usage["properties"]["ResourceGroupName"]
-        return usages
-
-    def write_sections(self, monitored_groups):
-        try:
-            usage_data = self.get_data()
-        except ApiErrorMissingData if self.debug else Exception as exc:
-            LOGGER.warning("%s", exc)
-            write_exception_to_agent_info_section(exc, "Usage client")
-            # write an empty section to all groups:
-            AzureSection("usagedetails", monitored_groups + [""]).write(write_empty=True)
-            return
-
-        cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
-        for usage_details in usage_data:
-            usage_details["type"] = "Microsoft.Consumption/usageDetails"
-            usage_resource = AzureResource(usage_details)
-            piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [""]
-            UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
 def write_section_ad(graph_client):
@@ -1019,6 +945,71 @@ def main_graph_client(args, secret):
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
+def get_usage_data(client: MgmtApiClient, args: Args) -> Sequence[object]:
+    NO_CONSUMPTION_API = (
+        "offer MS-AZR-0145P",
+        "offer MS-AZR-0146P",
+        "offer MS-AZR-159P",
+        "offer MS-AZR-0036P",
+        "offer MS-AZR-0143P",
+        "offer MS-AZR-0015P",
+        "offer MS-AZR-0144P",
+    )
+
+    LOGGER.debug("get usage details")
+
+    try:
+        usage_data = client.usagedetails()
+    except ApiError as exc:
+        if any(s in exc.args[0] for s in NO_CONSUMPTION_API):
+            raise NoConsumptionAPIError
+        raise
+
+    if not usage_data:
+        raise ApiErrorMissingData("Azure API did not return any usage details")
+
+    LOGGER.debug("yesterdays usage details: %d", len(usage_data))
+
+    for usage in usage_data:
+        usage["type"] = "Microsoft.Consumption/usageDetails"
+        usage["group"] = usage["properties"]["ResourceGroupName"]
+
+    return usage_data
+
+
+def write_usage_section(
+    usage_data: Sequence[object],
+    monitored_groups: list[str],
+) -> None:
+    if not usage_data:
+        AzureSection("usagedetails", monitored_groups + [""]).write(write_empty=True)
+
+    for usage in usage_data:
+        usage_resource = AzureResource(usage)
+        piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + [""]
+
+        section = AzureSection(usage_resource.section, piggytargets)
+        section.add(usage_resource.dumpinfo())
+        section.write()
+
+
+def usage_details(mgmt_client: MgmtApiClient, monitored_groups: list[str], args: Args) -> None:
+    try:
+        usage_section = get_usage_data(mgmt_client, args)
+        write_usage_section(usage_section, monitored_groups)
+
+    except NoConsumptionAPIError:
+        LOGGER.debug("Azure offer doesn't support querying the cost API")
+        return
+
+    except Exception as exc:
+        if args.debug:
+            raise
+        LOGGER.warning("%s", exc)
+        write_exception_to_agent_info_section(exc, "get_usage_data")
+        write_usage_section([], monitored_groups)
+
+
 def main_subscription(args, secret, selector, subscription):
     mgmt_client = MgmtApiClient(subscription)
 
@@ -1039,8 +1030,7 @@ def main_subscription(args, secret, selector, subscription):
     group_labels = get_group_labels(mgmt_client, monitored_groups)
     write_group_info(monitored_groups, monitored_resources, group_labels)
 
-    usage_client = UsageClient(mgmt_client, subscription, args.debug)
-    usage_client.write_sections(monitored_groups)
+    usage_details(mgmt_client, monitored_groups, args)
 
     func_args = ((mgmt_client, resource, group_labels, args) for resource in monitored_resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)

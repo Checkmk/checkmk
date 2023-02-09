@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p22
+Version: 2.1.0p21
 
 This werk fixes an issue with getting a wrong response when creating
 a host group without an alias. The alias field is now required.

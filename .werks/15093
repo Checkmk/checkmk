@@ -6,7 +6,7 @@ Date: 1675944556
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p22
+Version: 2.1.0p21
 
 Some refactorings broke the werk 6821. Bring back the missing row fields.
 Persisted delta trees cannot be changed and stay without the missing fields. 

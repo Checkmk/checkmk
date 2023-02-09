@@ -19,7 +19,7 @@ import logging
 import warnings
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from types import FunctionType
-from typing import Any, Final, Literal, TYPE_CHECKING, TypeVar
+from typing import Any, Final, Literal, TypeVar
 from urllib import parse
 
 import apispec
@@ -51,6 +51,8 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
     CONTENT_TYPE,
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
+    HEADER_CHECKMK_EDITION,
+    HEADER_CHECKMK_VERSION,
 )
 from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
@@ -76,10 +78,6 @@ from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
-
-if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import WSGIApplication
 
 _SEEN_ENDPOINTS: set[FunctionType] = set()
 
@@ -427,7 +425,7 @@ class Endpoint:
 
         self.operation_id: str
         self.func: WrappedFunc
-        self.wrapped: Callable[[Mapping[str, Any]], WSGIApplication]
+        self.wrapped: Callable[[Mapping[str, Any]], cmk_http.Response]
 
         self.permissions_required = permissions_required
         self._used_permissions: set[str] = set()
@@ -1015,9 +1013,10 @@ class Endpoint:
         module_obj = import_string(self.func.__module__)
 
         response_headers: dict[str, OpenAPIParameter] = {}
-        content_type_header = to_openapi([CONTENT_TYPE], "header")[0]
-        del content_type_header["in"]
-        response_headers[content_type_header.pop("name")] = content_type_header
+        for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
+            openapi_header = to_openapi([header_to_add], "header")[0]
+            del openapi_header["in"]
+            response_headers[openapi_header.pop("name")] = openapi_header
 
         if self.etag in ("output", "both"):
             etag_header = to_openapi([ETAG_HEADER_PARAM], "header")[0]

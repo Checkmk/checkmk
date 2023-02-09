@@ -19,9 +19,11 @@ from typing import Any, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
+from marshmallow import fields as ma_fields
 from werkzeug.exceptions import HTTPException
 from werkzeug.routing import Map, Rule, Submount
 
+import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import HTTPMethod
@@ -32,6 +34,10 @@ from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.restful_objects import Endpoint
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    HEADER_CHECKMK_EDITION,
+    HEADER_CHECKMK_VERSION,
+)
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
@@ -54,6 +60,11 @@ EXCEPTION_STATUS: dict[type[Exception], int] = {
 PathArgs = Mapping[str, Any]
 
 
+def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
+    assert len(header) == 1
+    return next(iter(header))
+
+
 class EndpointAdapter(AbstractWSGIApp):
     """Wrap an Endpoint
 
@@ -73,6 +84,9 @@ class EndpointAdapter(AbstractWSGIApp):
         # Create the response
         with self.endpoint.register_permission_tracking():
             wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
+
+        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_VERSION)] = cmk_version.__version__
+        wsgi_app.headers[_get_header_name(HEADER_CHECKMK_EDITION)] = cmk_version.edition().short
 
         # Serve the response
         return wsgi_app(environ, start_response)

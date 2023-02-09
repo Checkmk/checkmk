@@ -470,6 +470,14 @@ class RestApiClient:
             expect_ok=expect_ok,
         )
 
+    def bake_and_sign_agent(self, key_id: int, passphrase: str, expect_ok: bool = True) -> Response:
+        return self._request(
+            "post",
+            url="/domain-types/agent/actions/bake_and_sign/invoke",
+            body={"key_id": key_id, "passphrase": passphrase},
+            expect_ok=expect_ok,
+        )
+
 
 # === AuxTags Endpoint Client ===
 

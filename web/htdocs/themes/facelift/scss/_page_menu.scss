@@ -545,11 +545,11 @@ div#page_menu_popups {
         &,
         &:active {
           color: $font-color-light-bg;
-          background-color: darken($color-state-1-background, 5%);
+          background-color: $color-state-1-background;
         }
 
         &:hover {
-          background-color: $color-state-1-background;
+          background-color: darken($color-state-1-background, 5%);
         }
       }
 

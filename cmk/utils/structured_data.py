@@ -102,6 +102,7 @@ class ADeltaResult(NamedTuple):
 class DDeltaResult(NamedTuple):
     counter: SDDeltaCounter
     delta: SDPairs
+    has_changes: bool
 
 
 SDFilterFunc = Callable[[SDKey], bool]
@@ -536,7 +537,7 @@ class StructuredDataNode:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> SDDeltaResult:
+    def compare_with(self, other: object) -> SDDeltaResult:
         if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
@@ -566,17 +567,10 @@ class StructuredDataNode:
         for key in compared_keys.both:
             node = self._nodes[key]
             other_node = other._nodes[key]
-
             if node.is_equal(other_node):
-                if keep_identical:
-                    delta_node.add_node(node.get_encoded_node(encode_as=_identical_delta_tree_node))
                 continue
 
-            delta_node_result = node.compare_with(
-                other_node,
-                keep_identical=keep_identical,
-            )
-
+            delta_node_result = node.compare_with(other_node)
             if (
                 delta_node_result.counter["new"]
                 or delta_node_result.counter["changed"]
@@ -965,7 +959,7 @@ class Table:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> TDeltaResult:
+    def compare_with(self, other: object) -> TDeltaResult:
         if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
@@ -983,10 +977,11 @@ class Table:
             delta_dict_result = _compare_dicts(
                 old_dict=other._rows[key],
                 new_dict=self._rows[key],
-                keep_identical=keep_identical,
+                keep_identical=True,
             )
-            counter.update(delta_dict_result.counter)
-            delta_table.add_row(key, delta_dict_result.delta)
+            if delta_dict_result.has_changes:
+                counter.update(delta_dict_result.counter)
+                delta_table.add_row(key, delta_dict_result.delta)
 
         for key in compared_keys.only_new:
             new_row = {k: _new_delta_tree_node(v) for k, v in self._rows[key].items()}
@@ -1176,14 +1171,14 @@ class Attributes:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> ADeltaResult:
+    def compare_with(self, other: object) -> ADeltaResult:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         delta_dict_result = _compare_dicts(
             old_dict=other.pairs,
             new_dict=self.pairs,
-            keep_identical=keep_identical,
+            keep_identical=False,
         )
 
         delta_attributes = Attributes(path=self.path, retentions=self.retentions)
@@ -1257,6 +1252,7 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> D
     return DDeltaResult(
         counter=Counter(new=len(new), changed=len(changed), removed=len(removed)),
         delta=delta_dict,
+        has_changes=bool(new or removed or changed),
     )
 
 

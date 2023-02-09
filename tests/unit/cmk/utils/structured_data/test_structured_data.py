@@ -405,12 +405,42 @@ def test_table_compare_with(old_table_data, new_table_data, result):
     old_table.add_rows(old_table_data)
     new_table = Table(key_columns=["id"])
     new_table.add_rows(new_table_data)
+
     delta_result = new_table.compare_with(old_table)
+    if any(result):
+        assert not delta_result.delta.is_empty()
+    else:
+        assert delta_result.delta.is_empty()
+
     assert (
         delta_result.counter["new"],
         delta_result.counter["changed"],
         delta_result.counter["removed"],
     ) == result
+
+
+@pytest.mark.parametrize(
+    "old_row, new_row, expected_keys",
+    [
+        ({}, {}, set()),
+        ({"id": "id", "val": "val"}, {"id": "id", "val": "val"}, set()),
+        ({"id": "id", "val": "val"}, {"id": "id"}, set(["id", "val"])),
+        ({"id": "id"}, {"id": "id", "val": "val"}, set(["id", "val"])),
+        ({"id": "id1", "val": "val"}, {"id": "id2", "val": "val"}, set(["id", "val"])),
+    ],
+)
+def test_table_row_keys_compare_with(
+    old_row: dict[str, str],
+    new_row: dict[str, str],
+    expected_keys: set[str],
+) -> None:
+    old_table = Table(key_columns=["id"])
+    old_table.add_rows([old_row])
+    new_table = Table(key_columns=["id"])
+    new_table.add_rows([new_row])
+
+    delta_table = new_table.compare_with(old_table).delta
+    assert set(k for r in delta_table.rows for k in r) == expected_keys
 
 
 def test_filtering_node_no_paths():

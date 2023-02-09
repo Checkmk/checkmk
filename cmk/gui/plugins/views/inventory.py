@@ -2010,7 +2010,20 @@ class ABCNodeRenderer(abc.ABC):
 
         html.close_tr()
 
+        def _empty_or_equal(value: tuple[SDValue | None, SDValue | None] | SDValue | None) -> bool:
+            # Some refactorings broke werk 6821. Especially delta trees may contain empty or
+            # unchanged rows.
+            if value is None:
+                return True
+            if isinstance(value, tuple) and len(value) == 2 and value[0] == value[1]:
+                # Only applies to delta tree
+                return True
+            return False
+
         for index, entry in enumerate(self._sort_table_rows(hint, table)):
+            if all(_empty_or_equal(entry.get(key)) for _title, key, _is_key_column in titles):
+                continue
+
             html.open_tr(class_="even0")
             for title, key, _is_key_column in titles:
                 value = entry.get(key)

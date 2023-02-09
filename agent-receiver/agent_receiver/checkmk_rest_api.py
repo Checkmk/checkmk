@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Callable
 from enum import Enum
 from http import HTTPStatus
@@ -229,6 +228,11 @@ def _verify_response(
         )
 
 
+class _RestApiErrorDescr(BaseModel):
+    title: str
+    detail: str | None = None
+
+
 def _parse_error_response_body(body: str) -> str:
     """
     The REST API often returns JSON error bodies such as
@@ -241,14 +245,11 @@ def _parse_error_response_body(body: str) -> str:
     '["x", "y"]'
     >>> _parse_error_response_body('{"message": "Hands off this component!", "status": 403}')
     '{"message": "Hands off this component!", "status": 403}'
-    >>> _parse_error_response_body('{"title": "You do not have the permission for agent pairing.", "status": 403}')
-    'You do not have the permission for agent pairing.'
+    >>> _parse_error_response_body('{"title": "Insufficient permissions", "detail": "You need permission xyz.", "status": 403}')
+    'Insufficient permissions - Details: You need permission xyz.'
     """
     try:
-        deserialized_body = json.loads(body)
-    except json.JSONDecodeError:
+        error_descr = _RestApiErrorDescr.parse_raw(body)
+    except Exception:
         return body
-    try:
-        return deserialized_body["title"]
-    except (TypeError, KeyError):
-        return body
+    return error_descr.title + (f" - Details: {error_descr.detail}" if error_descr.detail else "")

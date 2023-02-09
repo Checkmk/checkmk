@@ -678,6 +678,7 @@ input[type="checkbox"] {
   letter-spacing: $letter-spacing-table;
   color: $font-color;
   background-color: $input-button-bg-color;
+  border: 1px solid $default-button-border-color;
   box-shadow: none;
 
   &:hover,
@@ -709,7 +710,7 @@ select {
 input.button {
   &:not([type="text"]),
   &:not([type="password"]) {
-    padding: 5px 8px;
+    padding: 6px 8px 4px;
   }
 }
 

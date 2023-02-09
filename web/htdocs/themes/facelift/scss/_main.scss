@@ -190,10 +190,12 @@ input.button.hot,
   &:active {
     color: $font-color-light-bg;
     background-color: $success-dimmed;
+    border-color: $success-dimmed;
   }
 
   &:hover {
     background-color: $success;
+    border-color: $success;
   }
 }
 

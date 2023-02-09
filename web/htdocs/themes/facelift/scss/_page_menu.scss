@@ -485,14 +485,23 @@ div#top_heading {
           color: $font-color;
           text-decoration: none;
           background-color: $button-bg-color-suggestions;
+          border: 1px solid $default-button-border-color;
           border-radius: 4px;
           box-sizing: border-box;
+
+          &:hover {
+            cursor: pointer;
+            background-color: $button-bg-color-default;
+
+            animation-duration: 0.5s;
+            animation-name: easyhoverbg;
+            animation-fill-mode: forwards;
+          }
 
           img {
             width: 15px;
             height: 15px;
             padding: 0;
-            margin-top: -1.5px;
             margin-right: 5px;
 
             &:hover {
@@ -506,13 +515,8 @@ div#top_heading {
             }
           }
 
-          &:hover {
-            cursor: pointer;
-            background-color: $button-bg-color-default;
-
-            animation-duration: 0.5s;
-            animation-name: easyhoverbg;
-            animation-fill-mode: forwards;
+          span {
+            padding-top: 3px;
           }
         }
 
@@ -546,10 +550,12 @@ div#page_menu_popups {
         &:active {
           color: $font-color-light-bg;
           background-color: $color-state-1-background;
+          border-color: $color-state-1-background;
         }
 
         &:hover {
           background-color: darken($color-state-1-background, 5%);
+          border-color: darken($color-state-1-background, 5%);
         }
       }
 
@@ -558,10 +564,12 @@ div#page_menu_popups {
         &:active {
           color: $white;
           background-color: darken($color-state-2-background, 5%);
+          border-color: darken($color-state-2-background, 5%);
         }
 
         &:hover {
           background-color: $color-state-2-background;
+          border-color: $color-state-2-background;
         }
       }
     }
@@ -581,11 +589,13 @@ div#page_menu_popups {
 
     &.confirm_question {
       background-color: $yellow;
+      border-color: $yellow;
     }
 
     &.confirm_warning {
       color: $white;
       background-color: $color-state-2-background;
+      border-color: $color-state-2-background;
     }
   }
 

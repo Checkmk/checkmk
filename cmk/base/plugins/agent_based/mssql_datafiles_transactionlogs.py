@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -66,7 +67,7 @@ def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
                 "max_size": None,
                 "allocated_size": None,
                 "used_size": None,
-                "mountpoint": physical_name[0],
+                "physical_name": physical_name.lower(),
             },
         )
         with suppress(ValueError):
@@ -178,6 +179,18 @@ def _mssql_datafiles_process_sizes(
         summary=f"Maximum size: {render.bytes(datafile_usage.max)}",
     )
 
+def _get_mountpoint(
+    df_dict: dict,
+    physical_name: str,
+) -> str:
+    part = physical_name.split("\\")
+    i = len(part)
+    while i > 1:
+        i = i -1
+        mountpoint = df_dict.get("/".join(part[0:i])+"/")
+        if mountpoint is not None:
+            return "/".join(part[0:i])+"/"
+    return part[0]+"/"
 
 def discover_mssql_common(
     mode: Literal["datafiles", "transactionlogs"],
@@ -219,12 +232,13 @@ def discover_mssql_transactionlogs(
 def _datafile_usage(
     instances: Iterable[MSSQLInstanceData],
     available_bytes: Mapping[str, float],
-) -> DatafileUsage | None:
+) -> Optional[DatafileUsage]:
     max_size_sum = 0.0
     allocated_size_sum = 0.0
     used_size_sum = 0.0
     unlimited = False
     instances_found = False
+    used_mointpoints = []
 
     for instance in instances:
         instances_found = True
@@ -232,13 +246,18 @@ def _datafile_usage(
         allocated_size_sum += instance["allocated_size"] or 0
         used_size_sum += (used_size := instance["used_size"] or 0)
 
-        max_size = instance["max_size"] or 0
-        filesystem_free_size = available_bytes.get(instance["mountpoint"])
-        if filesystem_free_size is not None and ((max_size > filesystem_free_size) or unlimited):
-            max_size = filesystem_free_size + used_size
+        mountpoint = _get_mountpoint(available_bytes, instance["physical_name"])
 
+        max_size = instance["max_size"] or 0
+
+        filesystem_free_size = available_bytes.get(mountpoint)
+        # when the free space of a mountpoint is added to the max size, then it should not be added again
+        if filesystem_free_size is not None and ((max_size > filesystem_free_size) or unlimited):
+            if mountpoint in used_mointpoints:filesystem_free_size = 0
+            max_size = filesystem_free_size + used_size
         max_size_sum += max_size
 
+        used_mointpoints.append(mountpoint)
     return (
         DatafileUsage(
             used=used_size_sum,
@@ -265,8 +284,7 @@ def check_mssql_common(
         )
     )
     available_bytes = (
-        {f.mountpoint[0]: f.avail_mb * 1024 * 1024 for f in section_df[0]} if section_df else {}
-    )
+        {f.mountpoint.lower(): f.avail_mb * 1024 * 1024 for f in section_df[0]} if section_df else {}
 
     if not (
         datafile_usage := _datafile_usage(

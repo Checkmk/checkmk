@@ -44676,9 +44676,9 @@ msgstr "Spiacente, non puoi avere più di %d metriche in un grafico combinato."
 msgid "Sorry, you have no permission for this host."
 msgstr "Spiacente, non hai l'autorizzazione per questo host."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
 "groups are <b>%s</b>, your contact groups are <b>%s</b>."
 msgstr ""
 "Spiacente, non hai i permessi sull'host '<b>%s</b>'. I gruppi di contatto "

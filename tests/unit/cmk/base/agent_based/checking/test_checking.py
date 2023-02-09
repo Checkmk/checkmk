@@ -22,7 +22,7 @@ from cmk.checkers.checkresults import ServiceCheckResult
 
 import cmk.base.agent_based.checking._checking as checking
 import cmk.base.config as config
-from cmk.base.api.agent_based.checking_classes import Metric, Result, State
+from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
 
 
 def make_timespecific_params_list(
@@ -226,7 +226,7 @@ def test_time_resolved_check_parameters(  # type:ignore[no-untyped-def]
 def test_aggregate_result(  # type:ignore[no-untyped-def]
     subresults, aggregated_results: ServiceCheckResult
 ) -> None:
-    assert checking._aggregate_results(subresults) == aggregated_results
+    assert checking._aggregate_results(consume_check_results(subresults)) == aggregated_results
 
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:

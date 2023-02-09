@@ -9,7 +9,13 @@ from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Seq
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import unwrap_parameters
-from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    EvalableFloat,
+    MetricTuple,
+    ParsedSectionName,
+    RuleSetName,
+)
 
 from cmk.checkers.discovery import AutocheckEntry
 
@@ -479,6 +485,29 @@ CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]
 CheckFunction = Callable[..., CheckResult]
 DiscoveryResult = Iterable[Service]
 DiscoveryFunction = Callable[..., DiscoveryResult]
+
+
+def consume_check_results(
+    subresults: CheckResult,
+) -> tuple[Sequence[MetricTuple], Sequence[Result]]:
+    """Impedance matching between the Check API and the Check Engine."""
+    ignore_results: list[IgnoreResults] = []
+    results: list[Result] = []
+    perfdata: list[MetricTuple] = []
+    for subr in subresults:
+        if isinstance(subr, IgnoreResults):
+            ignore_results.append(subr)
+        elif isinstance(subr, Metric):
+            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+        else:
+            results.append(subr)
+
+    # Consume *all* check results, and *then* raise, if we encountered
+    # an IgnoreResults instance.
+    if ignore_results:
+        raise IgnoreResultsError(str(ignore_results[-1]))
+
+    return perfdata, results
 
 
 class CheckPlugin(NamedTuple):

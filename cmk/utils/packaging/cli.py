@@ -476,18 +476,18 @@ def _add_command(
     subparser.set_defaults(handler=handler)
 
 
-def set_up_logging(verbosity: int) -> logging.Logger:
+def set_up_logging(verbosity: int) -> None:
     logging.basicConfig(
         format="%(levelname)s: %(message)s" if verbosity else "%(message)s",
         level={0: logging.WARNING, 1: logging.INFO}.get(verbosity, logging.DEBUG),
     )
-    return logging.getLogger(__name__)
 
 
 def main(argv: list[str], path_config: PathConfig) -> int:
     args = _parse_arguments(argv)
+    set_up_logging(args.verbose)
     try:
-        return args.handler(args, set_up_logging(args.verbose), path_config)
+        return args.handler(args, path_config)
     except PackageException as exc:
         if args.debug:
             raise

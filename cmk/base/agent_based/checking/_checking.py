@@ -68,11 +68,9 @@ from cmk.base.agent_based.utils import (
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import (
     CheckPlugin,
-    CheckResult,
-    IgnoreResults,
+    consume_check_results,
     IgnoreResultsError,
 )
-from cmk.base.api.agent_based.checking_classes import Metric as MetricResult
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
@@ -405,10 +403,12 @@ def get_aggregated_result(
             service.check_plugin_name, service.description
         ), value_store_manager.namespace(service.id()):
             result = _aggregate_results(
-                check_function(
-                    **item_kw,
-                    **params_kw,
-                    **section_kws,
+                consume_check_results(
+                    check_function(
+                        **item_kw,
+                        **params_kw,
+                        **section_kws,
+                    )
                 )
             )
 
@@ -535,8 +535,12 @@ def _add_state_marker(
     return result_str if state_marker in result_str else result_str + state_marker
 
 
-def _aggregate_results(subresults: CheckResult) -> ServiceCheckResult:
-    perfdata, results = _consume_and_dispatch_result_types(subresults)
+def _aggregate_results(
+    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+) -> ServiceCheckResult:
+    # This is more impedance matching.  The CheckFunction should
+    # probably just return a CheckResult.
+    perfdata, results = subresults
     needs_marker = len(results) > 1
     summaries: list[str] = []
     details: list[str] = []
@@ -569,26 +573,3 @@ def _aggregate_results(subresults: CheckResult) -> ServiceCheckResult:
         )
     all_text = [", ".join(summaries)] + details
     return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
-
-
-def _consume_and_dispatch_result_types(
-    subresults: CheckResult,
-) -> tuple[list[MetricTuple], list[CheckFunctionResult]]:
-    """Consume *all* check results, and *then* raise, if we encountered
-    an IgnoreResults instance.
-    """
-    ignore_results: list[IgnoreResults] = []
-    results: list[CheckFunctionResult] = []
-    perfdata: list[MetricTuple] = []
-    for subr in subresults:
-        if isinstance(subr, IgnoreResults):
-            ignore_results.append(subr)
-        elif isinstance(subr, MetricResult):
-            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
-        else:
-            results.append(subr)
-
-    if ignore_results:
-        raise IgnoreResultsError(str(ignore_results[-1]))
-
-    return perfdata, results

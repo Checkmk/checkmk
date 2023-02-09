@@ -72,7 +72,7 @@ fn renew_connection_cert(
     let (csr, private_key) = certs::make_csr(&connection.trust.uuid.to_string())?;
     let new_cert = renew_certificate_api.renew_certificate(&url, &connection.trust, csr)?;
     connection.trust.private_key = private_key;
-    connection.trust.certificate = new_cert.client_cert;
+    connection.trust.certificate = new_cert.agent_cert;
 
     Ok(())
 }
@@ -216,9 +216,9 @@ mod test_renew_certificate {
             _base_url: &reqwest::Url,
             connection: &config::TrustedConnection,
             _csr: String,
-        ) -> AnyhowResult<agent_receiver_api::CertificateResponse> {
-            Ok(agent_receiver_api::CertificateResponse {
-                client_cert: format!("new_cert_for_{}", connection.uuid),
+        ) -> AnyhowResult<agent_receiver_api::RenewCertificateResponse> {
+            Ok(agent_receiver_api::RenewCertificateResponse {
+                agent_cert: format!("new_cert_for_{}", connection.uuid),
             })
         }
     }

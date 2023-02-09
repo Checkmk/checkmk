@@ -10,7 +10,7 @@ import stat
 from collections.abc import Mapping
 from pathlib import Path
 from unittest import mock
-from uuid import UUID
+from uuid import UUID, uuid4
 from zlib import compress
 
 import pytest
@@ -582,20 +582,20 @@ def test_registration_status_pull_host(
     }
 
 
-def test_renew_certificate_wrong_csr(
+def test_renew_certificate_uuid_csr_mismatch(
     client: TestClient,
     uuid: UUID,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    _key, wrong_csr = generate_csr_pair("abc123", 512)
+    _key, wrong_csr = generate_csr_pair(str(uuid4()), 512)
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=typeshed_issue_7724(registration_status_headers),
         json={"csr": serialize_to_pem(wrong_csr)},
     )
 
-    assert response.status_code == 403
-    assert "CSR doesn't match" in response.json()["detail"]
+    assert response.status_code == 400
+    assert "does not match" in response.json()["detail"]
 
 
 def test_renew_certificate_not_registered(
@@ -615,18 +615,12 @@ def test_renew_certificate_not_registered(
 
 
 def test_renew_certificate_ok(
-    mocker: MockerFixture,
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
     serialized_csr: str,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    mocker.patch("agent_receiver.endpoints.internal_credentials")
-    mocker.patch(
-        "agent_receiver.endpoints.post_csr",
-        return_value="new_cert",
-    )
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
@@ -638,4 +632,4 @@ def test_renew_certificate_ok(
     )
 
     assert response.status_code == 200
-    assert response.json() == {"client_cert": "new_cert"}
+    assert response.json()["agent_cert"].startswith("-----BEGIN CERTIFICATE-----")

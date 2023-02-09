@@ -21,8 +21,8 @@ pub struct PairingResponse {
 }
 
 #[derive(Deserialize)]
-pub struct CertificateResponse {
-    pub client_cert: String,
+pub struct RenewCertificateResponse {
+    pub agent_cert: String,
 }
 
 #[serde_with::serde_as]
@@ -123,7 +123,7 @@ pub trait RenewCertificate {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         csr: String,
-    ) -> AnyhowResult<CertificateResponse>;
+    ) -> AnyhowResult<RenewCertificateResponse>;
 }
 
 pub struct Api {
@@ -215,7 +215,7 @@ impl RenewCertificate for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         csr: String,
-    ) -> AnyhowResult<CertificateResponse> {
+    ) -> AnyhowResult<RenewCertificateResponse> {
         let response = certs::client(
             Some(connection.tls_handshake_credentials()?),
             self.use_proxy,
@@ -230,7 +230,7 @@ impl RenewCertificate for Api {
 
         if status == StatusCode::OK {
             let body = response.text().context("Failed to obtain response body")?;
-            serde_json::from_str::<CertificateResponse>(&body)
+            serde_json::from_str::<RenewCertificateResponse>(&body)
                 .context(format!("Error parsing this response body: {body}"))
         } else {
             bail!(Api::error_response_description(

@@ -122,6 +122,20 @@ def log_http_exception(
     return wrapper
 
 
+class ControllerCertSettings(BaseModel, frozen=True):
+    lifetime_in_months: int
+
+
+@log_http_exception
+def controller_certificate_settings(credentials: HTTPBasicCredentials) -> ControllerCertSettings:
+    response = _forward_get(
+        "agent_controller_certificates_settings",
+        credentials,
+    )
+    _verify_response(response, HTTPStatus.OK)
+    return ControllerCertSettings.parse_obj(response.json())
+
+
 @log_http_exception
 def get_root_cert(credentials: HTTPBasicCredentials) -> str:
     response = _forward_get(

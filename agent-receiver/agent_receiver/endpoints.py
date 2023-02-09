@@ -13,6 +13,7 @@ from uuid import UUID
 from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
+    controller_certificate_settings,
     get_root_cert,
     host_configuration,
     HostConfiguration,
@@ -22,14 +23,16 @@ from agent_receiver.checkmk_rest_api import (
 from agent_receiver.decompression import DecompressionError, Decompressor
 from agent_receiver.log import logger
 from agent_receiver.models import (
-    CertResponse,
-    CsrBody,
+    CertificateRenewalBody,
+    CsrField,
     HostTypeEnum,
+    PairingBody,
     PairingResponse,
     RegistrationStatus,
     RegistrationStatusEnum,
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
+    RenewCertResponse,
 )
 from agent_receiver.site_context import r4r_dir, site_name
 from agent_receiver.utils import (
@@ -38,9 +41,17 @@ from agent_receiver.utils import (
     internal_credentials,
     uuid_from_pem_csr,
 )
+from cryptography.x509 import Certificate
 from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_NOT_IMPLEMENTED
+from starlette.status import (
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_403_FORBIDDEN,
+    HTTP_501_NOT_IMPLEMENTED,
+)
+
+from .certs import extract_cn_from_csr, serialize_to_pem, sign_agent_csr
 
 # pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
 # pylint: disable=too-many-function-args
@@ -48,11 +59,29 @@ from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_N
 security = HTTPBasic()
 
 
+def _validate_uuid_against_csr(uuid: UUID, csr_field: CsrField) -> None:
+    if str(uuid) != (cn := extract_cn_from_csr(csr_field.csr)):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"UUID ({uuid}) does not match CN ({cn}) of CSR.",
+        )
+
+
+def _sign_agent_csr(uuid: UUID, csr_field: CsrField) -> Certificate:
+    return sign_agent_csr(
+        csr_field.csr,
+        controller_certificate_settings(
+            f"uuid={uuid} Querying agent controller certificate settings failed",
+            internal_credentials(),
+        ).lifetime_in_months,
+    )
+
+
 @AGENT_RECEIVER_APP.post("/pairing", response_model=PairingResponse)
 async def pairing(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
-    pairing_body: CsrBody,
+    pairing_body: PairingBody,
 ) -> PairingResponse:
     uuid = uuid_from_pem_csr(pairing_body.csr)
 
@@ -296,21 +325,17 @@ async def registration_status(
 
 @UUID_VALIDATION_ROUTER.post(
     "/renew_certificate/{uuid}",
-    response_model=CertResponse,
+    response_model=RenewCertResponse,
 )
 async def renew_certificate(
     *,
     uuid: UUID,
-    csr_body: CsrBody,
-) -> CertResponse:
+    cert_renewal_body: CertificateRenewalBody,
+) -> RenewCertResponse:
 
     # Note: Technically, we could omit the {uuid} part of the endpoint url.
     # We explicitly require it for consistency with other endpoints.
-    if str(uuid) != uuid_from_pem_csr(csr_body.csr):
-        raise HTTPException(
-            status_code=HTTP_403_FORBIDDEN,
-            detail=f"You requested a certificate renewal for {uuid}, but the provided CSR doesn't match.",
-        )
+    _validate_uuid_against_csr(uuid, cert_renewal_body.csr)
 
     # Don't maintain deleted registrations.
     host = Host(uuid)
@@ -324,17 +349,13 @@ async def renew_certificate(
             detail="Host is not registered",
         )
 
-    client_cert = post_csr(
-        f"uuid={uuid} Certificate renewal failed",
-        internal_credentials(),
-        csr_body.csr,
-    )
+    agent_cert = _sign_agent_csr(uuid, cert_renewal_body.csr)
 
     logger.info(
         "uuid=%s Certificate renewal succeeded",
         uuid,
     )
 
-    return CertResponse(
-        client_cert=client_cert,
+    return RenewCertResponse(
+        agent_cert=serialize_to_pem(agent_cert),
     )

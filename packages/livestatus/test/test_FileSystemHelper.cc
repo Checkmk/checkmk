@@ -56,13 +56,13 @@ protected:
 };
 
 TEST_P(PathContainsFixtureWithPathCreation, TestPathContains) {
-    bool expected = std::get<2>(GetParam());
+    const bool expected = std::get<2>(GetParam());
     SetUp_(std::get<0>(GetParam()), std::get<1>(GetParam()));
     ASSERT_EQ(expected, mk::path_contains(directory(), path()));
 }
 
 TEST_P(PathContainsFixtureWithoutPathCreation, TestPathContains) {
-    bool expected = std::get<2>(GetParam());
+    const bool expected = std::get<2>(GetParam());
     SetUp_(std::get<0>(GetParam()), std::get<1>(GetParam()));
     ASSERT_EQ(expected, mk::path_contains(directory(), path()));
 }

@@ -22,7 +22,7 @@ DoubleFilter::DoubleFilter(Kind kind, std::string columnName,
 
 bool DoubleFilter::accepts(Row row, const User & /*user*/,
                            std::chrono::seconds /*timezone_offset*/) const {
-    double act_value = _getValue(row);
+    const double act_value = _getValue(row);
     switch (oper()) {
         case RelationalOperator::equal:
             return act_value == _ref_value;

@@ -31,7 +31,7 @@ EventConsoleConnection::~EventConsoleConnection() {
 }
 
 void EventConsoleConnection::run() {
-    asio::local::stream_protocol::endpoint ep(_path);
+    const asio::local::stream_protocol::endpoint ep(_path);
     // Attention, tricky timing-dependent stuff ahead: When we connect very
     // rapidly, a no_buffer_space (= ENOBUFS) error can happen. This is probably
     // caused by some internal asio Kung Fu, remapping EAGAIN to ENOBUFS, and

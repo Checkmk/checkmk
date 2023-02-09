@@ -123,7 +123,7 @@ void Renderer::outputUnicodeString(const char *start, const char *end,
 
 void Renderer::outputUTF8(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
-        unsigned char ch0 = *p;
+        const unsigned char ch0 = *p;
         if ((ch0 & 0x80) == 0x00) {
             if (isBoringChar(ch0)) {
                 _os.put(*p);
@@ -139,7 +139,7 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if (end <= &p[1]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
@@ -150,11 +150,11 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if (end <= &p[2]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            unsigned char ch2 = *++p;
+            const unsigned char ch2 = *++p;
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
@@ -170,15 +170,15 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if (end <= &p[3]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            unsigned char ch2 = *++p;
+            const unsigned char ch2 = *++p;
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
-            unsigned char ch3 = *++p;
+            const unsigned char ch3 = *++p;
             if ((ch3 & 0xC0) != 0x80) {
                 return invalidUTF8(ch3);
             }
@@ -194,7 +194,7 @@ void Renderer::outputUTF8(const char *start, const char *end) {
 
 void Renderer::outputLatin1(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
-        unsigned char ch = *p;
+        const unsigned char ch = *p;
         if (isBoringChar(ch)) {
             _os.put(*p);
         } else {
@@ -205,7 +205,7 @@ void Renderer::outputLatin1(const char *start, const char *end) {
 
 void Renderer::outputMixed(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
-        unsigned char ch0 = *p;
+        const unsigned char ch0 = *p;
         if (isBoringChar(ch0)) {
             _os.put(*p);
         } else if ((ch0 & 0xE0) == 0xC0) {
@@ -214,7 +214,7 @@ void Renderer::outputMixed(const char *start, const char *end) {
             if (end <= &p[1]) {
                 return truncatedUTF8();
             }
-            unsigned char ch1 = *++p;
+            const unsigned char ch1 = *++p;
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }

@@ -48,8 +48,8 @@ void *copy_thread(void *info) {
     signal(SIGWINCH, SIG_IGN);  // NOLINT
 
     auto *ti = static_cast<thread_info *>(info);
-    int from = ti->from;
-    int to = ti->to;
+    const int from = ti->from;
+    const int to = ti->to;
 
     char read_buffer[65536];
     while (true) {
@@ -76,7 +76,7 @@ void *copy_thread(void *info) {
         const char *buffer = read_buffer;
         size_t bytes_to_write = r;
         while (bytes_to_write > 0) {
-            ssize_t bytes_written = ::write(to, buffer, bytes_to_write);
+            const ssize_t bytes_written = ::write(to, buffer, bytes_to_write);
             if (bytes_written == -1) {
                 printErrno("Error: Cannot write " +
                            std::to_string(bytes_to_write) + " bytes to " +
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     // https://llvm.org/bugs/show_bug.cgi?id=29089
     signal(SIGWINCH, SIG_IGN);  // NOLINT
 
-    std::string unixpath = argv[1];
+    const std::string unixpath = argv[1];
     struct stat st;
 
     if (0 != stat(unixpath.c_str(), &st)) {
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
         exit(2);
     }
 
-    int sock = ::socket(PF_UNIX, SOCK_STREAM, 0);
+    const int sock = ::socket(PF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
         printErrno("Cannot create client socket");
         exit(3);

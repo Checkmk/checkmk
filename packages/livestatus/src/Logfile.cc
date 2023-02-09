@@ -22,7 +22,8 @@ std::chrono::system_clock::time_point firstTimestampOf(
     if (std::ifstream is{path}; is && std::getline(is, line)) {
         return LogEntry{{}, line}.time();
     }
-    generic_error ge{"cannot determine first timestamp of " + path.string()};
+    const generic_error ge{"cannot determine first timestamp of " +
+                           path.string()};
     Informational(logger) << ge;
     return {};
 }
@@ -40,7 +41,7 @@ Logfile::Logfile(Logger *logger, LogCache *log_cache,
     , _logclasses_read(0) {}
 
 void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
-    unsigned missing_types = logclasses & ~_logclasses_read;
+    const unsigned missing_types = logclasses & ~_logclasses_read;
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
     // load the rest of the file, even if no logclasses
@@ -49,7 +50,7 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
     if (_watch) {
         FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            generic_error ge("cannot open logfile " + _path.string());
+            const generic_error ge("cannot open logfile " + _path.string());
             Informational(_logger) << ge;
             return;
         }
@@ -82,7 +83,7 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
 
         FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            generic_error ge("cannot open logfile " + _path.string());
+            const generic_error ge("cannot open logfile " + _path.string());
             Informational(_logger) << ge;
             return;
         }

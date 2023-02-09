@@ -49,7 +49,7 @@ TEST_F(CrashReportFixture, DirectoryAndFileExist) {
 
 TEST_F(CrashReportFixture, AccessorsAreCorrect) {
     ASSERT_TRUE(fs::exists(fullpath));
-    CrashReport cr{uuid, component};
+    const CrashReport cr{uuid, component};
     EXPECT_EQ(uuid, cr.id());
     EXPECT_EQ(component, cr.component());
 }

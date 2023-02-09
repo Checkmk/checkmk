@@ -233,9 +233,9 @@ void *main_thread(void *data) {
             }
             break;
         }
-        int cc = ::accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
+        const int cc = ::accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
         if (cc == -1) {
-            generic_error ge("cannot accept client connection");
+            const generic_error ge("cannot accept client connection");
             Warning(logger) << ge;
             continue;
         }
@@ -246,7 +246,7 @@ void *main_thread(void *data) {
             fl_client_queue->push(cc, queue_overflow_strategy::pop_oldest)) {
             case queue_status::overflow:
             case queue_status::joinable: {
-                generic_error ge("cannot enqueue client socket");
+                const generic_error ge("cannot enqueue client socket");
                 Warning(logger) << ge;
                 break;
             }
@@ -379,7 +379,7 @@ void start_threads() {
 
     fl_thread_info.resize(g_livestatus_threads + 1);
     for (auto &info : fl_thread_info) {
-        ptrdiff_t idx = &info - fl_thread_info.data();
+        ptrdiff_t const idx = &info - fl_thread_info.data();
         if (idx == 0) {
             // start thread that listens on socket
             info.name = "main";
@@ -447,8 +447,8 @@ bool open_unix_socket() {
             Debug(fl_logger_nagios)
                 << "removed old socket file " << fl_paths._socket;
         } else {
-            generic_error ge("cannot remove old socket file " +
-                             fl_paths._socket);
+            const generic_error ge("cannot remove old socket file " +
+                                   fl_paths._socket);
             Alert(fl_logger_nagios) << ge;
             return false;
         }
@@ -457,7 +457,7 @@ bool open_unix_socket() {
     g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
-        generic_error ge("cannot create UNIX socket");
+        const generic_error ge("cannot create UNIX socket");
         Critical(fl_logger_nagios) << ge;
         return false;
     }
@@ -471,8 +471,8 @@ bool open_unix_socket() {
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (::bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
                sizeof(sockaddr)) < 0) {
-        generic_error ge("cannot bind UNIX socket to address " +
-                         fl_paths._socket);
+        const generic_error ge("cannot bind UNIX socket to address " +
+                               fl_paths._socket);
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
@@ -481,15 +481,17 @@ bool open_unix_socket() {
     // Make writable group members (fchmod didn't do nothing for me. Don't
     // know why!)
     if (0 != ::chmod(fl_paths._socket.c_str(), 0660)) {
-        generic_error ge("cannot change file permissions for UNIX socket at " +
-                         fl_paths._socket + " to 0660");
+        const generic_error ge(
+            "cannot change file permissions for UNIX socket at " +
+            fl_paths._socket + " to 0660");
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
     }
 
     if (0 != ::listen(g_unix_socket, 3 /* backlog */)) {
-        generic_error ge("cannot listen to UNIX socket at " + fl_paths._socket);
+        const generic_error ge("cannot listen to UNIX socket at " +
+                               fl_paths._socket);
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
@@ -515,7 +517,7 @@ int broker_host(int event_type __attribute__((__unused__)),
 }
 
 int broker_check(int event_type, void *data) {
-    int result = NEB_OK;
+    const int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
         auto *c = static_cast<nebstruct_service_check_data *>(data);
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
@@ -533,7 +535,7 @@ int broker_check(int event_type, void *data) {
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     auto *co = static_cast<nebstruct_comment_data *>(data);
-    unsigned long id = co->comment_id;
+    const unsigned long id = co->comment_id;
     switch (co->type) {
         case NEBTYPE_COMMENT_ADD:
         case NEBTYPE_COMMENT_LOAD: {
@@ -577,7 +579,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     auto *dt = static_cast<nebstruct_downtime_data *>(data);
-    unsigned long id = dt->downtime_id;
+    const unsigned long id = dt->downtime_id;
     switch (dt->type) {
         case NEBTYPE_DOWNTIME_ADD:
         case NEBTYPE_DOWNTIME_LOAD: {
@@ -857,7 +859,7 @@ std::string check_path(const std::string &name, const std::string &path) {
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
         // set default path to our logfile to be in the same path as nagios.log
-        std::string lf{log_file};
+        const std::string lf{log_file};
         auto slash = lf.rfind('/');
         fl_paths._logfile =
             (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
@@ -874,14 +876,14 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     while (char *token = next_field(&args)) {
         /* find = */
         char *part = token;
-        std::string left = safe_next_token(&part, '=');
+        const std::string left = safe_next_token(&part, '=');
         const char *right_token = next_token(&part, 0);
         if (right_token == nullptr) {
             fl_paths._socket = left;
         } else {
-            std::string right{right_token};
+            const std::string right{right_token};
             if (left == "debug") {
-                int debug_level = atoi(right.c_str());
+                const int debug_level = atoi(right.c_str());
                 if (debug_level >= 2) {
                     fl_livestatus_log_level = LogLevel::debug;
                 } else if (debug_level >= 1) {
@@ -919,7 +921,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                     << (fl_limits._max_response_size / (1024.0 * 1024.0))
                     << " MB)";
             } else if (left == "num_client_threads") {
-                int c = atoi(right.c_str());
+                const int c = atoi(right.c_str());
                 if (c <= 0 || c > 1000) {
                     Warning(logger) << "cannot set num_client_threads to " << c
                                     << ", must be > 0 and <= 1000";
@@ -929,7 +931,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                     g_livestatus_threads = c;
                 }
             } else if (left == "query_timeout") {
-                int c = atoi(right.c_str());
+                const int c = atoi(right.c_str());
                 if (c < 0) {
                     Warning(logger) << "query_timeout must be >= 0";
                 } else {
@@ -943,7 +945,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                     }
                 }
             } else if (left == "idle_timeout") {
-                int c = atoi(right.c_str());
+                const int c = atoi(right.c_str());
                 if (c < 0) {
                     Warning(logger) << "idle_timeout must be >= 0";
                 } else {
@@ -1017,7 +1019,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         }
     }
 
-    std::string sp{fl_paths._socket};
+    const std::string sp{fl_paths._socket};
     auto slash = sp.rfind('/');
     auto prefix = slash == std::string::npos ? "" : sp.substr(0, slash + 1);
     if (fl_paths._mkeventd_socket.empty()) {

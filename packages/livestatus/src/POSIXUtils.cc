@@ -28,7 +28,7 @@ using namespace std::chrono_literals;
 namespace {
 std::optional<SocketPair> fail(const std::string &message, Logger *logger,
                                SocketPair &sp) {
-    generic_error ge{message};
+    const generic_error ge{message};
     Alert(logger) << ge;
     sp.close();
     return {};

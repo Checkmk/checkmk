@@ -21,7 +21,7 @@ std::optional<std::string> MacroExpander::from_ptr(const char *str) {
 }
 
 std::string MacroExpander::expandMacros(const char *str) const {
-    std::string raw{str == nullptr ? "" : str};
+    const std::string raw{str == nullptr ? "" : str};
     std::string result;
     size_t pos = 0;
     while (pos < raw.size()) {
@@ -61,7 +61,7 @@ std::optional<std::string> CompoundMacroExpander::expand(
 std::optional<std::string> UserMacroExpander::expand(
     const std::string &str) const {
     if (mk::starts_with(str, "USER")) {
-        int n = atoi(str.substr(4).c_str());
+        const int n = atoi(str.substr(4).c_str());
         if (1 <= n && n <= MAX_USER_MACROS) {
             return from_ptr(macro_user[n - 1]);
         }
@@ -79,8 +79,8 @@ std::optional<std::string> CustomVariableExpander::expand(
         return {};
     }
 
-    RegExp re(str.substr(_prefix.size()), RegExp::Case::ignore,
-              RegExp::Syntax::literal);
+    const RegExp re(str.substr(_prefix.size()), RegExp::Case::ignore,
+                    RegExp::Syntax::literal);
     for (const auto &[name, value] :
          CustomAttributes(_cvm, AttributeKind::custom_variables)) {
         if (re.match(name)) {

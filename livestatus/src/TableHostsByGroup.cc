@@ -22,7 +22,7 @@ struct host_and_group {
 }  // namespace
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     TableHosts::addColumns(this, "", offsets.add([](Row r) {
         return r.rawData<host_and_group>()->hst->handle();
     }));

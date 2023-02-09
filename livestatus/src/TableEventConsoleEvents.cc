@@ -25,7 +25,7 @@ TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
 
 // static
 void TableEventConsoleEvents::addColumns(Table *table) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     table->addColumn(ECRow::makeIntColumn(
         "event_id", "The unique ID for this event", offsets));
     table->addColumn(ECRow::makeIntColumn(

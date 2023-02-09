@@ -15,6 +15,7 @@ from zlib import compress
 
 import pytest
 from agent_receiver import site_context
+from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration
 from agent_receiver.models import HostTypeEnum
 from fastapi import HTTPException
@@ -34,6 +35,12 @@ def fixture_symlink_push_host(
     source = site_context.agent_output_dir() / str(uuid)
     (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
     source.symlink_to(target_dir)
+
+
+@pytest.fixture(name="serialized_csr")
+def fixture_serialized_csr(uuid: UUID) -> str:
+    _key, csr = generate_csr_pair(str(uuid), 512)
+    return serialize_to_pem(csr)
 
 
 def test_register_register_with_hostname_host_missing(
@@ -584,7 +591,7 @@ def test_renew_certificate_wrong_csr(
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=typeshed_issue_7724(registration_status_headers),
-        json={"csr": wrong_csr},
+        json={"csr": serialize_to_pem(wrong_csr)},
     )
 
     assert response.status_code == 403
@@ -594,14 +601,13 @@ def test_renew_certificate_wrong_csr(
 def test_renew_certificate_not_registered(
     client: TestClient,
     uuid: UUID,
+    serialized_csr: str,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    _key, csr = generate_csr_pair(str(uuid), 512)
-
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=typeshed_issue_7724(registration_status_headers),
-        json={"csr": csr},
+        json={"csr": serialized_csr},
     )
 
     assert response.status_code == 403
@@ -613,9 +619,9 @@ def test_renew_certificate_ok(
     tmp_path: Path,
     client: TestClient,
     uuid: UUID,
+    serialized_csr: str,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    _key, csr = generate_csr_pair(str(uuid), 512)
     mocker.patch("agent_receiver.endpoints.internal_credentials")
     mocker.patch(
         "agent_receiver.endpoints.post_csr",
@@ -628,7 +634,7 @@ def test_renew_certificate_ok(
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=typeshed_issue_7724(registration_status_headers),
-        json={"csr": csr},
+        json={"csr": serialized_csr},
     )
 
     assert response.status_code == 200

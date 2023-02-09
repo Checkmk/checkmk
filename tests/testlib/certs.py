@@ -11,7 +11,6 @@ from cryptography.hazmat.primitives.asymmetric.rsa import (
     RSAPublicKey,
 )
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import (
     Certificate,
     CertificateSigningRequest,
@@ -56,7 +55,9 @@ def check_cn(
     return cert_or_csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == expected_cn
 
 
-def generate_csr_pair(cn: str, private_key_size: int = 2048) -> tuple[RSAPrivateKey, str]:
+def generate_csr_pair(
+    cn: str, private_key_size: int = 2048
+) -> tuple[RSAPrivateKey, CertificateSigningRequest]:
     private_key = _generate_private_key(private_key_size)
     return (
         private_key,
@@ -71,9 +72,7 @@ def generate_csr_pair(cn: str, private_key_size: int = 2048) -> tuple[RSAPrivate
         .sign(
             private_key,
             SHA256(),
-        )
-        .public_bytes(Encoding.PEM)
-        .decode("utf-8"),
+        ),
     )
 
 

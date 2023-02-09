@@ -10,6 +10,7 @@ from typing import NamedTuple
 
 import pytest
 import requests
+from agent_receiver.certs import serialize_to_pem
 from cryptography.hazmat.primitives import serialization
 
 from tests.testlib.certs import generate_csr_pair
@@ -67,7 +68,7 @@ def paired_keypair_fixture(
     agent_receiver_response = requests.post(
         f"{agent_receiver_url}/pairing",
         auth=("cmkadmin", site.admin_password),
-        json={"csr": csr},
+        json={"csr": serialize_to_pem(csr)},
         verify=False,
     )
     assert agent_receiver_response.status_code == 200
@@ -100,7 +101,7 @@ def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
     agent_receiver_response = requests.post(
         f"{agent_receiver_url}/pairing",
         auth=("cmkadmin", site.admin_password),
-        json={"csr": csr},
+        json={"csr": serialize_to_pem(csr)},
         verify=False,
     )
     assert agent_receiver_response.status_code == 400

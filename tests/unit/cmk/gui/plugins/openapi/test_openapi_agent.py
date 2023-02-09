@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.testlib.rest_api_client import RestApiClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 import cmk.utils.version as cmk_version
@@ -47,3 +49,10 @@ def test_download_agent_shipped_with_checkmk(
     assert resp.body == agent_bin_data
     assert resp.headers["Content-Disposition"] == 'attachment; filename="agent_bin_mock.bin"'
     packed_agent_path_patched.assert_called_once()
+
+
+def test_openapi_agent_key_id_above_zero_regression(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, api_client: RestApiClient
+) -> None:
+    # make sure this doesn't crash
+    api_client.bake_and_sign_agent(key_id=0, passphrase="", expect_ok=False).assert_status_code(400)

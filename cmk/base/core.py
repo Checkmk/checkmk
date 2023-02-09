@@ -60,10 +60,15 @@ def do_restart(
     core: MonitoringCore,
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: HostsToUpdate = None,
+    skip_config_locking_in_bakery: bool = False,
 ) -> None:
     try:
         with activation_lock(mode=config.restart_locking):
-            core_config.do_create_config(core, hosts_to_update=hosts_to_update)
+            core_config.do_create_config(
+                core,
+                hosts_to_update=hosts_to_update,
+                skip_config_locking_in_bakery=skip_config_locking_in_bakery,
+            )
             do_core_action(action)
 
     except Exception as e:

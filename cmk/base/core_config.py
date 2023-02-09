@@ -306,7 +306,11 @@ def check_icmp_arguments_of(
 #   '----------------------------------------------------------------------'
 
 
-def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None) -> None:
+def do_create_config(
+    core: MonitoringCore,
+    hosts_to_update: HostsToUpdate = None,
+    skip_config_locking_in_bakery: bool = False,
+) -> None:
     """Creating the monitoring core configuration and additional files
 
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
@@ -321,15 +325,15 @@ def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
-    _bake_on_restart()
+    _bake_on_restart(skip_config_locking_in_bakery)
 
 
-def _bake_on_restart():
+def _bake_on_restart(skip_locking_config: bool) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
 
-        agent_bakery.bake_on_restart()
+        agent_bakery.bake_on_restart(skip_locking_config)
     except ImportError:
         pass
 

@@ -415,7 +415,10 @@ class AutomationRenameHosts(Automation):
                 # force config generation to succeed. The core *must* start.
                 # TODO: Can't we drop this hack since we have config warnings now?
                 core_config.ignore_ip_lookup_failures()
-                _execute_silently(CoreAction.START)
+                # In this case the configuration is already locked by the caller of the automation.
+                # If that is on the local site, we can not lock the configuration again during baking!
+                # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
+                _execute_silently(CoreAction.START, skip_config_locking_in_bakery=True)
 
                 for hostname in core_config.failed_ip_lookups():
                     actions.append("dnsfail-" + hostname)
@@ -1072,6 +1075,7 @@ automations.register(AutomationReload())
 def _execute_silently(
     action: CoreAction,
     hosts_to_update: Optional[set[str]] = None,
+    skip_config_locking_in_bakery: bool = False,
 ) -> automation_results.RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         log.setup_console_logging()
@@ -1080,6 +1084,7 @@ def _execute_silently(
                 create_core(config.monitoring_core),
                 action,
                 hosts_to_update=hosts_to_update,
+                skip_config_locking_in_bakery=skip_config_locking_in_bakery,
             )
         except (MKBailOut, MKGeneralException) as e:
             raise MKAutomationError(str(e))
@@ -1090,15 +1095,6 @@ def _execute_silently(
             raise MKAutomationError(str(e))
 
         return automation_results.RestartResult(core_config.get_configuration_warnings())
-
-
-class AutomationStart(AutomationRestart):
-    """Not an externally registered automation, just supporting the "rename-hosts" automation"""
-
-    cmd = "start"
-
-    def _mode(self) -> CoreAction:
-        return CoreAction.START
 
 
 class AutomationGetConfiguration(Automation):

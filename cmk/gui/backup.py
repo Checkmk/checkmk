@@ -64,7 +64,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.key_mgmt import Key
-from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -1873,14 +1872,6 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "encrypt a backup, you will need the private key part together with the "
             "passphrase to decrypt the backup."
         )
-
-    def _generate_key(self, alias: str, passphrase: PasswordType) -> key_mgmt.Key:
-        assert user.id is not None
-        key = key_mgmt.generate_key(alias, passphrase, user.id, omd_site())
-        # Mark key as not downloaded yet to issue a warning to the user that the key
-        # should be backed up. The warning is removed on first download.
-        key.not_downloaded = True
-        return key
 
 
 class PageBackupUploadKey(key_mgmt.PageUploadKey):

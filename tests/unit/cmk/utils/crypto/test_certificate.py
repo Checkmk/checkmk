@@ -36,6 +36,7 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
             common_name="TestGenerateSelfSigned",
             expiry=relativedelta(hours=2),
             key_size=1024,
+            start_date=datetime.utcnow(),
         )
 
 

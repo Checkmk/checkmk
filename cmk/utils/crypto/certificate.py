@@ -108,6 +108,7 @@ class CertificateWithPrivateKey(NamedTuple):
         organizational_unit_name: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
+        start_date: datetime | None = None,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
@@ -120,6 +121,7 @@ class CertificateWithPrivateKey(NamedTuple):
             expiry,
             HashAlgorithm.Sha512,
             organizational_unit_name=organizational_unit_name,
+            start_date=start_date,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -237,8 +239,8 @@ class Certificate:
         expiry: relativedelta,
         signature_digest_algorithm: HashAlgorithm,
         organizational_unit_name: str | None = None,
+        start_date: datetime | None = None,
     ) -> Certificate:
-
         name_attrs = [
             x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name),
             x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization),
@@ -250,6 +252,9 @@ class Certificate:
                 )
             )
         name = x509.Name(name_attrs)
+
+        if start_date is None:
+            start_date = datetime.utcnow()
 
         # TODO: We'll need to set these extensions depending on how we intend to use the cert.
         #       Right now it's hardcoded for self-signed certs (CA=True) and does not restrict
@@ -284,8 +289,8 @@ class Certificate:
             x509.CertificateBuilder()
             .subject_name(name)
             .issuer_name(name)
-            .not_valid_before(datetime.utcnow())
-            .not_valid_after(datetime.utcnow() + expiry)
+            .not_valid_before(start_date)
+            .not_valid_after(start_date + expiry)
             .serial_number(x509.random_serial_number())
             .public_key(public_key._key)
             .add_extension(basic_constraints, critical=True)

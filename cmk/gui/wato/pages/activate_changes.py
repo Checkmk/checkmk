@@ -11,6 +11,7 @@ import os
 import tarfile
 from collections.abc import Collection, Iterator
 from dataclasses import asdict
+from datetime import datetime
 from typing import NamedTuple
 
 from six import ensure_str
@@ -19,6 +20,8 @@ from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.render as render
 from cmk.utils.licensing import get_license_usage_report_validity, LicenseUsageReportValidity
+from cmk.utils.licensing.state import is_licensed
+from cmk.utils.version import is_raw_edition
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -62,6 +65,12 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Ho
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import build_index_background
 
+if not is_raw_edition():  # TODO solve this via registration
+    from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
+        is_after_expiration_grace_period,
+        load_verification_response,
+    )
+
 
 @mode_registry.register
 class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
@@ -78,6 +87,9 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         super().__init__()
         super().load()
         self._license_usage_report_validity = get_license_usage_report_validity()
+        self._license_verification_response = (
+            load_verification_response() if not is_raw_edition() else None
+        )
 
     def title(self) -> str:
         return _("Activate pending changes")
@@ -177,6 +189,23 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         return True
 
+    def _license_allows_activation(self):
+        now = int(datetime.now().timestamp())
+        if not is_licensed() or self._license_verification_response is None:
+            #  TODO check for if (is_expired_trial() and num_hosts > 25) -> False
+            #  Figure out how to get num_hosts after activation
+            return True
+
+        license_usage_report_valid = (
+            self._license_usage_report_validity != LicenseUsageReportValidity.older_than_five_days
+        )
+        if is_raw_edition():
+            return license_usage_report_valid
+        return (
+            not is_after_expiration_grace_period(now, self._license_verification_response)
+            and license_usage_report_valid
+        )
+
     def _may_activate_changes(self) -> bool:
         if not user.may("wato.activate"):
             return False
@@ -187,9 +216,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if read_only.is_enabled() and not read_only.may_override():
             return False
 
-        return (
-            self._license_usage_report_validity != LicenseUsageReportValidity.older_than_five_days
-        )
+        return self._license_allows_activation()
 
     def action(self) -> ActionResult:
         if request.var("_action") != "discard":
@@ -204,7 +231,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if not self.has_changes():
             return None
 
-        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
+        if self._license_allows_activation():
             return None
 
         # Now remove all currently pending changes by simply restoring the last automatically
@@ -284,7 +311,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         self._activation_msg()
         self._activation_form()
 
-        self._show_license_usage_report_validity()
+        self._show_license_validity()
 
         self._activation_status()
 
@@ -401,22 +428,49 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 else:
                     html.write_text(", ".join(sorted(change["affected_sites"])))
 
-    def _show_license_usage_report_validity(self) -> None:
-        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
-            html.show_error(
-                _("Cannot activate changes: The license usage history is older than five days.")
-            )
+    def _get_cee_license_validity_error(self) -> str | None:
+        if is_raw_edition():  # TODO: cleanup conditional imports and solve this via registration
+            return None
+        now = int(datetime.now().timestamp())
+        if self._license_verification_response is None or not is_after_expiration_grace_period(
+            now, self._license_verification_response
+        ):
+            return None
 
+        return _(
+            "The currently applied license is expired since: %s (> 60 days)."
+        ) % datetime.fromtimestamp(
+            self._license_verification_response.subscription_expiration_ts
+        ).strftime(
+            "%Y-%m-%d"
+        )
+
+    def _show_license_validity(self) -> None:
+        errors = []
+        warnings = []
+
+        if (cee_error := self._get_cee_license_validity_error()) is not None:
+            errors.append(cee_error)
+
+        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
+            errors.append(_("The license usage history is older than five days."))
         elif (
             self._license_usage_report_validity == LicenseUsageReportValidity.older_than_three_days
         ):
-            html.show_warning(
+            warnings.append(
                 _(
                     "The license usage history was updated at least three days ago."
                     "<br>Note: If it cannot be updated within five days activate changes"
                     " will be blocked."
                 )
             )
+
+        if errors:
+            error__msg = _("Activation not possible because of the following licensing issues:<br>")
+            html.show_error(error__msg + "<br>".join(errors))
+            return
+        if warnings:
+            html.show_warning("<br>".join(warnings))
 
     def _activation_status(self):
         with table_element(

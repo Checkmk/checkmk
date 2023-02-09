@@ -16,7 +16,8 @@ from typing import Any, Final, Generic, Protocol, TypeVar
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
-from cmk.utils.store._locks import acquire_lock, have_lock, release_lock
+
+from ._locks import acquire_lock, have_lock, release_lock
 
 __all__ = [
     "BytesSerializer",
@@ -83,16 +84,16 @@ class PickleSerializer(Generic[TObject]):
         return obj
 
 
-def _check_permissions(path: Path) -> None:
-    """Check if the file owned by the site user and not world writable.
+def _raise_for_permissions(path: Path) -> None:
+    """Ensure that the file is owned by the current user or root and not world writable.
     Raise an exception otherwise."""
     stat = path.stat()
     # we trust root and ourselves
-    owned_by_site_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
+    owned_by_current_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
     world_writable = S_IMODE(stat.st_mode) & S_IWOTH != 0
 
-    if not owned_by_site_user_or_root:
-        raise MKGeneralException(_('Refusing to read file not owned by site user: "%s"') % path)
+    if not owned_by_current_user_or_root:
+        raise MKGeneralException(_('Refusing to read file not owned by us: "%s"') % path)
     if world_writable:
         raise MKGeneralException(_('Refusing to read world writable file: "%s"') % path)
 
@@ -151,7 +152,7 @@ class ObjectStore(Generic[TObject]):
 
     def _load_bytes_from_file(self) -> bytes:
         try:
-            _check_permissions(self.path)
+            _raise_for_permissions(self.path)
             return self.path.read_bytes()
         except FileNotFoundError:
             # Since locking (currently) creates an empty file,

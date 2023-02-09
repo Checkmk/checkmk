@@ -123,6 +123,7 @@ module = [
     "cmk.gui.views.layout",
     "cmk.gui.views.painter",
     "cmk.gui.background_job",
+    "cmk.gui.backup",
     "cmk.notification_plugins.*",
     "tests.gui_e2e.*",
     "tests.testlib.playwright.*",

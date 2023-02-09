@@ -32,6 +32,7 @@ set(livestatus_headers
     ${header_location}/IntColumn.h
     ${header_location}/Interface.h
     ${header_location}/IntFilter.h
+    ${header_location}/HostServiceState.h
     ${header_location}/ListColumn.h
     ${header_location}/ListFilter.h
     ${header_location}/LogCache.h
@@ -108,6 +109,7 @@ set(livestatus_sources
     global_counters.cc
     InputBuffer.cc
     IntFilter.cc
+    HostServiceState.cc
     ListFilter.cc
     LogCache.cc
     LogEntry.cc

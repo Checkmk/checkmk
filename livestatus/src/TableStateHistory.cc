@@ -14,7 +14,6 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "HostServiceState.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "livestatus/Attributes.h"  // IWYU pragma: keep
@@ -22,6 +21,7 @@
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/Filter.h"
+#include "livestatus/HostServiceState.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
@@ -34,7 +34,6 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
-#ifdef CMC
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_OK 0
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -43,9 +42,6 @@
 #define STATE_CRITICAL 2
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_UNKNOWN 3
-#else
-#include "nagios.h"
-#endif
 
 using namespace std::chrono_literals;
 

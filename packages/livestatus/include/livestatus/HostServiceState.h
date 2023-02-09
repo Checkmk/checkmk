@@ -1,12 +1,10 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #ifndef HostServiceState_h
 #define HostServiceState_h
-
-#include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
 #include <cstddef>
@@ -78,9 +76,7 @@ public:
     std::string _service_description;  // Fallback if service no longer exists
 
     HostServiceState();
-#ifdef CMC
     void computePerStateDurations();
-#endif
 };
 
 #endif  // HostServiceState_h

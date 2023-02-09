@@ -1,0 +1,14 @@
+Title: agent_azure: "No scheme supplied"
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1675953163
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p21
+
+Under certain circumstances agent_azure was exiting with the following error:
+C+:
+Invalid URL '': No scheme supplied. Perhaps you meant http://?
+C-:

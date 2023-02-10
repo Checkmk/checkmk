@@ -1789,39 +1789,41 @@ def pipe_pager() -> str:
 def call_scripts(site: SiteContext, phase: str) -> None:
     """Calls scripts in defined directories on update."""
     path = Path(site.dir, "lib", "omd", "scripts", phase)
-    if path.exists():
-        putenv("OMD_ROOT", site.dir)
-        putenv("OMD_SITE", site.name)
-        # NOTE: scripts have an order!
-        for file in sorted(path.iterdir()):
-            if file.name[0] == ".":
-                continue
-            sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-            with subprocess.Popen(  # nosec
-                str(file),  # path-like args is not allowed when shell is true
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                encoding="utf-8",
-            ) as proc:
+    if not path.exists():
+        return
 
-                if proc.stdout is None:
-                    raise Exception("stdout needs to be set")
+    putenv("OMD_ROOT", site.dir)
+    putenv("OMD_SITE", site.name)
+    # NOTE: scripts have an order!
+    for file in sorted(path.iterdir()):
+        if file.name[0] == ".":
+            continue
+        sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+        with subprocess.Popen(  # nosec
+            str(file),  # path-like args is not allowed when shell is true
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        ) as proc:
 
-                wrote_output = False
-                for line in proc.stdout:
-                    if not wrote_output:
-                        sys.stdout.write("\n")
-                        wrote_output = True
+            if proc.stdout is None:
+                raise Exception("stdout needs to be set")
 
-                    sys.stdout.write(f"-| {line}")
-                    sys.stdout.flush()
+            wrote_output = False
+            for line in proc.stdout:
+                if not wrote_output:
+                    sys.stdout.write("\n")
+                    wrote_output = True
 
-            if not proc.returncode:
-                sys.stdout.write(tty.ok + "\n")
-            else:
-                sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
-                raise SystemExit(1)
+                sys.stdout.write(f"-| {line}")
+                sys.stdout.flush()
+
+        if not proc.returncode:
+            sys.stdout.write(tty.ok + "\n")
+        else:
+            sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
+            raise SystemExit(1)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:

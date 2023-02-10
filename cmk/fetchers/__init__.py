@@ -22,7 +22,7 @@ from ._piggyback import PiggybackFetcher
 from ._program import ProgramFetcher
 from ._snmp import SNMPFetcher, SNMPSectionMeta
 from ._tcp import TCPEncryptionHandling, TCPFetcher
-from ._typedefs import FetcherType, SourceInfo, SourceType
+from ._typedefs import FetcherType
 
 __all__ = [
     "Fetcher",
@@ -36,8 +36,6 @@ __all__ = [
     "ProgramFetcher",
     "SNMPFetcher",
     "SNMPSectionMeta",
-    "SourceInfo",
-    "SourceType",
     "TCPEncryptionHandling",
     "TCPFetcher",
 ]

@@ -5,9 +5,7 @@
 
 from cmk.utils.type_defs import HostName
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, SourceType
 from cmk.checkers.checkresults import ServiceCheckResult
 
 

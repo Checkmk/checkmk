@@ -38,13 +38,15 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import FetcherType, SourceInfo, SourceType
+from cmk.fetchers import FetcherType
 
 from cmk.checkers import (
     crash_reporting,
     HostKey,
     ParserFunction,
     plugin_contexts,
+    SourceInfo,
+    SourceType,
     SummarizerFunction,
 )
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters

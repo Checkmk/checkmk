@@ -15,9 +15,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import HostName, LegacyCheckParameters
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, SourceType
 from cmk.checkers.checkresults import ServiceCheckResult
 
 import cmk.base.agent_based.checking._checking as checking

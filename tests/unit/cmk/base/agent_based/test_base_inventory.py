@@ -25,8 +25,9 @@ from cmk.utils.type_defs import (
     result,
 )
 
-from cmk.fetchers import FetcherType, SourceInfo, SourceType
+from cmk.fetchers import FetcherType
 
+from cmk.checkers import SourceInfo, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION
 

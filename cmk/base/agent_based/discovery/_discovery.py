@@ -23,9 +23,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import SourceInfo
-
-from cmk.checkers import ParserFunction, SummarizerFunction
+from cmk.checkers import ParserFunction, SourceInfo, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
 from cmk.base.agent_based.data_provider import (

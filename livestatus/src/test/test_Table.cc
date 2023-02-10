@@ -205,21 +205,7 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
     [[nodiscard]] int32_t pid() const override { return {}; }
-    [[nodiscard]] bool isEnableNotifications() const override { return {}; }
-    [[nodiscard]] bool isExecuteServiceChecks() const override { return {}; }
-    [[nodiscard]] bool isAcceptPassiveServiceChecks() const override {
-        return {};
-    }
-    [[nodiscard]] bool isExecuteHostChecks() const override { return {}; }
-    [[nodiscard]] bool isAcceptPassiveHostChecks() const override { return {}; }
-    [[nodiscard]] bool isObsessOverServices() const override { return {}; }
-    [[nodiscard]] bool isObsessOverHosts() const override { return {}; }
-    [[nodiscard]] bool isCheckServiceFreshness() const override { return {}; }
-    [[nodiscard]] bool isCheckHostFreshness() const override { return {}; }
-    [[nodiscard]] bool isEnableFlapDetection() const override { return {}; }
-    [[nodiscard]] bool isProcessPerformanceData() const override { return {}; }
-    [[nodiscard]] bool isEnableEventHandlers() const override { return {}; }
-    [[nodiscard]] bool isCheckExternalCommands() const override { return {}; }
+    [[nodiscard]] GlobalFlags globalFlags() const override { return {}; }
     [[nodiscard]] std::chrono::system_clock::time_point programStartTime()
         const override {
         return {};

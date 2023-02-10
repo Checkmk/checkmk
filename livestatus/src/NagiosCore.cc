@@ -348,43 +348,24 @@ std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
 }
 
 int32_t NagiosCore::pid() const { return nagios_pid; }
-bool NagiosCore::isEnableNotifications() const {
-    return enable_notifications != 0;
+GlobalFlags NagiosCore::globalFlags() const {
+    return {
+        .enable_notifications = enable_notifications != 0,
+        .execute_service_checks = execute_service_checks != 0,
+        .accept_passive_service_checks = accept_passive_service_checks != 0,
+        .execute_host_checks = execute_host_checks != 0,
+        .accept_passive_hostchecks = accept_passive_host_checks != 0,
+        .obsess_over_services = obsess_over_services != 0,
+        .obsess_over_hosts = obsess_over_hosts != 0,
+        .check_service_freshness = check_service_freshness != 0,
+        .check_host_freshness = check_host_freshness != 0,
+        .enable_flap_detection = enable_flap_detection != 0,
+        .process_performance_data = process_performance_data != 0,
+        .enable_event_handlers = enable_event_handlers != 0,
+        .check_external_commands = check_external_commands != 0,
+    };
 }
-bool NagiosCore::isExecuteServiceChecks() const {
-    return execute_service_checks != 0;
-}
-bool NagiosCore::isAcceptPassiveServiceChecks() const {
-    return accept_passive_service_checks != 0;
-}
-bool NagiosCore::isExecuteHostChecks() const {
-    return execute_host_checks != 0;
-}
-bool NagiosCore::isAcceptPassiveHostChecks() const {
-    return accept_passive_host_checks != 0;
-}
-bool NagiosCore::isObsessOverServices() const {
-    return obsess_over_services != 0;
-}
-bool NagiosCore::isObsessOverHosts() const { return obsess_over_hosts != 0; }
-bool NagiosCore::isCheckServiceFreshness() const {
-    return check_service_freshness != 0;
-}
-bool NagiosCore::isCheckHostFreshness() const {
-    return check_host_freshness != 0;
-}
-bool NagiosCore::isEnableFlapDetection() const {
-    return enable_flap_detection != 0;
-}
-bool NagiosCore::isProcessPerformanceData() const {
-    return process_performance_data != 0;
-}
-bool NagiosCore::isEnableEventHandlers() const {
-    return enable_event_handlers != 0;
-}
-bool NagiosCore::isCheckExternalCommands() const {
-    return check_external_commands != 0;
-}
+
 std::chrono::system_clock::time_point NagiosCore::programStartTime() const {
     return std::chrono::system_clock::from_time_t(program_start);
 }

@@ -22,6 +22,22 @@ struct Command {
     std::string _command_line;
 };
 
+struct GlobalFlags {
+    bool enable_notifications;
+    bool execute_service_checks;
+    bool accept_passive_service_checks;
+    bool execute_host_checks;
+    bool accept_passive_hostchecks;
+    bool obsess_over_services;
+    bool obsess_over_hosts;
+    bool check_service_freshness;
+    bool check_host_freshness;
+    bool enable_flap_detection;
+    bool process_performance_data;
+    bool enable_event_handlers;
+    bool check_external_commands;
+};
+
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
@@ -101,19 +117,7 @@ public:
     [[nodiscard]] virtual std::filesystem::path rrdcachedSocketPath() const = 0;
 
     [[nodiscard]] virtual int32_t pid() const = 0;
-    [[nodiscard]] virtual bool isEnableNotifications() const = 0;
-    [[nodiscard]] virtual bool isExecuteServiceChecks() const = 0;
-    [[nodiscard]] virtual bool isAcceptPassiveServiceChecks() const = 0;
-    [[nodiscard]] virtual bool isExecuteHostChecks() const = 0;
-    [[nodiscard]] virtual bool isAcceptPassiveHostChecks() const = 0;
-    [[nodiscard]] virtual bool isObsessOverServices() const = 0;
-    [[nodiscard]] virtual bool isObsessOverHosts() const = 0;
-    [[nodiscard]] virtual bool isCheckServiceFreshness() const = 0;
-    [[nodiscard]] virtual bool isCheckHostFreshness() const = 0;
-    [[nodiscard]] virtual bool isEnableFlapDetection() const = 0;
-    [[nodiscard]] virtual bool isProcessPerformanceData() const = 0;
-    [[nodiscard]] virtual bool isEnableEventHandlers() const = 0;
-    [[nodiscard]] virtual bool isCheckExternalCommands() const = 0;
+    [[nodiscard]] virtual GlobalFlags globalFlags() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     programStartTime() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point

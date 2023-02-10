@@ -138,19 +138,7 @@ public:
     std::filesystem::path rrdcachedSocketPath() const override;
 
     int32_t pid() const override;
-    bool isEnableNotifications() const override;
-    bool isExecuteServiceChecks() const override;
-    bool isAcceptPassiveServiceChecks() const override;
-    bool isExecuteHostChecks() const override;
-    bool isAcceptPassiveHostChecks() const override;
-    bool isObsessOverServices() const override;
-    bool isObsessOverHosts() const override;
-    bool isCheckServiceFreshness() const override;
-    bool isCheckHostFreshness() const override;
-    bool isEnableFlapDetection() const override;
-    bool isProcessPerformanceData() const override;
-    bool isEnableEventHandlers() const override;
-    bool isCheckExternalCommands() const override;
+    [[nodiscard]] GlobalFlags globalFlags() const override;
     std::chrono::system_clock::time_point programStartTime() const override;
     std::chrono::system_clock::time_point lastCommandCheckTime() const override;
     int32_t intervalLength() const override;

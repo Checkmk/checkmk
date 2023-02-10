@@ -3256,9 +3256,6 @@ msgstr "Regel ID toevoegen"
 msgid "Add Suffix"
 msgstr "Suffix toevoegen"
 
-msgid "Add a first row with column titles"
-msgstr "Voeg een eerste rij toe met kolomtitels"
-
 msgid "Add additional folder"
 msgstr "Extra map toevoegen"
 
@@ -3690,6 +3687,10 @@ msgstr "Toevoegen aan grafiekverzameling"
 
 msgid "Add to monitoring configuration"
 msgstr "Toevoegen aan bewakingsconfiguratie"
+
+#, fuzzy
+msgid "Add to query"
+msgstr "Indices voor zoekopdrachten"
 
 msgid "Add to trusted CAs"
 msgstr "Toevoegen aan vertrouwde CA's"
@@ -5209,6 +5210,10 @@ msgstr "Analyseer deze lijn"
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "Analyseren configuratie"
+
+#, fuzzy
+msgid "And"
+msgstr "Toevoegen"
 
 msgid "Android version regular expression"
 msgstr "Android versie reguliere expressie"
@@ -10142,9 +10147,6 @@ msgstr "Kolom Koppen"
 
 msgid "Column Title"
 msgstr "Kolom Titel"
-
-msgid "Column headers"
-msgstr "Kolom kopteksten"
 
 msgid "Column title"
 msgstr "Kolom titel"
@@ -15372,9 +15374,6 @@ msgstr "Veranderingen niet activeren"
 msgid "Do not add a link to this page in sidebar"
 msgstr "Voeg geen link naar deze pagina toe in de zijbalk"
 
-msgid "Do not add column headers"
-msgstr "Voeg geen kolomkoppen toe"
-
 msgid "Do not alert on connection loss"
 msgstr "Niet waarschuwen bij verlies van verbinding"
 
@@ -15940,9 +15939,6 @@ msgstr "Gebruik geen aangepaste poort"
 
 msgid "Don't use password"
 msgstr "Gebruik geen wachtwoord"
-
-msgid "Don't use quotes"
-msgstr "Gebruik geen aanhalingstekens"
 
 msgid "Don't wait for document body"
 msgstr "Wacht niet op een document"
@@ -18268,18 +18264,11 @@ msgstr "CSV exporteren"
 msgid "Export JSON"
 msgstr "JSON exporteren"
 
-msgid "Export List of Software packages as CSV file"
-msgstr "Lijst van softwarepakketten exporteren als CSV-bestand"
-
 msgid "Export as JSON"
 msgstr "Exporteren als JSON"
 
 msgid "Export as PNG"
 msgstr "Exporteren als PNG"
-
-msgid ""
-"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
-msgstr "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
 
 msgid "Export this rule for API"
 msgstr "Exporteer deze regel voor API"
@@ -26485,6 +26474,10 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Iptables filter configuratie"
 
+#, fuzzy
+msgid "Is"
+msgstr "s"
+
 msgid "Is CA"
 msgstr "Is CA"
 
@@ -26503,6 +26496,10 @@ msgstr "Is mountpoint"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "Is nodig om %s te zien die andere gebruikers hebben gemaakt."
+
+#, fuzzy
+msgid "Is not"
+msgstr "is niet"
 
 msgid "Is not available"
 msgstr "Is niet beschikbaar"
@@ -27198,6 +27195,14 @@ msgstr "Etiketteringsopties"
 
 msgid "Labels"
 msgstr "Etiketten"
+
+#, fuzzy
+msgid ""
+"Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
+"\"."
+msgstr ""
+"Labels moeten in het formaat <tt>[KEY]:[VALUE]</tt> zijn. Bijvoorbeeld "
+"<tt>cmk/os_family:linux</tt>."
 
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
@@ -35071,6 +35076,10 @@ msgstr "Opties voor rapport e-mails"
 msgid "Options: %s"
 msgstr "Opties"
 
+#, fuzzy
+msgid "Or"
+msgstr "O"
+
 msgid "Oracle"
 msgstr "Oracle"
 
@@ -37120,18 +37129,6 @@ msgstr "Geef de extensies op in kleine letters en zonder punt."
 msgid "Please specify the name of the status host."
 msgstr "Geef de naam van de status host op."
 
-#, python-format
-msgid ""
-"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
-"replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Check_MK's directory for "
-"variable data, which is <tt>%s</tt>."
-msgstr ""
-"Geef het pad naar het exportbestand op. De tekst <tt>[HOST]</tt> wordt "
-"vervangen door de hostnaam waarvoor de inventarisatie is gedaan. Als u een "
-"relatief pad gebruikt, is dat relatief ten opzichte van Check_MK's directory "
-"voor variabele gegevens, die <tt>%s</tt> is."
-
 msgid "Please specify the user and password needed to access the xml interface"
 msgstr ""
 "Geef de gebruiker en het wachtwoord op die nodig zijn voor toegang tot de "
@@ -37731,12 +37728,6 @@ msgstr "Proces Stemt overeen met tekstuele beschrijving of pad van proces"
 msgid "Process Matching"
 msgstr "Procesovereenstemming"
 
-msgid "Process Name"
-msgstr "Procesnaam"
-
-msgid "Process Name Matching"
-msgstr "Procesnaam vergelijken"
-
 msgid "Process Path Matching"
 msgstr "Procespad overeenstemmen"
 
@@ -37761,8 +37752,16 @@ msgstr "Proces ontdekking (alleen SNMP)"
 msgid "Process handles"
 msgstr "Proceshandgrepen"
 
+#, fuzzy
+msgid "Process name"
+msgstr "Procesnaam"
+
 msgid "Process name for usage in the Nagios service description"
 msgstr "Procesnaam voor gebruik in de Nagios-servicebeschrijving"
+
+#, fuzzy
+msgid "Process name matching"
+msgstr "Procesnaam vergelijken"
 
 #, fuzzy
 msgid "Process new logfiles from the beginning"
@@ -38178,9 +38177,6 @@ msgstr "Stille cache"
 
 msgid "Quit"
 msgstr "Stop"
-
-msgid "Quoting"
-msgstr "Citaat:"
 
 msgid "R.State"
 msgstr "R.State"
@@ -41700,9 +41696,6 @@ msgstr "Sentinel"
 
 msgid "Separate check"
 msgstr "Afzonderlijke controle"
-
-msgid "Separator"
-msgstr "Scheider"
 
 msgid "September"
 msgstr "September"
@@ -58461,11 +58454,6 @@ msgstr "Apparaattoestanden gebruiken en verwachte status overschrijven"
 msgid "Use device's levels if present, otherwise yours"
 msgstr "Gebruik de niveaus van het apparaat indien aanwezig, anders de uwe"
 
-msgid "Use double quotes, escape contained quotes with backslash"
-msgstr ""
-"Gebruik dubbele aanhalingstekens en sluit aanhalingstekens uit met een "
-"backslash"
-
 msgid "Use environment variables from host"
 msgstr "Gebruik omgevingsvariabelen van host"
 
@@ -58608,10 +58596,6 @@ msgstr "Gebruik de instellingen en paginaopmaak van"
 
 msgid "Use short title in reports header"
 msgstr "Gebruik een korte titel in de koptekst van het verslag"
-
-msgid "Use single quotes, escape contained quotes with backslash"
-msgstr ""
-"Gebruik enkele aanhalingstekens, sluit aanhalingstekens uit met een backslash"
 
 msgid "Use site ID"
 msgstr "Gebruik site ID"
@@ -61510,6 +61494,14 @@ msgstr ""
 "Telkens wanneer u wijzigingen met succes activeert, wordt een snapshot van "
 "de configuratie aangemaakt. U kunt ook manueel snapshots aanmaken. WATO zal "
 "oude snapshots verwijderen wanneer het maximum aantal snapshots is bereikt."
+
+#, fuzzy
+msgid "Where host label..."
+msgstr "Nieuw host label: "
+
+#, fuzzy
+msgid "Where service label..."
+msgstr "Overeenkomende dienst labels"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -66181,6 +66173,54 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Add a first row with column titles"
+#~ msgstr "Voeg een eerste rij toe met kolomtitels"
+
+#~ msgid "Column headers"
+#~ msgstr "Kolom kopteksten"
+
+#~ msgid "Do not add column headers"
+#~ msgstr "Voeg geen kolomkoppen toe"
+
+#~ msgid "Don't use quotes"
+#~ msgstr "Gebruik geen aanhalingstekens"
+
+#~ msgid "Export List of Software packages as CSV file"
+#~ msgstr "Lijst van softwarepakketten exporteren als CSV-bestand"
+
+#~ msgid ""
+#~ "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+#~ msgstr ""
+#~ "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
+
+#, python-format
+#~ msgid ""
+#~ "Please specify the path to the export file. The text <tt>[HOST]</tt> will "
+#~ "be replaced with the host name the inventory has been done for. If you "
+#~ "use a relative path then that will be relative to Check_MK's directory "
+#~ "for variable data, which is <tt>%s</tt>."
+#~ msgstr ""
+#~ "Geef het pad naar het exportbestand op. De tekst <tt>[HOST]</tt> wordt "
+#~ "vervangen door de hostnaam waarvoor de inventarisatie is gedaan. Als u "
+#~ "een relatief pad gebruikt, is dat relatief ten opzichte van Check_MK's "
+#~ "directory voor variabele gegevens, die <tt>%s</tt> is."
+
+#~ msgid "Quoting"
+#~ msgstr "Citaat:"
+
+#~ msgid "Separator"
+#~ msgstr "Scheider"
+
+#~ msgid "Use double quotes, escape contained quotes with backslash"
+#~ msgstr ""
+#~ "Gebruik dubbele aanhalingstekens en sluit aanhalingstekens uit met een "
+#~ "backslash"
+
+#~ msgid "Use single quotes, escape contained quotes with backslash"
+#~ msgstr ""
+#~ "Gebruik enkele aanhalingstekens, sluit aanhalingstekens uit met een "
+#~ "backslash"
 
 #, fuzzy
 #~| msgid "Global notification rules"

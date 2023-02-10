@@ -3116,9 +3116,6 @@ msgstr "ルールIDを追加"
 msgid "Add Suffix"
 msgstr "サフィックスを追加する"
 
-msgid "Add a first row with column titles"
-msgstr "列タイトルを含む最初の行を追加します"
-
 msgid "Add additional folder"
 msgstr "フォルダを追加します"
 
@@ -3545,6 +3542,10 @@ msgstr "グラフコレクションに追加"
 
 msgid "Add to monitoring configuration"
 msgstr "監視構成に追加"
+
+#, fuzzy
+msgid "Add to query"
+msgstr "クエリするインデックス"
 
 msgid "Add to trusted CAs"
 msgstr "信頼できるCAに追加する"
@@ -5002,6 +5003,10 @@ msgstr "この行を分析する"
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "構成を分析する"
+
+#, fuzzy
+msgid "And"
+msgstr "追加"
 
 msgid "Android version regular expression"
 msgstr "Androidバージョン正規表現"
@@ -9715,9 +9720,6 @@ msgstr "列ヘッダー"
 
 msgid "Column Title"
 msgstr "列タイトル"
-
-msgid "Column headers"
-msgstr "列ヘッダー"
 
 msgid "Column title"
 msgstr "列のタイトル"
@@ -14780,9 +14782,6 @@ msgstr "変更をアクティブにしないでください"
 msgid "Do not add a link to this page in sidebar"
 msgstr "サイドバーにこのページへのリンクを追加しないでください"
 
-msgid "Do not add column headers"
-msgstr "列ヘッダーを追加しないでください"
-
 msgid "Do not alert on connection loss"
 msgstr "接続が失われた場合は警告しない"
 
@@ -15347,9 +15346,6 @@ msgstr "カスタムポートを使用しないでください"
 
 msgid "Don't use password"
 msgstr "パスワードを使用しないでください"
-
-msgid "Don't use quotes"
-msgstr "引用符は使用しないでください"
 
 msgid "Don't wait for document body"
 msgstr "ドキュメントの本文を待たないでください"
@@ -17626,18 +17622,11 @@ msgstr "CSVをエクスポート"
 msgid "Export JSON"
 msgstr "JSONをエクスポートする"
 
-msgid "Export List of Software packages as CSV file"
-msgstr "ソフトウェアパッケージのリストをCSVファイルとしてエクスポート"
-
 msgid "Export as JSON"
 msgstr "JSONとしてエクスポート"
 
 msgid "Export as PNG"
 msgstr "PNGとしてエクスポート"
-
-msgid ""
-"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
-msgstr ""
 
 msgid "Export this rule for API"
 msgstr "このルールをAPI用にエクスポートする"
@@ -25363,6 +25352,10 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Iptablesフィルター構成"
 
+#, fuzzy
+msgid "Is"
+msgstr "s"
+
 msgid "Is CA"
 msgstr "CAですか"
 
@@ -25381,6 +25374,10 @@ msgstr "マウントポイントです"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "他のユーザーが作成した %s を表示するために必要です。"
+
+#, fuzzy
+msgid "Is not"
+msgstr "ではありません"
 
 msgid "Is not available"
 msgstr "利用できません"
@@ -26047,6 +26044,14 @@ msgstr "ラベル付けオプション"
 
 msgid "Labels"
 msgstr "ラベル"
+
+#, fuzzy
+msgid ""
+"Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
+"\"."
+msgstr ""
+"ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、 "
+"<tt>cmk/os_family:linux</tt>です。"
 
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
@@ -33733,6 +33738,10 @@ msgstr "レポートメールのオプション"
 msgid "Options: %s"
 msgstr "オプション"
 
+#, fuzzy
+msgid "Or"
+msgstr "O"
+
 msgid "Oracle"
 msgstr "オラクル"
 
@@ -35700,17 +35709,6 @@ msgstr "拡張子は小文字でドットなしで指定してください。"
 msgid "Please specify the name of the status host."
 msgstr "ステータスホストの名前を指定してください。"
 
-#, python-format
-msgid ""
-"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
-"replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Check_MK's directory for "
-"variable data, which is <tt>%s</tt>."
-msgstr ""
-"エクスポートファイルのパスを指定してください。テキスト<tt>[HOST]</tt> は、イ"
-"ンベントリが実行されたホスト名に置き換えられます。相対パスを使用する場合、"
-"Checkmkの変数データ用ディレクトリ(<tt>%s</tt>)からの相対パスになります。"
-
 msgid "Please specify the user and password needed to access the xml interface"
 msgstr ""
 "xmlインターフェースにアクセスするために必要なユーザーとパスワードを指定してく"
@@ -36290,12 +36288,6 @@ msgstr "プロセス一致テキストの説明またはプロセスのパス"
 msgid "Process Matching"
 msgstr "プロセスマッチング"
 
-msgid "Process Name"
-msgstr "プロセス名"
-
-msgid "Process Name Matching"
-msgstr "プロセス名の照合"
-
 msgid "Process Path Matching"
 msgstr "プロセスパスマッチング"
 
@@ -36320,8 +36312,16 @@ msgstr "プロセスディスカバリー(SNMPのみ)"
 msgid "Process handles"
 msgstr "プロセスハンドル"
 
+#, fuzzy
+msgid "Process name"
+msgstr "プロセス名"
+
 msgid "Process name for usage in the Nagios service description"
 msgstr "Nagiosサービスの説明で使用するプロセス名"
+
+#, fuzzy
+msgid "Process name matching"
+msgstr "プロセス名の照合"
 
 #, fuzzy
 msgid "Process new logfiles from the beginning"
@@ -36735,9 +36735,6 @@ msgstr "クワイエットキャッシュ"
 
 msgid "Quit"
 msgstr "終了する"
-
-msgid "Quoting"
-msgstr "引用"
 
 msgid "R.State"
 msgstr "R.State"
@@ -40156,9 +40153,6 @@ msgstr "Sentinel"
 
 msgid "Separate check"
 msgstr "個別チェック"
-
-msgid "Separator"
-msgstr "セパレーター"
 
 msgid "September"
 msgstr "9月"
@@ -55687,9 +55681,6 @@ msgstr ""
 "存在する場合はデバイスのレベルを使用し、存在しない場合は自分のレベルを使用し"
 "ます"
 
-msgid "Use double quotes, escape contained quotes with backslash"
-msgstr "二重引用符を使用し、円記号で含まれている引用符をエスケープします"
-
 msgid "Use environment variables from host"
 msgstr "ホストからの環境変数を使用する"
 
@@ -55825,9 +55816,6 @@ msgstr "設定とページレイアウトを使用する"
 
 msgid "Use short title in reports header"
 msgstr "レポートヘッダーに短いタイトルを使用する"
-
-msgid "Use single quotes, escape contained quotes with backslash"
-msgstr "一重引用符を使用し、バックスラッシュで引用符をエスケープします"
 
 msgid "Use site ID"
 msgstr ""
@@ -58486,6 +58474,14 @@ msgid ""
 "will be created. You can also create snapshots manually. WATO will delete "
 "old snapshots when the maximum number of snapshots is reached."
 msgstr ""
+
+#, fuzzy
+msgid "Where host label..."
+msgstr "ホストラベルと一致する"
+
+#, fuzzy
+msgid "Where service label..."
+msgstr "サービスラベルを一致させる"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -62849,6 +62845,45 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Add a first row with column titles"
+#~ msgstr "列タイトルを含む最初の行を追加します"
+
+#~ msgid "Column headers"
+#~ msgstr "列ヘッダー"
+
+#~ msgid "Do not add column headers"
+#~ msgstr "列ヘッダーを追加しないでください"
+
+#~ msgid "Don't use quotes"
+#~ msgstr "引用符は使用しないでください"
+
+#~ msgid "Export List of Software packages as CSV file"
+#~ msgstr "ソフトウェアパッケージのリストをCSVファイルとしてエクスポート"
+
+#, python-format
+#~ msgid ""
+#~ "Please specify the path to the export file. The text <tt>[HOST]</tt> will "
+#~ "be replaced with the host name the inventory has been done for. If you "
+#~ "use a relative path then that will be relative to Check_MK's directory "
+#~ "for variable data, which is <tt>%s</tt>."
+#~ msgstr ""
+#~ "エクスポートファイルのパスを指定してください。テキスト<tt>[HOST]</tt> は、"
+#~ "インベントリが実行されたホスト名に置き換えられます。相対パスを使用する場"
+#~ "合、Checkmkの変数データ用ディレクトリ(<tt>%s</tt>)からの相対パスになりま"
+#~ "す。"
+
+#~ msgid "Quoting"
+#~ msgstr "引用"
+
+#~ msgid "Separator"
+#~ msgstr "セパレーター"
+
+#~ msgid "Use double quotes, escape contained quotes with backslash"
+#~ msgstr "二重引用符を使用し、円記号で含まれている引用符をエスケープします"
+
+#~ msgid "Use single quotes, escape contained quotes with backslash"
+#~ msgstr "一重引用符を使用し、バックスラッシュで引用符をエスケープします"
 
 #, fuzzy
 #~| msgid "Global notification rules"

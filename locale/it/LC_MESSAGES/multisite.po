@@ -3264,9 +3264,6 @@ msgstr "Aggiungi l'ID della regola"
 msgid "Add Suffix"
 msgstr "Aggiungere il suffisso"
 
-msgid "Add a first row with column titles"
-msgstr "Aggiungere una prima riga con i titoli delle colonne"
-
 msgid "Add additional folder"
 msgstr "Aggiungi un'altra cartella"
 
@@ -3706,6 +3703,10 @@ msgstr "Aggiungi alla collezione di grafici"
 
 msgid "Add to monitoring configuration"
 msgstr "Aggiungere alla configurazione di monitoraggio"
+
+#, fuzzy
+msgid "Add to query"
+msgstr "Indici da interrogare"
 
 msgid "Add to trusted CAs"
 msgstr "Aggiungere alle CA fidate"
@@ -5254,6 +5255,10 @@ msgstr "Analizzare questa linea"
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "Analizzare la configurazione"
+
+#, fuzzy
+msgid "And"
+msgstr "Aggiungi"
 
 #, fuzzy
 msgid "Android version regular expression"
@@ -10278,9 +10283,6 @@ msgstr "Intestazioni di colonna"
 
 msgid "Column Title"
 msgstr "Titolo della colonna"
-
-msgid "Column headers"
-msgstr "Intestazioni di colonna"
 
 msgid "Column title"
 msgstr "Titolo della colonna"
@@ -15598,9 +15600,6 @@ msgstr "Non attivare le modifiche"
 msgid "Do not add a link to this page in sidebar"
 msgstr "Non aggiungere un link a questa pagina nella barra laterale"
 
-msgid "Do not add column headers"
-msgstr "Non aggiungere intestazioni di colonna"
-
 msgid "Do not alert on connection loss"
 msgstr "Non avvertire in caso di perdita di connessione"
 
@@ -16178,9 +16177,6 @@ msgstr "Non usare la porta personalizzata"
 
 msgid "Don't use password"
 msgstr "Non usare la password"
-
-msgid "Don't use quotes"
-msgstr "Non usare le virgolette"
 
 msgid "Don't wait for document body"
 msgstr "Non aspettare il corpo del documento"
@@ -18547,20 +18543,11 @@ msgstr "Esportazione CSV"
 msgid "Export JSON"
 msgstr "Esportare JSON"
 
-msgid "Export List of Software packages as CSV file"
-msgstr "Esportazione elenco di pacchetti software come file CSV"
-
 msgid "Export as JSON"
 msgstr "Esportare come JSON"
 
 msgid "Export as PNG"
 msgstr "Esportazione come PNG"
-
-msgid ""
-"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
-msgstr ""
-"File di esportazione da creare, contenente <tt>&lt;HOST&gt;</tt> per "
-"l'hostname"
 
 #, fuzzy
 msgid "Export this rule for API"
@@ -26859,6 +26846,10 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Configurazione del filtro Iptables"
 
+#, fuzzy
+msgid "Is"
+msgstr "s"
+
 msgid "Is CA"
 msgstr "È CA"
 
@@ -26877,6 +26868,10 @@ msgstr "È il punto di montaggio"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "È necessario per vedere %s che altri utenti hanno creato."
+
+#, fuzzy
+msgid "Is not"
+msgstr "non è"
 
 msgid "Is not available"
 msgstr "Non è disponibile"
@@ -27591,6 +27586,14 @@ msgstr "Opzioni di etichettatura"
 
 msgid "Labels"
 msgstr "Etichette"
+
+#, fuzzy
+msgid ""
+"Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
+"\"."
+msgstr ""
+"Le etichette devono essere nel formato <tt>[KEY]:[VALUE]</tt>. Per esempio "
+"<tt>os:windows</tt>."
 
 #, fuzzy
 msgid ""
@@ -35633,6 +35636,10 @@ msgstr "Opzioni per le e-mail di segnalazione"
 msgid "Options: %s"
 msgstr "Opzioni"
 
+#, fuzzy
+msgid "Or"
+msgstr "O"
+
 msgid "Oracle"
 msgstr "Oracle"
 
@@ -37727,18 +37734,6 @@ msgstr "Si prega di specificare le estensioni in minuscolo e senza punto."
 msgid "Please specify the name of the status host."
 msgstr "Specificare il nome dell'host di stato."
 
-#, fuzzy, python-format
-msgid ""
-"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
-"replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Check_MK's directory for "
-"variable data, which is <tt>%s</tt>."
-msgstr ""
-"Specificare il percorso del file di esportazione. Il testo <tt><HOST></tt> "
-"sarà sostituito con il nome dell'host per cui è stato fatto l'inventario. Se "
-"usi un percorso relativo allora sarà relativo alla directory di Check_MK per "
-"i dati variabili, che è <tt>%s</tt>."
-
 msgid "Please specify the user and password needed to access the xml interface"
 msgstr ""
 "Specificare l'utente e la password necessari per accedere all'interfaccia xml"
@@ -38350,12 +38345,6 @@ msgstr ""
 msgid "Process Matching"
 msgstr "Corrispondenza del processo"
 
-msgid "Process Name"
-msgstr "Nome del processo"
-
-msgid "Process Name Matching"
-msgstr "Corrispondenza del nome del processo"
-
 msgid "Process Path Matching"
 msgstr "Corrispondenza del percorso del processo"
 
@@ -38380,8 +38369,16 @@ msgstr "Scoperta dei processi (solo SNMP)"
 msgid "Process handles"
 msgstr "Maniglie di processo"
 
+#, fuzzy
+msgid "Process name"
+msgstr "Nome del processo"
+
 msgid "Process name for usage in the Nagios service description"
 msgstr "Nome del processo da usare nella descrizione del servizio Nagios"
+
+#, fuzzy
+msgid "Process name matching"
+msgstr "Corrispondenza del nome del processo"
 
 #, fuzzy
 msgid "Process new logfiles from the beginning"
@@ -38803,9 +38800,6 @@ msgstr "Cache tranquilla"
 
 msgid "Quit"
 msgstr "Abbandona"
-
-msgid "Quoting"
-msgstr "Citando"
 
 msgid "R.State"
 msgstr "R.Stato"
@@ -42400,9 +42394,6 @@ msgstr "Sentinella"
 
 msgid "Separate check"
 msgstr "Controllo separato"
-
-msgid "Separator"
-msgstr "Separatore"
 
 msgid "September"
 msgstr "Settembre"
@@ -59333,10 +59324,6 @@ msgstr "Utilizzare gli stati dei dispositivi e sovrascrivere lo stato previsto"
 msgid "Use device's levels if present, otherwise yours"
 msgstr "Usa i livelli del dispositivo se presenti, altrimenti i tuoi"
 
-msgid "Use double quotes, escape contained quotes with backslash"
-msgstr ""
-"Usare le doppie virgolette, sfuggire alle virgolette contenute con backslash"
-
 msgid "Use environment variables from host"
 msgstr "Utilizzare le variabili d'ambiente dall'host"
 
@@ -59480,10 +59467,6 @@ msgstr "Utilizzare le impostazioni e il layout di pagina da"
 
 msgid "Use short title in reports header"
 msgstr "Usa un titolo breve nell'intestazione dei rapporti"
-
-msgid "Use single quotes, escape contained quotes with backslash"
-msgstr ""
-"Usare virgolette singole, sfuggire alle virgolette contenute con backslash"
 
 msgid "Use site ID"
 msgstr "Usa l'ID del sito"
@@ -62404,6 +62387,14 @@ msgstr ""
 "un'istantanea della configurazione. Potete anche creare le istantanee "
 "manualmente. WATO cancellerà le vecchie istantanee quando il numero massimo "
 "di istantanee sarà raggiunto."
+
+#, fuzzy
+msgid "Where host label..."
+msgstr "Nuova etichetta dell'host: "
+
+#, fuzzy
+msgid "Where service label..."
+msgstr "Abbinare le etichette di servizio"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -67119,6 +67110,59 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Add a first row with column titles"
+#~ msgstr "Aggiungere una prima riga con i titoli delle colonne"
+
+#~ msgid "Column headers"
+#~ msgstr "Intestazioni di colonna"
+
+#~ msgid "Do not add column headers"
+#~ msgstr "Non aggiungere intestazioni di colonna"
+
+#~ msgid "Don't use quotes"
+#~ msgstr "Non usare le virgolette"
+
+#~ msgid "Export List of Software packages as CSV file"
+#~ msgstr "Esportazione elenco di pacchetti software come file CSV"
+
+#~ msgid ""
+#~ "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+#~ msgstr ""
+#~ "File di esportazione da creare, contenente <tt>&lt;HOST&gt;</tt> per "
+#~ "l'hostname"
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "Please specify the path to the export file. The text <tt><HOST></tt> "
+#~| "will be replaced with the host name the inventory has been done for. If "
+#~| "you use a relative path then that will be relative to Check_MK's "
+#~| "directory for variable data, which is <tt>%s</tt>."
+#~ msgid ""
+#~ "Please specify the path to the export file. The text <tt>[HOST]</tt> will "
+#~ "be replaced with the host name the inventory has been done for. If you "
+#~ "use a relative path then that will be relative to Check_MK's directory "
+#~ "for variable data, which is <tt>%s</tt>."
+#~ msgstr ""
+#~ "Specificare il percorso del file di esportazione. Il testo <tt><HOST></"
+#~ "tt> sarà sostituito con il nome dell'host per cui è stato fatto "
+#~ "l'inventario. Se usi un percorso relativo allora sarà relativo alla "
+#~ "directory di Check_MK per i dati variabili, che è <tt>%s</tt>."
+
+#~ msgid "Quoting"
+#~ msgstr "Citando"
+
+#~ msgid "Separator"
+#~ msgstr "Separatore"
+
+#~ msgid "Use double quotes, escape contained quotes with backslash"
+#~ msgstr ""
+#~ "Usare le doppie virgolette, sfuggire alle virgolette contenute con "
+#~ "backslash"
+
+#~ msgid "Use single quotes, escape contained quotes with backslash"
+#~ msgstr ""
+#~ "Usare virgolette singole, sfuggire alle virgolette contenute con backslash"
 
 #, fuzzy
 #~| msgid "Global notification rules"

@@ -2953,9 +2953,6 @@ msgstr "Adaugă Contoar"
 msgid "Add Suffix"
 msgstr "Adaugă filtre"
 
-msgid "Add a first row with column titles"
-msgstr ""
-
 #, fuzzy
 msgid "Add additional folder"
 msgstr "Informații Adiționale"
@@ -3483,6 +3480,10 @@ msgstr ""
 #, fuzzy
 msgid "Add to monitoring configuration"
 msgstr "Adaugă configurație de ajustare"
+
+#, fuzzy
+msgid "Add to query"
+msgstr "Adaugă Contoar"
 
 #, fuzzy
 msgid "Add to trusted CAs"
@@ -4919,6 +4920,10 @@ msgstr ""
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "Activare Configurare"
+
+#, fuzzy
+msgid "And"
+msgstr "Adaugă Condiție"
 
 #, fuzzy
 msgid "Android version regular expression"
@@ -9567,9 +9572,6 @@ msgstr ""
 #, fuzzy
 msgid "Column Title"
 msgstr "(fără titlu)"
-
-msgid "Column headers"
-msgstr ""
 
 #, fuzzy
 msgid "Column title"
@@ -14859,9 +14861,6 @@ msgstr "Activare schimbări"
 msgid "Do not add a link to this page in sidebar"
 msgstr "Adaugă un snapin pe sidebar"
 
-msgid "Do not add column headers"
-msgstr ""
-
 msgid "Do not alert on connection loss"
 msgstr ""
 
@@ -15441,9 +15440,6 @@ msgstr ""
 #, fuzzy
 msgid "Don't use password"
 msgstr "Parolâ Administrator:"
-
-msgid "Don't use quotes"
-msgstr ""
 
 msgid "Don't wait for document body"
 msgstr ""
@@ -17793,17 +17789,10 @@ msgstr "rapoarte"
 msgid "Export JSON"
 msgstr "rapoarte"
 
-msgid "Export List of Software packages as CSV file"
-msgstr ""
-
 msgid "Export as JSON"
 msgstr ""
 
 msgid "Export as PNG"
-msgstr ""
-
-msgid ""
-"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
 msgstr ""
 
 #, fuzzy
@@ -24999,6 +24988,10 @@ msgstr ""
 msgid "Iptables filter configuration"
 msgstr "Activare Configurare"
 
+#, fuzzy
+msgid "Is"
+msgstr "Adaugă Contoar"
+
 msgid "Is CA"
 msgstr ""
 
@@ -25017,6 +25010,9 @@ msgstr ""
 
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
+msgstr ""
+
+msgid "Is not"
 msgstr ""
 
 msgid "Is not available"
@@ -25704,6 +25700,11 @@ msgid "Labelling Options"
 msgstr ""
 
 msgid "Labels"
+msgstr ""
+
+msgid ""
+"Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
+"\"."
 msgstr ""
 
 msgid ""
@@ -33909,6 +33910,9 @@ msgstr ""
 msgid "Options: %s"
 msgstr "Grup nou"
 
+msgid "Or"
+msgstr ""
+
 msgid "Oracle"
 msgstr ""
 
@@ -35856,14 +35860,6 @@ msgstr ""
 msgid "Please specify the name of the status host."
 msgstr ""
 
-#, python-format
-msgid ""
-"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
-"replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Check_MK's directory for "
-"variable data, which is <tt>%s</tt>."
-msgstr ""
-
 msgid "Please specify the user and password needed to access the xml interface"
 msgstr ""
 
@@ -36467,14 +36463,6 @@ msgid "Process Matching"
 msgstr ""
 
 #, fuzzy
-msgid "Process Name"
-msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Process Name Matching"
-msgstr "Numele Elementului"
-
-#, fuzzy
 msgid "Process Path Matching"
 msgstr "Numele Elementului"
 
@@ -36506,8 +36494,16 @@ msgstr "Inventariere in masa"
 msgid "Process handles"
 msgstr "Numele Elementului"
 
+#, fuzzy
+msgid "Process name"
+msgstr "Numele Elementului"
+
 msgid "Process name for usage in the Nagios service description"
 msgstr ""
+
+#, fuzzy
+msgid "Process name matching"
+msgstr "Numele Elementului"
 
 msgid "Process new logfiles from the beginning"
 msgstr ""
@@ -36951,9 +36947,6 @@ msgid "Quiet cache"
 msgstr ""
 
 msgid "Quit"
-msgstr ""
-
-msgid "Quoting"
 msgstr ""
 
 msgid "R.State"
@@ -40521,9 +40514,6 @@ msgstr ""
 #, fuzzy
 msgid "Separate check"
 msgstr "Verificare activă"
-
-msgid "Separator"
-msgstr ""
 
 msgid "September"
 msgstr ""
@@ -54915,9 +54905,6 @@ msgstr ""
 msgid "Use device's levels if present, otherwise yours"
 msgstr ""
 
-msgid "Use double quotes, escape contained quotes with backslash"
-msgstr ""
-
 msgid "Use environment variables from host"
 msgstr ""
 
@@ -55062,9 +55049,6 @@ msgid "Use settings and page layout from"
 msgstr ""
 
 msgid "Use short title in reports header"
-msgstr ""
-
-msgid "Use single quotes, escape contained quotes with backslash"
 msgstr ""
 
 #, fuzzy
@@ -57447,6 +57431,14 @@ msgid ""
 "will be created. You can also create snapshots manually. WATO will delete "
 "old snapshots when the maximum number of snapshots is reached."
 msgstr ""
+
+#, fuzzy
+msgid "Where host label..."
+msgstr "Verificări active"
+
+#, fuzzy
+msgid "Where service label..."
+msgstr "Numele Elementului"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "

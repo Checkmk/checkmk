@@ -375,6 +375,15 @@ def test_create_event_from_line(line: str, expected: Mapping[str, Any]) -> None:
             id="content with both application and pid",
         ),
         pytest.param(
+            "App42Blah[-]: a message",
+            {
+                "application": "App42Blah",
+                "pid": 0,
+                "text": "a message",
+            },
+            id="content with application and an undefined pid",
+        ),
+        pytest.param(
             "App42Blah: a message",
             {
                 "application": "App42Blah",

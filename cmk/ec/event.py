@@ -289,7 +289,10 @@ def parse_syslog_info(content: str) -> Event:
         text = content.strip()
     elif "[" in parts[0]:  # TAG followed by pid
         application, pid_str = parts[0].split("[", 1)
-        pid = int(pid_str.rstrip("]"))
+        try:
+            pid = int(pid_str.rstrip("]"))
+        except ValueError:
+            pid = 0
         text = parts[1].strip()
     else:  # TAG not followed by pid
         application = parts[0]

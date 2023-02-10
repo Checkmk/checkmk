@@ -45,7 +45,7 @@ import traceback
 from collections.abc import Callable, Iterable
 from enum import auto, Enum
 from pathlib import Path
-from typing import BinaryIO, cast, Final, IO, NamedTuple, NoReturn
+from typing import BinaryIO, cast, Final, IO, Mapping, NamedTuple, NoReturn
 
 import psutil  # type: ignore[import]
 
@@ -1786,14 +1786,19 @@ def pipe_pager() -> str:
     return ""
 
 
-def call_scripts(site: SiteContext, phase: str) -> None:
-    """Calls scripts in defined directories on update."""
+def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | None = None) -> None:
+    """Calls hook scripts in defined directories."""
     path = Path(site.dir, "lib", "omd", "scripts", phase)
     if not path.exists():
         return
 
-    putenv("OMD_ROOT", site.dir)
-    putenv("OMD_SITE", site.name)
+    env = {
+        **os.environ,
+        "OMD_ROOT": site.dir,
+        "OMD_SITE": site.name,
+        **(add_env if add_env else {}),
+    }
+
     # NOTE: scripts have an order!
     for file in sorted(path.iterdir()):
         if file.name[0] == ".":
@@ -1805,6 +1810,7 @@ def call_scripts(site: SiteContext, phase: str) -> None:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             encoding="utf-8",
+            env=env,
         ) as proc:
 
             if proc.stdout is None:
@@ -2880,10 +2886,13 @@ def main_update(  # pylint: disable=too-many-branches
     # initialized tmpfs.
     prepare_and_populate_tmpfs(version_info, site)
 
-    # Needed for update-pre-hooks scripts
-    putenv("OMD_CONFLICT_MODE", conflict_mode)
-
-    call_scripts(site, "update-pre-hooks")
+    call_scripts(
+        site,
+        "update-pre-hooks",
+        add_env={
+            "OMD_CONFLICT_MODE": conflict_mode,
+        },
+    )
 
     # We previously executed "cmk -U" multiple times in the hooks CORE, MKEVENTD, PNP4NAGIOS to
     # update the core configuration. To only execute it once, we do it here.

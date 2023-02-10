@@ -1,0 +1,15 @@
+Title: Wrong password propagation for check_mail and check_mail_loop
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681482052
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p27
+
+A new authentication data format shared among check_mail* active checks was not properly handled
+by check_mail and check_mail_loop argument generators, resulting in messages like
+    WARNING: The stored password "('password', '<SOME_PASSWORD>')" used by service "<SERVICE-NAME>" on host "<HOST-NAME>" does not exist (anymore)
+
+This change applies these missing changes to the command line generators as already done in v2.2.0+

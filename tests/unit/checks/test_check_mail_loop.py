@@ -21,7 +21,7 @@ pytestmark = pytest.mark.checks
                     {
                         "server": "bar",
                         "connection": {"disable_tls": True, "tcp_port": 143},
-                        "auth": ("hans", "wurst"),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
                 ),
                 "mail_from": None,
@@ -53,7 +53,7 @@ pytestmark = pytest.mark.checks
                     {
                         "server": "imap.gmx.de",
                         "connection": {},
-                        "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
                     },
                 ),
                 "mail_from": "me_from@gmx.de",

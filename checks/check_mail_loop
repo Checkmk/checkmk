@@ -7,7 +7,7 @@
 from cmk.base.check_api import passwordstore_get_cmdline
 
 
-def check_mail_loop_arguments(params):
+def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     """
     >>> for a in check_mail_loop_arguments({
     ...     'item': 'MailLoop_imap',
@@ -18,7 +18,7 @@ def check_mail_loop_arguments(params):
     ...     'smtp_auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
     ...     'fetch': ('IMAP', {
     ...       'server': 'imap.gmx.de',
-    ...       'auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
+    ...       'auth': ("basic", ('me@gmx.de', ('password', 'p4ssw0rd'))),
     ...       'connection': {'disable_tls': False, 'tcp_port': 123}}),
     ...     'mail_from': 'me_from@gmx.de',
     ...     'mail_to': 'me_to@gmx.de',
@@ -48,13 +48,13 @@ def check_mail_loop_arguments(params):
     try:
         fetch_protocol, fetch_params = params["fetch"]
         connection_params = fetch_params["connection"]
-        fetch_username, fetch_password = fetch_params["auth"]
+        auth_type, auth_data = fetch_params["auth"]
     except KeyError as exc:
         raise ValueError(
             f"Params for check_mail_loop are faulty (missing {exc}), did you update the config?"
         )
 
-    args = [
+    args: list[str | tuple[str, str, str]] = [
         f"--fetch-protocol={fetch_protocol}",
         f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
     ]
@@ -70,8 +70,14 @@ def check_mail_loop_arguments(params):
     if (fetch_port := connection_params.get("tcp_port")) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
-    args.append(f"--fetch-username={fetch_username}")
-    args.append(passwordstore_get_cmdline("--fetch-password=%s", fetch_password))
+    if auth_type == "basic":
+        username, password = auth_data
+        args += [
+            f"--fetch-username={username}",
+            passwordstore_get_cmdline("--fetch-password=%s", password),
+        ]
+    else:
+        raise ValueError(f"{auth_type} authentication not (yet) supported for check_mail_loop")
 
     if "connect_timeout" in params:
         args.append(f"--connect-timeout={params['connect_timeout']}")

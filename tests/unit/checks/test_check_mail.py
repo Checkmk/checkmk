@@ -19,7 +19,7 @@ pytestmark = pytest.mark.checks
                     "IMAP",
                     {
                         "connection": {"disable_tls": False, "tcp_port": 143},
-                        "auth": ("foo", "bar"),
+                        "auth": ("basic", ("foo", "bar")),
                     },
                 ),
                 "connect_timeout": 15,
@@ -41,7 +41,7 @@ pytestmark = pytest.mark.checks
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
                         "connection": {"disable_tls": True, "tcp_port": 123},
                     },
                 ),

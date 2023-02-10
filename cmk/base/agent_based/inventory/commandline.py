@@ -20,9 +20,7 @@ from cmk.utils.type_defs import (
     SectionName,
 )
 
-from cmk.fetchers import FetcherFunction
-
-from cmk.checkers import ParserFunction, SummarizerFunction
+from cmk.checkers import FetcherFunction, ParserFunction, SummarizerFunction
 
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import SectionPlugin

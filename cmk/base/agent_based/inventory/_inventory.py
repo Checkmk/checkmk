@@ -36,9 +36,9 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.type_defs import HostName, HWSWInventoryParameters, InventoryPluginName, SectionName
 
-from cmk.fetchers import FetcherFunction, SourceType
+from cmk.fetchers import SourceType
 
-from cmk.checkers import HostKey, ParserFunction, SummarizerFunction
+from cmk.checkers import FetcherFunction, HostKey, ParserFunction, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 

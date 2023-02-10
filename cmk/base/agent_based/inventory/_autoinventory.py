@@ -9,9 +9,7 @@ from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.log import console
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, SectionName
 
-from cmk.fetchers import FetcherFunction
-
-from cmk.checkers import ParserFunction, SummarizerFunction
+from cmk.checkers import FetcherFunction, ParserFunction, SummarizerFunction
 
 import cmk.base.config as config
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin

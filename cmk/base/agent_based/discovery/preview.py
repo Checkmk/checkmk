@@ -18,9 +18,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, Se
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.fetchers import FetcherFunction
-
-from cmk.checkers import ParserFunction
+from cmk.checkers import FetcherFunction, ParserFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ServiceCheckResult
 

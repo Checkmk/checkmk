@@ -32,9 +32,7 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.fetchers import FetcherFunction
-
-from cmk.checkers import ParserFunction
+from cmk.checkers import FetcherFunction, ParserFunction
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
 import cmk.base.config as config

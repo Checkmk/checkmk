@@ -7,7 +7,8 @@ from collections.abc import Iterable, Sequence
 from functools import partial
 from typing import Protocol
 
-from cmk.utils.type_defs import AgentRawData, result
+from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
@@ -19,6 +20,15 @@ from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
 __all__ = ["parse_raw_data", "ParserFunction", "SummarizerFunction"]
+
+
+class FetcherFunction(Protocol):
+    def __call__(
+        self, host_name: HostName, *, ip_address: HostAddress | None
+    ) -> Sequence[
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ]:
+        ...
 
 
 class ParserFunction(Protocol):

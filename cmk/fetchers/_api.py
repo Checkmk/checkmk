@@ -3,30 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
 from functools import partial
-from typing import Protocol
 
-from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result
+from cmk.utils.type_defs import result
 
-from cmk.snmplib.type_defs import SNMPRawData, TRawData
+from cmk.snmplib.type_defs import TRawData
 
 from ._abstract import Fetcher, Mode
-from ._typedefs import SourceInfo
 from .filecache import FileCache
 
-__all__ = ["get_raw_data", "FetcherFunction"]
-
-
-class FetcherFunction(Protocol):
-    def __call__(
-        self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ]:
-        ...
+__all__ = ["get_raw_data"]
 
 
 def get_raw_data(

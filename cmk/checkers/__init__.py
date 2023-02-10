@@ -27,7 +27,7 @@ See Also:
 
 """
 
-from ._api import parse_raw_data, ParserFunction, SummarizerFunction
+from ._api import FetcherFunction, parse_raw_data, ParserFunction, SummarizerFunction
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import Parser
 from ._parseragent import AgentParser
@@ -37,6 +37,7 @@ from .summarize import summarize
 
 __all__ = [
     "AgentParser",
+    "FetcherFunction",
     "HostKey",
     "parse_raw_data",
     "Parser",

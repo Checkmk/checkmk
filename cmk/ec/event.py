@@ -285,7 +285,7 @@ def parse_syslog_info(content: str) -> Event:
         application, pid_str = parts[0].split("[", 1)
         pid_str = pid_str.rstrip("]")
         if pid_str.isnumeric():
-            pid = int(pid_str.rstrip("]"))
+            pid = int(pid_str)
         else:
             pid = 0
         text = parts[1].strip()

@@ -34,14 +34,12 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_OK 0
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_WARNING 1
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_CRITICAL 2
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_UNKNOWN 3
+enum {
+    STATE_OK = 0,
+    STATE_WARNING = 1,
+    STATE_CRITICAL = 2,
+    STATE_UNKNOWN = 3,
+};
 
 using namespace std::chrono_literals;
 

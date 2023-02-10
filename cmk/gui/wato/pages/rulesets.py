@@ -988,6 +988,8 @@ class ModeEditRuleset(WatoMode):
             item=make_form_submit_link(form_name="new_rule", button_name="_new_dflt_rule"),
             is_shortcut=True,
             is_suggested=True,
+            # Suggested but not enabled: Make it obvious for the user that 'adding' is disabled.
+            is_enabled=not self._rulespec.is_deprecated,
         )
 
         if self._hostname:

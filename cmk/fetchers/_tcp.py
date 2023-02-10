@@ -130,9 +130,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        if mode is not Mode.CHECKING:
-            raise MKFetcherError(f"Refusing to fetch live data during {mode.name.lower()}")
-
         agent_data, protocol = self._get_agent_data()
         return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 

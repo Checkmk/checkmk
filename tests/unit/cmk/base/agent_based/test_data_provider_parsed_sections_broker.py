@@ -12,9 +12,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, SourceType
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection
 

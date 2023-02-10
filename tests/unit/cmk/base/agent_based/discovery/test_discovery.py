@@ -29,10 +29,10 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-from cmk.fetchers import Mode, SourceType
+from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkers.host_sections import HostSections

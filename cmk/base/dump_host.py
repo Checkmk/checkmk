@@ -20,12 +20,11 @@ from cmk.fetchers import (
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
-    SourceInfo,
-    SourceType,
     TCPFetcher,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
+from cmk.checkers import SourceInfo, SourceType
 from cmk.checkers.check_table import LegacyCheckParameters
 
 import cmk.base.config as config

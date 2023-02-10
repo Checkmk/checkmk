@@ -13,9 +13,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, ServiceID
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey, plugin_contexts
+from cmk.checkers import HostKey, plugin_contexts, SourceType
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
 import cmk.base.config as config

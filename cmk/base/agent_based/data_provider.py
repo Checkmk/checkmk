@@ -12,9 +12,7 @@ import cmk.utils.piggyback
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
 
-from cmk.fetchers import SourceInfo, SourceType
-
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, SourceInfo, SourceType
 from cmk.checkers.crash_reporting import create_section_crash_dump
 from cmk.checkers.host_sections import HostSections
 

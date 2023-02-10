@@ -9,9 +9,7 @@ from collections.abc import Iterable, Sequence
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, SourceType
 
 from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,

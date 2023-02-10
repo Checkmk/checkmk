@@ -11,9 +11,7 @@ from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import HostName
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, SourceType
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ResolvedResult

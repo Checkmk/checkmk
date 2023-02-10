@@ -12,9 +12,8 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
-from cmk.fetchers import SourceInfo
-
 from ._parser import Parser
+from ._typedefs import SourceInfo
 from .checkresults import ActiveCheckResult
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, SectionNameCollection

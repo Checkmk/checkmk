@@ -31,10 +31,10 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Fetcher, get_raw_data, Mode, SourceInfo
+from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkers import parse_raw_data
+from cmk.checkers import parse_raw_data, SourceInfo
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.summarize import summarize

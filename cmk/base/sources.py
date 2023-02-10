@@ -17,15 +17,7 @@ from cmk.utils.type_defs import HostAddress, HostAgentConnectionMode, HostName, 
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-from cmk.fetchers import (
-    Fetcher,
-    FetcherType,
-    NoFetcher,
-    ProgramFetcher,
-    SNMPFetcher,
-    SourceInfo,
-    SourceType,
-)
+from cmk.fetchers import Fetcher, FetcherType, NoFetcher, ProgramFetcher, SNMPFetcher
 from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_file_cache_path_template, make_persisted_section_dir
 from cmk.fetchers.filecache import (
@@ -37,7 +29,7 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 
-from cmk.checkers import Parser, SNMPParser
+from cmk.checkers import Parser, SNMPParser, SourceInfo, SourceType
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register

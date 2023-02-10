@@ -95,7 +95,7 @@ def test_agent_section_side_effects(valid_plugin_module_name, empty_registry):
     )
 
     assert is_registered_agent_section_plugin(section)
-    assert not is_stored_ruleset(ruleset)  # This is a bug: SUP-13168
+    assert is_stored_ruleset(ruleset)
 
 
 def test_snmp_section_side_effects(valid_plugin_module_name, empty_registry):
@@ -117,7 +117,7 @@ def test_snmp_section_side_effects(valid_plugin_module_name, empty_registry):
     )
 
     assert is_registered_snmp_section_plugin(section)
-    assert not is_stored_ruleset(ruleset)  # This is a bug: SUP-13168
+    assert is_stored_ruleset(ruleset)
 
 
 def test_check_plugin_side_effects(valid_plugin_module_name, empty_registry):

@@ -78,6 +78,7 @@ class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
     mustsearch: bool
     force_checkboxes: bool
     play_sounds: bool
+    user_sortable: bool
 
 
 def copy_view_into_dashlet(

@@ -68,14 +68,14 @@ def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.
         for object_type in ["host", "service"]:
             old_id = f"{object_type}_labels"  # old label filter id
             ctx = config.get("context", {})
-            labels_config = ctx.get(old_id)  # type: ignore[attr-defined]
+            labels_config = ctx.get(old_id, {}).get(  # type: ignore[attr-defined]
+                f"{object_type}_label"
+            )
 
-            if not ctx or not labels_config:
+            if not labels_config:
                 continue
 
-            labels = [
-                d.get("value") for d in json.loads(labels_config.get(f"{object_type}_label", "[]"))
-            ]
+            labels = [d.get("value") for d in json.loads(labels_config)]
 
             new_id = f"{object_type}_label_groups"  # new label filter id
             label_groups_dict = {

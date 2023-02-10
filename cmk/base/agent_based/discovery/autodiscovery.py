@@ -32,7 +32,13 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.checkers import FetcherFunction, HostKey, ParserFunction, SummarizerFunction
+from cmk.checkers import (
+    FetcherFunction,
+    HostKey,
+    ParserFunction,
+    PSectionPlugin,
+    SummarizerFunction,
+)
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
 import cmk.base.config as config
@@ -45,7 +51,6 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 
@@ -103,7 +108,7 @@ def automation_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     failure_summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
@@ -363,7 +368,7 @@ def discover_marked_hosts(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
@@ -446,7 +451,7 @@ def _discover_marked_host(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     failure_summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     autodiscovery_queue: AutoQueue,

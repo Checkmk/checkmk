@@ -19,7 +19,13 @@ from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, Se
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkers import FetcherFunction, HostKey, ParserFunction, SummarizerFunction
+from cmk.checkers import (
+    FetcherFunction,
+    HostKey,
+    ParserFunction,
+    PSectionPlugin,
+    SummarizerFunction,
+)
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ServiceCheckResult
 
@@ -34,7 +40,6 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
@@ -57,7 +62,7 @@ def get_check_preview(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     failure_summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],

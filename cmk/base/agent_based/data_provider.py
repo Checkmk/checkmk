@@ -12,11 +12,11 @@ import cmk.utils.piggyback
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
 
-from cmk.checkers import HostKey, SourceInfo, SourceType
+from cmk.checkers import HostKey, PSectionPlugin, SourceInfo, SourceType
 from cmk.checkers.crash_reporting import create_section_crash_dump
 from cmk.checkers.host_sections import HostSections
 
-from cmk.base.api.agent_based.type_defs import AgentParseFunction, SectionPlugin, SNMPParseFunction
+from cmk.base.api.agent_based.type_defs import AgentParseFunction, SNMPParseFunction
 
 _CacheInfo = tuple[int, int]
 
@@ -49,7 +49,7 @@ class _ParsingResult(NamedTuple):
 
 class ResolvedResult(NamedTuple):
     section_name: SectionName
-    section_plugin: SectionPlugin
+    section_plugin: PSectionPlugin
     parsed_data: ParsedSectionContent
     cache_info: _CacheInfo | None
 
@@ -130,7 +130,7 @@ class ParsedSectionsResolver:
         self,
         parser: SectionsParser,
         *,
-        section_plugins: Mapping[SectionName, SectionPlugin],
+        section_plugins: Mapping[SectionName, PSectionPlugin],
     ) -> None:
         self._parser: Final = parser
         self.section_plugins: Final = section_plugins
@@ -147,9 +147,9 @@ class ParsedSectionsResolver:
 
     @staticmethod
     def _init_superseders(
-        section_plugins: Mapping[SectionName, SectionPlugin],
-    ) -> Mapping[SectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
-        superseders: dict[SectionName, list[tuple[SectionName, SectionPlugin]]] = {}
+        section_plugins: Mapping[SectionName, PSectionPlugin],
+    ) -> Mapping[SectionName, Sequence[tuple[SectionName, PSectionPlugin]]]:
+        superseders: dict[SectionName, list[tuple[SectionName, PSectionPlugin]]] = {}
         for section_name, section in section_plugins.items():
             for superseded in section.supersedes:
                 superseders.setdefault(superseded, []).append((section_name, section))
@@ -157,9 +157,9 @@ class ParsedSectionsResolver:
 
     @staticmethod
     def _init_producers(
-        section_plugins: Mapping[SectionName, SectionPlugin],
-    ) -> Mapping[ParsedSectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
-        producers: dict[ParsedSectionName, list[tuple[SectionName, SectionPlugin]]] = {}
+        section_plugins: Mapping[SectionName, PSectionPlugin],
+    ) -> Mapping[ParsedSectionName, Sequence[tuple[SectionName, PSectionPlugin]]]:
+        producers: dict[ParsedSectionName, list[tuple[SectionName, PSectionPlugin]]] = {}
         for section_name, section in section_plugins.items():
             producers.setdefault(section.parsed_section_name, []).append((section_name, section))
         return producers
@@ -213,7 +213,7 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
 
 def make_providers(
     host_sections: Mapping[HostKey, HostSections],
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
 ) -> Mapping[HostKey, Provider]:
     return {
         host_key: ParsedSectionsResolver(

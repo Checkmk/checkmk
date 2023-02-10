@@ -65,8 +65,16 @@ from cmk.base.agent_based.utils import (
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.base.api.agent_based import checking_classes, value_store
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based import value_store
+from cmk.base.api.agent_based.checking_classes import (
+    CheckPlugin,
+    CheckResult,
+    IgnoreResults,
+    IgnoreResultsError,
+)
+from cmk.base.api.agent_based.checking_classes import Metric as MetricResult
+from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
+from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
 from cmk.base.config import ConfigCache
@@ -355,7 +363,7 @@ def get_aggregated_result(
     config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     service: ConfiguredService,
-    plugin: checking_classes.CheckPlugin,
+    plugin: CheckPlugin,
     *,
     rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,
@@ -406,7 +414,7 @@ def get_aggregated_result(
                 )
             )
 
-    except checking_classes.IgnoreResultsError as e:
+    except IgnoreResultsError as e:
         msg = str(e) or "No service summary available"
         return _AggregatedResult(
             service=service,
@@ -529,14 +537,14 @@ def _add_state_marker(
     return result_str if state_marker in result_str else result_str + state_marker
 
 
-def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheckResult:
+def _aggregate_results(subresults: CheckResult) -> ServiceCheckResult:
     perfdata, results = _consume_and_dispatch_result_types(subresults)
     needs_marker = len(results) > 1
     summaries: list[str] = []
     details: list[str] = []
-    status = checking_classes.State.OK
+    status = State.OK
     for result in results:
-        status = checking_classes.State.worst(status, result.state)
+        status = State.worst(status, result.state)
         state_marker = state_markers[int(result.state)] if needs_marker else ""
         if result.summary:
             summaries.append(
@@ -566,23 +574,23 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
 
 
 def _consume_and_dispatch_result_types(
-    subresults: checking_classes.CheckResult,
-) -> tuple[list[MetricTuple], list[checking_classes.Result]]:
+    subresults: CheckResult,
+) -> tuple[list[MetricTuple], list[CheckFunctionResult]]:
     """Consume *all* check results, and *then* raise, if we encountered
     an IgnoreResults instance.
     """
-    ignore_results: list[checking_classes.IgnoreResults] = []
-    results: list[checking_classes.Result] = []
+    ignore_results: list[IgnoreResults] = []
+    results: list[CheckFunctionResult] = []
     perfdata: list[MetricTuple] = []
     for subr in subresults:
-        if isinstance(subr, checking_classes.IgnoreResults):
+        if isinstance(subr, IgnoreResults):
             ignore_results.append(subr)
-        elif isinstance(subr, checking_classes.Metric):
+        elif isinstance(subr, MetricResult):
             perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
         else:
             results.append(subr)
 
     if ignore_results:
-        raise checking_classes.IgnoreResultsError(str(ignore_results[-1]))
+        raise IgnoreResultsError(str(ignore_results[-1]))
 
     return perfdata, results

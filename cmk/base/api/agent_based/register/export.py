@@ -12,6 +12,7 @@ from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.register import (
     add_check_plugin,
     add_discovery_ruleset,
+    add_host_label_ruleset,
     add_inventory_plugin,
     add_section_plugin,
     is_registered_check_plugin,
@@ -112,6 +113,8 @@ def agent_section(
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     add_section_plugin(section_plugin)
+    if section_plugin.host_label_ruleset_name is not None:
+        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
 @overload  # no List of trees -> SimpleSNMPParseFunction
@@ -234,6 +237,8 @@ def snmp_section(
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     add_section_plugin(section_plugin)
+    if section_plugin.host_label_ruleset_name is not None:
+        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
 def check_plugin(

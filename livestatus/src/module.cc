@@ -338,7 +338,7 @@ void start_threads() {
     logger->setUseParentHandlers(false);
     try {
         logger->setHandler(
-            std::make_unique<LivestatusHandler>(fl_paths._logfile));
+            std::make_unique<LivestatusHandler>(fl_paths.livestatus_log_file));
     } catch (const generic_error &ex) {
         Warning(fl_logger_nagios) << ex;
     }
@@ -442,13 +442,13 @@ void terminate_threads() {
 
 bool open_unix_socket() {
     struct stat st;
-    if (stat(fl_paths._socket.c_str(), &st) == 0) {
-        if (::unlink(fl_paths._socket.c_str()) == 0) {
+    if (stat(fl_paths.livestatus_socket.c_str(), &st) == 0) {
+        if (::unlink(fl_paths.livestatus_socket.c_str()) == 0) {
             Debug(fl_logger_nagios)
-                << "removed old socket file " << fl_paths._socket;
+                << "removed old socket file " << fl_paths.livestatus_socket;
         } else {
             const generic_error ge("cannot remove old socket file " +
-                                   fl_paths._socket);
+                                   fl_paths.livestatus_socket);
             Alert(fl_logger_nagios) << ge;
             return false;
         }
@@ -463,16 +463,16 @@ bool open_unix_socket() {
     }
 
     // Bind it to its address. This creates the file with the name
-    // fl_paths._socket
+    // fl_paths.livestatus_socket
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, fl_paths._socket.c_str(),
+    strncpy(sockaddr.sun_path, fl_paths.livestatus_socket.c_str(),
             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (::bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
                sizeof(sockaddr)) < 0) {
         const generic_error ge("cannot bind UNIX socket to address " +
-                               fl_paths._socket);
+                               fl_paths.livestatus_socket);
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
@@ -480,10 +480,10 @@ bool open_unix_socket() {
 
     // Make writable group members (fchmod didn't do nothing for me. Don't
     // know why!)
-    if (0 != ::chmod(fl_paths._socket.c_str(), 0660)) {
+    if (0 != ::chmod(fl_paths.livestatus_socket.c_str(), 0660)) {
         const generic_error ge(
             "cannot change file permissions for UNIX socket at " +
-            fl_paths._socket + " to 0660");
+            fl_paths.livestatus_socket + " to 0660");
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
@@ -491,19 +491,19 @@ bool open_unix_socket() {
 
     if (0 != ::listen(g_unix_socket, 3 /* backlog */)) {
         const generic_error ge("cannot listen to UNIX socket at " +
-                               fl_paths._socket);
+                               fl_paths.livestatus_socket);
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
     }
 
     Informational(fl_logger_nagios)
-        << "opened UNIX socket at " << fl_paths._socket;
+        << "opened UNIX socket at " << fl_paths.livestatus_socket;
     return true;
 }
 
 void close_unix_socket() {
-    ::unlink(fl_paths._socket.c_str());
+    ::unlink(fl_paths.livestatus_socket.c_str());
     if (g_unix_socket >= 0) {
         ::close(g_unix_socket);
         g_unix_socket = -1;
@@ -861,7 +861,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         // set default path to our logfile to be in the same path as nagios.log
         const std::string lf{log_file};
         auto slash = lf.rfind('/');
-        fl_paths._logfile =
+        fl_paths.livestatus_log_file =
             (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
             "livestatus.log";
     }
@@ -879,7 +879,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         const std::string left = safe_next_token(&part, '=');
         const char *right_token = next_token(&part, 0);
         if (right_token == nullptr) {
-            fl_paths._socket = left;
+            fl_paths.livestatus_socket = left;
         } else {
             const std::string right{right_token};
             if (left == "debug") {
@@ -893,10 +893,6 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
                 Notice(logger)
                     << "setting debug level to " << fl_livestatus_log_level;
-            } else if (left == "log_file") {
-                fl_paths._logfile = right;
-            } else if (left == "mkeventd_socket") {
-                fl_paths._mkeventd_socket = right;
             } else if (left == "max_cached_messages") {
                 fl_limits._max_cached_messages =
                     strtoul(right.c_str(), nullptr, 10);
@@ -975,26 +971,31 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                     Warning(logger)
                         << "invalid group authorization mode, allowed are strict and loose";
                 }
-            } else if (left == "pnp_path") {
-                fl_paths._pnp = check_path("PNP perfdata directory", right);
             } else if (left == "crash_reports_path") {
-                fl_paths._crash_reports_path =
-                    check_path("Path to the crash reports", right);
+                fl_paths.crash_reports_directory =
+                    check_path("crash reports directory", right);
             } else if (left == "license_usage_history_path") {
-                fl_paths._license_usage_history_path =
-                    check_path("Path to the license usage", right);
+                fl_paths.license_usage_history_file =
+                    check_path("license usage history file", right);
             } else if (left == "mk_inventory_path") {
-                fl_paths._mk_inventory =
-                    check_path("Check_MK Inventory directory", right);
+                fl_paths.inventory_directory =
+                    check_path("inventory directory", right);
             } else if (left == "structured_status_path") {
-                fl_paths._structured_status =
-                    check_path("Check_MK structured status directory", right);
+                fl_paths.structured_status_directory =
+                    check_path("structured status directory", right);
             } else if (left == "robotmk_html_log_path") {
-                fl_paths._robotmk_html_log_path =
-                    check_path("Check_MK robotmk HTML log directory", right);
+                fl_paths.robotmk_html_log_directory =
+                    check_path("robotmk html log directory", right);
             } else if (left == "mk_logwatch_path") {
-                fl_paths._mk_logwatch =
-                    check_path("Check_MK logwatch directory", right);
+                fl_paths.logwatch_directory =
+                    check_path("logwatch directory", right);
+            } else if (left == "mkeventd_socket") {
+                fl_paths.mkeventd_socket = right;
+            } else if (left == "pnp_path") {
+                fl_paths.rrd_multiple_directory =
+                    check_path("RRD multiple directory", right);
+            } else if (left == "log_file") {
+                fl_paths.livestatus_log_file = right;
             } else if (left == "data_encoding") {
                 if (right == "utf8") {
                     fl_data_encoding = Encoding::utf8;
@@ -1019,15 +1020,15 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         }
     }
 
-    const std::string sp{fl_paths._socket};
+    const std::string sp{fl_paths.livestatus_socket};
     auto slash = sp.rfind('/');
     auto prefix = slash == std::string::npos ? "" : sp.substr(0, slash + 1);
-    if (fl_paths._mkeventd_socket.empty()) {
-        fl_paths._mkeventd_socket = prefix + "mkeventd/status";
+    if (fl_paths.mkeventd_socket.empty()) {
+        fl_paths.mkeventd_socket = prefix + "mkeventd/status";
     }
     // TODO(sp) Make this configurable.
-    if (fl_paths._rrdcached_socket.empty()) {
-        fl_paths._rrdcached_socket = prefix + "rrdcached.sock";
+    if (fl_paths.rrdcached_socket.empty()) {
+        fl_paths.rrdcached_socket = prefix + "rrdcached.sock";
     }
 }
 
@@ -1090,7 +1091,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
     Notice(fl_logger_nagios)
         << "finished initialization, further log messages go to "
-        << fl_paths._logfile;
+        << fl_paths.livestatus_log_file;
     return 0;
 }
 

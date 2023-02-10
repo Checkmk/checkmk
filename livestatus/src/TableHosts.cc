@@ -691,26 +691,27 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets, [mc](const host &hst) {
-            return pnpgraph_present(mc->pnpPath(), hst.name,
-                                    dummy_service_description());
+            return pnpgraph_present(mc->paths().rrd_multiple_directory,
+                                    hst.name, dummy_service_description());
         }));
     table->addColumn(std::make_unique<TimeColumn<host>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
         offsets, [mc](const host &hst) {
-            return mk_inventory_last(mc->mkInventoryPath() / hst.name);
+            return mk_inventory_last(mc->paths().inventory_directory /
+                                     hst.name);
         }));
 
     table->addColumn(std::make_unique<BlobColumn<host>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", offsets,
         BlobFileReader<host>{
-            [mc]() { return mc->mkInventoryPath(); },
+            [mc]() { return mc->paths().inventory_directory; },
             [](const host &r) { return std::filesystem::path{r.name}; }}));
     table->addColumn(std::make_unique<BlobColumn<host>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
-        BlobFileReader<host>{[mc]() { return mc->mkInventoryPath(); },
+        BlobFileReader<host>{[mc]() { return mc->paths().inventory_directory; },
                              [](const host &r) {
                                  return std::filesystem::path{
                                      std::string{r.name} + ".gz"};
@@ -720,24 +721,24 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         offsets,
         BlobFileReader<host>{
-            [mc]() { return mc->structuredStatusPath(); },
+            [mc]() { return mc->paths().structured_status_directory; },
             [](const host &r) { return std::filesystem::path{r.name}; }}));
     table->addColumn(std::make_unique<ListColumn<host>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
         [mc](const host &hst, const Column &col) {
+            const auto logwatch_directory = mc->paths().logwatch_directory;
             auto dir =
-                mc->mkLogwatchPath().empty() || std::string{hst.name}.empty()
+                logwatch_directory.empty() || std::string{hst.name}.empty()
                     ? std::filesystem::path()
-                    : std::filesystem::path{mc->mkLogwatchPath()} /
-                          pnp_cleanup(hst.name);
+                    : logwatch_directory / pnp_cleanup(hst.name);
             return getLogwatchList(dir, col);
         }));
 
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<host>>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", offsets,
-        [mc]() { return mc->mkLogwatchPath(); },
+        [mc]() { return mc->paths().logwatch_directory; },
         [](const host & /*r*/, const std::string &args) {
             return std::filesystem::path{args};
         }));
@@ -815,7 +816,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             std::vector<std::string> metrics;
             if (r.name != nullptr) {
                 auto names =
-                    scan_rrd(mc->pnpPath() / r.name,
+                    scan_rrd(mc->paths().rrd_multiple_directory / r.name,
                              dummy_service_description(), mc->loggerRRD());
                 std::transform(std::begin(names), std::end(names),
                                std::back_inserter(metrics),

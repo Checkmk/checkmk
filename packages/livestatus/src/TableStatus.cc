@@ -25,6 +25,7 @@
 namespace {
 struct Status {
     GlobalFlags global_flags;
+    Paths paths;
     // more to come...
 };
 }  // namespace
@@ -301,8 +302,8 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<TimeColumn<Status>>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        offsets, [mc](const Status & /*r*/) {
-            return mk_inventory_last(mc->mkInventoryPath() / ".last");
+        offsets, [](const Status &r) {
+            return mk_inventory_last(r.paths.inventory_directory / ".last");
         }));
     addColumn(std::make_unique<IntColumn<Status>>(
         "num_queued_notifications",
@@ -319,7 +320,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<BlobColumn<Status>>(
         "license_usage_history", "Historic license usage information", offsets,
         BlobFileReader<Status>{
-            [mc]() { return mc->licenseUsageHistoryPath(); },
+            [mc]() { return mc->paths().license_usage_history_file; },
             [](const Status & /*r*/) { return std::filesystem::path{}; }}));
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "average_runnable_jobs_fetcher",
@@ -356,7 +357,10 @@ std::string TableStatus::name() const { return "status"; }
 std::string TableStatus::namePrefix() const { return "status_"; }
 
 void TableStatus::answerQuery(Query &query, const User & /*user*/) {
-    Status status{.global_flags = core()->globalFlags()};
+    Status status{
+        .global_flags = core()->globalFlags(),
+        .paths = core()->paths(),
+    };
     query.processDataset(Row{&status});
 }
 

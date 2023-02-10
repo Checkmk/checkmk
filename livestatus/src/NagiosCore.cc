@@ -46,16 +46,21 @@ extern int g_num_queued_connections;
 extern std::atomic_int32_t g_livestatus_active_connections;
 
 void NagiosPaths::dump(Logger *logger) const {
-    Notice(logger) << "socket path = '" << _socket << "'";
-    Notice(logger) << "pnp path = '" << _pnp << "'";
-    Notice(logger) << "inventory path = '" << _mk_inventory << "'";
-    Notice(logger) << "structured status path = '" << _structured_status << "'";
-    Notice(logger) << "robotmk html log path = '" << _robotmk_html_log_path
-                   << "'";
-    Notice(logger) << "logwatch path = '" << _mk_logwatch << "'";
-    Notice(logger) << "log file path = '" << _logfile << "'";
-    Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
-    Notice(logger) << "rrdcached socket path = '" << _rrdcached_socket << "'";
+    Notice(logger) << "crash reports directory = " << crash_reports_directory;
+    Notice(logger) << "license usage history file = "
+                   << license_usage_history_file;
+    Notice(logger) << "inventory directory = \"" << inventory_directory << "\"";
+    Notice(logger) << "structured status directory = \""
+                   << structured_status_directory << "\"";
+    Notice(logger) << "Robotmk HTML log directory = "
+                   << robotmk_html_log_directory;
+    Notice(logger) << "logwatch directory = \"" << logwatch_directory << "\"";
+    Notice(logger) << "mkeventd socket = \"" << mkeventd_socket << "\"";
+    Notice(logger) << "RRD multiple directory = \"" << rrd_multiple_directory
+                   << "\"";
+    Notice(logger) << "rrdcached socket = \"" << rrdcached_socket << "\"";
+    Notice(logger) << "Livestatus socket = \"" << livestatus_socket << "\"";
+    Notice(logger) << "Livestatus log file = \"" << livestatus_log_file << "\"";
 }
 
 NagiosCore::NagiosCore(
@@ -307,47 +312,8 @@ bool NagiosCore::mkeventdEnabled() {
     return false;
 }
 
-std::filesystem::path NagiosCore::mkeventdSocketPath() const {
-    return _paths._mkeventd_socket;
-}
-
-std::filesystem::path NagiosCore::mkLogwatchPath() const {
-    return _paths._mk_logwatch;
-}
-
-std::filesystem::path NagiosCore::mkInventoryPath() const {
-    return _paths._mk_inventory;
-}
-
-std::filesystem::path NagiosCore::structuredStatusPath() const {
-    return _paths._structured_status;
-}
-
-std::filesystem::path NagiosCore::robotMkHtmlLogPath() const {
-    return _paths._robotmk_html_log_path;
-}
-
-std::filesystem::path NagiosCore::crashReportPath() const {
-    return _paths._crash_reports_path;
-}
-
-std::filesystem::path NagiosCore::licenseUsageHistoryPath() const {
-    return _paths._license_usage_history_path;
-}
-
-std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
-
-std::filesystem::path NagiosCore::historyFilePath() const { return log_file; }
-
-std::filesystem::path NagiosCore::logArchivePath() const {
-    return log_archive_path;
-}
-
-std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
-    return _paths._rrdcached_socket;
-}
-
 int32_t NagiosCore::pid() const { return nagios_pid; }
+
 GlobalFlags NagiosCore::globalFlags() const {
     return {
         .enable_notifications = enable_notifications != 0,
@@ -363,6 +329,23 @@ GlobalFlags NagiosCore::globalFlags() const {
         .process_performance_data = process_performance_data != 0,
         .enable_event_handlers = enable_event_handlers != 0,
         .check_external_commands = check_external_commands != 0,
+    };
+}
+
+Paths NagiosCore::paths() const {
+    return {
+        .crash_reports_directory = _paths.crash_reports_directory,
+        .license_usage_history_file = _paths.license_usage_history_file,
+        .inventory_directory = _paths.inventory_directory,
+        .structured_status_directory = _paths.structured_status_directory,
+        .robotmk_html_log_directory = _paths.robotmk_html_log_directory,
+        .logwatch_directory = _paths.logwatch_directory,
+        .mkeventd_socket = _paths.mkeventd_socket,
+        .history_file = log_file == nullptr ? "" : log_file,
+        .history_archive_directory =
+            log_archive_path == nullptr ? "" : log_archive_path,
+        .rrd_multiple_directory = _paths.rrd_multiple_directory,
+        .rrdcached_socket = _paths.rrdcached_socket,
     };
 }
 
@@ -519,7 +502,7 @@ MetricLocation NagiosCore::metricLocation(
     const std::string &host_name, const std::string &service_description,
     const Metric::Name &var) const {
     return MetricLocation{
-        pnpPath() / host_name /
+        paths().rrd_multiple_directory / host_name /
             pnp_cleanup(service_description + "_" +
                         Metric::MangledName(var).string() + ".rrd"),
         "1"};

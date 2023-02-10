@@ -38,6 +38,20 @@ struct GlobalFlags {
     bool check_external_commands;
 };
 
+struct Paths {
+    std::filesystem::path crash_reports_directory;
+    std::filesystem::path license_usage_history_file;
+    std::filesystem::path inventory_directory;
+    std::filesystem::path structured_status_directory;
+    std::filesystem::path robotmk_html_log_directory;
+    std::filesystem::path logwatch_directory;
+    std::filesystem::path mkeventd_socket;
+    std::filesystem::path history_file;
+    std::filesystem::path history_archive_directory;
+    std::filesystem::path rrd_multiple_directory;
+    std::filesystem::path rrdcached_socket;
+};
+
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
@@ -102,22 +116,9 @@ public:
 
     virtual bool mkeventdEnabled() = 0;
 
-    [[nodiscard]] virtual std::filesystem::path mkeventdSocketPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path mkLogwatchPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path mkInventoryPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path structuredStatusPath()
-        const = 0;
-    [[nodiscard]] virtual std::filesystem::path robotMkHtmlLogPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path crashReportPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path licenseUsageHistoryPath()
-        const = 0;
-    [[nodiscard]] virtual std::filesystem::path pnpPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path historyFilePath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path rrdcachedSocketPath() const = 0;
-
     [[nodiscard]] virtual int32_t pid() const = 0;
     [[nodiscard]] virtual GlobalFlags globalFlags() const = 0;
+    [[nodiscard]] virtual Paths paths() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     programStartTime() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point

@@ -50,7 +50,7 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
         auto command = "REPLICATE " + arguments;
         try {
             ECTableConnection ec(_mc->loggerLivestatus(),
-                                 _mc->mkeventdSocketPath(), command);
+                                 _mc->paths().mkeventd_socket, command);
             ec.run();
             result = ec.getResult();
         } catch (const std::runtime_error &err) {

@@ -28,7 +28,7 @@ TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
         offsets, [](const CrashReport &r) { return r._component; }));
     addDynamicColumn(std::make_unique<DynamicFileColumn<CrashReport>>(
         "file", "Files related to the crash report (crash.info, etc.)", offsets,
-        [mc] { return mc->crashReportPath(); },
+        [mc] { return mc->paths().crash_reports_directory; },
         [](const CrashReport & /*r*/, const std::string &args) {
             return std::filesystem::path{args};
         }));
@@ -39,7 +39,7 @@ std::string TableCrashReports::name() const { return "crashreports"; }
 std::string TableCrashReports::namePrefix() const { return "crashreport_"; }
 
 void TableCrashReports::answerQuery(Query &query, const User & /*user*/) {
-    mk::crash_report::any(core()->crashReportPath(),
+    mk::crash_report::any(core()->paths().crash_reports_directory,
                           [&query](const CrashReport &cr) {
                               const CrashReport *r = &cr;
                               return !query.processDataset(Row{r});

@@ -7,7 +7,6 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <functional>
 #include <initializer_list>
 #include <map>
@@ -172,38 +171,7 @@ class DummyMonitoringCore : public MonitoringCore {
 
     bool mkeventdEnabled() override { return {}; }
 
-    [[nodiscard]] std::filesystem::path mkeventdSocketPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path mkLogwatchPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path mkInventoryPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path structuredStatusPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path robotMkHtmlLogPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path crashReportPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path licenseUsageHistoryPath()
-        const override {
-        return {};
-    };
-    [[nodiscard]] std::filesystem::path pnpPath() const override { return {}; }
-    [[nodiscard]] std::filesystem::path historyFilePath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path logArchivePath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path rrdcachedSocketPath() const override {
-        return {};
-    }
+    [[nodiscard]] Paths paths() const override { return {}; }
     [[nodiscard]] int32_t pid() const override { return {}; }
     [[nodiscard]] GlobalFlags globalFlags() const override { return {}; }
     [[nodiscard]] std::chrono::system_clock::time_point programStartTime()

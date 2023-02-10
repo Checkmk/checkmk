@@ -34,18 +34,21 @@ class InputBuffer;
 class Logger;
 class OutputBuffer;
 
+// TODO(sp) Use Paths
 struct NagiosPaths {
-    std::string _socket{"/usr/local/nagios/var/rw/live"};
-    std::string _pnp;
-    std::string _mk_inventory;
-    std::string _structured_status;
-    std::filesystem::path _robotmk_html_log_path;
-    std::filesystem::path _crash_reports_path;
-    std::filesystem::path _license_usage_history_path;
-    std::string _mk_logwatch;
-    std::string _logfile;
-    std::string _mkeventd_socket;
-    std::string _rrdcached_socket;
+    std::filesystem::path crash_reports_directory;
+    std::filesystem::path license_usage_history_file;
+    std::string inventory_directory;
+    std::string structured_status_directory;
+    std::filesystem::path robotmk_html_log_directory;
+    std::string logwatch_directory;
+    std::string mkeventd_socket;
+    // TODO(sp) Put history_file and history_archive_directory here
+    std::string rrd_multiple_directory;
+    std::string rrdcached_socket;
+
+    std::string livestatus_socket{"/usr/local/nagios/var/rw/live"};
+    std::string livestatus_log_file;
 
     void dump(Logger *logger) const;
 };
@@ -125,20 +128,9 @@ public:
 
     bool mkeventdEnabled() override;
 
-    std::filesystem::path mkeventdSocketPath() const override;
-    std::filesystem::path mkLogwatchPath() const override;
-    std::filesystem::path mkInventoryPath() const override;
-    std::filesystem::path structuredStatusPath() const override;
-    std::filesystem::path robotMkHtmlLogPath() const override;
-    std::filesystem::path crashReportPath() const override;
-    std::filesystem::path licenseUsageHistoryPath() const override;
-    std::filesystem::path pnpPath() const override;
-    std::filesystem::path historyFilePath() const override;
-    std::filesystem::path logArchivePath() const override;
-    std::filesystem::path rrdcachedSocketPath() const override;
-
     int32_t pid() const override;
     [[nodiscard]] GlobalFlags globalFlags() const override;
+    [[nodiscard]] Paths paths() const override;
     std::chrono::system_clock::time_point programStartTime() const override;
     std::chrono::system_clock::time_point lastCommandCheckTime() const override;
     int32_t intervalLength() const override;

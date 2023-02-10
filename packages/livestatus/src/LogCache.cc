@@ -36,10 +36,11 @@ void LogCache::update() {
     _last_index_update = std::chrono::system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
-    addToIndex(std::make_unique<Logfile>(logger(), this, _mc->historyFilePath(),
-                                         true));
+    const auto paths = _mc->paths();
+    addToIndex(
+        std::make_unique<Logfile>(logger(), this, paths.history_file, true));
 
-    const std::filesystem::path dirpath = _mc->logArchivePath();
+    const std::filesystem::path dirpath = paths.history_archive_directory;
     try {
         for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
             addToIndex(
@@ -53,7 +54,7 @@ void LogCache::update() {
 
     if (_logfiles.empty()) {
         Notice(logger()) << "no log file found, not even "
-                         << _mc->historyFilePath();
+                         << paths.history_file;
     }
 }
 

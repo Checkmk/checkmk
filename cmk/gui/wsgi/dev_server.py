@@ -141,7 +141,7 @@ def prepare_dev_wsgi_app() -> WSGIApplication:
         logger.warning(os.environ.get("OMD_ROOT"))
         # We're nice and let the developer know.
         logger.warning("%s doesn't exist. No login possible.", file_name)
-        logger.warning("Create it using 'htpasswd -c %s $username'", file_name)
+        logger.warning("Create it using 'htpasswd -B -c %s cmkadmin'", file_name)
 
     from cmk.gui.wsgi.app import make_wsgi_app
 

@@ -5,7 +5,7 @@
 import enum
 import json
 import time
-from typing import Any, Iterable, Mapping, Sequence, Tuple
+from typing import Any, Iterable, Mapping, Sequence
 
 from typing_extensions import assert_never
 
@@ -28,6 +28,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
     ConditionStatus,
     CronJobLatestJob,
     CronJobStatus,
+    get_age_levels_for,
     JobCondition,
     JobConditionType,
     JobPod,
@@ -35,6 +36,10 @@ from cmk.base.plugins.agent_based.utils.kube import (
     pod_status_message,
     Timestamp,
 )
+
+CRONJOB_DEFAULT_PARAMS: Mapping[str, Any] = {
+    "pending": ("levels", (300, 600)),
+}
 
 
 class JobStatusType(enum.Enum):
@@ -104,7 +109,7 @@ def _check_cron_job_status(
 
     yield from _cron_job_status(
         current_time=current_time,
-        pending_levels=params.get("status_pending"),
+        pending_levels=get_age_levels_for(params, "pending"),
         job_status=job_status,
         job_pod=job_pod,
         job_start_time=latest_job.status.start_time,
@@ -130,7 +135,6 @@ def _check_cron_job_status(
 
 
 def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPod) -> JobStatusType:
-
     if job_conditions:
         for condition in job_conditions:
             if (
@@ -155,7 +159,7 @@ def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPo
 
 def _cron_job_status(
     current_time: Timestamp,
-    pending_levels: Tuple[int, int] | None,
+    pending_levels: tuple[int, int] | None,
     job_status: JobStatusType,
     job_pod: JobPod,
     job_start_time: Timestamp | None,

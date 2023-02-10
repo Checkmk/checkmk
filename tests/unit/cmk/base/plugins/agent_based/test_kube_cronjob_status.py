@@ -166,3 +166,17 @@ def test_cron_job_status_with_failed_job() -> None:
     assert isinstance(status_check_result, Result)
     assert status_check_result.state == State.CRIT
     assert status_check_result.summary == f"Latest job: Failed ({failure_reason})"
+
+
+def test_cron_job_status_with_pending_job() -> None:
+    """Test that check outputs WARN state when latest job is pending and crosses the threshold"""
+    result = list(
+        kube_cronjob_status._cron_job_status(
+            current_time=Timestamp(300.0),
+            pending_levels=(300, 600),
+            job_status=kube_cronjob_status.JobStatusType.PENDING,
+            job_pod=JobPodFactory.build(),
+            job_start_time=Timestamp(0.0),
+        )
+    )[0]
+    assert result.state == State.WARN

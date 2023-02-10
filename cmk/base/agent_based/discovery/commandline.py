@@ -17,9 +17,7 @@ from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
 
-from cmk.fetchers import FetcherFunction
-
-from cmk.checkers import ParserFunction
+from cmk.checkers import FetcherFunction, ParserFunction
 from cmk.checkers.discovery import AutochecksStore
 
 import cmk.base.core

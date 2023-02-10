@@ -46,6 +46,7 @@ from cmk.checkers import (
     ParserFunction,
     PInventoryPlugin,
     plugin_contexts,
+    PSectionPlugin,
     SourceInfo,
     SourceType,
     SummarizerFunction,
@@ -78,7 +79,7 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
-from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
+from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.config import ConfigCache
 
 __all__ = ["execute_checkmk_checks", "check_host_services"]
@@ -99,7 +100,7 @@ def execute_checkmk_checks(
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[CheckPluginName],

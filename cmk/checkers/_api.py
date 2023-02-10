@@ -4,18 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence, Set
 from functools import partial
-from typing import Generic, NamedTuple, Protocol
+from typing import Generic, Literal, NamedTuple, Protocol
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import (
     AgentRawData,
     HostAddress,
     HostName,
+    ParametersTypeAlias,
     ParsedSectionName,
     result,
     RuleSetName,
+    SectionName,
 )
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection, TRawData
@@ -36,6 +38,7 @@ __all__ = [
     "PInventoryPlugin",
     "PInventoryResult",
     "PluginSuppliedLabel",
+    "PSectionPlugin",
     "Source",
     "SummarizerFunction",
 ]
@@ -145,6 +148,40 @@ class PInventoryPlugin(Protocol):
     def inventory_ruleset_name(self) -> RuleSetName | None:
         # Only used with the config.  Should we try to get rid
         # of this attribute?
+        ...
+
+
+class PSectionPlugin(Protocol):
+    @property
+    def supersedes(self) -> Set[SectionName]:
+        ...
+
+    @property
+    def parse_function(self) -> Callable[..., object]:
+        # This function isn't typed precisely in the Check API.  Let's just
+        # keep the smallest common type of all the unions defined over there.
+        ...
+
+    @property
+    def parsed_section_name(self) -> ParsedSectionName:
+        ...
+
+    # The host_label_* attributes belong elsewhere.
+
+    @property
+    def host_label_function(self) -> Callable[..., Generator[HostLabel, None, None]]:
+        ...
+
+    @property
+    def host_label_default_parameters(self) -> ParametersTypeAlias | None:
+        ...
+
+    @property
+    def host_label_ruleset_name(self) -> RuleSetName | None:
+        ...
+
+    @property
+    def host_label_ruleset_type(self) -> Literal["merged", "all"]:
         ...
 
 

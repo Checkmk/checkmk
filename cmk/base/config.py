@@ -123,7 +123,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser, PInventoryPlugin, SourceType
+from cmk.checkers import AgentParser, PInventoryPlugin, PSectionPlugin, SourceType
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -144,12 +144,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
     create_snmp_section_plugin_from_legacy,
 )
-from cmk.base.api.agent_based.type_defs import (
-    Parameters,
-    ParametersTypeAlias,
-    SectionPlugin,
-    SNMPSectionPlugin,
-)
+from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
 
@@ -2314,7 +2309,7 @@ def get_discovery_parameters(
 
 def get_host_label_parameters(
     host_name: HostName,
-    section_plugin: SectionPlugin,
+    section_plugin: PSectionPlugin,
 ) -> None | Parameters | list[Parameters]:
     return _get_plugin_parameters(
         host_name=host_name,

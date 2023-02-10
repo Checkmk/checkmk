@@ -47,6 +47,7 @@ from cmk.checkers import (
     HostKey,
     ParserFunction,
     PInventoryPlugin,
+    PSectionPlugin,
     SourceType,
     SummarizerFunction,
 )
@@ -62,7 +63,6 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors, get_cache_info, get_section_kwargs
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 __all__ = [
@@ -88,7 +88,7 @@ def check_inventory_tree(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,

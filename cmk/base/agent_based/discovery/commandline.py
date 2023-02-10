@@ -18,7 +18,7 @@ from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
 
-from cmk.checkers import FetcherFunction, HostKey, ParserFunction
+from cmk.checkers import FetcherFunction, HostKey, ParserFunction, PSectionPlugin
 from cmk.checkers.discovery import AutochecksStore
 
 import cmk.base.core
@@ -30,7 +30,6 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
@@ -51,7 +50,7 @@ def commandline_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,

@@ -23,7 +23,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.checkers import ParserFunction, SourceInfo, SummarizerFunction
+from cmk.checkers import ParserFunction, PSectionPlugin, SourceInfo, SummarizerFunction
 from cmk.checkers.checkresults import ActiveCheckResult
 
 from cmk.base.agent_based.data_provider import (
@@ -33,7 +33,6 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters
@@ -51,7 +50,7 @@ def execute_check_discovery(
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:

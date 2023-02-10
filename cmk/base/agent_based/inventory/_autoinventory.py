@@ -9,10 +9,15 @@ from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.log import console
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, SectionName
 
-from cmk.checkers import FetcherFunction, ParserFunction, PInventoryPlugin, SummarizerFunction
+from cmk.checkers import (
+    FetcherFunction,
+    ParserFunction,
+    PInventoryPlugin,
+    PSectionPlugin,
+    SummarizerFunction,
+)
 
 import cmk.base.config as config
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 
 from ._active import execute_active_check_inventory
 
@@ -26,7 +31,7 @@ def inventorize_marked_hosts(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: Callable[[HostName], SummarizerFunction],
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: Mapping[SectionName, PSectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
 ) -> None:
     autoinventory_queue.cleanup(

@@ -51,6 +51,7 @@ def test_download_agent_shipped_with_checkmk(
     packed_agent_path_patched.assert_called_once()
 
 
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="endpoint not available in raw edition")
 def test_openapi_agent_key_id_above_zero_regression(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, api_client: RestApiClient
 ) -> None:

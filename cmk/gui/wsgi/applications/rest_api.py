@@ -127,7 +127,7 @@ def _verify_user(  # pylint: disable=too-many-branches
                 f"{user_id} has two-factor authentication enabled, which can only be used in "
                 "interactive GUI sessions."
             )
-        if not cmk.gui.session.session.session_info.two_factor_completed:
+        if not cmk.gui.session.is_two_factor_completed():
             raise MKAuthException("The two-factor authentication needs to be passed first.")
 
     return final_candidate

@@ -30,12 +30,23 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
 
 auth_logger = gui_logger.getChild("auth")
+
+
+def create_auth_session(username: UserId, session_id: str) -> None:
+    set_auth_cookie(username, session_id)
+
+
+def set_auth_cookie(username: UserId, session_id: str) -> None:
+    response.set_http_cookie(
+        auth_cookie_name(), auth_cookie_value(username, session_id), secure=request.is_secure
+    )
 
 
 def auth_cookie_name() -> str:
@@ -116,6 +127,29 @@ def load_session_infos(username: UserId, lock: bool = False) -> dict[str, Sessio
         )
         or {}
     )
+
+
+def _initialize_session(username: UserId, now: datetime) -> str:
+    """Creates a new user login session (if single user session mode is enabled) and
+    returns the session_id of the new session."""
+    session_infos = active_sessions(load_session_infos(username, lock=True), now)
+
+    session_id = create_session_id()
+    now_ts = int(now.timestamp())
+    session_info = SessionInfo(
+        session_id=session_id,
+        started_at=now_ts,
+        last_activity=now_ts,
+        flashes=[],
+    )
+
+    session_infos[session_id] = session_info
+
+    # Save once right after initialization. It may be saved another time later, in case something
+    # was modified during the request (e.g. flashes were added)
+    save_session_infos(username, session_infos)
+
+    return session_id
 
 
 def active_sessions(

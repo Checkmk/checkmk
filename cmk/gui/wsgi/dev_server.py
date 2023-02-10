@@ -219,22 +219,26 @@ def prepare_dev_wsgi_app() -> WSGIApplication:
 def main() -> None:
     setup_logging()
     args = parse_arguments()
-    from cmk.utils import paths, store
-
-    paths.web_dir = git_absolute("web")
-    paths.local_web_dir = pathlib.Path(git_absolute("web"))
-    paths.htpasswd_file = os.path.expanduser("~/.cmk-htpasswd")
-
-    # We need this to be able to automatically create a new user
-    store.makedirs(paths.profile_dir)
-    store.makedirs(paths.log_dir)
-
-    logger.warning("NOTE: If the design looks like it's missing CSS files, run 'make css'")
 
     with modified_environ(
         OMD_SITE="dev",
         OMD_ROOT=os.path.expanduser("~/.cmk-sites/dev-2.2"),
     ):
+        # IMPORTANT NOTE
+        # Any access on any path in the paths module will "bake" the path into the module.
+        # No further changes to "OMD_SITE" will have any effect then, thus we need to delay
+        # the first access as far as possible, after the environment variable has been set.
+        from cmk.utils import paths, store
+
+        paths.web_dir = git_absolute("web")
+        paths.local_web_dir = pathlib.Path(git_absolute("web"))
+        paths.htpasswd_file = os.path.expanduser("~/.cmk-htpasswd")
+
+        # We need this to be able to automatically create a new user
+        store.makedirs(paths.profile_dir)
+        store.makedirs(paths.log_dir)
+
+        logger.warning("NOTE: If the design looks like it's missing CSS files, run 'make css'")
         # Note we import and prepare everything within this context manager, because imports will
         # "materialize" with OMD_ROOT baked into it. If we import too soon, we will get wrong paths.
         wsgi_app = prepare_dev_wsgi_app()

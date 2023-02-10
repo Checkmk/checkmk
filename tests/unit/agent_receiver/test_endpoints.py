@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 from zlib import compress
 
 import pytest
+import requests
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
@@ -405,6 +406,157 @@ def test_register_new_folder_exists(
         uuid,
         serialized_csr,
     )
+
+
+def test_register_new_ongoing_cre(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    mocker.patch(
+        "agent_receiver.endpoints.cmk_edition",
+        return_value=CMKEdition.cre,
+    )
+    response = client.post(
+        f"/register_new_ongoing/{uuid}",
+        auth=("herbert", "joergl"),
+    )
+    assert response.status_code == 501
+    assert response.json() == {
+        "detail": "The Checkmk Raw edition does not support registration of new hosts"
+    }
+
+
+def _call_register_new_ongoing_cce(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> requests.Response:
+    mocker.patch(
+        "agent_receiver.endpoints.cmk_edition",
+        return_value=CMKEdition.cce,
+    )
+    return client.post(
+        f"/register_new_ongoing/{uuid}",
+        auth=("user", "password"),
+    )
+
+
+def test_register_new_ongoing_not_found(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    R4R(
+        status=RegistrationStatusEnum.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid4(),
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No registration with this UUID in progress"}
+
+
+def test_register_new_ongoing_username_mismatch(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    R4R(
+        status=RegistrationStatusEnum.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user2",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "A registration is in progress, but it was triggered by a different user"
+    }
+
+
+@pytest.mark.parametrize(
+    "status",
+    (RegistrationStatusEnum.NEW, RegistrationStatusEnum.PENDING),
+)
+def test_register_new_ongoing_in_progress(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+    status: RegistrationStatusEnum,
+) -> None:
+    R4R(
+        status=status,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 200
+    assert response.json() == {"status": "InProgress"}
+
+
+def test_register_new_ongoing_in_declined(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    R4R(
+        status=RegistrationStatusEnum.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+            state={
+                "type": "FOO",
+                "value": "BAR",
+                "readable": "Registration request declined",
+            },
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 200
+    assert response.json() == {"status": "Declined", "reason": "Registration request declined"}
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+@pytest.mark.parametrize(
+    "status",
+    (RegistrationStatusEnum.READY, RegistrationStatusEnum.DISCOVERABLE),
+)
+def test_register_new_ongoing_success(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+    status: RegistrationStatusEnum,
+) -> None:
+    R4R(
+        status=status,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Success",
+        "agent_cert": "cert",
+        "connection_mode": "push-agent",
+    }
 
 
 @pytest.fixture(name="agent_data_headers")

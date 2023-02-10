@@ -52,6 +52,18 @@ agent_receiver -> agent_receiver: Write registration file (Username, uuid, agent
 agent_receiver -> agent: Root Certificate
 
 
+== register_new_ongoing ==
+
+agent -> agent_receiver: /register_new_ongoing (Credentials, uuid)
+agent_receiver -> rest_api: /version (Credentials)
+rest_api -> agent_receiver: Version
+agent_receiver -> agent_receiver: Edition supports register_new_ongoing?
+agent_receiver -> agent_receiver: Retrieve request for registration (uuid)
+agent_receiver -> agent_receiver: Request for registration: username matches?
+agent_receiver -> agent_receiver: Check registration status
+agent_receiver -> agent: Registration in progress / Registration declined: reason / Success: Signed certificate, connection mode
+
+
 == agent_data ==
 
 agent -[#green]-> agent_receiver: /agent_data (uuid, data, compression)

@@ -8,6 +8,7 @@ import tempfile
 from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
+from typing import assert_never
 from uuid import UUID
 
 from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
@@ -32,6 +33,9 @@ from agent_receiver.models import (
     RegisterExistingBody,
     RegisterExistingResponse,
     RegisterNewBody,
+    RegisterNewOngoingResponseDeclined,
+    RegisterNewOngoingResponseInProgress,
+    RegisterNewOngoingResponseSuccess,
     RegisterNewResponse,
     RegistrationStatus,
     RegistrationStatusEnum,
@@ -54,6 +58,8 @@ from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
     HTTP_501_NOT_IMPLEMENTED,
 )
 
@@ -229,6 +235,81 @@ async def register_new(
     )
 
     return RegisterNewResponse(root_cert=root_cert)
+
+
+@AGENT_RECEIVER_APP.post(
+    "/register_new_ongoing/{uuid}",
+    # https://fastapi.tiangolo.com/tutorial/extra-models/#union-or-anyof
+    response_model=RegisterNewOngoingResponseInProgress  # type: ignore[arg-type]
+    | RegisterNewOngoingResponseDeclined
+    | RegisterNewOngoingResponseSuccess,
+)
+async def register_new_ongoing(
+    uuid: UUID,
+    *,
+    credentials: HTTPBasicCredentials = Depends(security),
+) -> RegisterNewOngoingResponseInProgress | RegisterNewOngoingResponseDeclined | RegisterNewOngoingResponseSuccess:
+    _validate_is_cce(credentials, uuid)
+
+    try:
+        r4r = R4R.read(uuid)
+    except FileNotFoundError:
+        logger.error(
+            "uuid=%s No registration in progress",
+            uuid,
+        )
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="No registration with this UUID in progress",
+        )
+    if r4r.request.username != credentials.username:
+        logger.error(
+            "uuid=%s Username mismatch",
+            uuid,
+        )
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="A registration is in progress, but it was triggered by a different user",
+        )
+
+    match r4r.status:
+        case RegistrationStatusEnum.NEW | RegistrationStatusEnum.PENDING:
+            logger.info(
+                "uuid=%s Registration in progress",
+                uuid,
+            )
+            return RegisterNewOngoingResponseInProgress()
+        case RegistrationStatusEnum.DECLINED:
+            logger.info(
+                "uuid=%s Registration declined",
+                uuid,
+            )
+            return RegisterNewOngoingResponseDeclined(
+                reason=r4r.request.rejection_notice() or "Reason unknown"
+            )
+        case RegistrationStatusEnum.READY | RegistrationStatusEnum.DISCOVERABLE:
+            try:
+                host = RegisteredHost(uuid)
+            except NotRegisteredException:
+                logger.error(
+                    "uuid=%s Not registered even though r4r says otherwise!?",
+                    uuid,
+                )
+                raise HTTPException(
+                    status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Registration was successful, but host is still not registered. This "
+                    "should not have happend. Maybe someone removed the registration by hand?",
+                )
+            logger.info(
+                "uuid=%s Registration successful",
+                uuid,
+            )
+            return RegisterNewOngoingResponseSuccess(
+                agent_cert=r4r.request.agent_cert,
+                connection_mode=host.connection_mode,
+            )
+
+    assert_never(r4r.status)
 
 
 def _validate_is_cce(credentials: HTTPBasicCredentials, uuid: UUID) -> None:

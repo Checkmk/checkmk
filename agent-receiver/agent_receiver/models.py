@@ -9,7 +9,7 @@ import re
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
@@ -134,6 +134,23 @@ class RegisterNewBody(BaseModel):
 
 class RegisterNewResponse(BaseModel):
     root_cert: str
+
+
+class RegisterNewOngoingResponseInProgress(BaseModel):
+    # the agent controller uses the status field for distinguishing the different variants when
+    # deserializing the response from the receiver
+    status: Literal["InProgress"] = "InProgress"
+
+
+class RegisterNewOngoingResponseDeclined(BaseModel):
+    status: Literal["Declined"] = "Declined"
+    reason: str
+
+
+class RegisterNewOngoingResponseSuccess(BaseModel):
+    status: Literal["Success"] = "Success"
+    agent_cert: str
+    connection_mode: ConnectionMode
 
 
 class RequestForRegistration(BaseModel):

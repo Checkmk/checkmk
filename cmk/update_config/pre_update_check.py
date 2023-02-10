@@ -9,11 +9,20 @@ import traceback
 from typing import Literal
 
 from cmk.utils import paths
-from cmk.utils.packaging import disable, Installer, PackageName, PackagePart, PackageVersion
+from cmk.utils.packaging import (
+    disable,
+    Installer,
+    PackageName,
+    PackagePart,
+    PackageVersion,
+    PathConfig,
+)
 from cmk.utils.packaging._reporter import files_inventory
 
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 from cmk.gui import main_modules
-from cmk.gui.cee.plugins.wato.mkpmanager import _PATH_CONFIG
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
@@ -114,14 +123,33 @@ def _all_ui_extensions_compatible(
 ) -> bool:
     main_modules.load_plugins()
     installer = Installer(paths.installed_packages_dir)
-    for mkp in files_inventory(installer, _PATH_CONFIG):
+    path_config = PathConfig(
+        local_root=paths.local_root,
+        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+        checks_dir=paths.local_checks_dir,
+        inventory_dir=paths.local_inventory_dir,
+        check_manpages_dir=paths.local_check_manpages_dir,
+        agents_dir=paths.local_agents_dir,
+        notifications_dir=paths.local_notifications_dir,
+        gui_plugins_dir=paths.local_gui_plugins_dir,
+        web_dir=paths.local_web_dir,
+        pnp_templates_dir=paths.local_pnp_templates_dir,
+        doc_dir=paths.local_doc_dir,
+        locale_dir=paths.local_locale_dir,
+        bin_dir=paths.local_bin_dir,
+        lib_dir=paths.local_lib_dir,
+        mib_dir=paths.local_mib_dir,
+        alert_handlers_dir=paths.local_alert_handlers_dir,
+    )
+    for mkp in files_inventory(installer, path_config):
         # mkp package file
         if not mkp["part_id"]:
             continue
 
         for file, error in get_failed_plugins():
             file_path = (
-                str(_PATH_CONFIG.get_path(PackagePart(mkp["part_id"]))) + "/" + str(mkp["file"])
+                str(path_config.get_path(PackagePart(mkp["part_id"]))) + "/" + str(mkp["file"])
             )
             if file_path == file:
                 # unpackaged files
@@ -153,7 +181,7 @@ def _all_ui_extensions_compatible(
                 ):
                     disable(
                         installer,
-                        _PATH_CONFIG,
+                        path_config,
                         PackageName(mkp["package"]),
                         PackageVersion(mkp["version"]),
                     )

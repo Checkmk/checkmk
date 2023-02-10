@@ -415,7 +415,7 @@ class AutomationRenameHosts(Automation):
                 # force config generation to succeed. The core *must* start.
                 # TODO: Can't we drop this hack since we have config warnings now?
                 core_config.ignore_ip_lookup_failures()
-                AutomationStart().execute([])
+                _execute_silently(CoreAction.START)
 
                 for hostname in core_config.failed_ip_lookups():
                     actions.append("dnsfail-" + hostname)
@@ -1018,23 +1018,7 @@ class AutomationRestart(Automation):
         return CoreAction.RESTART
 
     def execute(self, args: List[str]) -> automation_results.RestartResult:
-        with redirect_stdout(open(os.devnull, "w")):
-            log.setup_console_logging()
-            try:
-                do_restart(
-                    create_core(config.monitoring_core),
-                    self._mode(),
-                    hosts_to_update=None if not args else set(args),
-                )
-            except (MKBailOut, MKGeneralException) as e:
-                raise MKAutomationError(str(e))
-
-            except Exception as e:
-                if cmk.utils.debug.enabled():
-                    raise
-                raise MKAutomationError(str(e))
-
-            return automation_results.RestartResult(core_config.get_configuration_warnings())
+        return _execute_silently(self._mode(), None if not args else set(args))
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()
@@ -1083,6 +1067,29 @@ class AutomationReload(AutomationRestart):
 
 
 automations.register(AutomationReload())
+
+
+def _execute_silently(
+    action: CoreAction,
+    hosts_to_update: Optional[set[str]] = None,
+) -> automation_results.RestartResult:
+    with redirect_stdout(open(os.devnull, "w")):
+        log.setup_console_logging()
+        try:
+            do_restart(
+                create_core(config.monitoring_core),
+                action,
+                hosts_to_update=hosts_to_update,
+            )
+        except (MKBailOut, MKGeneralException) as e:
+            raise MKAutomationError(str(e))
+
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKAutomationError(str(e))
+
+        return automation_results.RestartResult(core_config.get_configuration_warnings())
 
 
 class AutomationStart(AutomationRestart):

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import os
 import tempfile
 from contextlib import suppress
@@ -37,12 +36,13 @@ from agent_receiver.models import (
     RegistrationWithHNBody,
     RegistrationWithLabelsBody,
     RenewCertResponse,
+    RequestForRegistration,
 )
 from agent_receiver.site_context import r4r_dir, site_name
 from agent_receiver.utils import (
-    get_registration_status_from_file,
     internal_credentials,
     NotRegisteredException,
+    R4R,
     RegisteredHost,
     uuid_from_pem_csr,
 )
@@ -194,31 +194,6 @@ async def register_with_hostname(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-def _write_registration_file(
-    username: str,
-    registration_body: RegistrationWithLabelsBody,
-) -> None:
-    (dir_new_requests := r4r_dir() / RegistrationStatusEnum.NEW.name).mkdir(
-        mode=0o770,
-        parents=True,
-        exist_ok=True,
-    )
-    (new_request := dir_new_requests / f"{registration_body.uuid}.json").write_text(
-        json.dumps(
-            {
-                "uuid": str(registration_body.uuid),
-                "username": username,
-                "agent_labels": registration_body.agent_labels,
-            }
-        )
-    )
-    new_request.chmod(0o660)
-    logger.info(
-        "uuid=%s Stored new request for registration",
-        registration_body.uuid,
-    )
-
-
 @AGENT_RECEIVER_APP.post(
     "/register_with_labels",
     status_code=HTTP_204_NO_CONTENT,
@@ -242,9 +217,17 @@ async def register_with_labels(
             status_code=HTTP_501_NOT_IMPLEMENTED,
             detail=f"The Checkmk {edition.value} edition does not support registration with agent labels",
         )
-    _write_registration_file(
-        credentials.username,
-        registration_body,
+    R4R(
+        status=RegistrationStatusEnum.NEW,
+        request=RequestForRegistration(
+            uuid=registration_body.uuid,
+            username=credentials.username,
+            agent_labels=registration_body.agent_labels,
+        ),
+    ).write()
+    logger.info(
+        "uuid=%s Stored new request for registration",
+        registration_body.uuid,
     )
     return Response(status_code=HTTP_204_NO_CONTENT)
 
@@ -351,20 +334,24 @@ async def agent_data(
 async def registration_status(
     uuid: UUID,
 ) -> RegistrationStatus:
-    registration_data = get_registration_status_from_file(uuid)
+    try:
+        r4r = R4R.read(uuid)
+    except FileNotFoundError:
+        r4r = None
+
     try:
         host = RegisteredHost(uuid)
     except NotRegisteredException:
-        if registration_data:
+        if r4r:
             return RegistrationStatus(
-                status=registration_data.status,
-                message=registration_data.message,
+                status=r4r.status,
+                message=r4r.request.rejection_notice(),
             )
         raise HTTPException(status_code=404, detail="Host is not registered")
 
     return RegistrationStatus(
         hostname=host.name,
-        status=registration_data.status if registration_data else None,
+        status=r4r.status if r4r else None,
         type=host.connection_mode,
         message="Host registered",
     )

@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import os
+from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Self
 from uuid import UUID
 
-from agent_receiver.models import ConnectionMode, RegistrationData, RegistrationStatusEnum
+from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
 from agent_receiver.site_context import agent_output_dir, r4r_dir, users_dir
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
@@ -42,36 +43,30 @@ class RegisteredHost:
         )
 
 
-def read_rejection_notice_from_file(path: Path) -> str | None:
-    try:
-        registration_request = json.loads(path.read_text())
-    except FileNotFoundError:
-        return None
+@dataclass(frozen=True)
+class R4R:
+    status: RegistrationStatusEnum
+    request: RequestForRegistration
 
-    return registration_request.get("state", {}).get("readable")
+    @classmethod
+    def read(cls, uuid: UUID) -> Self:
+        for status in RegistrationStatusEnum:
+            if (path := r4r_dir() / status.name / f"{uuid}.json").exists():
+                request = RequestForRegistration.parse_file(path)
+                # access time is used to determine when to remove registration request file
+                with suppress(OSError):
+                    os.utime(path, None)
+                return cls(status, request)
+        raise FileNotFoundError(f"No request for registration with UUID {uuid} found")
 
-
-def update_file_access_time(path: Path) -> None:
-    try:
-        os.utime(path, None)
-    except OSError:
-        pass
-
-
-def get_registration_status_from_file(uuid: UUID) -> RegistrationData | None:
-    for status in RegistrationStatusEnum:
-        path = r4r_dir() / status.name / f"{uuid}.json"
-        if path.exists():
-            message = (
-                read_rejection_notice_from_file(path)
-                if status is RegistrationStatusEnum.DECLINED
-                else None
-            )
-            # access time is used to determine when to remove registration request file
-            update_file_access_time(path)
-            return RegistrationData(status=status, message=message)
-
-    return None
+    def write(self) -> None:
+        (target_dir := r4r_dir() / self.status.name).mkdir(
+            mode=0o770,
+            parents=True,
+            exist_ok=True,
+        )
+        (target_path := target_dir / f"{self.request.uuid}.json").write_text(self.request.json())
+        target_path.chmod(0o660)
 
 
 def uuid_from_pem_csr(pem_csr: str) -> str:

@@ -9,7 +9,7 @@ import re
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple, Self
+from typing import Self
 from uuid import UUID
 
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
@@ -131,17 +131,22 @@ class RegistrationWithLabelsBody(BaseModel):
     agent_labels: Mapping[str, str]
 
 
+class RequestForRegistration(BaseModel):
+    uuid: UUID
+    username: str
+    agent_labels: Mapping[str, str]
+    state: Mapping[str, str] | None = None
+
+    def rejection_notice(self) -> str | None:
+        return (self.state or {}).get("readable")
+
+
 class RegistrationStatusEnum(Enum):
     NEW = "new"
     PENDING = "pending"
     DECLINED = "declined"
     READY = "ready"
     DISCOVERABLE = "discoverable"
-
-
-class RegistrationData(NamedTuple):
-    status: RegistrationStatusEnum
-    message: str | None
 
 
 class RegistrationStatus(BaseModel):

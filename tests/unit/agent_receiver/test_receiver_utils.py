@@ -9,8 +9,8 @@ from uuid import UUID
 
 import pytest
 from agent_receiver import site_context
-from agent_receiver.models import ConnectionMode
-from agent_receiver.utils import NotRegisteredException, RegisteredHost, update_file_access_time
+from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
+from agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
 
 
 def test_host_not_registered(uuid: UUID) -> None:
@@ -42,17 +42,27 @@ def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
     assert host.source_path == source
 
 
-def test_update_file_access_time_success(tmp_path: Path) -> None:
-    file_path = tmp_path / "my_file"
-    file_path.touch()
+def test_r4r(uuid: UUID) -> None:
+    r4r = R4R(
+        status=RegistrationStatusEnum.NEW,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="harry",
+            agent_labels={"a": "b"},
+        ),
+    )
+    r4r.write()
 
-    old_access_time = file_path.stat().st_atime
+    expected_path = site_context.r4r_dir() / "NEW" / f"{uuid}.json"
+    assert expected_path.is_file()
+    access_time_before_read = expected_path.stat().st_atime
+
     time.sleep(0.01)
-    update_file_access_time(file_path)
-    new_access_time = file_path.stat().st_atime
+    read_r4r = R4R.read(uuid)
+    assert r4r == read_r4r
+    assert expected_path.stat().st_atime > access_time_before_read
 
-    assert new_access_time > old_access_time
 
-
-def test_update_file_access_time_no_file(tmp_path: Path) -> None:
-    update_file_access_time(tmp_path / "my_file")
+def test_r4r_raises(uuid: UUID) -> None:
+    with pytest.raises(FileNotFoundError, match="No request for registration with UUID"):
+        R4R.read(uuid)

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import io
-import json
 import logging
 import stat
 from collections.abc import Mapping
@@ -17,7 +16,8 @@ import pytest
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
-from agent_receiver.models import ConnectionMode
+from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
+from agent_receiver.utils import R4R
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
@@ -334,18 +334,15 @@ def _test_register_with_labels(
         },
     )
     assert response.status_code == 204
-    assert json.loads((site_context.r4r_dir() / "NEW" / f"{uuid}.json").read_text()) == {
-        "uuid": str(uuid),
-        "username": "monitoring",
-        "agent_labels": {
-            "a": "b",
-            "c": "d",
-        },
+    triggered_r4r = R4R.read(uuid)
+    assert triggered_r4r
+    assert triggered_r4r.status is RegistrationStatusEnum.NEW
+    assert triggered_r4r.request.uuid == uuid
+    assert triggered_r4r.request.username == "monitoring"
+    assert triggered_r4r.request.agent_labels == {
+        "a": "b",
+        "c": "d",
     }
-    assert (
-        oct(stat.S_IMODE((site_context.r4r_dir() / "NEW" / f"{uuid}.json").stat().st_mode))
-        == "0o660"
-    )
 
 
 def test_register_with_labels_folder_missing(
@@ -565,18 +562,19 @@ def test_registration_status_declined(
     uuid: UUID,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    (path_declined := site_context.r4r_dir() / "DECLINED").mkdir()
-    (path_declined / f"{uuid}.json").write_text(
-        json.dumps(
-            {
-                "state": {
-                    "type": "FOO",
-                    "value": "BAR",
-                    "readable": "Registration request declined",
-                }
-            }
-        )
-    )
+    R4R(
+        status=RegistrationStatusEnum.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="harry",
+            agent_labels={},
+            state={
+                "type": "FOO",
+                "value": "BAR",
+                "readable": "Registration request declined",
+            },
+        ),
+    ).write()
 
     response = client.get(
         f"/registration_status/{uuid}",
@@ -612,8 +610,14 @@ def test_registration_status_push_host(
     uuid: UUID,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    (path_discoverable := site_context.r4r_dir() / "DISCOVERABLE").mkdir()
-    (path_discoverable / f"{uuid}.json").touch()
+    R4R(
+        status=RegistrationStatusEnum.DISCOVERABLE,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="harry",
+            agent_labels={},
+        ),
+    ).write()
 
     response = client.get(
         f"/registration_status/{uuid}",

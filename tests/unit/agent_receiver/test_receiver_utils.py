@@ -7,17 +7,15 @@ import time
 from pathlib import Path
 from uuid import UUID
 
+import pytest
 from agent_receiver import site_context
-from agent_receiver.models import HostTypeEnum
-from agent_receiver.utils import Host, update_file_access_time
+from agent_receiver.models import ConnectionMode
+from agent_receiver.utils import NotRegisteredException, RegisteredHost, update_file_access_time
 
 
 def test_host_not_registered(uuid: UUID) -> None:
-    host = Host(uuid)
-
-    assert host.registered is False
-    assert host.hostname is None
-    assert host.host_type is None
+    with pytest.raises(NotRegisteredException):
+        RegisteredHost(uuid)
 
 
 def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
@@ -25,11 +23,10 @@ def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
-    host = Host(uuid)
+    host = RegisteredHost(uuid)
 
-    assert host.registered is True
-    assert host.hostname == "hostname"
-    assert host.host_type is HostTypeEnum.PULL
+    assert host.name == "hostname"
+    assert host.connection_mode is ConnectionMode.PULL
     assert host.source_path == source
 
 
@@ -38,11 +35,10 @@ def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
     target_dir = tmp_path / "push-agent" / "hostname"
     source.symlink_to(target_dir)
 
-    host = Host(uuid)
+    host = RegisteredHost(uuid)
 
-    assert host.registered is True
-    assert host.hostname == "hostname"
-    assert host.host_type is HostTypeEnum.PUSH
+    assert host.name == "hostname"
+    assert host.connection_mode is ConnectionMode.PUSH
     assert host.source_path == source
 
 

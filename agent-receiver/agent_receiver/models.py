@@ -117,7 +117,7 @@ class RegistrationData(NamedTuple):
     message: str | None
 
 
-class HostTypeEnum(Enum):
+class ConnectionMode(Enum):
     PULL = "pull-agent"
     PUSH = "push-agent"
 
@@ -125,5 +125,5 @@ class HostTypeEnum(Enum):
 class RegistrationStatus(BaseModel):
     hostname: str | None = None
     status: RegistrationStatusEnum | None = None
-    type: HostTypeEnum | None = None
+    type: ConnectionMode | None = None
     message: str | None = None

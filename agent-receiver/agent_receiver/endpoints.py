@@ -24,8 +24,8 @@ from agent_receiver.decompression import DecompressionError, Decompressor
 from agent_receiver.log import logger
 from agent_receiver.models import (
     CertificateRenewalBody,
+    ConnectionMode,
     CsrField,
-    HostTypeEnum,
     PairingBody,
     PairingResponse,
     RegistrationStatus,
@@ -37,8 +37,9 @@ from agent_receiver.models import (
 from agent_receiver.site_context import r4r_dir, site_name
 from agent_receiver.utils import (
     get_registration_status_from_file,
-    Host,
     internal_credentials,
+    NotRegisteredException,
+    RegisteredHost,
     uuid_from_pem_csr,
 )
 from cryptography.x509 import Certificate
@@ -238,8 +239,9 @@ async def agent_data(
     compression: str = Header(...),
     monitoring_data: UploadFile = File(...),
 ) -> Response:
-    host = Host(uuid)
-    if not host.registered:
+    try:
+        host = RegisteredHost(uuid)
+    except NotRegisteredException:
         logger.error(
             "uuid=%s Host is not registered",
             uuid,
@@ -248,7 +250,7 @@ async def agent_data(
             status_code=HTTP_403_FORBIDDEN,
             detail="Host is not registered",
         )
-    if host.host_type is not HostTypeEnum.PUSH:
+    if host.connection_mode is not ConnectionMode.PUSH:
         logger.error(
             "uuid=%s Host is not a push host",
             uuid,
@@ -305,20 +307,21 @@ async def agent_data(
 async def registration_status(
     uuid: UUID,
 ) -> RegistrationStatus:
-    host = Host(uuid)
     registration_data = get_registration_status_from_file(uuid)
-
-    if not host.registered:
+    try:
+        host = RegisteredHost(uuid)
+    except NotRegisteredException:
         if registration_data:
             return RegistrationStatus(
-                status=registration_data.status, message=registration_data.message
+                status=registration_data.status,
+                message=registration_data.message,
             )
         raise HTTPException(status_code=404, detail="Host is not registered")
 
     return RegistrationStatus(
-        hostname=host.hostname,
+        hostname=host.name,
         status=registration_data.status if registration_data else None,
-        type=host.host_type,
+        type=host.connection_mode,
         message="Host registered",
     )
 
@@ -338,8 +341,9 @@ async def renew_certificate(
     _validate_uuid_against_csr(uuid, cert_renewal_body.csr)
 
     # Don't maintain deleted registrations.
-    host = Host(uuid)
-    if not host.registered:
+    try:
+        RegisteredHost(uuid)
+    except NotRegisteredException:
         logger.error(
             "uuid=%s Host is not registered",
             uuid,

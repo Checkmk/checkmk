@@ -6,9 +6,10 @@
 import json
 import os
 from pathlib import Path
+from typing import Final
 from uuid import UUID
 
-from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
+from agent_receiver.models import ConnectionMode, RegistrationData, RegistrationStatusEnum
 from agent_receiver.site_context import agent_output_dir, r4r_dir, users_dir
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
@@ -17,44 +18,28 @@ from fastapi.security import HTTPBasicCredentials
 INTERNAL_REST_API_USER = "automation"
 
 
-class Host:
+class NotRegisteredException(Exception):
+    ...
+
+
+class RegisteredHost:
     def __init__(self, uuid: UUID) -> None:
-        self._source_path = agent_output_dir() / str(uuid)
-
-        self._registered = self.source_path.is_symlink()
-        target_path = self._get_target_path() if self.registered else None
-
-        self._hostname = target_path.name if target_path else None
-        self._host_type = self._get_host_type(target_path)
-
-    def _get_target_path(self) -> Path | None:
+        self.source_path: Final = agent_output_dir() / str(uuid)
+        if not self.source_path.is_symlink():
+            raise NotRegisteredException("Source path is not a symlink")
         try:
-            return Path(os.readlink(self.source_path))
-        except (FileNotFoundError, OSError):
-            return None
+            target_path = Path(os.readlink(self.source_path))
+        except (FileNotFoundError, OSError) as excpt:
+            raise NotRegisteredException("Failed to follow source path symlink") from excpt
+
+        self.name: Final = target_path.name
+        self.connection_mode: Final = self._connection_mode(target_path)
 
     @staticmethod
-    def _get_host_type(target_path: Path | None) -> HostTypeEnum | None:
-        if not target_path:
-            return None
-
-        return HostTypeEnum.PUSH if target_path.parent.name == "push-agent" else HostTypeEnum.PULL
-
-    @property
-    def source_path(self) -> Path:
-        return self._source_path
-
-    @property
-    def registered(self) -> bool:
-        return self._registered
-
-    @property
-    def hostname(self) -> str | None:
-        return self._hostname
-
-    @property
-    def host_type(self) -> HostTypeEnum | None:
-        return self._host_type
+    def _connection_mode(target_path: Path) -> ConnectionMode:
+        return (
+            ConnectionMode.PUSH if target_path.parent.name == "push-agent" else ConnectionMode.PULL
+        )
 
 
 def read_rejection_notice_from_file(path: Path) -> str | None:

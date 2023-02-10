@@ -17,7 +17,7 @@ import pytest
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration
-from agent_receiver.models import HostTypeEnum
+from agent_receiver.models import ConnectionMode
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
@@ -553,7 +553,7 @@ def test_registration_status_push_host(
     assert response.json() == {
         "hostname": "hostname",
         "status": "discoverable",
-        "type": HostTypeEnum.PUSH.value,
+        "type": ConnectionMode.PUSH.value,
         "message": "Host registered",
     }
 
@@ -577,7 +577,7 @@ def test_registration_status_pull_host(
     assert response.json() == {
         "hostname": "hostname",
         "status": None,
-        "type": HostTypeEnum.PULL.value,
+        "type": ConnectionMode.PULL.value,
         "message": "Host registered",
     }
 

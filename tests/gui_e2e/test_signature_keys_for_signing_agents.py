@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
 from typing import Callable
 
 import pytest
@@ -13,6 +14,11 @@ from tests.testlib.playwright.helpers import PPage
 from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 from cmk.utils.crypto.password import Password
+
+
+@pytest.fixture(name="self_signed_cert", scope="module")
+def fixture_self_signed() -> CertificateWithPrivateKey:
+    return CertificateWithPrivateKey.generate_self_signed("Some CN", "e2etest")
 
 
 def go_to_signature_page(page: PPage) -> None:
@@ -65,7 +71,9 @@ def send_pem_file(page: PPage, description: str, password: str, content: str) ->
 
 @pytest.mark.parametrize("upload_function", (send_pem_content, send_pem_file))
 def test_upload_signing_keys(
-    upload_function: Callable[[PPage, str, str, str], None], logged_in_page: PPage
+    logged_in_page: PPage,
+    self_signed_cert: CertificateWithPrivateKey,
+    upload_function: Callable[[PPage, str, str, str], None],
 ) -> None:
     """send a few payloads to the `Signature keys for signing agents` page and check the responses"""
 
@@ -73,16 +81,14 @@ def test_upload_signing_keys(
     upload_function(logged_in_page, "Some description", "password", "invalid")
     logged_in_page.main_area.check_error("The file does not look like a valid key file.")
 
-    key_pair = CertificateWithPrivateKey.generate_self_signed("Some CN", "e2etest")
-
     # This is very delicate...
     # But will be fixed soon
     pem_content = (
-        key_pair.private_key.dump_pem(Password("SecureP4ssword")).str
+        self_signed_cert.private_key.dump_pem(Password("SecureP4ssword")).str
         + "\n"
-        + key_pair.certificate.dump_pem().str
+        + self_signed_cert.certificate.dump_pem().str
     ).strip() + "\n"
-    fingerprint = key_pair.certificate.fingerprint(HashAlgorithm.MD5).hex(":")
+    fingerprint = self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")
 
     # passphrase is invalid
     upload_function(logged_in_page, "Some description", "password", pem_content)
@@ -96,7 +102,6 @@ def test_upload_signing_keys(
 
 def test_add_key(logged_in_page: PPage) -> None:
     """add a key, aka let Checkmk generate it"""
-    # alias = "An alias"
     go_to_signature_page(logged_in_page)
     logged_in_page.main_area.get_suggestion("Add key").click()
     logged_in_page.main_area.check_page_title("Add agent signature key")
@@ -113,3 +118,46 @@ def test_add_key(logged_in_page: PPage) -> None:
     expect(logged_in_page.main_area.get_text("e2e-test"))
 
     delete_key(logged_in_page, "e2e-test")
+
+
+@pytest.fixture(name="with_key")
+def with_key_fixture(
+    logged_in_page: PPage, self_signed_cert: CertificateWithPrivateKey
+) -> Iterator[None]:
+    """create a signing key via the gui, yield and then delete it again"""
+
+    password = Password("foo")
+    combined_file = (
+        self_signed_cert.private_key.dump_pem(password).str
+        + self_signed_cert.certificate.dump_pem().str
+    )
+    send_pem_file(logged_in_page, "with_key_fixture", password.raw, combined_file)
+    expect(logged_in_page.main_area.get_text("with_key_fixture"))
+
+    yield
+
+    logged_in_page.go("index.py?start_url=wato.py%3Ffolder%3D%26mode%3Dsignature_keys")
+    delete_key(logged_in_page, "with_key_fixture")
+
+
+def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
+    """go to agents and click bake and sign
+
+    Bake and sign starts a backgroundjob. If the job finished the success is
+    reported. This is kind of asynchronous. Theoretically this could lead to
+    timeout problems, but in my experience the signing is quite fast. But if
+    this happens restart or mark this test to be skipped"""
+
+    # We need to "waste" some time here. The bake and sign button is sometimes
+    # not available if you go too fast to this site.
+    logged_in_page.megamenu_setup.click()
+    logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX").click()
+    logged_in_page.main_area.get_suggestion("Bake and sign agents").click()
+    logged_in_page.main_area.locator("#select2-key_p_key-container").click()
+    logged_in_page.main_area.locator(
+        "#select2-key_p_key-results > li.select2-results__option[role='option']"
+    ).filter(has_text="with_key_fixture").click()
+    logged_in_page.main_area.get_text("with_key_fixture").click()
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("foo")
+    logged_in_page.main_area.get_input("create").click()
+    logged_in_page.main_area.check_success("Agent baking successful")

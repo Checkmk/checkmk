@@ -25,6 +25,18 @@ def go_to_signature_page(page: PPage) -> None:
     page.main_area.check_page_title("Signature keys for signing agents")
 
 
+def delete_key(page: PPage, identifier: str) -> None:
+    """Delete a key based on some text, e.g. alias or hash
+
+    you already have to be on the `Signature keys for signing agents` site
+    """
+
+    page.main_area.locator(
+        f"tr.data:has-text('{identifier}') >> td.buttons >> a[title='Delete this key']"
+    ).click()
+    page.main_area.locator("#page_menu_popups").locator("button.swal2-confirm").click()
+
+
 def send_pem_content(page: PPage, description: str, password: str, content: str) -> None:
     """upload a combined pem file (private key and certificate) via the Paste textarea method"""
     go_to_signature_page(page)
@@ -79,7 +91,25 @@ def test_upload_signing_keys(
     # all ok
     upload_function(logged_in_page, "Some description", "SecureP4ssword", pem_content)
     expect(logged_in_page.main_area.get_text(fingerprint))
-    logged_in_page.main_area.locator(
-        f"tr.data:has-text('{fingerprint}') >> td.buttons >> a[title='Delete this key']"
-    ).click()
-    logged_in_page.main_area.locator("#page_menu_popups").locator("button.swal2-confirm").click()
+    delete_key(logged_in_page, fingerprint)
+
+
+def test_add_key(logged_in_page: PPage) -> None:
+    """add a key, aka let Checkmk generate it"""
+    # alias = "An alias"
+    go_to_signature_page(logged_in_page)
+    logged_in_page.main_area.get_suggestion("Add key").click()
+    logged_in_page.main_area.check_page_title("Add agent signature key")
+
+    # Use a too short password
+    logged_in_page.main_area.get_input("key_p_alias").fill("Won't work")
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("short")
+    logged_in_page.main_area.get_suggestion("Create").click()
+    logged_in_page.main_area.check_error("You need to provide at least 8 characters.")
+
+    logged_in_page.main_area.get_input("key_p_alias").fill("e2e-test")
+    logged_in_page.main_area.get_input("key_p_passphrase").fill("12345678")
+    logged_in_page.main_area.get_suggestion("Create").click()
+    expect(logged_in_page.main_area.get_text("e2e-test"))
+
+    delete_key(logged_in_page, "e2e-test")

@@ -108,20 +108,19 @@ class CertificateWithPrivateKey(NamedTuple):
         organizational_unit_name: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
-        start_date: datetime | None = None,
+        start_date: datetime | None = None,  # defaults to now
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
         private_key = RsaPrivateKey.generate(key_size)
-        certificate = Certificate.create(
+        certificate = Certificate._create(
             private_key.public_key,
             private_key,
             common_name,
             organization or f"Checkmk Site {omd_site()}",
             expiry,
-            HashAlgorithm.Sha512,
+            start_date=start_date or datetime.utcnow(),
             organizational_unit_name=organizational_unit_name,
-            start_date=start_date,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -230,17 +229,22 @@ class Certificate:
         self._cert = certificate
 
     @classmethod
-    def create(
+    def _create(
         cls,
         public_key: RsaPublicKey,
         signing_key: RsaPrivateKey,
         common_name: str,
         organization: str,
         expiry: relativedelta,
-        signature_digest_algorithm: HashAlgorithm,
+        start_date: datetime,
         organizational_unit_name: str | None = None,
-        start_date: datetime | None = None,
     ) -> Certificate:
+        """
+        Internal method currently only useful for `CertificateWithPrivateKey.generate_self_signed`
+
+        The reason is that extensions and key usages are hard-coded in a way only appropriate for
+        self-signed certificates.
+        """
         name_attrs = [
             x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name),
             x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization),
@@ -253,39 +257,7 @@ class Certificate:
             )
         name = x509.Name(name_attrs)
 
-        if start_date is None:
-            start_date = datetime.utcnow()
-
-        # TODO: We'll need to set these extensions depending on how we intend to use the cert.
-        #       Right now it's hardcoded for self-signed certs (CA=True) and does not restrict
-        #       the path length.
-
-        # RFC 5280 4.2.1.9.  Basic Constraints
-        basic_constraints = x509.BasicConstraints(ca=True, path_length=None)
-
-        # RFC 5280 4.2.1.9.  Key Usage
-        #     Conforming CAs MUST include this extension in certificates that
-        #     contain public keys that are used to validate digital signatures on
-        #     other public key certificates or CRLs.  When present, conforming CAs
-        #     SHOULD mark this extension as critical.
-        #     ...
-        #     If the keyCertSign bit is asserted, then the cA bit in the basic
-        #     constraints extension (Section 4.2.1.9) MUST also be asserted.
-        #
-        # TODO: What do we wnat to set here?
-        key_usage = x509.KeyUsage(
-            digital_signature=True,  # signing data
-            content_commitment=True,  # aka non_repudiation
-            key_encipherment=False,
-            data_encipherment=False,
-            key_agreement=False,
-            key_cert_sign=True,  # signing certs
-            crl_sign=True,  # signing CRLs
-            encipher_only=False,
-            decipher_only=False,
-        )
-
-        return Certificate(
+        builder = (
             x509.CertificateBuilder()
             .subject_name(name)
             .issuer_name(name)
@@ -293,9 +265,42 @@ class Certificate:
             .not_valid_after(start_date + expiry)
             .serial_number(x509.random_serial_number())
             .public_key(public_key._key)
-            .add_extension(basic_constraints, critical=True)
-            .add_extension(key_usage, critical=True)
-            .sign(private_key=signing_key._key, algorithm=signature_digest_algorithm.value)
+        )
+
+        # RFC 5280 4.2.1.9.  Basic Constraints
+        basic_constraints = x509.BasicConstraints(ca=False, path_length=None)
+        builder = builder.add_extension(basic_constraints, critical=True)
+
+        # RFC 5280 4.2.1.2.  Subject Key Identifier
+        #     this extension SHOULD be included in all end entity certificates
+        #
+        # ... which is all our certs since we don't build any chains at the moment
+        builder = builder.add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(public_key._key), critical=False
+        )
+
+        # RFC 5280 4.2.1.9.  Key Usage
+        #
+        # Currently only digital signature.
+        # Note that some combinations of usage bits may have security implications. See
+        # RFC 3279 2.3 and other links in RFC 5280 4.2.1.9. before enabling more usages.
+        builder = builder.add_extension(
+            x509.KeyUsage(
+                digital_signature=True,  # signing data
+                content_commitment=False,  # aka non_repudiation
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
+        )
+
+        return Certificate(
+            builder.sign(private_key=signing_key._key, algorithm=HashAlgorithm.Sha512.value)
         )
 
     @classmethod
@@ -370,19 +375,42 @@ class Certificate:
         ]:
             raise ValueError(f"Unsupported signature scheme for X.509 certificate ({oid})")
 
-        # Check Key Usage. If the extension is missing there's no restriction.
-        with contextlib.suppress(x509.ExtensionNotFound):
-            usage = signer._cert.extensions.get_extension_for_class(x509.KeyUsage).value
-            if not usage.key_cert_sign:
-                raise ValueError(
-                    "Signer certificate does not allow certificate signature verification (keyCertSign)"
-                )
+        # Check if the signer is allowed to sign certificates. Self-signed, non-CA certificates do
+        # not need to set the usage bit. See also https://github.com/openssl/openssl/issues/1418.
+        if not self._may_sign_certificates() and not self._is_self_signed():
+            raise ValueError(
+                "Signer certificate does not allow certificate signature verification "
+                "(CA flag or keyCertSign bit missing)."
+            )
 
         signer.public_key.verify(
             Signature(self._cert.signature),
             self._cert.tbs_certificate_bytes,
             HashAlgorithm.from_cryptography(self._cert.signature_hash_algorithm),
         )
+
+    def _may_sign_certificates(self) -> bool:
+        """
+        Check if this certificate may be used to sign other certificates, that is, has the
+        cA flag set and allows key usage KeyCertSign.
+
+        Note that self-signed, non-CA end entity certificates may self-sign without this.
+        """
+        is_ca = False
+        with contextlib.suppress(x509.ExtensionNotFound):
+            is_ca = self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
+
+        has_key_sign_bit = False
+        with contextlib.suppress(x509.ExtensionNotFound):
+            has_key_sign_bit = self._cert.extensions.get_extension_for_class(
+                x509.KeyUsage
+            ).value.key_cert_sign
+
+        return is_ca and has_key_sign_bit
+
+    def _is_self_signed(self) -> bool:
+        """Is the issuer the same as the subject?"""
+        return self._cert.subject == self._cert.issuer
 
     def verify_expiry(self, allowed_drift: relativedelta | None = None) -> None:
         """

@@ -16,8 +16,10 @@ from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import (
     CertificateWithPrivateKey,
     InvalidExpiryError,
+    InvalidSignatureError,
     PersistedCertificateWithPrivateKey,
     RsaPrivateKey,
+    Signature,
 )
 from cmk.utils.crypto.password import Password
 
@@ -145,13 +147,12 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
     assert loaded_enc._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
 
 
-def test_verify_rsa_key() -> None:
-    private_key = RsaPrivateKey.generate(2048)
-    try:
-        private_key.public_key.verify(
-            private_key.sign_data(b"test"),
-            b"test",
-            HashAlgorithm.Sha512,
-        )
-    except Exception as e:
-        assert False, str(e)
+@pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode("utf-8")])
+def test_verify_rsa_key(data: bytes) -> None:
+    private_key = RsaPrivateKey.generate(1024)
+    signed = private_key.sign_data(data)
+
+    private_key.public_key.verify(signed, data, HashAlgorithm.Sha512)
+
+    with pytest.raises(InvalidSignatureError):
+        private_key.public_key.verify(Signature(b"nope"), data, HashAlgorithm.Sha512)

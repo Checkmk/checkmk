@@ -15,7 +15,7 @@ int pnpgraph_present(const std::filesystem::path &pnp_path,
     if (pnp_path.empty()) {
         return -1;
     }
-    std::filesystem::path path =
+    const std::filesystem::path path =
         pnp_path / pnp_cleanup(host) / (pnp_cleanup(service) + ".xml");
     std::error_code ec;
     (void)std::filesystem::status(path, ec);

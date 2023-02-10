@@ -99,7 +99,7 @@ InputBuffer::Result InputBuffer::readRequest() {
             // Is there still space left in the buffer => read in
             // further data into the buffer.
             if (_write_index < _readahead_buffer.capacity()) {
-                Result rd =
+                const Result rd =
                     readData();  // tries to read in further data into buffer
                 if (rd == Result::timeout) {
                     if (query_started) {
@@ -156,9 +156,9 @@ InputBuffer::Result InputBuffer::readRequest() {
             // of the buffer's content is already processed. So we simply
             // shift the yet unprocessed data to the very left of the buffer.
             else if (_read_index > 0) {
-                size_t shift_by =
+                const size_t shift_by =
                     _read_index;  // distance to beginning of buffer
-                size_t size =
+                const size_t size =
                     _write_index - _read_index;  // amount of data to shift
                 memmove(_readahead_buffer.data(),
                         &_readahead_buffer[_read_index], size);
@@ -170,7 +170,7 @@ InputBuffer::Result InputBuffer::readRequest() {
             }
             // buffer is full, but still no end of line found
             else {
-                size_t new_capacity = _readahead_buffer.capacity() * 2;
+                const size_t new_capacity = _readahead_buffer.capacity() * 2;
                 if (new_capacity > maximum_buffer_size) {
                     Informational(_logger)
                         << "Error: maximum length of request line exceeded";
@@ -223,8 +223,8 @@ InputBuffer::Result InputBuffer::readData() {
             }
             break;
         }
-        ssize_t r = ::read(_fd, &_readahead_buffer[_write_index],
-                           _readahead_buffer.capacity() - _write_index);
+        const ssize_t r = ::read(_fd, &_readahead_buffer[_write_index],
+                                 _readahead_buffer.capacity() - _write_index);
         if (r < 0) {
             return Result::eof;
         }

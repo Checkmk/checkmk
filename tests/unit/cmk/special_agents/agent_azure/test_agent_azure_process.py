@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from cmk.special_agents.agent_azure import (
+    ApiError,
     Args,
     AzureResource,
     AzureSection,
@@ -21,9 +22,9 @@ from cmk.special_agents.agent_azure import (
     process_resource,
     process_vm,
     Section,
+    usage_details,
     write_group_info,
     write_section_ad,
-    write_usage_section_if_enabled,
 )
 
 pytestmark = pytest.mark.checks
@@ -35,10 +36,14 @@ class MockMgmtApiClient:
         resource_groups: Sequence[Mapping[str, Any]],
         vmviews: Mapping[str, Mapping[str, Mapping[str, Sequence[Mapping[str, str]]]]],
         ratelimit: float,
+        usage_data: Sequence[object] | None = None,
+        usage_details_exception: Exception | None = None,
     ) -> None:
         self.resource_groups = resource_groups
         self.vmviews = vmviews
         self.rate_limit = ratelimit
+        self.usage_data = usage_data if usage_data else []
+        self.usage_details_exception = usage_details_exception
 
     def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
         return self.resource_groups
@@ -49,6 +54,12 @@ class MockMgmtApiClient:
     @property
     def ratelimit(self) -> float:
         return self.rate_limit
+
+    def usagedetails(self) -> Sequence[object]:
+        if self.usage_details_exception is not None:
+            raise self.usage_details_exception
+
+        return self.usage_data
 
 
 @pytest.mark.parametrize(
@@ -488,18 +499,189 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
 
 
 @pytest.mark.parametrize(
-    "enabled_services",
+    "args, usage_data, exception, expected_result",
     [
-        ["non_existing_service"],
-        ["usage_details", "another_service"],
+        pytest.param(
+            Args(debug=False, services=[]),
+            None,
+            None,
+            "",
+            id="usage section not enabled",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
+            None,
+            ApiError("offer MS-AZR-0145P"),
+            "",
+            id="api error no consumption offer",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
+            None,
+            ApiError("unknown offer"),
+            "<<<<>>>>\n"
+            "<<<azure_agent_info:sep(124)>>>\n"
+            'agent-bailout|[2, "get_usage_data: unknown offer"]\n'
+            "<<<<>>>>\n"
+            "<<<<test1>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<test2>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<>>>>\n",
+            id="api error unknown offer",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
+            None,
+            Exception(),
+            "<<<<>>>>\n"
+            "<<<azure_agent_info:sep(124)>>>\n"
+            'agent-bailout|[2, "get_usage_data: "]\n'
+            "<<<<>>>>\n"
+            "<<<<test1>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<test2>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<>>>>\n",
+            id="exception in the api call",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
+            [],
+            None,
+            "<<<<>>>>\n"
+            "<<<azure_agent_info:sep(124)>>>\n"
+            'agent-bailout|[2, "get_usage_data: Azure API did not return any usage details"]\n'
+            "<<<<>>>>\n"
+            "<<<<test1>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<test2>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "<<<<>>>>\n",
+            id="empty usage data",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
+            [
+                {
+                    "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
+                    "name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6",
+                    "type": "Microsoft.CostManagement/query",
+                    "location": None,
+                    "sku": None,
+                    "eTag": None,
+                    "properties": {
+                        "Cost": 7.349267385987696,
+                        "CostUSD": 7.97158038308434,
+                        "ResourceType": "microsoft.network/applicationgateways",
+                        "ResourceGroupName": "test1",
+                        "Tags": [],
+                        "Currency": "EUR",
+                    },
+                },
+                {
+                    "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
+                    "name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8",
+                    "type": "Microsoft.CostManagement/query",
+                    "location": None,
+                    "sku": None,
+                    "eTag": None,
+                    "properties": {
+                        "Cost": 0.5107556132017598,
+                        "CostUSD": 0.5539016353215431,
+                        "ResourceType": "microsoft.network/loadbalancers",
+                        "ResourceGroupName": "test1",
+                        "Tags": [],
+                        "Currency": "EUR",
+                    },
+                },
+                {
+                    "id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071",
+                    "name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13",
+                    "type": "Microsoft.CostManagement/query",
+                    "location": None,
+                    "sku": None,
+                    "eTag": None,
+                    "properties": {
+                        "Cost": 0.12006320596267346,
+                        "CostUSD": 0.1315116481025144,
+                        "ResourceType": "microsoft.recoveryservices/vaults",
+                        "ResourceGroupName": "test1",
+                        "Tags": [],
+                        "Currency": "EUR",
+                    },
+                },
+            ],
+            None,
+            "<<<<test1>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "Resource\n"
+            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
+            'null, "properties": {"Cost": 7.349267385987696, "CostUSD": 7.97158038308434, "ResourceType": "microsoft.network/applicationgateways", '
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            "<<<<>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "Resource\n"
+            '{"id": '
+            '"subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-6", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
+            'null, "properties": {"Cost": 7.349267385987696, "CostUSD": 7.97158038308434, "ResourceType": "microsoft.network/applicationgateways", '
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            "<<<<>>>>\n"
+            "<<<<test1>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "Resource\n"
+            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
+            'null, "properties": {"Cost": 0.5107556132017598, "CostUSD": 0.5539016353215431, "ResourceType": "microsoft.network/loadbalancers", '
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            "<<<<>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "Resource\n"
+            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-8", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
+            'null, "properties": {"Cost": 0.5107556132017598, "CostUSD": 0.5539016353215431, "ResourceType": "microsoft.network/loadbalancers", '
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            "<<<<>>>>\n"
+            "<<<<test1>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "Resource\n"
+            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
+            'null, "properties": {"Cost": 0.12006320596267346, "CostUSD": 0.1315116481025144, "ResourceType": "microsoft.recoveryservices/vaults", '
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            "<<<<>>>>\n"
+            "<<<azure_usagedetails:sep(124)>>>\n"
+            "Resource\n"
+            '{"id": "subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/providers/Microsoft.CostManagement/query/b2ce4915-8c0d-4af7-8979-c561d83a1071", '
+            '"name": "b2ce4915-8c0d-4af7-8979-c561d83a1071-13", "type": "Microsoft.Consumption/usageDetails", "location": null, "sku": null, "eTag": '
+            'null, "properties": {"Cost": 0.12006320596267346, "CostUSD": 0.1315116481025144, "ResourceType": "microsoft.recoveryservices/vaults", '
+            '"ResourceGroupName": "test1", "Tags": [], "Currency": "EUR"}, "group": "test1", "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa", "provider": "Microsoft.CostManagement"}\n'
+            "<<<<>>>>\n",
+            id="no errors, usage data exists",
+        ),
     ],
 )
-def test_write_usage_section(enabled_services: list[str]) -> None:
-    usage_client = MagicMock()
-    write_usage_section_if_enabled(
-        usage_client, ["group1", "group2"], Args(services=enabled_services, debug=False)
+def test_usage_details(
+    args: Args,
+    usage_data: Sequence[object],
+    exception: Exception,
+    expected_result: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    mgmt_client = MockMgmtApiClient(
+        [], {}, 0, usage_data=usage_data, usage_details_exception=exception
     )
-    if "usage_details" in enabled_services:
-        usage_client.write_sections.assert_called()
-    else:
-        usage_client.write_sections.assert_not_called()
+    monitored_groups = ["test1", "test2"]
+
+    usage_details(mgmt_client, monitored_groups, args)  # type: ignore[arg-type]
+
+    captured = capsys.readouterr()
+    assert captured.out == expected_result

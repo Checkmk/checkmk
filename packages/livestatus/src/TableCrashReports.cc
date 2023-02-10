@@ -19,7 +19,7 @@
 #include "livestatus/StringColumn.h"
 
 TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<CrashReport>>(
         "id", "The ID of a crash report", offsets,
         [](const CrashReport &r) { return r._id; }));

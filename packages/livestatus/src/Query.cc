@@ -43,7 +43,7 @@ std::string nextStringArgument(char **line) {
 
 int nextNonNegativeIntegerArgument(char **line) {
     auto value = nextStringArgument(line);
-    int number = atoi(value.c_str());
+    const int number = atoi(value.c_str());
     if (isdigit(value[0]) == 0 || number < 0) {
         throw std::runtime_error("expected non-negative integer");
     }
@@ -405,8 +405,8 @@ void Query::parseStatsGroupLine(char *line) {
 }
 
 void Query::parseColumnsLine(const char *line) {
-    std::string str = line;
-    std::string sep = " \t\n\v\f\r";
+    const std::string str = line;
+    const std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
         auto space = str.find_first_of(sep, pos);
         auto column_name =
@@ -433,13 +433,13 @@ void Query::parseColumnsLine(const char *line) {
 }
 
 void Query::parseSeparatorsLine(char *line) {
-    std::string dsep = std::string(
+    const std::string dsep = std::string(
         1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
-    std::string fsep = std::string(
+    const std::string fsep = std::string(
         1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
-    std::string lsep = std::string(
+    const std::string lsep = std::string(
         1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
-    std::string hsep = std::string(
+    const std::string hsep = std::string(
         1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
     _separators = CSVSeparators(dsep, fsep, lsep, hsep);
 }
@@ -762,10 +762,11 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
         std::vector<std::unique_ptr<Aggregator>> aggrs;
+        aggrs.reserve(_stats_columns.size());
         for (const auto &sc : _stats_columns) {
             aggrs.push_back(sc->createAggregator(_logger));
         }
-        it = _stats_groups.emplace(groupspec, move(aggrs)).first;
+        it = _stats_groups.emplace(groupspec, std::move(aggrs)).first;
     }
     return it->second;
 }

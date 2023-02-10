@@ -67,7 +67,7 @@ static double staleness(const service &svc) {
 
     // check_mk PASSIVE CHECK without check interval uses the check
     // interval of its check-mk service
-    bool is_cmk_passive =
+    const bool is_cmk_passive =
         strncmp(svc.check_command_ptr->name, "check_mk-", 9) == 0;
     if (is_cmk_passive) {
         host *host = svc.host_ptr;

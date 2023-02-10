@@ -23,7 +23,7 @@ struct service_and_group {
 
 TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets.add([](Row r) {
         return r.rawData<service_and_group>()->svc;
     }),

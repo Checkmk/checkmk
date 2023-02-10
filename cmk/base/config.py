@@ -2546,6 +2546,8 @@ def lookup_ip_address(
     *,
     family: socket.AddressFamily | None = None,
 ) -> HostAddress | None:
+    if ConfigCache.is_no_ip_host(host_name):
+        return None
     if family is None:
         family = config_cache.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(
@@ -2744,7 +2746,7 @@ class ConfigCache:
     def make_snmp_fetcher(
         self,
         host_name: HostName,
-        ip_address: HostAddress | None,
+        ip_address: HostAddress,
         *,
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
@@ -2767,7 +2769,7 @@ class ConfigCache:
             snmp_config=self.make_snmp_config(host_name, ip_address),
         )
 
-    def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress | None) -> TCPFetcher:
+    def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress) -> TCPFetcher:
         return TCPFetcher(
             host_name=host_name,
             address=(ip_address, self._agent_port(host_name)),
@@ -2828,9 +2830,7 @@ class ConfigCache:
             is_dyndns_host=self.is_dyndns_host(host_name),
         )
 
-    def make_snmp_config(
-        self, host_name: HostName, ip_address: HostAddress | None
-    ) -> SNMPHostConfig:
+    def make_snmp_config(self, host_name: HostName, ip_address: HostAddress) -> SNMPHostConfig:
         return self.__snmp_config.setdefault(
             (host_name, ip_address),
             SNMPHostConfig(

@@ -42716,7 +42716,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
 "groups are <b>%s</b>, your contact groups are <b>%s</b>."
 msgstr ""
 

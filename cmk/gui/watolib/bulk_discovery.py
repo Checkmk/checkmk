@@ -11,7 +11,7 @@ from livestatus import SiteId
 import cmk.utils.store as store
 from cmk.utils.type_defs import DiscoveryResult
 
-from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
+from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
 from cmk.gui.background_job import (
     BackgroundJob,

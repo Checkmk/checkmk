@@ -39,7 +39,7 @@ void LogCache::update() {
     addToIndex(std::make_unique<Logfile>(logger(), this, _mc->historyFilePath(),
                                          true));
 
-    std::filesystem::path dirpath = _mc->logArchivePath();
+    const std::filesystem::path dirpath = _mc->logArchivePath();
     try {
         for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
             addToIndex(
@@ -76,7 +76,7 @@ void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
 std::pair<std::vector<std::filesystem::path>,
           std::optional<std::filesystem::path>>
 LogCache::pathsSince(std::chrono::system_clock::time_point since) {
-    std::lock_guard<std::mutex> lg(_lock);
+    const std::lock_guard<std::mutex> lg(_lock);
     update();
     std::vector<std::filesystem::path> paths;
     bool horizon_reached{false};
@@ -176,7 +176,7 @@ Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }
 void LogCache::for_each(
     const LogFilter &log_filter,
     const std::function<bool(const LogEntry &)> &process_log_entry) {
-    std::lock_guard<std::mutex> lg(_lock);
+    const std::lock_guard<std::mutex> lg(_lock);
     update();
 
     if (_logfiles.begin() == _logfiles.end()) {
@@ -211,7 +211,7 @@ void LogCache::for_each(
 }
 
 size_t LogCache::numCachedLogMessages() {
-    std::lock_guard<std::mutex> lg(_lock);
+    const std::lock_guard<std::mutex> lg(_lock);
     update();
     return _num_cached_log_messages;
 }

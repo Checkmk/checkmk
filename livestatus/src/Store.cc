@@ -120,7 +120,7 @@ void Store::logRequest(const std::string &line,
             log << R"(\n)" << l;
         }
     } else {
-        size_t s = lines.size();
+        const size_t s = lines.size();
         if (s > 0) {
             log << R"(\n{)" << s << (s == 1 ? " line follows" : " lines follow")
                 << "...}";
@@ -160,7 +160,7 @@ std::vector<std::string> Store::ExternalCommand::args() const {
 
 bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     // Precondition: output has been reset
-    InputBuffer::Result res = input.readRequest();
+    InputBuffer::Result const res = input.readRequest();
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
             std::ostringstream os;
@@ -170,7 +170,7 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
         }
         return false;
     }
-    std::string line = input.nextLine();
+    const std::string line = input.nextLine();
     if (mk::starts_with(line, "GET ")) {
         auto lines = getLines(input);
         logRequest(line, lines);
@@ -252,7 +252,7 @@ namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(Logger *logger, std::string path, std::string command)
-        : EventConsoleConnection(logger, move(path))
+        : EventConsoleConnection(logger, std::move(path))
         , command_(std::move(command)) {}
 
 private:
@@ -278,7 +278,7 @@ void Store::answerCommandEventConsole(const std::string &command) {
 }
 
 void Store::answerCommandNagios(const ExternalCommand &command) {
-    std::lock_guard<std::mutex> lg(_command_mutex);
+    const std::lock_guard<std::mutex> lg(_command_mutex);
     nagios_compat_submit_external_command(command.str().c_str());
 }
 

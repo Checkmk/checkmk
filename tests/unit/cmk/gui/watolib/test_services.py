@@ -11,8 +11,8 @@ from pytest_mock import MockerFixture
 from cmk.automations.results import (
     CheckPreviewEntry,
     DeleteHostsResult,
+    ServiceDiscoveryPreviewResult,
     SetAutochecksResult,
-    TryDiscoveryResult,
 )
 
 from cmk.gui.utils import transaction_manager
@@ -32,7 +32,7 @@ from cmk.gui.watolib.services import (
     StartDiscoveryRequest,
 )
 
-MOCK_DISCOVERY_RESULT = TryDiscoveryResult(
+MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     check_table=[
         CheckPreviewEntry(
             "old",
@@ -75,10 +75,10 @@ MOCK_DISCOVERY_RESULT = TryDiscoveryResult(
 )
 
 
-@pytest.fixture(name="mock_try_discovery")
-def fixture_mock_try_discovery(mocker: MockerFixture) -> MagicMock:
+@pytest.fixture(name="mock_discovery_preview")
+def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.try_discovery", return_value=MOCK_DISCOVERY_RESULT
+        "cmk.gui.watolib.services.discovery_preview", return_value=MOCK_DISCOVERY_RESULT
     )
 
 
@@ -123,7 +123,9 @@ def fixture_sample_host(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
-def test_perform_discovery_none_action(sample_host: CREHost, mock_try_discovery: MagicMock) -> None:
+def test_perform_discovery_none_action(
+    sample_host: CREHost, mock_discovery_preview: MagicMock
+) -> None:
     discovery_result = initial_discovery_result(
         discovery_options=DiscoveryOptions(
             action=DiscoveryAction.NONE,
@@ -136,7 +138,7 @@ def test_perform_discovery_none_action(sample_host: CREHost, mock_try_discovery:
         host=sample_host,
         previous_discovery_result=None,
     )
-    mock_try_discovery.assert_called_once()
+    mock_discovery_preview.assert_called_once()
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
 
 
@@ -144,7 +146,7 @@ def test_perform_discovery_none_action(sample_host: CREHost, mock_try_discovery:
 def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
     sample_host_name: str,
     sample_host: CREHost,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
 ) -> None:
     discovery_result = get_check_table(
         StartDiscoveryRequest(
@@ -161,7 +163,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
         )
     )
 
-    mock_try_discovery.assert_has_calls(
+    mock_discovery_preview.assert_has_calls(
         [
             call("NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False),
         ]
@@ -177,8 +179,8 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     mock_set_autochecks: MagicMock,
 ) -> None:
     mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
-    mock_try_discovery = mocker.patch(
-        "cmk.gui.watolib.services.try_discovery",
+    mock_discovery_preview = mocker.patch(
+        "cmk.gui.watolib.services.discovery_preview",
         return_value=DiscoveryResult(
             job_status={
                 "state": "initialized",
@@ -309,7 +311,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, ["TODAY"]),
         },
     )
-    mock_try_discovery.assert_called_once()
+    mock_discovery_preview.assert_called_once()
     assert [entry.check_source for entry in discovery_result.check_table] == [
         "old",
         "active",
@@ -329,8 +331,8 @@ def test_perform_discovery_single_update(
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
-    mock_try_discovery = mocker.patch(
-        "cmk.gui.watolib.services.try_discovery",
+    mock_discovery_preview = mocker.patch(
+        "cmk.gui.watolib.services.discovery_preview",
         return_value=DiscoveryResult(
             job_status={
                 "duration": 2.351154088973999,
@@ -557,7 +559,7 @@ def test_perform_discovery_single_update(
             ("mem_linux", None): ("Memory", {}, {}, ["TODAY"]),
         },
     )
-    mock_try_discovery.assert_called_with(
+    mock_discovery_preview.assert_called_with(
         "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert [
@@ -578,8 +580,8 @@ def test_perform_discovery_action_update_services(
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
-    mock_try_discovery = mocker.patch(
-        "cmk.gui.watolib.services.try_discovery",
+    mock_discovery_preview = mocker.patch(
+        "cmk.gui.watolib.services.discovery_preview",
         return_value=DiscoveryResult(
             job_status={
                 "duration": 2.351154088973999,
@@ -755,7 +757,7 @@ def test_perform_discovery_action_update_services(
             )
         },
     )
-    mock_try_discovery.assert_called_with(
+    mock_discovery_preview.assert_called_with(
         "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert [entry.check_source for entry in discovery_result.check_table] == ["old"]
@@ -775,8 +777,8 @@ def test_perform_discovery_action_update_host_labels(
     mock_update_host_labels = mocker.patch(
         "cmk.gui.watolib.services.update_host_labels", return_value=None
     )
-    mock_try_discovery = mocker.patch(
-        "cmk.gui.watolib.services.try_discovery",
+    mock_discovery_preview = mocker.patch(
+        "cmk.gui.watolib.services.discovery_preview",
         return_value=DiscoveryResult(
             job_status={
                 "duration": 2.351154088973999,
@@ -865,7 +867,7 @@ def test_perform_discovery_action_update_host_labels(
         },
     )
     mock_set_autochecks.assert_not_called()
-    mock_try_discovery.assert_called_with(
+    mock_discovery_preview.assert_called_with(
         "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert "cmk/check_mk_server" not in discovery_result.host_labels

@@ -49,7 +49,7 @@ TEST_F(CrashReportFixture, DirectoryAndFileExist) {
 
 TEST_F(CrashReportFixture, AccessorsAreCorrect) {
     ASSERT_TRUE(fs::exists(fullpath));
-    CrashReport cr{uuid, component};
+    const CrashReport cr{uuid, component};
     EXPECT_EQ(uuid, cr.id());
     EXPECT_EQ(component, cr.component());
 }
@@ -62,9 +62,8 @@ TEST_F(CrashReportFixture, ForEachCrashReport) {
         result = cr;
         return true;
     });
-    ASSERT_NE(std::nullopt, result);
-    EXPECT_EQ(uuid, result->id());
-    EXPECT_EQ(component, result->component());
+    EXPECT_TRUE(result && uuid == result->id());
+    EXPECT_TRUE(result && component == result->component());
 }
 
 TEST_F(CrashReportFixture, TestDeleteId) {

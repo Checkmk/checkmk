@@ -51,7 +51,7 @@ public:
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
     addColumn(std::make_unique<TimeColumn<LogEntry>>(

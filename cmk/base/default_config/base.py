@@ -279,6 +279,7 @@ bake_agents_on_restart = False
 folder_attributes: dict[str, FolderAttributes] = {}
 
 # BEGIN Kept for compatibility, but are deprecated and not used anymore
+inv_exports: dict = {}  # Rulesets for inventory export hooks
 extra_summary_host_conf: dict = {}
 extra_summary_service_conf: dict = {}
 summary_host_groups: list = []

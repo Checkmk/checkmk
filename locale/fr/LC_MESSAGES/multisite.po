@@ -44492,9 +44492,9 @@ msgstr ""
 msgid "Sorry, you have no permission for this host."
 msgstr "Désolé, vous n'avez pas la permission pour cet hôte."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
 "groups are <b>%s</b>, your contact groups are <b>%s</b>."
 msgstr ""
 "Désolé, vous n'avez aucune permission sur l'hôte '<b>%s</b>'. Les groupes de "

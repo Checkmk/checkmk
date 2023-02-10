@@ -99,7 +99,6 @@ liblivestatusneb_a_LD_FLAGS = \
 liblivestatusneb_a_SOURCES = \
         HostListRenderer.cc \
         HostListState.cc \
-        HostServiceState.cc \
         MacroExpander.cc \
         NagiosCore.cc \
         RRDColumn.cc \

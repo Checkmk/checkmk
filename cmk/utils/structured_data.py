@@ -505,7 +505,7 @@ class StructuredDataNode:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> DeltaStructuredDataNode:
+    def compare_with(self, other: object) -> DeltaStructuredDataNode:
         if not isinstance(other, StructuredDataNode):
             raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
@@ -525,17 +525,9 @@ class StructuredDataNode:
             node = self._nodes[key]
             other_node = other._nodes[key]
             if node.is_equal(other_node):
-                if keep_identical:
-                    delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
-                        node=node,
-                        encode_as=_identical_delta_tree_node,
-                    )
                 continue
 
-            delta_node_result = node.compare_with(
-                other_node,
-                keep_identical=keep_identical,
-            )
+            delta_node_result = node.compare_with(other_node)
             if delta_node_result.count_entries():
                 delta_nodes[key] = delta_node_result
 
@@ -854,7 +846,7 @@ class Table:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> DeltaTable:
+    def compare_with(self, other: object) -> DeltaTable:
         if not isinstance(other, Table):
             raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
@@ -867,13 +859,18 @@ class Table:
             delta_rows.append({k: _removed_delta_tree_node(v) for k, v in other._rows[key].items()})
 
         for key in compared_keys.both:
-            delta_rows.append(
-                _compare_dicts(
+            # Note: Rows which have at least one change also provide all other fields.
+            # Example:
+            # If the version of a package (below "Software > Packages") has changed from 1.0 to 2.0
+            # then it would be very annoying if the rest of the row is not shown.
+            if (
+                compared_dict_result := _compare_dicts(
                     old_dict=other._rows[key],
                     new_dict=self._rows[key],
-                    keep_identical=keep_identical,
+                    keep_identical=True,
                 )
-            )
+            ).has_changes:
+                delta_rows.append(compared_dict_result.result_dict)
 
         for key in compared_keys.only_new:
             delta_rows.append({k: _new_delta_tree_node(v) for k, v in self._rows[key].items()})
@@ -1025,7 +1022,7 @@ class Attributes:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> DeltaAttributes:
+    def compare_with(self, other: object) -> DeltaAttributes:
         if not isinstance(other, Attributes):
             raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
@@ -1034,8 +1031,8 @@ class Attributes:
             pairs=_compare_dicts(
                 old_dict=other.pairs,
                 new_dict=self.pairs,
-                keep_identical=keep_identical,
-            ),
+                keep_identical=False,
+            ).result_dict,
         )
 
     #   ---filtering------------------------------------------------------------
@@ -1236,9 +1233,12 @@ class DeltaAttributes:
 #   '----------------------------------------------------------------------'
 
 
-def _compare_dicts(
-    *, old_dict: dict, new_dict: dict, keep_identical: bool
-) -> dict[SDKey, tuple[SDValue | None, SDValue | None]]:
+class ComparedDictResult(NamedTuple):
+    result_dict: dict[SDKey, tuple[SDValue | None, SDValue | None]]
+    has_changes: bool
+
+
+def _compare_dicts(*, old_dict: dict, new_dict: dict, keep_identical: bool) -> ComparedDictResult:
     """
     Format of compared entries:
       new:          {k: (None, new_value), ...}
@@ -1249,16 +1249,21 @@ def _compare_dicts(
     compared_keys = _compare_dict_keys(old_dict=old_dict, new_dict=new_dict)
     compared_dict: dict[SDKey, tuple[SDValue | None, SDValue | None]] = {}
 
+    has_changes = False
     for k in compared_keys.both:
         if (new_value := new_dict[k]) != (old_value := old_dict[k]):
             compared_dict.setdefault(k, _changed_delta_tree_node(old_value, new_value))
+            has_changes = True
         elif keep_identical:
             compared_dict.setdefault(k, _identical_delta_tree_node(old_value))
 
     compared_dict.update({k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new})
     compared_dict.update({k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old})
 
-    return compared_dict
+    return ComparedDictResult(
+        result_dict=compared_dict,
+        has_changes=bool(has_changes or compared_keys.only_new or compared_keys.only_old),
+    )
 
 
 class ComparedDictKeys(NamedTuple):

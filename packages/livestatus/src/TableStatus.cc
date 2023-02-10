@@ -23,7 +23,7 @@
 #include "livestatus/mk_inventory.h"
 
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     addCounterColumns("neb_callbacks", "NEB callbacks", offsets,
                       Counter::neb_callbacks);
     addCounterColumns("requests", "requests to Livestatus", offsets,

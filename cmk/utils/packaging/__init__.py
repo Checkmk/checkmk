@@ -23,9 +23,9 @@ from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
 # It's OK to import centralized config load logic
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    add_rule_pack_proxies,
+    install_packaged_rule_packs,
     release_packaged_rule_packs,
-    remove_packaged_rule_packs,
+    uninstall_packaged_rule_packs,
 )
 
 from ._installed import Installer
@@ -100,8 +100,7 @@ def uninstall(
     for part, filenames in manifest.files.items():
         _logger.info("  Part '%s':", part.ident)
         if part is PackagePart.EC_RULE_PACKS:
-            remove_packaged_rule_packs(filenames)
-            continue
+            uninstall_packaged_rule_packs(filenames)
 
         for fn in filenames:
             _logger.info("    %s", fn)
@@ -366,8 +365,7 @@ def _install(
 
     _fix_files_permissions(manifest, path_config)
 
-    if ecfiles := manifest.files.get(PackagePart.EC_RULE_PACKS):
-        add_rule_pack_proxies((str(f) for f in ecfiles))
+    install_packaged_rule_packs(manifest.files.get(PackagePart.EC_RULE_PACKS, []))
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -392,7 +390,7 @@ def _install(
                     )
 
             if part is PackagePart.EC_RULE_PACKS:
-                remove_packaged_rule_packs(list(remove_files), delete_export=False)
+                uninstall_packaged_rule_packs(remove_files)
 
         remove_enabled_mark(old_manifest)
 

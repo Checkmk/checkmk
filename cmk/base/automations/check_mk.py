@@ -60,7 +60,6 @@ from cmk.automations.results import (
     DeleteHostsResult,
     DiagHostResult,
     DiscoveredHostLabelsDict,
-    DiscoveryResult,
     GetAgentOutputResult,
     GetCheckInformationResult,
     GetConfigurationResult,
@@ -73,11 +72,12 @@ from cmk.automations.results import (
     RenameHostsResult,
     RestartResult,
     ScanParentsResult,
+    ServiceDiscoveryPreviewResult,
+    ServiceDiscoveryResult,
     ServiceInfo,
     SetAutochecksResult,
     SetAutochecksTable,
     SetAutochecksTablePre20,
-    TryDiscoveryResult,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
 )
@@ -146,9 +146,9 @@ def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]
 
 
 class AutomationDiscovery(DiscoveryAutomation):
-    cmd = "inventory"  # TODO: Rename!
+    cmd = "service-discovery"
     needs_config = True
-    needs_checks = True  # TODO: Can we change this?
+    needs_checks = True
 
     # Does discovery for a list of hosts. Possible values for mode:
     # "new" - find only new services (like -I)
@@ -157,7 +157,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     # "refresh" - drop all services and reinventorize
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args: list[str]) -> DiscoveryResult:
+    def execute(self, args: list[str]) -> ServiceDiscoveryResult:
         force_snmp_cache_refresh, args = _extract_directive("@scan", args)
         _prevent_scan, args = _extract_directive("@noscan", args)
         raise_errors, args = _extract_directive("@raiseerrors", args)
@@ -219,18 +219,43 @@ class AutomationDiscovery(DiscoveryAutomation):
                 # make the service reflect the new state as soon as possible.
                 self._trigger_discovery_check(config_cache, hostname)
 
-        return DiscoveryResult(results)
+        return ServiceDiscoveryResult(results)
 
 
 automations.register(AutomationDiscovery())
 
 
+class AutomationDiscoveryPre22Name(AutomationDiscovery):
+    cmd = "inventory"
+    needs_config = True
+    needs_checks = True
+
+
+automations.register(AutomationDiscoveryPre22Name())
+
+
+class AutomationDiscoveryPreview(Automation):
+    cmd = "service-discovery-preview"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
+        prevent_fetching, args = _extract_directive("@nofetch", args)
+        raise_errors, args = _extract_directive("@raiseerrors", args)
+        return _get_discovery_preview(
+            HostName(args[0]), not prevent_fetching, OnError.RAISE if raise_errors else OnError.WARN
+        )
+
+
+automations.register(AutomationDiscoveryPreview())
+
+
 class AutomationTryDiscovery(Automation):
-    cmd = "try-inventory"  # TODO: Rename!
+    cmd = "try-inventory"  # TODO: drop with 2.3
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> TryDiscoveryResult:
+    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
         # Note: in the @noscan case we *must not* fetch live data (it must be fast)
         # In the @scan case we *must* fetch live data (it must be up to date)
         _do_scan, args = _extract_directive("@scan", args)
@@ -245,9 +270,13 @@ class AutomationTryDiscovery(Automation):
         )
 
 
+automations.register(AutomationTryDiscovery())
+
+
+# TODO: invert the 'perform_scan' logic -> 'prevent_fetching'
 def _get_discovery_preview(
     host_name: HostName, perform_scan: bool, on_error: OnError
-) -> TryDiscoveryResult:
+) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
@@ -269,7 +298,7 @@ def _get_discovery_preview(
             ]
         )
 
-        return TryDiscoveryResult(
+        return ServiceDiscoveryPreviewResult(
             output=buf.getvalue(),
             check_table=check_preview_table,
             host_labels=make_discovered_host_labels(host_label_result.present),
@@ -320,9 +349,6 @@ def _execute_discovery(
         ignored_services=IgnoredServices(config_cache, host_name),
         on_error=on_error,
     )
-
-
-automations.register(AutomationTryDiscovery())
 
 
 class AutomationSetAutochecks(DiscoveryAutomation):

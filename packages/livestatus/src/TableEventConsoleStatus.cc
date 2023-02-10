@@ -17,7 +17,7 @@
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
     : TableEventConsole{mc} {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "status_config_load_time",
         "The time when the Event Console config was loaded", offsets));

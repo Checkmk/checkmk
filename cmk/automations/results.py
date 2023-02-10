@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
@@ -74,7 +76,7 @@ class ABCAutomationResult(ABC):
 
 
 @dataclass
-class DiscoveryResult(ABCAutomationResult):
+class ServiceDiscoveryResult(ABCAutomationResult):
     hosts: Mapping[HostName, SingleHostDiscoveryResult]
 
     def _to_dict(self) -> Mapping[HostName, Mapping[str, Any]]:
@@ -90,15 +92,25 @@ class DiscoveryResult(ABCAutomationResult):
         return SerializedResult(repr(self._to_dict()))
 
     @classmethod
-    def deserialize(cls, serialized_result: SerializedResult) -> "DiscoveryResult":
+    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryResult:
         return cls(cls._from_dict(literal_eval(serialized_result)))
 
+    @staticmethod
+    def automation_call() -> str:
+        return "service-discovery"
+
+
+result_type_registry.register(ServiceDiscoveryResult)
+
+
+# Should be droped in 2.3
+class DiscoveryPre22NameResult(ServiceDiscoveryResult):
     @staticmethod
     def automation_call() -> str:
         return "inventory"
 
 
-result_type_registry.register(DiscoveryResult)
+result_type_registry.register(DiscoveryPre22NameResult)
 
 
 @dataclass(frozen=True)
@@ -118,7 +130,7 @@ class CheckPreviewEntry:
 
 
 @dataclass
-class TryDiscoveryResult(ABCAutomationResult):
+class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     output: str
     check_table: Sequence[CheckPreviewEntry]
     host_labels: DiscoveredHostLabelsDict
@@ -130,16 +142,26 @@ class TryDiscoveryResult(ABCAutomationResult):
         return SerializedResult(repr(astuple(self)))
 
     @classmethod
-    def deserialize(cls, serialized_result: SerializedResult) -> "TryDiscoveryResult":
+    def deserialize(cls, serialized_result: SerializedResult) -> ServiceDiscoveryPreviewResult:
         raw_output, raw_check_table, *raw_rest = literal_eval(serialized_result)
         return cls(raw_output, [CheckPreviewEntry(*cpe) for cpe in raw_check_table], *raw_rest)
 
     @staticmethod
     def automation_call() -> str:
+        return "service-discovery-preview"
+
+
+result_type_registry.register(ServiceDiscoveryPreviewResult)
+
+
+# Should be droped in 2.3
+class DiscoveryPreviewPre22NameResult(ServiceDiscoveryPreviewResult):
+    @staticmethod
+    def automation_call() -> str:
         return "try-inventory"
 
 
-result_type_registry.register(TryDiscoveryResult)
+result_type_registry.register(DiscoveryPreviewPre22NameResult)
 
 
 @dataclass

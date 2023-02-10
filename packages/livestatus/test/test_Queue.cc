@@ -150,11 +150,11 @@ TEST_F(MoveOnlyQueueTest, MoveOnlyTest) {
     EXPECT_EQ(queue_status::ok, queue.push(MoveOnly{"3rd"}, strategy));
 
     auto o1 = queue.pop(queue_pop_strategy::nonblocking, {});
-    EXPECT_EQ("1st", o1->id());
+    EXPECT_TRUE(o1 && "1st" == o1->id());
 
     auto o2 = queue.pop(queue_pop_strategy::blocking, {});
-    EXPECT_EQ("2nd", o2->id());
+    EXPECT_TRUE(o2 && "2nd" == o2->id());
 
     auto o3 = queue.pop(queue_pop_strategy::blocking, 0ms);
-    EXPECT_EQ("3rd", o3->id());
+    EXPECT_TRUE(o3 && "3rd" == o3->id());
 }

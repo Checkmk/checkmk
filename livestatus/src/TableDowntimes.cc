@@ -26,7 +26,7 @@
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<IDowntime>>(
         "author", "The contact that scheduled the downtime", offsets,
         [](const IDowntime &r) { return r.author(); }));

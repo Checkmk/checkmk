@@ -20,7 +20,7 @@ const double weight_per_second = pow(1.0 - percentile, 1.0 / horizon);
 // algorithm. It's the same as here.
 void Average::update(double value) {
     auto now = std::chrono::steady_clock::now();
-    std::scoped_lock l(_lock);
+    const std::scoped_lock l(_lock);
     if (_last_update == std::chrono::steady_clock::time_point{}) {
         _average = value;
     } else {
@@ -31,7 +31,7 @@ void Average::update(double value) {
             // updates
             timedif = 0.5;
         }
-        double weight = pow(weight_per_second, timedif);
+        const double weight = pow(weight_per_second, timedif);
         _average = _average * weight + value * (1 - weight);
     }
     _last_update = now;

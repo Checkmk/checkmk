@@ -37,9 +37,9 @@ struct DictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string &value) {
         DictColumn<host> cvdc{"name", "description", ColumnOffsets{},
                               CustomAttributeMap{kind}};
-        DictFilter filter{Filter::Kind::row, "name",
-                          [&cvdc](Row row) { return cvdc.getValue(row); },
-                          RelationalOperator::equal, value};
+        const DictFilter filter{Filter::Kind::row, "name",
+                                [&cvdc](Row row) { return cvdc.getValue(row); },
+                                RelationalOperator::equal, value};
         return filter.accepts(Row{&test_host}, NoAuthUser{}, {});
     }
 

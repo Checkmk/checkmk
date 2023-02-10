@@ -10,7 +10,6 @@ configuration.
 
 import copy
 import logging
-import os
 import pprint
 from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
@@ -253,16 +252,15 @@ mkp_rule_packs['{rule_pack['id']}'] = \\
     store.save_text_to_file(dir_ / f"{rule_pack['id']}.mk", output)
 
 
-def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
+def install_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     """
     Adds rule pack proxy objects to the list of rule packs given a list
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    rule_packs: list[ECRulePack] = []
-    rule_packs += load_rule_packs()
+    rule_packs = list(load_rule_packs())
     rule_pack_ids = {rp["id"]: i for i, rp in enumerate(rule_packs)}
-    ids = [os.path.splitext(fn)[0] for fn in file_names]
+    ids = [fn.stem for fn in file_names]
     for id_ in ids:
         index = rule_pack_ids.get(id_)
         if index is not None and isinstance(rule_packs[index], MkpRulePackProxy):
@@ -297,9 +295,6 @@ def release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
         2. Upon release of a MKP package with locally modified rule packs the
            modified rule pack updates the exported version.
     """
-    if not file_names:
-        return
-
     rule_packs = list(load_rule_packs())
     rule_pack_ids = [rp["id"] for rp in rule_packs]
     affected_ids = [fn.stem for fn in file_names]
@@ -317,24 +312,11 @@ def release_packaged_rule_packs(file_names: Iterable[Path]) -> None:
         save_rule_packs(rule_packs)
 
 
-def remove_packaged_rule_packs(file_names: Iterable[Path], delete_export: bool = True) -> None:
+def uninstall_packaged_rule_packs(file_names: Iterable[Path]) -> None:
     """
     This function synchronizes the rule packs in rules.mk and the packaged rule packs
     of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
     deleted the exported rule pack and the rule pack in rules.mk are both deleted.
     """
-    if not file_names:
-        return
-
-    rule_packs = list(load_rule_packs())
-    rule_pack_ids = [rp["id"] for rp in rule_packs]
-    affected_ids = [fn.stem for fn in file_names]
-
-    for id_ in affected_ids:
-        index = rule_pack_ids.index(id_)
-        del rule_packs[index]
-        if delete_export:
-            remove_exported_rule_pack(id_)
-        rule_pack_ids.remove(id_)
-
-    save_rule_packs(rule_packs)
+    affected_ids = {fn.stem for fn in file_names}
+    save_rule_packs(rp for rp in load_rule_packs() if rp["id"] not in affected_ids)

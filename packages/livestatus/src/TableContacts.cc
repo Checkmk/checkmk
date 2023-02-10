@@ -60,7 +60,7 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         offsets,
         [](const IContact &ct) { return ct.serviceNotificationPeriod(); }));
     for (int i = 0; i < max_contact_addresses; ++i) {
-        std::string b = "address" + std::to_string(i + 1);
+        const std::string b = "address" + std::to_string(i + 1);
         table->addColumn(std::make_unique<StringColumn<IContact>>(
             prefix + b, "The additional field " + b, offsets,
             [i](const IContact &ct) { return ct.address(i); }));

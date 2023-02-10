@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Container, Mapping, Sequence
 from datetime import time as dt_time
 from itertools import chain
 from logging import Logger
+from typing import Pattern
 
 from cmk.utils import debug
 from cmk.utils.log import VERBOSE
@@ -28,6 +30,8 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "static_checks:systemd_services": "static_checks:systemd_units_services",
 }
 
+DEPRECATED_RULESET_PATTERNS = (re.compile("^inv_exports:"),)
+
 
 class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
@@ -37,6 +41,11 @@ class UpdateRulesets(UpdateAction):
         _extract_connection_encryption_handling_from_210_rules(logger, all_rulesets)
 
         _transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
+        _delete_deprecated_wato_rulesets(
+            logger,
+            all_rulesets,
+            DEPRECATED_RULESET_PATTERNS,
+        )
         _transform_replaced_wato_rulesets(
             logger,
             all_rulesets,
@@ -101,6 +110,18 @@ def _extract_connection_encryption_handling_from_210_rules(
         )
         logger.log(VERBOSE, "Adding 'encryption_handling' rule: %s", new_rule.id)
         encryption_handling.append_rule(folder, new_rule)
+
+
+def _delete_deprecated_wato_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    deprecated_ruleset_patterns: tuple[Pattern],
+) -> None:
+    for ruleset_name in list(all_rulesets.get_rulesets()):
+        if any(p.match(ruleset_name) for p in deprecated_ruleset_patterns):
+            logger.log(VERBOSE, f"Removing ruleset {ruleset_name}")
+            all_rulesets.delete(ruleset_name)
+            continue
 
 
 def _transform_replaced_wato_rulesets(

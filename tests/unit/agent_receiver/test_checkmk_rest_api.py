@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from uuid import UUID
 
 import pytest
@@ -12,6 +11,9 @@ from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from pytest_mock import MockerFixture
 from requests import Response
+
+# pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
+# pylint: disable=too-many-function-args
 
 
 def test_link_host_with_uuid_unauthorized(
@@ -29,6 +31,7 @@ def test_link_host_with_uuid_unauthorized(
     )
     with pytest.raises(HTTPException) as excpt_info:
         link_host_with_uuid(
+            "some log message",
             HTTPBasicCredentials(
                 username="amdin",
                 password="password",
@@ -52,6 +55,7 @@ def test_link_host_with_uuid_ok(
         return_value=response,
     )
     link_host_with_uuid(
+        "some log message",
         HTTPBasicCredentials(
             username="amdin",
             password="password",

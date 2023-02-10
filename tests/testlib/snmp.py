@@ -28,7 +28,7 @@ class _StringSNMPBackend(StoredWalkSNMPBackend):
             SNMPHostConfig(
                 False,
                 f"unittest-{_StringSNMPBackend.counter}",
-                None,
+                "127.0.0.1",
                 "",
                 0,
                 False,

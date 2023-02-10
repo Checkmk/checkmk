@@ -5,9 +5,12 @@
 
 import logging
 from collections.abc import MutableMapping
+from pathlib import Path
 
 import pytest
 from pytest_mock import MockerFixture
+
+import cmk.utils.paths
 
 from cmk.update_config import main, registry
 
@@ -38,7 +41,14 @@ def test_parse_arguments_debug() -> None:
     assert main._parse_arguments(["--debug"]).debug is True
 
 
-def test_main_calls_config_updater(mocker: MockerFixture) -> None:
+def test_main_calls_config_updater(
+    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> None:
+    packages_dir = Path(cmk.utils.paths.var_dir, "packages")
+    packages_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
     mock_config_udpater_call = mocker.patch.object(
         main.ConfigUpdater,
         "__call__",
@@ -58,9 +68,13 @@ class MockUpdateAction(registry.UpdateAction):
 
 
 def test_config_updater_executes_plugins(
+    monkeypatch: pytest.MonkeyPatch,
     mocker: MockerFixture,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    packages_dir = Path(cmk.utils.paths.var_dir, "packages")
+    packages_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
     reg = registry.UpdateActionRegistry()
     reg.register(
         mock_plugin := MockUpdateAction(

@@ -219,7 +219,7 @@ def test_register_with_labels_cre(
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
-        lambda _c: CMKEdition["cre"],
+        return_value=CMKEdition.cre,
     )
     response = client.post(
         "/register_with_labels",
@@ -242,7 +242,7 @@ def _test_register_with_labels(
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
-        lambda _c: CMKEdition["cce"],
+        return_value=CMKEdition.cce,
     )
     response = client.post(
         "/register_with_labels",
@@ -616,13 +616,10 @@ def test_renew_certificate_ok(
     registration_status_headers: Mapping[str, str],
 ) -> None:
     _key, csr = generate_csr_pair(str(uuid), 512)
-    new_cert_json = {"cert": "new_cert"}
-    fake_response = mocker.MagicMock()
-    fake_response.json.return_value = new_cert_json
     mocker.patch("agent_receiver.endpoints.internal_credentials")
     mocker.patch(
         "agent_receiver.endpoints.post_csr",
-        return_value=fake_response,
+        return_value="new_cert",
     )
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"

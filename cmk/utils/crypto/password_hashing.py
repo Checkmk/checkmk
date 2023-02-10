@@ -13,6 +13,8 @@ The format contains an identifier for the hash algorithm that was used, the numb
 a salt, and the actual checksum -- which is all the information needed to verify the hash with a
 given password (see `verify`).
 """
+import logging
+import sys
 
 # Import errors from passlib are suppressed since stub files for mypy are not available.
 # pylint errors are suppressed since this is the only module that should import passlib.
@@ -22,6 +24,8 @@ from passlib import hash as passlib_hash  # pylint: disable=passlib-module-impor
 
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.exceptions import MKException
+
+logger = logging.getLogger(__name__)
 
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
 # has to run with reduced rounds. They can be monkeypatched here.
@@ -98,6 +102,10 @@ def verify(password: Password, password_hash: PasswordHash) -> None:
     try:
         valid = _context.verify(password.raw, password_hash)
     except passlib.exc.UnknownHashError:
+        logger.warning(
+            "Invalid hash. Only bcrypt is supported.",
+            exc_info=sys.exc_info(),
+        )
         raise ValueError("Invalid hash")
     if not valid:
         raise PasswordInvalidError

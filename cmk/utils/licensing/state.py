@@ -6,12 +6,8 @@
 """Care for the licensing state of a Checkmk installation"""
 
 import enum
-import time
-from datetime import timedelta
+from typing import Callable, NamedTuple
 
-import livestatus
-
-from cmk.utils.i18n import _
 from cmk.utils.version import edition, Edition
 
 
@@ -21,84 +17,57 @@ class LicenseState(enum.Enum):
     TRIAL = enum.auto()
     FREE = enum.auto()
     LICENSED = enum.auto()
+    EXPIRED = enum.auto()
+
+
+class _Handlers(NamedTuple):
+    status: Callable[[], LicenseState]
+    message: Callable[[], str]
+
+
+class GetLicenseStateRegistry:
+    def __init__(self) -> None:
+        self._entries: dict[Edition, _Handlers] = {}
+
+    def register(
+        self,
+        cmk_edition: Edition,
+        *,
+        status_handler: Callable[[], LicenseState],
+        message_handler: Callable[[], str],
+    ) -> None:
+        self._entries[cmk_edition] = _Handlers(status=status_handler, message=message_handler)
+
+    def __getitem__(self, key: Edition) -> _Handlers:
+        return self._entries.__getitem__(key)
+
+
+get_license_state_registry = GetLicenseStateRegistry()
 
 
 def license_status_message() -> str:
-    if not is_license_management_enabled(edition()):
-        return ""
-
-    if is_licensed():
-        return _("Licensed")
-
-    passed_time = _get_age_trial()
-    # Hardcoded 30 days of trial. For dynamic trial time change the 30 days
-    remaining_time = timedelta(seconds=30 * 24 * 60 * 60 - passed_time)
-
-    if is_expired_trial() or remaining_time.days < 0:
-        return _("Trial expired")
-
-    if remaining_time.days > 1:
-        return _("Trial expires in %s days") % remaining_time.days
-
-    return _("Trial expires today (%s)") % time.strftime(
-        str(_("%H:%M")), time.localtime(time.time() + remaining_time.seconds)
-    )
+    return get_license_state_registry[edition()].message()
 
 
-def is_license_management_enabled(check_edition: Edition) -> bool:
-    if check_edition is Edition.CRE:
-        # There is no license management planned for the CRE -> Always licensed
-        return False
-
-    # CMK-10662 - In 2.2 we only enable license management for the CCE.
-    # This special case needs to be removed with 2.3
-    if check_edition is Edition.CEE or check_edition is Edition.CME:
-        return False
-
-    return True
+def _get_license_status() -> LicenseState:
+    return get_license_state_registry[edition()].status()
 
 
 def is_licensed() -> bool:
-    return get_license_status() is LicenseState.LICENSED
+    return _get_license_status() is LicenseState.LICENSED
 
 
 def is_expired_trial() -> bool:
-    return get_license_status() is LicenseState.FREE
+    return _get_license_status() is LicenseState.FREE
 
 
-def get_license_status() -> LicenseState:
-    if not is_license_management_enabled(edition()):
-        return LicenseState.LICENSED
-
-    # TODO: Implement detection of "licensed" case here
-    return _get_expired_status()
-
-
-def _query(query: str) -> livestatus.LivestatusResponse:
-    return livestatus.LocalConnection().query(query)
+def register_get_license_state():
+    # There is no license management planned for the CRE -> Always licensed
+    get_license_state_registry.register(
+        Edition.CRE,
+        status_handler=lambda: LicenseState.LICENSED,
+        message_handler=lambda: "",
+    )
 
 
-def _get_expired_status() -> LicenseState:
-    try:
-        response = _query("GET status\nColumns: is_trial_expired\n")
-        return LicenseState.FREE if response[0][0] == 1 else LicenseState.TRIAL
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        # NOTE: If livestatus is absent we assume that trial is expired. Livestatus may be absent
-        # only when the cmc missing and this case for free version means just
-        # expiration(impossibility to check)
-        return LicenseState.FREE
-
-
-def _get_timestamp_trial() -> int:
-    try:
-        response = _query("GET status\nColumns: state_file_created\n")
-        return int(response[0][0])
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        # NOTE: If livestatus is absent we assume that trial is expired. Livestatus may be absent
-        # only when the cmc missing and this case for free version means just
-        # expiration(impossibility to check)
-        return 0
-
-
-def _get_age_trial() -> int:
-    return int(time.time()) - _get_timestamp_trial()
+register_get_license_state()

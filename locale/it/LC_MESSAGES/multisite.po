@@ -3264,6 +3264,9 @@ msgstr "Aggiungi l'ID della regola"
 msgid "Add Suffix"
 msgstr "Aggiungere il suffisso"
 
+msgid "Add a first row with column titles"
+msgstr "Aggiungere una prima riga con i titoli delle colonne"
+
 msgid "Add additional folder"
 msgstr "Aggiungi un'altra cartella"
 
@@ -10284,6 +10287,9 @@ msgstr "Intestazioni di colonna"
 msgid "Column Title"
 msgstr "Titolo della colonna"
 
+msgid "Column headers"
+msgstr "Intestazioni di colonna"
+
 msgid "Column title"
 msgstr "Titolo della colonna"
 
@@ -15600,6 +15606,9 @@ msgstr "Non attivare le modifiche"
 msgid "Do not add a link to this page in sidebar"
 msgstr "Non aggiungere un link a questa pagina nella barra laterale"
 
+msgid "Do not add column headers"
+msgstr "Non aggiungere intestazioni di colonna"
+
 msgid "Do not alert on connection loss"
 msgstr "Non avvertire in caso di perdita di connessione"
 
@@ -16177,6 +16186,9 @@ msgstr "Non usare la porta personalizzata"
 
 msgid "Don't use password"
 msgstr "Non usare la password"
+
+msgid "Don't use quotes"
+msgstr "Non usare le virgolette"
 
 msgid "Don't wait for document body"
 msgstr "Non aspettare il corpo del documento"
@@ -18543,11 +18555,20 @@ msgstr "Esportazione CSV"
 msgid "Export JSON"
 msgstr "Esportare JSON"
 
+msgid "Export List of Software packages as CSV file"
+msgstr "Esportazione elenco di pacchetti software come file CSV"
+
 msgid "Export as JSON"
 msgstr "Esportare come JSON"
 
 msgid "Export as PNG"
 msgstr "Esportazione come PNG"
+
+msgid ""
+"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+msgstr ""
+"File di esportazione da creare, contenente <tt>&lt;HOST&gt;</tt> per "
+"l'hostname"
 
 #, fuzzy
 msgid "Export this rule for API"
@@ -35243,10 +35264,6 @@ msgstr "Verifica del certificato SSL"
 msgid "Online verification procedure was not successful"
 msgstr "Cottura di successo"
 
-#, fuzzy, python-format
-msgid "Online verification procedure was not successful, reason: %s"
-msgstr "Cottura di successo"
-
 #, fuzzy
 msgid "Online verification procedure was successful"
 msgstr "Cottura di successo"
@@ -37047,6 +37064,10 @@ msgstr "Commento persistente"
 msgid "Persistent Volume Claims"
 msgstr "Commento persistente"
 
+#, fuzzy
+msgid "Persistent Volume Claims & Persistent Volumes"
+msgstr "Commento persistente"
+
 msgid "Persistent comment"
 msgstr "Commento persistente"
 
@@ -37733,6 +37754,18 @@ msgstr "Si prega di specificare le estensioni in minuscolo e senza punto."
 
 msgid "Please specify the name of the status host."
 msgstr "Specificare il nome dell'host di stato."
+
+#, fuzzy, python-format
+msgid ""
+"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
+"replaced with the host name the inventory has been done for. If you use a "
+"relative path then that will be relative to Check_MK's directory for "
+"variable data, which is <tt>%s</tt>."
+msgstr ""
+"Specificare il percorso del file di esportazione. Il testo <tt><HOST></tt> "
+"sarà sostituito con il nome dell'host per cui è stato fatto l'inventario. Se "
+"usi un percorso relativo allora sarà relativo alla directory di Check_MK per "
+"i dati variabili, che è <tt>%s</tt>."
 
 msgid "Please specify the user and password needed to access the xml interface"
 msgstr ""
@@ -38800,6 +38833,9 @@ msgstr "Cache tranquilla"
 
 msgid "Quit"
 msgstr "Abbandona"
+
+msgid "Quoting"
+msgstr "Citando"
 
 msgid "R.State"
 msgstr "R.Stato"
@@ -42148,13 +42184,16 @@ msgstr "Seleziona il suono"
 msgid "Select specific object type"
 msgstr "Seleziona il tipo di oggetto specifico"
 
+#, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
-"pods will be monitored in the same manner as regular pods. Your Dynamic host "
-"management rule should be configured accordingly to avoid that the piggyback "
-"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
-"CronJobs' option has no effect if Pods are not monitored"
+"pods will be monitored in the same manner as regular pods. Persistent Volume "
+"Claims will only appear in the respective object piggyback host instead of "
+"having their own host. Your Dynamic host management rule should be "
+"configured accordingly to avoid that the piggyback hosts for terminated "
+"CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
+"effect if Pods are not monitored"
 msgstr ""
 "Selezionare gli oggetti Kubernetes che si desidera monitorare. I pod "
 "controllati da CronJobs sono trattati separatamente, poiché di solito hanno "
@@ -42394,6 +42433,9 @@ msgstr "Sentinella"
 
 msgid "Separate check"
 msgstr "Controllo separato"
+
+msgid "Separator"
+msgstr "Separatore"
 
 msgid "September"
 msgstr "Settembre"
@@ -56472,6 +56514,10 @@ msgstr "Tempo di raccolta dei rifiuti in percentuale"
 msgid "Time stamp format"
 msgstr "Formato della marca temporale"
 
+#, fuzzy
+msgid "Time to alert when PVC status is in pending state"
+msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
+
 msgid "Time to connect"
 msgstr "Tempo di connettersi"
 
@@ -59324,6 +59370,10 @@ msgstr "Utilizzare gli stati dei dispositivi e sovrascrivere lo stato previsto"
 msgid "Use device's levels if present, otherwise yours"
 msgstr "Usa i livelli del dispositivo se presenti, altrimenti i tuoi"
 
+msgid "Use double quotes, escape contained quotes with backslash"
+msgstr ""
+"Usare le doppie virgolette, sfuggire alle virgolette contenute con backslash"
+
 msgid "Use environment variables from host"
 msgstr "Utilizzare le variabili d'ambiente dall'host"
 
@@ -59467,6 +59517,10 @@ msgstr "Utilizzare le impostazioni e il layout di pagina da"
 
 msgid "Use short title in reports header"
 msgstr "Usa un titolo breve nell'intestazione dei rapporti"
+
+msgid "Use single quotes, escape contained quotes with backslash"
+msgstr ""
+"Usare virgolette singole, sfuggire alle virgolette contenute con backslash"
 
 msgid "Use site ID"
 msgstr "Usa l'ID del sito"
@@ -60596,13 +60650,17 @@ msgstr "Verificare il certificato"
 msgid "Verification"
 msgstr "Notifica dell'utente"
 
-#, fuzzy
-msgid "Verification failed"
+#, fuzzy, python-format
+msgid "Verification %s: %s"
 msgstr "Notifica dell'utente"
 
 #, fuzzy
 msgid "Verification failed (license server)"
 msgstr "Panoramica delle applicazioni"
+
+#, fuzzy, python-format
+msgid "Verification failed: %s"
+msgstr "Notifica dell'utente"
 
 #, fuzzy
 msgid "Verification successful"
@@ -60904,6 +60962,10 @@ msgstr "Gruppi di volumi (LVM)"
 
 msgid "Volume name"
 msgstr "Nome del volume"
+
+#, fuzzy
+msgid "Volume parameters"
+msgstr "Parametri del modello"
 
 msgid "Vswitch bonding"
 msgstr "Collegamento Vswitch"
@@ -65682,6 +65744,10 @@ msgstr "etichette host esplicite"
 msgid "explicitly specified groups"
 msgstr "gruppi esplicitamente specificati"
 
+#, fuzzy
+msgid "failed"
+msgstr "Fallito"
+
 msgid "failures"
 msgstr "fallimenti"
 
@@ -66812,6 +66878,10 @@ msgstr "sottocategorie"
 msgid "success"
 msgstr "successo"
 
+#, fuzzy
+msgid "successful"
+msgstr "successo"
+
 msgid "synchronize"
 msgstr "sincronizzare"
 
@@ -67111,58 +67181,10 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
-#~ msgid "Add a first row with column titles"
-#~ msgstr "Aggiungere una prima riga con i titoli delle colonne"
-
-#~ msgid "Column headers"
-#~ msgstr "Intestazioni di colonna"
-
-#~ msgid "Do not add column headers"
-#~ msgstr "Non aggiungere intestazioni di colonna"
-
-#~ msgid "Don't use quotes"
-#~ msgstr "Non usare le virgolette"
-
-#~ msgid "Export List of Software packages as CSV file"
-#~ msgstr "Esportazione elenco di pacchetti software come file CSV"
-
-#~ msgid ""
-#~ "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
-#~ msgstr ""
-#~ "File di esportazione da creare, contenente <tt>&lt;HOST&gt;</tt> per "
-#~ "l'hostname"
-
 #, fuzzy, python-format
-#~| msgid ""
-#~| "Please specify the path to the export file. The text <tt><HOST></tt> "
-#~| "will be replaced with the host name the inventory has been done for. If "
-#~| "you use a relative path then that will be relative to Check_MK's "
-#~| "directory for variable data, which is <tt>%s</tt>."
-#~ msgid ""
-#~ "Please specify the path to the export file. The text <tt>[HOST]</tt> will "
-#~ "be replaced with the host name the inventory has been done for. If you "
-#~ "use a relative path then that will be relative to Check_MK's directory "
-#~ "for variable data, which is <tt>%s</tt>."
-#~ msgstr ""
-#~ "Specificare il percorso del file di esportazione. Il testo <tt><HOST></"
-#~ "tt> sarà sostituito con il nome dell'host per cui è stato fatto "
-#~ "l'inventario. Se usi un percorso relativo allora sarà relativo alla "
-#~ "directory di Check_MK per i dati variabili, che è <tt>%s</tt>."
-
-#~ msgid "Quoting"
-#~ msgstr "Citando"
-
-#~ msgid "Separator"
-#~ msgstr "Separatore"
-
-#~ msgid "Use double quotes, escape contained quotes with backslash"
-#~ msgstr ""
-#~ "Usare le doppie virgolette, sfuggire alle virgolette contenute con "
-#~ "backslash"
-
-#~ msgid "Use single quotes, escape contained quotes with backslash"
-#~ msgstr ""
-#~ "Usare virgolette singole, sfuggire alle virgolette contenute con backslash"
+#~| msgid "Baking successful"
+#~ msgid "Online verification procedure was not successful, reason: %s"
+#~ msgstr "Cottura di successo"
 
 #, fuzzy
 #~| msgid "Global notification rules"

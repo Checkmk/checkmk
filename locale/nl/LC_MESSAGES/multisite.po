@@ -3256,6 +3256,9 @@ msgstr "Regel ID toevoegen"
 msgid "Add Suffix"
 msgstr "Suffix toevoegen"
 
+msgid "Add a first row with column titles"
+msgstr "Voeg een eerste rij toe met kolomtitels"
+
 msgid "Add additional folder"
 msgstr "Extra map toevoegen"
 
@@ -10148,6 +10151,9 @@ msgstr "Kolom Koppen"
 msgid "Column Title"
 msgstr "Kolom Titel"
 
+msgid "Column headers"
+msgstr "Kolom kopteksten"
+
 msgid "Column title"
 msgstr "Kolom titel"
 
@@ -15374,6 +15380,9 @@ msgstr "Veranderingen niet activeren"
 msgid "Do not add a link to this page in sidebar"
 msgstr "Voeg geen link naar deze pagina toe in de zijbalk"
 
+msgid "Do not add column headers"
+msgstr "Voeg geen kolomkoppen toe"
+
 msgid "Do not alert on connection loss"
 msgstr "Niet waarschuwen bij verlies van verbinding"
 
@@ -15939,6 +15948,9 @@ msgstr "Gebruik geen aangepaste poort"
 
 msgid "Don't use password"
 msgstr "Gebruik geen wachtwoord"
+
+msgid "Don't use quotes"
+msgstr "Gebruik geen aanhalingstekens"
 
 msgid "Don't wait for document body"
 msgstr "Wacht niet op een document"
@@ -18264,11 +18276,18 @@ msgstr "CSV exporteren"
 msgid "Export JSON"
 msgstr "JSON exporteren"
 
+msgid "Export List of Software packages as CSV file"
+msgstr "Lijst van softwarepakketten exporteren als CSV-bestand"
+
 msgid "Export as JSON"
 msgstr "Exporteren als JSON"
 
 msgid "Export as PNG"
 msgstr "Exporteren als PNG"
+
+msgid ""
+"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+msgstr "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
 
 msgid "Export this rule for API"
 msgstr "Exporteer deze regel voor API"
@@ -34686,10 +34705,6 @@ msgstr "SSL-certificaat verificatie"
 msgid "Online verification procedure was not successful"
 msgstr "Registratie succesvol"
 
-#, fuzzy, python-format
-msgid "Online verification procedure was not successful, reason: %s"
-msgstr "Registratie succesvol"
-
 #, fuzzy
 msgid "Online verification procedure was successful"
 msgstr "Registratie succesvol"
@@ -36462,6 +36477,10 @@ msgstr "Aanhoudend commentaar"
 msgid "Persistent Volume Claims"
 msgstr "Aanhoudend commentaar"
 
+#, fuzzy
+msgid "Persistent Volume Claims & Persistent Volumes"
+msgstr "Aanhoudend commentaar"
+
 msgid "Persistent comment"
 msgstr "Aanhoudend commentaar"
 
@@ -37128,6 +37147,18 @@ msgstr "Geef de extensies op in kleine letters en zonder punt."
 
 msgid "Please specify the name of the status host."
 msgstr "Geef de naam van de status host op."
+
+#, python-format
+msgid ""
+"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
+"replaced with the host name the inventory has been done for. If you use a "
+"relative path then that will be relative to Check_MK's directory for "
+"variable data, which is <tt>%s</tt>."
+msgstr ""
+"Geef het pad naar het exportbestand op. De tekst <tt>[HOST]</tt> wordt "
+"vervangen door de hostnaam waarvoor de inventarisatie is gedaan. Als u een "
+"relatief pad gebruikt, is dat relatief ten opzichte van Check_MK's directory "
+"voor variabele gegevens, die <tt>%s</tt> is."
 
 msgid "Please specify the user and password needed to access the xml interface"
 msgstr ""
@@ -38177,6 +38208,9 @@ msgstr "Stille cache"
 
 msgid "Quit"
 msgstr "Stop"
+
+msgid "Quoting"
+msgstr "Citaat:"
 
 msgid "R.State"
 msgstr "R.State"
@@ -41454,13 +41488,16 @@ msgstr "Selecteer geluid"
 msgid "Select specific object type"
 msgstr "Selecteer specifiek objecttype"
 
+#, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
-"pods will be monitored in the same manner as regular pods. Your Dynamic host "
-"management rule should be configured accordingly to avoid that the piggyback "
-"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
-"CronJobs' option has no effect if Pods are not monitored"
+"pods will be monitored in the same manner as regular pods. Persistent Volume "
+"Claims will only appear in the respective object piggyback host instead of "
+"having their own host. Your Dynamic host management rule should be "
+"configured accordingly to avoid that the piggyback hosts for terminated "
+"CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
+"effect if Pods are not monitored"
 msgstr ""
 "Selecteer de Kubernetes objecten die je wilt monitoren. Pods die worden "
 "gecontroleerd door CronJobs worden apart behandeld omdat ze meestal een vrij "
@@ -41696,6 +41733,9 @@ msgstr "Sentinel"
 
 msgid "Separate check"
 msgstr "Afzonderlijke controle"
+
+msgid "Separator"
+msgstr "Scheider"
 
 msgid "September"
 msgstr "September"
@@ -55657,6 +55697,10 @@ msgstr "Tijd besteed aan vuilnisophaling in procenten"
 msgid "Time stamp format"
 msgstr "Tijdstempelformaat"
 
+#, fuzzy
+msgid "Time to alert when PVC status is in pending state"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
 msgid "Time to connect"
 msgstr "Tijd om aan te sluiten"
 
@@ -58454,6 +58498,11 @@ msgstr "Apparaattoestanden gebruiken en verwachte status overschrijven"
 msgid "Use device's levels if present, otherwise yours"
 msgstr "Gebruik de niveaus van het apparaat indien aanwezig, anders de uwe"
 
+msgid "Use double quotes, escape contained quotes with backslash"
+msgstr ""
+"Gebruik dubbele aanhalingstekens en sluit aanhalingstekens uit met een "
+"backslash"
+
 msgid "Use environment variables from host"
 msgstr "Gebruik omgevingsvariabelen van host"
 
@@ -58596,6 +58645,10 @@ msgstr "Gebruik de instellingen en paginaopmaak van"
 
 msgid "Use short title in reports header"
 msgstr "Gebruik een korte titel in de koptekst van het verslag"
+
+msgid "Use single quotes, escape contained quotes with backslash"
+msgstr ""
+"Gebruik enkele aanhalingstekens, sluit aanhalingstekens uit met een backslash"
 
 msgid "Use site ID"
 msgstr "Gebruik site ID"
@@ -59707,13 +59760,17 @@ msgstr "Verfiy Certificaten"
 msgid "Verification"
 msgstr "Kennisgeving gebruiker"
 
-#, fuzzy
-msgid "Verification failed"
+#, fuzzy, python-format
+msgid "Verification %s: %s"
 msgstr "Kennisgeving gebruiker"
 
 #, fuzzy
 msgid "Verification failed (license server)"
 msgstr "Overzicht toepassingen"
+
+#, fuzzy, python-format
+msgid "Verification failed: %s"
+msgstr "Kennisgeving gebruiker"
 
 #, fuzzy
 msgid "Verification successful"
@@ -60009,6 +60066,10 @@ msgstr "Volumegroepen (LVM)"
 
 msgid "Volume name"
 msgstr "Naam van het volume"
+
+#, fuzzy
+msgid "Volume parameters"
+msgstr "Modelparameters"
 
 msgid "Vswitch bonding"
 msgstr "Vswitch binding"
@@ -64758,6 +64819,10 @@ msgstr "expliciete host labels"
 msgid "explicitly specified groups"
 msgstr "uitdrukkelijk gespecificeerde groepen"
 
+#, fuzzy
+msgid "failed"
+msgstr "Mislukt"
+
 msgid "failures"
 msgstr "mislukkingen"
 
@@ -65875,6 +65940,10 @@ msgstr "subcategorieën"
 msgid "success"
 msgstr "succes"
 
+#, fuzzy
+msgid "successful"
+msgstr "succes"
+
 msgid "synchronize"
 msgstr "synchroniseren"
 
@@ -66174,53 +66243,10 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
-#~ msgid "Add a first row with column titles"
-#~ msgstr "Voeg een eerste rij toe met kolomtitels"
-
-#~ msgid "Column headers"
-#~ msgstr "Kolom kopteksten"
-
-#~ msgid "Do not add column headers"
-#~ msgstr "Voeg geen kolomkoppen toe"
-
-#~ msgid "Don't use quotes"
-#~ msgstr "Gebruik geen aanhalingstekens"
-
-#~ msgid "Export List of Software packages as CSV file"
-#~ msgstr "Lijst van softwarepakketten exporteren als CSV-bestand"
-
-#~ msgid ""
-#~ "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
-#~ msgstr ""
-#~ "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
-
-#, python-format
-#~ msgid ""
-#~ "Please specify the path to the export file. The text <tt>[HOST]</tt> will "
-#~ "be replaced with the host name the inventory has been done for. If you "
-#~ "use a relative path then that will be relative to Check_MK's directory "
-#~ "for variable data, which is <tt>%s</tt>."
-#~ msgstr ""
-#~ "Geef het pad naar het exportbestand op. De tekst <tt>[HOST]</tt> wordt "
-#~ "vervangen door de hostnaam waarvoor de inventarisatie is gedaan. Als u "
-#~ "een relatief pad gebruikt, is dat relatief ten opzichte van Check_MK's "
-#~ "directory voor variabele gegevens, die <tt>%s</tt> is."
-
-#~ msgid "Quoting"
-#~ msgstr "Citaat:"
-
-#~ msgid "Separator"
-#~ msgstr "Scheider"
-
-#~ msgid "Use double quotes, escape contained quotes with backslash"
-#~ msgstr ""
-#~ "Gebruik dubbele aanhalingstekens en sluit aanhalingstekens uit met een "
-#~ "backslash"
-
-#~ msgid "Use single quotes, escape contained quotes with backslash"
-#~ msgstr ""
-#~ "Gebruik enkele aanhalingstekens, sluit aanhalingstekens uit met een "
-#~ "backslash"
+#, fuzzy, python-format
+#~| msgid "Registration successful"
+#~ msgid "Online verification procedure was not successful, reason: %s"
+#~ msgstr "Registratie succesvol"
 
 #, fuzzy
 #~| msgid "Global notification rules"

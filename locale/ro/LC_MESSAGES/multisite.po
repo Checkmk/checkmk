@@ -2953,6 +2953,9 @@ msgstr "Adaugă Contoar"
 msgid "Add Suffix"
 msgstr "Adaugă filtre"
 
+msgid "Add a first row with column titles"
+msgstr ""
+
 #, fuzzy
 msgid "Add additional folder"
 msgstr "Informații Adiționale"
@@ -9574,6 +9577,10 @@ msgid "Column Title"
 msgstr "(fără titlu)"
 
 #, fuzzy
+msgid "Column headers"
+msgstr "(fără titlu)"
+
+#, fuzzy
 msgid "Column title"
 msgstr "(fără titlu)"
 
@@ -14861,6 +14868,10 @@ msgstr "Activare schimbări"
 msgid "Do not add a link to this page in sidebar"
 msgstr "Adaugă un snapin pe sidebar"
 
+#, fuzzy
+msgid "Do not add column headers"
+msgstr "doua nivele"
+
 msgid "Do not alert on connection loss"
 msgstr ""
 
@@ -15439,6 +15450,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Don't use password"
+msgstr "Parolâ Administrator:"
+
+#, fuzzy
+msgid "Don't use quotes"
 msgstr "Parolâ Administrator:"
 
 msgid "Don't wait for document body"
@@ -17789,10 +17804,17 @@ msgstr "rapoarte"
 msgid "Export JSON"
 msgstr "rapoarte"
 
+msgid "Export List of Software packages as CSV file"
+msgstr ""
+
 msgid "Export as JSON"
 msgstr ""
 
 msgid "Export as PNG"
+msgstr ""
+
+msgid ""
+"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
 msgstr ""
 
 #, fuzzy
@@ -33535,10 +33557,6 @@ msgstr "Activare Configurare"
 msgid "Online verification procedure was not successful"
 msgstr "Numele Aplicatiei"
 
-#, fuzzy, python-format
-msgid "Online verification procedure was not successful, reason: %s"
-msgstr "Numele Aplicatiei"
-
 #, fuzzy
 msgid "Online verification procedure was successful"
 msgstr "Numele Aplicatiei"
@@ -35283,6 +35301,10 @@ msgid "Persistent Volume Claims"
 msgstr "cu comentariu"
 
 #, fuzzy
+msgid "Persistent Volume Claims & Persistent Volumes"
+msgstr "cu comentariu"
+
+#, fuzzy
 msgid "Persistent comment"
 msgstr "cu comentariu"
 
@@ -35858,6 +35880,14 @@ msgid "Please specify the extensions in lower case and without dot."
 msgstr ""
 
 msgid "Please specify the name of the status host."
+msgstr ""
+
+#, python-format
+msgid ""
+"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
+"replaced with the host name the inventory has been done for. If you use a "
+"relative path then that will be relative to Check_MK's directory for "
+"variable data, which is <tt>%s</tt>."
 msgstr ""
 
 msgid "Please specify the user and password needed to access the xml interface"
@@ -36947,6 +36977,9 @@ msgid "Quiet cache"
 msgstr ""
 
 msgid "Quit"
+msgstr ""
+
+msgid "Quoting"
 msgstr ""
 
 msgid "R.State"
@@ -40296,10 +40329,12 @@ msgstr ""
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
-"pods will be monitored in the same manner as regular pods. Your Dynamic host "
-"management rule should be configured accordingly to avoid that the piggyback "
-"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
-"CronJobs' option has no effect if Pods are not monitored"
+"pods will be monitored in the same manner as regular pods. Persistent Volume "
+"Claims will only appear in the respective object piggyback host instead of "
+"having their own host. Your Dynamic host management rule should be "
+"configured accordingly to avoid that the piggyback hosts for terminated "
+"CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
+"effect if Pods are not monitored"
 msgstr ""
 
 msgid ""
@@ -40513,6 +40548,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Separate check"
+msgstr "Verificare activă"
+
+#, fuzzy
+msgid "Separator"
 msgstr "Verificare activă"
 
 msgid "September"
@@ -52021,6 +52060,9 @@ msgstr ""
 msgid "Time stamp format"
 msgstr ""
 
+msgid "Time to alert when PVC status is in pending state"
+msgstr ""
+
 #, fuzzy
 msgid "Time to connect"
 msgstr "Portul TCP pentru conexiune"
@@ -54905,6 +54947,9 @@ msgstr ""
 msgid "Use device's levels if present, otherwise yours"
 msgstr ""
 
+msgid "Use double quotes, escape contained quotes with backslash"
+msgstr ""
+
 msgid "Use environment variables from host"
 msgstr ""
 
@@ -55049,6 +55094,9 @@ msgid "Use settings and page layout from"
 msgstr ""
 
 msgid "Use short title in reports header"
+msgstr ""
+
+msgid "Use single quotes, escape contained quotes with backslash"
 msgstr ""
 
 #, fuzzy
@@ -56045,13 +56093,17 @@ msgstr " pe siteul de monitorizare: "
 msgid "Verification"
 msgstr "trimite notificare"
 
-#, fuzzy
-msgid "Verification failed"
+#, fuzzy, python-format
+msgid "Verification %s: %s"
 msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Verification failed (license server)"
 msgstr "Numele Aplicatiei"
+
+#, fuzzy, python-format
+msgid "Verification failed: %s"
+msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Verification successful"
@@ -56357,6 +56409,10 @@ msgstr ""
 #, fuzzy
 msgid "Volume name"
 msgstr "Nume nou"
+
+#, fuzzy
+msgid "Volume parameters"
+msgstr "(fără parametri)"
 
 msgid "Vswitch bonding"
 msgstr ""
@@ -60115,6 +60171,10 @@ msgstr "Verificări active"
 msgid "explicitly specified groups"
 msgstr ""
 
+#, fuzzy
+msgid "failed"
+msgstr "Adăugat %s"
+
 msgid "failures"
 msgstr ""
 
@@ -61294,6 +61354,10 @@ msgstr ""
 msgid "success"
 msgstr "Punct de Acces"
 
+#, fuzzy
+msgid "successful"
+msgstr "Punct de Acces"
+
 msgid "synchronize"
 msgstr ""
 
@@ -61597,6 +61661,10 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid "Online verification procedure was not successful, reason: %s"
+#~ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 #~ msgid "Submit verification request"

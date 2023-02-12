@@ -3116,6 +3116,9 @@ msgstr "ルールIDを追加"
 msgid "Add Suffix"
 msgstr "サフィックスを追加する"
 
+msgid "Add a first row with column titles"
+msgstr "列タイトルを含む最初の行を追加します"
+
 msgid "Add additional folder"
 msgstr "フォルダを追加します"
 
@@ -9721,6 +9724,9 @@ msgstr "列ヘッダー"
 msgid "Column Title"
 msgstr "列タイトル"
 
+msgid "Column headers"
+msgstr "列ヘッダー"
+
 msgid "Column title"
 msgstr "列のタイトル"
 
@@ -14782,6 +14788,9 @@ msgstr "変更をアクティブにしないでください"
 msgid "Do not add a link to this page in sidebar"
 msgstr "サイドバーにこのページへのリンクを追加しないでください"
 
+msgid "Do not add column headers"
+msgstr "列ヘッダーを追加しないでください"
+
 msgid "Do not alert on connection loss"
 msgstr "接続が失われた場合は警告しない"
 
@@ -15346,6 +15355,9 @@ msgstr "カスタムポートを使用しないでください"
 
 msgid "Don't use password"
 msgstr "パスワードを使用しないでください"
+
+msgid "Don't use quotes"
+msgstr "引用符は使用しないでください"
 
 msgid "Don't wait for document body"
 msgstr "ドキュメントの本文を待たないでください"
@@ -17622,11 +17634,18 @@ msgstr "CSVをエクスポート"
 msgid "Export JSON"
 msgstr "JSONをエクスポートする"
 
+msgid "Export List of Software packages as CSV file"
+msgstr "ソフトウェアパッケージのリストをCSVファイルとしてエクスポート"
+
 msgid "Export as JSON"
 msgstr "JSONとしてエクスポート"
 
 msgid "Export as PNG"
 msgstr "PNGとしてエクスポート"
+
+msgid ""
+"Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+msgstr ""
 
 msgid "Export this rule for API"
 msgstr "このルールをAPI用にエクスポートする"
@@ -33367,10 +33386,6 @@ msgstr "SSL証明書の検証"
 msgid "Online verification procedure was not successful"
 msgstr "登録完了"
 
-#, fuzzy, python-format
-msgid "Online verification procedure was not successful, reason: %s"
-msgstr "登録完了"
-
 #, fuzzy
 msgid "Online verification procedure was successful"
 msgstr "登録完了"
@@ -35089,6 +35104,10 @@ msgstr "持続的なコメント"
 msgid "Persistent Volume Claims"
 msgstr "持続的なコメント"
 
+#, fuzzy
+msgid "Persistent Volume Claims & Persistent Volumes"
+msgstr "持続的なコメント"
+
 msgid "Persistent comment"
 msgstr "持続的なコメント"
 
@@ -35708,6 +35727,17 @@ msgstr "拡張子は小文字でドットなしで指定してください。"
 
 msgid "Please specify the name of the status host."
 msgstr "ステータスホストの名前を指定してください。"
+
+#, python-format
+msgid ""
+"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
+"replaced with the host name the inventory has been done for. If you use a "
+"relative path then that will be relative to Check_MK's directory for "
+"variable data, which is <tt>%s</tt>."
+msgstr ""
+"エクスポートファイルのパスを指定してください。テキスト<tt>[HOST]</tt> は、イ"
+"ンベントリが実行されたホスト名に置き換えられます。相対パスを使用する場合、"
+"Checkmkの変数データ用ディレクトリ(<tt>%s</tt>)からの相対パスになります。"
 
 msgid "Please specify the user and password needed to access the xml interface"
 msgstr ""
@@ -36735,6 +36765,9 @@ msgstr "クワイエットキャッシュ"
 
 msgid "Quit"
 msgstr "終了する"
+
+msgid "Quoting"
+msgstr "引用"
 
 msgid "R.State"
 msgstr "R.State"
@@ -39939,10 +39972,12 @@ msgstr "特定のオブジェクトタイプを選択します"
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
-"pods will be monitored in the same manner as regular pods. Your Dynamic host "
-"management rule should be configured accordingly to avoid that the piggyback "
-"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
-"CronJobs' option has no effect if Pods are not monitored"
+"pods will be monitored in the same manner as regular pods. Persistent Volume "
+"Claims will only appear in the respective object piggyback host instead of "
+"having their own host. Your Dynamic host management rule should be "
+"configured accordingly to avoid that the piggyback hosts for terminated "
+"CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
+"effect if Pods are not monitored"
 msgstr ""
 
 msgid ""
@@ -40153,6 +40188,9 @@ msgstr "Sentinel"
 
 msgid "Separate check"
 msgstr "個別チェック"
+
+msgid "Separator"
+msgstr "セパレーター"
 
 msgid "September"
 msgstr "9月"
@@ -52958,6 +52996,10 @@ msgstr ""
 msgid "Time stamp format"
 msgstr "タイムスタンプ形式"
 
+#, fuzzy
+msgid "Time to alert when PVC status is in pending state"
+msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
+
 msgid "Time to connect"
 msgstr "接続する時間"
 
@@ -55681,6 +55723,9 @@ msgstr ""
 "存在する場合はデバイスのレベルを使用し、存在しない場合は自分のレベルを使用し"
 "ます"
 
+msgid "Use double quotes, escape contained quotes with backslash"
+msgstr "二重引用符を使用し、円記号で含まれている引用符をエスケープします"
+
 msgid "Use environment variables from host"
 msgstr "ホストからの環境変数を使用する"
 
@@ -55816,6 +55861,9 @@ msgstr "設定とページレイアウトを使用する"
 
 msgid "Use short title in reports header"
 msgstr "レポートヘッダーに短いタイトルを使用する"
+
+msgid "Use single quotes, escape contained quotes with backslash"
+msgstr "一重引用符を使用し、バックスラッシュで引用符をエスケープします"
 
 msgid "Use site ID"
 msgstr ""
@@ -56861,13 +56909,17 @@ msgstr "証明書を確認する"
 msgid "Verification"
 msgstr "ユーザー通知"
 
-#, fuzzy
-msgid "Verification failed"
+#, fuzzy, python-format
+msgid "Verification %s: %s"
 msgstr "ユーザー通知"
 
 #, fuzzy
 msgid "Verification failed (license server)"
 msgstr "アプリケーションの概要"
+
+#, fuzzy, python-format
+msgid "Verification failed: %s"
+msgstr "ユーザー通知"
 
 #, fuzzy
 msgid "Verification successful"
@@ -57154,6 +57206,10 @@ msgstr "ボリュームグループ(LVM)"
 
 msgid "Volume name"
 msgstr "ボリューム名"
+
+#, fuzzy
+msgid "Volume parameters"
+msgstr "モデルパラメータ"
 
 msgid "Vswitch bonding"
 msgstr "Vswitchボンディング"
@@ -61440,6 +61496,10 @@ msgstr "明示的なホストラベル"
 msgid "explicitly specified groups"
 msgstr "明示的に指定されたグループ"
 
+#, fuzzy
+msgid "failed"
+msgstr "失敗しました"
+
 msgid "failures"
 msgstr "失敗"
 
@@ -62547,6 +62607,10 @@ msgstr "サブカテゴリ"
 msgid "success"
 msgstr "成功"
 
+#, fuzzy
+msgid "successful"
+msgstr "成功"
+
 msgid "synchronize"
 msgstr "同期する"
 
@@ -62846,44 +62910,10 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
-#~ msgid "Add a first row with column titles"
-#~ msgstr "列タイトルを含む最初の行を追加します"
-
-#~ msgid "Column headers"
-#~ msgstr "列ヘッダー"
-
-#~ msgid "Do not add column headers"
-#~ msgstr "列ヘッダーを追加しないでください"
-
-#~ msgid "Don't use quotes"
-#~ msgstr "引用符は使用しないでください"
-
-#~ msgid "Export List of Software packages as CSV file"
-#~ msgstr "ソフトウェアパッケージのリストをCSVファイルとしてエクスポート"
-
-#, python-format
-#~ msgid ""
-#~ "Please specify the path to the export file. The text <tt>[HOST]</tt> will "
-#~ "be replaced with the host name the inventory has been done for. If you "
-#~ "use a relative path then that will be relative to Check_MK's directory "
-#~ "for variable data, which is <tt>%s</tt>."
-#~ msgstr ""
-#~ "エクスポートファイルのパスを指定してください。テキスト<tt>[HOST]</tt> は、"
-#~ "インベントリが実行されたホスト名に置き換えられます。相対パスを使用する場"
-#~ "合、Checkmkの変数データ用ディレクトリ(<tt>%s</tt>)からの相対パスになりま"
-#~ "す。"
-
-#~ msgid "Quoting"
-#~ msgstr "引用"
-
-#~ msgid "Separator"
-#~ msgstr "セパレーター"
-
-#~ msgid "Use double quotes, escape contained quotes with backslash"
-#~ msgstr "二重引用符を使用し、円記号で含まれている引用符をエスケープします"
-
-#~ msgid "Use single quotes, escape contained quotes with backslash"
-#~ msgstr "一重引用符を使用し、バックスラッシュで引用符をエスケープします"
+#, fuzzy, python-format
+#~| msgid "Registration successful"
+#~ msgid "Online verification procedure was not successful, reason: %s"
+#~ msgstr "登録完了"
 
 #, fuzzy
 #~| msgid "Global notification rules"

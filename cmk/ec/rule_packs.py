@@ -206,9 +206,9 @@ def save_rule_packs(
     output = "# Written by WATO\n# encoding: utf-8\n\n"
 
     if pretty_print:
-        rule_packs_text = pprint.pformat(rule_packs)
+        rule_packs_text = pprint.pformat(list(rule_packs))
     else:
-        rule_packs_text = repr(rule_packs)
+        rule_packs_text = repr(list(rule_packs))
 
     output += f"rule_packs += \\\n{rule_packs_text}\n"
 

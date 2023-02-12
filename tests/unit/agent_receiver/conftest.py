@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from agent_receiver import site_context
@@ -11,6 +11,7 @@ from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
 from agent_receiver.checkmk_rest_api import ControllerCertSettings
 from agent_receiver.main import main_app
 from fastapi.testclient import TestClient
+from pydantic import UUID4
 from pytest_mock import MockerFixture
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
@@ -141,5 +142,5 @@ def fixture_client() -> TestClient:
 
 
 @pytest.fixture(name="uuid")
-def fixture_uuid() -> UUID:
-    return uuid4()
+def fixture_uuid() -> UUID4:
+    return UUID4(str(uuid4()))

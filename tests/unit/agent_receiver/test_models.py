@@ -3,17 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from uuid import UUID
-
 import pytest
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.models import CsrField
+from pydantic import UUID4
 
 from tests.testlib.certs import generate_csr_pair
 
 
 class TestCsrField:
-    def test_validate_ok(self, uuid: UUID) -> None:
+    def test_validate_ok(self, uuid: UUID4) -> None:
         _key, csr = generate_csr_pair(str(uuid))
         CsrField.validate(serialize_to_pem(csr))
 

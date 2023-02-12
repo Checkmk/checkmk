@@ -9,7 +9,7 @@ import stat
 from collections.abc import Mapping
 from pathlib import Path
 from unittest import mock
-from uuid import UUID, uuid4
+from uuid import uuid4
 from zlib import compress
 
 import pytest
@@ -21,6 +21,7 @@ from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, Reques
 from agent_receiver.utils import R4R
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from pydantic import UUID4
 from pytest_mock import MockerFixture
 
 from tests.testlib.certs import generate_csr_pair
@@ -31,14 +32,14 @@ from cmk.utils.misc import typeshed_issue_7724
 @pytest.fixture(name="symlink_push_host")
 def fixture_symlink_push_host(
     tmp_path: Path,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     _symlink_push_host(tmp_path, uuid)
 
 
 def _symlink_push_host(
     tmp_path: Path,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
@@ -46,7 +47,7 @@ def _symlink_push_host(
 
 
 @pytest.fixture(name="serialized_csr")
-def fixture_serialized_csr(uuid: UUID) -> str:
+def fixture_serialized_csr(uuid: UUID4) -> str:
     _key, csr = generate_csr_pair(str(uuid), 512)
     return serialize_to_pem(csr)
 
@@ -55,7 +56,7 @@ def test_register_existing_ok(
     tmp_path: Path,
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
 ) -> None:
     def rest_api_register_mock(*args: object, **kwargs: object) -> RegisterResponse:
@@ -99,7 +100,7 @@ def test_register_existing_uuid_csr_mismatch(
 # this is a regression test for CMK-11202
 def test_register_existing_hostname_invalid(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
 ) -> None:
     response = client.post(
@@ -118,7 +119,7 @@ def test_register_existing_hostname_invalid(
 def test_register_register_with_hostname_host_missing(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -142,7 +143,7 @@ def test_register_register_with_hostname_host_missing(
 def test_register_register_with_hostname_wrong_site(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -168,7 +169,7 @@ def test_register_register_with_hostname_wrong_site(
 def test_register_register_with_hostname_cluster_host(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -192,7 +193,7 @@ def test_register_register_with_hostname_cluster_host(
 def test_register_register_with_hostname_unauthorized(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -223,7 +224,7 @@ def test_register_register_with_hostname_unauthorized(
 def test_register_register_with_hostname_ok(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -252,7 +253,7 @@ def test_register_register_with_hostname_ok(
 def test_register_register_with_hostname_invalid(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     response = client.post(
         "/register_with_hostname",
@@ -270,7 +271,7 @@ def test_register_register_with_hostname_invalid(
 def test_register_new_unauthenticated(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
 ) -> None:
     mocker.patch(
@@ -296,7 +297,7 @@ def test_register_new_unauthenticated(
 def test_register_new_cre(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
 ) -> None:
     mocker.patch(
@@ -343,7 +344,7 @@ def test_register_new_uuid_csr_mismatch(
 def _test_register_new(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
 ) -> None:
     mocker.patch(
@@ -380,7 +381,7 @@ def _test_register_new(
 def test_register_new_folder_missing(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
 ) -> None:
     assert not (site_context.r4r_dir() / "NEW").exists()
@@ -396,7 +397,7 @@ def test_register_new_folder_missing(
 def test_register_new_folder_exists(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
 ) -> None:
     (site_context.r4r_dir() / "NEW").mkdir(parents=True)
@@ -411,7 +412,7 @@ def test_register_new_folder_exists(
 def test_register_new_ongoing_cre(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
@@ -430,7 +431,7 @@ def test_register_new_ongoing_cre(
 def _call_register_new_ongoing_cce(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> requests.Response:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
@@ -445,7 +446,7 @@ def _call_register_new_ongoing_cce(
 def test_register_new_ongoing_not_found(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     R4R(
         status=RegistrationStatusEnum.DECLINED,
@@ -464,7 +465,7 @@ def test_register_new_ongoing_not_found(
 def test_register_new_ongoing_username_mismatch(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     R4R(
         status=RegistrationStatusEnum.DECLINED,
@@ -489,7 +490,7 @@ def test_register_new_ongoing_username_mismatch(
 def test_register_new_ongoing_in_progress(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     status: RegistrationStatusEnum,
 ) -> None:
     R4R(
@@ -509,7 +510,7 @@ def test_register_new_ongoing_in_progress(
 def test_register_new_ongoing_in_declined(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     R4R(
         status=RegistrationStatusEnum.DECLINED,
@@ -538,7 +539,7 @@ def test_register_new_ongoing_in_declined(
 def test_register_new_ongoing_success(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     status: RegistrationStatusEnum,
 ) -> None:
     R4R(
@@ -560,7 +561,7 @@ def test_register_new_ongoing_success(
 
 
 @pytest.fixture(name="agent_data_headers")
-def fixture_agent_data_headers(uuid: UUID) -> Mapping[str, str]:
+def fixture_agent_data_headers(uuid: UUID4) -> Mapping[str, str]:
     return {
         "compression": "zlib",
         "verified-uuid": str(uuid),
@@ -574,7 +575,7 @@ def fixture_compressed_agent_data() -> io.BytesIO:
 
 def test_agent_data_uuid_mismatch(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -591,7 +592,7 @@ def test_agent_data_uuid_mismatch(
 
 def test_agent_data_no_host(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -607,7 +608,7 @@ def test_agent_data_no_host(
 def test_agent_data_pull_host(
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -631,7 +632,7 @@ def test_agent_data_pull_host(
 @pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_invalid_compression(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
 ) -> None:
     response = client.post(
@@ -649,7 +650,7 @@ def test_agent_data_invalid_compression(
 @pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_invalid_data(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
 ) -> None:
     response = client.post(
@@ -665,7 +666,7 @@ def test_agent_data_invalid_data(
 def test_agent_data_success(
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -685,7 +686,7 @@ def test_agent_data_success(
 def test_agent_data_move_error(
     caplog: pytest.LogCaptureFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -705,7 +706,7 @@ def test_agent_data_move_error(
 @pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_move_ready(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -722,7 +723,7 @@ def test_agent_data_move_ready(
 
 
 @pytest.fixture(name="registration_status_headers")
-def fixture_registration_status_headers(uuid: UUID) -> Mapping[str, str]:
+def fixture_registration_status_headers(uuid: UUID4) -> Mapping[str, str]:
     return {
         "verified-uuid": str(uuid),
     }
@@ -730,7 +731,7 @@ def fixture_registration_status_headers(uuid: UUID) -> Mapping[str, str]:
 
 def test_registration_status_uuid_mismtach(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     response = client.get(
@@ -746,7 +747,7 @@ def test_registration_status_uuid_mismtach(
 
 def test_registration_status_declined(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     R4R(
@@ -780,7 +781,7 @@ def test_registration_status_declined(
 
 def test_registration_status_host_not_registered(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     response = client.get(
@@ -795,7 +796,7 @@ def test_registration_status_host_not_registered(
 @pytest.mark.usefixtures("symlink_push_host")
 def test_registration_status_push_host(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     R4R(
@@ -825,7 +826,7 @@ def test_registration_status_push_host(
 def test_registration_status_pull_host(
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
@@ -848,7 +849,7 @@ def test_registration_status_pull_host(
 
 def test_renew_certificate_uuid_csr_mismatch(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     _key, wrong_csr = generate_csr_pair(str(uuid4()), 512)
@@ -864,7 +865,7 @@ def test_renew_certificate_uuid_csr_mismatch(
 
 def test_renew_certificate_not_registered(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
     registration_status_headers: Mapping[str, str],
 ) -> None:
@@ -881,7 +882,7 @@ def test_renew_certificate_not_registered(
 def test_renew_certificate_ok(
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     serialized_csr: str,
     registration_status_headers: Mapping[str, str],
 ) -> None:

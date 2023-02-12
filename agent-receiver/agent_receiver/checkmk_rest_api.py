@@ -8,7 +8,6 @@ from enum import Enum
 from http import HTTPStatus
 from typing import Any, Concatenate, ParamSpec, TypeVar
 from urllib.parse import quote
-from uuid import UUID
 
 import requests
 from agent_receiver.log import logger
@@ -16,7 +15,7 @@ from agent_receiver.models import ConnectionMode
 from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 
 
 class CMKEdition(Enum):
@@ -144,7 +143,7 @@ class RegisterResponse(BaseModel, frozen=True):
 @log_http_exception
 def register(
     credentials: HTTPBasicCredentials,
-    uuid: UUID,
+    uuid: UUID4,
     host_name: str,
 ) -> RegisterResponse:
     response = _forward_put(
@@ -239,7 +238,7 @@ def host_configuration(
 def link_host_with_uuid(
     credentials: HTTPBasicCredentials,
     host_name: str,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     response = _forward_put(
         f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/link_uuid/invoke",

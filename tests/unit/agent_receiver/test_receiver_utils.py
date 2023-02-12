@@ -5,20 +5,20 @@
 
 import time
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 from agent_receiver import site_context
 from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
 from agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
+from pydantic import UUID4
 
 
-def test_host_not_registered(uuid: UUID) -> None:
+def test_host_not_registered(uuid: UUID4) -> None:
     with pytest.raises(NotRegisteredException):
         RegisteredHost(uuid)
 
 
-def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
+def test_pull_host_registered(tmp_path: Path, uuid: UUID4) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
@@ -30,7 +30,7 @@ def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
     assert host.source_path == source
 
 
-def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
+def test_push_host_registered(tmp_path: Path, uuid: UUID4) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "push-agent" / "hostname"
     source.symlink_to(target_dir)
@@ -42,7 +42,7 @@ def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
     assert host.source_path == source
 
 
-def test_r4r(uuid: UUID) -> None:
+def test_r4r(uuid: UUID4) -> None:
     r4r = R4R(
         status=RegistrationStatusEnum.NEW,
         request=RequestForRegistration(
@@ -64,6 +64,6 @@ def test_r4r(uuid: UUID) -> None:
     assert expected_path.stat().st_atime > access_time_before_read
 
 
-def test_r4r_raises(uuid: UUID) -> None:
+def test_r4r_raises(uuid: UUID4) -> None:
     with pytest.raises(FileNotFoundError, match="No request for registration with UUID"):
         R4R.read(uuid)

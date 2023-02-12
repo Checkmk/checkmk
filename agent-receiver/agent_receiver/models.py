@@ -10,11 +10,10 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, Self
-from uuid import UUID
 
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, UUID4, validator
 
 from .certs import extract_cn_from_csr
 
@@ -42,7 +41,7 @@ class CsrField:
         except IndexError:
             raise ValueError("CSR contains no CN")
         try:
-            UUID(cn, version=4)
+            UUID4(cn)
         except ValueError:
             raise ValueError(f"CN {cn} is not a valid version-4 UUID")
         return cls(csr)
@@ -85,7 +84,7 @@ def _is_valid_host_name(hostname: str) -> bool:
 
 
 class RegistrationWithHNBody(BaseModel):
-    uuid: UUID
+    uuid: UUID4
     host_name: str
 
     @validator("host_name")
@@ -100,7 +99,7 @@ class RegistrationWithHNBody(BaseModel):
 
 
 class RegisterExistingBody(RegistrationWithHNBody):
-    uuid: UUID
+    uuid: UUID4
     csr: CsrField
     host_name: str
 
@@ -127,7 +126,7 @@ class RegisterExistingResponse(BaseModel):
 
 
 class RegisterNewBody(BaseModel):
-    uuid: UUID
+    uuid: UUID4
     csr: CsrField
     agent_labels: Mapping[str, str]
 
@@ -154,7 +153,7 @@ class RegisterNewOngoingResponseSuccess(BaseModel):
 
 
 class RequestForRegistration(BaseModel):
-    uuid: UUID
+    uuid: UUID4
     username: str
     agent_labels: Mapping[str, str]
     agent_cert: str

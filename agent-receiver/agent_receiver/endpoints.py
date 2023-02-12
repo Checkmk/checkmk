@@ -9,7 +9,6 @@ from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from typing import assert_never
-from uuid import UUID
 
 from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from agent_receiver.checkmk_rest_api import (
@@ -54,6 +53,7 @@ from agent_receiver.utils import (
 from cryptography.x509 import Certificate
 from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from pydantic import UUID4
 from starlette.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
@@ -71,7 +71,7 @@ from .certs import extract_cn_from_csr, serialize_to_pem, sign_agent_csr, site_r
 security = HTTPBasic()
 
 
-def _validate_uuid_against_csr(uuid: UUID, csr_field: CsrField) -> None:
+def _validate_uuid_against_csr(uuid: UUID4, csr_field: CsrField) -> None:
     if str(uuid) != (cn := extract_cn_from_csr(csr_field.csr)):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
@@ -79,7 +79,7 @@ def _validate_uuid_against_csr(uuid: UUID, csr_field: CsrField) -> None:
         )
 
 
-def _sign_agent_csr(uuid: UUID, csr_field: CsrField) -> Certificate:
+def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
     return sign_agent_csr(
         csr_field.csr,
         controller_certificate_settings(
@@ -245,7 +245,7 @@ async def register_new(
     | RegisterNewOngoingResponseSuccess,
 )
 async def register_new_ongoing(
-    uuid: UUID,
+    uuid: UUID4,
     *,
     credentials: HTTPBasicCredentials = Depends(security),
 ) -> RegisterNewOngoingResponseInProgress | RegisterNewOngoingResponseDeclined | RegisterNewOngoingResponseSuccess:
@@ -312,7 +312,7 @@ async def register_new_ongoing(
     assert_never(r4r.status)
 
 
-def _validate_is_cce(credentials: HTTPBasicCredentials, uuid: UUID) -> None:
+def _validate_is_cce(credentials: HTTPBasicCredentials, uuid: UUID4) -> None:
     if not (
         edition := cmk_edition(
             f"uuid={uuid} Querying Checkmk edition failed",
@@ -345,7 +345,7 @@ def _store_agent_data(
             Path(temp_file.name).unlink(missing_ok=True)
 
 
-def _move_ready_file(uuid: UUID) -> None:
+def _move_ready_file(uuid: UUID4) -> None:
     (dir_discoverable := r4r_dir() / RegistrationStatusEnum.DISCOVERABLE.name).mkdir(exist_ok=True)
     with suppress(FileNotFoundError):
         (r4r_dir() / RegistrationStatusEnum.READY.name / f"{uuid}.json").rename(
@@ -358,7 +358,7 @@ def _move_ready_file(uuid: UUID) -> None:
     status_code=HTTP_204_NO_CONTENT,
 )
 async def agent_data(
-    uuid: UUID,
+    uuid: UUID4,
     *,
     compression: str = Header(...),
     monitoring_data: UploadFile = File(...),
@@ -429,7 +429,7 @@ async def agent_data(
     response_model=RegistrationStatus,
 )
 async def registration_status(
-    uuid: UUID,
+    uuid: UUID4,
 ) -> RegistrationStatus:
     try:
         r4r = R4R.read(uuid)
@@ -460,7 +460,7 @@ async def registration_status(
 )
 async def renew_certificate(
     *,
-    uuid: UUID,
+    uuid: UUID4,
     cert_renewal_body: CertificateRenewalBody,
 ) -> RenewCertResponse:
 

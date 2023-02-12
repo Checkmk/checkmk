@@ -8,13 +8,13 @@ from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Self
-from uuid import UUID
 
 from agent_receiver.models import ConnectionMode, RegistrationStatusEnum, RequestForRegistration
 from agent_receiver.site_context import agent_output_dir, r4r_dir, users_dir
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from fastapi.security import HTTPBasicCredentials
+from pydantic import UUID4
 
 INTERNAL_REST_API_USER = "automation"
 
@@ -24,7 +24,7 @@ class NotRegisteredException(Exception):
 
 
 class RegisteredHost:
-    def __init__(self, uuid: UUID) -> None:
+    def __init__(self, uuid: UUID4) -> None:
         self.source_path: Final = agent_output_dir() / str(uuid)
         if not self.source_path.is_symlink():
             raise NotRegisteredException("Source path is not a symlink")
@@ -49,7 +49,7 @@ class R4R:
     request: RequestForRegistration
 
     @classmethod
-    def read(cls, uuid: UUID) -> Self:
+    def read(cls, uuid: UUID4) -> Self:
         for status in RegistrationStatusEnum:
             if (path := r4r_dir() / status.name / f"{uuid}.json").exists():
                 request = RequestForRegistration.parse_file(path)

@@ -100,8 +100,8 @@ public:
     const std::string header{"component;id\n"};
 
 private:
-    [[nodiscard]] NagiosPaths paths_() const {
-        NagiosPaths p{};
+    [[nodiscard]] Paths paths_() const {
+        Paths p{};
         p.crash_reports_directory = basepath;
         return p;
     }

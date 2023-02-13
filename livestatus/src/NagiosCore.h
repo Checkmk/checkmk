@@ -11,7 +11,6 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
@@ -34,23 +33,6 @@ class InputBuffer;
 class Logger;
 class OutputBuffer;
 
-// TODO(sp) Use Paths
-struct NagiosPaths {
-    std::filesystem::path log_file;
-    std::filesystem::path crash_reports_directory;
-    std::filesystem::path license_usage_history_file;
-    std::filesystem::path inventory_directory;
-    std::filesystem::path structured_status_directory;
-    std::filesystem::path robotmk_html_log_directory;
-    std::filesystem::path logwatch_directory;
-    std::filesystem::path event_console_status_socket;
-    std::filesystem::path livestatus_socket;
-    std::filesystem::path history_file;
-    std::filesystem::path history_archive_directory;
-    std::filesystem::path rrd_multiple_directory;
-    std::filesystem::path rrdcached_socket;
-};
-
 struct NagiosLimits {
     size_t _max_cached_messages{500000};
     size_t _max_lines_per_logfile{1000000};
@@ -66,7 +48,7 @@ class NagiosCore : public MonitoringCore {
 public:
     NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
                std::map<unsigned long, std::unique_ptr<Comment>> &comments,
-               NagiosPaths paths, const NagiosLimits &limits,
+               Paths paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
     std::unique_ptr<const IHost> find_host(const std::string &name) override;
@@ -193,7 +175,7 @@ public:
 
 private:
     Logger *_logger_livestatus;
-    const NagiosPaths _paths;
+    const Paths _paths;
     const NagiosLimits _limits;
     const NagiosAuthorization _authorization;
     Encoding _data_encoding;

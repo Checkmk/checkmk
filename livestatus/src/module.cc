@@ -89,7 +89,7 @@ int g_unix_socket = -1;
 int g_max_fd_ever = 0;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static NagiosPaths fl_paths;
+static Paths fl_paths;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate;

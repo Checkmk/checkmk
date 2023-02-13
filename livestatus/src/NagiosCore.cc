@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
+#include <filesystem>
 #include <utility>
 
 #include "Comment.h"
@@ -46,9 +47,9 @@ extern std::atomic_int32_t g_livestatus_active_connections;
 
 NagiosCore::NagiosCore(
     std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
-    std::map<unsigned long, std::unique_ptr<Comment>> &comments,
-    NagiosPaths paths, const NagiosLimits &limits,
-    NagiosAuthorization authorization, Encoding data_encoding)
+    std::map<unsigned long, std::unique_ptr<Comment>> &comments, Paths paths,
+    const NagiosLimits &limits, NagiosAuthorization authorization,
+    Encoding data_encoding)
     : _downtimes{downtimes}
     , _comments{comments}
     , _logger_livestatus(Logger::getLogger("cmk.livestatus"))

@@ -99,7 +99,6 @@ checks = {
             [
                 (2, "Provisioning: 1 failed (warn/crit at 1/1) / 2 succeeded", []),
                 (0, "Power states: 1 deallocated / 1 running / 1 stopped", []),
-                (0, "VMs per group: Glastonbury: 3\n", []),
                 (
                     0,
                     "NotRunningUbuntu: Provisioning succeeded, VM deallocated\n",

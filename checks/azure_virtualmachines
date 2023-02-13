@@ -110,7 +110,6 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
     fixed_resources_list = parsed.values()
     provisionings = [_azure_vms_get_status(r, "ProvisioningState")[0] for r in fixed_resources_list]
     powers = [_azure_vms_get_status(r, "PowerState")[0] for r in fixed_resources_list]
-    groups = [r.group for r in fixed_resources_list]
 
     levels_provisioning = params.get("levels_provisioning", {})
     state, txt = 0, []
@@ -133,11 +132,6 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
         if state_p != 0 or count:
             txt.append(msg_p)
     yield state, "Power states: %s" % " / ".join(txt)
-
-    unique_groups = sorted(set(groups))
-    if unique_groups != [host_name()]:
-        group_count = ("%s: %d" % (g, groups.count(g)) for g in unique_groups)
-        yield 0, "VMs per group: %s\n" % " / ".join(group_count)
 
     # long output
     templ = "%s: Provisioning %s, VM %s\n"

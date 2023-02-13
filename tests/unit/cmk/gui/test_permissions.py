@@ -513,7 +513,6 @@ def test_registered_permissions() -> None:
     if not cmk_version.is_raw_edition():
         expected_permissions += [
             "agent_registration.edit",
-            "agent_registration.register_new_hosts",
             "dashboard.kubernetes_cluster",
             "dashboard.kubernetes_daemonset",
             "dashboard.kubernetes_deployment",
@@ -635,6 +634,12 @@ def test_registered_permissions() -> None:
             "view.customer_hosts_unreach",
             "sidesnap.customers",
             "graph_collection.default",
+        ]
+
+    if cmk_version.is_cloud_edition():
+        expected_permissions += [
+            "agent_registration.register_any_new_host",
+            "agent_registration.register_new_host_in_managed_folder",
         ]
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())

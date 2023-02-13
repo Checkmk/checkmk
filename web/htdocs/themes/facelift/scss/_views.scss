@@ -317,7 +317,7 @@ div.floatfilter {
     }
   }
 
-  table.valuespec_listof.filter &[class$="_label_groups"] {
+  table.valuespec_listof.filter &[class$="_labels"] {
     &,
     div#page_menu_popups div.side_popup form & {
       width: 348px;
@@ -356,7 +356,7 @@ div.floatfilter {
       }
     }
 
-    tr[id*="_groups_entry"] {
+    tr[id*="_labels_entry"] {
       &:first-child > td.vlof_buttons a.delete_button {
         display: none;
       }

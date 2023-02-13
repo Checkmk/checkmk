@@ -7108,7 +7108,7 @@ class LabelGroups(LabelGroup):
     _magic: str = "@!@"  # Used by ListOf class to count through entries
 
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
-        object_type = "host" if "host_label_group" in varprefix else "service"
+        object_type = "host" if varprefix == "host_labels" else "service"
         html.p(_("Where host label...") if object_type == "host" else _("Where service label..."))
         # Always append one empty row to groups
         value = self._add_empty_row_to_groups(value)

@@ -3607,7 +3607,7 @@ expected_filters: dict[str, dict[str, Any]] = {
         "sort_index": 302,
         "title": "Tags",
     },
-    "host_label_groups": {
+    "host_labels": {
         "comment": None,
         "filter_class": "LabelGroupFilter",
         "htmlvars": [],
@@ -3616,7 +3616,7 @@ expected_filters: dict[str, dict[str, Any]] = {
         "sort_index": 301,
         "title": "Host labels",
     },
-    "service_group_labels": {
+    "service_labels": {
         "comment": None,
         "filter_class": "LabelGroupFilter",
         "htmlvars": [],

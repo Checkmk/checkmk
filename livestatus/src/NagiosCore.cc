@@ -348,6 +348,7 @@ Paths NagiosCore::paths() const {
         .history_archive_directory = _paths.history_archive_directory,
         .rrd_multiple_directory = _paths.rrd_multiple_directory,
         .rrdcached_socket = _paths.rrdcached_socket,
+        .livestatus_socket = _paths.livestatus_socket,
     };
 }
 

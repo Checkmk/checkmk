@@ -47,8 +47,7 @@ struct NagiosPaths {
     std::filesystem::path history_archive_directory;
     std::filesystem::path rrd_multiple_directory;
     std::filesystem::path rrdcached_socket;
-
-    std::filesystem::path livestatus_socket{"/usr/local/nagios/var/rw/live"};
+    std::filesystem::path livestatus_socket;
     std::filesystem::path livestatus_log_file;
 
     void dump(Logger *logger) const;

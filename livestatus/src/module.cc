@@ -1021,6 +1021,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         }
     }
 
+    if (fl_paths.livestatus_socket.empty()) {  // Do we still need this?
+        fl_paths.livestatus_socket = "/usr/local/nagios/var/rw/live";
+    }
     const std::string sp{fl_paths.livestatus_socket};
     auto slash = sp.rfind('/');
     auto prefix = slash == std::string::npos ? "" : sp.substr(0, slash + 1);

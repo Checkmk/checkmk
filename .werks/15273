@@ -6,7 +6,7 @@ Date: 1675953163
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p21
+Version: 2.1.0p22
 
 Under certain circumstances agent_azure was exiting with the following error:
 C+:

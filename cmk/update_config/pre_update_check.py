@@ -151,12 +151,14 @@ def _all_ui_extensions_compatible(
 ) -> bool:
     main_modules.load_plugins()
     installer = Installer(paths.installed_packages_dir)
-    for mkp in files_inventory(installer, _PATH_CONFIG):
-        # mkp package file
-        if not mkp["part_id"]:
-            continue
+    inventory = files_inventory(installer, _PATH_CONFIG)
 
-        for file, error in get_failed_plugins():
+    for file, error in get_failed_plugins():
+        for mkp in inventory:
+            # mkp package file
+            if not mkp["part_id"]:
+                continue
+
             file_path = (
                 str(_PATH_CONFIG.get_path(PackagePart(mkp["part_id"]))) + "/" + str(mkp["file"])
             )

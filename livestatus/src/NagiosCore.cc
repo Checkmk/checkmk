@@ -57,6 +57,9 @@ void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "logwatch directory = \"" << logwatch_directory << "\"";
     Notice(logger) << "event console status socket = \""
                    << event_console_status_socket << "\"";
+    Notice(logger) << "history file = " << history_file;
+    Notice(logger) << "history archive directory = "
+                   << history_archive_directory;
     Notice(logger) << "RRD multiple directory = \"" << rrd_multiple_directory
                    << "\"";
     Notice(logger) << "rrdcached socket = \"" << rrdcached_socket << "\"";
@@ -342,9 +345,8 @@ Paths NagiosCore::paths() const {
         .robotmk_html_log_directory = _paths.robotmk_html_log_directory,
         .logwatch_directory = _paths.logwatch_directory,
         .event_console_status_socket = _paths.event_console_status_socket,
-        .history_file = log_file == nullptr ? "" : log_file,
-        .history_archive_directory =
-            log_archive_path == nullptr ? "" : log_archive_path,
+        .history_file = _paths.history_file,
+        .history_archive_directory = _paths.history_archive_directory,
         .rrd_multiple_directory = _paths.rrd_multiple_directory,
         .rrdcached_socket = _paths.rrdcached_socket,
     };

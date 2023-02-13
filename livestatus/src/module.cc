@@ -1030,6 +1030,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     if (fl_paths.rrdcached_socket.empty()) {
         fl_paths.rrdcached_socket = prefix + "rrdcached.sock";
     }
+    fl_paths.history_file = log_file == nullptr ? "" : log_file;
+    fl_paths.history_archive_directory =
+        log_archive_path == nullptr ? "" : log_archive_path;
 }
 
 void omd_advertize(Logger *logger) {

@@ -43,7 +43,8 @@ struct NagiosPaths {
     std::filesystem::path robotmk_html_log_directory;
     std::string logwatch_directory;
     std::string event_console_status_socket;
-    // TODO(sp) Put history_file and history_archive_directory here
+    std::filesystem::path history_file;
+    std::filesystem::path history_archive_directory;
     std::string rrd_multiple_directory;
     std::string rrdcached_socket;
 

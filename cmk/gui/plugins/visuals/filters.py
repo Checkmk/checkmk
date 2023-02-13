@@ -1553,7 +1553,7 @@ class LabelGroupFilter(Filter):
             title=title,
             sort_index=301,
             info=self.query_filter.object_type,
-            htmlvars=self.query_filter.request_vars,
+            htmlvars=[f"{self.query_filter.ident}_count"],
             link_columns=[],
         )
 

@@ -16,7 +16,7 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Sequence
+from cmk.gui.type_defs import FilterHTTPVariables, Sequence
 
 
 class Label(NamedTuple):
@@ -219,3 +219,57 @@ def _get_labels_from_livestatus(
         return set((str(label[0]), str(label[1])) for label in label_rows)
 
     return set((k, v) for row in label_rows for labels in row for k, v in labels.items())
+
+
+def _parse_label_groups_to_http_vars(
+    label_groups: LabelGroups, object_type: Literal["host", "service"]
+) -> FilterHTTPVariables:
+    prefix: str = f"{object_type}_labels"  # "[host|service]_labels"
+    filter_vars: dict[str, str] = {
+        f"{prefix}_count": "%d" % len(label_groups),
+    }
+    for i, (group_operator, group) in enumerate(label_groups, 1):
+        filter_vars.update(
+            {
+                f"{prefix}_{i}_vs_count": "%d" % len(group),
+                f"{prefix}_{i}_bool": group_operator,
+            }
+        )
+
+        for j, (label_operator, label) in enumerate(group, 1):
+            filter_vars.update(
+                {
+                    f"{prefix}_{i}_vs_{j}_bool": label_operator,
+                    f"{prefix}_{i}_vs_{j}_vs": label,
+                }
+            )
+
+    return filter_vars
+
+
+def _single_label_group_from_labels(
+    labels: Sequence[str], operator: AndOrNotLiteral = "and"
+) -> LabelGroups:
+    return [
+        (
+            "and",
+            [(operator, label) for label in labels],
+        )
+    ]
+
+
+def filter_http_vars_for_simple_label_group(
+    labels: Sequence[str],
+    object_type: Literal["host", "service"],
+    operator: AndOrNotLiteral = "and",
+) -> FilterHTTPVariables:
+    """Return HTTP vars for one label group of type <object_type>, containing all <labels> and
+    connecting all of them by the same logical <operator>.
+
+    >>> filter_http_vars_for_simple_label_group(["foo:bar", "check:mk"], "host")
+    {'host_labels_count': '1', 'host_labels_1_vs_count': '2', 'host_labels_1_bool': 'and', 'host_labels_1_vs_1_bool': 'and', 'host_labels_1_vs_1_vs': 'foo:bar', 'host_labels_1_vs_2_bool': 'and', 'host_labels_1_vs_2_vs': 'check:mk'}
+    """
+    return _parse_label_groups_to_http_vars(
+        _single_label_group_from_labels(labels, operator),
+        object_type,
+    )

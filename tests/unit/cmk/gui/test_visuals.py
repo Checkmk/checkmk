@@ -3610,7 +3610,7 @@ expected_filters: dict[str, dict[str, Any]] = {
     "host_labels": {
         "comment": None,
         "filter_class": "LabelGroupFilter",
-        "htmlvars": [],
+        "htmlvars": ["host_labels_count"],
         "info": "host",
         "link_columns": [],
         "sort_index": 301,
@@ -3619,7 +3619,7 @@ expected_filters: dict[str, dict[str, Any]] = {
     "service_labels": {
         "comment": None,
         "filter_class": "LabelGroupFilter",
-        "htmlvars": [],
+        "htmlvars": ["service_labels_count"],
         "info": "service",
         "link_columns": [],
         "sort_index": 301,

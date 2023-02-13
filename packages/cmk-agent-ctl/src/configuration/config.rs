@@ -402,13 +402,13 @@ impl Registry {
 
     pub fn register_connection(
         &mut self,
-        connection_type: &ConnectionType,
+        connection_mode: &ConnectionMode,
         site_id: &site_spec::SiteID,
         connection: TrustedConnectionWithRemote,
     ) {
-        let (insert_connections, remove_connections) = match connection_type {
-            ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
-            ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
+        let (insert_connections, remove_connections) = match connection_mode {
+            ConnectionMode::Push => (&mut self.connections.push, &mut self.connections.pull),
+            ConnectionMode::Pull => (&mut self.connections.pull, &mut self.connections.push),
         };
         remove_connections.remove(site_id);
         insert_connections.insert(site_id.clone(), connection);
@@ -598,7 +598,7 @@ impl LegacyPullMarker {
 }
 
 #[derive(StringEnum, PartialEq, Eq)]
-pub enum ConnectionType {
+pub enum ConnectionMode {
     /// `push-agent`
     Push,
     /// `pull-agent`
@@ -615,7 +615,7 @@ fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
 
 #[cfg(test)]
 pub mod test_helpers {
-    use crate::config::{ConnectionType, Registry, TrustedConnection, TrustedConnectionWithRemote};
+    use crate::config::{ConnectionMode, Registry, TrustedConnection, TrustedConnectionWithRemote};
     use crate::site_spec;
     use std::convert::From;
     use std::str::FromStr;
@@ -652,12 +652,12 @@ pub mod test_helpers {
             )
             .unwrap();
             registry.register_connection(
-                &ConnectionType::Push,
+                &ConnectionMode::Push,
                 &site_spec::SiteID::from_str("server/push-site").unwrap(),
                 trusted_connection_with_remote(),
             );
             registry.register_connection(
-                &ConnectionType::Pull,
+                &ConnectionMode::Pull,
                 &site_spec::SiteID::from_str("server/pull-site").unwrap(),
                 trusted_connection_with_remote(),
             );
@@ -988,7 +988,7 @@ mod test_registry {
         let reg_dir = TestRegistryDir::new();
         let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
-            &ConnectionType::Push,
+            &ConnectionMode::Push,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -1002,7 +1002,7 @@ mod test_registry {
         let reg_dir = TestRegistryDir::new();
         let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
-            &ConnectionType::Push,
+            &ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -1016,7 +1016,7 @@ mod test_registry {
         let reg_dir = TestRegistryDir::new();
         let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
-            &ConnectionType::Pull,
+            &ConnectionMode::Pull,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -1030,7 +1030,7 @@ mod test_registry {
         let reg_dir = TestRegistryDir::new();
         let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
-            &ConnectionType::Pull,
+            &ConnectionMode::Pull,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -1237,7 +1237,7 @@ mod test_registry {
         assert!(registry.activate_legacy_pull().is_ok());
         assert!(registry.legacy_pull_active());
         registry.register_connection(
-            &ConnectionType::Push,
+            &ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );

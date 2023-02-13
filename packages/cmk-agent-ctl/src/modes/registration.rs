@@ -131,7 +131,7 @@ fn prepare_registration<'a>(
 struct RegistrationResult {
     root_cert: String,
     agent_cert: String,
-    connection_mode: config::ConnectionType,
+    connection_mode: config::ConnectionMode,
 }
 
 impl std::convert::From<agent_receiver_api::RegisterExisitingResponse> for RegistrationResult {
@@ -288,7 +288,7 @@ fn proxy_registration(
         agent_rec_api,
     )?;
 
-    if registration_result.connection_mode == config::ConnectionType::Push {
+    if registration_result.connection_mode == config::ConnectionMode::Push {
         eprintln!(
             "WARNING: The host you just registered is configured to be a push host. The imported \
              connection will only work if the monitored host can connect to the monitoring server."
@@ -550,7 +550,7 @@ mod tests {
             Ok(agent_receiver_api::RegisterExisitingResponse {
                 root_cert: String::from("root_cert"),
                 agent_cert: String::from("agent_cert"),
-                connection_mode: config::ConnectionType::Pull,
+                connection_mode: config::ConnectionMode::Pull,
             })
         }
 
@@ -590,7 +590,7 @@ mod tests {
             Ok(agent_receiver_api::RegisterNewOngoingResponse::Success(
                 agent_receiver_api::RegisterNewOngoingResponseSuccess {
                     agent_cert: String::from("agent_cert"),
-                    connection_mode: config::ConnectionType::Push,
+                    connection_mode: config::ConnectionMode::Push,
                 },
             ))
         }
@@ -781,22 +781,22 @@ mod tests {
             let reg_dir = TestRegistryDir::new();
             let mut registry = reg_dir.registry();
             registry.register_connection(
-                &config::ConnectionType::Pull,
+                &config::ConnectionMode::Pull,
                 &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
                 config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
             );
             registry.register_connection(
-                &config::ConnectionType::Pull,
+                &config::ConnectionMode::Pull,
                 &site_spec::SiteID::from_str("server/other-pull-site").unwrap(),
                 config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
             );
             registry.register_connection(
-                &config::ConnectionType::Push,
+                &config::ConnectionMode::Push,
                 &site_spec::SiteID::from_str("server/pre-baked-push-site").unwrap(),
                 config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
             );
             registry.register_connection(
-                &config::ConnectionType::Push,
+                &config::ConnectionMode::Push,
                 &site_spec::SiteID::from_str("server/other-push-site").unwrap(),
                 config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
             );
@@ -878,10 +878,10 @@ mod tests {
                 assert_eq!(config.agent_labels.get("key").unwrap(), "value");
                 registry.register_connection(
                     std::collections::HashMap::from([
-                        ("server/pre-baked-pull-site", config::ConnectionType::Pull),
-                        ("server/pre-baked-pull-site-2", config::ConnectionType::Pull),
-                        ("server/pre-baked-push-site", config::ConnectionType::Push),
-                        ("server/pre-baked-push-site-2", config::ConnectionType::Push),
+                        ("server/pre-baked-pull-site", config::ConnectionMode::Pull),
+                        ("server/pre-baked-pull-site-2", config::ConnectionMode::Pull),
+                        ("server/pre-baked-push-site", config::ConnectionMode::Push),
+                        ("server/pre-baked-push-site-2", config::ConnectionMode::Push),
                     ])
                     .get(config.connection_config.site_id.to_string().as_str())
                     .unwrap(),
@@ -1007,7 +1007,7 @@ mod tests {
             let reg_dir = TestRegistryDir::new();
             let mut registry = reg_dir.registry();
             registry.register_connection(
-                &config::ConnectionType::Pull,
+                &config::ConnectionMode::Pull,
                 &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
                 config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
             );

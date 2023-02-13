@@ -56,12 +56,12 @@ mod tests {
         let registry_dir = TestRegistryDir::new();
         let mut registry = registry_dir.registry();
         registry.register_connection(
-            &config::ConnectionType::Push,
+            &config::ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PUSH),
         );
         registry.register_connection(
-            &config::ConnectionType::Pull,
+            &config::ConnectionMode::Pull,
             &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PULL),
         );

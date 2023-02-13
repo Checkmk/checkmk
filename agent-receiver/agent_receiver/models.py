@@ -174,5 +174,7 @@ class RegistrationStatusEnum(Enum):
 class RegistrationStatus(BaseModel, frozen=True):
     hostname: str | None = None
     status: RegistrationStatusEnum | None = None
-    type: ConnectionMode | None = None
+    connection_mode: ConnectionMode | None = None
     message: str | None = None
+    # Kept for backwards compatibility
+    type: ConnectionMode | None = None

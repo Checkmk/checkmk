@@ -28,20 +28,20 @@ pub fn migrate_registered_connections(path: impl AsRef<Path>) -> AnyhowResult<()
 
     let mut migrated_registry = config::Registry::new(path.as_ref())?;
 
-    for (connection_type, legacy_connections) in [
+    for (connection_mode, legacy_connections) in [
         (
-            config::ConnectionType::Push,
+            config::ConnectionMode::Push,
             registered_connections_legacy.push,
         ),
         (
-            config::ConnectionType::Pull,
+            config::ConnectionMode::Pull,
             registered_connections_legacy.pull,
         ),
     ] {
         for (coordinates, legacy_connection) in legacy_connections.into_iter() {
             let (site_id, migrated_connection) =
                 migrate_standard_connection(coordinates, legacy_connection);
-            migrated_registry.register_connection(&connection_type, &site_id, migrated_connection);
+            migrated_registry.register_connection(&connection_mode, &site_id, migrated_connection);
         }
     }
 

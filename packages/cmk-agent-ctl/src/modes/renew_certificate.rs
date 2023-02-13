@@ -277,22 +277,22 @@ mod test_renew_certificate {
         let cert_too_long = mk_ca_cert(365 * 600).unwrap();
         let cert_ok = mk_ca_cert(100).unwrap();
         reg.register_connection(
-            &config::ConnectionType::Push,
+            &config::ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/push-site_1").unwrap(),
             new_trusted_connection_with_remote(cert_too_short.clone()),
         );
         reg.register_connection(
-            &config::ConnectionType::Push,
+            &config::ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/push-site_2").unwrap(),
             new_trusted_connection_with_remote(cert_too_long.clone()),
         );
         reg.register_connection(
-            &config::ConnectionType::Pull,
+            &config::ConnectionMode::Pull,
             &site_spec::SiteID::from_str("server/pull-site_1").unwrap(),
             new_trusted_connection_with_remote(cert_too_long),
         );
         reg.register_connection(
-            &config::ConnectionType::Pull,
+            &config::ConnectionMode::Pull,
             &site_spec::SiteID::from_str("server/pull-site_2").unwrap(),
             new_trusted_connection_with_remote(cert_ok.clone()),
         );

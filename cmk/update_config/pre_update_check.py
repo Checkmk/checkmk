@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """ Pre update checks, executed before any configuration is changed. """
 
+import enum
 import sys
 import traceback
-from typing import Literal
 
 from cmk.utils import paths
 from cmk.utils.packaging import (
@@ -34,22 +34,50 @@ from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.actions.rulesets import AllRulesets
 
 
+class ConflictMode(enum.StrEnum):
+    ASK = "ask"
+    INSTALL = "install"
+    KEEP_OLD = "keepold"
+    ABORT = "abort"
+
+
+_PATH_CONFIG = PathConfig(
+    local_root=paths.local_root,
+    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+    agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+    checks_dir=paths.local_checks_dir,
+    inventory_dir=paths.local_inventory_dir,
+    check_manpages_dir=paths.local_check_manpages_dir,
+    agents_dir=paths.local_agents_dir,
+    notifications_dir=paths.local_notifications_dir,
+    gui_plugins_dir=paths.local_gui_plugins_dir,
+    web_dir=paths.local_web_dir,
+    pnp_templates_dir=paths.local_pnp_templates_dir,
+    doc_dir=paths.local_doc_dir,
+    locale_dir=paths.local_locale_dir,
+    bin_dir=paths.local_bin_dir,
+    lib_dir=paths.local_lib_dir,
+    mib_dir=paths.local_mib_dir,
+    alert_handlers_dir=paths.local_alert_handlers_dir,
+)
+
+
 def passed_pre_checks(
-    conflict_mode: Literal["ask", "install", "keepold", "abort"],
+    conflict_mode: ConflictMode,
 ) -> bool:
     return _all_ui_extensions_compatible(conflict_mode) and _all_rulesets_compatible(conflict_mode)
 
 
 def _all_rulesets_compatible(
-    conflict_mode: Literal["ask", "install", "keepold", "abort"],
+    conflict_mode: ConflictMode,
 ) -> bool:
     try:
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
             rulesets = AllRulesets.load_all_rulesets()
     except Exception:
-        if conflict_mode in ["install", "keepold"] or (
-            conflict_mode == "ask"
+        if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+            conflict_mode is ConflictMode.ASK
             and input(
                 "Unknown exception while trying to load rulesets.\n"
                 "Error: %s\n\n"
@@ -71,7 +99,7 @@ def _all_rulesets_compatible(
 
 def _validate_rule_values(
     all_rulesets: RulesetCollection,
-    conflict_mode: Literal["ask", "install", "keepold", "abort"],
+    conflict_mode: ConflictMode,
 ) -> bool:
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
@@ -90,8 +118,8 @@ def _validate_rule_values(
                     "",
                 )
             except MKUserError as excpt:
-                if conflict_mode in ["install", "keepold"] or (
-                    conflict_mode == "ask"
+                if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+                    conflict_mode is ConflictMode.ASK
                     and input(
                         "WARNING: Invalid rule configuration detected\n"
                         "Ruleset: %s\n"
@@ -119,43 +147,24 @@ def _validate_rule_values(
 
 
 def _all_ui_extensions_compatible(
-    conflict_mode: Literal["ask", "install", "keepold", "abort"],
+    conflict_mode: ConflictMode,
 ) -> bool:
     main_modules.load_plugins()
     installer = Installer(paths.installed_packages_dir)
-    path_config = PathConfig(
-        local_root=paths.local_root,
-        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
-        checks_dir=paths.local_checks_dir,
-        inventory_dir=paths.local_inventory_dir,
-        check_manpages_dir=paths.local_check_manpages_dir,
-        agents_dir=paths.local_agents_dir,
-        notifications_dir=paths.local_notifications_dir,
-        gui_plugins_dir=paths.local_gui_plugins_dir,
-        web_dir=paths.local_web_dir,
-        pnp_templates_dir=paths.local_pnp_templates_dir,
-        doc_dir=paths.local_doc_dir,
-        locale_dir=paths.local_locale_dir,
-        bin_dir=paths.local_bin_dir,
-        lib_dir=paths.local_lib_dir,
-        mib_dir=paths.local_mib_dir,
-        alert_handlers_dir=paths.local_alert_handlers_dir,
-    )
-    for mkp in files_inventory(installer, path_config):
+    for mkp in files_inventory(installer, _PATH_CONFIG):
         # mkp package file
         if not mkp["part_id"]:
             continue
 
         for file, error in get_failed_plugins():
             file_path = (
-                str(path_config.get_path(PackagePart(mkp["part_id"]))) + "/" + str(mkp["file"])
+                str(_PATH_CONFIG.get_path(PackagePart(mkp["part_id"]))) + "/" + str(mkp["file"])
             )
             if file_path == file:
                 # unpackaged files
                 if not (package_name := mkp["package"]):
-                    if conflict_mode in ["install", "keepold"] or (
-                        conflict_mode == "ask"
+                    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+                        conflict_mode is ConflictMode.ASK
                         and input(
                             "Incompatible local file '%s'.\n"
                             "Error: %s\n\n"
@@ -168,8 +177,8 @@ def _all_ui_extensions_compatible(
                         continue
                     return False
 
-                if conflict_mode in ["install", "keepold"] or (
-                    conflict_mode == "ask"
+                if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+                    conflict_mode is ConflictMode.ASK
                     and input(
                         "Incompatible file '%s' of extension package '%s'\n"
                         "Error: %s\n\n"
@@ -181,7 +190,7 @@ def _all_ui_extensions_compatible(
                 ):
                     disable(
                         installer,
-                        path_config,
+                        _PATH_CONFIG,
                         PackageName(mkp["package"]),
                         PackageVersion(mkp["version"]),
                     )

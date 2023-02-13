@@ -39,7 +39,7 @@ from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from .pre_update_check import passed_pre_checks
+from .pre_update_check import ConflictMode, passed_pre_checks
 from .registry import update_action_registry
 from .update_state import UpdateState
 
@@ -88,12 +88,14 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
     )
     p.add_argument(
         "--conflict",
-        choices=["ask", "install", "keepold", "abort"],
-        default="ask",
-        help="If you choose 'ask', you will need to manually answer all "
-        "upcoming questions. With 'install' or 'keepold' no interaction is "
-        "needed. If you choose 'abort', the update will be aborted if "
-        "interaction is needed.",
+        choices=list(ConflictMode),
+        default=ConflictMode.ASK,
+        type=ConflictMode,
+        help=(
+            f"If you choose '{ConflictMode.ASK}', you will need to manually answer all upcoming questions. "
+            f"With '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
+        ),
     )
     return p.parse_args(args)
 

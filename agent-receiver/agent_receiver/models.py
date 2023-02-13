@@ -47,20 +47,20 @@ class CsrField:
         return cls(csr)
 
 
-class CertificateRenewalBody(BaseModel):
+class CertificateRenewalBody(BaseModel, frozen=True):
     csr: CsrField
 
 
-class PairingBody(BaseModel):
+class PairingBody(BaseModel, frozen=True):
     csr: str
 
 
-class PairingResponse(BaseModel):
+class PairingResponse(BaseModel, frozen=True):
     root_cert: str
     client_cert: str
 
 
-class RenewCertResponse(BaseModel):
+class RenewCertResponse(BaseModel, frozen=True):
     agent_cert: str
 
 
@@ -83,7 +83,7 @@ def _is_valid_host_name(hostname: str) -> bool:
     return all(allowed.match(x) for x in hostname.split("."))
 
 
-class RegistrationWithHNBody(BaseModel):
+class RegistrationWithHNBody(BaseModel, frozen=True):
     uuid: UUID4
     host_name: str
 
@@ -119,40 +119,40 @@ class ConnectionMode(Enum):
     PUSH = "push-agent"
 
 
-class RegisterExistingResponse(BaseModel):
+class RegisterExistingResponse(BaseModel, frozen=True):
     root_cert: str
     agent_cert: str
     connection_mode: ConnectionMode
 
 
-class RegisterNewBody(BaseModel):
+class RegisterNewBody(BaseModel, frozen=True):
     uuid: UUID4
     csr: CsrField
     agent_labels: Mapping[str, str]
 
 
-class RegisterNewResponse(BaseModel):
+class RegisterNewResponse(BaseModel, frozen=True):
     root_cert: str
 
 
-class RegisterNewOngoingResponseInProgress(BaseModel):
+class RegisterNewOngoingResponseInProgress(BaseModel, frozen=True):
     # the agent controller uses the status field for distinguishing the different variants when
     # deserializing the response from the receiver
     status: Literal["InProgress"] = "InProgress"
 
 
-class RegisterNewOngoingResponseDeclined(BaseModel):
+class RegisterNewOngoingResponseDeclined(BaseModel, frozen=True):
     status: Literal["Declined"] = "Declined"
     reason: str
 
 
-class RegisterNewOngoingResponseSuccess(BaseModel):
+class RegisterNewOngoingResponseSuccess(BaseModel, frozen=True):
     status: Literal["Success"] = "Success"
     agent_cert: str
     connection_mode: ConnectionMode
 
 
-class RequestForRegistration(BaseModel):
+class RequestForRegistration(BaseModel, frozen=True):
     uuid: UUID4
     username: str
     agent_labels: Mapping[str, str]
@@ -171,7 +171,7 @@ class RegistrationStatusEnum(Enum):
     DISCOVERABLE = "discoverable"
 
 
-class RegistrationStatus(BaseModel):
+class RegistrationStatus(BaseModel, frozen=True):
     hostname: str | None = None
     status: RegistrationStatusEnum | None = None
     type: ConnectionMode | None = None

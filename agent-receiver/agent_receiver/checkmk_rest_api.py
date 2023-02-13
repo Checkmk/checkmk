@@ -187,7 +187,7 @@ def post_csr(
     return response.json()["cert"]
 
 
-class HostConfiguration(BaseModel):
+class HostConfiguration(BaseModel, frozen=True):
     site: str
     is_cluster: bool
 
@@ -269,7 +269,7 @@ def _verify_response(
         )
 
 
-class _RestApiErrorDescr(BaseModel):
+class _RestApiErrorDescr(BaseModel, frozen=True):
     title: str
     detail: str | None = None
 

@@ -448,7 +448,7 @@ bool open_unix_socket() {
                 << "removed old socket file " << fl_paths.livestatus_socket;
         } else {
             const generic_error ge("cannot remove old socket file " +
-                                   fl_paths.livestatus_socket);
+                                   fl_paths.livestatus_socket.string());
             Alert(fl_logger_nagios) << ge;
             return false;
         }
@@ -472,7 +472,7 @@ bool open_unix_socket() {
     if (::bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
                sizeof(sockaddr)) < 0) {
         const generic_error ge("cannot bind UNIX socket to address " +
-                               fl_paths.livestatus_socket);
+                               fl_paths.livestatus_socket.string());
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
@@ -483,7 +483,7 @@ bool open_unix_socket() {
     if (0 != ::chmod(fl_paths.livestatus_socket.c_str(), 0660)) {
         const generic_error ge(
             "cannot change file permissions for UNIX socket at " +
-            fl_paths.livestatus_socket + " to 0660");
+            fl_paths.livestatus_socket.string() + " to 0660");
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
@@ -491,7 +491,7 @@ bool open_unix_socket() {
 
     if (0 != ::listen(g_unix_socket, 3 /* backlog */)) {
         const generic_error ge("cannot listen to UNIX socket at " +
-                               fl_paths.livestatus_socket);
+                               fl_paths.livestatus_socket.string());
         Error(fl_logger_nagios) << ge;
         ::close(g_unix_socket);
         return false;
@@ -842,7 +842,8 @@ void deregister_callbacks() {
     neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA, broker_event);
 }
 
-std::string check_path(const std::string &name, const std::string &path) {
+std::filesystem::path check_path(const std::string &name,
+                                 const std::string &path) {
     struct stat st;
     if (stat(path.c_str(), &st) != 0) {
         Error(fl_logger_nagios) << name << " '" << path << "' not existing!";

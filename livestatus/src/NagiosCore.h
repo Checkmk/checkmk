@@ -38,18 +38,18 @@ class OutputBuffer;
 struct NagiosPaths {
     std::filesystem::path crash_reports_directory;
     std::filesystem::path license_usage_history_file;
-    std::string inventory_directory;
-    std::string structured_status_directory;
+    std::filesystem::path inventory_directory;
+    std::filesystem::path structured_status_directory;
     std::filesystem::path robotmk_html_log_directory;
-    std::string logwatch_directory;
-    std::string event_console_status_socket;
+    std::filesystem::path logwatch_directory;
+    std::filesystem::path event_console_status_socket;
     std::filesystem::path history_file;
     std::filesystem::path history_archive_directory;
-    std::string rrd_multiple_directory;
-    std::string rrdcached_socket;
+    std::filesystem::path rrd_multiple_directory;
+    std::filesystem::path rrdcached_socket;
 
-    std::string livestatus_socket{"/usr/local/nagios/var/rw/live"};
-    std::string livestatus_log_file;
+    std::filesystem::path livestatus_socket{"/usr/local/nagios/var/rw/live"};
+    std::filesystem::path livestatus_log_file;
 
     void dump(Logger *logger) const;
 };

@@ -105,14 +105,10 @@ from ._misc import (  # TODO(ML): We should clean this up some day.
     EvalableFloat,
     EVERYTHING,
     ExitSpec,
-    HostAddress,
-    HostgroupName,
-    HostName,
     HostOrServiceConditionRegex,
     HostOrServiceConditions,
     HostOrServiceConditionsNegated,
     HostOrServiceConditionsSimple,
-    HostState,
     HTTPMethod,
     HWSWInventoryParameters,
     InfluxDBConnectionSpec,
@@ -148,6 +144,7 @@ from .automations import (
     PiggybackHostsConnectorAttributes,
 )
 from .core_config import HostsToUpdate
+from .host import HostAddress, HostgroupName, HostName, HostState
 from .ip_lookup import UpdateDNSCacheResult
 from .notify import (
     Contact,

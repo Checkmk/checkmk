@@ -11,9 +11,6 @@ from dataclasses import dataclass
 from typing import Any, Literal, NewType, TypedDict, Union
 
 __all__ = [
-    "HostName",
-    "HostAddress",
-    "HostgroupName",
     "ServiceName",
     "ServicegroupName",
     "ContactgroupName",
@@ -32,7 +29,6 @@ __all__ = [
     "Timestamp",
     "TimeRange",
     "ServiceState",
-    "HostState",
     "ServiceDetails",
     "ServiceAdditionalDetails",
     "MetricName",
@@ -55,9 +51,6 @@ __all__ = [
     "HTTPMethod",
 ]
 
-HostName = str
-HostAddress = str
-HostgroupName = str
 ServiceName = str
 ServicegroupName = str
 ContactgroupName = str
@@ -93,7 +86,6 @@ Timestamp = int
 TimeRange = tuple[int, int]
 
 ServiceState = int
-HostState = int
 ServiceDetails = str
 ServiceAdditionalDetails = str
 

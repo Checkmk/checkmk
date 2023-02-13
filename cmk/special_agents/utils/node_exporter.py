@@ -29,57 +29,57 @@ class NodeExporterQuery(enum.StrEnum):
     # node_time_seconds: system time of the node, equal to btime + uptime from /proc/uptime
     node_uptime_seconds = "(node_time_seconds - node_boot_time_seconds)"
     # From /proc/meminfo
-    node_memory_MemTotal_bytes = "node_memory_MemTotal_bytes/1024"
-    node_memory_MemFree_bytes = "node_memory_MemFree_bytes/1024"
-    node_memory_MemAvailable_bytes = "node_memory_MemAvailable_bytes/1024"
-    node_memory_Buffers_bytes = "node_memory_Buffers_bytes/1024"
-    node_memory_Cached_bytes = "node_memory_Cached_bytes/1024"
-    node_memory_SwapCached_bytes = "node_memory_SwapCached_bytes/1024"
-    node_memory_Active_bytes = "node_memory_Active_bytes/1024"
-    node_memory_Inactive_bytes = "node_memory_Inactive_bytes/1024"
-    node_memory_Active_anon_bytes = "node_memory_Active_anon_bytes/1024"
-    node_memory_Inactive_anon_bytes = "node_memory_Inactive_anon_bytes/1024"
-    node_memory_Active_file_bytes = "node_memory_Active_file_bytes/1024"
-    node_memory_Inactive_file_bytes = "node_memory_Inactive_file_bytes/1024"
-    node_memory_Unevictable_bytes = "node_memory_Unevictable_bytes/1024"
-    node_memory_Mlocked_bytes = "node_memory_Mlocked_bytes/1024"
-    node_memory_SwapTotal_bytes = "node_memory_SwapTotal_bytes/1024"
-    node_memory_SwapFree_bytes = "node_memory_SwapFree_bytes/1024"
-    node_memory_Dirty_bytes = "node_memory_Dirty_bytes/1024"
-    node_memory_Writeback_bytes = "node_memory_Writeback_bytes/1024"
-    node_memory_AnonPages_bytes = "node_memory_AnonPages_bytes/1024"
-    node_memory_Mapped_bytes = "node_memory_Mapped_bytes/1024"
-    node_memory_Shmem_bytes = "node_memory_Shmem_bytes/1024"
-    node_memory_KReclaimable_bytes = "node_memory_KReclaimable_bytes/1024"
-    node_memory_Slab_bytes = "node_memory_Slab_bytes/1024"
-    node_memory_SReclaimable_bytes = "node_memory_SReclaimable_bytes/1024"
-    node_memory_SUnreclaim_bytes = "node_memory_SUnreclaim_bytes/1024"
-    node_memory_KernelStack_bytes = "node_memory_KernelStack_bytes/1024"
-    node_memory_PageTables_bytes = "node_memory_PageTables_bytes/1024"
-    node_memory_NFS_Unstable_bytes = "node_memory_NFS_Unstable_bytes/1024"
-    node_memory_Bounce_bytes = "node_memory_Bounce_bytes/1024"
-    node_memory_WritebackTmp_bytes = "node_memory_WritebackTmp_bytes/1024"
-    node_memory_CommitLimit_bytes = "node_memory_CommitLimit_bytes/1024"
-    node_memory_Committed_AS_bytes = "node_memory_Committed_AS_bytes/1024"
-    node_memory_VmallocTotal_bytes = "node_memory_VmallocTotal_bytes/1024"
-    node_memory_VmallocUsed_bytes = "node_memory_VmallocUsed_bytes/1024"
-    node_memory_VmallocChunk_bytes = "node_memory_VmallocChunk_bytes/1024"
-    node_memory_Percpu_bytes = "node_memory_Percpu_bytes/1024"
-    node_memory_HardwareCorrupted_bytes = "node_memory_HardwareCorrupted_bytes/1024"
-    node_memory_AnonHugePages_bytes = "node_memory_AnonHugePages_bytes/1024"
-    node_memory_ShmemHugePages_bytes = "node_memory_ShmemHugePages_bytes/1024"
-    node_memory_ShmemPmdMapped_bytes = "node_memory_ShmemPmdMapped_bytes/1024"
-    node_memory_CmaTotal_bytes = "node_memory_CmaTotal_bytes/1024"
-    node_memory_CmaFree_bytes = "node_memory_CmaFree_bytes/1024"
+    node_memory_MemTotal_kibibytes = "node_memory_MemTotal_bytes/1024"
+    node_memory_MemFree_kibibytes = "node_memory_MemFree_bytes/1024"
+    node_memory_MemAvailable_kibibytes = "node_memory_MemAvailable_bytes/1024"
+    node_memory_Buffers_kibibytes = "node_memory_Buffers_bytes/1024"
+    node_memory_Cached_kibibytes = "node_memory_Cached_bytes/1024"
+    node_memory_SwapCached_kibibytes = "node_memory_SwapCached_bytes/1024"
+    node_memory_Active_kibibytes = "node_memory_Active_bytes/1024"
+    node_memory_Inactive_kibibytes = "node_memory_Inactive_bytes/1024"
+    node_memory_Active_anon_kibibytes = "node_memory_Active_anon_bytes/1024"
+    node_memory_Inactive_anon_kibibytes = "node_memory_Inactive_anon_bytes/1024"
+    node_memory_Active_file_kibibytes = "node_memory_Active_file_bytes/1024"
+    node_memory_Inactive_file_kibibytes = "node_memory_Inactive_file_bytes/1024"
+    node_memory_Unevictable_kibibytes = "node_memory_Unevictable_bytes/1024"
+    node_memory_Mlocked_kibibytes = "node_memory_Mlocked_bytes/1024"
+    node_memory_SwapTotal_kibibytes = "node_memory_SwapTotal_bytes/1024"
+    node_memory_SwapFree_kibibytes = "node_memory_SwapFree_bytes/1024"
+    node_memory_Dirty_kibibytes = "node_memory_Dirty_bytes/1024"
+    node_memory_Writeback_kibibytes = "node_memory_Writeback_bytes/1024"
+    node_memory_AnonPages_kibibytes = "node_memory_AnonPages_bytes/1024"
+    node_memory_Mapped_kibibytes = "node_memory_Mapped_bytes/1024"
+    node_memory_Shmem_kibibytes = "node_memory_Shmem_bytes/1024"
+    node_memory_KReclaimable_kibibytes = "node_memory_KReclaimable_bytes/1024"
+    node_memory_Slab_kibibytes = "node_memory_Slab_bytes/1024"
+    node_memory_SReclaimable_kibibytes = "node_memory_SReclaimable_bytes/1024"
+    node_memory_SUnreclaim_kibibytes = "node_memory_SUnreclaim_bytes/1024"
+    node_memory_KernelStack_kibibytes = "node_memory_KernelStack_bytes/1024"
+    node_memory_PageTables_kibibytes = "node_memory_PageTables_bytes/1024"
+    node_memory_NFS_Unstable_kibibytes = "node_memory_NFS_Unstable_bytes/1024"
+    node_memory_Bounce_kibibytes = "node_memory_Bounce_bytes/1024"
+    node_memory_WritebackTmp_kibibytes = "node_memory_WritebackTmp_bytes/1024"
+    node_memory_CommitLimit_kibibytes = "node_memory_CommitLimit_bytes/1024"
+    node_memory_Committed_AS_kibibytes = "node_memory_Committed_AS_bytes/1024"
+    node_memory_VmallocTotal_kibibytes = "node_memory_VmallocTotal_bytes/1024"
+    node_memory_VmallocUsed_kibibytes = "node_memory_VmallocUsed_bytes/1024"
+    node_memory_VmallocChunk_kibibytes = "node_memory_VmallocChunk_bytes/1024"
+    node_memory_Percpu_kibibytes = "node_memory_Percpu_bytes/1024"
+    node_memory_HardwareCorrupted_kibibytes = "node_memory_HardwareCorrupted_bytes/1024"
+    node_memory_AnonHugePages_kibibytes = "node_memory_AnonHugePages_bytes/1024"
+    node_memory_ShmemHugePages_kibibytes = "node_memory_ShmemHugePages_bytes/1024"
+    node_memory_ShmemPmdMapped_kibibytes = "node_memory_ShmemPmdMapped_bytes/1024"
+    node_memory_CmaTotal_kibibytes = "node_memory_CmaTotal_bytes/1024"
+    node_memory_CmaFree_kibibytes = "node_memory_CmaFree_bytes/1024"
     node_memory_HugePages_Total = "node_memory_HugePages_Total"
     node_memory_HugePages_Free = "node_memory_HugePages_Free"
     node_memory_HugePages_Rsvd = "node_memory_HugePages_Rsvd"
     node_memory_HugePages_Surp = "node_memory_HugePages_Surp"
-    node_memory_Hugepagesize_bytes = "node_memory_Hugepagesize_bytes/1024"
-    node_memory_Hugetlb_bytes = "node_memory_Hugetlb_bytes/1024"
-    node_memory_DirectMap4k_bytes = "node_memory_DirectMap4k_bytes/1024"
-    node_memory_DirectMap2M_bytes = "node_memory_DirectMap2M_bytes/1024"
-    node_memory_DirectMap1G_bytes = "node_memory_DirectMap1G_bytes/1024"
+    node_memory_Hugepagesize_kibibytes = "node_memory_Hugepagesize_bytes/1024"
+    node_memory_Hugetlb_kibibytes = "node_memory_Hugetlb_bytes/1024"
+    node_memory_DirectMap4k_kibibytes = "node_memory_DirectMap4k_bytes/1024"
+    node_memory_DirectMap2M_kibibytes = "node_memory_DirectMap2M_bytes/1024"
+    node_memory_DirectMap1G_kibibytes = "node_memory_DirectMap1G_bytes/1024"
     # From /proc/loadavg
     node_load1 = "node_load1"
     node_load5 = "node_load5"
@@ -288,7 +288,13 @@ class NodeExporter:
             node: _create_section("mem", section_list) for node, section_list in result.items()
         }
         cluster_section = MemUsed.parse_obj(
-            {key: sum(sample["value"] for sample in samples) for key, samples in memory}
+            # We multiply by 1024, since the mem_linux check expects bytes, but the query provides
+            # kibibytes. Providing bytes via a dedicated section to the Memory check is possible.
+            # This is what we do at the cluster level, since it has it's own section.
+            # Thus, we pass the value multiplied by 1024.
+            # The nodes use the <<<mem>>> section, so their section values are not multiplied,
+            # unless they are migrated to their own section.
+            {key: sum(sample["value"] * 1024 for sample in samples) for key, samples in memory}
         )
         if cluster_section.MemTotal == 0:
             return None, node_sections
@@ -298,57 +304,57 @@ class NodeExporter:
         return [
             (query_name, self.get_promql(query))
             for query_name, query in [
-                ("MemTotal", NodeExporterQuery.node_memory_MemTotal_bytes),
-                ("MemFree", NodeExporterQuery.node_memory_MemFree_bytes),
-                ("MemAvailable", NodeExporterQuery.node_memory_MemAvailable_bytes),
-                ("Buffers", NodeExporterQuery.node_memory_Buffers_bytes),
-                ("Cached", NodeExporterQuery.node_memory_Cached_bytes),
-                ("SwapCached", NodeExporterQuery.node_memory_SwapCached_bytes),
-                ("Active", NodeExporterQuery.node_memory_Active_bytes),
-                ("Inactive", NodeExporterQuery.node_memory_Inactive_bytes),
-                ("Active(anon)", NodeExporterQuery.node_memory_Active_anon_bytes),
-                ("Inactive(anon)", NodeExporterQuery.node_memory_Inactive_anon_bytes),
-                ("Active(file)", NodeExporterQuery.node_memory_Active_file_bytes),
-                ("Inactive(file)", NodeExporterQuery.node_memory_Inactive_file_bytes),
-                ("Unevictable", NodeExporterQuery.node_memory_Unevictable_bytes),
-                ("Mlocked", NodeExporterQuery.node_memory_Mlocked_bytes),
-                ("SwapTotal", NodeExporterQuery.node_memory_SwapTotal_bytes),
-                ("SwapFree", NodeExporterQuery.node_memory_SwapFree_bytes),
-                ("Dirty", NodeExporterQuery.node_memory_Dirty_bytes),
-                ("Writeback", NodeExporterQuery.node_memory_Writeback_bytes),
-                ("AnonPages", NodeExporterQuery.node_memory_AnonPages_bytes),
-                ("Mapped", NodeExporterQuery.node_memory_Mapped_bytes),
-                ("Shmem", NodeExporterQuery.node_memory_Shmem_bytes),
-                ("KReclaimable", NodeExporterQuery.node_memory_KReclaimable_bytes),
-                ("Slab", NodeExporterQuery.node_memory_Slab_bytes),
-                ("SReclaimable", NodeExporterQuery.node_memory_SReclaimable_bytes),
-                ("SUnreclaim", NodeExporterQuery.node_memory_SUnreclaim_bytes),
-                ("KernelStack", NodeExporterQuery.node_memory_KernelStack_bytes),
-                ("PageTables", NodeExporterQuery.node_memory_PageTables_bytes),
-                ("NFS_Unstable", NodeExporterQuery.node_memory_NFS_Unstable_bytes),
-                ("Bounce", NodeExporterQuery.node_memory_Bounce_bytes),
-                ("WritebackTmp", NodeExporterQuery.node_memory_WritebackTmp_bytes),
-                ("CommitLimit", NodeExporterQuery.node_memory_CommitLimit_bytes),
-                ("Committed_AS", NodeExporterQuery.node_memory_Committed_AS_bytes),
-                ("VmallocTotal", NodeExporterQuery.node_memory_VmallocTotal_bytes),
-                ("VmallocUsed", NodeExporterQuery.node_memory_VmallocUsed_bytes),
-                ("VmallocChunk", NodeExporterQuery.node_memory_VmallocChunk_bytes),
-                ("Percpu", NodeExporterQuery.node_memory_Percpu_bytes),
-                ("HardwareCorrupted", NodeExporterQuery.node_memory_HardwareCorrupted_bytes),
-                ("AnonHugePages", NodeExporterQuery.node_memory_AnonHugePages_bytes),
-                ("ShmemHugePages", NodeExporterQuery.node_memory_ShmemHugePages_bytes),
-                ("ShmemPmdMapped", NodeExporterQuery.node_memory_ShmemPmdMapped_bytes),
-                ("CmaTotal", NodeExporterQuery.node_memory_CmaTotal_bytes),
-                ("CmaFree", NodeExporterQuery.node_memory_CmaFree_bytes),
+                ("MemTotal", NodeExporterQuery.node_memory_MemTotal_kibibytes),
+                ("MemFree", NodeExporterQuery.node_memory_MemFree_kibibytes),
+                ("MemAvailable", NodeExporterQuery.node_memory_MemAvailable_kibibytes),
+                ("Buffers", NodeExporterQuery.node_memory_Buffers_kibibytes),
+                ("Cached", NodeExporterQuery.node_memory_Cached_kibibytes),
+                ("SwapCached", NodeExporterQuery.node_memory_SwapCached_kibibytes),
+                ("Active", NodeExporterQuery.node_memory_Active_kibibytes),
+                ("Inactive", NodeExporterQuery.node_memory_Inactive_kibibytes),
+                ("Active(anon)", NodeExporterQuery.node_memory_Active_anon_kibibytes),
+                ("Inactive(anon)", NodeExporterQuery.node_memory_Inactive_anon_kibibytes),
+                ("Active(file)", NodeExporterQuery.node_memory_Active_file_kibibytes),
+                ("Inactive(file)", NodeExporterQuery.node_memory_Inactive_file_kibibytes),
+                ("Unevictable", NodeExporterQuery.node_memory_Unevictable_kibibytes),
+                ("Mlocked", NodeExporterQuery.node_memory_Mlocked_kibibytes),
+                ("SwapTotal", NodeExporterQuery.node_memory_SwapTotal_kibibytes),
+                ("SwapFree", NodeExporterQuery.node_memory_SwapFree_kibibytes),
+                ("Dirty", NodeExporterQuery.node_memory_Dirty_kibibytes),
+                ("Writeback", NodeExporterQuery.node_memory_Writeback_kibibytes),
+                ("AnonPages", NodeExporterQuery.node_memory_AnonPages_kibibytes),
+                ("Mapped", NodeExporterQuery.node_memory_Mapped_kibibytes),
+                ("Shmem", NodeExporterQuery.node_memory_Shmem_kibibytes),
+                ("KReclaimable", NodeExporterQuery.node_memory_KReclaimable_kibibytes),
+                ("Slab", NodeExporterQuery.node_memory_Slab_kibibytes),
+                ("SReclaimable", NodeExporterQuery.node_memory_SReclaimable_kibibytes),
+                ("SUnreclaim", NodeExporterQuery.node_memory_SUnreclaim_kibibytes),
+                ("KernelStack", NodeExporterQuery.node_memory_KernelStack_kibibytes),
+                ("PageTables", NodeExporterQuery.node_memory_PageTables_kibibytes),
+                ("NFS_Unstable", NodeExporterQuery.node_memory_NFS_Unstable_kibibytes),
+                ("Bounce", NodeExporterQuery.node_memory_Bounce_kibibytes),
+                ("WritebackTmp", NodeExporterQuery.node_memory_WritebackTmp_kibibytes),
+                ("CommitLimit", NodeExporterQuery.node_memory_CommitLimit_kibibytes),
+                ("Committed_AS", NodeExporterQuery.node_memory_Committed_AS_kibibytes),
+                ("VmallocTotal", NodeExporterQuery.node_memory_VmallocTotal_kibibytes),
+                ("VmallocUsed", NodeExporterQuery.node_memory_VmallocUsed_kibibytes),
+                ("VmallocChunk", NodeExporterQuery.node_memory_VmallocChunk_kibibytes),
+                ("Percpu", NodeExporterQuery.node_memory_Percpu_kibibytes),
+                ("HardwareCorrupted", NodeExporterQuery.node_memory_HardwareCorrupted_kibibytes),
+                ("AnonHugePages", NodeExporterQuery.node_memory_AnonHugePages_kibibytes),
+                ("ShmemHugePages", NodeExporterQuery.node_memory_ShmemHugePages_kibibytes),
+                ("ShmemPmdMapped", NodeExporterQuery.node_memory_ShmemPmdMapped_kibibytes),
+                ("CmaTotal", NodeExporterQuery.node_memory_CmaTotal_kibibytes),
+                ("CmaFree", NodeExporterQuery.node_memory_CmaFree_kibibytes),
                 ("HugePages_Total", NodeExporterQuery.node_memory_HugePages_Total),
                 ("HugePages_Free", NodeExporterQuery.node_memory_HugePages_Free),
                 ("HugePages_Rsvd", NodeExporterQuery.node_memory_HugePages_Rsvd),
                 ("HugePages_Surp", NodeExporterQuery.node_memory_HugePages_Surp),
-                ("Hugepagesize", NodeExporterQuery.node_memory_Hugepagesize_bytes),
-                ("Hugetlb", NodeExporterQuery.node_memory_Hugetlb_bytes),
-                ("DirectMap4k", NodeExporterQuery.node_memory_DirectMap4k_bytes),
-                ("DirectMap2M", NodeExporterQuery.node_memory_DirectMap2M_bytes),
-                ("DirectMap1G", NodeExporterQuery.node_memory_DirectMap1G_bytes),
+                ("Hugepagesize", NodeExporterQuery.node_memory_Hugepagesize_kibibytes),
+                ("Hugetlb", NodeExporterQuery.node_memory_Hugetlb_kibibytes),
+                ("DirectMap4k", NodeExporterQuery.node_memory_DirectMap4k_kibibytes),
+                ("DirectMap2M", NodeExporterQuery.node_memory_DirectMap2M_kibibytes),
+                ("DirectMap1G", NodeExporterQuery.node_memory_DirectMap1G_kibibytes),
             ]
         ]
 

@@ -21,7 +21,7 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.render as render
 from cmk.utils.licensing import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.licensing.state import is_expired_trial, is_licensed
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import __version__, is_raw_edition, Version
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -73,6 +73,7 @@ from cmk.gui.watolib.search import build_index_background
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         is_after_expiration_grace_period,
+        is_max_version_valid,
         load_verification_response,
     )
 
@@ -209,6 +210,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             return license_usage_report_valid
         return (
             not is_after_expiration_grace_period(now, self._license_verification_response)
+            and is_max_version_valid(self._license_verification_response)
             and license_usage_report_valid
         )
 
@@ -438,18 +440,24 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if is_raw_edition():  # TODO: cleanup conditional imports and solve this via registration
             return None
         now = int(datetime.now().timestamp())
-        if self._license_verification_response is None or not is_after_expiration_grace_period(
-            now, self._license_verification_response
-        ):
+        if self._license_verification_response is None:
             return None
 
-        return _(
-            "The currently applied license is expired since: %s (> 60 days)."
-        ) % datetime.fromtimestamp(
-            self._license_verification_response.subscription_expiration_ts
-        ).strftime(
-            "%Y-%m-%d"
-        )
+        if is_after_expiration_grace_period(now, self._license_verification_response):
+            return _(
+                "The currently applied license is expired since: %s (> 60 days)."
+            ) % datetime.fromtimestamp(
+                self._license_verification_response.subscription_expiration_ts
+            ).strftime(
+                "%Y-%m-%d"
+            )
+        if not is_max_version_valid(self._license_verification_response):
+            return _(
+                "Your license allows you to use Checkmk until version %s, but you are using %s. "
+                "Operating in 'unlicensed' mode."
+            ) % (self._license_verification_response.checkmk_max_version, Version(__version__))
+
+        return None
 
     def _show_license_validity(self) -> None:
         errors = []

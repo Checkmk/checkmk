@@ -338,7 +338,7 @@ void start_threads() {
     logger->setUseParentHandlers(false);
     try {
         logger->setHandler(
-            std::make_unique<LivestatusHandler>(fl_paths.livestatus_log_file));
+            std::make_unique<LivestatusHandler>(fl_paths.log_file));
     } catch (const generic_error &ex) {
         Warning(fl_logger_nagios) << ex;
     }
@@ -862,7 +862,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
         // set default path to our logfile to be in the same path as nagios.log
         const std::string lf{log_file};
         auto slash = lf.rfind('/');
-        fl_paths.livestatus_log_file =
+        fl_paths.log_file =
             (slash == std::string::npos ? "/tmp/" : lf.substr(0, slash + 1)) +
             "livestatus.log";
     }
@@ -996,7 +996,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 fl_paths.rrd_multiple_directory =
                     check_path("RRD multiple directory", right);
             } else if (left == "log_file") {
-                fl_paths.livestatus_log_file = right;
+                fl_paths.log_file = right;
             } else if (left == "data_encoding") {
                 if (right == "utf8") {
                     fl_data_encoding = Encoding::utf8;
@@ -1098,7 +1098,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 
     Notice(fl_logger_nagios)
         << "finished initialization, further log messages go to "
-        << fl_paths.livestatus_log_file;
+        << fl_paths.log_file;
     return 0;
 }
 

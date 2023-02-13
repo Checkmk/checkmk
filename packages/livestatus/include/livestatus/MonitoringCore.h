@@ -51,6 +51,7 @@ struct Paths {
     std::filesystem::path rrd_multiple_directory;
     std::filesystem::path rrdcached_socket;
     std::filesystem::path livestatus_socket;
+    std::filesystem::path log_file;
 };
 
 /// An abstraction layer for the monitoring core (nagios or cmc)

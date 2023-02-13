@@ -63,7 +63,7 @@ void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "RRD multiple directory = " << rrd_multiple_directory;
     Notice(logger) << "rrdcached socket = " << rrdcached_socket;
     Notice(logger) << "Livestatus socket = " << livestatus_socket;
-    Notice(logger) << "Livestatus log file = " << livestatus_log_file;
+    Notice(logger) << "log file = " << log_file;
 }
 
 NagiosCore::NagiosCore(
@@ -349,6 +349,7 @@ Paths NagiosCore::paths() const {
         .rrd_multiple_directory = _paths.rrd_multiple_directory,
         .rrdcached_socket = _paths.rrdcached_socket,
         .livestatus_socket = _paths.livestatus_socket,
+        .log_file = _paths.log_file,
     };
 }
 

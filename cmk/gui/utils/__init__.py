@@ -7,12 +7,11 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import itertools
 import marshal
 import urllib.parse
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Final, Sequence
 
 import cmk.utils.paths
 import cmk.utils.regex
@@ -98,8 +97,6 @@ _failed_plugins: dict[str, list[tuple[str, BaseException]]] = {}
 # (global variables). Also honors the local-hierarchy for OMD
 # TODO: This is kept for pre 1.6.0i1 plugins
 def load_web_plugins(forwhat: str, globalvars: dict) -> None:
-    _failed_plugins.setdefault(forwhat, [])
-
     for plugins_path in [
         Path(cmk.utils.paths.web_dir, "plugins", forwhat),
         cmk.utils.paths.local_web_dir / "plugins" / forwhat,
@@ -121,12 +118,16 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
 
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
-                _failed_plugins[forwhat].append((str(file_path), e))
+                add_failed_plugin(forwhat, str(file_path), e)
 
 
 def add_failed_plugin(main_module_name: str, plugin_name: str, e: BaseException) -> None:
     _failed_plugins.setdefault(main_module_name, []).append((plugin_name, e))
 
 
-def get_failed_plugins() -> list[tuple[str, BaseException]]:
-    return list(itertools.chain(*list(_failed_plugins.values())))
+def get_failed_plugins() -> Sequence[tuple[str, str, BaseException]]:
+    return [
+        (gui_part, file_name, exception)
+        for gui_part, errors in _failed_plugins.items()
+        for file_name, exception in errors
+    ]

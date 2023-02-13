@@ -153,7 +153,7 @@ def _all_ui_extensions_compatible(
     installer = Installer(paths.installed_packages_dir)
     inventory = files_inventory(installer, _PATH_CONFIG)
 
-    for file, error in get_failed_plugins():
+    for _gui_part, file, error in get_failed_plugins():
         for mkp in inventory:
             # mkp package file
             if not mkp["part_id"]:

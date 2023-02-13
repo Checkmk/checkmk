@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from functools import partial
-from typing import Protocol
+from typing import Any, Protocol
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Alternative, FixedValue, Float, Tuple
+from cmk.gui.valuespec import Alternative, FixedValue, Float, Tuple, ValueSpec
 
 
 def _NoLevels() -> FixedValue:
@@ -17,8 +17,9 @@ def _NoLevels() -> FixedValue:
     )
 
 
+# TODO: Re-think this type...
 class _Spec(Protocol):
-    def __call__(self, title: str, default_value: float):  # type:ignore[no-untyped-def]
+    def __call__(self, *args: Any, **kwargs: Any) -> ValueSpec:
         ...
 
 

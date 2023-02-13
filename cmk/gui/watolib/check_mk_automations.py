@@ -118,36 +118,48 @@ def _deserialize(
 def discovery(
     site_id: SiteId,
     mode: str,
-    flags: Iterable[str],
     host_names: Iterable[HostName],
     *,
+    scan: bool,
+    raise_errors: bool,
     timeout: int | None = None,
     non_blocking_http: bool = False,
-) -> results.DiscoveryResult:
+) -> results.ServiceDiscoveryResult:
     return _deserialize(
         _automation_serialized(
-            "inventory",
+            "service-discovery",
             siteid=site_id,
-            args=[*flags, mode, *host_names],
+            args=[
+                *(("@scan",) if scan else ()),
+                *(("@raiseerrors",) if raise_errors else ()),
+                mode,
+                *host_names,
+            ],
             timeout=timeout,
             non_blocking_http=non_blocking_http,
         ),
-        results.DiscoveryResult,
+        results.ServiceDiscoveryResult,
     )
 
 
-def try_discovery(
+def discovery_preview(
     site_id: SiteId,
-    flags: Iterable[str],
     host_name: HostName,
-) -> results.TryDiscoveryResult:
+    *,
+    prevent_fetching: bool,
+    raise_errors: bool,
+) -> results.ServiceDiscoveryPreviewResult:
     return _deserialize(
         _automation_serialized(
-            "try-inventory",
+            "service-discovery-preview",
             siteid=site_id,
-            args=[*flags, host_name],
+            args=[
+                *(("@nofetch",) if prevent_fetching else ()),
+                *(("@raiseerrors",) if raise_errors else ()),
+                host_name,
+            ],
         ),
-        results.TryDiscoveryResult,
+        results.ServiceDiscoveryPreviewResult,
     )
 
 

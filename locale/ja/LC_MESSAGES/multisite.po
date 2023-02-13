@@ -3546,6 +3546,10 @@ msgstr "グラフコレクションに追加"
 msgid "Add to monitoring configuration"
 msgstr "監視構成に追加"
 
+#, fuzzy
+msgid "Add to query"
+msgstr "クエリするインデックス"
+
 msgid "Add to trusted CAs"
 msgstr "信頼できるCAに追加する"
 
@@ -4442,9 +4446,6 @@ msgstr "通知されたオブジェクトのすべての連絡先"
 msgid "All customers"
 msgstr "すべてのお客様"
 
-msgid "All customers with host and service statistics"
-msgstr "ホストとサービスの統計を持つすべての顧客"
-
 msgid "All directions"
 msgstr "全方向"
 
@@ -4804,6 +4805,10 @@ msgstr "常にバルク"
 msgid "Always install Python with agent"
 msgstr "常にエージェントと一緒にPythonをインストールする"
 
+#, fuzzy
+msgid "Always keep vanished clustered services"
+msgstr "未定のクラスター化されたサービス"
+
 msgid "Always report OK"
 msgstr "常にOKを報告する"
 
@@ -5002,6 +5007,10 @@ msgstr "この行を分析する"
 msgid "Analyzing the Checkmk site configuration"
 msgstr "構成を分析する"
 
+#, fuzzy
+msgid "And"
+msgstr "追加"
+
 msgid "Android version regular expression"
 msgstr "Androidバージョン正規表現"
 
@@ -5145,6 +5154,10 @@ msgstr "アプリケーション(正規表現)"
 
 msgid "Application / Syslog-Tag"
 msgstr "アプリケーション/ Syslog-タグ"
+
+#, fuzzy
+msgid "Application Gateway"
+msgstr "アプリケーションキー"
 
 #, fuzzy
 msgid "Application ID"
@@ -6104,6 +6117,10 @@ msgid "Azure Agent Info"
 msgstr "Azureエージェント情報"
 
 #, fuzzy
+msgid "Azure Application Gateway"
+msgstr "アプリケーションキー"
+
+#, fuzzy
 msgid "Azure Blob Storage"
 msgstr "Azureストレージ"
 
@@ -6929,9 +6946,43 @@ msgstr ""
 "平均を計算します。アラートレベルを定義すると、それらは平均値に自動的に適用さ"
 "れます。これは、短いピークをマスクするのに役立ちます。"
 
+#, fuzzy
 msgid ""
-"By activating averaging, Check_MK will compute the average of the total CPU "
-"utilization over a given interval. If you have defined alerting levels then "
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the resident memory utilization, in percentage of total RAM. If you have "
+"defined alerting levels then these will automatically be applied on the "
+"averaged value. This helps to mask out short peaks. "
+msgstr ""
+"平均化をアクティブにすることにより、Checkmkは、指定された間隔での合計CPU使用"
+"率の平均を計算します。アラートレベルを定義した場合、これらは平均値に自動的に"
+"適用されます。これは、短いピークをマスクするのに役立ちます。 "
+
+#, fuzzy
+msgid ""
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the resident memory utilization. If you have defined alerting levels then "
+"these will automatically be applied on the averaged value. This helps to "
+"mask out short peaks. "
+msgstr ""
+"平均化をアクティブにすることにより、Checkmkは、指定された間隔での合計CPU使用"
+"率の平均を計算します。アラートレベルを定義した場合、これらは平均値に自動的に"
+"適用されます。これは、短いピークをマスクするのに役立ちます。 "
+
+#, fuzzy
+msgid ""
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the total CPU utilization. If you have defined alerting levels then these "
+"will automatically be applied on the averaged value. This helps to mask out "
+"short peaks. "
+msgstr ""
+"平均化をアクティブにすることにより、Checkmkは、指定された間隔での合計CPU使用"
+"率の平均を計算します。アラートレベルを定義した場合、これらは平均値に自動的に"
+"適用されます。これは、短いピークをマスクするのに役立ちます。 "
+
+#, fuzzy
+msgid ""
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the virtual memory utilization. If you have defined alerting levels then "
 "these will automatically be applied on the averaged value. This helps to "
 "mask out short peaks. "
 msgstr ""
@@ -7219,6 +7270,17 @@ msgstr ""
 "とに注意してください。<br>リモートサイトは、構成された接続との自動ユーザー同"
 "期を実行しません。ただし、構成済みのすべての接続または特定の接続リストとユー"
 "ザーを同期するように各サイトを構成できます。"
+
+msgid ""
+"By default we keep a record of vanished services on the node if they are "
+"assigned to a cluster. When a clustered service switches from one node to "
+"another, it might not be seen on either node for one check cycle. Keeping "
+"clustered services indefinitely keeps us from loosing them in this case. "
+"However this means that truly vanished clustered servces will never be "
+"removed from the cluster. If you choose to include clustered service in the "
+"removal operation, vanished services will be removed from clusters, at the "
+"risk of loosing services due to the described race condition."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -7522,9 +7584,6 @@ msgstr "CPGメンバー名"
 msgid "CPU"
 msgstr "CPU"
 
-msgid "CPU Averaging"
-msgstr "CPU平均化"
-
 msgid "CPU Load via WMI"
 msgstr "WMIを介したCPU負荷"
 
@@ -7541,6 +7600,10 @@ msgstr "CPU使用率"
 
 msgid "CPU Utilization of Clusters"
 msgstr "クラスターのCPU使用率"
+
+#, fuzzy
+msgid "CPU averaging"
+msgstr "CPU平均化"
 
 msgid "CPU in percent"
 msgstr "CPU(パーセント)"
@@ -7813,10 +7876,6 @@ msgstr ""
 msgid ""
 "Cannot activate changes: The license usage history is older than five days."
 msgstr ""
-
-#, fuzzy
-msgid "Cannot be a certificate chain"
-msgstr "証明書チェーン"
 
 msgid "Cannot calculate graph recipes"
 msgstr "グラフレシピを計算できません"
@@ -8849,11 +8908,11 @@ msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "時間パフォーマンスデータを使用したCheckmk"
 
 msgid ""
-"Checkmk signs its SAML 2.0 requests to your identity provider. You can use "
-"the certificate that is shipped with Checkmk. Alternatively, if your "
-"organisation manages its own certificates, you can also add a custom "
-"certificate. Note that the public certificate needs to be a single "
-"certificate (not a certificate chain)."
+"Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
+"the certificate that comes with Checkmk. Alternatively, if your organization "
+"manages its own certificates, you can add a custom certificate. Note that "
+"the public certificate must be a single certificate (not a certificate "
+"chain)."
 msgstr ""
 
 msgid "Checkmk site objects"
@@ -9128,11 +9187,6 @@ msgstr ""
 
 msgid ""
 "Choose what modem is used. Currently supported is only Teltonika-TRB140."
-msgstr ""
-
-msgid ""
-"Choose whether roles should be mapped. Specify the attribute name, and the "
-"corresponding mappings for each role."
 msgstr ""
 
 msgid ""
@@ -9489,15 +9543,6 @@ msgstr "クローズド"
 
 msgid "Cloud Based Environments"
 msgstr "クラウドベースの環境"
-
-msgid "Cloud Functions"
-msgstr "クラウド機能"
-
-msgid "Cloud Run"
-msgstr "Cloud Run"
-
-msgid "Cloud SQL"
-msgstr "Cloud SQL"
 
 msgid "Cloud based environments"
 msgstr "クラウドベースの環境"
@@ -11490,6 +11535,10 @@ msgstr "SNMPトラップを処理するための資格情報"
 msgid "Credentials for selected databases"
 msgstr "選択したデータベースの資格情報"
 
+msgid ""
+"Credentials not configured or invalid. Please review the license settings"
+msgstr ""
+
 msgid "Credentials to access the Database"
 msgstr ""
 
@@ -11664,6 +11713,10 @@ msgstr "現在のホストチェックの試行"
 
 msgid "Current image:"
 msgstr "現在の画像:"
+
+#, fuzzy
+msgid "Current license state"
+msgstr "現在の状態"
 
 msgid "Current log files"
 msgstr "現在のログファイル"
@@ -13209,8 +13262,24 @@ msgstr "スケジュールされたレポート '%s'を削除しますか?"
 msgid "Delete selected"
 msgstr "選択を削除します"
 
+#, fuzzy, python-format
+msgid "Delete selected %s"
+msgstr "選択を削除します"
+
 msgid "Delete selected MIBs"
 msgstr "選択したMIBを削除します"
+
+#, fuzzy
+msgid "Delete selected aggregations"
+msgstr "選択した集計について"
+
+#, fuzzy
+msgid "Delete selected hosts"
+msgstr "選択したユーザーを削除します"
+
+#, fuzzy
+msgid "Delete selected rules"
+msgstr "選択したユーザーを削除します"
 
 msgid "Delete selected users"
 msgstr "選択したユーザーを削除します"
@@ -14682,6 +14751,10 @@ msgstr ""
 msgid "Distinguished name for binding"
 msgstr "バインディングの識別名"
 
+#, fuzzy
+msgid "Distribute response"
+msgstr "応答を非表示"
+
 msgid "Distributed monitoring"
 msgstr "分散監視"
 
@@ -15139,41 +15212,11 @@ msgstr "コンテキストを転送する"
 msgid "Do you really want to %s"
 msgstr "本当に %s したいですか"
 
-#, python-format
-msgid "Do you really want to delete the selected %s?"
-msgstr "選択した %sを本当に削除しますか？"
-
-msgid "Do you really want to delete the selected MIBs?"
-msgstr "選択したMIBsを本当に削除しますか？"
-
-msgid "Do you really want to delete the selected aggregations?"
-msgstr "選択した集計を本当に削除しますか?"
-
-msgid "Do you really want to delete the selected hosts?"
-msgstr "選択したホストを本当に削除しますか?"
-
-msgid "Do you really want to delete the selected rules?"
-msgstr "選択したルールを本当に削除しますか？"
-
-msgid "Do you really want to delete the selected users?"
-msgstr "選択したユーザーを本当に削除しますか？"
-
 msgid "Do you really want to move the selected aggregations?"
 msgstr "選択した集計を本当に移動しますか？"
 
 msgid "Do you really want to move the selected rules?"
 msgstr "選択したルールを本当に移動しますか?"
-
-msgid ""
-"Do you really want to remove the TLS registration of the hosts in this "
-"folder?<br>This does not affect hosts in subfolders."
-msgstr ""
-"このフォルダーナイのホストのTLS登録を本当に削除してもよろしいですか。<br>これ"
-"は、サブフォルダー内のホストには影響しません。"
-
-msgid ""
-"Do you really want to remove the TLS registration of the selected hosts?"
-msgstr "選択したホストのTLS登録を本当に削除しますか?"
 
 #, fuzzy
 msgid ""
@@ -15182,11 +15225,6 @@ msgid ""
 msgstr ""
 "本当に次のホストに名前を変更してもよろしいですか？これには、監視コアの再起動"
 "が含まれます！"
-
-msgid ""
-"Do you really want to reset this configuration variable back to its default "
-"value?"
-msgstr "この構成変数をデフォルト値にリセットしますか?"
 
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "本当にイベントデーモンモードを切り替えますか？"
@@ -16614,6 +16652,10 @@ msgid ""
 "Encrypted connections to this site are made without certificate verification."
 msgstr "このサイトへの暗号化された接続は、証明書の検証なしで行われます。"
 
+#, fuzzy
+msgid "Encrypted private keys are not supported"
+msgstr "出力形式 '%s'はサポートされていません"
+
 msgid "Encryption"
 msgstr "暗号化"
 
@@ -17775,6 +17817,10 @@ msgstr ""
 msgid "Failed provisionings"
 msgstr "プロビジョニングの失敗"
 
+#, fuzzy
+msgid "Failed requests"
+msgstr "失敗した検索リクエスト"
+
 msgid "Failed requests to Adressbook files"
 msgstr "Adressbookファイルへのリクエストの失敗"
 
@@ -18332,9 +18378,6 @@ msgstr "ファイラーディスクレベル(NetApp、IBM SVC)"
 msgid "Files"
 msgstr "ファイル"
 
-msgid "Filestore"
-msgstr "ファイルストア"
-
 msgid "Filesystem"
 msgstr "ファイルシステム"
 
@@ -18764,6 +18807,17 @@ msgstr ""
 "構成されたIP範囲内の新しいホストを検出しようとします。新しく見つかった各ホス"
 "トは、ホスト名、DNS経由で解決可能な場合、またはIPアドレスによって現在のフォル"
 "ダーに追加されます。"
+
+msgid ""
+"For each running EC2 instance a piggyback host is created. We offer "
+"different ways of naming these hosts. Note, that not every host name is "
+"pingable. Moreover, changes in the piggyback name will cause the piggyback "
+"host to be reset. If you choose `IP - region - instance ID`, then the name "
+"includes the private IP address, the region and the instance ID: {Private "
+"IPv4 address}-{region}-{Instance ID}. This uniquely identifies the EC2 "
+"instance. This format was included with the 1.6.0 release of Checkmk and has "
+"been the only format until 2.2.0. This host name can not be pinged."
+msgstr ""
 
 msgid ""
 "For each weekday you can setup no, one or several time ranges in the format "
@@ -19260,10 +19314,6 @@ msgid "GByte/s"
 msgstr "ギガバイト/秒"
 
 #, fuzzy
-msgid "GCE Storage"
-msgstr "ストレージ"
-
-#, fuzzy
 msgid "GCP Cost"
 msgstr "TCPコネクト"
 
@@ -19619,9 +19669,6 @@ msgstr ""
 
 msgid "Google Cloud Platform (GCP)"
 msgstr ""
-
-msgid "Google Cloud Storage (GCS)"
-msgstr "Google Cloudストレージ (GCS)"
 
 msgid "Google Compute Engine (GCE)"
 msgstr "Google Compute Engine (GCE)"
@@ -20032,10 +20079,6 @@ msgstr "HTTPリクエストヘッダー変数"
 
 msgid "HTTP requests per second"
 msgstr "1秒あたりのHTTPリクエスト"
-
-#, fuzzy
-msgid "HTTP(S) load balancer"
-msgstr "ロードバランサー"
 
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP、TCP、Eメール、..。"
@@ -20532,10 +20575,38 @@ msgid ""
 "\">here</a>. If you want to speed up your search, use defined indices."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Here you can define levels on the CPU utilization of single processes. For "
-"performance reasons CPU Averaging will not be applied to to the levels of "
+"performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
+msgstr ""
+"ここでは、単一プロセスのCPU使用率のレベルを定義できます。パフォーマンス上の理"
+"由から、CPU平均化は単一プロセスのレベルには適用されません。"
+
+#, fuzzy
+msgid ""
+"Here you can define levels on the resident memory utilization (in percentage "
+"of total RAM) of single processes. For performance reasons resident memory "
+"averaging will not be applied to to the levels of single processes."
+msgstr ""
+"ここでは、単一プロセスのCPU使用率のレベルを定義できます。パフォーマンス上の理"
+"由から、CPU平均化は単一プロセスのレベルには適用されません。"
+
+#, fuzzy
+msgid ""
+"Here you can define levels on the resident memory utilization of single "
+"processes. For performance reasons resident memory averaging will not be "
+"applied to to the levels of single processes."
+msgstr ""
+"ここでは、単一プロセスのCPU使用率のレベルを定義できます。パフォーマンス上の理"
+"由から、CPU平均化は単一プロセスのレベルには適用されません。"
+
+#, fuzzy
+msgid ""
+"Here you can define levels on the virtual memory utilization of single "
+"processes. For performance reasons virtual memory averaging will not be "
+"applied to to the levels of single processes."
 msgstr ""
 "ここでは、単一プロセスのCPU使用率のレベルを定義できます。パフォーマンス上の理"
 "由から、CPU平均化は単一プロセスのレベルには適用されません。"
@@ -22158,6 +22229,10 @@ msgstr "IOグループ"
 
 msgid "IO Latency"
 msgstr "IOレイテンシー"
+
+#, fuzzy
+msgid "IP - region - instance ID"
+msgstr "インスタンスID"
 
 msgid "IP Address"
 msgstr "IPアドレス"
@@ -24317,6 +24392,10 @@ msgstr ""
 msgid "Include unmonitored time"
 msgstr "監視されていない時間を含める"
 
+#, fuzzy
+msgid "Include vanished clustered services during removal"
+msgstr "未定のクラスター化されたサービス"
+
 msgid "Inclusion patterns"
 msgstr "包含パターン"
 
@@ -24939,6 +25018,10 @@ msgstr "無効な呼び出し:プロファイルが設定されていません�
 msgid "Invalid call: The profile is missing."
 msgstr "無効な呼び出し: プロファイルがありません。"
 
+#, fuzzy
+msgid "Invalid certificate"
+msgstr "無効な証明書ファイル: %s"
+
 #, python-format
 msgid "Invalid certificate file: %s"
 msgstr "無効な証明書ファイル: %s"
@@ -25197,6 +25280,10 @@ msgstr "値が無効です '%r' である必要がありますが、 '%r'です"
 msgid "Invalid value: %s"
 msgstr "無効な値: %s"
 
+#, fuzzy, python-format
+msgid "Invalid verification response: %s"
+msgstr "グローバル通知ルール"
+
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "無効な垂直範囲: from は to よりも低くする必要があります"
 
@@ -25284,6 +25371,10 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Iptablesフィルター構成"
 
+#, fuzzy
+msgid "Is"
+msgstr "s"
+
 msgid "Is CA"
 msgstr "CAですか"
 
@@ -25302,6 +25393,10 @@ msgstr "マウントポイントです"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "他のユーザーが作成した %s を表示するために必要です。"
+
+#, fuzzy
+msgid "Is not"
+msgstr "ではありません"
 
 msgid "Is not available"
 msgstr "利用できません"
@@ -25969,6 +26064,14 @@ msgstr "ラベル付けオプション"
 msgid "Labels"
 msgstr "ラベル"
 
+#, fuzzy
+msgid ""
+"Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
+"\"."
+msgstr ""
+"ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、 "
+"<tt>cmk/os_family:linux</tt>です。"
+
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
 "os_family:linux</tt>."
@@ -26307,6 +26410,10 @@ msgstr "RAM使用量のレベル"
 
 msgid "Levels Services"
 msgstr "レベルサービス"
+
+#, fuzzy
+msgid "Levels app gateway"
+msgstr "遅延のレベル"
 
 #, fuzzy
 msgid "Levels byte count"
@@ -26872,6 +26979,14 @@ msgstr "SSL証明書の検証"
 #, fuzzy
 msgid "License verification mode"
 msgstr "SSL証明書の検証"
+
+#, fuzzy
+msgid "License verification state"
+msgstr "SSL証明書の検証"
+
+#, fuzzy
+msgid "Licensed"
+msgstr "ライセンス"
 
 #, fuzzy
 msgid "Licensing"
@@ -28859,6 +28974,14 @@ msgstr "最大 並列接続"
 msgid "Max. time behind the master"
 msgstr "最大 マスターの後ろの時間"
 
+#, fuzzy
+msgid "Max. waiting time for a connection."
+msgstr "TCP接続待ちの秒数"
+
+#, fuzzy
+msgid "Max. waiting time for a response."
+msgstr "SNMP応答の待ち時間に費やされた時間"
+
 msgid "Max.&nbsp;Vers.: "
 msgstr "最大 ＆nbsp; バージョン: "
 
@@ -29469,9 +29592,6 @@ msgstr "メモリ使用率: クラスター"
 msgid "Memory warning at"
 msgstr "でのメモリ警告"
 
-msgid "Memorystore Redis"
-msgstr "メモリストア Redis"
-
 msgid "Merge even if there is an acknowledged event"
 msgstr "確認済みのイベントがある場合でもマージ"
 
@@ -29561,6 +29681,14 @@ msgstr "メタ使用法"
 #, fuzzy
 msgid "Metadata endpoint"
 msgstr "RESTエンドポイントURL"
+
+msgid ""
+"Metadata information is exchanged between Checkmk and your identity "
+"provider, containing configuration information for successful SAML "
+"communication. This includes the single sign-on endpoint and bindings used "
+"by the identity provider, detailing the certificates used for signatures and "
+"encryption."
+msgstr ""
 
 msgid "Method"
 msgstr "方法"
@@ -30437,6 +30565,10 @@ msgstr "集計を移動する"
 
 msgid "Move rules"
 msgstr "移動ルール"
+
+#, fuzzy
+msgid "Move selected hosts"
+msgstr "選択したホスト上"
 
 msgid "Move self"
 msgstr "自分を動かす"
@@ -31485,6 +31617,14 @@ msgstr "利用可能な情報はありません"
 msgid "No levels"
 msgstr "レベルなし"
 
+#, fuzzy
+msgid "No levels on inodes"
+msgstr "Iノードのレベル"
+
+#, fuzzy
+msgid "No license verification performed yet"
+msgstr "SSL証明書の検証"
+
 msgid "No logging"
 msgstr "ロギングなし"
 
@@ -32376,6 +32516,14 @@ msgstr "クライアント数"
 msgid "Number of clients connected to a Device."
 msgstr "デバイスに接続されているクライアントの数。"
 
+#, fuzzy
+msgid "Number of cloud hosts"
+msgstr "除外されたホストの数"
+
+#, fuzzy
+msgid "Number of cloud services"
+msgstr "除外されたサービスの数"
+
 msgid "Number of columns"
 msgstr "列の数"
 
@@ -32466,6 +32614,10 @@ msgstr "失敗したジョブの数"
 msgid "Number of failed paths"
 msgstr "失敗したパスの数"
 
+#, fuzzy
+msgid "Number of failed requests upper levels"
+msgstr "上位レベルのインデックスの総数"
+
 msgid "Number of fan failures"
 msgstr "ファンの故障数"
 
@@ -32480,6 +32632,10 @@ msgstr "キューへの入力用に現在開いているハンドルの数。"
 
 msgid "Number of handles that are currently open for output for the queue."
 msgstr "キューの出力用に現在開いているハンドルの数。"
+
+#, fuzzy
+msgid "Number of healthy hosts lower levels"
+msgstr "下位レベルのエクステントの総数"
 
 msgid "Number of hops"
 msgstr "ホップ数"
@@ -33230,10 +33386,6 @@ msgstr "SSL証明書の検証"
 msgid "Online verification procedure was not successful"
 msgstr "登録完了"
 
-#, fuzzy, python-format
-msgid "Online verification procedure was not successful, reason: %s"
-msgstr "登録完了"
-
 #, fuzzy
 msgid "Online verification procedure was successful"
 msgstr "登録完了"
@@ -33600,6 +33752,10 @@ msgstr "レポートメールのオプション"
 #, fuzzy, python-format
 msgid "Options: %s"
 msgstr "オプション"
+
+#, fuzzy
+msgid "Or"
+msgstr "O"
 
 msgid "Oracle"
 msgstr "オラクル"
@@ -34948,6 +35104,10 @@ msgstr "持続的なコメント"
 msgid "Persistent Volume Claims"
 msgstr "持続的なコメント"
 
+#, fuzzy
+msgid "Persistent Volume Claims & Persistent Volumes"
+msgstr "持続的なコメント"
+
 msgid "Persistent comment"
 msgstr "持続的なコメント"
 
@@ -35030,12 +35190,6 @@ msgstr "物理ディスク"
 msgid "Physical disks"
 msgstr "物理ディスク"
 
-msgid "Physical memory usage"
-msgstr "物理メモリ使用量"
-
-msgid "Physical memory usage, in percentage of total RAM"
-msgstr "物理メモリ使用量 合計RAMのパーセンテージ"
-
 msgid "Physical port states to discover"
 msgstr "検出する物理ポートの状態"
 
@@ -35062,6 +35216,10 @@ msgstr "他のホストからのピギーバック情報"
 
 msgid "Piggyback name of virtual machines"
 msgstr "仮想マシンのピギーバック名"
+
+#, fuzzy
+msgid "Piggyback names"
+msgstr "ピギーバックデータ"
 
 #, fuzzy
 msgid "Piggyback services to monitor"
@@ -36092,6 +36250,10 @@ msgstr "プライバシーパスフレーズ"
 msgid "Privacy protocol"
 msgstr "プライバシープロトコル"
 
+#, fuzzy
+msgid "Private IP DNS name"
+msgstr "ホスト名またはDNS名"
+
 msgid "Private and shared memory"
 msgstr "プライベートメモリと共有メモリ"
 
@@ -36156,12 +36318,6 @@ msgstr "プロセス一致テキストの説明またはプロセスのパス"
 msgid "Process Matching"
 msgstr "プロセスマッチング"
 
-msgid "Process Name"
-msgstr "プロセス名"
-
-msgid "Process Name Matching"
-msgstr "プロセス名の照合"
-
 msgid "Process Path Matching"
 msgstr "プロセスパスマッチング"
 
@@ -36186,8 +36342,16 @@ msgstr "プロセスディスカバリー(SNMPのみ)"
 msgid "Process handles"
 msgstr "プロセスハンドル"
 
+#, fuzzy
+msgid "Process name"
+msgstr "プロセス名"
+
 msgid "Process name for usage in the Nagios service description"
 msgstr "Nagiosサービスの説明で使用するプロセス名"
+
+#, fuzzy
+msgid "Process name matching"
+msgstr "プロセス名の照合"
 
 #, fuzzy
 msgid "Process new logfiles from the beginning"
@@ -37540,6 +37704,14 @@ msgstr "削除する"
 msgid "Remove TLS registration"
 msgstr "TLSの登録を解除する"
 
+#, fuzzy
+msgid "Remove TLS registration of hosts in this folder"
+msgstr "TLSの登録を解除する"
+
+#, fuzzy
+msgid "Remove TLS registration of selected hosts"
+msgstr "TLSの登録を解除する"
+
 msgid "Remove Windows Firewall configuration if present"
 msgstr "存在する場合は、Windowsファイアウォール構成を削除します"
 
@@ -38047,6 +38219,10 @@ msgstr "確認済みの状態をリセットします"
 msgid "Reset all rule hit counters to zero"
 msgstr "すべてのルールヒットカウンターをゼロにリセットしました"
 
+#, fuzzy
+msgid "Reset configuration variable to default value"
+msgstr "構成変数 %s をデフォルトにリセットしました。"
+
 msgid "Reset counters"
 msgstr "カウンターをリセットする"
 
@@ -38070,8 +38246,28 @@ msgstr "構成変数 %s をデフォルトにリセットしました。"
 msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr "ルールパック %s のルールをMKP経由で提供されたものにリセットしました"
 
+#, fuzzy
+msgid "Resident memory averaging"
+msgstr "常駐メモリ使用量"
+
 msgid "Resident memory usage"
 msgstr "常駐メモリ使用量"
+
+#, fuzzy
+msgid "Resident memory usage (in percentage of total RAM) averaging"
+msgstr "物理メモリ使用量 合計RAMのパーセンテージ"
+
+#, fuzzy
+msgid "Resident memory usage (in percentage of total RAM) of a single process"
+msgstr "物理メモリ使用量 合計RAMのパーセンテージ"
+
+#, fuzzy
+msgid "Resident memory usage, in percentage of total RAM"
+msgstr "物理メモリ使用量 合計RAMのパーセンテージ"
+
+#, fuzzy
+msgid "Resident memory utilization of a single process"
+msgstr "単一プロセスのCPU使用率のレベル"
 
 msgid "Resident size"
 msgstr "レジデントのサイズ"
@@ -39274,6 +39470,10 @@ msgstr "保存してテストする"
 msgid "Save filters & go to designer"
 msgstr "フィルタを保存してデザイナーに移動"
 
+#, fuzzy
+msgid "Save response"
+msgstr "応答を非表示"
+
 #, python-format
 msgid "Save this %s and go to"
 msgstr "この %s を保存して、"
@@ -39739,6 +39939,11 @@ msgid ""
 "online documentation for more details."
 msgstr ""
 
+msgid ""
+"Select if roles should be mapped. For each role, specify the attribute name "
+"and corresponding mappings."
+msgstr ""
+
 msgid "Select individual files from list"
 msgstr "リストから個々のファイルを選択します"
 
@@ -39767,10 +39972,12 @@ msgstr "特定のオブジェクトタイプを選択します"
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
-"pods will be monitored in the same manner as regular pods. Your Dynamic host "
-"management rule should be configured accordingly to avoid that the piggyback "
-"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
-"CronJobs' option has no effect if Pods are not monitored"
+"pods will be monitored in the same manner as regular pods. Persistent Volume "
+"Claims will only appear in the respective object piggyback host instead of "
+"having their own host. Your Dynamic host management rule should be "
+"configured accordingly to avoid that the piggyback hosts for terminated "
+"CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
+"effect if Pods are not monitored"
 msgstr ""
 
 msgid ""
@@ -41342,9 +41549,6 @@ msgstr ""
 msgid "Show/Hide password"
 msgstr "パスワードの表示/非表示"
 
-msgid "Shows number of alerts grouped for each service."
-msgstr "サービスごとにグループ化されたアラートの数を表示します。"
-
 msgid "Shows the Checkmk logo."
 msgstr ""
 
@@ -42121,9 +42325,9 @@ msgstr ""
 msgid "Sorry, you have no permission for this host."
 msgstr "申し訳ありませんが、このホストに対する権限がありません。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
 "groups are <b>%s</b>, your contact groups are <b>%s</b>."
 msgstr ""
 "申し訳ありませんが、ホスト'<b>%s</b>'に対する権限がありません。ホストの連絡先"
@@ -44031,8 +44235,8 @@ msgid "Submit report"
 msgstr "レポートを送信する"
 
 #, fuzzy
-msgid "Submit verification request"
-msgstr "グローバル通知ルール"
+msgid "Submit request and get response"
+msgstr "ライセンス使用状況レポートを送信する"
 
 msgid "Submitting crash report..."
 msgstr "クラッシュレポートを送信しています..."
@@ -45834,15 +46038,14 @@ msgstr ""
 msgid "The attribute used as the e-mail of the user."
 msgstr "ユーザーのエイリアスを含むLDAP属性。"
 
-msgid ""
-"The attribute used as the full name of the user. If this is not specified, "
-"the user ID is used."
-msgstr ""
-
 #, fuzzy
 msgid ""
-"The attribute used to identify an individual user. This attribute must be "
-"unique."
+"The attribute used as the full name of the user. If not specified, the user "
+"ID is used."
+msgstr "ユーザーのエイリアスを含むLDAP属性。"
+
+#, fuzzy
+msgid "The attribute used to identify an individual user. It must be unique."
 msgstr "ユーザーグループのメンバーシップを識別するために使用される属性。"
 
 msgid ""
@@ -45857,8 +46060,8 @@ msgstr "ユーザーグループのメンバーシップを識別するために
 
 msgid ""
 "The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups must exist in Checkmk so that a mapping "
-"can be done."
+"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
+"mapped."
 msgstr ""
 
 msgid ""
@@ -48806,6 +49009,10 @@ msgstr "このルールの値は無効です。 "
 msgid "The vault name"
 msgstr "ボールト名"
 
+#, fuzzy
+msgid "The verification cannot be started due to missing public keys"
+msgstr "このパッケージはインストールできません: %s"
+
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "このサイトのバージョンは %s ではありません"
@@ -49730,6 +49937,10 @@ msgid ""
 "and after downloading. You can for example use the <tt>/tmp</tt> directory. "
 "Please note that Checkmk will not clean up this directory."
 msgstr ""
+
+#, fuzzy
+msgid "This does not affect hosts in subfolders."
+msgstr "このパッケージにはまだルールが含まれていません。"
 
 msgid "This element is currently in a scheduled downtime."
 msgstr "この要素は現在、スケジュールされたダウンタイムにあります。"
@@ -52300,6 +52511,15 @@ msgstr "この変数は工場出荷時の設定です。"
 msgid "This variable is configured in <a href=\"%s\">global settings</a>."
 msgstr "この変数は、<a href=\"%s\">グローバル設定</a>で構成されます。"
 
+#, fuzzy, python-format
+msgid "This verification response cannot be uploaded: %s"
+msgstr "このパッケージはインストールできません: %s"
+
+#, fuzzy
+msgid ""
+"This verification response cannot be verified due to missing public keys"
+msgstr "このパッケージはインストールできません: %s"
+
 msgid "This view as PDF"
 msgstr "このビューをPDFとして"
 
@@ -52776,6 +52996,10 @@ msgstr ""
 msgid "Time stamp format"
 msgstr "タイムスタンプ形式"
 
+#, fuzzy
+msgid "Time to alert when PVC status is in pending state"
+msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
+
 msgid "Time to connect"
 msgstr "接続する時間"
 
@@ -52802,14 +53026,6 @@ msgid ""
 msgstr ""
 "次のインスタンスに進む前に、インスタンスへの接続が開くのを待つ時間。設定され"
 "ていない場合、ADOのデフォルト値が使用されます。"
-
-#, fuzzy
-msgid "Time to wait for a connection."
-msgstr "TCP接続待ちの秒数"
-
-#, fuzzy
-msgid "Time to wait for a response."
-msgstr "SNMP応答の待ち時間に費やされた時間"
 
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "AVAILABLEがfalseの場合、警告までの許容期間"
@@ -56584,6 +56800,10 @@ msgstr "消えた"
 msgid "Vanished (checked, but no longer exist)"
 msgstr "消失(監視されていますが、存在しません)"
 
+#, fuzzy
+msgid "Vanished clustered services"
+msgstr "未定のクラスター化されたサービス"
+
 msgid "Vanished clustered services - located on cluster host"
 msgstr "消失したクラスター化サービス -クラスターホスト上にあります"
 
@@ -56689,17 +56909,17 @@ msgstr "証明書を確認する"
 msgid "Verification"
 msgstr "ユーザー通知"
 
-#, fuzzy
-msgid "Verification failed"
+#, fuzzy, python-format
+msgid "Verification %s: %s"
 msgstr "ユーザー通知"
-
-#, fuzzy
-msgid "Verification failed (Checkmk)"
-msgstr "証明書の確認"
 
 #, fuzzy
 msgid "Verification failed (license server)"
 msgstr "アプリケーションの概要"
+
+#, fuzzy, python-format
+msgid "Verification failed: %s"
+msgstr "ユーザー通知"
 
 #, fuzzy
 msgid "Verification successful"
@@ -56882,8 +57102,16 @@ msgstr "仮想マシン(ESXなど)のゲストツールのステータス"
 msgid "Virtual machine (for example ESX) heartbeat status"
 msgstr "仮想マシン(ESXなど)のハートビートステータス"
 
+#, fuzzy
+msgid "Virtual memory averaging"
+msgstr "仮想メモリの使用量"
+
 msgid "Virtual memory usage"
 msgstr "仮想メモリの使用量"
+
+#, fuzzy
+msgid "Virtual memory utilization of a single process"
+msgstr "単一プロセスのCPU使用率のレベル"
 
 msgid "Virtual network gateway name"
 msgstr "仮想ネットワークゲートウェイ名"
@@ -56978,6 +57206,10 @@ msgstr "ボリュームグループ(LVM)"
 
 msgid "Volume name"
 msgstr "ボリューム名"
+
+#, fuzzy
+msgid "Volume parameters"
+msgstr "モデルパラメータ"
 
 msgid "Vswitch bonding"
 msgstr "Vswitchボンディング"
@@ -58299,6 +58531,14 @@ msgid ""
 "old snapshots when the maximum number of snapshots is reached."
 msgstr ""
 
+#, fuzzy
+msgid "Where host label..."
+msgstr "ホストラベルと一致する"
+
+#, fuzzy
+msgid "Where service label..."
+msgstr "サービスラベルを一致させる"
+
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
 "configuration change."
@@ -58999,8 +59239,9 @@ msgstr ""
 
 msgid ""
 "You are going to move the selected hosts to folders representing their "
-"original folder location in the system you did the import from. Please make "
-"sure that you have done an <b>inventory</b> before moving the hosts."
+"original folder location in the system you did the import from."
+"<br><br>Please make sure that you have done an <b>inventory</b> before "
+"moving the hosts."
 msgstr ""
 
 #, python-format
@@ -60842,6 +61083,10 @@ msgstr "認証はあるがプライバシーはない"
 msgid "auto"
 msgstr "オート"
 
+#, fuzzy
+msgid "average"
+msgstr "平均"
+
 msgid "avg. duration"
 msgstr "平均. デュレーション"
 
@@ -61250,6 +61495,10 @@ msgstr "明示的なホストラベル"
 
 msgid "explicitly specified groups"
 msgstr "明示的に指定されたグループ"
+
+#, fuzzy
+msgid "failed"
+msgstr "失敗しました"
 
 msgid "failures"
 msgstr "失敗"
@@ -62358,6 +62607,10 @@ msgstr "サブカテゴリ"
 msgid "success"
 msgstr "成功"
 
+#, fuzzy
+msgid "successful"
+msgstr "成功"
+
 msgid "synchronize"
 msgstr "同期する"
 
@@ -62656,6 +62909,98 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy, python-format
+#~| msgid "Registration successful"
+#~ msgid "Online verification procedure was not successful, reason: %s"
+#~ msgstr "登録完了"
+
+#, fuzzy
+#~| msgid "Global notification rules"
+#~ msgid "Submit verification request"
+#~ msgstr "グローバル通知ルール"
+
+#~ msgid "Physical memory usage"
+#~ msgstr "物理メモリ使用量"
+
+#, fuzzy
+#~| msgid "Certificate Checking"
+#~ msgid "Verification failed (Checkmk)"
+#~ msgstr "証明書の確認"
+
+#, fuzzy
+#~| msgid "Certificate chain"
+#~ msgid "Cannot be a certificate chain"
+#~ msgstr "証明書チェーン"
+
+#~ msgid "All customers with host and service statistics"
+#~ msgstr "ホストとサービスの統計を持つすべての顧客"
+
+#~ msgid "Shows number of alerts grouped for each service."
+#~ msgstr "サービスごとにグループ化されたアラートの数を表示します。"
+
+#~ msgid "Cloud Functions"
+#~ msgstr "クラウド機能"
+
+#~ msgid "Cloud Run"
+#~ msgstr "Cloud Run"
+
+#~ msgid "Cloud SQL"
+#~ msgstr "Cloud SQL"
+
+#, python-format
+#~ msgid "Do you really want to delete the selected %s?"
+#~ msgstr "選択した %sを本当に削除しますか？"
+
+#~ msgid "Do you really want to delete the selected MIBs?"
+#~ msgstr "選択したMIBsを本当に削除しますか？"
+
+#~ msgid "Do you really want to delete the selected aggregations?"
+#~ msgstr "選択した集計を本当に削除しますか?"
+
+#~ msgid "Do you really want to delete the selected hosts?"
+#~ msgstr "選択したホストを本当に削除しますか?"
+
+#~ msgid "Do you really want to delete the selected rules?"
+#~ msgstr "選択したルールを本当に削除しますか？"
+
+#~ msgid "Do you really want to delete the selected users?"
+#~ msgstr "選択したユーザーを本当に削除しますか？"
+
+#~ msgid ""
+#~ "Do you really want to remove the TLS registration of the hosts in this "
+#~ "folder?<br>This does not affect hosts in subfolders."
+#~ msgstr ""
+#~ "このフォルダーナイのホストのTLS登録を本当に削除してもよろしいですか。<br>"
+#~ "これは、サブフォルダー内のホストには影響しません。"
+
+#~ msgid ""
+#~ "Do you really want to remove the TLS registration of the selected hosts?"
+#~ msgstr "選択したホストのTLS登録を本当に削除しますか?"
+
+#~ msgid ""
+#~ "Do you really want to reset this configuration variable back to its "
+#~ "default value?"
+#~ msgstr "この構成変数をデフォルト値にリセットしますか?"
+
+#~ msgid "Filestore"
+#~ msgstr "ファイルストア"
+
+#, fuzzy
+#~| msgid "Storage"
+#~ msgid "GCE Storage"
+#~ msgstr "ストレージ"
+
+#~ msgid "Google Cloud Storage (GCS)"
+#~ msgstr "Google Cloudストレージ (GCS)"
+
+#, fuzzy
+#~| msgid "Load balancers"
+#~ msgid "HTTP(S) load balancer"
+#~ msgstr "ロードバランサー"
+
+#~ msgid "Memorystore Redis"
+#~ msgstr "メモリストア Redis"
 
 #, fuzzy
 #~| msgid "Connect timeout (seconds)"
@@ -63388,9 +63733,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Report usage"
 #~ msgstr "使用状況を報告する"
-
-#~ msgid "Submit license usage report"
-#~ msgstr "ライセンス使用状況レポートを送信する"
 
 #~ msgid "Submit or download"
 #~ msgstr "サブミットまたはダウンロード"
@@ -66859,9 +67201,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Latest Service Pack"
 #~ msgstr "最新のサービスパック"
-
-#~ msgid "Licenses"
-#~ msgstr "ライセンス"
 
 #~ msgid "Link Priority"
 #~ msgstr "リンクの優先度"

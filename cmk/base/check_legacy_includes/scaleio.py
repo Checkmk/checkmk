@@ -6,7 +6,7 @@
 
 from contextlib import suppress
 
-from cmk.base.plugins.agent_based.utils.scaleio import (  # pylint: disable=unused-import
+from cmk.base.plugins.agent_based.utils.scaleio import (  # pylint: disable=unused-import  # noqa: F401
     convert_scaleio_space_into_mb,
     parse_scaleio,
 )

@@ -120,7 +120,7 @@ void Store::logRequest(const std::string &line,
             log << R"(\n)" << l;
         }
     } else {
-        size_t s = lines.size();
+        const size_t s = lines.size();
         if (s > 0) {
             log << R"(\n{)" << s << (s == 1 ? " line follows" : " lines follow")
                 << "...}";
@@ -160,7 +160,7 @@ std::vector<std::string> Store::ExternalCommand::args() const {
 
 bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     // Precondition: output has been reset
-    InputBuffer::Result res = input.readRequest();
+    InputBuffer::Result const res = input.readRequest();
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
             std::ostringstream os;
@@ -170,7 +170,7 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
         }
         return false;
     }
-    std::string line = input.nextLine();
+    const std::string line = input.nextLine();
     if (mk::starts_with(line, "GET ")) {
         auto lines = getLines(input);
         logRequest(line, lines);
@@ -236,7 +236,8 @@ void Store::answerCommandMkLogwatchAcknowledge(const ExternalCommand &command) {
         Warning(logger()) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
         return;
     }
-    mk_logwatch_acknowledge(logger(), _mc->mkLogwatchPath(), args[0], args[1]);
+    mk_logwatch_acknowledge(logger(), _mc->paths().logwatch_directory, args[0],
+                            args[1]);
 }
 
 void Store::answerCommandDelCrashReport(const ExternalCommand &command) {
@@ -245,14 +246,15 @@ void Store::answerCommandDelCrashReport(const ExternalCommand &command) {
         Warning(logger()) << "DEL_CRASH_REPORT expects 1 argument";
         return;
     }
-    mk::crash_report::delete_id(_mc->crashReportPath(), args[0], logger());
+    mk::crash_report::delete_id(_mc->paths().crash_reports_directory, args[0],
+                                logger());
 }
 
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(Logger *logger, std::string path, std::string command)
-        : EventConsoleConnection(logger, move(path))
+        : EventConsoleConnection(logger, std::move(path))
         , command_(std::move(command)) {}
 
 private:
@@ -269,7 +271,7 @@ void Store::answerCommandEventConsole(const std::string &command) {
         return;
     }
     try {
-        ECTableConnection(_mc->loggerLivestatus(), _mc->mkeventdSocketPath(),
+        ECTableConnection(_mc->loggerLivestatus(), _mc->paths().mkeventd_socket,
                           command)
             .run();
     } catch (const std::runtime_error &err) {
@@ -278,7 +280,7 @@ void Store::answerCommandEventConsole(const std::string &command) {
 }
 
 void Store::answerCommandNagios(const ExternalCommand &command) {
-    std::lock_guard<std::mutex> lg(_command_mutex);
+    const std::lock_guard<std::mutex> lg(_command_mutex);
     nagios_compat_submit_external_command(command.str().c_str());
 }
 

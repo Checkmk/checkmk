@@ -45,7 +45,7 @@ import traceback
 from collections.abc import Callable, Iterable
 from enum import auto, Enum
 from pathlib import Path
-from typing import BinaryIO, cast, Final, IO, NamedTuple, NoReturn
+from typing import BinaryIO, cast, Final, IO, Mapping, NamedTuple, NoReturn
 
 import psutil  # type: ignore[import]
 
@@ -292,13 +292,13 @@ def create_version_symlink(site: SiteContext, version: str) -> None:
     os.symlink("../../versions/%s" % version, linkname)
 
 
-def calculate_admin_password(options: CommandOptions) -> Password[str]:
+def calculate_admin_password(options: CommandOptions) -> Password:
     if pw := options.get("admin-password"):
         return Password(pw)
     return Password(random_password())
 
 
-def set_admin_password(site: SiteContext, pw: Password[str]) -> None:
+def set_admin_password(site: SiteContext, pw: Password) -> None:
     with open("%s/etc/htpasswd" % site.dir, "w") as f:
         f.write("cmkadmin:%s\n" % hash_password(pw))
 
@@ -333,9 +333,8 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
     """
     try:
         shutil.rmtree(site.version_meta_dir)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise
+    except FileNotFoundError:
+        pass
 
     skelroot = "/omd/versions/%s/skel" % version
     shutil.copytree(skelroot, "%s/skel" % site.version_meta_dir, symlinks=True)
@@ -1787,41 +1786,50 @@ def pipe_pager() -> str:
     return ""
 
 
-def call_scripts(site: SiteContext, phase: str) -> None:
+def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | None = None) -> None:
+    """Calls hook scripts in defined directories."""
     path = Path(site.dir, "lib", "omd", "scripts", phase)
-    if path.exists():
-        putenv("OMD_ROOT", site.dir)
-        putenv("OMD_SITE", site.name)
-        # NOTE: scripts have an order!
-        for file in sorted(path.iterdir()):
-            if file.name[0] == ".":
-                continue
-            sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-            with subprocess.Popen(  # nosec
-                str(file),  # path-like args is not allowed when shell is true
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                encoding="utf-8",
-            ) as proc:
+    if not path.exists():
+        return
 
-                if proc.stdout is None:
-                    raise Exception("stdout needs to be set")
+    env = {
+        **os.environ,
+        "OMD_ROOT": site.dir,
+        "OMD_SITE": site.name,
+        **(add_env if add_env else {}),
+    }
 
-                wrote_output = False
-                for line in proc.stdout:
-                    if not wrote_output:
-                        sys.stdout.write("\n")
-                        wrote_output = True
+    # NOTE: scripts have an order!
+    for file in sorted(path.iterdir()):
+        if file.name[0] == ".":
+            continue
+        sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+        with subprocess.Popen(  # nosec
+            str(file),  # path-like args is not allowed when shell is true
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            env=env,
+        ) as proc:
 
-                    sys.stdout.write(f"-| {line}")
-                    sys.stdout.flush()
+            if proc.stdout is None:
+                raise Exception("stdout needs to be set")
 
-            if not proc.returncode:
-                sys.stdout.write(tty.ok + "\n")
-            else:
-                sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
-                raise SystemExit(1)
+            wrote_output = False
+            for line in proc.stdout:
+                if not wrote_output:
+                    sys.stdout.write("\n")
+                    wrote_output = True
+
+                sys.stdout.write(f"-| {line}")
+                sys.stdout.flush()
+
+        if not proc.returncode:
+            sys.stdout.write(tty.ok + "\n")
+        else:
+            sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
+            raise SystemExit(1)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
@@ -2004,10 +2012,8 @@ def omd_versions() -> Iterable[str]:
                 if v != "default"
             ]
         )
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return []
-        raise
+    except FileNotFoundError:
+        return []
 
 
 def version_exists(v: str) -> bool:
@@ -2108,7 +2114,7 @@ def main_create(
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 
-def welcome_message(site: SiteContext, admin_password: Password[str]) -> None:
+def welcome_message(site: SiteContext, admin_password: Password) -> None:
     sys.stdout.write(f"Created new site {site.name} with version {omdlib.__version__}.\n\n")
     sys.stdout.write(
         f"  The site can be started with {tty.bold}omd start {site.name}{tty.normal}.\n"
@@ -2183,7 +2189,7 @@ def init_site(
     global_opts: "GlobalOptions",
     config_settings: Config,
     options: CommandOptions,
-) -> Password[str]:
+) -> Password:
     apache_reload = "apache-reload" in options
 
     # Create symbolic link to version
@@ -2880,7 +2886,16 @@ def main_update(  # pylint: disable=too-many-branches
     # initialized tmpfs.
     prepare_and_populate_tmpfs(version_info, site)
 
-    call_scripts(site, "update-pre-hooks")
+    call_scripts(
+        site,
+        "update-pre-hooks",
+        add_env={
+            "OMD_CONFLICT_MODE": conflict_mode,
+            "OMD_TO_EDITION": to_edition,
+            "OMD_FROM_VERSION": from_version,
+            "OMD_TO_VERSION": to_version,
+        },
+    )
 
     # We previously executed "cmk -U" multiple times in the hooks CORE, MKEVENTD, PNP4NAGIOS to
     # update the core configuration. To only execute it once, we do it here.
@@ -3695,11 +3710,8 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
     ]:
         try:
             os.unlink(path)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass
-            else:
-                raise
+        except FileNotFoundError:
+            pass
 
     if group_exists("omd"):
         groupdel("omd")
@@ -4673,7 +4685,5 @@ def _get_command(
 def _get_orig_working_directory() -> str:
     try:
         return os.getcwd()
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            return "/"
-        raise
+    except FileNotFoundError:
+        return "/"

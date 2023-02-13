@@ -195,9 +195,9 @@ impl ConnectionStatus {
         match remote_conn_type {
             Some(ct) => {
                 if ct == local_conn_type {
-                    format!("{}", ct)
+                    format!("{ct}")
                 } else {
-                    mark_problematic(&format!("{}", ct))
+                    mark_problematic(&format!("{ct}"))
                 }
             }
             None => mark_problematic("unknown"),
@@ -206,7 +206,7 @@ impl ConnectionStatus {
 
     fn registration_state_str(remote_conn_stat: &RemoteConnectionStatus) -> String {
         match &remote_conn_stat.registration_state {
-            Some(st) => format!("{}", st),
+            Some(st) => format!("{st}"),
             None => {
                 if remote_conn_stat.connection_type.is_some() & remote_conn_stat.host_name.is_some()
                 {
@@ -252,7 +252,7 @@ impl ConnectionStatus {
                     &self.local.connection_type,
                 ),
                 Err(err) => {
-                    vec![mark_problematic(&format!("Error: {}", err))]
+                    vec![mark_problematic(&format!("Error: {err}"))]
                 }
             },
             Remote::Imported => vec![String::from("No remote address (imported connection)")],
@@ -325,7 +325,7 @@ impl Status {
         if json {
             self.to_json()
         } else {
-            Ok(format!("{}", self))
+            Ok(format!("{self}"))
         }
     }
 }
@@ -355,7 +355,7 @@ impl std::fmt::Display for Status {
                     "\n\n\n{}",
                     self.connections
                         .iter()
-                        .map(|conn_stat| format!("{}", conn_stat))
+                        .map(|conn_stat| format!("{conn_stat}"))
                         .collect::<Vec<String>>()
                         .join("\n\n\n"),
                 )
@@ -365,7 +365,7 @@ impl std::fmt::Display for Status {
 }
 
 fn mark_problematic(to_mark: &str) -> String {
-    format!("{} (!!)", to_mark)
+    format!("{to_mark} (!!)")
 }
 
 fn _status(

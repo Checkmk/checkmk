@@ -6,7 +6,7 @@
 
 WARNING: Use at your own risk, not supported.
 
-Checkmk uses SSL certificates to verify push hosts.
+Checkmk uses TLS certificates to secure agent communication.
 """
 from collections.abc import Mapping
 from pathlib import Path
@@ -130,3 +130,31 @@ def make_certificate(param: Mapping[str, Any]) -> Response:
             "cert": _serialized_signed_cert(param["body"]["csr"]),
         }
     )
+
+
+@Endpoint(
+    "/agent_controller_certificates_settings",
+    "cmk/global_config",
+    method="get",
+    tag_group="Checkmk Internal",
+    additional_status_codes=[403],
+    status_descriptions={
+        403: "Unauthorized to read the global settings",
+    },
+    response_schema=response_schemas.AgentControllerCertificateSettings,
+    permissions_required=permissions.AnyPerm(
+        [
+            permissions.Perm("wato.seeall"),
+            permissions.Perm("wato.global"),
+        ],
+    ),
+)
+def agent_controller_certificates_settings(param: object) -> Response:
+    """Show agent controller certificate settings"""
+    if not (user.may("wato.seeall") or user.may("wato.global")):
+        raise ProblemException(
+            status=403,
+            title="Unauthorized",
+            detail="Unauthorized to read the global settings",
+        )
+    return serve_json(config.active_config.agent_controller_certificates)

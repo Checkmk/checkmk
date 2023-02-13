@@ -9,7 +9,6 @@ Please try to find a better place for the things you want to put here."""
 
 import itertools
 import marshal
-import os
 import urllib.parse
 import uuid
 from pathlib import Path

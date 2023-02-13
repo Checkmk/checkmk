@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, NamedTuple, Optional, Union
+from typing import Any, Mapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -26,7 +26,7 @@ class SAP_HANA_MAYBE(NamedTuple):
 def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
-        inst: Dict[str, Union[int, SAP_HANA_MAYBE]] = {}
+        inst: dict[str, int | str | SAP_HANA_MAYBE] = {}
         for line in lines:
             if len(line) < 7:
                 continue

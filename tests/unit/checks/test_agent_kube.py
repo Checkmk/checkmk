@@ -196,8 +196,8 @@ def test_parse_arguments_with_no_cluster_endpoint() -> None:
     ]
 
 
-def test_cronjob_piggyback_option() -> None:
-    """Test the cronjob piggyback option"""
+def test_cronjob_pvcs_piggyback_option() -> None:
+    """Test the cronjob and pvc piggyback option"""
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(
         {
@@ -208,7 +208,7 @@ def test_cronjob_piggyback_option() -> None:
                 "verify-cert": False,
                 "proxy": ("no_proxy", "no_proxy"),
             },
-            "monitored-objects": ["pods", "cronjobs_pods"],
+            "monitored-objects": ["pods", "cronjobs_pods", "pvcs"],
         },
         "host",
         "11.211.3.32",
@@ -223,6 +223,7 @@ def test_cronjob_piggyback_option() -> None:
         "--monitored-objects",
         "pods",
         "cronjobs_pods",
+        "pvcs",
         "--cluster-aggregation-exclude-node-roles",
         "control-plane",
         "infra",

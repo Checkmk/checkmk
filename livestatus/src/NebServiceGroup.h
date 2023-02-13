@@ -17,6 +17,10 @@ public:
     explicit NebServiceGroup(const servicegroup &service_group)
         : service_group_{service_group} {}
 
+    [[nodiscard]] const void *handle() const override {
+        return &service_group_;
+    }
+
     bool all(const std::function<bool(const IService &)> &pred) const override {
         for (const auto *member = service_group_.members; member != nullptr;
              member = member->next) {

@@ -20,8 +20,6 @@
 #include <vector>
 #endif
 #include "TableComments.h"
-#include "TableContactGroups.h"
-#include "TableContacts.h"
 #include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
@@ -38,6 +36,8 @@
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
+#include "livestatus/TableContactGroups.h"
+#include "livestatus/TableContacts.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableEventConsoleReplication.h"
 #include "livestatus/TableEventConsoleRules.h"

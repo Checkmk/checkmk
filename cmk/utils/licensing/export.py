@@ -284,9 +284,11 @@ class RawLicenseUsageSample(TypedDict):
     sample_time: int
     timezone: str
     num_hosts: int
+    num_hosts_cloud: int
     num_hosts_excluded: int
     num_shadow_hosts: int
     num_services: int
+    num_services_cloud: int
     num_services_excluded: int
     extension_ntop: bool
 
@@ -313,9 +315,11 @@ class LicenseUsageSample:
     sample_time: int
     timezone: str
     num_hosts: int
+    num_hosts_cloud: int
     num_hosts_excluded: int
     num_shadow_hosts: int
     num_services: int
+    num_services_cloud: int
     num_services_excluded: int
     extension_ntop: bool
 
@@ -330,9 +334,11 @@ class LicenseUsageSample:
             "sample_time": self.sample_time,
             "timezone": self.timezone,
             "num_hosts": self.num_hosts,
+            "num_hosts_cloud": self.num_hosts_cloud,
             "num_hosts_excluded": self.num_hosts_excluded,
             "num_shadow_hosts": self.num_shadow_hosts,
             "num_services": self.num_services,
+            "num_services_cloud": self.num_services_cloud,
             "num_services_excluded": self.num_services_excluded,
             "extension_ntop": self.extension_ntop,
         }
@@ -394,9 +400,11 @@ class LicenseUsageSample:
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=0,
             num_hosts_excluded=0,
             num_shadow_hosts=0,
             num_services=raw_sample["num_services"],
+            num_services_cloud=0,
             num_services_excluded=0,
             extension_ntop=extensions.ntop,
         )
@@ -429,9 +437,11 @@ class LicenseUsageSample:
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=0,
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
             num_shadow_hosts=0,
             num_services=raw_sample["num_services"],
+            num_services_cloud=0,
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )
@@ -464,9 +474,11 @@ class LicenseUsageSample:
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=0,
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
             num_shadow_hosts=raw_sample["num_shadow_hosts"],
             num_services=raw_sample["num_services"],
+            num_services_cloud=0,
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )
@@ -502,9 +514,11 @@ class LicenseUsageSample:
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=raw_sample["num_hosts_cloud"],
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
             num_shadow_hosts=raw_sample["num_shadow_hosts"],
             num_services=raw_sample["num_services"],
+            num_services_cloud=raw_sample["num_services_cloud"],
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )

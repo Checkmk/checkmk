@@ -81,6 +81,7 @@ from cmk.gui.valuespec import (
     DEF_VALUE,
     DropdownChoice,
     TextInput,
+    Transform,
     ValueSpec,
     ValueSpecDefault,
     ValueSpecHelp,
@@ -327,8 +328,7 @@ def user_locked(user_id: UserId) -> bool:
     return bool(load_user(user_id).get("locked"))
 
 
-# TODO: Change to factory
-class UserSelection(DropdownChoice[UserId]):
+class _UserSelection(DropdownChoice[UserId]):
     """Dropdown for choosing a multisite user"""
 
     def __init__(  # pylint: disable=redefined-builtin
@@ -351,9 +351,12 @@ class UserSelection(DropdownChoice[UserId]):
             default_value=default_value,
         )
 
-    def _generate_wato_users_elements_function(  # type:ignore[no-untyped-def]
-        self, none_value: str | None, only_contacts: bool = False, only_automation: bool = False
-    ):
+    def _generate_wato_users_elements_function(
+        self,
+        none_value: str | None,
+        only_contacts: bool = False,
+        only_automation: bool = False,
+    ) -> Callable[[], list[tuple[UserId | None, str]]]:
         def get_wato_users(nv: str | None) -> list[tuple[UserId | None, str]]:
             users = load_users()
             elements: list[tuple[UserId | None, str]] = sorted(
@@ -370,6 +373,29 @@ class UserSelection(DropdownChoice[UserId]):
 
     def value_to_html(self, value: Any) -> ValueSpecText:
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
+
+
+def UserSelection(  # pylint: disable=redefined-builtin
+    only_contacts: bool = False,
+    only_automation: bool = False,
+    none: str | None = None,
+    # ValueSpec
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
+    default_value: ValueSpecDefault[UserId] = DEF_VALUE,
+) -> Transform[UserId | None]:
+    return Transform(
+        valuespec=_UserSelection(
+            only_contacts=only_contacts,
+            only_automation=only_automation,
+            none=none,
+            title=title,
+            help=help,
+            default_value=default_value,
+        ),
+        to_valuespec=lambda raw_str: None if raw_str is None else UserId(raw_str),
+        from_valuespec=lambda uid: None if uid is None else str(uid),
+    )
 
 
 def on_failed_login(username: UserId, now: datetime) -> None:
@@ -554,7 +580,7 @@ def _clear_config_based_user_attributes() -> None:
 
 
 def check_credentials(
-    username: UserId, password: Password[str], now: datetime
+    username: UserId, password: Password, now: datetime
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():

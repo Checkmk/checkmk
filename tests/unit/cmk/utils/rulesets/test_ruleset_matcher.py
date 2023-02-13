@@ -16,7 +16,6 @@ import cmk.utils.paths
 from cmk.utils.rulesets.ruleset_matcher import (
     matches_tag_condition,
     RuleConditionsSpec,
-    Ruleset,
     RulesetMatchObject,
     RuleSpec,
     TagCondition,
@@ -62,7 +61,7 @@ def test_ruleset_match_object_service_cache_id_no_labels() -> None:
     assert obj.service_cache_id == ("svc", hash(None))
 
 
-ruleset: Ruleset[str] = [
+ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "1",
         "value": "BLA",
@@ -107,7 +106,7 @@ ruleset: Ruleset[str] = [
     },
 ]
 
-host_label_ruleset: Ruleset[str] = [
+host_label_ruleset: Sequence[RuleSpec[str]] = [
     # test simple label match
     {
         "id": "id0",
@@ -338,7 +337,7 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
     )
 
 
-dict_ruleset: Ruleset[dict[str, str]] = [
+dict_ruleset: Sequence[RuleSpec[dict[str, str]]] = [
     {
         "id": "1",
         "value": {"hu": "BLA"},
@@ -497,7 +496,7 @@ def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch: MonkeyPatch) -
     )
 
 
-tag_ruleset: Ruleset[str] = [
+tag_ruleset: Sequence[RuleSpec[str]] = [
     # test simple tag match
     {
         "id": "id0",
@@ -712,7 +711,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     )
 
 
-service_label_ruleset: Ruleset[str] = [
+service_label_ruleset: Sequence[RuleSpec[str]] = [
     # test simple label match
     {
         "id": "id0",

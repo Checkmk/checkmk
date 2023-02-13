@@ -24,12 +24,11 @@ Nice! Before contributing please check out our [contribution guidelines](CONTRIB
 It is highly recommended to use the prebuilt Checkmk packages we [provide](https://checkmk.com/download.php).
 But if you really want to build your own packages, you either need to download the source packages from our website or check out the [Git repository](https://github.com/tribe29/checkmk).
 
-To prepare your system for building, you need to execute this command:
+We're building the Checkmk packages within specific docker images for the different distros.
+Please find the Dockerfiles under buildscripts/infrastructure/build-nodes/ in order to get an idea what's needed to build it locally.
+However, keep in mind that those Dockerfiles are heavily relying on our infrastructure and won't build from scratch on your machine.
 
-    make -C omd setup
-
-This will install the missing build dependencies, at least if you are working on a supported Linux distribution.
-Then you can either create RPM or DEB packages, depending on your Linux distribution.
+If you have the dependencies in place, you can either create RPM or DEB packages, depending on your Linux distribution.
 
 To build an RPM:
 

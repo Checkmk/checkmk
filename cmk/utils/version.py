@@ -13,7 +13,6 @@ __version__ = "2.2.0i1"
 
 import datetime
 import enum
-import errno
 import functools
 import os
 import re
@@ -754,9 +753,7 @@ def _current_monitoring_core() -> str:
             encoding="utf-8",
             check=False,
         )
-    except OSError as e:
+    except FileNotFoundError:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
-        if e.errno != errno.ENOENT:
-            raise
         return "UNKNOWN"
     return completed_process.stdout.rstrip()

@@ -101,7 +101,8 @@ def _load_serial(username: UserId) -> int:
 
 def on_succeeded_login(username: UserId, now: datetime) -> None:
     ensure_user_can_init_session(username, now)
-    _reset_failed_logins(username)
+    # Set failed login counter to 0
+    save_custom_attr(username, "num_failed_logins", 0)
 
 
 def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
@@ -116,13 +117,6 @@ def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
                 f"{username} another session is active (inactive for: {idle_time} seconds)"
             )
             raise MKUserError(None, _("Another session is active"))
-
-
-def _reset_failed_logins(username: UserId) -> None:
-    """Login succeeded: Set failed login counter to 0"""
-    num_failed_logins = _load_failed_logins(username)
-    if num_failed_logins != 0:
-        _save_failed_logins(username, 0)
 
 
 def load_session_infos(username: UserId, lock: bool = False) -> dict[str, SessionInfo]:
@@ -156,11 +150,6 @@ def _initialize_session(username: UserId, now: datetime) -> str:
     save_session_infos(username, session_infos)
 
     return session_id
-
-
-def _load_failed_logins(username: UserId) -> int:
-    num = load_custom_attr(user_id=username, key="num_failed_logins", parser=utils.saveint)
-    return 0 if num is None else num
 
 
 def active_sessions(
@@ -204,10 +193,6 @@ def save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) 
     )
 
 
-def _save_failed_logins(username: UserId, count: int) -> None:
-    save_custom_attr(username, "num_failed_logins", str(count))
-
-
 def is_valid_user_session(
     username: UserId, session_infos: dict[str, SessionInfo], session_id: str
 ) -> bool:
@@ -222,8 +207,3 @@ def is_valid_user_session(
         return False
 
     return True
-
-
-def refresh_session(session_info: SessionInfo, now: datetime) -> None:
-    """Updates the current session of the user"""
-    session_info.last_activity = int(now.timestamp())

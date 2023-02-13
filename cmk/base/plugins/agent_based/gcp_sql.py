@@ -42,17 +42,17 @@ def _get_service_labels(
 ) -> list[ServiceLabel]:
     data = service.resource_data
     labels = (
-        [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
+        [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
         if "userLabels" in data["settings"]
         else []
     )
     labels.extend(
         [
-            ServiceLabel("gcp/location", service.location),
-            ServiceLabel("gcp/cloud_sql/name", item),
-            ServiceLabel("gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
-            ServiceLabel("gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
-            ServiceLabel("gcp/projectId", project),
+            ServiceLabel("cmk/gcp/location", service.location),
+            ServiceLabel("cmk/gcp/cloud_sql/name", item),
+            ServiceLabel("cmk/gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
+            ServiceLabel("cmk/gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
+            ServiceLabel("cmk/gcp/projectId", project),
         ]
     )
     return labels

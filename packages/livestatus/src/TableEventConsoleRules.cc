@@ -13,7 +13,7 @@
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole{mc} {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     addColumn(
         ECRow::makeStringColumn("rule_id", "The ID of the rule", offsets));
 

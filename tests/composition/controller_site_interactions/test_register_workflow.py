@@ -90,3 +90,10 @@ def test_register_workflow_push(
             "tag_address_family": "no-ip",
         },
     )
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _deactivate() -> None:
+    pytest.skip(
+        "Controller / receiver architecture is being reworked, will be re-activated afterwards"
+    )

@@ -11,7 +11,7 @@ from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
-from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import
+from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import  # noqa: F401
     compile_builtin_po_files,
     locale_base_dir,
     locale_paths,

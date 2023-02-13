@@ -184,7 +184,9 @@ purge() {
     _systemd_present && {
         # We forgot to stop/disable the units in the prerm scripts in 1.6
         systemctl stop "check_mk.socket" 2>/dev/null
+        systemctl stop "check-mk-agent.socket" 2>/dev/null
         systemctl disable "check_mk.socket" 2>/dev/null
+        systemctl disable "check-mk-agent.socket" 2>/dev/null
     }
 
     prefix="Removing leftover systemd units:"

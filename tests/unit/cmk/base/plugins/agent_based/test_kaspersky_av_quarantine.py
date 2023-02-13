@@ -6,7 +6,11 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.kaspersky_av_quarantine import check_kaspersky_av_quarantine
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.kaspersky_av_quarantine import (
+    check_kaspersky_av_quarantine,
+    Section,
+)
 
 
 @pytest.mark.parametrize(
@@ -21,7 +25,5 @@ from cmk.base.plugins.agent_based.kaspersky_av_quarantine import check_kaspersky
         )
     ],
 )
-def test_check_kaskpersky_av_client(  # type:ignore[no-untyped-def]
-    section, expected_results
-) -> None:
+def test_check_kaskpersky_av_client(section: Section, expected_results: CheckResult) -> None:
     assert list(check_kaspersky_av_quarantine(section)) == expected_results

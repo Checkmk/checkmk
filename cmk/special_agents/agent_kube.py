@@ -112,6 +112,7 @@ class MonitoredObject(enum.Enum):
     pods = "pods"
     cronjobs = "cronjobs"
     cronjobs_pods = "cronjobs_pods"
+    pvcs = "pvcs"
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:
@@ -1093,6 +1094,7 @@ def create_pvc_sections(
     piggyback_name: str,
     attached_pvc_namespaced_names: Sequence[str],
     api_persistent_volume_claims: Mapping[str, section.PersistentVolumeClaim],
+    api_persistent_volumes: Mapping[str, section.PersistentVolume],
     attached_volumes: Mapping[str, section.AttachedVolume],
 ) -> Iterator[WriteableSection]:
     if not attached_pvc_namespaced_names:
@@ -1108,6 +1110,19 @@ def create_pvc_sections(
         section_name=SectionName("kube_pvc_v1"),
         section=section.PersistentVolumeClaims(claims=attached_pvcs),
     )
+
+    pvc_attached_api_pvs = {
+        pvc.volume_name: api_persistent_volumes[pvc.volume_name]
+        for pvc in attached_pvcs.values()
+        if pvc.volume_name is not None
+    }
+
+    if pvc_attached_api_pvs:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pvc_pvs_v1"),
+            section=section.AttachedPersistentVolumes(volumes=pvc_attached_api_pvs),
+        )
 
     pvc_attached_volumes = {
         pvc_namespaced_name: volume
@@ -2170,6 +2185,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 api_data = from_kubernetes(
                     api_client,
                     timeout=(arguments.k8s_api_connect_timeout, arguments.k8s_api_read_timeout),
+                    query_kubelet_endpoints=MonitoredObject.pvcs in arguments.monitored_objects,
                 )
             except urllib3.exceptions.MaxRetryError as e:
                 raise ClusterConnectionError(
@@ -2196,9 +2212,13 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             )
             api_persistent_volume_claims = {
                 namespaced_name_from_metadata(pvc.metadata): section.PersistentVolumeClaim(
-                    **pvc.dict()
+                    volume_name=pvc.spec.volume_name, **pvc.dict()
                 )
                 for pvc in api_data.persistent_volume_claims
+            }
+            api_persistent_volumes = {
+                pv.metadata.name: section.PersistentVolume(name=pv.metadata.name, spec=pv.spec)
+                for pv in api_data.persistent_volumes
             }
             attached_volumes = serialize_attached_volumes_from_kubelet_metrics(
                 filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
@@ -2226,17 +2246,19 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         host_settings=checkmk_host_settings,
                         piggyback_name=deployment_piggyback_name,
                     )
-                    sections = chain(
-                        sections,
-                        create_pvc_sections(
-                            piggyback_name=deployment_piggyback_name,
-                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                deployment.pods
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        sections = chain(
+                            sections,
+                            create_pvc_sections(
+                                piggyback_name=deployment_piggyback_name,
+                                attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
+                                    deployment.pods
+                                ),
+                                api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
+                                attached_volumes=attached_volumes,
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(sections)
 
             resource_quotas = api_data.resource_quotas
@@ -2277,17 +2299,19 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         host_settings=checkmk_host_settings,
                         piggyback_name=daemonset_piggyback_name,
                     )
-                    daemonset_sections = chain(
-                        daemonset_sections,
-                        create_pvc_sections(
-                            piggyback_name=daemonset_piggyback_name,
-                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                daemonset.pods
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        daemonset_sections = chain(
+                            daemonset_sections,
+                            create_pvc_sections(
+                                piggyback_name=daemonset_piggyback_name,
+                                attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
+                                    daemonset.pods
+                                ),
+                                api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
+                                attached_volumes=attached_volumes,
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(daemonset_sections)
 
             if MonitoredObject.statefulsets in arguments.monitored_objects:
@@ -2301,17 +2325,19 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         host_settings=checkmk_host_settings,
                         piggyback_name=statefulset_piggyback_name,
                     )
-                    statefulset_sections = chain(
-                        statefulset_sections,
-                        create_pvc_sections(
-                            piggyback_name=statefulset_piggyback_name,
-                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                statefulset.pods
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        statefulset_sections = chain(
+                            statefulset_sections,
+                            create_pvc_sections(
+                                piggyback_name=statefulset_piggyback_name,
+                                attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
+                                    statefulset.pods
+                                ),
+                                api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
+                                attached_volumes=attached_volumes,
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(statefulset_sections)
 
             monitored_api_cron_job_pods = [
@@ -2359,17 +2385,19 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         ],
                     )
 
-                    sections = chain(
-                        sections,
-                        create_pvc_sections(
-                            piggyback_name=pod_piggyback_name,
-                            attached_pvc_namespaced_names=list(
-                                pod_attached_persistent_volume_claim_names(pod)
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        sections = chain(
+                            sections,
+                            create_pvc_sections(
+                                piggyback_name=pod_piggyback_name,
+                                attached_pvc_namespaced_names=list(
+                                    pod_attached_persistent_volume_claim_names(pod)
+                                ),
+                                api_persistent_volume_claims=api_persistent_volume_claims,
+                                api_persistent_volumes=api_persistent_volumes,
+                                attached_volumes=attached_volumes,
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(sections)
 
             usage_config = query.parse_session_config(arguments)

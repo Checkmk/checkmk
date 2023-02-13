@@ -11,7 +11,11 @@ ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS = {
     "levels": (45.0, 50.0),
 }
 
-DiscoveryResult = Iterable[tuple[None, str | None]] | Iterable[tuple[str, str | None]]
+DiscoveryResult = (
+    Iterable[tuple[None, str | None]]
+    | Iterable[tuple[str, str | None]]
+    | Iterable[tuple[str, dict]]
+)
 
 
 def alcatel_networking_products_scan_function(oid):

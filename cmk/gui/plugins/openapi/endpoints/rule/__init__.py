@@ -221,7 +221,7 @@ def list_rules(param):
     ruleset_name = param["ruleset_name"]
 
     try:
-        ruleset = all_rulesets.get(ruleset_name.replace("-", ":"))
+        ruleset = all_rulesets.get(ruleset_name)
     except KeyError:
         return problem(
             status=400,

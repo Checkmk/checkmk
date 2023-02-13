@@ -34,8 +34,8 @@ namespace column::service_group_members::detail {
 std::string checkValue(Logger *logger, RelationalOperator relOp,
                        const std::string &value) {
     auto pos = value.find(column::service_group_members::separator());
-    bool equality = relOp == RelationalOperator::equal ||
-                    relOp == RelationalOperator::not_equal;
+    const bool equality = relOp == RelationalOperator::equal ||
+                          relOp == RelationalOperator::not_equal;
     if (pos == std::string::npos && !(equality && value.empty())) {
         Informational(logger)
             << "Invalid reference value for service list membership. Must be 'hostname"

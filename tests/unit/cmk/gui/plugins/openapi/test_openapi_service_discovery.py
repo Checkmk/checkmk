@@ -15,11 +15,11 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from cmk.automations.results import (
     CheckPreviewEntry,
     GetServicesLabelsResult,
+    ServiceDiscoveryPreviewResult,
     SetAutochecksResult,
-    TryDiscoveryResult,
 )
 
-mock_discovery_result = TryDiscoveryResult(
+mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[
         CheckPreviewEntry(
             "old",
@@ -788,10 +788,10 @@ mock_discovery_result = TryDiscoveryResult(
 )
 
 
-@pytest.fixture(name="mock_try_discovery")
-def fixture_mock_try_discovery(mocker: MockerFixture) -> MagicMock:
+@pytest.fixture(name="mock_discovery_preview")
+def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.try_discovery", return_value=mock_discovery_result
+        "cmk.gui.watolib.services.discovery_preview", return_value=mock_discovery_result
     )
 
 
@@ -811,7 +811,7 @@ def fixture_mock_set_autochecks(mocker: MockerFixture) -> MagicMock:
 def test_openapi_discovery_fails_on_invalid_content_type(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.post(
@@ -821,7 +821,7 @@ def test_openapi_discovery_fails_on_invalid_content_type(
         status=415,
     )
     assert "Content type not valid" in resp.json["title"]
-    mock_try_discovery.assert_not_called()
+    mock_discovery_preview.assert_not_called()
     mock_set_autochecks.assert_not_called()
 
 
@@ -829,7 +829,7 @@ def test_openapi_discovery_fails_on_invalid_content_type(
 def test_openapi_discovery_on_invalid_mode(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
@@ -841,7 +841,7 @@ def test_openapi_discovery_on_invalid_mode(
         status=400,
     )
     assert resp.json["detail"] == "These fields have problems: mode"
-    mock_try_discovery.assert_not_called()
+    mock_discovery_preview.assert_not_called()
     mock_set_autochecks.assert_not_called()
 
 
@@ -849,7 +849,7 @@ def test_openapi_discovery_on_invalid_mode(
 def test_openapi_discovery_refresh_services(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
@@ -864,10 +864,10 @@ def test_openapi_discovery_refresh_services(
         resp.location
         == "http://localhost/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
-    assert mock_try_discovery.mock_calls == [
-        call("NO_SITE", ["@noscan"], "example.com"),
-        call("NO_SITE", ["@scan"], "example.com"),
-        call("NO_SITE", ["@noscan"], "example.com"),
+    assert mock_discovery_preview.mock_calls == [
+        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
+        call("NO_SITE", "example.com", prevent_fetching=False, raise_errors=False),
+        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
     ]
     mock_set_autochecks.assert_not_called()
 
@@ -877,7 +877,7 @@ def test_openapi_discovery_tabula_rasa(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_set_autochecks: MagicMock,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_discovery: MagicMock,
 ) -> None:
     aut_user_auth_wsgi_app.call_method(
@@ -890,11 +890,18 @@ def test_openapi_discovery_tabula_rasa(
     )
     mock_set_autochecks.assert_not_called()
     assert mock_discovery.mock_calls == [
-        call("NO_SITE", "refresh", ["@scan"], ["example.com"], non_blocking_http=True)
+        call(
+            "NO_SITE",
+            "refresh",
+            ["example.com"],
+            scan=True,
+            raise_errors=False,
+            non_blocking_http=True,
+        )
     ]
-    assert mock_try_discovery.mock_calls == [
-        call("NO_SITE", ["@noscan"], "example.com"),
-        call("NO_SITE", ["@noscan"], "example.com"),
+    assert mock_discovery_preview.mock_calls == [
+        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
+        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
     ]
 
 
@@ -902,7 +909,7 @@ def test_openapi_discovery_tabula_rasa(
 def test_openapi_discovery_disable_and_re_enable_one_service(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
     mocker: MockerFixture,
 ) -> None:
@@ -925,7 +932,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         headers={"Accept": "application/json"},
         status=200,
     )
-    mock_try_discovery.reset_mock()
+    mock_discovery_preview.reset_mock()
 
     df_boot_ignore = aut_user_auth_wsgi_app.follow_link(
         resp,
@@ -935,8 +942,8 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         status=204,
     )
     assert df_boot_ignore.text == ""
-    mock_try_discovery.assert_called_once()
-    mock_try_discovery.reset_mock()
+    mock_discovery_preview.assert_called_once()
+    mock_discovery_preview.reset_mock()
     mock_set_autochecks.assert_called_once_with(
         "NO_SITE",
         "example.com",
@@ -1009,7 +1016,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         status=204,
     )
     assert df_boot_monitor.text == ""
-    mock_try_discovery.assert_called_once()
+    mock_discovery_preview.assert_called_once()
     mock_set_autochecks.assert_called_once_with(
         "NO_SITE",
         "example.com",
@@ -1094,7 +1101,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
 def test_openapi_discover_single_service(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
     resp = aut_user_auth_wsgi_app.call_method(
@@ -1106,7 +1113,7 @@ def test_openapi_discover_single_service(
         status=204,
     )
     assert resp.text == ""
-    mock_try_discovery.assert_called_once()
+    mock_discovery_preview.assert_called_once()
     # TODO: This seems to be a bug. Might be caused by the fact that the service is currently not
     # known to the host. I have not verified this. But in case something like this happens, the
     # endpoint should fail with some error instead instead of continuing silently.
@@ -1191,7 +1198,7 @@ def test_openapi_bulk_discovery_with_invalid_hostname(
 def test_openapi_refresh_job_status(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
 ) -> None:
     host_name = "example.com"
 
@@ -1235,7 +1242,7 @@ def test_openapi_refresh_job_status(
 def test_openapi_deprecated_execute_discovery_endpoint(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_try_discovery: MagicMock,
+    mock_discovery_preview: MagicMock,
 ) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",

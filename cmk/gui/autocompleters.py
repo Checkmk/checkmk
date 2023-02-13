@@ -9,6 +9,7 @@ from itertools import chain
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
+from cmk.utils.regex import regex
 from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
@@ -29,9 +30,9 @@ from cmk.gui.plugins.visuals.utils import (
     livestatus_query_bare,
     livestatus_query_bare_string,
 )
-from cmk.gui.type_defs import Choices
-from cmk.gui.utils.labels import encode_label_for_livestatus, Label
-from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.type_defs import Choices, Sequence
+from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
+from cmk.gui.valuespec import autocompleter_registry, Labels
 from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
 
 
@@ -237,6 +238,26 @@ def tag_group_opt_autocompleter(value: str, params: dict) -> Choices:
                 if value.lower() in grouped_tag.title.lower() or value == grouped_tag.id:
                     grouped.append((tag_id, grouped_tag.title))
     return grouped
+
+
+@autocompleter_registry.register_expression("label")
+def label_autocompleter(value: str, params: dict) -> Choices:
+    """Return all known labels to support tagify label input dropdown completion"""
+    group_labels: Sequence[str] = params.get("context", {}).get("group_labels", [])
+    all_labels: Sequence[tuple[str, str]] = Labels.get_labels(
+        world=Labels.World(params["world"]), search_label=value
+    )
+    # E.g.: [("label:abc", "label:abc"), ("label:xyz", "label:xyz")]
+    label_choices: Choices = [((":".join([id_, val])),) * 2 for id_, val in all_labels]
+
+    # Filter out all labels that already exist in the given label group
+    if filtered_choices := [
+        (id_, val) for id_, val in sorted(set(label_choices)) if id_ not in group_labels
+    ]:
+        return filtered_choices
+
+    # The user is allowed to enter new labels if they are valid ("<key>:<value>")
+    return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
 def _graph_choices_from_livestatus_row(  # type:ignore[no-untyped-def]

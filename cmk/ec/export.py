@@ -23,9 +23,9 @@ from .main import SyslogFacility, SyslogPriority
 # TODO remove match_ipv4_network when the GUI uses the EC logic.
 from .rule_matcher import match_ipv4_network, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import (
-    add_rule_pack_proxies,
     ECRuleSpec,
     export_rule_pack,
+    install_packaged_rule_packs,
     load_config,
     load_rule_packs,
     mkp_rule_pack_dir,
@@ -35,5 +35,6 @@ from .rule_packs import (
     rule_pack_dir,
     RulePackType,
     save_rule_packs,
+    uninstall_packaged_rule_packs,
 )
 from .settings import FileDescriptor, PortNumber, Settings, settings

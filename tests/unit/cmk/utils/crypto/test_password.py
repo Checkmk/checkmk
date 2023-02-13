@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, AnyStr
+from typing import Any
 
 import pytest
 from cryptography.hazmat.primitives import hashes
 
-from cmk.utils.crypto.password import HashAlgorithm, Password
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.password import Password, PasswordPolicy
 
 
 @pytest.mark.parametrize(
@@ -17,27 +18,21 @@ from cmk.utils.crypto.password import HashAlgorithm, Password
         "",
         "test 😹",
         "long" * 100,
-        b"\xf0\x9f\x98\xb9",
     ],
 )
-def test_valid_password(password: AnyStr) -> None:
+def test_valid_password(password: str) -> None:
     Password(password)
 
 
-@pytest.mark.parametrize(
-    "password",
-    ["\0", b"\0", b"\0".decode()],
-)
-def test_invalid_password(password: AnyStr) -> None:
-    with pytest.raises(ValueError, match="Invalid password"):
-        Password(password)
+def test_invalid_password() -> None:
+    with pytest.raises(ValueError, match="null byte"):
+        Password("foo\0bar")
 
 
 @pytest.mark.parametrize(
     "a,b,expected",
     [
         (Password("😹"), Password("😹"), True),
-        (Password("😹"), Password(b"\xf0\x9f\x98\xb9"), True),
         (Password("     "), Password(" "), False),
         (Password(""), "", False),
         (Password("123"), 123, False),
@@ -56,3 +51,27 @@ def test_hash_algorithms_from_cryptography() -> None:
 def test_hash_algorithms_from_cryptography_unsupported() -> None:
     with pytest.raises(ValueError):
         HashAlgorithm.from_cryptography(hashes.MD5())
+
+
+OK = PasswordPolicy.Result.OK
+TooShort = PasswordPolicy.Result.TooShort
+TooSimple = PasswordPolicy.Result.TooSimple
+
+
+@pytest.mark.parametrize(
+    "password,min_len,min_grp,expected",
+    [
+        ("", 0, 0, OK),
+        ("", None, None, OK),
+        ("cmk", 3, 1, OK),
+        ("cmk", 4, 1, TooShort),
+        ("", None, 1, TooSimple),
+        ("abc123", None, 3, TooSimple),
+        ("abc123", 10, 3, TooShort),  # too short takes precedence
+        ("aB1!", 4, 4, OK),
+    ],
+)
+def test_password_policy(
+    password: str, min_len: int, min_grp: int, expected: PasswordPolicy.Result
+) -> None:
+    assert Password(password).verify_policy(PasswordPolicy(min_len, min_grp)) == expected

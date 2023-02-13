@@ -52,6 +52,14 @@ __all__ = [
 ]
 
 
+def ensure_ipaddress(address: HostAddress | None) -> HostAddress:
+    if address is None:
+        raise TypeError(address)
+    if address in ["0.0.0.0", "::"]:
+        raise TypeError(address)
+    return address
+
+
 def make_parser(
     config_cache: ConfigCache,
     source: SourceInfo,
@@ -154,7 +162,8 @@ class _Builder:
         #       remove this special case.
         #
         if self.config_cache.is_all_agents_host(self.host_name):
-            self._add(*self._get_agent())
+            with suppress(TypeError):
+                self._add(*self._get_agent())
             for elem in self._get_special_agents():
                 self._add(*elem)
 
@@ -167,7 +176,8 @@ class _Builder:
             if special_agents:
                 self._add(*special_agents[0])
             else:
-                self._add(*self._get_agent())
+                with suppress(TypeError):
+                    self._add(*self._get_agent())
 
         if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
             source = SourceInfo(
@@ -221,51 +231,12 @@ class _Builder:
             FetcherType.SNMP,
             SourceType.HOST,
         )
-        self._add(
-            source,
-            self.config_cache.make_snmp_fetcher(
-                self.host_name,
-                self.ipaddress,
-                on_scan_error=self.on_scan_error,
-                selected_sections=self.selected_sections,
-            ),
-            SNMPFileCache(
-                source.hostname,
-                path_template=make_file_cache_path_template(
-                    fetcher_type=source.fetcher_type, ident=source.ident
-                ),
-                max_age=self._max_age_snmp(),
-                simulation=self.simulation_mode,
-                use_only_cache=self.file_cache_options.use_only_cache,
-                file_cache_mode=self.file_cache_options.file_cache_mode(),
-            ),
-        )
-
-    def _initialize_mgmt_boards(self) -> None:
-        protocol = self.config_cache.management_protocol(self.host_name)
-        if protocol is None:
-            return
-
-        self._initialize_snmp_plugin_store()
-        ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
-        if ip_address is None:
-            # HostAddress is not Optional.
-            #
-            # See above.
-            return
-        if protocol == "snmp":
-            source = SourceInfo(
-                self.host_name,
-                self.ipaddress,
-                "mgmt_snmp",
-                FetcherType.SNMP,
-                SourceType.MANAGEMENT,
-            )
+        with suppress(TypeError):
             self._add(
                 source,
                 self.config_cache.make_snmp_fetcher(
                     self.host_name,
-                    self.ipaddress,
+                    ensure_ipaddress(self.ipaddress),
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
                 ),
@@ -280,29 +251,68 @@ class _Builder:
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
-        elif protocol == "ipmi":
-            source = SourceInfo(
-                self.host_name,
-                ip_address,
-                "mgmt_ipmi",
-                FetcherType.IPMI,
-                SourceType.MANAGEMENT,
-            )
-            assert source.ipaddress
-            self._add(
-                source,
-                self.config_cache.make_ipmi_fetcher(self.host_name, source.ipaddress),
-                AgentFileCache(
-                    source.hostname,
-                    path_template=make_file_cache_path_template(
-                        fetcher_type=source.fetcher_type, ident=source.ident
+
+    def _initialize_mgmt_boards(self) -> None:
+        protocol = self.config_cache.management_protocol(self.host_name)
+        if protocol is None:
+            return
+
+        self._initialize_snmp_plugin_store()
+        if protocol == "snmp":
+            with suppress(TypeError):
+                source = SourceInfo(
+                    self.host_name,
+                    ensure_ipaddress(self.ipaddress),
+                    "mgmt_snmp",
+                    FetcherType.SNMP,
+                    SourceType.MANAGEMENT,
+                )
+                self._add(
+                    source,
+                    self.config_cache.make_snmp_fetcher(
+                        source.hostname,
+                        ensure_ipaddress(source.ipaddress),
+                        on_scan_error=self.on_scan_error,
+                        selected_sections=self.selected_sections,
                     ),
-                    max_age=self._max_age_tcp(),
-                    simulation=self.simulation_mode,
-                    use_only_cache=self.file_cache_options.use_only_cache,
-                    file_cache_mode=self.file_cache_options.file_cache_mode(),
-                ),
-            )
+                    SNMPFileCache(
+                        source.hostname,
+                        path_template=make_file_cache_path_template(
+                            fetcher_type=source.fetcher_type, ident=source.ident
+                        ),
+                        max_age=self._max_age_snmp(),
+                        simulation=self.simulation_mode,
+                        use_only_cache=self.file_cache_options.use_only_cache,
+                        file_cache_mode=self.file_cache_options.file_cache_mode(),
+                    ),
+                )
+        elif protocol == "ipmi":
+            with suppress(TypeError):
+                source = SourceInfo(
+                    self.host_name,
+                    ensure_ipaddress(
+                        config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
+                    ),
+                    "mgmt_ipmi",
+                    FetcherType.IPMI,
+                    SourceType.MANAGEMENT,
+                )
+                self._add(
+                    source,
+                    self.config_cache.make_ipmi_fetcher(
+                        source.hostname, ensure_ipaddress(source.ipaddress)
+                    ),
+                    AgentFileCache(
+                        source.hostname,
+                        path_template=make_file_cache_path_template(
+                            fetcher_type=source.fetcher_type, ident=source.ident
+                        ),
+                        max_age=self._max_age_tcp(),
+                        simulation=self.simulation_mode,
+                        use_only_cache=self.file_cache_options.use_only_cache,
+                        file_cache_mode=self.file_cache_options.file_cache_mode(),
+                    ),
+                )
         else:
             raise LookupError()
 
@@ -379,7 +389,9 @@ class _Builder:
             )
             return (
                 source,
-                self.config_cache.make_tcp_fetcher(source.hostname, source.ipaddress),
+                self.config_cache.make_tcp_fetcher(
+                    source.hostname, ensure_ipaddress(source.ipaddress)
+                ),
                 AgentFileCache(
                     source.hostname,
                     path_template=make_file_cache_path_template(

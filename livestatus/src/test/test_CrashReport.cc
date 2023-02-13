@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/data_encoding.h"
 #include "test/Utilities.h"
@@ -49,7 +50,7 @@ TEST_F(CrashReportFixture, DirectoryAndFileExist) {
 
 TEST_F(CrashReportFixture, AccessorsAreCorrect) {
     ASSERT_TRUE(fs::exists(fullpath));
-    CrashReport cr{uuid, component};
+    const CrashReport cr{uuid, component};
     EXPECT_EQ(uuid, cr.id());
     EXPECT_EQ(component, cr.component());
 }
@@ -62,9 +63,8 @@ TEST_F(CrashReportFixture, ForEachCrashReport) {
         result = cr;
         return true;
     });
-    ASSERT_NE(std::nullopt, result);
-    EXPECT_EQ(uuid, result->id());
-    EXPECT_EQ(component, result->component());
+    EXPECT_TRUE(result && uuid == result->id());
+    EXPECT_TRUE(result && component == result->component());
 }
 
 TEST_F(CrashReportFixture, TestDeleteId) {
@@ -102,13 +102,13 @@ public:
 private:
     [[nodiscard]] NagiosPaths paths_() const {
         NagiosPaths p{};
-        p._crash_reports_path = basepath;
+        p.crash_reports_directory = basepath;
         return p;
     }
 };
 
 TEST_F(CrashReportTableFixture, TestTable) {
-    EXPECT_EQ(basepath, core.crashReportPath());
+    EXPECT_EQ(basepath, core.paths().crash_reports_directory);
     EXPECT_EQ("crashreports", table.name());
     EXPECT_EQ("crashreport_", table.namePrefix());
 }

@@ -569,9 +569,24 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete hosts"""
     user.need_permission("wato.edit")
     body = params["body"]
-    for host_name in body["entries"]:
-        host = Host.load_host(host_name)
-        host.folder().delete_hosts([host.name()], automation=delete_hosts)
+    hostnames = body["entries"]
+
+    # Ideally, we would not need folder id's. However, folders cannot be sorted.
+    folder_by_id = {}
+    folder_id_by_hostname = {}
+    for hostname in hostnames:
+        folder = Host.load_host(hostname).folder()
+        folder_id_by_hostname[hostname] = folder.id()
+        folder_by_id[folder.id()] = folder
+
+    for id_, hostnames_per_folder in itertools.groupby(
+        sorted(hostnames, key=folder_id_by_hostname.__getitem__),
+        key=folder_id_by_hostname.__getitem__,
+    ):
+        folder = folder_by_id[id_]
+        # Calling Folder.delete_hosts is very expensive. Thus, we only call it once per folder.
+        folder.delete_hosts(list(hostnames_per_folder), automation=delete_hosts)
+
     return Response(status=204)
 
 

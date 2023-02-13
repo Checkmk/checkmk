@@ -7,12 +7,9 @@
 #define Attributes_h
 
 #include <string>
-#include <unordered_map>
 
 #include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
-
-using Attributes = std::unordered_map<std::string, std::string>;
 
 inline std::tuple<AttributeKind, std::string> to_attribute_kind(
     const std::string &name) {

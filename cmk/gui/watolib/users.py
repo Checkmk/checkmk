@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from datetime import datetime
+from typing import cast
 
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto.password import Password
+from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.object_diff import make_diff_text
 
 import cmk.gui.userdb as userdb
@@ -125,6 +126,21 @@ def edit_users(changed_users: UserObject) -> None:
     userdb.save_users(all_users, datetime.now())
 
 
+def remove_custom_attribute_from_all_users(custom_attribute_name: str) -> None:
+    edit_users(
+        {
+            user_id: {
+                "attributes": cast(
+                    UserSpec,
+                    {k: v for k, v in settings.items() if k != custom_attribute_name},
+                ),
+                "is_new_user": False,
+            }
+            for user_id, settings in userdb.load_users(lock=True).items()
+        }
+    )
+
+
 def make_user_audit_log_object(attributes: UserSpec) -> UserSpec:
     """The resulting object is used for building object diffs"""
     obj = attributes.copy()
@@ -178,17 +194,14 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
     if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
-    # Authentication: Password or Secret
+    # Automation Secret
+    # Note: if a password is used it is verified before this; we only know the hash here
     if "automation_secret" in user_attrs:
         secret = user_attrs["automation_secret"]
         if len(secret) < 10:
             raise MKUserError(
                 "secret", _("Please specify a secret of at least 10 characters length.")
             )
-    else:
-        password = user_attrs.get("password")
-        if password:
-            verify_password_policy(Password(password))
 
     # Email
     email = user_attrs.get("email")
@@ -261,31 +274,20 @@ def notification_script_choices():
 
 def verify_password_policy(password: Password) -> None:
     min_len = active_config.password_policy.get("min_length")
-    if min_len and password.char_count() < min_len:
+    num_groups = active_config.password_policy.get("num_groups")
+
+    result = password.verify_policy(PasswordPolicy(min_len, num_groups))
+    if result == PasswordPolicy.Result.TooShort:
         raise MKUserError(
             "password",
             _("The given password is too short. It must have at least %d characters.") % min_len,
         )
-
-    num_groups = active_config.password_policy.get("num_groups")
-    if num_groups:
-        groups = {}
-        for c in password.as_string():
-            if c in "abcdefghijklmnopqrstuvwxyz":
-                groups["lcase"] = 1
-            elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                groups["ucase"] = 1
-            elif c in "0123456789":
-                groups["numbers"] = 1
-            else:
-                groups["special"] = 1
-
-        if sum(groups.values()) < num_groups:
-            raise MKUserError(
-                "password",
-                _(
-                    "The password does not use enough character groups. You need to "
-                    "set a password which uses at least %d of them."
-                )
-                % num_groups,
+    if result == PasswordPolicy.Result.TooSimple:
+        raise MKUserError(
+            "password",
+            _(
+                "The password does not use enough character groups. You need to "
+                "set a password which uses at least %d of them."
             )
+            % num_groups,
+        )

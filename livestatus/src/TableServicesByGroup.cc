@@ -5,35 +5,35 @@
 
 #include "TableServicesByGroup.h"
 
+#include <memory>
 #include <optional>
 
-#include "NebService.h"
-#include "NebServiceGroup.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "livestatus/Column.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
-#include "nagios.h"
 
 namespace {
 struct service_and_group {
-    const service *svc;
-    const servicegroup *group;
+    const IService *svc;
+    const IServiceGroup *group;
 };
 }  // namespace
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<service_and_group>()->svc;
+        return r.rawData<service_and_group>()->svc->handle();
     }),
                               true);
     TableServiceGroups::addColumns(
         this, "servicegroup_", offsets.add([](Row r) {
-            return r.rawData<service_and_group>()->group;
+            return r.rawData<service_and_group>()->group->handle();
         }));
 }
 
@@ -41,39 +41,32 @@ std::string TableServicesByGroup::name() const { return "servicesbygroup"; }
 
 std::string TableServicesByGroup::namePrefix() const { return "service_"; }
 
-void TableServicesByGroup::answerQuery(Query &query, const User &user) {
-    auto process = [&](const service_and_group &sag) {
-        return !user.is_authorized_for_service(NebService{*sag.svc}) ||
-               query.processDataset(Row{&sag});
-    };
+namespace {
+bool ProcessServiceGroup(Query &query, const User &user,
+                         const IServiceGroup &sg) {
+    return !user.is_authorized_for_service_group(sg) ||
+           sg.all([&query, &user, &sg](const IService &s) {
+               if (!user.is_authorized_for_service(s)) {
+                   return true;
+               }
+               service_and_group sag{&s, &sg};
+               return query.processDataset(Row{&sag});
+           });
+}
+}  // namespace
 
+void TableServicesByGroup::answerQuery(Query &query, const User &user) {
     // If we know the service group, we simply iterate over it.
     if (auto value = query.stringValueRestrictionFor("groups")) {
         Debug(logger()) << "using service group index with '" << *value << "'";
-        if (const auto *group =
-                find_servicegroup(const_cast<char *>(value->c_str()))) {
-            if (user.is_authorized_for_service_group(NebServiceGroup{*group})) {
-                for (const auto *m = group->members; m != nullptr;
-                     m = m->next) {
-                    if (!process(service_and_group{m->service_ptr, group})) {
-                        return;
-                    }
-                }
-            }
+        if (const auto sg = core()->find_servicegroup(*value)) {
+            ProcessServiceGroup(query, user, *sg);
         }
         return;
     }
-
     // In the general case, we have to process all service groups.
     Debug(logger()) << "using full table scan";
-    for (const auto *group = servicegroup_list; group != nullptr;
-         group = group->next) {
-        if (user.is_authorized_for_service_group(NebServiceGroup{*group})) {
-            for (const auto *m = group->members; m != nullptr; m = m->next) {
-                if (!process(service_and_group{m->service_ptr, group})) {
-                    return;
-                }
-            }
-        }
-    }
+    core()->all_of_service_groups([&query, &user](const auto &sg) {
+        return ProcessServiceGroup(query, user, sg);
+    });
 }

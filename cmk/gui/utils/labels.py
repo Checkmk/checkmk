@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from ast import literal_eval
 from collections.abc import Iterable, Mapping
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 from redis import Redis
 from redis.client import Pipeline
@@ -23,6 +23,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import Sequence
 
 
 class Label(NamedTuple):
@@ -32,6 +33,14 @@ class Label(NamedTuple):
 
 
 Labels = Iterable[Label]
+
+# Label group specific types
+AndOrNotLiteral = Literal["and", "or", "not"]
+LabelGroup = Sequence[tuple[AndOrNotLiteral, str]]
+LabelGroups = Sequence[tuple[AndOrNotLiteral, LabelGroup]]
+
+# Labels need to be in the format "<key>:<value>", e.g. "os:windows"
+LABEL_REGEX = r"^[^:]+:[^:]+$"
 
 
 class _LivestatusLabelResponse(NamedTuple):
@@ -45,7 +54,6 @@ class _MergedLabels(NamedTuple):
 
 
 def parse_labels_value(value: str) -> Labels:
-
     try:
         decoded_labels = json.loads(value or "[]")
     except ValueError as e:
@@ -93,6 +101,55 @@ def encode_labels_for_livestatus(
     if headers := "\n".join(encode_label_for_livestatus(column, label) for label in labels):
         return headers + "\n"
     return ""
+
+
+def encode_label_groups_for_livestatus(
+    column: str,
+    label_groups: LabelGroups,
+) -> str:
+    """
+    >>> encode_labels_for_livestatus("labels", [Label("key", "value", False), Label("x", "y", False)])
+    "Filter: labels = 'key' 'value'\\nFilter: labels = 'x' 'y'\\n"
+    >>> encode_labels_for_livestatus("labels", [])
+    ''
+    """
+    filter_str: str = ""
+    is_first_group: bool = True
+    group_operator: AndOrNotLiteral
+    for group_operator, label_group in label_groups:
+        is_first_label: bool = True
+        label_operator: AndOrNotLiteral
+        for label_operator, label in label_group:
+            if not label:
+                continue
+
+            label_id, label_val = label.split(":")
+            filter_str += (
+                encode_label_for_livestatus(column, Label(label_id, label_val, False)) + "\n"
+            )
+            filter_str += _operator_filter_str(label_operator, is_first_label)
+            is_first_label = False
+
+        if not is_first_label:
+            filter_str += _operator_filter_str(group_operator, is_first_group)
+        is_first_group = False
+
+    return filter_str
+
+
+# Type of argument operator should be 'Operator'
+def _operator_filter_str(operator: AndOrNotLiteral, is_first: bool) -> str:
+    if is_first:
+        if operator == "not":
+            # Negate without And for the first element
+            return "Negate:\n"
+        # No filter str for and/or for the first element
+        return ""
+    if operator == "not":
+        # Negate with And for non-first elements
+        return "Negate:\nAnd: 2\n"
+    # "And: 2\n" or "Or: 2\n"
+    return f"{operator.title()}: 2\n"
 
 
 def encode_labels_for_tagify(
@@ -308,3 +365,20 @@ class LabelsCache:
 @request_memoize()
 def get_labels_cache() -> LabelsCache:
     return LabelsCache()
+
+
+def get_labels_from_config(search_label: str) -> Sequence[tuple[str, str]]:
+    # TODO: Until we have a config specific implementation we now use the labels known to the
+    # core. This is not optimal, but better than doing nothing.
+    # To implement a setup specific search, we need to decide which occurrences of labels we
+    # want to search: hosts / folders, rules, ...?
+    return get_labels_from_core(search_label)
+
+
+def get_labels_from_core(search_label: str | None = None) -> Sequence[tuple[str, str]]:
+    all_labels: Sequence[tuple[str, str]] = get_labels_cache().get_labels_list()
+    if search_label is None:
+        return all_labels
+    return [
+        (ident, value) for ident, value in all_labels if search_label in ":".join([ident, value])
+    ]

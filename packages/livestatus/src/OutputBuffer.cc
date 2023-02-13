@@ -37,7 +37,7 @@ void OutputBuffer::flush() {
             _os << _error_message;
         }
         auto code = static_cast<unsigned>(_response_code);
-        size_t size = _os.tellp();
+        const size_t size = _os.tellp();
         std::ostringstream header;
         header << std::setw(3) << std::setfill('0') << code << " "  //
                << std::setw(11) << std::setfill(' ') << size << "\n";
@@ -62,7 +62,7 @@ std::string_view toStringView(std::ostringstream &os) {
 void OutputBuffer::writeData(std::ostringstream &os) {
     if (writeWithTimeoutWhile(_fd, toStringView(os), 100ms,
                               [this]() { return !shouldTerminate(); }) == -1) {
-        generic_error ge{"cannot write to client socket"};
+        const generic_error ge{"cannot write to client socket"};
         Informational(_logger) << ge;
     }
 }

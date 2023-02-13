@@ -111,7 +111,7 @@ from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console as _console  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec
-from cmk.utils.rulesets.ruleset_matcher import Ruleset as _Ruleset
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec as _RuleSpec
 from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
     get_rule_options,
     hosttags_match_taglist,
@@ -260,22 +260,24 @@ def savefloat(f: Any) -> float:
 
 
 # Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
-def service_extra_conf(hostname: HostName, service: ServiceName, ruleset: _config.Ruleset) -> List:
+def service_extra_conf(
+    hostname: HostName, service: ServiceName, ruleset: Iterable[_RuleSpec]
+) -> List:
     return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
-def host_extra_conf(hostname: str, ruleset: _config.Ruleset) -> List:
+def host_extra_conf(hostname: str, ruleset: Iterable[_RuleSpec]) -> List:
     return _config.get_config_cache().host_extra_conf(HostName(hostname), ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
-def in_binary_hostlist(hostname: HostName, ruleset: _config.Ruleset) -> bool:
+def in_binary_hostlist(hostname: HostName, ruleset: Iterable[_RuleSpec]) -> bool:
     return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
-def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, Any]:
+def host_extra_conf_merged(hostname: str, conf: Iterable[_RuleSpec]) -> Dict[str, Any]:
     return _config.get_config_cache().host_extra_conf_merged(HostName(hostname), conf)
 
 
@@ -351,7 +353,7 @@ def get_number_with_precision(
     return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
 
 
-def get_checkgroup_parameters(group: str, deflt: _Ruleset) -> _Ruleset:
+def get_checkgroup_parameters(group: str, deflt: Iterable[_RuleSpec]) -> Iterable[_RuleSpec]:
     return _config.checkgroup_parameters.get(group, deflt)
 
 

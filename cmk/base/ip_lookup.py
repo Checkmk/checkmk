@@ -94,14 +94,13 @@ def lookup_ip_address(
     if is_dyndns_host:
         return host_name
 
-    return (
-        None
-        if is_no_ip_host
-        else cached_dns_lookup(
-            host_name,
-            family=family,
-            force_file_cache_renewal=force_file_cache_renewal,
-        )
+    if is_no_ip_host:
+        return None
+
+    return cached_dns_lookup(
+        host_name,
+        family=family,
+        force_file_cache_renewal=force_file_cache_renewal,
     )
 
 

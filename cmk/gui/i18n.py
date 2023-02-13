@@ -39,16 +39,12 @@ class Translation(NamedTuple):
 translation = request_local_attr("translation", Translation)
 
 
-def _translation() -> Translation | None:
-    return translation
-
-
 @request_memoize()
 def _(message: str, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings.
     """
-    if _translation():
+    if translation:
         return translation.translation.gettext(message)
     return str(message)
 
@@ -64,7 +60,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings
     """
-    if _translation():
+    if translation:
         return translation.translation.ngettext(singular, plural, n)
     if n == 1:
         return str(singular)
@@ -72,7 +68,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
 
 
 def get_current_language() -> str:
-    if _translation():
+    if translation:
         return translation.name
     return "en"
 
@@ -208,7 +204,7 @@ def _u(text: str) -> str:
         if current_language == "en":
             return text
         return ldict.get(current_language, text)
-    if _translation():
+    if translation:
         return translation.translation.gettext(text)
     return text
 

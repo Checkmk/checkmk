@@ -32,6 +32,7 @@ set(livestatus_headers
     ${header_location}/IntColumn.h
     ${header_location}/Interface.h
     ${header_location}/IntFilter.h
+    ${header_location}/HostServiceState.h
     ${header_location}/ListColumn.h
     ${header_location}/ListFilter.h
     ${header_location}/LogCache.h
@@ -74,6 +75,8 @@ set(livestatus_headers
     ${header_location}/Table.h
     ${header_location}/TableColumns.h
     ${header_location}/TableCommands.h
+    ${header_location}/TableContacts.h
+    ${header_location}/TableContactGroups.h
     ${header_location}/TableCrashReports.h
     ${header_location}/TableEventConsole.h
     ${header_location}/TableEventConsoleReplication.h
@@ -106,6 +109,7 @@ set(livestatus_sources
     global_counters.cc
     InputBuffer.cc
     IntFilter.cc
+    HostServiceState.cc
     ListFilter.cc
     LogCache.cc
     LogEntry.cc
@@ -138,6 +142,8 @@ set(livestatus_sources
     Table.cc
     TableColumns.cc
     TableCommands.cc
+    TableContacts.cc
+    TableContactGroups.cc
     TableCrashReports.cc
     TableEventConsole.cc
     TableEventConsoleReplication.cc

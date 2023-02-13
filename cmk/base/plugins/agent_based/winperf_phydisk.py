@@ -167,11 +167,13 @@ def _parse_header(header_row: Sequence[str]) -> tuple[float, Optional[int]]:
 
 def _create_sections(instances: Sequence[str], disk_template: DiskType) -> SectionsType:
     sections: SectionsType = {}
-    # Example of instances
-    # From Agent we get:  "3 instances: 0_C: 1_F: _Total\n"
-    # Parser does this:  ['3','instances:','0_C','1_F','_Total']
+    # Example of instances(disk num 2 has no letter as a label)
+    # From Agent we get:  "4 instances: 0_C: 1_F: 2 _Total\n"
+    # Parser does this:  ['4','instances:','0_C','1_F','2_2', '_Total']
     disk_labels = [disk_str.split("_") for disk_str in instances[InstancesRowIndex.FIRST_DISK : -1]]
-    for disk_num, disk_name in disk_labels:
+    for disk_info in disk_labels:
+        disk_num = disk_info[0]
+        disk_name = disk_info[-1]  # disk_info may contain only disk num
         new_disk = disk_template.copy()
         if disk_name in sections:
             # Disk exists(strange!): write full disk id but reversed: not "C", but "C_1" or "C_0"

@@ -6,7 +6,6 @@
 
 import argparse
 import collections
-import errno
 import json
 import re
 import socket
@@ -14,7 +13,6 @@ import sys
 import time
 from collections import Counter
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any
 from xml.dom import minidom
 
@@ -37,7 +35,7 @@ import cmk.special_agents.utils as utils
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
+AGENT_TMP_PATH = cmk.utils.paths.tmp_dir / "agents/agent_vsphere"
 
 REQUESTED_COUNTERS_KEYS = (
     "disk.numberReadAveraged",
@@ -1229,9 +1227,8 @@ class ESXConnection:
     def delete_server_cookie(self):
         try:
             self._server_cookie_path.unlink()
-        except OSError as exc:
-            if exc.errno != errno.ENOENT:
-                raise
+        except FileNotFoundError:
+            pass
 
 
 # .

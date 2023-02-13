@@ -6,18 +6,17 @@
 
 from __future__ import annotations
 
-import errno
 import logging
 import os
 import time
 from collections.abc import Container
-from typing import Any, Final
+from typing import Any, Final, Sequence
 
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId
+from cmk.utils.type_defs import ContactgroupName, UserId
 from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
@@ -129,8 +128,8 @@ class LoggedInUser:
         return self.get_attribute("customer")
 
     @property
-    def contact_groups(self) -> list:
-        return self.get_attribute("contactgroups", [])
+    def contact_groups(self) -> Sequence[ContactgroupName]:
+        return [ContactgroupName(raw) for raw in self.get_attribute("contactgroups", [])]
 
     @property
     def start_url(self) -> str | None:
@@ -411,10 +410,8 @@ class LoggedInUser:
 
         try:
             return os.stat(self.confdir + "/" + name + ".mk").st_mtime
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return 0
-            raise
+        except FileNotFoundError:
+            return 0
 
     def get_docs_base_url(self) -> str:
         version = Version(__version__).version_base

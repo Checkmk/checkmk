@@ -5,7 +5,6 @@
 
 import abc
 import ast
-import errno
 import glob
 import io
 import logging
@@ -61,7 +60,6 @@ from cmk.automations.results import (
     DeleteHostsResult,
     DiagHostResult,
     DiscoveredHostLabelsDict,
-    DiscoveryResult,
     GetAgentOutputResult,
     GetCheckInformationResult,
     GetConfigurationResult,
@@ -74,11 +72,12 @@ from cmk.automations.results import (
     RenameHostsResult,
     RestartResult,
     ScanParentsResult,
+    ServiceDiscoveryPreviewResult,
+    ServiceDiscoveryResult,
     ServiceInfo,
     SetAutochecksResult,
     SetAutochecksTable,
     SetAutochecksTablePre20,
-    TryDiscoveryResult,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
 )
@@ -140,10 +139,16 @@ class DiscoveryAutomation(Automation):
         discovery.schedule_discovery_check(host_name)
 
 
+def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]]:
+    if directive in args:
+        return True, [a for i, a in enumerate(args) if i != args.index(directive)]
+    return False, args
+
+
 class AutomationDiscovery(DiscoveryAutomation):
-    cmd = "inventory"  # TODO: Rename!
+    cmd = "service-discovery"
     needs_config = True
-    needs_checks = True  # TODO: Can we change this?
+    needs_checks = True
 
     # Does discovery for a list of hosts. Possible values for mode:
     # "new" - find only new services (like -I)
@@ -152,21 +157,16 @@ class AutomationDiscovery(DiscoveryAutomation):
     # "refresh" - drop all services and reinventorize
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args: list[str]) -> DiscoveryResult:
+    def execute(self, args: list[str]) -> ServiceDiscoveryResult:
+        force_snmp_cache_refresh, args = _extract_directive("@scan", args)
+        _prevent_scan, args = _extract_directive("@noscan", args)
+        raise_errors, args = _extract_directive("@raiseerrors", args)
         # Error sensitivity
-        if args[0] == "@raiseerrors":
-            args = args[1:]
+        if raise_errors:
             on_error = OnError.RAISE
             os.dup2(os.open("/dev/null", os.O_WRONLY), 2)
         else:
             on_error = OnError.IGNORE
-
-        # Do a full service scan
-        if args[0] == "@scan":
-            force_snmp_cache_refresh = True
-            args = args[1:]
-        else:
-            force_snmp_cache_refresh = False
 
         # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
         file_cache_options = FileCacheOptions(use_outdated=True)
@@ -209,6 +209,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 check_plugins=CheckPluginMapper(),
                 find_service_description=config.service_description,
                 mode=mode,
+                keep_clustered_vanished_services=True,
                 service_filters=None,
                 on_error=on_error,
             )
@@ -218,108 +219,136 @@ class AutomationDiscovery(DiscoveryAutomation):
                 # make the service reflect the new state as soon as possible.
                 self._trigger_discovery_check(config_cache, hostname)
 
-        return DiscoveryResult(results)
+        return ServiceDiscoveryResult(results)
 
 
 automations.register(AutomationDiscovery())
 
 
+class AutomationDiscoveryPre22Name(AutomationDiscovery):
+    cmd = "inventory"
+    needs_config = True
+    needs_checks = True
+
+
+automations.register(AutomationDiscoveryPre22Name())
+
+
+class AutomationDiscoveryPreview(Automation):
+    cmd = "service-discovery-preview"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
+        prevent_fetching, args = _extract_directive("@nofetch", args)
+        raise_errors, args = _extract_directive("@raiseerrors", args)
+        return _get_discovery_preview(
+            HostName(args[0]), not prevent_fetching, OnError.RAISE if raise_errors else OnError.WARN
+        )
+
+
+automations.register(AutomationDiscoveryPreview())
+
+
 class AutomationTryDiscovery(Automation):
-    cmd = "try-inventory"  # TODO: Rename!
+    cmd = "try-inventory"  # TODO: drop with 2.3
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: list[str]) -> TryDiscoveryResult:
-        buf = io.StringIO()
-        with redirect_stdout(buf), redirect_stderr(buf):
-            log.setup_console_logging()
-            check_preview_table, host_label_result = self._execute_discovery(args)
-
-            def make_discovered_host_labels(
-                labels: Sequence[HostLabel],
-            ) -> DiscoveredHostLabelsDict:
-                # this dict deduplicates label names! TODO: sort only if and where needed!
-                return {
-                    l.name: l.to_dict() for l in sorted(labels, key=operator.attrgetter("name"))
-                }
-
-            changed_labels = make_discovered_host_labels(
-                [
-                    l
-                    for l in host_label_result.vanished
-                    if l.name in make_discovered_host_labels(host_label_result.new)
-                ]
-            )
-
-            return TryDiscoveryResult(
-                output=buf.getvalue(),
-                check_table=check_preview_table,
-                host_labels=make_discovered_host_labels(host_label_result.present),
-                new_labels=make_discovered_host_labels(
-                    [l for l in host_label_result.new if l.name not in changed_labels]
-                ),
-                vanished_labels=make_discovered_host_labels(
-                    [l for l in host_label_result.vanished if l.name not in changed_labels]
-                ),
-                changed_labels=changed_labels,
-            )
-
-    def _execute_discovery(
-        self, args: list[str]
-    ) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
-        perform_scan = True
+    def execute(self, args: list[str]) -> ServiceDiscoveryPreviewResult:
         # Note: in the @noscan case we *must not* fetch live data (it must be fast)
         # In the @scan case we *must* fetch live data (it must be up to date)
-        if args[0] == "@noscan":
-            args = args[1:]
-            perform_scan = False
+        _do_scan, args = _extract_directive("@scan", args)
+        prevent_scan, args = _extract_directive("@noscan", args)
+        raise_errors, args = _extract_directive("@raiseerrors", args)
+        perform_scan = (
+            not prevent_scan
+        )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
 
-        elif args[0] == "@scan":
-            # Do a full service scan
-            args = args[1:]
-
-        file_cache_options = FileCacheOptions(
-            use_outdated=not perform_scan, use_only_cache=not perform_scan
-        )
-
-        if args[0] == "@raiseerrors":
-            on_error = OnError.RAISE
-            args = args[1:]
-        else:
-            on_error = OnError.WARN
-
-        config_cache = config.get_config_cache()
-        parser = ConfiguredParser(
-            config_cache,
-            selected_sections=NO_SELECTION,
-            keep_outdated=file_cache_options.keep_outdated,
-            logger=logging.getLogger("cmk.base.discovery"),
-        )
-        fetcher = ConfiguredFetcher(
-            config_cache,
-            file_cache_options=file_cache_options,
-            force_snmp_cache_refresh=perform_scan,
-            mode=Mode.DISCOVERY,
-            on_error=on_error,
-            selected_sections=NO_SELECTION,
-            simulation_mode=config.simulation_mode,
-            max_cachefile_age=config.max_cachefile_age(),
-        )
-        host_name = HostName(args[0])
-        return discovery.get_check_preview(
-            host_name,
-            config_cache=config_cache,
-            parser=parser,
-            fetcher=fetcher,
-            section_plugins=SectionPluginMapper(),
-            check_plugins=CheckPluginMapper(),
-            find_service_description=config.service_description,
-            ignored_services=IgnoredServices(config_cache, host_name),
-            on_error=on_error,
+        return _get_discovery_preview(
+            HostName(args[0]), perform_scan, OnError.RAISE if raise_errors else OnError.WARN
         )
 
 
 automations.register(AutomationTryDiscovery())
+
+
+# TODO: invert the 'perform_scan' logic -> 'prevent_fetching'
+def _get_discovery_preview(
+    host_name: HostName, perform_scan: bool, on_error: OnError
+) -> ServiceDiscoveryPreviewResult:
+    buf = io.StringIO()
+    with redirect_stdout(buf), redirect_stderr(buf):
+        log.setup_console_logging()
+        check_preview_table, host_label_result = _execute_discovery(
+            host_name, perform_scan, on_error
+        )
+
+        def make_discovered_host_labels(
+            labels: Sequence[HostLabel],
+        ) -> DiscoveredHostLabelsDict:
+            # this dict deduplicates label names! TODO: sort only if and where needed!
+            return {l.name: l.to_dict() for l in sorted(labels, key=operator.attrgetter("name"))}
+
+        changed_labels = make_discovered_host_labels(
+            [
+                l
+                for l in host_label_result.vanished
+                if l.name in make_discovered_host_labels(host_label_result.new)
+            ]
+        )
+
+        return ServiceDiscoveryPreviewResult(
+            output=buf.getvalue(),
+            check_table=check_preview_table,
+            host_labels=make_discovered_host_labels(host_label_result.present),
+            new_labels=make_discovered_host_labels(
+                [l for l in host_label_result.new if l.name not in changed_labels]
+            ),
+            vanished_labels=make_discovered_host_labels(
+                [l for l in host_label_result.vanished if l.name not in changed_labels]
+            ),
+            changed_labels=changed_labels,
+        )
+
+
+def _execute_discovery(
+    host_name: HostName,
+    perform_scan: bool,
+    on_error: OnError,
+) -> tuple[Sequence[CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]]:
+    file_cache_options = FileCacheOptions(
+        use_outdated=not perform_scan, use_only_cache=not perform_scan
+    )
+
+    config_cache = config.get_config_cache()
+    parser = ConfiguredParser(
+        config_cache,
+        selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
+    fetcher = ConfiguredFetcher(
+        config_cache,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=perform_scan,
+        mode=Mode.DISCOVERY,
+        on_error=on_error,
+        selected_sections=NO_SELECTION,
+        simulation_mode=config.simulation_mode,
+        max_cachefile_age=config.max_cachefile_age(),
+    )
+    return discovery.get_check_preview(
+        host_name,
+        config_cache=config_cache,
+        parser=parser,
+        fetcher=fetcher,
+        section_plugins=SectionPluginMapper(),
+        check_plugins=CheckPluginMapper(),
+        find_service_description=config.service_description,
+        ignored_services=IgnoredServices(config_cache, host_name),
+        on_error=on_error,
+    )
 
 
 class AutomationSetAutochecks(DiscoveryAutomation):
@@ -515,14 +544,14 @@ class AutomationRenameHosts(Automation):
 
         # Rename temporary files of the host
         for d in ["cache", "counters"]:
-            if self._rename_host_file(tmp_dir + "/" + d + "/", oldname, newname):
+            if self._rename_host_file(str(tmp_dir / d), oldname, newname):
                 actions.append(d)
 
-        if self._rename_host_dir(tmp_dir + "/piggyback/", oldname, newname):
+        if self._rename_host_dir(str(tmp_dir / "piggyback"), oldname, newname):
             actions.append("piggyback-load")
 
         # Rename piggy files *created* by the host
-        piggybase = tmp_dir + "/piggyback/"
+        piggybase = str(tmp_dir) + "/piggyback/"
         if os.path.exists(piggybase):
             for piggydir in os.listdir(piggybase):
                 if self._rename_host_file(piggybase + piggydir, oldname, newname):
@@ -959,11 +988,8 @@ class ABCDeleteHosts:
     def _delete_datasource_dirs(self, hostname: HostName) -> None:
         try:
             ds_directories = os.listdir(data_source_cache_dir)
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                ds_directories = []
-            else:
-                raise
+        except FileNotFoundError:
+            ds_directories = []
 
         for data_source_name in ds_directories:
             filename = f"{data_source_cache_dir}/{data_source_name}/{hostname}"
@@ -981,13 +1007,12 @@ class ABCDeleteHosts:
         # logwatch and piggyback folders
         for what_dir in [
             f"{logwatch_dir}/{hostname}",
-            f"{tmp_dir}/piggyback/{hostname}",
+            str(tmp_dir / f"piggyback{hostname}"),
         ]:
             try:
                 shutil.rmtree(what_dir)
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+            except FileNotFoundError:
+                continue
 
     def _delete_if_exists(self, path: str) -> None:
         """Delete the given file or folder in case it exists"""
@@ -1504,10 +1529,8 @@ class AutomationDiagHost(Automation):
                 encoding="utf-8",
                 check=False,
             )
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return 1, "Cannot find binary <tt>traceroute</tt>."
-            raise
+        except FileNotFoundError:
+            return 1, "Cannot find binary <tt>traceroute</tt>."
         return completed_process.returncode, completed_process.stdout
 
     def _execute_snmp(  # type: ignore[no-untyped-def]  # pylint: disable=too-many-branches

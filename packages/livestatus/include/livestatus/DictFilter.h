@@ -11,7 +11,7 @@
 #include <memory>
 #include <string>
 
-#include "livestatus/Attributes.h"
+#include "Interface.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/opids.h"

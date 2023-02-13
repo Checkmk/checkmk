@@ -523,6 +523,7 @@ def vs_filesystem(
     elements: Sequence[FilesystemElements] | None = None,
     extra_elements: list[DictionaryEntry] | None = None,
     ignored_keys: Sequence[str] | None = None,
+    title: str | None = None,
 ) -> Dictionary:
 
     if extra_elements is None:
@@ -563,4 +564,5 @@ def vs_filesystem(
             "flex_levels"
         ],
         ignored_keys=ignored_keys,
+        title=title,
     )

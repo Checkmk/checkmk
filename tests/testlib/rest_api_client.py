@@ -11,22 +11,33 @@ import multiprocessing
 import pprint
 import queue
 from collections.abc import Mapping
-from typing import Any, Literal, NoReturn, Sequence, TypedDict
+from typing import Any, Literal, NoReturn, Sequence, Type, TypedDict
 
 from pydantic import BaseModel, StrictStr
 
 from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
 
-
-class AuxTagJSON(BaseModel):
-    aux_tag_id: StrictStr
-    title: StrictStr
-    topic: StrictStr
-
-
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
+
+
+class Link(BaseModel):
+    domainType: Literal["link"]
+    rel: StrictStr
+    href: StrictStr
+    method: Literal["GET", "PUT", "DELETE"]
+    type: Literal["application/json"]
+
+
+class ObjectResponse(BaseModel):
+    links: list[Link]
+    members: dict
+
+
+class CollectionResponse(BaseModel):
+    links: list[Link]
+    extensions: dict
 
 
 @dataclasses.dataclass(frozen=True)
@@ -198,7 +209,18 @@ class RestApiClient:
                 headers=default_headers,
                 url_is_complete=url_is_complete,
             )
+
+        if method == "get" and expect_ok:
+            self._check_response_keys(resp, url)
+
         return resp
+
+    def _check_response_keys(self, resp: Response, url: str) -> None:
+        if "collections" in url:
+            assert set(resp.json) == {"links", "domainType", "id", "value", "extensions"}
+
+        if "objects" in url:
+            assert set(resp.json) == {"links", "domainType", "id", "title", "members", "extensions"}
 
     def follow_link(
         self,
@@ -423,42 +445,6 @@ class RestApiClient:
 
         return result
 
-    def get_aux_tag(self, tag_id: str, expect_ok: bool = True) -> Response:
-        return self._request(
-            "get",
-            url=f"/objects/aux_tag/{tag_id}",
-            expect_ok=expect_ok,
-        )
-
-    def get_aux_tags(self, expect_ok: bool = True) -> Response:
-        return self._request(
-            "get",
-            url="/domain-types/aux_tag/collections/all",
-            expect_ok=expect_ok,
-        )
-
-    def create_aux_tag(self, tag_data: AuxTagJSON, expect_ok: bool = True) -> Response:
-        return self._request(
-            "post",
-            url="/domain-types/aux_tag/collections/all",
-            pydantic_basemodel_body=tag_data,
-            expect_ok=expect_ok,
-        )
-
-    def edit_aux_tag(self, tag_data: AuxTagJSON, expect_ok: bool = True) -> Response:
-        return self._request(
-            "put",
-            url=f"/objects/aux_tag/{tag_data.aux_tag_id}",
-            body={"title": tag_data.title, "topic": tag_data.topic},
-            expect_ok=expect_ok,
-        )
-
-    def delete_aux_tag(self, tag_id: str) -> Response:
-        return self._request(
-            "post",
-            url=f"/objects/aux_tag/{tag_id}/actions/delete/invoke",
-        )
-
     def call_online_verification(self, expect_ok: bool = False) -> Response:
         return self._request(
             "post",
@@ -510,3 +496,220 @@ class RestApiClient:
             body=body,
             expect_ok=expect_ok,
         )
+
+    def show_user(self, username: str, expect_ok: bool = True) -> Response:
+        return self._request("get", url=f"/objects/user_config/{username}", expect_ok=expect_ok)
+
+    # TODO: add additional parameters
+    def edit_user(
+        self, username: str, fullname: str | None = None, expect_ok: bool = True
+    ) -> Response:
+        body = {"fullname": fullname} if fullname is not None else {}
+
+        # if there is no object, there's probably no etag.
+        # But we want the 404 from the request below!
+        etag = self.show_user(username, expect_ok=expect_ok).headers.get("E-Tag")
+        if etag is not None:
+            headers = {"If-Match": etag}
+        else:
+            headers = {}
+
+        return self._request(
+            "put",
+            url=f"/objects/user_config/{username}",
+            body=body,
+            headers=headers,
+            expect_ok=expect_ok,
+        )
+
+    def bake_and_sign_agent(self, key_id: int, passphrase: str, expect_ok: bool = True) -> Response:
+        return self._request(
+            "post",
+            url="/domain-types/agent/actions/bake_and_sign/invoke",
+            body={"key_id": key_id, "passphrase": passphrase},
+            expect_ok=expect_ok,
+        )
+
+
+# === AuxTags Endpoint Client ===
+
+
+class AuxTagEditRequest(BaseModel):
+    title: StrictStr | None
+    topic: StrictStr | None
+
+
+class AuxTagCreateRequest(AuxTagEditRequest):
+    aux_tag_id: StrictStr | None
+
+
+class AuxTagResponseObject(BaseModel):
+    topic: StrictStr
+
+
+class AuxTagObjectResponse(ObjectResponse):
+    domainType: Literal["aux_tag"]
+    id: StrictStr
+    title: StrictStr
+    extensions: AuxTagResponseObject
+
+
+class AuxTagCollectionResponse(CollectionResponse):
+    id: Literal["aux_tag"]
+    domainType: Literal["aux_tag"]
+    value: list[AuxTagObjectResponse]
+
+
+class AuxTagTestClient(RestApiClient):
+    domain: Literal["aux_tag"] = "aux_tag"
+
+    @property
+    def create_model(self) -> Type[AuxTagCreateRequest]:
+        return AuxTagCreateRequest
+
+    @property
+    def edit_model(self) -> Type[AuxTagEditRequest]:
+        return AuxTagEditRequest
+
+    def get(self, aux_tag_id: str, expect_ok: bool = True) -> Response:
+        resp = self._request(
+            "get",
+            url=f"/objects/{self.domain}/{aux_tag_id}",
+            expect_ok=expect_ok,
+        )
+
+        if expect_ok:
+            AuxTagObjectResponse(**resp.json)
+        return resp
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        resp = self._request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+        if expect_ok:
+            AuxTagCollectionResponse(**resp.json)
+        return resp
+
+    def create(self, tag_data: AuxTagCreateRequest, expect_ok: bool = True) -> Response:
+        resp = self._request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            pydantic_basemodel_body=tag_data,
+            expect_ok=expect_ok,
+        )
+        if expect_ok:
+            create_response = AuxTagObjectResponse(**resp.json)
+            assert tag_data.aux_tag_id == create_response.id
+            assert tag_data.topic == create_response.extensions.topic
+            assert tag_data.title == create_response.title
+        return resp
+
+    def edit(
+        self, aux_tag_id: str, tag_data: AuxTagEditRequest, expect_ok: bool = True
+    ) -> Response:
+        etag = self.get(aux_tag_id).headers["ETag"]
+        resp = self._request(
+            "put",
+            url=f"/objects/{self.domain}/{aux_tag_id}",
+            pydantic_basemodel_body=tag_data,
+            headers={"If-Match": etag, "Accept": "application/json"},
+            expect_ok=expect_ok,
+        )
+        if expect_ok:
+            edit_response = AuxTagObjectResponse(**resp.json)
+            assert aux_tag_id == edit_response.id
+            assert tag_data.topic == edit_response.extensions.topic
+            assert tag_data.title == edit_response.title
+        return resp
+
+    def delete(self, aux_tag_id: str) -> Response:
+        etag = self.get(aux_tag_id).headers["ETag"]
+        return self._request(
+            "post",
+            url=f"/objects/{self.domain}/{aux_tag_id}/actions/delete/invoke",
+            headers={"If-Match": etag, "Accept": "application/json"},
+        )
+
+
+# === TimePeriod Endpoint Client ===
+
+
+class TimePeriodObject(BaseModel):
+    alias: StrictStr
+    active_time_ranges: list
+    exceptions: list
+    exclude: list | None  # builtin timeperiods don't have an exclude field
+
+
+class TimePeriodObjectResponse(ObjectResponse):
+    domainType: Literal["time_period"]
+    id: StrictStr
+    title: StrictStr
+    extensions: TimePeriodObject
+
+
+class TimePeriodCollectionResponse(CollectionResponse):
+    id: Literal["time_period"]
+    domainType: Literal["time_period"]
+    value: list[TimePeriodObjectResponse]
+
+
+class TimePeriodTestClient(RestApiClient):
+    domain: Literal["time_period"] = "time_period"
+
+    def get(self, time_period_id: str, expect_ok: bool = True) -> Response:
+        resp = self._request(
+            "get",
+            url=f"/objects/{self.domain}/{time_period_id}",
+            expect_ok=expect_ok,
+        )
+        if expect_ok:
+            TimePeriodObjectResponse(**resp.json)
+        return resp
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        resp = self._request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+        if expect_ok:
+            TimePeriodCollectionResponse(**resp.json)
+        return resp
+
+    def delete(self, time_period_id: str) -> Response:
+        etag = self.get(time_period_id).headers["ETag"]
+        resp = self._request(
+            "delete",
+            url=f"/objects/{self.domain}/{time_period_id}",
+            headers={"If-Match": etag, "Accept": "application/json"},
+        )
+        resp.assert_status_code(204)
+        return resp
+
+    def create(self, time_period_data: dict[str, object], expect_ok: bool = True) -> Response:
+        resp = self._request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=time_period_data,
+            expect_ok=expect_ok,
+        )
+        if expect_ok:
+            TimePeriodObjectResponse(**resp.json)
+        return resp
+
+    def edit(
+        self, time_period_id: str, time_period_data: dict[str, object], expect_ok: bool = True
+    ) -> Response:
+        etag = self.get(time_period_id).headers["ETag"]
+        resp = self._request(
+            "put",
+            url=f"/objects/{self.domain}/{time_period_id}",
+            body=time_period_data,
+            expect_ok=expect_ok,
+            headers={"If-Match": etag, "Accept": "application/json"},
+        )
+
+        return resp

@@ -271,7 +271,7 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
 
 // A bit verbose, but we avoid unnecessary string copies below.
 void LogEntry::classifyLogMessage() {
-    std::string_view message_sv{message_};
+    const std::string_view message_sv{message_};
     for (const auto &def : log_definitions) {
         if (textStartsWith(def.prefix) &&
             message_.compare(timestamp_prefix_length + def.prefix.size(), 2,
@@ -281,9 +281,9 @@ void LogEntry::classifyLogMessage() {
             kind_ = def.log_type;
             // TODO(sp) Use boost::tokenizer instead of this index fiddling
             size_t pos = timestamp_prefix_length + def.prefix.size() + 2;
-            for (Param par : def.params) {
-                size_t sep_pos = message_.find(';', pos);
-                size_t end_pos =
+            for (Param const par : def.params) {
+                const size_t sep_pos = message_.find(';', pos);
+                const size_t end_pos =
                     sep_pos == std::string::npos ? message_.size() : sep_pos;
                 assign(par, message_sv.substr(pos, end_pos - pos));
                 pos = sep_pos == std::string::npos ? message_.size()
@@ -340,7 +340,7 @@ T parseState(std::string_view str, const one_of<T, N> &table, T default_value) {
     // Ugly: Depending on where we're called, the actual state type can be in
     // parentheses at the end, e.g. "ALERTHANDLER (OK)".
     if (!str.empty() && str[str.size() - 1] == ')') {
-        size_t lparen = str.rfind('(');
+        const size_t lparen = str.rfind('(');
         if (lparen != std::string::npos) {
             str = str.substr(lparen + 1, str.size() - lparen - 2);
         }

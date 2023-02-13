@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import MutableSequence, Sequence
+from collections.abc import Sequence
 from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
@@ -11,7 +11,7 @@ from livestatus import SiteId
 import cmk.utils.store as store
 from cmk.utils.type_defs import DiscoveryResult
 
-from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
+from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -195,7 +195,15 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     ):
 
         try:
-            response = self._execute_discovery(task, mode, do_scan, ignore_errors)
+            response = discovery(
+                task.site_id,
+                mode,
+                task.host_names,
+                scan=do_scan,
+                raise_errors=not ignore_errors,
+                timeout=request.request_timeout - 2,
+                non_blocking_http=True,
+            )
             self._process_discovery_results(task, job_interface, response)
         except Exception:
             self._num_hosts_failed += len(task.host_names)
@@ -209,28 +217,6 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             self._logger.exception(msg)
 
         self._num_hosts_processed += len(task.host_names)
-
-    def _execute_discovery(
-        self,
-        task: DiscoveryTask,
-        mode: DiscoveryMode,
-        do_scan: DoFullScan,
-        ignore_errors: IgnoreErrors,
-    ) -> AutomationDiscoveryResult:
-        flags: MutableSequence[str] = []
-        if not ignore_errors:
-            flags.append("@raiseerrors")
-        if do_scan:
-            flags.append("@scan")
-
-        return discovery(
-            task.site_id,
-            mode,
-            flags,
-            task.host_names,
-            timeout=request.request_timeout - 2,
-            non_blocking_http=True,
-        )
 
     def _process_discovery_results(  # type:ignore[no-untyped-def]
         self,

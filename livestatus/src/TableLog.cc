@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <variant>  // IWYU pragma: keep
 
-#include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "livestatus/Column.h"
@@ -24,6 +23,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/TableCommands.h"
+#include "livestatus/TableContacts.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
@@ -51,7 +51,7 @@ public:
 
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
     addColumn(std::make_unique<TimeColumn<LogEntry>>(
@@ -128,8 +128,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     }),
                               false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
-        const auto &c = r.rawData<LogRow>()->ctc;
-        return c ? c->handle() : nullptr;
+        return r.rawData<LogRow>()->ctc.get();
     }));
     TableCommands::addColumns(this, "current_command_", offsets.add([](Row r) {
         return &r.rawData<LogRow>()->command;

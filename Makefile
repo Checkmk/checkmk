@@ -420,7 +420,6 @@ setup:
 	fi ; \
 	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
-	$(MAKE) -C omd setup
 	$(MAKE) -C docker_image setup
 	$(MAKE) -C locale setup
 

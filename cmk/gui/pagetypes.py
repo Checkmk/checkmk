@@ -817,7 +817,12 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         # Now scan users subdirs for files "user_$type_name.mk"
         with suppress(FileNotFoundError):
             for profile_path in cmk.utils.paths.profile_dir.iterdir():
-                user_id = UserId(profile_path.name)
+                try:
+                    user_id = UserId(profile_path.name)
+                except ValueError:
+                    # skip paths that aren't valid UserIds
+                    continue
+
                 try:
                     path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
                     if not path.exists():

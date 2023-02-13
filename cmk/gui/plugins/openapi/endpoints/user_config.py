@@ -28,7 +28,7 @@ from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import htpasswd
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
-from cmk.gui.watolib.users import delete_users, edit_users
+from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
 
 TIMESTAMP_RANGE = tuple[float, float]
 
@@ -176,7 +176,15 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     # last_pw_change & serial must be changed manually if edit happens
     username = params["username"]
     api_attrs = params["body"]
-    internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
+
+    try:
+        internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
+    except KeyError:
+        return problem(
+            status=404,
+            title=f'User "{username}" is not known.',
+            detail="The user to edit does not exist. Please check for eventual misspellings.",
+        )
 
     edit_users(
         {
@@ -440,9 +448,6 @@ def _auth_options_to_internal_format(
     Example:
     >>> _auth_options_to_internal_format({"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"})  # doctest:+ELLIPSIS
     {'automation_secret': 'TNBJCkwane3$cfn0XLf6p6a', 'password': ...}
-
-    >>> _auth_options_to_internal_format({"auth_type": "password", "password": "password"})  # doctest:+ELLIPSIS
-    {'password': ..., 'last_pw_change': ...}
     """
     internal_options: dict[str, str | bool | int] = {}
     if not auth_details:
@@ -456,9 +461,9 @@ def _auth_options_to_internal_format(
         internal_options["password"] = htpasswd.hash_password(Password(secret))
     else:  # password
         if new_user or "password" in auth_details:
-            internal_options["password"] = htpasswd.hash_password(
-                Password(auth_details["password"])
-            )
+            pw = Password(auth_details["password"])
+            verify_password_policy(pw)
+            internal_options["password"] = htpasswd.hash_password(pw)
 
         if "enforce_password_change" in auth_details:
             internal_options["enforce_pw_change"] = auth_details["enforce_password_change"]

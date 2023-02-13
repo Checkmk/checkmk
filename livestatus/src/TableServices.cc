@@ -67,7 +67,7 @@ static double staleness(const service &svc) {
 
     // check_mk PASSIVE CHECK without check interval uses the check
     // interval of its check-mk service
-    bool is_cmk_passive =
+    const bool is_cmk_passive =
         strncmp(svc.check_command_ptr->name, "check_mk-", 9) == 0;
     if (is_cmk_passive) {
         host *host = svc.host_ptr;
@@ -131,7 +131,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_log", "The file content of the Robotmk log",
         offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->robotMkHtmlLogPath(); },
+            [mc]() { return mc->paths().robotmk_html_log_directory; },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_log.html";
@@ -140,7 +140,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_log_gz",
         "The gzipped file content of the Robotmk log", offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->robotMkHtmlLogPath(); },
+            [mc]() { return mc->paths().robotmk_html_log_directory; },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_log.html.gz";
@@ -149,7 +149,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_error_log",
         "The file content of the Robotmk error log", offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->robotMkHtmlLogPath(); },
+            [mc]() { return mc->paths().robotmk_html_log_directory; },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_error_log.html";
@@ -158,7 +158,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_error_log_gz",
         "The gzipped file content of the Robotmk error log", offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->robotMkHtmlLogPath(); },
+            [mc]() { return mc->paths().robotmk_html_log_directory; },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_error_log.html.gz";
@@ -441,8 +441,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets, [mc](const service &svc) {
-            return pnpgraph_present(mc->pnpPath(), svc.host_ptr->name,
-                                    svc.description);
+            return pnpgraph_present(mc->paths().rrd_multiple_directory,
+                                    svc.host_ptr->name, svc.description);
         }));
 
     // columns of type double
@@ -656,8 +656,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             if (r.host_name == nullptr || r.description == nullptr) {
                 return metrics;
             }
-            auto names = scan_rrd(mc->pnpPath() / r.host_name, r.description,
-                                  mc->loggerRRD());
+            auto names =
+                scan_rrd(mc->paths().rrd_multiple_directory / r.host_name,
+                         r.description, mc->loggerRRD());
             std::transform(std::begin(names), std::end(names),
                            std::back_inserter(metrics),
                            [](auto &&m) { return m.string(); });

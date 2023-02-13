@@ -5,7 +5,7 @@
 
 import json
 import time
-from typing import Mapping, Optional, Tuple
+from typing import Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 from cmk.base.plugins.agent_based.utils.kube import (
     condition_detailed_description,
     condition_short_description,
+    get_age_levels_for,
     PodCondition,
     PodConditions,
     VSResultAge,
@@ -39,30 +40,6 @@ def discovery(section: PodConditions) -> DiscoveryResult:
 
 
 LOGICAL_ORDER = ["scheduled", "initialized", "containersready", "ready"]
-
-
-def get_levels_for(params: Mapping[str, VSResultAge], key: str) -> Optional[Tuple[int, int]]:
-    """Get the levels for the given key from the params
-
-    Examples:
-        >>> params = dict(
-        ...     initialized="no_levels",
-        ...     scheduled=("levels", (89, 179)),
-        ...     containersready="no_levels",
-        ...     ready=("levels", (359, 719)),
-        ... )
-        >>> get_levels_for(params, "initialized")
-        >>> get_levels_for(params, "scheduled")
-        (89, 179)
-        >>> get_levels_for(params, "containersready")
-        >>> get_levels_for(params, "ready")
-        (359, 719)
-        >>> get_levels_for({}, "ready")
-    """
-    levels = params.get(key, "no_levels")
-    if levels == "no_levels":
-        return None
-    return levels[1]
 
 
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
@@ -106,7 +83,7 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
         else:
             summary_prefix = condition_short_description(name, False)
         for result in check_levels(
-            time_diff, levels_upper=get_levels_for(params, name), render_func=render.timespan
+            time_diff, levels_upper=get_age_levels_for(params, name), render_func=render.timespan
         ):
             yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
 

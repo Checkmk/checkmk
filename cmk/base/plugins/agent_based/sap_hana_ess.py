@@ -12,7 +12,7 @@ def parse_sap_hana_ess(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
 
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
-        inst_data = {}
+        inst_data: dict[str, str | int] = {}
         for line in lines:
             if len(line) < 2:
                 continue

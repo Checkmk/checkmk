@@ -133,7 +133,7 @@ ACTIVATION_TIME_RESTART = "restart"
 ACTIVATION_TIME_SYNC = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
-ACTIVATION_TMP_BASE_DIR = cmk.utils.paths.tmp_dir + "/wato/activation"
+ACTIVATION_TMP_BASE_DIR = str(cmk.utils.paths.tmp_dir / "wato/activation")
 ACTIVATION_PERISTED_DIR = cmk.utils.paths.var_dir + "/wato/activation"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
@@ -328,11 +328,8 @@ def _update_replication_status(site_id, vars_):
 def clear_site_replication_status(site_id):
     try:
         os.unlink(_site_replication_status_path(site_id))
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            pass  # Not existant -> OK
-        else:
-            raise
+    except FileNotFoundError:
+        pass  # Not existant -> OK
 
     ActivateChanges().confirm_site_changes(site_id)
 
@@ -1319,9 +1316,8 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
         ):
             try:
                 files.update(os.listdir(base_dir))
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise
+            except FileNotFoundError:
+                pass
 
         ids = []
         for activation_id in files:
@@ -2097,10 +2093,16 @@ def get_number_of_pending_changes() -> int:
     return len(changes.grouped_changes())
 
 
-def _need_to_update_config_after_sync() -> bool:
+def _need_to_update_mkps_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
     logger.debug("Local version: %s, Central version: %s", cmk_version.__version__, central_version)
+    return cmk_version.__version__ != central_version
+
+
+def _need_to_update_config_after_sync() -> bool:
+    if not (central_version := _request.headers.get("x-checkmk-version")):
+        raise ValueError("Request header x-checkmk-version is missing")
     return not cmk_version.is_same_major_version(
         cmk_version.__version__,
         central_version,
@@ -2133,9 +2135,31 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # When receiving configuration from a central site that uses a previous major
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
-        if _need_to_update_config_after_sync():
+        if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
-            cmk.utils.packaging.update_active_packages(logger)
+            cmk.utils.packaging.update_active_packages(
+                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
+                cmk.utils.packaging.PathConfig(
+                    local_root=cmk.utils.paths.local_root,
+                    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+                    agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
+                    checks_dir=cmk.utils.paths.local_checks_dir,
+                    inventory_dir=cmk.utils.paths.local_inventory_dir,
+                    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
+                    agents_dir=cmk.utils.paths.local_agents_dir,
+                    notifications_dir=cmk.utils.paths.local_notifications_dir,
+                    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+                    web_dir=cmk.utils.paths.local_web_dir,
+                    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+                    doc_dir=cmk.utils.paths.local_doc_dir,
+                    locale_dir=cmk.utils.paths.local_locale_dir,
+                    bin_dir=cmk.utils.paths.local_bin_dir,
+                    lib_dir=cmk.utils.paths.local_lib_dir,
+                    mib_dir=cmk.utils.paths.local_mib_dir,
+                    alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
+                ),
+            )
+        if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
 
@@ -2552,11 +2576,12 @@ class AutomationReceiveConfigSync(AutomationCommand):
             site_file = base_dir.joinpath(site_path)
             try:
                 site_file.unlink()
-            except OSError as e:
+            except FileNotFoundError:
                 # errno.ENOENT - File already removed. Fine
+                pass
+            except NotADirectoryError:
                 # errno.ENOTDIR - dir with files was replaced by e.g. symlink
-                if e.errno not in [errno.ENOENT, errno.ENOTDIR]:
-                    raise
+                pass
 
         _unpack_sync_archive(sync_archive, base_dir)
 
@@ -2585,6 +2610,7 @@ def get_activation_ids() -> list[str]:
     Returns:
         A list of activation ids found in the tmp activation directory
     """
+
     if os.path.exists(ACTIVATION_TMP_BASE_DIR):
         return os.listdir(ACTIVATION_TMP_BASE_DIR)
     return []

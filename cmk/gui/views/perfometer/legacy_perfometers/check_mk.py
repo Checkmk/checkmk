@@ -916,7 +916,7 @@ def perfometer_humidity(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     humidity = float(perf_data[0][1])
-    return "%3.1f% %" % humidity, perfometer_linear(humidity, "#6f2")
+    return "%3.1f%%" % humidity, perfometer_linear(humidity, "#6f2")
 
 
 def perfometer_eaton(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:

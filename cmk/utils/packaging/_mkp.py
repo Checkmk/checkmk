@@ -15,12 +15,13 @@ import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import lru_cache
 from io import BytesIO
-from logging import Logger
 from pathlib import Path
 
 from pydantic import BaseModel, Extra, Field
 
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
+
+_logger = logging.getLogger(__name__)
 
 
 @enum.unique
@@ -106,12 +107,11 @@ def manifest_template(
     )
 
 
-def read_manifest_optionally(manifest_path: Path, logger: Logger | None) -> Manifest | None:
+def read_manifest_optionally(manifest_path: Path) -> Manifest | None:
     try:
         return Manifest.parse_python_string(manifest_path.read_text())
     except Exception:
-        if logger is not None:
-            logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
+        _logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
     return None
 
 
@@ -126,20 +126,20 @@ def extract_manifest(file_content: bytes) -> Manifest:
     return Manifest.parse_python_string(raw_info.decode())
 
 
-def extract_manifests(paths: Iterable[Path], logger: Logger) -> list[Manifest]:
+def extract_manifests(paths: Iterable[Path]) -> list[Manifest]:
     return [
         manifest
         for pkg_path in paths
-        if (manifest := extract_manifest_optionally(pkg_path, logger)) is not None
+        if (manifest := extract_manifest_optionally(pkg_path)) is not None
     ]
 
 
-def extract_manifest_optionally(pkg_path: Path, logger: Logger) -> Manifest | None:
+def extract_manifest_optionally(pkg_path: Path) -> Manifest | None:
     try:
         return _extract_manifest_cached(pkg_path, pkg_path.stat().st_mtime)
     except Exception:
         # Do not make broken files / packages fail the whole mechanism
-        logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
+        _logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
     return None
 
 
@@ -152,7 +152,6 @@ def create_mkp(
     manifest: Manifest,
     version_packaged: str,
     site_paths: Callable[[PackagePart], Path],
-    logger: logging.Logger,
 ) -> bytes:
 
     manifest = Manifest(
@@ -176,7 +175,7 @@ def create_mkp(
             ("info.json", manifest.json_file_content().encode()),
             # Now pack the actual files into sub tars
             *(
-                _create_tar(part.ident, site_paths(part), filenames, logger)
+                _create_tar(part.ident, site_paths(part), filenames)
                 for part, filenames in manifest.files.items()
                 if filenames
             ),
@@ -205,13 +204,11 @@ def _create_tgz(files: Iterable[tuple[str, bytes]]) -> bytes:
     return buffer.getvalue()
 
 
-def _create_tar(
-    name: str, src: Path, filenames: Iterable[Path], logger: logging.Logger
-) -> tuple[str, bytes]:
+def _create_tar(name: str, src: Path, filenames: Iterable[Path]) -> tuple[str, bytes]:
     tarname = f"{name}.tar"
-    logger.debug("  Packing %s:", tarname)
+    _logger.debug("  Packing %s:", tarname)
     for f in filenames:
-        logger.debug("    %s", f)
+        _logger.debug("    %s", f)
     return tarname, subprocess.check_output(
         [
             "tar",
@@ -230,7 +227,6 @@ def extract_mkp(
     manifest: Manifest,
     mkp: bytes,
     site_paths: Callable[[PackagePart], Path],
-    logger: logging.Logger,
 ) -> None:
     _extract_tgz(
         mkp,
@@ -239,29 +235,24 @@ def extract_mkp(
             for part, filenames in manifest.files.items()
             if filenames
         ],
-        logger,
     )
 
 
-def _extract_tgz(
-    mkp: bytes, content: Iterable[tuple[str, Path, Iterable[Path]]], logger: logging.Logger
-) -> None:
+def _extract_tgz(mkp: bytes, content: Iterable[tuple[str, Path, Iterable[Path]]]) -> None:
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         for tarname, dst, filenames in content:
-            _extract_tar(tar, tarname, dst, filenames, logger)
+            _extract_tar(tar, tarname, dst, filenames)
 
 
-def _extract_tar(
-    tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable[Path], logger: logging.Logger
-) -> None:
+def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable[Path]) -> None:
 
-    logger.debug("  Extracting '%s':", name)
+    _logger.debug("  Extracting '%s':", name)
     for fn in filenames:
-        logger.debug("    %s", fn)
+        _logger.debug("    %s", fn)
 
     if not dst.exists():
         # make sure target directory exists
-        logger.debug("    Creating directory %s", dst)
+        _logger.debug("    Creating directory %s", dst)
         dst.mkdir(parents=True, exist_ok=True)
 
     tarsource = tar.extractfile(name)

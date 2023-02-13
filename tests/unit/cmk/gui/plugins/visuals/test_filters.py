@@ -300,16 +300,33 @@ filter_tests = [
         request_vars=[("is_host_favorites", "-1")],
         expected_filters="",
     ),
-    # Testing base class ABCLabelFilter
+    # Testing base class LabelGroupFilter
     FilterTest(
-        ident="host_labels",
-        request_vars=[("host_label", "[]")],
+        ident="host_label_groups",
+        request_vars=[("host_label_groups_count", "0")],
         expected_filters="",
     ),
     FilterTest(
-        ident="host_labels",
-        request_vars=[("host_label", '[{"value": "abc:axxxx"}]')],
-        expected_filters="Filter: host_labels = 'abc' 'axxxx'\n",
+        ident="host_label_groups",
+        request_vars=[
+            ("host_label_groups_count", "2"),
+            # Group 1
+            ("host_label_groups_1_vs_count", "2"),
+            ("host_label_groups_1_bool", "and"),
+            ("host_label_groups_1_vs_1_bool", "and"),
+            ("host_label_groups_1_vs_1_vs", "label:abc"),
+            ("host_label_groups_1_vs_2_bool", "or"),
+            ("host_label_groups_1_vs_2_vs", "label:xyz"),
+            # Group 2
+            ("host_label_groups_2_vs_count", "1"),
+            ("host_label_groups_2_bool", "not"),
+            ("host_label_groups_2_vs_1_bool", "and"),
+            ("host_label_groups_2_vs_1_vs", "label:mno"),
+        ],
+        expected_filters=(
+            "Filter: host_labels = 'label' 'abc'\nFilter: host_labels = 'label' 'xyz'\nOr: 2\n"
+            "Filter: host_labels = 'label' 'mno'\nNegate:\nAnd: 2\n"
+        ),
     ),
     # Testing base class FilterNumberRange
     FilterTest(

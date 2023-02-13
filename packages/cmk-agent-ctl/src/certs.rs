@@ -75,11 +75,11 @@ impl std::convert::TryFrom<&Certificate> for CNCheckerUUID {
             certificate.as_ref(),
         )
         .map_err(|e| {
-            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {}", e))
+            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {e}"))
         })?;
 
         let common_names = common_names(cert.subject()).map_err(|e| {
-            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {}", e))
+            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {e}"))
         })?;
 
         if common_names.len() != 1 {
@@ -130,8 +130,7 @@ impl ServerCertVerifier for CnIsNoUuidAcceptAnyHostname {
             // emulate reqwest::ClientBuilder::danger_accept_invalid_hostnames
             &ServerName::try_from(cn_checker.cn()).map_err(|e| {
                 RusttlsError::General(format!(
-                    "CN in server certificate cannot be used as server name: {}",
-                    e
+                    "CN in server certificate cannot be used as server name: {e}"
                 ))
             })?,
             scts,
@@ -183,7 +182,7 @@ pub fn client(
 }
 
 pub fn fetch_server_cert_pem(server: &str, port: &u16) -> AnyhowResult<String> {
-    let tcp_stream = TcpStream::connect(format!("{}:{}", server, port))?;
+    let tcp_stream = TcpStream::connect(format!("{server}:{port}"))?;
     let mut ssl_connector_builder = SslConnector::builder(SslMethod::tls())?;
     ssl_connector_builder.set_verify(SslVerifyMode::NONE);
     let mut ssl_stream = ssl_connector_builder.build().connect(server, tcp_stream)?;
@@ -214,7 +213,7 @@ pub fn common_names<'a>(x509_name: &'a x509_parser::x509::X509Name) -> AnyhowRes
         .iter_common_name()
         .map(|n| {
             n.as_str()
-                .map_err(|e| anyhow!(format!("Failed to parse CN to string: {}", e)))
+                .map_err(|e| anyhow!(format!("Failed to parse CN to string: {e}")))
         })
         .collect::<AnyhowResult<Vec<_>>>()
 }

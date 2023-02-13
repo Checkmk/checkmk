@@ -28,11 +28,13 @@ from werkzeug.test import create_environ
 
 from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import (
+    AuxTagTestClient,
     expand_rel,
     get_link,
     RequestHandler,
     Response,
     RestApiClient,
+    TimePeriodTestClient,
 )
 from tests.testlib.users import create_and_destroy_user
 from tests.testlib.utils import no_search_index_update_background
@@ -553,3 +555,13 @@ class WebTestAppRequestHandler(RequestHandler):
 @pytest.fixture()
 def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
     return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def auxtag_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AuxTagTestClient:
+    return AuxTagTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def timeperiod_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> TimePeriodTestClient:
+    return TimePeriodTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

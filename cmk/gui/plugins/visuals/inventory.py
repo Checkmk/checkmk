@@ -359,8 +359,8 @@ class _FilterInvHasSoftwarePackage(Filter):
         if not name:
             return rows
 
-        from_version = value[self._varprefix + "from_version"]
-        to_version = value[self._varprefix + "to_version"]
+        from_version = value[self._varprefix + "version_from"]
+        to_version = value[self._varprefix + "version_to"]
         negate = bool(value[self._varprefix + "negate"])
         match = value[self._varprefix + "match"]
         if match == "regex":
@@ -381,7 +381,7 @@ class _FilterInvHasSoftwarePackage(Filter):
             packages_table = row["host_inventory"].get_table(["software", "packages"])
             if packages_table is None:
                 continue
-            packages = packages_table.data
+            packages = packages_table.rows
             is_in = self.find_package(packages, name, from_version, to_version)
             if is_in != negate:
                 new_rows.append(row)

@@ -109,7 +109,7 @@ def _get_cluster_check_function(
     *,
     mode: Literal["native", "failover", "worst", "best"],
     vsm: ValueStoreManager,
-    clusterization_parameters: Mapping[ſtr, Any] | None = None,
+    clusterization_parameters: Mapping[str, Any] | None = None,
 ) -> CheckFunction:
     """small wrapper for cluster_modes.get_cluster_check_function"""
     plugin = _get_test_check_plugin(check_function=check_function)

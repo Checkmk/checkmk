@@ -15,7 +15,7 @@
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole{mc} {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     addColumn(ECRow::makeIntColumn(
         "history_line", "The line number of the event in the history file",
         offsets));

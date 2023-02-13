@@ -7,7 +7,6 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <functional>
 #include <initializer_list>
 #include <map>
@@ -18,8 +17,6 @@
 #include <vector>
 
 #include "TableComments.h"
-#include "TableContactGroups.h"
-#include "TableContacts.h"
 #include "TableDowntimes.h"
 #include "TableEventConsoleEvents.h"
 #include "TableEventConsoleHistory.h"
@@ -42,6 +39,8 @@
 #include "livestatus/Table.h"
 #include "livestatus/TableColumns.h"
 #include "livestatus/TableCommands.h"
+#include "livestatus/TableContactGroups.h"
+#include "livestatus/TableContacts.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/TableEventConsoleRules.h"
 #include "livestatus/TableEventConsoleStatus.h"
@@ -61,6 +60,8 @@ class IDowntime;
 class IHost;
 class IService;
 class ITimeperiod;
+class IHostGroup;
+class IServiceGroup;
 
 class DummyMonitoringCore : public MonitoringCore {
     std::unique_ptr<const IHost> find_host(
@@ -71,7 +72,8 @@ class DummyMonitoringCore : public MonitoringCore {
         const std::string & /*designation*/) override {
         return {};
     }
-    bool all_hosts(std::function<bool(const IHost &)> /*pred*/) const override {
+    bool all_of_hosts(
+        const std::function<bool(const IHost &)> & /*pred*/) const override {
         return true;
     }
     std::unique_ptr<const IService> find_service(
@@ -84,12 +86,17 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
 
+    std::unique_ptr<const IServiceGroup> find_servicegroup(
+        const std::string & /*name*/) override {
+        return {};
+    }
+
     [[nodiscard]] std::unique_ptr<const IContact> find_contact(
         const std::string & /*name*/) const override {
         return {};
     }
-    bool all_contacts(
-        std::function<bool(const IContact &)> /*pred*/) const override {
+    bool all_of_contacts(
+        const std::function<bool(const IContact &)> & /*pred*/) const override {
         return true;
     }
     std::unique_ptr<User> find_user(const std::string & /*name*/) override {
@@ -147,56 +154,26 @@ class DummyMonitoringCore : public MonitoringCore {
         return true;
     }
 
+    bool all_of_contact_groups(const std::function<bool(const IContactGroup &)>
+                                   & /* f */) const override {
+        return {};
+    }
+
+    bool all_of_host_groups(const std::function<bool(const IHostGroup &)>
+                                & /* f */) const override {
+        return {};
+    }
+
+    bool all_of_service_groups(const std::function<bool(const IServiceGroup &)>
+                                   & /* f */) const override {
+        return {};
+    }
+
     bool mkeventdEnabled() override { return {}; }
 
-    [[nodiscard]] std::filesystem::path mkeventdSocketPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path mkLogwatchPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path mkInventoryPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path structuredStatusPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path robotMkHtmlLogPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path crashReportPath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path licenseUsageHistoryPath()
-        const override {
-        return {};
-    };
-    [[nodiscard]] std::filesystem::path pnpPath() const override { return {}; }
-    [[nodiscard]] std::filesystem::path historyFilePath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path logArchivePath() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path rrdcachedSocketPath() const override {
-        return {};
-    }
+    [[nodiscard]] Paths paths() const override { return {}; }
     [[nodiscard]] int32_t pid() const override { return {}; }
-    [[nodiscard]] bool isEnableNotifications() const override { return {}; }
-    [[nodiscard]] bool isExecuteServiceChecks() const override { return {}; }
-    [[nodiscard]] bool isAcceptPassiveServiceChecks() const override {
-        return {};
-    }
-    [[nodiscard]] bool isExecuteHostChecks() const override { return {}; }
-    [[nodiscard]] bool isAcceptPassiveHostChecks() const override { return {}; }
-    [[nodiscard]] bool isObsessOverServices() const override { return {}; }
-    [[nodiscard]] bool isObsessOverHosts() const override { return {}; }
-    [[nodiscard]] bool isCheckServiceFreshness() const override { return {}; }
-    [[nodiscard]] bool isCheckHostFreshness() const override { return {}; }
-    [[nodiscard]] bool isEnableFlapDetection() const override { return {}; }
-    [[nodiscard]] bool isProcessPerformanceData() const override { return {}; }
-    [[nodiscard]] bool isEnableEventHandlers() const override { return {}; }
-    [[nodiscard]] bool isCheckExternalCommands() const override { return {}; }
+    [[nodiscard]] GlobalFlags globalFlags() const override { return {}; }
     [[nodiscard]] std::chrono::system_clock::time_point programStartTime()
         const override {
         return {};
@@ -243,7 +220,10 @@ class DummyMonitoringCore : public MonitoringCore {
 
     [[nodiscard]] bool hasEventHandlers() const override { return {}; }
 
-    [[nodiscard]] bool isTrialExpired() const override { return {}; }
+    [[nodiscard]] bool isTrialExpired(
+        std::chrono::system_clock::time_point /*now*/) const override {
+        return {};
+    }
 
     [[nodiscard]] double averageRunnableJobsFetcher() const override {
         return {};

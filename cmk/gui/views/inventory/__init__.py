@@ -301,33 +301,6 @@ class ABCRowTable(RowTable):
 
 
 # .
-#   .--API-----------------------------------------------------------------.
-#   |                             _    ____ ___                            |
-#   |                            / \  |  _ \_ _|                           |
-#   |                           / _ \ | |_) | |                            |
-#   |                          / ___ \|  __/| |                            |
-#   |                         /_/   \_\_|  |___|                           |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def declare_joined_inventory_table_view(
-    table_view_name: str,
-    title_singular: str,
-    title_plural: str,
-    tables: Sequence[str],
-    match_by: Sequence[str],
-) -> None:
-    _register_multi_table_view(
-        table_view_name,
-        title_singular,
-        title_plural,
-        tables,
-        match_by,
-    )
-
-
-# .
 #   .--paint helper--------------------------------------------------------.
 #   |                   _       _     _          _                         |
 #   |       _ __   __ _(_)_ __ | |_  | |__   ___| |_ __   ___ _ __         |
@@ -1338,7 +1311,11 @@ def _register_attribute_column(
         name,
         {
             "title": long_inventory_title,
-            "short": hint.title,
+            # For table columns or attributes we always use the long_title for the column title
+            # in order to avoid overlaps with other titles, eg.:
+            # - BIOS > Version
+            # - Firmware > Version
+            "short": hint.long_title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
             "params": Dictionary(
@@ -1444,7 +1421,11 @@ def _register_table_column(
         column,
         {
             "title": long_inventory_title,
-            "short": hint.title,
+            # For table columns or attributes we always use the long_title for the column title
+            # in order to avoid overlaps with other titles, eg.:
+            # - BIOS > Version
+            # - Firmware > Version
+            "short": hint.long_title,
             "columns": [column],
             "paint": lambda row: hint.paint_function(row.get(column)),
             "sorter": column,
@@ -1587,138 +1568,6 @@ def _register_table_view(
         filters,
         [inventory_path],
         table_view_spec.icon,
-    )
-
-
-class RowMultiTableInventory(ABCRowTable):
-    def __init__(
-        self,
-        sources: Sequence[tuple[str, inventory.InventoryPath]],
-        match_by: Sequence[str],
-        errors: Sequence[str],
-    ) -> None:
-        super().__init__(
-            [table_view_name for table_view_name, _path in sources], ["host_structured_status"]
-        )
-        self._sources = sources
-        self._match_by = match_by
-        self._errors = errors
-
-    def _get_inv_data(self, hostrow: Row) -> Sequence[tuple[str, Sequence[SDRow]]]:
-        try:
-            merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
-        except inventory.LoadStructuredDataError:
-            user_errors.add(
-                MKUserError(
-                    "load_inventory_tree",
-                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
-                    % inventory.get_short_inventory_filepath(hostrow.get("host_name", "")),
-                )
-            )
-            return []
-
-        if merged_tree is None:
-            return []
-
-        return [
-            (info_name, _get_table_rows(merged_tree, inventory_path))
-            for info_name, inventory_path in self._sources
-        ]
-
-    def _prepare_rows(self, inv_data: Sequence[tuple[str, Sequence[SDRow]]]) -> Iterable[Row]:
-        joined_rows: dict[tuple[str, ...], dict] = {}
-        for this_info_name, this_inv_data in inv_data:
-            for entry in this_inv_data:
-                inst = joined_rows.setdefault(tuple(entry[key] for key in self._match_by), {})
-                inst.update({this_info_name + "_" + k: v for k, v in entry.items()})
-        return [joined_rows[match_by_key] for match_by_key in sorted(joined_rows)]
-
-    def _add_declaration_errors(self) -> None:
-        if self._errors:
-            user_errors.add(MKUserError("table_view_name", ", ".join(self._errors)))
-
-
-def _register_multi_table_view(
-    table_view_name: str,
-    title_singular: str,
-    title_plural: str,
-    tables: Sequence[str],
-    match_by: Sequence[str],
-) -> None:
-    _register_info_class(table_view_name, title_singular, title_plural)
-
-    info_names_and_paths: list[tuple[str, inventory.InventoryPath]] = []
-    errors = []
-    for this_table_view_name in tables:
-        visual_info_class = visual_info_registry.get(this_table_view_name)
-        data_source_class = data_source_registry.get(this_table_view_name)
-        if data_source_class is None or visual_info_class is None:
-            errors.append(
-                "Missing table view name for inventory table view '%s'" % this_table_view_name
-            )
-            continue
-
-        assert issubclass(data_source_class, ABCDataSourceInventory)
-        ds = data_source_class()
-        info_names_and_paths.append((ds.ident, ds.inventory_path))
-
-    # Create the datasource (like a database view)
-    data_source_registry.register(
-        type(
-            "DataSourceInventory%s" % table_view_name.title(),
-            (ABCDataSource,),
-            {
-                "_ident": table_view_name,
-                "_sources": info_names_and_paths,
-                "_match_by": match_by,
-                "_errors": errors,
-                "_title": "{}: {}".format(_("Inventory"), title_plural),
-                "_infos": (
-                    ["host"] + [info_name for info_name, _inventory_path in info_names_and_paths]
-                ),
-                "ident": property(lambda s: s._ident),
-                "title": property(lambda s: s._title),
-                "table": property(
-                    lambda s: RowMultiTableInventory(s._sources, s._match_by, s._errors)
-                ),
-                "infos": property(lambda s: s._infos),
-                "keys": property(lambda s: []),
-                "id_keys": property(lambda s: []),
-            },
-        )
-    )
-
-    known_common_columns = set()
-    painters: list[ColumnSpec] = []
-    filters = []
-    for this_table_view_name, this_inventory_path in info_names_and_paths:
-        for name, col_hint in DISPLAY_HINTS.get_hints(
-            this_inventory_path.path
-        ).column_hints.items():
-            if name in match_by:
-                # Filter out duplicate common columns which are used to join tables
-                if name in known_common_columns:
-                    continue
-                known_common_columns.add(name)
-
-            column = this_table_view_name + "_" + name
-
-            # Declare a painter, sorter and filters for each path with display hint
-            _register_table_column(
-                this_table_view_name,
-                column,
-                col_hint,
-            )
-
-            painters.append(ColumnSpec(column))
-            filters.append(column)
-
-    _register_views(
-        table_view_name,
-        title_plural,
-        painters,
-        filters,
-        [inventory_path for _info_name, inventory_path in info_names_and_paths],
     )
 
 
@@ -2385,7 +2234,20 @@ class ABCNodeRenderer(abc.ABC):
             )
         html.close_tr()
 
+        def _empty_or_equal(value: tuple[SDValue | None, SDValue | None] | SDValue | None) -> bool:
+            # Some refactorings broke werk 6821. Especially delta trees may contain empty or
+            # unchanged rows.
+            if value is None:
+                return True
+            if isinstance(value, tuple) and len(value) == 2 and value[0] == value[1]:
+                # Only applies to delta tree
+                return True
+            return False
+
         for row in hints.sort_rows(table.rows, columns):
+            if all(_empty_or_equal(row.get(column.key)) for column in columns):
+                continue
+
             html.open_tr(class_="even0")
             for column in columns:
                 value = row.get(column.key)

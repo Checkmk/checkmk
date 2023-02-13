@@ -7,7 +7,7 @@
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import Dict
+    from typing import Dict  # noqa: F401
 except ImportError:
     pass
 

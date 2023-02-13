@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 from collections.abc import Callable, Container, Mapping, Sequence
+from contextlib import suppress
 from functools import partial
 from pathlib import Path
 from typing import Final, Literal, overload, Protocol, TypedDict, TypeVar, Union
@@ -51,7 +52,8 @@ from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import error_handling, parse_raw_data
+from cmk.checkers import parse_raw_data
+from cmk.checkers.error_handling import CheckResultErrorHandler
 from cmk.checkers.submitters import get_submitter, Submitter
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
@@ -1403,7 +1405,14 @@ def mode_automation(args: list[str]) -> None:
     # At least for the automation calls that buffer and handle the stdout/stderr on their own
     # we can now enable this. In the future we should remove this call for all automations calls and
     # handle the output in a common way.
-    if args[0] not in ["restart", "reload", "start", "create-diagnostics-dump", "try-inventory"]:
+    if args[0] not in [
+        "restart",
+        "reload",
+        "start",
+        "create-diagnostics-dump",
+        "try-inventory",
+        "service-discovery-preview",
+    ]:
         log.clear_console_logging()
 
     sys.exit(automations.automations.execute(args[0], args[1:]))
@@ -1573,18 +1582,41 @@ def mode_check_discovery(
         include_ok_results=False,
         override_non_ok_state=None,
     )
-    return discovery.commandline_check_discovery(
-        hostname,
-        config_cache=config_cache,
-        fetcher=fetcher,
-        parser=parser,
-        summarizer=summarizer,
-        active_check_handler=active_check_handler,
-        section_plugins=SectionPluginMapper(),
-        check_plugins=CheckPluginMapper(),
-        find_service_description=config.service_description,
+    error_handler = CheckResultErrorHandler(
+        exit_spec=config_cache.exit_code_spec(hostname),
+        host_name=hostname,
+        service_name="Check_MK Discovery",
+        plugin_name="discover",
+        is_cluster=config_cache.is_cluster(hostname),
+        snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
+    state, text = 3, "unknown error"
+    with error_handler:
+        fetched = fetcher(hostname, ip_address=None)
+        check_result = discovery.execute_check_discovery(
+            hostname,
+            config_cache=config_cache,
+            fetched=((f[0], f[1]) for f in fetched),
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
+            check_plugins=CheckPluginMapper(),
+            find_service_description=config.service_description,
+        )
+        state, text = check_result.state, check_result.as_text()
+
+    if error_handler.result is not None:
+        state, text = error_handler.result
+
+    active_check_handler(hostname, text)
+    if keepalive:
+        console.verbose(text)
+    else:
+        with suppress(IOError):
+            sys.stdout.write(text)
+            sys.stdout.flush()
+    return state
 
 
 def register_mode_check_discovery(
@@ -1937,29 +1969,52 @@ def mode_check(
         include_ok_results=True,
         override_non_ok_state=None,
     )
-    return checking.commandline_checking(
-        hostname,
-        ipaddress,
-        config_cache=config_cache,
-        fetcher=fetcher,
-        parser=parser,
-        summarizer=summarizer,
-        section_plugins=SectionPluginMapper(),
-        check_plugins=CheckPluginMapper(),
-        inventory_plugins=InventoryPluginMapper(),
-        run_plugin_names=run_plugin_names,
-        submitter=get_submitter_(
-            check_submission=config.check_submission,
-            monitoring_core=config.monitoring_core,
-            dry_run=options.get("no-submit", False),
-            host_name=hostname,
-            perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
-            show_perfdata=options.get("perfdata", False),
-        ),
-        active_check_handler=active_check_handler,
+    error_handler = CheckResultErrorHandler(
+        config_cache.exit_code_spec(hostname),
+        host_name=hostname,
+        service_name="Check_MK",
+        plugin_name="mk",
+        is_cluster=config_cache.is_cluster(hostname),
+        snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
-        perfdata_with_times=config.check_mk_perfdata_with_times,
     )
+    state, text = (3, "unknown error")
+    with error_handler:
+        console.vverbose("Checkmk version %s\n", cmk_version.__version__)
+        fetched = fetcher(hostname, ip_address=ipaddress)
+        check_result = checking.execute_checkmk_checks(
+            hostname=hostname,
+            config_cache=config_cache,
+            fetched=fetched,
+            parser=parser,
+            summarizer=summarizer,
+            section_plugins=SectionPluginMapper(),
+            check_plugins=CheckPluginMapper(),
+            inventory_plugins=InventoryPluginMapper(),
+            run_plugin_names=run_plugin_names,
+            submitter=get_submitter_(
+                check_submission=config.check_submission,
+                monitoring_core=config.monitoring_core,
+                dry_run=options.get("no-submit", False),
+                host_name=hostname,
+                perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+                show_perfdata=options.get("perfdata", False),
+            ),
+            perfdata_with_times=config.check_mk_perfdata_with_times,
+        )
+        state, text = check_result.state, check_result.as_text()
+
+    if error_handler.result is not None:
+        state, text = error_handler.result
+
+    active_check_handler(hostname, text)
+    if keepalive:
+        console.verbose(text)
+    else:
+        with suppress(IOError):
+            sys.stdout.write(text)
+            sys.stdout.flush()
+    return state
 
 
 def register_mode_check(
@@ -2146,7 +2201,7 @@ def mode_inventory_as_check(
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
-) -> int:
+) -> ServiceState:
     config_cache = config.get_config_cache()
     file_cache_options = _handle_fetcher_options(options)
     parameters = HWSWInventoryParameters.from_raw(options)
@@ -2172,9 +2227,18 @@ def mode_inventory_as_check(
         include_ok_results=False,
         override_non_ok_state=parameters.fail_status,
     )
-    return error_handling.check_result(
-        partial(
-            execute_active_check_inventory,
+    error_handler = CheckResultErrorHandler(
+        exit_spec=config_cache.exit_code_spec(hostname),
+        host_name=hostname,
+        service_name="Check_MK HW/SW Inventory",
+        plugin_name="check_mk_active-cmk_inv",
+        is_cluster=config_cache.is_cluster(hostname),
+        snmp_backend=config_cache.get_snmp_backend(hostname),
+        keepalive=keepalive,
+    )
+    state, text = (3, "unknown error")
+    with error_handler:
+        check_result = execute_active_check_inventory(
             hostname,
             config_cache=config_cache,
             fetcher=fetcher,
@@ -2184,16 +2248,19 @@ def mode_inventory_as_check(
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
-        ),
-        exit_spec=config_cache.exit_code_spec(hostname),
-        host_name=hostname,
-        service_name="Check_MK HW/SW Inventory",
-        plugin_name="check_mk_active-cmk_inv",
-        is_cluster=config_cache.is_cluster(hostname),
-        snmp_backend=config_cache.get_snmp_backend(hostname),
-        active_check_handler=active_check_handler,
-        keepalive=keepalive,
-    )
+        )
+        state, text = check_result.state, check_result.as_text()
+    if error_handler.result is not None:
+        state, text = error_handler.result
+
+    active_check_handler(hostname, text)
+    if keepalive:
+        console.verbose(text)
+    else:
+        with suppress(IOError):
+            sys.stdout.write(text)
+            sys.stdout.flush()
+    return state
 
 
 def register_mode_inventory_as_check(

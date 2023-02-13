@@ -5,15 +5,16 @@
 
 import json
 from unittest.mock import MagicMock
+from urllib.parse import urljoin
 
 import pytest
 from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-_BASE = "/NO_SITE/check_mk/api/1.0"
-_URL_ROOT_CERT = f"{_BASE}/root_cert"
-_URL_CSR = f"{_BASE}/csr"
+_BASE = "/NO_SITE/check_mk/api/1.0/"
+_URL_ROOT_CERT = urljoin(_BASE, "root_cert")
+_URL_CSR = urljoin(_BASE, "csr")
 
 _CSR = """-----BEGIN CERTIFICATE REQUEST-----
 MIIChTCCAW0CAQAwLzEtMCsGA1UEAwwkYWJjZDY3YzYtNjdhNi00N2Q2LWFiNzYt
@@ -195,4 +196,29 @@ def test_csr_200(
         status=200,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
+    )
+
+
+def test_agent_controller_certificates_settings_ok(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+) -> None:
+    assert set(
+        logged_in_admin_wsgi_app.get(
+            urljoin(_BASE, "agent_controller_certificates_settings"),
+            status=200,
+            headers={"Accept": "application/json"},
+        ).json_body
+    ) == {"lifetime_in_months"}
+
+
+def test_agent_controller_certificates_settings_unauthorized(
+    logged_in_wsgi_app: WebTestAppForCMK,
+) -> None:
+    assert (
+        logged_in_wsgi_app.get(
+            urljoin(_BASE, "agent_controller_certificates_settings"),
+            status=403,
+            headers={"Accept": "application/json"},
+        ).json_body["title"]
+        == "Unauthorized"
     )

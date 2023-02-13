@@ -43,7 +43,8 @@ import cryptography.x509 as x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
-from cmk.utils.crypto.password import HashAlgorithm, Password
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 
@@ -107,6 +108,7 @@ class CertificateWithPrivateKey(NamedTuple):
         organizational_unit_name: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
+        start_date: datetime | None = None,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
@@ -119,6 +121,7 @@ class CertificateWithPrivateKey(NamedTuple):
             expiry,
             HashAlgorithm.Sha512,
             organizational_unit_name=organizational_unit_name,
+            start_date=start_date,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -236,8 +239,8 @@ class Certificate:
         expiry: relativedelta,
         signature_digest_algorithm: HashAlgorithm,
         organizational_unit_name: str | None = None,
+        start_date: datetime | None = None,
     ) -> Certificate:
-
         name_attrs = [
             x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name),
             x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization),
@@ -249,6 +252,9 @@ class Certificate:
                 )
             )
         name = x509.Name(name_attrs)
+
+        if start_date is None:
+            start_date = datetime.utcnow()
 
         # TODO: We'll need to set these extensions depending on how we intend to use the cert.
         #       Right now it's hardcoded for self-signed certs (CA=True) and does not restrict
@@ -283,8 +289,8 @@ class Certificate:
             x509.CertificateBuilder()
             .subject_name(name)
             .issuer_name(name)
-            .not_valid_before(datetime.utcnow())
-            .not_valid_after(datetime.utcnow() + expiry)
+            .not_valid_before(start_date)
+            .not_valid_after(start_date + expiry)
             .serial_number(x509.random_serial_number())
             .public_key(public_key._key)
             .add_extension(basic_constraints, critical=True)
@@ -419,6 +425,27 @@ class Certificate:
             )
         return attr[0].value
 
+    def fingerprint(self, algorithm: HashAlgorithm) -> bytes:
+        """return the fingerprint
+
+        >>> Certificate.load_pem(
+        ...     CertificatePEM("\\n".join([
+        ...         "-----BEGIN CERTIFICATE-----",
+        ...         "MIIBYzCCAQ2gAwIBAgIUbPnfSpiyrseGMfzqs9QZF/QQWakwDQYJKoZIhvcNAQEF",
+        ...         "BQAwHjENMAsGA1UEAwwEdW5pdDENMAsGA1UECgwEdGVzdDAeFw0yMzAyMDgwOTMw",
+        ...         "NDRaFw0zMzAyMDgwOTMwNDRaMB4xDTALBgNVBAMMBHVuaXQxDTALBgNVBAoMBHRl",
+        ...         "c3QwXDANBgkqhkiG9w0BAQEFAANLADBIAkEA0oU0G0Um+IztvdGmwgLiAf1srMCu",
+        ...         "xi5SbZO+TyX6/e/yaTmRAvJv1159j+SYurqhKw6/UqI9PVhRyn/F+bkC2QIDAQAB",
+        ...         "oyMwITAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBxjANBgkqhkiG9w0B",
+        ...         "AQUFAANBALxBKfv6Z8zYbyGl4E5GqBSTltOwAOApoFCD1G+JJffwJ7axDstcYMPy",
+        ...         "4Xll7GthxPWvXF+of3VAkEhv5qhIrKM=",
+        ...         "-----END CERTIFICATE-----",
+        ...     ]))
+        ... ).fingerprint(HashAlgorithm.Sha256).hex()
+        '9b567eaf29173dfddbc2e42e00023e65998a22475bc4a728fe0abdaaff364989'
+        """
+        return self._cert.fingerprint(algorithm.value)
+
 
 class RsaPrivateKey:
     """
@@ -496,7 +523,7 @@ class RsaPrivateKey:
     def sign_data(
         self, data: bytes, hash_algorithm: HashAlgorithm = HashAlgorithm.Sha512
     ) -> Signature:
-        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value()))
+        return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value))
 
 
 class RsaPublicKey:

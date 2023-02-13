@@ -31,6 +31,7 @@ def _valuespec_inventory_services_rules():
                 "services",
                 ListOfStrings(
                     title=_("Services (Regular Expressions)"),
+                    size=49,
                     help=_(
                         "Regular expressions matching the begining of the internal name "
                         "or the description of the service. "

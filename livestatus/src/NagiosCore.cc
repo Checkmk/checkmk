@@ -17,8 +17,11 @@
 #include "NebContactGroup.h"
 #include "NebDowntime.h"
 #include "NebHost.h"
+#include "NebHostGroup.h"
 #include "NebService.h"
+#include "NebServiceGroup.h"
 #include "NebTimeperiod.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/Average.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
@@ -43,16 +46,21 @@ extern int g_num_queued_connections;
 extern std::atomic_int32_t g_livestatus_active_connections;
 
 void NagiosPaths::dump(Logger *logger) const {
-    Notice(logger) << "socket path = '" << _socket << "'";
-    Notice(logger) << "pnp path = '" << _pnp << "'";
-    Notice(logger) << "inventory path = '" << _mk_inventory << "'";
-    Notice(logger) << "structured status path = '" << _structured_status << "'";
-    Notice(logger) << "robotmk html log path = '" << _robotmk_html_log_path
-                   << "'";
-    Notice(logger) << "logwatch path = '" << _mk_logwatch << "'";
-    Notice(logger) << "log file path = '" << _logfile << "'";
-    Notice(logger) << "mkeventd socket path = '" << _mkeventd_socket << "'";
-    Notice(logger) << "rrdcached socket path = '" << _rrdcached_socket << "'";
+    Notice(logger) << "crash reports directory = " << crash_reports_directory;
+    Notice(logger) << "license usage history file = "
+                   << license_usage_history_file;
+    Notice(logger) << "inventory directory = \"" << inventory_directory << "\"";
+    Notice(logger) << "structured status directory = \""
+                   << structured_status_directory << "\"";
+    Notice(logger) << "Robotmk HTML log directory = "
+                   << robotmk_html_log_directory;
+    Notice(logger) << "logwatch directory = \"" << logwatch_directory << "\"";
+    Notice(logger) << "mkeventd socket = \"" << mkeventd_socket << "\"";
+    Notice(logger) << "RRD multiple directory = \"" << rrd_multiple_directory
+                   << "\"";
+    Notice(logger) << "rrdcached socket = \"" << rrdcached_socket << "\"";
+    Notice(logger) << "Livestatus socket = \"" << livestatus_socket << "\"";
+    Notice(logger) << "Livestatus log file = \"" << livestatus_log_file << "\"";
 }
 
 NagiosCore::NagiosCore(
@@ -85,7 +93,8 @@ std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
     return host == nullptr ? nullptr : std::make_unique<NebHost>(*host);
 }
 
-bool NagiosCore::all_hosts(std::function<bool(const IHost &)> pred) const {
+bool NagiosCore::all_of_hosts(
+    const std::function<bool(const IHost &)> &pred) const {
     for (const auto *hst = host_list; hst != nullptr; hst = hst->next) {
         if (!pred(NebHost{*hst})) {
             return false;
@@ -116,6 +125,13 @@ std::unique_ptr<const IContactGroup> NagiosCore::find_contactgroup(
     return std::make_unique<NebContactGroup>(name);
 }
 
+std::unique_ptr<const IServiceGroup> NagiosCore::find_servicegroup(
+    const std::string &name) {
+    const auto *group = ::find_servicegroup(const_cast<char *>(name.c_str()));
+    return group == nullptr ? nullptr
+                            : std::make_unique<NebServiceGroup>(*group);
+}
+
 std::unique_ptr<const IContact> NagiosCore::find_contact(
     const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
@@ -123,8 +139,8 @@ std::unique_ptr<const IContact> NagiosCore::find_contact(
     return c == nullptr ? nullptr : std::make_unique<NebContact>(*c);
 }
 
-bool NagiosCore::all_contacts(
-    std::function<bool(const IContact &)> pred) const {
+bool NagiosCore::all_of_contacts(
+    const std::function<bool(const IContact &)> &pred) const {
     for (const ::contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
         if (!pred(NebContact{*ctc})) {
             return false;
@@ -259,6 +275,36 @@ bool NagiosCore::all_of_timeperiods(
     return true;
 }
 
+bool NagiosCore::all_of_contact_groups(
+    const std::function<bool(const IContactGroup &)> &pred) const {
+    for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
+        if (!pred(NebContactGroup{*cg})) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool NagiosCore::all_of_host_groups(
+    const std::function<bool(const IHostGroup &)> &pred) const {
+    for (const auto *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
+        if (!pred(NebHostGroup{*hg})) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool NagiosCore::all_of_service_groups(
+    const std::function<bool(const IServiceGroup &)> &pred) const {
+    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
+        if (!pred(NebServiceGroup{*sg})) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool NagiosCore::mkeventdEnabled() {
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
         return config_mkeventd == std::string("on");
@@ -266,84 +312,43 @@ bool NagiosCore::mkeventdEnabled() {
     return false;
 }
 
-std::filesystem::path NagiosCore::mkeventdSocketPath() const {
-    return _paths._mkeventd_socket;
-}
-
-std::filesystem::path NagiosCore::mkLogwatchPath() const {
-    return _paths._mk_logwatch;
-}
-
-std::filesystem::path NagiosCore::mkInventoryPath() const {
-    return _paths._mk_inventory;
-}
-
-std::filesystem::path NagiosCore::structuredStatusPath() const {
-    return _paths._structured_status;
-}
-
-std::filesystem::path NagiosCore::robotMkHtmlLogPath() const {
-    return _paths._robotmk_html_log_path;
-}
-
-std::filesystem::path NagiosCore::crashReportPath() const {
-    return _paths._crash_reports_path;
-}
-
-std::filesystem::path NagiosCore::licenseUsageHistoryPath() const {
-    return _paths._license_usage_history_path;
-}
-
-std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
-
-std::filesystem::path NagiosCore::historyFilePath() const { return log_file; }
-
-std::filesystem::path NagiosCore::logArchivePath() const {
-    return log_archive_path;
-}
-
-std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
-    return _paths._rrdcached_socket;
-}
-
 int32_t NagiosCore::pid() const { return nagios_pid; }
-bool NagiosCore::isEnableNotifications() const {
-    return enable_notifications != 0;
+
+GlobalFlags NagiosCore::globalFlags() const {
+    return {
+        .enable_notifications = enable_notifications != 0,
+        .execute_service_checks = execute_service_checks != 0,
+        .accept_passive_service_checks = accept_passive_service_checks != 0,
+        .execute_host_checks = execute_host_checks != 0,
+        .accept_passive_hostchecks = accept_passive_host_checks != 0,
+        .obsess_over_services = obsess_over_services != 0,
+        .obsess_over_hosts = obsess_over_hosts != 0,
+        .check_service_freshness = check_service_freshness != 0,
+        .check_host_freshness = check_host_freshness != 0,
+        .enable_flap_detection = enable_flap_detection != 0,
+        .process_performance_data = process_performance_data != 0,
+        .enable_event_handlers = enable_event_handlers != 0,
+        .check_external_commands = check_external_commands != 0,
+    };
 }
-bool NagiosCore::isExecuteServiceChecks() const {
-    return execute_service_checks != 0;
+
+Paths NagiosCore::paths() const {
+    return {
+        .crash_reports_directory = _paths.crash_reports_directory,
+        .license_usage_history_file = _paths.license_usage_history_file,
+        .inventory_directory = _paths.inventory_directory,
+        .structured_status_directory = _paths.structured_status_directory,
+        .robotmk_html_log_directory = _paths.robotmk_html_log_directory,
+        .logwatch_directory = _paths.logwatch_directory,
+        .mkeventd_socket = _paths.mkeventd_socket,
+        .history_file = log_file == nullptr ? "" : log_file,
+        .history_archive_directory =
+            log_archive_path == nullptr ? "" : log_archive_path,
+        .rrd_multiple_directory = _paths.rrd_multiple_directory,
+        .rrdcached_socket = _paths.rrdcached_socket,
+    };
 }
-bool NagiosCore::isAcceptPassiveServiceChecks() const {
-    return accept_passive_service_checks != 0;
-}
-bool NagiosCore::isExecuteHostChecks() const {
-    return execute_host_checks != 0;
-}
-bool NagiosCore::isAcceptPassiveHostChecks() const {
-    return accept_passive_host_checks != 0;
-}
-bool NagiosCore::isObsessOverServices() const {
-    return obsess_over_services != 0;
-}
-bool NagiosCore::isObsessOverHosts() const { return obsess_over_hosts != 0; }
-bool NagiosCore::isCheckServiceFreshness() const {
-    return check_service_freshness != 0;
-}
-bool NagiosCore::isCheckHostFreshness() const {
-    return check_host_freshness != 0;
-}
-bool NagiosCore::isEnableFlapDetection() const {
-    return enable_flap_detection != 0;
-}
-bool NagiosCore::isProcessPerformanceData() const {
-    return process_performance_data != 0;
-}
-bool NagiosCore::isEnableEventHandlers() const {
-    return enable_event_handlers != 0;
-}
-bool NagiosCore::isCheckExternalCommands() const {
-    return check_external_commands != 0;
-}
+
 std::chrono::system_clock::time_point NagiosCore::programStartTime() const {
     return std::chrono::system_clock::from_time_t(program_start);
 }
@@ -397,7 +402,10 @@ bool NagiosCore::hasEventHandlers() const {
     return g_any_event_handler_enabled;
 }
 
-bool NagiosCore::isTrialExpired() const { return false; }
+bool NagiosCore::isTrialExpired(
+    std::chrono::system_clock::time_point /*now*/) const {
+    return false;
+}
 
 double NagiosCore::averageRunnableJobsFetcher() const { return 0.0; }
 double NagiosCore::averageRunnableJobsChecker() const { return 0.0; }
@@ -425,9 +433,9 @@ size_t NagiosCore::numCachedLogMessages() {
 
 namespace {
 // Nagios converts custom attribute names to uppercase, splits name/value at
-// space, uses ';' as a comment character, is line-oriented, etc. etc. So we use
-// a base16 encoding for names and values of tags, labels, and label sources,
-// e.g. "48656C6C6F2C20776F726C6421" => "Hello, world!".
+// space, uses ';' as a comment character, is line-oriented, etc. etc. So we
+// use a base16 encoding for names and values of tags, labels, and label
+// sources, e.g. "48656C6C6F2C20776F726C6421" => "Hello, world!".
 std::string b16decode(const std::string &hex) {
     auto len = hex.length() & ~1;
     std::string result;
@@ -494,7 +502,7 @@ MetricLocation NagiosCore::metricLocation(
     const std::string &host_name, const std::string &service_description,
     const Metric::Name &var) const {
     return MetricLocation{
-        pnpPath() / host_name /
+        paths().rrd_multiple_directory / host_name /
             pnp_cleanup(service_description + "_" +
                         Metric::MangledName(var).string() + ".rrd"),
         "1"};

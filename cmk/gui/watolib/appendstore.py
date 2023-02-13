@@ -5,7 +5,6 @@
 
 import abc
 import ast
-import errno
 import os
 from pathlib import Path
 from typing import Generic, TypeVar
@@ -78,11 +77,8 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
                 for entry in f.read().split(b"\0"):
                     if entry:
                         entries.append(self._deserialize(ast.literal_eval(entry.decode("utf-8"))))
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass
-            else:
-                raise
+        except FileNotFoundError:
+            pass
         except Exception:
             if lock:
                 store.release_lock(path)
@@ -117,10 +113,4 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
             store.release_lock(path)
 
     def clear(self) -> None:
-        try:
-            self._path.unlink()
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                pass  # Not existant -> OK
-            else:
-                raise
+        self._path.unlink(missing_ok=True)

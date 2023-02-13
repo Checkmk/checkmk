@@ -34,7 +34,7 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocom
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import DualListChoice, Labels
+from cmk.gui.valuespec import DualListChoice, LabelGroups
 
 if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.visuals.managed_site_filters import (  # pylint: disable=no-name-in-module
@@ -1540,14 +1540,14 @@ class _FilterHostAuxTags(Filter):
 filter_registry.register(_FilterHostAuxTags())
 
 
-class LabelFilter(Filter):
+class LabelGroupFilter(Filter):
     def __init__(
         self,
         *,
         title: str | LazyString,
         object_type: Literal["host", "service"],
     ) -> None:
-        self.query_filter = query_filters.AllLabelsQuery(object_type=object_type)
+        self.query_filter = query_filters.AllLabelGroupsQuery(object_type=object_type)
         super().__init__(
             ident=self.query_filter.ident,
             title=title,
@@ -1557,34 +1557,33 @@ class LabelFilter(Filter):
             link_columns=[],
         )
 
-    def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        return " ".join(f"{e.id}:{e.value}" for e in sorted(self.query_filter.parse_value(value)))
-
-    def request_vars_from_row(self, row: Row) -> dict[str, str]:
-        return {self.query_filter.request_vars[0]: row[self.query_filter.ident]}
-
     def _valuespec(self):
-        return Labels(world=Labels.World.CORE)
+        return LabelGroups()
 
     def display(self, value: FilterHTTPVariables) -> None:
         self._valuespec().render_input(
-            self.query_filter.request_vars[0],
-            {e.id: e.value for e in self.query_filter.parse_value(value)},
+            self.query_filter.ident,
+            self.query_filter.parse_value(value),
         )
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the HTML
+        var context. This can be used to persist the filter settings."""
+        return dict(request.itervars(self.query_filter.ident))
+
 
 filter_registry.register(
-    LabelFilter(
+    LabelGroupFilter(
         title=_l("Host labels"),
         object_type="host",
     )
 )
 
 filter_registry.register(
-    LabelFilter(
+    LabelGroupFilter(
         title=_l("Service labels"),
         object_type="service",
     )

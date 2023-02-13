@@ -18,6 +18,9 @@ from cmk.utils import paths, version
 from cmk.utils.store import load_mk_file
 from cmk.utils.type_defs import UserId
 
+import cmk.gui.watolib.check_mk_automations
+import cmk.gui.watolib.rulespecs
+
 
 @pytest.fixture(scope="function", name="new_rule")
 def new_rule_fixture(logged_in_admin_wsgi_app):
@@ -37,6 +40,11 @@ def _create_rule(
     description: str = "",
     documentation_url: str = "",
     disabled: bool = False,
+    ruleset: str = "inventory_df_rules",
+    value_raw: str = """{
+        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+    }""",
 ) -> tuple[webtest.TestResponse, dict[str, typing.Any]]:
     base = "/NO_SITE/check_mk/api/1.0"
     properties = {
@@ -47,13 +55,10 @@ def _create_rule(
     if documentation_url:
         properties["documentation_url"] = documentation_url
     values = {
-        "ruleset": "inventory_df_rules",
+        "ruleset": ruleset,
         "folder": folder,
         "properties": properties,
-        "value_raw": """{
-            "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-            "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-        }""",
+        "value_raw": value_raw,
         "conditions": {
             "host_tags": [
                 {
@@ -265,6 +270,33 @@ def test_create_rule_with_string_value(
     )
 
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
+
+
+def test_openapi_list_rules_with_hyphens(
+    base: str, logged_in_admin_wsgi_app: WebTestAppForCMK, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        cmk.gui.watolib.rulespecs.CheckTypeGroupSelection,
+        "get_elements",
+        lambda x: {"fileinfo_groups": "some title"},
+    )
+    STATIC_CHECKS_FILEINFO_GROUPS = "static_checks:fileinfo-groups"
+    _, result = _create_rule(
+        logged_in_admin_wsgi_app,
+        "/",
+        ruleset=STATIC_CHECKS_FILEINFO_GROUPS,
+        value_raw="('fileinfo_groups', '', {'group_patterns': []})",
+    )
+    assert result["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
+
+    resp = logged_in_admin_wsgi_app.get(
+        base + f"/domain-types/rule/collections/all?ruleset_name={STATIC_CHECKS_FILEINFO_GROUPS}",
+        headers={"Accept": "application/json"},
+        status=200,
+    ).json
+
+    assert len(resp["value"]) == 1
+    assert resp["value"][0]["extensions"]["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
 
 
 def test_openapi_list_rules(

@@ -17,6 +17,7 @@ def inventory_netif_link(info):
 
 def check_netif_link(item, targetstate, info):
     links = [i[4] for i in info if i[0] == item]
+    link = False  # otherwise link might be undefined below
     if len(links) == 0:
         return (2, "unknown network device")
     if len(links) != 1:

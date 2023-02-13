@@ -23,20 +23,24 @@ from cmk.utils.type_defs import TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
-)
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
+from cmk.gui.plugins.openapi.restful_objects.request_schemas import (
+    InputTimePeriod,
+    UpdateTimePeriod,
+)
+from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
+    TimePeriodResponse,
+    TimePeriodResponseCollection,
+)
+from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import (
+    delete_timeperiod,
     load_timeperiod,
     load_timeperiods,
     save_timeperiod,
-    save_timeperiods,
+    TimePeriodNotFoundError,
 )
 
 TIME_RANGE = tuple[str, str]
@@ -51,13 +55,35 @@ RW_PERMISSIONS = permissions.AllPerm(
 )
 
 
+def time_period_not_found_problem(time_period_id: str) -> Response:
+    return problem(
+        status=404,
+        title="The requested time period was not found",
+        detail=f"Could not find a time period with id {time_period_id}.",
+    )
+
+
+def _get_time_period_domain_object(
+    name: str,
+    api_format: dict[str, Any],
+) -> DomainObject:
+    return constructors.domain_object(
+        domain_type="time_period",
+        identifier=name,
+        title=api_format["alias"],
+        extensions=api_format,
+        deletable=True,
+        editable=True,
+    )
+
+
 @Endpoint(
     constructors.collection_href("time_period"),
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=request_schemas.InputTimePeriod,
-    response_schema=response_schemas.DomainObject,
+    request_schema=InputTimePeriod,
+    response_schema=TimePeriodResponse,
     permissions_required=RW_PERMISSIONS,
 )
 def create_timeperiod(params: Mapping[str, Any]) -> Response:
@@ -72,7 +98,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
         alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
     )
     save_timeperiod(name, time_period)
-    return _serve_time_period(_to_api_format(load_timeperiod(name)))
+    return _serve_time_period(_get_time_period_domain_object(name, _to_api_format(time_period)))
 
 
 @Endpoint(
@@ -81,7 +107,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[NAME_FIELD],
     additional_status_codes=[405],
-    request_schema=request_schemas.UpdateTimePeriod,
+    request_schema=UpdateTimePeriod,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
@@ -97,20 +123,19 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         )
     try:
         time_period = load_timeperiod(name)
-    except KeyError:
-        raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
+    except TimePeriodNotFoundError:
+        return time_period_not_found_problem(name)
 
-    time_period = _to_api_format(time_period, internal_format=True)
+    parsed_time_period = _to_api_format(time_period, internal_format=True)
 
     updated_time_period = _to_checkmk_format(
-        alias=body.get("alias", time_period["alias"]),
+        alias=body.get("alias", parsed_time_period["alias"]),
         periods=_daily_time_ranges(
-            body.get("active_time_ranges", time_period["active_time_ranges"])
+            body.get("active_time_ranges", parsed_time_period["active_time_ranges"])
         ),
-        exceptions=_format_exceptions(body.get("exceptions", time_period["exceptions"])),
-        exclude=body.get("exclude", time_period["exclude"]),
+        exceptions=_format_exceptions(body.get("exceptions", parsed_time_period["exceptions"])),
+        exclude=body.get("exclude", parsed_time_period["exclude"]),
     )
-
     save_timeperiod(name, updated_time_period)
     return Response(status=204)
 
@@ -129,11 +154,11 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.timeperiods")
     name = params["name"]
-    time_periods = load_timeperiods()
-    if name not in time_periods:
-        raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
-    del time_periods[name]
-    save_timeperiods(time_periods)
+    try:
+        delete_timeperiod(name)
+    except TimePeriodNotFoundError:
+        return time_period_not_found_problem(name)
+
     return Response(status=204)
 
 
@@ -142,52 +167,45 @@ def delete(params: Mapping[str, Any]) -> Response:
     "cmk/show",
     method="get",
     path_params=[NAME_FIELD],
-    response_schema=response_schemas.ConcreteTimePeriod,
+    response_schema=TimePeriodResponse,
     permissions_required=PERMISSIONS,
 )
 def show_time_period(params: Mapping[str, Any]) -> Response:
     """Show a time period"""
     user.need_permission("wato.timeperiods")
     name = params["name"]
-    time_periods = load_timeperiods()
-    if name not in time_periods:
-        raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
-    time_period = time_periods[name]
-    return _serve_time_period(_to_api_format(time_period, name == "24X7"))
+
+    try:
+        time_period = load_timeperiod(name)
+    except TimePeriodNotFoundError:
+        return time_period_not_found_problem(name)
+
+    api_format = _to_api_format(time_period, name == "24X7")
+    return _serve_time_period(_get_time_period_domain_object(name, api_format))
 
 
 @Endpoint(
     constructors.collection_href("time_period"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=TimePeriodResponseCollection,
     permissions_required=PERMISSIONS,
 )
 def list_time_periods(params: Mapping[str, Any]) -> Response:
     """Show all time periods"""
     user.need_permission("wato.timeperiods")
-    time_periods = []
-    for time_period_id, time_period_details in load_timeperiods().items():
-        alias = time_period_details["alias"]
-        if not isinstance(alias, str):  # check for mypy
-            continue
-        time_periods.append(
-            constructors.collection_item(
-                domain_type="time_period",
-                title=alias,
-                identifier=time_period_id,
-            )
+    return serve_json(
+        constructors.collection_object(
+            domain_type="time_period",
+            value=[
+                _get_time_period_domain_object(name, _to_api_format(time_period, name == "24X7"))
+                for name, time_period in load_timeperiods().items()
+            ],
         )
-    time_period_collection = {
-        "id": "timeperiod",
-        "domainType": "time_period",
-        "value": time_periods,
-        "links": [constructors.link_rel("self", constructors.collection_href("time_period"))],
-    }
-    return serve_json(time_period_collection)
+    )
 
 
-def _serve_time_period(time_period):
+def _serve_time_period(time_period: DomainObject) -> Response:
     response = serve_json(time_period)
     response.headers.add("ETag", constructors.etag_of_dict(time_period).to_header())
     return response
@@ -220,7 +238,7 @@ def _to_api_format(  # type:ignore[no-untyped-def]
         time_period_readable["exclude"] = time_period.get("exclude", [])
 
     active_time_ranges = _active_time_ranges_readable(
-        {key: time_period[key] for key in defines.weekday_ids()}
+        {key: time_period[key] for key in time_period if key in defines.weekday_ids()}
     )
     exceptions = _exceptions_readable(
         {

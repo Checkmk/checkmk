@@ -119,7 +119,7 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.omd_root", Path(tmp_dir))
-    monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.tmp_dir", Path(tmp_dir, "tmp/check_mk"))
     monkeypatch.setattr(
         "cmk.utils.paths.counters_dir", os.path.join(tmp_dir, "tmp/check_mk/counters")
     )

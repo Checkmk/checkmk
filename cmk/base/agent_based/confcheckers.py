@@ -48,7 +48,14 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
 
-__all__ = ["ConfiguredParser", "ConfiguredFetcher"]
+__all__ = [
+    "CheckPluginMapper",
+    "ConfiguredFetcher",
+    "ConfiguredParser",
+    "ConfiguredSummarizer",
+    "InventoryPluginMapper",
+    "SectionPluginMapper",
+]
 
 
 def _fetch_all(
@@ -135,7 +142,7 @@ class ConfiguredSummarizer:
         self,
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     ) -> Iterable[ActiveCheckResult]:
-        return next(
+        return itertools.chain.from_iterable(
             summarize_host_sections(
                 host_sections,
                 source,

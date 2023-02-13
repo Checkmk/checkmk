@@ -107,6 +107,7 @@ def automation_discovery(
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
+    keep_clustered_vanished_services: bool,
     service_filters: _ServiceFilters | None,
     on_error: OnError,
 ) -> DiscoveryResult:
@@ -171,6 +172,7 @@ def automation_discovery(
             result,
             find_service_description,
             mode,
+            keep_clustered_vanished_services,
         )
         config_cache.set_autochecks(host_name, list(final_services.values()))
 
@@ -242,9 +244,10 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     result: DiscoveryResult,
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
+    keep_clustered_vanished_services: bool,
 ) -> Mapping[ServiceID, AutocheckServiceWithNodes]:
     """
-    The output contains a selction of services in the states "new", "old", "ignored", "vanished"
+    The output contains a selection of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
 
     Service in with the state "custom", "active" and "manual" are currently not checked.
@@ -292,10 +295,11 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                     result.self_kept += 1
 
         else:
-            # Silently keep clustered services
-            post_discovery_services.update(
-                (s.service.id(), s) for s in discovered_services_with_nodes
-            )
+            if check_source != "clustered_vanished" or keep_clustered_vanished_services:
+                # Silently keep clustered services
+                post_discovery_services.update(
+                    (s.service.id(), s) for s in discovered_services_with_nodes
+                )
             if check_source == "clustered_new":
                 result.clustered_new += len(discovered_services_with_nodes)
             elif check_source == "clustered_old":
@@ -463,6 +467,9 @@ def _discover_marked_host(
         check_plugins=check_plugins,
         find_service_description=find_service_description,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
+        keep_clustered_vanished_services=params.rediscovery.get(
+            "keep_clustered_vanished_services", True
+        ),
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         on_error=on_error,
     )

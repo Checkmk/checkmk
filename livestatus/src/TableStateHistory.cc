@@ -14,7 +14,6 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "HostServiceState.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "livestatus/Attributes.h"  // IWYU pragma: keep
@@ -22,6 +21,7 @@
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/Filter.h"
+#include "livestatus/HostServiceState.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/LogEntry.h"
@@ -34,18 +34,12 @@
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
 
-#ifdef CMC
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_OK 0
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_WARNING 1
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_CRITICAL 2
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define STATE_UNKNOWN 3
-#else
-#include "nagios.h"
-#endif
+enum {
+    STATE_OK = 0,
+    STATE_WARNING = 1,
+    STATE_CRITICAL = 2,
+    STATE_UNKNOWN = 3,
+};
 
 using namespace std::chrono_literals;
 
@@ -389,8 +383,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
         }
 
         if (in_nagios_initial_states &&
-            !(entry->kind() == LogEntryKind::state_service_initial ||
-              entry->kind() == LogEntryKind::state_host_initial)) {
+            entry->kind() != LogEntryKind::state_service_initial &&
+            entry->kind() != LogEntryKind::state_host_initial) {
             // Set still unknown hosts / services to unmonitored
             for (auto &it_hst : state_info) {
                 HostServiceState *hst = it_hst.second;
@@ -559,7 +553,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             }
             case LogEntryKind::timeperiod_transition: {
                 try {
-                    TimeperiodTransition tpt(entry->options());
+                    const TimeperiodTransition tpt(entry->options());
                     notification_periods[tpt.name()] = tpt.to();
                     for (auto &it_hst : state_info) {
                         updateHostServiceState(
@@ -738,7 +732,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             break;
         }
         case LogEntryKind::downtime_alert_host: {
-            int downtime_active =
+            const int downtime_active =
                 mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
 
             if (hs_state->_in_host_downtime != downtime_active) {
@@ -757,7 +751,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
             break;
         }
         case LogEntryKind::downtime_alert_service: {
-            int downtime_active =
+            const int downtime_active =
                 mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
                 if (!only_update) {
@@ -770,7 +764,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
         case LogEntryKind::flapping_host:
         case LogEntryKind::flapping_service: {
-            int flapping_active =
+            const int flapping_active =
                 mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
                 if (!only_update) {
@@ -785,7 +779,7 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
         }
         case LogEntryKind::timeperiod_transition: {
             try {
-                TimeperiodTransition tpt(entry->options());
+                const TimeperiodTransition tpt(entry->options());
                 // if no _host pointer is available the initial status of
                 // _in_notification_period (1) never changes
                 if (hs_state->_host != nullptr &&
@@ -819,9 +813,10 @@ TableStateHistory::ModificationStatus TableStateHistory::updateHostServiceState(
     }
 
     if (entry->kind() != LogEntryKind::timeperiod_transition) {
-        bool fix_me = (entry->kind() == LogEntryKind::state_host_initial ||
-                       entry->kind() == LogEntryKind::state_service_initial) &&
-                      entry->plugin_output() == "(null)";
+        const bool fix_me =
+            (entry->kind() == LogEntryKind::state_host_initial ||
+             entry->kind() == LogEntryKind::state_service_initial) &&
+            entry->plugin_output() == "(null)";
         hs_state->_log_output = fix_me ? "" : entry->plugin_output();
         hs_state->_long_log_output = entry->long_plugin_output();
     }

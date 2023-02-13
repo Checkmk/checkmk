@@ -37,7 +37,6 @@ from cmk.gui.views.inventory import (
     inv_paint_number,
     inv_paint_size,
     NodeDisplayHint,
-    RowMultiTableInventory,
     RowTableInventory,
     RowTableInventoryHistory,
     TableDisplayHint,
@@ -204,67 +203,6 @@ def test_query_row_table_inventory_history_add_columns(
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ["host_foo"])
-
-
-@pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    sources = list(
-        zip(
-            ["invtesttable1", "invtesttable2"],
-            [
-                cmk.gui.inventory.InventoryPath.parse(".foo.bar:"),
-                cmk.gui.inventory.InventoryPath.parse("foo.baz:"),
-            ],
-        )
-    )
-    row_table = RowMultiTableInventory(sources, ["sid"], [])
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
-    for row in rows:
-        assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
-
-
-@pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory_unknown_columns(
-    monkeypatch: pytest.MonkeyPatch, view: View
-) -> None:
-    sources = list(
-        zip(
-            ["invtesttable1", "invtesttable2"],
-            [
-                cmk.gui.inventory.InventoryPath.parse(".foo.bar:"),
-                cmk.gui.inventory.InventoryPath.parse("foo.baz:"),
-            ],
-        )
-    )
-    row_table = RowMultiTableInventory(sources, ["sid"], [])
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
-    for row in rows:
-        assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
-
-
-@pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory_add_columns(
-    monkeypatch: pytest.MonkeyPatch, view: View
-) -> None:
-    sources = list(
-        zip(
-            ["invtesttable1", "invtesttable2"],
-            [
-                cmk.gui.inventory.InventoryPath.parse(".foo.bar:"),
-                cmk.gui.inventory.InventoryPath.parse("foo.baz:"),
-            ],
-        )
-    )
-    row_table = RowMultiTableInventory(sources, ["sid"], [])
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
-    for row in rows:
-        assert set(row) == set(EXPECTED_INV_MULTI_KEYS + ["host_foo"])
 
 
 @pytest.mark.parametrize(

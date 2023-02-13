@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_win_disks import inventory_win_disks, parse_win_disks
 
 from .utils_inventory import sort_inventory_result
@@ -167,7 +169,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_win_disks(string_table, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_win_disks(string_table: StringTable, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(
         inventory_win_disks(parse_win_disks(string_table))
     ) == sort_inventory_result(expected_result)

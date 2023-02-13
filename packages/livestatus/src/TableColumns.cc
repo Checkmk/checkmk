@@ -14,7 +14,7 @@
 #include "livestatus/StringColumn.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
-    ColumnOffsets offsets{};
+    const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<Column>>(
         "table", "The name of the table", offsets, [this](const Column &col) {
             return this->getValue(col, Type::table);

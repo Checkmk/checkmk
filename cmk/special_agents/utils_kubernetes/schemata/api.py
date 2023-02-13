@@ -1022,6 +1022,7 @@ class PersistentVolumeClaimSpec(ClientModel):
     resources: StorageResourceRequirements | None
     storage_class_name: str | None
     volume_mode: PersistentVolumeMode | None
+    volume_name: VolumeName | None = None
 
 
 class PersistentVolumeClaimPhase(enum.Enum):
@@ -1051,6 +1052,17 @@ class PersistentVolumeClaim(BaseModel):
     metadata: MetaData
     spec: PersistentVolumeClaimSpec
     status: PersistentVolumeClaimStatus
+
+
+class PersistentVolumeSpec(ClientModel):
+    access_modes: list[AccessMode]
+    storage_class_name: str
+    volume_mode: str
+
+
+class PersistentVolume(ClientModel):
+    metadata: MetaDataNoNamespace
+    spec: PersistentVolumeSpec
 
 
 class ClusterDetails(BaseModel):

@@ -8,7 +8,6 @@
 
 import collections
 import enum
-import errno
 import os
 import shutil
 from pathlib import Path
@@ -136,14 +135,13 @@ def cleanup_cmk():
 
     import cmk.utils.paths
 
-    if "pytest_cmk_" not in cmk.utils.paths.tmp_dir:
+    if "pytest_cmk_" not in str(cmk.utils.paths.tmp_dir):
         return
 
     try:
-        shutil.rmtree(cmk.utils.paths.tmp_dir)
-    except OSError as exc:
-        if exc.errno != errno.ENOENT:
-            raise  # re-raise exception
+        shutil.rmtree(str(cmk.utils.paths.tmp_dir))
+    except FileNotFoundError:
+        pass
 
 
 def pytest_cmdline_main(config):

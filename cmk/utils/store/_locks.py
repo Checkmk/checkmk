@@ -15,7 +15,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from cmk.utils.exceptions import MKTimeout
+from cmk.utils.exceptions import MKConfigLockTimeout, MKTimeout
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 
@@ -27,7 +27,6 @@ _all = [
     "lock_checkmk_configuration",
     "lock_exclusive",
     "locked",
-    "MKConfigLockTimeout",
     "release_all_locks",
     "release_lock",
     "try_acquire_lock",
@@ -46,10 +45,6 @@ logger = logging.getLogger("cmk.store")
 #   +----------------------------------------------------------------------+
 #   | Predefined locks                                                     |
 #   '----------------------------------------------------------------------'
-
-
-class MKConfigLockTimeout(MKTimeout):
-    """Special exception to signalize timeout waiting for the global configuration lock"""
 
 
 def configuration_lockfile() -> str:

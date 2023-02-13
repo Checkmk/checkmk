@@ -12,11 +12,19 @@ import livestatus
 from cmk.utils.licensing.state import (
     get_license_status,
     is_expired_trial,
+    is_license_management_enabled,
     is_licensed,
     license_status_message,
     LicenseState,
 )
 from cmk.utils.version import Edition
+
+
+def test_is_license_management_enabled() -> None:
+    assert is_license_management_enabled(Edition.CRE) is False
+    assert is_license_management_enabled(Edition.CEE) is False
+    assert is_license_management_enabled(Edition.CME) is False
+    assert is_license_management_enabled(Edition.CCE) is True
 
 
 @pytest.fixture(name="non_free_edition")
@@ -25,12 +33,14 @@ def fixture_non_free_edition(
 ) -> Iterable[Edition]:
     if edition is Edition.CRE:
         pytest.skip("Test is only relevant for non-CRE editions")
-    monkeypatch.setattr("cmk.utils.licensing.state.is_raw_edition", lambda: False)
+    if edition is Edition.CEE or edition is Edition.CME:
+        pytest.skip("Enable in 2.3 with CMK-10662")
+    monkeypatch.setattr("cmk.utils.licensing.state.edition", lambda: edition)
     yield edition
 
 
 def test_raw_edition_is_always_licensed(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("cmk.utils.licensing.state.is_raw_edition", lambda: True)
+    monkeypatch.setattr("cmk.utils.licensing.state.edition", lambda: Edition.CRE)
     assert is_expired_trial() is False
     assert is_licensed() is True
     assert get_license_status() is LicenseState.LICENSED

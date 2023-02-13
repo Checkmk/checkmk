@@ -200,7 +200,7 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    preliminary_candidates: Sequence[tuple[CheckPluginName, list[ParsedSectionName]]] = list(
+    preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]] = list(
         (p.name, p.sections) for p in check_plugins.values() if p.name in run_plugin_names
     )
 
@@ -218,7 +218,7 @@ def _find_candidates(
 
 def _find_host_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: Iterable[tuple[CheckPluginName, list[ParsedSectionName]]],
+    preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
     parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 
@@ -238,7 +238,7 @@ def _find_host_candidates(
 
 def _find_mgmt_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: Iterable[tuple[CheckPluginName, list[ParsedSectionName]]],
+    preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
     parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 

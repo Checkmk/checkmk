@@ -11,7 +11,6 @@ import datetime as dt
 import logging
 import sys
 from collections.abc import Callable, Generator, Sequence
-from pathlib import Path
 from typing import Any
 
 import urllib3
@@ -32,7 +31,7 @@ LOGGER = logging.getLogger("agent_storeonce4x")
 
 class StoreOnceOauth2Session(Requester):
 
-    _token_dir = Path(cmk.utils.paths.tmp_dir, "special_agents/agent_storeonce4x")
+    _token_dir = cmk.utils.paths.tmp_dir / "special_agents/agent_storeonce4x"
     _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"
     _token_endpoint = "/pml/login/authenticate"

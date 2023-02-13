@@ -25,7 +25,7 @@ struct DummyValue {};
 
 TEST(ListColumn, GetValueLambda) {
     using value_type = ListColumn<DummyRow>::value_type;
-    value_type v{"hello"s, "world"s};
+    value_type v{"hello"s, "world"s};  // NOLINT(misc-const-correctness)
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
@@ -39,7 +39,7 @@ TEST(ListColumn, GetValueLambda) {
 
 TEST(ListColumn, GetValueDefault) {
     using value_type = ListColumn<DummyRow>::value_type;
-    value_type v{"hello"s, "world"s};
+    value_type v{"hello"s, "world"s};  // NOLINT(misc-const-correctness)
 
     const auto row = DummyRow{nullptr};
     const auto col = ListColumn<DummyRow>{

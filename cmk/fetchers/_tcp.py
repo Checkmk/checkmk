@@ -25,7 +25,6 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 from cmk.fetchers import Fetcher, Mode
 
 from ._agentctl import AgentCtlMessage
-from ._iputils import verify_ipaddress
 
 __all__ = ["TCPEncryptionHandling", "TCPFetcher"]
 
@@ -41,7 +40,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self,
         *,
         family: socket.AddressFamily,
-        address: tuple[HostAddress | None, int],
+        address: tuple[HostAddress, int],
         timeout: float,
         host_name: HostName,
         encryption_handling: TCPEncryptionHandling,
@@ -50,7 +49,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         super().__init__(logger=logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
-        self.address: Final[tuple[HostAddress | None, int]] = (address[0], address[1])
+        self.address: Final[tuple[HostAddress, int]] = (address[0], address[1])
         self.timeout: Final = timeout
         self.host_name: Final = host_name
         self.encryption_handling: Final = encryption_handling
@@ -81,7 +80,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
         serialized_ = copy.deepcopy(dict(serialized))
-        address: tuple[HostAddress | None, int] = serialized_.pop("address")
+        address: tuple[HostAddress, int] = serialized_.pop("address")
         host_name = HostName(serialized_.pop("host_name"))
         encryption_handling = TCPEncryptionHandling(serialized_.pop("encryption_handling"))
         return cls(
@@ -102,7 +101,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
         }
 
     def open(self) -> None:
-        verify_ipaddress(self.address[0])
         self._logger.debug(
             "Connecting via TCP to %s:%d (%ss timeout)",
             self.address[0],
@@ -132,9 +130,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        if mode is not Mode.CHECKING:
-            raise MKFetcherError(f"Refusing to fetch live data during {mode.name.lower()}")
-
         agent_data, protocol = self._get_agent_data()
         return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 

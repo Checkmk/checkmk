@@ -17,7 +17,7 @@
 void PerfdataAggregator::consume(Row row, const User & /*user*/,
                                  std::chrono::seconds /*timezone_offset*/) {
     std::istringstream iss(_getValue(row));
-    std::istream_iterator<std::string> end;
+    const std::istream_iterator<std::string> end;
     for (auto it = std::istream_iterator<std::string>(iss); it != end; ++it) {
         auto pos = it->find('=');
         if (pos != std::string::npos) {
@@ -36,7 +36,7 @@ void PerfdataAggregator::output(RowRenderer &r) const {
     std::string perf_data;
     bool first = true;
     for (const auto &entry : _aggregations) {
-        double value = entry.second->value();
+        const double value = entry.second->value();
         if (std::isfinite(value)) {
             if (first) {
                 first = false;

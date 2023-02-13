@@ -28,7 +28,7 @@ struct Blob {
 };
 
 std::ostream &operator<<(std::ostream &os, const Blob &blob) {
-    OStreamStateSaver s(os);
+    const OStreamStateSaver s(os);
     for (auto ch : blob.contents) {
         if (std::isprint(ch) != 0) {
             os << ch;

@@ -9,8 +9,8 @@ from typing import Any
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
-from cmk.base.config import Ruleset
-from cmk.base.plugins.agent_based.utils.df import (
+from cmk.base.config import RuleSpec
+from cmk.base.plugins.agent_based.utils.df import (  # noqa: 401
     check_filesystem_levels,
     check_inodes,
     FILESYSTEM_DEFAULT_LEVELS,
@@ -35,7 +35,7 @@ filesystem_default_levels: dict[str, Any] = {}  # can also be dropped some day i
 #     ( [ ( "Backup space 1", "/usr/backup/*.xyz" ),
 #         ( "Backup space 2", "/usr/backup2/*.xyz" ) ], ALL_HOSTS ),
 # ]
-filesystem_groups: Ruleset = []
+filesystem_groups: list[RuleSpec] = []
 
 
 # ==================================================================================================

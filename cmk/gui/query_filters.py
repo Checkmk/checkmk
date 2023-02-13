@@ -22,7 +22,14 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
+from cmk.gui.utils.labels import (
+    encode_label_groups_for_livestatus,
+    encode_labels_for_livestatus,
+    Label,
+    LabelGroups,
+    Labels,
+    parse_labels_value,
+)
 from cmk.gui.utils.user_errors import user_errors
 
 SitesOptions = list[tuple[str, str]]
@@ -680,7 +687,40 @@ class MultipleQuery(TextQuery):
         return lq_logic(f"Filter: {self.column} {negate}{self.op}", self.selection(value), joiner)
 
 
-class LabelsQuery(Query):
+class AllLabelGroupsQuery(Query):
+    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
+        self.object_type = object_type
+        self.column = f"{object_type}_labels"
+        # Request vars can be empty here. They are gathered dynamically within the
+        # LabelGroupFilter class, value() method
+        super().__init__(ident=f"{object_type}_label_groups", request_vars=[])
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return encode_label_groups_for_livestatus(self.column, self.parse_value(value))
+
+    def parse_value(self, value: FilterHTTPVariables) -> LabelGroups:
+        prefix: str = self.ident  # "[host|service]_label_groups"
+        label_groups: list = []
+
+        groups_count: int = int(value.get(f"{prefix}_count") or "0")
+        labels_count: int
+        for i in range(1, groups_count + 1):
+            labels_count = int(value.get(f"{prefix}_{i}_vs_count") or "0")
+            label_group_bool: str = value.get(f"{prefix}_{i}_bool", "and")
+
+            label_group = []
+            for j in range(1, labels_count + 1):
+                operator = value.get(f"{prefix}_{i}_vs_{j}_bool", "and")
+                if vs_value := value.get(f"{prefix}_{i}_vs_{j}_vs"):
+                    label_group.append((operator, vs_value))
+
+            if label_group:
+                label_groups.append((label_group_bool, label_group))
+
+        return label_groups
+
+
+class ABCTagsQuery(Query):
     column: str
     object_type: Literal["host", "service"]
 
@@ -691,14 +731,7 @@ class LabelsQuery(Query):
         return parse_labels_value(value.get(self.request_vars[0], ""))
 
 
-class AllLabelsQuery(LabelsQuery):
-    def __init__(self, *, object_type: Literal["host", "service"]) -> None:
-        self.object_type = object_type
-        self.column = f"{object_type}_labels"
-        super().__init__(ident=f"{object_type}_labels", request_vars=[f"{object_type}_label"])
-
-
-class TagsQuery(LabelsQuery):
+class TagsQuery(ABCTagsQuery):
     def __init__(
         self,
         *,
@@ -735,7 +768,7 @@ class TagsQuery(LabelsQuery):
                 yield Label(tag_group.id, tag, negate=op != "is")
 
 
-class AuxTagsQuery(LabelsQuery):
+class AuxTagsQuery(ABCTagsQuery):
     def __init__(self, *, object_type: Literal["host"]) -> None:
         self.object_type = object_type
         self.column = f"{object_type}_tags"

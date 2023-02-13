@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-import sys
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, NamedTuple, TypeVar
+from typing import Any, cast, Generic, NamedTuple, Required, TypedDict, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, Labels
@@ -27,13 +26,6 @@ from cmk.utils.type_defs import (
     HostOrServiceConditionsSimple,
     ServiceName,
 )
-
-if sys.version_info < (3, 11):
-    # Generic typed dict
-    from typing_extensions import TypedDict
-else:
-    from typing import TypedDict
-
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
@@ -102,25 +94,19 @@ class RuleConditionsSpec(TypedDict, total=False):
     host_folder: Any
 
 
-class _RuleSpecBase(TypedDict, Generic[TRuleValue]):
-    value: TRuleValue
-    condition: RuleConditionsSpec
-
-
-class RuleSpec(Generic[TRuleValue], _RuleSpecBase[TRuleValue], total=False):
+class RuleSpec(Generic[TRuleValue], TypedDict, total=False):
+    value: Required[TRuleValue]
+    condition: Required[RuleConditionsSpec]
     id: str  # Should not be optional but nearly not test has that attribute set!
     options: RuleOptionsSpec
-
-
-Ruleset = list[RuleSpec[TRuleValue]]
 
 
 class LabelManager(NamedTuple):
     """Helper class to manage access to the host and service labels"""
 
     explicit_host_labels: dict[str, Labels]
-    host_label_rules: Ruleset[dict[str, str]]
-    service_label_rules: Ruleset[dict[str, str]]
+    host_label_rules: Sequence[RuleSpec[dict[str, str]]]
+    service_label_rules: Sequence[RuleSpec[dict[str, str]]]
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 
@@ -209,7 +195,7 @@ class RulesetMatcher:
         self._service_match_cache: dict = {}
 
     def is_matching_host_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset[bool]
+        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[bool]]
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -226,7 +212,7 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_host_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset[dict[str, TRuleValue]]
+        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[dict[str, TRuleValue]]]
     ) -> dict[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
@@ -239,7 +225,10 @@ class RulesetMatcher:
         return merged
 
     def get_host_ruleset_values(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset[TRuleValue], is_binary: bool
+        self,
+        match_object: RulesetMatchObject,
+        ruleset: Iterable[RuleSpec[TRuleValue]],
+        is_binary: bool,
     ) -> Generator:
         """Returns a generator of the values of the matched rules
         Replaces host_extra_conf"""
@@ -262,7 +251,7 @@ class RulesetMatcher:
         yield from optimized_ruleset.get(match_object.host_name, default)
 
     def is_matching_service_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset[TRuleValue]
+        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[TRuleValue]]
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -277,7 +266,7 @@ class RulesetMatcher:
         return False  # no match. Do not ignore
 
     def get_service_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset[dict[str, TRuleValue]]
+        self, match_object: RulesetMatchObject, ruleset: Iterable[RuleSpec[dict[str, TRuleValue]]]
     ) -> dict[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
@@ -290,7 +279,10 @@ class RulesetMatcher:
         return merged
 
     def get_service_ruleset_values(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset[TRuleValue], is_binary: bool
+        self,
+        match_object: RulesetMatchObject,
+        ruleset: Iterable[RuleSpec[TRuleValue]],
+        is_binary: bool,
     ) -> Generator:
         """Returns a generator of the values of the matched rules
         Replaces service_extra_conf"""
@@ -364,7 +356,7 @@ class RulesetMatcher:
         return negate
 
     def get_values_for_generic_agent(
-        self, ruleset: Ruleset[object], path_for_rule_matching: str
+        self, ruleset: Iterable[RuleSpec[object]], path_for_rule_matching: str
     ) -> list[object]:
         """Compute rulesets for "generic" hosts
 
@@ -499,7 +491,7 @@ class RulesetOptimizer:
         )
 
     def get_host_ruleset(
-        self, ruleset: Ruleset[TRuleValue], with_foreign_hosts: bool, is_binary: bool
+        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool, is_binary: bool
     ) -> PreprocessedHostRuleset[TRuleValue]:
         cache_id = id(ruleset), with_foreign_hosts
 
@@ -513,7 +505,7 @@ class RulesetOptimizer:
         return host_ruleset
 
     def _convert_host_ruleset(
-        self, ruleset: Ruleset[TRuleValue], with_foreign_hosts: bool, is_binary: bool
+        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool, is_binary: bool
     ) -> PreprocessedHostRuleset[TRuleValue]:
         """Precompute host lookup map
 
@@ -531,7 +523,7 @@ class RulesetOptimizer:
         return host_values
 
     def get_service_ruleset(
-        self, ruleset: Ruleset[TRuleValue], with_foreign_hosts: bool
+        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
     ) -> PreprocessedServiceRuleset:
         cache_id = id(ruleset), with_foreign_hosts
 
@@ -545,7 +537,7 @@ class RulesetOptimizer:
         return cached_ruleset
 
     def _convert_service_ruleset(
-        self, ruleset: Ruleset[TRuleValue], with_foreign_hosts: bool
+        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
     ) -> PreprocessedServiceRuleset:
         new_rules: PreprocessedServiceRuleset = []
         for rule in ruleset:
@@ -1046,7 +1038,9 @@ class RulesetToDictTransformer:
         self._tag_groups = tag_to_group_map
         self._transformed_ids: set[int] = set()
 
-    def transform_in_place(self, ruleset, is_service, is_binary):
+    def transform_in_place(
+        self, ruleset: Iterable[RuleSpec[TRuleValue]], is_service: bool, is_binary: bool
+    ) -> None:
         for rule in ruleset:
             if not isinstance(rule, dict):
                 new_value = self._transform_rule(rule, is_service, is_binary)

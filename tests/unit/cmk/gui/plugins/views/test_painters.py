@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -18,7 +19,7 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
-from cmk.gui.type_defs import ColumnSpec, Literal, Row
+from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
@@ -296,6 +297,21 @@ def test_registered_painters() -> None:
         "inv_networking_wlan_controller_accesspoints",
         "inv_software",
         "inv_software_applications",
+        "inv_software_applications_azure",
+        "inv_software_applications_azure_application_gateways",
+        "inv_software_applications_azure_application_gateways_rules",
+        "inv_software_applications_azure_application_gateways_rules_backends",
+        "inv_software_applications_azure_application_gateways_rules_listeners",
+        "inv_software_applications_azure_application_gateways_rules_listeners_private_ips",
+        "inv_software_applications_azure_application_gateways_rules_listeners_public_ips",
+        "inv_software_applications_azure_load_balancers",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_configs",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules_private_ips",
+        "inv_software_applications_azure_load_balancers_inbound_nat_rules_public_ips",
+        "inv_software_applications_azure_load_balancers_outbound_rules",
+        "inv_software_applications_azure_load_balancers_outbound_rules_backend_pools",
+        "inv_software_applications_azure_load_balancers_outbound_rules_backend_pools_addresses",
         "inv_software_applications_check_mk",
         "inv_software_applications_check_mk_cluster",
         "inv_software_applications_check_mk_cluster_is_cluster",

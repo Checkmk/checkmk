@@ -22,6 +22,36 @@ struct Command {
     std::string _command_line;
 };
 
+struct GlobalFlags {
+    bool enable_notifications;
+    bool execute_service_checks;
+    bool accept_passive_service_checks;
+    bool execute_host_checks;
+    bool accept_passive_hostchecks;
+    bool obsess_over_services;
+    bool obsess_over_hosts;
+    bool check_service_freshness;
+    bool check_host_freshness;
+    bool enable_flap_detection;
+    bool process_performance_data;
+    bool enable_event_handlers;
+    bool check_external_commands;
+};
+
+struct Paths {
+    std::filesystem::path crash_reports_directory;
+    std::filesystem::path license_usage_history_file;
+    std::filesystem::path inventory_directory;
+    std::filesystem::path structured_status_directory;
+    std::filesystem::path robotmk_html_log_directory;
+    std::filesystem::path logwatch_directory;
+    std::filesystem::path mkeventd_socket;
+    std::filesystem::path history_file;
+    std::filesystem::path history_archive_directory;
+    std::filesystem::path rrd_multiple_directory;
+    std::filesystem::path rrdcached_socket;
+};
+
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
@@ -30,7 +60,8 @@ public:
     virtual std::unique_ptr<const IHost> find_host(const std::string &name) = 0;
     virtual std::unique_ptr<const IHost> getHostByDesignation(
         const std::string &designation) = 0;
-    virtual bool all_hosts(std::function<bool(const IHost &)> pred) const = 0;
+    virtual bool all_of_hosts(
+        const std::function<bool(const IHost &)> &pred) const = 0;
 
     virtual std::unique_ptr<const IService> find_service(
         const std::string &host_name,
@@ -38,10 +69,13 @@ public:
     virtual std::unique_ptr<const IContactGroup> find_contactgroup(
         const std::string &name) = 0;
 
+    virtual std::unique_ptr<const IServiceGroup> find_servicegroup(
+        const std::string &name) = 0;
+
     [[nodiscard]] virtual std::unique_ptr<const IContact> find_contact(
         const std::string &name) const = 0;
-    virtual bool all_contacts(
-        std::function<bool(const IContact &)> pred) const = 0;
+    virtual bool all_of_contacts(
+        const std::function<bool(const IContact &)> &pred) const = 0;
 
     virtual std::unique_ptr<User> find_user(const std::string &name) = 0;
 
@@ -61,7 +95,6 @@ public:
         const IService &) const = 0;
     bool virtual all_of_comments(
         const std::function<bool(const IComment &)> &pred) const = 0;
-
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
     downtimes(const IHost &) const = 0;
     [[nodiscard]] virtual std::vector<std::unique_ptr<const IDowntime>>
@@ -72,36 +105,20 @@ public:
     bool virtual all_of_timeperiods(
         const std::function<bool(const ITimeperiod &)> &pred) const = 0;
 
+    virtual bool all_of_contact_groups(
+        const std::function<bool(const IContactGroup &)> &pred) const = 0;
+
+    virtual bool all_of_host_groups(
+        const std::function<bool(const IHostGroup &)> &pred) const = 0;
+
+    virtual bool all_of_service_groups(
+        const std::function<bool(const IServiceGroup &)> &pred) const = 0;
+
     virtual bool mkeventdEnabled() = 0;
 
-    [[nodiscard]] virtual std::filesystem::path mkeventdSocketPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path mkLogwatchPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path mkInventoryPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path structuredStatusPath()
-        const = 0;
-    [[nodiscard]] virtual std::filesystem::path robotMkHtmlLogPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path crashReportPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path licenseUsageHistoryPath()
-        const = 0;
-    [[nodiscard]] virtual std::filesystem::path pnpPath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path historyFilePath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;
-    [[nodiscard]] virtual std::filesystem::path rrdcachedSocketPath() const = 0;
-
     [[nodiscard]] virtual int32_t pid() const = 0;
-    [[nodiscard]] virtual bool isEnableNotifications() const = 0;
-    [[nodiscard]] virtual bool isExecuteServiceChecks() const = 0;
-    [[nodiscard]] virtual bool isAcceptPassiveServiceChecks() const = 0;
-    [[nodiscard]] virtual bool isExecuteHostChecks() const = 0;
-    [[nodiscard]] virtual bool isAcceptPassiveHostChecks() const = 0;
-    [[nodiscard]] virtual bool isObsessOverServices() const = 0;
-    [[nodiscard]] virtual bool isObsessOverHosts() const = 0;
-    [[nodiscard]] virtual bool isCheckServiceFreshness() const = 0;
-    [[nodiscard]] virtual bool isCheckHostFreshness() const = 0;
-    [[nodiscard]] virtual bool isEnableFlapDetection() const = 0;
-    [[nodiscard]] virtual bool isProcessPerformanceData() const = 0;
-    [[nodiscard]] virtual bool isEnableEventHandlers() const = 0;
-    [[nodiscard]] virtual bool isCheckExternalCommands() const = 0;
+    [[nodiscard]] virtual GlobalFlags globalFlags() const = 0;
+    [[nodiscard]] virtual Paths paths() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     programStartTime() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point
@@ -134,7 +151,8 @@ public:
 
     [[nodiscard]] virtual bool hasEventHandlers() const = 0;
 
-    [[nodiscard]] virtual bool isTrialExpired() const = 0;
+    [[nodiscard]] virtual bool isTrialExpired(
+        std::chrono::system_clock::time_point now) const = 0;
 
     [[nodiscard]] virtual double averageRunnableJobsFetcher() const = 0;
     [[nodiscard]] virtual double averageRunnableJobsChecker() const = 0;

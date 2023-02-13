@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import abc
 import copy
-import errno
 import logging
 import os
 import shutil
@@ -461,7 +460,7 @@ class LDAPUserConnector(UserConnector):
 
     @classmethod
     def _ldap_caches_filepath(cls) -> Path:
-        return Path(cmk.utils.paths.tmp_dir) / "ldap_caches"
+        return cmk.utils.paths.tmp_dir / "ldap_caches"
 
     @classmethod
     def config_changed(cls) -> None:
@@ -471,9 +470,8 @@ class LDAPUserConnector(UserConnector):
     def clear_all_ldap_caches(cls) -> None:
         try:
             shutil.rmtree(str(cls._ldap_caches_filepath()))
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
+        except FileNotFoundError:
+            pass
 
     # Bind with the default credentials
     def _default_bind(self, conn):
@@ -1167,7 +1165,7 @@ class LDAPUserConnector(UserConnector):
     #
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, user_id: UserId, password: Password[str]) -> CheckCredentialsResult:
+    def check_credentials(self, user_id: UserId, password: Password) -> CheckCredentialsResult:
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
         user_connection_id = self._connection_id_of_user(user_id)

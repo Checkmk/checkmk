@@ -479,7 +479,7 @@ def piggy_back(
         yield PiggyBackSection(
             name=name,
             service_name=service.name,
-            labels=service.labeler(host) | {"gcp/project": client.project},
+            labels=service.labeler(host) | {"cmk/gcp/projectId": client.project},
             sections=sections,
         )
 
@@ -1067,8 +1067,12 @@ HTTP_LOADBALANCER = Service(
 
 def default_labeler(asset: Asset) -> Labels:
     if "labels" in asset.asset.resource.data:
-        return {f"gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
+        return {f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
     return {}
+
+
+def gce_labeler(asset: Asset) -> Labels:
+    return {**default_labeler(asset), "cmk/gcp/gce": "instance"}
 
 
 GCE = PiggyBackService(
@@ -1077,7 +1081,7 @@ GCE = PiggyBackService(
     asset_label="id",
     metric_label="instance_id",
     name_label="name",
-    labeler=default_labeler,
+    labeler=gce_labeler,
     services=[
         Service(
             name="uptime_total",

@@ -275,7 +275,7 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
     collector = collector_factory(sections)
 
     def test_labeler(asset: agent_gcp.Asset) -> agent_gcp.Labels:
-        return {f"gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
+        return {f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
 
     piggy_back_section = agent_gcp.PiggyBackService(
         name="testing",
@@ -356,10 +356,10 @@ def test_serialize_piggy_back_section(
 
     assert output[1] == "<<<labels:sep(0)>>>"
     assert json.loads(output[2]) == {
-        "gcp/labels/van": "halen",
-        "gcp/labels/judas": "priest",
-        "gcp/labels/iron": "maiden",
-        "gcp/project": "test",
+        "cmk/gcp/labels/van": "halen",
+        "cmk/gcp/labels/judas": "priest",
+        "cmk/gcp/labels/iron": "maiden",
+        "cmk/gcp/projectId": "test",
     }
 
     section_names = {line[3:-3] for line in output[2:-1] if line.startswith("<<<")}
@@ -379,10 +379,10 @@ def test_piggy_back_sort_values_to_host(
 
 def test_piggy_back_host_labels(piggy_back_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
     assert piggy_back_sections[0].labels == {
-        "gcp/labels/van": "halen",
-        "gcp/labels/iron": "maiden",
-        "gcp/labels/judas": "priest",
-        "gcp/project": "test",
+        "cmk/gcp/labels/van": "halen",
+        "cmk/gcp/labels/iron": "maiden",
+        "cmk/gcp/labels/judas": "priest",
+        "cmk/gcp/projectId": "test",
     }
 
 
@@ -414,7 +414,11 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
 
 
 def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
-    assert gce_sections[0].labels == {"gcp/labels/t": "tt", "gcp/project": "test"}
+    assert gce_sections[0].labels == {
+        "cmk/gcp/gce": "instance",
+        "cmk/gcp/labels/t": "tt",
+        "cmk/gcp/projectId": "test",
+    }
 
 
 def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:

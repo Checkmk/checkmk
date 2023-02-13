@@ -13,6 +13,10 @@ from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
 
 
+class TimePeriodNotFoundError(KeyError):
+    pass
+
+
 def builtin_timeperiods() -> TimeperiodSpecs:
     return {
         "24X7": {
@@ -36,8 +40,20 @@ def load_timeperiods() -> TimeperiodSpecs:
 
 
 def load_timeperiod(name: str) -> TimeperiodSpec:
-    timeperiods = load_timeperiods()
-    return timeperiods[name]
+    try:
+        timeperiod = load_timeperiods()[name]
+    except KeyError:
+        raise TimePeriodNotFoundError
+    return timeperiod
+
+
+def delete_timeperiod(name: str) -> None:
+    try:
+        timeperiods = load_timeperiods()
+        del timeperiods[name]
+    except KeyError:
+        raise TimePeriodNotFoundError
+    save_timeperiods(timeperiods)
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:

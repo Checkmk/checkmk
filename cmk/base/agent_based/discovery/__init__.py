@@ -10,7 +10,7 @@ from .autodiscovery import (
     get_host_services,
     schedule_discovery_check,
 )
-from .commandline import commandline_check_discovery, commandline_discovery
+from .commandline import commandline_discovery
 from .preview import get_check_preview
 from .utils import DiscoveryMode, QualifiedDiscovery
 
@@ -18,7 +18,6 @@ __all__ = [
     "DiscoveryMode",
     "QualifiedDiscovery",
     "automation_discovery",
-    "commandline_check_discovery",
     "commandline_discovery",
     "discover_marked_hosts",
     "execute_check_discovery",

@@ -46,6 +46,7 @@ class Attr(NamedTuple):
     description: str
     enum: list[str | None] | None = None
     field: fields.Field | None = None
+    allow_none: bool = False
 
 
 ObjectType = Literal["host", "folder", "cluster"]
@@ -164,6 +165,10 @@ def collect_attributes(
         mandatory = False
         field = None
 
+        allowed_ids = [tag.id for tag in tag_group.tags]
+        if tag_group.is_checkbox_tag_group:
+            allowed_ids.insert(0, None)
+
         if context == "view":
             result.append(
                 Attr(
@@ -171,6 +176,7 @@ def collect_attributes(
                     section=section,
                     mandatory=mandatory,
                     description="" if tag_group.help is None else tag_group.help,
+                    allow_none=None in allowed_ids,
                     field=field,
                 )
             )
@@ -185,10 +191,6 @@ def collect_attributes(
             for tag in tag_group.tags:
                 description.append(f" * {_format(tag.id)}: {tag.title}")
 
-        allowed_ids = [tag.id for tag in tag_group.tags]
-        if tag_group.is_checkbox_tag_group:
-            allowed_ids.insert(0, None)
-
         result.append(
             Attr(
                 name=tag_name,
@@ -196,10 +198,10 @@ def collect_attributes(
                 mandatory=mandatory,
                 description="\n\n".join(description),
                 enum=allowed_ids,
+                allow_none=None in allowed_ids,
                 field=field,
             )
         )
-
     return result
 
 
@@ -269,8 +271,9 @@ def _field_from_attr(attr):
     # If we assigned None to enum, this would lead to a broken OpenApi specification!
     if attr.enum is not None:
         kwargs["enum"] = attr.enum
-        if None in attr.enum:
-            kwargs["allow_none"] = True
+
+    if attr.allow_none is True:
+        kwargs["allow_none"] = True
 
     if attr.name in validators:
         kwargs["validate"] = validators[attr.name]

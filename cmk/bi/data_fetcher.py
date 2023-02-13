@@ -57,7 +57,7 @@ SiteProgramStart = tuple[SiteId, int]
 
 
 def get_cache_dir() -> Path:
-    cache_dir = Path(tmp_dir, "bi_cache")
+    cache_dir = tmp_dir / "bi_cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
 

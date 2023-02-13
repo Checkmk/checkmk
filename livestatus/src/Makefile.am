@@ -17,7 +17,7 @@ ASIO_VERSION := asio-1.24.0-patched
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 LIBLIVESTATUS_PATH := $(abs_top_srcdir)/packages/livestatus
-LIBLIVESTATUS_RUN_CI := $(LIBLIVESTATUS_PATH)/run-ci
+LIBLIVESTATUS_RUN := $(LIBLIVESTATUS_PATH)/run
 LIBLIVESTATUS_INCLUDE := $(LIBLIVESTATUS_PATH)/include
 LIBLIVESTATUS_SO := $(LIBLIVESTATUS_PATH)/build/src/liblivestatus.so
 RE2_INCLUDE := $(LIBLIVESTATUS_PATH)/build/_deps/re2-src
@@ -79,7 +79,7 @@ test_neb_LDADD = \
 .PHONY: always-rebuild-livestatus-lib
 $(LIBLIVESTATUS_SO): always-rebuild-livestatus-lib
 	@echo Building lib livestatus...
-	$(LIBLIVESTATUS_RUN_CI) --build
+	$(LIBLIVESTATUS_RUN) --build
 
 unit-test: test_neb$(EXEEXT) $(LIBLIVESTATUS_SO)
 	LD_LIBRARY_PATH=$(dir $(LIBLIVESTATUS_SO)) \
@@ -99,15 +99,12 @@ liblivestatusneb_a_LD_FLAGS = \
 liblivestatusneb_a_SOURCES = \
         HostListRenderer.cc \
         HostListState.cc \
-        HostServiceState.cc \
         MacroExpander.cc \
         NagiosCore.cc \
         RRDColumn.cc \
         ServiceListState.cc \
         Store.cc \
         TableComments.cc \
-        TableContactGroups.cc \
-        TableContacts.cc \
         TableDowntimes.cc \
         TableEventConsoleEvents.cc \
         TableEventConsoleHistory.cc \

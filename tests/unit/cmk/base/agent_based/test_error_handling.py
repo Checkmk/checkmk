@@ -11,108 +11,71 @@ from cmk.utils.type_defs import ExitSpec, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.checkers import error_handling
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.error_handling import CheckResultErrorHandler
 
 
-def test_no_error_keeps_returns_status_from_callee(capsys) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("host_name")
-    state, text = error_handling._handle_success(
-        ActiveCheckResult(
+def _handler() -> CheckResultErrorHandler:
+    return CheckResultErrorHandler(
+        ExitSpec(),
+        host_name=HostName("hello"),
+        service_name="service_name",
+        plugin_name="plugin_name",
+        is_cluster=False,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
+        keepalive=False,
+    )
+
+
+def test_no_error_keeps_returns_status_from_callee() -> None:
+    handler = _handler()
+    result = handler.result
+
+    with handler:
+        check_result = ActiveCheckResult(
             0,
             "summary",
             ("details", "lots of"),
             ("metrics", "x"),
         )
-    )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
+        result = check_result.state, check_result.as_text()
 
-    assert state == 0
-    assert capsys.readouterr().out == "summary | metrics x\ndetails\nlots of\n"
+    assert result == (0, "summary | metrics x\ndetails\nlots of\n")
+    assert handler.result is None
 
 
-def test_MKTimeout_exception_returns_2(capsys) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("host_name")
-    state, text = error_handling._handle_failure(
-        MKTimeout("oops!"),
-        ExitSpec(),
-        host_name=hostname,
-        service_name="service_name",
-        plugin_name="pluging_name",
-        is_cluster=False,
-        snmp_backend=SNMPBackendEnum.CLASSIC,
-        rtc_package=None,
-        keepalive=False,
-    )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
+def test_MKTimeout_exception_returns_2() -> None:
+    handler = _handler()
+    with handler:
+        raise MKTimeout("oops!")
 
-    assert state == 2
-    assert capsys.readouterr().out == "Timed out\n"
+    assert handler.result == (2, "Timed out\n")
 
 
-def test_MKAgentError_exception_returns_2(capsys) -> None:  # type:ignore[no-untyped-def]
-    hostname = "host_name"
-    state, text = error_handling._handle_failure(
-        MKAgentError("oops!"),
-        ExitSpec(),
-        host_name=hostname,
-        service_name="service_name",
-        plugin_name="pluging_name",
-        is_cluster=False,
-        snmp_backend=SNMPBackendEnum.CLASSIC,
-        rtc_package=None,
-        keepalive=False,
-    )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
+def test_MKAgentError_exception_returns_2() -> None:
+    handler = _handler()
+    with handler:
+        raise MKAgentError("oops!")
 
-    assert state == 2
-    assert capsys.readouterr().out == "oops!\n"
+    assert handler.result == (2, "oops!\n")
 
 
-def test_MKGeneralException_returns_3(capsys) -> None:  # type:ignore[no-untyped-def]
-    hostname = "host_name"
-    state, text = error_handling._handle_failure(
-        MKGeneralException("kaputt!"),
-        ExitSpec(),
-        host_name=hostname,
-        service_name="service_name",
-        plugin_name="pluging_name",
-        is_cluster=False,
-        snmp_backend=SNMPBackendEnum.CLASSIC,
-        rtc_package=None,
-        keepalive=False,
-    )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
+def test_MKGeneralException_returns_3() -> None:
+    handler = _handler()
+    with handler:
+        raise MKGeneralException("kaputt!")
 
-    assert state == 3
-    assert capsys.readouterr().out == "kaputt!\n"
+    assert handler.result == (3, "kaputt!\n")
 
 
 @pytest.mark.usefixtures("disable_debug")
-def test_unhandled_exception_returns_3(capsys) -> None:  # type:ignore[no-untyped-def]
-    hostname = "host_name"
-    state, text = error_handling._handle_failure(
-        ValueError("unexpected :/"),
-        ExitSpec(),
-        host_name=hostname,
-        service_name="service_name",
-        plugin_name="pluging_name",
-        is_cluster=False,
-        snmp_backend=SNMPBackendEnum.CLASSIC,
-        rtc_package=None,
-        keepalive=False,
-    )
-    error_handling._handle_output(
-        text, hostname, active_check_handler=lambda *args: None, keepalive=False
-    )
+def test_unhandled_exception_returns_3() -> None:
+    handler = _handler()
+    with handler:
+        raise ValueError("unexpected :/")
 
+    assert handler.result is not None
+
+    state, text = handler.result
     assert state == 3
-    assert capsys.readouterr().out.startswith("check failed - please submit a crash report!")
+    assert text.startswith("check failed - please submit a crash report!")

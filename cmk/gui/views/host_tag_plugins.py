@@ -10,7 +10,7 @@ from cmk.gui.i18n import _
 
 from .painter.v0.base import Painter, painter_registry
 from .painter.v0.helpers import get_tag_groups
-from .sorter import register_sorter
+from .sorter import Sorter, sorter_registry
 
 
 def register_tag_plugins() -> None:
@@ -69,15 +69,21 @@ def _paint_host_tag(row, tgid):
 
 def _register_host_tag_sorters() -> None:
     for tag_group in active_config.tags.tag_groups:
-        register_sorter(
-            "host_tag_" + str(tag_group.id),
+        ident = "host_tag_" + str(tag_group.id)
+        cls = type(
+            "LegacySorter%s" % str(ident).title(),
+            (Sorter,),
             {
-                "_tag_group_id": tag_group.id,
+                "_ident": ident,
+                "_spec": {"_tag_group_id": tag_group.id},
+                "ident": property(lambda s: s._ident),
                 "title": _("Host tag:") + " " + tag_group.title,
                 "columns": ["host_tags"],
-                "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_group_id"]),
+                "load_inv": False,
+                "cmp": lambda self, r1, r2, p: _cmp_host_tag(r1, r2, self._spec["_tag_group_id"]),
             },
         )
+        sorter_registry.register(cls)
 
 
 def _cmp_host_tag(r1, r2, tgid):

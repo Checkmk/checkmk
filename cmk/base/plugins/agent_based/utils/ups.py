@@ -18,6 +18,7 @@ from ..agent_based_api.v1 import (
     State,
     type_defs,
 )
+from ..agent_based_api.v1.type_defs import CheckResult
 
 DETECT_UPS_GENERIC = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.165.3"),
@@ -191,11 +192,11 @@ def discover_ups_battery_state(
     yield Service()
 
 
-def check_ups_battery_state(  # type:ignore[no-untyped-def]
+def check_ups_battery_state(
     section_ups_battery_warnings: Optional[Battery],
     section_ups_on_battery: Optional[Battery],
     section_ups_seconds_on_battery: Optional[Battery],
-):
+) -> CheckResult:
 
     battery = _assemble_battery(
         section_ups_battery_warnings,

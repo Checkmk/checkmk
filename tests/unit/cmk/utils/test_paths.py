@@ -37,7 +37,6 @@ _STR_PATHS: Final = {
     "data_source_cache_dir",
     "snmp_scan_cache_dir",
     "include_cache_dir",
-    "tmp_dir",
     "logwatch_dir",
     "nagios_objects_file",
     "nagios_command_pipe_path",

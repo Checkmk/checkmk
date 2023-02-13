@@ -19,7 +19,7 @@ StringFilter::StringFilter(Kind kind, std::string columnName,
 
 bool StringFilter::accepts(Row row, const User & /*user*/,
                            std::chrono::seconds /*timezone_offset*/) const {
-    std::string act_string = _getValue(row);
+    const std::string act_string = _getValue(row);
     switch (oper()) {
         case RelationalOperator::equal:
         case RelationalOperator::equal_icase:

@@ -10,6 +10,8 @@ Tests for legacy tuple rulesets.
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -18,7 +20,7 @@ import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
 
 import cmk.base.config as config
-from cmk.base.config import Ruleset
+from cmk.base.config import RuleSpec
 
 
 @pytest.fixture(autouse=True)
@@ -37,7 +39,7 @@ def ts(monkeypatch):
 
 
 def test_service_extra_conf(ts: Scenario) -> None:
-    ruleset: Ruleset[str] = [
+    ruleset: Sequence[RuleSpec[str]] = [
         {"condition": {}, "options": {}, "value": "1"},
         {"condition": {}, "options": {}, "value": "2"},
         {"condition": {"host_tags": {"agent": "no-agent"}}, "options": {}, "value": "3"},
@@ -116,7 +118,7 @@ def host_ruleset():
     ]
 
 
-def test_host_extra_conf(ts: Scenario, host_ruleset: Ruleset[object]) -> None:
+def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
     assert ts.config_cache.host_extra_conf("host1", host_ruleset) == [
         {"1": True},
         {"2": True},
@@ -134,7 +136,7 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Ruleset[object]) -> None:
     ]
 
 
-def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Ruleset[object]) -> None:
+def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
     assert ts.config_cache.host_extra_conf_merged("host1", host_ruleset) == {
         "1": True,
         "2": True,
@@ -271,7 +273,9 @@ def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Ruleset[object]) -> 
         ),
     ],
 )
-def test_in_boolean_serviceconf_list(ts: Scenario, parameters: tuple[Ruleset, bool, bool]) -> None:
+def test_in_boolean_serviceconf_list(
+    ts: Scenario, parameters: tuple[Sequence[RuleSpec], bool, bool]
+) -> None:
     ruleset, outcome_host1, outcome_host2 = parameters
 
     assert (

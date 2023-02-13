@@ -450,7 +450,9 @@ class Mailbox:
             # return int(time.time()) if parsed is None else email.utils.mktime_tz(parsed)
             raw_number = verified_result(self._connection.fetch(mail_id, "INTERNALDATE"))[0]
             assert isinstance(raw_number, bytes)
-            return int(time.mktime(imaplib.Internaldate2tuple(raw_number)))
+            time_tuple = imaplib.Internaldate2tuple(raw_number)
+            assert time_tuple is not None
+            return int(time.mktime(time_tuple))
 
         if self.inbox_protocol() == "EWS":
             assert isinstance(self._connection, EWS)

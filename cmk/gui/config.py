@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import errno
 import os
 import sys
 from collections.abc import Callable, Mapping
@@ -141,9 +140,8 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
     try:
         with Path(path).open("rb") as f:
             exec(f.read(), {}, raw_config)
-    except OSError as e:
-        if e.errno != errno.ENOENT:  # No such file or directory
-            raise
+    except FileNotFoundError:
+        pass
     except Exception as e:
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (path, e))
 

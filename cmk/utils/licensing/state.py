@@ -12,7 +12,7 @@ from datetime import timedelta
 import livestatus
 
 from cmk.utils.i18n import _
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import edition, Edition
 
 
 class LicenseState(enum.Enum):
@@ -24,7 +24,7 @@ class LicenseState(enum.Enum):
 
 
 def license_status_message() -> str:
-    if is_raw_edition():
+    if not is_license_management_enabled(edition()):
         return ""
 
     if is_licensed():
@@ -45,6 +45,19 @@ def license_status_message() -> str:
     )
 
 
+def is_license_management_enabled(check_edition: Edition) -> bool:
+    if check_edition is Edition.CRE:
+        # There is no license management planned for the CRE -> Always licensed
+        return False
+
+    # CMK-10662 - In 2.2 we only enable license management for the CCE.
+    # This special case needs to be removed with 2.3
+    if check_edition is Edition.CEE or check_edition is Edition.CME:
+        return False
+
+    return True
+
+
 def is_licensed() -> bool:
     return get_license_status() is LicenseState.LICENSED
 
@@ -54,10 +67,9 @@ def is_expired_trial() -> bool:
 
 
 def get_license_status() -> LicenseState:
-    if is_raw_edition():
-        return (
-            LicenseState.LICENSED
-        )  # There is no license management for the CRE -> Always licensed
+    if not is_license_management_enabled(edition()):
+        return LicenseState.LICENSED
+
     # TODO: Implement detection of "licensed" case here
     return _get_expired_status()
 

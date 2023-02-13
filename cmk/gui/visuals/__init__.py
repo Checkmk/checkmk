@@ -417,7 +417,7 @@ def cleanup_context_filters(  # type:ignore[no-untyped-def]
 
 
 class _CombinedVisualsCache(Generic[T]):
-    _visuals_cache_dir: Final[Path] = Path(cmk.utils.paths.tmp_dir) / "visuals_cache"
+    _visuals_cache_dir: Final = cmk.utils.paths.tmp_dir / "visuals_cache"
 
     def __init__(self, visual_type: VisualTypeName) -> None:
         self._visual_type: Final = visual_type
@@ -428,7 +428,7 @@ class _CombinedVisualsCache(Generic[T]):
             _CombinedVisualsCache(visual_type).invalidate_cache()
 
     def invalidate_cache(self) -> None:
-        self._update_cache_info_timestamp()
+        self._info_filename.unlink(missing_ok=True)
 
     def _update_cache_info_timestamp(self) -> None:
         cache_info_filename = self._info_filename
@@ -459,7 +459,7 @@ class _CombinedVisualsCache(Generic[T]):
 
         if not self._info_filename.exists():
             # Create a new file for future reference (this obviously has the newest timestamp)
-            self.invalidate_cache()
+            self._update_cache_info_timestamp()
             return False
 
         if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
@@ -1551,7 +1551,11 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
         custom_field_handler(visual)
 
     render_context_specs(
-        visual["context"],
+        # During view configuration: if a MKUserError is raised BEFORE the visual context is set
+        # via 'visual["context"] = process_context_specs(context_specs)' from above then we get a
+        # KeyError here and the whole configuration is lost and has to be started from scratch.
+        # Example: If no column is choosen.
+        visual.get("context", {}),
         context_specs,
         isopen=what != "dashboards",
         help_text=help_text_context,

@@ -1,11 +1,10 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "TableContactGroups.h"
+#include "livestatus/TableContactGroups.h"
 
-#include <algorithm>
 #include <memory>
 #include <variant>  // IWYU pragma: keep
 #include <vector>
@@ -16,29 +15,18 @@
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
-#include "nagios.h"
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
-    ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<contactgroup>>(
+    const ColumnOffsets offsets{};
+    addColumn(std::make_unique<StringColumn<IContactGroup>>(
         "name", "Name of the contact group", offsets,
-        [](const contactgroup &r) {
-            return r.group_name == nullptr ? "" : r.group_name;
-        }));
-    addColumn(std::make_unique<StringColumn<contactgroup>>(
+        [](const IContactGroup &r) { return r.name(); }));
+    addColumn(std::make_unique<StringColumn<IContactGroup>>(
         "alias", "An alias of the contact group", offsets,
-        [](const contactgroup &r) {
-            return r.alias == nullptr ? "" : r.alias;
-        }));
-    addColumn(std::make_unique<ListColumn<contactgroup>>(
+        [](const IContactGroup &r) { return r.alias(); }));
+    addColumn(std::make_unique<ListColumn<IContactGroup>>(
         "members", "A list of all members of this contactgroup", offsets,
-        [](const contactgroup &r) {
-            std::vector<std::string> names;
-            for (const auto *cm = r.members; cm != nullptr; cm = cm->next) {
-                names.emplace_back(cm->contact_ptr->name);
-            }
-            return names;
-        }));
+        [](const IContactGroup &r) { return r.contactNames(); }));
 }
 
 std::string TableContactGroups::name() const { return "contactgroups"; }
@@ -46,12 +34,9 @@ std::string TableContactGroups::name() const { return "contactgroups"; }
 std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactGroups::answerQuery(Query &query, const User & /*user*/) {
-    for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
-        const contactgroup *r = cg;
-        if (!query.processDataset(Row{r})) {
-            break;
-        }
-    }
+    core()->all_of_contact_groups([&query](const IContactGroup &r) {
+        return query.processDataset(Row{&r});
+    });
 }
 
 Row TableContactGroups::get(const std::string &primary_key) const {

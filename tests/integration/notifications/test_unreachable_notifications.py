@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
 import os
 import time
 
@@ -112,10 +111,8 @@ def initial_state_fixture(site: Site) -> None:
         def rotated_log():
             try:
                 return inode_before != os.stat(site.path("var/check_mk/core/history")).st_ino
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    return False
-                raise e
+            except FileNotFoundError:
+                return False
 
         wait_until(rotated_log, timeout=10)
     else:

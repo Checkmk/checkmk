@@ -26,8 +26,8 @@ void mk_logwatch_acknowledge(Logger *logger,
                 file_name;
     std::error_code ec;
     if (!std::filesystem::remove(path, ec)) {
-        generic_error ge("Cannot acknowledge mk_logfile file '" + file_name +
-                         "' of host '" + host_name + "'");
+        const generic_error ge("Cannot acknowledge mk_logfile file '" +
+                               file_name + "' of host '" + host_name + "'");
         Warning(logger) << ge;
     }
 }

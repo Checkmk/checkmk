@@ -255,6 +255,7 @@ class InputHostGroup(InputGroup):
         description="A name used as identifier",
     )
     alias = fields.String(
+        required=True,
         description="The name used for displaying in the GUI.",
         example="Windows Servers",
     )
@@ -322,7 +323,9 @@ class InputContactGroup(InputGroup):
         description="The name of the contact group.",
     )
     alias = fields.String(
-        description="The name used for displaying in the GUI.", example="Not on Sundays."
+        required=True,
+        description="The name used for displaying in the GUI.",
+        example="Not on Sundays.",
     )
 
 

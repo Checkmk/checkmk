@@ -98,10 +98,10 @@ std::string strip(const std::string &str, const std::string &chars) {
 }
 
 std::ostream &operator<<(std::ostream &os, const escape_nonprintable &enp) {
-    OStreamStateSaver s{os};
+    const OStreamStateSaver s{os};
     os << std::hex << std::uppercase << std::setfill('0');
     for (auto ch : enp.buffer) {
-        int uch{static_cast<unsigned char>(ch)};
+        const int uch{static_cast<unsigned char>(ch)};
         if (std::isprint(uch) != 0 && ch != '\\') {
             os << ch;
         } else {
@@ -125,7 +125,7 @@ std::string replace_first(const std::string &str, const std::string &from,
     if (str.empty() && from.empty()) {
         return "";
     }
-    size_t match = str.find(from);
+    const size_t match = str.find(from);
     if (match == std::string::npos) {
         return str;
     }
@@ -140,7 +140,7 @@ std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to) {
     std::string result;
     result.reserve(str.size());
-    size_t added_after_match = from.empty() ? 1 : 0;
+    const size_t added_after_match = from.empty() ? 1 : 0;
     size_t pos = 0;
     size_t match = 0;
     while ((match = str.find(from, pos)) != std::string::npos) {

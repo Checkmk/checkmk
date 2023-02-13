@@ -14,7 +14,7 @@ REPO_DIR="$(git rev-parse --show-toplevel)"
 # in case of worktrees $REPO_DIR might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
-CMD="$*"
+CMD="${*:-bash}"
 
 # This block makes sure a local containerized session does not interfere with
 # native builds. Maybe in the future this script should not be executed in
@@ -28,7 +28,7 @@ if [ "$USER" != "jenkins" ]; then
     mkdir -p "${REPO_DIR}/build_user_home/"
 
     if [ ! -d "${REPO_DIR}/.docker_workspace/venv" ]; then
-        CMD="touch ${REPO_DIR}/Pipfile.lock; $*"
+        CMD="touch ${REPO_DIR}/Pipfile.lock; ${CMD[*]}"
     fi
 
     # Create directories for build artifacts which we want to have separated
@@ -61,7 +61,7 @@ fi
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
 if [ -t 0 ]; then
-    echo "Running in Docker container from image ${IMAGE_ID} (cmd=$*) (workdir=${PWD})"
+    echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
 fi
 
 # shellcheck disable=SC2086

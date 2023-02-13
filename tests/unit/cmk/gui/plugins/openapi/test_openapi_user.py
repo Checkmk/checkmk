@@ -16,13 +16,14 @@ from pytest import MonkeyPatch
 
 from tests.testlib.rest_api_client import RestApiClient
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
 from cmk.utils import version
 from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
+from cmk.gui.config import active_config
 from cmk.gui.plugins.openapi.endpoints.user_config import (
     _api_to_internal_format,
     _internal_to_api_format,
@@ -503,6 +504,37 @@ def test_openapi_user_edit_auth(
             params=json.dumps(remove_details),
             status=200,
             headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
+            content_type="application/json",
+        )
+
+
+@pytest.fixture(name="with_password_policy")
+def fixture_password_policy(set_config: SetConfig) -> Iterator[None]:
+    with set_config(password_policy={"min_length": 20}):
+        assert active_config.password_policy.get("min_length") == 20
+        yield
+
+
+@managedtest
+def test_openapi_create_user_password_policy(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_password_policy: None
+) -> None:
+    user_detail = {
+        "username": "shortpw",
+        "fullname": "Short Password",
+        "customer": "provider",
+        "roles": ["user"],
+        "auth_option": {"auth_type": "password", "password": "short"},  # fixture expects 20 chars
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    with freeze_time("2010-02-01 08:00:00"):
+        aut_user_auth_wsgi_app.call_method(
+            "post",
+            base + "/domain-types/user_config/collections/all",
+            params=json.dumps(user_detail),
+            headers={"Accept": "application/json"},
+            status=400,
             content_type="application/json",
         )
 
@@ -1257,3 +1289,9 @@ def test_user_with_invalid_id(api_client: RestApiClient) -> None:
     api_client.create_user(
         username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
     ).assert_status_code(400)
+
+
+def test_openapi_edit_non_existing_user_regression(api_client: RestApiClient) -> None:
+    api_client.edit_user(
+        "i_do_not_exists", fullname="I hopefully won't crash the site!", expect_ok=False
+    ).assert_status_code(404)

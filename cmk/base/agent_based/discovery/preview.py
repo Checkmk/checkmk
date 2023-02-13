@@ -22,6 +22,7 @@ from cmk.fetchers import FetcherFunction
 
 from cmk.checkers import ParserFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkers.checkresults import ServiceCheckResult
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
@@ -174,15 +175,19 @@ def _check_preview_table_row(
         else None
     )
 
-    result = checking.get_aggregated_result(
-        host_name,
-        config_cache,
-        parsed_sections_broker,
-        service,
-        check_plugin,
-        value_store_manager=value_store_manager,
-        rtc_package=None,
-    ).result
+    result = (
+        checking.get_aggregated_result(
+            host_name,
+            config_cache,
+            parsed_sections_broker,
+            service,
+            check_plugin,
+            value_store_manager=value_store_manager,
+            rtc_package=None,
+        ).result
+        if check_plugin is not None
+        else ServiceCheckResult.check_not_implemented()
+    )
 
     return _make_check_preview_entry(
         host_name=host_name,

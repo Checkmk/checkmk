@@ -11,6 +11,7 @@ be called manually.
 
 import argparse
 import logging
+import sys
 from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
@@ -38,12 +39,23 @@ from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
+from .pre_update_check import passed_pre_checks
 from .registry import update_action_registry
 from .update_state import UpdateState
 
 
-def main(args: Sequence[str]) -> bool:
+def main(args: Sequence[str]) -> int:
     arguments = _parse_arguments(args)
+
+    if not passed_pre_checks(arguments.conflict):
+        sys.exit(
+            "\nUpdate aborted due incompatible local files.\n"
+            "The Checkmk configuration has not been modified.\n\n"
+            "You can downgrade to your previous version again using "
+            "'omd update' and start the site again."
+        )
+        return False
+
     logger = _setup_logging(arguments)
 
     if arguments.debug:
@@ -61,7 +73,7 @@ def main(args: Sequence[str]) -> bool:
             'ERROR: Please repair this and run "cmk-update-config -v" '
             "BEFORE starting the site again."
         )
-        return False
+        return 1
 
 
 def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
@@ -73,6 +85,15 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
         action="count",
         default=0,
         help="Verbose mode (use multiple times for more output)",
+    )
+    p.add_argument(
+        "--conflict",
+        choices=["ask", "install", "keepold", "abort"],
+        default="ask",
+        help="If you choose 'ask', you will need to manually answer all "
+        "upcoming questions. With 'install' or 'keepold' no interaction is "
+        "needed. If you choose 'abort', the update will be aborted if "
+        "interaction is needed.",
     )
     return p.parse_args(args)
 
@@ -125,7 +146,7 @@ class ConfigUpdater:
         self._logger: Final = logger
         self.update_state: Final = update_state
 
-    def __call__(self) -> bool:
+    def __call__(self) -> int:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
 
@@ -157,7 +178,7 @@ class ConfigUpdater:
                 except Exception:
                     self._has_errors = True
                     self._logger.error(' + "%s" failed' % action.title, exc_info=True)
-                    if debug.enabled():
+                    if not action.continue_on_failure or debug.enabled():
                         raise
 
             if not self._has_errors and not is_wato_slave_site():
@@ -170,7 +191,7 @@ class ConfigUpdater:
 
         self.update_state.save()
         self._logger.log(VERBOSE, "Done")
-        return self._has_errors
+        return 1 if self._has_errors else 0
 
     def _check_failed_gui_plugins(self) -> None:
         if get_failed_plugins():

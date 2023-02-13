@@ -8,6 +8,7 @@ import time
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_win_video import inventory_win_video, parse_win_video
 
 from .utils_inventory import sort_inventory_result
@@ -93,8 +94,10 @@ _INSTALLED_DATE = 123
         ),
     ],
 )
-def test_inventory_win_video(  # type:ignore[no-untyped-def]
-    monkeypatch, string_table, expected_result
+def test_inventory_win_video(
+    monkeypatch: pytest.MonkeyPatch,
+    string_table: StringTable,
+    expected_result: InventoryResult,
 ) -> None:
     monkeypatch.setattr(time, "mktime", lambda s: _INSTALLED_DATE)
     assert sort_inventory_result(

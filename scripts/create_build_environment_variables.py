@@ -38,7 +38,12 @@ from subprocess import check_output, DEVNULL
 assert sys.version_info.major == 3
 
 
+def cmd_out(cmd, **args):
+    return check_output(["sh", "-c", cmd], text=True, **args)
+
+
 def main():
+
     print("# generated using create_build_environment_variables.py, don't modify directly")
     print(
         "\n".join(
@@ -53,10 +58,8 @@ def main():
     checksums = [
         (
             f"sha1sum:{path}",
-            check_output(
+            cmd_out(
                 f"find $(realpath {path}) -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum",
-                shell=True,
-                text=True,
                 stderr=DEVNULL,
             )
             .split(" ", 1)[0]
@@ -75,7 +78,7 @@ def main():
         )
 
     evals = [
-        (f"eval:{name}", check_output(expr, shell=True, text=True).strip())
+        (f"eval:{name}", cmd_out(expr).strip())
         for e in sys.argv[1:]
         for op, args in (e.split(":", 1),)
         if op == "eval"

@@ -5,8 +5,7 @@
 
 
 from collections import Counter
-from collections.abc import Callable, Container, Mapping
-from functools import partial
+from collections.abc import Container, Mapping
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -16,19 +15,11 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.labels import HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    Item,
-    SectionName,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
 
 from cmk.fetchers import FetcherFunction
 
-from cmk.checkers import error_handling, ParserFunction, SummarizerFunction
-from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers import ParserFunction
 from cmk.checkers.discovery import AutochecksStore
 
 import cmk.base.core
@@ -44,7 +35,6 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services
-from ._discovery import execute_check_discovery
 from ._host_labels import (
     analyse_host_labels,
     discover_cluster_labels,
@@ -53,7 +43,7 @@ from ._host_labels import (
 )
 from .utils import QualifiedDiscovery
 
-__all__ = ["commandline_discovery", "commandline_check_discovery"]
+__all__ = ["commandline_discovery"]
 
 
 def commandline_discovery(
@@ -236,63 +226,3 @@ def _commandline_discovery_on_host(
     for result in check_parsing_errors(parsed_sections_broker.parsing_errors()):
         for line in result.details:
             console.warning(line)
-
-
-def commandline_check_discovery(
-    host_name: HostName,
-    *,
-    config_cache: ConfigCache,
-    fetcher: FetcherFunction,
-    parser: ParserFunction,
-    summarizer: SummarizerFunction,
-    active_check_handler: Callable[[HostName, str], object],
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    keepalive: bool,
-) -> ServiceState:
-    return error_handling.check_result(
-        partial(
-            _commandline_check_discovery,
-            host_name,
-            config_cache=config_cache,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=section_plugins,
-            check_plugins=check_plugins,
-            find_service_description=find_service_description,
-        ),
-        exit_spec=config_cache.exit_code_spec(host_name),
-        host_name=host_name,
-        service_name="Check_MK Discovery",
-        plugin_name="discover",
-        is_cluster=config_cache.is_cluster(host_name),
-        snmp_backend=config_cache.get_snmp_backend(host_name),
-        active_check_handler=active_check_handler,
-        keepalive=keepalive,
-    )
-
-
-def _commandline_check_discovery(
-    host_name: HostName,
-    *,
-    config_cache: ConfigCache,
-    fetcher: FetcherFunction,
-    parser: ParserFunction,
-    summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-) -> ActiveCheckResult:
-    fetched = fetcher(host_name, ip_address=None)
-    return execute_check_discovery(
-        host_name,
-        config_cache=config_cache,
-        fetched=((f[0], f[1]) for f in fetched),
-        parser=parser,
-        summarizer=summarizer,
-        section_plugins=section_plugins,
-        check_plugins=check_plugins,
-        find_service_description=find_service_description,
-    )

@@ -73,7 +73,7 @@ std::unique_ptr<Column> Table::dynamicColumn(const std::string &colname,
         throw std::runtime_error("missing separator in dynamic column '" +
                                  colname + "'");
     }
-    std::string colname2 = rest.substr(0, sep_pos);
+    const std::string colname2 = rest.substr(0, sep_pos);
     if (colname2.empty()) {
         throw std::runtime_error("empty column name for dynamic column '" +
                                  colname + "'");

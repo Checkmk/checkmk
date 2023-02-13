@@ -531,7 +531,7 @@ def _valuespec_special_agents_aws() -> Migrate:
             ],
             optional_keys=["overall_tags", "proxy_details"],
         ),
-        migrate=lambda p: p.setdefault("piggyback_naming_convention", "ip_region_instance"),
+        migrate=lambda p: {"piggyback_naming_convention": "ip_region_instance"} | p,
     )
 
 

@@ -345,7 +345,3 @@ clean: install-clean
 	$(RM) -r $(BUILD_HELPER_DIR)
 	$(RM) -r $(BUILD_BASE_DIR)
 	$(RM) -r $(PACKAGE_BUILD_DIR)
-
-setup:
-	@echo "Please run the build in a docker container."
-	@echo "Dockerfiles for all Distros can be found under 'buildscripts/infrastructure/build-nodes/'."

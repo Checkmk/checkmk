@@ -21,10 +21,12 @@ class UpdateAction(ABC):
         name: str,
         title: str,
         sort_index: int,
+        continue_on_failure: bool = True,
     ) -> None:
         self.name: Final = name
         self.title: Final = title
         self.sort_index: Final = sort_index
+        self.continue_on_failure: Final = continue_on_failure
 
     @abstractmethod
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:

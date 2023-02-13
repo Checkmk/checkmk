@@ -3485,6 +3485,10 @@ msgid "Add to monitoring configuration"
 msgstr "Adaugă configurație de ajustare"
 
 #, fuzzy
+msgid "Add to query"
+msgstr "Adaugă Contoar"
+
+#, fuzzy
 msgid "Add to trusted CAs"
 msgstr "Adaugă la Favorite"
 
@@ -4385,9 +4389,6 @@ msgstr ""
 msgid "All customers"
 msgstr ""
 
-msgid "All customers with host and service statistics"
-msgstr ""
-
 #, fuzzy
 msgid "All directions"
 msgstr "Acțiune"
@@ -4738,6 +4739,10 @@ msgstr ""
 msgid "Always install Python with agent"
 msgstr ""
 
+#, fuzzy
+msgid "Always keep vanished clustered services"
+msgstr "Vizibilitatea Elementelor/Serviciilor"
+
 msgid "Always report OK"
 msgstr ""
 
@@ -4920,6 +4925,10 @@ msgid "Analyzing the Checkmk site configuration"
 msgstr "Activare Configurare"
 
 #, fuzzy
+msgid "And"
+msgstr "Adaugă Condiție"
+
+#, fuzzy
 msgid "Android version regular expression"
 msgstr "Mesajul Text"
 
@@ -5060,6 +5069,10 @@ msgstr ""
 
 msgid "Application / Syslog-Tag"
 msgstr ""
+
+#, fuzzy
+msgid "Application Gateway"
+msgstr "Numele Aplicatiei"
 
 #, fuzzy
 msgid "Application ID"
@@ -6037,6 +6050,10 @@ msgid "Azure Agent Info"
 msgstr ""
 
 #, fuzzy
+msgid "Azure Application Gateway"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
 msgid "Azure Blob Storage"
 msgstr "Conexiuni Active"
 
@@ -6915,8 +6932,29 @@ msgid ""
 msgstr ""
 
 msgid ""
-"By activating averaging, Check_MK will compute the average of the total CPU "
-"utilization over a given interval. If you have defined alerting levels then "
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the resident memory utilization, in percentage of total RAM. If you have "
+"defined alerting levels then these will automatically be applied on the "
+"averaged value. This helps to mask out short peaks. "
+msgstr ""
+
+msgid ""
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the resident memory utilization. If you have defined alerting levels then "
+"these will automatically be applied on the averaged value. This helps to "
+"mask out short peaks. "
+msgstr ""
+
+msgid ""
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the total CPU utilization. If you have defined alerting levels then these "
+"will automatically be applied on the averaged value. This helps to mask out "
+"short peaks. "
+msgstr ""
+
+msgid ""
+"By activating averaging, Checkmk will compute an exponential moving average "
+"of the virtual memory utilization. If you have defined alerting levels then "
 "these will automatically be applied on the averaged value. This helps to "
 "mask out short peaks. "
 msgstr ""
@@ -7113,6 +7151,17 @@ msgid ""
 "sites don't perform automatic user synchronizations with the configured "
 "connections. But you can configure each site to either synchronize the users "
 "with all configured connections or a specific list of connections."
+msgstr ""
+
+msgid ""
+"By default we keep a record of vanished services on the node if they are "
+"assigned to a cluster. When a clustered service switches from one node to "
+"another, it might not be seen on either node for one check cycle. Keeping "
+"clustered services indefinitely keeps us from loosing them in this case. "
+"However this means that truly vanished clustered servces will never be "
+"removed from the cluster. If you choose to include clustered service in the "
+"removal operation, vanished services will be removed from clusters, at the "
+"risk of loosing services due to the described race condition."
 msgstr ""
 
 #, python-brace-format
@@ -7387,9 +7436,6 @@ msgstr ""
 msgid "CPU"
 msgstr ""
 
-msgid "CPU Averaging"
-msgstr ""
-
 msgid "CPU Load via WMI"
 msgstr ""
 
@@ -7407,6 +7453,10 @@ msgstr "Dezactiveaza Notificarile"
 
 msgid "CPU Utilization of Clusters"
 msgstr ""
+
+#, fuzzy
+msgid "CPU averaging"
+msgstr "Mesajul Text"
 
 msgid "CPU in percent"
 msgstr ""
@@ -7690,10 +7740,6 @@ msgstr ""
 msgid ""
 "Cannot activate changes: The license usage history is older than five days."
 msgstr ""
-
-#, fuzzy
-msgid "Cannot be a certificate chain"
-msgstr "Notificari"
 
 msgid "Cannot calculate graph recipes"
 msgstr ""
@@ -8715,11 +8761,11 @@ msgid "Checkmk service provider metadata (generated automatically)"
 msgstr "Starea porturilor pentru inventariere"
 
 msgid ""
-"Checkmk signs its SAML 2.0 requests to your identity provider. You can use "
-"the certificate that is shipped with Checkmk. Alternatively, if your "
-"organisation manages its own certificates, you can also add a custom "
-"certificate. Note that the public certificate needs to be a single "
-"certificate (not a certificate chain)."
+"Checkmk signs your SAML 2.0 requests to your identity provider. You can use "
+"the certificate that comes with Checkmk. Alternatively, if your organization "
+"manages its own certificates, you can add a custom certificate. Note that "
+"the public certificate must be a single certificate (not a certificate "
+"chain)."
 msgstr ""
 
 msgid "Checkmk site objects"
@@ -8959,11 +9005,6 @@ msgstr ""
 
 msgid ""
 "Choose what modem is used. Currently supported is only Teltonika-TRB140."
-msgstr ""
-
-msgid ""
-"Choose whether roles should be mapped. Specify the attribute name, and the "
-"corresponding mappings for each role."
 msgstr ""
 
 msgid ""
@@ -9339,18 +9380,6 @@ msgstr ""
 msgid "Cloud Based Environments"
 msgstr ""
 
-#, fuzzy
-msgid "Cloud Functions"
-msgstr "Conexiuni Active"
-
-#, fuzzy
-msgid "Cloud Run"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Cloud SQL"
-msgstr "Adresă"
-
 msgid "Cloud based environments"
 msgstr ""
 
@@ -9547,8 +9576,9 @@ msgstr ""
 msgid "Column Title"
 msgstr "(fără titlu)"
 
+#, fuzzy
 msgid "Column headers"
-msgstr ""
+msgstr "(fără titlu)"
 
 #, fuzzy
 msgid "Column title"
@@ -11405,6 +11435,10 @@ msgstr ""
 msgid "Credentials for selected databases"
 msgstr "Conexiuni Active"
 
+msgid ""
+"Credentials not configured or invalid. Please review the license settings"
+msgstr ""
+
 msgid "Credentials to access the Database"
 msgstr ""
 
@@ -11589,6 +11623,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Current image:"
+msgstr "Parola"
+
+#, fuzzy
+msgid "Current license state"
 msgstr "Parola"
 
 #, fuzzy
@@ -13216,8 +13254,24 @@ msgstr "Sterge Elementul"
 msgid "Delete selected"
 msgstr "Sterge Elementul"
 
+#, fuzzy, python-format
+msgid "Delete selected %s"
+msgstr "Sterge Elementul"
+
 #, fuzzy
 msgid "Delete selected MIBs"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete selected aggregations"
+msgstr "Agregare noua"
+
+#, fuzzy
+msgid "Delete selected hosts"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete selected rules"
 msgstr "Sterge Elementul"
 
 #, fuzzy
@@ -14770,6 +14824,10 @@ msgstr ""
 msgid "Distinguished name for binding"
 msgstr ""
 
+#, fuzzy
+msgid "Distribute response"
+msgstr "Notificari"
+
 # georgem ##############
 #, fuzzy
 msgid "Distributed monitoring"
@@ -14810,8 +14868,9 @@ msgstr "Activare schimbări"
 msgid "Do not add a link to this page in sidebar"
 msgstr "Adaugă un snapin pe sidebar"
 
+#, fuzzy
 msgid "Do not add column headers"
-msgstr ""
+msgstr "doua nivele"
 
 msgid "Do not alert on connection loss"
 msgstr ""
@@ -15240,30 +15299,6 @@ msgstr ""
 msgid "Do you really want to %s"
 msgstr ""
 
-#, python-format
-msgid "Do you really want to delete the selected %s?"
-msgstr ""
-
-#, fuzzy
-msgid "Do you really want to delete the selected MIBs?"
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-msgid "Do you really want to delete the selected aggregations?"
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-msgid "Do you really want to delete the selected hosts?"
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-msgid "Do you really want to delete the selected rules?"
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-msgid "Do you really want to delete the selected users?"
-msgstr "O agregare legată de un singur element"
-
 #, fuzzy
 msgid "Do you really want to move the selected aggregations?"
 msgstr "O agregare legată de un singur element"
@@ -15272,25 +15307,9 @@ msgstr "O agregare legată de un singur element"
 msgid "Do you really want to move the selected rules?"
 msgstr "O agregare legată de un singur element"
 
-#, fuzzy
-msgid ""
-"Do you really want to remove the TLS registration of the hosts in this "
-"folder?<br>This does not affect hosts in subfolders."
-msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-msgid ""
-"Do you really want to remove the TLS registration of the selected hosts?"
-msgstr "O agregare legată de un singur element"
-
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core!"
-msgstr ""
-
-msgid ""
-"Do you really want to reset this configuration variable back to its default "
-"value?"
 msgstr ""
 
 #, fuzzy
@@ -15433,8 +15452,9 @@ msgstr ""
 msgid "Don't use password"
 msgstr "Parolâ Administrator:"
 
+#, fuzzy
 msgid "Don't use quotes"
-msgstr ""
+msgstr "Parolâ Administrator:"
 
 msgid "Don't wait for document body"
 msgstr ""
@@ -16732,6 +16752,9 @@ msgid ""
 "Encrypted connections to this site are made without certificate verification."
 msgstr ""
 
+msgid "Encrypted private keys are not supported"
+msgstr ""
+
 #, fuzzy
 msgid "Encryption"
 msgstr "Acțiune"
@@ -17970,6 +17993,10 @@ msgstr "trimite notificare"
 msgid "Failed provisionings"
 msgstr "Optiuni tabel"
 
+#, fuzzy
+msgid "Failed requests"
+msgstr "cereri"
+
 msgid "Failed requests to Adressbook files"
 msgstr ""
 
@@ -18540,10 +18567,6 @@ msgid "Files"
 msgstr ""
 
 #, fuzzy
-msgid "Filestore"
-msgstr "Spațiu liber exact"
-
-#, fuzzy
 msgid "Filesystem"
 msgstr "Spațiu liber exact"
 
@@ -18965,6 +18988,17 @@ msgid ""
 "address to check whether or not a host is using this ip address. Each new "
 "found host will be added to the current folder by it's hostname, when "
 "resolvable via DNS, or by it's IP address."
+msgstr ""
+
+msgid ""
+"For each running EC2 instance a piggyback host is created. We offer "
+"different ways of naming these hosts. Note, that not every host name is "
+"pingable. Moreover, changes in the piggyback name will cause the piggyback "
+"host to be reset. If you choose `IP - region - instance ID`, then the name "
+"includes the private IP address, the region and the instance ID: {Private "
+"IPv4 address}-{region}-{Instance ID}. This uniquely identifies the EC2 "
+"instance. This format was included with the 1.6.0 release of Checkmk and has "
+"been the only format until 2.2.0. This host name can not be pinged."
 msgstr ""
 
 msgid ""
@@ -19455,10 +19489,6 @@ msgstr ""
 msgid "GByte/s"
 msgstr ""
 
-#, fuzzy
-msgid "GCE Storage"
-msgstr "Dimensiunea Maxima"
-
 msgid "GCP Cost"
 msgstr ""
 
@@ -19827,9 +19857,6 @@ msgid "Google Cloud Platform"
 msgstr ""
 
 msgid "Google Cloud Platform (GCP)"
-msgstr ""
-
-msgid "Google Cloud Storage (GCS)"
 msgstr ""
 
 msgid "Google Compute Engine (GCE)"
@@ -20260,9 +20287,6 @@ msgstr "cereri/sec"
 #, fuzzy
 msgid "HTTP requests per second"
 msgstr "cereri/sec"
-
-msgid "HTTP(S) load balancer"
-msgstr ""
 
 msgid "HTTP, TCP, Email, ..."
 msgstr ""
@@ -20708,8 +20732,26 @@ msgstr ""
 
 msgid ""
 "Here you can define levels on the CPU utilization of single processes. For "
-"performance reasons CPU Averaging will not be applied to to the levels of "
+"performance reasons CPU averaging will not be applied to to the levels of "
 "single processes."
+msgstr ""
+
+msgid ""
+"Here you can define levels on the resident memory utilization (in percentage "
+"of total RAM) of single processes. For performance reasons resident memory "
+"averaging will not be applied to to the levels of single processes."
+msgstr ""
+
+msgid ""
+"Here you can define levels on the resident memory utilization of single "
+"processes. For performance reasons resident memory averaging will not be "
+"applied to to the levels of single processes."
+msgstr ""
+
+msgid ""
+"Here you can define levels on the virtual memory utilization of single "
+"processes. For performance reasons virtual memory averaging will not be "
+"applied to to the levels of single processes."
 msgstr ""
 
 #, python-format
@@ -22263,6 +22305,10 @@ msgstr ""
 
 msgid "IO Latency"
 msgstr ""
+
+#, fuzzy
+msgid "IP - region - instance ID"
+msgstr "Adaugă instanță NGINX"
 
 msgid "IP Address"
 msgstr ""
@@ -23953,6 +23999,10 @@ msgid "Include unmonitored time"
 msgstr ""
 
 #, fuzzy
+msgid "Include vanished clustered services during removal"
+msgstr "Grup nou"
+
+#, fuzzy
 msgid "Inclusion patterns"
 msgstr "Adaugă model/tipar"
 
@@ -24602,6 +24652,10 @@ msgstr ""
 msgid "Invalid call: The profile is missing."
 msgstr ""
 
+#, fuzzy
+msgid "Invalid certificate"
+msgstr "Adaugă notificare"
+
 #, python-format
 msgid "Invalid certificate file: %s"
 msgstr ""
@@ -24860,6 +24914,10 @@ msgstr ""
 msgid "Invalid value: %s"
 msgstr " Parametrul este: %r"
 
+#, fuzzy, python-format
+msgid "Invalid verification response: %s"
+msgstr "Notificari"
+
 msgid "Invalid vertical range: from must be lower than to"
 msgstr ""
 
@@ -24952,6 +25010,10 @@ msgstr ""
 msgid "Iptables filter configuration"
 msgstr "Activare Configurare"
 
+#, fuzzy
+msgid "Is"
+msgstr "Adaugă Contoar"
+
 msgid "Is CA"
 msgstr ""
 
@@ -24970,6 +25032,9 @@ msgstr ""
 
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
+msgstr ""
+
+msgid "Is not"
 msgstr ""
 
 msgid "Is not available"
@@ -25660,6 +25725,11 @@ msgid "Labels"
 msgstr ""
 
 msgid ""
+"Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
+"\"."
+msgstr ""
+
+msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
 "os_family:linux</tt>."
 msgstr ""
@@ -26025,6 +26095,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 #, fuzzy
 msgid "Levels Services"
 msgstr "servicii"
+
+#, fuzzy
+msgid "Levels app gateway"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels byte count"
@@ -26670,6 +26744,14 @@ msgstr "Activare Configurare"
 #, fuzzy
 msgid "License verification mode"
 msgstr "Activare Configurare"
+
+#, fuzzy
+msgid "License verification state"
+msgstr "Activare Configurare"
+
+#, fuzzy
+msgid "Licensed"
+msgstr "Stare adiministrativă"
 
 #, fuzzy
 msgid "Licensing"
@@ -28767,6 +28849,14 @@ msgid "Max. time behind the master"
 msgstr ""
 
 #, fuzzy
+msgid "Max. waiting time for a connection."
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "Max. waiting time for a response."
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
 msgid "Max.&nbsp;Vers.: "
 msgstr "Nr. Max. Versiuni"
 
@@ -29454,10 +29544,6 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Memory warning at"
 msgstr ""
 
-#, fuzzy
-msgid "Memorystore Redis"
-msgstr "cereri"
-
 msgid "Merge even if there is an acknowledged event"
 msgstr ""
 
@@ -29552,6 +29638,14 @@ msgid "Meta usage"
 msgstr "% utilizare"
 
 msgid "Metadata endpoint"
+msgstr ""
+
+msgid ""
+"Metadata information is exchanged between Checkmk and your identity "
+"provider, containing configuration information for successful SAML "
+"communication. This includes the single sign-on endpoint and bindings used "
+"by the identity provider, detailing the certificates used for signatures and "
+"encryption."
 msgstr ""
 
 msgid "Method"
@@ -30492,6 +30586,10 @@ msgstr "Agregare noua"
 #, fuzzy
 msgid "Move rules"
 msgstr "Arata regulile de utilizator"
+
+#, fuzzy
+msgid "Move selected hosts"
+msgstr "Sterge Elementul"
 
 msgid "Move self"
 msgstr ""
@@ -31614,6 +31712,14 @@ msgstr ""
 msgid "No levels"
 msgstr "doua nivele"
 
+#, fuzzy
+msgid "No levels on inodes"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "No license verification performed yet"
+msgstr "Activare Configurare"
+
 msgid "No logging"
 msgstr ""
 
@@ -32519,6 +32625,14 @@ msgid "Number of clients connected to a Device."
 msgstr ""
 
 #, fuzzy
+msgid "Number of cloud hosts"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "Number of cloud services"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Number of columns"
 msgstr "Numarul maxim de conexiuni"
 
@@ -32619,6 +32733,10 @@ msgstr "Numarul maxim de mesaje"
 msgid "Number of failed paths"
 msgstr ""
 
+#, fuzzy
+msgid "Number of failed requests upper levels"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Number of fan failures"
 msgstr ""
 
@@ -32633,6 +32751,10 @@ msgstr ""
 
 msgid "Number of handles that are currently open for output for the queue."
 msgstr ""
+
+#, fuzzy
+msgid "Number of healthy hosts lower levels"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of hops"
@@ -33435,10 +33557,6 @@ msgstr "Activare Configurare"
 msgid "Online verification procedure was not successful"
 msgstr "Numele Aplicatiei"
 
-#, fuzzy, python-format
-msgid "Online verification procedure was not successful, reason: %s"
-msgstr "Numele Aplicatiei"
-
 #, fuzzy
 msgid "Online verification procedure was successful"
 msgstr "Numele Aplicatiei"
@@ -33809,6 +33927,9 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Options: %s"
 msgstr "Grup nou"
+
+msgid "Or"
+msgstr ""
 
 msgid "Oracle"
 msgstr ""
@@ -35180,6 +35301,10 @@ msgid "Persistent Volume Claims"
 msgstr "cu comentariu"
 
 #, fuzzy
+msgid "Persistent Volume Claims & Persistent Volumes"
+msgstr "cu comentariu"
+
+#, fuzzy
 msgid "Persistent comment"
 msgstr "cu comentariu"
 
@@ -35267,12 +35392,6 @@ msgstr ""
 msgid "Physical disks"
 msgstr ""
 
-msgid "Physical memory usage"
-msgstr ""
-
-msgid "Physical memory usage, in percentage of total RAM"
-msgstr ""
-
 #, fuzzy
 msgid "Physical port states to discover"
 msgstr "Starea porturilor pentru inventariere"
@@ -35301,6 +35420,10 @@ msgstr ""
 
 msgid "Piggyback name of virtual machines"
 msgstr ""
+
+#, fuzzy
+msgid "Piggyback names"
+msgstr "Agregare noua"
 
 #, fuzzy
 msgid "Piggyback services to monitor"
@@ -36297,6 +36420,10 @@ msgstr ""
 msgid "Privacy protocol"
 msgstr ""
 
+#, fuzzy
+msgid "Private IP DNS name"
+msgstr "Numele Elementului"
+
 msgid "Private and shared memory"
 msgstr ""
 
@@ -36366,14 +36493,6 @@ msgid "Process Matching"
 msgstr ""
 
 #, fuzzy
-msgid "Process Name"
-msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Process Name Matching"
-msgstr "Numele Elementului"
-
-#, fuzzy
 msgid "Process Path Matching"
 msgstr "Numele Elementului"
 
@@ -36405,8 +36524,16 @@ msgstr "Inventariere in masa"
 msgid "Process handles"
 msgstr "Numele Elementului"
 
+#, fuzzy
+msgid "Process name"
+msgstr "Numele Elementului"
+
 msgid "Process name for usage in the Nagios service description"
 msgstr ""
+
+#, fuzzy
+msgid "Process name matching"
+msgstr "Numele Elementului"
 
 msgid "Process new logfiles from the beginning"
 msgstr ""
@@ -37824,6 +37951,14 @@ msgstr ""
 msgid "Remove TLS registration"
 msgstr "Numele Elementului"
 
+#, fuzzy
+msgid "Remove TLS registration of hosts in this folder"
+msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Remove TLS registration of selected hosts"
+msgstr "Numele Elementului"
+
 msgid "Remove Windows Firewall configuration if present"
 msgstr ""
 
@@ -38368,6 +38503,10 @@ msgid "Reset all rule hit counters to zero"
 msgstr ""
 
 #, fuzzy
+msgid "Reset configuration variable to default value"
+msgstr "Notificari"
+
+#, fuzzy
 msgid "Reset counters"
 msgstr "Reseteaza contoarele"
 
@@ -38392,8 +38531,25 @@ msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr ""
 
 #, fuzzy
+msgid "Resident memory averaging"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Resident memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
+
+msgid "Resident memory usage (in percentage of total RAM) averaging"
+msgstr ""
+
+msgid "Resident memory usage (in percentage of total RAM) of a single process"
+msgstr ""
+
+#, fuzzy
+msgid "Resident memory usage, in percentage of total RAM"
+msgstr "Nivelurile maxime pentru voltaj"
+
+msgid "Resident memory utilization of a single process"
+msgstr ""
 
 msgid "Resident size"
 msgstr ""
@@ -39666,6 +39822,10 @@ msgstr "Salveaza si Testeaza"
 msgid "Save filters & go to designer"
 msgstr "Salveaza si mergi la"
 
+#, fuzzy
+msgid "Save response"
+msgstr "Notificari"
+
 #, python-format
 msgid "Save this %s and go to"
 msgstr ""
@@ -40135,6 +40295,11 @@ msgid ""
 "online documentation for more details."
 msgstr ""
 
+msgid ""
+"Select if roles should be mapped. For each role, specify the attribute name "
+"and corresponding mappings."
+msgstr ""
+
 msgid "Select individual files from list"
 msgstr ""
 
@@ -40164,10 +40329,12 @@ msgstr ""
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
-"pods will be monitored in the same manner as regular pods. Your Dynamic host "
-"management rule should be configured accordingly to avoid that the piggyback "
-"hosts for terminated CronJob pods are kept for too long. This 'Pods of "
-"CronJobs' option has no effect if Pods are not monitored"
+"pods will be monitored in the same manner as regular pods. Persistent Volume "
+"Claims will only appear in the respective object piggyback host instead of "
+"having their own host. Your Dynamic host management rule should be "
+"configured accordingly to avoid that the piggyback hosts for terminated "
+"CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
+"effect if Pods are not monitored"
 msgstr ""
 
 msgid ""
@@ -40383,8 +40550,9 @@ msgstr ""
 msgid "Separate check"
 msgstr "Verificare activă"
 
+#, fuzzy
 msgid "Separator"
-msgstr ""
+msgstr "Verificare activă"
 
 msgid "September"
 msgstr ""
@@ -41831,10 +41999,6 @@ msgstr ""
 msgid "Show/Hide password"
 msgstr "Parola"
 
-#, fuzzy
-msgid "Shows number of alerts grouped for each service."
-msgstr "Arata regulile de utilizator"
-
 msgid "Shows the Checkmk logo."
 msgstr ""
 
@@ -42581,7 +42745,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
 "groups are <b>%s</b>, your contact groups are <b>%s</b>."
 msgstr ""
 
@@ -44413,8 +44577,8 @@ msgid "Submit report"
 msgstr "Adaugă element"
 
 #, fuzzy
-msgid "Submit verification request"
-msgstr "Notificari"
+msgid "Submit request and get response"
+msgstr "% utilizare"
 
 msgid "Submitting crash report..."
 msgstr ""
@@ -46098,13 +46262,11 @@ msgid "The attribute used as the e-mail of the user."
 msgstr ""
 
 msgid ""
-"The attribute used as the full name of the user. If this is not specified, "
-"the user ID is used."
+"The attribute used as the full name of the user. If not specified, the user "
+"ID is used."
 msgstr ""
 
-msgid ""
-"The attribute used to identify an individual user. This attribute must be "
-"unique."
+msgid "The attribute used to identify an individual user. It must be unique."
 msgstr ""
 
 msgid ""
@@ -46117,8 +46279,8 @@ msgstr ""
 
 msgid ""
 "The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups must exist in Checkmk so that a mapping "
-"can be done."
+"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
+"mapped."
 msgstr ""
 
 msgid ""
@@ -48700,6 +48862,10 @@ msgstr ""
 msgid "The vault name"
 msgstr "foloseste numele portului"
 
+#, fuzzy
+msgid "The verification cannot be started due to missing public keys"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr ""
@@ -49443,6 +49609,9 @@ msgid ""
 "This directory will be used for temporarily storing backups before uploading "
 "and after downloading. You can for example use the <tt>/tmp</tt> directory. "
 "Please note that Checkmk will not clean up this directory."
+msgstr ""
+
+msgid "This does not affect hosts in subfolders."
 msgstr ""
 
 msgid "This element is currently in a scheduled downtime."
@@ -51461,6 +51630,15 @@ msgstr ""
 msgid "This variable is configured in <a href=\"%s\">global settings</a>."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "This verification response cannot be uploaded: %s"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy
+msgid ""
+"This verification response cannot be verified due to missing public keys"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 msgid "This view as PDF"
 msgstr ""
 
@@ -51882,6 +52060,9 @@ msgstr ""
 msgid "Time stamp format"
 msgstr ""
 
+msgid "Time to alert when PVC status is in pending state"
+msgstr ""
+
 #, fuzzy
 msgid "Time to connect"
 msgstr "Portul TCP pentru conexiune"
@@ -51909,14 +52090,6 @@ msgid ""
 "Time to wait for a connection to an instance to open before continuing with "
 "the next instance. If unset, the default value from ADO is used."
 msgstr ""
-
-#, fuzzy
-msgid "Time to wait for a connection."
-msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-msgid "Time to wait for a response."
-msgstr "Numarul maxim de conexiuni"
 
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr ""
@@ -55801,6 +55974,10 @@ msgid "Vanished (checked, but no longer exist)"
 msgstr ""
 
 #, fuzzy
+msgid "Vanished clustered services"
+msgstr "Vizibilitatea Elementelor/Serviciilor"
+
+#, fuzzy
 msgid "Vanished clustered services - located on cluster host"
 msgstr "Grup nou"
 
@@ -55916,16 +56093,17 @@ msgstr " pe siteul de monitorizare: "
 msgid "Verification"
 msgstr "trimite notificare"
 
-#, fuzzy
-msgid "Verification failed"
+#, fuzzy, python-format
+msgid "Verification %s: %s"
 msgstr "trimite notificare"
-
-msgid "Verification failed (Checkmk)"
-msgstr ""
 
 #, fuzzy
 msgid "Verification failed (license server)"
 msgstr "Numele Aplicatiei"
+
+#, fuzzy, python-format
+msgid "Verification failed: %s"
+msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Verification successful"
@@ -56118,8 +56296,16 @@ msgstr ""
 msgid "Virtual machine (for example ESX) heartbeat status"
 msgstr ""
 
+#, fuzzy
+msgid "Virtual memory averaging"
+msgstr "Dimensiunea Maxima"
+
 msgid "Virtual memory usage"
 msgstr ""
+
+#, fuzzy
+msgid "Virtual memory utilization of a single process"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Virtual network gateway name"
 msgstr ""
@@ -56223,6 +56409,10 @@ msgstr ""
 #, fuzzy
 msgid "Volume name"
 msgstr "Nume nou"
+
+#, fuzzy
+msgid "Volume parameters"
+msgstr "(fără parametri)"
 
 msgid "Vswitch bonding"
 msgstr ""
@@ -57298,6 +57488,14 @@ msgid ""
 "old snapshots when the maximum number of snapshots is reached."
 msgstr ""
 
+#, fuzzy
+msgid "Where host label..."
+msgstr "Verificări active"
+
+#, fuzzy
+msgid "Where service label..."
+msgstr "Numele Elementului"
+
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
 "configuration change."
@@ -57952,8 +58150,9 @@ msgstr ""
 
 msgid ""
 "You are going to move the selected hosts to folders representing their "
-"original folder location in the system you did the import from. Please make "
-"sure that you have done an <b>inventory</b> before moving the hosts."
+"original folder location in the system you did the import from."
+"<br><br>Please make sure that you have done an <b>inventory</b> before "
+"moving the hosts."
 msgstr ""
 
 #, python-format
@@ -59537,6 +59736,10 @@ msgid "auto"
 msgstr ""
 
 #, fuzzy
+msgid "average"
+msgstr "Agregare noua"
+
+#, fuzzy
 msgid "avg. duration"
 msgstr "Agregare noua"
 
@@ -59967,6 +60170,10 @@ msgstr "Verificări active"
 
 msgid "explicitly specified groups"
 msgstr ""
+
+#, fuzzy
+msgid "failed"
+msgstr "Adăugat %s"
 
 msgid "failures"
 msgstr ""
@@ -61147,6 +61354,10 @@ msgstr ""
 msgid "success"
 msgstr "Punct de Acces"
 
+#, fuzzy
+msgid "successful"
+msgstr "Punct de Acces"
+
 msgid "synchronize"
 msgstr ""
 
@@ -61451,6 +61662,77 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
+#, fuzzy, python-format
+#~ msgid "Online verification procedure was not successful, reason: %s"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Submit verification request"
+#~ msgstr "Notificari"
+
+#, fuzzy
+#~ msgid "Cannot be a certificate chain"
+#~ msgstr "Notificari"
+
+#, fuzzy
+#~ msgid "Shows number of alerts grouped for each service."
+#~ msgstr "Arata regulile de utilizator"
+
+#, fuzzy
+#~ msgid "Cloud Functions"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
+#~ msgid "Cloud Run"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Cloud SQL"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Do you really want to delete the selected MIBs?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Do you really want to delete the selected aggregations?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Do you really want to delete the selected hosts?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Do you really want to delete the selected rules?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Do you really want to delete the selected users?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid ""
+#~ "Do you really want to remove the TLS registration of the hosts in this "
+#~ "folder?<br>This does not affect hosts in subfolders."
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid ""
+#~ "Do you really want to remove the TLS registration of the selected hosts?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~ msgid "Filestore"
+#~ msgstr "Spațiu liber exact"
+
+#, fuzzy
+#~ msgid "GCE Storage"
+#~ msgstr "Dimensiunea Maxima"
+
+#, fuzzy
+#~ msgid "Memorystore Redis"
+#~ msgstr "cereri"
+
 #, fuzzy
 #~ msgid "Connection timeout (seconds)"
 #~ msgstr "Conexiune Noua"
@@ -61516,10 +61798,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Do not add a link"
 #~ msgstr "foloseste alias"
-
-#, fuzzy
-#~ msgid "License key"
-#~ msgstr "Stare adiministrativă"
 
 #, fuzzy
 #~ msgid "No such license key"
@@ -61680,10 +61958,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Report usage"
-#~ msgstr "% utilizare"
-
-#, fuzzy
-#~ msgid "Submit license usage report"
 #~ msgstr "% utilizare"
 
 #, fuzzy
@@ -64866,10 +65140,6 @@ msgstr ""
 #~ msgstr "Atribute personalizate"
 
 #, fuzzy
-#~ msgid "Resetting configuration variable"
-#~ msgstr "Notificari"
-
-#, fuzzy
 #~ msgid "Routing Engine"
 #~ msgstr "sesiuni"
 
@@ -66253,10 +66523,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "activating..."
 #~ msgstr " Activează această opțiune"
-
-#, fuzzy
-#~ msgid "average duration"
-#~ msgstr "Agregare noua"
 
 #, fuzzy
 #~ msgid "bottom up"

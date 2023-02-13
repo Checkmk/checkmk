@@ -11,7 +11,6 @@ import abc
 import argparse
 import atexit
 import datetime
-import errno
 import getopt
 import json
 import logging
@@ -136,10 +135,10 @@ class DataCache(abc.ABC):
 
         try:
             return self._cache_file.stat().st_mtime
+        except FileNotFoundError:
+            logging.info("No such file or directory %s (cache_timestamp)", self._cache_file)
+            return None
         except OSError as exc:
-            if exc.errno == errno.ENOENT:
-                logging.info("No such file or directory %s (cache_timestamp)", self._cache_file)
-                return None
             logging.info("Cannot calculate cache file age: %s", exc)
             raise
 
@@ -162,11 +161,11 @@ class DataCache(abc.ABC):
         try:
             with self._cache_file.open(encoding="utf-8") as f:
                 raw_content = f.read().strip()
+        except FileNotFoundError:
+            logging.info("No such file or directory %s (read from cache)", self._cache_file)
+            raise
         except OSError as exc:
-            if exc.errno == errno.ENOENT:
-                logging.info("No such file or directory %s (read from cache)", self._cache_file)
-            else:
-                logging.info("Cannot read from cache file: %s", exc)
+            logging.info("Cannot read from cache file: %s", exc)
             raise
 
         try:

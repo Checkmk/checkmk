@@ -16,9 +16,43 @@ from typing import Any
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
-from cmk.utils.store._file import *
-from cmk.utils.store._locks import *
+from cmk.utils.store._file import (
+    BytesSerializer,
+    DimSerializer,
+    ObjectStore,
+    PickleSerializer,
+    TextSerializer,
+)
+from cmk.utils.store._locks import acquire_lock, cleanup_locks, configuration_lockfile, have_lock
 from cmk.utils.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
+from cmk.utils.store._locks import (
+    lock_checkmk_configuration,
+    lock_exclusive,
+    locked,
+    release_all_locks,
+    release_lock,
+    try_acquire_lock,
+    try_locked,
+)
+
+__all__ = [
+    "BytesSerializer",
+    "DimSerializer",
+    "ObjectStore",
+    "PickleSerializer",
+    "TextSerializer",
+    "acquire_lock",
+    "cleanup_locks",
+    "configuration_lockfile",
+    "have_lock",
+    "lock_checkmk_configuration",
+    "lock_exclusive",
+    "locked",
+    "release_all_locks",
+    "release_lock",
+    "try_acquire_lock",
+    "try_locked",
+]
 
 logger = logging.getLogger("cmk.store")
 
@@ -208,7 +242,7 @@ def save_bytes_to_file(path: Path | str, content: bytes) -> None:
         ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content)
 
 
-_pickled_files_base_dir = Path(cmk.utils.paths.tmp_dir) / "pickled_files_cache"
+_pickled_files_base_dir = cmk.utils.paths.tmp_dir / "pickled_files_cache"
 _pickle_serializer = PickleSerializer[Any]()
 
 

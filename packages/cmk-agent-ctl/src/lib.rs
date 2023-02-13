@@ -129,8 +129,7 @@ fn agent_socket_operational(mode: &cli::Mode) -> AnyhowResult<()> {
                 Ok(())
             } else {
                 bail!(format!(
-                    "Something seems wrong with the agent socket ({}), aborting",
-                    agent_channel
+                    "Something seems wrong with the agent socket ({agent_channel}), aborting"
                 ))
             }
         }

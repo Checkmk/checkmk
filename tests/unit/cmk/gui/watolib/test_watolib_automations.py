@@ -88,16 +88,14 @@ class TestCheckmkAutomationBackgroundJob:
             "headers",
             {"x-checkmk-version": "2.2.0i1"},
         )
-        automations.CheckmkAutomationBackgroundJob(
-            "job_id",
-            api_request := automations.CheckmkAutomationRequest(
-                command="test",
-                args=None,
-                indata=None,
-                stdin_data=None,
-                timeout=None,
-            ),
-        ).execute_automation(
+        api_request = automations.CheckmkAutomationRequest(
+            command="test",
+            args=None,
+            indata=None,
+            stdin_data=None,
+            timeout=None,
+        )
+        automations.CheckmkAutomationBackgroundJob("job_id", api_request,).execute_automation(
             MagicMock(),
             api_request,
         )
@@ -118,17 +116,14 @@ class TestCheckmkAutomationBackgroundJob:
                 "headers",
                 {"x-checkmk-version": "2.1.0p10"},
             )
-
-        automations.CheckmkAutomationBackgroundJob(
-            "job_id",
-            api_request := automations.CheckmkAutomationRequest(
-                command="test",
-                args=None,
-                indata=None,
-                stdin_data=None,
-                timeout=None,
-            ),
-        ).execute_automation(
+        api_request = automations.CheckmkAutomationRequest(
+            command="test",
+            args=None,
+            indata=None,
+            stdin_data=None,
+            timeout=None,
+        )
+        automations.CheckmkAutomationBackgroundJob("job_id", api_request).execute_automation(
             MagicMock(),
             api_request,
         )

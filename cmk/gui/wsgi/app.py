@@ -6,8 +6,6 @@ from __future__ import annotations
 
 import logging
 import pathlib
-import random
-import string
 import typing as t
 
 import werkzeug
@@ -57,7 +55,6 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     app = CheckmkFlaskApp(__name__)
     app.debug = debug
     app.testing = testing
-    app.secret_key = "".join(random.choices(string.printable, k=64))
     # Config needs a request context to work. :(
     # Until this can work, we need to do it at runtime in `FileBasedSession`.
     # app.config["PERMANENT_SESSION_LIFETIME"] = active_config.user_idle_timeout

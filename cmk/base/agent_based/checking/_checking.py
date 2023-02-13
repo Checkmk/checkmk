@@ -280,14 +280,24 @@ def check_host_services(
             host_name, store_changes=not submitter.dry_run
         ) as value_store_manager:
             submittables = [
-                get_aggregated_result(
-                    host_name,
-                    config_cache,
-                    parsed_sections_broker,
-                    service,
-                    check_plugins.get(service.check_plugin_name),
-                    value_store_manager=value_store_manager,
-                    rtc_package=rtc_package,
+                (
+                    _AggregatedResult(
+                        service=service,
+                        submit=True,
+                        data_received=True,
+                        result=ServiceCheckResult.check_not_implemented(),
+                        cache_info=None,
+                    )
+                    if service.check_plugin_name not in check_plugins
+                    else get_aggregated_result(
+                        host_name,
+                        config_cache,
+                        parsed_sections_broker,
+                        service,
+                        check_plugins[service.check_plugin_name],
+                        value_store_manager=value_store_manager,
+                        rtc_package=rtc_package,
+                    )
                 )
                 for service in _filter_services_to_check(
                     services=services,
@@ -345,7 +355,7 @@ def get_aggregated_result(
     config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     service: ConfiguredService,
-    plugin: checking_classes.CheckPlugin | None,
+    plugin: checking_classes.CheckPlugin,
     *,
     rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,
@@ -354,15 +364,6 @@ def get_aggregated_result(
 
     This function is also called during discovery.
     """
-    if plugin is None:
-        return _AggregatedResult(
-            service=service,
-            submit=True,
-            data_received=True,
-            result=ServiceCheckResult.check_not_implemented(),
-            cache_info=None,
-        )
-
     check_function = (
         _cluster_modes.get_cluster_check_function(
             *config_cache.get_clustered_service_configuration(host_name, service.description),

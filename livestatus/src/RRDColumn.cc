@@ -98,10 +98,10 @@ std::string replace_all(const std::string &str, const std::string &chars,
 }
 
 std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
-    size_t dot_pos = str.find_last_of('.');
+    const size_t dot_pos = str.find_last_of('.');
     if (dot_pos != std::string::npos) {
-        Metric::Name head{str.substr(0, dot_pos)};
-        std::string tail = str.substr(dot_pos);
+        const Metric::Name head{str.substr(0, dot_pos)};
+        const std::string tail = str.substr(dot_pos);
         if (tail == ".max") {
             return std::make_pair(head, "MAX");
         }
@@ -158,7 +158,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     std::set<std::string> touched_rrds;
 
     while (const char *tok = next_token(&scan, ',')) {
-        std::string token = tok;
+        const std::string token = tok;
         if (!converted_rpn.empty()) {
             converted_rpn += ",";
         }
@@ -214,11 +214,12 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
     auto *logger = _mc->loggerRRD();
-    if (_mc->pnp4nagiosEnabled() && !_mc->rrdcachedSocketPath().empty() &&
+    const auto rrdcached_socket = _mc->paths().rrdcached_socket;
+    if (_mc->pnp4nagiosEnabled() && !rrdcached_socket.empty() &&
         !touched_rrds.empty()) {
         std::vector<std::string> daemon_argv_s{
             "rrdtool flushcached",  // name of program (ignored)
-            "--daemon", _mc->rrdcachedSocketPath()};
+            "--daemon", rrdcached_socket};
 
         for (const auto &rrdfile : touched_rrds) {
             daemon_argv_s.push_back(rrdfile);

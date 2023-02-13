@@ -149,10 +149,7 @@ impl Api {
 
     fn error_response_description(status: StatusCode, body: Option<String>) -> String {
         match body {
-            None => format!(
-                "Request failed with code {}, could not obtain response body",
-                status
-            ),
+            None => format!("Request failed with code {status}, could not obtain response body"),
             Some(body) => format!(
                 "Request failed with code {}: {}",
                 status,
@@ -202,7 +199,7 @@ impl Pairing for Api {
         if status == StatusCode::OK {
             let body = response.text().context("Failed to obtain response body")?;
             serde_json::from_str::<PairingResponse>(&body)
-                .context(format!("Error parsing this response body: {}", body))
+                .context(format!("Error parsing this response body: {body}"))
         } else {
             bail!(Api::error_response_description(
                 status,
@@ -234,7 +231,7 @@ impl RenewCertificate for Api {
         if status == StatusCode::OK {
             let body = response.text().context("Failed to obtain response body")?;
             serde_json::from_str::<CertificateResponse>(&body)
-                .context(format!("Error parsing this response body: {}", body))
+                .context(format!("Error parsing this response body: {body}"))
         } else {
             bail!(Api::error_response_description(
                 status,
@@ -359,7 +356,7 @@ impl Status for Api {
         if response.status() == StatusCode::OK {
             let body = response.text()?;
             Ok(serde_json::from_str::<StatusResponse>(&body)
-                .context(format!("Failed to deserialize response body: {}", body))?)
+                .context(format!("Failed to deserialize response body: {body}"))?)
         } else {
             bail!(Api::error_response_description(
                 response.status(),
@@ -437,7 +434,7 @@ mod test_api {
         ))
         .unwrap_err();
         assert_eq!(
-            format!("{}", error_value),
+            format!("{error_value}"),
             "Request failed with code 401 Unauthorized: Insufficient permissions"
         );
     }

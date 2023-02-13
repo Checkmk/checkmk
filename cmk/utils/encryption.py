@@ -10,7 +10,6 @@ from __future__ import annotations
 import binascii
 import contextlib
 import enum
-import errno
 import hashlib
 import os
 import re
@@ -157,11 +156,9 @@ def raw_certificates_from_file(path: Path) -> list[str]:
                 for match in _PEM_RE.finditer(f.read())
                 if (content := match.group(0)).isascii()
             ]
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            # Silently ignore e.g. dangling symlinks
-            return []
-        raise
+    except FileNotFoundError:
+        # Silently ignore e.g. dangling symlinks
+        return []
 
 
 class CertificateDetails(NamedTuple):

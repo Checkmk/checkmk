@@ -28,7 +28,7 @@ using namespace std::chrono_literals;
 namespace {
 std::optional<SocketPair> fail(const std::string &message, Logger *logger,
                                SocketPair &sp) {
-    generic_error ge{message};
+    const generic_error ge{message};
     Alert(logger) << ge;
     sp.close();
     return {};
@@ -134,7 +134,7 @@ void setThreadName(std::string name) {
     }
 
     // ... and here invisible to ps/pstree/..., but in its full glory:
-    thread_name = move(name);
+    thread_name = std::move(name);
 }
 
 std::string getThreadName() { return thread_name; }

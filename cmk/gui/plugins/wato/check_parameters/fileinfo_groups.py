@@ -100,14 +100,14 @@ def _valuespec_fileinfo_groups() -> Dictionary:
                         elements=[
                             TextInput(
                                 title=_("Name of group"),
-                                size=20,
+                                size=37,
                             ),
                             Tuple(
                                 show_titles=True,
                                 orientation="vertical",
                                 elements=[
-                                    TextInput(title=_("Include Pattern"), size=40),
-                                    TextInput(title=_("Exclude Pattern"), size=40),
+                                    TextInput(title=_("Include Pattern"), size=61),
+                                    TextInput(title=_("Exclude Pattern"), size=61),
                                 ],
                             ),
                         ],

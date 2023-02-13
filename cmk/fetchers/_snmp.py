@@ -20,7 +20,6 @@ from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSectio
 
 from cmk.fetchers import Fetcher, Mode
 
-from ._iputils import verify_ipaddress
 from .cache import PersistedSections, SectionStore
 from .snmp import make_backend, SNMPPluginStore
 
@@ -154,7 +153,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         }
 
     def open(self) -> None:
-        verify_ipaddress(self.snmp_config.ipaddress)
+        pass
 
     def close(self) -> None:
         pass

@@ -77,7 +77,7 @@ class ModeBulkImport(WatoMode):
 
     @property
     def _upload_tmp_path(self) -> Path:
-        return Path(cmk.utils.paths.tmp_dir) / "host-import"
+        return cmk.utils.paths.tmp_dir / "host-import"
 
     def title(self) -> str:
         return _("Bulk host import")

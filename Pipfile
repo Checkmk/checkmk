@@ -48,6 +48,7 @@ pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
 pytest-profiling = "*"  # used to analyze test run performance
 pytest-random-order = "*"  # used to test resiliency
 pytest-repeat = "*"  # used to test resiliency
+pytest-xdist = "*" # used to limit number of procs in e2e tests
 responses = "*"  # used for unit tests
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before committing changes
@@ -69,6 +70,7 @@ pipfile = "*" # for generating import names during int tests
 py-import-cycles = "*"  # used in tests/Makefile
 types-pysaml2 = "*"  # typing extension for pysaml2
 telnetlib3 = "*"  # used by Windows Agent tests
+ruff = "==0.0.240"  # newer versions have problems with the match statement
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py

@@ -8,7 +8,6 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 
 import abc
 import argparse
-import errno
 import hashlib
 import itertools
 import json
@@ -19,7 +18,6 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
-from pathlib import Path
 from time import sleep
 from typing import Any, assert_never, Literal, NamedTuple, Type, TypedDict, TypeVar
 
@@ -49,9 +47,12 @@ from cmk.special_agents.utils import (
     get_seconds_since_midnight,
     vcrtrace,
 )
+from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.argument_parsing import Args
 
 NOW = datetime.now()
+
+GLOBAL_SERVICE_REGION = "us-east-1"
 
 
 AWSStrings = bytes | str
@@ -327,10 +328,7 @@ class AWSConfig:
         try:
             with self._config_hash_file.open(mode="r", encoding="utf-8") as f:
                 return f.read().strip()
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                # No such file or directory
-                raise
+        except FileNotFoundError:
             return None
 
     def _write_config_hash(self) -> None:
@@ -626,6 +624,7 @@ class AWSSectionResults(NamedTuple):
 class AWSSectionResult(NamedTuple):
     piggyback_hostname: AWSStrings
     content: Any
+    piggyback_host_labels: Mapping[str, str] | None = None
 
 
 class AWSLimit(NamedTuple):
@@ -658,7 +657,7 @@ class AWSComputedContent(NamedTuple):
     cache_timestamp: float
 
 
-AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
+AWSCacheFilePath = tmp_dir / "agents" / "agent_aws"
 
 
 class AWSSection(DataCache):
@@ -1623,6 +1622,10 @@ class EC2(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
+    @property
+    def host_labels(self) -> Mapping[str, str]:
+        return {"cmk/aws/ec2": "instance"}
+
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("ec2_summary")
         if colleague and colleague.content:
@@ -1679,7 +1682,7 @@ class EC2(AWSSectionCloudwatch):
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [
-            AWSSectionResult(piggyback_hostname, rows)
+            AWSSectionResult(piggyback_hostname, rows, self.host_labels)
             for piggyback_hostname, rows in computed_content.content.items()
         ]
 
@@ -6268,6 +6271,7 @@ class AWSSections(abc.ABC):
         self,
         hostname: str,
         session: boto3.session.Session,
+        account_id: str,
         debug: bool = False,
         config: botocore.config.Config = None,
     ) -> None:
@@ -6276,6 +6280,7 @@ class AWSSections(abc.ABC):
         self._debug = debug
         self._sections: list[AWSSection] = []
         self.config = config
+        self.account_id = account_id
 
     @abc.abstractmethod
     def init_sections(
@@ -6328,7 +6333,44 @@ class AWSSections(abc.ABC):
                 )
 
         self._write_exceptions(exceptions)
+        self._write_host_labels(results)
         self._write_section_results(results)
+
+    def _collect_static_host_labels(self) -> Mapping[str, str]:
+        """Labels every host will be labelled with regardless of type"""
+        host_labels = {"cmk/aws/account": self.account_id}
+        return host_labels
+
+    def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
+        return (
+            section_result.piggyback_hostname is not None
+            and section_result.piggyback_hostname != ""
+            and section_result.piggyback_hostname != self._hostname
+        )
+
+    def _collect_piggyback_host_labels(
+        self, results: Results, static_labels: Mapping[str, str]
+    ) -> Mapping[str, Mapping[str, str]]:
+        """Labels dependent on the type of piggyback host"""
+        host_labels: dict[str, dict[str, str]] = defaultdict(lambda: {**static_labels})
+        for result in results.values():
+            for row in result:
+                if self._is_piggyback_host_result(row) and row.piggyback_host_labels:
+                    host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels)
+        return host_labels
+
+    def _write_labels_section(self, host_labels: Mapping[str, str]) -> None:
+        with SectionWriter("labels") as w:
+            w.append(json.dumps(host_labels))
+
+    def _write_host_labels(self, results: Results) -> None:
+        static_host_labels = self._collect_static_host_labels()
+        self._write_labels_section(static_host_labels)
+
+        piggyback_host_labels = self._collect_piggyback_host_labels(results, static_host_labels)
+        for hostname, host_labels in piggyback_host_labels.items():
+            with ConditionalPiggybackSection(hostname):
+                self._write_labels_section(host_labels)
 
     def _write_exceptions(self, exceptions: Sequence) -> None:
         sys.stdout.write("<<<aws_exceptions>>>\n")
@@ -6374,9 +6416,7 @@ class AWSSections(abc.ABC):
             section_header = f"<<<aws_{section_name}{cached_suffix}>>>\n"
 
         for row in result:
-            write_piggyback_header = (
-                row.piggyback_hostname and row.piggyback_hostname != self._hostname
-            )
+            write_piggyback_header = self._is_piggyback_host_result(row)
             if write_piggyback_header:
                 sys.stdout.write("<<<<%s>>>>\n" % str(row.piggyback_hostname))
             sys.stdout.write(section_header)
@@ -7265,6 +7305,20 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
     return aws_config
 
 
+def _create_session_from_args(args: Args, region: str) -> boto3.session.Session:
+    if args.assume_role:
+        return _sts_assume_role(
+            args.access_key_id, args.secret_access_key, args.role_arn, args.external_id, region
+        )
+    return _create_session(args.access_key_id, args.secret_access_key, region)
+
+
+def _get_account_id(args: Args) -> str:
+    session = _create_session_from_args(args, GLOBAL_SERVICE_REGION)
+    account_id = session.client("sts").get_caller_identity()["Account"]
+    return account_id
+
+
 def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-many-branches
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
@@ -7296,8 +7350,21 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
             ", ".join(regional_services),
         )
 
+    try:
+        account_id = _get_account_id(args)
+    except AwsAccessError as ae:
+        # can not access AWS, retreat
+        sys.stdout.write("<<<aws_exceptions>>>\n")
+        sys.stdout.write("Exception: %s\n" % ae)
+        return 0
+    except Exception as e:
+        logging.info(e)
+        if args.debug:
+            raise
+        return 1
+
     for aws_services, aws_regions, aws_sections in [
-        (global_services, ["us-east-1"], AWSSectionsUSEast),
+        (global_services, [GLOBAL_SERVICE_REGION], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:
@@ -7305,22 +7372,10 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
 
         for region in aws_regions:
             try:
-                if args.assume_role:
-                    session = _sts_assume_role(
-                        args.access_key_id,
-                        args.secret_access_key,
-                        args.role_arn,
-                        args.external_id,
-                        region,
-                    )
-                else:
-                    session = _create_session(
-                        args.access_key_id,
-                        args.secret_access_key,
-                        region,
-                    )
-
-                sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
+                session = _create_session_from_args(args, region)
+                sections = aws_sections(
+                    hostname, session, account_id, debug=args.debug, config=proxy_config
+                )
                 sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
             except AwsAccessError as ae:

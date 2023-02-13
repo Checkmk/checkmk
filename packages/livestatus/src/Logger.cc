@@ -28,7 +28,7 @@ SharedStreamHandler::SharedStreamHandler(std::mutex &mutex, std::ostream &os)
     : _mutex(mutex), _os(os) {}
 
 void SharedStreamHandler::publish(const LogRecord &record) {
-    std::lock_guard<std::mutex> lg(_mutex);
+    const std::lock_guard<std::mutex> lg(_mutex);
     getFormatter()->format(_os, record);
     _os << std::endl;
 }
@@ -72,7 +72,7 @@ void ConcreteLogger::setLevel(LogLevel level) { _level = level; }
 Handler *ConcreteLogger::getHandler() const { return _handler; }
 
 void ConcreteLogger::setHandler(std::unique_ptr<Handler> handler) {
-    std::scoped_lock l(_lock);
+    const std::scoped_lock l(_lock);
     delete _handler;
     _handler = handler.release();
 }
@@ -87,7 +87,7 @@ void ConcreteLogger::setUseParentHandlers(bool useParentHandlers) {
 void ConcreteLogger::emitContext(std::ostream & /*unused*/) const {}
 
 void ConcreteLogger::callHandler(const LogRecord &record) {
-    std::scoped_lock l(_lock);
+    const std::scoped_lock l(_lock);
     if (Handler *handler = getHandler()) {
         handler->publish(record);
     }
@@ -174,7 +174,7 @@ Logger *LogManager::getLogger(const std::string &name) {
 }
 
 Logger *LogManager::lookup(const std::string &name, Logger *parent) {
-    std::lock_guard<std::mutex> lg(_mutex);
+    const std::lock_guard<std::mutex> lg(_mutex);
     auto it = _known_loggers.find(name);
     if (it == _known_loggers.end()) {
         it = _known_loggers

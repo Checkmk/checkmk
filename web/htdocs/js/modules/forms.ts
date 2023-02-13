@@ -173,8 +173,9 @@ function enable_label_input_fields(container) {
                 "request=" +
                 encodeURIComponent(
                     JSON.stringify({
-                        search_label: value,
-                        world: world,
+                        ident: "label",
+                        value: value,
+                        params: {world: world},
                     })
                 );
 
@@ -202,7 +203,7 @@ function kill_previous_autocomplete_call() {
 }
 
 function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
-    g_ajax_obj = ajax.call_ajax("ajax_autocomplete_labels.py", {
+    g_ajax_obj = ajax.call_ajax("ajax_vs_autocomplete.py", {
         method: "POST",
         post_data: post_data,
         response_handler: function (handler_data, ajax_response) {
@@ -214,10 +215,15 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
                 return;
             }
 
+            let result_objects: Object[] = [];
+            response.result.choices.forEach((entry: string[]) => {
+                result_objects.push({value: entry[1]});
+            });
+
             handler_data.tagify.settings.whitelist.splice(
                 10,
                 response.result.length,
-                ...response.result
+                ...result_objects
             );
             // render the suggestions dropdown
             handler_data.tagify.loading(false);

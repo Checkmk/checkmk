@@ -86,7 +86,7 @@ def test_read_manifest_optionally_ok(tmp_path: Path) -> None:
     ok_manifest_path = tmp_path / "ok"
     ok_manifest_path.write_text(TEST_MANIFEST.file_content())
 
-    manifest = read_manifest_optionally(ok_manifest_path, None)
+    manifest = read_manifest_optionally(ok_manifest_path)
     assert manifest
     assert manifest == TEST_MANIFEST
 
@@ -98,11 +98,11 @@ def test_read_manifest_optionally_invalid(tmp_path: Path) -> None:
     }
     invalid_manifest_path.write_text(f"{pprint.pformat(invalid_manifest_dict)}\n")
 
-    assert read_manifest_optionally(invalid_manifest_path, None) is None
+    assert read_manifest_optionally(invalid_manifest_path) is None
 
 
 def test_read_manifest_optionally_missing(tmp_path: Path) -> None:
-    assert read_manifest_optionally(tmp_path, None) is None
+    assert read_manifest_optionally(tmp_path) is None
 
 
 def test_field_conversion() -> None:

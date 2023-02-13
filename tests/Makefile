@@ -146,7 +146,7 @@ bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
 	  $(FIND_PYTHON_FILES) | tr '\n' ',' | sed 's/,$$//'; \
 	  echo ) > bandit.ini
-	( echo exclude: /tests,/scripts >> bandit.ini )
+	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)
@@ -278,7 +278,7 @@ test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
 
 test-gui-e2e: prepare-playwright
-	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" --log-cli-level=INFO $(realpath gui_e2e/)
+	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" --log-cli-level=INFO $(realpath gui_e2e/)  --numprocesses=1
 
 test-gui-e2e-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"

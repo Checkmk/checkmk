@@ -851,29 +851,6 @@ class TestTCPFetcher:
             # its name advertises.
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == b"cached_section"
 
-    def test_fetching_without_cache_raises_in_non_checking_mode(self) -> None:
-        file_cache = StubFileCache[AgentRawData](
-            HostName("hostname"),
-            path_template=os.devnull,
-            max_age=MaxAge.unlimited(),
-            simulation=False,
-            use_only_cache=False,
-            file_cache_mode=FileCacheMode.READ_WRITE,
-        )
-        with TCPFetcher(
-            family=socket.AF_INET,
-            address=("127.0.0.1", 6556),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.1,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
-            pre_shared_secret=None,
-        ) as fetcher:
-            for mode in Mode:
-                if mode is Mode.CHECKING:
-                    continue
-                raw_data = get_raw_data(file_cache, fetcher, mode)
-                assert isinstance(raw_data.error, MKFetcherError)
-
     def test_open_exception_becomes_fetcher_error(self) -> None:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),

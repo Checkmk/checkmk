@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import re
 from collections.abc import Mapping
 from typing import Any
@@ -21,8 +20,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
@@ -251,12 +251,11 @@ def _render_tag_group(
             ("%s_tag_0_val" % object_type, tag_id_or_label_value),
         ]
     elif label_type == "label":
-        type_filter_vars = [
-            (
-                "%s_label" % object_type,
-                json.dumps([{"value": f"{tag_group_id_or_label_key}:{tag_id_or_label_value}"}]),
-            ),
-        ]
+        filter_vars_dict: FilterHTTPVariables = filter_http_vars_for_simple_label_group(
+            [f"{tag_group_id_or_label_key}:{tag_id_or_label_value}"],
+            object_type,  # type: ignore[arg-type]
+        )
+        type_filter_vars = list(filter_vars_dict.items())
 
     else:
         raise NotImplementedError()

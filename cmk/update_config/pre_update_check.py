@@ -7,17 +7,11 @@
 import enum
 import sys
 import traceback
+from pathlib import Path
+from typing import Mapping
 
 from cmk.utils import paths
-from cmk.utils.packaging import (
-    disable,
-    Installer,
-    PackageName,
-    PackagePart,
-    PackageVersion,
-    PathConfig,
-)
-from cmk.utils.packaging._reporter import files_inventory
+from cmk.utils.packaging import disable, Installer, PackageID, PathConfig
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -151,52 +145,103 @@ def _all_ui_extensions_compatible(
 ) -> bool:
     main_modules.load_plugins()
     installer = Installer(paths.installed_packages_dir)
-    inventory = files_inventory(installer, _PATH_CONFIG)
+    installed_files_package_map = {
+        _PATH_CONFIG.get_path(part) / file: manifest.id
+        for manifest in installer.get_installed_manifests()
+        for part, files in manifest.files.items()
+        for file in files
+    }
 
-    for _gui_part, file, error in get_failed_plugins():
-        for mkp in inventory:
-            # mkp package file
-            if not mkp["part_id"]:
-                continue
+    disabled_packages: set[PackageID] = set()
+    for gui_part, file, error in get_failed_plugins():
 
-            file_path = (
-                str(_PATH_CONFIG.get_path(PackagePart(mkp["part_id"]))) + "/" + str(mkp["file"])
+        if (
+            path_and_id := _best_effort_guess_for_file_path(
+                gui_part, file, installed_files_package_map
             )
-            if file_path == file:
-                # unpackaged files
-                if not (package_name := mkp["package"]):
-                    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-                        conflict_mode is ConflictMode.ASK
-                        and input(
-                            "Incompatible local file '%s'.\n"
-                            "Error: %s\n\n"
-                            "You can abort the update process (A) and try to fix "
-                            "the incompatibilities or continue the update (c).\n\n"
-                            "Abort the update process? [A/c] \n" % (mkp["file"], error)
-                        ).lower()
-                        in ["c", "continue"]
-                    ):
-                        continue
-                    return False
+        ) is None:
+            # we know something is wrong, but have no idea which file to blame
+            if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+                conflict_mode is ConflictMode.ASK
+                and input(
+                    "Incompatible local plugin '%s'.\n"
+                    "Error: %s\n\n"
+                    "You can abort the update process (A) and try to fix "
+                    "the incompatibilities or continue the update (c).\n\n"
+                    "Abort the update process? [A/c] \n" % (file, error)
+                ).lower()
+                in ["c", "continue"]
+            ):
+                continue
+            return False
 
-                if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-                    conflict_mode is ConflictMode.ASK
-                    and input(
-                        "Incompatible file '%s' of extension package '%s'\n"
-                        "Error: %s\n\n"
-                        "You can abort the update process (A) or disable the "
-                        "extension package (d) and continue the update process.\n"
-                        "Abort the update process? [A/d] \n" % (mkp["file"], package_name, error),
-                    ).lower()
-                    in ["d", "disable"]
-                ):
-                    disable(
-                        installer,
-                        _PATH_CONFIG,
-                        PackageName(mkp["package"]),
-                        PackageVersion(mkp["version"]),
-                    )
-                    sys.stdout.write("Disabled extension package: %s" % package_name)
-                else:
-                    return False
+        # file path is unused. We could offer to delete it in the dialog below?
+        _file_path, package_id = path_and_id
+
+        # unpackaged files
+        if package_id is None:
+            if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+                conflict_mode is ConflictMode.ASK
+                and input(
+                    "Incompatible local file '%s'.\n"
+                    "Error: %s\n\n"
+                    "You can abort the update process (A) and try to fix "
+                    "the incompatibilities or continue the update (c).\n\n"
+                    "Abort the update process? [A/c] \n" % (file, error)
+                ).lower()
+                in ["c", "continue"]
+            ):
+                continue
+            return False
+
+        if package_id in disabled_packages:
+            continue  # already dealt with
+
+        if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+            conflict_mode is ConflictMode.ASK
+            and input(
+                "Incompatible file '%s' of extension package '%s %s'\n"
+                "Error: %s\n\n"
+                "You can abort the update process (A) or disable the "
+                "extension package (d) and continue the update process.\n"
+                "Abort the update process? [A/d] \n"
+                % (file, package_id.name, package_id.version, error),
+            ).lower()
+            in ["d", "disable"]
+        ):
+            disable(
+                installer,
+                _PATH_CONFIG,
+                package_id.name,
+                package_id.version,
+            )
+            disabled_packages.add(package_id)
+            sys.stdout.write(
+                "Disabled extension package: %s %s" % (package_id.name, package_id.version)
+            )
+        else:
+            return False
     return True
+
+
+def _best_effort_guess_for_file_path(
+    gui_part: str, file: str, installed: Mapping[Path, PackageID]
+) -> tuple[Path, PackageID | None] | None:
+    "try to guess which file could create such an error"
+    potential_sources = (
+        _PATH_CONFIG.gui_plugins_dir / gui_part / f"{file}.py",
+        _PATH_CONFIG.web_dir / gui_part / f"{file}.py",
+        _PATH_CONFIG.gui_plugins_dir / gui_part / f"{file}/__init__.py",
+        _PATH_CONFIG.web_dir / gui_part / f"{file}/__init__.py",
+    )
+
+    if installed_candidates := [
+        (p, package) for p in potential_sources if ((package := installed.get(p)) is not None)
+    ]:
+        return installed_candidates[0] if len(installed_candidates) == 1 else None
+
+    return (
+        (unpackaged_candidates[0], None)
+        if (unpackaged_candidates := [p for p in potential_sources if p.exists()])
+        else None
+    )

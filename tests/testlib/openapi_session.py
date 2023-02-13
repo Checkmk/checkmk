@@ -99,7 +99,9 @@ class CMKOpenApiSession(requests.Session):
         Suggested method to use a base url with a requests.Session
         see https://github.com/psf/requests/issues/2554#issuecomment-109341010
         """
-        url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
+
+        if not url.startswith("http://"):
+            url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
 
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
         response = super().request(method, url, *args, **kwargs)

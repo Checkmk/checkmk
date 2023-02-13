@@ -65,6 +65,7 @@ from cmk.special_agents.utils_kubernetes.common import (
     WriteableSection,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
+from cmk.special_agents.utils_kubernetes.schemata.api import NamespaceName
 
 NATIVE_NODE_CONDITION_TYPES = [
     "Ready",
@@ -1048,18 +1049,12 @@ def pod_attached_persistent_volume_claim_names(pod: api.Pod) -> Iterator[str]:
         if volume.persistent_volume_claim is None:
             continue
 
-        yield api.namespaced_name(
-            namespace=pod_namespace(pod), name=volume.persistent_volume_claim.claim_name
-        )
+        yield volume.persistent_volume_claim.claim_name
 
 
-def attached_pvc_namespaced_names_from_pods(pods: Sequence[api.Pod]) -> Sequence[str]:
+def attached_pvc_names_from_pods(pods: Sequence[api.Pod]) -> Sequence[str]:
     return list(
-        {
-            namespaced_name
-            for pod in pods
-            for namespaced_name in pod_attached_persistent_volume_claim_names(pod)
-        }
+        {pvc_name for pod in pods for pvc_name in pod_attached_persistent_volume_claim_names(pod)}
     )
 
 
@@ -1071,8 +1066,14 @@ def filter_kubelet_volume_metrics(
 
 def serialize_attached_volumes_from_kubelet_metrics(
     volume_metric_samples: Iterator[api.KubeletVolumeMetricSample],
-) -> Mapping[str, section.AttachedVolume]:
-    volumes: dict[str, section.AttachedVolume] = {}
+) -> Iterator[section.AttachedVolume]:
+    """Serialize attached volumes from kubelet metrics
+
+    A PV can be bound to one PVC only, so while a PV itself has no namespace, the PVC
+    namespace + name can be used to identify it uniquely (and easily)
+
+    Remember: since a PVC has a namespace, only the namespace + name combination is unique
+    """
 
     def pvc_unique(v: api.KubeletVolumeMetricSample) -> tuple[str, str]:
         return v.labels.namespace, v.labels.persistentvolumeclaim
@@ -1081,29 +1082,50 @@ def serialize_attached_volumes_from_kubelet_metrics(
         sorted(volume_metric_samples, key=pvc_unique), key=pvc_unique
     ):
         volume_details = {sample.metric_name.value: sample.value for sample in samples}
-        volumes[api.namespaced_name(namespace, pvc)] = section.AttachedVolume(
+        yield section.AttachedVolume(
             capacity=volume_details["kubelet_volume_stats_capacity_bytes"],
             free=volume_details["kubelet_volume_stats_available_bytes"],
             persistent_volume_claim=pvc,
-            namespace=namespace,
+            namespace=NamespaceName(namespace),
         )
-    return volumes
+
+
+def group_serialized_volumes_by_namespace(
+    serialized_pvs: Iterator[section.AttachedVolume],
+) -> Mapping[NamespaceName, Mapping[str, section.AttachedVolume]]:
+    namespaced_grouped_pvs: dict[NamespaceName, dict[str, section.AttachedVolume]] = {}
+    for pv in serialized_pvs:
+        namespace_pvs: dict[str, section.AttachedVolume] = namespaced_grouped_pvs.setdefault(
+            pv.namespace, {}
+        )
+        namespace_pvs[pv.persistent_volume_claim] = pv
+    return namespaced_grouped_pvs
+
+
+def group_parsed_pvcs_by_namespace(
+    api_pvcs: Sequence[api.PersistentVolumeClaim],
+) -> Mapping[NamespaceName, Mapping[str, section.PersistentVolumeClaim]]:
+    namespace_sorted_pvcs: dict[NamespaceName, dict[str, section.PersistentVolumeClaim]] = {}
+    for pvc in api_pvcs:
+        namespace_pvcs: dict[str, section.PersistentVolumeClaim] = namespace_sorted_pvcs.setdefault(
+            pvc.metadata.namespace, {}
+        )
+        namespace_pvcs[pvc.metadata.name] = section.PersistentVolumeClaim.parse_obj(pvc.dict())
+    return namespace_sorted_pvcs
 
 
 def create_pvc_sections(
     piggyback_name: str,
-    attached_pvc_namespaced_names: Sequence[str],
-    api_persistent_volume_claims: Mapping[str, section.PersistentVolumeClaim],
-    api_persistent_volumes: Mapping[str, section.PersistentVolume],
+    attached_pvc_names: Sequence[str],
+    api_pvcs: Mapping[str, section.PersistentVolumeClaim],
+    api_pvs: Mapping[str, section.PersistentVolume],
     attached_volumes: Mapping[str, section.AttachedVolume],
 ) -> Iterator[WriteableSection]:
-    if not attached_pvc_namespaced_names:
+    """Create PVC & PV related sections"""
+    if not attached_pvc_names:
         return
 
-    attached_pvcs = {
-        pvc_namespaced_name: api_persistent_volume_claims[pvc_namespaced_name]
-        for pvc_namespaced_name in attached_pvc_namespaced_names
-    }
+    attached_pvcs = {pvc_name: api_pvcs[pvc_name] for pvc_name in attached_pvc_names}
 
     yield WriteableSection(
         piggyback_name=piggyback_name,
@@ -1112,7 +1134,7 @@ def create_pvc_sections(
     )
 
     pvc_attached_api_pvs = {
-        pvc.volume_name: api_persistent_volumes[pvc.volume_name]
+        pvc.volume_name: api_pvs[pvc.volume_name]
         for pvc in attached_pvcs.values()
         if pvc.volume_name is not None
     }
@@ -1125,9 +1147,9 @@ def create_pvc_sections(
         )
 
     pvc_attached_volumes = {
-        pvc_namespaced_name: volume
-        for pvc_namespaced_name in attached_pvc_namespaced_names
-        if (volume := attached_volumes.get(pvc_namespaced_name)) is not None
+        pvc_name: volume
+        for pvc_name in attached_pvc_names
+        if (volume := attached_volumes.get(pvc_name)) is not None
     }
     if pvc_attached_volumes:
         yield WriteableSection(
@@ -1217,6 +1239,11 @@ def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
         'foo'
     """
     return namespace.metadata.name
+
+
+def kube_object_namespace_name(kube_object: KubeNamespacedObj) -> NamespaceName:
+    """The namespace name of the Kubernetes object"""
+    return kube_object.metadata.namespace
 
 
 def cron_job_namespaced_name(cron_job: api.CronJob) -> str:
@@ -2210,18 +2237,19 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 arguments.namespace_include_patterns,
                 arguments.namespace_exclude_patterns,
             )
-            api_persistent_volume_claims = {
-                namespaced_name_from_metadata(pvc.metadata): section.PersistentVolumeClaim(
-                    volume_name=pvc.spec.volume_name, **pvc.dict()
-                )
-                for pvc in api_data.persistent_volume_claims
-            }
+
+            namespace_grouped_api_pvcs = group_parsed_pvcs_by_namespace(
+                api_data.persistent_volume_claims
+            )
+
             api_persistent_volumes = {
                 pv.metadata.name: section.PersistentVolume(name=pv.metadata.name, spec=pv.spec)
                 for pv in api_data.persistent_volumes
             }
-            attached_volumes = serialize_attached_volumes_from_kubelet_metrics(
-                filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
+            namespaced_grouped_attached_volumes = group_serialized_volumes_by_namespace(
+                serialize_attached_volumes_from_kubelet_metrics(
+                    filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
+                )
             )
             piggyback_formatter = functools.partial(
                 piggyback_formatter_with_cluster_name, arguments.cluster
@@ -2247,16 +2275,17 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         piggyback_name=deployment_piggyback_name,
                     )
                     if MonitoredObject.pvcs in arguments.monitored_objects:
+                        deployment_namespace = kube_object_namespace_name(deployment)
                         sections = chain(
                             sections,
                             create_pvc_sections(
                                 piggyback_name=deployment_piggyback_name,
-                                attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                    deployment.pods
+                                attached_pvc_names=attached_pvc_names_from_pods(deployment.pods),
+                                api_pvcs=namespace_grouped_api_pvcs.get(deployment_namespace, {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    deployment_namespace, {}
                                 ),
-                                api_persistent_volume_claims=api_persistent_volume_claims,
-                                api_persistent_volumes=api_persistent_volumes,
-                                attached_volumes=attached_volumes,
                             ),
                         )
                     common.write_sections(sections)
@@ -2300,16 +2329,17 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         piggyback_name=daemonset_piggyback_name,
                     )
                     if MonitoredObject.pvcs in arguments.monitored_objects:
+                        daemonset_namespace = kube_object_namespace_name(daemonset)
                         daemonset_sections = chain(
                             daemonset_sections,
                             create_pvc_sections(
                                 piggyback_name=daemonset_piggyback_name,
-                                attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                    daemonset.pods
+                                attached_pvc_names=attached_pvc_names_from_pods(daemonset.pods),
+                                api_pvcs=namespace_grouped_api_pvcs.get(daemonset_namespace, {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    daemonset_namespace, {}
                                 ),
-                                api_persistent_volume_claims=api_persistent_volume_claims,
-                                api_persistent_volumes=api_persistent_volumes,
-                                attached_volumes=attached_volumes,
                             ),
                         )
                     common.write_sections(daemonset_sections)
@@ -2326,16 +2356,17 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         piggyback_name=statefulset_piggyback_name,
                     )
                     if MonitoredObject.pvcs in arguments.monitored_objects:
+                        statefulset_namespace = kube_object_namespace_name(statefulset)
                         statefulset_sections = chain(
                             statefulset_sections,
                             create_pvc_sections(
                                 piggyback_name=statefulset_piggyback_name,
-                                attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                    statefulset.pods
+                                attached_pvc_names=attached_pvc_names_from_pods(statefulset.pods),
+                                api_pvcs=namespace_grouped_api_pvcs.get(statefulset_namespace, {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    statefulset_namespace, {}
                                 ),
-                                api_persistent_volume_claims=api_persistent_volume_claims,
-                                api_persistent_volumes=api_persistent_volumes,
-                                attached_volumes=attached_volumes,
                             ),
                         )
                     common.write_sections(statefulset_sections)
@@ -2390,12 +2421,14 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                             sections,
                             create_pvc_sections(
                                 piggyback_name=pod_piggyback_name,
-                                attached_pvc_namespaced_names=list(
+                                attached_pvc_names=list(
                                     pod_attached_persistent_volume_claim_names(pod)
                                 ),
-                                api_persistent_volume_claims=api_persistent_volume_claims,
-                                api_persistent_volumes=api_persistent_volumes,
-                                attached_volumes=attached_volumes,
+                                api_pvcs=namespace_grouped_api_pvcs.get(pod_namespace(pod), {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    pod_namespace(pod), {}
+                                ),
                             ),
                         )
                     common.write_sections(sections)

@@ -471,10 +471,12 @@ class Cpu(BaseModel):
 
 
 class AttachedVolume(BaseModel):
+    """The PV from a kubelet metrics representation"""
+
     capacity: float
     free: float
     persistent_volume_claim: str
-    namespace: str
+    namespace: api.NamespaceName
 
 
 class PerformanceUsage(Section):

@@ -227,7 +227,7 @@ def _output_status_capacity_result(pvc: PersistentVolumeClaim) -> Iterator[Resul
 
 register.check_plugin(
     name="kube_pvc",
-    service_name="Persistent Volume Claim %s",
+    service_name="PVC %s",
     sections=[
         "kube_pvc",
         "kube_pvc_volumes",

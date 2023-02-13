@@ -1026,6 +1026,8 @@ class AttachedPersistentVolumes(Section):
 
 
 class AttachedVolume(BaseModel):
+    """The PV from a kubelet metrics representation"""
+
     capacity: float
     free: float
     persistent_volume_claim: str

@@ -8,7 +8,9 @@ from typing import Any, Literal, Set
 
 from livestatus import OnlySites, SiteId
 
+from cmk.utils import store
 from cmk.utils.defines import short_service_state_name
+from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.bi.foldable_tree_renderer import (
@@ -40,6 +42,7 @@ from cmk.gui.views.command import (
     CommandSpec,
     PermissionSectionAction,
 )
+from cmk.gui.views.command.base import CommandSpecWithoutSite
 from cmk.gui.views.data_source import ABCDataSource, RowTable
 from cmk.gui.views.painter.v0.base import Cell, CellSpec, CSVExportError, Painter
 from cmk.gui.views.painter_options import PainterOption, PainterOptions
@@ -49,18 +52,7 @@ from cmk.bi.computer import BIAggregationFilter
 from cmk.bi.data_fetcher import get_cache_dir
 from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
-
 from cmk.bi.type_defs import frozen_aggregations_dir
-
-#     ____        _
-#    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
-#    | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
-#    | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \
-#    |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
-#
-from cmk.utils import store
-from cmk.utils.exceptions import MKGeneralException
-from cmk.gui.views.command.base import CommandSpecWithoutSite
 
 
 class DataSourceBIAggregations(ABCDataSource):

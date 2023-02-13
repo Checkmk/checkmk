@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p21
+Version: 2.1.0p22
 
 This affects the newly introduced feature of having different MKPs active for remote sites with deviating Checkmk versions.
 Previously, we only re-evaluated the active MKPs for major version differences, but in fact we must do it whenever the remote sites version is not the same as the central sites version (as an MKP may only be applicable to a specific patch release).

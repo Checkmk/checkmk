@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
 
+import pytest
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -19,8 +21,11 @@ from cryptography.x509 import (
     NameAttribute,
 )
 from cryptography.x509.oid import NameOID
+from dateutil.relativedelta import relativedelta
+from freezegun import freeze_time
 
 from cmk.utils.certs import _rsa_public_key_from_cert_or_csr
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 
 
 def check_certificate_against_private_key(
@@ -81,3 +86,22 @@ def _generate_private_key(size: int) -> RSAPrivateKey:
         public_exponent=65537,
         key_size=size,
     )
+
+
+FROZEN_NOW = datetime(2023, 1, 1, 8, 0, 0)
+
+
+@pytest.fixture(name="self_signed_cert", scope="module")
+def fixture_self_signed() -> CertificateWithPrivateKey:
+    """
+    Return a self-signed certificate.
+
+    Valid from 2023-01-01 08:00:00 til 2023-01-01 10:00:00.
+    """
+    with freeze_time(FROZEN_NOW):
+        return CertificateWithPrivateKey.generate_self_signed(
+            common_name="TestGenerateSelfSigned",
+            expiry=relativedelta(hours=2),
+            key_size=1024,
+            start_date=datetime.utcnow(),
+        )

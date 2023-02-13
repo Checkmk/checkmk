@@ -19,6 +19,9 @@ from fakeredis import FakeRedis  # type: ignore[import]
 
 from tests.testlib import is_cloud_repo, is_enterprise_repo, is_managed_repo
 
+# Import this fixture to not clutter this file, but it's unused here...
+from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
+
 import livestatus
 
 import cmk.utils.caching

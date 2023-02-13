@@ -25,23 +25,8 @@ from cmk.utils.crypto.certificate import (
 )
 from cmk.utils.crypto.password import Password
 
+# this is the same as in testlib.certs
 FROZEN_NOW = datetime(2023, 1, 1, 8, 0, 0)
-
-
-@pytest.fixture(name="self_signed_cert", scope="module")
-def fixture_self_signed() -> CertificateWithPrivateKey:
-    """
-    Return a self-signed certificate.
-
-    Valid from 2023-01-01 08:00:00 til 2023-01-01 10:00:00.
-    """
-    with freeze_time(FROZEN_NOW):
-        return CertificateWithPrivateKey.generate_self_signed(
-            common_name="TestGenerateSelfSigned",
-            expiry=relativedelta(hours=2),
-            key_size=1024,
-            start_date=datetime.utcnow(),
-        )
 
 
 def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> None:

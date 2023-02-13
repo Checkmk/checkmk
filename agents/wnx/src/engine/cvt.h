@@ -22,7 +22,7 @@ bool CheckIniFile(const std::filesystem::path &ini_file_path);
 class Parser final {
 public:
     Parser() = default;
-    virtual ~Parser();
+    ~Parser();
 
     // no copy, no move
     Parser(const Parser &) = delete;

@@ -454,15 +454,14 @@ int ExecCvtIniYaml(const fs::path &ini_file_name,
     if (stdio_log != StdioLog::no) {
         XLOG::setup::ColoredOutputOnStdio(true);
     }
-    fs::path file = ini_file_name;
     std::error_code ec;
-    if (!fs::exists(file, ec)) {
+    if (!fs::exists(ini_file_name, ec)) {
         XLOG::l(flag)("File not found '{}'", ini_file_name);
         return 3;
     }
     cma::cfg::cvt::Parser parser_converter;
     parser_converter.prepare();
-    if (!parser_converter.readIni(file, false)) {
+    if (!parser_converter.readIni(ini_file_name, false)) {
         XLOG::l(flag)("Failed Load '{}'", fs::absolute(ini_file_name));
         return 2;
     }
@@ -968,7 +967,7 @@ private:
 void RunTestingUdpServer(asio::io_context *io_context, int port_num,
                          bool print) {
     try {
-        UdpServer s(*io_context, port_num, print);
+        UdpServer s(*io_context, static_cast<short>(port_num), print);
 
         io_context->run();  // blocking call till the context stopped
     } catch (std::exception &e) {

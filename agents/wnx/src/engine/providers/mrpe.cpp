@@ -287,7 +287,7 @@ void MrpeProvider::parseConfig() {
     checks_.clear();
     includes_.clear();
 
-    auto strings =
+    const auto strings =
         cfg::GetArray<std::string>(cfg::groups::kMrpe, cfg::vars::kMrpeConfig);
 
     if (strings.empty()) {
@@ -301,8 +301,8 @@ void MrpeProvider::parseConfig() {
 }
 
 void MrpeProvider::loadTimeout() {
-    auto mrpe_timeout = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kTimeout,
-                                    cfg::defaults::kMrpeTimeout);
+    const auto mrpe_timeout = cfg::GetVal(
+        cfg::groups::kMrpe, cfg::vars::kTimeout, cfg::defaults::kMrpeTimeout);
     setTimeout(std::min(1U, mrpe_timeout));
 }
 

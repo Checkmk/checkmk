@@ -34,7 +34,7 @@ public:
         auto yaml = GetLoadedConfig();
         auto sections =
             GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        sections.emplace_back(std::string(groups::kMrpe));
+        sections.emplace_back(std::string{groups::kMrpe});
         PutInternalArray(groups::kGlobal, vars::kSectionsEnabled, sections);
         yaml[groups::kGlobal].remove(vars::kSectionsDisabled);
         yaml[groups::kGlobal][vars::kLogDebug] = "all";
@@ -250,26 +250,24 @@ TEST(SectionProviderMrpe, ProcessCfg) {
 }
 
 TEST(SectionProviderMrpe, Ctor) {
-    {
-        std::string base = "Codepage 'c:\\windows\\system32\\chcp.com' x d f";
-        MrpeEntry me("", base);
-        EXPECT_EQ(me.exe_name_, "chcp.com");
-        EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
-        EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
-        EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_FALSE(me.caching_interval_.has_value());
-    }
+    const std::string base = R"(Codepage 'c:\windows\system32\chcp.com' x d f)";
+    MrpeEntry me("", base);
+    EXPECT_EQ(me.exe_name_, "chcp.com");
+    EXPECT_EQ(me.full_path_name_, R"(c:\windows\system32\chcp.com)");
+    EXPECT_EQ(me.command_line_, R"(c:\windows\system32\chcp.com x d f)");
+    EXPECT_EQ(me.description_, "Codepage");
+    EXPECT_FALSE(me.caching_interval_.has_value());
+}
 
-    {
-        std::string base =
-            "Codepage (interval=123456) 'c:\\windows\\system32\\chcp.com' x d f";
-        MrpeEntry me("", base);
-        EXPECT_EQ(me.exe_name_, "chcp.com");
-        EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
-        EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
-        EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(*me.caching_interval_, 123456);
-    }
+TEST(SectionProviderMrpe, CtorInterval) {
+    const std::string base =
+        R"(Codepage (interval=123456) 'c:\windows\system32\chcp.com' x d f)";
+    MrpeEntry me("", base);
+    EXPECT_EQ(me.exe_name_, "chcp.com");
+    EXPECT_EQ(me.full_path_name_, R"(c:\windows\system32\chcp.com)");
+    EXPECT_EQ(me.command_line_, R"(c:\windows\system32\chcp.com x d f)");
+    EXPECT_EQ(me.description_, "Codepage");
+    EXPECT_EQ(*me.caching_interval_, 123456);
 }
 
 TEST(SectionProviderMrpe, Run) {

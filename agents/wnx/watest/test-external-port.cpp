@@ -16,7 +16,7 @@ using namespace std::string_literals;
 using asio::ip::tcp;
 
 namespace wtools {
-class TestProcessor2 : public wtools::BaseServiceProcessor {
+class TestProcessor2 final : public wtools::BaseServiceProcessor {
 public:
     TestProcessor2() { s_counter++; }
     ~TestProcessor2() override { s_counter--; }
@@ -54,9 +54,9 @@ TEST(ExternalPortTest, StartStop) {
     world::ExternalPort test_port(&tp);  //
 
     ExternalPort::IoParam io_param{
-        .port{tst::TestPort()},
-        .local_only{LocalOnly::yes},
-        .pid{},
+        .port = tst::TestPort(),
+        .local_only = LocalOnly::yes,
+        .pid = 0U,
     };
     EXPECT_TRUE(test_port.startIo(reply, io_param));
     EXPECT_TRUE(test_port.isIoStarted());
@@ -174,7 +174,7 @@ public:
     void SetUp() override {
         test_port_.startIo(
             reply,
-            {.port{tst::TestPort()}, .local_only{LocalOnly::no}, .pid{}});
+            {.port = tst::TestPort(), .local_only = LocalOnly::no, .pid = 0U});
     }
 
     void TearDown() override {
@@ -267,9 +267,9 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
             return std::vector<uint8_t>{};
         },
         ExternalPort::IoParam{
-            .port{0},
-            .local_only{LocalOnly::no},
-            .pid{::GetCurrentProcessId()},
+            .port = 0U,
+            .local_only = LocalOnly::no,
+            .pid = ::GetCurrentProcessId(),
         });
     EXPECT_TRUE(tst::WaitForSuccessSilent(
         1000ms, [this] { return test_port_.entriesInQueue() == 0; }));

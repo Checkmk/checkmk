@@ -318,7 +318,7 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
     ASSERT_EQ(sections.size(), LogWatchSections_Main);
 
     // data to be tested against
-    const RawLogWatchData base[LogWatchSections_Test] = {
+    constexpr RawLogWatchData base[LogWatchSections_Test] = {
         //{false, "", cfg::EventLevels::kOff, false},
         {true, "Parameters", cfg::EventLevels::kIgnore,
          provider::LogWatchContext::hide},
@@ -364,7 +364,7 @@ TEST(LogWatchEventTest, CheckTestConfig) {
     ASSERT_EQ(sections.size(), LogWatchSections_Test);
 
     // data to be tested against
-    const RawLogWatchData base[LogWatchSections_Test] = {
+    constexpr RawLogWatchData base[LogWatchSections_Test] = {
         {true, "Application", cfg::EventLevels::kCrit,
          provider::LogWatchContext::with},
         {true, "System", cfg::EventLevels::kWarn,

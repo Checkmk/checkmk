@@ -620,7 +620,7 @@ private:
         ServiceProcessor *service_processor,  // host
         const std::wstring &segment_name,     // identifies exe
         int timeout,                          // for exe
-        const std::wstring &command_line) {
+        const std::wstring &command_line) const {
         return kickExe(async, exe_name, answer_id, service_processor,
                        segment_name, timeout, command_line, {});
     }

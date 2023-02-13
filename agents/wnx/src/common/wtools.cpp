@@ -1148,12 +1148,11 @@ static uint64_t GetCounterValueFromBlock(
             // situation. Once upon a time in future we might implement a
             // conversion as described in
             // http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
-            const int size = counter.CounterSize;
-            if (size == 4) {
+            if (counter.CounterSize == 4) {
                 return static_cast<uint64_t>(dwords[0]);
             }
 
-            if (size == 8) {
+            if (counter.CounterSize == 8) {
                 // i am not sure that this must be should so complicated
                 return static_cast<uint64_t>(dwords[0]) +
                        (static_cast<uint64_t>(dwords[1]) << 32);
@@ -2876,7 +2875,8 @@ ACL *CombineSidsIntoACl(const SidStore &first, const SidStore &second) {
 
     // init
     if (acl != nullptr &&
-        ::InitializeAcl(acl, (int32_t)acl_size, ACL_REVISION) == TRUE &&
+        ::InitializeAcl(acl, static_cast<int32_t>(acl_size), ACL_REVISION) ==
+            TRUE &&
         ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
                               first.sid()) == TRUE &&
         ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
@@ -3105,7 +3105,7 @@ public:
                 case ERROR_SUCCESS:
                     return;
                 default:
-                    delete static_cast<void *>(table_);
+                    ::operator delete(static_cast<void *>(table_));
                     table_ = nullptr;
                     XLOG::l("Error [{}] GetTcpTable2", ret);
                     return;
@@ -3118,7 +3118,7 @@ public:
     MibTcpTable2Wrapper(MibTcpTable2Wrapper &&) = delete;
     MibTcpTable2Wrapper &operator=(MibTcpTable2Wrapper &&) = delete;
 
-    ~MibTcpTable2Wrapper() { delete static_cast<void *>(table_); }
+    ~MibTcpTable2Wrapper() { ::operator delete(static_cast<void *>(table_)); }
 
     [[nodiscard]] const MIB_TCPROW2 *row(size_t index) const {
         return table_ == nullptr || index >= table_->dwNumEntries
@@ -3131,7 +3131,7 @@ public:
 
 private:
     void reallocateBuffer(size_t size) {
-        delete static_cast<void *>(table_);
+        ::operator delete(static_cast<void *>(table_));
         table_ = static_cast<MIB_TCPTABLE2 *>(::operator new(size));
     }
 

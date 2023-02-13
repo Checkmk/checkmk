@@ -98,11 +98,9 @@ void CreatePluginInTemp(const std::filesystem::path &path, int timeout,
 }
 
 void RemoveFolder(const std::filesystem::path &path) {
-    fs::path top = path;
-
-    cma::PathVector directories;
+    PathVector directories;
     std::error_code ec;
-    for (auto &p : fs::recursive_directory_iterator(top, ec)) {
+    for (auto &p : fs::recursive_directory_iterator(path, ec)) {
         const auto &dir_path = p.path();
         if (fs::is_directory(dir_path)) {
             directories.push_back(fs::canonical(dir_path));
@@ -1761,10 +1759,10 @@ TestDateTime StringToTime(const std::string &text) {
         return tdt;
     }
 
-    tdt.hour = std::stoi(table[0].c_str());
-    tdt.min = std::stoi(table[1].c_str());
-    tdt.sec = std::stoi(sec_table[0].c_str());
-    tdt.msec = std::stoi(sec_table[1].c_str());
+    tdt.hour = std::stoi(table[0]);
+    tdt.min = std::stoi(table[1]);
+    tdt.sec = std::stoi(sec_table[0]);
+    tdt.msec = std::stoi(sec_table[1]);
 
     return tdt;
 }

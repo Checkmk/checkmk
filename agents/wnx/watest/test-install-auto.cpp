@@ -60,8 +60,8 @@ TEST(InstallAuto, FileControlIntegration) {
     // Typical windows code below: wait for file, because on heavy load file may
     // not be created quick enough. WTF Microsoft?
     tst::WaitForSuccessSilent(1000ms, [path] {
-        std::error_code ec;
-        return fs::exists(path, ec);
+        std::error_code code;
+        return fs::exists(path, code);
     });
     EXPECT_TRUE(NeedInstall(path, out));
     BackupFile(path, out);

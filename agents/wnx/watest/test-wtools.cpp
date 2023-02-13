@@ -638,7 +638,7 @@ TEST(Wtools, ToCanonical) {
         L"c:\\windows\\TrustedInstaller.exe"));
 
     // Non existing environment variable must  not change
-    const auto no_variable{L"%temroot%\\servicing\\TrustedInstaller.exe"sv};
+    constexpr auto no_variable{L"%temroot%\\servicing\\TrustedInstaller.exe"sv};
     EXPECT_EQ(ToCanonical(no_variable), no_variable);
 
     // Border value
@@ -711,8 +711,8 @@ TEST(Wtools, ExecuteCommandsAsync) {
     EXPECT_EQ(table[1], ToUtf8(commands[1]));
 
     tst::WaitForSuccessSilent(5000ms, [output_file] {
-        std::error_code ec;
-        return fs::exists(output_file, ec) && fs::file_size(output_file) >= 1;
+        std::error_code code;
+        return fs::exists(output_file, code) && fs::file_size(output_file) >= 1;
     });
     const auto output = tst::ReadFileAsTable(output_file);
     EXPECT_EQ(output[0], "x");

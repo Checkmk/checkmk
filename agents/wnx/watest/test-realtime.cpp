@@ -131,7 +131,7 @@ TEST(RealtimeTest, PackData) {
         auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
-        auto timestamp_mid = std::stoll(timestamp.c_str());
+        auto timestamp_mid = std::stoll(timestamp);
         EXPECT_TRUE(tstamp1 <= timestamp_mid);
         EXPECT_TRUE(tstamp2 >= timestamp_mid);
     }
@@ -150,7 +150,7 @@ TEST(RealtimeTest, PackData) {
         auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
-        auto timestamp_mid = std::stoll(timestamp.c_str());
+        auto timestamp_mid = std::stoll(timestamp);
         EXPECT_TRUE(tstamp1 <= timestamp_mid);
         EXPECT_TRUE(tstamp2 >= timestamp_mid);
 

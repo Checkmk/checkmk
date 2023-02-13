@@ -733,14 +733,13 @@ bool FindActivateStartLegacyAgent(AddAction action) {
     return true;
 }
 
-bool RunDetachedProcess(const std::wstring &Name) {
+bool RunDetachedProcess(const std::wstring &name) {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
     ZeroMemory(&si, sizeof si);
     si.cb = sizeof si;
     ZeroMemory(&pi, sizeof pi);
-    std::wstring name = Name;
     auto windows_name = const_cast<LPWSTR>(name.c_str());
 
     const auto ret = CreateProcessW(
@@ -755,7 +754,7 @@ bool RunDetachedProcess(const std::wstring &Name) {
         &si,      // Pointer to STARTUPINFO structure
         &pi);     // Pointer to PROCESS_INFORMATION structure
     if (ret != TRUE) {
-        XLOG::l("Cant start the process {}, error is {}", wtools::ToUtf8(Name),
+        XLOG::l("Cant start the process {}, error is {}", wtools::ToUtf8(name),
                 GetLastError());
     }
     CloseHandle(pi.hProcess);
@@ -1115,18 +1114,15 @@ bool ConvertUserIniFile(
     // check_mk.user.yml or check_mk.bakery.yml
     const auto name = wtools::ToUtf8(files::kDefaultMainConfigName);
 
-    // generate
-    auto out_folder = program_data;
-
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)
     const auto ini_from_wato = IsBakeryIni(user_ini_file);
     fs::path yaml_file;
 
     if (ini_from_wato || local_ini_exists)
-        yaml_file = CreateBakeryYamlFromIni(user_ini_file, out_folder, name);
+        yaml_file = CreateBakeryYamlFromIni(user_ini_file, program_data, name);
     else
-        yaml_file = CreateUserYamlFromIni(user_ini_file, out_folder, name);
+        yaml_file = CreateUserYamlFromIni(user_ini_file, program_data, name);
 
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",

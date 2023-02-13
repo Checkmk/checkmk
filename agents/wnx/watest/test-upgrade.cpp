@@ -125,7 +125,7 @@ TEST(UpgradeTest, PatchStateHash) {
     EXPECT_EQ(old_hash, new_expected);
 }
 
-std::string nullfile = "";
+std::string nullfile;
 std::string not_bakeryfile_strange =
     "[local]\n"
     "# define maximum cache age for scripts matching specified patterns - first match wins\n"

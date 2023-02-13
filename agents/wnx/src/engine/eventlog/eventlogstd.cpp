@@ -61,7 +61,7 @@ namespace vs = std::views;
 MessageResolver::~MessageResolver() {
     for (const auto h :
          _cache | vs::values |
-             vs::filter([](const auto &h) noexcept { return h != nullptr; })) {
+             vs::filter([](const auto &p) noexcept { return p != nullptr; })) {
         FreeLibrary(h);
     }
 }
@@ -229,7 +229,7 @@ void EventLog::seek(uint64_t record_number) {
         record_offset_ = oldestRecord + recordCount;
     } else {
         // Within bounds, the offset for the next actual read:
-        record_offset_ = (DWORD)record_number;
+        record_offset_ = static_cast<DWORD>(record_number);
     }
     buffer_offset_ = buffer_used_;  // enforce that a new chunk is fetched
 }
@@ -302,7 +302,7 @@ bool EventLog::fillBuffer() {
     DWORD bytes_required = 0;
 
     if (::ReadEventLogW(handle_, flags, record_offset_, buffer_.data(),
-                        (DWORD)buffer_.size(), &buffer_used_,
+                        static_cast<DWORD>(buffer_.size()), &buffer_used_,
                         &bytes_required)) {
         return true;
     }

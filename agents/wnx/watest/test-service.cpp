@@ -15,7 +15,7 @@
 using namespace std::chrono_literals;
 
 namespace wtools {
-class TestProcessor : public wtools::BaseServiceProcessor {
+class TestProcessor final : public wtools::BaseServiceProcessor {
 public:
     TestProcessor() { s_counter++; }
     ~TestProcessor() override { s_counter--; }

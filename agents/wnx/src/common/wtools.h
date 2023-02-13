@@ -437,7 +437,7 @@ public:
     ServiceController(ServiceController &&) = delete;
     ServiceController &operator=(ServiceController &&) = delete;
 
-    virtual ~ServiceController() {
+    ~ServiceController() {
         std::lock_guard lk(s_lock_);
         if (s_controller_ != nullptr && s_controller_ == this) {
             s_controller_ = nullptr;
@@ -931,7 +931,7 @@ public:
     WmiWrapper(WmiWrapper &&) = delete;
     WmiWrapper &operator=(WmiWrapper &&) = delete;
 
-    virtual ~WmiWrapper() { close(); }
+    ~WmiWrapper() { close(); }
     bool open() noexcept;
     bool connect(std::wstring_view name_space) noexcept;
     // This is OPTIONAL feature, LWA doesn't use it
@@ -1010,7 +1010,7 @@ public:
     ACLInfo operator=(const ACLInfo &) = delete;
     ACLInfo(ACLInfo &&) = delete;
     ACLInfo operator=(ACLInfo &&) = delete;
-    virtual ~ACLInfo();
+    ~ACLInfo();
     /// \b Queries NTFS for ACL Info of the file/directory
     HRESULT query() noexcept;
     /// \b Outputs ACL info in Human-readable format

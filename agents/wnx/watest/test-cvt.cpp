@@ -214,7 +214,7 @@ TEST(CvtTest, LogWatchSection) {
 
     ASSERT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
     auto logfiles = logwatch[vars::kLogWatchEventLogFile];
-    const cma::provider::RawLogWatchData base[4] = {
+    constexpr cma::provider::RawLogWatchData base[4] = {
         {true, "application", EventLevels::kCrit,
          provider::LogWatchContext::with},
         {true, "system", EventLevels::kWarn, provider::LogWatchContext::hide},

@@ -204,9 +204,11 @@ TEST(OnlyFromTest, LocalAllowedIpv6) {
 
     ip_received.clear();
     world::ExternalPort test_port(nullptr);
-    ASSERT_TRUE(test_port.startIo(
-        RegisterIp,
-        {.port{tst::TestPort()}, .local_only{world::LocalOnly::no}, .pid{}}));
+
+    ASSERT_TRUE(
+        test_port.startIo(RegisterIp, {.port = tst::TestPort(),
+                                       .local_only = world::LocalOnly::no,
+                                       .pid = std::nullopt}));
     WriteToSocket("::1");
     EXPECT_EQ(ip_received, "::1");
     test_port.shutdownIo();

@@ -616,7 +616,7 @@ auto ReadFileAsTable(const fs::path &name) {
 
 /// reads the file which must be encoded as LE BOM
 std::wstring ReadLeBom(const fs::path &file) {
-    constexpr size_t max_log_size{8192U * 1024};
+    constexpr size_t max_log_size{8192U * 1024U};
     constexpr auto ff = static_cast<unsigned char>('\xFF');
     constexpr auto fe = static_cast<unsigned char>('\xFE');
     constexpr std::array le_bom_marker{ff, fe};

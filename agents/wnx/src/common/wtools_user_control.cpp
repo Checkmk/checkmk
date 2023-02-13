@@ -175,10 +175,11 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
     lg_info.lgrpi1_comment = const_cast<wchar_t *>(group_comment.data());
 
     unsigned long parm_err = 0;
-    auto err = ::NetLocalGroupAdd(primary_dc_name_,           // PDC name
-                                  1,                          // level
-                                  (unsigned char *)&lg_info,  // input buffer
-                                  &parm_err);  // parameter in error
+    auto err =
+        ::NetLocalGroupAdd(primary_dc_name_,                    // PDC name
+                           1,                                   // level
+                           reinterpret_cast<BYTE *>(&lg_info),  // input buffer
+                           &parm_err);  // parameter in error
 
     switch (err) {
         case 0:

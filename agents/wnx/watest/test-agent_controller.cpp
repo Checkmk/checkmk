@@ -457,9 +457,9 @@ TEST(AgentController, SimulationIntegration) {
     const auto m = GetModus();
     ON_OUT_OF_SCOPE(details::SetModus(m));
     details::SetModus(Modus::service);
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
-    fs::copy(fs::path{"c:\\windows\\system32\\whoami.exe"},
+    fs::copy(fs::path{R"(c:\windows\system32\whoami.exe)"},
              temp_fs->root() / cfg::files::kAgentCtl);
     const auto service = fs::path{cfg::GetRootDir()} / "cmd.exe";
     const auto expected =

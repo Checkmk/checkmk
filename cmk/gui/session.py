@@ -299,15 +299,6 @@ class FileBasedSession(SessionInterface):
             )
 
 
-def is_two_factor_completed() -> bool:
-    """Whether or not the user has completed the 2FA challenge"""
-    return session.session_info.two_factor_completed
-
-
-def set_two_factor_completed() -> None:
-    session.session_info.two_factor_completed = True
-
-
 # Casting the original LocalProxy, so "from flask import session" and our own
 # session object will always return the same objects.
 session: CheckmkFileBasedSession = cast(CheckmkFileBasedSession, flask.session)

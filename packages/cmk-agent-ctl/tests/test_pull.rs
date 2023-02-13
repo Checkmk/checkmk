@@ -23,7 +23,7 @@ fn registry(
 ) -> config::Registry {
     let mut registry = config::Registry::from_file(path).unwrap();
     registry.register_connection(
-        &config::ConnectionType::Pull,
+        &config::ConnectionMode::Pull,
         &site_spec::SiteID::from_str("some_server/some_site").unwrap(),
         config::TrustedConnectionWithRemote {
             trust: config::TrustedConnection {

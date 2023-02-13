@@ -32,7 +32,7 @@ struct RegisterExistingBody {
 pub struct RegisterExisitingResponse {
     pub root_cert: String,
     pub agent_cert: String,
-    pub connection_mode: config::ConnectionType,
+    pub connection_mode: config::ConnectionMode,
 }
 
 #[serde_with::serde_as]
@@ -57,7 +57,7 @@ pub struct RegisterNewOngoingResponseDeclined {
 #[derive(Deserialize)]
 pub struct RegisterNewOngoingResponseSuccess {
     pub agent_cert: String,
-    pub connection_mode: config::ConnectionType,
+    pub connection_mode: config::ConnectionMode,
 }
 
 #[derive(Deserialize)]
@@ -86,8 +86,7 @@ pub enum HostStatus {
 pub struct StatusResponse {
     pub hostname: Option<String>,
     pub status: Option<HostStatus>,
-    #[serde(rename = "type")]
-    pub connection_type: Option<config::ConnectionType>,
+    pub connection_mode: Option<config::ConnectionMode>,
     pub message: Option<String>,
 }
 

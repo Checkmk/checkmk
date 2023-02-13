@@ -774,8 +774,9 @@ def test_registration_status_declined(
     assert response.json() == {
         "hostname": None,
         "status": "declined",
-        "type": None,
+        "connection_mode": None,
         "message": "Registration request declined",
+        "type": None,
     }
 
 
@@ -818,8 +819,9 @@ def test_registration_status_push_host(
     assert response.json() == {
         "hostname": "hostname",
         "status": "discoverable",
-        "type": ConnectionMode.PUSH.value,
+        "connection_mode": ConnectionMode.PUSH.value,
         "message": "Host registered",
+        "type": ConnectionMode.PUSH.value,
     }
 
 
@@ -842,8 +844,9 @@ def test_registration_status_pull_host(
     assert response.json() == {
         "hostname": "hostname",
         "status": None,
-        "type": ConnectionMode.PULL.value,
+        "connection_mode": ConnectionMode.PULL.value,
         "message": "Host registered",
+        "type": ConnectionMode.PULL.value,
     }
 
 

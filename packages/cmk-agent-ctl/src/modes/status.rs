@@ -24,13 +24,13 @@ enum CertParsingResult {
 
 #[derive(serde::Serialize)]
 struct LocalConnectionStatus {
-    connection_type: config::ConnectionType,
+    connection_mode: config::ConnectionMode,
     cert_info: CertParsingResult,
 }
 
 #[derive(serde::Serialize)]
 struct RemoteConnectionStatus {
-    connection_type: Option<config::ConnectionType>,
+    connection_mode: Option<config::ConnectionMode>,
     registration_state: Option<agent_receiver_api::HostStatus>,
     host_name: Option<String>,
 }
@@ -119,7 +119,7 @@ impl ConnectionStatus {
             &conn.trust,
         )?;
         Ok(RemoteConnectionStatus {
-            connection_type: status_response.connection_type,
+            connection_mode: status_response.connection_mode,
             registration_state: status_response.status,
             host_name: status_response.hostname,
         })
@@ -128,7 +128,7 @@ impl ConnectionStatus {
     fn from_standard_conn(
         site_id: &site_spec::SiteID,
         conn: &config::TrustedConnectionWithRemote,
-        conn_type: config::ConnectionType,
+        conn_mode: config::ConnectionMode,
         agent_rec_api: &Option<impl agent_receiver_api::Status>,
     ) -> ConnectionStatus {
         ConnectionStatus {
@@ -138,7 +138,7 @@ impl ConnectionStatus {
             }),
             uuid: conn.trust.uuid,
             local: LocalConnectionStatus {
-                connection_type: conn_type,
+                connection_mode: conn_mode,
                 cert_info: CertParsingResult::from(&conn.trust.certificate),
             },
             remote: match agent_rec_api {
@@ -155,7 +155,7 @@ impl ConnectionStatus {
             site_data: None,
             uuid: conn.uuid,
             local: LocalConnectionStatus {
-                connection_type: config::ConnectionType::Pull,
+                connection_mode: config::ConnectionMode::Pull,
                 cert_info: CertParsingResult::from(&conn.certificate),
             },
             remote: Remote::Imported,
@@ -164,7 +164,7 @@ impl ConnectionStatus {
 
     fn local_lines_readable(&self) -> Vec<String> {
         let mut lines = vec![];
-        lines.push(format!("Connection type: {}", self.local.connection_type));
+        lines.push(format!("Connection mode: {}", self.local.connection_mode));
         lines.push(format!(
             "Connecting to receiver port: {}",
             if let Some(site_data) = &self.site_data {
@@ -188,13 +188,13 @@ impl ConnectionStatus {
         lines
     }
 
-    fn remote_conn_type_str(
-        local_conn_type: &config::ConnectionType,
-        remote_conn_type: &Option<config::ConnectionType>,
+    fn remote_conn_mode_str(
+        local_conn_mode: &config::ConnectionMode,
+        remote_conn_mode: &Option<config::ConnectionMode>,
     ) -> String {
-        match remote_conn_type {
+        match remote_conn_mode {
             Some(ct) => {
-                if ct == local_conn_type {
+                if ct == local_conn_mode {
                     format!("{ct}")
                 } else {
                     mark_problematic(&format!("{ct}"))
@@ -208,7 +208,7 @@ impl ConnectionStatus {
         match &remote_conn_stat.registration_state {
             Some(st) => format!("{st}"),
             None => {
-                if remote_conn_stat.connection_type.is_some() & remote_conn_stat.host_name.is_some()
+                if remote_conn_stat.connection_mode.is_some() & remote_conn_stat.host_name.is_some()
                 {
                     String::from("operational")
                 } else {
@@ -220,14 +220,14 @@ impl ConnectionStatus {
 
     fn remote_lines_success_readable(
         remote_conn_stat: &RemoteConnectionStatus,
-        local_conn_type: &config::ConnectionType,
+        local_conn_mode: &config::ConnectionMode,
     ) -> Vec<String> {
         vec![
             format!(
-                "Connection type: {}",
-                ConnectionStatus::remote_conn_type_str(
-                    local_conn_type,
-                    &remote_conn_stat.connection_type
+                "Connection mode: {}",
+                ConnectionStatus::remote_conn_mode_str(
+                    local_conn_mode,
+                    &remote_conn_stat.connection_mode
                 ),
             ),
             format!(
@@ -249,7 +249,7 @@ impl ConnectionStatus {
             Remote::StatusResponse(remote_conn_stat) => match &remote_conn_stat {
                 Ok(remote_conn_stat) => Self::remote_lines_success_readable(
                     remote_conn_stat,
-                    &self.local.connection_type,
+                    &self.local.connection_mode,
                 ),
                 Err(err) => {
                     vec![mark_problematic(&format!("Error: {err}"))]
@@ -292,7 +292,7 @@ impl Status {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 site_id,
                 push_conn,
-                config::ConnectionType::Push,
+                config::ConnectionMode::Push,
                 agent_rec_api,
             ));
         }
@@ -300,7 +300,7 @@ impl Status {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 site_id,
                 pull_conn,
-                config::ConnectionType::Pull,
+                config::ConnectionMode::Pull,
                 agent_rec_api,
             ));
         }
@@ -420,7 +420,7 @@ mod test_status {
 
     fn local_connection_status() -> LocalConnectionStatus {
         LocalConnectionStatus {
-            connection_type: config::ConnectionType::Pull,
+            connection_mode: config::ConnectionMode::Pull,
             cert_info: CertParsingResult::Success(cert_info()),
         }
     }
@@ -437,7 +437,7 @@ mod test_status {
                     }),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
+                        connection_mode: config::ConnectionMode::Pull,
                         cert_info: CertParsingResult::Success(cert_info())
                     },
                     remote: Remote::QueryDisabled
@@ -447,7 +447,7 @@ mod test_status {
                 "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
@@ -471,7 +471,7 @@ mod test_status {
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
-                            connection_type: Some(config::ConnectionType::Pull),
+                            connection_mode: Some(config::ConnectionMode::Pull),
                             registration_state: None,
                             host_name: Some(String::from("my-host")),
                         }
@@ -482,12 +482,12 @@ mod test_status {
                 "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tRegistration state: operational\n\
                  \t\tHost name: my-host"
             )
@@ -508,7 +508,7 @@ mod test_status {
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
-                            connection_type: Some(config::ConnectionType::Pull),
+                            connection_mode: Some(config::ConnectionMode::Pull),
                             registration_state: Some(agent_receiver_api::HostStatus::Discoverable),
                             host_name: Some(String::from("my-host")),
                         }
@@ -519,12 +519,12 @@ mod test_status {
                 "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tRegistration state: discoverable\n\
                  \t\tHost name: my-host"
             )
@@ -547,7 +547,7 @@ mod test_status {
                 "Imported connection:\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tConnecting to receiver port: None (imported connection)\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
@@ -576,7 +576,7 @@ mod test_status {
                 "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
@@ -587,7 +587,7 @@ mod test_status {
     }
 
     #[test]
-    fn test_connection_status_fmt_mismatch_conn_type() {
+    fn test_connection_status_fmt_mismatch_conn_mode() {
         assert_eq!(
             format!(
                 "{}",
@@ -600,7 +600,7 @@ mod test_status {
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
-                            connection_type: Some(config::ConnectionType::Push),
+                            connection_mode: Some(config::ConnectionMode::Push),
                             registration_state: None,
                             host_name: Some(String::from("my-host")),
                         }
@@ -611,12 +611,12 @@ mod test_status {
                 "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tConnection type: push-agent (!!)\n\
+                 \t\tConnection mode: push-agent (!!)\n\
                  \t\tRegistration state: operational\n\
                  \t\tHost name: my-host"
             )
@@ -637,7 +637,7 @@ mod test_status {
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
-                            connection_type: Some(config::ConnectionType::Pull),
+                            connection_mode: Some(config::ConnectionMode::Pull),
                             registration_state: None,
                             host_name: None,
                         }
@@ -648,12 +648,12 @@ mod test_status {
                 "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
-                 \t\tConnection type: pull-agent\n\
+                 \t\tConnection mode: pull-agent\n\
                  \t\tRegistration state: unknown (!!)\n\
                  \t\tHost name: unknown"
             )
@@ -675,7 +675,7 @@ mod test_status {
                     uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(RemoteConnectionStatus {
-                        connection_type: Some(config::ConnectionType::Pull),
+                        connection_mode: Some(config::ConnectionMode::Pull),
                         registration_state: None,
                         host_name: Some(String::from("my-host")),
                     })),
@@ -687,7 +687,7 @@ mod test_status {
                     }),
                     uuid: uuid::Uuid::from_str("3c87778b-8bb8-434d-bcc6-6d05f2668c80").unwrap(),
                     local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Push,
+                        connection_mode: config::ConnectionMode::Push,
                         cert_info: CertParsingResult::Success(CertInfo {
                             issuer: String::from("Site 'site2' local CA"),
                             from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
@@ -695,7 +695,7 @@ mod test_status {
                         }),
                     },
                     remote: Remote::StatusResponse(Ok(RemoteConnectionStatus {
-                        connection_type: Some(config::ConnectionType::Push),
+                        connection_mode: Some(config::ConnectionMode::Push),
                         registration_state: None,
                         host_name: Some(String::from("my-host2")),
                     })),
@@ -714,23 +714,23 @@ mod test_status {
              Connection: localhost/site\n\
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
              \tLocal:\n\
-             \t\tConnection type: pull-agent\n\
+             \t\tConnection mode: pull-agent\n\
              \t\tConnecting to receiver port: 8000\n\
              \t\tCertificate issuer: Site 'site' local CA\n\
              \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
              \tRemote:\n\
-             \t\tConnection type: pull-agent\n\
+             \t\tConnection mode: pull-agent\n\
              \t\tRegistration state: operational\n\
              \t\tHost name: my-host\n\n\n\
              Connection: somewhere/site2\n\
              \tUUID: 3c87778b-8bb8-434d-bcc6-6d05f2668c80\n\
              \tLocal:\n\
-             \t\tConnection type: push-agent\n\
+             \t\tConnection mode: push-agent\n\
              \t\tConnecting to receiver port: 8000\n\
              \t\tCertificate issuer: Site 'site2' local CA\n\
              \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
              \tRemote:\n\
-             \t\tConnection type: push-agent\n\
+             \t\tConnection mode: push-agent\n\
              \t\tRegistration state: operational\n\
              \t\tHost name: my-host2"
         );
@@ -775,7 +775,7 @@ mod test_status {
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from("host")),
                 status: None,
-                connection_type: Some(config::ConnectionType::Pull),
+                connection_mode: Some(config::ConnectionMode::Pull),
                 message: None,
             })
         }
@@ -786,7 +786,7 @@ mod test_status {
         let reg_dir = config::test_helpers::TestRegistryDir::new();
         let mut registry = reg_dir.registry();
         registry.register_connection(
-            &config::ConnectionType::Push,
+            &config::ConnectionMode::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
             config::TrustedConnectionWithRemote::from("99f56bbc-5965-4b34-bc70-1959ad1d32d6"),
         );
@@ -815,11 +815,11 @@ mod test_status {
                  Connection: server/push-site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
-                 \t\tConnection type: push-agent\n\
+                 \t\tConnection mode: push-agent\n\
                  \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate parsing failed (!!)\n\
                  \tRemote:\n\
-                 \t\tConnection type: pull-agent (!!)\n\
+                 \t\tConnection mode: pull-agent (!!)\n\
                  \t\tRegistration state: operational\n\
                  \t\tHost name: host",
                 constants::VERSION,

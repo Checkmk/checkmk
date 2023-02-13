@@ -58,7 +58,7 @@ def test_status_pull(
         host_attributes={},
     )["connections"][0]["remote"]
     assert remote_status["host_name"] == "pull-host"
-    assert HostAgentConnectionMode(remote_status["connection_type"]) is HostAgentConnectionMode.PULL
+    assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PULL
 
 
 @pytest.mark.usefixtures("skip_if_not_cloud_edition")
@@ -73,7 +73,7 @@ def test_status_push(
         host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
     )["connections"][0]["remote"]
     assert remote_status["host_name"] == "push-host"
-    assert HostAgentConnectionMode(remote_status["connection_type"]) is HostAgentConnectionMode.PUSH
+    assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PUSH
 
 
 @pytest.fixture(scope="module", autouse=True)

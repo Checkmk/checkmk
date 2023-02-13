@@ -449,8 +449,9 @@ async def registration_status(
     return RegistrationStatus(
         hostname=host.name,
         status=r4r.status if r4r else None,
-        type=host.connection_mode,
+        connection_mode=host.connection_mode,
         message="Host registered",
+        type=host.connection_mode,
     )
 
 

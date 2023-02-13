@@ -489,6 +489,7 @@ pub fn proxy_register(config: &config::RegistrationConfigHostName) -> AnyhowResu
 #[cfg(test)]
 mod tests {
     use super::*;
+    use config::test_helpers::TestRegistryDir;
     use std::str::FromStr;
 
     const SERVER: &str = "server";
@@ -607,10 +608,6 @@ mod tests {
         }
     }
 
-    fn registry() -> config::Registry {
-        config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap()
-    }
-
     fn agent_labels() -> types::AgentLabels {
         let mut al = std::collections::HashMap::new();
         al.insert(String::from("a"), String::from("b"));
@@ -713,7 +710,8 @@ mod tests {
 
         #[test]
         fn test_host_name() {
-            let mut registry = registry();
+            let reg_dir = TestRegistryDir::new();
+            let mut registry = reg_dir.registry();
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(None, None, false),
@@ -737,7 +735,8 @@ mod tests {
 
         #[test]
         fn test_agent_labels() {
-            let mut registry = registry();
+            let reg_dir = TestRegistryDir::new();
+            let mut registry = reg_dir.registry();
             assert!(!registry.path().exists());
             assert!(direct_registration(
                 &registration_connection_config(
@@ -786,8 +785,9 @@ mod tests {
     mod test_register_pre_configured {
         use super::*;
 
-        fn registry() -> config::Registry {
-            let mut registry = super::registry();
+        fn registry() -> (TestRegistryDir, config::Registry) {
+            let reg_dir = TestRegistryDir::new();
+            let mut registry = reg_dir.registry();
             registry.register_connection(
                 &config::ConnectionType::Pull,
                 &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
@@ -811,7 +811,7 @@ mod tests {
             registry.register_imported_connection(config::TrustedConnection::from(
                 uuid::Uuid::new_v4(),
             ));
-            registry
+            (reg_dir, registry)
         }
 
         fn pre_configured_connections(
@@ -980,7 +980,7 @@ mod tests {
 
         #[test]
         fn test_keep_existing_connections() {
-            let mut registry = registry();
+            let (_reg_dir, mut registry) = registry();
             assert!(_register_pre_configured(
                 &pre_configured_connections(true),
                 &config::ClientConfig {
@@ -996,7 +996,7 @@ mod tests {
 
         #[test]
         fn test_remove_vanished_connections() {
-            let mut registry = registry();
+            let (_reg_dir, mut registry) = registry();
             assert!(_register_pre_configured(
                 &pre_configured_connections(false),
                 &config::ClientConfig {
@@ -1012,7 +1012,8 @@ mod tests {
 
         #[test]
         fn test_port_update_only() {
-            let mut registry = super::registry();
+            let reg_dir = TestRegistryDir::new();
+            let mut registry = reg_dir.registry();
             registry.register_connection(
                 &config::ConnectionType::Pull,
                 &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),

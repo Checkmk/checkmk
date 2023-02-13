@@ -45,17 +45,16 @@ mod tests {
     use crate::modes::delete_connection::{delete, delete_all};
     use crate::site_spec;
     use crate::*;
+    use config::test_helpers::TestRegistryDir;
     use std::str::FromStr;
     const UUID_PUSH: &str = "0096abd7-83c9-42f8-8b3a-3ffba7ba959d";
     const UUID_PULL: &str = "b3501e4d-2820-433c-8e9c-38c69ac20faa";
     const UUID_PULL_IMP1: &str = "00c21714-5086-46d7-848e-5be72c715cfd";
     const UUID_PULL_IMP2: &str = "3bf83706-8e47-4e38-beb6-b1ce83a4eee1";
 
-    fn registry(path: Option<std::path::PathBuf>) -> config::Registry {
-        let mut registry = config::Registry::new(
-            &path.unwrap_or_else(|| tempfile::NamedTempFile::new().unwrap().path().to_path_buf()),
-        )
-        .unwrap();
+    fn registry() -> (TestRegistryDir, config::Registry) {
+        let registry_dir = TestRegistryDir::new();
+        let mut registry = registry_dir.registry();
         registry.register_connection(
             &config::ConnectionType::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
@@ -68,12 +67,12 @@ mod tests {
         );
         registry.register_imported_connection(config::TrustedConnection::from(UUID_PULL_IMP1));
         registry.register_imported_connection(config::TrustedConnection::from(UUID_PULL_IMP2));
-        registry
+        (registry_dir, registry)
     }
 
     #[test]
     fn test_delete_by_site_id_ok() {
-        let mut reg = registry(None);
+        let (_reg_dir, mut reg) = registry();
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, "server/push-site").is_ok());
         assert!(reg.path().exists());
@@ -81,18 +80,16 @@ mod tests {
 
     #[test]
     fn test_delete_by_site_id_missing() {
+        let (_reg_dir, mut reg) = registry();
         assert_eq!(
-            format!(
-                "{}",
-                delete(&mut registry(None), "someserver/site").unwrap_err()
-            ),
+            format!("{}", delete(&mut reg, "someserver/site").unwrap_err()),
             "Connection 'someserver/site' not found"
         );
     }
 
     #[test]
     fn test_delete_pull_by_uuid_ok() {
-        let mut reg = registry(None);
+        let (_reg_dir, mut reg) = registry();
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, UUID_PULL).is_ok());
         assert!(reg.pull_standard_is_empty());
@@ -101,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_delete_push_by_uuid_ok() {
-        let mut reg = registry(None);
+        let (_reg_dir, mut reg) = registry();
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, UUID_PUSH).is_ok());
         assert!(reg.push_is_empty());
@@ -110,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_delete_pull_imported_ok() {
-        let mut reg = registry(None);
+        let (_reg_dir, mut reg) = registry();
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, UUID_PULL_IMP1).is_ok());
         assert!(reg.path().exists());
@@ -119,18 +116,16 @@ mod tests {
     #[test]
     fn test_delete_by_uuid_missing() {
         let uuid = uuid::Uuid::new_v4();
+        let (_reg_dir, mut reg) = registry();
         assert_eq!(
-            format!(
-                "{}",
-                delete(&mut registry(None), &uuid.to_string()).unwrap_err()
-            ),
+            format!("{}", delete(&mut reg, &uuid.to_string()).unwrap_err()),
             format!("No connection with UUID '{}'", &uuid),
         );
     }
 
     #[test]
     fn test_delete_all_no_legacy_pull() {
-        let mut reg = registry(None);
+        let (_reg_dir, mut reg) = registry();
         assert!(!reg.path().exists());
         assert!(delete_all(&mut reg, false).is_ok());
         assert!(reg.path().exists());
@@ -139,12 +134,10 @@ mod tests {
 
     #[test]
     fn test_delete_all_with_legacy_pull() {
-        let tmp_dir = tempfile::tempdir().unwrap();
-        let mut reg = registry(Some(tmp_dir.path().join("registry.json")));
+        let (_reg_dir, mut reg) = registry();
         assert!(!reg.path().exists());
         assert!(delete_all(&mut reg, true).is_ok());
         assert!(reg.path().exists());
         assert!(reg.legacy_pull_active());
-        tmp_dir.close().unwrap();
     }
 }

@@ -623,20 +623,66 @@ pub mod test_helpers {
     use std::convert::From;
     use std::str::FromStr;
 
-    pub fn registry() -> Registry {
-        let mut registry = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
-        registry.register_connection(
-            &ConnectionType::Push,
-            &site_spec::SiteID::from_str("server/push-site").unwrap(),
-            trusted_connection_with_remote(),
-        );
-        registry.register_connection(
-            &ConnectionType::Pull,
-            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
-            trusted_connection_with_remote(),
-        );
-        registry.register_imported_connection(trusted_connection());
-        registry
+    pub struct TestRegistryDir {
+        // Wrapping this TempDir in an Option allows us to call close() on it in drop().
+        pub dir: Option<tempfile::TempDir>,
+    }
+
+    impl TestRegistryDir {
+        pub fn new() -> Self {
+            let dir = Some(tempfile::tempdir().unwrap());
+            Self { dir }
+        }
+
+        pub fn registry(&self) -> Registry {
+            Registry::new(
+                self.dir
+                    .as_ref()
+                    .unwrap()
+                    .path()
+                    .join("registered_connections.json")
+                    .as_ref(),
+            )
+            .unwrap()
+        }
+
+        pub fn prefilled_registry(&self) -> Registry {
+            let mut registry = Registry::new(
+                self.dir
+                    .as_ref()
+                    .unwrap()
+                    .path()
+                    .join("registered_connections.json")
+                    .as_ref(),
+            )
+            .unwrap();
+            registry.register_connection(
+                &ConnectionType::Push,
+                &site_spec::SiteID::from_str("server/push-site").unwrap(),
+                trusted_connection_with_remote(),
+            );
+            registry.register_connection(
+                &ConnectionType::Pull,
+                &site_spec::SiteID::from_str("server/pull-site").unwrap(),
+                trusted_connection_with_remote(),
+            );
+            registry.register_imported_connection(trusted_connection());
+            registry
+        }
+    }
+
+    // Clippy is happy
+    impl Default for TestRegistryDir {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl Drop for TestRegistryDir {
+        fn drop(&mut self) {
+            // We can manage to move the TempDir out (close() needs to) by replacing it with None.
+            self.dir.take().unwrap().close().unwrap();
+        }
     }
 
     pub fn trusted_connection_with_remote() -> TrustedConnectionWithRemote {
@@ -886,14 +932,15 @@ mod test_client_config {
 mod test_registry {
     use super::*;
     use crate::config::test_helpers::{
-        registry, trusted_connection, trusted_connection_with_remote,
+        trusted_connection, trusted_connection_with_remote, TestRegistryDir,
     };
     use std::convert::From;
     use std::str::FromStr;
 
     #[test]
     fn test_io() {
-        let reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let reg = reg_dir.prefilled_registry();
         assert!(!reg.path.exists());
 
         reg.save().unwrap();
@@ -912,7 +959,8 @@ mod test_registry {
 
     #[test]
     fn test_reload() {
-        let reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let reg = reg_dir.prefilled_registry();
         reg.save().unwrap();
         let mut reg = Registry::from_file(&reg.path).unwrap();
         assert!(!reg.refresh().unwrap());
@@ -939,7 +987,8 @@ mod test_registry {
 
     #[test]
     fn test_register_push_connection_new() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
             &ConnectionType::Push,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
@@ -952,7 +1001,8 @@ mod test_registry {
 
     #[test]
     fn test_register_push_connection_from_pull() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
             &ConnectionType::Push,
             &site_spec::SiteID::from_str("server/pull-site").unwrap(),
@@ -965,7 +1015,8 @@ mod test_registry {
 
     #[test]
     fn test_register_pull_connection_new() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
             &ConnectionType::Pull,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
@@ -978,7 +1029,8 @@ mod test_registry {
 
     #[test]
     fn test_register_pull_connection_from_push() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         reg.register_connection(
             &ConnectionType::Pull,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
@@ -991,7 +1043,8 @@ mod test_registry {
 
     #[test]
     fn test_register_imported_connection() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         let conn = trusted_connection();
         let uuid = conn.uuid;
         reg.register_imported_connection(conn);
@@ -1003,7 +1056,8 @@ mod test_registry {
 
     #[test]
     fn test_retrieve_standard_connection_by_uuid() {
-        let reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let reg = reg_dir.prefilled_registry();
         let uuid_push = reg.push_connections().next().unwrap().1.trust.uuid;
         let uuid_pull = reg.standard_pull_connections().next().unwrap().1.trust.uuid;
         let uuid_imported = reg.imported_pull_connections().next().unwrap().uuid;
@@ -1026,7 +1080,8 @@ mod test_registry {
 
     #[test]
     fn test_is_empty() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         assert!(!reg.is_empty());
         reg.connections.push.clear();
         assert!(!reg.is_empty());
@@ -1038,7 +1093,8 @@ mod test_registry {
 
     #[test]
     fn test_pull_connections() {
-        let reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let reg = reg_dir.prefilled_registry();
         let pull_conns: Vec<&TrustedConnection> = reg.pull_connections().collect();
         assert!(pull_conns.len() == 2);
         assert!(
@@ -1055,7 +1111,8 @@ mod test_registry {
 
     #[test]
     fn test_registered_site_ids() {
-        let reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let reg = reg_dir.prefilled_registry();
         let mut reg_site_ids: Vec<String> =
             reg.registered_site_ids().map(|s| s.to_string()).collect();
         reg_site_ids.sort_unstable();
@@ -1064,7 +1121,8 @@ mod test_registry {
 
     #[test]
     fn test_get_mutable() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         let pull_conn = reg.standard_pull_connections().next().unwrap().1.clone();
         let push_conn = reg.push_connections().next().unwrap().1.clone();
         assert_eq!(
@@ -1084,7 +1142,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_push() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         assert!(reg
             .delete_standard_connection(&site_spec::SiteID::from_str("server/push-site").unwrap())
             .is_ok());
@@ -1095,7 +1154,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_pull() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         assert!(reg
             .delete_standard_connection(&site_spec::SiteID::from_str("server/pull-site").unwrap())
             .is_ok());
@@ -1106,7 +1166,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_missing() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         assert_eq!(
             format!(
                 "{}",
@@ -1126,7 +1187,8 @@ mod test_registry {
     fn test_delete_imported_connection_ok() {
         let uuid_first_imported = uuid::Uuid::new_v4();
         let uuid_second_imported = uuid::Uuid::new_v4();
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         reg.connections.pull_imported.clear();
         reg.register_imported_connection(TrustedConnection::from(uuid_first_imported));
         reg.register_imported_connection(TrustedConnection::from(uuid_second_imported));
@@ -1140,7 +1202,8 @@ mod test_registry {
 
     #[test]
     fn test_delete_imported_connection_err() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         let uuid = uuid::Uuid::new_v4();
         assert_eq!(
             format!("{}", reg.delete_imported_connection(&uuid).unwrap_err()),
@@ -1153,14 +1216,16 @@ mod test_registry {
 
     #[test]
     fn test_clear() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         reg.clear();
         assert!(reg.is_empty());
     }
 
     #[test]
     fn test_clear_imported() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         reg.clear_imported();
         assert!(reg.pull_imported_is_empty());
         assert!(!reg.is_empty());
@@ -1168,8 +1233,8 @@ mod test_registry {
 
     #[test]
     fn test_legacy_pull_marker_handling() {
-        let tmp_dir = tempfile::tempdir().unwrap();
-        let mut registry = Registry::new(&tmp_dir.path().join("registry.json")).unwrap();
+        let reg_dir = TestRegistryDir::new();
+        let mut registry = reg_dir.registry();
         assert!(!registry.legacy_pull_active());
         assert!(registry.activate_legacy_pull().is_ok());
         assert!(registry.legacy_pull_active());
@@ -1182,6 +1247,5 @@ mod test_registry {
         assert!(registry.activate_legacy_pull().is_err());
         registry.save().unwrap();
         assert!(!registry.legacy_pull_marker.exists());
-        tmp_dir.close().unwrap();
     }
 }

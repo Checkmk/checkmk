@@ -783,8 +783,8 @@ mod test_status {
 
     #[test]
     fn test_status_end_to_end() {
-        let mut registry =
-            config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
+        let reg_dir = config::test_helpers::TestRegistryDir::new();
+        let mut registry = reg_dir.registry();
         registry.register_connection(
             &config::ConnectionType::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),

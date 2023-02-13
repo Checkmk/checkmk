@@ -144,7 +144,7 @@ fn conditionally_renew_connection_cert(
 #[cfg(test)]
 mod test_renew_certificate {
 
-    use crate::config::test_helpers::registry;
+    use crate::configuration::config::test_helpers::TestRegistryDir;
     use crate::modes::renew_certificate::*;
     use openssl;
     use openssl::asn1::Asn1Time;
@@ -225,7 +225,8 @@ mod test_renew_certificate {
 
     #[test]
     fn test_renew_certificate() {
-        let mut reg = registry();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.prefilled_registry();
         let uuid_push = reg.push_connections().next().unwrap().1.trust.uuid;
         let uuid_pull = reg.standard_pull_connections().next().unwrap().1.trust.uuid;
         let uuid_imported = reg.imported_pull_connections().next().unwrap().uuid;
@@ -270,74 +271,75 @@ mod test_renew_certificate {
 
     #[test]
     fn test_renew_all_certificates() {
-        let mut registry =
-            config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.registry();
         let cert_too_short = mk_ca_cert(10).unwrap();
         let cert_too_long = mk_ca_cert(365 * 600).unwrap();
         let cert_ok = mk_ca_cert(100).unwrap();
-        registry.register_connection(
+        reg.register_connection(
             &config::ConnectionType::Push,
             &site_spec::SiteID::from_str("server/push-site_1").unwrap(),
             new_trusted_connection_with_remote(cert_too_short.clone()),
         );
-        registry.register_connection(
+        reg.register_connection(
             &config::ConnectionType::Push,
             &site_spec::SiteID::from_str("server/push-site_2").unwrap(),
             new_trusted_connection_with_remote(cert_too_long.clone()),
         );
-        registry.register_connection(
+        reg.register_connection(
             &config::ConnectionType::Pull,
             &site_spec::SiteID::from_str("server/pull-site_1").unwrap(),
             new_trusted_connection_with_remote(cert_too_long),
         );
-        registry.register_connection(
+        reg.register_connection(
             &config::ConnectionType::Pull,
             &site_spec::SiteID::from_str("server/pull-site_2").unwrap(),
             new_trusted_connection_with_remote(cert_ok.clone()),
         );
-        registry.register_imported_connection(new_trusted_connection(cert_too_short.clone()));
+        reg.register_imported_connection(new_trusted_connection(cert_too_short.clone()));
 
         let test_api = TestApi {};
 
-        renew_all_certificates(&mut registry, &test_api).unwrap();
+        renew_all_certificates(&mut reg, &test_api).unwrap();
 
-        let conn = &registry
+        let conn = &reg
             .get(&site_spec::SiteID::from_str("server/push-site_1").unwrap())
             .unwrap()
             .trust;
         let (cert, uuid) = (&conn.certificate, conn.uuid);
         assert!(cert == &format!("new_cert_for_{uuid}"));
 
-        let conn = &registry
+        let conn = &reg
             .get(&site_spec::SiteID::from_str("server/push-site_2").unwrap())
             .unwrap()
             .trust;
         let (cert, uuid) = (&conn.certificate, conn.uuid);
         assert!(cert == &format!("new_cert_for_{uuid}"));
 
-        let conn = &registry
+        let conn = &reg
             .get(&site_spec::SiteID::from_str("server/pull-site_1").unwrap())
             .unwrap()
             .trust;
         let (cert, uuid) = (&conn.certificate, conn.uuid);
         assert!(cert == &format!("new_cert_for_{uuid}"));
 
-        let conn = &registry
+        let conn = &reg
             .get(&site_spec::SiteID::from_str("server/pull-site_2").unwrap())
             .unwrap()
             .trust;
         assert!(conn.certificate == cert_ok);
 
-        let conn = &registry.imported_pull_connections().next().unwrap();
+        let conn = &reg.imported_pull_connections().next().unwrap();
         assert!(conn.certificate == cert_too_short);
     }
 
     #[test]
     fn test_renew_all_certificates_legacy_pull_mode() -> AnyhowResult<()> {
-        let mut registry = config::Registry::new(tempfile::NamedTempFile::new()?.as_ref())?;
-        registry.activate_legacy_pull()?;
-        renew_all_certificates(&mut registry, &TestApi {})?;
-        assert!(registry.legacy_pull_active());
+        let reg_dir = TestRegistryDir::new();
+        let mut reg = reg_dir.registry();
+        reg.activate_legacy_pull()?;
+        renew_all_certificates(&mut reg, &TestApi {})?;
+        assert!(reg.legacy_pull_active());
         Ok(())
     }
 }

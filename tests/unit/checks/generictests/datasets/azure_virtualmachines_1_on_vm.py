@@ -54,7 +54,6 @@ checks = {
                     [],
                 ),
                 (1, "VM stopped", []),
-                (0, "Resource group: Glastonbury", []),
                 (0, "Location: westeurope", []),
                 (0, "Monitoring-all: true", []),
                 (0, "Monitoring-vm: true", []),

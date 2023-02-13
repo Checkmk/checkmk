@@ -102,17 +102,17 @@ checks = {
                 (0, "VMs per group: Glastonbury: 3\n", []),
                 (
                     0,
-                    "NotRunningUbuntu: Provisioning succeeded, VM deallocated, Resource group: Glastonbury\n",
+                    "NotRunningUbuntu: Provisioning succeeded, VM deallocated\n",
                     [],
                 ),
                 (
                     0,
-                    "provfailedserv: Provisioning failed, VM stopped, Resource group: Glastonbury\n",
+                    "provfailedserv: Provisioning failed, VM stopped\n",
                     [],
                 ),
                 (
                     0,
-                    "winserv2016: Provisioning succeeded, VM running, Resource group: Glastonbury\n",
+                    "winserv2016: Provisioning succeeded, VM running\n",
                     [],
                 ),
             ],
@@ -140,7 +140,6 @@ checks = {
                     [],
                 ),
                 (1, "VM stopped", []),
-                (0, "Resource group: Glastonbury", []),
                 (0, "Location: westeurope", []),
                 (0, "Monitoring-all: true", []),
                 (0, "Monitoring-vm: true", []),
@@ -163,7 +162,6 @@ checks = {
             [
                 (0, "Provisioning succeeded", []),
                 (0, "VM deallocated", []),
-                (0, "Resource group: Glastonbury", []),
                 (0, "Location: westeurope", []),
             ],
         ),
@@ -184,7 +182,6 @@ checks = {
             [
                 (0, "Provisioning succeeded", []),
                 (0, "VM running", []),
-                (0, "Resource group: Glastonbury", []),
                 (0, "Location: westeurope", []),
                 (0, "Monitoring-all: true", []),
                 (0, "Monitoring-vm: true", []),

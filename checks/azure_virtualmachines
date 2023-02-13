@@ -54,12 +54,6 @@ def check_azure_virtualmachines(_item, params, resource):
     power_state, msg = _azure_vms_get_status(resource, "PowerState")
     yield map_power_states.get(power_state, 1), "VM %s%s" % (power_state, msg)
 
-    # This service may be present on the agent host, the VM itself,
-    # or the resource group host. No need to show the group in the latter case.
-    group = resource.group
-    if host_name() != group:
-        yield 0, "Resource group: %s" % group
-
     for kv_pair in iter_resource_attributes(resource):
         yield 0, "%s: %s" % kv_pair
 
@@ -146,9 +140,9 @@ def check_azure_virtualmachines_summary(_summary, params, parsed):
         yield 0, "VMs per group: %s\n" % " / ".join(group_count)
 
     # long output
-    templ = "%s: Provisioning %s, VM %s, Resource group: %s\n"
+    templ = "%s: Provisioning %s, VM %s\n"
     names = (r.name for r in fixed_resources_list)
-    vms = sorted(zip(names, provisionings, powers, groups))
+    vms = sorted(zip(names, provisionings, powers))
     for vmach in vms:
         yield 0, templ % vmach
 

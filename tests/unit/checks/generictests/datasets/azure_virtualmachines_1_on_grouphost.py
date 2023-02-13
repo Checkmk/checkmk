@@ -101,17 +101,17 @@ checks = {
                 (0, "Power states: 1 deallocated / 1 running / 1 stopped", []),
                 (
                     0,
-                    "NotRunningUbuntu: Provisioning succeeded, VM deallocated, Resource group: non-existent-testhost\n",
+                    "NotRunningUbuntu: Provisioning succeeded, VM deallocated\n",
                     [],
                 ),
                 (
                     0,
-                    "provfailedserv: Provisioning failed, VM stopped, Resource group: non-existent-testhost\n",
+                    "provfailedserv: Provisioning failed, VM stopped\n",
                     [],
                 ),
                 (
                     0,
-                    "winserv2016: Provisioning succeeded, VM running, Resource group: non-existent-testhost\n",
+                    "winserv2016: Provisioning succeeded, VM running\n",
                     [],
                 ),
             ],

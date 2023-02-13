@@ -19,7 +19,7 @@ from cmk.utils.paths import (
     r4r_ready_dir,
     received_outputs_dir,
 )
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAgentConnectionMode, HostName
 
 
 class TestUUIDLink:
@@ -126,7 +126,9 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
     # During link creation the cmk_agent_connection could possibly not be calculated yet,
     # ie. push-agent or other.
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=push_configured)
-    uuid_link_manager.update_links({hostname: {"cmk_agent_connection": "push-agent"}})
+    uuid_link_manager.update_links(
+        {hostname: {"cmk_agent_connection": HostAgentConnectionMode.PUSH.value}}
+    )
 
     assert len(list(received_outputs_dir.iterdir())) == 1
 

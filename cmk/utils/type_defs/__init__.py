@@ -34,6 +34,7 @@ __all__ = [
     "HandlerName",
     "HandlerParameters",
     "HostAddress",
+    "HostAgentConnectionMode",
     "HostgroupName",
     "HostName",
     "HostOrServiceConditionRegex",
@@ -144,7 +145,7 @@ from .automations import (
     PiggybackHostsConnectorAttributes,
 )
 from .core_config import HostsToUpdate
-from .host import HostAddress, HostgroupName, HostName, HostState
+from .host import HostAddress, HostAgentConnectionMode, HostgroupName, HostName, HostState
 from .ip_lookup import UpdateDNSCacheResult
 from .notify import (
     Contact,

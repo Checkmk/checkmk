@@ -14,7 +14,7 @@ from tests.testlib.site import Site
 from tests.composition.controller_site_interactions.common import controller_status_json
 from tests.composition.utils import execute
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAgentConnectionMode, HostName
 
 
 def _get_status_output_json(
@@ -58,7 +58,7 @@ def test_status_pull(
         host_attributes={},
     )["connections"][0]["remote"]
     assert remote_status["host_name"] == "pull-host"
-    assert remote_status["connection_type"] == "pull-agent"
+    assert HostAgentConnectionMode(remote_status["connection_type"]) is HostAgentConnectionMode.PULL
 
 
 @pytest.mark.usefixtures("skip_if_not_cloud_edition")
@@ -70,10 +70,10 @@ def test_status_push(
         site=central_site,
         agent_ctl=agent_ctl,
         hostname=HostName("push-host"),
-        host_attributes={"cmk_agent_connection": "push-agent"},
+        host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
     )["connections"][0]["remote"]
     assert remote_status["host_name"] == "push-host"
-    assert remote_status["connection_type"] == "push-agent"
+    assert HostAgentConnectionMode(remote_status["connection_type"]) is HostAgentConnectionMode.PUSH
 
 
 @pytest.fixture(scope="module", autouse=True)

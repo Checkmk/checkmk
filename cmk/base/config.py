@@ -54,6 +54,7 @@ import cmk.utils.store.host_storage
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
+from cmk.utils.agent_registration import connection_mode_from_host_config
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
 from cmk.utils.config_path import ConfigPath
@@ -86,6 +87,7 @@ from cmk.utils.type_defs import (
     ContactgroupName,
     ExitSpec,
     HostAddress,
+    HostAgentConnectionMode,
     HostgroupName,
     HostName,
     HWSWInventoryParameters,
@@ -3149,13 +3151,8 @@ class ConfigCache:
 
         return list(parent_candidates.intersection(self.all_active_realhosts()))
 
-    def agent_connection_mode(self, host_name: HostName) -> Literal["pull-agent", "push-agent"]:
-        mode = self.explicit_host_attributes(host_name).get("cmk_agent_connection", "pull-agent")
-        if mode == "pull-agent":
-            return "pull-agent"
-        if mode == "push-agent":
-            return "push-agent"
-        raise NotImplementedError(f"unknown connection mode: {mode!r}")
+    def agent_connection_mode(self, host_name: HostName) -> HostAgentConnectionMode:
+        return connection_mode_from_host_config(self.explicit_host_attributes(host_name))
 
     def extra_host_attributes(self, host_name: HostName) -> ObjectAttributes:
         attrs: ObjectAttributes = {}

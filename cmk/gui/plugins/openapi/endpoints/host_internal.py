@@ -11,8 +11,8 @@ from collections.abc import Mapping
 from typing import Any, Literal
 from uuid import UUID
 
-from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.type_defs import HostName
+from cmk.utils.agent_registration import connection_mode_from_host_config, get_uuid_link_manager
+from cmk.utils.type_defs import HostAgentConnectionMode, HostName
 
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Response
@@ -54,7 +54,8 @@ def _link_with_uuid(
     uuid_link_manager.create_link(
         host_name,
         uuid,
-        push_configured=host.effective_attributes().get("cmk_agent_connection") == "push-agent",
+        push_configured=connection_mode_from_host_config(host.effective_attributes())
+        is HostAgentConnectionMode.PUSH,
     )
 
 

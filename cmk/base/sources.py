@@ -10,10 +10,10 @@
 import logging
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
-from typing import Final
+from typing import assert_never, Final
 
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import HostAddress, HostName, SectionName
+from cmk.utils.type_defs import HostAddress, HostAgentConnectionMode, HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
@@ -348,63 +348,66 @@ class _Builder:
             )
 
         connection_mode = self.config_cache.agent_connection_mode(self.host_name)
-        if connection_mode == "push-agent":
-            source = SourceInfo(
-                self.host_name,
-                self.ipaddress,
-                "push-agent",
-                FetcherType.PUSH_AGENT,
-                SourceType.HOST,
-            )
-            # convert to seconds and add grace period
-            interval = int(1.5 * 60 * self.config_cache.check_mk_check_interval(self.host_name))
-            return (
-                source,
-                NoFetcher(),
-                AgentFileCache(
-                    source.hostname,
-                    path_template=make_file_cache_path_template(
-                        fetcher_type=source.fetcher_type, ident=source.ident
+
+        match connection_mode:
+            case HostAgentConnectionMode.PUSH:
+                source = SourceInfo(
+                    self.host_name,
+                    self.ipaddress,
+                    "push-agent",
+                    FetcherType.PUSH_AGENT,
+                    SourceType.HOST,
+                )
+                # convert to seconds and add grace period
+                interval = int(1.5 * 60 * self.config_cache.check_mk_check_interval(self.host_name))
+                return (
+                    source,
+                    NoFetcher(),
+                    AgentFileCache(
+                        source.hostname,
+                        path_template=make_file_cache_path_template(
+                            fetcher_type=source.fetcher_type, ident=source.ident
+                        ),
+                        max_age=MaxAge.unlimited()
+                        if self.simulation_mode or self.file_cache_options.use_outdated
+                        else MaxAge(interval, interval, interval),
+                        simulation=self.simulation_mode,
+                        use_only_cache=True,
+                        file_cache_mode=(
+                            # Careful: at most read-only!
+                            FileCacheMode.DISABLED
+                            if self.file_cache_options.disabled
+                            else FileCacheMode.READ
+                        ),
                     ),
-                    max_age=MaxAge.unlimited()
-                    if self.simulation_mode or self.file_cache_options.use_outdated
-                    else MaxAge(interval, interval, interval),
-                    simulation=self.simulation_mode,
-                    use_only_cache=True,
-                    file_cache_mode=(
-                        # Careful: at most read-only!
-                        FileCacheMode.DISABLED
-                        if self.file_cache_options.disabled
-                        else FileCacheMode.READ
+                )
+            case HostAgentConnectionMode.PULL:
+                source = SourceInfo(
+                    self.host_name,
+                    self.ipaddress,
+                    "agent",
+                    FetcherType.TCP,
+                    SourceType.HOST,
+                )
+                return (
+                    source,
+                    self.config_cache.make_tcp_fetcher(
+                        source.hostname, ensure_ipaddress(source.ipaddress)
                     ),
-                ),
-            )
-        if connection_mode == "pull-agent":
-            source = SourceInfo(
-                self.host_name,
-                self.ipaddress,
-                "agent",
-                FetcherType.TCP,
-                SourceType.HOST,
-            )
-            return (
-                source,
-                self.config_cache.make_tcp_fetcher(
-                    source.hostname, ensure_ipaddress(source.ipaddress)
-                ),
-                AgentFileCache(
-                    source.hostname,
-                    path_template=make_file_cache_path_template(
-                        fetcher_type=source.fetcher_type, ident=source.ident
+                    AgentFileCache(
+                        source.hostname,
+                        path_template=make_file_cache_path_template(
+                            fetcher_type=source.fetcher_type, ident=source.ident
+                        ),
+                        max_age=self._max_age_tcp(),
+                        simulation=self.simulation_mode,
+                        use_only_cache=self.file_cache_options.tcp_use_only_cache
+                        or self.file_cache_options.use_only_cache,
+                        file_cache_mode=self.file_cache_options.file_cache_mode(),
                     ),
-                    max_age=self._max_age_tcp(),
-                    simulation=self.simulation_mode,
-                    use_only_cache=self.file_cache_options.tcp_use_only_cache
-                    or self.file_cache_options.use_only_cache,
-                    file_cache_mode=self.file_cache_options.file_cache_mode(),
-                ),
-            )
-        raise NotImplementedError(f"connection mode {connection_mode!r}")
+                )
+
+        assert_never(connection_mode)
 
     def _get_special_agents(self) -> Iterable[tuple[SourceInfo, Fetcher, FileCache]]:
         def make_id(agentname: str) -> str:

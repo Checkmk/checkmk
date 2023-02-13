@@ -15,7 +15,7 @@ from tests.testlib.site import Site
 from tests.composition.controller_site_interactions.common import query_hosts_service_count
 from tests.composition.utils import execute
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAgentConnectionMode, HostName
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -86,7 +86,7 @@ def test_register_workflow_push(
         agent_ctl=agent_ctl,
         hostname=HostName("push-host"),
         host_attributes={
-            "cmk_agent_connection": "push-agent",
+            "cmk_agent_connection": HostAgentConnectionMode.PUSH.value,
             "tag_address_family": "no-ip",
         },
     )

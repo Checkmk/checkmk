@@ -12,7 +12,7 @@ from typing import Any, NamedTuple
 from uuid import UUID
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAgentConnectionMode, HostName
 
 
 def get_r4r_filepath(folder: Path, uuid: UUID) -> Path:
@@ -23,6 +23,15 @@ def get_uuid_link_manager() -> UUIDLinkManager:
     return UUIDLinkManager(
         received_outputs_dir=cmk.utils.paths.received_outputs_dir,
         data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+    )
+
+
+def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostAgentConnectionMode:
+    return HostAgentConnectionMode(
+        host_config.get(
+            "cmk_agent_connection",
+            HostAgentConnectionMode.PULL.value,
+        )
     )
 
 
@@ -110,7 +119,8 @@ class UUIDLinkManager:
                 self.create_link(
                     link.hostname,
                     link.uuid,
-                    push_configured=host_config.get("cmk_agent_connection", "") == "push-agent",
+                    push_configured=connection_mode_from_host_config(host_config)
+                    is HostAgentConnectionMode.PUSH,
                 )
 
     @staticmethod

@@ -190,6 +190,9 @@ tcp_hosts: list = [
     # Match all those that don't have ping and don't have no-agent set
     (["!ping", "!no-agent"], _ALL_HOSTS),
 ]
+# cf. cmk.utils.type_defs.HostAgentConnectionMode, currently there seems to be no good way to
+# directly couple these two definitions
+# https://github.com/python/typing/issues/781
 cmk_agent_connection: dict[HostName, Literal["pull-agent", "push-agent"]] = {}
 bulkwalk_hosts: list[RuleSpec[object]] = []
 snmpv2c_hosts: list[RuleSpec[object]] = []

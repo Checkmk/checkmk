@@ -104,7 +104,9 @@ class CMKOpenApiSession(requests.Session):
         """
         assert isinstance(method, str)  # HACK
         assert isinstance(url, str)  # HACK
-        url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
+
+        if not url.startswith("http://"):
+            url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
 
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
         response = super().request(method, url, *args, **kwargs)

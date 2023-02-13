@@ -44,6 +44,7 @@
 #include "livestatus/InputBuffer.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Poller.h"
 #include "livestatus/Queue.h"

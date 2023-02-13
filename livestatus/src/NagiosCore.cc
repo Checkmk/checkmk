@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
-#include <sstream>
 #include <utility>
 
 #include "Comment.h"

@@ -7,14 +7,28 @@
 #define MonitoringCore_h
 
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
+#include <functional>
+#include <memory>
 #include <string>
+#include <vector>
 
-#include "livestatus/Interface.h"
 #include "livestatus/Metric.h"
-#include "livestatus/Triggers.h"
-#include "livestatus/User.h"
 enum class Encoding;
+class IComment;
+class IContact;
+class IContactGroup;
+class IDowntime;
+class IHost;
+class IHostGroup;
+class IService;
+class IServiceGroup;
+class ITimeperiod;
+class Triggers;
 class Logger;
+class User;
 
 // Livestatus view onto a command definition, regardless of the monitoring core
 struct Command {

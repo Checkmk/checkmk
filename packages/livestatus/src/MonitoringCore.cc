@@ -5,6 +5,8 @@
 
 #include "livestatus/MonitoringCore.h"
 
+#include <sstream>
+
 #include "livestatus/Logger.h"
 
 void Paths::dump(Logger *logger) const {

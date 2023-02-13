@@ -20,7 +20,7 @@ from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.render as render
 from cmk.utils.licensing import get_license_usage_report_validity, LicenseUsageReportValidity
-from cmk.utils.licensing.state import is_licensed
+from cmk.utils.licensing.state import is_expired_trial, is_licensed
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.forms as forms
@@ -61,7 +61,12 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUni
 from cmk.gui.watolib import activate_changes, backup_snapshots
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    collect_all_hosts,
+    Folder,
+    folder_preserving_link,
+    Host,
+)
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import build_index_background
 
@@ -191,9 +196,10 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
     def _license_allows_activation(self):
         now = int(datetime.now().timestamp())
+
         if not is_licensed() or self._license_verification_response is None:
-            #  TODO check for if (is_expired_trial() and num_hosts > 25) -> False
-            #  Figure out how to get num_hosts after activation
+            if is_expired_trial() and len(collect_all_hosts()) > 25:
+                return False
             return True
 
         license_usage_report_valid = (
@@ -451,6 +457,16 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         if (cee_error := self._get_cee_license_validity_error()) is not None:
             errors.append(cee_error)
+
+        if is_expired_trial() and (num_active_hosts := len(collect_all_hosts())) > 25:
+            errors.append(
+                _(
+                    "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
+                    "Your Checkmk installation can handle 25 hosts after the 30-day trial period, "
+                    "not %d. Please adjust your configuration accordingly and try again."
+                )
+                % num_active_hosts
+            )
 
         if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
             errors.append(_("The license usage history is older than five days."))

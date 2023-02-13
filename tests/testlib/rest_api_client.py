@@ -12,7 +12,7 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping
-from typing import Any, Literal, NoReturn, Sequence, Type, TypedDict
+from typing import Any, cast, Literal, NoReturn, Sequence, Type, TypedDict
 
 from pydantic import BaseModel, StrictStr
 
@@ -73,6 +73,11 @@ class RestApiException(Exception):
         self.response = response
 
     def __str__(self) -> str:
+        try:
+            formatted_body = json.loads(cast(bytes, self.response.body))
+        except (ValueError, TypeError):
+            formatted_body = self.response.body
+
         return pprint.pformat(
             {
                 "request": {
@@ -83,7 +88,7 @@ class RestApiException(Exception):
                 },
                 "response": {
                     "status": self.response.status_code,
-                    "body": self.response.body,
+                    "body": formatted_body,
                     "headers": self.response.headers,
                 },
             }

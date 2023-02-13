@@ -52,13 +52,13 @@ def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.
           "host_label": "[{'value':'a:b'},{'value':'c:d'}]",
       }}
     Exemplary new visual context for a host label filter:
-      {"host_label_groups": {
-          "host_label_groups_count": 1,
-          "host_label_groups_1_bool": "and",
-          "host_label_groups_1_vs_1_bool": "and",
-          "host_label_groups_1_vs_1_vs": "a:b",
-          "host_label_groups_1_vs_2_bool": "and",
-          "host_label_groups_1_vs_2_vs": "c:d",
+      {"host_labels": {
+          "host_labels_count": 1,
+          "host_labels_1_bool": "and",
+          "host_labels_1_vs_1_bool": "and",
+          "host_labels_1_vs_1_vs": "a:b",
+          "host_labels_1_vs_2_bool": "and",
+          "host_labels_1_vs_2_vs": "c:d",
       }}
     """
     for (owner, _name), config in all_visuals.items():
@@ -66,9 +66,9 @@ def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.
             continue
 
         for object_type in ["host", "service"]:
-            old_id = f"{object_type}_labels"  # old label filter id
+            ident = f"{object_type}_labels"
             ctx = config.get("context", {})
-            labels_config = ctx.get(old_id, {}).get(  # type: ignore[attr-defined]
+            labels_config = ctx.get(ident, {}).get(  # type: ignore[attr-defined]
                 f"{object_type}_label"
             )
 
@@ -77,15 +77,14 @@ def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.
 
             labels = [d.get("value") for d in json.loads(labels_config)]
 
-            new_id = f"{object_type}_label_groups"  # new label filter id
             label_groups_dict = {
-                f"{new_id}_count": "1",
-                f"{new_id}_1_bool": "and",
-                f"{new_id}_1_vs_count": str(len(labels)),
+                f"{ident}_count": "1",
+                f"{ident}_1_bool": "and",
+                f"{ident}_1_vs_count": str(len(labels)),
             }
 
             for i, label in enumerate(labels, 1):
-                label_id = f"{new_id}_1_vs_{i}"
+                label_id = f"{ident}_1_vs_{i}"
                 label_groups_dict.update(
                     {
                         f"{label_id}_bool": "and",
@@ -97,7 +96,6 @@ def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.
             label_groups_value: _LabelGroups = AllLabelGroupsQuery(
                 object_type=object_type  # type: ignore[arg-type]
             ).parse_value(label_groups_dict)
-            LabelGroups().validate_value(value=label_groups_value, varprefix=new_id)
+            LabelGroups().validate_value(value=label_groups_value, varprefix=ident)
 
-            ctx[new_id] = label_groups_dict  # type: ignore[index]
-            del ctx[old_id]  # type: ignore[attr-defined]
+            ctx[ident] = label_groups_dict  # type: ignore[index]

@@ -693,13 +693,13 @@ class AllLabelGroupsQuery(Query):
         self.column = f"{object_type}_labels"
         # Request vars can be empty here. They are gathered dynamically within the
         # LabelGroupFilter class, value() method
-        super().__init__(ident=f"{object_type}_label_groups", request_vars=[])
+        super().__init__(ident=f"{object_type}_labels", request_vars=[])
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return encode_label_groups_for_livestatus(self.column, self.parse_value(value))
 
     def parse_value(self, value: FilterHTTPVariables) -> LabelGroups:
-        prefix: str = self.ident  # "[host|service]_label_groups"
+        prefix: str = self.ident  # "[host|service]_labels"
         label_groups: list = []
 
         groups_count: int = int(value.get(f"{prefix}_count") or "0")

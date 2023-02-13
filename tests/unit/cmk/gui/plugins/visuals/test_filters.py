@@ -302,26 +302,26 @@ filter_tests = [
     ),
     # Testing base class LabelGroupFilter
     FilterTest(
-        ident="host_label_groups",
-        request_vars=[("host_label_groups_count", "0")],
+        ident="host_labels",
+        request_vars=[("host_labels_count", "0")],
         expected_filters="",
     ),
     FilterTest(
-        ident="host_label_groups",
+        ident="host_labels",
         request_vars=[
-            ("host_label_groups_count", "2"),
+            ("host_labels_count", "2"),
             # Group 1
-            ("host_label_groups_1_vs_count", "2"),
-            ("host_label_groups_1_bool", "and"),
-            ("host_label_groups_1_vs_1_bool", "and"),
-            ("host_label_groups_1_vs_1_vs", "label:abc"),
-            ("host_label_groups_1_vs_2_bool", "or"),
-            ("host_label_groups_1_vs_2_vs", "label:xyz"),
+            ("host_labels_1_vs_count", "2"),
+            ("host_labels_1_bool", "and"),
+            ("host_labels_1_vs_1_bool", "and"),
+            ("host_labels_1_vs_1_vs", "label:abc"),
+            ("host_labels_1_vs_2_bool", "or"),
+            ("host_labels_1_vs_2_vs", "label:xyz"),
             # Group 2
-            ("host_label_groups_2_vs_count", "1"),
-            ("host_label_groups_2_bool", "not"),
-            ("host_label_groups_2_vs_1_bool", "and"),
-            ("host_label_groups_2_vs_1_vs", "label:mno"),
+            ("host_labels_2_vs_count", "1"),
+            ("host_labels_2_bool", "not"),
+            ("host_labels_2_vs_1_bool", "and"),
+            ("host_labels_2_vs_1_vs", "label:mno"),
         ],
         expected_filters=(
             "Filter: host_labels = 'label' 'abc'\nFilter: host_labels = 'label' 'xyz'\nOr: 2\n"

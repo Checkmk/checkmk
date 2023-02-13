@@ -21,8 +21,7 @@ class FigureRegistry<T extends FigureData> {
     register(
         figure_class: new (div_selector, fixed_size?: any) => FigureBase<T>
     ): void {
-        let instance: FigureBase<T> = new figure_class(null, null);
-        this._figures[instance.ident()] = figure_class;
+        this._figures[figure_class.prototype.ident()] = figure_class;
     }
 
     get_figure(

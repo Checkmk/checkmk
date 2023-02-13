@@ -271,8 +271,8 @@ void Store::answerCommandEventConsole(const std::string &command) {
         return;
     }
     try {
-        ECTableConnection(_mc->loggerLivestatus(), _mc->paths().mkeventd_socket,
-                          command)
+        ECTableConnection(_mc->loggerLivestatus(),
+                          _mc->paths().event_console_status_socket, command)
             .run();
     } catch (const std::runtime_error &err) {
         Alert(logger()) << err.what();

@@ -990,7 +990,7 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 fl_paths.logwatch_directory =
                     check_path("logwatch directory", right);
             } else if (left == "mkeventd_socket") {
-                fl_paths.mkeventd_socket = right;
+                fl_paths.event_console_status_socket = right;
             } else if (left == "pnp_path") {
                 fl_paths.rrd_multiple_directory =
                     check_path("RRD multiple directory", right);
@@ -1023,8 +1023,8 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     const std::string sp{fl_paths.livestatus_socket};
     auto slash = sp.rfind('/');
     auto prefix = slash == std::string::npos ? "" : sp.substr(0, slash + 1);
-    if (fl_paths.mkeventd_socket.empty()) {
-        fl_paths.mkeventd_socket = prefix + "mkeventd/status";
+    if (fl_paths.event_console_status_socket.empty()) {
+        fl_paths.event_console_status_socket = prefix + "mkeventd/status";
     }
     // TODO(sp) Make this configurable.
     if (fl_paths.rrdcached_socket.empty()) {

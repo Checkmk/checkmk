@@ -48,7 +48,7 @@ public:
     ECTableConnection(MonitoringCore *mc, const Table &table, Query &query,
                       std::function<bool(const ECRow &)> is_authorized)
         : EventConsoleConnection(mc->loggerLivestatus(),
-                                 mc->paths().mkeventd_socket)
+                                 mc->paths().event_console_status_socket)
         , mc_{mc}
         , table_{table}
         , query_{query}

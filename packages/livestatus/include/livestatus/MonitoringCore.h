@@ -45,7 +45,7 @@ struct Paths {
     std::filesystem::path structured_status_directory;
     std::filesystem::path robotmk_html_log_directory;
     std::filesystem::path logwatch_directory;
-    std::filesystem::path mkeventd_socket;
+    std::filesystem::path event_console_status_socket;
     std::filesystem::path history_file;
     std::filesystem::path history_archive_directory;
     std::filesystem::path rrd_multiple_directory;

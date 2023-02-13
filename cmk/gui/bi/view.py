@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import pickle
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any, Literal, Set
@@ -51,7 +50,7 @@ from cmk.bi.data_fetcher import get_cache_dir
 from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
 
-from ...bi.type_defs import frozen_aggregations_dir
+from cmk.bi.type_defs import frozen_aggregations_dir
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -59,8 +58,9 @@ from ...bi.type_defs import frozen_aggregations_dir
 #    | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \
 #    |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
 #
-from ...utils.exceptions import MKGeneralException
-from ..views.command.base import CommandSpecWithoutSite
+from cmk.utils import store
+from cmk.utils.exceptions import MKGeneralException
+from cmk.gui.views.command.base import CommandSpecWithoutSite
 
 
 class DataSourceBIAggregations(ABCDataSource):
@@ -882,8 +882,9 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     bi_ref_aggregation, bi_ref_branch = found_aggr
 
     # Load other aggregation from disk
+    other_aggr_path = Path(get_cache_dir(), "compiled_aggregations", other_aggregation)
     other_aggr = BIAggregation.create_trees_from_schema(
-        pickle.loads(Path(get_cache_dir(), "compiled_aggregations", other_aggregation).read_bytes())
+        store.load_object_from_pickle_file(other_aggr_path, default={})
     )
 
     aggregations_are_equal = True

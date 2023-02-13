@@ -724,6 +724,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
             g_timeperiods_cache->update(from_timeval(ps->timestamp));
             start_threads();
+            fl_core->paths().dump(fl_core->loggerLivestatus());
             break;
         default:
             break;
@@ -1047,7 +1048,6 @@ void omd_advertize(Logger *logger) {
     Notice(logger) << "built with " << BUILD_CXX << ", using "
                    << RegExp::engine() << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";
-    fl_paths.dump(logger);
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(logger)
             << "running on Checkmk site " << omd_site << ", cool.";

@@ -4,12 +4,13 @@ set(livestatus_headers
     ${header_location}/AndingFilter.h
     ${header_location}/AttributeBitmaskColumn.h
     ${header_location}/AttributeListColumn.h
+    ${header_location}/Attributes.h
     ${header_location}/Average.h
     ${header_location}/BitMask.h
     ${header_location}/BlobColumn.h
     ${header_location}/ChronoUtils.h
-    ${header_location}/Column.h
     ${header_location}/ColumnFilter.h
+    ${header_location}/Column.h
     ${header_location}/CommentRenderer.h
     ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
@@ -21,18 +22,18 @@ set(livestatus_headers
     ${header_location}/DoubleFilter.h
     ${header_location}/DowntimeRenderer.h
     ${header_location}/DynamicColumn.h
-    ${header_location}/DynamicFileColumn.h
     ${header_location}/DynamicEventConsoleReplicationColumn.h
+    ${header_location}/DynamicFileColumn.h
     ${header_location}/EventConsoleConnection.h
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
+    ${header_location}/HostServiceState.h
     ${header_location}/InputBuffer.h
     ${header_location}/IntAggregator.h
     ${header_location}/IntColumn.h
     ${header_location}/Interface.h
     ${header_location}/IntFilter.h
-    ${header_location}/HostServiceState.h
     ${header_location}/ListColumn.h
     ${header_location}/ListFilter.h
     ${header_location}/LogCache.h
@@ -44,6 +45,7 @@ set(livestatus_headers
     ${header_location}/Metric.h
     ${header_location}/mk_inventory.h
     ${header_location}/mk_logwatch.h
+    ${header_location}/MonitoringCore.h
     ${header_location}/NullColumn.h
     ${header_location}/opids.h
     ${header_location}/OringFilter.h
@@ -57,12 +59,10 @@ set(livestatus_headers
     ${header_location}/Query.h
     ${header_location}/Queue.h
     ${header_location}/RegExp.h
-    ${header_location}/Renderer.h
     ${header_location}/RendererBrokenCSV.h
     ${header_location}/RendererCSV.h
+    ${header_location}/Renderer.h
     ${header_location}/RendererJSON.h
-    ${header_location}/ServiceGroupMembersColumn.h
-    ${header_location}/ServiceListRenderer.h
     ${header_location}/RendererPython3.h
     ${header_location}/Row.h
     ${header_location}/ServiceGroupMembersColumn.h
@@ -72,19 +72,19 @@ set(livestatus_headers
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h
-    ${header_location}/Table.h
     ${header_location}/TableColumns.h
     ${header_location}/TableCommands.h
-    ${header_location}/TableContacts.h
     ${header_location}/TableContactGroups.h
+    ${header_location}/TableContacts.h
     ${header_location}/TableCrashReports.h
     ${header_location}/TableEventConsole.h
     ${header_location}/TableEventConsoleReplication.h
     ${header_location}/TableEventConsoleRules.h
     ${header_location}/TableEventConsoleStatus.h
+    ${header_location}/Table.h
     ${header_location}/TableLabels.h
-    ${header_location}/TableTimeperiods.h
     ${header_location}/TableStatus.h
+    ${header_location}/TableTimeperiods.h
     ${header_location}/TimeAggregator.h
     ${header_location}/TimeColumn.h
     ${header_location}/TimeFilter.h
@@ -94,22 +94,22 @@ set(livestatus_sources
     AndingFilter.cc
     AttributeListColumn.cc
     Average.cc
-    CrashReport.cc
     Column.cc
     ColumnFilter.cc
     CommentRenderer.cc
     CountAggregator.cc
+    CrashReport.cc
     DictFilter.cc
     DoubleFilter.cc
     DowntimeRenderer.cc
-    EventConsoleConnection.cc
     DynamicEventConsoleReplicationColumn.cc
+    EventConsoleConnection.cc
     FileSystemHelper.cc
     Filter.cc
     global_counters.cc
+    HostServiceState.cc
     InputBuffer.cc
     IntFilter.cc
-    HostServiceState.cc
     ListFilter.cc
     LogCache.cc
     LogEntry.cc
@@ -119,8 +119,9 @@ set(livestatus_sources
     Metric.cc
     mk_inventory.cc
     mk_logwatch.cc
-    opids.cc
+    MonitoringCore.cc
     NullColumn.cc
+    opids.cc
     OringFilter.cc
     OutputBuffer.cc
     PerfdataAggregator.cc
@@ -128,8 +129,8 @@ set(livestatus_sources
     POSIXUtils.cc
     Query.cc
     RegExp.cc
-    Renderer.cc
     RendererBrokenCSV.cc
+    Renderer.cc
     RendererCSV.cc
     RendererJSON.cc
     RendererPython3.cc
@@ -142,16 +143,16 @@ set(livestatus_sources
     Table.cc
     TableColumns.cc
     TableCommands.cc
-    TableContacts.cc
     TableContactGroups.cc
+    TableContacts.cc
     TableCrashReports.cc
     TableEventConsole.cc
     TableEventConsoleReplication.cc
     TableEventConsoleRules.cc
     TableEventConsoleStatus.cc
     TableLabels.cc
-    TableTimeperiods.cc
     TableStatus.cc
+    TableTimeperiods.cc
     TimeFilter.cc
     Triggers.cc
     User.cc)

@@ -49,8 +49,6 @@ struct NagiosPaths {
     std::filesystem::path history_archive_directory;
     std::filesystem::path rrd_multiple_directory;
     std::filesystem::path rrdcached_socket;
-
-    void dump(Logger *logger) const;
 };
 
 struct NagiosLimits {

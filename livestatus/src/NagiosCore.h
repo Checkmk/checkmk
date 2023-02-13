@@ -36,6 +36,7 @@ class OutputBuffer;
 
 // TODO(sp) Use Paths
 struct NagiosPaths {
+    std::filesystem::path log_file;
     std::filesystem::path crash_reports_directory;
     std::filesystem::path license_usage_history_file;
     std::filesystem::path inventory_directory;
@@ -43,12 +44,11 @@ struct NagiosPaths {
     std::filesystem::path robotmk_html_log_directory;
     std::filesystem::path logwatch_directory;
     std::filesystem::path event_console_status_socket;
+    std::filesystem::path livestatus_socket;
     std::filesystem::path history_file;
     std::filesystem::path history_archive_directory;
     std::filesystem::path rrd_multiple_directory;
     std::filesystem::path rrdcached_socket;
-    std::filesystem::path livestatus_socket;
-    std::filesystem::path log_file;
 
     void dump(Logger *logger) const;
 };

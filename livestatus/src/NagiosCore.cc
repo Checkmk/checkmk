@@ -46,6 +46,7 @@ extern int g_num_queued_connections;
 extern std::atomic_int32_t g_livestatus_active_connections;
 
 void NagiosPaths::dump(Logger *logger) const {
+    Notice(logger) << "log file = " << log_file;
     Notice(logger) << "crash reports directory = " << crash_reports_directory;
     Notice(logger) << "license usage history file = "
                    << license_usage_history_file;
@@ -57,13 +58,12 @@ void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "logwatch directory = " << logwatch_directory;
     Notice(logger) << "event console status socket = "
                    << event_console_status_socket;
+    Notice(logger) << "Livestatus socket = " << livestatus_socket;
     Notice(logger) << "history file = " << history_file;
     Notice(logger) << "history archive directory = "
                    << history_archive_directory;
     Notice(logger) << "RRD multiple directory = " << rrd_multiple_directory;
     Notice(logger) << "rrdcached socket = " << rrdcached_socket;
-    Notice(logger) << "Livestatus socket = " << livestatus_socket;
-    Notice(logger) << "log file = " << log_file;
 }
 
 NagiosCore::NagiosCore(
@@ -337,6 +337,7 @@ GlobalFlags NagiosCore::globalFlags() const {
 
 Paths NagiosCore::paths() const {
     return {
+        .log_file = _paths.log_file,
         .crash_reports_directory = _paths.crash_reports_directory,
         .license_usage_history_file = _paths.license_usage_history_file,
         .inventory_directory = _paths.inventory_directory,
@@ -344,12 +345,11 @@ Paths NagiosCore::paths() const {
         .robotmk_html_log_directory = _paths.robotmk_html_log_directory,
         .logwatch_directory = _paths.logwatch_directory,
         .event_console_status_socket = _paths.event_console_status_socket,
+        .livestatus_socket = _paths.livestatus_socket,
         .history_file = _paths.history_file,
         .history_archive_directory = _paths.history_archive_directory,
         .rrd_multiple_directory = _paths.rrd_multiple_directory,
         .rrdcached_socket = _paths.rrdcached_socket,
-        .livestatus_socket = _paths.livestatus_socket,
-        .log_file = _paths.log_file,
     };
 }
 

@@ -209,18 +209,7 @@ class RestApiClient:
                 headers=default_headers,
                 url_is_complete=url_is_complete,
             )
-
-        if method == "get" and expect_ok:
-            self._check_response_keys(resp, url)
-
         return resp
-
-    def _check_response_keys(self, resp: Response, url: str) -> None:
-        if "collections" in url:
-            assert set(resp.json) == {"links", "domainType", "id", "value", "extensions"}
-
-        if "objects" in url:
-            assert set(resp.json) == {"links", "domainType", "id", "title", "members", "extensions"}
 
     def follow_link(
         self,
@@ -631,85 +620,3 @@ class AuxTagTestClient(RestApiClient):
             url=f"/objects/{self.domain}/{aux_tag_id}/actions/delete/invoke",
             headers={"If-Match": etag, "Accept": "application/json"},
         )
-
-
-# === TimePeriod Endpoint Client ===
-
-
-class TimePeriodObject(BaseModel):
-    alias: StrictStr
-    active_time_ranges: list
-    exceptions: list
-    exclude: list | None  # builtin timeperiods don't have an exclude field
-
-
-class TimePeriodObjectResponse(ObjectResponse):
-    domainType: Literal["time_period"]
-    id: StrictStr
-    title: StrictStr
-    extensions: TimePeriodObject
-
-
-class TimePeriodCollectionResponse(CollectionResponse):
-    id: Literal["time_period"]
-    domainType: Literal["time_period"]
-    value: list[TimePeriodObjectResponse]
-
-
-class TimePeriodTestClient(RestApiClient):
-    domain: Literal["time_period"] = "time_period"
-
-    def get(self, time_period_id: str, expect_ok: bool = True) -> Response:
-        resp = self._request(
-            "get",
-            url=f"/objects/{self.domain}/{time_period_id}",
-            expect_ok=expect_ok,
-        )
-        if expect_ok:
-            TimePeriodObjectResponse(**resp.json)
-        return resp
-
-    def get_all(self, expect_ok: bool = True) -> Response:
-        resp = self._request(
-            "get",
-            url=f"/domain-types/{self.domain}/collections/all",
-            expect_ok=expect_ok,
-        )
-        if expect_ok:
-            TimePeriodCollectionResponse(**resp.json)
-        return resp
-
-    def delete(self, time_period_id: str) -> Response:
-        etag = self.get(time_period_id).headers["ETag"]
-        resp = self._request(
-            "delete",
-            url=f"/objects/{self.domain}/{time_period_id}",
-            headers={"If-Match": etag, "Accept": "application/json"},
-        )
-        resp.assert_status_code(204)
-        return resp
-
-    def create(self, time_period_data: dict[str, object], expect_ok: bool = True) -> Response:
-        resp = self._request(
-            "post",
-            url=f"/domain-types/{self.domain}/collections/all",
-            body=time_period_data,
-            expect_ok=expect_ok,
-        )
-        if expect_ok:
-            TimePeriodObjectResponse(**resp.json)
-        return resp
-
-    def edit(
-        self, time_period_id: str, time_period_data: dict[str, object], expect_ok: bool = True
-    ) -> Response:
-        etag = self.get(time_period_id).headers["ETag"]
-        resp = self._request(
-            "put",
-            url=f"/objects/{self.domain}/{time_period_id}",
-            body=time_period_data,
-            expect_ok=expect_ok,
-            headers={"If-Match": etag, "Accept": "application/json"},
-        )
-
-        return resp

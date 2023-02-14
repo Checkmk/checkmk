@@ -746,23 +746,29 @@ class ModeEditTimeperiod(WatoMode):
                 self._name,
             )
 
+        elements = [
+            ("name", name_element),
+            (
+                "alias",
+                TextInput(
+                    title=_("Alias"),
+                    help=_("An alias or description of the time period"),
+                    allow_empty=False,
+                    size=80,
+                ),
+            ),
+            ("weekdays", self._vs_weekdays()),
+            ("exceptions", self._vs_exceptions()),
+        ]
+
+        # Show the exclude option in the gui, only when there are choices.
+        exclude = self._vs_exclude()
+        if len(exclude._choices):
+            elements.append(("exclude", exclude))
+
         return Dictionary(
             title=_("Time period"),
-            elements=[
-                ("name", name_element),
-                (
-                    "alias",
-                    TextInput(
-                        title=_("Alias"),
-                        help=_("An alias or description of the timeperiod"),
-                        allow_empty=False,
-                        size=80,
-                    ),
-                ),
-                ("weekdays", self._vs_weekdays()),
-                ("exceptions", self._vs_exceptions()),
-                ("exclude", self._vs_exclude()),
-            ],
+            elements=elements,
             render="form",
             optional_keys=False,
             validate=self._validate_id_and_alias,
@@ -869,11 +875,18 @@ class ModeEditTimeperiod(WatoMode):
     def _other_timeperiod_choices(self):
         """List of timeperiods that can be used for exclusions
 
-        We offer the list of all other timeperiods - but only those that do not exclude the current
-        timeperiod (in order to avoid cycles)"""
+        We offer the list of all other time periods - but only those that do not exclude the current
+        time period (in order to avoid cycles)
+
+        Don't allow the built-in time period '24X7'.
+
+        """
         other_tps = []
 
         for tpname, tp in self._timeperiods.items():
+            if tpname == "24X7":
+                continue
+
             if not self._timeperiod_excludes(tpname):
                 other_tps.append((tpname, timeperiod_spec_alias(tp, tpname)))
 
@@ -992,7 +1005,7 @@ class ModeEditTimeperiod(WatoMode):
             "alias": vs_spec["alias"],
         }
 
-        if vs_spec["exclude"]:
+        if "exclude" in vs_spec:
             tp_spec["exclude"] = vs_spec["exclude"]
 
         tp_spec.update(self._exceptions_from_valuespec(vs_spec))

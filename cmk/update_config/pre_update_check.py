@@ -123,7 +123,7 @@ def _validate_rule_values(
                         "Exception: %s\n\n"
                         "You can abort the update process (A) and "
                         "try to fix the incompatibilities with a downgrade "
-                        "to the version you came from or continue the update.\n"
+                        "to the version you came from or continue (c) the update.\n\n"
                         "Abort update? [A/c]\n"
                         % (
                             ruleset.name,

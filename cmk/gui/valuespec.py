@@ -110,6 +110,7 @@ from cmk.gui.utils.labels import (
     get_labels_from_core,
     label_help_text,
     LABEL_REGEX,
+    LabelType,
     parse_labels_value,
 )
 from cmk.gui.utils.output_funnel import output_funnel
@@ -6951,10 +6952,10 @@ class Labels(ValueSpec[LabelsModel]):
     @classmethod
     def get_labels(cls, world: "Labels.World", search_label: str) -> Sequence[tuple[str, str]]:
         if world is cls.World.CONFIG:
-            return get_labels_from_config(search_label)
+            return get_labels_from_config(LabelType.ALL, search_label)
 
         if world is cls.World.CORE:
-            return get_labels_from_core(search_label)
+            return get_labels_from_core(LabelType.ALL, search_label)
 
         raise NotImplementedError()
 

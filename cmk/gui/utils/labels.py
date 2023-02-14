@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import enum
 import json
 from ast import literal_eval
 from collections.abc import Iterable, Mapping
@@ -30,6 +31,12 @@ class Label(NamedTuple):
     id: str
     value: str
     negate: bool
+
+
+class LabelType(enum.StrEnum):
+    HOST = "host"
+    SERVICE = "service"
+    ALL = "all"
 
 
 Labels = Iterable[Label]
@@ -367,18 +374,45 @@ def get_labels_cache() -> LabelsCache:
     return LabelsCache()
 
 
-def get_labels_from_config(search_label: str) -> Sequence[tuple[str, str]]:
+def get_labels_from_config(label_type: LabelType, search_label: str) -> Sequence[tuple[str, str]]:
     # TODO: Until we have a config specific implementation we now use the labels known to the
     # core. This is not optimal, but better than doing nothing.
     # To implement a setup specific search, we need to decide which occurrences of labels we
     # want to search: hosts / folders, rules, ...?
-    return get_labels_from_core(search_label)
+    return get_labels_from_core(label_type, search_label)
 
 
-def get_labels_from_core(search_label: str | None = None) -> Sequence[tuple[str, str]]:
-    all_labels: Sequence[tuple[str, str]] = get_labels_cache().get_labels_list()
+def get_labels_from_core(
+    label_type: LabelType, search_label: str | None = None
+) -> Sequence[tuple[str, str]]:
+    all_labels = _get_labels_from_livestatus(label_type)
     if search_label is None:
-        return all_labels
+        return list(all_labels)
     return [
         (ident, value) for ident, value in all_labels if search_label in ":".join([ident, value])
     ]
+
+
+def _get_labels_from_livestatus(
+    label_type: LabelType,
+) -> set[tuple[str, str]]:
+    if label_type == LabelType.HOST:
+        query = "GET hosts\nCache: reload\nColumns: labels\n"
+    elif label_type == LabelType.SERVICE:
+        query = "GET services\nCache: reload\nColumns: labels\n"
+    elif label_type == LabelType.ALL:
+        query = "GET labels\nCache: reload\nColumns: name value\n"
+    else:
+        raise ValueError("Unsupported livestatus query")
+
+    try:
+        sites.live().set_auth_domain("labels")
+        with sites.only_sites(list(user.authorized_sites().keys())):
+            label_rows = sites.live().query(query)
+    finally:
+        sites.live().set_auth_domain("read")
+
+    if label_type == LabelType.ALL:
+        return set((str(label[0]), str(label[1])) for label in label_rows)
+
+    return set((k, v) for row in label_rows for labels in row for k, v in labels.items())

@@ -23,16 +23,16 @@ from cmk.utils.type_defs import TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.endpoints.time_periods.request_schemas import (
-    CreateTimePeriod,
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.request_schemas import (
+    InputTimePeriod,
     UpdateTimePeriod,
 )
-from cmk.gui.plugins.openapi.endpoints.time_periods.response_schemas import (
+from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
     TimePeriodResponse,
     TimePeriodResponseCollection,
 )
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import (
@@ -63,7 +63,7 @@ def time_period_not_found_problem(time_period_id: str) -> Response:
     )
 
 
-def _serialize_time_period(
+def _get_time_period_domain_object(
     name: str,
     api_format: dict[str, Any],
 ) -> DomainObject:
@@ -82,7 +82,7 @@ def _serialize_time_period(
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=CreateTimePeriod,
+    request_schema=InputTimePeriod,
     response_schema=TimePeriodResponse,
     permissions_required=RW_PERMISSIONS,
 )
@@ -98,7 +98,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
         alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
     )
     save_timeperiod(name, time_period)
-    return _serve_time_period(_serialize_time_period(name, _to_api_format(time_period)))
+    return _serve_time_period(_get_time_period_domain_object(name, _to_api_format(time_period)))
 
 
 @Endpoint(
@@ -181,7 +181,7 @@ def show_time_period(params: Mapping[str, Any]) -> Response:
         return time_period_not_found_problem(name)
 
     api_format = _to_api_format(time_period, name == "24X7")
-    return _serve_time_period(_serialize_time_period(name, api_format))
+    return _serve_time_period(_get_time_period_domain_object(name, api_format))
 
 
 @Endpoint(
@@ -198,7 +198,7 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
         constructors.collection_object(
             domain_type="time_period",
             value=[
-                _serialize_time_period(name, _to_api_format(time_period, name == "24X7"))
+                _get_time_period_domain_object(name, _to_api_format(time_period, name == "24X7"))
                 for name, time_period in load_timeperiods().items()
             ],
         )

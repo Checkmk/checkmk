@@ -201,7 +201,7 @@ class ModeAuditLog(WatoMode):
                         css_classes=["toggle"],
                     ),
                     PageMenuEntry(
-                        title=_("Show object type"), 
+                        title=_("Show object type"),
                         icon_name="checked_checkbox" if self._show_object_type else "checkbox",
                         item=make_simple_link(
                             makeactionuri(
@@ -321,13 +321,16 @@ class ModeAuditLog(WatoMode):
                 table.cell(_("User"), user_txt, css=["nobreak narrow"])
 
                 if self._show_object_type:
-                   table.cell(_("Object type"),
-                      entry.object_ref.object_type.name if entry.object_ref else "",
-                      css=["narrow"])
+                    table.cell(
+                        _("Object type"),
+                        entry.object_ref.object_type.name if entry.object_ref else "",
+                        css=["narrow"],
+                    )
 
                 if self._show_object:
-                    table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"])
-
+                    table.cell(
+                        _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
+                    )
 
                 text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
                 table.cell(_("Summary"), text)

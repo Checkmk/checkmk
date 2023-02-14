@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
+#include <memory>
 #include <utility>
 
 #include "Comment.h"
@@ -15,6 +16,7 @@
 #include "NebContact.h"
 #include "NebContactGroup.h"
 #include "NebDowntime.h"
+#include "NebGlobalFlags.h"
 #include "NebHost.h"
 #include "NebHostGroup.h"
 #include "NebPaths.h"
@@ -296,22 +298,8 @@ bool NagiosCore::mkeventdEnabled() {
 
 int32_t NagiosCore::pid() const { return nagios_pid; }
 
-GlobalFlags NagiosCore::globalFlags() const {
-    return {
-        .enable_notifications = enable_notifications != 0,
-        .execute_service_checks = execute_service_checks != 0,
-        .accept_passive_service_checks = accept_passive_service_checks != 0,
-        .execute_host_checks = execute_host_checks != 0,
-        .accept_passive_hostchecks = accept_passive_host_checks != 0,
-        .obsess_over_services = obsess_over_services != 0,
-        .obsess_over_hosts = obsess_over_hosts != 0,
-        .check_service_freshness = check_service_freshness != 0,
-        .check_host_freshness = check_host_freshness != 0,
-        .enable_flap_detection = enable_flap_detection != 0,
-        .process_performance_data = process_performance_data != 0,
-        .enable_event_handlers = enable_event_handlers != 0,
-        .check_external_commands = check_external_commands != 0,
-    };
+std::unique_ptr<const IGlobalFlags> NagiosCore::globalFlags() const {
+    return std::make_unique<const NebGlobalFlags>();
 }
 
 std::unique_ptr<const IPaths> NagiosCore::paths() const {

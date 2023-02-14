@@ -57,6 +57,7 @@ class IComment;
 class IContact;
 class IContactGroup;
 class IDowntime;
+class IGlobalFlags;
 class IHost;
 class IPaths;
 class IService;
@@ -176,7 +177,10 @@ class DummyMonitoringCore : public MonitoringCore {
         return {};
     }
     [[nodiscard]] int32_t pid() const override { return {}; }
-    [[nodiscard]] GlobalFlags globalFlags() const override { return {}; }
+    [[nodiscard]] std::unique_ptr<const IGlobalFlags> globalFlags()
+        const override {
+        return {};
+    }
     [[nodiscard]] std::chrono::system_clock::time_point programStartTime()
         const override {
         return {};

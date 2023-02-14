@@ -25,7 +25,7 @@
 
 namespace {
 struct Status {
-    GlobalFlags global_flags;
+    std::unique_ptr<const IGlobalFlags> global_flags;
     std::unique_ptr<const IPaths> paths;
     // more to come...
 };
@@ -102,66 +102,76 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<BoolColumn<Status>>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)", offsets,
-        [](const Status &r) { return r.global_flags.enable_notifications; }));
+        [](const Status &r) {
+            return r.global_flags->enable_notifications();
+        }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "execute_service_checks",
         "Whether active service checks are activated in general (0/1)", offsets,
-        [](const Status &r) { return r.global_flags.execute_service_checks; }));
+        [](const Status &r) {
+            return r.global_flags->execute_service_checks();
+        }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "accept_passive_service_checks",
         "Whether passive service checks are activated in general (0/1)",
         offsets, [](const Status &r) {
-            return r.global_flags.accept_passive_service_checks;
+            return r.global_flags->accept_passive_service_checks();
         }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "execute_host_checks",
         "Whether host checks are executed in general (0/1)", offsets,
-        [](const Status &r) { return r.global_flags.execute_host_checks; }));
+        [](const Status &r) { return r.global_flags->execute_host_checks(); }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)", offsets,
         [](const Status &r) {
-            return r.global_flags.accept_passive_hostchecks;
+            return r.global_flags->accept_passive_hostchecks();
         }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
-        offsets,
-        [](const Status &r) { return r.global_flags.obsess_over_services; }));
+        offsets, [](const Status &r) {
+            return r.global_flags->obsess_over_services();
+        }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "obsess_over_hosts",
         "Whether Nagios will obsess over host checks (0/1)", offsets,
-        [](const Status &r) { return r.global_flags.obsess_over_hosts; }));
+        [](const Status &r) { return r.global_flags->obsess_over_hosts(); }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "check_service_freshness",
         "Whether service freshness checking is activated in general (0/1)",
         offsets, [](const Status &r) {
-            return r.global_flags.check_service_freshness;
+            return r.global_flags->check_service_freshness();
         }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "check_host_freshness",
         "Whether host freshness checking is activated in general (0/1)",
-        offsets,
-        [](const Status &r) { return r.global_flags.check_host_freshness; }));
+        offsets, [](const Status &r) {
+            return r.global_flags->check_host_freshness();
+        }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "enable_flap_detection",
         "Whether flap detection is activated in general (0/1)", offsets,
-        [](const Status &r) { return r.global_flags.enable_flap_detection; }));
+        [](const Status &r) {
+            return r.global_flags->enable_flap_detection();
+        }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
         offsets, [](const Status &r) {
-            return r.global_flags.process_performance_data;
+            return r.global_flags->process_performance_data();
         }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "enable_event_handlers",
         "Whether alert handlers are activated in general (0/1)", offsets,
-        [](const Status &r) { return r.global_flags.enable_event_handlers; }));
+        [](const Status &r) {
+            return r.global_flags->enable_event_handlers();
+        }));
     addColumn(std::make_unique<BoolColumn<Status>>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
         offsets, [](const Status &r) {
-            return r.global_flags.check_external_commands;
+            return r.global_flags->check_external_commands();
         }));
     addColumn(std::make_unique<TimeColumn<Status>>(
         "program_start",

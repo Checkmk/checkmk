@@ -229,4 +229,22 @@ public:
     [[nodiscard]] virtual std::filesystem::path rrdcached_socket() const = 0;
 };
 
+class IGlobalFlags {
+public:
+    virtual ~IGlobalFlags() = default;
+    [[nodiscard]] virtual bool enable_notifications() const = 0;
+    [[nodiscard]] virtual bool execute_service_checks() const = 0;
+    [[nodiscard]] virtual bool accept_passive_service_checks() const = 0;
+    [[nodiscard]] virtual bool execute_host_checks() const = 0;
+    [[nodiscard]] virtual bool accept_passive_hostchecks() const = 0;
+    [[nodiscard]] virtual bool obsess_over_services() const = 0;
+    [[nodiscard]] virtual bool obsess_over_hosts() const = 0;
+    [[nodiscard]] virtual bool check_service_freshness() const = 0;
+    [[nodiscard]] virtual bool check_host_freshness() const = 0;
+    [[nodiscard]] virtual bool enable_flap_detection() const = 0;
+    [[nodiscard]] virtual bool process_performance_data() const = 0;
+    [[nodiscard]] virtual bool enable_event_handlers() const = 0;
+    [[nodiscard]] virtual bool check_external_commands() const = 0;
+};
+
 #endif  // Interface_h

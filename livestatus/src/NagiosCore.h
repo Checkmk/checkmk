@@ -126,7 +126,8 @@ public:
     bool mkeventdEnabled() override;
 
     int32_t pid() const override;
-    [[nodiscard]] GlobalFlags globalFlags() const override;
+    [[nodiscard]] std::unique_ptr<const IGlobalFlags> globalFlags()
+        const override;
     [[nodiscard]] std::unique_ptr<const IPaths> paths() const override;
     std::chrono::system_clock::time_point programStartTime() const override;
     std::chrono::system_clock::time_point lastCommandCheckTime() const override;

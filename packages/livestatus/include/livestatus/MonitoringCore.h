@@ -20,6 +20,7 @@ class IComment;
 class IContact;
 class IContactGroup;
 class IDowntime;
+class IGlobalFlags;
 class IHost;
 class IHostGroup;
 class IPaths;
@@ -34,22 +35,6 @@ class User;
 struct Command {
     std::string _name;
     std::string _command_line;
-};
-
-struct GlobalFlags {
-    bool enable_notifications;
-    bool execute_service_checks;
-    bool accept_passive_service_checks;
-    bool execute_host_checks;
-    bool accept_passive_hostchecks;
-    bool obsess_over_services;
-    bool obsess_over_hosts;
-    bool check_service_freshness;
-    bool check_host_freshness;
-    bool enable_flap_detection;
-    bool process_performance_data;
-    bool enable_event_handlers;
-    bool check_external_commands;
 };
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
@@ -117,7 +102,8 @@ public:
     virtual bool mkeventdEnabled() = 0;
 
     [[nodiscard]] virtual int32_t pid() const = 0;
-    [[nodiscard]] virtual GlobalFlags globalFlags() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<const IGlobalFlags> globalFlags()
+        const = 0;
     [[nodiscard]] virtual std::unique_ptr<const IPaths> paths() const = 0;
     virtual void dumpPaths(Logger *logger) const;
     [[nodiscard]] virtual std::chrono::system_clock::time_point

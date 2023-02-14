@@ -10,6 +10,7 @@
 #include <string>
 #include <system_error>
 
+#include "livestatus/Interface.h"
 #include "livestatus/Logfile.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MonitoringCore.h"
@@ -38,9 +39,9 @@ void LogCache::update() {
     // current nagios.log and all files in the archive.
     const auto paths = _mc->paths();
     addToIndex(
-        std::make_unique<Logfile>(logger(), this, paths.history_file, true));
+        std::make_unique<Logfile>(logger(), this, paths->history_file(), true));
 
-    const std::filesystem::path dirpath = paths.history_archive_directory;
+    const std::filesystem::path dirpath = paths->history_archive_directory();
     try {
         for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
             addToIndex(
@@ -54,7 +55,7 @@ void LogCache::update() {
 
     if (_logfiles.empty()) {
         Notice(logger()) << "no log file found, not even "
-                         << paths.history_file;
+                         << paths->history_file();
     }
 }
 

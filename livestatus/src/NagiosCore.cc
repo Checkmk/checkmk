@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
-#include <filesystem>
 #include <utility>
 
 #include "Comment.h"
@@ -18,6 +17,7 @@
 #include "NebDowntime.h"
 #include "NebHost.h"
 #include "NebHostGroup.h"
+#include "NebPaths.h"
 #include "NebService.h"
 #include "NebServiceGroup.h"
 #include "NebTimeperiod.h"
@@ -47,9 +47,9 @@ extern std::atomic_int32_t g_livestatus_active_connections;
 
 NagiosCore::NagiosCore(
     std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
-    std::map<unsigned long, std::unique_ptr<Comment>> &comments, Paths paths,
-    const NagiosLimits &limits, NagiosAuthorization authorization,
-    Encoding data_encoding)
+    std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+    NagiosPathConfig paths, const NagiosLimits &limits,
+    NagiosAuthorization authorization, Encoding data_encoding)
     : _downtimes{downtimes}
     , _comments{comments}
     , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
@@ -314,22 +314,8 @@ GlobalFlags NagiosCore::globalFlags() const {
     };
 }
 
-Paths NagiosCore::paths() const {
-    return {
-        .log_file = _paths.log_file,
-        .crash_reports_directory = _paths.crash_reports_directory,
-        .license_usage_history_file = _paths.license_usage_history_file,
-        .inventory_directory = _paths.inventory_directory,
-        .structured_status_directory = _paths.structured_status_directory,
-        .robotmk_html_log_directory = _paths.robotmk_html_log_directory,
-        .logwatch_directory = _paths.logwatch_directory,
-        .event_console_status_socket = _paths.event_console_status_socket,
-        .livestatus_socket = _paths.livestatus_socket,
-        .history_file = _paths.history_file,
-        .history_archive_directory = _paths.history_archive_directory,
-        .rrd_multiple_directory = _paths.rrd_multiple_directory,
-        .rrdcached_socket = _paths.rrdcached_socket,
-    };
+std::unique_ptr<const IPaths> NagiosCore::paths() const {
+    return std::make_unique<NebPaths>(_paths);
 }
 
 std::chrono::system_clock::time_point NagiosCore::programStartTime() const {
@@ -485,7 +471,7 @@ MetricLocation NagiosCore::metricLocation(
     const std::string &host_name, const std::string &service_description,
     const Metric::Name &var) const {
     return MetricLocation{
-        paths().rrd_multiple_directory / host_name /
+        paths()->rrd_multiple_directory() / host_name /
             pnp_cleanup(service_description + "_" +
                         Metric::MangledName(var).string() + ".rrd"),
         "1"};

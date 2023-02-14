@@ -15,6 +15,7 @@
 
 #include "livestatus/BlobColumn.h"
 #include "livestatus/EventConsoleConnection.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MonitoringCore.h"
 
@@ -50,7 +51,7 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
         auto command = "REPLICATE " + arguments;
         try {
             ECTableConnection ec(_mc->loggerLivestatus(),
-                                 _mc->paths().event_console_status_socket,
+                                 _mc->paths()->event_console_status_socket(),
                                  command);
             ec.run();
             result = ec.getResult();

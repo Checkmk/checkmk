@@ -16,8 +16,8 @@
 #include "TableQueryHelper.h"
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/data_encoding.h"
 #include "test/Utilities.h"
@@ -100,15 +100,15 @@ public:
     const std::string header{"component;id\n"};
 
 private:
-    [[nodiscard]] Paths paths_() const {
-        Paths p{};
+    [[nodiscard]] NagiosPathConfig paths_() const {
+        NagiosPathConfig p{};
         p.crash_reports_directory = basepath;
         return p;
     }
 };
 
 TEST_F(CrashReportTableFixture, TestTable) {
-    EXPECT_EQ(basepath, core.paths().crash_reports_directory);
+    EXPECT_EQ(basepath, core.paths()->crash_reports_directory());
     EXPECT_EQ("crashreports", table.name());
     EXPECT_EQ("crashreport_", table.namePrefix());
 }

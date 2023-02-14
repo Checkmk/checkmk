@@ -131,7 +131,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_log", "The file content of the Robotmk log",
         offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->paths().robotmk_html_log_directory; },
+            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_log.html";
@@ -140,7 +140,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_log_gz",
         "The gzipped file content of the Robotmk log", offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->paths().robotmk_html_log_directory; },
+            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_log.html.gz";
@@ -149,7 +149,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_error_log",
         "The file content of the Robotmk error log", offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->paths().robotmk_html_log_directory; },
+            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_error_log.html";
@@ -158,7 +158,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "robotmk_last_error_log_gz",
         "The gzipped file content of the Robotmk error log", offsets,
         BlobFileReader<service>{
-            [mc]() { return mc->paths().robotmk_html_log_directory; },
+            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
             [](const service &r) {
                 return std::filesystem::path{r.host_ptr->name} / r.description /
                        "suite_last_error_log.html.gz";
@@ -441,7 +441,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this object (-1/0/1)",
         offsets, [mc](const service &svc) {
-            return pnpgraph_present(mc->paths().rrd_multiple_directory,
+            return pnpgraph_present(mc->paths()->rrd_multiple_directory(),
                                     svc.host_ptr->name, svc.description);
         }));
 
@@ -657,7 +657,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
                 return metrics;
             }
             auto names =
-                scan_rrd(mc->paths().rrd_multiple_directory / r.host_name,
+                scan_rrd(mc->paths()->rrd_multiple_directory() / r.host_name,
                          r.description, mc->loggerRRD());
             std::transform(std::begin(names), std::end(names),
                            std::back_inserter(metrics),

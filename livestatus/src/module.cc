@@ -44,7 +44,6 @@
 #include "livestatus/InputBuffer.h"
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Poller.h"
 #include "livestatus/Queue.h"
@@ -89,7 +88,7 @@ int g_unix_socket = -1;
 int g_max_fd_ever = 0;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static Paths fl_paths;
+static NagiosPathConfig fl_paths;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate;
@@ -725,7 +724,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
             g_timeperiods_cache->update(from_timeval(ps->timestamp));
             start_threads();
-            fl_core->paths().dump(fl_core->loggerLivestatus());
+            fl_core->dumpPaths(fl_core->loggerLivestatus());
             break;
         default:
             break;

@@ -16,6 +16,7 @@
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
@@ -25,7 +26,7 @@
 namespace {
 struct Status {
     GlobalFlags global_flags;
-    Paths paths;
+    std::unique_ptr<const IPaths> paths;
     // more to come...
 };
 }  // namespace
@@ -303,7 +304,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
         offsets, [](const Status &r) {
-            return mk_inventory_last(r.paths.inventory_directory / ".last");
+            return mk_inventory_last(r.paths->inventory_directory() / ".last");
         }));
     addColumn(std::make_unique<IntColumn<Status>>(
         "num_queued_notifications",
@@ -320,7 +321,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<BlobColumn<Status>>(
         "license_usage_history", "Historic license usage information", offsets,
         BlobFileReader<Status>{
-            [mc]() { return mc->paths().license_usage_history_file; },
+            [mc]() { return mc->paths()->license_usage_history_file(); },
             [](const Status & /*r*/) { return std::filesystem::path{}; }}));
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "average_runnable_jobs_fetcher",

@@ -9,7 +9,6 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
@@ -23,6 +22,7 @@ class IContactGroup;
 class IDowntime;
 class IHost;
 class IHostGroup;
+class IPaths;
 class IService;
 class IServiceGroup;
 class ITimeperiod;
@@ -50,24 +50,6 @@ struct GlobalFlags {
     bool process_performance_data;
     bool enable_event_handlers;
     bool check_external_commands;
-};
-
-struct Paths {
-    std::filesystem::path log_file;
-    std::filesystem::path crash_reports_directory;
-    std::filesystem::path license_usage_history_file;
-    std::filesystem::path inventory_directory;
-    std::filesystem::path structured_status_directory;
-    std::filesystem::path robotmk_html_log_directory;
-    std::filesystem::path logwatch_directory;
-    std::filesystem::path event_console_status_socket;
-    std::filesystem::path livestatus_socket;
-    std::filesystem::path history_file;
-    std::filesystem::path history_archive_directory;
-    std::filesystem::path rrd_multiple_directory;
-    std::filesystem::path rrdcached_socket;
-
-    void dump(Logger *logger) const;
 };
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
@@ -136,7 +118,8 @@ public:
 
     [[nodiscard]] virtual int32_t pid() const = 0;
     [[nodiscard]] virtual GlobalFlags globalFlags() const = 0;
-    [[nodiscard]] virtual Paths paths() const = 0;
+    [[nodiscard]] virtual std::unique_ptr<const IPaths> paths() const = 0;
+    virtual void dumpPaths(Logger *logger) const;
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     programStartTime() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point

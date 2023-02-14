@@ -12,10 +12,12 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <type_traits>
 
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
@@ -214,7 +216,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     // https://github.com/oetiker/rrdtool-1.x/issues/1062
 
     auto *logger = _mc->loggerRRD();
-    const auto rrdcached_socket = _mc->paths().rrdcached_socket;
+    const auto rrdcached_socket = _mc->paths()->rrdcached_socket();
     if (_mc->pnp4nagiosEnabled() && !rrdcached_socket.empty() &&
         !touched_rrds.empty()) {
         std::vector<std::string> daemon_argv_s{

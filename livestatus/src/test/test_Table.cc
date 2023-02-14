@@ -58,6 +58,7 @@ class IContact;
 class IContactGroup;
 class IDowntime;
 class IHost;
+class IPaths;
 class IService;
 class ITimeperiod;
 class IHostGroup;
@@ -171,7 +172,9 @@ class DummyMonitoringCore : public MonitoringCore {
 
     bool mkeventdEnabled() override { return {}; }
 
-    [[nodiscard]] Paths paths() const override { return {}; }
+    [[nodiscard]] std::unique_ptr<const IPaths> paths() const override {
+        return {};
+    }
     [[nodiscard]] int32_t pid() const override { return {}; }
     [[nodiscard]] GlobalFlags globalFlags() const override { return {}; }
     [[nodiscard]] std::chrono::system_clock::time_point programStartTime()

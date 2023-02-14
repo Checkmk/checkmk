@@ -7,6 +7,7 @@
 #define Interface_h
 
 #include <chrono>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
@@ -201,6 +202,31 @@ public:
 
     [[nodiscard]] virtual const IHost &host() const = 0;
     [[nodiscard]] virtual const IService *service() const = 0;
+};
+
+class IPaths {
+public:
+    virtual ~IPaths() = default;
+    [[nodiscard]] virtual std::filesystem::path log_file() const = 0;
+    [[nodiscard]] virtual std::filesystem::path crash_reports_directory()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path license_usage_history_file()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path inventory_directory() const = 0;
+    [[nodiscard]] virtual std::filesystem::path structured_status_directory()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path robotmk_html_log_directory()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path logwatch_directory() const = 0;
+    [[nodiscard]] virtual std::filesystem::path event_console_status_socket()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path livestatus_socket() const = 0;
+    [[nodiscard]] virtual std::filesystem::path history_file() const = 0;
+    [[nodiscard]] virtual std::filesystem::path history_archive_directory()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path rrd_multiple_directory()
+        const = 0;
+    [[nodiscard]] virtual std::filesystem::path rrdcached_socket() const = 0;
 };
 
 #endif  // Interface_h

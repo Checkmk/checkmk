@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
@@ -44,11 +45,27 @@ struct NagiosAuthorization {
     GroupAuthorization _group{GroupAuthorization::strict};
 };
 
+struct NagiosPathConfig {
+    std::filesystem::path log_file;
+    std::filesystem::path crash_reports_directory;
+    std::filesystem::path license_usage_history_file;
+    std::filesystem::path inventory_directory;
+    std::filesystem::path structured_status_directory;
+    std::filesystem::path robotmk_html_log_directory;
+    std::filesystem::path logwatch_directory;
+    std::filesystem::path event_console_status_socket;
+    std::filesystem::path livestatus_socket;
+    std::filesystem::path history_file;
+    std::filesystem::path history_archive_directory;
+    std::filesystem::path rrd_multiple_directory;
+    std::filesystem::path rrdcached_socket;
+};
+
 class NagiosCore : public MonitoringCore {
 public:
     NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
                std::map<unsigned long, std::unique_ptr<Comment>> &comments,
-               Paths paths, const NagiosLimits &limits,
+               NagiosPathConfig paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
     std::unique_ptr<const IHost> find_host(const std::string &name) override;
@@ -110,7 +127,7 @@ public:
 
     int32_t pid() const override;
     [[nodiscard]] GlobalFlags globalFlags() const override;
-    [[nodiscard]] Paths paths() const override;
+    [[nodiscard]] std::unique_ptr<const IPaths> paths() const override;
     std::chrono::system_clock::time_point programStartTime() const override;
     std::chrono::system_clock::time_point lastCommandCheckTime() const override;
     int32_t intervalLength() const override;
@@ -175,7 +192,7 @@ public:
 
 private:
     Logger *_logger_livestatus;
-    const Paths _paths;
+    const NagiosPathConfig _paths;
     const NagiosLimits _limits;
     const NagiosAuthorization _authorization;
     Encoding _data_encoding;

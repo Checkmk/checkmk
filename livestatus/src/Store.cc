@@ -14,6 +14,7 @@
 #include "livestatus/CrashReport.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/InputBuffer.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MonitoringCore.h"
 #include "livestatus/OutputBuffer.h"
@@ -236,8 +237,8 @@ void Store::answerCommandMkLogwatchAcknowledge(const ExternalCommand &command) {
         Warning(logger()) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
         return;
     }
-    mk_logwatch_acknowledge(logger(), _mc->paths().logwatch_directory, args[0],
-                            args[1]);
+    mk_logwatch_acknowledge(logger(), _mc->paths()->logwatch_directory(),
+                            args[0], args[1]);
 }
 
 void Store::answerCommandDelCrashReport(const ExternalCommand &command) {
@@ -246,8 +247,8 @@ void Store::answerCommandDelCrashReport(const ExternalCommand &command) {
         Warning(logger()) << "DEL_CRASH_REPORT expects 1 argument";
         return;
     }
-    mk::crash_report::delete_id(_mc->paths().crash_reports_directory, args[0],
-                                logger());
+    mk::crash_report::delete_id(_mc->paths()->crash_reports_directory(),
+                                args[0], logger());
 }
 
 namespace {
@@ -272,7 +273,7 @@ void Store::answerCommandEventConsole(const std::string &command) {
     }
     try {
         ECTableConnection(_mc->loggerLivestatus(),
-                          _mc->paths().event_console_status_socket, command)
+                          _mc->paths()->event_console_status_socket(), command)
             .run();
     } catch (const std::runtime_error &err) {
         Alert(logger()) << err.what();

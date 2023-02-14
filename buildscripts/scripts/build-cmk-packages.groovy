@@ -156,35 +156,23 @@ def main() {
     //      in the conditional_stage
     def agent_builds = agent_list.collectEntries { agent ->
         [("agent ${agent}") : {
-                conditional_stage("Build ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
+                conditional_stage("Build Agent for ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
                     if (agent == "windows") {
                         def win_project_name = "${jenkins_base_folder}/winagt-build";
                         def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
-                        def win_project_build, win_py_project_build;
-
-                        /// TODO: these builds do not depend on the edition, so we could also just take
-                        ///       nightly builds as well (those can be selected based on parameters, too)
-                        on_dry_run_omit(LONG_RUNNING, "BUILD agent=${agent}") {
-                            win_project_build = build(
-                                job: win_project_name,
-                                parameters: [string(name: 'VERSION', value: VERSION)]);
-                            win_py_project_build = build(
-                                job: win_py_project_name,
-                                parameters: [string(name: 'VERSION', value: VERSION)]);
-                        }
 
                         copyArtifacts(
                             projectName: win_project_name,
-                            selector: win_project_build ? specific(win_project_build.getId()) : lastSuccessful(),
+                            selector: specific(get_valid_build_id(win_project_name, VERSION)),
                             target: "agents",
                             fingerprintArtifacts: true
                         )
                         copyArtifacts(
                             projectName: win_py_project_name,
-                            selector: win_py_project_build ? specific(win_py_project_build.getId()) : lastSuccessful(),
+                            selector: specific(get_valid_build_id(win_py_project_name, VERSION)),
                             target: "agents",
                             fingerprintArtifacts: true
-                         )
+                        )
                     } else {
                         /// must take place in $WORKSPACE since we need to
                         /// access $WORKSPACE/agents
@@ -567,4 +555,21 @@ def test_package(package_path, name, workspace, source_dir, cmk_version) {
         ])
     }
 }
+
+def get_valid_build_id(jobName, version_string) {
+    def lastBuild = Jenkins.instance.getItemByFullName(jobName).lastCompletedBuild;
+    if (version_string in ["daily", "git"] &&
+        lastBuild != null &&
+        lastBuild.result.toString().equals("SUCCESS")
+    ) {
+        return lastBuild.getId();
+    }
+    show_duration("Build ${jobName}") {
+        return build(
+            job: jobName,
+            parameters: [string(name: "VERSION", value: version_string)]
+        ).getId();
+    }
+}
+
 return this;

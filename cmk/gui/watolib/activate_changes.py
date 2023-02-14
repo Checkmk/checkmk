@@ -30,6 +30,7 @@ import time
 import traceback
 from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from itertools import filterfalse
 from pathlib import Path
 from typing import Any, Iterator, NamedTuple, Sequence
@@ -52,6 +53,7 @@ from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.state import is_expired_trial
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
+from cmk.utils.version import __version__, is_raw_edition, Version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -110,6 +112,16 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.site_changes import SiteChanges
 
+if not is_raw_edition():  # TODO solve this via registration
+    from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
+        is_after_expiration_grace_period,
+        is_max_version_valid,
+        load_verification_response,
+    )
+    from cmk.utils.cee.licensing.export import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
+        VerificationResponse,
+    )
+
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
 PHASE_INITIALIZED = "initialized"  # Process has been initialized (not in thread yet)
@@ -148,6 +160,10 @@ SiteActivationState = dict[str, Any]
 ActivationState = dict[str, SiteActivationState]
 
 
+class MKLicensingError(Exception):
+    pass
+
+
 def get_trial_expired_message() -> str:
     return _(
         "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
@@ -155,6 +171,28 @@ def get_trial_expired_message() -> str:
         "In case you want to test distributed setups, please contact us at "
         "https://checkmk.com/contact"
     )
+
+
+def get_license_expired_message(expiration_ts: int) -> str:
+    return _(
+        "The currently applied license is expired since: %s (> 60 days)."
+    ) % datetime.fromtimestamp(expiration_ts).strftime("%Y-%m-%d")
+
+
+def get_license_max_version_invalid_message(max_version: str) -> str:
+    return _(
+        "Your license allows you to use Checkmk until version %s, but you are using %s. "
+        "Operating in 'unlicensed' mode."
+    ) % (max_version, Version(__version__))
+
+
+def get_cee_license_validity_error(verification_response: VerificationResponse) -> str | None:
+    now = int(datetime.now().timestamp())
+    if is_after_expiration_grace_period(now, verification_response):
+        return get_license_expired_message(verification_response.subscription_expiration_ts)
+    if not is_max_version_valid(verification_response):
+        return get_license_max_version_invalid_message(verification_response.checkmk_max_version)
+    return None
 
 
 # TODO: find a way to make this more obvious/transparent in code
@@ -2694,6 +2732,11 @@ def activate_changes_start(
         An ActivationRestAPIResponseExtensions instance.
 
     """
+    # TODO: cleanup conditional imports and solve this via registration
+    if not is_raw_edition() and (verification_response := load_verification_response()) is not None:
+        if (license_error := get_cee_license_validity_error(verification_response)) is not None:
+            raise MKLicensingError(license_error)
+
     changes = ActivateChanges()
     changes.load()
 

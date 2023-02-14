@@ -37,6 +37,7 @@ from cmk.gui.watolib.activate_changes import (
     get_activation_ids,
     get_restapi_response_for_activation_id,
     load_activate_change_manager_with_id,
+    MKLicensingError,
 )
 
 from cmk import fields
@@ -82,11 +83,12 @@ PERMISSIONS = permissions.AllPerm(
             "The API user may not activate another users changes, "
             "or the user may and activation was not forced explicitly."
         ),
+        403: "Activation not possible because of licensing issues.",
         409: "Some sites could not be activated.",
         422: "There are no changes to be activated.",
         423: "There is already an activation running.",
     },
-    additional_status_codes=[302, 401, 409, 422, 423],
+    additional_status_codes=[302, 401, 403, 409, 422, 423],
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,
     permissions_required=permissions.AllPerm(
@@ -105,7 +107,9 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.activate")
     body = params["body"]
     sites = body["sites"]
-    with may_fail(MKUserError), may_fail(MKAuthException, status=401):
+    with may_fail(MKUserError), may_fail(MKAuthException, status=401), may_fail(
+        MKLicensingError, status=403
+    ):
         activation_response = activate_changes_start(
             sites, force_foreign_changes=body["force_foreign_changes"]
         )

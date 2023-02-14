@@ -90,7 +90,7 @@ def gen_id() -> str:
 
 # This may not be moved to g, because this needs to be request independent
 # TODO: Move to cmk.gui.modules once load_web_plugins is dropped
-_failed_plugins: dict[str, list[tuple[str, BaseException]]] = {}
+_failed_plugins: dict[tuple[str, str], BaseException] = {}
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a specified context
@@ -122,12 +122,15 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
 
 
 def add_failed_plugin(main_module_name: str, plugin_name: str, e: BaseException) -> None:
-    _failed_plugins.setdefault(main_module_name, []).append((plugin_name, e))
+    _failed_plugins[(main_module_name, plugin_name)] = e
 
 
 def get_failed_plugins() -> Sequence[tuple[str, str, BaseException]]:
     return [
-        (gui_part, file_name, exception)
-        for gui_part, errors in _failed_plugins.items()
-        for file_name, exception in errors
+        (subcomponent, module_or_filename, exc)
+        for (subcomponent, module_or_filename), exc in _failed_plugins.items()
     ]
+
+
+def remove_failed_plugin(entry: tuple[str, str]) -> None:
+    _drop = _failed_plugins.pop(entry, None)

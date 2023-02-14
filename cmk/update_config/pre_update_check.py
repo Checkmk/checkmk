@@ -19,7 +19,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
-from cmk.gui.utils import get_failed_plugins
+from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.watolib.rulesets import RulesetCollection
@@ -153,11 +153,11 @@ def _all_ui_extensions_compatible(
     }
 
     disabled_packages: set[PackageID] = set()
-    for gui_part, file, error in get_failed_plugins():
+    for gui_part, module_or_file, error in get_failed_plugins():
 
         if (
             path_and_id := _best_effort_guess_for_file_path(
-                gui_part, file, installed_files_package_map
+                gui_part, module_or_file, installed_files_package_map
             )
         ) is None:
             # we know something is wrong, but have no idea which file to blame
@@ -168,7 +168,7 @@ def _all_ui_extensions_compatible(
                     "Error: %s\n\n"
                     "You can abort the update process (A) and try to fix "
                     "the incompatibilities or continue the update (c).\n\n"
-                    "Abort the update process? [A/c] \n" % (file, error)
+                    "Abort the update process? [A/c] \n" % (module_or_file, error)
                 ).lower()
                 in ["c", "continue"]
             ):
@@ -187,7 +187,7 @@ def _all_ui_extensions_compatible(
                     "Error: %s\n\n"
                     "You can abort the update process (A) and try to fix "
                     "the incompatibilities or continue the update (c).\n\n"
-                    "Abort the update process? [A/c] \n" % (file, error)
+                    "Abort the update process? [A/c] \n" % (module_or_file, error)
                 ).lower()
                 in ["c", "continue"]
             ):
@@ -205,7 +205,7 @@ def _all_ui_extensions_compatible(
                 "You can abort the update process (A) or disable the "
                 "extension package (d) and continue the update process.\n"
                 "Abort the update process? [A/d] \n"
-                % (file, package_id.name, package_id.version, error),
+                % (module_or_file, package_id.name, package_id.version, error),
             ).lower()
             in ["d", "disable"]
         ):
@@ -216,6 +216,7 @@ def _all_ui_extensions_compatible(
                 package_id.version,
             )
             disabled_packages.add(package_id)
+            remove_failed_plugin((gui_part, module_or_file))
             sys.stdout.write(
                 "Disabled extension package: %s %s" % (package_id.name, package_id.version)
             )
@@ -225,7 +226,7 @@ def _all_ui_extensions_compatible(
 
 
 def _best_effort_guess_for_file_path(
-    gui_part: str, file: str, installed: Mapping[Path, PackageID]
+    gui_part: str, module_or_file: str, installed: Mapping[Path, PackageID]
 ) -> tuple[Path, PackageID | None] | None:
     "try to guess which file could create such an error"
     potential_sources = (
@@ -233,12 +234,12 @@ def _best_effort_guess_for_file_path(
             # the legacy case where we come from web dir
             _PATH_CONFIG.web_dir
             / gui_part
-            / f"{file.rstrip('c')}",
+            / f"{module_or_file.rstrip('c')}",
         )
-        if file.endswith((".py", ".pyc"))
+        if module_or_file.endswith((".py", ".pyc"))
         else (
-            _PATH_CONFIG.gui_plugins_dir / gui_part / f"{file}.py",
-            _PATH_CONFIG.gui_plugins_dir / gui_part / file / "__init__.py",
+            _PATH_CONFIG.gui_plugins_dir / gui_part / f"{module_or_file}.py",
+            _PATH_CONFIG.gui_plugins_dir / gui_part / module_or_file / "__init__.py",
         )
     )
 

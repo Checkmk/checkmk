@@ -103,10 +103,14 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
         return
 
     if in_user_warning_header_phase(now, response):
+        # TODO change to correct link once available
+        licensing_link = "https://checkmk.com/contact"
         writer.show_warning(
-            # TODO which link for what to do as next step
-            _("Your license is expired since %s. See here how to proceed: link_tbd")
-            % datetime.fromtimestamp(response.subscription_expiration_ts).strftime("%Y-%m-%d")
+            _("Your license is expired since %s. See here how to proceed: %s")
+            % (
+                datetime.fromtimestamp(response.subscription_expiration_ts).strftime("%Y-%m-%d"),
+                licensing_link,
+            )
         )
         return
 

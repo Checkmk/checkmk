@@ -41,7 +41,7 @@ class TestAggregationRawdataGenerator:
                     "credentials": "automation",
                 },
                 "automation",
-                "Ischbinwischtisch\n",
+                "Ischbinwischtisch",
                 "http://localhost:5002/NO_SITE",
                 id="standard_automation_user",
             ),

@@ -8,6 +8,7 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 
@@ -96,7 +97,7 @@ class HtpasswdUserConnector(UserConnector):
             return user_id
 
     def _is_automation_user(self, user_id: UserId) -> bool:
-        return Path(cmk.utils.paths.var_dir, "web", str(user_id), "automation.secret").is_file()
+        return AutomationUserSecret(user_id).exists()
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During

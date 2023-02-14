@@ -11,6 +11,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import cmk.utils.paths as paths
+from cmk.utils.type_defs.user_id import UserId
 
 
 class _LocalSecret(ABC):
@@ -74,3 +75,42 @@ class EncrypterSecret(_LocalSecret):
 
     # TODO: Use a different secret for separation of concerns. If possible, rotate often. CMK-11925
     path = paths.auth_secret_file
+
+
+class AutomationUserSecret:
+    """An automation user's login secret
+
+    Note: this is not really a secret like the other secrets in this file an must not be used the
+    same way. It's a (possibly randomly generated, possibly user provided) password.
+    In particular, this means it cannot be used for cryptographic operations without proper
+    password-based key derivation first.
+
+    If possible, the goal is to remove this class (and file) entirely (CMK-12142), checking the
+    password like other user passwords and storing it in the password store if necessary.
+    """
+
+    def __init__(self, user_id: UserId, profile_dir: Path = paths.profile_dir) -> None:
+        self.path = profile_dir / user_id / "automation.secret"
+
+    def read(self) -> str:
+        """Read the secret from the user's "automation.secret" file.
+
+        Raises an exception if the file does not exist or an empty secret has been read from the
+        file.
+        """
+        # Note: stripping here is required because older code insisted on adding a newline at the
+        # end of the file and strip that when reading. Would be nice to remove this but it would
+        # need a migration. It's probably better to get rid of the file altogether (CMK-12142).
+        if not (secret := self.path.read_text().strip()):
+            raise ValueError(f"Secret loaded from {self.path} is empty")
+        return secret
+
+    def exists(self) -> bool:
+        return self.path.is_file()
+
+    def save(self, secret: str) -> None:
+        self.path.write_text(secret)
+
+    def delete(self) -> None:
+        """Delete the secret file, ignore missing files"""
+        self.path.unlink(missing_ok=True)

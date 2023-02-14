@@ -5,7 +5,10 @@
 
 from pathlib import Path
 
+import pytest
+
 import cmk.utils.crypto.secrets as secrets
+from cmk.utils.type_defs import UserId
 
 
 def test_create_secret_and_hmac(tmp_path: Path) -> None:
@@ -23,3 +26,16 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
     assert (
         secret.hmac("hello") == "3bc5a0f1f479929f6c6330bd2dabf2d78ed389ab329f2c0b0baadfb3a01dbeae"
     )
+
+
+def test_automation_user_secret() -> None:
+    aus = secrets.AutomationUserSecret(UserId("crypto_secrets_new_user"))
+
+    assert not aus.exists()
+    with pytest.raises(FileNotFoundError):
+        aus.read()
+
+    aus.path.parent.mkdir()  # profile dir of the test user
+    aus.save(secret := "this is a test")
+    assert aus.exists()
+    assert aus.read() == secret

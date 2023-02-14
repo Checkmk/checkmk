@@ -32,6 +32,7 @@ import cmk.utils.site as site
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.diagnostics import (
     CheckmkFilesMap,
     DiagnosticsElementCSVResult,
@@ -53,7 +54,7 @@ from cmk.utils.i18n import _
 from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, UserId
 
 if cmk_version.is_enterprise_edition():
     from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
@@ -827,7 +828,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     def _get_response(
         self, checkmk_server_name: str, omd_config: site.OMDConfig
     ) -> requests.Response:
-        automation_secret = self._get_automation_secret()
+        automation_secret = AutomationUserSecret(UserId("automation")).read()
 
         url = "http://{}:{}/{}/check_mk/report.py?".format(
             omd_config["CONFIG_APACHE_TCP_ADDR"],
@@ -843,13 +844,6 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         )
 
         return requests.post(url)
-
-    def _get_automation_secret(self) -> str:
-        automation_secret_filepath = Path(cmk.utils.paths.var_dir).joinpath(
-            "web/automation/automation.secret"
-        )
-        with automation_secret_filepath.open("r", encoding="utf-8") as f:
-            return f.read().strip()
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):

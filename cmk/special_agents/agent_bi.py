@@ -14,9 +14,9 @@ import requests
 import urllib3
 
 import cmk.utils.site
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.exceptions import MKException
 from cmk.utils.password_store import extract
-from cmk.utils.paths import profile_dir
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 
@@ -137,12 +137,14 @@ class AggregationRawdataGenerator:
         self._credentials = config["credentials"]
         if self._credentials == "automation":
             self._username = self._credentials
-            self._secret = (profile_dir / self._username / "automation.secret").read_text(
-                encoding="utf-8"
-            )
+            self._secret = AutomationUserSecret(self._username).read()
         else:
             self._username, automation_secret = self._credentials[1]
-            self._secret = extract(automation_secret)
+            if (secret := extract(automation_secret)) is None:
+                raise ValueError(
+                    f"No automation secret found for user {self._username} found in password store"
+                )
+            self._secret = secret
 
         site_config = config["site"]
 

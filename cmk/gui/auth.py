@@ -11,12 +11,10 @@ import hmac
 import traceback
 from contextlib import suppress
 from datetime import datetime
-from pathlib import Path
 from typing import Callable
 
-import cmk.utils
-import cmk.utils.paths
 from cmk.utils.crypto.password import Password
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
@@ -203,15 +201,11 @@ def user_from_basic_header(auth_header: str) -> tuple[UserId, Password]:
 
 
 def verify_automation_secret(user_id: UserId, secret: str) -> bool:
-    if secret and user_id and "/" not in user_id:
-        path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
-        if not path.is_file():
-            return False
-
-        with path.open(encoding="utf-8") as f:
-            return f.read().strip() == secret
-
-    return False
+    return (
+        secret != ""
+        and (stored_secret := AutomationUserSecret(user_id)).exists()
+        and stored_secret.read() == secret
+    )
 
 
 def check_auth_by_custom_http_header() -> UserId | None:

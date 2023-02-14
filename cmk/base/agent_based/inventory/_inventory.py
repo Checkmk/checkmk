@@ -105,7 +105,6 @@ def check_inventory_tree(
     store_piggybacked_sections(host_sections_no_error)
 
     broker = make_broker(host_sections_no_error, section_plugins)
-    parsing_errors = broker.parsing_errors()
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -122,6 +121,11 @@ def check_inventory_tree(
         old_tree=old_tree,
     )
 
+    # The call to `parsing_errors()` must be *after*
+    # `_collect_inventory_plugin_items()` because the broker implements
+    # an implicit protocol where `parsing_errors()` is empty until other
+    # methods of the broker have been called.
+    parsing_errors = broker.parsing_errors()
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections
     ) or bool(parsing_errors)

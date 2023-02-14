@@ -61,11 +61,3 @@ class PatchJsonMiddleware(AbstractWSGIMiddleware):
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         with patch_json(json):
             return self.app(environ, start_response)
-
-
-class FixApacheEnv(AbstractWSGIMiddleware):
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        if "apache.version" in environ:
-            environ["PATH_INFO"] = environ["SCRIPT_URL"]
-            del environ["SCRIPT_URL"]
-        return self.app(environ, start_response)

@@ -21,7 +21,6 @@ from cmk.gui import http
 from cmk.gui.session import FileBasedSession
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
-from cmk.gui.wsgi.middleware import FixApacheEnv
 from cmk.gui.wsgi.profiling import ProfileSwitcher
 
 if t.TYPE_CHECKING:
@@ -66,7 +65,6 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     app.register_blueprint(checkmk)
 
     # Some middlewares we want to have available in all environments
-    app.wsgi_app = FixApacheEnv(app.wsgi_app).wsgi_app  # type: ignore[assignment]
     app.wsgi_app = ProxyFix(app.wsgi_app)  # type: ignore[assignment]
     app.wsgi_app = ProfileSwitcher(  # type: ignore[assignment]
         app.wsgi_app,

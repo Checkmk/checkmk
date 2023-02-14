@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 
+import flask
 import pytest
 import webtest  # type: ignore[import]
+from flask import request
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -13,6 +15,19 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
+
+
+def test_request_url(flask_app: flask.Flask) -> None:
+    url = "/NO_SITE/check_mk/api/1.0/objects/activation_run/123/actions/wait-for-completion/invoke"
+    with flask_app.test_request_context(
+        environ_overrides={
+            "apache.version": "foo",
+            "PATH_INFO": url,
+            "SCRIPT_NAME": url,
+        },
+    ):
+        flask_app.preprocess_request()
+        assert request.url == f"http://localhost{url}"
 
 
 @pytest.mark.parametrize(

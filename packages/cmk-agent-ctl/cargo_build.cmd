@@ -31,6 +31,13 @@ set arte=%cur_dir%\..\..\artefacts
 set target=i686-pc-windows-msvc
 set exe_name=cmk-agent-ctl.exe
 set exe=target\%target%\release\%exe_name%
+rustup toolchain list
+rustup default 1.66.0
+rustup target add %target%
+rustup update 1.66.0
+@echo RUST versions:
+cargo -V
+rustc -V
 
 :: Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
 :: which is not provided by libucrt. The latter is needed for static linking.

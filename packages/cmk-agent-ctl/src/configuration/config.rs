@@ -272,20 +272,20 @@ impl Registry {
         &self.path
     }
 
-    pub fn new(path: &Path) -> AnyhowResult<Self> {
+    pub fn new(path: impl AsRef<Path>) -> AnyhowResult<Self> {
         Ok(Self {
             connections: RegisteredConnections::default(),
-            path: PathBuf::from(path),
+            path: PathBuf::from(path.as_ref()),
             last_reload: None,
             legacy_pull_marker: LegacyPullMarker::new(Self::path_legacy_pull_marker(path)?),
         })
     }
 
-    pub fn from_file(path: &Path) -> AnyhowResult<Self> {
+    pub fn from_file(path: impl AsRef<Path>) -> AnyhowResult<Self> {
         Ok(Self {
-            connections: RegisteredConnections::load_missing_safe(path)?,
-            path: PathBuf::from(path),
-            last_reload: mtime(path)?,
+            connections: RegisteredConnections::load_missing_safe(path.as_ref())?,
+            path: PathBuf::from(path.as_ref()),
+            last_reload: mtime(path.as_ref())?,
             legacy_pull_marker: LegacyPullMarker::new(Self::path_legacy_pull_marker(path)?),
         })
     }
@@ -567,11 +567,8 @@ impl TrustedConnection {
 struct LegacyPullMarker(std::path::PathBuf);
 
 impl LegacyPullMarker {
-    fn new<P>(path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
-        Self(path.as_ref().to_owned())
+    fn new(path: impl AsRef<Path>) -> Self {
+        Self(PathBuf::from(path.as_ref()))
     }
 
     fn exists(&self) -> bool {
@@ -640,8 +637,7 @@ pub mod test_helpers {
                     .as_ref()
                     .unwrap()
                     .path()
-                    .join("registered_connections.json")
-                    .as_ref(),
+                    .join("registered_connections.json"),
             )
             .unwrap()
         }
@@ -652,8 +648,7 @@ pub mod test_helpers {
                     .as_ref()
                     .unwrap()
                     .path()
-                    .join("registered_connections.json")
-                    .as_ref(),
+                    .join("registered_connections.json"),
             )
             .unwrap();
             registry.register_connection(
@@ -848,6 +843,7 @@ mod test_legacy_pull_marker {
         assert!(!lpm.exists());
         lpm.create().unwrap();
         assert!(lpm.exists());
+        lpm.remove().unwrap();
     }
 
     #[test]
@@ -864,6 +860,8 @@ mod test_legacy_pull_marker {
         let lpm = legacy_pull_marker();
         lpm.create().unwrap();
         assert!(lpm.0.is_file());
+        // clean up
+        lpm.remove().unwrap();
     }
 }
 

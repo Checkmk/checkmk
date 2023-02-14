@@ -157,11 +157,33 @@ mod test {
     use super::*;
     use std::path::PathBuf;
 
-    fn tmp_path() -> PathBuf {
-        tempfile::NamedTempFile::new()
-            .unwrap()
-            .into_temp_path()
-            .to_path_buf()
+    struct NamedTempPath {
+        path: PathBuf,
+    }
+
+    impl NamedTempPath {
+        fn new() -> Self {
+            Self {
+                path: tempfile::NamedTempFile::new()
+                    .unwrap()
+                    .into_temp_path()
+                    .to_path_buf(),
+            }
+        }
+    }
+
+    impl AsRef<Path> for NamedTempPath {
+        fn as_ref(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for NamedTempPath {
+        fn drop(&mut self) {
+            if self.path.exists() {
+                std::fs::remove_file(&self.path).unwrap();
+            }
+        }
     }
 
     fn write_legacy_registry(path: impl AsRef<Path>) {
@@ -199,15 +221,15 @@ mod test {
 
     #[test]
     fn test_missing_registry_ok() {
-        let tmp_path = tmp_path();
-        assert!(!tmp_path.exists());
+        let tmp_path = NamedTempPath::new();
+        assert!(!tmp_path.as_ref().exists());
         assert!(migrate_registered_connections(&tmp_path).is_ok());
-        assert!(!tmp_path.exists());
+        assert!(!tmp_path.as_ref().exists());
     }
 
     #[test]
     fn test_up_to_date_registry_untouched() {
-        let tmp_path = tmp_path();
+        let tmp_path = NamedTempPath::new();
         config::Registry::new(&tmp_path).unwrap().save().unwrap();
         let mtime_before_migration = std::fs::metadata(&tmp_path).unwrap().modified().unwrap();
         assert!(migrate_registered_connections(&tmp_path).is_ok());
@@ -217,7 +239,7 @@ mod test {
 
     #[test]
     fn test_legacy_registry_migration() {
-        let tmp_path = tmp_path();
+        let tmp_path = NamedTempPath::new();
         write_legacy_registry(&tmp_path);
         assert!(migrate_registered_connections(&tmp_path).is_ok());
         let migrated_registry = config::Registry::from_file(&tmp_path).unwrap();
@@ -293,8 +315,8 @@ mod test {
 
     #[test]
     fn test_crash_upon_corrupt_registry() {
-        let tmp_path = tmp_path();
+        let tmp_path = NamedTempPath::new();
         std::fs::write(&tmp_path, "nonsense").unwrap();
-        assert!(migrate_registered_connections(&tmp_path).is_err())
+        assert!(migrate_registered_connections(&tmp_path).is_err());
     }
 }

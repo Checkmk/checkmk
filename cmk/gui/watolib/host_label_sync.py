@@ -12,9 +12,6 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any
 
-from flask import current_app
-from flask.ctx import RequestContext
-
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
@@ -37,13 +34,12 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     job_registry,
 )
-from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
-from cmk.gui.utils.script_helpers import make_request_context
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
@@ -167,17 +163,11 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
 
-        with (
-            request_context := make_request_context(current_app)
-        ):  # pylint: disable=superfluous-parens
-            load_config()
-
         with ThreadPool(20) as pool:
             results = pool.map(
-                self._execute_site_sync_bg,
+                copy_request_context(self._execute_site_sync_bg),
                 [
                     (
-                        request_context,
                         site_id,
                         site_spec,
                         SiteRequest(newest_host_labels.get(site_id, 0.0), None),
@@ -191,15 +181,13 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
     def _execute_site_sync_bg(
         self,
         args: tuple[
-            RequestContext,
             SiteId,
             SiteConfiguration,
             SiteRequest,
         ],
     ) -> SiteResult:
         log.init_logging()  # NOTE: We run in a subprocess!
-        with args[0]:
-            return _execute_site_sync(*args[1:])
+        return _execute_site_sync(*args)
 
     def _process_site_sync_results(
         self, newest_host_labels: dict[SiteId, float], results: list[SiteResult]

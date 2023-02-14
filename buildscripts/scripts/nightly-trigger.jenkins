@@ -13,7 +13,7 @@ withFolderProperties{
         case 'cee':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST
             EDITION_DEFAULT = 'enterprise'
-            START_HOUR = '0'
+            CRON_PATTERN = '0 0 * * *' // 0:00 am
             RUN_INTEGRATION_TESTS = true
             RUN_IMAGE_TESTS = true
             DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
@@ -22,7 +22,7 @@ withFolderProperties{
         case 'cre':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
             EDITION_DEFAULT = 'raw'
-            START_HOUR = '2'
+            CRON_PATTERN = '0 2 * * *' // 2:00 am
             RUN_INTEGRATION_TESTS = true
             RUN_IMAGE_TESTS = true
             DEPLOY_TO_WEBSITE = false
@@ -31,7 +31,7 @@ withFolderProperties{
         case 'cfe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
             EDITION_DEFAULT = 'free'
-            START_HOUR = '4'
+            CRON_PATTERN = '30 2 * * *' // 2:30 am
             // CFE is basically a CEE, so we do not need to test it
             RUN_INTEGRATION_TESTS = false
             RUN_IMAGE_TESTS = false
@@ -41,7 +41,7 @@ withFolderProperties{
         case 'cpe':
             DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CPE
             EDITION_DEFAULT = 'plus'
-            START_HOUR = '4'
+            CRON_PATTERN = '0 3 * * *' // 3:00 am
             // Enable this later when we have CPE specific integration tests.
             // Until then it's similar to the CEE.
             RUN_INTEGRATION_TESTS = false
@@ -65,7 +65,7 @@ properties([
         string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise, managed or plus' )
     ]),
     pipelineTriggers(
-        ENABLE_NIGHTLY_TRIGGER ? [cron("0 ${START_HOUR} * * *")] : []
+        ENABLE_NIGHTLY_TRIGGER ? [cron("${CRON_PATTERN}")] : []
     )
 ])
 

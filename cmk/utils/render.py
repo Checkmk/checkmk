@@ -253,7 +253,7 @@ def fmt_number_with_precision(
 
 
 def fmt_bytes(
-    b: int,
+    b: float,
     *,
     unit_prefix_type: type[_ABCUnitPrefixes] = IECUnitPrefixes,
     precision: int = 2,

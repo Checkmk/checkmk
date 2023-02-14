@@ -244,11 +244,14 @@ class Config:
 
 class StateConfig(BaseModel):
     state: str | None
-    started: None
+    started: float | None
     output: str
-    pid: int | None = None
-    success: bool = False
+    bytes_per_second: float | None = None
     finished: float | None = None
+    next_schedule: None = None
+    pid: int | None = None
+    size: int | None = None
+    success: bool = False
 
 
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
@@ -284,7 +287,6 @@ class MKBackupJob(abc.ABC):
             )
 
         # Fix data structure when the process has been killed
-        assert state.state == "running" and state.pid is None  # safe guard for the next ignore
         if state.state == "running" and not os.path.exists("/proc/%d" % state.pid):  # type: ignore[str-format]
             assert state.started is not None
             state.state = "finished"
@@ -620,14 +622,16 @@ class PageBackup:
                     html.write_text(_("Started at %s") % render.date_and_time(state.started))
                     duration = time.time() - state.started
                     if job_state == "finished":
+                        assert state.finished is not None
                         html.write_text(", Finished at %s" % render.date_and_time(state.finished))
                         duration = state.finished - state.started
 
                     if state.size is not None:
-                        size_txt = "Size: %s, " % render.fmt_bytes(state["size"])
+                        size_txt = "Size: %s, " % render.fmt_bytes(state.size)
                     else:
                         size_txt = ""
 
+                    assert state.bytes_per_second is not None
                     html.write_text(
                         _(" (Duration: %s, %sIO: %s/s)")
                         % (
@@ -966,6 +970,7 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
             html.write_text(_("Started at %s") % render.date_and_time(state.started))
             duration = time.time() - state.started
             if state.state == "finished":
+                assert state.finished is not None
                 html.write_text(", Finished at %s" % render.date_and_time(state.started))
                 duration = state.finished - state.started
 

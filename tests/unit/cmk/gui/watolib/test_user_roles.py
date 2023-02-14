@@ -55,14 +55,12 @@ def test_cloning_user_roles() -> None:
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
     assert len(all_roles) == 8 if cmk_version.is_cloud_edition() else 6
-    assert {roleid for roleid in all_roles.keys() if roleid.endswith("x")} == set(
-        (
-            "adminx",
-            "guestx",
-            "userx",
-        )
-        + (("agent_registrationx",) if cmk_version.is_cloud_edition() else ())
-    )
+    assert {roleid for roleid in all_roles.keys() if roleid.endswith("x")} == {
+        "adminx",
+        "guestx",
+        "userx",
+        "agent_registrationx",
+    }
 
 
 def test_get_default_user_roles() -> None:

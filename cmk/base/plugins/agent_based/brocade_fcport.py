@@ -132,6 +132,18 @@ def _get_if_table_offset(speed_info: StringTable, offset: int) -> int | None:
     return None
 
 
+def _get_relevant_part_of_speed_info(speed_info: StringTable, offset: int) -> StringTable:
+    # if-table and brocade-if-table do NOT have same length
+    # first remove interfaces at the beginning of the speed info table:
+    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset) :]]
+
+    # but there may also be some vlan (or other non fc) interfaces at the bottom of speed_info:
+    while speed_info and speed_info[-1] and speed_info[-1][0] != "56":
+        speed_info.pop()
+
+    return speed_info
+
+
 def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-untyped-def]
     if_info: StringTable = string_table[0]
     link_info: StringTable = string_table[1]
@@ -144,8 +156,7 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-unty
         return None
 
     isl_ports = dict(link_info)
-    # if-table and brocade-if-table do NOT have same length
-    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset) :]]
+    speed_info = _get_relevant_part_of_speed_info(speed_info, offset)
 
     if len(if_info) == len(speed_info):
         # extract the speed from IF-MIB::ifHighSpeed.

@@ -9,26 +9,27 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.azure_virtual_machine import (
+    _MAP_POWER,
+    _MAP_PROVISIONING,
+    check_azure_virtual_machine,
+    check_azure_virtual_machine_summary,
+    discover_azure_virtual_machine,
+    discover_azure_virtual_machine_summary,
+    VMSummaryParams,
+)
 from cmk.base.plugins.agent_based.utils.azure import Resource, Section
 
 DEFAULT_PARAMS = {
-    "map_provisioning_states": {
-        "succeeded": 0,
-        "failed": 2,
-    },
-    "map_power_states": {
-        "starting": 0,
-        "running": 0,
-        "stopping": 1,
-        "stopped": 1,
-        "deallocating": 0,
-        "deallocated": 0,
-        "unknown": 3,
-    },
+    "map_provisioning_states": _MAP_PROVISIONING,
+    "map_power_states": _MAP_POWER,
 }
 
 MULTIPLE_VMS_SECTION = {
@@ -87,6 +88,24 @@ MULTIPLE_VMS_SECTION = {
         subscription="4db89361-bcd9-4353-8edb-33f49608d4fa",
     ),
 }
+
+
+@pytest.mark.parametrize(
+    "section,expected_discovery",
+    [
+        pytest.param(
+            MULTIPLE_VMS_SECTION,
+            [Service(item="VM-test-1"), Service(item="VM-test-2")],
+            id="multiple VM resources",
+        ),
+        pytest.param({}, [], id="no VM resources"),
+    ],
+)
+def test_discover_azure_virtual_machine(
+    section: Section,
+    expected_discovery: DiscoveryResult,
+) -> None:
+    assert list(discover_azure_virtual_machine(section)) == expected_discovery
 
 
 @pytest.mark.parametrize(
@@ -239,17 +258,20 @@ MULTIPLE_VMS_SECTION = {
     ],
 )
 def test_check_azure_virtual_machines(
-    fix_register: FixRegister,
     item: str,
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, Mapping[str, int]],
     section: Section,
     expected_result: CheckResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("azure_virtualmachines")]
     assert (
-        list(check_plugin.check_function(item=item, params=params, section=section))
+        list(check_azure_virtual_machine(item=item, params=params, section=section))
         == expected_result
     )
+
+
+def test_check_azure_virtual_machines_no_item() -> None:
+    with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
+        list(check_azure_virtual_machine(item="VM-test-1", params={}, section={}))
 
 
 @pytest.mark.parametrize(
@@ -264,8 +286,7 @@ def test_discover_azure_virtual_machines_summary(
     section: Section,
     expected_discovery: DiscoveryResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("azure_virtualmachines_summary")]
-    assert list(check_plugin.discovery_function(section)) == expected_discovery
+    assert list(discover_azure_virtual_machine_summary(section)) == expected_discovery
 
 
 @pytest.mark.parametrize(
@@ -282,8 +303,11 @@ def test_discover_azure_virtual_machines_summary(
                 Result(state=State.CRIT, summary="Power states: 2 running (warn/crit at 1/2)"),
                 Result(
                     state=State.OK,
-                    summary="VM-test-1: Provisioning succeeded, VM running",
-                    details="VM-test-1: Provisioning succeeded, VM running\nVM-test-2: Provisioning succeeded, VM running",
+                    notice="VM-test-1: Provisioning succeeded, VM running",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VM-test-2: Provisioning succeeded, VM running",
                 ),
             ],
             id="check upper levels",
@@ -305,8 +329,11 @@ def test_discover_azure_virtual_machines_summary(
                 ),
                 Result(
                     state=State.OK,
-                    summary="VM-test-1: Provisioning succeeded, VM running",
-                    details="VM-test-1: Provisioning succeeded, VM running\nVM-test-2: Provisioning succeeded, VM running",
+                    notice="VM-test-1: Provisioning succeeded, VM running",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="VM-test-2: Provisioning succeeded, VM running",
                 ),
             ],
             id="check lower levels",
@@ -314,10 +341,10 @@ def test_discover_azure_virtual_machines_summary(
     ],
 )
 def test_check_azure_virtual_machines_summary(
-    fix_register: FixRegister,
     section: Section,
-    params: Mapping[str, tuple[float, float]],
+    params: Mapping[str, VMSummaryParams],
     expected_result: CheckResult,
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("azure_virtualmachines_summary")]
-    assert list(check_plugin.check_function(params=params, section=section)) == expected_result
+    assert (
+        list(check_azure_virtual_machine_summary(params=params, section=section)) == expected_result
+    )

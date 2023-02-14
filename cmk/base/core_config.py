@@ -259,7 +259,8 @@ def do_create_config(
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
-    _bake_on_restart(config_cache, skip_config_locking_for_bakery)
+    if config.bake_agents_on_restart and not config.is_wato_slave_site:
+        _bake_on_restart(config_cache, skip_config_locking_for_bakery)
 
 
 def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> None:

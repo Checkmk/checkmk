@@ -34,11 +34,11 @@ def test_registered_permission_sections() -> None:
         ("view", (50, "Views", True)),
         ("icons_and_actions", (50, "Icons", True)),
         ("pagetype_topic", (50, "Topics", True)),
+        ("agent_registration", (50, "Agent registration", False)),
     ]
 
     if not cmk_version.is_raw_edition():
         expected_sections += [
-            ("agent_registration", (50, "Agent registration", False)),
             ("custom_graph", (50, "Custom graphs", True)),
             ("forecast_graph", (50, "Forecast graphs", True)),
             ("graph_collection", (50, "Graph collections", True)),

@@ -5549,7 +5549,7 @@ rulespec_registry.register(
 
 def _valuespec_check_mk_agent_target_versions() -> CascadingDropdown:
     return CascadingDropdown(
-        title="{} - {}".format(_("Check for correct version of Checkmk agent"), _("Deprecated")),
+        title=_("Check for correct version of Checkmk agent"),
         help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
         % _("Checkmk Agent installation auditing"),
         choices=[

@@ -156,6 +156,7 @@ def _list_host_services(params: Mapping[str, Any]) -> Response:
     method="get",
     query_params=[OPTIONAL_HOST_NAME, *PARAMETERS],
     tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
 )

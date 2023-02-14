@@ -164,7 +164,7 @@ def _all_ui_extensions_compatible(
             if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
                 conflict_mode is ConflictMode.ASK
                 and input(
-                    "Incompatible local plugin '%s'.\n"
+                    "Incompatible plugin '%s'.\n"
                     "Error: %s\n\n"
                     "You can abort the update process (A) and try to fix "
                     "the incompatibilities or continue the update (c).\n\n"
@@ -176,7 +176,7 @@ def _all_ui_extensions_compatible(
             return False
 
         # file path is unused. We could offer to delete it in the dialog below?
-        _file_path, package_id = path_and_id
+        _file_path, package_id = path_and_id  # pylint: disable=unpacking-non-sequence
 
         # unpackaged files
         if package_id is None:
@@ -229,19 +229,35 @@ def _best_effort_guess_for_file_path(
 ) -> tuple[Path, PackageID | None] | None:
     "try to guess which file could create such an error"
     potential_sources = (
-        _PATH_CONFIG.gui_plugins_dir / gui_part / f"{file}.py",
-        _PATH_CONFIG.web_dir / gui_part / f"{file}.py",
-        _PATH_CONFIG.gui_plugins_dir / gui_part / f"{file}/__init__.py",
-        _PATH_CONFIG.web_dir / gui_part / f"{file}/__init__.py",
+        (
+            # the legacy case where we come from web dir
+            _PATH_CONFIG.web_dir
+            / gui_part
+            / f"{file.rstrip('c')}",
+        )
+        if file.endswith((".py", ".pyc"))
+        else (
+            _PATH_CONFIG.gui_plugins_dir / gui_part / f"{file}.py",
+            _PATH_CONFIG.gui_plugins_dir / gui_part / file / "__init__.py",
+        )
     )
 
-    if installed_candidates := [
+    installed_candidates = [
         (p, package) for p in potential_sources if ((package := installed.get(p)) is not None)
-    ]:
-        return installed_candidates[0] if len(installed_candidates) == 1 else None
+    ]
+    match len(installed_candidates):
+        case 0:
+            pass
+        case 1:
+            return installed_candidates[0]
+        case _more_than_one:
+            return None  # refuse to guess
 
-    return (
-        (unpackaged_candidates[0], None)
-        if (unpackaged_candidates := [p for p in potential_sources if p.exists()])
-        else None
-    )
+    unpackaged_candidates = [p for p in potential_sources if p.exists()]
+    match len(unpackaged_candidates):
+        case 0:
+            return None  # how did that happen?
+        case 1:
+            return (unpackaged_candidates[0], None)
+        case _more_than_one:
+            return None  # refuse to guess

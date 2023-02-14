@@ -82,7 +82,7 @@ def check_app_registration(
 
 register.check_plugin(
     name="azure_app_registration",
-    service_name="App Registration Secret %s",
+    service_name="Azure/App Registration Secret %s",
     discovery_function=discover_app_registration,
     check_function=check_app_registration,
     check_ruleset_name="credentials_expiration",

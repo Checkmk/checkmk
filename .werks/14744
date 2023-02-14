@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Graph dashlets used in dashboards were not refreshed correctly since 2.1 if the
 graph used a timerange option with "The last".

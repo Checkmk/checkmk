@@ -6,7 +6,7 @@ Date: 1658856897
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Every linux server with MegaRAID controller reported only one service for logical disks, independent of the actual number of configured logical disks, named <i>"RAID Adapter/LDisk /c{adapter}/v{disk}"</i> (sic, without replacement of the variables).
 

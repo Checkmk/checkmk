@@ -6,7 +6,7 @@ Date: 1673535001
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Discovery for `netapp_api_if` would skip interfaces with no entry for amount of received data (for
 historical) reasons.

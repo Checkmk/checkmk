@@ -6,7 +6,7 @@ Date: 1671624841
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The internal queues of the CMC for communication with the RRD cache daemon,
 Carbon connections, and InfluxDB connections has been increased.  This can

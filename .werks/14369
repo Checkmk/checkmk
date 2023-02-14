@@ -6,7 +6,7 @@ Date: 1661786696
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk fixes a bug in the REST API edit user endpoint. The serial count should only
 increment when the client attempts to edit the auth_option nested attributes.

@@ -6,7 +6,7 @@ Date: 1675238898
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The "type" column in the Livestatus "downtimes" table incorrectly contained
 information about the active/pending state of the downtime, now it is

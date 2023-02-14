@@ -6,7 +6,7 @@ Date: 1655851496
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This loosens the discovery restrictions on the fortigate_ap_connection check, to allow detection of APs on other fortinet devices.
 

@@ -6,7 +6,7 @@ Date: 1676360541
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The "Try out" in Swagger-UI does not work for endpoint examples which make use
 of the "query" query parameter. The change must be adapted on the Swagger side.

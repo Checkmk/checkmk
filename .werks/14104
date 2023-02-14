@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you used report options in the "Add to" menu of views, an error like "Cannot
 load reports from /omd/sites/beta/var/check_mk/web/USER/user_reports.mk:

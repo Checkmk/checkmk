@@ -6,7 +6,7 @@ Date: 1659944890
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the dcd failed during the host bulk discovery step if the
 configuration contained a host attribute tag that was enabled via a checkbox.

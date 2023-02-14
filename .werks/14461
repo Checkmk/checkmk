@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The quicksearch just returned a warning like "More than 80 results" if the
 configured "Number of elements to show in Quicksearch" was reached.

@@ -6,7 +6,7 @@ Date: 1658833093
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The configuration of the expected name in the servers SSL certificate now works as intended.
 

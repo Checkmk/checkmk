@@ -6,7 +6,7 @@ Date: 1645734175
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In case the linux agent is managed by systemd, the agent
 updater now comes with dedicated systemd units to trigger

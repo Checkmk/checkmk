@@ -6,6 +6,6 @@ Date: 1659718014
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Depending on the OpenBSD version, the agent was reporting wrong values for the free memory.

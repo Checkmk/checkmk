@@ -6,7 +6,7 @@ Date: 1659620852
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The <tt>mk_logwatch</tt> agent plugin can be deployed via the agent bakery (ruleset <i>Text logfiles
 (Linux, Solaris, Windows)</i>). In this ruleset, users can specify regular expressions for

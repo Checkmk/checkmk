@@ -6,7 +6,7 @@ Date: 1654766725
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When updating agents using the agent updater on Solaris, the postremove script
 will try to remove the corresponding service line from <tt>/etc/services</tt>.

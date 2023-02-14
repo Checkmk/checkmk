@@ -6,7 +6,7 @@ Date: 1646752523
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check returned a 0 cpu usage value when the Kubernetes special
 agent was polled too frequently. This werk fixes this behaviour

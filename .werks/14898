@@ -6,7 +6,7 @@ Date: 1667815693
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Since version 2.1.0p7 and werk #14281 the Apache port of the source site was
 used for the new site while using "omd cp" command.

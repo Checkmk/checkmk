@@ -6,7 +6,7 @@ Date: 1655905040
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the check apc_symmetra_test would result in an unknown state, if the data was based on
 the PowerChute Business Edition. The underlying reason was that we did not implement parsing for the

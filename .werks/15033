@@ -6,7 +6,7 @@ Date: 1669820175
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this werk, the chrony cached section had the same value for both age validity
 and the refresh interval. This led to an occasional CRIT status on the associating service

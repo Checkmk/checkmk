@@ -6,7 +6,7 @@ Date: 1672845211
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Metrics are collected and sent together after either about 5000
 metrics have been enqueued or 10 seconds, whichever comes first.

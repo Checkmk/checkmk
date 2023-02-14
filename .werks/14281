@@ -6,7 +6,7 @@ Date: 1654114193
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Each Checkmk site provides it's HTTP services (UI, APIs) using it's own site
 Apache process. Global access to this site Apache is provided via the system

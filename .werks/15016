@@ -6,7 +6,7 @@ Date: 1671790468
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Newer version of the Meinberg Lanman NTP devices support additional
 reference clocks. The new reference clocks are now also monitored.

@@ -6,7 +6,7 @@ Date: 1673862563
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The builtin cluster modes of various WMI based check plugins did not work correclty.
 They would incorrectly report "<i>item not present anymore</i>" (and go to UNKNOWN).

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent updater used to use the fixed directory <tt>var/lib/check_mk_agent/</tt>
 to unpack its CA certificates regardless of what was configured in the rule

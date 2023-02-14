@@ -6,7 +6,7 @@ Date: 1649935530
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously mknotifyd did not authenticate peers. With this Werk mknotifyd can
 be configured to require TLS client certificate authentication. This is only

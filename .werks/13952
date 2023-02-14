@@ -6,7 +6,7 @@ Date: 1654853604
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Passwords that have newlines in them can now be created using
 the REST API. The endpoint will strip the newlines away.

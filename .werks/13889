@@ -6,7 +6,7 @@ Date: 1657097880
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Due to a regression in 2.1, the translation of units and descriptions of
 SNMP traps was broken, this has been fixed.

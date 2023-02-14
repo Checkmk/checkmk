@@ -6,7 +6,7 @@ Date: 1670919292
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Current check_mailboxes active check implementation used only legacy authentication
 for EWS mailboxes.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Up to this Werk vanished clustered services could never be removed using the periodic service discovery.
 We have now added a configuration option that allows users to achieve just that, but beware:

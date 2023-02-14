@@ -6,7 +6,7 @@ Date: 1657016593
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk introduces the new /objects/service_discovery/{host_name} endpoint which
 returns the latest service discovery result of a host. The response object includes the

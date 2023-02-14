@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When using a "Percentage of total service problems" dashlet without the necessary monitoring data the
 dashlet would display a traceback of the error.

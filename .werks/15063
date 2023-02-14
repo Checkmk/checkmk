@@ -6,7 +6,7 @@ Date: 1671110709
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When changing the password for an automation user the time of the last password change was not set.
 If the global setting <i>Maximum age of passwords</i> was enabled and the password retired, the login was not possible even if the password was newly set.

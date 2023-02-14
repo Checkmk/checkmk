@@ -6,7 +6,7 @@ Date: 1656424140
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It is possible to configure the <tt>df</tt> check to exlude the space reserved
 for the root user from the used space. The metric 'fs_used_percent' which is

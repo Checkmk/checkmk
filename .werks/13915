@@ -6,7 +6,7 @@ Date: 1659531771
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 After a failed attempt to connect to an InfluxDB server, the core now
 waits at least 30 s before trying again.  This leads to, for example,

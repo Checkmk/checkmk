@@ -6,7 +6,7 @@ Date: 1659508633
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Depending on the <tt>pymongo</tt> version on the host system, the two check plugins mentioned above
 crashed with

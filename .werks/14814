@@ -6,7 +6,7 @@ Date: 1666020757
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In case of the reboot of a proxmox node the proxmox special agent crashed.
 This has been fixed now.

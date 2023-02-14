@@ -6,7 +6,7 @@ Date: 1674036625
 Edition: cce
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Checkmk now supports monitoring OpenShift clusters. The OpenShift monitoring builds on top of
 Checkmk's existing Kubernetes monitoring. However, the metrics are collected via methods tailored to

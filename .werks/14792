@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In case you want to install python packages with pip as a site user,
 which needs to be compiled from source, this should now be possible.

@@ -6,7 +6,7 @@ Date: 1670573735
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk introduces the event console endpoints. Previously, users could acknowledge event
 console events via the Web API but after some security changes, this is now not possible. The

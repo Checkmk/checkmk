@@ -6,7 +6,7 @@ Date: 1659700778
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to activate logging for the agent bakery.
 When activated at <i>Global Settings - Setup - Agent bakery logging</i>,

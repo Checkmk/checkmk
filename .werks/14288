@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With 2.1.0p7 and werk #14281 we changed the system Apache configuration which
 broke the System Apache error page that is shown to the user in case the site

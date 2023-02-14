@@ -6,7 +6,7 @@ Date: 1647530457
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The service Check_MK Discovery could produce a crash report with the
 error "Checker and fetcher mismatch" if the address of an SNMP host

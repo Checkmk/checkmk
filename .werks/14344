@@ -6,7 +6,7 @@ Date: 1656495445
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the REST API returned a validation error if the specified custom attributes
 had a topic other than "Custom Attributes". This werk removes that restriction and allows

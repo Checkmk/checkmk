@@ -6,7 +6,7 @@ Date: 1648713497
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 You may find that some Nodes don't add resources to the overall workload your Cluster can handle.
 This werk introduces a new option, which allows you to remove Nodes from aggregations on the Cluster

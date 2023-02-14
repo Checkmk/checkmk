@@ -6,7 +6,7 @@ Date: 1664775662
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk only affects users with custom bakery plugins that have not been migrated to the new plugin API (introduced in Checkmk version 2.0).
 As announced in Werk #11401 the support for legacy bakery plugins (used in Checkmk version 1.6 and earlier) is now dropped.

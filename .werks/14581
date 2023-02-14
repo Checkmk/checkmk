@@ -6,7 +6,7 @@ Date: 1675418824
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When creating a piggyback host for an EC2 instance, <tt>agent_aws</tt> uses the format
 C+:

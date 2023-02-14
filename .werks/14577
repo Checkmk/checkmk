@@ -6,7 +6,7 @@ Date: 1674810228
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The new option can be configured in the rules <tt>Kubernetes resource quota cpu
 utilization</tt>, <tt>Kubernetes CPU resource utilization</tt>, <tt>Kubernetes

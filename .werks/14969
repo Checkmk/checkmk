@@ -6,7 +6,7 @@ Date: 1670235948
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk only affects maintainers of custom special agents:
 Previously, when an error occurred when executing a special agent, the first exception line was displayed in the service summary of the <i>Check_MK</i> service.

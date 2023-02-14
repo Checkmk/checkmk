@@ -6,7 +6,7 @@ Date: 1649676590
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before, the Kubernetes special agent would crash with the message
 

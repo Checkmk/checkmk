@@ -6,7 +6,7 @@ Date: 1664265337
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It was previously not required to be authenticated to access the site's REST API documentation.
 

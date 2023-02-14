@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you exported a graph via "This view as PDF" and selected a different
 timerange for the graph before, e.g. "The last 8 days", the timerange was

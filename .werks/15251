@@ -6,7 +6,7 @@ Date: 1675239307
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The "is_pending" part of the "downtimes_with_extra_info" column in the
 "hosts" and "services" table reported all downtimes to be pending.  This has

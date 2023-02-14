@@ -6,7 +6,7 @@ Date: 1653981251
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check "hp_proliant_raid" showed an empty item name in the event that a name
 for the raid had not been set. This is problematic as all items must have an

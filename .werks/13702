@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This change is only incompatible for user who scripted tools against the
 2.1.0b1 version of the agent controller <tt>cmk-agent-ctl</tt>.

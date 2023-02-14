@@ -6,7 +6,7 @@ Date: 1676215804
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 You can now choose to freeze the structure of an aggregation group.
 Once created, aggregations will never change their structure unless the user triggers a rebuild.

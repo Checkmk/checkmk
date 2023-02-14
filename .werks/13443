@@ -6,7 +6,7 @@ Date: 1675758119
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this change it was possible to query rules prefixed with active_checks:
 or static_checks: with a hyphen instead of a colon.

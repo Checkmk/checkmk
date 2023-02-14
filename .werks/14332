@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If new Forecast graphs were saved with the option "Save & go to Forecast graph"
 or existing graphs were edited via "Edit model", the defined titel was

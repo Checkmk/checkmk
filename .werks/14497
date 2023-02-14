@@ -6,7 +6,7 @@ Date: 1656591084
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The incompatibility of this change only affects users who use the metric for
 filesystem space reserved for the root user ("reserved") in a custom graph and

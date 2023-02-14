@@ -6,7 +6,7 @@ Date: 1655994127
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Docker containers are usually monitored as piggyback hosts in Checkmk. If a container with
 the same name runs on multiple Docker hosts, the piggyback host representing this container

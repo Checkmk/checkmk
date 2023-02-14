@@ -6,7 +6,7 @@ Date: 1674633112
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The performance and stability of the event console is now improved when
 processing large logwatch.ec generated spool files.

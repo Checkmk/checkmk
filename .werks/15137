@@ -6,7 +6,7 @@ Date: 1672843461
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Monitoring of Azure Virtual Network Gateways is extended
 with four new checks and four new metrics.

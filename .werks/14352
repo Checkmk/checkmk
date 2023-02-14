@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Since werk 12185 we automatically show metrics in the output of local checks. The metric names
 are now consistently converted to sentence case. Below are examples for the automatic conversion

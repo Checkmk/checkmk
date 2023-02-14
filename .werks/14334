@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If views with multiple columns "Host custom attribute" were exported, e.g. as
 JSON or CSV, the title for each attribute was "host_custom_variable". This was

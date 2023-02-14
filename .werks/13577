@@ -6,7 +6,7 @@ Date: 1645786464
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When using the rule "Check hosts with PING (ICMP Echo Request)" in combination with
 "Ping all IPv4/6 addresses", only a service for the first matching rule was created.

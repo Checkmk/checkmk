@@ -6,7 +6,7 @@ Date: 1665133214
 Edition: cee
 Knowledge: doc
 Level: 3
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 
 When using the <i>Agent updater</i> the Checkmk server needs a secret in order to allow the agent to download new agents.

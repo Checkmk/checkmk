@@ -6,7 +6,7 @@ Date: 1659192555
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Services belonging to the check plugin formerly known as "Throughput LUNs" (<tt>hpux_lunstats</tt>) are now created by a different plugin and behave differently.
 

@@ -6,7 +6,7 @@ Date: 1661330101
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check heartbeat_crm_resources would not discover any services when
 pacemaker version >= 2 is installed on the host system. This is for example the

@@ -6,7 +6,7 @@ Date: 1673255007
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, if the field <tt>.status.images</tt> of a Kubernetes Node contained any element with
 <tt>names</tt> set to <tt>null</tt>, the API response would be rejected by agent_kube with the error

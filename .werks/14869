@@ -6,7 +6,7 @@ Date: 1664212709
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Until now mk_logwatch plugin could not create a directory for batch 
 files because the directory name as a rule contained a colon and the 

@@ -6,7 +6,7 @@ Date: 1674658903
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Within the ruleset "Checkmk agent installation auditing", it's possible for some time
 to configiure the state that is reported if the host queried the server for an agent update,

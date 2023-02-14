@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Local users whose passwords are hashed with insecure hash functions in the htpasswd file will be required to change their passwords on their next UI login.
 Users that authenticate via other mechanisms, such as LDAP, are not affected by this.

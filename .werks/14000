@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In some cases, the plugin <tt>mk_oracle.ps1</tt> may deliver empty
 async sections. This is possible in a situation when the async process,

@@ -6,7 +6,7 @@ Date: 1665512248
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, mk_logwatch plugin may wrongly report as changed 
 the whole content of a log file. The source of the problem was 

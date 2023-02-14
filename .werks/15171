@@ -6,7 +6,7 @@ Date: 1673444301
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When querying logs from the Datadog API, there was a shift in the time window of the query. The
 shift corresponded to the UTC offset of the local time zone of the monitoring server. This was

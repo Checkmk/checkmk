@@ -6,7 +6,7 @@ Date: 1650386830
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In Windows names of a network card may contain a wide variety of the 
 symbols including the pipe symbol. If the pipe symbol is presented in 

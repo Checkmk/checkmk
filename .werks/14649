@@ -6,7 +6,7 @@ Date: 1666178963
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This feature affects users that maintain a distributed setup where not all sites run the same Checkmk version.
 Users can now simultaneously manage conflicting MKPs for different Checkmk versions.

@@ -6,7 +6,7 @@ Date: 1670932946
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Inventory based views, ie. the data source is an inventory table, now offer the
 possibility to join other inventory tables. This can be configured in the

@@ -6,7 +6,7 @@ Date: 1653052222
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In distributed setups with configuration replication, deleting a user with none-ASCII
 characters in its username led to a crash upon attempting to activate the change:

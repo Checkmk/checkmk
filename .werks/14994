@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Using "_trans_id=-1" with an automation user for Web API calls could not be
 processed successfully.

@@ -62,7 +62,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of local item")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_local,
-        title=lambda: _("Local checks in Checkmk clusters") + " - " + _("Deprecated"),
+        title=lambda: _("Local checks in Checkmk clusters"),
         is_deprecated=True,
     )
 )

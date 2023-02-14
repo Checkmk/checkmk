@@ -316,7 +316,11 @@ class Rulespec(abc.ABC):
 
         self._name = name
         self._group = group
-        self._title = title
+        self._title = (
+            (lambda: "%s - %s" % (title(), _("Deprecated")))
+            if is_deprecated and title is not None
+            else title
+        )
         self._valuespec = valuespec
         self._match_type = match_type
         self._item_type = item_type

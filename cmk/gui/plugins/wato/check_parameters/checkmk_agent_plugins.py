@@ -62,7 +62,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_checkmk_agent_plugins,
-        title=lambda: _("Checkmk agent plugins") + " - " + _("Deprecated"),
+        title=lambda: _("Checkmk agent plugins"),
         # only present during 2.1.0b1. remove in 2.2!
         is_deprecated=True,
     )

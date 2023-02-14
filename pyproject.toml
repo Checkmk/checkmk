@@ -125,6 +125,7 @@ module = [
     "cmk.gui.background_job",
     "cmk.gui.backup",
     "cmk.notification_plugins.*",
+    "cmk.utils.crypto.*",
     "tests.gui_e2e.*",
     "tests.testlib.playwright.*",
     "tests.unit.cmk.ec.*",

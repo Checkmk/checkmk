@@ -111,14 +111,6 @@ def verify(password: Password, password_hash: PasswordHash) -> None:
         raise PasswordInvalidError
 
 
-def needs_update(password_hash: PasswordHash) -> bool:
-    """Check if a password hash should be re-calculated because the hash algorithm is deprecated.
-
-    See _context for the list of deprecated algorithms.
-    """
-    return _context.needs_update(password_hash)
-
-
 def is_unsupported_legacy_hash(password_hash: PasswordHash) -> bool:
     """Was the hash algorithm used for this hash once supported but isn't anymore?"""
     legacy = ["sha256_crypt", "md5_crypt", "apr_md5_crypt", "des_crypt"]

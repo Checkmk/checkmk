@@ -532,9 +532,12 @@ class Certificate:
         return self._cert.fingerprint(algorithm.value)
 
     def get_subject_alt_names(self) -> list[str]:
-        return self._cert.extensions.get_extension_for_oid(
+        sans = self._cert.extensions.get_extension_for_oid(
             x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
         ).value.get_values_for_type(x509.DNSName)
+        assert all(isinstance(x, str) for x in sans)
+        # Well look at that assert...
+        return sans  # type: ignore[no-any-return]
 
 
 class RsaPrivateKey:

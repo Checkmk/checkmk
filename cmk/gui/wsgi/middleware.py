@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import wsgiref.util
 
 from cmk.gui import hooks
 
@@ -26,12 +25,9 @@ def apache_env(app):
 
     @functools.wraps(app)
     def _add_apache_env(environ, start_response):
-        if not environ.get("REQUEST_URI"):
-            environ["REQUEST_URI"] = wsgiref.util.request_uri(environ)
-
-        path_info = environ.get("PATH_INFO")
-        if not path_info or path_info == "/":
+        if "apache.version" in environ:
             environ["PATH_INFO"] = environ["SCRIPT_NAME"]
+            del environ["SCRIPT_NAME"]
 
         return app(environ, start_response)
 

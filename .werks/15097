@@ -1,0 +1,16 @@
+Title: Apache WSGI environment when receiving conflicting information
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1676377496
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p22
+
+In some cases the URL calculation used internally in Checkmk could be
+confused by a WSGI environment with conflicting data. This is now fixed
+in code.
+
+In some cases, in the REST API, wrong URLs could be produced and returned
+to the user. When accessing those, a 404 error could have ocurred.

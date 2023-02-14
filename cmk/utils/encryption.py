@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.x509.oid import ExtensionOID, NameOID
 from OpenSSL import crypto, SSL
 
-import cmk.utils.paths
+from cmk.utils.crypto.secrets import EncrypterSecret
 from cmk.utils.exceptions import MKGeneralException
 
 OPENSSL_SALTED_MARKER = "Salted__"
@@ -285,36 +285,22 @@ class Encrypter:
     """Helper to encrypt site secrets
 
     The secrets are encrypted using the auth.secret which is only known to the local and remotely
-    configured sites. The encrypted values are base64 encoded for easier processing.
+    configured sites.
     """
 
-    @staticmethod
-    def _secret_key_path() -> Path:
-        return cmk.utils.paths.omd_root / "etc" / "auth.secret"
+    # TODO: This shares almost all the code with PasswordStore, except for the version bytes that
+    # are prepended by the store.
 
     @staticmethod
-    def _passphrase() -> bytes:
-        with Encrypter._secret_key_path().open(mode="rb") as f:
-            return f.read().strip()
-
-    @staticmethod
-    def _secret_key(passphrase: bytes, salt: bytes) -> bytes:
-        """Build some secret for the encryption
-
-        Use the sites auth.secret for encryption. This secret is only known to the current site
-        and other distributed sites.
-        """
-        return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
-
-    @staticmethod
-    def _cipher(key: bytes, nonce: bytes) -> Any:  # FIXME: Better return type?
+    def _cipher(salt: bytes, nonce: bytes) -> Any:  # 'CbcMode', but Cryptodome doesn't expose this
+        key = EncrypterSecret().derive_secret_key(salt)
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
 
     @staticmethod
     def encrypt(value: str) -> bytes:
         salt = os.urandom(AES.block_size)
         nonce = os.urandom(AES.block_size)
-        cipher = Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
+        cipher = Encrypter._cipher(salt, nonce)
         encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
         return salt + nonce + tag + encrypted
 
@@ -324,8 +310,4 @@ class Encrypter:
         nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
         tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
 
-        return (
-            Encrypter._cipher(Encrypter._secret_key(Encrypter._passphrase(), salt), nonce)
-            .decrypt_and_verify(encrypted, tag)
-            .decode("utf-8")
-        )
+        return Encrypter._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")

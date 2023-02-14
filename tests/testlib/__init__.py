@@ -210,6 +210,10 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr(
         "cmk.utils.paths.site_config_dir", Path(cmk.utils.paths.var_dir, "site_configs")
     )
+    monkeypatch.setattr("cmk.utils.paths.auth_secret_file", Path(tmp_dir) / "etc/auth.secret")
+    monkeypatch.setattr(
+        "cmk.utils.paths.password_store_secret_file", Path(tmp_dir) / "etc/password_store.secret"
+    )
     monkeypatch.setattr(
         "cmk.utils.paths.disabled_packages_dir", Path(cmk.utils.paths.var_dir, "disabled_packages")
     )

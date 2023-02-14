@@ -7,21 +7,12 @@ import hashlib
 
 import pytest
 
-import cmk.utils.paths
 from cmk.utils.encryption import Encrypter
 
 import cmk.gui.valuespec as vs
 from cmk.gui.http import request
 
 from .utils import request_var
-
-
-@pytest.fixture()
-def fixture_auth_secret():
-    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
-    secret_path.parent.mkdir(parents=True, exist_ok=True)
-    with secret_path.open("wb") as f:
-        f.write(b"auth-secret")
 
 
 class TestValueSpecPassword:

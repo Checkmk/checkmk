@@ -85,6 +85,14 @@ crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
 
+# persisted secret files
+# avoid using these paths directly; use wrappers in cmk.util.crypto.secrets instead
+# note that many of these paths are duplicated in code relating to snapshots and Activate Changes
+#
+auth_secret_file = omd_root / "etc/auth.secret"
+# the path for password_store.secret is also duplicated in omd cmk_password_store.h!
+password_store_secret_file = omd_root / "etc/password_store.secret"
+
 share_dir = _omd_path_str("share/check_mk")
 checks_dir = _omd_path_str("share/check_mk/checks")
 notifications_dir = _omd_path("share/check_mk/notifications")

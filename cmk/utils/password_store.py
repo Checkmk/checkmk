@@ -38,11 +38,8 @@ file, there is the `extract` function which can be used like this:
   password = cmk.utils.password_store.extract("pw_id")
 
 """
-import hashlib
 import os
-import secrets
 import shutil
-import string
 import sys
 from collections.abc import Mapping
 from contextlib import suppress
@@ -54,6 +51,7 @@ from Cryptodome.Cipher import AES
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.crypto.secrets import PasswordStoreSecret
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
@@ -225,48 +223,15 @@ class PasswordStore:
     VERSION_BYTE_LENGTH = 2
 
     @staticmethod
-    def _secret_key_path() -> Path:
-        path = cmk.utils.paths.omd_root / "etc" / "password_store.secret"
-        if not path.exists():
-            # Initialize the password store encryption key in case it does not exist
-            PasswordStore._create_secret_key(path)
-        return path
-
-    @staticmethod
-    def _passphrase() -> bytes:
-        with PasswordStore._secret_key_path().open(mode="rb") as f:
-            return f.read().strip()
-
-    @staticmethod
-    def _cipher(key: bytes, nonce: bytes) -> Any:
+    def _cipher(salt: bytes, nonce: bytes) -> Any:  # 'CbcMode', but Cryptodome doesn't expose this
+        key = PasswordStoreSecret().derive_secret_key(salt)
         return AES.new(key, AES.MODE_GCM, nonce=nonce)
-
-    @staticmethod
-    def _secret_key(passphrase: bytes, salt: bytes) -> bytes:
-        """Build some secret for the encryption
-
-        Use the sites auth.secret for encryption. This secret is only known to the current site
-        and other distributed sites.
-        """
-        return hashlib.scrypt(passphrase, salt=salt, n=2**14, r=8, p=1, dklen=32)
-
-    @staticmethod
-    def _create_secret_key(path: Path) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.touch()
-        path.chmod(0o660)
-        path.write_text(
-            "".join(secrets.choice(string.ascii_uppercase + string.digits) for i in range(256))
-        )
 
     @staticmethod
     def encrypt(value: str) -> bytes:
         salt = os.urandom(AES.block_size)
         nonce = os.urandom(AES.block_size)
-        cipher = PasswordStore._cipher(
-            PasswordStore._secret_key(PasswordStore._passphrase(), salt),
-            nonce,
-        )
+        cipher = PasswordStore._cipher(salt, nonce)
         encrypted, tag = cipher.encrypt_and_digest(value.encode("utf-8"))
         return (
             PasswordStore.VERSION.to_bytes(PasswordStore.VERSION_BYTE_LENGTH, byteorder="big")
@@ -286,14 +251,7 @@ class PasswordStore:
         nonce, rest = rest[: AES.block_size], rest[AES.block_size :]
         tag, encrypted = rest[: AES.block_size], rest[AES.block_size :]
 
-        return (
-            PasswordStore._cipher(
-                PasswordStore._secret_key(PasswordStore._passphrase(), salt),
-                nonce,
-            )
-            .decrypt_and_verify(encrypted, tag)
-            .decode("utf-8")
-        )
+        return PasswordStore._cipher(salt, nonce).decrypt_and_verify(encrypted, tag).decode("utf-8")
 
 
 _obfuscate = PasswordStore.encrypt

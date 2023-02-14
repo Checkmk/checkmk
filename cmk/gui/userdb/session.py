@@ -16,14 +16,11 @@ Once a user logs out or the "last activity" is older than the configured session
 session is invalidated. The user can then login again from the same client or another one.
 """
 
-import hmac
-import secrets
 from dataclasses import asdict
 from datetime import datetime
-from hashlib import sha256
 from typing import Mapping
 
-import cmk.utils.paths
+from cmk.utils.crypto.secrets import AuthenticationSecret
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -48,32 +45,7 @@ def auth_cookie_value(username: UserId, session_id: str) -> str:
 
 def generate_auth_hash(username: UserId, session_id: str) -> str:
     """Generates a hash to be added into the cookie value"""
-    secret = _load_secret()
-    serial = _load_serial(username)
-    return hmac.new(
-        key=secret, msg=(username + session_id + str(serial)).encode("utf-8"), digestmod=sha256
-    ).hexdigest()
-
-
-def _load_secret() -> bytes:
-    """Reads the sites auth secret from a file
-
-    Creates the files if it does not exist. Having access to the secret means that one can issue
-    valid cookies for the cookie auth.
-    """
-    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
-    secret = secret_path.read_bytes() if secret_path.exists() else None
-
-    # Create new secret when this installation has no secret
-    #
-    # In past versions we used another bad approach to generate a secret. This
-    # checks for such secrets and creates a new one. This will invalidate all
-    # current auth cookies which means that all logged in users will need to
-    # renew their login after update.
-    if secret is None or len(secret) == 32:
-        secret = secrets.token_bytes(256)
-        secret_path.write_bytes(secret)
-    return secret
+    return AuthenticationSecret().hmac(f"{username}{session_id}{_load_serial(username)}")
 
 
 def _load_serial(username: UserId) -> int:

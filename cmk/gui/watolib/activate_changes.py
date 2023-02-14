@@ -234,19 +234,13 @@ def get_replication_paths() -> list[ReplicationPath]:
         ReplicationPath(
             "file",
             "auth.secret",
-            os.path.relpath(
-                "%s/auth.secret" % os.path.dirname(cmk.utils.paths.htpasswd_file),
-                cmk.utils.paths.omd_root,
-            ),
+            os.path.relpath(cmk.utils.paths.auth_secret_file, cmk.utils.paths.omd_root),
             [],
         ),
         ReplicationPath(
             "file",
             "password_store.secret",
-            os.path.relpath(
-                "%s/password_store.secret" % os.path.dirname(cmk.utils.paths.htpasswd_file),
-                cmk.utils.paths.omd_root,
-            ),
+            os.path.relpath(cmk.utils.paths.password_store_secret_file, cmk.utils.paths.omd_root),
             [],
         ),
         ReplicationPath(

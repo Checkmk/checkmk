@@ -6,7 +6,7 @@ Date: 1649834677
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In Checkmk 1.6 and earlier the backend would silently sanitize metric names according to the nagios specification.
 As this is no longer done, the local check plugin crashed upon invalid metric names.

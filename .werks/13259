@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 After updating to Checkmk 2.1 rules configured for "output loads of UPSs and PDUs" check in
 Checkmk 2.0 and below would result in unhandled exceptions "KeyError (levels)" and error messages

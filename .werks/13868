@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Since version 2.0.0, quotes are allowed in service descriptions.
 If a notification was triggered for such service, the graphs were missing.

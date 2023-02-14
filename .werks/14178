@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Configurations with hundreds of domain controllers could slow down the discovery speed of the nearest LDAP server.
 

@@ -6,7 +6,7 @@ Date: 1670228901
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The following special agents now create a crash report if they encounter an unforeseen exception:
 

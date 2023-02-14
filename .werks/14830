@@ -6,7 +6,7 @@ Date: 1668582907
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When rendering graphs, Checkmk computes suitable steps for the ticks on the time axis based on the
 current zoom level. However, this computation did not take into account shifts in local time zones,

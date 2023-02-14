@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Nodes overview in the "Kubernetes Cluster" dashboard showed sites instead
 of hosts/nodes if checkmk was configured in a distributed setup.

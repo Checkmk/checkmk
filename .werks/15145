@@ -6,7 +6,7 @@ Date: 1675954792
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Usage details section provides yesterday's Azure resource costs used in the "Cost"
 check plugin. Until now, the section data was fetched once a day and cached.

@@ -6,6 +6,6 @@ Date: 1654861635
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 To test pagerduty notification you can now use CUSTOM commands as documented.

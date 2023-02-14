@@ -6,7 +6,7 @@ Date: 1650983688
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Host labels take the key:value format where both key and value are of
 the string type. In the previous version, it was possible to specify

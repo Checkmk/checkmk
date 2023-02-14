@@ -6,7 +6,7 @@ Date: 1657702426
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Some jenkins plugins for git forges (i.e. gitea) use the jenkins.branch.Organizationfolder class as a folder.
 This was previously as a single job and parsing failed. This is fixed now. No user interaction required.

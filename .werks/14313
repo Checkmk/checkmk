@@ -6,7 +6,7 @@ Date: 1653981797
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check "hp_proliant_raid" shows the progress percentage of rebuild tasks for
 raids that are currently rebuilding. In some cases, this percentage was shown

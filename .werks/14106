@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Werk 13372 introduced the possibility to use host label conditions in service
 label rulesets but broke the validation, that host label rules can not use

@@ -6,7 +6,7 @@ Date: 1658259601
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this werk, if the connection to a database failed, the SAP HANA
 Backup service in a cluster host was marked as OK.

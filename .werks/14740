@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to set CRIT/WARN levels on the size of PostgreSQL databases.
 This can be configured at the ruleset <i>PostgreSQL Database Statistics</i> and has

@@ -6,7 +6,7 @@ Date: 1661764566
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to monitor Azure Traffic Manager in Checkmk.
 Two new checks have been added:

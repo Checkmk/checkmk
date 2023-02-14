@@ -6,7 +6,7 @@ Date: 1646912945
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Event Console is able to execute actions, e.g. shell scripts, when opening
 or cancelling events. Details of the events are available to the script via

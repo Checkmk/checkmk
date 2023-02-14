@@ -6,7 +6,7 @@ Date: 1662131213
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Depending on the current configuration, the dashlet <i>Percentage of service problems</i> reported
 "Sorry, you cannot create combined graphs for more than 100 objects"

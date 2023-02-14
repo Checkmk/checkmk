@@ -6,7 +6,7 @@ Date: 1666360024
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This change makes the "Archive events" actions in the
 Event Console faster and more reliable.

@@ -6,7 +6,7 @@ Date: 1657792095
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The interface checks process a lot of different metrics (input and output bandwidth, input and
 output error rates, input and and output packet rates, etc.). Before this werk, for any metric not

@@ -6,7 +6,7 @@ Date: 1675336518
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On creating a Tag Group, the tag group choice ident field can be null.
 Response schema updated to reflect this.  Also, HostTagGroup ident

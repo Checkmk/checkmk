@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you used macros in option "Store in sub directory" of report scheduler
 entries, the error "General Options: Please specify a relative path only using

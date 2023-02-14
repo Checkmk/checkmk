@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you used site filters in views and the option "Export" -> "This view as
 PDF", the generated report contained all site results.

@@ -6,7 +6,7 @@ Date: 1650952686
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk changes the items and service names of the megaraid plugins.
 Existing services will continue to produce correct results, but we encourage users to switch to the new services as soon as possible (see below for details).

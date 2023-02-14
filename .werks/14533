@@ -6,7 +6,7 @@ Date: 1662558239
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The graph client API calls require some optional permissions so we are
 handling these permissions errors by notifying the user of the issue but

@@ -6,7 +6,7 @@ Date: 1645625973
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In the previous version, boolean based query params were excluded from the
 examples in the REST API documentation. This led to confusion as the params

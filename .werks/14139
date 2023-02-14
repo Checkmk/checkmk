@@ -6,7 +6,7 @@ Date: 1656941506
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the agent plug-in mk_postgres.py would incorrectly set the VACUUM time to be equal to
 the ANALYZE time. Thus, the ANALYZE time could not be monitored. Thank you, Thomas Glöckner for

@@ -6,7 +6,7 @@ Date: 1673942967
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Event console events can currently be acknowledged via the REST API,
 however, to align with the GUI functionality, this change will allow

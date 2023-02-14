@@ -6,7 +6,7 @@ Date: 1674548495
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 SNMP discovery now also detects HP A10508 switches with sysObjectID .1.3.6.1.4.1.25506.11.1.87
 

@@ -6,7 +6,7 @@ Date: 1657704838
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check plugin <i>Cisco Devices: Temperature Sensors</i> /<tt>cisco_temperature</tt>) previously used the entPhysicalDescr MIB instead of the entPhysicalName MIB (.2 and .7 of 1.3.6.1.2.1.47.1.1.1.1 respectively).
 

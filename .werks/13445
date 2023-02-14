@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Several endpoints (contact_group_config, password, service_group_config,
 host_group_config, and time_period) used a field which required at least two

@@ -6,7 +6,7 @@ Date: 1661863172
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check "apc_mod_pdu_modules" assumed power measurements to be in hundreths
 of kW, instead of tenths of kW as described in the device's MIB. The correct

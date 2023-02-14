@@ -6,7 +6,7 @@ Date: 1647005507
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On some Fast LTA systems, the discovery of the fast_lta_* checks was not triggered.
 This is fixed now by using a more open snmp_scan_function.

@@ -6,7 +6,7 @@ Date: 1653836726
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The command line flags <tt>--cache</tt>,  <tt>--no-cache</tt>, <tt>--no-tcp</tt>
 and  <tt>--usewalk</tt> only have an effect to commands that involve fetching

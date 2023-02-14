@@ -6,7 +6,7 @@ Date: 1659964676
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Depending on the failures reported by the Graylog API, the check plugin <tt>graylog_failures</tt>
 crashed with

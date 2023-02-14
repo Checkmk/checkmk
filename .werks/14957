@@ -6,7 +6,7 @@ Date: 1667220707
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When monitoring files/filegroups with service monitoring rules <i>Size and age of single files</i>
 or <i>Size, age and count of file groups</i> (i.e., all services basing on the <i>fileinfo</i>

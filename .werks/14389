@@ -6,7 +6,7 @@ Date: 1666785092
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This Werk adds the tool cmk-passwd.
 cmk-passwd can add and change Checkmk user passwords via the commandline, as could previously be achieved using htpasswd.

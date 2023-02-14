@@ -6,7 +6,7 @@ Date: 1649694423
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The activate check "Check HTML Form Submit" can now be configured to use TLS
 without validating the server certificate. Previously, TLS could only be switched

@@ -6,7 +6,7 @@ Date: 1653311365
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the parameter <tt>DNS Server</tt> of <tt>Check DNS
 service</tt> rule was broken.  The options <tt>this host</tt> and

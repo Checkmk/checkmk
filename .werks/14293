@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With #14281 a new system apache configuration hook for managing the system
 apache reverse proxy config has been introduced.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If the painter "Site ID" is used in views were the site is missing, e.g. "All
 aggregations", the error "KeyError: 'site'" occurred.

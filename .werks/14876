@@ -6,7 +6,7 @@ Date: 1663841502
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, host tags with single values (i.e. checkboxes) were reset when
 the Edit Host Properties page was loaded. Although the save mechanism was

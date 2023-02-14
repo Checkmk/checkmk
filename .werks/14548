@@ -6,7 +6,7 @@ Date: 1659362741
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Werk <a href="https://checkmk.com/werk/14451">14451</a> introduced a regression which made the
 <tt>logwatch</tt> agent plugin crash under Python 2. The <i>"Check_MK"</i> service of affected hosts

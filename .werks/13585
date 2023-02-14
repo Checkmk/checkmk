@@ -6,7 +6,7 @@ Date: 1649081432
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With Checkmk, we deliver nagios plugins, like check_snmp or check_hpjd.
 You're affected, if you're using those plugin and seeing the following output:

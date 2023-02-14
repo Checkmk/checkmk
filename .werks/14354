@@ -6,7 +6,7 @@ Date: 1654861144
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The SFTP check used to fail with username/password if an SSH key exists that doesn't allow access to the SFTP server
 and no ssh key was specified to be used. The search for private keys in the ~/.ssh folder is now disabled by default.

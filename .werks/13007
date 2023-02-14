@@ -6,7 +6,7 @@ Date: 1649668038
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This new check creates a service for a Mobileiron source host.
 The Special Agent for Mobileiron now also queries data of the Mobileiron host itself.

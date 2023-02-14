@@ -6,7 +6,7 @@ Date: 1670573500
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The ETag header for the root folder has been generated incorrectly, making it impossible to edit it through the REST API.
 This is no longer the case.

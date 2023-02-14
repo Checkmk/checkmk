@@ -6,7 +6,7 @@ Date: 1670934129
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Now you can use regexes in {{Joined column}}s. If multiple entries are found
 the first one of the sorted entries will be used.

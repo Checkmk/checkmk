@@ -6,7 +6,7 @@ Date: 1656412529
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Some discovered host labels from vSphere plugins lead to the above crash
 when discovering new host labels.

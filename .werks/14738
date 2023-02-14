@@ -6,7 +6,7 @@ Date: 1662554565
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With the ruleset "Installation paths for agent files", you can choose non-default installation
 directories for the Checkmk agent, including the path for executables.

@@ -6,7 +6,7 @@ Date: 1650889904
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In some environments "HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}"
 registry key was missing which caused the agent to crash.

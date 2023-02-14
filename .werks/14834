@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The configured status of {{State when inventory fails}} in the ruleset
 {{Do hardware/software inventory}} did not apply if the inventory could not be

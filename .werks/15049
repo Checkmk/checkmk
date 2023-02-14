@@ -6,7 +6,7 @@ Date: 1670506859
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 New check plugin for monitoring Graylog Events.
 The check plugin provides information about the Total number of events in the last 24 hours.

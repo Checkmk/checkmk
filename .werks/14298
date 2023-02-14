@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With Checkmk 2.1, announced by Werk #13640, the Web API was deprecated. This
 release now removes the Web API.

@@ -6,7 +6,7 @@ Date: 1658404375
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In order to register at a Checkmk site, the agent controller (<tt>cmk-agent-ctl</tt>) needs to know,
 among others, the name of the server where the site is running and a port. The port can either be

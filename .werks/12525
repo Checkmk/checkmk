@@ -6,6 +6,6 @@ Date: 1668157429
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 For the violet <i>explicit</i> labels the label color was too dark in the dark theme and the font color too dark in the light theme. Both stylings are fixed.

@@ -6,7 +6,7 @@ Date: 1663054178
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The REST API now checks whether you have write access to the folder to which you want to move a rule,
 and aborts the operation with a 401 status code if this is not the case.

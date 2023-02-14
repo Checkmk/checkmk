@@ -6,7 +6,7 @@ Date: 1671526724
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When pressing <i>Show  all results</i> for a topic, the search will now display at maximum 80
 results. In case more results are available, a corresponding message will be displayed. This can

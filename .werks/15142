@@ -6,7 +6,7 @@ Date: 1674055238
 Edition: cce
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to monitor the health of Azure resources.
 A new resource health service will be added for every monitored

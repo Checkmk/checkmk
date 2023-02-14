@@ -6,7 +6,7 @@ Date: 1657790011
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When a time range filter for the event console history table was used with
 an equality operator, an important performance optimization was not

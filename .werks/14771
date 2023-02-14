@@ -6,7 +6,7 @@ Date: 1661508150
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The InfluxDB connector checks whether a connection is possible over
 the "ping" endpoint.

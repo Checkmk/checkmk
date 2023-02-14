@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the networking information of a Kubernetes Node was found under Software > Applications
 > Kubernetes > Network. With this werk, the information is in the path Networking > Kubernetes.

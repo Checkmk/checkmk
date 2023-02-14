@@ -6,7 +6,7 @@ Date: 1658323045
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check plugin <i>"SAP R/3: Dialog Statistics"</i> (<tt>sap_dialog</tt>) interpreted unreadable
 values as being zero. These values are skipped now.

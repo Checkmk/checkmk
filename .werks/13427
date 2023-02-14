@@ -6,7 +6,7 @@ Date: 1661246500
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this change Services like "Output Voltage switch-A PSU 1" were
 discovered but had an unknown status.

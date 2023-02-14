@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If the command "mkp show" was used with mkp files like "my_mkp.mkp", the error
 "Cannot open package my_mkp.mkp: I/O operation on closed file" occurred.

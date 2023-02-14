@@ -6,7 +6,7 @@ Date: 1665565459
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously the cluster property was added in any case even if the newly
 computed tree was empty (ie. no data or inventory plugins did not add any

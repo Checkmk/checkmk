@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The locked_by host attribute was represented as string by the REST API while it
 is actually a more complex data structure. The scheme is now representing the

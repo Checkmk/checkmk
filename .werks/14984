@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The <tt>mkp remove</tt> command (or <tt>cmk -P remove</tt>) has been fixed to reflect the recent changes in the GUI.
 You can only remove <i>disabled</i> packages.

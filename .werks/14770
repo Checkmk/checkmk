@@ -6,7 +6,7 @@ Date: 1667375323
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check "mssql_instance" reported an UNKNOWN state when a specific MSSQL
 instance had been discovered and added to the monitoring, but vanished later.

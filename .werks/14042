@@ -6,7 +6,7 @@ Date: 1650889203
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 $MK_CONFDIR and $MK_TEMPDIR now default to paths of the Windows agent
 if they aren't set.

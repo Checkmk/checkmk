@@ -6,7 +6,7 @@ Date: 1645774764
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In the previous version, the show all users endpoint returned an error
 if one of the users had no email present in its contact information.

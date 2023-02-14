@@ -6,7 +6,7 @@ Date: 1656419543
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Parsing mssql_counters failed for timestamps in format "%d/%m/%y %H:%M:%S".
 Now, we additionally support this format.

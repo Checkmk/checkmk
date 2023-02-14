@@ -6,7 +6,7 @@ Date: 1654862237
 Edition: cme
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Any password synchronised from a central to a remote customer site was empty.
 For this fix to come into effect, users have to open a stored password in the

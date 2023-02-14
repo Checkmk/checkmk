@@ -6,7 +6,7 @@ Date: 1667815477
 Edition: cme
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Instead of only one logo for both the login mask and the navigation bar, admins of a CME installation can now upload two separate logos, with different size restrictions for the two differnt UI places.
 The login logo is restricted to 120px width and 36px height, the navigation bar logo is restricted to 48px width and 48px height.

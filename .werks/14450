@@ -6,7 +6,7 @@ Date: 1657569354
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk comments myhostname in /etc/postfix/main.cf.
 Some mailservers reject mails with BOGUS HELO if you let myhostname uncommented.

@@ -6,7 +6,7 @@ Date: 1661764434
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The SAP HANA bakery plugin did not handle the option <i>User store key</i> under <i>Credentials</i>
 > <i>Default credentials</i> properly. Depending on the configured value, either the agent baking

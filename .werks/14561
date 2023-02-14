@@ -6,7 +6,7 @@ Date: 1664791347
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the Prometheus special agent would query the endpoint `/api/v1/targets` regardless of
 what was configured in the Prometheus rule. This was an additional burden on users, which did not

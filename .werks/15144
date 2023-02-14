@@ -6,7 +6,7 @@ Date: 1675328273
 Edition: cce
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to monitor Azure Application Gateway in Checkmk.
 A new check plugin Microsoft Azure Application Gateway and HW/SW

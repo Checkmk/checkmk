@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this Werk, trying to authenticate to an LDAP server that is unavailable would result in an error saying that the server could be contacted.
 This leaks the address of the LDAP server.

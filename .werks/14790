@@ -6,7 +6,7 @@ Date: 1669817156
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 You're affected if you're using mk_oracle for linux and the oracle version 12.1.0.1 (SE One).
 The agent plugin may output something like:

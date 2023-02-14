@@ -6,7 +6,7 @@ Date: 1667554915
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check results in false CRITs on RAC standby databases with multiple running
 instances.  Some more changes are done, due to wrong design in old code.

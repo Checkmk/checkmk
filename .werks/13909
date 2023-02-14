@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The protocol used between the fetchers and the core could only accomodate
 payloads up to ca. 100 MB.  This limit has been increased significantly.

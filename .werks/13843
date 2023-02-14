@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The active discovery check <i>Check_MK Discovery</i> did not use cached data.
 This could lead to lost logwatch messages.

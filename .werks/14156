@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The compiled aggregation trees were incomplete when a user with a restricted host/service view triggered the bi-compilation.

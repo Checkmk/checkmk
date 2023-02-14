@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This fixes a regression introduced in Checkmk 2.1.0p15.
 If users try to change the host properties from the <i>"Test connection to <HOST>"</i> page, the above error was raised.

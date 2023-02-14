@@ -6,7 +6,7 @@ Date: 1650530885
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In the previous version the BI special agent required the configuration lock to compute the aggregation status.
 Long running processes, like the agent baking or host renaming, could hold the configuration lock for a considerable

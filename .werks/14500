@@ -6,7 +6,7 @@ Date: 1658736233
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 We have added a new agent plugin and corresponding section plugin to monitor
 network interfaces. These plugins provide essentially the same information as

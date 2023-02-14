@@ -6,7 +6,7 @@ Date: 1675674268
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Using various filters of the 'list rules' endpoint (GET '/domain-types/ruleset/collections/all') had
 no effect on the result.

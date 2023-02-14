@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check "domino_tasks" shows state UNKNOWN along with the message "Item not
 found in monitoring data", even though there is no data available for this

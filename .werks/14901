@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk introduces a fix that aligns both the response and request schemas on the user_config
 endpoints. The response schema now nests the enforce_password_change attribute just like the

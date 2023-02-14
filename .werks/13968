@@ -6,7 +6,7 @@ Date: 1669631451
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Having a host configured with an unknown site would return a 500 status code error on endpoints such as "/domain-types/host_config/collections/all".
 This is common in a distributed monitoring environment.

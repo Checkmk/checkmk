@@ -6,7 +6,7 @@ Date: 1655990250
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When deploying the linux agent via bakery and setting a custom installation path the async agent would randomly crash after about a week.
 This has been due to a wrong update of the PATH variable. This has been fixed now.

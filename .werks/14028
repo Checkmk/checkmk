@@ -6,7 +6,7 @@ Date: 1650956398
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Checkmk now parsed the time a service has been in the activating/deactivating/reloading state from the status output of systemd.
 Correct parsing of the status information will only work after an agent update.

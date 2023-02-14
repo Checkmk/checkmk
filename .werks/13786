@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In some instances, the restart rate of a pod cannot be determined.
 Previously, the rate would then be substituted by the restart count.

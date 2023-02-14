@@ -6,7 +6,7 @@ Date: 1650711314
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent controller (<tt>cmk-agent-ctl</tt>) now offers the option to
 (re-)enable the legacy pull mode (no TLS, simple TCP communication). The

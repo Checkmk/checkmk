@@ -126,10 +126,10 @@ def try_detect_servers(ssl_ports):
         # the pid/proc field length is limited to 19 chars. Thus in case of
         # long PIDs, the process names are stripped of by that length.
         # Workaround this problem here
-        procs = [p[: 19 - len(pid) - 1] for p in procs]
+        stripped_procs = [p[: 19 - len(pid) - 1] for p in procs]
 
         # Skip unwanted processes
-        if proc not in procs:
+        if proc not in stripped_procs:
             continue
 
         scheme, server_address, server_port = parse_address_and_port(parts[3], ssl_ports)

@@ -148,6 +148,20 @@ ALL_METRICS: dict[str, list[tuple]] = {
         ("HealthyHostCount", "PT1M", "average", None),
         ("FailedRequests", "PT1M", "count", None),
     ],
+    "Microsoft.Compute/virtualMachines": [
+        (
+            "Percentage CPU,CPU Credits Consumed,CPU Credits Remaining,Available Memory Bytes,Disk Read Operations/Sec,Disk Write Operations/Sec",
+            "PT1M",
+            "average",
+            None,
+        ),
+        (
+            "Network In Total,Network Out Total,Disk Read Bytes,Disk Write Bytes",
+            "PT1M",
+            "total",
+            None,
+        ),
+    ],
 }
 
 
@@ -1236,6 +1250,7 @@ def process_resource(
 
         if args.piggyback_vms == "self":
             sections.append(get_vm_labels_section(resource, group_labels))
+
     elif resource_type == "Microsoft.Network/applicationGateways":
         process_app_gateway(mgmt_client, resource)
     elif resource_type == "Microsoft.RecoveryServices/vaults":
@@ -1245,11 +1260,16 @@ def process_resource(
     elif resource_type == "Microsoft.Network/loadBalancers":
         process_load_balancer(mgmt_client, resource)
 
-    err = gather_metrics(mgmt_client, resource, debug=args.debug)
+    # metrics aren't collected for VMs if they are mapped to a resource host
+    err = (
+        gather_metrics(mgmt_client, resource, debug=args.debug)
+        if resource_type != "Microsoft.Compute/virtualMachines" or args.piggyback_vms != "grouphost"
+        else None
+    )
 
     agent_info_section = AzureSection("agent_info")
     agent_info_section.add(("remaining-reads", mgmt_client.ratelimit))
-    agent_info_section.add(err.dumpinfo())
+    agent_info_section.add(err.dumpinfo() if err else None)
     sections.append(agent_info_section)
 
     section = AzureSection(resource.section, resource.piggytargets)

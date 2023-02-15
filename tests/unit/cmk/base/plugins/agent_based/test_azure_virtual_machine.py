@@ -7,10 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
+    Metric,
     Result,
     Service,
     State,
@@ -21,15 +20,86 @@ from cmk.base.plugins.agent_based.azure_virtual_machine import (
     _MAP_PROVISIONING,
     check_azure_virtual_machine,
     check_azure_virtual_machine_summary,
+    check_azure_vm_burst_cpu_credits,
+    check_azure_vm_cpu_utilization,
+    check_azure_vm_disk,
+    check_azure_vm_memory,
+    check_azure_vm_network_io,
     discover_azure_virtual_machine,
     discover_azure_virtual_machine_summary,
+    discover_azure_vm_cpu_utilization,
+    discover_azure_vm_network_io,
     VMSummaryParams,
 )
-from cmk.base.plugins.agent_based.utils.azure import Resource, Section
+from cmk.base.plugins.agent_based.utils import interfaces
+from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource, Section
 
 DEFAULT_PARAMS = {
     "map_provisioning_states": _MAP_PROVISIONING,
     "map_power_states": _MAP_POWER,
+}
+
+SECTION = {
+    "VM-test-1": Resource(
+        id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
+        name="VM-test-1",
+        type="Microsoft.Compute/virtualMachines",
+        group="test1",
+        kind=None,
+        location="uksouth",
+        tags={},
+        properties={},
+        specific_info={
+            "statuses": [
+                {
+                    "code": "ProvisioningState/succeeded",
+                    "level": "Info",
+                    "displayStatus": "Provisioning succeeded",
+                    "time": "2023-02-09T16:19:16.9149346+00:00",
+                },
+                {"code": "PowerState/running", "level": "Info", "displayStatus": "VM running"},
+            ]
+        },
+        metrics={
+            "average_Percentage_CPU": AzureMetric(
+                name="Percentage CPU", aggregation="average", value=0.275, unit="percent"
+            ),
+            "average_CPU_Credits_Consumed": AzureMetric(
+                name="CPU Credits Consumed", aggregation="average", value=0, unit="count"
+            ),
+            "average_CPU_Credits_Remaining": AzureMetric(
+                name="CPU Credits Remaining", aggregation="average", value=101.21, unit="count"
+            ),
+            "average_Available_Memory_Bytes": AzureMetric(
+                name="Available Memory Bytes", aggregation="average", value=206569472, unit="bytes"
+            ),
+            "average_Disk_Read_Operations/Sec": AzureMetric(
+                name="Disk Read Operations/Sec",
+                aggregation="average",
+                value=0,
+                unit="countpersecond",
+            ),
+            "average_Disk_Write_Operations/Sec": AzureMetric(
+                name="Disk Write Operations/Sec",
+                aggregation="average",
+                value=0.33,
+                unit="countpersecond",
+            ),
+            "total_Disk_Read_Bytes": AzureMetric(
+                name="Disk Read Bytes", aggregation="total", value=0, unit="bytes"
+            ),
+            "total_Disk_Write_Bytes": AzureMetric(
+                name="Disk Write Bytes", aggregation="total", value=286887.79, unit="bytes"
+            ),
+            "total_Network_In_Total": AzureMetric(
+                name="Network In Total", aggregation="total", value=38778, unit="bytes"
+            ),
+            "total_Network_Out_Total": AzureMetric(
+                name="Network Out Total", aggregation="total", value=55957, unit="bytes"
+            ),
+        },
+        subscription="4db89361-bcd9-4353-8edb-33f49608d4fa",
+    )
 }
 
 MULTIPLE_VMS_SECTION = {
@@ -114,35 +184,7 @@ def test_discover_azure_virtual_machine(
         pytest.param(
             "VM-test-1",
             DEFAULT_PARAMS,
-            {
-                "VM-test-1": Resource(
-                    id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test-group/providers/Microsoft.Compute/virtualMachines/VM-test-1",
-                    name="VM-test-1",
-                    type="Microsoft.Compute/virtualMachines",
-                    group="test-group",
-                    kind=None,
-                    location="uksouth",
-                    tags={},
-                    properties={},
-                    specific_info={
-                        "statuses": [
-                            {
-                                "code": "ProvisioningState/succeeded",
-                                "level": "Info",
-                                "displayStatus": "Provisioning succeeded",
-                                "time": "2023-02-09T16:19:16.9149346+00:00",
-                            },
-                            {
-                                "code": "PowerState/running",
-                                "level": "Info",
-                                "displayStatus": "VM running",
-                            },
-                        ]
-                    },
-                    metrics={},
-                    subscription="4db89361-bcd9-4353-8edb-33f49608d4fa",
-                ),
-            },
+            SECTION,
             [
                 Result(state=State.OK, summary="Provisioning succeeded"),
                 Result(state=State.OK, summary="VM running"),
@@ -282,7 +324,6 @@ def test_check_azure_virtual_machines_no_item() -> None:
     ],
 )
 def test_discover_azure_virtual_machines_summary(
-    fix_register: FixRegister,
     section: Section,
     expected_discovery: DiscoveryResult,
 ) -> None:
@@ -348,3 +389,154 @@ def test_check_azure_virtual_machines_summary(
     assert (
         list(check_azure_virtual_machine_summary(params=params, section=section)) == expected_result
     )
+
+
+@pytest.mark.parametrize(
+    "section, expected_discovery",
+    [
+        pytest.param(SECTION, [Service(item="CPU Utilization")], id="one resource"),
+        pytest.param(MULTIPLE_VMS_SECTION, [], id="multiple resources"),
+        pytest.param({}, [], id="no resources"),
+    ],
+)
+def test_discover_azure_vm_cpu_utilization(
+    section: Section, expected_discovery: DiscoveryResult
+) -> None:
+    assert list(discover_azure_vm_cpu_utilization(section)) == expected_discovery
+
+
+@pytest.mark.parametrize(
+    "params,section,expected_result",
+    [
+        (
+            {"levels": (0.2, 0.5)},
+            SECTION,
+            [
+                Result(
+                    state=State.WARN, summary="CPU utilization: 0.28% (warn/crit at 0.20%/0.50%)"
+                ),
+                Metric("util", 0.275, levels=(0.2, 0.5)),
+            ],
+        ),
+    ],
+)
+def test_check_azure_vm_cpu_utilization(
+    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+) -> None:
+    assert (
+        list(check_azure_vm_cpu_utilization("CPU Utilization", params, section)) == expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    "params,section,expected_result",
+    [
+        (
+            {"levels": (200.0, 150.0)},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Consumed: 0"),
+                Metric("cpu_credits_consumed", 0.0),
+                Result(state=State.CRIT, summary="Remaining: 101.21 (warn/crit below 200.0/150.0)"),
+                Metric("cpu_credits_remaining", 101.21),
+            ],
+        ),
+    ],
+)
+def test_check_azure_vm_burst_cpu_credits(
+    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+) -> None:
+    assert list(check_azure_vm_burst_cpu_credits(params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "params,section,expected_result",
+    [
+        (
+            {"levels": (1000, 1000000000)},
+            SECTION,
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Available memory: 197 MiB (warn/crit below 1000 B/954 MiB)",
+                ),
+                Metric("mem_available", 206569472.0),
+            ],
+        ),
+    ],
+)
+def test_check_azure_vm_memory(
+    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+) -> None:
+    assert list(check_azure_vm_memory(params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "params,section,expected_result",
+    [
+        (
+            {"disk_write_ios": (0.2, 0.5)},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Read: 0.00 B/s"),
+                Metric("disk_read_throughput", 0.0),
+                Result(state=State.OK, summary="Write: 4.78 kB/s"),
+                Metric("disk_write_throughput", 4781.463166666666),
+                Result(state=State.OK, summary="Read operations: 0.00/s"),
+                Metric("disk_read_ios", 0.0),
+                Result(
+                    state=State.WARN,
+                    summary="Write operations: 0.33/s (warn/crit at 0.20/s/0.50/s)",
+                ),
+                Metric("disk_write_ios", 0.33, levels=(0.2, 0.5)),
+            ],
+        ),
+    ],
+)
+def test_check_azure_vm_disk(
+    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+) -> None:
+    assert list(check_azure_vm_disk(params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, expected_discovery",
+    [
+        pytest.param(SECTION, [Service(item="Network IO")], id="one resource"),
+        pytest.param(MULTIPLE_VMS_SECTION, [], id="multiple resources"),
+        pytest.param({}, [], id="no resources"),
+    ],
+)
+def test_discover_azure_vm_network_io(
+    section: Section, expected_discovery: DiscoveryResult
+) -> None:
+    assert list(discover_azure_vm_network_io(section)) == expected_discovery
+
+
+@pytest.mark.parametrize(
+    "params,section,expected_result",
+    [
+        (
+            interfaces.CHECK_DEFAULT_PARAMETERS,
+            SECTION,
+            [
+                Result(state=State.OK, summary="[0]"),
+                Result(state=State.OK, summary="(up)", details="Operational state: up"),
+                Result(state=State.OK, summary="Speed: unknown"),
+                Result(state=State.OK, summary="In: 646 B/s"),
+                Metric("in", 646.3, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Out: 933 B/s"),
+                Metric("out", 932.6166666666667, boundaries=(0.0, None)),
+            ],
+        ),
+    ],
+)
+def test_check_azure_vm_network_io(
+    params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
+) -> None:
+    assert list(check_azure_vm_network_io("Network IO", params, section)) == expected_result
+
+
+def test_check_azure_vm_network_io_error() -> None:
+    with pytest.raises(IgnoreResultsError, match="nly one resource expected"):
+        list(check_azure_vm_network_io("Network IO", {}, MULTIPLE_VMS_SECTION))

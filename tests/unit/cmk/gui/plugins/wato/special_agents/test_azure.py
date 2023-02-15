@@ -40,7 +40,6 @@ def test_all_services_present_in_gui():
         "ad_connect",
         "app_registrations",
         "usage_details",
-        "Microsoft.Compute/virtualMachines",
         "Microsoft.RecoveryServices/vaults",
         *all_agent_metrics,
     ]

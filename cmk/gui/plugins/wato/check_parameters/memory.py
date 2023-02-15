@@ -16,6 +16,7 @@ from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
+    Filesize,
     Integer,
     Percentage,
     TextInput,
@@ -152,5 +153,27 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_memory_utilization,
         title=lambda: _("Memory Utilization"),
+    )
+)
+
+
+def _parameter_valuespec_memory_available() -> Dictionary:
+    return Dictionary(
+        title=_("Levels memory"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(Filesize, title=_("Available memory lower levels")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="memory_available",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_memory_available,
+        title=lambda: _("Available Memory"),
     )
 )

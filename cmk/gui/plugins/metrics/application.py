@@ -678,6 +678,18 @@ metric_info["sms_success_rate"] = {
     "color": "35/a",
 }
 
+metric_info["cpu_credits_consumed"] = {
+    "title": _l("Credits consumed"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["cpu_credits_remaining"] = {
+    "title": _l("Credits remaining"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -759,5 +771,13 @@ graph_info["messages"] = {
         ("failed_notifications", "line"),
         ("delivered_notifications", "line"),
         ("messages_publish", "line"),
+    ],
+}
+
+graph_info["cpu_credits"] = {
+    "title": _l("CPU credits"),
+    "metrics": [
+        ("cpu_credits_consumed", "line"),
+        ("cpu_credits_remaining", "line"),
     ],
 }

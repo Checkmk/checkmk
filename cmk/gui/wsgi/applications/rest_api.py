@@ -28,7 +28,7 @@ from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui import config, session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
-from cmk.gui.http import Request, Response
+from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.restful_objects import Endpoint
@@ -373,7 +373,6 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             if self.debug:
                 raise
 
-            request = Request(environ)
             site = config.omd_site()
             query_string = urllib.parse.urlencode(
                 [

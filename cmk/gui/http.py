@@ -281,8 +281,8 @@ class Request(
     # pylint: disable=too-many-ancestors
 
     def __init__(self, environ: dict, populate_request: bool = True, shallow: bool = False) -> None:
-        # Modify the environment to fix double URLs in some apache configurations.
-        if "apache.version" in environ:
+        # Modify the environment to fix double URLs in some apache configurations, only once.
+        if "apache.version" in environ and environ.get("SCRIPT_NAME"):
             environ["PATH_INFO"] = environ["SCRIPT_NAME"]
             del environ["SCRIPT_NAME"]
 

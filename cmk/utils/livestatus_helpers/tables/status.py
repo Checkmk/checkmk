@@ -24,6 +24,13 @@ class Status(Table):
     )
     """Whether passive service checks are activated in general (0/1)"""
 
+    average_latency_checker = Column(
+        'average_latency_checker',
+        col_type='float',
+        description='The average latency for executing Check_MK checkers (i.e. the time the start of the execution is behind the schedule)',
+    )
+    """The average latency for executing Check_MK checkers (i.e. the time the start of the execution is behind the schedule)"""
+
     average_latency_cmk = Column(
         'average_latency_cmk',
         col_type='float',
@@ -272,9 +279,9 @@ class Status(Table):
     helper_usage_generic = Column(
         'helper_usage_generic',
         col_type='float',
-        description='The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)',
+        description='The average usage of the active check helpers, ranging from 0.0 (0%) up to 1.0 (100%)',
     )
-    """The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
+    """The average usage of the active check helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
 
     helper_usage_real_time = Column(
         'helper_usage_real_time',

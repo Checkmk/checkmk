@@ -154,8 +154,7 @@ class _Builder:
         #       remove this special case.
         #
         if self.config_cache.is_all_agents_host(self.host_name):
-            with suppress(TypeError):
-                self._add(*self._get_agent())
+            self._get_agent()
             for elem in self._get_special_agents():
                 self._add(*elem)
 
@@ -168,8 +167,7 @@ class _Builder:
             if special_agents:
                 self._add(*special_agents[0])
             else:
-                with suppress(TypeError):
-                    self._add(*self._get_agent())
+                self._get_agent()
 
         if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
             source = SourceInfo(
@@ -321,7 +319,7 @@ class _Builder:
             fetcher,
         )
 
-    def _get_agent(self) -> tuple[SourceInfo, Fetcher, FileCache]:
+    def _get_agent(self) -> None:
         with suppress(LookupError):
             source = SourceInfo(
                 self.host_name,
@@ -330,7 +328,7 @@ class _Builder:
                 FetcherType.PROGRAM,
                 SourceType.HOST,
             )
-            return (
+            self._add(
                 source,
                 self.config_cache.make_program_fetcher(source.hostname, source.ipaddress),
                 AgentFileCache(
@@ -344,9 +342,9 @@ class _Builder:
                     file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
+            return
 
         connection_mode = self.config_cache.agent_connection_mode(self.host_name)
-
         match connection_mode:
             case HostAgentConnectionMode.PUSH:
                 source = SourceInfo(
@@ -358,7 +356,7 @@ class _Builder:
                 )
                 # convert to seconds and add grace period
                 interval = int(1.5 * 60 * self.config_cache.check_mk_check_interval(self.host_name))
-                return (
+                self._add(
                     source,
                     NoFetcher(),
                     AgentFileCache(
@@ -387,25 +385,26 @@ class _Builder:
                     FetcherType.TCP,
                     SourceType.HOST,
                 )
-                return (
-                    source,
-                    self.config_cache.make_tcp_fetcher(
-                        source.hostname, ensure_ipaddress(source.ipaddress)
-                    ),
-                    AgentFileCache(
-                        source.hostname,
-                        path_template=make_file_cache_path_template(
-                            fetcher_type=source.fetcher_type, ident=source.ident
+                with suppress(TypeError):
+                    self._add(
+                        source,
+                        self.config_cache.make_tcp_fetcher(
+                            source.hostname, ensure_ipaddress(source.ipaddress)
                         ),
-                        max_age=self._max_age_tcp(),
-                        simulation=self.simulation_mode,
-                        use_only_cache=self.file_cache_options.tcp_use_only_cache
-                        or self.file_cache_options.use_only_cache,
-                        file_cache_mode=self.file_cache_options.file_cache_mode(),
-                    ),
-                )
-
-        assert_never(connection_mode)
+                        AgentFileCache(
+                            source.hostname,
+                            path_template=make_file_cache_path_template(
+                                fetcher_type=source.fetcher_type, ident=source.ident
+                            ),
+                            max_age=self._max_age_tcp(),
+                            simulation=self.simulation_mode,
+                            use_only_cache=self.file_cache_options.tcp_use_only_cache
+                            or self.file_cache_options.use_only_cache,
+                            file_cache_mode=self.file_cache_options.file_cache_mode(),
+                        ),
+                    )
+            case _:
+                assert_never(connection_mode)
 
     def _get_special_agents(self) -> Iterable[tuple[SourceInfo, Fetcher, FileCache]]:
         def make_id(agentname: str) -> str:

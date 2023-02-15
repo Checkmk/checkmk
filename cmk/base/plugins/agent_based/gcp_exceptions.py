@@ -68,6 +68,8 @@ def _parse_error_message(exc_type: str, exc_message: str) -> str:
             return f"{main_message} {'. '.join(link_infos)}"
         case "PermissionDenied" if exc_message.startswith("403 Permission monitoring"):
             return exc_message
+        case "Unauthenticated":
+            return exc_message.split(" [reason:")[0]
         case "HttpError":
             return exc_message.split('returned "')[1].split('". Details')[0]
     return exc_message

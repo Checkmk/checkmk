@@ -23,16 +23,16 @@ from cmk.utils.type_defs import TimeperiodSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.plugins.openapi.restful_objects.request_schemas import (
-    InputTimePeriod,
+from cmk.gui.plugins.openapi.endpoints.time_periods.request_schemas import (
+    CreateTimePeriod,
     UpdateTimePeriod,
 )
-from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
+from cmk.gui.plugins.openapi.endpoints.time_periods.response_schemas import (
     TimePeriodResponse,
     TimePeriodResponseCollection,
 )
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import (
@@ -82,7 +82,7 @@ def _get_time_period_domain_object(
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=InputTimePeriod,
+    request_schema=CreateTimePeriod,
     response_schema=TimePeriodResponse,
     permissions_required=RW_PERMISSIONS,
 )

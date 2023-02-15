@@ -883,6 +883,8 @@ ITEM_PARAMS_RESULTS = (
             Metric("total", 4000000.0, boundaries=(0.0, 25000000.0)),
             Result(state=State.OK, notice="Errors in: 0 packets/s"),
             Metric("if_in_errors", 0.0, levels=(10.0, 20.0)),
+            Result(state=State.OK, notice="Discards in: 0 packets/s"),
+            Metric("if_in_discards", 0.0),
             Result(state=State.OK, notice="Multicast in: 0 packets/s"),
             Metric("if_in_mcast", 0.0),
             Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
@@ -891,10 +893,10 @@ ITEM_PARAMS_RESULTS = (
             Metric("if_in_unicast", 0.0),
             Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
             Metric("if_in_non_unicast", 0.0),
-            Result(state=State.OK, notice="Discards in: 0 packets/s"),
-            Metric("if_in_discards", 0.0),
             Result(state=State.OK, notice="Errors out: 0 packets/s"),
             Metric("if_out_errors", 0.0, levels=(10.0, 20.0)),
+            Result(state=State.OK, notice="Discards out: 0 packets/s"),
+            Metric("if_out_discards", 0.0),
             Result(state=State.OK, notice="Multicast out: 0 packets/s"),
             Metric("if_out_mcast", 0.0),
             Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
@@ -903,8 +905,6 @@ ITEM_PARAMS_RESULTS = (
             Metric("if_out_unicast", 0.0),
             Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
             Metric("if_out_non_unicast", 0.0),
-            Result(state=State.OK, notice="Discards out: 0 packets/s"),
-            Metric("if_out_discards", 0.0),
         ],
     ),
     (
@@ -915,7 +915,7 @@ ITEM_PARAMS_RESULTS = (
             "traffic": [("both", ("perc", ("upper", (5.0, 20.0))))],
             "state": ["1"],
             "nucasts": (1, 2),
-            "discards": (1, 2),
+            "discards": {"both": ("abs", (1, 2))},
         },
         [
             Result(state=State.OK, summary="[wlp2s0]"),
@@ -934,6 +934,8 @@ ITEM_PARAMS_RESULTS = (
             Metric("out", 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
             Result(state=State.OK, notice="Errors in: 0 packets/s"),
             Metric("if_in_errors", 0.0, levels=(10.0, 20.0)),
+            Result(state=State.OK, notice="Discards in: 0 packets/s"),
+            Metric("if_in_discards", 0.0, levels=(1.0, 2.0)),
             Result(state=State.OK, notice="Multicast in: 0 packets/s"),
             Metric("if_in_mcast", 0.0),
             Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
@@ -942,10 +944,10 @@ ITEM_PARAMS_RESULTS = (
             Metric("if_in_unicast", 0.0),
             Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
             Metric("if_in_non_unicast", 0.0, levels=(1.0, 2.0)),
-            Result(state=State.OK, notice="Discards in: 0 packets/s"),
-            Metric("if_in_discards", 0.0, levels=(1.0, 2.0)),
             Result(state=State.OK, notice="Errors out: 0 packets/s"),
             Metric("if_out_errors", 0.0, levels=(10.0, 20.0)),
+            Result(state=State.OK, notice="Discards out: 0 packets/s"),
+            Metric("if_out_discards", 0.0, levels=(1.0, 2.0)),
             Result(state=State.OK, notice="Multicast out: 0 packets/s"),
             Metric("if_out_mcast", 0.0),
             Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
@@ -954,8 +956,6 @@ ITEM_PARAMS_RESULTS = (
             Metric("if_out_unicast", 0.0),
             Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
             Metric("if_out_non_unicast", 0.0, levels=(1.0, 2.0)),
-            Result(state=State.OK, notice="Discards out: 0 packets/s"),
-            Metric("if_out_discards", 0.0, levels=(1.0, 2.0)),
         ],
     ),
 )
@@ -1324,6 +1324,8 @@ def test_check_single_interface_bm_averaging() -> None:
         Metric("out", 3200000.0, boundaries=(0.0, None)),
         Result(state=State.OK, notice="Errors in: 0 packets/s"),
         Metric("if_in_errors", 0.0),
+        Result(state=State.OK, notice="Discards in: 0 packets/s"),
+        Metric("if_in_discards", 0.0),
         Result(state=State.OK, notice="Multicast in average 13min: 0 packets/s"),
         Metric("if_in_mcast", 0.0),
         Result(state=State.OK, notice="Broadcast in average 13min: 0 packets/s"),
@@ -1332,10 +1334,10 @@ def test_check_single_interface_bm_averaging() -> None:
         Metric("if_in_unicast", 0.0),
         Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
         Metric("if_in_non_unicast", 0.0),
-        Result(state=State.OK, notice="Discards in: 0 packets/s"),
-        Metric("if_in_discards", 0.0),
         Result(state=State.OK, notice="Errors out: 0 packets/s"),
         Metric("if_out_errors", 0.0),
+        Result(state=State.OK, notice="Discards out: 0 packets/s"),
+        Metric("if_out_discards", 0.0),
         Result(state=State.OK, notice="Multicast out average 13min: 0 packets/s"),
         Metric("if_out_mcast", 0.0),
         Result(state=State.OK, notice="Broadcast out average 13min: 0 packets/s"),
@@ -1344,8 +1346,6 @@ def test_check_single_interface_bm_averaging() -> None:
         Metric("if_out_unicast", 0.0),
         Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
         Metric("if_out_non_unicast", 0.0),
-        Result(state=State.OK, notice="Discards out: 0 packets/s"),
-        Metric("if_out_discards", 0.0),
     ]
 
 
@@ -1480,7 +1480,9 @@ def test_check_single_interface_packet_levels() -> None:
                 "broadcast": {
                     "both": ("perc", (0.0, 2.0)),
                 },
-                "discards": (50.0, 300.0),
+                "discards": {
+                    "both": ("abs", (50.0, 300.0)),
+                },
             },
             interfaces.InterfaceWithRatesAndAverages(
                 interfaces.Attributes(
@@ -1558,6 +1560,15 @@ def test_check_single_interface_packet_levels() -> None:
             levels=(10.0, 20.0),
         ),
         Result(
+            state=State.OK,
+            notice="Discards in: 40 packets/s",
+        ),
+        Metric(
+            "if_in_discards",
+            40.0,
+            levels=(50.0, 300.0),
+        ),
+        Result(
             state=State.WARN,
             summary="Multicast in: 20 packets/s (warn/crit at 11 packets/s/23 packets/s)",
         ),
@@ -1594,15 +1605,6 @@ def test_check_single_interface_packet_levels() -> None:
             levels=(0.0, 5.0),
         ),
         Result(
-            state=State.OK,
-            notice="Discards in: 40 packets/s",
-        ),
-        Metric(
-            "if_in_discards",
-            40.0,
-            levels=(50.0, 300.0),
-        ),
-        Result(
             state=State.CRIT,
             summary="Errors out: 100 packets/s (warn/crit at 10 packets/s/20 packets/s)",
         ),
@@ -1610,6 +1612,15 @@ def test_check_single_interface_packet_levels() -> None:
             "if_out_errors",
             100.0,
             levels=(10.0, 20.0),
+        ),
+        Result(
+            state=State.WARN,
+            summary="Discards out: 90 packets/s (warn/crit at 50 packets/s/300 packets/s)",
+        ),
+        Metric(
+            "if_out_discards",
+            90.0,
+            levels=(50.0, 300.0),
         ),
         Result(
             state=State.CRIT,
@@ -1646,15 +1657,6 @@ def test_check_single_interface_packet_levels() -> None:
             "if_out_non_unicast",
             150.0,
             levels=(0.0, 5.0),
-        ),
-        Result(
-            state=State.WARN,
-            summary="Discards out: 90 packets/s (warn/crit at 50 packets/s/300 packets/s)",
-        ),
-        Metric(
-            "if_out_discards",
-            90.0,
-            levels=(50.0, 300.0),
         ),
     ]
 
@@ -1903,6 +1905,8 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         Metric("total", 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
         Result(state=State.OK, notice="Errors in: 0 packets/s"),
         Metric("if_in_errors", 0.0, levels=(10.0, 20.0)),
+        Result(state=State.OK, notice="Discards in: 0 packets/s"),
+        Metric("if_in_discards", 0.0),
         Result(state=State.OK, notice="Multicast in: 0 packets/s"),
         Metric("if_in_mcast", 0.0),
         Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
@@ -1911,10 +1915,10 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         Metric("if_in_unicast", 0.0),
         Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
         Metric("if_in_non_unicast", 0.0),
-        Result(state=State.OK, notice="Discards in: 0 packets/s"),
-        Metric("if_in_discards", 0.0),
         Result(state=State.OK, notice="Errors out: 0 packets/s"),
         Metric("if_out_errors", 0.0, levels=(10.0, 20.0)),
+        Result(state=State.OK, notice="Discards out: 0 packets/s"),
+        Metric("if_out_discards", 0.0),
         Result(state=State.OK, notice="Multicast out: 0 packets/s"),
         Metric("if_out_mcast", 0.0),
         Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
@@ -1923,8 +1927,6 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         Metric("if_out_unicast", 0.0),
         Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
         Metric("if_out_non_unicast", 0.0),
-        Result(state=State.OK, notice="Discards out: 0 packets/s"),
-        Metric("if_out_discards", 0.0),
     ]
 
 

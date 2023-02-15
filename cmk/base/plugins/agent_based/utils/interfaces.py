@@ -723,7 +723,7 @@ def _get_packet_levels(
     params: Mapping[str, Any]
 ) -> tuple[GeneralPacketLevels, GeneralPacketLevels]:
     DIRECTIONS = ("in", "out")
-    PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast")
+    PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast", "discards")
 
     def none_levels() -> dict[str, dict[str, Any | None]]:
         return {name: {direction: None for direction in DIRECTIONS} for name in PACKET_TYPES}
@@ -1460,7 +1460,6 @@ def check_single_interface(
         abs_packet_levels=abs_packet_levels,
         perc_packet_levels=perc_packet_levels,
         nucast_levels=params.get("nucasts"),
-        disc_levels=params.get("discards"),
         rates=interface.rates_with_averages,
     )
 
@@ -1879,7 +1878,6 @@ def _output_packet_rates(
     abs_packet_levels: GeneralPacketLevels,
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: tuple[float, float] | None,
-    disc_levels: tuple[float, float] | None,
     rates: RatesWithAverages,
 ) -> type_defs.CheckResult:
     for direction, mrate, brate, urate, nurate, discrate, errorrate in [
@@ -1921,6 +1919,18 @@ def _output_packet_rates(
                 all_pacrate,
             ),
             (
+                discrate,
+                abs_packet_levels["discards"][direction],
+                perc_packet_levels["discards"][direction],
+                "discards",
+                "discards",
+                _sum_optional_floats(
+                    urate.rate if urate else None,
+                    nurate.rate if nurate else None,
+                    discrate.rate if discrate else None,
+                ),
+            ),
+            (
                 mrate,
                 abs_packet_levels["multicast"][direction],
                 perc_packet_levels["multicast"][direction],
@@ -1960,7 +1970,6 @@ def _output_packet_rates(
 
         for display_name, metric_name, packets, levels in [
             ("Non-unicast", "non_unicast", nurate, nucast_levels),
-            ("Discards", "discards", discrate, disc_levels),
         ]:
             if packets is None:
                 continue

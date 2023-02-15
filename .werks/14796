@@ -1,0 +1,13 @@
+Title: Enable percentual limits for interfaces discards
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1676460702
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The limits for packet discards rates can now also be given in percent.
+The reference value is the sum of unicast + non-unicast + discards.

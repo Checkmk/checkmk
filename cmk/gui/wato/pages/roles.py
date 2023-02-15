@@ -305,11 +305,12 @@ class ModeEditRole(WatoMode):
         base_role_id = self._role_id if self._role.basedon is None else self._role.basedon
         html.help(
             _(
-                "When you leave the permissions at &quot;default&quot; then they get their "
-                "settings from the factory defaults (for builtin roles) or from the "
-                "factory default of their base role (for user define roles). Factory defaults "
-                "may change due to software updates. When choosing another base role, all "
-                "permissions that are on default will reflect the new base role."
+                'If you leave the permissions at "default", '
+                "they get their settings from the factory defaults (for builtin roles) or from the "
+                "factory default of their base role (for user define roles). "
+                "Factory defaults may change due to software updates. "
+                "When choosing another base role, all permissions that are on default will reflect "
+                "the new base role."
             )
         )
 

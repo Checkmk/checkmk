@@ -53,6 +53,10 @@ def _get_license_status() -> LicenseState:
     return get_license_state_registry[edition()].status()
 
 
+def is_trial() -> bool:
+    return _get_license_status() is LicenseState.TRIAL
+
+
 def is_licensed() -> bool:
     return _get_license_status() is LicenseState.LICENSED
 

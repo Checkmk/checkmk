@@ -150,7 +150,7 @@ class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
                 last_audit_logs_of_site = self._get_last_audit_logs_of_site(site_id, since)
             except Exception as e:
                 failed_sites.add(site_id)
-                logger.debug("Failed to get audit logs from site %s: %s", site_id, e)
+                logger.error("Failed to get audit logs from site %s: %s", site_id, e)
                 continue
 
             if last_audit_logs_of_site:
@@ -200,7 +200,7 @@ class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
 
         self._audit_log_store.write(central_site_entries)
 
-        for site_id, num_entries in audit_logs_counter:
+        for site_id, num_entries in audit_logs_counter.items():
             logger.debug("Wrote %s audit log entries from site %s", num_entries, site_id)
 
         return audit_logs_from_remote_sites

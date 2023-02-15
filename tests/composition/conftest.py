@@ -120,7 +120,8 @@ def _create_site_and_restart_httpd(site_factory: SiteFactory, site_name: str) ->
     see eg. sles-15sp4.
     """
     site = site_factory.get_site(site_name)
-    if os.environ["DISTRO"] in {"centos-7", "centos-8", "almalinux-9"}:
+    # When executed locally and undockerized, the DISTRO may not be set
+    if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
         execute(["sudo", "httpd", "-k", "restart"])
     return site
 

@@ -1188,6 +1188,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help=f"implemented services: {','.join(list(SERVICES))}",
         choices=list(SERVICES) + list(PIGGY_BACK_SERVICES),
         required=False,
+        default=[],
     )
     parser.add_argument(
         "--monitor_health",

@@ -70,17 +70,20 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
 
         dropdown_visuals = _get_visuals_for_page_menu_dropdown(linked_visuals, info, is_single_info)
 
-        # Special hack for host setup links
+        # Special hack for host setup and parent/child topology links
         if info_name == "host" and is_single_info:
             host_setup_topic = _page_menu_host_setup_topic(view)
+            parent_child_topic = _page_menu_networking_topic(view)
         else:
             host_setup_topic = []
+            parent_child_topic = []
 
         dropdowns.append(
             PageMenuDropdown(
                 name=ident,
                 title=info.title if is_single_info else info.title_plural,
                 topics=host_setup_topic
+                + parent_child_topic
                 + list(
                     _get_context_page_menu_topics(
                         view,
@@ -485,6 +488,32 @@ def _dropdown_matches_datasource(info_name: InfoName, datasource: ABCDataSource)
     raise ValueError(
         f"Can not decide whether or not to show this button: {info_name}, {datasource.ident}"
     )
+
+
+def _page_menu_networking_topic(view: View) -> list[PageMenuTopic]:
+    if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
+        return []
+
+    host_name = view.context["host"]["host"]
+
+    return [
+        PageMenuTopic(
+            title=_("Network monitoring"),
+            entries=[
+                PageMenuEntry(
+                    title=_("Parent/Child topology"),
+                    icon_name="aggr",
+                    item=make_simple_link(
+                        makeuri_contextless(
+                            request,
+                            [("host_name", host_name)],
+                            filename="parent_child_topology.py",
+                        )
+                    ),
+                )
+            ],
+        )
+    ]
 
 
 def _page_menu_host_setup_topic(view: View) -> list[PageMenuTopic]:

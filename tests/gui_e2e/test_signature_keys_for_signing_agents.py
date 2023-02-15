@@ -148,11 +148,12 @@ def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
     timeout problems, but in my experience the signing is quite fast. But if
     this happens restart or mark this test to be skipped"""
 
-    # We need to "waste" some time here. The bake and sign button is sometimes
-    # not available if you go too fast to this site.
     logged_in_page.megamenu_setup.click()
     logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX").click()
-    logged_in_page.main_area.get_suggestion("Bake and sign agents").click()
+    logged_in_page.click_and_wait(
+        locator=logged_in_page.main_area.get_suggestion("Bake and sign agents"),
+        reload_on_error=True,
+    )
     logged_in_page.main_area.locator("#select2-key_p_key-container").click()
     logged_in_page.main_area.locator(
         "#select2-key_p_key-results > li.select2-results__option[role='option']"
@@ -161,3 +162,14 @@ def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
     logged_in_page.main_area.get_input("key_p_passphrase").fill("foo")
     logged_in_page.main_area.get_input("create").click()
     logged_in_page.main_area.check_success("Agent baking successful")
+
+
+def test_bake_and_sign_disabled(logged_in_page: PPage) -> None:
+    """go to agents and click bake and sign and check that the sign buttons are
+    disabled"""
+
+    logged_in_page.megamenu_setup.click()
+    logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX").click()
+
+    expect(logged_in_page.main_area.get_suggestion("Bake and sign agents").locator(".disabled"))
+    expect(logged_in_page.main_area.get_suggestion("Sign agents").locator(".disabled"))

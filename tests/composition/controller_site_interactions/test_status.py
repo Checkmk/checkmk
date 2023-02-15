@@ -74,10 +74,3 @@ def test_status_push(
     )["connections"][0]["remote"]
     assert remote_status["host_name"] == "push-host"
     assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PUSH
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _deactivate() -> None:
-    pytest.skip(
-        "Controller / receiver architecture is being reworked, will be re-activated afterwards"
-    )

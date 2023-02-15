@@ -8,8 +8,6 @@ import subprocess
 import time
 from pathlib import Path
 
-import pytest
-
 from tests.testlib.site import Site
 
 from tests.composition.controller_site_interactions.common import query_hosts_service_count
@@ -21,9 +19,6 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
 
-@pytest.mark.skip(
-    "Controller / receiver architecture is being reworked, will be re-activated afterwards"
-)
 def test_proxy_register_import_workflow(
     *,
     central_site: Site,

@@ -147,15 +147,14 @@ public:
     double livestatusUsage() const override;
 
     double averageLatencyGeneric() const override;
-    double averageLatencyCmk() const override;
-    double averageLatencyFetcher() const override;
     double averageLatencyRealTime() const override;
+    double averageLatencyFetcher() const override;
+    double averageLatencyChecker() const override;
 
     double helperUsageGeneric() const override;
-    double helperUsageCmk() const override;
+    double helperUsageRealTime() const override;
     double helperUsageFetcher() const override;
     double helperUsageChecker() const override;
-    double helperUsageRealTime() const override;
 
     bool hasEventHandlers() const override;
 

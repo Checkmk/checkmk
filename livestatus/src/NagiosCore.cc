@@ -345,15 +345,14 @@ double NagiosCore::livestatusUsage() const {
 double NagiosCore::averageLatencyGeneric() const {
     return g_average_active_latency;
 }
-double NagiosCore::averageLatencyCmk() const { return 0.0; }
-double NagiosCore::averageLatencyFetcher() const { return 0.0; }
 double NagiosCore::averageLatencyRealTime() const { return 0.0; }
+double NagiosCore::averageLatencyFetcher() const { return 0.0; }
+double NagiosCore::averageLatencyChecker() const { return 0.0; }
 
 double NagiosCore::helperUsageGeneric() const { return 0.0; }
-double NagiosCore::helperUsageCmk() const { return 0.0; }
+double NagiosCore::helperUsageRealTime() const { return 0.0; }
 double NagiosCore::helperUsageFetcher() const { return 0.0; }
 double NagiosCore::helperUsageChecker() const { return 0.0; }
-double NagiosCore::helperUsageRealTime() const { return 0.0; }
 
 bool NagiosCore::hasEventHandlers() const {
     return g_any_event_handler_enabled;

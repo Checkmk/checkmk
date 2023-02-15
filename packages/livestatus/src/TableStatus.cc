@@ -258,30 +258,26 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets,
         [mc](const Status & /*r*/) { return mc->averageLatencyGeneric(); }));
     addColumn(std::make_unique<DoubleColumn<Status>>(
-        "average_latency_cmk",
-        "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
+        "average_latency_real_time",
+        "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
         offsets,
-        [mc](const Status & /*r*/) { return mc->averageLatencyCmk(); }));
+        [mc](const Status & /*r*/) { return mc->averageLatencyRealTime(); }));
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "average_latency_fetcher",
         "The average latency for executing Check_MK fetchers (i.e. the time the start of the execution is behind the schedule)",
         offsets,
         [mc](const Status & /*r*/) { return mc->averageLatencyFetcher(); }));
     addColumn(std::make_unique<DoubleColumn<Status>>(
-        "average_latency_real_time",
-        "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
+        "average_latency_cmk",
+        "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
         offsets,
-        [mc](const Status & /*r*/) { return mc->averageLatencyRealTime(); }));
+        [mc](const Status & /*r*/) { return mc->averageLatencyChecker(); }));
 
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "helper_usage_generic",
         "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets,
         [mc](const Status & /*r*/) { return mc->helperUsageGeneric(); }));
-    addColumn(std::make_unique<DoubleColumn<Status>>(
-        "helper_usage_cmk",
-        "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets, [mc](const Status & /*r*/) { return mc->helperUsageCmk(); }));
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
@@ -295,6 +291,11 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "helper_usage_checker",
         "The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        offsets,
+        [mc](const Status & /*r*/) { return mc->helperUsageChecker(); }));
+    addColumn(std::make_unique<DoubleColumn<Status>>(
+        "helper_usage_cmk",
+        "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets,
         [mc](const Status & /*r*/) { return mc->helperUsageChecker(); }));
 

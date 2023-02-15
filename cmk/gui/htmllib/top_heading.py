@@ -27,8 +27,11 @@ from .generator import HTMLWriter
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         get_days_until_expiration,
+        get_num_hosts,
+        get_remaining_trial_time,
         in_admin_warning_header_phase,
-        in_user_warning_header_phase,
+        in_user_warning_header_phase_licensed,
+        in_user_warning_header_phase_trial,
         load_verified_response,
     )
 
@@ -97,15 +100,28 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
     if is_raw_edition():  # TODO: cleanup conditional imports and solve this via registration
         return
 
-    now = int(datetime.now().timestamp())
+    if in_user_warning_header_phase_trial():
+        # TODO change to correct link once available
+        licensing_link = "https://checkmk.com/contact"
+        writer.show_warning(
+            _(
+                "Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
+                "hosts is supported, currently %s hosts are being monitored. "
+                "Adjust your configuration or see here how to proceed: %s  "
+            )
+            % (get_remaining_trial_time().days, get_num_hosts(), licensing_link)
+        )
+        return
+
     if not is_licensed():
         return
 
     if (verified_response := load_verified_response()) is None:
         return
-
     response = verified_response.response
-    if in_user_warning_header_phase(now, response):
+
+    now = int(datetime.now().timestamp())
+    if in_user_warning_header_phase_licensed(now, response):
         # TODO change to correct link once available
         licensing_link = "https://checkmk.com/contact"
         writer.show_warning(

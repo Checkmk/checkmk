@@ -103,10 +103,10 @@ class TestModeAutomation:
         monkeypatch.setattr(
             request,
             "headers",
-            {"x-checkmk-version": "2.1.0p20", "x-checkmk-edition": "cee"},
+            {"x-checkmk-version": "2.2.0p20", "x-checkmk-edition": "cee"},
         )
         automation.ModeAutomation()._execute_cmk_automation()
-        assert response.get_data() == b"((1, 2),)"
+        assert response.get_data() == b"((1, 2), 'abc')"
 
     @pytest.mark.parametrize(
         "incomp_version",
@@ -121,9 +121,9 @@ class TestModeAutomation:
         "setup_request",
         "patch_edition",
     )
-    def test_execute_cmk_automation_incompatible(  # type:ignore[no-untyped-def]
+    def test_execute_cmk_automation_incompatible(
         self, incomp_version: str, monkeypatch: pytest.MonkeyPatch
-    ):
+    ) -> None:
         monkeypatch.setattr(
             request,
             "headers",

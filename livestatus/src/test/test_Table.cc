@@ -215,14 +215,13 @@ class DummyMonitoringCore : public MonitoringCore {
     [[nodiscard]] double livestatusUsage() const override { return {}; }
 
     [[nodiscard]] double averageLatencyGeneric() const override { return {}; }
-    [[nodiscard]] double averageLatencyCmk() const override { return {}; }
+    [[nodiscard]] double averageLatencyChecker() const override { return {}; }
     [[nodiscard]] double averageLatencyFetcher() const override { return {}; }
     [[nodiscard]] double averageLatencyRealTime() const override { return {}; }
 
     [[nodiscard]] double helperUsageGeneric() const override { return {}; }
-    [[nodiscard]] double helperUsageCmk() const override { return {}; }
-    [[nodiscard]] double helperUsageFetcher() const override { return {}; }
     [[nodiscard]] double helperUsageChecker() const override { return {}; }
+    [[nodiscard]] double helperUsageFetcher() const override { return {}; }
     [[nodiscard]] double helperUsageRealTime() const override { return {}; }
 
     [[nodiscard]] bool hasEventHandlers() const override { return {}; }

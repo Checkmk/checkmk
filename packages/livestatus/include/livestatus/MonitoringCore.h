@@ -126,15 +126,14 @@ public:
     [[nodiscard]] virtual double livestatusUsage() const = 0;
 
     [[nodiscard]] virtual double averageLatencyGeneric() const = 0;
-    [[nodiscard]] virtual double averageLatencyCmk() const = 0;
-    [[nodiscard]] virtual double averageLatencyFetcher() const = 0;
     [[nodiscard]] virtual double averageLatencyRealTime() const = 0;
+    [[nodiscard]] virtual double averageLatencyFetcher() const = 0;
+    [[nodiscard]] virtual double averageLatencyChecker() const = 0;
 
     [[nodiscard]] virtual double helperUsageGeneric() const = 0;
-    [[nodiscard]] virtual double helperUsageCmk() const = 0;
+    [[nodiscard]] virtual double helperUsageRealTime() const = 0;
     [[nodiscard]] virtual double helperUsageFetcher() const = 0;
     [[nodiscard]] virtual double helperUsageChecker() const = 0;
-    [[nodiscard]] virtual double helperUsageRealTime() const = 0;
 
     [[nodiscard]] virtual bool hasEventHandlers() const = 0;
 

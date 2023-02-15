@@ -16,12 +16,6 @@ from tests.composition.utils import execute
 from cmk.utils.type_defs import HostName
 
 
-def query_hosts_service_count(site: Site, hostname: HostName) -> int:
-    services_response = site.openapi.get(f"objects/host/{hostname}/collections/services")
-    assert services_response.ok
-    return len(services_response.json()["value"])
-
-
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
     return json.loads(
         execute(

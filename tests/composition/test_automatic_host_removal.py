@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import time
 
+from tests.testlib import wait_until
 from tests.testlib.site import Site
 
 LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,14 @@ def test_automatic_host_removal(
     )
     central_site.openapi.activate_changes_and_wait_for_completion()
 
-    LOGGER.info("Sleeping 65s to wait for hosts to be removed")
-    time.sleep(65)
+    def _no_hosts_exist() -> bool:
+        return not central_site.openapi.get("domain-types/host_config/collections/all").json()[
+            "value"
+        ]
 
-    assert not central_site.openapi.get("domain-types/host_config/collections/all").json()["value"]
+    LOGGER.info("Waiting for hosts to be removed")
+    wait_until(
+        _no_hosts_exist,
+        timeout=120,
+        interval=10,
+    )

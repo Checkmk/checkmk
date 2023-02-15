@@ -2175,6 +2175,13 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     tmp_dir=cmk.utils.paths.tmp_dir,
                     web_dir=cmk.utils.paths.local_web_dir,
                 ),
+                {
+                    cmk.utils.packaging.PackagePart.EC_RULE_PACKS: cmk.utils.packaging.PackageOperationCallbacks(
+                        install=ec.install_packaged_rule_packs,
+                        release=ec.release_packaged_rule_packs,
+                        uninstall=ec.uninstall_packaged_rule_packs,
+                    )
+                },
             )
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")

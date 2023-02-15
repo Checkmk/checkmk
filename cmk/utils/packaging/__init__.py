@@ -19,13 +19,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.i18n import _  # noqa: F401
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
-# It's OK to import centralized config load logic
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    install_packaged_rule_packs,
-    release_packaged_rule_packs,
-    uninstall_packaged_rule_packs,
-)
-
 from ._installed import Installer
 from ._mkp import (  # noqa: F401
     create_mkp,
@@ -38,7 +31,13 @@ from ._mkp import (  # noqa: F401
     PackagePart,
     read_manifest_optionally,
 )
-from ._parts import CONFIG_PARTS, PathConfig, permissions, ui_title  # noqa: F401
+from ._parts import (  # noqa: F401
+    CONFIG_PARTS,
+    PackageOperationCallbacks,
+    PathConfig,
+    permissions,
+    ui_title,
+)
 from ._reporter import all_local_files, all_rule_pack_files
 from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
@@ -69,7 +68,11 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
-def release(installer: Installer, pacname: PackageName) -> None:
+def release(
+    installer: Installer,
+    pacname: PackageName,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+) -> None:
     if (manifest := installer.get_installed_manifest(pacname)) is None:
         raise PackageError(f"Package {pacname} not installed or corrupt.")
 
@@ -79,8 +82,8 @@ def release(installer: Installer, pacname: PackageName) -> None:
         for f in files:
             _logger.info("    %s", f)
 
-    if filenames := manifest.files.get(PackagePart.EC_RULE_PACKS):
-        release_packaged_rule_packs(filenames)
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].release(manifest.files[part])
 
     installer.remove_installed_manifest(pacname)
 
@@ -92,14 +95,12 @@ def create_mkp_object(manifest: Manifest, path_config: PathConfig) -> bytes:
 def uninstall(
     installer: Installer,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
     post_package_change_actions: bool = True,
 ) -> None:
     for part, filenames in manifest.files.items():
         _logger.info("  Part '%s':", part.ident)
-        if part is PackagePart.EC_RULE_PACKS:
-            uninstall_packaged_rule_packs(filenames)
-
         for fn in filenames:
             _logger.info("    %s", fn)
             try:
@@ -108,6 +109,9 @@ def uninstall(
                 raise PackageError(
                     f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
                 ) from exc
+
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].uninstall(manifest.files[part])
 
     installer.remove_installed_manifest(manifest.name)
 
@@ -175,6 +179,7 @@ class PackageStore:
 def disable(
     installer: Installer,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     package_name: PackageName,
     package_version: PackageVersion | None,
 ) -> None:
@@ -182,7 +187,7 @@ def disable(
 
     if (installed := installer.get_installed_manifest(package_name)) is not None:
         if package_version is None or installed.version == package_version:
-            uninstall(installer, path_config, manifest)
+            uninstall(installer, path_config, callbacks, manifest)
 
     package_path.unlink()
 
@@ -307,6 +312,7 @@ def install(
     package_store: PackageStore,
     package_id: PackageID,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     allow_outdated: bool = True,
     post_package_change_actions: bool = True,
 ) -> Manifest:
@@ -315,6 +321,7 @@ def install(
             installer,
             package_store.get_existing_package_path(package_id).read_bytes(),
             path_config,
+            callbacks,
             allow_outdated=allow_outdated,
             post_package_change_actions=post_package_change_actions,
         )
@@ -327,6 +334,7 @@ def _install(
     installer: Installer,
     mkp: bytes,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
     #  b) users cannot even modify packages without installing them
@@ -355,7 +363,8 @@ def _install(
 
     _fix_files_permissions(manifest, path_config)
 
-    install_packaged_rule_packs(manifest.files.get(PackagePart.EC_RULE_PACKS, []))
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].install(manifest.files[part])
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -379,8 +388,8 @@ def _install(
                         "[%s %s]: Removed %s", old_manifest.name, old_manifest.version, path
                     )
 
-            if part is PackagePart.EC_RULE_PACKS:
-                uninstall_packaged_rule_packs(remove_files)
+            if (callback := callbacks.get(part)) is not None:
+                callback.uninstall(list(remove_files))
 
         remove_enabled_mark(old_manifest)
 
@@ -608,14 +617,18 @@ def rule_pack_id_to_mkp(
     }
 
 
-def update_active_packages(installer: Installer, path_config: PathConfig) -> None:
+def update_active_packages(
+    installer: Installer,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+) -> None:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore()
     _deinstall_inapplicable_active_packages(
-        installer, path_config, post_package_change_actions=False
+        installer, path_config, callbacks, post_package_change_actions=False
     )
     _install_applicable_inactive_packages(
-        package_store, installer, path_config, post_package_change_actions=False
+        package_store, installer, path_config, callbacks, post_package_change_actions=False
     )
     _execute_post_package_change_actions(None)
 
@@ -623,6 +636,7 @@ def update_active_packages(installer: Installer, path_config: PathConfig) -> Non
 def _deinstall_inapplicable_active_packages(
     installer: Installer,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     post_package_change_actions: bool,
 ) -> None:
@@ -641,6 +655,7 @@ def _deinstall_inapplicable_active_packages(
             uninstall(
                 installer,
                 path_config,
+                callbacks,
                 manifest,
                 post_package_change_actions=post_package_change_actions,
             )
@@ -652,6 +667,7 @@ def _install_applicable_inactive_packages(
     package_store: PackageStore,
     installer: Installer,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     post_package_change_actions: bool,
 ) -> None:
@@ -663,6 +679,7 @@ def _install_applicable_inactive_packages(
                     package_store,
                     manifest.id,
                     path_config,
+                    callbacks,
                     allow_outdated=False,
                     post_package_change_actions=post_package_change_actions,
                 )
@@ -688,7 +705,11 @@ def _sort_enabled_packages_for_installation() -> Iterable[tuple[PackageName, Ite
     )
 
 
-def disable_outdated(installer: Installer, path_config: PathConfig) -> None:
+def disable_outdated(
+    installer: Installer,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+) -> None:
     """Check installed packages and disables the outdated ones
 
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
@@ -704,7 +725,7 @@ def disable_outdated(installer: Installer, path_config: PathConfig) -> None:
                 manifest.version,
                 exc,
             )
-            disable(installer, path_config, manifest.name, manifest.version)
+            disable(installer, path_config, callbacks, manifest.name, manifest.version)
         else:
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
 

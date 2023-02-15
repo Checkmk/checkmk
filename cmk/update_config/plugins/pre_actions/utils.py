@@ -6,9 +6,17 @@
 import enum
 import sys
 from pathlib import Path
+from typing import Final
 
 from cmk.utils import paths
-from cmk.utils.packaging import disable, Installer, PackageID, PathConfig
+from cmk.utils.packaging import (
+    disable,
+    Installer,
+    PackageID,
+    PackageOperationCallbacks,
+    PackagePart,
+    PathConfig,
+)
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -34,6 +42,14 @@ _PATH_CONFIG = PathConfig(
     tmp_dir=paths.tmp_dir,
     web_dir=paths.local_web_dir,
 )
+
+_CALLBACKS: Final = {
+    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
+        install=ec.install_packaged_rule_packs,
+        uninstall=ec.uninstall_packaged_rule_packs,
+        release=ec.release_packaged_rule_packs,
+    ),
+}
 
 
 class ConflictMode(enum.StrEnum):
@@ -65,6 +81,7 @@ def disable_incomp_mkp(
         disable(
             installer,
             _PATH_CONFIG,
+            _CALLBACKS,
             package_id.name,
             package_id.version,
         )

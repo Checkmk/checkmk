@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Callable, Final, Sequence
 
 from typing_extensions import assert_never
 
@@ -164,3 +164,14 @@ def permissions(part: PackagePart) -> int:
 
 
 CONFIG_PARTS: Final = (PackagePart.EC_RULE_PACKS,)
+
+
+PackageOperationCallback = Callable[[Sequence[Path]], None]
+
+
+@dataclass(frozen=True)
+class PackageOperationCallbacks:
+    # currently we don't need more. Add if needed.
+    install: PackageOperationCallback = lambda _files: None
+    uninstall: PackageOperationCallback = lambda _files: None
+    release: PackageOperationCallback = lambda _files: None

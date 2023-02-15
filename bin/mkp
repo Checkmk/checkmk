@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from typing import Final
 
 import cmk.utils.paths
-from cmk.utils.packaging import cli, PathConfig
+from cmk.utils.packaging import cli, PackageOperationCallbacks, PackagePart, PathConfig
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -32,6 +33,20 @@ _PATH_CONFIG = PathConfig(
     web_dir=cmk.utils.paths.local_web_dir,
 )
 
+_CALLBACKS: Final = {
+    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
+        install=ec.install_packaged_rule_packs,
+        uninstall=ec.uninstall_packaged_rule_packs,
+        release=ec.release_packaged_rule_packs,
+    ),
+}
+
 
 if __name__ == "__main__":
-    sys.exit(cli.main(sys.argv[1:] or ["--help"], _PATH_CONFIG))
+    sys.exit(
+        cli.main(
+            sys.argv[1:] or ["--help"],
+            _PATH_CONFIG,
+            _CALLBACKS,
+        )
+    )

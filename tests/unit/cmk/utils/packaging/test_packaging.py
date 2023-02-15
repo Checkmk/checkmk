@@ -45,6 +45,9 @@ _PATH_CONFIG = packaging.PathConfig(
 )
 
 
+_NO_CALLBACKS: dict[packaging.PackagePart, packaging.PackageOperationCallbacks] = {}
+
+
 @pytest.fixture(name="installer", scope="function")
 def _get_installer() -> Iterator[packaging.Installer]:
     cmk.utils.paths.installed_packages_dir.mkdir(parents=True, exist_ok=True)
@@ -85,7 +88,7 @@ def fixture_mkp_bytes(build_setup_search_index: Mock, installer: packaging.Insta
     mkp = packaging.create_mkp_object(manifest, _PATH_CONFIG)
 
     # Remove files from local hierarchy
-    packaging.uninstall(installer, _PATH_CONFIG, manifest)
+    packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     build_setup_search_index.assert_called_once()
     build_setup_search_index.reset_mock()
     assert installer.is_installed(packaging.PackageName("aaa")) is False
@@ -218,7 +221,12 @@ def test_install(
     mkp_bytes: bytes, build_setup_search_index: Mock, installer: packaging.Installer
 ) -> None:
     packaging._install(
-        installer, mkp_bytes, _PATH_CONFIG, allow_outdated=False, post_package_change_actions=True
+        installer,
+        mkp_bytes,
+        _PATH_CONFIG,
+        _NO_CALLBACKS,
+        allow_outdated=False,
+        post_package_change_actions=True,
     )
     build_setup_search_index.assert_called_once()
 
@@ -231,7 +239,7 @@ def test_install(
 
 def test_release_not_existing(installer: packaging.Installer) -> None:
     with pytest.raises(packaging.PackageError):
-        packaging.release(installer, packaging.PackageName("abc"))
+        packaging.release(installer, packaging.PackageName("abc"), _NO_CALLBACKS)
 
 
 def test_release(installer: packaging.Installer) -> None:
@@ -239,7 +247,7 @@ def test_release(installer: packaging.Installer) -> None:
     assert installer.is_installed(packaging.PackageName("aaa")) is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
-    packaging.release(installer, packaging.PackageName("aaa"))
+    packaging.release(installer, packaging.PackageName("aaa"), _NO_CALLBACKS)
 
     assert installer.is_installed(packaging.PackageName("aaa")) is False
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
@@ -267,7 +275,7 @@ def test_write_file(installer: packaging.Installer) -> None:
 
 def test_uninstall(build_setup_search_index: Mock, installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
-    packaging.uninstall(installer, _PATH_CONFIG, manifest)
+    packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     build_setup_search_index.assert_called_once()
     assert not installer.is_installed(packaging.PackageName("aaa"))
 

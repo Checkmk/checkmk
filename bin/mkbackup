@@ -461,9 +461,6 @@ class RestoreStream(MKBackupStream):
         except ValueError:
             raise MKGeneralException("Failed to parse the encrypted backup file (key length)")
 
-        if int(key_len) > 256:
-            raise MKGeneralException("Failed to process backup file (invalid key length)")
-
         encrypted_secret_key = self._stream.read(int(key_len))
 
         if self._stream.read(1) != b"\0":

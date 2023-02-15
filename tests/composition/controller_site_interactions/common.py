@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from tests.testlib import wait_until
 from tests.testlib.site import Site
 
 from tests.composition.utils import execute
@@ -31,4 +32,44 @@ def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
                 "--json",
             ]
         ).stdout
+    )
+
+
+def wait_until_host_receives_data(
+    site: Site,
+    hostname: HostName,
+    *,
+    timeout: int = 120,
+    interval: int = 15,
+) -> None:
+    wait_until(
+        lambda: not site.execute(["cmk", "-d", hostname]).wait(),
+        timeout=timeout,
+        interval=interval,
+    )
+
+
+def wait_until_host_has_services(
+    site: Site,
+    hostname: HostName,
+    *,
+    n_services_min: int = 5,
+    timeout: int = 120,
+    interval: int = 15,
+) -> None:
+    wait_until(
+        lambda: _query_hosts_service_count(site, hostname) > n_services_min,
+        timeout=timeout,
+        interval=interval,
+    )
+
+
+def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
+    return (
+        len(services_response.json()["value"])
+        # the host might not yet exist at the point where we start waiting
+        if (
+            services_response := site.openapi.get(f"objects/host/{hostname}/collections/services")
+        ).ok
+        else 0
     )

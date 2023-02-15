@@ -5,15 +5,15 @@
 
 import logging
 import subprocess
-import time
 from pathlib import Path
 
 from tests.testlib.site import Site
 
-from tests.composition.controller_site_interactions.common import query_hosts_service_count
 from tests.composition.utils import execute
 
 from cmk.utils.type_defs import HostName
+
+from .common import wait_until_host_has_services, wait_until_host_receives_data
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -55,15 +55,15 @@ def test_proxy_register_import_workflow(
         check=True,
     )
 
-    LOGGER.info("Sleeping 60s to give controller time to open TCP socket")
-    time.sleep(60)
-
-    # TODO (jh): Remove once we figured out how to handle live data fetching during discovery
-    assert not central_site.execute(["cmk", "-d", hostname]).wait()
+    LOGGER.info("Waiting for controller to open TCP socket or push data")
+    wait_until_host_receives_data(central_site, hostname)
 
     central_site.openapi.discover_services_and_wait_for_completion(hostname)
     central_site.openapi.activate_changes_and_wait_for_completion()
 
-    # Without this sleep, the test is flaky. Should probably be investigated.
-    time.sleep(1)
-    assert query_hosts_service_count(central_site, hostname) > 5
+    wait_until_host_has_services(
+        central_site,
+        hostname,
+        timeout=10,
+        interval=2,
+    )

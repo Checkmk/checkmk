@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import time
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -12,10 +11,11 @@ import pytest
 
 from tests.testlib.site import Site
 
-from tests.composition.controller_site_interactions.common import query_hosts_service_count
 from tests.composition.utils import execute
 
 from cmk.utils.type_defs import HostAgentConnectionMode, HostName
+
+from .common import wait_until_host_has_services, wait_until_host_receives_data
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -50,18 +50,18 @@ def _test_register_workflow(
         ]
     )
 
-    LOGGER.info("Sleeping 60s to give controller time to open TCP socket or push data")
-    time.sleep(60)
-
-    # TODO (jh): Remove once we figured out how to handle live data fetching during discovery
-    assert not site.execute(["cmk", "-d", hostname]).wait()
+    LOGGER.info("Waiting for controller to open TCP socket or push data")
+    wait_until_host_receives_data(site, hostname)
 
     site.openapi.discover_services_and_wait_for_completion(hostname)
     site.openapi.activate_changes_and_wait_for_completion()
 
-    # Without this sleep, the test is flaky. Should probably be investigated.
-    time.sleep(1)
-    assert query_hosts_service_count(site, hostname) > 5
+    wait_until_host_has_services(
+        site,
+        hostname,
+        timeout=10,
+        interval=2,
+    )
 
 
 def test_register_workflow_pull(

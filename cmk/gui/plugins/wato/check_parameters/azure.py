@@ -737,3 +737,59 @@ rulespec_registry.register(
         title=lambda: _("Azure Load Balancer Health"),
     )
 )
+
+
+def _parameter_valuespec_vm_burst_cpu_credits() -> Dictionary:
+    return Dictionary(
+        title=_("Levels CPU credits"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(Float, title=_("Remaining credits lower levels")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_vm_burst_cpu_credits",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
+        title=lambda: _("Azure VM Burst CPU Credits"),
+    )
+)
+
+
+def _parameter_valuespec_vm_disk() -> Dictionary:
+    return Dictionary(
+        title=_("Levels disk"),
+        elements=[
+            (
+                "disk_read",
+                SimpleLevels(Float, title=_("Disk read"), unit="B/s"),
+            ),
+            (
+                "disk_write",
+                SimpleLevels(Float, title=_("Disk write"), unit="B/s"),
+            ),
+            (
+                "disk_read_ios",
+                SimpleLevels(Float, title=_("Disk read operations"), unit="1/s"),
+            ),
+            (
+                "disk_write_ios",
+                SimpleLevels(Float, title=_("Disk write operations"), unit="1/s"),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_vm_disk",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_vm_disk,
+        title=lambda: _("Azure VM Disk"),
+    )
+)

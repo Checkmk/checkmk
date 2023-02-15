@@ -3,12 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Iterator, Mapping
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.azure import iter_resource_attributes, parse_resources, Resource, Section
+from .utils import interfaces
+from .utils.azure import (
+    create_check_metrics_function_single,
+    create_discover_by_metrics_function,
+    create_discover_by_metrics_function_single,
+    iter_resource_attributes,
+    MetricData,
+    parse_resources,
+    Resource,
+    Section,
+)
 
 _MAP_PROVISIONING = {
     "succeeded": 0,
@@ -41,6 +61,16 @@ register.agent_section(
     name="azure_virtualmachines",
     parse_function=parse_resources,
 )
+
+
+#   .--VM------------------------------------------------------------------.
+#   |                          __     ____  __                             |
+#   |                          \ \   / /  \/  |                            |
+#   |                           \ \ / /| |\/| |                            |
+#   |                            \ V / | |  | |                            |
+#   |                             \_/  |_|  |_|                            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 def discover_azure_virtual_machine(section: Section) -> DiscoveryResult:
@@ -104,6 +134,16 @@ register.check_plugin(
         "map_power_states": _MAP_POWER,
     },
 )
+
+
+#   .--VM Summary----------------------------------------------------------.
+#   | __     ____  __   ____                                               |
+#   | \ \   / /  \/  | / ___| _   _ _ __ ___  _ __ ___   __ _ _ __ _   _   |
+#   |  \ \ / /| |\/| | \___ \| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |  |
+#   |   \ V / | |  | |  ___) | |_| | | | | | | | | | | | (_| | |  | |_| |  |
+#   |    \_/  |_|  |_| |____/ \__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |  |
+#   |                                                              |___/   |
+#   '----------------------------------------------------------------------'
 
 
 def discover_azure_virtual_machine_summary(section: Section) -> DiscoveryResult:
@@ -182,4 +222,263 @@ register.check_plugin(
             "unknown": {"levels": (1, 2)},
         },
     },
+)
+
+
+#   .--CPU Utilization-----------------------------------------------------.
+#   |    ____ ____  _   _   _   _ _   _ _ _          _   _                 |
+#   |   / ___|  _ \| | | | | | | | |_(_) (_)______ _| |_(_) ___  _ __      |
+#   |  | |   | |_) | | | | | | | | __| | | |_  / _` | __| |/ _ \| '_ \     |
+#   |  | |___|  __/| |_| | | |_| | |_| | | |/ / (_| | |_| | (_) | | | |    |
+#   |   \____|_|    \___/   \___/ \__|_|_|_/___\__,_|\__|_|\___/|_| |_|    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_azure_vm_cpu_utilization(section: Section) -> DiscoveryResult:
+    if len(section) != 1:
+        return
+    resource = list(section.values())[0]
+
+    yield from create_discover_by_metrics_function("average_Percentage_CPU")(
+        {"CPU Utilization": resource}
+    )
+
+
+def check_azure_vm_cpu_utilization(
+    item: str, params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    yield from create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_Percentage_CPU",
+                "util",
+                "CPU utilization",
+                render.percent,
+                upper_levels_param="levels",
+            )
+        ]
+    )(params, section)
+
+
+register.check_plugin(
+    name="azure_vm_cpu_utilization",
+    sections=["azure_virtualmachines"],
+    service_name="Azure/VM %s",
+    discovery_function=discover_azure_vm_cpu_utilization,
+    check_function=check_azure_vm_cpu_utilization,
+    check_ruleset_name="cpu_utilization_with_item",
+    check_default_parameters={"levels": (65.0, 90.0)},
+)
+
+
+#   .--CPU Credits---------------------------------------------------------.
+#   |          ____ ____  _   _    ____              _ _ _                 |
+#   |         / ___|  _ \| | | |  / ___|_ __ ___  __| (_) |_ ___           |
+#   |        | |   | |_) | | | | | |   | '__/ _ \/ _` | | __/ __|          |
+#   |        | |___|  __/| |_| | | |___| | |  __/ (_| | | |_\__ \          |
+#   |         \____|_|    \___/   \____|_|  \___|\__,_|_|\__|___/          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def check_azure_vm_burst_cpu_credits(
+    params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    yield from create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_CPU_Credits_Consumed",
+                "cpu_credits_consumed",
+                "Consumed",
+                str,
+            ),
+            MetricData(
+                "average_CPU_Credits_Remaining",
+                "cpu_credits_remaining",
+                "Remaining",
+                str,
+                lower_levels_param="levels",
+            ),
+        ]
+    )(params, section)
+
+
+register.check_plugin(
+    name="azure_vm_burst_cpu_credits",
+    sections=["azure_virtualmachines"],
+    service_name="Azure/VM Burst CPU Credits",
+    discovery_function=create_discover_by_metrics_function_single(
+        "average_CPU_Credits_Consumed",
+        "average_CPU_Credits_Remaining",
+    ),
+    check_function=check_azure_vm_burst_cpu_credits,
+    check_ruleset_name="azure_vm_burst_cpu_credits",
+    check_default_parameters={},
+)
+
+
+#   .--Memory--------------------------------------------------------------.
+#   |               __  __                                                 |
+#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
+#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
+#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
+#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
+#   |                                                |___/                 |
+#   '----------------------------------------------------------------------'
+
+
+def check_azure_vm_memory(
+    params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    yield from create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_Available_Memory_Bytes",
+                "mem_available",
+                "Available memory",
+                render.bytes,
+                lower_levels_param="levels",
+            ),
+        ]
+    )(params, section)
+
+
+register.check_plugin(
+    name="azure_vm_memory",
+    sections=["azure_virtualmachines"],
+    service_name="Azure/VM Memory",
+    discovery_function=create_discover_by_metrics_function_single("average_Available_Memory_Bytes"),
+    check_function=check_azure_vm_memory,
+    check_ruleset_name="memory_available",
+    check_default_parameters={},
+)
+
+
+#   .--Disk----------------------------------------------------------------.
+#   |                          ____  _     _                               |
+#   |                         |  _ \(_)___| | __                           |
+#   |                         | | | | / __| |/ /                           |
+#   |                         | |_| | \__ \   <                            |
+#   |                         |____/|_|___/_|\_\                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Section) -> CheckResult:
+    if len(section) != 1:
+        raise IgnoreResultsError("Only one resource expected")
+
+    resource = list(section.values())[0]
+
+    if (read_bytes := resource.metrics.get("total_Disk_Read_Bytes")) is not None:
+        yield from check_levels(
+            read_bytes.value / 60,
+            levels_upper=params.get("disk_read"),
+            metric_name="disk_read_throughput",
+            label="Read",
+            render_func=render.iobandwidth,
+        )
+
+    if (write_bytes := resource.metrics.get("total_Disk_Write_Bytes")) is not None:
+        yield from check_levels(
+            write_bytes.value / 60,
+            levels_upper=params.get("disk_write"),
+            metric_name="disk_write_throughput",
+            label="Write",
+            render_func=render.iobandwidth,
+        )
+
+    if (read_ops := resource.metrics.get("average_Disk_Read_Operations/Sec")) is not None:
+        yield from check_levels(
+            read_ops.value,
+            levels_upper=params.get("disk_read_ios"),
+            metric_name="disk_read_ios",
+            label="Read operations",
+            render_func=lambda x: f"{x:.2f}/s",
+        )
+
+    if (write_ops := resource.metrics.get("average_Disk_Write_Operations/Sec")) is not None:
+        yield from check_levels(
+            write_ops.value,
+            levels_upper=params.get("disk_write_ios"),
+            metric_name="disk_write_ios",
+            label="Write operations",
+            render_func=lambda x: f"{x:.2f}/s",
+        )
+
+
+register.check_plugin(
+    name="azure_vm_disk",
+    sections=["azure_virtualmachines"],
+    service_name="Azure/VM Disk",
+    discovery_function=create_discover_by_metrics_function_single(
+        "total_Disk_Read_Bytes",
+        "total_Disk_Write_Bytes",
+        "average_Disk_Read_Operations/Sec",
+        "average_Disk_Write_Operations/Sec",
+    ),
+    check_function=check_azure_vm_disk,
+    check_ruleset_name="azure_vm_disk",
+    check_default_parameters={},
+)
+
+
+#   .--Network IO----------------------------------------------------------.
+#   |          _   _      _                      _      ___ ___            |
+#   |         | \ | | ___| |___      _____  _ __| | __ |_ _/ _ \           |
+#   |         |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ /  | | | | |          |
+#   |         | |\  |  __/ |_ \ V  V / (_) | |  |   <   | | |_| |          |
+#   |         |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |___\___/           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_azure_vm_network_io(section: Section) -> DiscoveryResult:
+    if len(section) != 1:
+        return
+    resource = list(section.values())[0]
+
+    yield from create_discover_by_metrics_function(
+        "total_Network_In_Total", "total_Network_Out_Total"
+    )({"Network IO": resource})
+
+
+def check_azure_vm_network_io(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if len(section) != 1:
+        raise IgnoreResultsError("Only one resource expected")
+
+    resource = list(section.values())[0]
+    interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+        interfaces.InterfaceWithRates(
+            attributes=interfaces.Attributes(
+                index="0",
+                descr=item,
+                alias=item,
+                type="1",
+                oper_status="1",
+            ),
+            rates=interfaces.Rates(
+                in_octets=resource.metrics["total_Network_In_Total"].value / 60,
+                out_octets=resource.metrics["total_Network_Out_Total"].value / 60,
+            ),
+            get_rate_errors=[],
+        ),
+        timestamp=time.time(),
+        value_store=get_value_store(),
+        params=params,
+    )
+    yield from interfaces.check_single_interface(item, params, interface)
+
+
+register.check_plugin(
+    name="azure_vm_network_io",
+    sections=["azure_virtualmachines"],
+    service_name="Azure/VM %s",
+    discovery_function=discover_azure_vm_network_io,
+    check_function=check_azure_vm_network_io,
+    check_ruleset_name="if",
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
 )

@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from mock import patch
 
 from cmk.special_agents.agent_azure import (
     ApiError,
@@ -383,7 +384,9 @@ def test_get_vm_labels_section(
         ),
     ],
 )
+@patch("cmk.special_agents.agent_azure.gather_metrics", return_value=None)
 def test_process_resource(
+    mock_gather_metrics: MagicMock,
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],
     group_tags: GroupLabels,

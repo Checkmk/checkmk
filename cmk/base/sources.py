@@ -191,7 +191,13 @@ class _Builder:
                     if self.file_cache_options.use_outdated
                     else self.file_cache_max_age,
                     simulation=False,  # TODO Quickfix for SUP-9912
-                    use_only_cache=self.file_cache_options.use_only_cache,
+                    # Setting "use only cache" usually means we do not want to create network
+                    # traffic or bother the monitored device for performance reasons.
+                    # Piggybacked data is either available locally in the stored piggyback files,
+                    # or not at all, so a cache makes no sense.
+                    # Always allow "fetching" (which is reading from disk) and never even use the cache.
+                    # TODO: We probably should use "NoCache" here?
+                    use_only_cache=False,
                     file_cache_mode=FileCacheMode.DISABLED,
                 ),
             )

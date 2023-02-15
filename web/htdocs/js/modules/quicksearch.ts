@@ -150,8 +150,8 @@ function mkSearchMoveElement(step) {
     var a = 0;
     for (var i = 0; i < oResults.length; i++) {
         if (oResults[i].tagName == "A") {
-            oCurrent = oResults[i] as HTMLAnchorElement;
             if (a == iCurrent) {
+                oCurrent = oResults[i] as HTMLAnchorElement;
                 oResults[i].setAttribute("class", "active");
             } else {
                 oResults[i].setAttribute("class", "inactive");

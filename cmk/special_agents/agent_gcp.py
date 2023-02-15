@@ -15,7 +15,7 @@ from typing import Any, Protocol
 
 import requests
 import typing_extensions
-from google.api_core.exceptions import PermissionDenied
+from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -555,7 +555,7 @@ def run(
             client, [s.name for s in services] + [s.name for s in piggy_back_services]
         )
         serializer([assets])
-    except PermissionDenied:
+    except (PermissionDenied, Unauthenticated):
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Cloud Asset")])
         return
@@ -563,7 +563,7 @@ def run(
     try:
         serializer(run_metrics(client, services))
         serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
-    except PermissionDenied:
+    except (PermissionDenied, Unauthenticated):
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Monitoring")])
         return

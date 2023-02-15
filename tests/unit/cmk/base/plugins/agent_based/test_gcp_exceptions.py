@@ -109,6 +109,23 @@ EXCEPTIONS = [
     ),
     pytest.param(
         GCPException(
+            section=_ExceptionSection(
+                type="Unauthenticated",
+                message="""Cloud Asset:401 Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project. [reason: "ACCOUNT_STATE_INVALID"domain: "googleapis.com"metadata {  key: "email"  value: "test-metric-access@tribe29-check-development.iam.gserviceaccount.com"}metadata {  key: "method"  value: "google.cloud.asset.v1.AssetService.ListAssets"}metadata {  key: "service"  value: "cloudasset.googleapis.com"}]""",
+                gcp_source=None,
+            ),
+            results=[
+                Result(
+                    state=State.CRIT,
+                    summary="The Google Cloud API reported an error. Please read the error message on how to fix it:",
+                    details="Unauthenticated: Cloud Asset:401 Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
+                )
+            ],
+        ),
+        id="unauthenticated",
+    ),
+    pytest.param(
+        GCPException(
             section=_ExceptionSection(type=None, message=None, gcp_source=None),
             results=[Result(state=State.OK, notice="No exceptions")],
         ),

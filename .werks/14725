@@ -1,0 +1,17 @@
+Title: Crash: Builtin dashlets using custom graph timeranges
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1676460032
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p22
+
+When using custom graph timeranges and adjusting the "The last 25 hours" option,
+rendering builtin dashlets would result in a crash with the following errormessage:
+
+TypeError('NoneType' object is not subscriptable)
+
+Now the dashlet displays displays an MKUserError in the dashlet itself. In this case
+you should adjust the dashlet or global configuration.

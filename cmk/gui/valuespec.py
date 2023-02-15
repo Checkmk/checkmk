@@ -3283,6 +3283,8 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         try:
             vs.validate_datatype(value[1], "")
             return [ident, vs.value_to_json(value[1])]
+        except MKUserError as e:
+            raise MKUserError(e.varname, e.message) from e
         except Exception:  # TODO: fix exc
             return
 
@@ -3375,7 +3377,10 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                         )
                     vs.validate_datatype(value[1], varprefix + "_%d" % nr)
                 return
-        raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % value)
+        raise MKUserError(
+            varprefix + "_sel",
+            _("Value %r is not allowed here. Please check your configuration.") % value,
+        )
 
     def _validate_value(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
         if self._no_preselect and value == self._no_preselect_value:

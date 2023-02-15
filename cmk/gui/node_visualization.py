@@ -331,7 +331,7 @@ class ABCTopologyPage(Page):
         return {}
 
     def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
-        _context, show_filters = get_topology_context_and_filters()
+        context, _show_filters = get_topology_context_and_filters()
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
         display_dropdown.topics.insert(
             0,
@@ -344,7 +344,7 @@ class ABCTopologyPage(Page):
                         item=PageMenuSidePopup(
                             cmk.gui.visuals.render_filter_form(
                                 info_list=["host", "service"],
-                                context={f.ident: {} for f in show_filters if f.available()},
+                                context=context,
                                 page_name=page_name,
                                 reset_ajax_page="ajax_initial_topology_filters",
                             )

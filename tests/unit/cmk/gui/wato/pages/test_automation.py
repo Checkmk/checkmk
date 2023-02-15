@@ -26,7 +26,7 @@ class ResultTest(ABCAutomationResult):
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
             self._default_serialize()
-            if for_cmk_version >= cmk_version.Version("2.2.0i1")
+            if for_cmk_version >= cmk_version.Version("2.3.0i1")
             else SerializedResult(repr((self.field_1,)))
         )
 
@@ -52,7 +52,7 @@ class TestModeAutomation:
     ) -> tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],
-            "((1, 2), 'abc')",
+            "((1, 2), 'this field was not sent by version N-1')",
         )
 
     @pytest.fixture(name="check_mk_local_automation_serialized")
@@ -91,7 +91,7 @@ class TestModeAutomation:
             {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
         )
         automation.ModeAutomation()._execute_cmk_automation()
-        assert response.get_data() == b"((1, 2), 'abc')"
+        assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
         "result_type_registry",
@@ -106,7 +106,7 @@ class TestModeAutomation:
             {"x-checkmk-version": "2.2.0p20", "x-checkmk-edition": "cee"},
         )
         automation.ModeAutomation()._execute_cmk_automation()
-        assert response.get_data() == b"((1, 2), 'abc')"
+        assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.parametrize(
         "incomp_version",

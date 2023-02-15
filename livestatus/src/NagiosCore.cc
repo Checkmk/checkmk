@@ -137,8 +137,8 @@ std::unique_ptr<User> NagiosCore::find_user(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
     if (const auto *ctc = ::find_contact(const_cast<char *>(name.c_str()))) {
         return std::make_unique<AuthUser>(
-            NebContact{*ctc}, _authorization._service, _authorization._group,
-            [](const std::string &name) {
+            std::make_unique<NebContact>(*ctc), _authorization._service,
+            _authorization._group, [](const std::string &name) {
                 return std::make_unique<NebContactGroup>(name);
             });
     }

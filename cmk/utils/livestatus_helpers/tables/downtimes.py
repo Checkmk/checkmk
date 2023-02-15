@@ -1784,13 +1784,13 @@ class Downtimes(Table):
     triggered_by = Column(
         'triggered_by',
         col_type='int',
-        description='The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime',
+        description='The ID of the downtime triggering this dowtime or 0 if there is none',
     )
-    """The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime"""
+    """The ID of the downtime triggering this dowtime or 0 if there is none"""
 
     type = Column(
         'type',
         col_type='int',
-        description='The type of the downtime: 0 if it is active, 1 if it is pending',
+        description='1 for a service downtime, 2 for a host downtime',
     )
-    """The type of the downtime: 0 if it is active, 1 if it is pending"""
+    """1 for a service downtime, 2 for a host downtime"""

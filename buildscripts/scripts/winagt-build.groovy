@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: windows-agent-build.groovy
+/// file: winagt-build.groovy
 
 def main() {
     check_job_parameters(["VERSION"]);

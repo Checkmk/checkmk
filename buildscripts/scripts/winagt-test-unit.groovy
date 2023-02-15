@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: windows-agent-unit-test.groovy
+/// file: winagt-test-unit.groovy
 
 def main() {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");

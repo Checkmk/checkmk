@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: windows-agent-modules-build.groovy
+/// file: winagt-build-modules.groovy
 
 /// builds python module for windows agent
 

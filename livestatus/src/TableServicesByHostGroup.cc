@@ -5,19 +5,19 @@
 
 #include "TableServicesByHostGroup.h"
 
-#include "NebService.h"
 #include "TableHostGroups.h"
 #include "TableServices.h"
 #include "livestatus/Column.h"
+#include "livestatus/Interface.h"
+#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
-#include "nagios.h"
 
 namespace {
-struct service_and_group {
-    const service *svc;
-    const hostgroup *group;
+struct ServiceAndGroup {
+    const IService &svc;
+    const IHostGroup &group;
 };
 }  // namespace
 
@@ -25,11 +25,11 @@ TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
     const ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<service_and_group>()->svc;
+        return r.rawData<ServiceAndGroup>()->svc.handle();
     }),
                               true);
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
-        return r.rawData<service_and_group>()->group;
+        return r.rawData<ServiceAndGroup>()->group.handle();
     }));
 }
 
@@ -40,20 +40,14 @@ std::string TableServicesByHostGroup::name() const {
 std::string TableServicesByHostGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByHostGroup::answerQuery(Query &query, const User &user) {
-    auto process = [&](const service_and_group &sag) {
-        return !user.is_authorized_for_service(NebService{*sag.svc}) ||
-               query.processDataset(Row{&sag});
-    };
-
-    for (const auto *group = hostgroup_list; group != nullptr;
-         group = group->next) {
-        for (const auto *hm = group->members; hm != nullptr; hm = hm->next) {
-            for (const auto *sm = hm->host_ptr->services; sm != nullptr;
-                 sm = sm->next) {
-                if (!process(service_and_group{sm->service_ptr, group})) {
-                    return;
-                }
-            }
-        }
-    }
+    core()->all_of_host_groups([&user, &query](const IHostGroup &hg) {
+        return hg.all([&hg, &user, &query](const IHost &host) {
+            return host.all_of_services(
+                [&hg, &user, &query](const IService &svc) {
+                    ServiceAndGroup sag = {.svc{svc}, .group{hg}};
+                    return !user.is_authorized_for_service(svc) ||
+                           query.processDataset(Row{&sag});
+                });
+        });
+    });
 }

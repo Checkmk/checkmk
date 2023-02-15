@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, NoReturn
 
 from cmk.utils.type_defs import AgentRawData
 
@@ -33,5 +33,5 @@ class NoFetcher(Fetcher[AgentRawData]):
     def close(self) -> None:
         pass
 
-    def _fetch_from_io(self, mode: Mode):  # type:ignore[no-untyped-def]
+    def _fetch_from_io(self, mode: Mode) -> NoReturn:
         raise TypeError(self)

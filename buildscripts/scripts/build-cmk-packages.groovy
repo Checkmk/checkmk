@@ -158,8 +158,8 @@ def main() {
         [("agent ${agent}") : {
                 conditional_stage("Build ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
                     if (agent == "windows") {
-                        def win_project_name = "${jenkins_base_folder}/windows-agent-build";
-                        def win_py_project_name = "${jenkins_base_folder}/windows-agent-modules-build";
+                        def win_project_name = "${jenkins_base_folder}/winagt-build";
+                        def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
                         def win_project_build, win_py_project_build;
 
                         /// TODO: these builds do not depend on the edition, so we could also just take

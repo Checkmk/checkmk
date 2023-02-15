@@ -108,7 +108,7 @@ class Client:
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
-        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, currency, invoice.month'
+        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month'
         body = {"query": query, "useLegacySql": False}
         request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
         response = request.execute()
@@ -274,6 +274,7 @@ class PiggyBackSection:
 @dataclass(frozen=True)
 class CostRow:
     project: str
+    id: str
     month: str
     amount: float
     currency: str
@@ -283,6 +284,7 @@ class CostRow:
         return json.dumps(
             {
                 "project": row.project,
+                "id": row.id,
                 "month": row.month,
                 "amount": row.amount,
                 "currency": row.currency,
@@ -505,7 +507,7 @@ class CostArgument:
 def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow]:
     schema, pages = client.list_costs(tableid=cost.tableid)
     columns = {el["name"]: i for i, el in enumerate(schema)}
-    assert set(columns.keys()) == {"name", "cost", "currency", "month"}
+    assert set(columns.keys()) == {"name", "id", "cost", "currency", "month"}
     cost_rows: list[CostRow] = []
     for page in pages:
         for row in page:
@@ -513,6 +515,7 @@ def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow
             cost_rows.append(
                 CostRow(
                     project=data[columns["name"]]["v"],
+                    id=data[columns["id"]]["v"],
                     month=data[columns["month"]]["v"],
                     amount=float(data[columns["cost"]]["v"]),
                     currency=data[columns["currency"]]["v"],

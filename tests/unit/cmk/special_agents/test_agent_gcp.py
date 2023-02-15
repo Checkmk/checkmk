@@ -138,18 +138,51 @@ class FakeClient:
     def list_costs(self, tableid: str) -> tuple[agent_gcp.Schema, agent_gcp.Pages]:
         schema = [
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "id", "type": "STRING", "mode": "NULLABLE"},
             {"name": "cost", "type": "FLOAT", "mode": "NULLABLE"},
             {"name": "currency", "type": "STRING", "mode": "NULLABLE"},
             {"name": "month", "type": "STRING", "mode": "NULLABLE"},
         ]
         rows = [
             [
-                {"f": [{"v": "test"}, {"v": "42.21"}, {"v": "EUR"}, {"v": "202207"}]},
-                {"f": [{"v": "checkmk"}, {"v": "3.1415"}, {"v": "EUR"}, {"v": "202207"}]},
+                {
+                    "f": [
+                        {"v": "test"},
+                        {"v": "testid"},
+                        {"v": "42.21"},
+                        {"v": "EUR"},
+                        {"v": "202207"},
+                    ]
+                },
+                {
+                    "f": [
+                        {"v": "checkmk"},
+                        {"v": "checkmkid"},
+                        {"v": "3.1415"},
+                        {"v": "EUR"},
+                        {"v": "202207"},
+                    ]
+                },
             ],
             [
-                {"f": [{"v": "test"}, {"v": "1337.0"}, {"v": "EUR"}, {"v": "202206"}]},
-                {"f": [{"v": "checkmk"}, {"v": "2.71"}, {"v": "EUR"}, {"v": "202206"}]},
+                {
+                    "f": [
+                        {"v": "test"},
+                        {"v": "testid"},
+                        {"v": "1337.0"},
+                        {"v": "EUR"},
+                        {"v": "202206"},
+                    ]
+                },
+                {
+                    "f": [
+                        {"v": "checkmk"},
+                        {"v": "checkmkid"},
+                        {"v": "2.71"},
+                        {"v": "EUR"},
+                        {"v": "202206"},
+                    ]
+                },
             ],
         ]
         return schema, rows
@@ -518,7 +551,7 @@ def test_output_contains_cost_section(cost_output: Sequence[agent_gcp.Section]) 
     assert len(asset_sections) == 1
 
 
-def test_output_cost_sectoin(
+def test_output_cost_section(
     cost_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert "cost" in {s.name for s in cost_output}
@@ -529,8 +562,8 @@ def test_output_cost_sectoin(
     assert lines == [
         "<<<gcp_cost:sep(0)>>>",
         '{"query_month": "202207"}',
-        '{"project": "test", "month": "202207", "amount": 42.21, "currency": "EUR"}',
-        '{"project": "checkmk", "month": "202207", "amount": 3.1415, "currency": "EUR"}',
-        '{"project": "test", "month": "202206", "amount": 1337.0, "currency": "EUR"}',
-        '{"project": "checkmk", "month": "202206", "amount": 2.71, "currency": "EUR"}',
+        '{"project": "test", "id": "testid", "month": "202207", "amount": 42.21, "currency": "EUR"}',
+        '{"project": "checkmk", "id": "checkmkid", "month": "202207", "amount": 3.1415, "currency": "EUR"}',
+        '{"project": "test", "id": "testid", "month": "202206", "amount": 1337.0, "currency": "EUR"}',
+        '{"project": "checkmk", "id": "checkmkid", "month": "202206", "amount": 2.71, "currency": "EUR"}',
     ]

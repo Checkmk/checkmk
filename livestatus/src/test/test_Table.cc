@@ -967,6 +967,7 @@ static ColumnDefinitions status_columns() {
     return {
         {"accept_passive_host_checks", ColumnType::int_},
         {"accept_passive_service_checks", ColumnType::int_},
+        {"average_latency_checker", ColumnType::double_},
         {"average_latency_cmk", ColumnType::double_},
         {"average_latency_fetcher", ColumnType::double_},
         {"average_latency_generic", ColumnType::double_},

@@ -21,12 +21,14 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
         "title": "MKP Rule pack",
         "id": "mkp_rule_pack_id",
         "rules": [{"id": "mkp_rule_id", "description": "descr", "comment": "comment"}],
+        "disabled": False,
     }
     rule_packs: Iterable[ECRulePack] = [
         {
             "title": "Rule pack",
             "id": "rule_pack_id",
             "rules": [{"id": "rule_id", "description": "descr", "comment": ""}],
+            "disabled": False,
         },
         mkp_rule_pack,
     ]

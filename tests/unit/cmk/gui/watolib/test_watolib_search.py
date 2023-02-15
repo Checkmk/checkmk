@@ -469,12 +469,9 @@ class TestRealisticSearch:
     )
     def test_real_search_without_exception(
         self,
-        mock_livestatus: MockLiveStatusConnection,
     ) -> None:
         builder = IndexBuilder(real_match_item_generator_registry)
-
-        with self._livestatus_mock(mock_livestatus):
-            builder.build_full_index()
+        builder.build_full_index()
 
         assert builder.index_is_built(builder._redis_client)
 
@@ -488,8 +485,6 @@ class TestRealisticSearch:
         live: MockLiveStatusConnection,
     ) -> MockLiveStatusConnection:
         live.add_table("eventconsolerules", [])
-        live.expect_query("GET eventconsolerules\nColumns: rule_id rule_hits\n")
-        live.expect_query("GET eventconsolerules\nColumns: rule_id rule_hits\n")
         return live
 
     @pytest.mark.usefixtures(
@@ -510,8 +505,7 @@ class TestRealisticSearch:
 
         with _UserContext(LoggedInNobody()):
             builder = IndexBuilder(real_match_item_generator_registry)
-            with self._livestatus_mock(mock_livestatus):
-                builder.build_full_index()
+            builder.build_full_index()
 
         searcher = IndexSearcher(PermissionsHandler())
         searcher._redis_client = builder._redis_client
@@ -532,7 +526,6 @@ class TestRealisticSearch:
     def test_dcd_not_found_if_not_super_user(  # type:ignore[no-untyped-def]
         self,
         monkeypatch: MonkeyPatch,
-        mock_livestatus: MockLiveStatusConnection,
     ):
         """
         This test ensures that test_index_is_built_as_super_user makes sense, ie. that if we do not
@@ -551,8 +544,7 @@ class TestRealisticSearch:
 
         with _UserContext(LoggedInNobody()):
             builder = IndexBuilder(real_match_item_generator_registry)
-            with self._livestatus_mock(mock_livestatus):
-                builder.build_full_index()
+            builder.build_full_index()
 
         searcher = IndexSearcher(PermissionsHandler())
         searcher._redis_client = builder._redis_client

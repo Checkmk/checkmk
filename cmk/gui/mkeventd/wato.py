@@ -49,7 +49,12 @@ from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.mkeventd import export_mkp_rule_pack, load_mkeventd_rules, save_mkeventd_rules
+from cmk.gui.watolib.mkeventd import (
+    _get_rule_stats_from_ec,
+    export_mkp_rule_pack,
+    load_mkeventd_rules,
+    save_mkeventd_rules,
+)
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -1875,6 +1880,15 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
 
         have_match = False
+
+        rule_stats = _get_rule_stats_from_ec()
+        rule_pack_hits: dict[str, int] = {}
+        for rp in ec.load_rule_packs():
+            pack_hits = 0
+            for rule in rp["rules"]:
+                pack_hits += rule_stats.get(rule["id"], 0)
+            rule_pack_hits[rp["id"]] = pack_hits
+
         with table_element(css="ruleset", limit=None, sortable=False, title=title) as table:
             for nr, rule_pack in enumerate(self._rule_packs):
                 id_ = rule_pack["id"]
@@ -2057,8 +2071,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     css=["number"],
                 )
 
-                hits = rule_pack.get("hits")
-                table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
+                table.cell(_("Hits"), str(rule_pack_hits[rule_pack["id"]]), css=["number"])
 
     def _filter_mkeventd_rule_packs(
         self, search_expression: str, rule_packs: Sequence[ec.ECRulePackSpec]
@@ -2295,6 +2308,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
+            hits = _get_rule_stats_from_ec()
             for nr, rule in enumerate(self._rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
@@ -2425,8 +2439,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     _("Service Level"),
                     dict(service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]),
                 )
-                hits = rule.get("hits")
-                table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
+
+                table.cell(_("Hits"), str(hits[rule["id"]]) if hits else "", css=["number"])
 
                 # Text to match
                 table.cell(_("Text to match"), rule.get("match"))
@@ -2489,7 +2503,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            self._rule_pack: ec.ECRulePack = {"rules": []}
+            self._rule_pack = ec.default_rule_pack(rules=[])
         else:
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
@@ -2537,7 +2551,6 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
             title=rule_pack_dict["title"],
             disabled=rule_pack_dict["disabled"],
             rules=existing_rules,
-            hits=0,
         )
 
         new_id = self._rule_pack["id"]

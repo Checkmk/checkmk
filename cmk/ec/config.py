@@ -179,7 +179,6 @@ class ECRulePackSpec(TypedDict, total=False):
     title: str
     disabled: bool
     rules: Collection[Any]  # TODO: This should acutally be Collection[Rule]
-    hits: int  # TODO: This is a GUI-only feature, which doesn't belong here at all.
     customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
 
 

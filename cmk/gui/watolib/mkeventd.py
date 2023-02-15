@@ -12,20 +12,7 @@ from cmk.gui.config import active_config
 
 
 def load_mkeventd_rules():  # TODO: We get quite a few error with this! -> Sequence[ec.ECRulePackSpec]:
-    rule_packs = ec.load_rule_packs()
-
-    # TODO: We should really separate the rule stats from this "config load logic"
-    rule_stats = _get_rule_stats_from_ec()
-
-    for rule_pack in rule_packs:
-        pack_hits = 0
-        for rule in rule_pack["rules"]:
-            hits = rule_stats.get(rule["id"], 0)
-            rule["hits"] = hits
-            pack_hits += hits
-        rule_pack["hits"] = pack_hits
-
-    return rule_packs
+    return ec.load_rule_packs()
 
 
 def _get_rule_stats_from_ec() -> Mapping[str, int]:

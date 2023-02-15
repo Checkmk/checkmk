@@ -121,6 +121,7 @@ def _rule_packs() -> list[ECRulePack]:
         {
             "id": "default",
             "title": "Default rule pack",
+            "disabled": False,
             "rules": [
                 {
                     "id": "test2",

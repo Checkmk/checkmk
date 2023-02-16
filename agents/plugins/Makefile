@@ -33,5 +33,5 @@ clean:
 %_2.py: %.py.checksum
 	cat "$(<:.checksum=)" | gawk -v text="# Do not test generated 2.x files\n# fmt: off\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
 	sed -i 's/#!\/usr\/bin\/env python3/#!\/usr\/bin\/env python2/g' "$@"
-	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
+	$(THREE_TO_TWO) --nofix=str --nofix=next --nobackups --write "$@" >/dev/null
 	chmod +x "$@"

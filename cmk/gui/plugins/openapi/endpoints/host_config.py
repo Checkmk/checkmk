@@ -62,7 +62,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.utils import problem, serve_json
+from cmk.gui.plugins.openapi.utils import EXT, problem, serve_json
 from cmk.gui.valuespec import Hostname
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
@@ -259,10 +259,12 @@ def _bulk_host_action_response(
             title="Some actions failed",
             detail=f"Some of the actions were performed but the following were faulty and "
             f"were skipped: {' ,'.join(failed_hosts)}.",
-            ext={
-                "succeeded_hosts": _host_collection(succeeded_hosts),
-                "failed_hosts": failed_hosts,
-            },
+            ext=EXT(
+                {
+                    "succeeded_hosts": _host_collection(succeeded_hosts),
+                    "failed_hosts": failed_hosts,
+                }
+            ),
         )
 
     return serve_host_collection(succeeded_hosts)
@@ -677,7 +679,7 @@ def _require_host_etag(host):
     etag_values = _host_etag_values(host)
     constructors.require_etag(
         constructors.etag_of_dict(etag_values),
-        error_details=etag_values,
+        error_details=EXT(etag_values),
     )
 
 

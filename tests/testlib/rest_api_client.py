@@ -225,9 +225,15 @@ class RestApiClient:
         expect_ok: bool = True,
         follow_redirects: bool = True,
         url_is_complete: bool = False,
+        use_default_headers: bool = True,
     ) -> Response:
-        default_headers = JSON_HEADERS.copy()
-        default_headers.update(headers or {})
+        if use_default_headers:
+            default_headers = JSON_HEADERS.copy()
+            default_headers.update(headers or {})
+        else:
+            default_headers = cast(
+                dict[str, str], headers
+            )  # TODO FIX this. Need this to test exceptions
 
         if not url_is_complete:
             url = self._url_prefix + url

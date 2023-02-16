@@ -29,7 +29,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     PropertyFormat,
     ResultType,
 )
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import EXT, ProblemException
 
 
 @contextlib.contextmanager
@@ -193,7 +193,7 @@ def expand_rel(
 
 def require_etag(
     etag: ETags,
-    error_details: dict[str, str] | None = None,
+    error_details: EXT | None = None,
 ) -> None:
     """Ensure the current request matches the given ETag.
 

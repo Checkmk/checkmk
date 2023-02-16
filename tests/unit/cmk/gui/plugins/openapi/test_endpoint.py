@@ -10,9 +10,12 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+import mock
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.testlib.rest_api_client import AuxTagTestClient
+
+from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
 from cmk.gui import hooks
 from cmk.gui.fields.utils import BaseSchema
@@ -177,4 +180,130 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
         "status": 500,
         "detail": "Endpoint tests.unit.cmk.gui.plugins.openapi.test_endpoint.test\nThis is a bug, please report.",
         "ext": {"codes": [204]},
+    }
+
+
+# ========= PATH Validation Tests =========
+def test_path_validation_exception(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    resp = aut_user_auth_wsgi_app.get(
+        url=f"{base}/objects/event_console/abc",
+        headers={"Accept": "application/json"},
+        status=404,
+    )
+    assert resp.json["title"] == "Not Found"
+    assert resp.json["detail"] == "These fields have problems: event_id"
+    assert resp.json["fields"] == {"event_id": ["'abc' does not match pattern '^[0-9]+$'."]}
+
+
+# ========= HEADER Validation Tests =========
+def test_non_matching_content_type_exception(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    test_data: dict = {
+        "name": "foo",
+        "alias": "foobar",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+    resp = aut_user_auth_wsgi_app.post(
+        url=f"{base}/domain-types/time_period/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "text"},
+        params=json.dumps(test_data),
+        status=415,
+    )
+    assert resp.json["title"] == "Content type not valid for this endpoint."
+    assert resp.json["detail"] == "Content-Type 'text' not supported for this endpoint."
+
+
+def test_content_type_with_invalid_charset(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    test_data: dict = {
+        "name": "foo",
+        "alias": "foobar",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+    resp = aut_user_auth_wsgi_app.post(
+        url=f"{base}/domain-types/time_period/collections/all",
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json; charset=not-utf-8",
+        },
+        params=json.dumps(test_data),
+        status=415,
+    )
+    assert resp.json["title"] == "Content type not valid for this endpoint."
+    assert (
+        resp.json["detail"]
+        == "Character set 'not-utf-8' not supported for content-type 'application/json'."
+    )
+
+
+def test_non_supported_accept_header(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    test_data: dict = {
+        "name": "foo",
+        "alias": "foobar",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+    resp = aut_user_auth_wsgi_app.post(
+        url=f"{base}/domain-types/time_period/collections/all",
+        headers={"Accept": "something_else", "Content-Type": "application/json"},
+        params=json.dumps(test_data),
+        status=406,
+    )
+    assert resp.json["title"] == "Not Acceptable"
+    assert (
+        resp.json["detail"]
+        == "Can not send a response with the content type specified in the 'Accept' Header. Accept Header: something_else. Supported content types: [application/json]"
+    )
+
+
+# ========= WATO disabled Validation =========
+def test_wato_disabled_exception(auxtag_client: AuxTagTestClient, set_config: SetConfig) -> None:
+    with set_config(wato_enabled=False):
+        resp = auxtag_client.create(
+            tag_data=auxtag_client.create_model(
+                aux_tag_id="aux_tag_id_1",
+                title="aux_tag_1",
+                topic="topic_1",
+                help="help",
+            ),
+            expect_ok=False,
+        )
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Forbidden: WATO is disabled"
+    assert (
+        resp.json["detail"]
+        == "This endpoint is currently disabled via the 'Disable remote configuration' option in 'Distributed Monitoring'. You may be able to query the central site."
+    )
+
+
+# ========= Permission Validation =========
+def test_permission_exception(auxtag_client: AuxTagTestClient) -> None:
+    def validate(*args, **kwargs):
+        return False
+
+    with mock.patch(
+        "cmk.gui.plugins.openapi.restful_objects.permissions.BasePerm.validate", validate
+    ):
+        resp = auxtag_client.get(aux_tag_id="ping", expect_ok=False)
+
+    resp.assert_status_code(500)
+    assert resp.json["title"] == "Internal Server Error"
+    assert (
+        resp.json["detail"]
+        == "Permission mismatch\nThere can be some causes for this error:\n* a permission which was required (successfully) was not declared\n* a permission which was declared (not optional) was not required\n* No permission was required at all, although permission were declared\nEndpoint: <Endpoint cmk.gui.plugins.openapi.endpoints.aux_tags:show_aux_tag>\nParams: {'aux_tag_id': 'ping'}\nRequired: ['wato.hosttags']\nDeclared: {wato.hosttags}\n"
+    )
+    assert set(resp.json["ext"]) == {
+        "crash_id",
+        "crash_report",
+        "stack_trace",
+    }
+    assert set(resp.json["ext"]["crash_report"]) == {
+        "method",
+        "href",
+        "rel",
+        "type",
     }

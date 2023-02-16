@@ -15,7 +15,10 @@ import sys
 
 import pytest
 
-import agents.plugins.mk_logwatch as lw
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_logwatch_2 as lw  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_logwatch as lw
 
 try:
     from typing import Sequence  # noqa: F401

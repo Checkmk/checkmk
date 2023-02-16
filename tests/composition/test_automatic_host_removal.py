@@ -47,5 +47,5 @@ def test_automatic_host_removal(
     wait_until(
         _no_hosts_exist,
         timeout=120,
-        interval=10,
+        interval=20,
     )

@@ -64,6 +64,6 @@ def test_proxy_register_import_workflow(
     wait_until_host_has_services(
         central_site,
         hostname,
-        timeout=10,
-        interval=2,
+        timeout=30,
+        interval=10,
     )

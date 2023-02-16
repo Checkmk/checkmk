@@ -1658,7 +1658,7 @@ class ApiData:
             yield from self._output_node_section(diskstat_result, host_mapping)
 
         if "mem" in node_entities:
-            _, mem_result = self.node_exporter.memory_summary()
+            mem_result = self.node_exporter.memory_summary()
             yield from self._output_node_section(mem_result, host_mapping)
 
         if "kernel" in node_entities:

@@ -100,19 +100,6 @@ class CPULoad(pydantic.BaseModel):
     num_cpus: int
 
 
-class MemUsed(pydantic.BaseModel):
-    """section: prometheus_mem_used_v1"""
-
-    Cached: int
-    MemFree: int
-    MemTotal: int
-    SwapFree: int
-    SwapTotal: int
-    Buffers: int
-    Dirty: int
-    Writeback: int
-
-
 class Uptime(pydantic.BaseModel):
     """section: prometheus_uptime_v1"""
 
@@ -277,28 +264,14 @@ class NodeExporter:
                 device[entity_name] = int(float(node_info["value"]))
         return result
 
-    def memory_summary(self) -> tuple[MemUsed | None, dict[str, SectionStr]]:
+    def memory_summary(self) -> dict[str, SectionStr]:
         result: dict[str, list[str]] = {}
         memory = self._retrieve_memory()
         for query_name, query in memory:
             for node_element in query:
                 node_mem = result.setdefault(node_element["labels"]["instance"], [])
                 node_mem.append("{}: {} kB".format(query_name, int(node_element["value"])))
-        node_sections = {
-            node: _create_section("mem", section_list) for node, section_list in result.items()
-        }
-        cluster_section = MemUsed.parse_obj(
-            # We multiply by 1024, since the mem_linux check expects bytes, but the query provides
-            # kibibytes. Providing bytes via a dedicated section to the Memory check is possible.
-            # This is what we do at the cluster level, since it has it's own section.
-            # Thus, we pass the value multiplied by 1024.
-            # The nodes use the <<<mem>>> section, so their section values are not multiplied,
-            # unless they are migrated to their own section.
-            {key: sum(sample["value"] * 1024 for sample in samples) for key, samples in memory}
-        )
-        if cluster_section.MemTotal == 0:
-            return None, node_sections
-        return cluster_section, node_sections
+        return {node: _create_section("mem", section_list) for node, section_list in result.items()}
 
     def _retrieve_memory(self) -> list[tuple[str, list[PromQLMetric]]]:
         return [
@@ -428,7 +401,7 @@ class NodeExporter:
     def _retrieve_uptime(self) -> list[PromQLMetric]:
         return self.get_promql(NodeExporterQuery.node_uptime_seconds)
 
-    def cpu_summary(self) -> tuple[CPULoad | None, dict[str, SectionStr]]:
+    def cpu_summary(self) -> dict[str, SectionStr]:
         cpu = self._retrieve_cpu()
         node_to_raw: dict[str, dict[str, float]] = {}
         for key, samples in cpu:
@@ -436,16 +409,10 @@ class NodeExporter:
                 instance = sample["labels"]["instance"]
                 raw = node_to_raw.setdefault(instance, {})
                 raw[key] = sample["value"]
-        cluster_section = CPULoad.parse_obj(
-            {key: sum(sample["value"] for sample in samples) for key, samples in cpu}
-        )
-        node_sections = {
+        return {
             node: _create_section("prometheus_cpu_v1:sep(0)", [CPULoad.parse_obj(raw).json()])
             for node, raw in node_to_raw.items()
         }
-        if cluster_section.num_cpus == 0:
-            return None, node_sections
-        return cluster_section, node_sections
 
     def _retrieve_cpu(self) -> list[tuple[str, list[PromQLMetric]]]:
         return [

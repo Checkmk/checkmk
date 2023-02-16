@@ -7,8 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.3.0b1
-
+Version: 2.2.0b1
 
 The TLS encryption for agent communication (introduced with Checkmk 2.1) makes use of x509 Certificates to authenticate the agent against the Checkmk site.<br>
 Therefore, the Checkmk site issues a certificate to the agent controller of a host on agent registration.

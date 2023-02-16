@@ -5,9 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access,redefined-outer-name
+
+import sys
+
 import pytest
 
-import agents.plugins.apache_status as apache_status
+if sys.version_info[0] == 2:
+    import agents.plugins.apache_status_2 as apache_status  # pylint: disable=syntax-error
+else:
+    import agents.plugins.apache_status as apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 
@@ -94,6 +100,10 @@ def test_urlopen_illegal_urls(scheme) -> None:  # type:ignore[no-untyped-def]
     ["http", "https"],
 )
 def test_urlopen_legal_urls(scheme, mocker) -> None:  # type:ignore[no-untyped-def]
-    mocked_urlopen = mocker.patch("agents.plugins.apache_status._urlopen")
+    mocked_urlopen = mocker.patch(
+        "agents.plugins.apache_status_2.urlopen"
+        if sys.version_info[0] == 2
+        else "agents.plugins.apache_status.urlopen"
+    )
     apache_status.get_response_body(scheme, None, "127.0.0.1", "8080", "index.html")
     assert mocked_urlopen.call_count == 1  # no assert_called_once() in python < 3.6

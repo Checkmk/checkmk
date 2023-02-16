@@ -3,17 +3,23 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=protected-access,redefined-outer-name
+
+import sys
+
+import pytest
+
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_jolokia_2 as mk_jolokia  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_jolokia as mk_jolokia
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
     from typing import Dict  # noqa: F401
 except ImportError:
     pass
-
-import pytest
-
-import agents.plugins.mk_jolokia as mk_jolokia
 
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])

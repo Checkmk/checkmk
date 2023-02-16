@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 from collections import namedtuple
 
 import pytest
 
-import agents.plugins.mk_sap as mk_sap
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_sap_2 as mk_sap  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_sap as mk_sap
 
 Value = namedtuple("Value", ["value"])  # pylint: disable=collections-namedtuple-call
 

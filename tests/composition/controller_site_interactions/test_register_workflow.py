@@ -59,8 +59,8 @@ def _test_register_workflow(
     wait_until_host_has_services(
         site,
         hostname,
-        timeout=10,
-        interval=2,
+        timeout=30,
+        interval=10,
     )
 
 

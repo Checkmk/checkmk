@@ -34,7 +34,7 @@ def wait_until_host_receives_data(
     hostname: HostName,
     *,
     timeout: int = 120,
-    interval: int = 15,
+    interval: int = 20,
 ) -> None:
     wait_until(
         lambda: not site.execute(["cmk", "-d", hostname]).wait(),
@@ -49,7 +49,7 @@ def wait_until_host_has_services(
     *,
     n_services_min: int = 5,
     timeout: int = 120,
-    interval: int = 15,
+    interval: int = 20,
 ) -> None:
     wait_until(
         lambda: _query_hosts_service_count(site, hostname) > n_services_min,

@@ -70,7 +70,7 @@ def main(args: Sequence[str]) -> int:
         if debug.enabled():
             raise
         logger.exception(
-            'ERROR: Please repair this and run "cmk-update-config -v" '
+            'ERROR: Please repair this and run "cmk-update-config" '
             "BEFORE starting the site again."
         )
         return 1
@@ -165,15 +165,16 @@ class ConfigUpdater:
             self._check_failed_gui_plugins()
             self._initialize_base_environment()
 
-            self._logger.log(VERBOSE, "Updating Checkmk configuration...")
-            self._logger.log(
-                VERBOSE,
-                f"{tty.red}ATTENTION: Some steps may take a long time depending "
-                f"on your installation, e.g. during major upgrades.{tty.normal}",
+            self._logger.info("Updating Checkmk configuration...")
+            self._logger.info(
+                f"{tty.red}ATTENTION{tty.normal}: Some steps may take a long time depending "
+                f"on your installation. Please be patient.",
             )
 
             for count, action in enumerate(actions, start=1):
-                self._logger.log(VERBOSE, " %i/%i %s..." % (count, total, action.title))
+                self._logger.info(
+                    f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {action.title}..."
+                )
                 try:
                     with ActivateChangesWriter.disable():
                         action(self._logger, self.update_state.setdefault(action.name))
@@ -192,8 +193,13 @@ class ConfigUpdater:
                 )
 
         self.update_state.save()
-        self._logger.log(VERBOSE, "Done")
-        return 1 if self._has_errors else 0
+
+        if self._has_errors:
+            self._logger.error(f"Done ({tty.red}with errors{tty.normal})")
+            return 1
+
+        self._logger.info(f"Done ({tty.green}success{tty.normal})")
+        return 0
 
     def _check_failed_gui_plugins(self) -> None:
         if get_failed_plugins():

@@ -90,8 +90,8 @@ def test_config_updater_executes_plugins(
 
     output = capsys.readouterr()
     assert output.err == ""
-    assert "1/1 Test Title..." in output.out
-    assert output.out.endswith("Done\n")
+    assert "01/01 Test Title..." in output.out
+    assert output.out.endswith("Done (success)\n")
 
     assert mock_plugin.calls == 1
 

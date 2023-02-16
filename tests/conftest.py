@@ -71,6 +71,7 @@ test_types = collections.OrderedDict(
         ("packaging", ExecutionType.VirtualEnv),
         ("composition", ExecutionType.VirtualEnv),
         ("code_quality", ExecutionType.VirtualEnv),
+        ("update", ExecutionType.VirtualEnv),
     ]
 )
 

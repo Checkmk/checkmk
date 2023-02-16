@@ -45,6 +45,7 @@ class Site:
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
         admin_password: str = "cmk",
+        update: bool = False,
     ) -> None:
         assert site_id
         self.id = site_id
@@ -62,6 +63,8 @@ class Site:
 
         self._livestatus_port: int | None = None
         self.admin_password = admin_password
+
+        self.update = update
 
         self.openapi = CMKOpenApiSession(
             host=self.http_address,
@@ -497,13 +500,23 @@ class Site:
                     'Use "tests/scripts/install-cmk.py" or install it manually.'
                 )
 
-        if not self.reuse and self.exists():
+        if not (self.reuse or self.update) and self.exists():
             raise Exception("The site %s already exists." % self.id)
 
-        if not self.exists():
+        if self.update or not self.exists():
             logger.info("Creating site '%s'", self.id)
             completed_process = subprocess.run(
                 [
+                    "/usr/bin/sudo",
+                    "/usr/bin/omd",
+                    "-f",
+                    "-V",
+                    self.version.version_directory(),
+                    "update",
+                    self.id,
+                ]
+                if self.update
+                else [
                     "/usr/bin/sudo",
                     "/usr/bin/omd",
                     "-V",
@@ -931,7 +944,8 @@ class Site:
 
         web = CMKWebSession(self)
         web.login()
-        self.enforce_non_localized_gui(web)
+        if not os.getenv("SKIP_ENFORCE_NON_LOCALIZED_GUI") == "1":
+            self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
 
     # Add some test configuration that is not test specific. These settings are set only to have a
@@ -954,10 +968,12 @@ class Site:
 
         user_spec, etag = self.openapi.get_user("cmkadmin")
         user_spec["language"] = "en"
+        if os.environ.get("STRIP_ENFORCE_PASSWORD_CHANGE") == "1":
+            user_spec.pop("enforce_password_change", None)
         self.openapi.edit_user("cmkadmin", user_spec, etag)
 
         # Verify the language is as expected now
-        r = web.get("user_profile.py")
+        r = web.get("user_profile.py", allow_redirect_to_login=True)
         assert "Edit profile" in r.text, "Body: %s" % r.text
 
     def open_livestatus_tcp(self, encrypted: bool) -> None:
@@ -1107,6 +1123,7 @@ class SiteFactory:
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
         prefix: str | None = None,
+        update: bool = False,
     ) -> None:
         self._version = version
         self._base_ident = prefix or "s_%s_" % version.branch[:6]
@@ -1114,6 +1131,7 @@ class SiteFactory:
         self._index = 1
         self._update_from_git = update_from_git
         self._install_test_python_modules = install_test_python_modules
+        self._update = update
 
     @property
     def sites(self) -> Mapping[str, Site]:
@@ -1160,6 +1178,7 @@ class SiteFactory:
             reuse=False,
             update_from_git=self._update_from_git,
             install_test_python_modules=self._install_test_python_modules,
+            update=self._update,
         )
 
     def _new_site(self, name: str) -> Site:

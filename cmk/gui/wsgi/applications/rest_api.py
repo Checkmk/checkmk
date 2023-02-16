@@ -32,7 +32,14 @@ from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.restful_objects import Endpoint
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import (
+    EXT,
+    problem,
+    ProblemException,
+    RestAPIPermissionException,
+    RestAPIRequestGeneralException,
+    RestAPIResponseGeneralException,
+)
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp
 from cmk.gui.wsgi.wrappers import ParameterDict
 
@@ -346,6 +353,18 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 title=http.client.responses[exc.status],
                 detail=str(exc),
             )(environ, start_response)
+        except RestAPIRequestGeneralException as exc:
+            assert isinstance(exc.response, Response)
+            return exc.response(environ, start_response)
+
+        except RestAPIPermissionException as exc:
+            assert isinstance(exc.response, Response)
+            return exc.response(environ, start_response)
+
+        except RestAPIResponseGeneralException as exc:
+            assert isinstance(exc.response, Response)
+            return exc.response(environ, start_response)
+
         except HTTPException as exc:
             assert isinstance(exc.code, int)
             return problem(
@@ -393,7 +412,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 status=500,
                 title=http.client.responses[500],
                 detail=str(exc),
-                ext=crash_details,
+                ext=EXT(crash_details),
             )(environ, start_response)
 
 

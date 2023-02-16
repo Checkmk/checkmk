@@ -93,6 +93,12 @@ def parse_win_cpuinfo(string_table: StringTable) -> _Section:
     return section
 
 
+register.agent_section(
+    name="win_cpuinfo",
+    parse_function=parse_win_cpuinfo,
+)
+
+
 def inventory_win_cpuinfo(section: _Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "cpu"],

@@ -1,0 +1,11 @@
+Title: Network topology icon: Filter formular did not reflect chosen host name
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1676553335
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p22
+
+If you accessed the network topology for a specific host, the host name was not displayed in the filter form.

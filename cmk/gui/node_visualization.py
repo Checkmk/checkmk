@@ -113,10 +113,10 @@ class ParentChildTopologyPage(Page):
         if request.var("filled_in"):
             # Parameters from the check_mk filters
             self._update_topology_settings_with_context(topology_settings)
-        elif request.var("host_name"):
+        elif request.var("host_regex"):
             # Explicit host_name. Used by icon linking to Topology
             topology_settings.growth_root_nodes = {
-                HostName(html.request.get_str_input_mandatory("host_name"))
+                HostName(html.request.get_str_input_mandatory("host_regex").rstrip("$"))
             }
         else:
             # Default page without further context
@@ -209,7 +209,11 @@ class ParentChildTopologyPage(Page):
         return []
 
     def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
-        _view, show_filters = get_topology_view_and_filters()
+        view, _show_filters = get_topology_view_and_filters()
+        context = cmk.gui.visuals.active_context_from_request(
+            view.datasource.infos, view.spec["context"]
+        )
+
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
         display_dropdown.topics.insert(
             0,
@@ -222,7 +226,7 @@ class ParentChildTopologyPage(Page):
                         item=PageMenuSidePopup(
                             cmk.gui.visuals.render_filter_form(
                                 info_list=["host", "service"],
-                                context={f.ident: {} for f in show_filters if f.available()},
+                                context=context,
                                 page_name=page_name,
                                 reset_ajax_page="ajax_initial_topology_filters",
                             )

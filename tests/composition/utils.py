@@ -178,15 +178,21 @@ def _provide_agent_unix_socket() -> Iterator[None]:
 
 @contextlib.contextmanager
 def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
-    with subprocess.Popen(
+    # We are deliberately not using Popen as a context manager here. In case we run into an
+    # Exception while we are inside a Popen context manager, we end up in Popen.__exit__, which
+    # waits for the child process to finish. But our child process is not supposed to ever finish.
+    proc = subprocess.Popen(
         [
             "sudo",
             ctl_path.as_posix(),
             "daemon",
-        ]
-    ) as ctl_daemon_proc:
-        yield
-        ctl_daemon_proc.kill()
+        ],
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+        close_fds=True,
+    )
+    yield
+    proc.kill()
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):

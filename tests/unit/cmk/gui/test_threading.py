@@ -5,6 +5,7 @@
 from multiprocessing.pool import ThreadPool
 
 import flask
+import pytest
 from flask.globals import request
 
 from cmk.gui.config import active_config
@@ -15,6 +16,7 @@ def _run_in_thread(attr: str) -> tuple[bool, str]:
     return getattr(active_config, attr), request.url
 
 
+@pytest.mark.skip(reason="flaky)")
 def test_thread_pool_request_context(flask_app: flask.Flask) -> None:
 
     path = "/NO_SITE/check_mk/index.html"

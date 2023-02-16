@@ -16,6 +16,7 @@ from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import (
     CertificateWithPrivateKey,
     InvalidExpiryError,
+    InvalidPEMError,
     InvalidSignatureError,
     PersistedCertificateWithPrivateKey,
     RsaPrivateKey,
@@ -160,10 +161,10 @@ def test_verify_rsa_key(data: bytes) -> None:
 
 
 def test_loading_combined_file_content_empty_invalid_certificate() -> None:
-    with pytest.raises(ValueError, match="Could not find certificate"):
+    with pytest.raises(InvalidPEMError, match="Could not find certificate"):
         CertificateWithPrivateKey.load_combined_file_content("", None)
 
-    with pytest.raises(ValueError, match="Unable to load certificate."):
+    with pytest.raises(InvalidPEMError, match="Unable to load certificate."):
         CertificateWithPrivateKey.load_combined_file_content(
             "-----BEGIN CERTIFICATE-----a-----END CERTIFICATE-----", None
         )
@@ -173,9 +174,9 @@ def test_loading_combined_file_content_empty_key(
     self_signed_cert: CertificateWithPrivateKey,
 ) -> None:
     file_content = self_signed_cert.certificate.dump_pem().str
-    with pytest.raises(ValueError, match="Could not find private key"):
+    with pytest.raises(InvalidPEMError, match="Could not find private key"):
         CertificateWithPrivateKey.load_combined_file_content(file_content, None)
-    with pytest.raises(ValueError, match="Could not find encrypted private key"):
+    with pytest.raises(InvalidPEMError, match="Could not find encrypted private key"):
         CertificateWithPrivateKey.load_combined_file_content(file_content, Password("unittest"))
 
 

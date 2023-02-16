@@ -158,7 +158,7 @@ class CertificateWithPrivateKey(NamedTuple):
                 r"-----BEGIN CERTIFICATE-----[\s\w+/=]+-----END CERTIFICATE-----", content
             )
         ) is None:
-            raise ValueError("Could not find certificate")
+            raise InvalidPEMError("Could not find certificate")
         cert = Certificate.load_pem(CertificatePEM(cert_match.group(0)))
 
         if passphrase is not None:
@@ -168,7 +168,7 @@ class CertificateWithPrivateKey(NamedTuple):
                     content,
                 )
             ) is None:
-                raise ValueError("Could not find encrypted private key")
+                raise InvalidPEMError("Could not find encrypted private key")
             key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
         else:
             if (
@@ -176,7 +176,7 @@ class CertificateWithPrivateKey(NamedTuple):
                     r"-----BEGIN PRIVATE KEY-----[\s\w+/=]+-----END PRIVATE KEY-----", content
                 )
             ) is None:
-                raise ValueError("Could not find private key")
+                raise InvalidPEMError("Could not find private key")
             key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
 
         return cls(
@@ -355,7 +355,10 @@ class Certificate:
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
-        return Certificate(x509.load_pem_x509_certificate(pem_data.bytes))
+        try:
+            return Certificate(x509.load_pem_x509_certificate(pem_data.bytes))
+        except ValueError:
+            raise InvalidPEMError("Unable to load certificate.")
 
     def dump_pem(self) -> CertificatePEM:
         return CertificatePEM(self._cert.public_bytes(serialization.Encoding.PEM))

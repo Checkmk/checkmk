@@ -29,7 +29,6 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.watolib.check_mk_automations
 import cmk.gui.watolib.rulespecs
-from cmk.gui.exceptions import MKAuthException
 
 
 @pytest.fixture(scope="function", name="new_rule")
@@ -541,12 +540,12 @@ def test_user_needs_folder_permissions_to_move_rules(
     )
 
     rule_client.set_credentials(username=with_user[0], password=with_user[1])
-    with pytest.raises(MKAuthException):
-        rule_client.move(
-            rule_id=resp.json["id"],
-            options={"position": "top_of_folder", "folder": "~" + dest_folder},
-            expect_ok=False,
-        ).assert_status_code(401)
+
+    rule_client.move(
+        rule_id=resp.json["id"],
+        options={"position": "top_of_folder", "folder": "~" + dest_folder},
+        expect_ok=False,
+    ).assert_status_code(401)
 
 
 def test_openapi_only_show_used_rulesets_by_default_regression(

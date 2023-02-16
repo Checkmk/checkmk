@@ -30,13 +30,20 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui import config, sites, userdb
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.globals import AppContext, RequestContext, user
 from cmk.gui.http import Request, Response
 from cmk.gui.login import check_auth_by_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.permissions import load_dynamic_permissions
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import (
+    EXT,
+    problem,
+    ProblemException,
+    RestAPIPermissionException,
+    RestAPIRequestGeneralException,
+    RestAPIResponseGeneralException,
+)
 from cmk.gui.utils.logged_in import LoggedInNobody
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
@@ -484,8 +491,30 @@ class CheckmkRESTAPI:
 
                 with set_user_context(rfc7662["sub"], rfc7662):
                     return wsgi_app(environ, start_response)
+
         except ProblemException as exc:
             return exc(environ, start_response)
+
+        except MKHTTPException as exc:
+            assert isinstance(exc.status, int)
+            return problem(
+                status=exc.status,
+                title=http.client.responses[exc.status],
+                detail=str(exc),
+            )(environ, start_response)
+
+        except RestAPIRequestGeneralException as exc:
+            assert isinstance(exc.response, Response)
+            return exc.response(environ, start_response)
+
+        except RestAPIPermissionException as exc:
+            assert isinstance(exc.response, Response)
+            return exc.response(environ, start_response)
+
+        except RestAPIResponseGeneralException as exc:
+            assert isinstance(exc.response, Response)
+            return exc.response(environ, start_response)
+
         except HTTPException as exc:
             # We don't want to log explicit HTTPExceptions as these are intentional.
             assert isinstance(exc.code, int)
@@ -535,7 +564,7 @@ class CheckmkRESTAPI:
                 status=500,
                 title=http.client.responses[500],
                 detail=str(exc),
-                ext=crash_details,
+                ext=EXT(crash_details),
             )(environ, start_response)
 
 

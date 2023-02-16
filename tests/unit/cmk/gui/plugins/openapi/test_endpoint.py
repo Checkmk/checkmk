@@ -176,3 +176,80 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
         "detail": "Endpoint tests.unit.cmk.gui.plugins.openapi.test_endpoint.test\nThis is a bug, please report.",
         "ext": {"codes": [204]},
     }
+
+
+# ========= PATH Validation Tests =========
+def test_path_validation_exception(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    resp = aut_user_auth_wsgi_app.get(
+        url=f"{base}/objects/event_console/abc",
+        headers={"Accept": "application/json"},
+        status=404,
+    )
+    assert resp.json["title"] == "Not Found"
+    assert resp.json["detail"] == "These fields have problems: event_id"
+    assert resp.json["fields"] == {"event_id": ["'abc' does not match pattern '^[0-9]+$'."]}
+
+
+# ========= HEADER Validation Tests =========
+def test_non_matching_content_type_exception(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    test_data: dict = {
+        "name": "foo",
+        "alias": "foobar",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+    resp = aut_user_auth_wsgi_app.post(
+        url=f"{base}/domain-types/time_period/collections/all",
+        headers={"Accept": "application/json", "Content-Type": "text"},
+        params=json.dumps(test_data),
+        status=415,
+    )
+    assert resp.json["title"] == "Content type not valid for this endpoint."
+    assert resp.json["detail"] == "Content-Type 'text' not supported for this endpoint."
+
+
+def test_content_type_with_invalid_charset(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    test_data: dict = {
+        "name": "foo",
+        "alias": "foobar",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+    resp = aut_user_auth_wsgi_app.post(
+        url=f"{base}/domain-types/time_period/collections/all",
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json; charset=not-utf-8",
+        },
+        params=json.dumps(test_data),
+        status=415,
+    )
+    assert resp.json["title"] == "Content type not valid for this endpoint."
+    assert (
+        resp.json["detail"]
+        == "Character set 'not-utf-8' not supported for content-type 'application/json'."
+    )
+
+
+def test_non_supported_accept_header(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    test_data: dict = {
+        "name": "foo",
+        "alias": "foobar",
+        "active_time_ranges": [{"day": "all"}],
+        "exceptions": [{"date": "2020-01-01"}],
+    }
+    resp = aut_user_auth_wsgi_app.post(
+        url=f"{base}/domain-types/time_period/collections/all",
+        headers={"Accept": "something_else", "Content-Type": "application/json"},
+        params=json.dumps(test_data),
+        status=406,
+    )
+    assert resp.json["title"] == "Not Acceptable"
+    assert (
+        resp.json["detail"]
+        == "Can not send a response with the content type specified in the 'Accept' Header. Accept Header: something_else. Supported content types: [application/json]"
+    )

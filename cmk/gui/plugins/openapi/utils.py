@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, cast, Dict, Iterable, Literal, Optional
+from typing import Any, cast, Dict, Iterable, Literal, NewType, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -18,14 +18,17 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.type_defs import Serializable
 
+FIELDS = NewType("FIELDS", dict[str, Any])
+EXT = NewType("EXT", dict[str, Any])
+
 
 def problem(
     status: int = 400,
     title: str = "A problem occurred.",
     detail: Optional[str] = None,
     type_: Optional[str] = None,
-    fields: Optional[dict[str, Any]] = None,
-    ext: Optional[dict[str, Any]] = None,
+    fields: Optional[FIELDS] = None,
+    ext: Optional[EXT] = None,
 ) -> Response:
     problem_dict = {
         "title": title,
@@ -49,6 +52,185 @@ def problem(
     )
 
 
+class GeneralRestAPIException(HTTPException):
+    def __init__(
+        self,
+        status: int,
+        title: str,
+        detail: str,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        self.status = status
+        self.title = title
+        self.detail = detail
+        self.fields = fields
+        self.ext = ext
+        super().__init__(
+            description=title,
+            response=problem(
+                status=status,
+                title=title,
+                detail=detail,
+                fields=fields,
+                ext=ext,
+            ),
+        )
+
+
+# ==================================================== REQUEST exceptions
+class RestAPIRequestGeneralException(GeneralRestAPIException):
+    def __init__(
+        self,
+        status: Literal[400, 403, 404, 406, 415],
+        title: str,
+        detail: str,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(status, title, detail, fields, ext)
+
+
+class RestAPIRequestContentTypeException(RestAPIRequestGeneralException):
+    status: Literal[415] = 415
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIRequestContentTypeException.status, title, detail, fields, ext)
+
+
+class RestAPIPathValidationException(RestAPIRequestGeneralException):
+    status: Literal[404] = 404
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIPathValidationException.status, title, detail, fields, ext)
+
+
+class RestAPIHeaderSchemaValidationException(RestAPIRequestGeneralException):
+    status: Literal[400] = 400
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIHeaderSchemaValidationException.status, title, detail, fields, ext)
+
+
+class RestAPIHeaderValidationException(RestAPIRequestGeneralException):
+    status: Literal[406] = 406
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIHeaderValidationException.status, title, detail, fields, ext)
+
+
+class RestAPIQueryPathValidationException(RestAPIRequestGeneralException):
+    status: Literal[400] = 400
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIQueryPathValidationException.status, title, detail, fields, ext)
+
+
+class RestAPIRequestDataValidationException(RestAPIRequestGeneralException):
+    status: Literal[400] = 400
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIRequestDataValidationException.status, title, detail, fields, ext)
+
+
+class RestAPIWatoDisabledException(RestAPIRequestGeneralException):
+    status: Literal[403] = 403
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIWatoDisabledException.status, title, detail, fields, ext)
+
+
+# ==================================================== PERMISSION Exceptions
+class RestAPIPermissionException(GeneralRestAPIException):  # Crash report?
+    status: Literal[500] = 500
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIPermissionException.status, title, detail, fields, ext)
+
+
+# ==================================================== RESPONSE Exceptions
+class RestAPIResponseGeneralException(GeneralRestAPIException):
+    def __init__(
+        self,
+        status: Literal[400, 500],
+        title: str,
+        detail: str,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(status, title, detail, fields, ext)
+
+
+class RestAPIResponseException(RestAPIResponseGeneralException):  # Crash report?
+    status: Literal[500] = 500
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
+    ) -> None:
+        super().__init__(RestAPIResponseException.status, title, detail, fields, ext)
+
+
 class ProblemException(HTTPException):
     def __init__(
         self,
@@ -56,8 +238,8 @@ class ProblemException(HTTPException):
         title: str = "A problem occured.",
         detail: Optional[str] = None,
         type_: Optional[str] = None,
-        fields: Optional[dict[str, list[Any]]] = None,
-        ext: Optional[dict[str, Any]] = None,
+        fields: Optional[FIELDS] = None,
+        ext: Optional[EXT] = None,
     ):
         """
         This exception is holds arguments that are going to be passed to the

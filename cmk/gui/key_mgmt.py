@@ -68,9 +68,10 @@ class KeypairStore:
 
     def save(self, keys: Mapping[int, Key]) -> None:
         store.makedirs(self._path.parent)
-        store.save_mk_file(
-            self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"
-        )
+        with store.locked(self._path):
+            store.save_mk_file(
+                self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"
+            )
 
     def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
         return {key_id: Key.parse_obj(raw_key) for key_id, raw_key in raw_keys.items()}

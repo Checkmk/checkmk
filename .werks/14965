@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0b1
+Version: 2.3.0b1
 
 On agent registration, the contacted site issues an x509 certificate to the requesting agent controller.<br>
 Previously, this agent certificate has been signed by the site-local CA, that's also used to issue certificates used for distributed monitoring, and to issue the agent receiver's certificate.

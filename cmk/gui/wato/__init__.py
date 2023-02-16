@@ -332,6 +332,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.plugins.wato as api_module
+    import cmk.gui.plugins.wato.datasource_programs as datasource_programs
 
     for name in (
         "ABCEventsMode",
@@ -503,6 +504,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
             "Filesize": cmk.gui.valuespec.Filesize,
             "ListOfStrings": cmk.gui.valuespec.ListOfStrings,
             "MonitoredHostname": cmk.gui.valuespec.MonitoredHostname,
+            "MonitoringState": cmk.gui.valuespec.MonitoringState,
             "Password": cmk.gui.valuespec.Password,
             "TextAscii": cmk.gui.valuespec.TextAscii,
             "TextUnicode": cmk.gui.valuespec.TextUnicode,
@@ -516,3 +518,17 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "wato_root_dir",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.utils.__dict__[name]
+
+    for name in (
+        "RulespecGroupDatasourcePrograms",
+        "RulespecGroupDatasourceProgramsOS",
+        "RulespecGroupDatasourceProgramsApps",
+        "RulespecGroupDatasourceProgramsCloud",
+        "RulespecGroupDatasourceProgramsContainer",
+        "RulespecGroupDatasourceProgramsCustom",
+        "RulespecGroupDatasourceProgramsHardware",
+        "RulespecGroupDatasourceProgramsTesting",
+    ):
+        datasource_programs.__dict__[name] = cmk.gui.plugins.wato.special_agents.common.__dict__[
+            name
+        ]

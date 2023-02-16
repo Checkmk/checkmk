@@ -2149,7 +2149,7 @@ def _need_to_update_config_after_sync() -> bool:
 
 def _execute_cmk_update_config() -> None:
     completed_process = subprocess.run(
-        ["cmk-update-config", "-v"],
+        ["cmk-update-config"],
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -2159,7 +2159,7 @@ def _execute_cmk_update_config() -> None:
     )
     logger.log(
         logging.DEBUG if completed_process.returncode == 0 else logging.WARNING,
-        "'cmk-update-config -v' finished. Exit code: %s, Output: %s",
+        "'cmk-update-config' finished. Exit code: %s, Output: %s",
         completed_process.returncode,
         completed_process.stdout,
     )

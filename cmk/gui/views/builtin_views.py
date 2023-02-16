@@ -18,6 +18,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualLinkSpec,
 )
+from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 
@@ -4809,7 +4810,10 @@ builtin_views["docker_nodes"] = _simple_host_view(
         "name": "docker_nodes",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/docker_object:node"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/docker_object:node"],
+            object_type="host",
+        )
     },
 )
 
@@ -4842,7 +4846,10 @@ builtin_views["docker_containers"] = _simple_host_view(
         "name": "docker_containers",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/docker_object:container"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/docker_object:container"],
+            object_type="host",
+        )
     },
 )
 
@@ -4860,7 +4867,10 @@ builtin_views["vsphere_servers"] = _simple_host_view(
         "name": "vsphere_servers",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/vsphere_object:server"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/vsphere_object:server"],
+            object_type="host",
+        )
     },
 )
 
@@ -4896,7 +4906,10 @@ builtin_views["vpshere_vms"] = _simple_host_view(
         "name": "vpshere_vms",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/vsphere_object:vm"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/vsphere_object:vm"],
+            object_type="host",
+        )
     },
 )
 
@@ -4947,7 +4960,12 @@ builtin_views["cmk_servers"] = {
     "add_context_to_title": False,
     "browser_reload": 0,
     "column_headers": "pergroup",
-    "context": {"host_labels": {"host_label": '[{"value":"cmk/check_mk_server:yes"}]'}},
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/check_mk_server:yes"],
+            object_type="host",
+        )
+    },
     "datasource": "hosts",
     "description": _l("Displaying the overall state of Checkmk servers\n"),
     "force_checkboxes": False,
@@ -5080,7 +5098,10 @@ builtin_views["cmk_sites"] = {
     "browser_reload": 0,
     "column_headers": "pergroup",
     "context": {
-        "host_labels": {"host_label": '[{"value":"cmk/check_mk_server:yes"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/check_mk_server:yes"],
+            object_type="host",
+        )
     },
     "datasource": "invcmksites",
     "description": _l("Displaying the state of Checkmk sites\n"),

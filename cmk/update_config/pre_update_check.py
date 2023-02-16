@@ -218,7 +218,7 @@ def _all_ui_extensions_compatible(
             disabled_packages.add(package_id)
             remove_failed_plugin((gui_part, module_or_file))
             sys.stdout.write(
-                "Disabled extension package: %s %s" % (package_id.name, package_id.version)
+                "Disabled extension package: %s %s\n" % (package_id.name, package_id.version)
             )
         else:
             return False

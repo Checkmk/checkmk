@@ -47,7 +47,7 @@ from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import sitenames
-from cmk.gui.table import Foldable, table_element
+from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -664,11 +664,11 @@ class DiscoveryPageRenderer:
                     )
 
             if entry.show_bulk_actions:
-                self._toggle_bulk_action_page_menu_entries(discovery_result, entry.table_group)
+                self._toggle_bulk_action_page_menu_entries(entry.table_group)
             html.hidden_fields()
             html.end_form()
 
-    def _is_active(self, discovery_result) -> bool:  # type:ignore[no-untyped-def]
+    def _is_active(self, discovery_result: DiscoveryResult) -> bool:
         return discovery_result.job_status["is_active"]
 
     def _group_check_table_by_state(
@@ -806,10 +806,8 @@ class DiscoveryPageRenderer:
             enable_page_menu_entry(html, "show_plugin_names")
 
     def _toggle_bulk_action_page_menu_entries(  # pylint: disable=too-many-branches
-        self,
-        discovery_result,
-        table_source,
-    ):
+        self, table_source: str
+    ) -> None:
         if not user.may("wato.services"):
             return
 
@@ -840,17 +838,23 @@ class DiscoveryPageRenderer:
     def _enable_bulk_button(self, source, target):
         enable_page_menu_entry(html, f"bulk_{source}_{target}")
 
-    def _show_check_row(  # type:ignore[no-untyped-def]
-        self, table, discovery_result, api_request, entry: CheckPreviewEntry, show_bulk_actions
+    def _show_check_row(
+        self,
+        table: Table,
+        discovery_result: DiscoveryResult,
+        api_request: dict,
+        entry: CheckPreviewEntry,
+        show_bulk_actions: bool,
     ) -> None:
         statename = "" if entry.state is None else short_service_state_name(entry.state, "")
         if statename == "":
             statename = short_service_state_name(-1)
             stateclass = "state svcstate statep"
-            table.row(css="data", state=0)
+            table.row(css=["data"], state=0)
         else:
+            assert entry.state is not None
             stateclass = f"state svcstate state{entry.state}"
-            table.row(css="data", state=entry.state)
+            table.row(css=["data"], state=entry.state)
 
         self._show_bulk_checkbox(
             table,
@@ -865,10 +869,10 @@ class DiscoveryPageRenderer:
         table.cell(
             _("State"),
             HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
-            css=stateclass,
+            css=[stateclass],
         )
-        table.cell(_("Service"), entry.description, css="service")
-        table.cell(_("Status detail"), css="expanding")
+        table.cell(_("Service"), entry.description, css=["service"])
+        table.cell(_("Status detail"), css=["expanding"])
         self._show_status_detail(entry)
 
         if entry.check_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
@@ -878,7 +882,7 @@ class DiscoveryPageRenderer:
         manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
 
         if self._options.show_parameters:
-            table.cell(_("Check parameters"), css="expanding")
+            table.cell(_("Check parameters"), css=["expanding"])
             self._show_check_parameters(entry)
 
         if self._options.show_discovered_labels:
@@ -889,7 +893,7 @@ class DiscoveryPageRenderer:
             table.cell(
                 _("Check plugin"),
                 HTMLWriter.render_a(content=ctype, href=manpage_url),
-                css="plugins",
+                css=["plugins"],
             )
 
     def _show_status_detail(self, entry: CheckPreviewEntry) -> None:
@@ -996,13 +1000,13 @@ class DiscoveryPageRenderer:
         )
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
-    def _show_actions(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def _show_actions(  # pylint: disable=too-many-branches
         self,
-        table,
-        discovery_result,
+        table: Table,
+        discovery_result: DiscoveryResult,
         entry: CheckPreviewEntry,
-    ):
-        table.cell(css="buttons")
+    ) -> None:
+        table.cell(css=["buttons"])
         if not user.may("wato.services"):
             html.empty_icon()
             html.empty_icon()

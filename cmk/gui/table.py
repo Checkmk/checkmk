@@ -206,7 +206,7 @@ class Table:
             [] if css is None else css, state, collect_headers, fixed, id_, onmouseover, onmouseout
         )
 
-    def cell(  # type:ignore[no-untyped-def]
+    def cell(
         self,
         title: HTMLContent = "",
         text: HTMLContent = "",
@@ -214,7 +214,7 @@ class Table:
         help_txt: str | None = None,
         colspan: int | None = None,
         sortable: bool = True,
-    ):
+    ) -> None:
         self._finish_previous()
         self.next_func = lambda: self._add_cell(
             title=title,

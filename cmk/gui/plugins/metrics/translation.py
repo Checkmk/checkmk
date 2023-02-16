@@ -407,6 +407,7 @@ df_basic_perfvarnames = [
     "overprovisioned",
     "dedup_rate",
     "file_count",
+    "fs_used_renamed_legacy_records",
 ]
 df_translation: Dict[str, CheckMetricEntry] = {
     "~(?!%s).*$"

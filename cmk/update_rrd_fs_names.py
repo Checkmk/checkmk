@@ -125,29 +125,20 @@ def update_files(hostname, servicedesc, item, source):
     metrics = get_metrics(filepath, source)
     perfvar = cmk.utils.pnp_cleanup(item)
 
-    update_condition = perfvar in metrics and "fs_used" not in metrics
     logger.info("Analyzing %s", filepath)
     entry_to_rename = {}
-    if update_condition:
+    if perfvar in metrics:
+        new_name = "fs_used" if "fs_used" not in metrics else "fs_used_renamed_legacy_records"
         if source == "cmc":
-            r_metrics = ["fs_used" if x == perfvar else x for x in metrics]
+            r_metrics = [new_name if x == perfvar else x for x in metrics]
             cmk.base.cee.rrd.create_cmc_rrd_info_file(hostname, servicedesc, r_metrics)
         else:
-            entry_to_rename = update_pnp_info_files(perfvar, "fs_used", filepath)
+            entry_to_rename = update_pnp_info_files(perfvar, new_name, filepath)
 
         logger.info("   Updated ")
 
-    elif metrics.count("fs_used") == 1 and perfvar not in metrics:
-        logger.debug("   Already in desired format")
     else:
-        logger.error(
-            "RRD files for host %s and service %s stored in files:\n  - %s\n  - %s\n"
-            "are messed up. Please restore them both from backup.",
-            hostname,
-            servicedesc,
-            filepath,
-            filepath.replace(".info", ".rrd"),
-        )
+        logger.debug("   Already in desired format")
 
     return entry_to_rename
 

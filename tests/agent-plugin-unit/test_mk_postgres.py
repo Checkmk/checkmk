@@ -4,15 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
-
 # pylint: disable=protected-access,redefined-outer-name
+
+import copy
 import sys
 
 import pytest
 from mock import Mock, patch
 
-import agents.plugins.mk_postgres as mk_postgres
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_postgres_2 as mk_postgres  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_postgres as mk_postgres
 
 try:
     from typing import Dict, Optional  # noqa: F401

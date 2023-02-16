@@ -26,32 +26,22 @@ __version__ = "2.3.0b1"
 import os
 import re
 import sys
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
     sys.exit(1)
 
-if sys.version_info[0] == 2:
-    from urllib2 import HTTPError, Request, URLError  # pylint: disable=import-error
-    from urllib2 import urlopen as _urlopen  # pylint: disable=import-error
 
-    def urltype(request):
-        return request.get_type()
-
-else:
-    from urllib.error import HTTPError, URLError  # pylint: disable=import-error,no-name-in-module
-    from urllib.request import Request  # pylint: disable=import-error,no-name-in-module
-    from urllib.request import urlopen as _urlopen  # pylint: disable=import-error,no-name-in-module
-
-    def urltype(request):
-        return request.type
-
-
-def urlopen(request, timeout=5, cafile=None, context=None):
-    scheme = urltype(request)
+def urlopen_(request, timeout=5, cafile=None, context=None):
+    if sys.version_info[0] == 2:
+        scheme = request.get_type()
+    else:
+        scheme = request.type
     if scheme not in ["http", "https"]:
         raise ValueError("Scheme '%s' is not allowed" % scheme)
-    return _urlopen(  # nosec B310 # BNS:6b61d9
+    return urlopen(  # nosec B310 # BNS:6b61d9
         request, timeout=timeout, cafile=cafile, context=context
     )
 
@@ -228,7 +218,7 @@ def urlopen_with_ssl(request, timeout):
     if (sys.version_info[0] == 3 and sys.version_info >= (3, 5)) or (
         sys.version_info[0] == 2 and sys.version_info >= (2, 7)
     ):
-        result = urlopen(request, context=get_ssl_no_verify_context(), timeout=timeout)
+        result = urlopen_(request, context=get_ssl_no_verify_context(), timeout=timeout)
     else:
         if sys.version_info[0] == 2:
             from urllib2 import (  # pylint: disable=import-error
@@ -243,7 +233,7 @@ def urlopen_with_ssl(request, timeout):
                 install_opener,
             )
         install_opener(build_opener(HTTPSHandler()))
-        result = urlopen(request, timeout=timeout)
+        result = urlopen_(request, timeout=timeout)
     return result
 
 
@@ -254,16 +244,16 @@ def get_response(proto, cafile, address, portspec, page):
     # Try to fetch the status page for each server
     try:
         if proto == "https" and cafile:
-            return urlopen(request, cafile=cafile, timeout=5)
+            return urlopen_(request, cafile=cafile, timeout=5)
         if proto == "https" and is_local:
             return urlopen_with_ssl(request, timeout=5)
-        return urlopen(request, timeout=5)
+        return urlopen_(request, timeout=5)
     except URLError as exc:
         if "unknown protocol" in str(exc):
             # HACK: workaround misconfigurations where port 443 is used for
             # serving non ssl secured http
             url = "http://%s%s/server-status?auto" % (address, portspec)
-            return urlopen(url, timeout=5)
+            return urlopen_(url, timeout=5)
         raise
 
 

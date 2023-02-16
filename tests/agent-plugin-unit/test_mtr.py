@@ -4,9 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+
 import pytest
 
-import agents.plugins.mtr as mtr
+if sys.version_info[0] == 2:
+    import agents.plugins.mtr_2 as mtr  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mtr as mtr
 
 
 @pytest.mark.parametrize(

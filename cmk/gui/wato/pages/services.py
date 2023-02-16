@@ -772,13 +772,14 @@ class DiscoveryPageRenderer:
         if not user.may("wato.services"):
             return
 
-        fixall = 0
-        already_has_services = False
-        for check in discovery_result.check_table:
-            if check.check_source in [DiscoveryState.MONITORED, DiscoveryState.VANISHED]:
-                already_has_services = True
-            if check.check_source in [DiscoveryState.UNDECIDED, DiscoveryState.VANISHED]:
-                fixall += 1
+        has_changes = any(
+            check.check_source in (DiscoveryState.UNDECIDED, DiscoveryState.VANISHED)
+            for check in discovery_result.check_table
+        )
+        had_services_before = any(
+            check.check_source in (DiscoveryState.MONITORED, DiscoveryState.VANISHED)
+            for check in discovery_result.check_table
+        )
 
         if self._is_active(discovery_result):
             enable_page_menu_entry(html, "stop")
@@ -788,14 +789,14 @@ class DiscoveryPageRenderer:
         enable_page_menu_entry(html, "refresh")
 
         if (
-            fixall >= 1
+            has_changes
             and user.may("wato.service_discovery_to_monitored")
             and user.may("wato.service_discovery_to_removed")
         ):
             enable_page_menu_entry(html, "fix_all")
 
         if (
-            already_has_services
+            had_services_before
             and user.may("wato.service_discovery_to_undecided")
             and user.may("wato.service_discovery_to_monitored")
             and user.may("wato.service_discovery_to_ignored")
@@ -806,7 +807,7 @@ class DiscoveryPageRenderer:
         if discovery_result.host_labels:
             enable_page_menu_entry(html, "update_host_labels")
 
-        if already_has_services:
+        if had_services_before:
             enable_page_menu_entry(html, "show_checkboxes")
             enable_page_menu_entry(html, "show_parameters")
             enable_page_menu_entry(html, "show_discovered_labels")

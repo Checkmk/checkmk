@@ -3060,6 +3060,9 @@ msgstr "Activering is voltooid."
 msgid "Activation needed"
 msgstr "Activering nodig"
 
+msgid "Activation not possible because of the following licensing issues:<br>"
+msgstr ""
+
 msgid "Activation of automatic agent updates"
 msgstr "Activering van automatische agent-updates"
 
@@ -4399,6 +4402,10 @@ msgstr "Aggregatiegroepen"
 msgid "Aggregation name"
 msgstr "Naam aggregatie"
 
+#, fuzzy
+msgid "Aggregation not configured to be frozen"
+msgstr "Aggregatieopties voor geclusterde diensten"
+
 msgid "Aggregation of Downtimes"
 msgstr "Aggregatie van downtimes"
 
@@ -4408,20 +4415,25 @@ msgstr "Aggregatieopties voor geclusterde diensten"
 msgid "Aggregation status output"
 msgstr "Uitgang aggregatiestatus"
 
+#, fuzzy
+msgid "Aggregation types"
+msgstr "Aggregaties"
+
 msgid "Aggregation: affected hosts"
 msgstr "Aggregatie: getroffen hosts"
 
 msgid "Aggregation: affected hosts (link to host page)"
 msgstr "Aggregatie: getroffen hosts (link naar hostpagina)"
 
-msgid "Aggregation: complete tree"
-msgstr "Aggregatie: volledige boom"
-
 msgid "Aggregation: simplistic boxed layout"
 msgstr "Aggregatie: simplistische box-indeling"
 
 msgid "Aggregations"
 msgstr "Aggregaties"
+
+#, fuzzy
+msgid "Aggregations are equal"
+msgstr "Aggregatienaam"
 
 msgid "Air flow"
 msgstr "Luchtstroom"
@@ -8228,12 +8240,6 @@ msgstr ""
 "Kan cookie niet verkrijgen van ntop server '%s' voor gebruiker '%s'. "
 "Controleer uw ntop verbindingsinstellingen."
 
-msgid ""
-"Cannot activate changes: The license usage history is older than five days."
-msgstr ""
-"Kan wijzigingen niet activeren: De licentie gebruiksgeschiedenis is ouder "
-"dan vijf dagen."
-
 msgid "Cannot calculate graph recipes"
 msgstr "Kan grafiekrecepten niet berekenen"
 
@@ -10375,6 +10381,10 @@ msgstr "Compatibele en incompatibele Werks"
 msgid "Complete the restore"
 msgstr "Voltooi de restauratie"
 
+#, fuzzy
+msgid "Complete tree"
+msgstr "Voltooi de restauratie"
+
 msgid "Complete variable list (for testing)"
 msgstr "Volledige lijst van variabelen (voor testen)"
 
@@ -11072,6 +11082,13 @@ msgstr "Verbinding met de Web API"
 
 msgid "Connection type"
 msgstr "Type aansluiting"
+
+#, python-format
+msgid ""
+"Connection with licensing server (%s) failed. You need to make sure that "
+"your Checkmk can reach the license server. Please check your firewall and "
+"proxy settings.<br><br>Details: %s"
+msgstr ""
 
 msgid "Connections"
 msgstr "Verbindingen"
@@ -14594,6 +14611,10 @@ msgstr ""
 
 msgid "Difference"
 msgstr "Verschil"
+
+#, fuzzy
+msgid "Difference between frozen and live aggregation"
+msgstr "Verschil tussen de eerste en de laatste bewerking in het oplog"
 
 msgid "Difference between the first and last operation in the oplog"
 msgstr "Verschil tussen de eerste en de laatste bewerking in het oplog"
@@ -19873,6 +19894,14 @@ msgstr "Vrije swap ruimte"
 
 msgid "Free tapes"
 msgstr "Gratis tapes"
+
+#, fuzzy
+msgid "Freeze aggregations"
+msgstr "Aggregaties verwijderen"
+
+#, fuzzy
+msgid "Freeze selected"
+msgstr "Verwijderen geselecteerd"
 
 msgid "Frequencies up to"
 msgstr "Frequenties tot"
@@ -26119,10 +26148,6 @@ msgstr ""
 msgid "Invalid automation command: %s."
 msgstr "Ongeldige automatiseringsopdracht: %s."
 
-#, python-format
-msgid "Invalid automation secret for user %s"
-msgstr "Ongeldig automatiseringsgeheim voor gebruiker %s"
-
 msgid "Invalid automation secret."
 msgstr "Ongeldig automatiseringsgeheim."
 
@@ -28568,8 +28593,8 @@ msgstr "Laden in huidig venster / tabblad"
 msgid "Load of Citrix Server"
 msgstr "Belasting van Citrix Server"
 
-#, python-format
-msgid "Loading \"%s\" failed: %s"
+#, fuzzy, python-format
+msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Laden van \"%s\" mislukt: %s"
 
 msgid "Loading maps..."
@@ -32560,6 +32585,10 @@ msgstr ""
 "te versturen zonder TLS. Als u echter een bestaande installatie upgrade, zal "
 "de oude transportmodus (met optionele encryptie) blijven werken, om de "
 "migratie te vergemakkelijken."
+
+#, fuzzy
+msgid "New aggregations are frozen"
+msgstr "BI aggregatiegroepen boom"
 
 msgid "New backup job"
 msgstr "Nieuwe back-uptaak"
@@ -38822,7 +38851,7 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr "Vernieuwde controleconfiguratie van host '%s'"
 
 #, python-format
-msgid "Refusing to read file not owned by site user: \"%s\""
+msgid "Refusing to read file not owned by us: \"%s\""
 msgstr ""
 
 #, python-format
@@ -42865,6 +42894,10 @@ msgstr "Toon details over livestatus encryptie"
 msgid "Show discovered service labels"
 msgstr "Ontdekte service labels tonen"
 
+#, fuzzy
+msgid "Show dynamic"
+msgstr "Toon metriek"
+
 msgid "Show empty groups"
 msgstr "Toon lege groepen"
 
@@ -42873,6 +42906,10 @@ msgstr "Toon mislukte meldingen"
 
 msgid "Show files in service details"
 msgstr "Toon bestanden in service details"
+
+#, fuzzy
+msgid "Show frozen"
+msgstr "Toon meer"
 
 msgid "Show graph time range"
 msgstr "Toon grafiek tijdsbereik"
@@ -43892,6 +43929,18 @@ msgstr "Sophos Schijfgebruik"
 
 msgid "Sophos Memory utilization"
 msgstr "Sophos Geheugengebruik"
+
+#, fuzzy, python-format
+msgid ""
+"Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
+"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"Please adjust your configuration accordingly and try again."
+msgstr ""
+"Sorry, maar uw onbeperkte 30-dagen proefperiode van Checkmk is afgelopen. De "
+"Checkmk Free Edition staat geen gedistribueerde setups toe na de "
+"proefperiode van 30 dagen. Als u gedistribueerde setups wilt testen, <a href="
+"\"https://checkmk.com/contact.php?\" target=\"_blank\">neem dan contact met "
+"ons op</a>."
 
 #, fuzzy
 msgid ""
@@ -48404,6 +48453,10 @@ msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr ""
 "De huidige bewakingstoestand (inclusief bevestigingen en onderbrekingen)"
 
+#, python-format
+msgid "The currently applied license is expired since: %s (> 60 days)."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "The custom logo %s has been deleted."
 msgstr "Het logo is verwijderd."
@@ -49268,6 +49321,12 @@ msgid ""
 msgstr ""
 "De kostenniveaus zullen worden geacht te luiden in de valuta die overeenkomt "
 "met de gerapporteerde gegevens."
+
+#, fuzzy
+msgid "The license usage history is older than five days."
+msgstr ""
+"Kan wijzigingen niet activeren: De licentie gebruiksgeschiedenis is ouder "
+"dan vijf dagen."
 
 msgid ""
 "The license usage history was updated at least three days ago.<br>Note: If "
@@ -50804,6 +50863,13 @@ msgstr ""
 "De stratum (\"afstand\" tot de referentieklok) waarop de controle kritisch "
 "wordt."
 
+msgid ""
+"The structure of frozen aggregations are saved initially and does not change "
+"afterwards, unless triggered by the user. An icon indicates whether the "
+"aggregate is frozen. This icon can also be used to update the frozen "
+"structure of the aggregates."
+msgstr ""
+
 #, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
@@ -51497,6 +51563,14 @@ msgstr ""
 "Deze macro's kunnen in rapporten worden gebruikt door de naam van de macro "
 "te omringen met dollartekens. Bijv. $CUSTOMER_MACRO$"
 
+#, fuzzy
+msgid "These nodes are not in the frozen aggregation"
+msgstr "Er zijn geen geconfigureerde regels in dit aggregatiepakket"
+
+#, fuzzy
+msgid "These nodes are only in the frozen aggregation"
+msgstr "Toon alleen deze aggregatie"
+
 msgid ""
 "These services are being discovered but have been disabled by creating a "
 "rule in the rule set <i>Disabled services</i> or <i>Disabled checks</i>."
@@ -51848,6 +51922,10 @@ msgstr "Deze aggregatie is momenteel ingeschakeld."
 
 msgid "This aggregation is currently out of its service period."
 msgstr "Deze aggregatie is momenteel buiten haar dienstperiode."
+
+#, fuzzy
+msgid "This aggregation is frozen"
+msgstr "Deze samenvoeging bestaat niet."
 
 #, python-format
 msgid ""
@@ -52753,6 +52831,14 @@ msgstr ""
 
 msgid "This name will be used in the description of the service"
 msgstr "Deze naam zal worden gebruikt in de beschrijving van de dienst"
+
+#, fuzzy
+msgid "This node is not in the frozen aggregation"
+msgstr "Staat indien knooppunt niet in staat is te draaien"
+
+#, fuzzy
+msgid "This node is only in the frozen aggregation"
+msgstr "Toon alleen deze aggregatie"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "Dit aantal nieuwe controles is onmiddellijk gepland"
@@ -55755,6 +55841,12 @@ msgstr "Tijd tot waarschuwing, indien voorwaarde REPLICAFAILURE waar is"
 
 #, fuzzy
 msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+msgid ""
+"Time until alert, if the latest CronJob job has been running for longer than "
+"set time"
 msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
 #, fuzzy
@@ -59763,6 +59855,10 @@ msgstr "Kennisgeving gebruiker"
 #, fuzzy, python-format
 msgid "Verification %s: %s"
 msgstr "Kennisgeving gebruiker"
+
+#, fuzzy
+msgid "Verification failed (Received invalid response from license server)"
+msgstr "Overzicht toepassingen"
 
 #, fuzzy
 msgid "Verification failed (license server)"
@@ -64096,6 +64192,20 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr "Uw invoer komt niet overeen met het vereiste formaat."
 
+#, python-format
+msgid ""
+"Your license allows you to use Checkmk until version %s, but you are using "
+"%s. Operating in 'unlicensed' mode."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Your license expires in %i days"
+msgstr "Proef verloopt in %s dagen"
+
+#, python-format
+msgid "Your license is expired since %s. See here how to proceed: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Your logo has been uploaded."
 msgid_plural "Your logos have been uploaded"
@@ -64895,6 +65005,14 @@ msgstr "gratis huurcontracten"
 
 msgid "free space"
 msgstr "vrije ruimte"
+
+#, fuzzy, python-format
+msgid "freeze the following %d aggregations?"
+msgstr "de volgende %d %s verwijderen?"
+
+#, fuzzy
+msgid "freeze the following aggregation"
+msgstr "Verwijder deze aggregatie"
 
 msgid "from the beginning"
 msgstr "vanaf het begin"
@@ -66242,6 +66360,13 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Aggregation: complete tree"
+#~ msgstr "Aggregatie: volledige boom"
+
+#, python-format
+#~ msgid "Invalid automation secret for user %s"
+#~ msgstr "Ongeldig automatiseringsgeheim voor gebruiker %s"
 
 #, fuzzy, python-format
 #~| msgid "Registration successful"

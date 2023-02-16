@@ -3068,6 +3068,9 @@ msgstr "L'attivazione è terminata."
 msgid "Activation needed"
 msgstr "Attivazione necessaria"
 
+msgid "Activation not possible because of the following licensing issues:<br>"
+msgstr ""
+
 msgid "Activation of automatic agent updates"
 msgstr "Attivazione degli aggiornamenti automatici dell'agente"
 
@@ -4432,6 +4435,10 @@ msgstr "Gruppi di aggregazione"
 msgid "Aggregation name"
 msgstr "Nome dell'aggregazione"
 
+#, fuzzy
+msgid "Aggregation not configured to be frozen"
+msgstr "Aggregazioni interessate dal servizio"
+
 msgid "Aggregation of Downtimes"
 msgstr "Aggregazione dei tempi di inattività"
 
@@ -4442,20 +4449,25 @@ msgstr "Aggregazioni interessate dal servizio"
 msgid "Aggregation status output"
 msgstr "Uscita dello stato di aggregazione"
 
+#, fuzzy
+msgid "Aggregation types"
+msgstr "Aggregazioni"
+
 msgid "Aggregation: affected hosts"
 msgstr "Aggregazione: host interessati"
 
 msgid "Aggregation: affected hosts (link to host page)"
 msgstr "Aggregazione: host interessati (link alla pagina dell'host)"
 
-msgid "Aggregation: complete tree"
-msgstr "Aggregazione: albero completo"
-
 msgid "Aggregation: simplistic boxed layout"
 msgstr "Aggregazione: layout semplicistico a caselle"
 
 msgid "Aggregations"
 msgstr "Aggregazioni"
+
+#, fuzzy
+msgid "Aggregations are equal"
+msgstr "Nome dell'aggregazione"
 
 msgid "Air flow"
 msgstr "Flusso d'aria"
@@ -8319,12 +8331,6 @@ msgstr ""
 "Impossibile acquisire il cookie dal server ntop '%s' per l'utente '%s'. "
 "Controlla le impostazioni della tua connessione ntop."
 
-msgid ""
-"Cannot activate changes: The license usage history is older than five days."
-msgstr ""
-"Impossibile attivare le modifiche: La cronologia di utilizzo della licenza è "
-"più vecchia di cinque giorni."
-
 msgid "Cannot calculate graph recipes"
 msgstr "Impossibile calcolare le ricette dei grafici"
 
@@ -10514,6 +10520,10 @@ msgstr "Werks compatibili e incompatibili"
 msgid "Complete the restore"
 msgstr "Completare il ripristino"
 
+#, fuzzy
+msgid "Complete tree"
+msgstr "Completare il ripristino"
+
 msgid "Complete variable list (for testing)"
 msgstr "Elenco completo delle variabili (per i test)"
 
@@ -11216,6 +11226,13 @@ msgstr "Connessione all'API web"
 
 msgid "Connection type"
 msgstr "Tipo di connessione"
+
+#, python-format
+msgid ""
+"Connection with licensing server (%s) failed. You need to make sure that "
+"your Checkmk can reach the license server. Please check your firewall and "
+"proxy settings.<br><br>Details: %s"
+msgstr ""
 
 msgid "Connections"
 msgstr "Connessioni"
@@ -14789,6 +14806,10 @@ msgstr ""
 
 msgid "Difference"
 msgstr "Differenza"
+
+#, fuzzy
+msgid "Difference between frozen and live aggregation"
+msgstr "Differenza tra la prima e l'ultima operazione nell'oplog"
 
 msgid "Difference between the first and last operation in the oplog"
 msgstr "Differenza tra la prima e l'ultima operazione nell'oplog"
@@ -20175,6 +20196,14 @@ msgstr "Spazio swap libero"
 
 msgid "Free tapes"
 msgstr "Nastri gratuiti"
+
+#, fuzzy
+msgid "Freeze aggregations"
+msgstr "Cancellare le aggregazioni"
+
+#, fuzzy
+msgid "Freeze selected"
+msgstr "Cancella selezionato"
 
 msgid "Frequencies up to"
 msgstr "Frequenze fino a"
@@ -26489,10 +26518,6 @@ msgstr ""
 msgid "Invalid automation command: %s."
 msgstr "Comando di automazione non valido: %s."
 
-#, python-format
-msgid "Invalid automation secret for user %s"
-msgstr "Segreto di automazione non valido per l'utente %s"
-
 msgid "Invalid automation secret."
 msgstr "Segreto di automazione non valido."
 
@@ -28994,8 +29019,8 @@ msgstr "Carica nella finestra / scheda corrente"
 msgid "Load of Citrix Server"
 msgstr "Carico di Citrix Server"
 
-#, python-format
-msgid "Loading \"%s\" failed: %s"
+#, fuzzy, python-format
+msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Caricamento \"%s\" fallito: %s"
 
 msgid "Loading maps..."
@@ -33061,6 +33086,10 @@ msgstr ""
 "dati senza TLS. Tuttavia, se si aggiorna un'installazione esistente, la "
 "vecchia modalità di trasporto (con crittografia opzionale) continuerà a "
 "funzionare, per facilitare la migrazione."
+
+#, fuzzy
+msgid "New aggregations are frozen"
+msgstr "Gruppi di aggregazione BI ad albero"
 
 msgid "New backup job"
 msgstr "Nuovo lavoro di backup"
@@ -39453,7 +39482,7 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr "Aggiornata la configurazione di controllo dell'host '%s'"
 
 #, python-format
-msgid "Refusing to read file not owned by site user: \"%s\""
+msgid "Refusing to read file not owned by us: \"%s\""
 msgstr ""
 
 #, python-format
@@ -43583,6 +43612,10 @@ msgid "Show discovered service labels"
 msgstr "Mostra le etichette di servizio scoperte"
 
 #, fuzzy
+msgid "Show dynamic"
+msgstr "Mostra la metrica"
+
+#, fuzzy
 msgid "Show empty groups"
 msgstr "Mostra il numero di gruppi"
 
@@ -43591,6 +43624,10 @@ msgstr "Mostra le notifiche fallite"
 
 msgid "Show files in service details"
 msgstr "Mostra i file nei dettagli del servizio"
+
+#, fuzzy
+msgid "Show frozen"
+msgstr "Mostra di più"
 
 msgid "Show graph time range"
 msgstr "Mostra l'intervallo di tempo del grafico"
@@ -44630,6 +44667,18 @@ msgstr "Sophos Utilizzo del disco"
 
 msgid "Sophos Memory utilization"
 msgstr "Sophos Utilizzo della memoria"
+
+#, fuzzy, python-format
+msgid ""
+"Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
+"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"Please adjust your configuration accordingly and try again."
+msgstr ""
+"Siamo spiacenti, ma la tua prova illimitata di 30 giorni di Checkmk è "
+"terminata. Checkmk Free Edition non consente installazioni distribuite dopo "
+"il periodo di prova di 30 giorni. Nel caso tu voglia provare le "
+"configurazioni distribuite, per favore <a href=\"https://checkmk.com/contact."
+"php?\" target=\"_blank\">contattaci</a>."
 
 #, fuzzy
 msgid ""
@@ -49176,6 +49225,10 @@ msgstr ""
 "Lo stato attuale del monitoraggio (inclusi i riconoscimenti e i tempi di "
 "inattività)"
 
+#, python-format
+msgid "The currently applied license is expired since: %s (> 60 days)."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "The custom logo %s has been deleted."
 msgstr "Il logo è stato cancellato."
@@ -50040,6 +50093,12 @@ msgid ""
 msgstr ""
 "I livelli dei costi saranno considerati nella valuta corrispondente ai dati "
 "riportati."
+
+#, fuzzy
+msgid "The license usage history is older than five days."
+msgstr ""
+"Impossibile attivare le modifiche: La cronologia di utilizzo della licenza è "
+"più vecchia di cinque giorni."
 
 msgid ""
 "The license usage history was updated at least three days ago.<br>Note: If "
@@ -51593,6 +51652,13 @@ msgstr ""
 "Lo strato (\"distanza\" dall'orologio di riferimento) al quale il controllo "
 "diventa critico."
 
+msgid ""
+"The structure of frozen aggregations are saved initially and does not change "
+"afterwards, unless triggered by the user. An icon indicates whether the "
+"aggregate is frozen. This icon can also be used to update the frozen "
+"structure of the aggregates."
+msgstr ""
+
 #, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
@@ -52289,6 +52355,14 @@ msgstr ""
 "Queste macro possono essere usate nei rapporti circondando il nome della "
 "macro con il segno del dollaro. Per esempio $CUSTOMER_MACRO$"
 
+#, fuzzy
+msgid "These nodes are not in the frozen aggregation"
+msgstr "Non ci sono regole configurate in questo pacchetto di aggregazione"
+
+#, fuzzy
+msgid "These nodes are only in the frozen aggregation"
+msgstr "Mostra solo questa aggregazione"
+
 msgid ""
 "These services are being discovered but have been disabled by creating a "
 "rule in the rule set <i>Disabled services</i> or <i>Disabled checks</i>."
@@ -52640,6 +52714,10 @@ msgstr "Questa aggregazione è attualmente abilitata."
 
 msgid "This aggregation is currently out of its service period."
 msgstr "Questa aggregazione è attualmente fuori dal suo periodo di servizio."
+
+#, fuzzy
+msgid "This aggregation is frozen"
+msgstr "Questa aggregazione non esiste."
 
 #, python-format
 msgid ""
@@ -53547,6 +53625,14 @@ msgstr ""
 
 msgid "This name will be used in the description of the service"
 msgstr "Questo nome sarà usato nella descrizione del servizio"
+
+#, fuzzy
+msgid "This node is not in the frozen aggregation"
+msgstr "Stato se il nodo non è in stato di esecuzione"
+
+#, fuzzy
+msgid "This node is only in the frozen aggregation"
+msgstr "Mostra solo questa aggregazione"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "Questo numero di nuovi controlli è previsto immediatamente"
@@ -56579,6 +56665,12 @@ msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 #, fuzzy
 msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
+
+#, fuzzy
+msgid ""
+"Time until alert, if the latest CronJob job has been running for longer than "
+"set time"
 msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 #, fuzzy
@@ -60653,6 +60745,10 @@ msgstr "Notifica dell'utente"
 #, fuzzy, python-format
 msgid "Verification %s: %s"
 msgstr "Notifica dell'utente"
+
+#, fuzzy
+msgid "Verification failed (Received invalid response from license server)"
+msgstr "Panoramica delle applicazioni"
 
 #, fuzzy
 msgid "Verification failed (license server)"
@@ -65007,6 +65103,20 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr "Il tuo input non corrisponde al formato richiesto."
 
+#, python-format
+msgid ""
+"Your license allows you to use Checkmk until version %s, but you are using "
+"%s. Operating in 'unlicensed' mode."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Your license expires in %i days"
+msgstr "La prova scade tra %s giorni"
+
+#, python-format
+msgid "Your license is expired since %s. See here how to proceed: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Your logo has been uploaded."
 msgid_plural "Your logos have been uploaded"
@@ -65820,6 +65930,14 @@ msgstr "affitti gratuiti"
 
 msgid "free space"
 msgstr "spazio libero"
+
+#, fuzzy, python-format
+msgid "freeze the following %d aggregations?"
+msgstr " il seguente %d crash %s"
+
+#, fuzzy
+msgid "freeze the following aggregation"
+msgstr "Cancellare questa aggregazione"
 
 msgid "from the beginning"
 msgstr "dall'inizio"
@@ -67180,6 +67298,13 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Aggregation: complete tree"
+#~ msgstr "Aggregazione: albero completo"
+
+#, python-format
+#~ msgid "Invalid automation secret for user %s"
+#~ msgstr "Segreto di automazione non valido per l'utente %s"
 
 #, fuzzy, python-format
 #~| msgid "Baking successful"

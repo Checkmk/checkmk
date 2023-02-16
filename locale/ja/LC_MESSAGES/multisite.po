@@ -2920,6 +2920,9 @@ msgstr "アクティベーションが終了しました。"
 msgid "Activation needed"
 msgstr "アクティベーションが必要"
 
+msgid "Activation not possible because of the following licensing issues:<br>"
+msgstr ""
+
 msgid "Activation of automatic agent updates"
 msgstr "自動エージェント更新のアクティブ化"
 
@@ -4220,6 +4223,10 @@ msgstr "集約グループ"
 msgid "Aggregation name"
 msgstr "集計名"
 
+#, fuzzy
+msgid "Aggregation not configured to be frozen"
+msgstr "クラスタ化サービスの集計オプション"
+
 msgid "Aggregation of Downtimes"
 msgstr "ダウンタイムの集計"
 
@@ -4229,20 +4236,25 @@ msgstr "クラスタ化サービスの集計オプション"
 msgid "Aggregation status output"
 msgstr "集計ステータスの出力"
 
+#, fuzzy
+msgid "Aggregation types"
+msgstr "集計"
+
 msgid "Aggregation: affected hosts"
 msgstr "集約:影響を受けるホスト"
 
 msgid "Aggregation: affected hosts (link to host page)"
 msgstr "集約:影響を受けるホスト(ホストページへのリンク)"
 
-msgid "Aggregation: complete tree"
-msgstr "集計: 完全なツリー"
-
 msgid "Aggregation: simplistic boxed layout"
 msgstr "集約:単純なボックスレイアウト"
 
 msgid "Aggregations"
 msgstr "集計"
+
+#, fuzzy
+msgid "Aggregations are equal"
+msgstr "集約名"
 
 msgid "Air flow"
 msgstr "エアフロー"
@@ -7873,10 +7885,6 @@ msgid ""
 "ntop connection settings."
 msgstr ""
 
-msgid ""
-"Cannot activate changes: The license usage history is older than five days."
-msgstr ""
-
 msgid "Cannot calculate graph recipes"
 msgstr "グラフレシピを計算できません"
 
@@ -9943,6 +9951,10 @@ msgstr "互換性のあるおよび互換性のないWerks"
 msgid "Complete the restore"
 msgstr "復元を完了します"
 
+#, fuzzy
+msgid "Complete tree"
+msgstr "復元を完了します"
+
 msgid "Complete variable list (for testing)"
 msgstr "完全な変数リスト(テスト用)"
 
@@ -10573,6 +10585,13 @@ msgstr "Web APIへの接続"
 
 msgid "Connection type"
 msgstr "接続タイプ"
+
+#, python-format
+msgid ""
+"Connection with licensing server (%s) failed. You need to make sure that "
+"your Checkmk can reach the license server. Please check your firewall and "
+"proxy settings.<br><br>Details: %s"
+msgstr ""
 
 msgid "Connections"
 msgstr "接続"
@@ -14024,6 +14043,10 @@ msgstr ""
 
 msgid "Difference"
 msgstr "差"
+
+#, fuzzy
+msgid "Difference between frozen and live aggregation"
+msgstr "oplogの最初と最後の操作の差異"
 
 msgid "Difference between the first and last operation in the oplog"
 msgstr "oplogの最初と最後の操作の差異"
@@ -19166,6 +19189,14 @@ msgstr "空きスワップスペース"
 
 msgid "Free tapes"
 msgstr "フリーのテープ"
+
+#, fuzzy
+msgid "Freeze aggregations"
+msgstr "集計を削除する"
+
+#, fuzzy
+msgid "Freeze selected"
+msgstr "選択を削除します"
 
 msgid "Frequencies up to"
 msgstr "までの周波数"
@@ -25002,10 +25033,6 @@ msgstr "属性名が無効です。文字a-z、A-Z、0-9、_、および-のみ�
 msgid "Invalid automation command: %s."
 msgstr "無効な自動化コマンド: %s。"
 
-#, python-format
-msgid "Invalid automation secret for user %s"
-msgstr "ユーザー %sに対する無効な自動シークレット"
-
 msgid "Invalid automation secret."
 msgstr "オートメーションシークレットが無効です。"
 
@@ -27393,8 +27420,8 @@ msgstr "現在のウィンドウ/タブにロード"
 msgid "Load of Citrix Server"
 msgstr "Citrixサーバーの負荷"
 
-#, python-format
-msgid "Loading \"%s\" failed: %s"
+#, fuzzy, python-format
+msgid "Loading \"%s/%s\" failed: %s"
 msgstr "\"%s\" の読み込みに失敗しました: %s"
 
 msgid "Loading maps..."
@@ -31300,6 +31327,10 @@ msgid ""
 "transport mode (with optional encryption) will continue to work, to ease "
 "migration."
 msgstr ""
+
+#, fuzzy
+msgid "New aggregations are frozen"
+msgstr "BI集約グループツリー"
 
 msgid "New backup job"
 msgstr "新しいバックアップジョブ"
@@ -37372,7 +37403,7 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr "ホスト '%s' の確認設定を更新しました"
 
 #, python-format
-msgid "Refusing to read file not owned by site user: \"%s\""
+msgid "Refusing to read file not owned by us: \"%s\""
 msgstr ""
 
 #, python-format
@@ -41273,6 +41304,10 @@ msgstr "ライブステータス暗号化に関する詳細を表示する"
 msgid "Show discovered service labels"
 msgstr ""
 
+#, fuzzy
+msgid "Show dynamic"
+msgstr "メトリックを表示"
+
 msgid "Show empty groups"
 msgstr "空のグループを表示する"
 
@@ -41281,6 +41316,10 @@ msgstr "失敗した通知を表示する"
 
 msgid "Show files in service details"
 msgstr "サービスの詳細にファイルを表示する"
+
+#, fuzzy
+msgid "Show frozen"
+msgstr "もっと見る"
 
 msgid "Show graph time range"
 msgstr "グラフの時間範囲を表示する"
@@ -42240,6 +42279,17 @@ msgstr "ソフォスのディスク使用率"
 
 msgid "Sophos Memory utilization"
 msgstr "Sophosのメモリ使用率"
+
+#, fuzzy, python-format
+msgid ""
+"Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
+"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"Please adjust your configuration accordingly and try again."
+msgstr ""
+"申し訳ありませんが、Checkmkの30日間の無制限トライアルは終了しました。Checkmk "
+"Free Editionでは、30日間の試用期間後の分散セットアップは許可されていません。"
+"分散セットアップをテストする場合は、<a href = \"https://checkmk.com/contact."
+"php?\" target = \"_blank\">お問い合わせ</a>ください。"
 
 #, fuzzy
 msgid ""
@@ -46479,6 +46529,10 @@ msgstr "現在のライブステータスの使用量は %.2f%% です"
 msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr "現在の監視状態(確認応答とダウンタイムを含む)"
 
+#, python-format
+msgid "The currently applied license is expired since: %s (> 60 days)."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "The custom logo %s has been deleted."
 msgstr "ロゴが削除されました。"
@@ -47257,6 +47311,9 @@ msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
 "to the reported data."
 msgstr "コストのレベルは、報告されたデータに対応する通貨であると見なされます。"
+
+msgid "The license usage history is older than five days."
+msgstr ""
 
 msgid ""
 "The license usage history was updated at least three days ago.<br>Note: If "
@@ -48618,6 +48675,13 @@ msgid ""
 "critical."
 msgstr "チェックが重要になる層(基準クロックまでの\"距離\")。"
 
+msgid ""
+"The structure of frozen aggregations are saved initially and does not change "
+"afterwards, unless triggered by the user. An icon indicates whether the "
+"aggregate is frozen. This icon can also be used to update the frozen "
+"structure of the aggregates."
+msgstr ""
+
 #, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
@@ -49270,6 +49334,14 @@ msgid ""
 "in dollar signs. E.g. $CUSTOMER_MACRO$"
 msgstr ""
 
+#, fuzzy
+msgid "These nodes are not in the frozen aggregation"
+msgstr "この集計パックには構成済みのルールはありません"
+
+#, fuzzy
+msgid "These nodes are only in the frozen aggregation"
+msgstr "この集計のみを表示"
+
 msgid ""
 "These services are being discovered but have been disabled by creating a "
 "rule in the rule set <i>Disabled services</i> or <i>Disabled checks</i>."
@@ -49579,6 +49651,10 @@ msgstr "この集計は現在有効になっています。"
 
 msgid "This aggregation is currently out of its service period."
 msgstr "この集計は現在、サービス期間を過ぎています。"
+
+#, fuzzy
+msgid "This aggregation is frozen"
+msgstr "この集計は存在しません。"
 
 #, python-format
 msgid ""
@@ -50368,6 +50444,14 @@ msgstr ""
 
 msgid "This name will be used in the description of the service"
 msgstr "この名前は、サービスの説明で使用されます"
+
+#, fuzzy
+msgid "This node is not in the frozen aggregation"
+msgstr "ノードが実行中の状態にない場合の状態"
+
+#, fuzzy
+msgid "This node is only in the frozen aggregation"
+msgstr "この集計のみを表示"
 
 msgid "This number of new checks is scheduled immediately"
 msgstr "この数の新しいチェックはすぐにスケジュールされます"
@@ -53050,6 +53134,12 @@ msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの�
 
 #, fuzzy
 msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
+
+#, fuzzy
+msgid ""
+"Time until alert, if the latest CronJob job has been running for longer than "
+"set time"
 msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
 
 #, fuzzy
@@ -56912,6 +57002,10 @@ msgstr "ユーザー通知"
 #, fuzzy, python-format
 msgid "Verification %s: %s"
 msgstr "ユーザー通知"
+
+#, fuzzy
+msgid "Verification failed (Received invalid response from license server)"
+msgstr "アプリケーションの概要"
 
 #, fuzzy
 msgid "Verification failed (license server)"
@@ -60790,6 +60884,20 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr "入力が必要な形式と一致しません。"
 
+#, python-format
+msgid ""
+"Your license allows you to use Checkmk until version %s, but you are using "
+"%s. Operating in 'unlicensed' mode."
+msgstr ""
+
+#, python-format
+msgid "Your license expires in %i days"
+msgstr ""
+
+#, python-format
+msgid "Your license is expired since %s. See here how to proceed: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Your logo has been uploaded."
 msgid_plural "Your logos have been uploaded"
@@ -61572,6 +61680,14 @@ msgstr "フリーリース"
 
 msgid "free space"
 msgstr "空き容量"
+
+#, fuzzy, python-format
+msgid "freeze the following %d aggregations?"
+msgstr "次の %d%sを削除しますか？"
+
+#, fuzzy
+msgid "freeze the following aggregation"
+msgstr "この集計を削除します"
 
 msgid "from the beginning"
 msgstr "最初から"
@@ -62909,6 +63025,13 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Aggregation: complete tree"
+#~ msgstr "集計: 完全なツリー"
+
+#, python-format
+#~ msgid "Invalid automation secret for user %s"
+#~ msgstr "ユーザー %sに対する無効な自動シークレット"
 
 #, fuzzy, python-format
 #~| msgid "Registration successful"

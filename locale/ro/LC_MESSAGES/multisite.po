@@ -2721,6 +2721,9 @@ msgstr " Activează această opțiune"
 msgid "Activation needed"
 msgstr " Activează această opțiune"
 
+msgid "Activation not possible because of the following licensing issues:<br>"
+msgstr ""
+
 msgid "Activation of automatic agent updates"
 msgstr ""
 
@@ -4150,6 +4153,10 @@ msgid "Aggregation name"
 msgstr ""
 
 #, fuzzy
+msgid "Aggregation not configured to be frozen"
+msgstr "Un titlu pentru view"
+
+#, fuzzy
 msgid "Aggregation of Downtimes"
 msgstr "Întreruperi adhoc"
 
@@ -4160,13 +4167,14 @@ msgstr "Un titlu pentru view"
 msgid "Aggregation status output"
 msgstr ""
 
+#, fuzzy
+msgid "Aggregation types"
+msgstr "Agregare noua"
+
 msgid "Aggregation: affected hosts"
 msgstr ""
 
 msgid "Aggregation: affected hosts (link to host page)"
-msgstr ""
-
-msgid "Aggregation: complete tree"
 msgstr ""
 
 msgid "Aggregation: simplistic boxed layout"
@@ -4174,6 +4182,10 @@ msgstr ""
 
 msgid "Aggregations"
 msgstr ""
+
+#, fuzzy
+msgid "Aggregations are equal"
+msgstr "Agregare noua"
 
 msgid "Air flow"
 msgstr ""
@@ -7737,10 +7749,6 @@ msgid ""
 "ntop connection settings."
 msgstr ""
 
-msgid ""
-"Cannot activate changes: The license usage history is older than five days."
-msgstr ""
-
 msgid "Cannot calculate graph recipes"
 msgstr ""
 
@@ -9785,6 +9793,10 @@ msgstr ""
 msgid "Complete the restore"
 msgstr ""
 
+#, fuzzy
+msgid "Complete tree"
+msgstr "Conexiuni Active"
+
 msgid "Complete variable list (for testing)"
 msgstr ""
 
@@ -10406,6 +10418,13 @@ msgstr "Conexiune Noua"
 #, fuzzy
 msgid "Connection type"
 msgstr "Conexiune Noua"
+
+#, python-format
+msgid ""
+"Connection with licensing server (%s) failed. You need to make sure that "
+"your Checkmk can reach the license server. Please check your firewall and "
+"proxy settings.<br><br>Details: %s"
+msgstr ""
 
 #, fuzzy
 msgid "Connections"
@@ -14032,6 +14051,9 @@ msgid ""
 msgstr ""
 
 msgid "Difference"
+msgstr ""
+
+msgid "Difference between frozen and live aggregation"
 msgstr ""
 
 msgid "Difference between the first and last operation in the oplog"
@@ -19348,6 +19370,14 @@ msgstr ""
 msgid "Free tapes"
 msgstr "spatiu utilizat"
 
+#, fuzzy
+msgid "Freeze aggregations"
+msgstr "Agregare noua"
+
+#, fuzzy
+msgid "Freeze selected"
+msgstr "Sterge Elementul"
+
 msgid "Frequencies up to"
 msgstr ""
 
@@ -24636,10 +24666,6 @@ msgstr ""
 msgid "Invalid automation command: %s."
 msgstr ""
 
-#, python-format
-msgid "Invalid automation secret for user %s"
-msgstr ""
-
 msgid "Invalid automation secret."
 msgstr ""
 
@@ -27176,7 +27202,7 @@ msgid "Load of Citrix Server"
 msgstr ""
 
 #, python-format
-msgid "Loading \"%s\" failed: %s"
+msgid "Loading \"%s/%s\" failed: %s"
 msgstr ""
 
 msgid "Loading maps..."
@@ -31375,6 +31401,10 @@ msgid ""
 "transport mode (with optional encryption) will continue to work, to ease "
 "migration."
 msgstr ""
+
+#, fuzzy
+msgid "New aggregations are frozen"
+msgstr "Agregare noua"
 
 msgid "New backup job"
 msgstr ""
@@ -37621,7 +37651,7 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr ""
 
 #, python-format
-msgid "Refusing to read file not owned by site user: \"%s\""
+msgid "Refusing to read file not owned by us: \"%s\""
 msgstr ""
 
 #, python-format
@@ -41699,6 +41729,10 @@ msgid "Show discovered service labels"
 msgstr "spatiu utilizat"
 
 #, fuzzy
+msgid "Show dynamic"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
 msgid "Show empty groups"
 msgstr "Arata regulile de utilizator"
 
@@ -41709,6 +41743,10 @@ msgstr "trimite notificare"
 #, fuzzy
 msgid "Show files in service details"
 msgstr "servicii"
+
+#, fuzzy
+msgid "Show frozen"
+msgstr "afiseaza erori"
 
 msgid "Show graph time range"
 msgstr ""
@@ -42676,6 +42714,13 @@ msgstr "Dezactiveaza Notificarile"
 #, fuzzy
 msgid "Sophos Memory utilization"
 msgstr "Dezactiveaza Notificarile"
+
+#, python-format
+msgid ""
+"Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
+"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"Please adjust your configuration accordingly and try again."
+msgstr ""
 
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
@@ -46630,6 +46675,10 @@ msgstr ""
 msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr ""
 
+#, python-format
+msgid "The currently applied license is expired since: %s (> 60 days)."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "The custom logo %s has been deleted."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
@@ -47327,6 +47376,9 @@ msgstr ""
 msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
 "to the reported data."
+msgstr ""
+
+msgid "The license usage history is older than five days."
 msgstr ""
 
 msgid ""
@@ -48501,6 +48553,13 @@ msgid ""
 "critical."
 msgstr ""
 
+msgid ""
+"The structure of frozen aggregations are saved initially and does not change "
+"afterwards, unless triggered by the user. An icon indicates whether the "
+"aggregate is frozen. This icon can also be used to update the frozen "
+"structure of the aggregates."
+msgstr ""
+
 #, python-format
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
@@ -49071,6 +49130,12 @@ msgid ""
 "in dollar signs. E.g. $CUSTOMER_MACRO$"
 msgstr ""
 
+msgid "These nodes are not in the frozen aggregation"
+msgstr ""
+
+msgid "These nodes are only in the frozen aggregation"
+msgstr ""
+
 msgid ""
 "These services are being discovered but have been disabled by creating a "
 "rule in the rule set <i>Disabled services</i> or <i>Disabled checks</i>."
@@ -49313,6 +49378,10 @@ msgstr ""
 
 msgid "This aggregation is currently out of its service period."
 msgstr ""
+
+#, fuzzy
+msgid "This aggregation is frozen"
+msgstr "Agregare noua"
 
 #, python-format
 msgid ""
@@ -49977,6 +50046,13 @@ msgid ""
 msgstr ""
 
 msgid "This name will be used in the description of the service"
+msgstr ""
+
+#, fuzzy
+msgid "This node is not in the frozen aggregation"
+msgstr "Acces la Consola de Evenimente"
+
+msgid "This node is only in the frozen aggregation"
 msgstr ""
 
 msgid "This number of new checks is scheduled immediately"
@@ -52113,6 +52189,11 @@ msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr ""
 
 msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr ""
+
+msgid ""
+"Time until alert, if the latest CronJob job has been running for longer than "
+"set time"
 msgstr ""
 
 #, fuzzy
@@ -56098,6 +56179,10 @@ msgid "Verification %s: %s"
 msgstr "trimite notificare"
 
 #, fuzzy
+msgid "Verification failed (Received invalid response from license server)"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
 msgid "Verification failed (license server)"
 msgstr "Numele Aplicatiei"
 
@@ -59435,6 +59520,20 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr ""
 
+#, python-format
+msgid ""
+"Your license allows you to use Checkmk until version %s, but you are using "
+"%s. Operating in 'unlicensed' mode."
+msgstr ""
+
+#, python-format
+msgid "Your license expires in %i days"
+msgstr ""
+
+#, python-format
+msgid "Your license is expired since %s. See here how to proceed: %s"
+msgstr ""
+
 msgid "Your logo has been uploaded."
 msgid_plural "Your logos have been uploaded"
 msgstr[0] ""
@@ -60254,6 +60353,16 @@ msgstr "trei nivele"
 
 msgid "free space"
 msgstr ""
+
+# georgem ##############
+#, fuzzy, python-format
+msgid "freeze the following %d aggregations?"
+msgstr "Grup nou"
+
+# georgem ##############
+#, fuzzy
+msgid "freeze the following aggregation"
+msgstr "Grup nou"
 
 msgid "from the beginning"
 msgstr ""
@@ -64394,10 +64503,6 @@ msgstr ""
 #~ msgstr "Conexiune Noua"
 
 #, fuzzy
-#~ msgid "Complete site"
-#~ msgstr "Conexiuni Active"
-
-#, fuzzy
 #~ msgid "Configuration Replication"
 #~ msgstr "Portul TCP pentru conexiune"
 
@@ -64945,10 +65050,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Network interface port types to discover"
 #~ msgstr "Starea porturilor pentru inventariere"
-
-#, fuzzy
-#~ msgid "New Aggregation"
-#~ msgstr "Agregare noua"
 
 #, fuzzy
 #~ msgid "New Aux tag"

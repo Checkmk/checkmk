@@ -94,7 +94,12 @@ def fix_hr_fs_mountpoint(mp: str) -> str:
 
 def discover_hr_fs(params: Sequence[Mapping[str, Any]], section: Section) -> DiscoveryResult:
     yield from df_discovery(
-        params, [descr for descr, *_unused in section if descr not in EXCLUDED_MOUNTPOINTS]
+        params,
+        [
+            descr
+            for descr, size, *_unused in section
+            if descr not in EXCLUDED_MOUNTPOINTS and size != 0
+        ],
     )
 
 

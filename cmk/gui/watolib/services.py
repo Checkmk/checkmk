@@ -533,17 +533,38 @@ def perform_service_discovery(
     return discovery_result
 
 
-def has_discovery_action_specific_permissions(intended_discovery_action: str) -> bool:
-    if intended_discovery_action == DiscoveryAction.NONE and not user.may("wato.services"):
-        return False
-    if intended_discovery_action != DiscoveryAction.TABULA_RASA and not (
+def has_discovery_action_specific_permissions(
+    intended_discovery_action: str,
+) -> bool:
+    user_may_discover = (
         user.may("wato.service_discovery_to_undecided")
         and user.may("wato.service_discovery_to_monitored")
         and user.may("wato.service_discovery_to_ignored")
         and user.may("wato.service_discovery_to_removed")
-    ):
-        return False
-    return True
+    )
+    # not sure if the function even gets called for all of these.
+    match intended_discovery_action:
+        case DiscoveryAction.NONE:
+            return user.may("wato.services")
+        case DiscoveryAction.STOP:
+            return user_may_discover
+        case DiscoveryAction.TABULA_RASA:
+            return True
+        case DiscoveryAction.FIX_ALL:
+            return user_may_discover
+        case DiscoveryAction.REFRESH:
+            return user_may_discover
+        case DiscoveryAction.SINGLE_UPDATE:
+            return user_may_discover
+        case DiscoveryAction.BULK_UPDATE:
+            return user_may_discover
+        case DiscoveryAction.UPDATE_HOST_LABELS:
+            return user_may_discover
+        case DiscoveryAction.UPDATE_SERVICES:
+            return user_may_discover
+
+    # not sure if this can happen.
+    return user_may_discover
 
 
 def initial_discovery_result(

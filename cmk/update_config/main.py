@@ -54,7 +54,7 @@ def main(args: Sequence[str]) -> int:
             "You can downgrade to your previous version again using "
             "'omd update' and start the site again."
         )
-        return False
+        return 1
 
     logger = _setup_logging(arguments)
 

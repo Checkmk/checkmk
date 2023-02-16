@@ -766,7 +766,10 @@ class Key(BaseModel):
     def fingerprint(self, algorithm: HashAlgorithm) -> str:
         """return the fingerprint aka hash of the certificate as a hey string"""
         return (
-            Certificate.load_pem(CertificatePEM(self.certificate)).fingerprint(algorithm).hex(":")
+            Certificate.load_pem(CertificatePEM(self.certificate))
+            .fingerprint(algorithm)
+            .hex(":")
+            .upper()
         )
 
 

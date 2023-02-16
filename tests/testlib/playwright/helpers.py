@@ -34,6 +34,10 @@ class LocatorHelper(ABC):
         """check for an error div and its content"""
         expect(self.locator("div.error")).to_have_text(message)
 
+    def check_warning(self, message: str | Pattern) -> None:
+        """check for a warning div and its content"""
+        expect(self.locator("div.warning")).to_have_text(message)
+
     def get_input(self, input_name: str) -> Locator:
         return self.locator(f'input[name="{input_name}"]')
 

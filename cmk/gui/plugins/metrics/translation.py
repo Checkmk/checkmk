@@ -687,7 +687,7 @@ check_metrics["check_mk_active-disk_smb"] = {
 }
 df_basic_perfvarnames = [
     "inodes_used", "fs_size", "growth", "trend", "reserved", "fs_free", "fs_provisioning",
-    "uncommitted", "overprovisioned", "dedup_rate", "file_count"
+    "uncommitted", "overprovisioned", "dedup_rate", "file_count", "fs_used_renamed_legacy_records"
 ]
 df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {

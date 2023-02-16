@@ -1,0 +1,21 @@
+Title: Deal with 'messed up' RRD files
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1676558705
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p34
+
+In some particular update scenario, users would see a message about 'messed up' RRD files:
+<i>"RRD files for host myHost [...] are messed up. Please restore them both from backup."</i>
+This case is now properly handled.
+
+Users which are affected by the issue can execute the initial command again to get this fixed.
+
+Technical details:
+Older filesystem metrics have been created using the mount as metric name, leading to a lot of differently named metrics.
+We have since changed the metric name to the predictable (and reusable) name 'fs_used'.
+The migration failed in cases where for some reason both the old and the new metric are present.
+In this case we now create the artificial metric <tt>fs_used_renamed_legacy_records</tt> from the old values, which will be prepended to the new metric to provide the full history of RRDs.

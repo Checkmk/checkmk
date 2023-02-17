@@ -53,6 +53,10 @@ LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 LogCacheFilePath = tmp_dir / "special_agents" / "agent_proxmox_ve"
 
 
+class TimeoutOnFirstConnect(TimeoutError):
+    ...
+
+
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     """parse command line arguments and return argument object"""
     parser = create_default_argument_parser(description=__doc__)
@@ -658,11 +662,19 @@ class ProxmoxVeSession:
         ) -> None:
             super().__init__()
             ticket_url = base_url + "api2/json/access/ticket"
-            response = (
-                requests.post(url=ticket_url, verify=verify_ssl, data=credentials, timeout=timeout)
-                .json()
-                .get("data")
-            )
+            try:
+                response = (
+                    requests.post(
+                        url=ticket_url, verify=verify_ssl, data=credentials, timeout=timeout
+                    )
+                    .json()
+                    .get("data")
+                )
+            except requests.exceptions.ConnectTimeout:
+                raise TimeoutOnFirstConnect(
+                    f"Could not connect to {base_url} (TimeoutError after {timeout}s)"
+                )
+
             if response is None:
                 raise RuntimeError(
                     "Couldn't authenticate %r @ %r"
@@ -878,9 +890,18 @@ class ProxmoxVeAPI:
         return rec_get_tree(None, requested_structure, [])
 
 
+def agent_proxmox_ve_main_error_handler(args: Args) -> int:
+    """Just wraps error handling"""
+    try:
+        return agent_proxmox_ve_main(args)
+    except TimeoutOnFirstConnect as exc:
+        print(exc, file=sys.stderr)
+        return 1
+
+
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_proxmox_ve_main)
+    return special_agent_main(parse_arguments, agent_proxmox_ve_main_error_handler)
 
 
 if __name__ == "__main__":

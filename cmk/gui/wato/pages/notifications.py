@@ -773,7 +773,7 @@ class ModeNotifications(ABCNotificationsMode):
                         or _("Unknown date")
                     )
 
-                table.cell(_("Date/Time"), date, css=["nobr"])
+                table.cell(_("Time"), date, css=["nobr"])
                 nottype = context.get("NOTIFICATIONTYPE", "")
                 table.cell(_("Type"), nottype)
 

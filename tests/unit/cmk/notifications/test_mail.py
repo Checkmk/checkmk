@@ -301,16 +301,14 @@ def mock_service_context():
 
 
 SERVICE_CONTENT_TXT = """\
-Host:                heute (heute)
+Host:                heute
 Service:             CPU utilization
 Event:               OK -> WARN
 Address:             127.0.0.1
-Date / Time:         Wed Mar 20 16:51:46 CET 2019
+Time:                Wed Mar 20 16:51:46 CET 2019
 Summary:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)
 Details:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)
 another line\\nlast line
-Host Metrics:        \n\
-Service Metrics:     \n\
 """
 
 
@@ -447,12 +445,11 @@ def mock_host_context():
 
 
 HOST_CONTENT_TXT = """\
-Host:                heute (heute)
+Host:                heute
 Event:               DOWN -> UP
 Address:             127.0.0.1
-Date / Time:         Fri Aug 23 11:13:17 CEST 2019
+Time:                Fri Aug 23 11:13:17 CEST 2019
 Summary:             Packet received via smart PING
-Metrics:             \n\
 """
 
 

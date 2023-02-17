@@ -271,8 +271,8 @@ BODY_ELEMENTS = [
         True,
         "all",
         "Host",
-        "$HOSTNAME$ ($HOSTALIAS$)",
-        "$LINKEDHOSTNAME$ ($HOSTALIAS$)",
+        "$HOSTNAME_AND_ALIAS_TXT$",
+        "$HOSTNAME_AND_ALIAS_HTML$",
     ),
     ("servicedesc", "service", True, "all", "Service", "$SERVICEDESC$", "$LINKEDSERVICEDESC$"),
     (
@@ -299,11 +299,11 @@ BODY_ELEMENTS = [
         "both",
         False,
         "all",
-        "Date / Time",
+        "Time",
         "$LONGDATETIME$",
         "$LONGDATETIME$",
     ),
-    ("omdsite", "both", False, "all", "OMD Site", "$OMD_SITE$", "$OMD_SITE$"),
+    ("omdsite", "both", False, "all", "Site", "$OMD_SITE$", "$OMD_SITE$"),
     ("hosttags", "both", False, "all", "Host Tags", "$HOST_TAGS$", "$HOST_TAGS$"),
     (
         "notification_author",
@@ -765,7 +765,7 @@ def construct_content(
     if "PARAMETER_ELEMENTSS" in context:
         elements = context["PARAMETER_ELEMENTSS"].split()
     else:
-        elements = ["perfdata", "graph", "abstime", "address", "longoutput"]
+        elements = ["graph", "abstime", "address", "longoutput"]
 
     if is_bulk and "graph" in elements:
         notifications_with_graphs = context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"]
@@ -816,6 +816,13 @@ def extend_context(context: dict[str, str]) -> None:
         utils.service_url_from_context(context),
         context.get("SERVICEDESC", ""),
     )
+
+    if context["HOSTALIAS"] and context["HOSTNAME"] != context["HOSTALIAS"]:
+        context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$ ($HOSTALIAS$)"
+        context["HOSTNAME_AND_ALIAS_HTML"] = "$LINKEDHOSTNAME$ ($HOSTALIAS$)"
+    else:
+        context["HOSTNAME_AND_ALIAS_TXT"] = "$HOSTNAME$"
+        context["HOSTNAME_AND_ALIAS_HTML"] = "$LINKEDHOSTNAME$"
 
     event_template_txt, event_template_html = event_templates(context["NOTIFICATIONTYPE"])
 

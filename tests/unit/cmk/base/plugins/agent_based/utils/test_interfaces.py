@@ -1974,14 +1974,12 @@ def test_cluster_check_ignore_discovered_params() -> None:
                     type="10",
                 ),
             ],
-            [
-                interfaces.Interface(
-                    index="2",
-                    descr="Port 2",
-                    alias="",
-                    type="10",
-                )
-            ],
+            [interfaces.Interface(
+                index="2",
+                descr="Port 2",
+                alias="",
+                type="10",
+            )],
             id="unclustered, simple item",
         ),
         pytest.param(
@@ -2000,14 +1998,12 @@ def test_cluster_check_ignore_discovered_params() -> None:
                     type="10",
                 ),
             ],
-            [
-                interfaces.Interface(
-                    index="2",
-                    descr="",
-                    alias="Port",
-                    type="10",
-                )
-            ],
+            [interfaces.Interface(
+                index="2",
+                descr="",
+                alias="Port",
+                type="10",
+            )],
             id="unclustered, compound item",
         ),
         pytest.param(
@@ -2026,14 +2022,12 @@ def test_cluster_check_ignore_discovered_params() -> None:
                     type="10",
                 ),
             ],
-            [
-                interfaces.Interface(
-                    index="1",
-                    descr="",
-                    alias="Port 2",
-                    type="10",
-                )
-            ],
+            [interfaces.Interface(
+                index="1",
+                descr="",
+                alias="Port 2",
+                type="10",
+            )],
             id="unclustered, simple and compound mixed",
         ),
         pytest.param(
@@ -2172,12 +2166,7 @@ def test_matching_interfaces_for_item(
     section: interfaces.Section,
     expected_matches: Sequence[interfaces.Interface],
 ) -> None:
-    assert (
-        list(
-            interfaces.matching_interfaces_for_item(
-                item,
-                section,
-            )
-        )
-        == expected_matches
-    )
+    assert (list(interfaces.matching_interfaces_for_item(
+        item,
+        section,
+    )) == expected_matches)

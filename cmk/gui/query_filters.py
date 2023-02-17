@@ -944,7 +944,9 @@ def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) 
 
     def _add_row(row) -> bool:
         # Apply filter if and only if a filter value is set
-        if (filter_key := "%s_%d" % (ident, row["invinterface_oper_status"])) in values:
+        if (oper_status := row.get("invinterface_oper_status")) is not None and (
+            filter_key := "%s_%d" % (ident, oper_status)
+        ) in values:
             return values[filter_key] == "on"
         return True
 

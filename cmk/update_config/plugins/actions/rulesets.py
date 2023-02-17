@@ -37,7 +37,7 @@ class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
 
-        # this *must* be done before the transorms, otherwise information is lost!
+        # this *must* be done before the transforms, otherwise information is lost!
         _extract_connection_encryption_handling_from_210_rules(logger, all_rulesets)
 
         _transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
@@ -108,6 +108,9 @@ def _extract_connection_encryption_handling_from_210_rules(
             "This rule has been created automatically during the upgrade to Checkmk version 2.2.\n"
             f"Please refer to Werk #14982 for details.\n\n{new_rule.comment()}"
         )
+        new_rule.rule_options.disabled = rule.rule_options.disabled
+        new_rule.rule_options.predefined_condition_id = rule.rule_options.predefined_condition_id
+        new_rule.conditions = rule.conditions
         logger.log(VERBOSE, "Adding 'encryption_handling' rule: %s", new_rule.id)
         encryption_handling.append_rule(folder, new_rule)
 

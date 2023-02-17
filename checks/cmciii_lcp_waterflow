@@ -28,7 +28,7 @@ def parse_cmciii_lcp_waterflow(info) -> Section:
     iter_info = iter(info[0])
     name = None
     for line in iter_info:
-        if line == "Waterflow":
+        if "Waterflow" in line:
             name = line
             break
 

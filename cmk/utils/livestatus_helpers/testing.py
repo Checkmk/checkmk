@@ -232,6 +232,9 @@ class MockLiveStatusConnection:
             livestatus.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
              * 'GET status\\nColumns: livestatus_version program_version \
 program_start num_hosts num_services core_pid'
+            <BLANKLINE>
+            No queries were sent to site NO_SITE.
+
 
         This example will fail due to a wrong query being issued:
 
@@ -244,6 +247,10 @@ program_start num_hosts num_services core_pid'
              * 'Hello world!'
             Got query:
              * 'Foo bar!'
+            <BLANKLINE>
+            The following queries were sent to site NO_SITE:
+             * 'Foo bar!'
+
 
         This example will fail due to a superfluous query being issued:
 
@@ -254,6 +261,10 @@ program_start num_hosts num_services core_pid'
             ...
             livestatus.LivestatusTestingError: Got unexpected query on site 'NO_SITE':
              * 'Spanish inquisition!'
+            <BLANKLINE>
+            The following queries were sent to site NO_SITE:
+             * 'Spanish inquisition!'
+
 
         Using the new site parameter, we can add data to specific sites.
 
@@ -596,12 +607,22 @@ def remove_headers(query: str, headers: list[str]) -> str:
 
 class MockSingleSiteConnection:
     def __init__(self, site_name: SiteName, multisite_connection: MockLiveStatusConnection) -> None:
+        self._sent_queries: list[bytes] = []
         self._site_name = site_name
         self._multisite = multisite_connection
         self._last_response: io.StringIO | None = None
         self._expected_queries: list[tuple[str, MatchType]] = []
 
         self.socket = FakeSocket(self)
+
+    def _format_sent_queries(self):
+        if not self._sent_queries:
+            return f"\n\nNo queries were sent to site {self._site_name}."
+        formatted_queries = "\n".join(["* " + repr(query.decode()) for query in self._sent_queries])
+        return (
+            f"\n\nThe following queries were sent to site {self._site_name}:\n "
+            f"{formatted_queries}"
+        )
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={id(self)} site={self._site_name}>"
@@ -625,9 +646,13 @@ class MockSingleSiteConnection:
         return self
 
     def result_of_next_query(self, query: str) -> tuple[Response, str]:
+        self._sent_queries.append(query.encode())
         if not self._expected_queries:
             raise LivestatusTestingError(
-                f"Got unexpected query on site {self._site_name!r}:" "\n" f" * {repr(query)}"
+                f"Got unexpected query on site {self._site_name!r}:"
+                "\n"
+                f" * {repr(query)}"
+                f"{self._format_sent_queries()}"
             )
 
         expected_query, match_type = self._expected_queries.pop(0)
@@ -652,6 +677,7 @@ class MockSingleSiteConnection:
                 f" * {repr(expected_query)}\n"
                 f"Got query:\n"
                 f" * {repr(query)}"
+                f"{self._format_sent_queries()}"
             )
 
         def _generate_output() -> Iterable[list[ColumnName]]:
@@ -672,6 +698,7 @@ class MockSingleSiteConnection:
         return self._last_response.read(length).encode("utf-8")
 
     def socket_send(self, data: bytes) -> None:
+        self._sent_queries.append(data)
         if data[-2:] == b"\n\n":
             data = data[:-2]
         response, output_format = self.result_of_next_query(data.decode("utf-8"))
@@ -687,6 +714,7 @@ class MockSingleSiteConnection:
                 remaining_queries += f"\n * {repr(query[0])}"
             raise LivestatusTestingError(
                 f"Expected queries were not queried on site {self._site_name!r}:{remaining_queries}"
+                f"{self._format_sent_queries()}"
             )
 
 

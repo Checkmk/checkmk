@@ -66,7 +66,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         offsets, [](const IComment &r) { return r.expire_time(); }));
 
     TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
-        return r.rawData<IComment>()->host().handle();
+        return &r.rawData<IComment>()->host();
     }),
                            LockComments::no, LockDowntimes::yes);
     TableServices::addColumns(this, "service_", offsets.add([](Row r) {

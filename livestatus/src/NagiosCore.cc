@@ -89,10 +89,10 @@ const IHost *NagiosCore::ihost(const ::host *handle) const {
     return it == ihosts_by_handle_.end() ? nullptr : it->second.get();
 }
 
-std::unique_ptr<const IHost> NagiosCore::find_host(const std::string &name) {
+const IHost *NagiosCore::find_host(const std::string &name) {
     // Older Nagios headers are not const-correct... :-P
-    const auto *host = ::find_host(const_cast<char *>(name.c_str()));
-    return host == nullptr ? nullptr : std::make_unique<NebHost>(*host);
+    const auto *handle = ::find_host(const_cast<char *>(name.c_str()));
+    return handle == nullptr ? nullptr : ihost(handle);
 }
 
 std::unique_ptr<const IHostGroup> NagiosCore::find_hostgroup(

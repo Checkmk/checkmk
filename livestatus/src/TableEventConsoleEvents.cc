@@ -11,12 +11,12 @@
 #include "TableHosts.h"
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
-#include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/Table.h"
 #include "livestatus/TimeColumn.h"
+class IHost;
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole{mc} {
@@ -92,8 +92,7 @@ void TableEventConsoleEvents::addColumns(Table *table) {
                               "The syslog application match groups", offsets));
 
     TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
-        const auto *h = r.rawData<ECRow>()->host();
-        return h == nullptr ? nullptr : h->handle();
+        return r.rawData<ECRow>()->host();
     }),
                            LockComments::yes, LockDowntimes::yes);
 }

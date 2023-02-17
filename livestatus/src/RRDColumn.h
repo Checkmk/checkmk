@@ -18,7 +18,6 @@
 #include "livestatus/overload.h"  // IWYU pragma: keep
 
 #ifdef CMC
-class Host;
 class Service;
 #else
 #include "nagios.h"
@@ -54,12 +53,8 @@ public:
 // TODO(sp): Remove.
 #ifdef CMC
     std::vector<value_type> operator()(
-        const Host &hst, std::chrono::seconds timezone_offset) const;
-    std::vector<value_type> operator()(
         const Service &svc, std::chrono::seconds timezone_offset) const;
 #else
-    std::vector<value_type> operator()(
-        const ::host &hst, std::chrono::seconds timezone_offset) const;
     std::vector<value_type> operator()(
         const ::service &svc, std::chrono::seconds timezone_offset) const;
 #endif

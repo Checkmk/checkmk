@@ -74,7 +74,7 @@ public:
     // TODO(sp) Nuke this
     const IHost *ihost(const ::host *handle) const;
 
-    std::unique_ptr<const IHost> find_host(const std::string &name) override;
+    const IHost *find_host(const std::string &name) override;
     [[nodiscard]] std::unique_ptr<const IHostGroup> find_hostgroup(
         const std::string &name) const override;
     std::unique_ptr<const IHost> getHostByDesignation(

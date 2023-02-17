@@ -66,9 +66,8 @@ class IHostGroup;
 class IServiceGroup;
 
 class DummyMonitoringCore : public MonitoringCore {
-    std::unique_ptr<const IHost> find_host(
-        const std::string & /*name*/) override {
-        return {};
+    const IHost *find_host(const std::string & /*name*/) override {
+        return nullptr;
     }
     [[nodiscard]] std::unique_ptr<const IHostGroup> find_hostgroup(
         const std::string & /* name */) const override {

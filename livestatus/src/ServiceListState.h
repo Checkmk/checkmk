@@ -16,14 +16,11 @@ class IServiceGroup;
 class User;
 
 #ifdef CMC
-#include "CmcHost.h"
 #include "CmcServiceGroup.h"
-class Service;
-class Host;
 template <typename T>
 class ObjectGroup;
+class Service;
 #else
-#include "NebHost.h"
 #include "NebServiceGroup.h"
 #include "nagios.h"
 #endif
@@ -56,17 +53,11 @@ public:
 
 // TODO(sp): Remove.
 #ifdef CMC
-    int32_t operator()(const Host &hst, const User &user) const {
-        return (*this)(CmcHost{hst}, user);
-    }
     int32_t operator()(const ObjectGroup<Service> &group,
                        const User &user) const {
         return (*this)(CmcServiceGroup{group}, user);
     }
 #else
-    int32_t operator()(const host &hst, const User &user) const {
-        return (*this)(NebHost{hst}, user);
-    }
     int32_t operator()(const servicegroup &group, const User &user) const {
         return (*this)(NebServiceGroup{group}, user);
     }

@@ -25,10 +25,8 @@
 #include "livestatus/strutil.h"
 
 #ifdef CMC
-#include "CmcHost.h"
 #include "CmcService.h"
 #else
-#include "NebHost.h"
 #include "NebService.h"
 #endif
 
@@ -99,20 +97,10 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
 
 #ifdef CMC
 std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
-    const Host &hst, std::chrono::seconds timezone_offset) const {
-    return (*this)(CmcHost{hst}, timezone_offset);
-}
-
-std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
     const Service &svc, std::chrono::seconds timezone_offset) const {
     return (*this)(CmcService{svc}, timezone_offset);
 }
 #else
-std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
-    const ::host &hst, std::chrono::seconds timezone_offset) const {
-    return (*this)(NebHost{hst}, timezone_offset);
-}
-
 std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
     const ::service &svc, std::chrono::seconds timezone_offset) const {
     return (*this)(NebService{svc}, timezone_offset);

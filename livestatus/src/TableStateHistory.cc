@@ -179,10 +179,8 @@ void TableStateHistory::addColumns(Table *table, const std::string &prefix,
 
     // join host and service tables
     TableHosts::addColumns(
-        table, prefix + "current_host_", offsets.add([](Row r) {
-            const auto &h = r.rawData<HostServiceState>()->_host;
-            return h ? h->handle() : nullptr;
-        }),
+        table, prefix + "current_host_",
+        offsets.add([](Row r) { return r.rawData<HostServiceState>()->_host; }),
         LockComments::yes, LockDowntimes::yes);
     TableServices::addColumns(
         table, prefix + "current_service_", offsets.add([](Row r) {
@@ -398,7 +396,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
 
         HostServiceKey key = nullptr;
         bool is_service = false;
-        auto entry_host = core()->find_host(entry->host_name());
+        const auto *entry_host = core()->find_host(entry->host_name());
         auto entry_service = core()->find_service(entry->host_name(),
                                                   entry->service_description());
         switch (entry->kind()) {
@@ -423,7 +421,8 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host: {
                 if (!is_service) {
-                    key = entry_host ? entry_host->handle() : nullptr;
+                    key =
+                        entry_host == nullptr ? nullptr : entry_host->handle();
                 }
 
                 if (key == nullptr) {
@@ -444,7 +443,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     // now
                     state = new HostServiceState();
                     state->_is_host = entry->service_description().empty();
-                    state->_host = std::move(entry_host);
+                    state->_host = entry_host;
                     state->_service = std::move(entry_service);
                     state->_host_name = entry->host_name();
                     state->_service_description = entry->service_description();
@@ -464,7 +463,7 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     // Host/Service relations
                     if (state->_is_host) {
                         for (auto &it_inh : state_info) {
-                            if (it_inh.second->_host &&
+                            if (it_inh.second->_host != nullptr &&
                                 it_inh.second->_host->handle() ==
                                     state->_host->handle()) {
                                 state->_services.push_back(it_inh.second);
@@ -486,14 +485,16 @@ void TableStateHistory::answerQueryInternal(Query &query, const User &user,
                     state->_notification_period =
                         state->_service
                             ? state->_service->notificationPeriodName()
-                        : state->_host ? state->_host->notificationPeriodName()
-                                       : "";
+                        : state->_host != nullptr
+                            ? state->_host->notificationPeriodName()
+                            : "";
 
                     // Same for service period.
                     state->_service_period =
                         state->_service ? state->_service->servicePeriodName()
-                        : state->_host  ? state->_host->servicePeriodName()
-                                        : "";
+                        : state->_host != nullptr
+                            ? state->_host->servicePeriodName()
+                            : "";
 
                     // Determine initial in_notification_period status
                     auto tmp_period =
@@ -877,7 +878,7 @@ void TableStateHistory::process(
     // if (hs_state->_duration > 0)
     _abort_query =
         user.is_authorized_for_object(
-            hs_state->_host ? hs_state->_host.get() : nullptr,
+            hs_state->_host,
             hs_state->_service ? hs_state->_service.get() : nullptr, false) &&
         !query.processDataset(Row{hs_state});
 

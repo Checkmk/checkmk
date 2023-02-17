@@ -580,8 +580,9 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         get_comments));
 
     if (add_hosts == AddHosts::yes) {
-        TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
-            return r.rawData<service>()->host_ptr;
+        TableHosts::addColumns(table, "host_", offsets.add([mc](Row r) {
+            const auto *handle = r.rawData<service>()->host_ptr;
+            return mc->impl<NagiosCore>()->ihost(handle);
         }),
                                LockComments::yes, LockDowntimes::yes);
     }
@@ -764,7 +765,7 @@ void TableServices::answerQuery(Query &query, const User &user) {
     // If we know the host, we use it directly.
     if (auto value = query.stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
-        if (const auto hst = core()->find_host(*value)) {
+        if (const auto *hst = core()->find_host(*value)) {
             const auto *h = static_cast<const host *>(hst->handle());
             for (const auto *m = h->services; m != nullptr; m = m->next) {
                 if (!process(*m->service_ptr)) {

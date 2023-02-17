@@ -11,6 +11,8 @@ from collections.abc import Sequence
 
 import pytest
 
+from tests.testlib.rest_api_client import RestApiClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import paths, version
@@ -69,7 +71,9 @@ def test_folder_schema() -> None:
     assert schema.load({"folder": "~"})["folder"]
 
 
-def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_folder_validation(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, api_client: RestApiClient
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -86,6 +90,12 @@ def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> 
         status=400,
         headers={"Accept": "application/json"},
         content_type="application/json",
+    )
+    api_client.create_folder(
+        folder_name="\\",
+        title="test",
+        parent="~",
+        expect_ok=False,
     )
 
 

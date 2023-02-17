@@ -11,6 +11,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables
+from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import fields as gui_fields
@@ -462,7 +463,7 @@ class CreateFolder(BaseSchema):
             "The filesystem directory name (not path!) of the folder." " No slashes are allowed."
         ),
         required=True,
-        pattern="[^/]+",
+        pattern=WATO_FOLDER_PATH_NAME_REGEX,
         example="production",
     )
     title = fields.String(

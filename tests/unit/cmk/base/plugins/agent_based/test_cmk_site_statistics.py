@@ -36,7 +36,7 @@ _SECTION_LIVESTATUS_STATUS = {
     "heute": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "0",
+        "average_latency_checker": "0",
         "average_latency_fetcher": "5.46863e-05",
         "average_latency_generic": "0",
         "average_latency_real_time": "0",
@@ -63,7 +63,6 @@ _SECTION_LIVESTATUS_STATUS = {
         "forks_rate": "0",
         "has_event_handlers": "0",
         "helper_usage_checker": "7.74162e-07",
-        "helper_usage_cmk": "0",
         "helper_usage_fetcher": "0.0057499",
         "helper_usage_generic": "0",
         "helper_usage_real_time": "0",
@@ -107,7 +106,7 @@ _SECTION_LIVESTATUS_STATUS = {
     "gestern": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "0",
+        "average_latency_checker": "0",
         "average_latency_fetcher": "1.6504e-05",
         "average_latency_generic": "0",
         "average_latency_real_time": "0",
@@ -134,7 +133,6 @@ _SECTION_LIVESTATUS_STATUS = {
         "forks_rate": "0",
         "has_event_handlers": "0",
         "helper_usage_checker": "2.15661e-05",
-        "helper_usage_cmk": "0",
         "helper_usage_fetcher": "0.000610388",
         "helper_usage_generic": "0",
         "helper_usage_real_time": "0",

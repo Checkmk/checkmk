@@ -125,7 +125,7 @@ def test_service_table(site: Site) -> None:
 @pytest.mark.usefixtures("default_cfg")
 def test_usage_counters(site: Site) -> None:
     rows = site.live.query(
-        "GET status\nColumns: helper_usage_cmk helper_usage_fetcher helper_usage_checker\n"
+        "GET status\nColumns: helper_usage_generic helper_usage_real_time helper_usage_fetcher helper_usage_checker\n"
     )
     assert isinstance(rows, list)
     assert len(rows) == 1

@@ -46,7 +46,6 @@ livestatus_status_default_levels = {
     "average_latency_cmk": (30, 60),
     "average_latency_fetcher": (30, 60),
     "helper_usage_generic": (80.0, 90.0),
-    "helper_usage_cmk": (80.0, 90.0),
     "helper_usage_fetcher": (80.0, 90.0),
     "helper_usage_checker": (80.0, 90.0),
     "livestatus_usage": (60.0, 80.0),
@@ -178,11 +177,10 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
         metrics = [
-            (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average check latency"),
-            (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Checkmk latency"),
+            (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average active check latency"),
+            (1, lambda x: "%.3fs" % x, "average_latency_checker", "Average checker latency"),
             (1, lambda x: "%.3fs" % x, "average_latency_fetcher", "Average fetcher latency"),
-            (100, render.percent, "helper_usage_generic", "Check helper usage"),
-            (100, render.percent, "helper_usage_cmk", "Checkmk helper usage"),
+            (100, render.percent, "helper_usage_generic", "Active check helper usage"),
             (100, render.percent, "helper_usage_fetcher", "Fetcher helper usage"),
             (100, render.percent, "helper_usage_checker", "Checker helper usage"),
             (100, render.percent, "livestatus_usage", "Livestatus usage"),
@@ -241,6 +239,10 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
                     value = 0.0
                 else:
                     raise
+
+            # The column was incorrectly named, but we want to keep the parameter configuration and the persisted metrics.
+            if key == "average_latency_checker":
+                key = "average_latency_cmk"
 
             yield from check_levels(
                 value=value,

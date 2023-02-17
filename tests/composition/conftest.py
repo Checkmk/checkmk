@@ -108,7 +108,10 @@ def _remote_site(central_site: Site, site_factory: SiteFactory) -> Site:
         }
     )
     central_site.openapi.login_to_site(remote_site.id)
-    central_site.openapi.activate_changes_and_wait_for_completion()
+    central_site.openapi.activate_changes_and_wait_for_completion(
+        # this seems to be necessary to avoid sporadic CI failures
+        force_foreign_changes=True,
+    )
     return remote_site
 
 

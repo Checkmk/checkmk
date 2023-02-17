@@ -6,7 +6,7 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from cmk.gui.ctx_stack import g
+from cmk.gui.ctx_stack import global_var, set_global_var
 
 
 @contextmanager
@@ -34,10 +34,8 @@ def is_permission_tracking_enabled() -> bool:
 
 
 def _get_permission_tracking() -> bool:
-    if "permission_tracking" not in g:
-        return False
-    return g.permission_tracking
+    return global_var("permission_tracking", default=False)
 
 
 def _set_permission_tracking(enable: bool) -> None:
-    g.permission_tracking = enable
+    set_global_var("permission_tracking", enable)

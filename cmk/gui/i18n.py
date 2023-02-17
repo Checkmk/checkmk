@@ -9,11 +9,9 @@ import gettext as gettext_module
 from pathlib import Path
 from typing import NamedTuple
 
-from flask import g
-
 import cmk.utils.paths
 
-from cmk.gui.ctx_stack import request_local_attr, set_global_var
+from cmk.gui.ctx_stack import global_var, request_local_attr, set_global_var
 from cmk.gui.hooks import request_memoize
 from cmk.gui.utils.speaklater import LazyString
 
@@ -158,8 +156,9 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
     translations: list[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
-            g.translation = gettext_module.translation(
-                "multisite", str(locale_base_dir), languages=[lang]
+            set_global_var(
+                "translation",
+                gettext_module.translation("multisite", str(locale_base_dir), languages=[lang]),
             )
 
         except OSError:
@@ -167,8 +166,8 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
 
         # Create a chain of fallback translations
         if translations:
-            g.translation.add_fallback(translations[-1])
-        translations.append(g.translation)
+            global_var("translation").add_fallback(translations[-1])
+        translations.append(global_var("translation"))
 
     if not translations:
         return None

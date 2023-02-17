@@ -6,11 +6,11 @@
 from collections.abc import Container
 from typing import Iterable, TypeVar
 
-from cmk.utils import aws_constants
 from cmk.utils.version import is_cloud_edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
+    aws_region_to_monitor,
     RulespecGroupVMCloudContainer,
     validate_aws_tags,
 )
@@ -524,8 +524,8 @@ def _valuespec_special_agents_aws() -> Migrate:
                 (
                     "regions",
                     ListChoice(
-                        title=_("Regions to use"),
-                        choices=sorted(aws_constants.AWSRegions, key=lambda x: x[1]),
+                        title=_("Regions to monitor"),
+                        choices=aws_region_to_monitor(),
                     ),
                 ),
                 (

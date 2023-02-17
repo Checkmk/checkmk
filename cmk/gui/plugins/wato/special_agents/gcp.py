@@ -17,7 +17,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
 )
 from cmk.gui.utils.urls import DocReference
-from cmk.gui.valuespec import Checkbox, Dictionary, ListChoice, TextInput
+from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
 
 RAW_GCP_SERVICES: Final = [
     ("gcs", "Google Cloud Storage (GCS)"),
@@ -109,14 +109,6 @@ def _valuespec_special_agents_gcp():
                         )
                     ],
                     required_keys=["tableid"],
-                ),
-            ),
-            (
-                "health",
-                Checkbox(
-                    title="Health",
-                    label="Monitor GCP health",
-                    help="Monitor health of GCP products in any region",
                 ),
             ),
         ],

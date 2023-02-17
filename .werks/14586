@@ -1,0 +1,19 @@
+Title: gcp_status: Monitor GCP Status
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1677670821
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+With this werk, it is possible to monitor the GCP Health Dashboard,
+available at https://status.cloud.google.com/. Since this
+site is publicly available, no authentication is required for this
+monitoring.
+
+This feature consists of a special agent, agent_gcp_status, and a new
+check, gcp_status. The special agent can be configured via the rule
+Google Cloud Platform (GCP) Status.
+

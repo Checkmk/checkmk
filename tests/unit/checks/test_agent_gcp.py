@@ -23,7 +23,6 @@ pytestmark = pytest.mark.checks
                 "project": "test",
                 "credentials": "definitely some json",
                 "services": ["gcs", "run"],
-                "health": False,
             },
             [
                 "--project",
@@ -46,7 +45,6 @@ pytestmark = pytest.mark.checks
                 "credentials": "definitely some json",
                 "cost": {"tableid": "checkmk"},
                 "services": [],
-                "health": False,
             },
             [
                 "--project",
@@ -68,7 +66,6 @@ pytestmark = pytest.mark.checks
                 "credentials": "definitely some json",
                 "cost": {"tableid": "checkmk"},
                 "services": ["gcs"],
-                "health": True,
             },
             [
                 "--project",
@@ -79,7 +76,6 @@ pytestmark = pytest.mark.checks
                 "2022-01-12",
                 "--cost_table",
                 "checkmk",
-                "--monitor_health",
                 "--services",
                 "gcs",
                 "--piggy-back-prefix",
@@ -92,7 +88,6 @@ pytestmark = pytest.mark.checks
                 "project": "test",
                 "credentials": "definitely some json",
                 "services": [],
-                "health": False,
                 "piggyback": {"prefix": "custom-prefix", "piggyback_services": ["gce"]},
             },
             [

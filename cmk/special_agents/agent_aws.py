@@ -7401,3 +7401,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
 
 class AwsAccessError(MKException):
     pass
+
+
+if __name__ == "__main__":
+    sys.exit(main())

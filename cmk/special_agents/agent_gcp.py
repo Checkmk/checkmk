@@ -13,7 +13,6 @@ from functools import cache
 from types import TracebackType
 from typing import Any, Protocol
 
-import requests
 import typing_extensions
 from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
@@ -74,9 +73,6 @@ class ClientProtocol(Protocol):
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         ...
 
-    def health_info(self) -> Mapping[str, Any]:
-        ...
-
 
 @dataclass(unsafe_hash=True)
 class Client:
@@ -133,12 +129,6 @@ class Client:
                 pages.append(response["rows"])
 
         return schema, pages
-
-    def health_info(self) -> Mapping[str, Any]:
-        resp = requests.get("https://status.cloud.google.com/incidents.json")
-        if resp.status_code == 200:
-            return resp.json()
-        return {}
 
 
 @dataclass(frozen=True)
@@ -305,18 +295,6 @@ class CostSection:
 
 
 @dataclass(frozen=True)
-class HealthSection:
-    date: datetime.date
-    # I do not want to make an explicit type for the incident schema
-    # https://status.cloud.google.com/incidents.schema.json
-    health_info: Mapping[str, Any]
-    name: str = "health"
-
-    def serialize(self) -> str:
-        return json.dumps(self.health_info)
-
-
-@dataclass(frozen=True)
 class ExceptionSection:
     exc_type: type[BaseException] | None
     exception: BaseException | None
@@ -335,10 +313,10 @@ Section = (
     | ResultSection
     | PiggyBackSection
     | CostSection
-    | HealthSection
     | ExceptionSection
     | HostLabelSection
 )
+
 #################
 # Serialization #
 #################
@@ -372,12 +350,6 @@ def _cost_serializer(section: CostSection) -> None:
             w.append(CostRow.serialize(row))
 
 
-def _health_serializer(section: HealthSection) -> None:
-    with SectionWriter("gcp_health") as w:
-        w.append(json.dumps({"date": section.date.isoformat()}))
-        w.append(section.serialize())
-
-
 def _exception_serializer(section: ExceptionSection) -> None:
     with SectionWriter("gcp_exceptions") as w:
         if section.exc_type is not None:
@@ -399,8 +371,6 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
             _piggyback_serializer(section)
         elif isinstance(section, CostSection):
             _cost_serializer(section)
-        elif isinstance(section, HealthSection):
-            _health_serializer(section)
         elif isinstance(section, ExceptionSection):
             _exception_serializer(section)
         elif isinstance(section, HostLabelSection):
@@ -548,15 +518,6 @@ def run_cost(client: ClientProtocol, cost: CostArgument | None) -> Iterable[Cost
     yield CostSection(rows=gather_costs(client, cost), query_date=client.date)
 
 
-##################
-# Service Health #
-##################
-
-
-def run_health(client: ClientProtocol) -> Iterable[HealthSection]:
-    yield HealthSection(date=client.date, health_info=client.health_info())
-
-
 #################
 # Orchestration #
 #################
@@ -568,7 +529,6 @@ def run(
     piggy_back_services: Sequence[PiggyBackService],
     serializer: Callable[[Iterable[Section] | Iterable[PiggyBackSection]], None],
     cost: CostArgument | None,
-    monitor_health: bool,
     piggy_back_prefix: str,
 ) -> None:
     serializer([HostLabelSection(labels={"cmk/gcp/projectId": client.project})])
@@ -596,9 +556,6 @@ def run(
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="BigQuery")])
         return
-
-    if monitor_health:
-        serializer(run_health(client))
 
     serializer([ExceptionSection(None, None, None)])
 
@@ -1217,12 +1174,6 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         default=[],
     )
     parser.add_argument(
-        "--monitor_health",
-        action="store_true",
-        help="Monitor GCP Health",
-    )
-
-    parser.add_argument(
         "--piggy-back-prefix",
         type=str,
         help="Prefix for piggyback hosts",
@@ -1236,7 +1187,6 @@ def agent_gcp_main(args: Args) -> int:
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
     cost = CostArgument(args.cost_table) if args.cost_table else None
-    monitor_health = args.monitor_health
     piggy_back_prefix = args.piggy_back_prefix
     run(
         client,
@@ -1244,7 +1194,6 @@ def agent_gcp_main(args: Args) -> int:
         piggies,
         serializer=gcp_serializer,
         cost=cost,
-        monitor_health=monitor_health,
         piggy_back_prefix=piggy_back_prefix,
     )
     return 0

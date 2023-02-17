@@ -37,10 +37,14 @@ import types
 from collections import defaultdict
 from urllib.parse import quote_plus
 
-PY2 = sys.version_info[0] == 2
-
 try:
-    from typing import Any, Dict, Iterable, List, Union
+    from typing import (  # noqa: F401 # pylint: disable=unused-import
+        Any,
+        Dict,
+        Iterable,
+        List,
+        Union,
+    )
 except ImportError:
     pass
 
@@ -796,7 +800,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
             LOGGER.warning("config file %s does not exist!", filename)
         else:
             with open(filename, "r") as cfg:
-                if PY2:
+                if sys.version_info[0] == 2:
                     self.readfp(cfg)  # pylint: disable=deprecated-method
                 else:
                     self.read_file(cfg)

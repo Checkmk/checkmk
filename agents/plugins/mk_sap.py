@@ -45,7 +45,7 @@ import sys
 import time
 
 try:
-    from typing import Any, Dict, List, Tuple, Union
+    from typing import Any, Dict, List, Tuple, Union  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 

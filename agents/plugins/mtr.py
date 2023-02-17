@@ -30,7 +30,7 @@ import sys
 import time
 
 try:
-    from typing import Any, Dict
+    from typing import Any, Dict  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -182,7 +182,7 @@ def check_mtr_pid(pid):
 def parse_report(host, status):  # pylint: disable=too-many-branches
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
-        if not host in status.keys():
+        if host not in status.keys():
             # New host
             status[host] = {"hops": {}, "lasttime": 0}
         return
@@ -206,7 +206,7 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
                 pid = int(opened_file.readline().rstrip())
             if check_mtr_pid(pid):
                 # Still running, we're done.
-                if not host in status.keys():
+                if host not in status.keys():
                     # New host
                     status[host] = {"hops": {}, "lasttime": 0}
                 status[host]["running"] = True
@@ -226,7 +226,7 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
             "expecting at least 1 hop! Throwing away invalid report\n" % reportfile
         )
         os.unlink(reportfile)
-        if not host in status.keys():
+        if host not in status.keys():
             # New host
             status[host] = {"hops": {}, "lasttime": 0}
         return
@@ -242,10 +242,10 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
         lines.pop(0)  # Get rid of HOST: header
         hopline = re.compile(
             r"^\s*\d+\."
-        )  #  10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
+        )  # 10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
         for line in lines:
             if not hopline.match(line):
-                continue  #     |  `|-- 129.250.2.159
+                continue  # |  `|-- 129.250.2.159
             hopcount += 1
             parts = line.split()
             if len(parts) < 8:

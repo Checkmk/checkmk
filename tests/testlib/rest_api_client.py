@@ -194,12 +194,12 @@ class RestApiClient:
     * inline the top level keys of the request body as function parameters
     * inline all query parameters as function parameters
     * add the following arg: `expect_ok: bool = True`
-    * call and return `self._request()` with the following args:
+    * call and return `self.request()` with the following args:
       * `url` should be the url of the endpoint with all path parameters filled in
       * `body` should be a dict with all the keys you inlined in to the function signature
       * `query_params` should be a dict with all the query parameters you inlined into the function signature
       * `expect_ok` should be passed on from the function signature
-    * if the endpoint needs an etag, get it and pass it as a header to `self._request()` (see `edit_host`)
+    * if the endpoint needs an etag, get it and pass it as a header to `self.request()` (see `edit_host`)
 
     A good example to start from would be the `create_host` method of this class.
 
@@ -207,10 +207,14 @@ class RestApiClient:
     """
 
     def __init__(self, request_handler: RequestHandler, url_prefix: str):
-        self._request_handler = request_handler
+        self.request_handler = request_handler
         self._url_prefix = url_prefix
 
-    def _request(
+    def set_credentials(self, username: str, password: str) -> None:
+        self.request_handler.set_credentials(username, password)
+
+    # This is public for quick debugging sessions
+    def request(
         self,
         method: HTTPMethod,
         url: str,
@@ -236,7 +240,7 @@ class RestApiClient:
             else:
                 request_body = ""
 
-        resp = self._request_handler.request(
+        resp = self.request_handler.request(
             method=method,
             url=url,
             query_params=query_params,
@@ -247,7 +251,7 @@ class RestApiClient:
         if expect_ok and resp.status_code >= 400:
             raise RestApiException(url, method, body, default_headers, resp)
         if follow_redirects and 300 <= resp.status_code < 400:
-            return self._request(
+            return self.request(
                 method=method,
                 url=resp.headers["Location"],
                 query_params=query_params,
@@ -280,10 +284,10 @@ class RestApiClient:
         }
         if not body:
             del kwargs["body"]
-        return self._request(**kwargs, url_is_complete=True, expect_ok=expect_ok)
+        return self.request(**kwargs, url_is_complete=True, expect_ok=expect_ok)
 
     def get_folder(self, folder_name: str, expect_ok: bool = True) -> Response:
-        return self._request(
+        return self.request(
             "get",
             url=f"/objects/folder_config/{folder_name}",
             expect_ok=expect_ok,
@@ -299,7 +303,7 @@ class RestApiClient:
         etag = self.get_folder(folder_name).headers["ETag"]
         headers = {"IF-Match": etag}
         body = {"title": title, "attributes": attributes}
-        return self._request(
+        return self.request(
             "put",
             url=f"/objects/folder_config/{folder_name}",
             headers=headers,
@@ -319,7 +323,7 @@ class RestApiClient:
             query_params = {"bake_agent": "1" if bake_agent else "0"}
         else:
             query_params = {}
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/host_config/collections/all",
             query_params=query_params,
@@ -328,7 +332,7 @@ class RestApiClient:
         )
 
     def bulk_create_hosts(self, *args: JSON, expect_ok: bool = True) -> Response:
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/host_config/actions/bulk-create/invoke",
             body={"entries": args},
@@ -348,7 +352,7 @@ class RestApiClient:
             query_params = {"bake_agent": "1" if bake_agent else "0"}
         else:
             query_params = {}
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/host_config/collections/clusters",
             query_params=query_params,
@@ -362,7 +366,7 @@ class RestApiClient:
         )
 
     def get_host(self, host_name: str, expect_ok: bool = True) -> Response:
-        return self._request("get", url="/objects/host_config/" + host_name, expect_ok=expect_ok)
+        return self.request("get", url="/objects/host_config/" + host_name, expect_ok=expect_ok)
 
     def edit_host(
         self,
@@ -380,7 +384,7 @@ class RestApiClient:
             "update_attributes": update_attributes,
             "remove_attributes": remove_attributes,
         }
-        return self._request(
+        return self.request(
             "put",
             url="/objects/host_config/" + host_name,
             body={k: v for k, v in body.items() if v is not None},
@@ -389,7 +393,7 @@ class RestApiClient:
         )
 
     def bulk_edit_hosts(self, *args: JSON, expect_ok: bool = True) -> Response:
-        return self._request(
+        return self.request(
             "put",
             url="/domain-types/host_config/actions/bulk-update/invoke",
             body={"entries": args},
@@ -401,7 +405,7 @@ class RestApiClient:
     ) -> Response:
         etag = self.get_host(host_name).headers["ETag"]
         headers = {"IF-Match": etag}
-        return self._request(
+        return self.request(
             "put",
             url=f"/objects/host_config/{host_name}/properties/{property_name}",
             body=property_value,
@@ -410,7 +414,7 @@ class RestApiClient:
         )
 
     def delete_host(self, host_name: str) -> Response:
-        return self._request("delete", url=f"/objects/host_config/{host_name}")
+        return self.request("delete", url=f"/objects/host_config/{host_name}")
 
     def activate_changes(
         self,
@@ -421,7 +425,7 @@ class RestApiClient:
     ) -> Response:
         if sites is None:
             sites = []
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/activation_run/actions/activate-changes/invoke",
             body={
@@ -440,7 +444,7 @@ class RestApiClient:
     ) -> Response | NoReturn:
         if sites is None:
             sites = []
-        response = self._request(
+        response = self.request(
             "post",
             url="/domain-types/activation_run/actions/activate-changes/invoke",
             body={
@@ -460,7 +464,7 @@ class RestApiClient:
         def waiter(result_que: multiprocessing.Queue, initial_response: Response) -> None:
             wait_response = initial_response
             while wait_response.status_code == 302:
-                wait_response = self._request(
+                wait_response = self.request(
                     "get",
                     url=wait_response.headers["Location"],
                     expect_ok=False,
@@ -481,7 +485,7 @@ class RestApiClient:
         return result
 
     def call_online_verification(self, expect_ok: bool = False) -> Response:
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/licensing/actions/verify/invoke",
             expect_ok=expect_ok,
@@ -511,7 +515,7 @@ class RestApiClient:
         if site is not None:
             body["site"] = site
 
-        return self._request(
+        return self.request(
             "post", url="/domain-types/metric/actions/get/invoke", body=body, expect_ok=expect_ok
         )
 
@@ -525,7 +529,7 @@ class RestApiClient:
         if version.is_managed_edition():
             body["customer"] = "provider"
 
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/user_config/collections/all",
             body=body,
@@ -555,12 +559,12 @@ class RestApiClient:
             )
         )
 
-        return self._request(
+        return self.request(
             "get", url="/domain-types/ruleset/collections/all?" + query_params, expect_ok=expect_ok
         )
 
     def list_rules(self, ruleset: str, expect_ok: bool = True) -> Response:
-        return self._request(
+        return self.request(
             "get",
             url=f"/domain-types/rule/collections/all?ruleset_name={ruleset}",
             expect_ok=expect_ok,
@@ -585,18 +589,22 @@ class RestApiClient:
             }
         )
 
-        return self._request(
+        return self.request(
             "post", url="/domain-types/rule/collections/all", body=body, expect_ok=expect_ok
         )
 
     def show_user(self, username: str, expect_ok: bool = True) -> Response:
-        return self._request("get", url=f"/objects/user_config/{username}", expect_ok=expect_ok)
+        return self.request("get", url=f"/objects/user_config/{username}", expect_ok=expect_ok)
 
     # TODO: add additional parameters
     def edit_user(
-        self, username: str, fullname: str | None = None, expect_ok: bool = True
+        self,
+        username: str,
+        fullname: str | None = None,
+        contactgroups: list[str] | None = None,
+        expect_ok: bool = True,
     ) -> Response:
-        body = {"fullname": fullname} if fullname is not None else {}
+        body = {"fullname": fullname, "contactgroups": contactgroups}
 
         # if there is no object, there's probably no etag.
         # But we want the 404 from the request below!
@@ -606,16 +614,16 @@ class RestApiClient:
         else:
             headers = {}
 
-        return self._request(
+        return self.request(
             "put",
             url=f"/objects/user_config/{username}",
-            body=body,
+            body={k: v for k, v in body.items() if v is not None},
             headers=headers,
             expect_ok=expect_ok,
         )
 
     def bake_and_sign_agent(self, key_id: int, passphrase: str, expect_ok: bool = True) -> Response:
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/agent/actions/bake_and_sign/invoke",
             body={"key_id": key_id, "passphrase": passphrase},
@@ -664,7 +672,7 @@ class AuxTagTestClient(RestApiClient):
         return AuxTagEditRequest
 
     def get(self, aux_tag_id: str, expect_ok: bool = True) -> Response:
-        resp = self._request(
+        resp = self.request(
             "get",
             url=f"/objects/{self.domain}/{aux_tag_id}",
             expect_ok=expect_ok,
@@ -675,7 +683,7 @@ class AuxTagTestClient(RestApiClient):
         return resp
 
     def get_all(self, expect_ok: bool = True) -> Response:
-        resp = self._request(
+        resp = self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
@@ -685,7 +693,7 @@ class AuxTagTestClient(RestApiClient):
         return resp
 
     def create(self, tag_data: AuxTagCreateRequest, expect_ok: bool = True) -> Response:
-        resp = self._request(
+        resp = self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             pydantic_basemodel_body=tag_data,
@@ -702,7 +710,7 @@ class AuxTagTestClient(RestApiClient):
         self, aux_tag_id: str, tag_data: AuxTagEditRequest, expect_ok: bool = True
     ) -> Response:
         etag = self.get(aux_tag_id).headers["ETag"]
-        resp = self._request(
+        resp = self.request(
             "put",
             url=f"/objects/{self.domain}/{aux_tag_id}",
             pydantic_basemodel_body=tag_data,
@@ -718,7 +726,7 @@ class AuxTagTestClient(RestApiClient):
 
     def delete(self, aux_tag_id: str) -> Response:
         etag = self.get(aux_tag_id).headers["ETag"]
-        return self._request(
+        return self.request(
             "post",
             url=f"/objects/{self.domain}/{aux_tag_id}/actions/delete/invoke",
             headers={"If-Match": etag, "Accept": "application/json"},
@@ -752,7 +760,7 @@ class TimePeriodTestClient(RestApiClient):
     domain: Literal["time_period"] = "time_period"
 
     def get(self, time_period_id: str, expect_ok: bool = True) -> Response:
-        resp = self._request(
+        resp = self.request(
             "get",
             url=f"/objects/{self.domain}/{time_period_id}",
             expect_ok=expect_ok,
@@ -762,7 +770,7 @@ class TimePeriodTestClient(RestApiClient):
         return resp
 
     def get_all(self, expect_ok: bool = True) -> Response:
-        resp = self._request(
+        resp = self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
@@ -773,7 +781,7 @@ class TimePeriodTestClient(RestApiClient):
 
     def delete(self, time_period_id: str) -> Response:
         etag = self.get(time_period_id).headers["ETag"]
-        resp = self._request(
+        resp = self.request(
             "delete",
             url=f"/objects/{self.domain}/{time_period_id}",
             headers={"If-Match": etag, "Accept": "application/json"},
@@ -782,7 +790,7 @@ class TimePeriodTestClient(RestApiClient):
         return resp
 
     def create(self, time_period_data: dict[str, object], expect_ok: bool = True) -> Response:
-        resp = self._request(
+        resp = self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             body=time_period_data,
@@ -796,7 +804,7 @@ class TimePeriodTestClient(RestApiClient):
         self, time_period_id: str, time_period_data: dict[str, object], expect_ok: bool = True
     ) -> Response:
         etag = self.get(time_period_id).headers["ETag"]
-        resp = self._request(
+        resp = self.request(
             "put",
             url=f"/objects/{self.domain}/{time_period_id}",
             body=time_period_data,

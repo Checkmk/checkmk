@@ -17,7 +17,7 @@ except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore
 
 try:
-    from typing import Any, Dict, List, Set
+    from typing import Any, Dict, List, Set  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 

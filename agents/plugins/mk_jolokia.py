@@ -6,9 +6,6 @@
 
 __version__ = "2.2.0b1"
 
-# this file has to work with both Python 2 and 3
-# pylint: disable=super-with-arguments
-
 import io
 import os
 import socket
@@ -25,7 +22,15 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+    from typing import (  # noqa: F401 # pylint: disable=unused-import
+        Any,
+        Callable,
+        Dict,
+        List,
+        Optional,
+        Tuple,
+        Union,
+    )
 except ImportError:
     pass
 
@@ -325,7 +330,7 @@ def cached(function):
     return cached_function
 
 
-class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
+class JolokiaInstance:
     # use this to filter headers whien recording via vcr trace
     FILTER_SENSITIVE = {"filter_headers": [("authorization", "****")]}
 
@@ -378,7 +383,7 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
         return config
 
     def __init__(self, config):
-        super(JolokiaInstance, self).__init__()
+        super().__init__()
         self._config = self._sanitize_config(config)
 
         self.name = self._config["instance"]

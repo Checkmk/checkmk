@@ -18,9 +18,6 @@ You should find an example configuration file at
 '../cfg_examples/logwatch.cfg' relative to this file.
 """
 
-# this file has to work with both Python 2 and 3
-# pylint: disable=super-with-arguments
-
 from __future__ import with_statement
 
 __version__ = "2.2.0b1"
@@ -47,7 +44,14 @@ import socket
 import time
 
 try:
-    from typing import Any, Collection, Dict, Iterable, Iterator, Sequence
+    from typing import (  # noqa: F401 # pylint: disable=unused-import
+        Any,
+        Collection,
+        Dict,
+        Iterable,
+        Iterator,
+        Sequence,
+    )
 except ImportError:
     # We need typing only for testing
     pass
@@ -114,6 +118,7 @@ if PY3:
     )
     old_stdout, sys.stdout = sys.stdout, new_stdout
 
+
 # Borrowed from six
 def ensure_str(s, encoding="utf-8", errors="strict"):
     # type: (text_type | binary_type, str, str) -> str
@@ -161,7 +166,7 @@ def init_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(lineno)s: %(message)s")
 
 
-class ArgsParser(object):  # pylint: disable=too-few-public-methods, useless-object-inheritance
+class ArgsParser:  # pylint: disable=too-few-public-methods
     """
     Custom argument parsing.
     (Neither use optparse which is Python 2.3 to 2.7 only.
@@ -170,7 +175,7 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods, useless-obj
 
     def __init__(self, argv):
         # type: (Sequence[str]) -> None
-        super(ArgsParser, self).__init__()
+        super().__init__()
 
         if "-h" in argv:
             sys.stderr.write(ensure_str(__doc__))
@@ -400,10 +405,10 @@ def read_config(config_lines, files, debug=False):
     return global_options, logfiles_configs, cluster_configs
 
 
-class State(object):  # pylint: disable=useless-object-inheritance
+class State:
     def __init__(self, filename):
         # type: (str) -> None
-        super(State, self).__init__()
+        super().__init__()
         self.filename = filename
         self._data = {}  # type: dict[text_type | binary_type, dict[str, Any]]
 
@@ -454,13 +459,13 @@ class State(object):  # pylint: disable=useless-object-inheritance
         return self._data.setdefault(key, {"file": key})
 
 
-class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
+class LogLinesIter:
     # this is supposed to become a proper iterator.
     # for now, we need a persistent buffer to fix things
     BLOCKSIZE = 8192
 
     def __init__(self, logfile, encoding):
-        super(LogLinesIter, self).__init__()
+        super().__init__()
         self._fd = os.open(logfile, os.O_RDONLY)
         self._lines = []  # List[Text]
         self._buffer = b""
@@ -768,7 +773,7 @@ def process_logfile(section, filestate, debug):  # pylint: disable=too-many-bran
     return header, []
 
 
-class Options(object):  # pylint: disable=useless-object-inheritance
+class Options:
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
 
     MAP_OVERFLOW = {"C": 2, "W": 1, "I": 0, "O": 0}
@@ -897,24 +902,24 @@ class Options(object):  # pylint: disable=useless-object-inheritance
             raise
 
 
-class GlobalOptions(object):  # pylint: disable=useless-object-inheritance
+class GlobalOptions:
     def __init__(self):
-        super(GlobalOptions, self).__init__()
+        super().__init__()
         self.retention_period = 60
 
 
-class PatternConfigBlock(object):  # pylint: disable=useless-object-inheritance
+class PatternConfigBlock:
     def __init__(self, files, patterns):
         # type: (Sequence[text_type], Sequence[tuple[text_type, text_type, Sequence[text_type], Sequence[text_type]]]) -> None
-        super(PatternConfigBlock, self).__init__()
+        super().__init__()
         self.files = files
         self.patterns = patterns
 
 
-class ClusterConfigBlock(object):  # pylint: disable=useless-object-inheritance
+class ClusterConfigBlock:
     def __init__(self, name, ips_or_subnets):
         # type: (text_type, Sequence[text_type]) -> None
-        super(ClusterConfigBlock, self).__init__()
+        super().__init__()
         self.name = name
         self.ips_or_subnets = ips_or_subnets
 
@@ -981,10 +986,10 @@ def _compile_continuation_pattern(raw_pattern):
         return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
 
 
-class LogfileSection(object):  # pylint: disable=useless-object-inheritance
+class LogfileSection:
     def __init__(self, logfile_ref):
         # type: (tuple[text_type | binary_type, text_type]) -> None
-        super(LogfileSection, self).__init__()
+        super().__init__()
         self.name_fs = logfile_ref[0]
         self.name_write = logfile_ref[1]
         self.options = Options()

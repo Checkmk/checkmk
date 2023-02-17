@@ -21,11 +21,7 @@ from __future__ import with_statement
 
 __version__ = "2.2.0b1"
 
-# this file has to work with both Python 2 and 3
-# pylint: disable=super-with-arguments
-
-# N O T E:
-# docker is available for python versions from 2.6 / 3.3
+# NOTE: docker is available for python versions from 2.6 / 3.3
 
 import argparse
 import configparser
@@ -40,7 +36,7 @@ import sys
 import time
 
 try:
-    from typing import Dict, Tuple, Union
+    from typing import Dict, Tuple, Union  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -166,7 +162,7 @@ class Section(list):
     # Should we need to parallelize one day, change this to be
     # more like the Section class in agent_azure, for instance
     def __init__(self, name=None, piggytarget=None):
-        super(Section, self).__init__()
+        super().__init__()
         if piggytarget is not None:
             self.append("<<<<%s>>>>" % piggytarget)
         if name is not None:
@@ -273,7 +269,7 @@ class MKDockerClient(docker.DockerClient):
     _DEVICE_MAP_LOCK = multiprocessing.Lock()
 
     def __init__(self, config):
-        super(MKDockerClient, self).__init__(config["base_url"], version=MKDockerClient.API_VERSION)
+        super().__init__(config["base_url"], version=MKDockerClient.API_VERSION)
         all_containers = _robust_inspect(self, "containers")
         if config["container_id"] == "name":
             self.all_containers = {c.attrs["Name"].lstrip("/"): c for c in all_containers}
@@ -286,7 +282,7 @@ class MKDockerClient(docker.DockerClient):
         self._device_map = None
         self.node_info = self.info()
 
-        self._df_caller = ParallelDfCall(call=super(MKDockerClient, self).df)
+        self._df_caller = ParallelDfCall(call=super().df)
 
     def df(self):
         return self._df_caller()

@@ -24,7 +24,16 @@ import subprocess
 import sys
 
 try:
-    from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+    from typing import (  # noqa: F401 # pylint: disable=unused-import
+        Any,
+        Callable,
+        Dict,
+        Iterable,
+        List,
+        Optional,
+        Sequence,
+        Tuple,
+    )
 except ImportError:
     # We need typing only for testing
     pass
@@ -80,6 +89,7 @@ elif IS_WINDOWS:
     import time
 else:
     raise OSNotImplementedError
+
 
 # for compatibility with python 2.6
 def subprocess_check_output(args):

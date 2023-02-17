@@ -89,9 +89,6 @@ You should find an example configuration file at
 
 __version__ = "2.2.0b1"
 
-# this file has to work with both Python 2 and 3
-# pylint: disable=super-with-arguments
-
 import collections
 import configparser
 import errno
@@ -168,14 +165,14 @@ def parse_arguments(argv=None):
     return parsed_args
 
 
-class FileStat(object):  # pylint: disable=useless-object-inheritance
+class FileStat:
     """Wrapper arount os.stat
 
     Only call os.stat once.
     """
 
     def __init__(self, path):
-        super(FileStat, self).__init__()
+        super().__init__()
         LOGGER.debug("Creating FileStat(%r)", path)
         self.path = ensure_text(path)
         self.stat_status = "ok"
@@ -239,11 +236,11 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
 #   '----------------------------------------------------------------------'
 
 
-class PatternIterator(object):  # pylint: disable=useless-object-inheritance
+class PatternIterator:
     """Recursively iterate over all files"""
 
     def __init__(self, pattern_list):
-        super(PatternIterator, self).__init__()
+        super().__init__()
         self._patterns = [os.path.abspath(os.path.expanduser(p)) for p in pattern_list]
 
     def _iter_files(self, pattern):
@@ -289,7 +286,7 @@ def get_file_iterator(config):
 #   '----------------------------------------------------------------------'
 
 
-class AbstractFilter(object):  # pylint: disable=useless-object-inheritance
+class AbstractFilter:
     """Abstract filter interface"""
 
     def matches(self, filestat):
@@ -306,11 +303,11 @@ COMPARATORS = {
 }
 
 
-class AbstractNumericFilter(AbstractFilter):
+class AbstractNumericFilter:
     """Common code for filtering by comparing integers"""
 
     def __init__(self, spec_string):
-        super(AbstractNumericFilter, self).__init__()
+        super().__init__()
         match = FILTER_SPEC_PATTERN.match(spec_string)
         if match is None:
             raise ValueError("unable to parse filter spec: %r" % spec_string)
@@ -347,9 +344,9 @@ class AgeFilter(AbstractNumericFilter):
         return filestat.stat_status != "file vanished"
 
 
-class RegexFilter(AbstractFilter):
+class RegexFilter:
     def __init__(self, regex_pattern):
-        super(RegexFilter, self).__init__()
+        super().__init__()
         LOGGER.debug("initializing with pattern: %r", regex_pattern)
         self._regex = re.compile(ensure_text(regex_pattern), re.UNICODE)
 

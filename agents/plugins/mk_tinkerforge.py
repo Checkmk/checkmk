@@ -49,7 +49,7 @@ import time
 from optparse import OptionParser  # pylint: disable=deprecated-module
 
 try:
-    from typing import List
+    from typing import List  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -14,6 +15,7 @@ from typing import (
     Container,
     Dict,
     Iterable,
+    Iterator,
     List,
     Literal,
     Mapping,
@@ -231,18 +233,71 @@ def render_mac_address(phys_address: Union[Iterable[int], str]) -> str:
     return (":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(' ', '0')).upper()
 
 
-def item_matches(
+def matching_interfaces_for_item(
     item: str,
-    ifIndex: str,
-    ifAlias: str,
-    ifDescr: str,
-) -> bool:
-    return item.lstrip("0") == ifIndex \
-            or (item == "0" * len(item) and saveint(ifIndex) == 0) \
-            or item == ifAlias \
-            or item == ifDescr \
-            or item == "%s %s" % (ifAlias, ifIndex) \
-            or item == "%s %s" % (ifDescr, ifIndex)
+    section: Section,
+) -> Iterator[Interface]:
+    if not section:
+        return
+
+    if section[0].node:
+        yield from _matching_clustered_interfaces_for_item(item, section)
+        return
+
+    if match := _matching_unclustered_interface_for_item(item, section):
+        yield match
+
+
+def _matching_clustered_interfaces_for_item(
+    item: str,
+    section: Section,
+) -> Iterator[Interface]:
+    for _node, node_interfaces in itertools.groupby(
+            # itertools.groupby needs the input to be sorted accordingly. This is most likely already
+            # the case, at least if we reach this point via cluster_check, but I don't want to rely on
+            # it.
+            sorted(
+                section,
+                key=lambda iface: str(iface.node),
+            ),
+            key=lambda iface: iface.node,
+    ):
+        if match := _matching_unclustered_interface_for_item(item, list(node_interfaces)):
+            yield match
+
+
+def _matching_unclustered_interface_for_item(
+    item: str,
+    section: Section,
+) -> Optional[Interface]:
+    return (simple_match  # pylint: disable=used-before-assignment
+            if (simple_match := _matching_interface_for_simple_item(item, section)) else
+            _matching_interface_for_compound_item(item, section))
+
+
+def _matching_interface_for_simple_item(
+    item: str,
+    ifaces: Iterable[Interface],
+) -> Optional[Interface]:
+    return next(
+        (interface for interface in ifaces if item.lstrip("0") == interface.index or
+         (item == "0" * len(item) and saveint(interface.index) == 0) or item in (interface.alias,
+                                                                                 interface.descr)),
+        None,
+    )
+
+
+def _matching_interface_for_compound_item(
+    item: str,
+    ifaces: Iterable[Interface],
+) -> Optional[Interface]:
+    return next(
+        (interface for interface in ifaces if item in (
+            f"{interface.alias} {interface.index}",
+            f"{interface.descr} {interface.index}",
+        )),
+        None,
+    )
 
 
 # Pads port numbers with zeroes, so that items
@@ -662,24 +717,23 @@ def _check_ungrouped_ifs(
     results_from_fastest_interface = None
     max_out_traffic = -1.0
 
-    for interface in section:
-        if item_matches(item, interface.index, interface.alias, interface.descr):
-            last_results = list(
-                check_single_interface(
-                    item,
-                    params,
-                    interface,
-                    timestamp=timestamp,
-                    input_is_rate=input_is_rate,
-                    use_discovered_state_and_speed=interface.node is None,
-                ))
-            for result in last_results:
-                if isinstance(
-                        result,
-                        Metric,
-                ) and result.name == 'out' and result.value > max_out_traffic:
-                    max_out_traffic = result.value
-                    results_from_fastest_interface = last_results
+    for interface in matching_interfaces_for_item(item, section):
+        last_results = list(
+            check_single_interface(
+                item,
+                params,
+                interface,
+                timestamp=timestamp,
+                input_is_rate=input_is_rate,
+                use_discovered_state_and_speed=interface.node is None,
+            ))
+        for result in last_results:
+            if isinstance(
+                    result,
+                    Metric,
+            ) and result.name == 'out' and result.value > max_out_traffic:
+                max_out_traffic = result.value
+                results_from_fastest_interface = last_results
 
     if results_from_fastest_interface:
         yield from results_from_fastest_interface

@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.api.agent_based.type_defs import StringTable
 
 from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult
 
@@ -24,15 +28,15 @@ info = [
         ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MaxRequestTime", {})]),
     ],
 )
-def test_jolokia_generic_discovery(  # type:ignore[no-untyped-def]
-    check, lines, expected_result
+def test_jolokia_generic_discovery(
+    check: str, lines: StringTable, expected_result: Sequence[object]
 ) -> None:
     parsed = Check("jolokia_generic").run_parse(lines)
 
-    check = Check(check)
-    discovered = check.run_discovery(parsed)
+    check_val = Check(check)
+    discovered = check_val.run_discovery(parsed)
     assertDiscoveryResultsEqual(
-        check,
+        check_val,
         DiscoveryResult(discovered),
         DiscoveryResult(expected_result),
     )

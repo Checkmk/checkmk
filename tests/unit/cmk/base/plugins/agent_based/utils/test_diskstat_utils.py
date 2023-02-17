@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 import pytest
@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import diskstat
 
 
@@ -342,7 +343,7 @@ def test_summarize_disks(
         ),
     ],
 )
-def test_scale_levels(levels, factor) -> None:  # type:ignore[no-untyped-def]
+def test_scale_levels(levels: tuple[float, float] | None, factor: float) -> None:
     scaled_levels = diskstat._scale_levels(levels, factor)
     if levels is None:
         assert scaled_levels is None
@@ -502,8 +503,10 @@ def test_load_levels_wato() -> None:
         ),
     ],
 )
-def test_check_diskstat_dict(params, disk, exp_res) -> None:  # type:ignore[no-untyped-def]
-    exp_res = exp_res.copy()
+def test_check_diskstat_dict(
+    params: Mapping[str, object], disk: diskstat.Disk, exp_res: CheckResult
+) -> None:
+
     value_store: dict[str, Any] = {}
 
     assert (
@@ -514,21 +517,18 @@ def test_check_diskstat_dict(params, disk, exp_res) -> None:  # type:ignore[no-u
         )
         == exp_res
     )
-
-    if exp_res:
-        exp_res = [
-            Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds"),
-            *exp_res,
-        ]
-
-    assert (
-        list(
-            diskstat.check_diskstat_dict(
-                params=({**params, "average": 300}),
-                disk=disk,
-                value_store=value_store,
-                this_time=60.0,
-            ),
-        )
-        == exp_res
-    )
+    assert list(
+        diskstat.check_diskstat_dict(
+            params=({**params, "average": 300}),
+            disk=disk,
+            value_store=value_store,
+            this_time=60.0,
+        ),
+    ) == [
+        *(
+            [Result(state=State.OK, notice="All values averaged over 5 minutes 0 seconds")]
+            if exp_res
+            else []
+        ),
+        *exp_res,
+    ]

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from tests.testlib import Check
@@ -21,8 +23,8 @@ pytestmark = pytest.mark.checks
         ({"levels": (0, 1)}, 2, " (warn/crit at 0/1)"),
     ],
 )
-def test_check_win_license(  # type:ignore[no-untyped-def]
-    params, expected_status, expected_levels_info
+def test_check_win_license(
+    params: Mapping[str, tuple[float, float]], expected_status: int, expected_levels_info: str
 ) -> None:
     check = Check("msoffice_serviceplans")
 

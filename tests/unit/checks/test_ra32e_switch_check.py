@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.api.agent_based.type_defs import StringTable
 
 from .checktestlib import BasicCheckResult
 
@@ -59,7 +63,7 @@ RA32E_SWITCH = "ra32e_switch"
         )
     ],
 )
-def test_ra32e_switch_discovery(info, result) -> None:  # type:ignore[no-untyped-def]
+def test_ra32e_switch_discovery(info: StringTable, result: Sequence[tuple[str, None]]) -> None:
     check = Check(RA32E_SWITCH)
     assert list(check.run_discovery(info)) == result
 

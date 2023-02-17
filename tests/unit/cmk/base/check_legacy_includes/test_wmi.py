@@ -444,7 +444,7 @@ def scale_counter_reference(measure, factor, base):
         (1844674407366441, 1, 15143722),
     ],
 )
-def test_scale_counter(measure, factor, base) -> None:  # type:ignore[no-untyped-def]
+def test_scale_counter(measure: float, factor: float, base: float) -> None:
     assert (
         abs(scale_counter(measure, factor, base) - scale_counter_reference(measure, factor, base))
         < 1e-15

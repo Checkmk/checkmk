@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.api.agent_based.type_defs import StringTable
 
 from .checktestlib import assertCheckResultsEqual, CheckResult
 
@@ -16,6 +20,9 @@ def _get_from_context(name, context={}):  # pylint: disable=dangerous-default-va
     if not context:
         context.update(Check("nullmailer_mailq").context)
     return context[name]
+
+
+RawQueue = tuple[float, float, str]
 
 
 @pytest.mark.parametrize(
@@ -29,7 +36,7 @@ def _get_from_context(name, context={}):  # pylint: disable=dangerous-default-va
         ),
     ],
 )
-def test_parse_function(info, expected_parsed) -> None:  # type:ignore[no-untyped-def]
+def test_parse_function(info: StringTable, expected_parsed: Sequence[object]) -> None:
     parse_nullmailer_mailq = _get_from_context("parse_nullmailer_mailq")
     queue = _get_from_context("Queue")
     assert parse_nullmailer_mailq(info) == [queue(*p) for p in expected_parsed]
@@ -69,8 +76,10 @@ def test_parse_function(info, expected_parsed) -> None:  # type:ignore[no-untype
         ),
     ],
 )
-def test_check_single_queue(  # type:ignore[no-untyped-def]
-    raw_queue, levels_length, expected_result
+def test_check_single_queue(
+    raw_queue: RawQueue,
+    levels_length: tuple[float, float],
+    expected_result: Sequence[tuple[float, str]],
 ) -> None:
     check_single_queue = _get_from_context("_check_single_queue")
     queue = _get_from_context("Queue")
@@ -94,7 +103,9 @@ def test_check_single_queue(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_nullmailer_mailq(raw_queues, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_nullmailer_mailq(
+    raw_queues: Sequence[RawQueue], expected_result: Sequence[object]
+) -> None:
     dummy_item = ""
     params = _get_from_context("nullmailer_mailq_default_levels")
     check_nullmailer_mailq = _get_from_context("check_nullmailer_mailq")

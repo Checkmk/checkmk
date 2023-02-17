@@ -1017,7 +1017,7 @@ class ClusterScenario(NamedTuple):
 
 
 @pytest.fixture(name="cluster_scenario")
-def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped-def]
+def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
     hostname = HostName("test-clusterhost")
     node1_hostname = HostName("test-node1")
     node2_hostname = HostName("test-node2")

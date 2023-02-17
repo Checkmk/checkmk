@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import Check
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import MKCounterWrapped
 
 from .checktestlib import assertDiscoveryResultsEqual, CheckResult, DiscoveryResult
@@ -111,7 +114,7 @@ info_msx_info_store_1 = [
         ("dotnet_clrmemory", [["WMItimeout"]], []),
     ],
 )
-def test_wmi_cpu_load_discovery(check_name, info, expected) -> None:  # type:ignore[no-untyped-def]
+def test_wmi_cpu_load_discovery(check_name: str, info: StringTable, expected: object) -> None:
     check = Check(check_name)
     discovery_result = DiscoveryResult(check.run_discovery(check.run_parse(info)))
     discovery_expected = DiscoveryResult(expected)
@@ -119,12 +122,12 @@ def test_wmi_cpu_load_discovery(check_name, info, expected) -> None:  # type:ign
 
 
 @pytest.mark.parametrize(
-    "check_name,info,expected",
+    "check_name,info",
     [
-        ("wmi_webservices", info_wmi_timeout, None),
+        ("wmi_webservices", info_wmi_timeout),
     ],
 )
-def test_wmi_timeout_exceptions(check_name, info, expected) -> None:  # type:ignore[no-untyped-def]
+def test_wmi_timeout_exceptions(check_name: str, info: StringTable) -> None:
     check = Check(check_name)
     with pytest.raises(MKCounterWrapped):
         CheckResult(check.run_check(None, {}, check.run_parse(info)))
@@ -156,9 +159,7 @@ def test_wmi_timeout_exceptions(check_name, info, expected) -> None:  # type:ign
         ),
     ],
 )
-def test_wmi_msexch_isclienttype_wato_params(  # type:ignore[no-untyped-def]
-    check_name, expected
-) -> None:
+def test_wmi_msexch_isclienttype_wato_params(check_name: str, expected: Sequence[object]) -> None:
     check = Check(check_name)
     result = list(
         check.run_check(

@@ -238,7 +238,7 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-def test_check_temperature_trend(test_case) -> None:    # type:ignore[no-untyped-def]
+def test_check_temperature_trend(test_case:Entry) -> None:
     check = Check('acme_temp')
     check_trend = check.context['check_temperature_trend']
 

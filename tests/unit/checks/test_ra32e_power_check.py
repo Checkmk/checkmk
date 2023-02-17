@@ -7,6 +7,8 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.api.agent_based.type_defs import StringTable
+
 from .checktestlib import BasicCheckResult
 
 pytestmark = pytest.mark.checks
@@ -15,7 +17,7 @@ RA32E_POWER = "ra32e_power"
 
 
 @pytest.mark.parametrize("info,result", [([[""]], None), ([["0"]], [(None, {})])])
-def test_ra32e_power_discovery(info, result) -> None:  # type:ignore[no-untyped-def]
+def test_ra32e_power_discovery(info: StringTable, result: object) -> None:
     check = Check(RA32E_POWER)
     assert check.run_discovery(info) == result
 

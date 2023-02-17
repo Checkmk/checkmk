@@ -27,6 +27,7 @@ from urllib.request import urlopen
 
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
+from cmk.utils.mail import default_from_address, send_mail_sendmail, set_mail_headers
 
 from cmk.notification_plugins import utils
 
@@ -545,7 +546,7 @@ def multipart_mail(
         part.add_header("Content-Disposition", how, filename=name)
         m.attach(part)
 
-    return utils.set_mail_headers(target, subject, from_address, reply_to, m)
+    return set_mail_headers(target, subject, from_address, reply_to, m)
 
 
 def send_mail_smtp(  # pylint: disable=too-many-branches
@@ -674,7 +675,9 @@ def send_mail_smtp_impl(
 def send_mail(message: Message, target: str, from_address: str, context: dict[str, str]) -> int:
     if "PARAMETER_SMTP_PORT" in context:
         return send_mail_smtp(message, target, from_address, context)
-    return utils.send_mail_sendmail(message, target, from_address)
+    send_mail_sendmail(message, target, from_address)
+    sys.stdout.write("Spooled mail to local mail transmission agent\n")
+    return 0
 
 
 def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
@@ -989,7 +992,7 @@ class BulkEmailContent(EmailContent):
             from_address=utils.format_address(
                 escaped_context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
                 # TODO: Correct context parameter???
-                escaped_context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+                escaped_context.get("PARAMETER_FROM_ADDRESS", default_from_address()),
             ),
             reply_to=utils.format_address(
                 escaped_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),
@@ -1017,7 +1020,7 @@ class SingleEmailContent(EmailContent):
             subject=escaped_context["SUBJECT"],
             from_address=utils.format_address(
                 escaped_context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
-                escaped_context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+                escaped_context.get("PARAMETER_FROM_ADDRESS", default_from_address()),
             ),
             reply_to=utils.format_address(
                 escaped_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),

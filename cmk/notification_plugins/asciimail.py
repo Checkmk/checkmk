@@ -10,6 +10,8 @@ import sys
 from email.mime.text import MIMEText
 from typing import NoReturn
 
+from cmk.utils.mail import default_from_address, send_mail_sendmail, set_mail_headers
+
 from cmk.notification_plugins import utils
 
 opt_debug = "-d" in sys.argv
@@ -153,17 +155,19 @@ def main() -> NoReturn:
     # Create the mail and send it
     from_address = utils.format_address(
         context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
-        context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+        context.get("PARAMETER_FROM_ADDRESS", default_from_address()),
     )
     reply_to = utils.format_address(
         context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),
         context.get("PARAMETER_REPLY_TO_ADDRESS", ""),
     )
-    m = utils.set_mail_headers(
+    m = set_mail_headers(
         mailto, subject, from_address, reply_to, MIMEText(content_txt, "plain", _charset="utf-8")
     )
     try:
-        sys.exit(utils.send_mail_sendmail(m, mailto, from_address))
+        send_mail_sendmail(m, mailto, from_address)
+        sys.stdout.write("Spooled mail to local mail transmission agent\n")
+        sys.exit(0)
     except Exception as e:
         sys.stderr.write("Unhandled exception: %s\n" % e)
         # unhandled exception, don't retry this...

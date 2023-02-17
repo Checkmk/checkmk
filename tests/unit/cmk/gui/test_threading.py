@@ -19,20 +19,20 @@ def _run_in_thread(attr: str) -> tuple[bool, str]:
     return getattr(active_config, attr), request.url
 
 
-@pytest.mark.skip(reason="flaky)")
 def test_thread_pool_request_context(flask_app: flask.Flask) -> None:
     path = "/NO_SITE/check_mk/index.html"
     with flask_app.test_request_context(path):
         flask_app.preprocess_request()
 
-        size = 20
+        size = 10
+        jobs = ["debug"] * (size * 100)
         with ThreadPool(size) as pool:
             results = pool.map(
                 copy_request_context(_run_in_thread),
-                ["debug"] * size,
+                jobs,
             )
 
-    assert len(results) == size
+    assert len(results) == len(jobs)
     for debug, url in results:
         assert not debug
         assert url.endswith(path)

@@ -130,6 +130,7 @@ def _register_pre_21_plugin_api() -> None:
         {
             "indexed_color": plugin_utils.indexed_color,
             "metric_info": plugin_utils.metric_info,
+            "check_metrics": plugin_utils.check_metrics,
         }
     )
 

@@ -21,6 +21,18 @@ from cmk.special_agents.agent_smb_share import (
     smb_share_agent,
 )
 
+SHARED_FOLDER = "My Shared Folder"
+HOST_NAME = "HOSTNAME"
+SHARE_BASE = f"\\\\{HOST_NAME}\\{SHARED_FOLDER}"
+
+
+def file(name: str) -> SharedFile:
+    return SharedFile(0, 0, 0, 0, 10, 0, 32, "", name)
+
+
+def folder(name: str) -> SharedFile:
+    return SharedFile(0, 0, 0, 0, 10, 0, 16, "", name)
+
 
 class MockShare:
     def __init__(self, name) -> None:  # type:ignore[no-untyped-def]
@@ -95,159 +107,153 @@ def test_parse_arguments() -> None:
 
 
 @pytest.mark.parametrize(
-    "filesystem, shared_folder, pattern, expected_file_data",
+    "filesystem, pattern, expected_file_data",
     [
         (
             {
-                "My Shared Folder": {
-                    "": [SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder1")],
+                SHARED_FOLDER: {
+                    "": [folder("Subfolder1")],
                     "Subfolder1\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "My File"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "File"),
+                        file("My File"),
+                        file("File"),
                     ],
                 }
             },
-            "My Shared Folder",
             ["Subfolder1", "My File"],
-            [("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\My File", "My File")],
+            [(f"{SHARE_BASE}\\Subfolder1\\My File", "My File")],
         ),
         (
             {
-                "My Shared Folder": {
+                SHARED_FOLDER: {
                     "": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder1"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file1"),
+                        folder("Subfolder1"),
+                        file("file1"),
                     ],
                     "Subfolder1\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder2"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder3"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file2"),
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("file2"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file3"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file4"),
+                        file("file3"),
+                        file("file4"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file5"),
+                        file("file5"),
                     ],
                 }
             },
-            "My Shared Folder",
             ["Subfolder1", "*folder*", "*ile*"],
             [
-                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\file3", "file3"),
-                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\file4", "file4"),
-                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\file5", "file5"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\file3", "file3"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\file4", "file4"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\file5", "file5"),
             ],
         ),
         (
             {
-                "My Shared Folder": {
+                SHARED_FOLDER: {
                     "": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder1"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder1"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder2"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder3"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder4"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder4"),
+                        file("some_file"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder5"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder5"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        file("some_file"),
                     ],
                 }
             },
-            "My Shared Folder",
             ["Subfolder1", "*", "*", "some_file"],
             [
                 (
-                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
                     "some_file",
                 ),
                 (
-                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
                     "some_file",
                 ),
             ],
         ),
         (
             {
-                "My Shared Folder": {
+                SHARED_FOLDER: {
                     "": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder1"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder1"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder2"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder3"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder4"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder4"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder2\\Subfolder4\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder5"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        folder("Subfolder5"),
+                        file("some_file"),
                     ],
                     "Subfolder1\\Subfolder3\\Subfolder5\\": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "some_file"),
+                        file("some_file"),
                     ],
                 }
             },
-            "My Shared Folder",
             ["Subfolder1", "**", "some_file"],
             [
-                ("\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder2\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
                 (
-                    "\\\\HOSTNAME\\My Shared Folder\\Subfolder1\\Subfolder3\\some_file",
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file",
                     "some_file",
                 ),
             ],
         ),
         (
             {
-                "My Shared Folder": {
+                SHARED_FOLDER: {
                     "": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "Subfolder1"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file1"),
-                        SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file2"),
+                        folder("Subfolder1"),
+                        file("file1"),
+                        file("file2"),
                     ],
                 }
             },
-            "My Shared Folder",
             ["*"],
             [
-                ("\\\\HOSTNAME\\My Shared Folder\\file1", "file1"),
-                ("\\\\HOSTNAME\\My Shared Folder\\file2", "file2"),
+                (f"{SHARE_BASE}\\file1", "file1"),
+                (f"{SHARE_BASE}\\file2", "file2"),
             ],
         ),
         (
             {
-                "My Shared Folder": {
+                SHARED_FOLDER: {
                     "": [
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", "."),
-                        SharedFile(0, 0, 0, 0, 10, 0, 16, "", ".."),
+                        folder("."),
+                        folder(".."),
                     ],
-                    "..": [SharedFile(0, 0, 0, 0, 10, 0, 32, "", "file")],
+                    "..": [file("file")],
                 }
             },
-            "My Shared Folder",
             ["..", "file"],
             [],
         ),
@@ -255,12 +261,11 @@ def test_parse_arguments() -> None:
 )
 def test_iter_shared_files(
     filesystem: dict,
-    shared_folder: str,
     pattern: list[str],
     expected_file_data: list[tuple[str, str]],
 ) -> None:
     conn = MockSMBConnection(filesystem=filesystem)
-    files = list(iter_shared_files(conn, "HOSTNAME", shared_folder, pattern))
+    files = list(iter_shared_files(conn, HOST_NAME, SHARED_FOLDER, pattern))
     file_data = [(f.path, f.file.filename) for f in files]
 
     assert file_data == expected_file_data
@@ -297,7 +302,7 @@ def test_get_all_shared_files(  # type:ignore[no-untyped-def]
     with mock.patch("cmk.special_agents.agent_smb_share.iter_shared_files", return_value=file_data):
         conn = MockSMBConnection(shares=["SharedFolder1", "SharedFolder2"])
         files_per_pattern = [
-            (p, list(f)) for p, f in get_all_shared_files(conn, "HOSTNAME", patterns)
+            (p, list(f)) for p, f in get_all_shared_files(conn, HOST_NAME, patterns)
         ]
         assert files_per_pattern == expected_file_data
 
@@ -321,7 +326,7 @@ def test_get_all_shared_files_errors(  # type:ignore[no-untyped-def]
 ):
     conn = MockSMBConnection()
     with pytest.raises(RuntimeError, match=expected_error_message):
-        dict(get_all_shared_files(conn, "HOSTNAME", patterns))
+        dict(get_all_shared_files(conn, HOST_NAME, patterns))
 
 
 @pytest.mark.parametrize(

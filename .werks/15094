@@ -1,0 +1,17 @@
+Title: HW/SW Inventory: Fix crash while filtering the operational status in network interfaces views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1676627897
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The crash shows
+C+:
+KeyError (invinterface_oper_status)
+...
+File "/omd/sites/gotamedia/lib/python3/cmk/gui/query_filters.py", line 947, in _add_row
+    if (filter_key := "%s_%d" % (ident, row["invinterface_oper_status"])) in values:
+C-:

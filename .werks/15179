@@ -6,7 +6,7 @@ Date: 1675667869
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0b1
+Version: 2.3.0b1
 
 This werk is only incompatible if you monitor logfiles containing non-ASCII characters with the
 <tt>logwatch</tt> agent plugin.

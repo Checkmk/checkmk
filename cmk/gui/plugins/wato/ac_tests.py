@@ -1108,7 +1108,7 @@ class ACTestBrokenGUIExtension(ACTest):
         if not errors:
             yield ACResultOK(_("No broken extensions were found."))
 
-        for gui_part, plugin_file, error in errors:
+        for _path, gui_part, plugin_file, error in errors:
             yield ACResultCRIT(_('Loading "%s/%s" failed: %s') % (gui_part, plugin_file, error))
 
 

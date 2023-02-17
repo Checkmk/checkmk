@@ -7,8 +7,6 @@
 import enum
 import sys
 import traceback
-from pathlib import Path
-from typing import Mapping
 
 from cmk.utils import paths
 from cmk.utils.packaging import disable, Installer, PackageID, PathConfig
@@ -153,31 +151,9 @@ def _all_ui_extensions_compatible(
     }
 
     disabled_packages: set[PackageID] = set()
-    for gui_part, module_or_file, error in get_failed_plugins():
+    for path, _gui_part, module_name, error in get_failed_plugins():
 
-        if (
-            path_and_id := _best_effort_guess_for_file_path(
-                gui_part, module_or_file, installed_files_package_map
-            )
-        ) is None:
-            # we know something is wrong, but have no idea which file to blame
-            if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-                conflict_mode is ConflictMode.ASK
-                and input(
-                    "Incompatible plugin '%s'.\n"
-                    "Error: %s\n\n"
-                    "You can abort the update process (A) and try to fix "
-                    "the incompatibilities or continue the update (c).\n\n"
-                    "Abort the update process? [A/c] \n" % (module_or_file, error)
-                ).lower()
-                in ["c", "continue"]
-            ):
-                continue
-            return False
-
-        # file path is unused. We could offer to delete it in the dialog below?
-        _file_path, package_id = path_and_id  # pylint: disable=unpacking-non-sequence
-
+        package_id = installed_files_package_map.get(path)
         # unpackaged files
         if package_id is None:
             if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
@@ -187,7 +163,7 @@ def _all_ui_extensions_compatible(
                     "Error: %s\n\n"
                     "You can abort the update process (A) and try to fix "
                     "the incompatibilities or continue the update (c).\n\n"
-                    "Abort the update process? [A/c] \n" % (module_or_file, error)
+                    "Abort the update process? [A/c] \n" % (module_name, error)
                 ).lower()
                 in ["c", "continue"]
             ):
@@ -205,7 +181,7 @@ def _all_ui_extensions_compatible(
                 "You can abort the update process (A) or disable the "
                 "extension package (d) and continue the update process.\n"
                 "Abort the update process? [A/d] \n"
-                % (module_or_file, package_id.name, package_id.version, error),
+                % (module_name, package_id.name, package_id.version, error),
             ).lower()
             in ["d", "disable"]
         ):
@@ -216,49 +192,10 @@ def _all_ui_extensions_compatible(
                 package_id.version,
             )
             disabled_packages.add(package_id)
-            remove_failed_plugin((gui_part, module_or_file))
+            remove_failed_plugin(path)
             sys.stdout.write(
                 "Disabled extension package: %s %s\n" % (package_id.name, package_id.version)
             )
         else:
             return False
     return True
-
-
-def _best_effort_guess_for_file_path(
-    gui_part: str, module_or_file: str, installed: Mapping[Path, PackageID]
-) -> tuple[Path, PackageID | None] | None:
-    "try to guess which file could create such an error"
-    potential_sources = (
-        (
-            # the legacy case where we come from web dir
-            _PATH_CONFIG.web_dir
-            / gui_part
-            / f"{module_or_file.rstrip('c')}",
-        )
-        if module_or_file.endswith((".py", ".pyc"))
-        else (
-            _PATH_CONFIG.gui_plugins_dir / gui_part / f"{module_or_file}.py",
-            _PATH_CONFIG.gui_plugins_dir / gui_part / module_or_file / "__init__.py",
-        )
-    )
-
-    installed_candidates = [
-        (p, package) for p in potential_sources if ((package := installed.get(p)) is not None)
-    ]
-    match len(installed_candidates):
-        case 0:
-            pass
-        case 1:
-            return installed_candidates[0]
-        case _more_than_one:
-            return None  # refuse to guess
-
-    unpackaged_candidates = [p for p in potential_sources if p.exists()]
-    match len(unpackaged_candidates):
-        case 0:
-            return None  # how did that happen?
-        case 1:
-            return (unpackaged_candidates[0], None)
-        case _more_than_one:
-            return None  # refuse to guess

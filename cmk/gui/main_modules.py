@@ -5,7 +5,9 @@
 
 import importlib
 import sys
+import traceback
 from collections.abc import Iterator
+from pathlib import Path
 from types import ModuleType
 
 import cmk.utils.version as cmk_version
@@ -83,7 +85,12 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
                 logger.error(
                     "  Error in %s plugin '%s'\n", main_module_name, plugin_name, exc_info=exc
                 )
-                utils.add_failed_plugin(main_module_name, plugin_name, exc)
+                utils.add_failed_plugin(
+                    Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
+                    main_module_name,
+                    plugin_name,
+                    exc,
+                )
 
     logger.debug("Main module plugins imported")
 

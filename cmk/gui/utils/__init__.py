@@ -90,7 +90,7 @@ def gen_id() -> str:
 
 # This may not be moved to g, because this needs to be request independent
 # TODO: Move to cmk.gui.modules once load_web_plugins is dropped
-_failed_plugins: dict[tuple[str, str], BaseException] = {}
+_failed_plugins: dict[Path, tuple[str, str, BaseException]] = {}
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a specified context
@@ -105,6 +105,9 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
             continue
 
         for file_path in sorted(plugins_path.iterdir()):
+            if file_path.suffix not in (".py", ".pyc"):
+                continue
+
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
                     with file_path.open(encoding="utf-8") as f:
@@ -118,19 +121,21 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
 
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
-                add_failed_plugin(forwhat, str(file_path), e)
+                add_failed_plugin(file_path.with_suffix(".py"), forwhat, file_path.stem, e)
 
 
-def add_failed_plugin(main_module_name: str, plugin_name: str, e: BaseException) -> None:
-    _failed_plugins[(main_module_name, plugin_name)] = e
+def add_failed_plugin(
+    path: Path, main_module_name: str, plugin_name: str, e: BaseException
+) -> None:
+    _failed_plugins[path] = main_module_name, plugin_name, e
 
 
-def get_failed_plugins() -> Sequence[tuple[str, str, BaseException]]:
+def get_failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
     return [
-        (subcomponent, module_or_filename, exc)
-        for (subcomponent, module_or_filename), exc in _failed_plugins.items()
+        (path, subcomponent, module_name, exc)
+        for path, (subcomponent, module_name, exc) in _failed_plugins.items()
     ]
 
 
-def remove_failed_plugin(entry: tuple[str, str]) -> None:
+def remove_failed_plugin(entry: Path) -> None:
     _drop = _failed_plugins.pop(entry, None)

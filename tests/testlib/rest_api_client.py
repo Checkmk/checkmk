@@ -293,6 +293,26 @@ class RestApiClient:
             expect_ok=expect_ok,
         )
 
+    def create_folder(
+        self,
+        folder_name: str,
+        title: str,
+        parent: str,
+        attributes: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self._request(
+            "post",
+            url="/domain-types/folder_config/collections/all",
+            body={
+                "name": folder_name,
+                "title": title,
+                "parent": parent,
+                "attributes": attributes or {},
+            },
+            expect_ok=expect_ok,
+        )
+
     def edit_folder(
         self,
         folder_name: str,

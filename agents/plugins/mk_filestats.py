@@ -92,6 +92,8 @@ __version__ = "2.2.0b1"
 # this file has to work with both Python 2 and 3
 # pylint: disable=super-with-arguments
 
+import collections
+import configparser
 import errno
 import glob
 import logging
@@ -103,26 +105,8 @@ import sys
 import time
 from stat import S_ISDIR, S_ISREG
 
-# NOTE: The tool 3to2 runs when the agent is configured for python 2.5/2.6
-#       and converts the import automatically to 'ConfigParser'.
-#       It does not run for python 2.7, which is why the try/except block
-#       is needed; python 2.7.17 supports importing 'configparser', but from
-#       2.7.18 this is not supported. The documentation explicitly states
-#       that the module 'configparser' is supported from python 3.
-#       https://docs.python.org/2/library/configparser.html
-
 try:
-    from collections import OrderedDict
-except ImportError:  # Python2
-    from ordereddict import OrderedDict  # type: ignore
-
-try:
-    import configparser
-except ImportError:  # Python2
-    import ConfigParser as configparser  # type: ignore
-
-try:
-    import typing
+    from typing import Dict, List  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -486,7 +470,7 @@ def grouping_multiple_groups(config_section_name, files_iter, grouping_condition
     # with 0 count if there are no files for them.
     grouped_files = {
         "": [],  # parent
-    }  # type: typing.Dict[str, typing.List[FileStat]]
+    }  # type: Dict[str, List[FileStat]]
     grouped_files.update({g[0]: [] for g in grouping_conditions})
     for single_file in files_iter:
         matching_child_group = _get_matching_child_group(single_file, grouping_conditions)
@@ -608,11 +592,11 @@ def write_output(groups, output_aggregator):
 def iter_config_section_dicts(cfg_file=None):
     if cfg_file is None:
         cfg_file = DEFAULT_CFG_FILE
-    # use OrderedDict for Python 2.6 compatibility: default type is a normal dict,
-    # which is unfortunately not insertion-ordered in Python 2.6
+    # FIXME: Python 2.6 has no OrderedDict at all, it is only available in a separate ordereddict
+    # package, but we simply can't assume that this is installed on the client!
     config = configparser.ConfigParser(
         DEFAULT_CFG_SECTION,
-        dict_type=OrderedDict,
+        dict_type=collections.OrderedDict,
     )
     LOGGER.debug("trying to read %r", cfg_file)
     files_read = config.read(cfg_file)

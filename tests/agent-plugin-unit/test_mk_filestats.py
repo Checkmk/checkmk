@@ -12,17 +12,10 @@ import sys
 
 import pytest
 
-import agents.plugins.mk_filestats as mk_filestats
-
-
-def configparser_library_name():
-    python_version = sys.version_info
-    if python_version[0] == 2 and python_version[1] < 7:
-        # the configparser library is named ConfigParser in Python 2.6 and below.
-        # its name is replaced by the 3to2 tool automatically in-code, but
-        # obviously the strings are not replaced
-        return "ConfigParser"
-    return "configparser"
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_filestats_2 as mk_filestats  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_filestats as mk_filestats
 
 
 @pytest.fixture(name="lazyfile")
@@ -203,7 +196,9 @@ class TestConfigParsing:
         mocker,
     ):
         mocker.patch(
-            configparser_library_name() + ".ConfigParser",
+            "ConfigParser.ConfigParser"
+            if sys.version_info[0] == 2
+            else "configparser.ConfigParser",
             return_value=mocked_configparser,
         )
         actual_results = list(mk_filestats.iter_config_section_dicts(config_file_name))

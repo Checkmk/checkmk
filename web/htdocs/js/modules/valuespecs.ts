@@ -1220,3 +1220,18 @@ export function single_label_on_change(select_elem: HTMLSelectElement) {
     const last_select_id = "#" + new_row.id.replace("vs_entry", "vs") + "_vs";
     $(last_select_id).select2("open");
 }
+
+export function toggle_label_row_opacity(
+    elem: HTMLSelectElement,
+    is_active: boolean
+) {
+    const tr: HTMLTableRowElement = elem.closest("tr")!;
+    const tbody: HTMLTableSectionElement = tr.closest("tbody")!;
+    if (tbody.lastChild !== tr) return;
+
+    if (is_active === true) {
+        utils.add_class(tr, "active");
+    } else {
+        utils.remove_class(tr, "active");
+    }
+}

@@ -10,7 +10,7 @@ import Swal from "sweetalert2";
 
 import * as utils from "utils";
 import * as ajax from "ajax";
-import {initialize_autocompleters} from "valuespecs";
+import {toggle_label_row_opacity, initialize_autocompleters} from "valuespecs";
 
 export function enable_dynamic_form_elements(
     container: HTMLElement | null = null
@@ -36,13 +36,25 @@ export function enable_select2_dropdowns(container) {
     initialize_autocompleters(container);
 
     // workaround for select2-input not being in focus
-    $(document).on("select2:open", () =>
+    $(document).on("select2:open", e => {
         (
             document.querySelector(
                 ".select2-search__field"
             ) as HTMLSelectElement
-        )?.focus()
-    );
+        )?.focus();
+        if (
+            e.target.id.match("labels.*vs") &&
+            e.target instanceof HTMLSelectElement
+        )
+            toggle_label_row_opacity(e.target, true);
+    });
+    $(document).on("select2:close", e => {
+        if (
+            e.target.id.match("labels.*vs") &&
+            e.target instanceof HTMLSelectElement
+        )
+            toggle_label_row_opacity(e.target, false);
+    });
 }
 
 function enable_label_input_fields(container) {

@@ -1797,7 +1797,8 @@ run_remote_plugins() {
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
-            run_cached "mrpe_${descr}" "${interval}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+            # Sourcing the agent here is not very performant, but we need 'run_mrpe', and not all shells support exporting of functions.
+            run_cached "mrpe_${descr}" "${interval}" "${interval}" "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe '${descr}' '${cmdline}'"
         fi
 
     done

@@ -5,20 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import collections
 import configparser
-
-# pylint: disable=protected-access,redefined-outer-name
 import os
 import sys
 
 import pytest
 
 import agents.plugins.mk_filestats as mk_filestats
-
-try:
-    from collections import namedtuple, OrderedDict
-except ImportError:  # Python2
-    from ordereddict import namedtuple, OrderedDict  # type: ignore
 
 
 def configparser_library_name():
@@ -31,8 +25,8 @@ def configparser_library_name():
     return "configparser"
 
 
-@pytest.fixture
-def lazyfile():
+@pytest.fixture(name="lazyfile")
+def fixture_lazyfile():
     mylazyfile = mk_filestats.FileStat(__file__)
 
     # Overwrite the path to be reproducable...
@@ -192,7 +186,11 @@ class TestConfigParsing:
 
     @pytest.fixture
     def mocked_configparser(self, config_options):
-        parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION, dict_type=OrderedDict)
+        # FIXME: Python 2.6 has no OrderedDict at all, it is only available in a separate ordereddict
+        # package, but we simply can't assume that this is installed on the client!
+        parser = MockConfigParser(
+            mk_filestats.DEFAULT_CFG_SECTION, dict_type=collections.OrderedDict
+        )
         for section, option, value in config_options:
             parser.add_section(section)
             parser.set(section, option, value)
@@ -346,7 +344,7 @@ def test_grouping_multiple_groups(
 
 @pytest.mark.parametrize("val", [None, "null"])
 def test_explicit_null_in_filestat(val):
-    FilestatFake = namedtuple(  # pylint: disable=collections-namedtuple-call
+    FilestatFake = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "FilestatFake", ["size", "age", "stat_status"]
     )
     filestat = FilestatFake(val, val, "file vanished")

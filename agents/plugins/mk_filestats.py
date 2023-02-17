@@ -101,9 +101,9 @@ import operator
 import os
 import re
 import shlex
+import stat
 import sys
 import time
-from stat import S_ISDIR, S_ISREG
 
 try:
     from typing import Dict, List  # noqa: F401 # pylint: disable=unused-import
@@ -189,26 +189,26 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
         LOGGER.debug("os.stat(%r)", self.path)
         path = self.path.encode("utf8")
         try:
-            stat = os.stat(path)
+            file_stat = os.stat(path)
         except OSError as exc:
             self.stat_status = "file vanished" if exc.errno == errno.ENOENT else str(exc)
             return
 
         try:
-            self.size = int(stat.st_size)
+            self.size = int(file_stat.st_size)
         except ValueError as exc:
             self.stat_status = str(exc)
             return
 
         try:
-            self._m_time = int(stat.st_mtime)
+            self._m_time = int(file_stat.st_mtime)
             self.age = int(time.time()) - self._m_time
         except ValueError as exc:
             self.stat_status = str(exc)
             return
 
-        self.isfile = S_ISREG(stat.st_mode)
-        self.isdir = S_ISDIR(stat.st_mode)
+        self.isfile = stat.S_ISREG(file_stat.st_mode)
+        self.isdir = stat.S_ISDIR(file_stat.st_mode)
 
     def __repr__(self):
         # type: () -> str

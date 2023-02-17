@@ -337,22 +337,31 @@ class PPage(LocatorHelper):
         reload_on_error: bool = False,
         max_tries: int = 10,
     ) -> None:
-        """Click the located element and wait until the current URL has changed and is loaded or an
-        expected locator is found.
+        """Wait until the specified locator could be clicked.
+        After a successful click, wait until the current URL has changed and is loaded
+        or an expected locator is found.
         """
         url = self.page.url
-        locator.click()
+        clicked = False
 
         for _ in range(max_tries):
-            try:
-                if navigate:
-                    expect(self.page).not_to_have_url(url)
-                elif expected_locator:
-                    expect(expected_locator).to_be_visible()
-                self.page.wait_for_load_state("networkidle")
-                return
-            except AssertionError:
-                pass
+            if not clicked:
+                try:
+                    locator.click()
+                    clicked = True
+                except _api_types.TimeoutError:
+                    pass
+
+            if clicked:
+                try:
+                    if navigate:
+                        expect(self.page).not_to_have_url(url)
+                    elif expected_locator:
+                        expect(expected_locator).to_be_visible()
+                    self.page.wait_for_load_state("networkidle")
+                    return
+                except AssertionError:
+                    pass
 
             try:
                 if reload_on_error:

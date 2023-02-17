@@ -31,13 +31,6 @@ class Status(Table):
     )
     """The average latency for executing Check_MK checkers (i.e. the time the start of the execution is behind the schedule)"""
 
-    average_latency_cmk = Column(
-        'average_latency_cmk',
-        col_type='float',
-        description='The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)',
-    )
-    """The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)"""
-
     average_latency_fetcher = Column(
         'average_latency_fetcher',
         col_type='float',
@@ -261,13 +254,6 @@ class Status(Table):
         description='The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)',
     )
     """The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
-
-    helper_usage_cmk = Column(
-        'helper_usage_cmk',
-        col_type='float',
-        description='The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)',
-    )
-    """The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
 
     helper_usage_fetcher = Column(
         'helper_usage_fetcher',

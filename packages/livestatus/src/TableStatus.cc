@@ -272,12 +272,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "The average latency for executing Check_MK checkers (i.e. the time the start of the execution is behind the schedule)",
         offsets,
         [mc](const Status & /*r*/) { return mc->averageLatencyChecker(); }));
-    // TODO(sp) Remove this misnomer and keep it only in 2.2 branch
-    addColumn(std::make_unique<DoubleColumn<Status>>(
-        "average_latency_cmk",
-        "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
-        offsets,
-        [mc](const Status & /*r*/) { return mc->averageLatencyChecker(); }));
 
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "helper_usage_generic",
@@ -297,12 +291,6 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<DoubleColumn<Status>>(
         "helper_usage_checker",
         "The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        offsets,
-        [mc](const Status & /*r*/) { return mc->helperUsageChecker(); }));
-    // TODO(sp) Remove this misnomer and keep it only in 2.2 branch
-    addColumn(std::make_unique<DoubleColumn<Status>>(
-        "helper_usage_cmk",
-        "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
         offsets,
         [mc](const Status & /*r*/) { return mc->helperUsageChecker(); }));
 

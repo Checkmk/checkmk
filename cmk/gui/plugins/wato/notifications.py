@@ -263,7 +263,7 @@ class NotificationParameterMail(NotificationParameter):
                     ListChoice(
                         title=_("Display additional information"),
                         choices=[
-                            ("omdsite", _("OMD Site")),
+                            ("omdsite", _("Site ID")),
                             ("hosttags", _("Tags of the Host")),
                             ("address", _("IP Address of Host")),
                             ("abstime", _("Absolute Time of Alert")),
@@ -273,12 +273,12 @@ class NotificationParameterMail(NotificationParameter):
                             ("ack_comment", _("Acknowledgement Comment")),
                             ("notification_author", _("Notification Author")),
                             ("notification_comment", _("Notification Comment")),
-                            ("perfdata", _("Performance Data")),
-                            ("graph", _("Performance Graphs")),
+                            ("perfdata", _("Metrics")),
+                            ("graph", _("Time series graph")),
                             ("notesurl", _("Custom Host/Service Notes URL")),
                             ("context", _("Complete variable list (for testing)")),
                         ],
-                        default_value=["perfdata", "graph", "abstime", "address", "longoutput"],
+                        default_value=["graph", "abstime", "address", "longoutput"],
                     ),
                 ),
                 (

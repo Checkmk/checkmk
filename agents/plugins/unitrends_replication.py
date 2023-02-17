@@ -8,12 +8,7 @@ __version__ = "2.2.0b1"
 
 import sys
 import time
-
-if sys.version_info[0] == 2:
-    from urllib2 import urlopen  # pylint: disable=import-error
-else:
-    from urllib.request import urlopen  # pylint: disable=import-error,no-name-in-module
-
+from urllib.request import urlopen
 from xml.dom import minidom
 
 now = int(time.time())
@@ -26,7 +21,7 @@ url = (
     % (start, end, dpu)
 )
 
-xml = urlopen(url)  # nosec B310 # BNS:28af27
+xml = urlopen(url)  # nosec B310 # BNS:28af27 # pylint: disable=consider-using-with
 
 sys.stdout.write("<<<unitrends_replication:sep(124)>>>\n")
 dom = minidom.parse(xml)

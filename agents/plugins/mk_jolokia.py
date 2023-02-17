@@ -10,6 +10,7 @@ import io
 import os
 import socket
 import sys
+import urllib.parse
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
@@ -33,11 +34,6 @@ try:
     )
 except ImportError:
     pass
-
-if sys.version_info[0] >= 3:
-    from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
-else:
-    from urllib2 import quote  # pylint: disable=import-error
 
 try:
     try:
@@ -620,7 +616,9 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     except IndexError:
         return []
 
-    return [("%s/%s" % (quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
+    return [
+        ("%s/%s" % (urllib.parse.quote(mbean_exp), path), path, itemspec) for mbean_exp in paths
+    ]
 
 
 def _process_queries(inst, queries):

@@ -22,6 +22,8 @@ __version__ = "2.2.0b1"
 import os
 import re
 import sys
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
@@ -29,13 +31,10 @@ if sys.version_info < (2, 6):
 
 if sys.version_info[0] == 2:
     import urllib2  # pylint: disable=import-error
-    from urllib2 import HTTPError, Request, URLError, urlopen  # pylint: disable=import-error
 
     urllib2.getproxies = lambda: {}
 else:
     import urllib
-    from urllib.error import HTTPError, URLError  # pylint: disable=import-error,no-name-in-module
-    from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
 
     urllib.getproxies = lambda: {}  # type: ignore[attr-defined]
 
@@ -165,7 +164,7 @@ for server in servers:
                 # HACK: workaround misconfigurations where port 443 is used for
                 # serving non ssl secured http
                 url = "http://%s:%s/%s" % (address, port, page)
-                fd = urlopen(url)  # nosec B310 # BNS:6b61d9
+                fd = urlopen(url)  # nosec B310 # BNS:6b61d9 # pylint: disable=consider-using-with
             else:
                 raise
 

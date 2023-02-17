@@ -47,6 +47,7 @@ import os
 import sys
 import time
 from optparse import OptionParser  # pylint: disable=deprecated-module
+from urllib.request import urlopen
 
 try:
     from typing import List  # noqa: F401 # pylint: disable=unused-import
@@ -69,9 +70,7 @@ def install():
 
     if sys.version_info[0] >= 3:
         from io import BytesIO
-        from urllib.request import urlopen  # pylint: disable=no-name-in-module
     else:
-        from urllib2 import urlopen
         from cStringIO import StringIO as BytesIO
     import shutil
     from zipfile import ZipFile
@@ -81,7 +80,7 @@ def install():
     #   `curl -s "https://download.tinkerforge.com/[new-version].zip | sha256sum`
     download_digest = "e735e0e53ad56e2c2919cf412f3ec28ec0997919eb556b20c27519a57fb7bad0"
 
-    response = urlopen(url)  # nosec B310 # BNS:28af27
+    response = urlopen(url)  # nosec B310 # BNS:28af27 # pylint: disable=consider-using-with
     buf = BytesIO(response.read())
     check_digest(buf, download_digest)
 

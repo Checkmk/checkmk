@@ -27,7 +27,7 @@ import os
 import re
 import sys
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import build_opener, HTTPSHandler, install_opener, Request, urlopen
 
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
@@ -220,18 +220,6 @@ def urlopen_with_ssl(request, timeout):
     ):
         result = urlopen_(request, context=get_ssl_no_verify_context(), timeout=timeout)
     else:
-        if sys.version_info[0] == 2:
-            from urllib2 import (  # pylint: disable=import-error
-                build_opener,
-                HTTPSHandler,
-                install_opener,
-            )
-        else:
-            from urllib.request import (  # pylint: disable=import-error,no-name-in-module
-                build_opener,
-                HTTPSHandler,
-                install_opener,
-            )
         install_opener(build_opener(HTTPSHandler()))
         result = urlopen_(request, timeout=timeout)
     return result

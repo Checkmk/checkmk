@@ -136,6 +136,8 @@ def _special_agent_main_core(
     try:
         return main_fn(args)
     except Exception:
+        if args.debug:
+            raise
         crash_dump = create_agent_crash_dump()
         sys.stderr.write(crash_dump)
         return 1

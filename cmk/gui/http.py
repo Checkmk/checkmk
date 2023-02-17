@@ -278,6 +278,8 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
+    meta: dict[str, Any]
+
     # pylint: disable=too-many-ancestors
 
     def __init__(self, environ: dict, populate_request: bool = True, shallow: bool = False) -> None:
@@ -287,6 +289,7 @@ class Request(
             del environ["SCRIPT_NAME"]
 
         super().__init__(environ, populate_request=populate_request, shallow=shallow)
+        self.meta = {}
         self._verify_not_using_threaded_mpm()
 
     def _verify_not_using_threaded_mpm(self) -> None:

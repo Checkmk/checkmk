@@ -29,10 +29,9 @@ Downtime object can have the following relations:
  * `urn:org.restfulobjects/delete` - The endpoint to delete downtimes.
 
 """
-
 import datetime as dt
 import json
-from typing import Literal
+from typing import Callable, Literal, Union
 
 from cmk.utils.livestatus_helpers.expressions import And, Or
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
@@ -184,6 +183,27 @@ def create_host_related_downtime(params):
     return Response(status=204)
 
 
+def _with_defaulted_timezone(
+    date: dt.datetime,
+    _get_local_timezone: Callable[[], Union[dt.tzinfo, None]] = lambda: dt.datetime.now(
+        dt.timezone.utc
+    )
+    .astimezone()
+    .tzinfo,
+) -> dt.datetime:
+    """Default a datetime to the local timezone.
+
+    Params:
+        date: a datetime that might not have a timezone
+
+    Returns: The input datetime if it had a timezone set or
+             the input datetime with the local timezone if no timezone was set.
+    """
+    if date.tzinfo is None:
+        date = date.replace(tzinfo=_get_local_timezone())
+    return date
+
+
 @Endpoint(
     constructors.collection_href("downtime", "service"),
     "cmk/create_service",
@@ -206,16 +226,22 @@ def create_service_related_downtime(params):
     if downtime_type == "service":
         host_name = body["host_name"]
         with detailed_connection(live) as conn:
-            site_id = Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)).value(
-                conn
-            )
+            try:
+                site_id = Query(
+                    columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)
+                ).value(conn)
+            except ValueError:
+                # Request user can't see the host (but may still be able to access the service)
+                site_id = None
+        start_time = _with_defaulted_timezone(body["start_time"])
+        end_time = _with_defaulted_timezone(body["end_time"])
         downtime_commands.schedule_service_downtime(
             live,
             site_id,
             host_name=body["host_name"],
             service_description=body["service_descriptions"],
-            start_time=body["start_time"],
-            end_time=body["end_time"],
+            start_time=start_time,
+            end_time=end_time,
             recur=body["recur"],
             duration=body["duration"],
             user_id=user.ident,

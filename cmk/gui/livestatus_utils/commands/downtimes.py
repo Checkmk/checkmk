@@ -183,7 +183,7 @@ def schedule_services_downtimes_with_query(
 
 def schedule_service_downtime(
     connection,
-    site_id: SiteId,
+    site_id: Optional[SiteId],
     host_name: str,
     service_description: Union[List[str], str],
     start_time: dt.datetime,
@@ -241,7 +241,7 @@ def schedule_service_downtime(
             A comment which will be added to the downtime.
 
         site_id:
-            Site which is targeted by command
+            An optional Site which is targeted by the command. Defaults to the local site if 'None'.
 
     See Also:
         https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=119
@@ -670,7 +670,7 @@ def schedule_host_downtime(
 def _schedule_downtime(
     sites,
     command: LivestatusCommand,
-    site_id,
+    site_id: Optional[SiteId],
     host_or_group: str,
     service_description: Optional[str],
     start_time: dt.datetime,

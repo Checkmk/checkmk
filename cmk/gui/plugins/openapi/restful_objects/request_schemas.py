@@ -837,7 +837,7 @@ class CreateHostDowntime(CreateHostDowntimeBase):
 
 
 class CreateServiceDowntime(CreateServiceDowntimeBase):
-    host_name = MONITORED_HOST
+    host_name = EXISTING_HOST_NAME  # Note: You don't need access to the host, only to the service
     service_descriptions = fields.List(
         fields.String(),
         uniqueItems=True,

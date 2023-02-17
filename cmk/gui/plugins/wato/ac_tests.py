@@ -791,26 +791,23 @@ class ACTestCheckMKHelperUsage(ACTest):
     def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
-            "GET status\nColumns: helper_usage_cmk average_latency_cmk\n"
+            "GET status\nColumns: helper_usage_checker average_latency_checker\n"
         )
 
-        helper_usage_perc = 100 * row[0]
-        check_latecy_cmk = row[1]
+        helper_usage_checker_percent = 100 * row[0]
+        average_latency_checker = row[1]
 
         usage_warn, usage_crit = 85, 95
-        if helper_usage_perc >= usage_crit:
+        if helper_usage_checker_percent >= usage_crit:
             cls: type[ACResult] = ACResultCRIT
-        elif helper_usage_perc >= usage_warn:
+        elif helper_usage_checker_percent >= usage_warn:
             cls = ACResultWARN
         else:
             cls = ACResultOK
 
         yield cls(
-            _(
-                "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
-                "average check latency of %.3fs."
-            )
-            % (helper_usage_perc, check_latecy_cmk)
+            _("The current checker usage is %.2f%%. The checkers have an average latency of %.3fs.")
+            % (helper_usage_checker_percent, average_latency_checker)
         )
 
 

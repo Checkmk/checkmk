@@ -122,8 +122,8 @@ def _parameter_valuespec_livestatus_status():
             (
                 "average_latency_cmk",
                 Tuple(
-                    title=_("Levels Latency Checkmk"),
-                    help=_("Set Levels for the Checkmk Latency Time"),
+                    title=_("Levels Latency Checker"),
+                    help=_("Set Levels for the Checker Latency Time"),
                     elements=[
                         Age(
                             title=_("Warning at or above"),

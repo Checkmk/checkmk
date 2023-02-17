@@ -16,7 +16,7 @@ SECTION_LIVESTATUS_STATUS = {
     "heute": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "0.456069",
+        "average_latency_checker": "0.456069",
         "average_latency_fetcher": "0.456069",
         "average_latency_generic": "0.83618",
         "average_latency_real_time": "0",
@@ -40,7 +40,6 @@ SECTION_LIVESTATUS_STATUS = {
         "forks": "0",
         "forks_rate": "0",
         "has_event_handlers": "0",
-        "helper_usage_cmk": "0.00172541",
         "helper_usage_checker": "0.00172541",
         "helper_usage_fetcher": "0.00172541",
         "helper_usage_generic": "6.34573e-14",
@@ -82,7 +81,7 @@ SECTION_LIVESTATUS_STATUS = {
     "stable": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "2.93392e-05",
+        "average_latency_checker": "2.93392e-05",
         "average_latency_fetcher": "2.93392e-05",
         "average_latency_generic": "6.15271e-06",
         "average_latency_real_time": "0",
@@ -106,7 +105,6 @@ SECTION_LIVESTATUS_STATUS = {
         "forks": "0",
         "forks_rate": "0",
         "has_event_handlers": "0",
-        "helper_usage_cmk": "0.00377173",
         "helper_usage_fetcher": "0.00377173",
         "helper_usage_checker": "0.00377173",
         "helper_usage_generic": "3.45846e-323",
@@ -262,7 +260,6 @@ MERGED_SECTION_ENTERPRISE = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 6.34573e-12,
-                "check_mk_helper_usage": 0.172541,
                 "fetcher_helper_usage": 0.172541,
                 "checker_helper_usage": 0.172541,
                 "cmc": "running",
@@ -284,7 +281,6 @@ MERGED_SECTION_ENTERPRISE = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 3.46e-321,
-                "check_mk_helper_usage": 0.377173,
                 "fetcher_helper_usage": 0.377173,
                 "checker_helper_usage": 0.377173,
                 "cmc": "running",
@@ -337,7 +333,6 @@ MERGED_SECTION_RAWEDITION = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 6.34573e-12,
-                "check_mk_helper_usage": 0.172541,
                 "fetcher_helper_usage": 0.172541,
                 "checker_helper_usage": 0.172541,
                 "crontab": "running",
@@ -357,7 +352,6 @@ MERGED_SECTION_RAWEDITION = {
             "status_columns": {
                 "apache": "running",
                 "check_helper_usage": 3.46e-321,
-                "check_mk_helper_usage": 0.377173,
                 "fetcher_helper_usage": 0.377173,
                 "checker_helper_usage": 0.377173,
                 "crontab": "running",
@@ -433,7 +427,6 @@ def test_inventory_checkmk() -> None:
                 status_columns={
                     "apache": "running",
                     "check_helper_usage": 6.34573e-12,
-                    "check_mk_helper_usage": 0.172541,
                     "fetcher_helper_usage": 0.172541,
                     "checker_helper_usage": 0.172541,
                     "cmc": "running",
@@ -457,7 +450,6 @@ def test_inventory_checkmk() -> None:
                 status_columns={
                     "apache": "running",
                     "check_helper_usage": 3.46e-321,
-                    "check_mk_helper_usage": 0.377173,
                     "fetcher_helper_usage": 0.377173,
                     "checker_helper_usage": 0.377173,
                     "cmc": "running",

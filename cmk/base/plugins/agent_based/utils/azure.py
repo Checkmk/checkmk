@@ -185,6 +185,28 @@ def create_discover_by_metrics_function(
     return discovery_function
 
 
+def create_discover_by_metrics_function_single(
+    *desired_metrics: str,
+    resource_type: str | None = None,
+) -> Callable[[Section], DiscoveryResult]:
+    """
+    Return a discovery function, that will discover if any of the metrics are found
+    only if there is one resource in the section; doesn't return an item
+    """
+
+    def discovery_function(section: Section) -> DiscoveryResult:
+        if len(section) != 1:
+            return
+
+        resource = list(section.values())[0]
+        if (resource_type is None or resource_type == resource.type) and (
+            set(desired_metrics) & set(resource.metrics)
+        ):
+            yield Service()
+
+    return discovery_function
+
+
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
 #   |                   / ___| |__   ___  ___| | _____                     |
@@ -210,6 +232,31 @@ def iter_resource_attributes(
             yield capitalize(key), value
 
 
+def check_resource_metrics(
+    resource: Resource,
+    params: Mapping[str, Any],
+    metrics_data: Sequence[MetricData],
+    suppress_error: bool = False,
+) -> CheckResult:
+    metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
+    if not any(metrics) and not suppress_error:
+        raise IgnoreResultsError("Data not present at the moment")
+
+    for metric, metric_data in zip(metrics, metrics_data):
+        if not metric:
+            continue
+
+        yield from check_levels(
+            metric.value,
+            levels_upper=params.get(metric_data.upper_levels_param),
+            levels_lower=params.get(metric_data.lower_levels_param),
+            metric_name=metric_data.metric_name,
+            label=metric_data.metric_label,
+            render_func=metric_data.render_func,
+            boundaries=metric_data.boundaries,
+        )
+
+
 def create_check_metrics_function(
     metrics_data: Sequence[MetricData], suppress_error: bool = False
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
@@ -220,23 +267,22 @@ def create_check_metrics_function(
                 return
             raise IgnoreResultsError("Data not present at the moment")
 
-        metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
-        if not any(metrics) and not suppress_error:
-            raise IgnoreResultsError("Data not present at the moment")
+        yield from check_resource_metrics(resource, params, metrics_data, suppress_error)
 
-        for metric, metric_data in zip(metrics, metrics_data):
-            if not metric:
-                continue
+    return check_metric
 
-            yield from check_levels(
-                metric.value,
-                levels_upper=params.get(metric_data.upper_levels_param),
-                levels_lower=params.get(metric_data.lower_levels_param),
-                metric_name=metric_data.metric_name,
-                label=metric_data.metric_label,
-                render_func=metric_data.render_func,
-                boundaries=metric_data.boundaries,
-            )
+
+def create_check_metrics_function_single(
+    metrics_data: Sequence[MetricData], suppress_error: bool = False
+) -> Callable[[Mapping[str, Any], Section], CheckResult]:
+    def check_metric(params: Mapping[str, Any], section: Section) -> CheckResult:
+        if len(section) != 1:
+            if suppress_error:
+                return
+            raise IgnoreResultsError("Only one resource expected")
+
+        resource = list(section.values())[0]
+        yield from check_resource_metrics(resource, params, metrics_data, suppress_error)
 
     return check_metric
 

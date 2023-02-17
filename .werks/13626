@@ -1,0 +1,12 @@
+Title: Linux/Windows dashboards: Adjust titles for inv columns
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1676650829
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The column names have been too long in relation to the actual content in
+the lines. Now the boards use shorter column names.

@@ -411,6 +411,17 @@ div.floatfilter {
         td.vlof_content {
           padding-bottom: 0;
         }
+
+        span.select2-container--default {
+          opacity: $label-filter-last-row-opacity;
+        }
+
+        &.active,
+        &:hover {
+          span.select2-container--default {
+            opacity: 1;
+          }
+        }
       }
 
       td.vlof_buttons a.delete_button img {

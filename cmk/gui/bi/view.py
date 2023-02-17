@@ -1109,18 +1109,25 @@ class CommandFreezeAggregation(Command):
 
     def render(self, what) -> None:  # type:ignore[no-untyped-def]
         html.div(
-            html.render_button("_freeze_aggregations", _("Freeze selected"), cssclass="hot"),
+            html.render_button(self._button_name, _("Freeze selected"), cssclass="hot"),
             class_="group",
         )
+
+    @property
+    def _button_name(self) -> str:
+        return "_freeze_aggregations"
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        actions = []
+        if not request.has_var(self._button_name):
+            return None
+
         if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
             if compiled_aggregation.frozen_info:
-                actions.append(compiled_aggregation.frozen_info.based_on_branch_title)
-        return actions, ""
+                return [compiled_aggregation.frozen_info.based_on_branch_title], ""
+
+        return None
 
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         """Function that is called to execute this action"""
@@ -1131,7 +1138,7 @@ class CommandFreezeAggregation(Command):
         self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
     ) -> str:
         if len_action_rows == 1:
-            return _("freeze the following aggregation")
+            return _("freeze the following aggregation?")
         return _("freeze the following %d aggregations?") % len_action_rows
 
 

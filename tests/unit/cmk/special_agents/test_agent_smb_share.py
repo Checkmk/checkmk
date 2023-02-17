@@ -109,7 +109,7 @@ def test_parse_arguments() -> None:
 @pytest.mark.parametrize(
     "filesystem, pattern, expected_file_data",
     [
-        (
+        pytest.param(
             {
                 SHARED_FOLDER: {
                     "": [folder("Subfolder1")],
@@ -121,8 +121,9 @@ def test_parse_arguments() -> None:
             },
             ["Subfolder1", "My File"],
             [(f"{SHARE_BASE}\\Subfolder1\\My File", "My File")],
+            id="exact pattern for one file to match",
         ),
-        (
+        pytest.param(
             {
                 SHARED_FOLDER: {
                     "": [
@@ -149,8 +150,9 @@ def test_parse_arguments() -> None:
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\file4", "file4"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\file5", "file5"),
             ],
+            id="wildcard in folder- and filename",
         ),
-        (
+        pytest.param(
             {
                 SHARED_FOLDER: {
                     "": [
@@ -190,8 +192,9 @@ def test_parse_arguments() -> None:
                     "some_file",
                 ),
             ],
+            id="wildcard for 2 folder hirachies",
         ),
-        (
+        pytest.param(
             {
                 SHARED_FOLDER: {
                     "": [
@@ -227,8 +230,9 @@ def test_parse_arguments() -> None:
                     "some_file",
                 ),
             ],
+            id="double star globbing, ignore one folder hirachy and don't match in current folder",
         ),
-        (
+        pytest.param(
             {
                 SHARED_FOLDER: {
                     "": [
@@ -243,8 +247,9 @@ def test_parse_arguments() -> None:
                 (f"{SHARE_BASE}\\file1", "file1"),
                 (f"{SHARE_BASE}\\file2", "file2"),
             ],
+            id="match everything with *",
         ),
-        (
+        pytest.param(
             {
                 SHARED_FOLDER: {
                     "": [
@@ -256,6 +261,7 @@ def test_parse_arguments() -> None:
             },
             ["..", "file"],
             [],
+            id="do not look into ..",
         ),
     ],
 )

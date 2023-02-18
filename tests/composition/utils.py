@@ -5,6 +5,7 @@
 
 import contextlib
 import glob
+import logging
 import os
 import socketserver
 import subprocess
@@ -17,6 +18,9 @@ from tests.testlib.site import Site
 from tests.testlib.utils import is_containerized
 
 from tests.composition.constants import TEST_HOST_1
+
+LOGGER = logging.getLogger("composition-tests")
+LOGGER.setLevel(logging.INFO)
 
 
 def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:

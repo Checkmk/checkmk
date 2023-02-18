@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-
 from tests.testlib import wait_until
 from tests.testlib.site import Site
 
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
+from .utils import LOGGER
 
 
 def test_automatic_host_removal(

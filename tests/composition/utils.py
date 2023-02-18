@@ -14,6 +14,7 @@ from collections.abc import Iterator, Sequence
 from multiprocessing import Process
 from pathlib import Path
 
+from tests.testlib import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import is_containerized
 
@@ -158,9 +159,8 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
         yield
         return
 
-    if is_containerized():
-        with _provide_agent_unix_socket(), _run_controller_daemon(ctl_path):
-            yield
+    with _provide_agent_unix_socket(), _run_controller_daemon(ctl_path):
+        yield
 
 
 @contextlib.contextmanager
@@ -189,14 +189,31 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
         [
             "sudo",
             ctl_path.as_posix(),
+            "-vv",
             "daemon",
         ],
-        stderr=subprocess.STDOUT,
+        stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         close_fds=True,
+        encoding="utf-8",
     )
     yield
+
+    exit_code = proc.poll()
     proc.kill()
+    wait_until(
+        lambda: proc.poll() is not None,
+        timeout=30,
+        interval=5,
+    )
+
+    if proc.stdout:
+        LOGGER.info("Stdout from controller daemon process:\n%s", proc.stdout.read())
+    if proc.stderr:
+        LOGGER.info("Stderr from controller daemon process:\n%s", proc.stderr.read())
+
+    if exit_code is not None:
+        raise RuntimeError(f"Controller daemon exited with code {exit_code}, which is unexpected.")
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):

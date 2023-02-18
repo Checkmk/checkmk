@@ -17,7 +17,7 @@ from tests.testlib.version import CMKVersion, version_from_env
 from tests.composition.utils import (
     agent_controller_daemon,
     bake_agent,
-    clean_agent_controller,
+    CleanAgentController,
     execute,
     get_cre_agent_path,
     install_agent_package,
@@ -143,7 +143,7 @@ def _agent_package_path(site: Site) -> Path:
 @pytest.fixture(name="agent_ctl", scope="function")
 def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
     with (
-        clean_agent_controller(installed_agent_ctl_in_unknown_state),
+        CleanAgentController(installed_agent_ctl_in_unknown_state),
         agent_controller_daemon(installed_agent_ctl_in_unknown_state),
     ):
         yield installed_agent_ctl_in_unknown_state

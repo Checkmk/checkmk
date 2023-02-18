@@ -216,21 +216,15 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
     def handle(self) -> None:
-        try:
-            agent_data = self._agent_output()
-        except Exception:
-            return
-        self.request.sendall(agent_data)
-
-    def _agent_output(self) -> bytes:
-        return subprocess.run(
-            ["check_mk_agent"],
-            input=self.request.recv(1024),
-            capture_output=True,
-            close_fds=True,
-            check=True,
-            timeout=15,
-        ).stdout
+        self.request.sendall(
+            subprocess.run(
+                ["check_mk_agent"],
+                input=self.request.recv(1024),
+                capture_output=True,
+                close_fds=True,
+                check=True,
+            ).stdout
+        )
 
 
 def should_skip_because_uncontainerized() -> bool:

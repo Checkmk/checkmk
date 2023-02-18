@@ -187,7 +187,6 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
     # waits for the child process to finish. But our child process is not supposed to ever finish.
     proc = subprocess.Popen(
         [
-            "sudo",
             ctl_path.as_posix(),
             "-vv",
             "daemon",
@@ -207,13 +206,12 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
         interval=5,
     )
 
-    if proc.stdout:
-        LOGGER.info("Stdout from controller daemon process:\n%s", proc.stdout.read())
-    if proc.stderr:
-        LOGGER.info("Stderr from controller daemon process:\n%s", proc.stderr.read())
+    stdout, stderr = proc.communicate()
+    LOGGER.info("Stdout from controller daemon process:\n%s", stdout)
+    LOGGER.info("Stderr from controller daemon process:\n%s", stderr)
 
     if exit_code is not None:
-        raise RuntimeError(f"Controller daemon exited with code {exit_code}, which is unexpected.")
+        LOGGER.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
@@ -226,7 +224,7 @@ class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
 
     def _agent_output(self) -> bytes:
         return subprocess.run(
-            ["sudo", "check_mk_agent"],
+            ["check_mk_agent"],
             input=self.request.recv(1024),
             capture_output=True,
             close_fds=True,

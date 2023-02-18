@@ -506,6 +506,8 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
             "MonitoredHostname": cmk.gui.valuespec.MonitoredHostname,
             "MonitoringState": cmk.gui.valuespec.MonitoringState,
             "Password": cmk.gui.valuespec.Password,
+            "Percentage": cmk.gui.valuespec.Percentage,
+            "RegExpUnicode": cmk.gui.valuespec.RegExpUnicode,
             "TextAscii": cmk.gui.valuespec.TextAscii,
             "TextUnicode": cmk.gui.valuespec.TextUnicode,
             "Transform": cmk.gui.valuespec.Transform,

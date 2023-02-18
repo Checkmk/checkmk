@@ -3,20 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 import subprocess
 from pathlib import Path
 
 from tests.testlib.site import Site
 
-from tests.composition.utils import execute
-
 from cmk.utils.type_defs import HostName
 
+from ..utils import execute, LOGGER
 from .common import wait_until_host_has_services, wait_until_host_receives_data
-
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
 
 
 def test_proxy_register_import_workflow(

@@ -112,11 +112,6 @@ known_results = {
         DiscoveryState.MONITORED,
         DiscoveryState.CUSTOM_IGNORED,
     ): _expected_monitored_standard(),
-    (DiscoveryState.MONITORED, DiscoveryState.LEGACY): _expected_monitored_standard(),
-    (
-        DiscoveryState.MONITORED,
-        DiscoveryState.LEGACY_IGNORED,
-    ): _expected_monitored_standard(),
     (DiscoveryState.VANISHED, DiscoveryState.IGNORED): (
         {MOCK_KEY: MOCK_VALUE},
         set(),
@@ -151,11 +146,6 @@ known_results = {
     (
         DiscoveryState.VANISHED,
         DiscoveryState.CUSTOM_IGNORED,
-    ): _expected_vanished_standard(),
-    (DiscoveryState.VANISHED, DiscoveryState.LEGACY): _expected_vanished_standard(),
-    (
-        DiscoveryState.VANISHED,
-        DiscoveryState.LEGACY_IGNORED,
     ): _expected_vanished_standard(),
     (DiscoveryState.UNDECIDED, DiscoveryState.MONITORED): (
         {MOCK_KEY: MOCK_VALUE},
@@ -221,11 +211,6 @@ known_results = {
         DiscoveryState.IGNORED,
         DiscoveryState.CUSTOM_IGNORED,
     ): _expected_ignored_standard(),
-    (DiscoveryState.IGNORED, DiscoveryState.LEGACY): _expected_ignored_standard(),
-    (
-        DiscoveryState.IGNORED,
-        DiscoveryState.LEGACY_IGNORED,
-    ): _expected_ignored_standard(),
     (DiscoveryState.CLUSTERED_OLD, DiscoveryState.CLUSTERED_NEW): _expected_clustered(),
     (DiscoveryState.CLUSTERED_OLD, DiscoveryState.CLUSTERED_OLD): _expected_clustered(),
     (
@@ -235,11 +220,6 @@ known_results = {
     (
         DiscoveryState.CLUSTERED_OLD,
         DiscoveryState.CUSTOM_IGNORED,
-    ): _expected_clustered(),
-    (DiscoveryState.CLUSTERED_OLD, DiscoveryState.LEGACY): _expected_clustered(),
-    (
-        DiscoveryState.CLUSTERED_OLD,
-        DiscoveryState.LEGACY_IGNORED,
     ): _expected_clustered(),
     (
         DiscoveryState.CLUSTERED_OLD,
@@ -268,14 +248,6 @@ known_results = {
     ): _expected_clustered(),
     (
         DiscoveryState.CLUSTERED_NEW,
-        DiscoveryState.LEGACY,
-    ): _expected_clustered(),
-    (
-        DiscoveryState.CLUSTERED_NEW,
-        DiscoveryState.LEGACY_IGNORED,
-    ): _expected_clustered(),
-    (
-        DiscoveryState.CLUSTERED_NEW,
         DiscoveryState.CLUSTERED_IGNORED,
     ): _expected_clustered(),
     (
@@ -306,11 +278,6 @@ known_results = {
         DiscoveryState.CLUSTERED_IGNORED,
         DiscoveryState.CUSTOM_IGNORED,
     ): _expected_clustered(),
-    (DiscoveryState.CLUSTERED_IGNORED, DiscoveryState.LEGACY): _expected_clustered(),
-    (
-        DiscoveryState.CLUSTERED_IGNORED,
-        DiscoveryState.LEGACY_IGNORED,
-    ): _expected_clustered(),
     (
         DiscoveryState.CLUSTERED_VANISHED,
         DiscoveryState.CLUSTERED_VANISHED,
@@ -330,11 +297,6 @@ known_results = {
     (
         DiscoveryState.CLUSTERED_VANISHED,
         DiscoveryState.CUSTOM_IGNORED,
-    ): _expected_clustered(),
-    (DiscoveryState.CLUSTERED_VANISHED, DiscoveryState.LEGACY): _expected_clustered(),
-    (
-        DiscoveryState.CLUSTERED_VANISHED,
-        DiscoveryState.LEGACY_IGNORED,
     ): _expected_clustered(),
 }
 

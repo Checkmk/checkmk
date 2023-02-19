@@ -82,10 +82,6 @@ class DiscoveryState:
     CLUSTERED_IGNORED = "clustered_ignored"
     ACTIVE_IGNORED = "active_ignored"
     CUSTOM_IGNORED = "custom_ignored"
-    # TODO: Were removed in 1.6 from base. Keeping this for
-    # compatibility with older remote sites. Remove with 1.7.
-    LEGACY = "legacy"
-    LEGACY_IGNORED = "legacy_ignored"
 
     @classmethod
     def is_discovered(cls, table_source) -> bool:  # type:ignore[no-untyped-def]

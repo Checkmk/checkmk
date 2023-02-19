@@ -1241,7 +1241,8 @@ class DiscoveryPageRenderer:
             return f"active_checks:{entry.check_plugin_name}"
         return None
 
-    def _ordered_table_groups(self) -> list[TableGroupEntry]:
+    @staticmethod
+    def _ordered_table_groups() -> list[TableGroupEntry]:
         return [
             TableGroupEntry(
                 table_group=DiscoveryState.UNDECIDED,
@@ -1322,17 +1323,6 @@ class DiscoveryPageRenderer:
                     "manually by a Setup rule <i>Enforced services</i>."
                 ),
             ),
-            # TODO: Were removed in 1.6 from base. Keeping this for
-            # compatibility with older remote sites. Remove with 1.7.
-            TableGroupEntry(
-                table_group=DiscoveryState.LEGACY,
-                show_bulk_actions=False,
-                title=_("Legacy services - defined in main.mk"),
-                help_text=_(
-                    "These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
-                    "in <tt>main.mk</tt> or a similar configuration file."
-                ),
-            ),
             TableGroupEntry(
                 table_group=DiscoveryState.CUSTOM,
                 show_bulk_actions=False,
@@ -1399,19 +1389,6 @@ class DiscoveryPageRenderer:
                 help_text=_(
                     "These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
                     "call a classical check plugin, that you have installed yourself. "
-                    "These services have been disabled by creating a rule in the rule set "
-                    "<i>Disabled services</i> oder <i>Disabled checks</i>."
-                ),
-            ),
-            # TODO: Were removed in 1.6 from base. Keeping this for
-            # compatibility with older remote sites. Remove with 1.7.
-            TableGroupEntry(
-                table_group=DiscoveryState.LEGACY_IGNORED,
-                show_bulk_actions=False,
-                title=_("Disabled legacy services - defined in main.mk"),
-                help_text=_(
-                    "These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
-                    "in <tt>main.mk</tt> or a similar configuration file. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),

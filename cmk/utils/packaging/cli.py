@@ -18,7 +18,6 @@ from . import (
     disable,
     disable_outdated,
     get_classified_manifests,
-    get_enabled_manifests,
     get_stored_manifests,
     get_unpackaged_files,
     install,
@@ -338,11 +337,12 @@ def _command_remove(
 ) -> int:
     """Remove a package from the site"""
     package_id = _get_package_id(args.name, args.version)
-    if package_id in get_enabled_manifests():
+    package_store = PackageStore()
+    if package_id in package_store.get_enabled_manifests():
         raise PackageError("This package is enabled! Please disable it first.")
 
     _logger.info("Removing package %s...", package_id.name)
-    PackageStore().remove(package_id)
+    package_store.remove(package_id)
     _logger.info("Successfully removed package %s.", package_id.name)
     return 0
 

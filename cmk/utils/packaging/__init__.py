@@ -195,6 +195,13 @@ class PackageStore:
         # should never be missing, but don't crash in messed up state
         self._enabled_path(package_id).unlink(missing_ok=True)
 
+    def get_enabled_manifests(self) -> Mapping[PackageID, Manifest]:
+        try:
+            enabled_paths = list(self.enabled_packages.iterdir())
+        except FileNotFoundError:
+            return {}
+        return {m.id: m for m in extract_manifests(enabled_paths)}
+
 
 def disable(
     installer: Installer,
@@ -527,19 +534,12 @@ def get_classified_manifests(
     return ClassifiedManifests(
         stored=get_stored_manifests(package_store),
         installed=list(installed),
-        inactive=[m for id_, m in get_enabled_manifests().items() if id_ not in installed_ids],
+        inactive=[
+            m
+            for id_, m in package_store.get_enabled_manifests().items()
+            if id_ not in installed_ids
+        ],
     )
-
-
-def get_enabled_manifests() -> Mapping[PackageID, Manifest]:
-    return {m.id: m for m in extract_manifests(_get_enabled_package_paths())}
-
-
-def _get_enabled_package_paths() -> list[Path]:
-    try:
-        return list(cmk.utils.paths.local_enabled_packages_dir.iterdir())
-    except FileNotFoundError:
-        return []
 
 
 def get_unpackaged_files(
@@ -630,7 +630,7 @@ def _install_applicable_inactive_packages(
     *,
     post_package_change_actions: bool,
 ) -> None:
-    for name, manifests in _sort_enabled_packages_for_installation():
+    for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
             try:
                 install(
@@ -652,11 +652,15 @@ def _install_applicable_inactive_packages(
                 break
 
 
-def _sort_enabled_packages_for_installation() -> Iterable[tuple[PackageName, Iterable[Manifest]]]:
+def _sort_enabled_packages_for_installation(
+    package_store: PackageStore,
+) -> Iterable[tuple[PackageName, Iterable[Manifest]]]:
     return groupby(
         sorted(
             sorted(
-                get_enabled_manifests().values(), key=lambda m: m.version.sort_key, reverse=True
+                package_store.get_enabled_manifests().values(),
+                key=lambda m: m.version.sort_key,
+                reverse=True,
             ),
             key=lambda m: m.name,
         ),

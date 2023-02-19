@@ -191,7 +191,7 @@ def show_services(params: Mapping[str, Any]) -> Response:
         host=host,
         folder=host.folder(),
         options=DiscoveryOptions(
-            action="",
+            action=DiscoveryAction.NONE,
             show_checkboxes=False,
             show_parameters=False,
             show_discovered_labels=False,
@@ -679,7 +679,7 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     return _serve_background_job(job)
 
 
-def _discovery_options(action_mode: str):  # type:ignore[no-untyped-def]
+def _discovery_options(action_mode: DiscoveryAction) -> DiscoveryOptions:
     return DiscoveryOptions(
         action=action_mode,
         show_checkboxes=False,

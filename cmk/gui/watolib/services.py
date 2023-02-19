@@ -102,9 +102,14 @@ class DiscoveryState:
         ]
 
 
-# Would rather use an Enum for this, but this information is exported to javascript
-# using JSON and Enum is not serializable
-class DiscoveryAction:
+class DiscoveryAction(enum.StrEnum):
+    """This is exported to javascript, so it has to be json serializable
+
+    >>> import json
+    >>> [json.dumps(a) for a in DiscoveryAction]
+    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"']
+    """
+
     NONE = ""  # corresponds to Full Scan in WATO
     STOP = "stop"
     FIX_ALL = "fix_all"
@@ -158,7 +163,7 @@ class DiscoveryResult(NamedTuple):
 
 
 class DiscoveryOptions(NamedTuple):
-    action: str
+    action: DiscoveryAction
     show_checkboxes: bool
     show_parameters: bool
     show_discovered_labels: bool
@@ -546,7 +551,7 @@ def perform_service_discovery(
 
 
 def has_discovery_action_specific_permissions(
-    intended_discovery_action: str, update_target: UpdateType | None
+    intended_discovery_action: DiscoveryAction, update_target: UpdateType | None
 ) -> bool:
     def may_all(*permissions: str) -> bool:
         return all(user.may(p) for p in permissions)
@@ -587,14 +592,7 @@ def has_discovery_action_specific_permissions(
         case DiscoveryAction.UPDATE_SERVICES:
             return user.may("wato.services")
 
-    # not sure if this can happen. Play it safe and require everything.
-    return may_all(
-        "wato.services",
-        "wato.service_discovery_to_undecided",
-        "wato.service_discovery_to_monitored",
-        "wato.service_discovery_to_ignored",
-        "wato.service_discovery_to_removed",
-    ) and may_edit_ruleset("ignored_services")
+    assert_never(intended_discovery_action)
 
 
 def has_modification_specific_permissions(update_target: UpdateType) -> bool:

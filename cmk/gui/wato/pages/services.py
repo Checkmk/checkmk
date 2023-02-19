@@ -403,9 +403,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 
     def _get_status_message(
-        self, discovery_result: DiscoveryResult, performed_action: str
+        self, discovery_result: DiscoveryResult, performed_action: DiscoveryAction
     ) -> str | None:
-        if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
+        if performed_action is DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
         cmk_check_entries = [

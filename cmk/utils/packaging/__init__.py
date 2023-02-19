@@ -122,7 +122,7 @@ class PackageStore:
         self.local_packages: Final = cmk.utils.paths.local_optional_packages_dir
         self.shipped_packages: Final = cmk.utils.paths.optional_packages_dir
 
-    def store(self, file_content: bytes) -> Manifest:
+    def store(self, file_content: bytes, overwrite: bool = False) -> Manifest:
 
         package = extract_manifest(file_content)
 
@@ -130,8 +130,8 @@ class PackageStore:
         local_package_path = self.local_packages / base_name
         shipped_package_path = self.shipped_packages / base_name
 
-        if local_package_path.exists() or shipped_package_path.exists():
-            raise PackageError("Package '%s' already exists on the site!" % base_name)
+        if shipped_package_path.exists() or (not overwrite and local_package_path.exists()):
+            raise PackageError(f"Package {package.name} {package.version} exists on the site!")
 
         local_package_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_bytes_to_file(str(local_package_path), file_content)
@@ -248,14 +248,8 @@ def _create_enabled_mkp_from_installed_package(
     After we changed and or created an MKP, we must make sure it is present on disk as
     an MKP, just like the uploaded ones.
     """
-    base_name = format_file_name(manifest.id)
-    file_path = cmk.utils.paths.local_optional_packages_dir / base_name
-
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-
     mkp = create_mkp_object(manifest, path_config)
-    file_path.write_bytes(mkp)
-
+    package_store.store(mkp, overwrite=True)
     mark_as_enabled(package_store, manifest.id)
 
 

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
-import shutil
 import subprocess
 from collections.abc import Iterable, Mapping
 from itertools import groupby
@@ -280,23 +278,21 @@ def _create_enabled_mkp_from_installed_package(
 def mark_as_enabled(package_store: PackageStore, package_id: PackageID) -> None:
     """Mark the package as one of the enabled ones
 
-    Copying (or linking) the packages into the local hierarchy is the easiest way to get them to
+    Copying the packages into the local hierarchy is the easiest way to get them to
     be synchronized with the remote sites.
     """
     package_path = package_store.get_existing_package_path(package_id)
     destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-
-    # linking fails if the destination exists
-    destination.unlink(missing_ok=True)
-
-    try:
-        os.link(str(package_path), str(destination))
-    except OSError:
-        # if the source belongs to root (as the shipped packages do) we may not be allowed
-        # to hardlink them. We fall back to copying.
-        shutil.copy(str(package_path), str(destination))
+    # We create a copy of the file in the local directory.
+    # That way it'll be synced to the remote sites.
+    # This creates redundant data on the system, but what are our options?
+    #  a) extend the syncing mechanism: complex and makes the code more entangled
+    #  b) move the file: also requires adjustments in a lot of places
+    #  c) softlink: depends on the syncing mechanisms idea of how to handle a symlink -> see a)
+    #  d) hardlink: *should* not work, see the linux kernel doc on "/proc/sys/fs/protect_hardlinks"
+    destination.write_bytes(package_path.read_bytes())
 
 
 def remove_enabled_mark(manifest: Manifest) -> None:

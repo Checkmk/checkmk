@@ -7,7 +7,7 @@
     - role: tribe29.checkmk.server
       vars:
         state: absent
-        checkmk_server_edition: cee
+        checkmk_server_edition: cce
     - "change-motd"
     - configure-apache
 

@@ -55,6 +55,11 @@ def _get_installer() -> Iterator[packaging.Installer]:
     shutil.rmtree(cmk.utils.paths.installed_packages_dir)
 
 
+@pytest.fixture(name="package_store", scope="function")
+def _get_package_store() -> Iterator[packaging.PackageStore]:
+    yield packaging.PackageStore()
+
+
 def _read_manifest(
     installer: packaging.Installer, pacname: packaging.PackageName
 ) -> packaging.Manifest:
@@ -218,10 +223,14 @@ def test_edit_rename_conflict(installer: packaging.Installer) -> None:
 
 
 def test_install(
-    mkp_bytes: bytes, build_setup_search_index: Mock, installer: packaging.Installer
+    mkp_bytes: bytes,
+    build_setup_search_index: Mock,
+    installer: packaging.Installer,
+    package_store: packaging.PackageStore,
 ) -> None:
     packaging._install(
         installer,
+        package_store,
         mkp_bytes,
         _PATH_CONFIG,
         _NO_CALLBACKS,

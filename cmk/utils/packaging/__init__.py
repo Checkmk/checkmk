@@ -121,6 +121,7 @@ class PackageStore:
     def __init__(self) -> None:
         self.local_packages: Final = cmk.utils.paths.local_optional_packages_dir
         self.shipped_packages: Final = cmk.utils.paths.optional_packages_dir
+        self.enabled_packages: Final = cmk.utils.paths.local_enabled_packages_dir
 
     def store(self, file_content: bytes, overwrite: bool = False) -> Manifest:
 
@@ -167,6 +168,32 @@ class PackageStore:
             # yes, this is a race condition. But we want to make the intention clear.
             raise PackageError(f"no such package: {package_id.name} {package_id.version}")
         return shipped_package_path
+
+    def _enabled_path(self, package_id: PackageID) -> Path:
+        return self.enabled_packages / format_file_name(package_id)
+
+    def mark_as_enabled(self, package_id: PackageID) -> None:
+        """Mark the package as one of the enabled ones
+
+        Copying the packages into the local hierarchy is the easiest way to get them to
+        be synchronized with the remote sites.
+        """
+        package_path = self.get_existing_package_path(package_id)
+        destination = self._enabled_path(package_id)
+
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        # We create a copy of the file in the local directory.
+        # That way it'll be synced to the remote sites.
+        # This creates redundant data on the system, but what are our options?
+        #  a) extend the syncing mechanism: complex and makes the code more entangled
+        #  b) move the file: also requires adjustments in a lot of places
+        #  c) softlink: depends on the syncing mechanisms idea of how to handle a symlink -> see a)
+        #  d) hardlink: *should* not work, see the linux kernel doc on "/proc/sys/fs/protect_hardlinks"
+        destination.write_bytes(package_path.read_bytes())
+
+    def remove_enabled_mark(self, package_id: PackageID) -> None:
+        # should never be missing, but don't crash in messed up state
+        self._enabled_path(package_id).unlink(missing_ok=True)
 
 
 def disable(
@@ -250,34 +277,7 @@ def _create_enabled_mkp_from_installed_package(
     """
     mkp = create_mkp_object(manifest, path_config)
     package_store.store(mkp, overwrite=True)
-    mark_as_enabled(package_store, manifest.id)
-
-
-def mark_as_enabled(package_store: PackageStore, package_id: PackageID) -> None:
-    """Mark the package as one of the enabled ones
-
-    Copying the packages into the local hierarchy is the easiest way to get them to
-    be synchronized with the remote sites.
-    """
-    package_path = package_store.get_existing_package_path(package_id)
-    destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    # We create a copy of the file in the local directory.
-    # That way it'll be synced to the remote sites.
-    # This creates redundant data on the system, but what are our options?
-    #  a) extend the syncing mechanism: complex and makes the code more entangled
-    #  b) move the file: also requires adjustments in a lot of places
-    #  c) softlink: depends on the syncing mechanisms idea of how to handle a symlink -> see a)
-    #  d) hardlink: *should* not work, see the linux kernel doc on "/proc/sys/fs/protect_hardlinks"
-    destination.write_bytes(package_path.read_bytes())
-
-
-def remove_enabled_mark(manifest: Manifest) -> None:
-    base_name = format_file_name(manifest.id)
-    (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
-        missing_ok=True
-    )  # should never be missing, but don't crash in messed up state
+    package_store.mark_as_enabled(manifest.id)
 
 
 def install(
@@ -292,6 +292,7 @@ def install(
     try:
         return _install(
             installer,
+            package_store,
             package_store.get_existing_package_path(package_id).read_bytes(),
             path_config,
             callbacks,
@@ -300,11 +301,12 @@ def install(
         )
     finally:
         # it is enabled, even if installing failed
-        mark_as_enabled(package_store, package_id)
+        package_store.mark_as_enabled(package_id)
 
 
 def _install(
     installer: Installer,
+    package_store: PackageStore,
     mkp: bytes,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
@@ -348,7 +350,7 @@ def _install(
             new_files = set(manifest.files.get(part, []))
             callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
 
-        remove_enabled_mark(old_manifest)
+        package_store.remove_enabled_mark(old_manifest.id)
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)

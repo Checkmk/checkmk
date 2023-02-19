@@ -82,8 +82,7 @@ def disable_incomp_mkp(
             installer,
             _PATH_CONFIG,
             _CALLBACKS,
-            package_id.name,
-            package_id.version,
+            package_id,
         )
         sys.stdout.write(
             "Disabled extension package: %s %s\n" % (package_id.name, package_id.version)

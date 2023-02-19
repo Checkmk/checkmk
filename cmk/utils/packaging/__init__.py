@@ -180,44 +180,30 @@ def disable(
     installer: Installer,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
-    package_name: PackageName,
-    package_version: PackageVersion | None,
+    package_id: PackageID,
 ) -> None:
-    package_path, manifest = _find_path_and_package_info(package_name, package_version)
+    package_path, manifest = _find_path_and_package_info(package_id)
 
-    if (installed := installer.get_installed_manifest(package_name)) is not None:
-        if package_version is None or installed.version == package_version:
+    if (installed := installer.get_installed_manifest(package_id.name)) is not None:
+        if installed.version == package_id.version:
             uninstall(installer, path_config, callbacks, manifest)
 
     package_path.unlink()
 
 
-def _find_path_and_package_info(
-    package_name: PackageName, package_version: PackageVersion | None
-) -> tuple[Path, Manifest]:
-
-    if package_version is None:
-
-        def package_matches(manifest: Manifest) -> bool:
-            return manifest.name == package_name
-
-    else:
-
-        def package_matches(manifest: Manifest) -> bool:
-            return manifest.name == package_name and manifest.version == package_version
+def _find_path_and_package_info(package_id: PackageID) -> tuple[Path, Manifest]:
 
     matching_packages = [
         (package_path, manifest)
         for package_path in _get_enabled_package_paths()
         if (manifest := extract_manifest_optionally(package_path)) is not None
-        and package_matches(manifest)
+        and manifest.id == package_id
     ]
 
-    package_str = f"{package_name}" + ("" if package_version is None else f" {package_version}")
     if not matching_packages:
-        raise PackageError(f"Package {package_str} is not enabled")
+        raise PackageError(f"Package not enabled: {package_id.name} {package_id.version}")
     if len(matching_packages) > 1:
-        raise PackageError(f"Package not unique: {package_str}")
+        raise PackageError(f"Package not unique: {package_id.name} {package_id.version}")
 
     return matching_packages[0]
 
@@ -725,7 +711,7 @@ def disable_outdated(
                 manifest.version,
                 exc,
             )
-            disable(installer, path_config, callbacks, manifest.name, manifest.version)
+            disable(installer, path_config, callbacks, manifest.id)
         else:
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
 

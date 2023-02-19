@@ -418,8 +418,7 @@ def _command_disable(
         Installer(path_config.installed_packages_dir),
         path_config,
         callbacks,
-        args.name,
-        args.version,
+        _get_package_id(args.name, args.version),
     )
     return 0
 

@@ -15,6 +15,7 @@ from cmk.utils.packaging import (
     PackageID,
     PackageOperationCallbacks,
     PackagePart,
+    PackageStore,
     PathConfig,
 )
 
@@ -51,6 +52,8 @@ _CALLBACKS: Final = {
     ),
 }
 
+_PACKAGE_STORE = PackageStore()
+
 
 class ConflictMode(enum.StrEnum):
     ASK = "ask"
@@ -80,6 +83,7 @@ def disable_incomp_mkp(
     ):
         disable(
             installer,
+            _PACKAGE_STORE,
             _PATH_CONFIG,
             _CALLBACKS,
             package_id,

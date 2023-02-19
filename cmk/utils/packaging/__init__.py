@@ -198,34 +198,16 @@ class PackageStore:
 
 def disable(
     installer: Installer,
+    package_store: PackageStore,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     package_id: PackageID,
 ) -> None:
-    package_path, manifest = _find_path_and_package_info(package_id)
-
-    if (installed := installer.get_installed_manifest(package_id.name)) is not None:
-        if installed.version == package_id.version:
-            uninstall(installer, path_config, callbacks, manifest)
-
-    package_path.unlink()
-
-
-def _find_path_and_package_info(package_id: PackageID) -> tuple[Path, Manifest]:
-
-    matching_packages = [
-        (package_path, manifest)
-        for package_path in _get_enabled_package_paths()
-        if (manifest := extract_manifest_optionally(package_path)) is not None
-        and manifest.id == package_id
-    ]
-
-    if not matching_packages:
-        raise PackageError(f"Package not enabled: {package_id.name} {package_id.version}")
-    if len(matching_packages) > 1:
-        raise PackageError(f"Package not unique: {package_id.name} {package_id.version}")
-
-    return matching_packages[0]
+    if (
+        installed := installer.get_installed_manifest(package_id.name)
+    ) is not None and installed.version == package_id.version:
+        uninstall(installer, path_config, callbacks, installed)
+    package_store.remove_enabled_mark(package_id)
 
 
 def create(installer: Installer, manifest: Manifest, path_config: PathConfig) -> None:
@@ -684,6 +666,7 @@ def _sort_enabled_packages_for_installation() -> Iterable[tuple[PackageName, Ite
 
 def disable_outdated(
     installer: Installer,
+    package_store: PackageStore,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
 ) -> None:
@@ -702,7 +685,7 @@ def disable_outdated(
                 manifest.version,
                 exc,
             )
-            disable(installer, path_config, callbacks, manifest.id)
+            disable(installer, package_store, path_config, callbacks, manifest.id)
         else:
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
 

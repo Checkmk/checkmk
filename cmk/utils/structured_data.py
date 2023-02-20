@@ -181,6 +181,19 @@ class TreeOrArchiveStore(TreeStore):
         super().__init__(tree_dir)
         self._archive_dir = Path(archive)
 
+    def load_previous(self, *, host_name: HostName | str) -> StructuredDataNode:
+        if (tree_file := self._tree_file(host_name=host_name)).exists():
+            return load_tree(tree_file)
+
+        try:
+            latest_archive_tree_file = max(
+                self._archive_host_dir(host_name).iterdir(), key=lambda tp: int(tp.name)
+            )
+        except (FileNotFoundError, ValueError):
+            return StructuredDataNode()
+
+        return load_tree(latest_archive_tree_file)
+
     def _archive_host_dir(self, host_name: HostName) -> Path:
         return self._archive_dir / str(host_name)
 

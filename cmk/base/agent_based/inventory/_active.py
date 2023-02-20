@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping
+from typing import NamedTuple
 
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
@@ -65,47 +66,51 @@ def execute_active_check_inventory(
         AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_name)
 
     if not (result.processing_failed or result.no_data_or_files):
-        _save_inventory_tree(
-            hostname=host_name,
-            tree_or_archive_store=tree_or_archive_store,
+        save_tree_actions = _get_save_tree_actions(
             old_tree=old_tree,
             inventory_tree=result.inventory_tree,
             update_result=result.update_result,
         )
+        if save_tree_actions.do_remove:
+            tree_or_archive_store.remove(host_name=host_name)
+        # The order of archive or save is important:
+        if save_tree_actions.do_archive:
+            tree_or_archive_store.archive(host_name=host_name)
+        if save_tree_actions.do_save:
+            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
 
     return result.check_result
 
 
-def _save_inventory_tree(
+class _SaveTreeActions(NamedTuple):
+    do_remove: bool
+    do_archive: bool
+    do_save: bool
+
+
+def _get_save_tree_actions(
     *,
-    hostname: HostName,
-    tree_or_archive_store: TreeOrArchiveStore,
     old_tree: StructuredDataNode,
     inventory_tree: StructuredDataNode,
     update_result: UpdateResult,
-) -> None:
+) -> _SaveTreeActions:
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
-        tree_or_archive_store.remove(host_name=hostname)
-        return
+        console.verbose("No inventory tree.\n")
+        return _SaveTreeActions(do_remove=True, do_archive=False, do_save=False)
 
     if old_tree.is_empty():
         console.verbose("New inventory tree.\n")
+        return _SaveTreeActions(do_remove=False, do_archive=False, do_save=True)
 
-    elif not old_tree.is_equal(inventory_tree):
+    if has_changed := (not old_tree.is_equal(inventory_tree)):
         console.verbose("Inventory tree has changed. Add history entry.\n")
-        tree_or_archive_store.archive(host_name=hostname)
 
-    elif update_result.save_tree:
-        console.verbose(
-            "Update inventory tree%s.\n"
-            % (" (%s)" % update_result.reason if update_result.reason else "")
-        )
-    else:
-        console.verbose(
-            "Inventory tree not updated%s.\n"
-            % (" (%s)" % update_result.reason if update_result.reason else "")
-        )
-        return
+    if update_result.save_tree:
+        console.verbose(f"Updated inventory tree ({update_result.reason or ''}).\n")
 
-    tree_or_archive_store.save(host_name=hostname, tree=inventory_tree)
+    return _SaveTreeActions(
+        do_remove=False,
+        do_archive=has_changed,
+        do_save=(has_changed or update_result.save_tree),
+    )

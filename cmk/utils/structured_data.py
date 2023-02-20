@@ -185,11 +185,12 @@ class TreeOrArchiveStore(TreeStore):
         return self._archive_dir / str(host_name)
 
     def archive(self, *, host_name: HostName) -> None:
+        if not (tree_file := self._tree_file(host_name)).exists():
+            return
         target_dir = self._archive_host_dir(host_name)
         target_dir.mkdir(parents=True, exist_ok=True)
-
-        filepath = self._tree_file(host_name)
-        filepath.rename(target_dir / str(int(filepath.stat().st_mtime)))
+        tree_file.rename(target_dir / str(int(tree_file.stat().st_mtime)))
+        self._gz_file(host_name).unlink(missing_ok=True)
 
 
 # .

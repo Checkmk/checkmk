@@ -1779,7 +1779,7 @@ run_remote_plugins() {
     prefix="${2}"
     [ -f "${configfile}" ] || return
 
-    _non_comment_lines "${configfile}" | while read -r descr rest; do
+    _non_comment_lines "${configfile}" | tr '[:blank:]' ' ' | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
         cmdline="${rest#(*) }"
 

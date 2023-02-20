@@ -176,8 +176,8 @@ public:
 
     Triggers &triggers() override;
 
-    size_t numQueuedNotifications() override;
-    size_t numQueuedAlerts() override;
+    size_t numQueuedNotifications() const override;
+    size_t numQueuedAlerts() const override;
     size_t numCachedLogMessages() override;
 
     MetricLocation metricLocation(const std::string &host_name,

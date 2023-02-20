@@ -74,11 +74,13 @@ from cmk.gui.watolib.services import (
     get_check_table,
     has_active_job,
     has_discovery_action_specific_permissions,
+    has_modification_specific_permissions,
     initial_discovery_result,
     perform_fix_all,
     perform_host_label_discovery,
     perform_service_discovery,
     StartDiscoveryRequest,
+    UpdateType,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset
 
@@ -250,7 +252,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         api_request: AjaxDiscoveryRequest = self.webapi_request()
         html.request.del_var("request")  # Do not add this to URLs constructed later
-        update_target = api_request.get("update_target", None)
+        update_target = (
+            None if (raw := api_request.get("update_target", None)) is None else UpdateType(raw)
+        )
         update_source = api_request.get("update_source", None)
         api_request.setdefault("update_services", [])
         update_services = api_request.get("update_services", [])
@@ -274,7 +278,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         # If the user has the wrong permissions, then we still return a discovery result
         # which is different from the REST API behavior.
-        if not has_discovery_action_specific_permissions(discovery_options.action):
+        if not has_discovery_action_specific_permissions(discovery_options.action, update_target):
             discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
 
         discovery_result = self._perform_discovery_action(
@@ -282,7 +286,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             discovery_options=discovery_options,
             previous_discovery_result=previous_discovery_result,
             update_source=update_source,
-            update_target=update_target,
+            update_target=None if update_target is None else update_target.value,
             update_services=update_services,
         )
 
@@ -834,27 +838,28 @@ class DiscoveryPageRenderer:
             return
 
         if table_source == DiscoveryState.MONITORED:
-            if user.may("wato.service_discovery_to_undecided"):
+            if has_modification_specific_permissions(UpdateType.UNDECIDED):
                 self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
-            if user.may("wato.service_discovery_to_ignored"):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.IGNORED:
-            if user.may("wato.service_discovery_to_monitored"):
-                self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
-            if user.may("wato.service_discovery_to_undecided"):
-                self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
+            if may_edit_ruleset("ignored_services"):
+                if has_modification_specific_permissions(UpdateType.MONITORED):
+                    self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
+                if has_modification_specific_permissions(UpdateType.UNDECIDED):
+                    self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
 
         elif table_source == DiscoveryState.VANISHED:
-            if user.may("wato.service_discovery_to_removed"):
+            if has_modification_specific_permissions(UpdateType.REMOVED):
                 self._enable_bulk_button(table_source, DiscoveryState.REMOVED)
-            if user.may("wato.service_discovery_to_ignored"):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.UNDECIDED:
-            if user.may("wato.service_discovery_to_monitored"):
+            if has_modification_specific_permissions(UpdateType.MONITORED):
                 self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
-            if user.may("wato.service_discovery_to_ignored"):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
     def _enable_bulk_button(self, source, target):
@@ -1027,7 +1032,7 @@ class DiscoveryPageRenderer:
 
         num_buttons = 0
         if entry.check_source == DiscoveryState.MONITORED:
-            if user.may("wato.service_discovery_to_undecided"):
+            if has_modification_specific_permissions(UpdateType.UNDECIDED):
                 num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
@@ -1035,9 +1040,7 @@ class DiscoveryPageRenderer:
                     "undecided",
                     button_classes,
                 )
-            if may_edit_ruleset("ignored_services") and user.may(
-                "wato.service_discovery_to_ignored"
-            ):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
@@ -1047,34 +1050,33 @@ class DiscoveryPageRenderer:
                 )
 
         elif entry.check_source == DiscoveryState.IGNORED:
-            if may_edit_ruleset("ignored_services"):
-                if user.may("wato.service_discovery_to_monitored"):
-                    num_buttons += self._icon_button(
-                        entry.check_source,
-                        checkbox_name,
-                        DiscoveryState.MONITORED,
-                        "monitored",
-                        button_classes,
-                    )
-                if user.may("wato.service_discovery_to_ignored"):
-                    num_buttons += self._icon_button(
-                        entry.check_source,
-                        checkbox_name,
-                        DiscoveryState.UNDECIDED,
-                        "undecided",
-                        button_classes,
-                    )
-                num_buttons += self._disabled_services_button(entry.description)
+            if may_edit_ruleset("ignored_services") and has_modification_specific_permissions(
+                UpdateType.MONITORED
+            ):
+                num_buttons += self._icon_button(
+                    DiscoveryState.IGNORED,
+                    checkbox_name,
+                    DiscoveryState.MONITORED,
+                    "monitored",
+                    button_classes,
+                )
+            if has_modification_specific_permissions(UpdateType.IGNORED):
+                num_buttons += self._icon_button(
+                    DiscoveryState.IGNORED,
+                    checkbox_name,
+                    DiscoveryState.UNDECIDED,
+                    "undecided",
+                    button_classes,
+                )
+            num_buttons += self._disabled_services_button(entry.description)
 
         elif entry.check_source == DiscoveryState.VANISHED:
-            if user.may("wato.service_discovery_to_removed"):
+            if has_modification_specific_permissions(UpdateType.REMOVED):
                 num_buttons += self._icon_button_removed(
                     entry.check_source, checkbox_name, button_classes
                 )
 
-            if may_edit_ruleset("ignored_services") and user.may(
-                "wato.service_discovery_to_ignored"
-            ):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
@@ -1084,7 +1086,7 @@ class DiscoveryPageRenderer:
                 )
 
         elif entry.check_source == DiscoveryState.UNDECIDED:
-            if user.may("wato.service_discovery_to_monitored"):
+            if has_modification_specific_permissions(UpdateType.MONITORED):
                 num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,
@@ -1092,9 +1094,7 @@ class DiscoveryPageRenderer:
                     "monitored",
                     button_classes,
                 )
-            if may_edit_ruleset("ignored_services") and user.may(
-                "wato.service_discovery_to_ignored"
-            ):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 num_buttons += self._icon_button(
                     entry.check_source,
                     checkbox_name,

@@ -1,0 +1,23 @@
+Title: Agent plugins: Drop 2.6 compatibility
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1676883153
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+For compatibility with old Linux systems we still maintain the Python 2
+compatibility mechanic we introduced with werk #12149.
+
+In previous versions we ensured compatibility with Python 2.6 and 2.7.
+Providing support for 2.6 needs more and more effort these days while it's
+relevance decreases. For this reason we drop the support for 2.6 with this
+release.
+
+If you are still using Python 2.6 on a monitored system, you will have to use
+the old agent plugins or switch to Python 2.7 when updating your agent plugins
+to Checkmk 2.2.
+

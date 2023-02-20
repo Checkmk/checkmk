@@ -364,9 +364,9 @@ def _command_template(args: argparse.Namespace, path_config: PathConfig) -> int:
     temp_file = paths.tmp_dir / f"{args.name}.manifest.temp"
     temp_file.write_text(package.file_content())
     sys.stdout.write(
-        "Created '{temp_file}'.\n"
+        f"Created '{temp_file}'.\n"
         "You may now edit it.\n"
-        "Create the package using `mkp package {temp_file}`.\n"
+        f"Create the package using `mkp package {temp_file}`.\n"
     )
     return 0
 

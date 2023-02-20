@@ -44,6 +44,7 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
+from cmk.base.ip_lookup import AddressFamily
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -223,7 +224,7 @@ def test_is_ipv4_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.is_ipv4_host(hostname) == result
+    assert (AddressFamily.IPv4 in config_cache.address_family(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -243,7 +244,7 @@ def test_is_ipv6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.is_ipv6_host(hostname) == result
+    assert (AddressFamily.IPv6 in config_cache.address_family(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -263,7 +264,7 @@ def test_is_ipv4v6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.is_ipv4v6_host(hostname) == result
+    assert (config_cache.address_family(hostname) is AddressFamily.DUAL_STACK) is result
 
 
 def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
@@ -301,60 +302,39 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert config_cache.default_address_family("localhost") is socket.AF_INET
-    assert config_cache.is_no_ip_host("localhost") is False
-    assert config_cache.is_ipv4_host("localhost") is True
-    assert config_cache.is_ipv6_host("localhost") is False
-    assert config_cache.is_ipv4v6_host("localhost") is False
+    assert config_cache.address_family("localhost") is AddressFamily.IPv4
     assert ip_address_of(config_cache, "localhost", socket.AF_INET) == "127.0.0.1"
     assert ip_address_of(config_cache, "localhost", socket.AF_INET6) == "::1"
 
     assert config_cache.default_address_family("shadow_host_name") is socket.AF_INET
-    assert config_cache.is_no_ip_host("shadow_host_name") is False
-    assert config_cache.is_ipv4_host("shadow_host_name") is True
-    assert config_cache.is_ipv6_host("shadow_host_name") is False
-    assert config_cache.is_ipv4v6_host("shadow_host_name") is False
+    assert config_cache.address_family("shadow_host_name") is AddressFamily.IPv4
     assert ip_address_of(config_cache, "shadow_host_name", socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
     assert (
         ip_address_of(config_cache, "shadow_host_name", socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
     )
 
     assert config_cache.default_address_family("no_ip") is socket.AF_INET
-    assert config_cache.is_no_ip_host("no_ip") is True
-    assert config_cache.is_ipv4_host("no_ip") is False
-    assert config_cache.is_ipv6_host("no_ip") is False
-    assert config_cache.is_ipv4v6_host("no_ip") is False
+    assert config_cache.address_family("no_ip") is AddressFamily.NO_IP
     assert ip_address_of(config_cache, "no_ip", socket.AF_INET) is None
     assert ip_address_of(config_cache, "no_ip", socket.AF_INET6) is None
 
     assert config_cache.default_address_family("dual_stack") is socket.AF_INET
-    assert config_cache.is_no_ip_host("dual_stack") is False
-    assert config_cache.is_ipv4_host("dual_stack") is True
-    assert config_cache.is_ipv6_host("dual_stack") is True
-    assert config_cache.is_ipv4v6_host("dual_stack") is True
+    assert config_cache.address_family("dual_stack") is AddressFamily.DUAL_STACK
     assert ip_address_of(config_cache, "dual_stack", socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
     assert ip_address_of(config_cache, "dual_stack", socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
 
     assert config_cache.default_address_family("cluster") is socket.AF_INET
-    assert config_cache.is_no_ip_host("cluster") is False
-    assert config_cache.is_ipv4_host("cluster") is True  # That's strange!
-    assert config_cache.is_ipv6_host("cluster") is False
-    assert config_cache.is_ipv4v6_host("cluster") is False
+    assert config_cache.address_family("cluster") is AddressFamily.IPv4  # That's strange
     assert ip_address_of(config_cache, "cluster", socket.AF_INET) == ""
     assert ip_address_of(config_cache, "cluster", socket.AF_INET6) == ""
 
     assert config_cache.default_address_family("bad_host") is socket.AF_INET
-    assert config_cache.is_no_ip_host("bad_host") is False
-    assert config_cache.is_ipv4_host("bad_host") is True  # That's strange!
-    assert config_cache.is_ipv6_host("bad_host") is False
-    assert config_cache.is_ipv4v6_host("bad_host") is False
+    assert config_cache.address_family("bad_host") is AddressFamily.IPv4  # That's strange
     assert ip_address_of(config_cache, "bad_host", socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
     assert ip_address_of(config_cache, "bad_host", socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
 
     assert config_cache.default_address_family("undiscoverable") is socket.AF_INET
-    assert config_cache.is_no_ip_host("undiscoverable") is False
-    assert config_cache.is_ipv4_host("undiscoverable") is True  # That's strange!
-    assert config_cache.is_ipv6_host("undiscoverable") is False
-    assert config_cache.is_ipv4v6_host("undiscoverable") is False
+    assert config_cache.address_family("undiscoverable") is AddressFamily.IPv4  # That's strange
     assert ip_address_of(config_cache, "undiscoverable", socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
     assert ip_address_of(config_cache, "undiscoverable", socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
 
@@ -416,7 +396,7 @@ def test_is_no_ip_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.is_no_ip_host(hostname) == result
+    assert (config_cache.address_family(hostname) is AddressFamily.NO_IP) is result
 
 
 @pytest.mark.parametrize(

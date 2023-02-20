@@ -58,6 +58,7 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     write_notify_host_file,
 )
+from cmk.base.ip_lookup import AddressFamily
 
 ObjectSpec = dict[str, Any]
 
@@ -665,7 +666,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             host_attrs.get("_NODEIPS"),
         )
 
-    if ConfigCache.is_ipv4v6_host(hostname):
+    if ConfigCache.address_family(hostname) is AddressFamily.DUAL_STACK:
         if config_cache.default_address_family(hostname) is socket.AF_INET6:
             _add_ping_service(
                 cfg,
@@ -1274,18 +1275,18 @@ if '-d' in sys.argv:
             raise TypeError()
 
         for node in nodes:
-            if ConfigCache.is_ipv4_host(node):
+            if AddressFamily.IPv4 in ConfigCache.address_family(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AF_INET
                 )
 
-            if ConfigCache.is_ipv6_host(node):
+            if AddressFamily.IPv6 in ConfigCache.address_family(node):
                 needed_ipv6addresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AF_INET6
                 )
 
         try:
-            if ConfigCache.is_ipv4_host(hostname):
+            if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AF_INET
                 )
@@ -1293,19 +1294,19 @@ if '-d' in sys.argv:
             pass
 
         try:
-            if ConfigCache.is_ipv6_host(hostname):
+            if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AF_INET6
                 )
         except Exception:
             pass
     else:
-        if ConfigCache.is_ipv4_host(hostname):
+        if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
             needed_ipaddresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AF_INET
             )
 
-        if ConfigCache.is_ipv6_host(hostname):
+        if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AF_INET6
             )

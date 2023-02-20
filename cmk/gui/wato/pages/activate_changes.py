@@ -74,7 +74,7 @@ if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         is_after_expiration_grace_period,
         is_max_version_valid,
-        load_verification_response,
+        load_verified_response,
     )
 
 
@@ -94,7 +94,13 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         super().load()
         self._license_usage_report_validity = get_license_usage_report_validity()
         self._license_verification_response = (
-            load_verification_response() if not is_raw_edition() else None
+            None
+            if is_raw_edition()
+            else (
+                None
+                if (verified_response := load_verified_response()) is None
+                else verified_response.response
+            )
         )
 
     def title(self) -> str:

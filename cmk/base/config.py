@@ -1186,112 +1186,110 @@ def all_configured_offline_hosts() -> set[HostName]:
 
 
 # Cleanup! .. some day
-def _get_old_cmciii_temp_description(item: Item) -> tuple[bool, ServiceName]:
+def _get_old_cmciii_temp_description(item: Item) -> tuple[ServiceName, None]:
     if item is None:
         raise TypeError()
 
     if "Temperature" in item:
-        return False, item  # old item format, no conversion
+        return item, None  # old item format, no conversion
 
     parts = item.split(" ")
     if parts[0] == "Ambient":
-        return False, "%s Temperature" % parts[1]
+        return "%s Temperature" % parts[1], None
 
     if len(parts) == 2:
-        return False, f"{parts[1]} {parts[0]}.Temperature"
+        return f"{parts[1]} {parts[0]}.Temperature", None
 
     if parts[1] == "LCP":
         parts[1] = "Liquid_Cooling_Package"
-    return False, f"{parts[1]} {parts[0]}.{parts[2]}-Temperature"
+    return f"{parts[1]} {parts[0]}.{parts[2]}-Temperature", None
 
 
-_old_service_descriptions: Mapping[
-    str, ServiceName | Callable[[Item], tuple[bool, ServiceName]]
-] = {
-    "aix_memory": "Memory used",
+_old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item]]] = {
+    "aix_memory": lambda item: ("Memory used", item),
     # While using the old description, don't append the item, even when discovered
     # with the new check which creates an item.
-    "barracuda_mailqueues": lambda item: (False, "Mail Queue"),
-    "brocade_sys_mem": "Memory used",
-    "casa_cpu_temp": "Temperature %s",
-    "cisco_asa_failover": "Cluster Status",
-    "cisco_mem": "Mem used %s",
-    "cisco_mem_asa": "Mem used %s",
-    "cisco_mem_asa64": "Mem used %s",
+    "barracuda_mailqueues": lambda item: ("Mail Queue", None),
+    "brocade_sys_mem": lambda item: ("Memory used", item),
+    "casa_cpu_temp": lambda item: ("Temperature %s", item),
+    "cisco_asa_failover": lambda item: ("Cluster Status", item),
+    "cisco_mem": lambda item: ("Mem used %s", item),
+    "cisco_mem_asa": lambda item: ("Mem used %s", item),
+    "cisco_mem_asa64": lambda item: ("Mem used %s", item),
     "cmciii_temp": _get_old_cmciii_temp_description,
-    "cmciii_psm_current": "%s",
-    "cmciii_lcp_airin": "LCP Fanunit Air IN",
-    "cmciii_lcp_airout": "LCP Fanunit Air OUT",
-    "cmciii_lcp_water": "LCP Fanunit Water %s",
-    "db2_mem": "Mem of %s",
-    "df": "fs_%s",
-    "df_netapp": "fs_%s",
-    "df_netapp32": "fs_%s",
-    "docker_container_mem": "Memory used",
-    "enterasys_temp": lambda item: (False, "Temperature"),
-    "esx_vsphere_datastores": "fs_%s",
-    "esx_vsphere_hostsystem_mem_usage": "Memory used",
-    "esx_vsphere_hostsystem_mem_usage_cluster": "Memory usage",
-    "etherbox_temp": "Sensor %s",
-    "fortigate_memory": "Memory usage",
-    "fortigate_memory_base": "Memory usage",
-    "fortigate_node_memory": "Memory usage %s",
-    "hr_fs": "fs_%s",
-    "hr_mem": "Memory used",
-    "huawei_switch_mem": "Memory used %s",
-    "hyperv_vm": "hyperv_vms",
-    "ibm_svc_mdiskgrp": "MDiskGrp %s",
-    "ibm_svc_system": "IBM SVC Info",
-    "ibm_svc_systemstats_cache": "IBM SVC Cache Total",
-    "ibm_svc_systemstats_diskio": "IBM SVC Throughput %s Total",
-    "ibm_svc_systemstats_disk_latency": "IBM SVC Latency %s Total",
-    "ibm_svc_systemstats_iops": "IBM SVC IOPS %s Total",
-    "innovaphone_mem": "Memory used",
-    "innovaphone_temp": lambda item: (False, "Temperature"),
-    "juniper_mem": "Memory Utilization %s",
-    "juniper_screenos_mem": "Memory used",
-    "juniper_trpz_mem": "Memory used",
-    "liebert_bat_temp": lambda item: (False, "Battery Temp"),
-    "logwatch": "LOG %s",
-    "logwatch_groups": "LOG %s",
-    "megaraid_bbu": "RAID Adapter/BBU %s",
-    "megaraid_pdisks": "RAID PDisk Adapt/Enc/Sl %s",
-    "megaraid_ldisks": "RAID Adapter/LDisk %s",
-    "mem_used": "Memory used",
-    "mem_win": "Memory and pagefile",
-    "mknotifyd": "Notification Spooler %s",
-    "mknotifyd_connection": "Notification Connection %s",
-    "mssql_backup": "%s Backup",
-    "mssql_blocked_sessions": lambda item: (False, "MSSQL Blocked Sessions"),
-    "mssql_counters_cache_hits": "%s",
-    "mssql_counters_file_sizes": "%s File Sizes",
-    "mssql_counters_locks": "%s Locks",
-    "mssql_counters_locks_per_batch": "%s Locks per Batch",
-    "mssql_counters_pageactivity": "%s Page Activity",
-    "mssql_counters_sqlstats": "%s",
-    "mssql_counters_transactions": "%s Transactions",
-    "mssql_databases": "%s Database",
-    "mssql_datafiles": "Datafile %s",
-    "mssql_tablespaces": "%s Sizes",
-    "mssql_transactionlogs": "Transactionlog %s",
-    "mssql_versions": "%s Version",
-    "netscaler_mem": "Memory used",
-    "nullmailer_mailq": lambda item: (False, "Nullmailer Queue"),
-    "nvidia_temp": "Temperature NVIDIA %s",
-    "postfix_mailq": lambda item: (False, "Postfix Queue"),
-    "ps": "proc_%s",
-    "qmail_stats": lambda item: (False, "Qmail Queue"),
-    "raritan_emx": "Rack %s",
-    "raritan_pdu_inlet": "Input Phase %s",
-    "services": "service_%s",
-    "solaris_mem": "Memory used",
-    "sophos_memory": "Memory usage",
-    "statgrab_mem": "Memory used",
-    "tplink_mem": "Memory used",
-    "ups_bat_temp": "Temperature Battery %s",
-    "vms_diskstat_df": "fs_%s",
-    "wmic_process": "proc_%s",
-    "zfsget": "fs_%s",
+    "cmciii_psm_current": lambda item: ("%s", item),
+    "cmciii_lcp_airin": lambda item: ("LCP Fanunit Air IN", item),
+    "cmciii_lcp_airout": lambda item: ("LCP Fanunit Air OUT", item),
+    "cmciii_lcp_water": lambda item: ("LCP Fanunit Water %s", item),
+    "db2_mem": lambda item: ("Mem of %s", item),
+    "df": lambda item: ("fs_%s", item),
+    "df_netapp": lambda item: ("fs_%s", item),
+    "df_netapp32": lambda item: ("fs_%s", item),
+    "docker_container_mem": lambda item: ("Memory used", item),
+    "enterasys_temp": lambda item: ("Temperature", None),
+    "esx_vsphere_datastores": lambda item: ("fs_%s", item),
+    "esx_vsphere_hostsystem_mem_usage": lambda item: ("Memory used", item),
+    "esx_vsphere_hostsystem_mem_usage_cluster": lambda item: ("Memory usage", item),
+    "etherbox_temp": lambda item: ("Sensor %s", item),
+    "fortigate_memory": lambda item: ("Memory usage", item),
+    "fortigate_memory_base": lambda item: ("Memory usage", item),
+    "fortigate_node_memory": lambda item: ("Memory usage %s", item),
+    "hr_fs": lambda item: ("fs_%s", item),
+    "hr_mem": lambda item: ("Memory used", item),
+    "huawei_switch_mem": lambda item: ("Memory used %s", item),
+    "hyperv_vm": lambda item: ("hyperv_vms", item),
+    "ibm_svc_mdiskgrp": lambda item: ("MDiskGrp %s", item),
+    "ibm_svc_system": lambda item: ("IBM SVC Info", item),
+    "ibm_svc_systemstats_cache": lambda item: ("IBM SVC Cache Total", item),
+    "ibm_svc_systemstats_diskio": lambda item: ("IBM SVC Throughput %s Total", item),
+    "ibm_svc_systemstats_disk_latency": lambda item: ("IBM SVC Latency %s Total", item),
+    "ibm_svc_systemstats_iops": lambda item: ("IBM SVC IOPS %s Total", item),
+    "innovaphone_mem": lambda item: ("Memory used", item),
+    "innovaphone_temp": lambda item: ("Temperature", None),
+    "juniper_mem": lambda item: ("Memory Utilization %s", item),
+    "juniper_screenos_mem": lambda item: ("Memory used", item),
+    "juniper_trpz_mem": lambda item: ("Memory used", item),
+    "liebert_bat_temp": lambda item: ("Battery Temp", None),
+    "logwatch": lambda item: ("LOG %s", item),
+    "logwatch_groups": lambda item: ("LOG %s", item),
+    "megaraid_bbu": lambda item: ("RAID Adapter/BBU %s", item),
+    "megaraid_pdisks": lambda item: ("RAID PDisk Adapt/Enc/Sl %s", item),
+    "megaraid_ldisks": lambda item: ("RAID Adapter/LDisk %s", item),
+    "mem_used": lambda item: ("Memory used", item),
+    "mem_win": lambda item: ("Memory and pagefile", item),
+    "mknotifyd": lambda item: ("Notification Spooler %s", item),
+    "mknotifyd_connection": lambda item: ("Notification Connection %s", item),
+    "mssql_backup": lambda item: ("%s Backup", item),
+    "mssql_blocked_sessions": lambda item: ("MSSQL Blocked Sessions", None),
+    "mssql_counters_cache_hits": lambda item: ("%s", item),
+    "mssql_counters_file_sizes": lambda item: ("%s File Sizes", item),
+    "mssql_counters_locks": lambda item: ("%s Locks", item),
+    "mssql_counters_locks_per_batch": lambda item: ("%s Locks per Batch", item),
+    "mssql_counters_pageactivity": lambda item: ("%s Page Activity", item),
+    "mssql_counters_sqlstats": lambda item: ("%s", item),
+    "mssql_counters_transactions": lambda item: ("%s Transactions", item),
+    "mssql_databases": lambda item: ("%s Database", item),
+    "mssql_datafiles": lambda item: ("Datafile %s", item),
+    "mssql_tablespaces": lambda item: ("%s Sizes", item),
+    "mssql_transactionlogs": lambda item: ("Transactionlog %s", item),
+    "mssql_versions": lambda item: ("%s Version", item),
+    "netscaler_mem": lambda item: ("Memory used", item),
+    "nullmailer_mailq": lambda item: ("Nullmailer Queue", None),
+    "nvidia_temp": lambda item: ("Temperature NVIDIA %s", item),
+    "postfix_mailq": lambda item: ("Postfix Queue", None),
+    "ps": lambda item: ("proc_%s", item),
+    "qmail_stats": lambda item: ("Qmail Queue", None),
+    "raritan_emx": lambda item: ("Rack %s", item),
+    "raritan_pdu_inlet": lambda item: ("Input Phase %s", item),
+    "services": lambda item: ("service_%s", item),
+    "solaris_mem": lambda item: ("Memory used", item),
+    "sophos_memory": lambda item: ("Memory usage", item),
+    "statgrab_mem": lambda item: ("Memory used", item),
+    "tplink_mem": lambda item: ("Memory used", item),
+    "ups_bat_temp": lambda item: ("Temperature Battery %s", item),
+    "vms_diskstat_df": lambda item: ("fs_%s", item),
+    "wmic_process": lambda item: ("proc_%s", item),
+    "zfsget": lambda item: ("fs_%s", item),
 }
 
 
@@ -1312,7 +1310,9 @@ def service_description(
     )
 
 
-def _get_service_description_template_and_item(plugin: CheckPlugin, item: Item) -> tuple[str, Item]:
+def _get_service_description_template_and_item(
+    plugin: CheckPlugin, item: Item
+) -> tuple[ServiceName, Item]:
     plugin_name_str = str(plugin.name)
 
     # use user-supplied service description, if available
@@ -1323,12 +1323,7 @@ def _get_service_description_template_and_item(plugin: CheckPlugin, item: Item) 
     old_descr = _old_service_descriptions.get(plugin_name_str)
     if old_descr is None or plugin_name_str in use_new_descriptions_for:
         return plugin.service_name, item
-
-    if isinstance(old_descr, str):
-        return old_descr, item
-
-    preserve_item, descr_format = old_descr(item)
-    return descr_format, item if preserve_item else None
+    return old_descr(item)
 
 
 def _format_item_with_template(template: str, item: Item) -> str:

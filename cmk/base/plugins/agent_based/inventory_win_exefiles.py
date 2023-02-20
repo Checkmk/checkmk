@@ -82,9 +82,9 @@ def inventory_win_exefiles(section: Section) -> InventoryResult:
             path=["software", "packages"],
             key_columns={
                 "name": package.name,
+                "path": package.path,
             },
             inventory_columns={
-                "path": package.path,
                 "package_type": package.package_type,
                 "install_date": package.install_date,
                 "size": package.size,

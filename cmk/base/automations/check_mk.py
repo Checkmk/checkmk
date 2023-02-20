@@ -12,6 +12,7 @@ import operator
 import os
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
 from collections.abc import Iterable, Mapping, Sequence
@@ -1450,7 +1451,9 @@ class AutomationDiagHost(Automation):
     def _execute_ping(
         self, config_cache: ConfigCache, hostname: HostName, ipaddress: str
     ) -> tuple[int, str]:
-        base_cmd = "ping6" if config_cache.is_ipv6_primary(hostname) else "ping"
+        base_cmd = (
+            "ping6" if config_cache.default_address_family(hostname) is socket.AF_INET6 else "ping"
+        )
         completed_process = subprocess.run(
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
             stdout=subprocess.PIPE,
@@ -1523,7 +1526,9 @@ class AutomationDiagHost(Automation):
     def _execute_traceroute(
         self, config_cache: ConfigCache, hostname: HostName, ipaddress: str
     ) -> tuple[int, str]:
-        family_flag = "-6" if config_cache.is_ipv6_primary(hostname) else "-4"
+        family_flag = (
+            "-6" if config_cache.default_address_family(hostname) is socket.AF_INET6 else "-4"
+        )
         try:
             completed_process = subprocess.run(
                 ["traceroute", family_flag, "-n", ipaddress],

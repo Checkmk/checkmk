@@ -460,7 +460,7 @@ def test_is_ipv6_primary_host(
     ts.add_host(hostname, tags)
     ts.set_ruleset("primary_address_family", ruleset)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.is_ipv6_primary(hostname) == result
+    assert (config_cache.default_address_family(hostname) is socket.AF_INET6) is result
 
 
 @pytest.mark.parametrize(

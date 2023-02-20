@@ -298,7 +298,7 @@ def tags_of_host(hostname: HostName) -> Set[str]:
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
 def is_ipv6_primary(hostname: HostName) -> bool:
-    return _config.get_config_cache().is_ipv6_primary(hostname)
+    return _config.get_config_cache().default_address_family(hostname) is socket.AF_INET6
 
 
 nagios_illegal_chars = _config.nagios_illegal_chars

@@ -8,6 +8,7 @@ import dataclasses
 import os
 import shlex
 import shutil
+import socket
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
@@ -184,18 +185,18 @@ def check_icmp_arguments_of(
     config_cache: ConfigCache,
     hostname: HostName,
     add_defaults: bool = True,
-    family: int | None = None,
+    family: socket.AddressFamily | None = None,
 ) -> str:
     levels = config_cache.ping_levels(hostname)
     if not add_defaults and not levels:
         return ""
 
     if family is None:
-        family = 6 if config_cache.is_ipv6_primary(hostname) else 4
+        family = config_cache.default_address_family(hostname)
 
     args = []
 
-    if family == 6:
+    if family is socket.AF_INET6:
         args.append("-6")
 
     rta = 200.0, 500.0

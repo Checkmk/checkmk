@@ -153,6 +153,7 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.ip_lookup import AddressFamily
 
 TagIDs = set[TagID]
 
@@ -396,7 +397,7 @@ _failed_ip_lookups: list[HostName] = []
 
 
 def ip_address_of(
-    config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily
+    config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily | AddressFamily
 ) -> str | None:
     try:
         return lookup_ip_address(config_cache, host_name, family=family)
@@ -2523,7 +2524,6 @@ def lookup_mgmt_board_ip_address(
             ),
             override_dns=fake_dns,
             is_dyndns_host=config_cache.is_dyndns_host(host_name),
-            is_no_ip_host=False,
             force_file_cache_renewal=not use_dns_cache,
         )
     except MKIPAddressLookupError:
@@ -2534,16 +2534,22 @@ def lookup_ip_address(
     config_cache: ConfigCache,
     host_name: HostName,
     *,
-    family: socket.AddressFamily | None = None,
+    family: socket.AddressFamily | AddressFamily | None = None,
 ) -> HostAddress | None:
-    if ConfigCache.is_no_ip_host(host_name):
+    if ConfigCache.address_family(host_name) is AddressFamily.NO_IP:
+        # TODO(ml): [IPv6] Silently override the `family` parameter.  Where
+        # that is necessary, the callers are highly unlikely to handle IPv6
+        # and DUAL_STACK correctly.
         return None
     if family is None:
         family = config_cache.default_address_family(host_name)
+    if isinstance(family, socket.AddressFamily):
+        family = AddressFamily.from_socket(family)
     return ip_lookup.lookup_ip_address(
         host_name=host_name,
         family=family,
-        configured_ip_address=(ipaddresses if family is socket.AF_INET else ipv6addresses).get(
+        # TODO(ml): [IPv6] What about dual stack?
+        configured_ip_address=(ipaddresses if AddressFamily.IPv4 in family else ipv6addresses).get(
             host_name
         ),
         simulation_mode=simulation_mode,
@@ -2553,7 +2559,6 @@ def lookup_ip_address(
         ),
         override_dns=fake_dns,
         is_dyndns_host=config_cache.is_dyndns_host(host_name),
-        is_no_ip_host=config_cache.is_no_ip_host(host_name),
         force_file_cache_renewal=not use_dns_cache,
     )
 
@@ -2810,9 +2815,7 @@ class ConfigCache:
     def ip_lookup_config(self, host_name: HostName) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
             hostname=host_name,
-            is_ipv4_host=ConfigCache.is_ipv4_host(host_name),
-            is_ipv6_host=ConfigCache.is_ipv6_host(host_name),
-            is_no_ip_host=ConfigCache.is_no_ip_host(host_name),
+            address_family=ConfigCache.address_family(host_name),
             is_snmp_host=self.is_snmp_host(host_name),
             snmp_backend=self.get_snmp_backend(host_name),
             default_address_family=self.default_address_family(host_name),
@@ -3362,7 +3365,7 @@ class ConfigCache:
         explicit_command = self.explicit_check_command(host_name)
         if explicit_command is not None:
             return explicit_command
-        if ConfigCache.is_no_ip_host(host_name):
+        if ConfigCache.address_family(host_name) is AddressFamily.NO_IP:
             return "ok"
         return default_host_check_command
 
@@ -3754,43 +3757,38 @@ class ConfigCache:
         return self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"]
 
     @staticmethod
-    def is_no_ip_host(hostname: HostName) -> bool:
-        tag_groups = ConfigCache.tags(hostname)
-        return tag_groups["address_family"] == "no-ip"
-
-    @staticmethod
-    def is_ipv6_host(hostname: HostName) -> bool:
-        # Whether or not the given host is configured not to be monitored via IP
-        tag_groups = ConfigCache.tags(hostname)
-        return "ip-v6" in tag_groups
-
-    @staticmethod
-    def is_ipv4_host(hostname: HostName) -> bool:
-        # Whether or not the given host is configured to be monitored via IPv4.
-        # This is the case when it is set to be explicit IPv4 or implicit (when
-        # host is not an IPv6 host and not a "No IP" host)
-        tag_groups = ConfigCache.tags(hostname)
-        return "ip-v4" in tag_groups or (
-            not ConfigCache.is_ipv6_host(hostname) and not ConfigCache.is_no_ip_host(hostname)
-        )
-
-    @staticmethod
-    def is_ipv4v6_host(hostname: HostName) -> bool:
-        tag_groups = ConfigCache.tags(hostname)
-        return "ip-v6" in tag_groups and "ip-v4" in tag_groups
+    def address_family(host_name: HostName) -> AddressFamily:
+        # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
+        tag_groups = ConfigCache.tags(host_name)
+        if "no-ip" in tag_groups or "no-ip" == tag_groups["address_family"]:
+            return AddressFamily.NO_IP
+        if "ip-v4v6" in tag_groups or "ip-v4v6" == tag_groups["address_family"]:
+            return AddressFamily.DUAL_STACK
+        if ("ip-v6" in tag_groups or "ip-v6" == tag_groups["address_family"]) and (
+            "ip-v4" in tag_groups or "ip-v4" == tag_groups["address_family"]
+        ):
+            return AddressFamily.DUAL_STACK
+        if (
+            "ip-v6" in tag_groups
+            or "ip-v6-only" in tag_groups
+            or tag_groups["address_family"] in {"ip-v6", "ip-v6-only"}
+        ):
+            return AddressFamily.IPv6
+        return AddressFamily.IPv4
 
     def default_address_family(self, hostname: HostName) -> socket.AddressFamily:
-        def primary_ip_address_family_of() -> str:
+        def primary_ip_address_family_of() -> socket.AddressFamily:
             rules = self.host_extra_conf(hostname, primary_address_family)
-            if rules:
-                return rules[0]
-            return "ipv4"
+            if rules and rules[0] == "ipv6":
+                return socket.AF_INET6
+            return socket.AF_INET
 
         def is_ipv6_primary() -> bool:
             # Whether or not the given host is configured to be monitored primarily via IPv6
-            return (
-                not ConfigCache.is_ipv4v6_host(hostname) and ConfigCache.is_ipv6_host(hostname)
-            ) or (ConfigCache.is_ipv4v6_host(hostname) and primary_ip_address_family_of() == "ipv6")
+            return ConfigCache.address_family(hostname) is AddressFamily.IPv6 or (
+                ConfigCache.address_family(hostname) is AddressFamily.DUAL_STACK
+                and primary_ip_address_family_of() is socket.AF_INET6
+            )
 
         return socket.AF_INET6 if is_ipv6_primary() else socket.AF_INET
 
@@ -4120,9 +4118,11 @@ class ConfigCache:
         if "alias" not in attrs:
             attrs["alias"] = self.alias(hostname)
 
+        family = ConfigCache.address_family(hostname)
+
         # Now lookup configured IP addresses
         v4address: str | None = None
-        if ConfigCache.is_ipv4_host(hostname):
+        if AddressFamily.IPv4 in family:
             v4address = ip_address_of(self, hostname, socket.AF_INET)
 
         if v4address is None:
@@ -4130,7 +4130,7 @@ class ConfigCache:
         attrs["_ADDRESS_4"] = v4address
 
         v6address: str | None = None
-        if ConfigCache.is_ipv6_host(hostname):
+        if AddressFamily.IPv6 in family:
             v6address = ip_address_of(self, hostname, socket.AF_INET6)
         if v6address is None:
             v6address = ""
@@ -4173,7 +4173,7 @@ class ConfigCache:
             "_NODENAMES": " ".join(sorted_nodes),
         }
         node_ips_4 = []
-        if ConfigCache.is_ipv4_host(hostname):
+        if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
             family = socket.AF_INET
             for h in sorted_nodes:
                 addr = ip_address_of(self, h, family)
@@ -4183,7 +4183,7 @@ class ConfigCache:
                     node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
         node_ips_6 = []
-        if ConfigCache.is_ipv6_host(hostname):
+        if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
             family = socket.AF_INET6
             for h in sorted_nodes:
                 addr = ip_address_of(self, h, family)

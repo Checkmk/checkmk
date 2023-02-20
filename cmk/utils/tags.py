@@ -640,6 +640,9 @@ class BuiltinTagConfig(TagConfig):
                 ],
             },
             {
+                # Shouldn't be used *directly* anywhere.  Always prefer
+                # `ConfigCache.address_family(HostName) -> AddressFamily`
+                # because it is typed.
                 "id": "address_family",
                 "title": _("IP address family"),
                 "topic": "Address",

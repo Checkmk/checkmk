@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import enum
 import socket
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager
@@ -26,11 +29,27 @@ _fake_dns: HostAddress | None = None
 _enforce_localhost = False
 
 
+@enum.unique
+class AddressFamily(enum.IntFlag):
+    NO_IP = enum.auto()
+    IPv4 = enum.auto()
+    IPv6 = enum.auto()
+    DUAL_STACK = IPv4 | IPv6
+
+    @classmethod
+    def from_socket(cls, /, af: socket.AddressFamily) -> AddressFamily:
+        match af:
+            case socket.AF_INET:
+                return cls.IPv4
+            case socket.AF_INET6:
+                return cls.IPv6
+            case _:
+                raise ValueError(af)
+
+
 class IPLookupConfig(NamedTuple):
     hostname: HostName
-    is_ipv4_host: bool
-    is_ipv6_host: bool
-    is_no_ip_host: bool
+    address_family: AddressFamily
     is_snmp_host: bool
     snmp_backend: SNMPBackendEnum
     default_address_family: socket.AddressFamily
@@ -38,11 +57,21 @@ class IPLookupConfig(NamedTuple):
     is_dyndns_host: bool
 
 
-def fallback_ip_for(family: socket.AddressFamily) -> HostAddress:
-    return {
-        socket.AF_INET: "0.0.0.0",
-        socket.AF_INET6: "::",
-    }.get(family, "::")
+def fallback_ip_for(family: socket.AddressFamily | AddressFamily) -> HostAddress:
+    if isinstance(family, socket.AddressFamily):
+        family = AddressFamily.from_socket(family)
+    match family:
+        case AddressFamily.IPv4:
+            return "0.0.0.0"
+        case AddressFamily.IPv6:
+            return "::"
+        case _:
+            # TODO(ml): [IPv6] This ignores `default_address_family()`
+            # and falls back to IPv6, where IPv4 is the default almost
+            # everywhere else.  Using "0.0.0.0" or "::" only makes sense
+            # for a server anyway, so the users of this function are
+            # most likely misconfigured.
+            return "::"
 
 
 def enforce_fake_dns(address: HostAddress) -> None:
@@ -64,13 +93,12 @@ def enforce_localhost() -> None:
 def lookup_ip_address(
     *,
     host_name: HostName,
-    family: socket.AddressFamily,
+    family: AddressFamily | socket.AddressFamily,
     configured_ip_address: HostAddress | None,
     simulation_mode: bool,
     is_snmp_usewalk_host: bool,
     override_dns: HostAddress | None,
     is_dyndns_host: bool,
-    is_no_ip_host: bool,
     force_file_cache_renewal: bool,
 ) -> HostAddress | None:
     """This function *may* look up an IP address, or return a host name"""
@@ -81,9 +109,12 @@ def lookup_ip_address(
     if override_dns:
         return override_dns
 
+    if isinstance(family, socket.AddressFamily):
+        family = AddressFamily.from_socket(family)
+
     # Honor simulation mode und usewalk hosts. Never contact the network.
     if simulation_mode or _enforce_localhost or is_snmp_usewalk_host:
-        return "127.0.0.1" if family is socket.AF_INET else "::1"
+        return "::1" if AddressFamily.IPv6 in family else "127.0.0.1"
 
     # check if IP address is hard coded by the user
     if configured_ip_address:
@@ -94,12 +125,15 @@ def lookup_ip_address(
     if is_dyndns_host:
         return host_name
 
-    if is_no_ip_host:
+    if family is AddressFamily.NO_IP:
         return None
 
     return cached_dns_lookup(
         host_name,
-        family=family,
+        # NO_IP handled in guard.
+        # TODO(ml): [IPv6] Default to IPv4 for DUAL_STACK.  Why doesn't this
+        # obey `default_address_family()` or handle both addresses in that case?
+        family=socket.AF_INET if AddressFamily.IPv4 in family else socket.AF_INET6,
         force_file_cache_renewal=force_file_cache_renewal,
     )
 
@@ -342,6 +376,7 @@ def update_dns_cache(
         ip_lookup_cache.clear()
 
         console.verbose("Updating DNS cache...\n")
+        # `_annotate_family()` handles DUAL_STACK and NO_IP
         for host_name, host_config, family in _annotate_family(ip_lookup_configs):
             console.verbose(f"{host_name} ({family})...")
             try:
@@ -360,7 +395,6 @@ def update_dns_cache(
                     ),
                     override_dns=override_dns,
                     is_dyndns_host=host_config.is_dyndns_host,
-                    is_no_ip_host=host_config.is_no_ip_host,
                     force_file_cache_renewal=True,  # it's cleared anyway
                 )
                 console.verbose(f"{ip}\n")
@@ -389,9 +423,7 @@ def _annotate_family(
     ip_lookup_configs: Iterable[IPLookupConfig],
 ) -> Iterable[tuple[HostName, IPLookupConfig, socket.AddressFamily]]:
     for host_config in ip_lookup_configs:
-
-        if host_config.is_ipv4_host:
+        if AddressFamily.IPv4 in host_config.address_family:
             yield host_config.hostname, host_config, socket.AF_INET
-
-        if host_config.is_ipv6_host:
+        if AddressFamily.IPv6 in host_config.address_family:
             yield host_config.hostname, host_config, socket.AF_INET6

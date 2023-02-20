@@ -32,6 +32,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.config import ConfigCache
+from cmk.base.ip_lookup import AddressFamily
 
 
 def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
@@ -119,7 +120,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     addresses: str | None = ""
-    if not ConfigCache.is_ipv4v6_host(hostname):
+    if ConfigCache.address_family(hostname) is not AddressFamily.DUAL_STACK:
         addresses = ipaddress
     else:
         try:

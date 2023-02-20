@@ -51,7 +51,7 @@ def main() {
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
 
     def build_image = !(edition in ["free"]);
-    def build_cloud_images = edition == "enterprise";
+    def build_cloud_images = edition == "cloud";
 
     def run_integration_tests = !(edition in ["free"]);
     def run_image_tests = !(edition in ["free"]);

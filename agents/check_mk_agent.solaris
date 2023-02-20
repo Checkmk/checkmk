@@ -644,7 +644,7 @@ run_remote_plugins() {
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.
     # shellcheck disable=SC2162
-    grep -v '^ *#' "${MK_CONFDIR}/mrpe.cfg" | grep -v '^ *$' |
+    grep -v '^ *#' "${MK_CONFDIR}/mrpe.cfg" | tr '[:blank:]' ' ' | grep -v '^ *$' |
         while read descr cmdline; do
             interval=
             if [[ ${cmdline} =~ \(([^\)]*)\)[[:space:]](.*) ]]; then

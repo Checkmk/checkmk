@@ -369,16 +369,27 @@ div.floatfilter {
         }
       }
 
-      > td.vlof_content > div.bool span.select2-container--default {
-        width: 6.3 * $spacing !important;
+      > td.vlof_content > div.bool {
+        display: flex;
+        width: 6 * $spacing;
         margin-top: 8px;
-      }
-    }
 
-    div.line {
-      width: $spacing;
-      margin-top: 18px;
-      border-top: 1px solid $line-color;
+        span.vs_label {
+          margin-right: 4px;
+          margin: 4px 7px 0;
+        }
+
+        span.select2-container--default {
+          width: 5 * $spacing !important;
+          height: max-content;
+        }
+
+        div.line {
+          width: 100%;
+          margin-top: $spacing;
+          border-top: 1px solid $line-color;
+        }
+      }
     }
 
     div.label_group {
@@ -392,22 +403,14 @@ div.floatfilter {
         margin-right: $spacing;
       }
 
-      // Hide first boolean operator dropdown
-      tr:first-child td.vlof_content {
-        div.bool > span.select2-container--default {
-          display: none !important;
-        }
-
-        > span.select2-container--default {
-          margin-left: 5.6 * $spacing;
-        }
-      }
-
+      tr:first-child,
       tr:last-child {
         td.vlof_buttons a.delete_button {
           display: none;
         }
+      }
 
+      tr:last-child {
         td.vlof_content {
           padding-bottom: 0;
         }
@@ -438,7 +441,7 @@ div.floatfilter {
       // Boolean operator dropdowns
       select[id$="_bool"] {
         & + span.select2-container--default {
-          width: 5.2 * $spacing !important;
+          width: 6 * $spacing !important;
         }
       }
 

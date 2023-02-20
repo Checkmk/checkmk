@@ -375,8 +375,9 @@ def _install(
                         "[%s %s]: Removed %s", old_manifest.name, old_manifest.version, path
                     )
 
-            if (callback := callbacks.get(part)) is not None:
-                callback.uninstall(list(remove_files))
+        for part in set(old_manifest.files) & set(callbacks):
+            new_files = set(manifest.files.get(part, []))
+            callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
 
         remove_enabled_mark(old_manifest)
 

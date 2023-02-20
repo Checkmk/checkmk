@@ -33,6 +33,7 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # the EDITIONS environment variable handed over by some jenkins test jobs.
 # Looks like we need to cleanup the EDITION handling here.
 GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
+AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
@@ -57,11 +58,10 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     --exclude="code_examples.py" \
     '^\#!/.*sh' [^.]* 2>/dev/null)
 
-PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 BROWSER_ENGINES = "chromium" "firefox"
 
 .PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
-	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
+	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker test-composition test-composition-docker \
 	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
 	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
@@ -88,7 +88,7 @@ sync-legacy-checks: $(patsubst ../checks/%,../cmk/base/legacy_checks/%.py,$(wild
 
 help:
 	@echo "format-shell                        - Format shell agents"
-	@for i in $(PYTHON_VERSIONS); do \
+	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
 	@echo "test-bandit                         - Run bandit (security) tests"
@@ -154,9 +154,9 @@ agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	cat "$<" | gawk -v text="# Do not test generated 2.x files\n# fmt: off\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
 	$(THREE_TO_TWO) --nofix=str --nofix=next --nobackups --write "$@" >/dev/null
 
-$(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
+$(foreach VERS,$(filter 2.%,$(AGENT_PLUGIN_PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
-$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
+$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	# Clean up auto-generated files, which do not have a corresponding source file anymore
 	flock ./agent-plugin-unit $(FIND_INVALID_TEST_FILES)
 	# Recursive Makefiles suck big time...
@@ -379,7 +379,7 @@ test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
 
 test-agent-plugin-docker:
-	../scripts/run-in-docker.sh make $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
 test-unit-coverage-html: prepare-protobuf-files sync-legacy-checks
 	$(PYTEST) \

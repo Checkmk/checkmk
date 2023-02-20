@@ -13,8 +13,8 @@ import time
 from collections.abc import Iterator, Sequence
 from multiprocessing import Process
 from pathlib import Path
-from typing import Final, Literal
 
+from tests.testlib import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import is_containerized
 
@@ -138,19 +138,15 @@ def get_cre_agent_path(site: Site) -> Path:
     return Path(agent_results[0])
 
 
-class CleanAgentController:
-    def __init__(self, ctl_path: Path) -> None:
-        self.path: Final = ctl_path
+@contextlib.contextmanager
+def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
+    _clear_controller_connections(ctl_path)
+    yield
+    _clear_controller_connections(ctl_path)
 
-    def __enter__(self) -> None:
-        self._clear_controller_connections()
 
-    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> Literal[False]:
-        self._clear_controller_connections()
-        return False
-
-    def _clear_controller_connections(self) -> None:
-        execute(["sudo", self.path.as_posix(), "delete-all"])
+def _clear_controller_connections(ctl_path: Path) -> None:
+    execute(["sudo", ctl_path.as_posix(), "delete-all"])
 
 
 @contextlib.contextmanager
@@ -163,69 +159,59 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
         yield
         return
 
-    with _AgentUnixSocket(), _ControllerDaemon(ctl_path):
+    with _provide_agent_unix_socket(), _run_controller_daemon(ctl_path):
         yield
 
 
-class _AgentUnixSocket:
-    _SOCKET_ADDRESS = Path("/run/check-mk-agent.socket")
-
-    def __init__(self) -> None:
-        self._proc: Process | None = None
-
-    def __enter__(self) -> None:
-        self._SOCKET_ADDRESS.unlink(missing_ok=True)
-        self._proc = Process(
-            target=socketserver.UnixStreamServer(
-                server_address=str(self._SOCKET_ADDRESS),
-                RequestHandlerClass=_CMKAgentSocketHandler,
-            ).serve_forever
-        )
-        self._proc.start()
-        self._SOCKET_ADDRESS.chmod(0o777)
-
-    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> Literal[False]:
-        if self._proc:
-            self._proc.kill()
-        self._SOCKET_ADDRESS.unlink(missing_ok=True)
-        return False
+@contextlib.contextmanager
+def _provide_agent_unix_socket() -> Iterator[None]:
+    socket_address = Path("/run/check-mk-agent.socket")
+    socket_address.unlink(missing_ok=True)
+    proc = Process(
+        target=socketserver.UnixStreamServer(
+            server_address=str(socket_address),
+            RequestHandlerClass=_CMKAgentSocketHandler,
+        ).serve_forever
+    )
+    proc.start()
+    socket_address.chmod(0o777)
+    yield None
+    proc.kill()
+    socket_address.unlink(missing_ok=True)
 
 
-class _ControllerDaemon:
-    def __init__(self, ctl_path: Path) -> None:
-        self.path: Final = ctl_path
-        self._proc: subprocess.Popen | None = None
+@contextlib.contextmanager
+def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
+    # We are deliberately not using Popen as a context manager here. In case we run into an
+    # Exception while we are inside a Popen context manager, we end up in Popen.__exit__, which
+    # waits for the child process to finish. But our child process is not supposed to ever finish.
+    proc = subprocess.Popen(
+        [
+            ctl_path.as_posix(),
+            "-vv",
+            "daemon",
+        ],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        close_fds=True,
+        encoding="utf-8",
+    )
+    yield
 
-    def __enter__(self) -> None:
-        # We are deliberately not using Popen as a context manager here. In case we run into an
-        # Exception while we are inside a Popen context manager, we end up in Popen.__exit__, which
-        # waits for the child process to finish. But our child process is not supposed to ever finish.
-        self._proc = subprocess.Popen(
-            [
-                self.path.as_posix(),
-                "-vv",
-                "daemon",
-            ],
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            close_fds=True,
-            encoding="utf-8",
-        )
+    exit_code = proc.poll()
+    proc.kill()
+    wait_until(
+        lambda: proc.poll() is not None,
+        timeout=30,
+        interval=5,
+    )
 
-    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> Literal[False]:
-        if not self._proc:
-            return False
+    stdout, stderr = proc.communicate()
+    LOGGER.info("Stdout from controller daemon process:\n%s", stdout)
+    LOGGER.info("Stderr from controller daemon process:\n%s", stderr)
 
-        exit_code = self._proc.poll()
-        self._proc.kill()
-        stdout, stderr = self._proc.communicate()
-        LOGGER.info("Stdout from controller daemon process:\n%s", stdout)
-        LOGGER.info("Stderr from controller daemon process:\n%s", stderr)
-
-        if exit_code is not None:
-            LOGGER.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
-
-        return False
+    if exit_code is not None:
+        LOGGER.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):

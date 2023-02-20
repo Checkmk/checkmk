@@ -217,7 +217,9 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
                 value = factor * float(status[key])
             except KeyError:
                 # may happen if we are trying to query old host
-                if key in [
+                if key == "average_latency_checker":
+                    value = status["average_latency_cmk"]
+                elif key in [
                     "helper_usage_fetcher",
                     "helper_usage_checker",
                     "average_latency_fetcher",

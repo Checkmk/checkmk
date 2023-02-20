@@ -169,7 +169,7 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 #   +----------------------------------------------------------------------+
 
 
-def discover_azure_by_metrics(
+def create_discover_by_metrics_function(
     *desired_metrics: str,
     resource_type: str | None = None,
 ) -> Callable[[Section], DiscoveryResult]:
@@ -210,7 +210,7 @@ def iter_resource_attributes(
             yield capitalize(key), value
 
 
-def check_azure_metrics(
+def create_check_metrics_function(
     metrics_data: Sequence[MetricData], suppress_error: bool = False
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     def check_metric(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -242,7 +242,7 @@ def check_azure_metrics(
 
 
 def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_memory_percent",
@@ -256,7 +256,7 @@ def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
 
 
 def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_cpu_percent",
@@ -270,7 +270,7 @@ def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
 
 
 def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_active_connections",
@@ -291,7 +291,7 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
 
 
 def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "total_network_bytes_ingress",
@@ -312,7 +312,7 @@ def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
 
 
 def check_storage() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
-    return check_azure_metrics(
+    return create_check_metrics_function(
         [
             MetricData(
                 "average_io_consumption_percent",

@@ -380,8 +380,8 @@ Logger *NagiosCore::loggerRRD() { return _logger_livestatus; }
 
 Triggers &NagiosCore::triggers() { return _triggers; }
 
-size_t NagiosCore::numQueuedNotifications() { return 0; }
-size_t NagiosCore::numQueuedAlerts() { return 0; }
+size_t NagiosCore::numQueuedNotifications() const { return 0; }
+size_t NagiosCore::numQueuedAlerts() const { return 0; }
 
 size_t NagiosCore::numCachedLogMessages() {
     return _store.numCachedLogMessages();

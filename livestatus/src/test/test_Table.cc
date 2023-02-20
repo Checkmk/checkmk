@@ -253,9 +253,9 @@ class DummyMonitoringCore : public MonitoringCore {
 
     Triggers &triggers() override { return triggers_; }
 
-    size_t numQueuedNotifications() override { return {}; }
-    size_t numQueuedAlerts() override { return {}; }
-    size_t numCachedLogMessages() override { return {}; }
+    [[nodiscard]] size_t numQueuedNotifications() const override { return {}; }
+    [[nodiscard]] size_t numQueuedAlerts() const override { return {}; }
+    [[nodiscard]] size_t numCachedLogMessages() override { return {}; }
 
     [[nodiscard]] MetricLocation metricLocation(
         const std::string & /*host_name*/,

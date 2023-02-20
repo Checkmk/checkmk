@@ -156,9 +156,10 @@ public:
 
     virtual Triggers &triggers() = 0;
 
-    virtual size_t numQueuedNotifications() = 0;
-    virtual size_t numQueuedAlerts() = 0;
-    virtual size_t numCachedLogMessages() = 0;
+    [[nodiscard]] virtual size_t numQueuedNotifications() const = 0;
+    [[nodiscard]] virtual size_t numQueuedAlerts() const = 0;
+    // TODO(sp) This should really be const!
+    [[nodiscard]] virtual size_t numCachedLogMessages() = 0;
 
     [[nodiscard]] virtual MetricLocation metricLocation(
         const std::string &host_name, const std::string &service_description,

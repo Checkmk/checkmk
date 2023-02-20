@@ -27,21 +27,22 @@ index daf11a4..641330c 100644
  verbose = 1
  
 diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
-index e5e7372..764947b 100644
+index e5e7372..9a47e6d 100644
 --- a/python/netsnmp/client_intf.c
 +++ b/python/netsnmp/client_intf.c
-@@ -1897,6 +1897,10 @@ netsnmp_walk(PyObject *self, PyObject *args)
+@@ -1897,6 +1897,11 @@ netsnmp_walk(PyObject *self, PyObject *args)
    return (val_tuple ? val_tuple : Py_BuildValue(""));
  }
  
-+static void
-+netsnmp_always_create_new_user(void) {
++static PyObject *
++netsnmp_always_create_new_user(PyObject *self, PyObject * Py_UNUSED(args)) {
 +  snmp_always_create_new_user(1);
++  Py_RETURN_NONE;
 +}
  
  static PyObject *
  netsnmp_getbulk(PyObject *self, PyObject *args)
-@@ -2270,6 +2274,8 @@ static PyMethodDef ClientMethods[] = {
+@@ -2270,6 +2275,8 @@ static PyMethodDef ClientMethods[] = {
     "perform an SNMP SET operation."},
    {"walk",  netsnmp_walk, METH_VARARGS,
     "perform an SNMP WALK operation."},

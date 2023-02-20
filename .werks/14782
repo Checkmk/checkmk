@@ -9,3 +9,6 @@ Level: 1
 Version: 2.2.0b1
 
 With this werk, a new summary check (corresponding to Systemd Service Summary) is available.
+
+<b>Note:</b>
+This feature needs an update of the agent as it needs to use '--type socket' for 'systemctl'.

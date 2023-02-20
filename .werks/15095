@@ -1,0 +1,15 @@
+Title: inventory_win_exefiles: Fix uniqueness of packages
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1676906186
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p23
+
+The name of executable files are not unique. Thus multiple same-named files
+with different paths are stored below one entry. This has been fixed by adding
+the path to {{key columns}}.
+

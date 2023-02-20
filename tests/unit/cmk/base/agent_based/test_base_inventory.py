@@ -15,7 +15,7 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode
+from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
 from cmk.utils.type_defs import (
     AgentRawData,
     EVERYTHING,
@@ -33,6 +33,7 @@ from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
 from cmk.base.agent_based.confcheckers import ConfiguredParser, SectionPluginMapper
+from cmk.base.agent_based.inventory._active import _get_save_tree_actions, _SaveTreeActions
 from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
     _parse_inventory_plugin_item,
@@ -1450,4 +1451,84 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             )
         )
         == active_check_results
+    )
+
+
+@pytest.mark.parametrize(
+    "old_tree, inventory_tree, update_result, expected_save_tree_actions",
+    [
+        (
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ),
+            # No further impact, may not be realistic here
+            StructuredDataNode(),
+            # No further impact, may not be realistic here
+            UpdateResult(save_tree=True, reason=""),
+            _SaveTreeActions(do_remove=True, do_archive=False, do_save=False),
+        ),
+        (
+            StructuredDataNode(),
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+            ),
+            # No further impact, may not be realistic here
+            UpdateResult(save_tree=True, reason=""),
+            _SaveTreeActions(do_remove=False, do_archive=False, do_save=True),
+        ),
+        (
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ),
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+            ),
+            UpdateResult(save_tree=True, reason=""),
+            _SaveTreeActions(do_remove=False, do_archive=True, do_save=True),
+        ),
+        (
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ),
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
+            ),
+            UpdateResult(save_tree=False, reason=""),
+            _SaveTreeActions(do_remove=False, do_archive=True, do_save=True),
+        ),
+        (
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ),
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ),
+            UpdateResult(save_tree=False, reason=""),
+            _SaveTreeActions(do_remove=False, do_archive=False, do_save=False),
+        ),
+        (
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ),
+            StructuredDataNode.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ),
+            UpdateResult(save_tree=True, reason=""),
+            _SaveTreeActions(do_remove=False, do_archive=False, do_save=True),
+        ),
+    ],
+)
+def test_save_tree_actions(
+    old_tree: StructuredDataNode,
+    inventory_tree: StructuredDataNode,
+    update_result: UpdateResult,
+    expected_save_tree_actions: _SaveTreeActions,
+) -> None:
+    assert (
+        _get_save_tree_actions(
+            old_tree=old_tree,
+            inventory_tree=inventory_tree,
+            update_result=update_result,
+        )
+        == expected_save_tree_actions
     )

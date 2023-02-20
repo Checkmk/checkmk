@@ -6968,15 +6968,17 @@ class AndOrNotDropdown(DropdownChoice):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         valuespec: ValueSpec,
-        choices: DropdownChoices | None,
+        choices: DropdownChoices | None = None,
+        vs_label: str | None = None,
     ):
         super().__init__(
-            choices=choices or [("and", _("And")), ("or", _("Or")), ("not", _("Not"))],
+            choices=choices or [],
             encode_value=False,
         )
 
         self._valuespec = valuespec
         self._default_value: AndOrNotDropdownValue = ("and", valuespec.default_value())
+        self._vs_label = vs_label
 
     def _varprefixes(self, varprefix: str) -> tuple[str, str]:
         return (varprefix + "_bool", varprefix + "_vs")
@@ -6986,10 +6988,13 @@ class AndOrNotDropdown(DropdownChoice):
         value = value if value else self._default_value
 
         html.open_div(class_=["bool"])
-        super().render_input(varprefix_bool, value[0] if value else None)
+        if self._vs_label and not self._choices:
+            html.span(self._vs_label, class_=["vs_label"])
+        else:
+            super().render_input(varprefix_bool, value[0] if value else None)
+        html.div("", class_=["line"])
         html.close_div()
 
-        html.div("", class_=["line"])
         self._valuespec.render_input(varprefix_vs, value[1])
 
     def from_html_vars(self, varprefix: str) -> AndOrNotDropdownValue | None:
@@ -7066,8 +7071,9 @@ class _SingleLabel(AjaxDropdownChoice):
 
 class LabelGroup(ListOf):
     _ident: str = "label_group"
-    _choices: DropdownChoices = [("and", "And"), ("or", "Or"), ("not", "Not")]
-    _first_element_choices: DropdownChoices = []
+    _choices: DropdownChoices = [("and", "and"), ("or", "or"), ("not", "not")]
+    _first_element_choices: DropdownChoices = [("and", "is"), ("not", "is not")]
+    _first_element_label: str | None = None
     _sub_vs: ValueSpec = _SingleLabel(world=Labels.World.CORE)
     _magic: str = "@:@"  # Used by ListOf class to count through entries
 
@@ -7080,16 +7086,20 @@ class LabelGroup(ListOf):
             first_element_vs=AndOrNotDropdown(
                 valuespec=self._sub_vs,
                 choices=self._first_element_choices,
-            )
-            if self._first_element_choices
-            else None,
+                vs_label=self._first_element_label,
+            ),
             magic=self._magic,
             add_label=_("Add to query"),
+            del_label=self.del_label,
             add_icon="plus",
             ignore_complain=True,
             movable=False,
             default_value=[("and", self._sub_vs.default_value())],
         )
+
+    @property
+    def del_label(self) -> str:
+        return _("Remove this label")
 
     def render_input(
         self,
@@ -7103,14 +7113,17 @@ class LabelGroup(ListOf):
 
 class LabelGroups(LabelGroup):
     _ident: str = "label_groups"
-    _choices: DropdownChoices = [("and", "and is"), ("or", "or is"), ("not", "is not")]
-    _first_element_choices: DropdownChoices = [("and", _("Is")), ("not", _("Is not"))]
+    _choices: DropdownChoices = [("and", "and"), ("or", "or"), ("not", "not")]
+    _first_element_choices: DropdownChoices = []
+    _first_element_label: str | None = "Label"
     _sub_vs: ValueSpec = LabelGroup()
     _magic: str = "@!@"  # Used by ListOf class to count through entries
 
+    @property
+    def del_label(self) -> str:
+        return _("Remove this label group")
+
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
-        object_type = "host" if varprefix == "host_labels" else "service"
-        html.p(_("Where host label...") if object_type == "host" else _("Where service label..."))
         # Always append one empty row to groups
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)

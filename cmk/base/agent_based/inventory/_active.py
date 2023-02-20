@@ -46,7 +46,7 @@ def execute_active_check_inventory(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,
     )
-    old_tree = tree_or_archive_store.load(host_name=host_name)
+    old_tree = tree_or_archive_store.load_previous(host_name=host_name)
 
     result = check_inventory_tree(
         host_name,
@@ -71,8 +71,6 @@ def execute_active_check_inventory(
             inventory_tree=result.inventory_tree,
             update_result=result.update_result,
         )
-        if save_tree_actions.do_remove:
-            tree_or_archive_store.remove(host_name=host_name)
         # The order of archive or save is important:
         if save_tree_actions.do_archive:
             tree_or_archive_store.archive(host_name=host_name)
@@ -83,7 +81,6 @@ def execute_active_check_inventory(
 
 
 class _SaveTreeActions(NamedTuple):
-    do_remove: bool
     do_archive: bool
     do_save: bool
 
@@ -95,13 +92,13 @@ def _get_save_tree_actions(
     update_result: UpdateResult,
 ) -> _SaveTreeActions:
     if inventory_tree.is_empty():
-        # Remove empty inventory files. Important for host inventory icon
+        # Archive current inventory tree file if it exists. Important for host inventory icon
         console.verbose("No inventory tree.\n")
-        return _SaveTreeActions(do_remove=True, do_archive=False, do_save=False)
+        return _SaveTreeActions(do_archive=True, do_save=False)
 
     if old_tree.is_empty():
         console.verbose("New inventory tree.\n")
-        return _SaveTreeActions(do_remove=False, do_archive=False, do_save=True)
+        return _SaveTreeActions(do_archive=False, do_save=True)
 
     if has_changed := (not old_tree.is_equal(inventory_tree)):
         console.verbose("Inventory tree has changed. Add history entry.\n")
@@ -110,7 +107,6 @@ def _get_save_tree_actions(
         console.verbose(f"Updated inventory tree ({update_result.reason or ''}).\n")
 
     return _SaveTreeActions(
-        do_remove=False,
         do_archive=has_changed,
         do_save=(has_changed or update_result.save_tree),
     )

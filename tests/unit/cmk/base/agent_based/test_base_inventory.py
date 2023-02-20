@@ -1465,7 +1465,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             StructuredDataNode(),
             # No further impact, may not be realistic here
             UpdateResult(save_tree=True, reason=""),
-            _SaveTreeActions(do_remove=True, do_archive=False, do_save=False),
+            _SaveTreeActions(do_archive=True, do_save=False),
         ),
         (
             StructuredDataNode(),
@@ -1474,7 +1474,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             ),
             # No further impact, may not be realistic here
             UpdateResult(save_tree=True, reason=""),
-            _SaveTreeActions(do_remove=False, do_archive=False, do_save=True),
+            _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
             StructuredDataNode.deserialize(
@@ -1484,7 +1484,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
             ),
             UpdateResult(save_tree=True, reason=""),
-            _SaveTreeActions(do_remove=False, do_archive=True, do_save=True),
+            _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
             StructuredDataNode.deserialize(
@@ -1494,7 +1494,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
             ),
             UpdateResult(save_tree=False, reason=""),
-            _SaveTreeActions(do_remove=False, do_archive=True, do_save=True),
+            _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
             StructuredDataNode.deserialize(
@@ -1504,7 +1504,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
             UpdateResult(save_tree=False, reason=""),
-            _SaveTreeActions(do_remove=False, do_archive=False, do_save=False),
+            _SaveTreeActions(do_archive=False, do_save=False),
         ),
         (
             StructuredDataNode.deserialize(
@@ -1514,7 +1514,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
             UpdateResult(save_tree=True, reason=""),
-            _SaveTreeActions(do_remove=False, do_archive=False, do_save=True),
+            _SaveTreeActions(do_archive=False, do_save=True),
         ),
     ],
 )

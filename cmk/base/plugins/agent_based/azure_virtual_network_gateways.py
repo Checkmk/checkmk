@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.azure import (
-    check_azure_metrics,
+    create_check_metrics_function,
     iter_resource_attributes,
     MetricData,
     parse_azure_datetime,
@@ -106,7 +106,7 @@ def check_azure_virtual_network_gateway(
     if (vn_gateway := section.get(item)) is None:
         return
 
-    yield from check_azure_metrics(
+    yield from create_check_metrics_function(
         [
             MetricData(
                 "maximum_P2SConnectionCount",

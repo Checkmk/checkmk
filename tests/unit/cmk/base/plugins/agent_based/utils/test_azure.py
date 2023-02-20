@@ -25,7 +25,7 @@ from cmk.base.plugins.agent_based.utils.azure import (
     check_memory,
     check_network,
     check_storage,
-    discover_azure_by_metrics,
+    create_discover_by_metrics_function,
     iter_resource_attributes,
     parse_resources,
     Resource,
@@ -217,8 +217,8 @@ def test_parse_resources() -> None:
     assert parse_resources(RESOURCES) == PARSED_RESOURCES
 
 
-def test_discover_azure_by_metrics() -> None:
-    discovery_func = discover_azure_by_metrics(
+def test_create_discover_by_metrics_function() -> None:
+    discovery_func = create_discover_by_metrics_function(
         "average_storage_percent", "average_active_connections"
     )
     assert list(discovery_func(PARSED_RESOURCES)) == [Service(item="checkmk-mysql-server")]

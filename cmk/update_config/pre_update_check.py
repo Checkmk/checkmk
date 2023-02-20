@@ -7,9 +7,11 @@
 import enum
 import sys
 import traceback
+from pathlib import Path
 
 from cmk.utils import paths
 from cmk.utils.packaging import disable, Installer, PackageID, PathConfig
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -57,7 +59,11 @@ _PATH_CONFIG = PathConfig(
 def passed_pre_checks(
     conflict_mode: ConflictMode,
 ) -> bool:
-    return _all_ui_extensions_compatible(conflict_mode) and _all_rulesets_compatible(conflict_mode)
+    return (
+        _all_ui_extensions_compatible(conflict_mode)
+        and _all_rulesets_compatible(conflict_mode)
+        and _all_agent_based_plugins_compatible(conflict_mode)
+    )
 
 
 def _all_rulesets_compatible(
@@ -142,60 +148,110 @@ def _all_ui_extensions_compatible(
     conflict_mode: ConflictMode,
 ) -> bool:
     main_modules.load_plugins()
-    installer = Installer(paths.installed_packages_dir)
-    installed_files_package_map = {
-        _PATH_CONFIG.get_path(part) / file: manifest.id
-        for manifest in installer.get_installed_manifests()
-        for part, files in manifest.files.items()
-        for file in files
-    }
-
+    installer, package_map = _get_installer_and_package_map()
     disabled_packages: set[PackageID] = set()
     for path, _gui_part, module_name, error in get_failed_plugins():
 
-        package_id = installed_files_package_map.get(path)
+        package_id = package_map.get(path.resolve())
         # unpackaged files
         if package_id is None:
-            if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-                conflict_mode is ConflictMode.ASK
-                and input(
-                    "Incompatible local file '%s'.\n"
-                    "Error: %s\n\n"
-                    "You can abort the update process (A) and try to fix "
-                    "the incompatibilities or continue the update (c).\n\n"
-                    "Abort the update process? [A/c] \n" % (module_name, error)
-                ).lower()
-                in ["c", "continue"]
-            ):
+            if _continue_on_incomp_local_file(conflict_mode, module_name, error):
                 continue
             return False
 
         if package_id in disabled_packages:
             continue  # already dealt with
 
-        if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-            conflict_mode is ConflictMode.ASK
-            and input(
-                "Incompatible file '%s' of extension package '%s %s'\n"
-                "Error: %s\n\n"
-                "You can abort the update process (A) or disable the "
-                "extension package (d) and continue the update process.\n"
-                "Abort the update process? [A/d] \n"
-                % (module_name, package_id.name, package_id.version, error),
-            ).lower()
-            in ["d", "disable"]
-        ):
-            disable(
-                installer,
-                _PATH_CONFIG,
-                package_id.name,
-                package_id.version,
-            )
+        if _disable_incomp_mkp(conflict_mode, module_name, error, package_id, installer):
             disabled_packages.add(package_id)
             remove_failed_plugin(path)
-            sys.stdout.write(
-                "Disabled extension package: %s %s\n" % (package_id.name, package_id.version)
-            )
         else:
             return False
+
     return True
+
+
+def _all_agent_based_plugins_compatible(conflict_mode):
+    installer, package_map = _get_installer_and_package_map()
+    disabled_packages: set[PackageID] = set()
+    for module_name, error in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
+        path = Path(traceback.extract_tb(error.__traceback__)[-1].filename)
+        package_id = package_map.get(path.resolve())
+        # unpackaged files
+        if package_id is None:
+            if _continue_on_incomp_local_file(conflict_mode, module_name, error):
+                continue
+            return False
+
+        if package_id in disabled_packages:
+            continue  # already dealt with
+
+        if _disable_incomp_mkp(conflict_mode, module_name, error, package_id, installer):
+            disabled_packages.add(package_id)
+        else:
+            return False
+
+    return True
+
+
+def _disable_incomp_mkp(
+    conflict_mode: ConflictMode,
+    module_name: str,
+    error: BaseException,
+    package_id: PackageID,
+    installer: Installer,
+) -> bool:
+    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+        conflict_mode is ConflictMode.ASK
+        and input(
+            "Incompatible file '%s' of extension package '%s %s'\n"
+            "Error: %s\n\n"
+            "You can abort the update process (A) or disable the "
+            "extension package (d) and continue the update process.\n"
+            "Abort the update process? [A/d] \n"
+            % (module_name, package_id.name, package_id.version, error),
+        ).lower()
+        in ["d", "disable"]
+    ):
+        disable(
+            installer,
+            _PATH_CONFIG,
+            package_id.name,
+            package_id.version,
+        )
+        sys.stdout.write(
+            "Disabled extension package: %s %s\n" % (package_id.name, package_id.version)
+        )
+        return True
+    return False
+
+
+def _continue_on_incomp_local_file(
+    conflict_mode: ConflictMode,
+    module_name: str,
+    error: BaseException,
+) -> bool:
+    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+        conflict_mode is ConflictMode.ASK
+        and input(
+            "Incompatible local file '%s'.\n"
+            "Error: %s\n\n"
+            "You can abort the update process (A) and try to fix "
+            "the incompatibilities or continue the update (c).\n\n"
+            "Abort the update process? [A/c] \n" % (module_name, error)
+        ).lower()
+        in ["c", "continue"]
+    ):
+        return True
+    return False
+
+
+def _get_installer_and_package_map() -> tuple[Installer, dict[Path, PackageID]]:
+    installer = Installer(paths.installed_packages_dir)
+    installed_files_package_map = {
+        Path(_PATH_CONFIG.get_path(part)).resolve() / file: manifest.id
+        for manifest in installer.get_installed_manifests()
+        for part, files in manifest.files.items()
+        for file in files
+    }
+    return installer, installed_files_package_map

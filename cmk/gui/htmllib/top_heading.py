@@ -29,7 +29,7 @@ if not is_raw_edition():  # TODO solve this via registration
         get_days_until_expiration,
         in_admin_warning_header_phase,
         in_user_warning_header_phase,
-        load_verification_response,
+        load_verified_response,
     )
 
 
@@ -96,12 +96,15 @@ def top_heading(
 def _may_show_license_expiry(writer: HTMLWriter) -> None:
     if is_raw_edition():  # TODO: cleanup conditional imports and solve this via registration
         return
+
     now = int(datetime.now().timestamp())
     if not is_licensed():
         return
-    if (response := load_verification_response()) is None:
+
+    if (verified_response := load_verified_response()) is None:
         return
 
+    response = verified_response.response
     if in_user_warning_header_phase(now, response):
         # TODO change to correct link once available
         licensing_link = "https://checkmk.com/contact"

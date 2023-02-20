@@ -116,7 +116,7 @@ if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         is_after_expiration_grace_period,
         is_max_version_valid,
-        load_verification_response,
+        load_verified_response,
     )
     from cmk.utils.cee.licensing.export import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         VerificationResponse,
@@ -2733,8 +2733,10 @@ def activate_changes_start(
 
     """
     # TODO: cleanup conditional imports and solve this via registration
-    if not is_raw_edition() and (verification_response := load_verification_response()) is not None:
-        if (license_error := get_cee_license_validity_error(verification_response)) is not None:
+    if not is_raw_edition() and (verified_response := load_verified_response()) is not None:
+        if (
+            license_error := get_cee_license_validity_error(verified_response.response)
+        ) is not None:
             raise MKLicensingError(license_error)
 
     changes = ActivateChanges()

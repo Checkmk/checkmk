@@ -14,7 +14,6 @@ from collections.abc import Iterator, Sequence
 from multiprocessing import Process
 from pathlib import Path
 
-from tests.testlib import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import is_containerized
 
@@ -141,8 +140,10 @@ def get_cre_agent_path(site: Site) -> Path:
 @contextlib.contextmanager
 def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
     _clear_controller_connections(ctl_path)
-    yield
-    _clear_controller_connections(ctl_path)
+    try:
+        yield
+    finally:
+        _clear_controller_connections(ctl_path)
 
 
 def _clear_controller_connections(ctl_path: Path) -> None:
@@ -175,9 +176,11 @@ def _provide_agent_unix_socket() -> Iterator[None]:
     )
     proc.start()
     socket_address.chmod(0o777)
-    yield None
-    proc.kill()
-    socket_address.unlink(missing_ok=True)
+    try:
+        yield
+    finally:
+        proc.kill()
+        socket_address.unlink(missing_ok=True)
 
 
 @contextlib.contextmanager
@@ -196,22 +199,19 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
         close_fds=True,
         encoding="utf-8",
     )
-    yield
 
-    exit_code = proc.poll()
-    proc.kill()
-    wait_until(
-        lambda: proc.poll() is not None,
-        timeout=30,
-        interval=5,
-    )
+    try:
+        yield
+    finally:
+        exit_code = proc.poll()
+        proc.kill()
 
-    stdout, stderr = proc.communicate()
-    LOGGER.info("Stdout from controller daemon process:\n%s", stdout)
-    LOGGER.info("Stderr from controller daemon process:\n%s", stderr)
+        stdout, stderr = proc.communicate()
+        LOGGER.info("Stdout from controller daemon process:\n%s", stdout)
+        LOGGER.info("Stderr from controller daemon process:\n%s", stderr)
 
-    if exit_code is not None:
-        LOGGER.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
+        if exit_code is not None:
+            LOGGER.error("Controller daemon exited with code %s, which is unexpected.", exit_code)
 
 
 class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):

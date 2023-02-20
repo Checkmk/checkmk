@@ -5,13 +5,14 @@
 
 import ast
 import dataclasses
+import enum
 import json
 import os
 import sys
 import time
 from collections.abc import Callable, Sequence
 from hashlib import sha256
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Literal, NamedTuple, TypedDict
 
 from mypy_extensions import NamedArg
 
@@ -54,6 +55,7 @@ from cmk.gui.watolib.rulesets import (
     Ruleset,
     service_description_to_condition,
 )
+from cmk.gui.watolib.utils import may_edit_ruleset
 
 
 # Would rather use an Enum for this, but this information is exported to javascript
@@ -112,6 +114,14 @@ class DiscoveryAction:
     BULK_UPDATE = "bulk_update"
     UPDATE_HOST_LABELS = "update_host_labels"
     UPDATE_SERVICES = "update_services"
+
+
+class UpdateType(enum.Enum):
+    "States that an individual service can be changed to by clicking a button"
+    UNDECIDED = "new"
+    MONITORED = "old"
+    IGNORED = "ignored"
+    REMOVED = "removed"
 
 
 class DiscoveryResult(NamedTuple):
@@ -536,37 +546,70 @@ def perform_service_discovery(
 
 
 def has_discovery_action_specific_permissions(
-    intended_discovery_action: str,
+    intended_discovery_action: str, update_target: UpdateType | None
 ) -> bool:
-    user_may_discover = (
-        user.may("wato.service_discovery_to_undecided")
-        and user.may("wato.service_discovery_to_monitored")
-        and user.may("wato.service_discovery_to_ignored")
-        and user.may("wato.service_discovery_to_removed")
-    )
+    def may_all(*permissions: str) -> bool:
+        return all(user.may(p) for p in permissions)
+
     # not sure if the function even gets called for all of these.
     match intended_discovery_action:
         case DiscoveryAction.NONE:
             return user.may("wato.services")
         case DiscoveryAction.STOP:
-            return user_may_discover
+            return user.may("wato.services")
         case DiscoveryAction.TABULA_RASA:
-            return True
+            return may_all(
+                "wato.service_discovery_to_undecided",
+                "wato.service_discovery_to_monitored",
+                "wato.service_discovery_to_removed",
+            )
         case DiscoveryAction.FIX_ALL:
-            return user_may_discover
+            return may_all(
+                "wato.service_discovery_to_monitored",
+                "wato.service_discovery_to_removed",
+            )
         case DiscoveryAction.REFRESH:
-            return user_may_discover
+            return user.may("wato.services")
         case DiscoveryAction.SINGLE_UPDATE:
-            return user_may_discover
+            if update_target is None:
+                # This should never happen.
+                # The typing possibilities are currently so limited that I don't see a better solution.
+                # We only get here via the REST API, which does not allow SINGLE_UPDATES.
+                return False
+            return has_modification_specific_permissions(update_target)
         case DiscoveryAction.BULK_UPDATE:
-            return user_may_discover
+            return may_all(
+                "wato.service_discovery_to_monitored",
+                "wato.service_discovery_to_removed",
+            )
         case DiscoveryAction.UPDATE_HOST_LABELS:
-            return user_may_discover
+            return user.may("wato.services")
         case DiscoveryAction.UPDATE_SERVICES:
-            return user_may_discover
+            return user.may("wato.services")
 
-    # not sure if this can happen.
-    return user_may_discover
+    # not sure if this can happen. Play it safe and require everything.
+    return may_all(
+        "wato.services",
+        "wato.service_discovery_to_undecided",
+        "wato.service_discovery_to_monitored",
+        "wato.service_discovery_to_ignored",
+        "wato.service_discovery_to_removed",
+    ) and may_edit_ruleset("ignored_services")
+
+
+def has_modification_specific_permissions(update_target: UpdateType) -> bool:
+    match update_target:
+        case UpdateType.MONITORED:
+            return user.may("wato.service_discovery_to_monitored")
+        case UpdateType.UNDECIDED:
+            return user.may("wato.service_discovery_to_undecided")
+        case UpdateType.REMOVED:
+            return user.may("wato.service_discovery_to_removed")
+        case UpdateType.IGNORED:
+            return user.may("wato.service_discovery_to_ignored") and may_edit_ruleset(
+                "ignored_services"
+            )
+    assert_never(update_target)
 
 
 def initial_discovery_result(

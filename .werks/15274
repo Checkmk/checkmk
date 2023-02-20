@@ -6,7 +6,7 @@ Date: 1676389666
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.3.0b1
 
 For certain configuration of Brocade FC Switches the "assumed speed"
 (configurable, defaults to 2GByte/s) was displayed, although the

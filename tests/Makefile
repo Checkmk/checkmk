@@ -35,8 +35,8 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
 
 # Since the unit tests (that are written for Python 3) are executed with Python
-# 2.6 and 2.7, we need to convert them, just like it is done for the agent
-# plugins (see agents/plugins/Makefile)
+# 2.7, we need to convert them, just like it is done for the agent plugins (see
+# agents/plugins/Makefile)
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
@@ -57,8 +57,6 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     --exclude="code_examples.py" \
     '^\#!/.*sh' [^.]* 2>/dev/null)
 
-# Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
-# until we have a feasible solution or we drop the support for 2.6 completely.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 BROWSER_ENGINES = "chromium" "firefox"
 

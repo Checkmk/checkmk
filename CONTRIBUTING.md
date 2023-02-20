@@ -261,7 +261,7 @@ Best is to only rely on vanilla Python without 3rd party modules.
 
 Use `#!/usr/bin/env python3` as shebang.
 
-Besides the Python 3 variant, the agent plugins are also available for Python 2.
+Besides the Python 3 variant, the agent plugins are also available for Python 2.7.
 These Python 2 variants (`_2.py` ending in `agents/plugins`) are generated automatically from the Python 3 scripts while packaging Checkmk.
 So no Python 2 script needs to be programmed.
 The Python 2 files are named `[plugin]_2.py`.

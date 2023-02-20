@@ -10,6 +10,4 @@ State: unknown
 Version: 2.0.0p31
 
 For certain models only the first phase was discovered.
-Now all three phases should be discovered.
-
-
+Now all three phases will be discovered.

@@ -316,11 +316,7 @@ class Rulespec(abc.ABC):
 
         self._name = name
         self._group = group
-        self._title = (
-            (lambda: "%s - %s" % (title(), _("Deprecated")))
-            if is_deprecated and title is not None
-            else title
-        )
+        self._title = title
         self._valuespec = valuespec
         self._match_type = match_type
         self._item_type = item_type
@@ -348,10 +344,10 @@ class Rulespec(abc.ABC):
 
     @property
     def title(self) -> str | None:
-        if self._title:
-            return self._title()
-
-        return self.valuespec.title()
+        plain_title = self._title() if self._title else self.valuespec.title()
+        if self._is_deprecated:
+            return "%s: %s" % (_("Deprecated"), plain_title)
+        return plain_title
 
     @property
     def help(self) -> None | str | HTML:

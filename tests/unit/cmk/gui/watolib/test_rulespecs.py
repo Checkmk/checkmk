@@ -1564,7 +1564,7 @@ def test_legacy_register_rule_attributes(monkeypatch) -> None:  # type:ignore[no
     assert spec.group_name == "dingdong_group"
     assert isinstance(spec.valuespec, Dictionary)
     assert spec.match_type == "dict"
-    assert spec.title == "title - Deprecated"
+    assert spec.title == "Deprecated: title"
     assert spec.help == "help me!"
     assert isinstance(spec.item_spec, TextInput)
     assert spec.item_type == "service"
@@ -1810,10 +1810,10 @@ def test_match_item_generator_rules() -> None:
             match_texts=["title", "some_host_rulespec"],
         ),
         MatchItem(
-            title="Title - Deprecated",
+            title="Deprecated: Title",
             topic="Deprecated rulesets",
             url="wato.py?mode=edit_ruleset&varname=some_deprecated_host_rulespec",
-            match_texts=["title - deprecated", "some_deprecated_host_rulespec"],
+            match_texts=["deprecated: title", "some_deprecated_host_rulespec"],
         ),
     ]
 

@@ -660,19 +660,19 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             config_cache,
             hostname,
             host_attrs["address"],
-            config_cache.is_ipv6_primary(hostname) and 6 or 4,
+            config_cache.default_address_family(hostname),
             "PING",
             host_attrs.get("_NODEIPS"),
         )
 
     if ConfigCache.is_ipv4v6_host(hostname):
-        if config_cache.is_ipv6_primary(hostname):
+        if config_cache.default_address_family(hostname) is socket.AF_INET6:
             _add_ping_service(
                 cfg,
                 config_cache,
                 hostname,
                 host_attrs["_ADDRESS_4"],
-                4,
+                socket.AF_INET,
                 "PING IPv4",
                 host_attrs.get("_NODEIPS_4"),
             )
@@ -682,7 +682,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 config_cache,
                 hostname,
                 host_attrs["_ADDRESS_6"],
-                6,
+                socket.AF_INET6,
                 "PING IPv6",
                 host_attrs.get("_NODEIPS_6"),
             )
@@ -695,7 +695,7 @@ def _add_ping_service(
     config_cache: ConfigCache,
     host_name: HostName,
     ipaddress: HostAddress,
-    family: int,
+    family: socket.AddressFamily,
     descr: ServiceName,
     node_ips: str | None,
 ) -> None:

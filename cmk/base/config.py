@@ -2824,7 +2824,7 @@ class ConfigCache:
         return self.__snmp_config.setdefault(
             (host_name, ip_address),
             SNMPHostConfig(
-                is_ipv6_primary=self.is_ipv6_primary(host_name),
+                is_ipv6_primary=self.default_address_family(host_name) is socket.AF_INET6,
                 hostname=host_name,
                 ipaddress=ip_address,
                 credentials=self._snmp_credentials(host_name),
@@ -3052,7 +3052,7 @@ class ConfigCache:
         if mgmt_host_address:
             return mgmt_host_address
 
-        if self.is_ipv6_primary(host_name):
+        if self.default_address_family(host_name) is socket.AF_INET6:
             return ipv6addresses.get(host_name)
 
         return ipaddresses.get(host_name)
@@ -3779,23 +3779,20 @@ class ConfigCache:
         tag_groups = ConfigCache.tags(hostname)
         return "ip-v6" in tag_groups and "ip-v4" in tag_groups
 
-    def is_ipv6_primary(self, hostname: HostName) -> bool:
-        # Whether or not the given host is configured to be monitored primarily via IPv6
-        return (
-            not ConfigCache.is_ipv4v6_host(hostname) and ConfigCache.is_ipv6_host(hostname)
-        ) or (
-            ConfigCache.is_ipv4v6_host(hostname)
-            and self._primary_ip_address_family_of(hostname) == "ipv6"
-        )
-
     def default_address_family(self, hostname: HostName) -> socket.AddressFamily:
-        return socket.AF_INET6 if self.is_ipv6_primary(hostname) else socket.AF_INET
+        def primary_ip_address_family_of() -> str:
+            rules = self.host_extra_conf(hostname, primary_address_family)
+            if rules:
+                return rules[0]
+            return "ipv4"
 
-    def _primary_ip_address_family_of(self, hostname: HostName) -> str:
-        rules = self.host_extra_conf(hostname, primary_address_family)
-        if rules:
-            return rules[0]
-        return "ipv4"
+        def is_ipv6_primary() -> bool:
+            # Whether or not the given host is configured to be monitored primarily via IPv6
+            return (
+                not ConfigCache.is_ipv4v6_host(hostname) and ConfigCache.is_ipv6_host(hostname)
+            ) or (ConfigCache.is_ipv4v6_host(hostname) and primary_ip_address_family_of() == "ipv6")
+
+        return socket.AF_INET6 if is_ipv6_primary() else socket.AF_INET
 
     def _has_piggyback_data(self, host_name: HostName) -> bool:
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
@@ -4139,8 +4136,7 @@ class ConfigCache:
             v6address = ""
         attrs["_ADDRESS_6"] = v6address
 
-        ipv6_primary = self.is_ipv6_primary(hostname)
-        if ipv6_primary:
+        if self.default_address_family(hostname) is socket.AF_INET6:
             attrs["address"] = attrs["_ADDRESS_6"]
             attrs["_ADDRESS_FAMILY"] = "6"
         else:
@@ -4196,7 +4192,9 @@ class ConfigCache:
                 else:
                     node_ips_6.append(ip_lookup.fallback_ip_for(family))
 
-        node_ips = node_ips_6 if self.is_ipv6_primary(hostname) else node_ips_4
+        node_ips = (
+            node_ips_6 if self.default_address_family(hostname) is socket.AF_INET6 else node_ips_4
+        )
 
         for suffix, val in [("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6)]:
             attrs["_NODEIPS%s" % suffix] = " ".join(val)
@@ -4225,7 +4223,9 @@ class ConfigCache:
         host_name: HostName,
         nodes: Iterable[HostName],
     ) -> None:
-        cluster_host_family = "IPv6" if self.is_ipv6_primary(host_name) else "IPv4"
+        cluster_host_family = (
+            "IPv6" if self.default_address_family(host_name) is socket.AF_INET6 else "IPv4"
+        )
         address_families = [
             f"{host_name}: {cluster_host_family}",
         ]
@@ -4233,7 +4233,7 @@ class ConfigCache:
         address_family = cluster_host_family
         mixed = False
         for nodename in nodes:
-            family = "IPv6" if self.is_ipv6_primary(nodename) else "IPv4"
+            family = "IPv6" if self.default_address_family(nodename) is socket.AF_INET6 else "IPv4"
             address_families.append(f"{nodename}: {family}")
             if address_family is None:
                 address_family = family
@@ -4981,5 +4981,7 @@ class CEEHostConfig:
                 defaults=default,
                 rulesets=self._config_cache.matched_agent_config_entries(self.hostname),
             ),
-            "is_ipv6_primary": self._config_cache.is_ipv6_primary(self.hostname),
+            "is_ipv6_primary": (
+                self._config_cache.default_address_family(self.hostname) is socket.AF_INET6
+            ),
         }

@@ -131,7 +131,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             secondary = "X.X.X.X"
 
         addresses = f"{ipaddress}, {secondary}"
-        if config_cache.is_ipv6_primary(hostname):
+        if config_cache.default_address_family(hostname) is socket.AF_INET6:
             addresses += " (Primary: IPv6)"
         else:
             addresses += " (Primary: IPv4)"

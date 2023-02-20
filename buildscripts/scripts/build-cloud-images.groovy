@@ -5,7 +5,7 @@
 /// Builds cloud images using checkmk (AWS and Azure)
 
 /// Parameters / environment values:
-///     EDITION: enterprise only currently
+///     EDITION: cloud only currently
 ///
 /// Jenkins artifacts: will be directly pushed into the cloud
 /// Depends on: Ubuntu 22.04 package beeing available on download.checkmk.com (will be fetched by ansible collection)
@@ -16,8 +16,8 @@ def main() {
         "VERSION",
     ])
 
-    if (EDITION != 'enterprise') {
-        error "The AMI build must currently *only* use the enterprise edition."
+    if (EDITION != 'cloud') {
+        error "The AMI/Azure builds must currently *only* use the cloud edition."
     }
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy")

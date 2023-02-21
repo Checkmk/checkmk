@@ -2,9 +2,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from enum import Enum
 from typing import Any, TypeVar
 
@@ -18,6 +20,8 @@ QueryData = TypeVar("QueryData")
 
 
 def get_redis_client() -> Redis[str]:
+    if not redis_enabled():
+        raise RuntimeError("Redis currently explicitly disabled")
     return Redis.from_url(
         f"unix://{omd_root}/tmp/run/redis",
         db=0,
@@ -82,3 +86,21 @@ def query_redis(
             query_lock.release()
         if update_lock.owned():
             update_lock.release()
+
+
+_ENABLED = True
+
+
+@contextmanager
+def disable_redis() -> Iterator[None]:
+    global _ENABLED
+    last_value = _ENABLED
+    _ENABLED = False
+    try:
+        yield
+    finally:
+        _ENABLED = last_value
+
+
+def redis_enabled() -> bool:
+    return _ENABLED

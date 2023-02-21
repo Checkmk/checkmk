@@ -29,7 +29,7 @@ from cmk.utils import store
 from cmk.utils.datastructures import deep_update
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.redis import get_redis_client, Pipeline
+from cmk.utils.redis import get_redis_client, Pipeline, redis_enabled
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
@@ -1071,7 +1071,7 @@ class WATOHosts(TypedDict):
     clusters: dict[HostName, list[HostName]]
 
 
-_enforce_disabled_redis = False
+_REDIS_ENABLED_LOCALLY = True
 
 
 def may_use_redis() -> bool:
@@ -1079,7 +1079,7 @@ def may_use_redis() -> bool:
     # - Redis server is not running during cmk_update_config.py
     # - Bulk operations which would update redis several thousand times, instead of just once
     #     There is a special context manager which allows to disable redis handling in this case
-    if not _redis_available() or _enforce_disabled_redis:
+    if not _redis_available() or not redis_enabled() or not _REDIS_ENABLED_LOCALLY:
         return False
 
     return True
@@ -1096,12 +1096,14 @@ def _redis_available() -> bool:
 
 
 @contextmanager
-def disable_redis() -> Iterator[None]:
-    global _enforce_disabled_redis
-    last_value = _enforce_disabled_redis
-    _enforce_disabled_redis = True
-    yield
-    _enforce_disabled_redis = last_value
+def _disable_redis_locally() -> Iterator[None]:
+    global _REDIS_ENABLED_LOCALLY
+    last_value = _REDIS_ENABLED_LOCALLY
+    _REDIS_ENABLED_LOCALLY = False
+    try:
+        yield
+    finally:
+        _REDIS_ENABLED_LOCALLY = last_value
 
 
 def _wato_folders_factory() -> Mapping[PathWithoutSlash, CREFolder | None]:
@@ -2376,7 +2378,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # Since redis only updates on the next request, we can no longer use it here
         # We COULD enforce a redis update here, but this would take too much time
         # After the move action, the request is finished anyway.
-        with disable_redis():
+        with _disable_redis_locally():
             # Reload folder at new location and rewrite host files
             # Again, some special handling because of the missing slash in the main folder
             if not target_folder.is_root():

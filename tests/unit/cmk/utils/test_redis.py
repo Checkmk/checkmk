@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.redis import get_redis_client
+import pytest
+
+from cmk.utils.redis import disable_redis, get_redis_client, redis_enabled
 
 
 class TestCheckmkRedisClient:
@@ -12,3 +14,24 @@ class TestCheckmkRedisClient:
             "decode_responses",
             False,
         )
+
+
+def test_get_redis_client_raises_when_disabled():
+    with disable_redis(), pytest.raises(RuntimeError):
+        get_redis_client()
+
+
+def test_redis_enabled_by_default() -> None:
+    assert redis_enabled()
+
+
+def test_disable_redis():
+    with disable_redis():
+        assert not redis_enabled()
+    assert redis_enabled()
+
+
+def test_disable_redis_exception_handling():
+    with disable_redis(), pytest.raises(Exception):
+        raise Exception
+    assert redis_enabled()

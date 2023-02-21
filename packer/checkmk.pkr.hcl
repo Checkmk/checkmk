@@ -20,7 +20,7 @@ packer {
 }
 
 
-source "qemu" "ubuntu-2204-amd64-qemu" {
+source "qemu" "builder" {
   vm_name          = "ubuntu-2204-amd64-qemu-build"
   iso_url          = "http://www.releases.ubuntu.com/22.04/ubuntu-22.04.1-live-server-amd64.iso"
   iso_checksum     = "sha256:10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb"
@@ -98,7 +98,7 @@ source "amazon-ebs" "builder" {
 build {
   name = "checkmk-ansible"
   sources = [
-    #"source.qemu.ubuntu-2204-amd64-qemu"
+    "source.qemu.builder",
     "source.amazon-ebs.builder",
     "source.azure-arm.builder"
   ]

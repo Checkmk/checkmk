@@ -24,7 +24,6 @@ def _get_pw(pw: str = "hunter2") -> Callable[[], Password]:
     "user,password",
     [
         ("testuser", "hunter2"),
-        ("", ""),
         ("unicode", "🙈 🙉 🙊"),
     ],
 )

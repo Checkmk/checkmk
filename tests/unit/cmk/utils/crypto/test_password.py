@@ -13,18 +13,25 @@ from cmk.utils.crypto.password import Password, PasswordPolicy
 @pytest.mark.parametrize(
     "password",
     [
-        "",
         "test 😹",
         "long" * 100,
+        "    ",
     ],
 )
 def test_valid_password(password: str) -> None:
     Password(password)
 
 
-def test_invalid_password() -> None:
-    with pytest.raises(ValueError, match="null byte"):
-        Password("foo\0bar")
+@pytest.mark.parametrize(
+    "password,error",
+    [
+        ("foo\0bar", "null byte"),
+        ("", "empty"),
+    ],
+)
+def test_invalid_password(password: str, error: str) -> None:
+    with pytest.raises(ValueError, match=error):
+        Password(password)
 
 
 @pytest.mark.parametrize(
@@ -32,7 +39,6 @@ def test_invalid_password() -> None:
     [
         (Password("😹"), Password("😹"), True),
         (Password("     "), Password(" "), False),
-        (Password(""), "", False),
         (Password("123"), 123, False),
     ],
 )
@@ -48,11 +54,10 @@ TooSimple = PasswordPolicy.Result.TooSimple
 @pytest.mark.parametrize(
     "password,min_len,min_grp,expected",
     [
-        ("", 0, 0, OK),
-        ("", None, None, OK),
+        ("a", 0, 0, OK),
+        ("a", None, None, OK),
         ("cmk", 3, 1, OK),
         ("cmk", 4, 1, TooShort),
-        ("", None, 1, TooSimple),
         ("abc123", None, 3, TooSimple),
         ("abc123", 10, 3, TooShort),  # too short takes precedence
         ("aB1!", 4, 4, OK),

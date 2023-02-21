@@ -471,6 +471,67 @@ def test_openapi_user_edit_auth(aut_user_auth_wsgi_app: WebTestAppForCMK, monkey
         )
 
 
+@pytest.mark.parametrize(
+    "password,reason",
+    [
+        # Fail because the AUTH_PASSWORD schema requires minLength=1. (It also doesn't comply with
+        # the policy but we never get to checking that.)
+        ("", "These fields have problems: auth_option"),
+    ],
+)
+def test_openapi_create_user_password_failures(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, password: str, reason: str
+) -> None:
+    """Test that invalid passwords are denied and handled gracefully"""
+
+    user_detail = complement_customer(
+        {
+            "username": "shortpw",
+            "fullname": "Short Password",
+            "roles": ["user"],
+            "auth_option": {"auth_type": "password", "password": password},
+        }
+    )
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
+    assert reason in response.json["detail"]
+
+
+def test_openapi_automation_enforce_pw_change(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    """
+    Test that password change cannot be force for automation users.
+    This should be caught by the schema.
+    """
+
+    user_detail = complement_customer(
+        {
+            "username": "automation_enforce_pw_change",
+            "fullname": "But I can't!",
+            "roles": ["user"],
+            "auth_option": {"auth_type": "automation", "enforce_password_change": True},
+        }
+    )
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
+    assert '"enforce_password_change": ["Unknown field."]' in response
+
+
 @managedtest
 def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
     monkeypatch.setattr(

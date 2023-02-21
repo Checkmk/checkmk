@@ -1,0 +1,17 @@
+Title: setting empty user passwords via the REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677070618
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p26
+
+Prior to this Werk it was possible to set empty passwords for users via the REST API.
+
+An empty password is not considered a valid password and now results in a 400 error.
+
+Note that this only affected the REST API, not the UI's User Management nor it's Change Password functionality.
+

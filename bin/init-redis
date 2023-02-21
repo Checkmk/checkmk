@@ -22,7 +22,7 @@ def main():
             # for several attempts (sleep up to 6 * 5s = 30s at most)
             build_index_background(
                 n_attempts_redis_connection=6,
-                sleep_time=5,
+                wait_between_attempts=5,
             )
     except Exception as excpt:
         logger.error("ERROR: Failed to launch building of search index")

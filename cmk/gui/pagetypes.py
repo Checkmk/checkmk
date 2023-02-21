@@ -1520,8 +1520,8 @@ def _page_menu_entries_save(
     parent_item = breadcrumb[-2]
 
     yield PageMenuEntry(
-        title=_("Abort"),
-        icon_name="abort",
+        title=_("Cancel"),
+        icon_name="cancel",
         item=make_simple_link(parent_item.url),
         is_list_entry=False,
         is_shortcut=True,

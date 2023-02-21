@@ -1776,8 +1776,8 @@ class ABCEditRuleMode(WatoMode):
             breadcrumb,
             form_name="rule_editor",
             button_name="_save",
-            add_abort_link=True,
-            abort_url=self._back_url(),
+            add_cancel_link=True,
+            cancel_url=self._back_url(),
         )
 
         if this_rule_topic := self._page_menu_topic_this_rule():

@@ -8,7 +8,7 @@ import json
 import pprint
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteId
 
@@ -1024,7 +1024,7 @@ class DiscoveryPageRenderer:
         if entry.check_source == DiscoveryState.MONITORED:
             if user.may("wato.service_discovery_to_undecided"):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.MONITORED,
                     checkbox_name,
                     DiscoveryState.UNDECIDED,
                     "undecided",
@@ -1034,7 +1034,7 @@ class DiscoveryPageRenderer:
                 "wato.service_discovery_to_ignored"
             ):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.MONITORED,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
@@ -1045,7 +1045,7 @@ class DiscoveryPageRenderer:
             if may_edit_ruleset("ignored_services"):
                 if user.may("wato.service_discovery_to_monitored"):
                     num_buttons += self._icon_button(
-                        entry.check_source,
+                        DiscoveryState.IGNORED,
                         checkbox_name,
                         DiscoveryState.MONITORED,
                         "monitored",
@@ -1053,7 +1053,7 @@ class DiscoveryPageRenderer:
                     )
                 if user.may("wato.service_discovery_to_ignored"):
                     num_buttons += self._icon_button(
-                        entry.check_source,
+                        DiscoveryState.IGNORED,
                         checkbox_name,
                         DiscoveryState.UNDECIDED,
                         "undecided",
@@ -1071,7 +1071,7 @@ class DiscoveryPageRenderer:
                 "wato.service_discovery_to_ignored"
             ):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.VANISHED,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
@@ -1081,7 +1081,7 @@ class DiscoveryPageRenderer:
         elif entry.check_source == DiscoveryState.UNDECIDED:
             if user.may("wato.service_discovery_to_monitored"):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.UNDECIDED,
                     checkbox_name,
                     DiscoveryState.MONITORED,
                     "monitored",
@@ -1091,7 +1091,7 @@ class DiscoveryPageRenderer:
                 "wato.service_discovery_to_ignored"
             ):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.UNDECIDED,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
@@ -1113,7 +1113,14 @@ class DiscoveryPageRenderer:
             html.empty_icon()
             num_buttons += 1
 
-    def _icon_button(self, table_source, checkbox_name, table_target, descr_target, button_classes):
+    def _icon_button(
+        self,
+        table_source: Literal["new", "old", "ignored", "vanished"],
+        checkbox_name: str,
+        table_target: Literal["new", "old", "ignored"],
+        descr_target: Literal["undecided", "monitored", "disabled"],
+        button_classes: list[str],
+    ) -> Literal[1]:
         options = self._options._replace(action=DiscoveryAction.SINGLE_UPDATE)
         html.icon_button(
             url="",

@@ -65,20 +65,23 @@ class GeneralRestAPIException(HTTPException):
         fields: FIELDS | None = None,
         ext: EXT | None = None,
     ) -> None:
-        self.status = status
-        self.title = title
+        self.code: int = status
+        self.description: str = title
         self.detail = detail
         self.fields = fields
         self.ext = ext
-        super().__init__(
-            description=title,
-            response=problem(
-                status=status,
-                title=title,
-                detail=detail,
-                fields=fields,
-                ext=ext,
-            ),
+        super().__init__(description=title)
+
+    def __call__(self, environ, start_response) -> Iterable[bytes]:  # type:ignore[no-untyped-def]
+        return self.to_problem()(environ, start_response)
+
+    def to_problem(self) -> Response:
+        return problem(
+            status=self.code,
+            title=self.description,
+            detail=self.detail,
+            fields=self.fields,
+            ext=self.ext,
         )
 
 
@@ -221,7 +224,7 @@ class RestAPIResponseGeneralException(GeneralRestAPIException):
         super().__init__(status, title, detail, fields, ext)
 
 
-class RestAPIResponseException(RestAPIResponseGeneralException):  # Crash report?
+class RestAPIResponseException(RestAPIResponseGeneralException):
     status: Literal[500] = 500
 
     def __init__(

@@ -177,9 +177,9 @@ def test_openapi_app_exception(
     )
     assert "detail" in resp.json
     assert "title" in resp.json
-    assert "crash_report" in resp.json["ext"]
-    assert "check_mk" in resp.json["ext"]["crash_report"]["href"]
-    assert "crash_id" in resp.json["ext"]
+    assert "crash_report_url" in resp.json["ext"]["details"]
+    assert "check_mk" in resp.json["ext"]["details"]["crash_report_url"]["href"]
+    assert "id" in resp.json["ext"]
 
 
 def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:

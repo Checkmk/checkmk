@@ -14,6 +14,7 @@ import traceback
 import typing
 import urllib.parse
 from collections.abc import Callable, Mapping
+from datetime import datetime
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
@@ -40,6 +41,7 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
 )
 from cmk.gui.plugins.openapi.utils import (
     EXT,
+    GeneralRestAPIException,
     problem,
     ProblemException,
     RestAPIPermissionException,
@@ -70,6 +72,75 @@ PathArgs = Mapping[str, Any]
 def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
     assert len(header) == 1
     return next(iter(header))
+
+
+def crash_report_response(
+    environ: WSGIEnvironment, start_response: StartResponse, exc: Exception
+) -> WSGIResponse:
+    site = config.omd_site()
+    details: dict[str, Any] = {}
+
+    if isinstance(exc, GeneralRestAPIException):
+        details["rest_api_exception"] = {
+            "description": exc.description,
+            "detail": exc.detail,
+            "ext": exc.ext,
+            "fields": exc.fields,
+        }
+
+    details["request_info"] = {
+        "method": request.environ["REQUEST_METHOD"],
+        "data_received": request.json if request.data else "",
+        "endpoint_url": request.path,
+        "headers": {
+            "accept": request.environ.get("HTTP_ACCEPT", "missing"),
+            "content_type": request.environ.get("CONTENT_TYPE", "missing"),
+        },
+    }
+
+    details["check_mk_info"] = {
+        "site": site,
+        "check_mk_user": {
+            "user_id": user.id,
+            "user_roles": user.role_ids,
+            "authorized_sites": list(user.authorized_sites()),
+        },
+    }
+
+    crash = APICrashReport.from_exception(details=details)
+    crash_reporting.CrashReportStore().save(crash)
+    logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
+
+    query_string = urllib.parse.urlencode(
+        [
+            ("crash_id", (crash.ident_to_text())),
+            ("site", site),
+        ]
+    )
+    crash.crash_info["details"]["crash_report_url"] = {
+        "href": f"{request.host_url}{site}/check_mk/crash.py?{query_string}",
+        "method": "get",
+        "rel": "cmk/crash-report",
+        "type": "text/html",
+    }
+
+    del crash.crash_info["exc_traceback"]
+    if user.may("general.see_crash_reports"):
+        crash.crash_info["exc_traceback"] = traceback.format_exc().split("\n")
+
+    crash.crash_info["time"] = datetime.fromtimestamp(crash.crash_info["time"]).isoformat()
+    crash_msg = (
+        exc.description
+        if isinstance(exc, GeneralRestAPIException)
+        else crash.crash_info["exc_value"]
+    )
+
+    return problem(
+        status=500,
+        title="Internal Server Error",
+        detail=f"{crash.crash_info['exc_type']}: {crash_msg}. Crash report generated. Please submit.",
+        ext=EXT(crash.crash_info),
+    )(environ, start_response)
 
 
 class EndpointAdapter(AbstractWSGIApp):
@@ -362,8 +433,10 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # the header methods.
             with ensure_authenticated(persist=False):
                 return wsgi_endpoint(environ, start_response)
+
         except ProblemException as exc:
             return exc(environ, start_response)
+
         except MKHTTPException as exc:
             assert isinstance(exc.status, int)
             return problem(
@@ -371,17 +444,15 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 title=http.client.responses[exc.status],
                 detail=str(exc),
             )(environ, start_response)
+
         except RestAPIRequestGeneralException as exc:
-            assert isinstance(exc.response, Response)
-            return exc.response(environ, start_response)
+            return exc(environ, start_response)
 
         except RestAPIPermissionException as exc:
-            assert isinstance(exc.response, Response)
-            return exc.response(environ, start_response)
+            return crash_report_response(environ, start_response, exc)
 
         except RestAPIResponseGeneralException as exc:
-            assert isinstance(exc.response, Response)
-            return exc.response(environ, start_response)
+            return crash_report_response(environ, start_response, exc)
 
         except HTTPException as exc:
             assert isinstance(exc.code, int)
@@ -390,48 +461,20 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 title=http.client.responses[exc.code],
                 detail=str(exc),
             )(environ, start_response)
+
         except MKException as exc:
             if self.debug:
                 raise
-
             return problem(
                 status=EXCEPTION_STATUS.get(type(exc), 500),
                 title="An exception occurred.",
                 detail=str(exc),
             )(environ, start_response)
+
         except Exception as exc:
-            crash = APICrashReport.from_exception()
-            crash_reporting.CrashReportStore().save(crash)
-            logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
             if self.debug:
                 raise
-
-            site = config.omd_site()
-            query_string = urllib.parse.urlencode(
-                [
-                    ("crash_id", (crash.ident_to_text())),
-                    ("site", site),
-                ]
-            )
-            crash_url = f"{request.host_url}{site}/check_mk/crash.py?{query_string}"
-            crash_details = {
-                "crash_id": (crash.ident_to_text()),
-                "crash_report": {
-                    "href": crash_url,
-                    "method": "get",
-                    "rel": "cmk/crash-report",
-                    "type": "text/html",
-                },
-            }
-            if user.may("general.see_crash_reports"):
-                crash_details["stack_trace"] = traceback.format_exc().split("\n")
-
-            return problem(
-                status=500,
-                title=http.client.responses[500],
-                detail=str(exc),
-                ext=EXT(crash_details),
-            )(environ, start_response)
+            return crash_report_response(environ, start_response, exc)
 
 
 class APICrashReport(crash_reporting.ABCCrashReport):

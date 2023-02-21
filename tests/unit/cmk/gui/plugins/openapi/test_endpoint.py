@@ -22,7 +22,7 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import ProblemException, RestAPIResponseGeneralException
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
 
@@ -175,12 +175,13 @@ def test_openapi_endpoint_decorator_catches_status_code_exceptions(
         {"Accept": "application/json"},  # headers
         status=500,
     )
-    assert json.loads(response.text) == {
-        "title": "Unexpected status code returned: 418",
-        "status": 500,
-        "detail": "Endpoint tests.unit.cmk.gui.plugins.openapi.test_endpoint.test\nThis is a bug, please report.",
-        "ext": {"codes": [204]},
-    }
+
+    assert response.json["title"] == "Internal Server Error"
+    assert response.json["ext"]["exc_type"] == "RestAPIResponseException"
+    exc = response.json["ext"]["details"]["rest_api_exception"]
+    assert exc["description"] == "Unexpected status code returned: 418"
+    assert exc["detail"] == "Endpoint tests.unit.cmk.gui.plugins.openapi.test_endpoint.test"
+    assert exc["ext"] == {"The following status codes are allowed for this endpoint": [204]}
 
 
 # ========= PATH Validation Tests =========
@@ -291,19 +292,69 @@ def test_permission_exception(auxtag_client: AuxTagTestClient) -> None:
         resp = auxtag_client.get(aux_tag_id="ping", expect_ok=False)
 
     resp.assert_status_code(500)
+
+    assert resp.json["ext"]["exc_type"] == "RestAPIPermissionException"
+    exc = resp.json["ext"]["details"]["rest_api_exception"]
+    assert exc["description"] == "Permission mismatch"
+    assert (
+        exc["detail"]
+        == "There can be some causes for this error:\n* a permission which was required (successfully) was not declared\n* a permission which was declared (not optional) was not required\n* No permission was required at all, although permission were declared\nEndpoint: <Endpoint cmk.gui.plugins.openapi.endpoints.aux_tags:show_aux_tag>\nParams: {'aux_tag_id': 'ping'}\nRequired: ['wato.hosttags']\nDeclared: {wato.hosttags}\n"
+    )
+
+
+# ========= Crash Reporting Tests =========
+def test_crash_report_with_post(
+    auxtag_client: AuxTagTestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    exc_title = "The Wizard of Oz (1939)"
+    exc_detail = "Toto, I've a feeling we're not in Kansas anymore."
+
+    def raise_an_exception():
+        raise RestAPIResponseGeneralException(status=500, title=exc_title, detail=exc_detail)
+
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.aux_tags.load_tag_config",
+        raise_an_exception,
+    )
+    resp = auxtag_client.create(
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="topic_1",
+            help="help",
+        ),
+        expect_ok=False,
+    )
+    resp.assert_status_code(500)
     assert resp.json["title"] == "Internal Server Error"
     assert (
         resp.json["detail"]
-        == "Permission mismatch\nThere can be some causes for this error:\n* a permission which was required (successfully) was not declared\n* a permission which was declared (not optional) was not required\n* No permission was required at all, although permission were declared\nEndpoint: <Endpoint cmk.gui.plugins.openapi.endpoints.aux_tags:show_aux_tag>\nParams: {'aux_tag_id': 'ping'}\nRequired: ['wato.hosttags']\nDeclared: {wato.hosttags}\n"
+        == "RestAPIResponseGeneralException: The Wizard of Oz (1939). Crash report generated. Please submit."
     )
-    assert set(resp.json["ext"]) == {
-        "crash_id",
-        "crash_report",
-        "stack_trace",
+
+    ext = resp.json["ext"]
+
+    assert set(ext) == {
+        "time",
+        "os",
+        "version",
+        "edition",
+        "exc_traceback",
+        "core",
+        "python_version",
+        "python_paths",
+        "id",
+        "crash_type",
+        "exc_type",
+        "exc_value",
+        "local_vars",
+        "details",
     }
-    assert set(resp.json["ext"]["crash_report"]) == {
-        "method",
-        "href",
-        "rel",
-        "type",
+
+    details = resp.json["ext"]["details"]
+    assert set(details) == {
+        "rest_api_exception",
+        "request_info",
+        "check_mk_info",
+        "crash_report_url",
     }

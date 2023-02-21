@@ -20,6 +20,7 @@ from typing import Final
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.redis import disable_redis
 from cmk.utils.version import is_raw_edition
 
 # This special script needs persistence and conversion code from different
@@ -37,7 +38,6 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
-from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode

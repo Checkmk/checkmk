@@ -6,10 +6,11 @@
 
 import traceback
 
+from cmk.utils.redis import disable_redis
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 

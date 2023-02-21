@@ -357,10 +357,6 @@ div.floatfilter {
     }
 
     tr[id*="_labels_entry"] {
-      &:first-child > td.vlof_buttons a.delete_button {
-        display: none;
-      }
-
       > td.vlof_buttons a.delete_button img {
         opacity: 0.5;
 
@@ -403,14 +399,11 @@ div.floatfilter {
         margin-right: $spacing;
       }
 
-      tr:first-child,
       tr:last-child {
         td.vlof_buttons a.delete_button {
           display: none;
         }
-      }
 
-      tr:last-child {
         td.vlof_content {
           padding-bottom: 0;
         }

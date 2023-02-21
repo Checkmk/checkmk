@@ -7110,6 +7110,16 @@ class LabelGroup(ListOf):
         super().render_input(varprefix, value)
         html.close_div()
 
+    def _del_button(self, vp: str, nr: str) -> None:
+        choices_or_label: DropdownChoices | str = (
+            self._first_element_choices or self._first_element_label or self._choices
+        )
+        js = (
+            f"cmk.valuespecs.label_group_delete({json.dumps(vp)}, {json.dumps(nr)},"
+            f"{json.dumps(choices_or_label)});"
+        )
+        html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
+
 
 class LabelGroups(LabelGroup):
     _ident: str = "label_groups"

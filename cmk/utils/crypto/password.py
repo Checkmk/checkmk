@@ -48,6 +48,8 @@ class Password:
     def __init__(self, password: str) -> None:
         if "\0" in password:
             raise ValueError("Password must not contain null bytes")
+        if password == "":
+            raise ValueError("Password must not be empty")
         self.raw: Final[str] = password
 
     def verify_policy(self, policy: PasswordPolicy) -> PasswordPolicy.Result:
@@ -98,13 +100,8 @@ class Password:
             2
             >>> len(Password("💚✅").raw_bytes)
             7
-
-        More examples:
-
             >>> len(Password("abc"))
             3
-            >>> len(Password(""))
-            0
         """
         return len(self.raw)
 

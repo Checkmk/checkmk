@@ -38,7 +38,7 @@ def htpasswd_file_fixture(tmp_path: Path, monkeypatch: MonkeyPatch) -> Path:
     return htpasswd_file_path
 
 
-@pytest.mark.parametrize("password", ["blä", "😀", "😀" * 18, "a" * 71, ""])
+@pytest.mark.parametrize("password", ["blä", "😀", "😀" * 18, "a" * 71])
 def test_hash_password(password: str) -> None:
     hashed_pw = htpasswd.hash_password(Password(password))
     password_hashing.verify(Password(password), hashed_pw)

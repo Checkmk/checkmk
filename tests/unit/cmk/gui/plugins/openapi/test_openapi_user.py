@@ -518,28 +518,95 @@ def fixture_password_policy(set_config: SetConfig) -> Iterator[None]:
         yield
 
 
-@managedtest
-def test_openapi_create_user_password_policy(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, with_password_policy: None
+@pytest.mark.parametrize(
+    "password,reason",
+    [
+        # Fail due to policy (fixture expects 20 chars).
+        ("short", "too short"),
+        # Fail because the AUTH_PASSWORD schema requires minLength=1. (It also doesn't comply with
+        # the policy but we never get to checking that.)
+        ("", "These fields have problems: auth_option"),
+        # Fail when trying to instantiate the Password object (null bytes not allowed).
+        ("\0" * 21, "Password must not contain null bytes"),
+    ],
+)
+def test_openapi_create_user_password_failures(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_password_policy: None, password: str, reason: str
 ) -> None:
-    user_detail = {
-        "username": "shortpw",
-        "fullname": "Short Password",
-        "customer": "provider",
-        "roles": ["user"],
-        "auth_option": {"auth_type": "password", "password": "short"},  # fixture expects 20 chars
-    }
+    """Test that invalid passwords are denied and handled gracefully"""
+
+    user_detail = complement_customer(
+        {
+            "username": "shortpw",
+            "fullname": "Short Password",
+            "roles": ["user"],
+            "auth_option": {"auth_type": "password", "password": password},
+        }
+    )
 
     base = "/NO_SITE/check_mk/api/1.0"
-    with freeze_time("2010-02-01 08:00:00"):
-        aut_user_auth_wsgi_app.call_method(
-            "post",
-            base + "/domain-types/user_config/collections/all",
-            params=json.dumps(user_detail),
-            headers={"Accept": "application/json"},
-            status=400,
-            content_type="application/json",
-        )
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
+    assert reason in response.json["detail"]
+
+
+def test_openapi_automation_enforce_pw_change(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    """
+    Test that password change cannot be force for automation users.
+    This should be caught by the schema.
+    """
+
+    user_detail = complement_customer(
+        {
+            "username": "automation_enforce_pw_change",
+            "fullname": "But I can't!",
+            "roles": ["user"],
+            "auth_option": {"auth_type": "automation", "enforce_password_change": True},
+        }
+    )
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
+    assert '"enforce_password_change": ["Unknown field."]' in response
+
+
+@pytest.mark.parametrize("auth_type", ["password", "automation"])
+def test_openapi_incomplete_auth_options(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, auth_type: str
+) -> None:
+    """Test that new users cannot be created without a password / secret"""
+
+    user_detail = complement_customer(
+        {
+            "username": f"incomplete_auth_options_{auth_type}",
+            "fullname": "a new user",
+            "roles": ["user"],
+            "auth_option": {"auth_type": auth_type},
+        }
+    )
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
 
 
 @managedtest

@@ -198,9 +198,7 @@ def _command_show(
         enabled_dir=path_config.packages_enabled_dir,
     )
     manifest = extract_manifest(
-        package_store.get_existing_package_path(
-            _get_package_id(args.name, args.version, package_store)
-        ).read_bytes()
+        package_store.read_bytes(_get_package_id(args.name, args.version, package_store))
     )
     sys.stdout.write(f"{manifest.json() if args.json else _to_text(manifest)}\n")
     return 0
@@ -218,9 +216,7 @@ def _command_files(
         enabled_dir=path_config.packages_enabled_dir,
     )
     manifest = extract_manifest(
-        package_store.get_existing_package_path(
-            _get_package_id(args.name, args.version, package_store)
-        ).read_bytes()
+        package_store.read_bytes(_get_package_id(args.name, args.version, package_store))
     )
     sys.stdout.write(
         "".join(

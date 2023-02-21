@@ -155,12 +155,14 @@ class PackageStore:
         except FileNotFoundError:
             return []
 
-    def get_existing_package_path(self, package_id: PackageID) -> Path:
+    def read_bytes(self, package_id: PackageID) -> bytes:
+        return self._get_existing_package_path(package_id).read_bytes()
+
+    def _get_existing_package_path(self, package_id: PackageID) -> Path:
         """Return the path of an existing package
 
         (not to confuse with the path of a package file that is to be created!)
         """
-        # TODO: can we drop this, and just hand out the bytes or create the "enabled link"?
         base_name = format_file_name(package_id)
         if (local_package_path := self.local_packages / base_name).exists():
             return local_package_path
@@ -178,7 +180,7 @@ class PackageStore:
         Copying the packages into the local hierarchy is the easiest way to get them to
         be synchronized with the remote sites.
         """
-        package_path = self.get_existing_package_path(package_id)
+        package_path = self._get_existing_package_path(package_id)
         destination = self._enabled_path(package_id)
 
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -290,7 +292,7 @@ def install(
         return _install(
             installer,
             package_store,
-            package_store.get_existing_package_path(package_id).read_bytes(),
+            package_store.read_bytes(package_id),
             path_config,
             callbacks,
             allow_outdated=allow_outdated,

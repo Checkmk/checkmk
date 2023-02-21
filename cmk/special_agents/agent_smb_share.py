@@ -5,6 +5,7 @@
 
 import logging
 import socket
+import sys
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -17,6 +18,10 @@ from smb.SMBConnection import SMBConnection  # type: ignore[import]
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
+
+class SMBShareAgentError(Exception):
+    ...
 
 
 class File(NamedTuple):
@@ -100,16 +105,16 @@ def get_all_shared_files(
     for pattern_string in patterns:
         pattern = pattern_string.strip("\\").split("\\")
         if len(pattern) < 3:
-            raise RuntimeError(
+            raise SMBShareAgentError(
                 f"Invalid pattern {pattern_string}. Pattern has to consist of hostname, share and file matching pattern"
             )
 
         if pattern[0] != hostname:
-            raise RuntimeError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
+            raise SMBShareAgentError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
 
         share_name = pattern[1]
         if share_name not in share_names:
-            raise RuntimeError(f"Share {share_name} doesn't exist on host {hostname}")
+            raise SMBShareAgentError(f"Share {share_name} doesn't exist on host {hostname}")
 
         yield pattern_string, list(iter_shared_files(conn, hostname, share_name, pattern[2:]))
 
@@ -144,12 +149,14 @@ def connect(
         logging.debug("Connecting to %s on port 445", ip_address)
         success = conn.connect(ip_address, 445)
     except (OSError, NotConnectedError):
-        raise RuntimeError(
+        raise SMBShareAgentError(
             "Could not connect to the remote host. Check your ip address and remote name."
         )
 
     if not success:
-        raise RuntimeError("Connection to the remote host was declined. Check your credentials.")
+        raise SMBShareAgentError(
+            "Connection to the remote host was declined. Check your credentials."
+        )
 
     logging.debug("Connection successfully established")
 
@@ -160,14 +167,17 @@ def connect(
 
 
 def smb_share_agent(args: Args) -> int:
-    with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
-        all_files = get_all_shared_files(conn, args.hostname, args.patterns)
-        try:
+    try:
+        with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
+            all_files = get_all_shared_files(conn, args.hostname, args.patterns)
             logging.debug("Querying share files and writing fileinfo section")
             write_section(all_files)
-        except OperationFailure as err:
-            raise RuntimeError(err.args[0])
-
+    except SMBShareAgentError as err:
+        sys.stderr.write(str(err))
+        return 1
+    except OperationFailure as err:
+        sys.stderr.write(str(err.args[0]))
+        return 1
     logging.debug("Agent finished successfully")
     return 0
 

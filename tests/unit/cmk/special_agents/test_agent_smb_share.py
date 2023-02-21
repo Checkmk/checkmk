@@ -19,6 +19,7 @@ from cmk.special_agents.agent_smb_share import (
     main,
     parse_arguments,
     smb_share_agent,
+    SMBShareAgentError,
 )
 
 
@@ -320,7 +321,7 @@ def test_get_all_shared_files_errors(  # type:ignore[no-untyped-def]
     expected_error_message: str,
 ):
     conn = MockSMBConnection()
-    with pytest.raises(RuntimeError, match=expected_error_message):
+    with pytest.raises(SMBShareAgentError, match=expected_error_message):
         dict(get_all_shared_files(conn, "HOSTNAME", patterns))
 
 
@@ -382,49 +383,55 @@ def test_smb_share_agent(arg_list, files, expected_result) -> None:  # type:igno
     assert MockSectionWriter.writer == expected_result
 
 
-def test_smb_share_agent_error() -> None:
+def test_smb_share_agent_error(capsys: pytest.CaptureFixture) -> None:
     args = parse_arguments(
         ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
     )
 
     with mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect") as mock_connection:
         mock_connection.side_effect = NotConnectedError
-        with pytest.raises(
-            RuntimeError,
-            match="Could not connect to the remote host. Check your ip address and remote name.",
-        ):
-            smb_share_agent(args)
+        smb_share_agent(args)
+        assert (
+            capsys.readouterr().err
+            == "Could not connect to the remote host. Check your ip address and remote name."
+        )
 
 
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect", return_value=False)
-def test_smb_share_agent_unsuccessful_connect(mock_connect) -> None:  # type:ignore[no-untyped-def]
+def test_smb_share_agent_unsuccessful_connect(
+    mock_connect: mock.Mock, capsys: pytest.CaptureFixture
+) -> None:
     args = parse_arguments(
         ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
     )
-
-    with pytest.raises(
-        RuntimeError, match="Connection to the remote host was declined. Check your credentials."
-    ):
-        smb_share_agent(args)
+    smb_share_agent(args)
+    assert (
+        capsys.readouterr().err
+        == "Connection to the remote host was declined. Check your credentials."
+    )
 
 
 @mock.patch("cmk.special_agents.agent_smb_share.connect")
 @mock.patch("cmk.special_agents.agent_smb_share.get_all_shared_files")
 @mock.patch("cmk.special_agents.agent_smb_share.write_section")
-def test_smb_share_agent_operation_failure(  # type:ignore[no-untyped-def]
-    mock_connect, mock_get_files, mock_write_section
+def test_smb_share_agent_operation_failure(
+    mock_connect: mock.Mock,
+    mock_get_files: mock.Mock,
+    mock_write_section: mock.Mock,
+    capsys: pytest.CaptureFixture,
 ) -> None:
     mock_write_section.side_effect = OperationFailure("Operation failure happened", [])
     args = parse_arguments(
         ["hostname", "127.0.0.1", "--username", "username", "--password", "password"],
     )
-    with pytest.raises(OperationFailure, match="Operation failure happened"):
-        smb_share_agent(args)
+
+    smb_share_agent(args)
+    assert capsys.readouterr().err == "Operation failure happened"
 
 
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.connect", return_value=True)
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection.close")
-def test_connect_error(mock_close, mock_connect) -> None:  # type:ignore[no-untyped-def]
+def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:
     with pytest.raises(Exception, match="Exception during usage of smb connection"):
         with connect("username", "password", "hostname", "127.0.0.1"):
             raise Exception("Exception during usage of smb connection")
@@ -433,5 +440,5 @@ def test_connect_error(mock_close, mock_connect) -> None:  # type:ignore[no-unty
 
 
 @mock.patch("cmk.special_agents.agent_smb_share.special_agent_main", return_value=0)
-def test_main(mock_agent) -> None:  # type:ignore[no-untyped-def]
+def test_main(mock_agent: mock.Mock) -> None:
     assert main() == 0

@@ -17,8 +17,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.redis import disable_redis
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
@@ -762,15 +762,16 @@ def dump_wato_folder_structure(  # type:ignore[no-untyped-def]
 def test_folder_permissions(  # type:ignore[no-untyped-def]
     structure, testfolder_expected_groups
 ) -> None:
-    wato_folder = make_monkeyfree_folder(structure)
-    # dump_wato_folder_structure(wato_folder)
-    testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
-    permitted_groups_cre_folder, _host_contact_groups, _use_for_service = testfolder.groups()
-    assert permitted_groups_cre_folder == testfolder_expected_groups
+    with disable_redis():
+        wato_folder = make_monkeyfree_folder(structure)
+        # dump_wato_folder_structure(wato_folder)
+        testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
+        permitted_groups_cre_folder, _host_contact_groups, _use_for_service = testfolder.groups()
+        assert permitted_groups_cre_folder == testfolder_expected_groups
 
-    all_folders = _convert_folder_tree_to_all_folders(wato_folder)
-    permitted_groups_bulk = hosts_and_folders._get_permitted_groups_of_all_folders(all_folders)
-    assert permitted_groups_bulk["sub1/testfolder"].actual_groups == testfolder_expected_groups
+        all_folders = _convert_folder_tree_to_all_folders(wato_folder)
+        permitted_groups_bulk = hosts_and_folders._get_permitted_groups_of_all_folders(all_folders)
+        assert permitted_groups_bulk["sub1/testfolder"].actual_groups == testfolder_expected_groups
 
 
 def _convert_folder_tree_to_all_folders(  # type:ignore[no-untyped-def]
@@ -870,14 +871,15 @@ group_tree_test = (
 def test_num_hosts_normal_user(  # type:ignore[no-untyped-def]
     structure, user_tests, monkeypatch
 ) -> None:
-    for user_test in user_tests:
-        _run_num_host_test(
-            structure,
-            user_test,
-            user_test.expected_num_hosts,
-            False,
-            monkeypatch,
-        )
+    with disable_redis():
+        for user_test in user_tests:
+            _run_num_host_test(
+                structure,
+                user_test,
+                user_test.expected_num_hosts,
+                False,
+                monkeypatch,
+            )
 
 
 @pytest.mark.usefixtures("with_admin_login")
@@ -888,8 +890,9 @@ def test_num_hosts_normal_user(  # type:ignore[no-untyped-def]
 def test_num_hosts_admin_user(  # type:ignore[no-untyped-def]
     structure, user_tests, monkeypatch
 ) -> None:
-    for user_test in user_tests:
-        _run_num_host_test(structure, user_test, 117, True, monkeypatch)
+    with disable_redis():
+        for user_test in user_tests:
+            _run_num_host_test(structure, user_test, 117, True, monkeypatch)
 
 
 def _run_num_host_test(structure, user_test, expected_host_count, is_admin, monkeypatch):
@@ -1001,9 +1004,10 @@ def test_load_redis_folders_on_demand(monkeypatch) -> None:  # type:ignore[no-un
         assert isinstance(g.wato_folders._raw_dict[""], hosts_and_folders.CREFolder)
 
 
-def test_folder_exists(mocker: MagicMock, tmp_path: Path) -> None:
-    mocker.patch.object(cmk.utils.paths, "check_mk_config_dir", str(tmp_path))
-    (tmp_path / "wato" / "foo" / "bar").mkdir(parents=True)
+def test_folder_exists() -> None:
+    hosts_and_folders.Folder.root_folder().create_subfolder("foo", "foo", {}).create_subfolder(
+        "bar", "bar", {}
+    )
     assert hosts_and_folders.Folder.folder_exists("foo")
     assert hosts_and_folders.Folder.folder_exists("foo/bar")
     assert not hosts_and_folders.Folder.folder_exists("bar")
@@ -1012,9 +1016,10 @@ def test_folder_exists(mocker: MagicMock, tmp_path: Path) -> None:
         hosts_and_folders.Folder.folder_exists("../wato")
 
 
-def test_folder_access(mocker: MagicMock, tmp_path: Path) -> None:
-    mocker.patch.object(cmk.utils.paths, "check_mk_config_dir", str(tmp_path))
-    (tmp_path / "wato" / "foo" / "bar").mkdir(parents=True)
+def test_folder_access() -> None:
+    hosts_and_folders.Folder.root_folder().create_subfolder("foo", "foo", {}).create_subfolder(
+        "bar", "bar", {}
+    )
     assert isinstance(hosts_and_folders.Folder.folder("foo/bar"), hosts_and_folders.CREFolder)
     assert isinstance(hosts_and_folders.Folder.folder(""), hosts_and_folders.CREFolder)
     with pytest.raises(MKGeneralException):

@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from enum import Enum
 from typing import Any, TypeVar
 
+from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis.client import Pipeline
 
@@ -28,6 +29,14 @@ def get_redis_client() -> Redis[str]:
         encoding="utf-8",
         decode_responses=True,
     )
+
+
+def redis_server_reachable() -> bool:
+    try:
+        get_redis_client().ping()
+    except RedisConnectionError:
+        return False
+    return True
 
 
 class IntegrityCheckResponse(Enum):

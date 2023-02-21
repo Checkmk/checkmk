@@ -19,8 +19,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Final, Literal, NamedTuple, TypedDict
 
-import psutil  # type: ignore[import]
-
 from livestatus import SiteId
 
 import cmk.utils.paths
@@ -29,7 +27,7 @@ from cmk.utils import store
 from cmk.utils.datastructures import deep_update
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.redis import get_redis_client, Pipeline, redis_enabled
+from cmk.utils.redis import get_redis_client, Pipeline, redis_enabled, redis_server_reachable
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
@@ -292,16 +290,6 @@ class _RedisHelper:
         latest_timestamp = self._get_latest_timestamps_from_disk()[-1]
         wato_folders = _get_fully_loaded_wato_folders()
         return latest_timestamp, wato_folders
-
-    @classmethod
-    def redis_server_active(cls) -> bool:
-        redis_pid_path = cmk.utils.paths.omd_root / "tmp" / "run" / "redis-server.pid"
-        if not redis_pid_path.exists():
-            return False
-
-        with suppress(ValueError):
-            return psutil.pid_exists(int(store.load_bytes_from_file(redis_pid_path)))
-        return False
 
     @property
     def folder_paths(self) -> Sequence[PathWithSlash]:
@@ -625,7 +613,7 @@ class _RedisHelper:
         find (+spawn process) -> 0.14 seconds
         """
         result = subprocess.run(
-            "find ~/etc/check_mk/conf.d/wato -type d -printf '%T@\n' -o -name .wato -printf '%T@\n' | sort -n | tail -6 | uniq",
+            f"find {cmk.utils.paths.check_mk_config_dir}/wato -type d -printf '%T@\n' -o -name .wato -printf '%T@\n' | sort -n | tail -6 | uniq",
             shell=True,
             capture_output=True,
             check=True,
@@ -1079,20 +1067,20 @@ def may_use_redis() -> bool:
     # - Redis server is not running during cmk_update_config.py
     # - Bulk operations which would update redis several thousand times, instead of just once
     #     There is a special context manager which allows to disable redis handling in this case
-    if not _redis_available() or not redis_enabled() or not _REDIS_ENABLED_LOCALLY:
-        return False
-
-    return True
+    return (
+        all(
+            (
+                redis_enabled(),
+                _REDIS_ENABLED_LOCALLY,
+            ),
+        )
+        and _redis_available()
+    )
 
 
 @request_memoize()
 def _redis_available() -> bool:
-    if not _RedisHelper.redis_server_active():
-        return False
-
-    if os.path.exists(os.path.expanduser("~/use_classic")):
-        return False
-    return True
+    return redis_server_reachable() and not os.path.exists(os.path.expanduser("~/use_classic"))
 
 
 @contextmanager

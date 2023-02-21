@@ -64,10 +64,10 @@ def test_folder_times() -> None:
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
-        folder = Folder("test", parent_folder=root)
+        Folder("test", parent_folder=root).save()
+        folder = Folder("test", "")
         folder.save()
 
-    folder = Folder("test", "")
     meta_data = folder.attributes()["meta_data"]
     assert int(meta_data["created_at"]) == int(current)
     assert int(meta_data["updated_at"]) == int(current)

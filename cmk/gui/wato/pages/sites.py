@@ -649,7 +649,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _action_login(self, login_id: SiteId) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
-        if request.get_ascii_input("_abort"):
+        if request.get_ascii_input("_cancel"):
             return redirect(mode_url("sites"))
 
         if not transactions.check_transaction():
@@ -728,7 +728,7 @@ class ModeDistributedMonitoring(WatoMode):
         )
         forms.end()
         html.button("_do_login", _("Login"))
-        html.button("_abort", _("Abort"))
+        html.button("_cancel", _("Cancel"))
         html.hidden_field("_login", login_id)
         html.hidden_fields()
         html.end_form()

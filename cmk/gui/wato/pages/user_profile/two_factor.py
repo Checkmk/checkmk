@@ -264,7 +264,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_abort_link=True
+            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_cancel_link=True
         )
         return menu
 

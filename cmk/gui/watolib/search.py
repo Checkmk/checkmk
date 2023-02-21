@@ -18,7 +18,7 @@ import redis
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.redis import get_redis_client
+from cmk.utils.redis import get_redis_client, redis_enabled
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -572,6 +572,9 @@ class SearchIndexBackgroundJob(BackgroundJob):
                 estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
+
+    def start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
+        return super().start(target) if redis_enabled() else None
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

@@ -1235,3 +1235,59 @@ export function toggle_label_row_opacity(
         utils.remove_class(tr, "active");
     }
 }
+
+export function label_group_delete(
+    varprefix: string,
+    index: string,
+    first_elem_choices_or_label: string[][] | string
+) {
+    const tr = document.getElementById(
+        varprefix + "_entry_" + index
+    )! as HTMLTableRowElement;
+    const tbody = tr.parentNode as HTMLTableSectionElement;
+
+    if (tbody.children[0] === tr) {
+        // The tr to be deleted is the first child -> put in first element specific choices/label
+        if (tbody.children.length == 1) {
+            // Add another element if the one to be deleted is the only one
+            const add_element_buttons = tbody
+                .closest("div.valuespec_listof")!
+                .getElementsByClassName("vlof_add_button") as HTMLCollection;
+            const add_element_button = add_element_buttons[
+                add_element_buttons.length - 1
+            ] as HTMLAnchorElement;
+            add_element_button.click();
+        }
+
+        let next_row_select: HTMLSelectElement = tbody.children[1]
+            .getElementsByClassName("bool")![0]
+            .getElementsByTagName("select")![0];
+        if (first_elem_choices_or_label instanceof Object) {
+            // first element has dropdown choices -> adjust the dropdown choices
+            const first_elem_choices: Object = Object.fromEntries(
+                first_elem_choices_or_label
+            );
+            const options: HTMLOptionsCollection = next_row_select.options;
+            for (let i = 0; i < options.length; i++) {
+                if (first_elem_choices.hasOwnProperty(options[i].value)) {
+                    options[i].innerHTML = first_elem_choices[options[i].value];
+                } else {
+                    options.remove(i);
+                    i -= 1;
+                }
+            }
+        } else {
+            // first element has a label -> remove dropdown and put in a label span
+            const next_bool_div = next_row_select.parentNode as HTMLDivElement;
+            next_bool_div.removeChild(next_row_select.nextSibling!); // select2 span
+            next_bool_div.removeChild(next_row_select);
+            next_bool_div.insertBefore(
+                tr.getElementsByClassName("vs_label")[0],
+                next_bool_div.lastChild
+            );
+        }
+    }
+
+    listof_delete(varprefix, index);
+    forms.enable_dynamic_form_elements(tbody);
+}

@@ -9,11 +9,14 @@ Level: 2
 State: unknown
 Version: 2.1.0p23
 
-Previously, the dcd would stop updating and deleting the host configurations, if they were in 
-an inconsistent state. The following error would be shown:
+Previously, the dcd could not handle host configurations, if they were in an
+inconsistent state. In such cases, it would stop updating and deleting the host
+configurations. The following error would be shown:
 C+:
 k: api_attributes[k] for k in future_attributes["locked_attributes"] + internal_keys
 KeyError: 'site'
 C-:
-With this werk, the dcd will not crash. Instead it assigns the attributes, which are configured by
-the connection.
+This meant, the attributes of the host were not present, even though they were
+supposed to be locked by the dcd. With this werk, the dcd will not crash.
+Instead it assigns the attributes, which are configured by the connection. This
+includes the internal attribute "Locked by", which is inaccessible via the GUI.

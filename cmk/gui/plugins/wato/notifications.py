@@ -88,7 +88,7 @@ def _vs_add_common_mail_elements(elements):
                         "address",
                         EmailAddress(
                             title=_("Email address"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -96,7 +96,7 @@ def _vs_add_common_mail_elements(elements):
                         "display_name",
                         TextInput(
                             title=_("Display name"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -119,7 +119,7 @@ def _vs_add_common_mail_elements(elements):
                         "address",
                         EmailAddress(
                             title=_("Email address"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -127,7 +127,7 @@ def _vs_add_common_mail_elements(elements):
                         "display_name",
                         TextInput(
                             title=_("Display name"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -148,7 +148,7 @@ def _vs_add_common_mail_elements(elements):
                     "notification context."
                 ),
                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                size=64,
+                size=76,
             ),
         ),
         (
@@ -160,7 +160,7 @@ def _vs_add_common_mail_elements(elements):
                     "notification context."
                 ),
                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                size=64,
+                size=76,
             ),
         ),
     ]
@@ -286,8 +286,8 @@ class NotificationParameterMail(NotificationParameter):
                     TextAreaUnicode(
                         title=_("Add HTML section above table (e.g. title, description…)"),
                         default_value="<HTMLTAG>CONTENT</HTMLTAG>",
-                        cols=40,
-                        rows="auto",
+                        cols=76,
+                        rows=3,
                     ),
                 ),
                 (

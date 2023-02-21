@@ -18,7 +18,7 @@ import redis
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.redis import get_redis_client, redis_enabled
+from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -317,6 +317,8 @@ class PermissionsHandler:
 
 class IndexSearcher:
     def __init__(self, permissions_handler: PermissionsHandler) -> None:
+        if not redis_server_reachable():
+            raise RuntimeError("Redis server is not reachable")
         self._may_see_category = permissions_handler.may_see_category
         self._may_see_item_func = permissions_handler.permissions_for_items()
         self._user_id = user.ident
@@ -487,39 +489,59 @@ class _SearchResultWithPermissionsCheck:
     permissions_check: Callable[[str], bool]
 
 
+def _verify_redis_is_reachable(
+    *,
+    job_interface: BackgroundProcessInterface,
+    n_attempts_max: int = 1,
+    wait_between_attempts: int = 5,
+) -> None:
+    n_attempts = 0
+    job_interface.send_progress_update(_("Checking if Redis is reachable"))
+
+    while n_attempts < n_attempts_max:
+        n_attempts += 1
+
+        if redis_server_reachable():
+            job_interface.send_progress_update(_("Redis is reachable"))
+            return
+
+        job_interface.send_progress_update(
+            _("Connection attempt %d / %d to Redis failed")
+            % (
+                n_attempts,
+                n_attempts_max,
+            )
+        )
+
+        if n_attempts == n_attempts_max:
+            break
+
+        sleep(wait_between_attempts)
+
+    job_interface.send_result_message(
+        _("Maximum number of allowed connection attempts reached, terminating")
+    )
+    raise redis.ConnectionError("Failed to connect to local Redis server")
+
+
 def _build_index_background(
     job_interface: BackgroundProcessInterface,
     n_attempts_redis_connection: int = 1,
-    sleep_time: int = 5,
+    wait_between_attempts: int = 5,
 ) -> None:
-    n_attempts = 0
+    _verify_redis_is_reachable(
+        job_interface=job_interface,
+        n_attempts_max=n_attempts_redis_connection,
+        wait_between_attempts=wait_between_attempts,
+    )
     job_interface.send_progress_update(_("Building of search index started"))
-    while True:
-        try:
-            n_attempts += 1
-            IndexBuilder(match_item_generator_registry).build_full_index()
-            break
-        except redis.ConnectionError:
-            job_interface.send_progress_update(
-                _("Connection attempt %d / %d to Redis failed")
-                % (
-                    n_attempts,
-                    n_attempts_redis_connection,
-                )
-            )
-            if n_attempts == n_attempts_redis_connection:
-                job_interface.send_result_message(
-                    _("Maximum number of allowed connection attempts reached, terminating")
-                )
-                raise
-            job_interface.send_progress_update(_("Will wait for %d seconds and retry") % sleep_time)
-            sleep(sleep_time)
+    IndexBuilder(match_item_generator_registry).build_full_index()
     job_interface.send_result_message(_("Search index successfully built"))
 
 
 def build_index_background(
     n_attempts_redis_connection: int = 1,
-    sleep_time: int = 5,
+    wait_between_attempts: int = 5,
 ) -> None:
     build_job = SearchIndexBackgroundJob()
     with suppress(BackgroundJobAlreadyRunning):
@@ -527,7 +549,7 @@ def build_index_background(
             lambda job_interface: _build_index_background(
                 job_interface=job_interface,
                 n_attempts_redis_connection=n_attempts_redis_connection,
-                sleep_time=sleep_time,
+                wait_between_attempts=wait_between_attempts,
             )
         )
 
@@ -536,6 +558,8 @@ def _update_index_background(
     change_action_name: str,
     job_interface: BackgroundProcessInterface,
 ) -> None:
+    _verify_redis_is_reachable(job_interface=job_interface)
+
     job_interface.send_progress_update(_("Updating of search index started"))
 
     if not IndexBuilder.index_is_built():

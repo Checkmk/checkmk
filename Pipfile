@@ -131,7 +131,7 @@ Pillow = "==9.4.0"
 python-ldap = "==3.4.3"  # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.16"  # needed by GUI (API XML format)
 Cython = "==0.29.32"  # needed by numpy
-numpy = "==1.22.4"  # needed by GUI (metrics)
+numpy = "==1.24.2"  # needed by GUI (metrics)
 reportlab = "==3.6.12"  # needed by GUI (reporting)
 PyPDF3 = "==1.0.5"  # needed by GUI (reporting)
 roman = "==3.3"  # needed by GUI (reporting)

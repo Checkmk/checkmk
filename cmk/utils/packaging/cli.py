@@ -159,7 +159,13 @@ def _command_show_all(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
 ) -> int:
     """Show all manifests"""
-    stored_manifests = get_stored_manifests(PackageStore())
+    stored_manifests = get_stored_manifests(
+        PackageStore(
+            shipped_dir=path_config.packages_shipped_dir,
+            local_dir=path_config.packages_local_dir,
+            enabled_dir=path_config.packages_enabled_dir,
+        )
+    )
 
     if args.json:
         sys.stdout.write(f"{stored_manifests.json()}\n")
@@ -186,10 +192,15 @@ def _command_show(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
 ) -> int:
     """Show manifest of a stored package"""
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
     manifest = extract_manifest(
-        PackageStore()
-        .get_existing_package_path(_get_package_id(args.name, args.version))
-        .read_bytes()
+        package_store.get_existing_package_path(
+            _get_package_id(args.name, args.version, package_store)
+        ).read_bytes()
     )
     sys.stdout.write(f"{manifest.json() if args.json else _to_text(manifest)}\n")
     return 0
@@ -201,10 +212,15 @@ def _command_files(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
 ) -> int:
     """Show all files beloning to a package"""
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
     manifest = extract_manifest(
-        PackageStore()
-        .get_existing_package_path(_get_package_id(args.name, args.version))
-        .read_bytes()
+        package_store.get_existing_package_path(
+            _get_package_id(args.name, args.version, package_store)
+        ).read_bytes()
     )
     sys.stdout.write(
         "".join(
@@ -229,7 +245,14 @@ def _command_list(
 ) -> int:
     """Show a table of all known files, including the deployment state"""
     installer = Installer(path_config.installed_packages_dir)
-    classified_manifests = get_classified_manifests(PackageStore(), installer)
+    classified_manifests = get_classified_manifests(
+        PackageStore(
+            shipped_dir=path_config.packages_shipped_dir,
+            local_dir=path_config.packages_local_dir,
+            enabled_dir=path_config.packages_enabled_dir,
+        ),
+        installer,
+    )
 
     if args.json:
         sys.stdout.write(f"{classified_manifests.json()}\n")
@@ -303,7 +326,11 @@ def _command_add(
     except OSError as exc:
         raise PackageError from exc
 
-    manifest = PackageStore().store(file_content)
+    manifest = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    ).store(file_content)
 
     # these are the required arguments for `mkp enable`!
     sys.stdout.write(f"{manifest.name} {manifest.version}\n")
@@ -336,8 +363,12 @@ def _command_remove(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
 ) -> int:
     """Remove a package from the site"""
-    package_id = _get_package_id(args.name, args.version)
-    package_store = PackageStore()
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
+    package_id = _get_package_id(args.name, args.version, package_store)
     if package_id in package_store.get_enabled_manifests():
         raise PackageError("This package is enabled! Please disable it first.")
 
@@ -359,7 +390,14 @@ def _command_disable_outdated(
     In case it is outdated, the package is disabled.
     """
     disable_outdated(
-        Installer(path_config.installed_packages_dir), PackageStore(), path_config, callbacks
+        Installer(path_config.installed_packages_dir),
+        PackageStore(
+            shipped_dir=path_config.packages_shipped_dir,
+            local_dir=path_config.packages_local_dir,
+            enabled_dir=path_config.packages_enabled_dir,
+        ),
+        path_config,
+        callbacks,
     )
     return 0
 
@@ -404,8 +442,17 @@ def _command_enable(
 ) -> int:
     """Enable a disabled package"""
     installer = Installer(path_config.installed_packages_dir)
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
     install(
-        installer, PackageStore(), _get_package_id(args.name, args.version), path_config, callbacks
+        installer,
+        package_store,
+        _get_package_id(args.name, args.version, package_store),
+        path_config,
+        callbacks,
     )
     return 0
 
@@ -416,12 +463,17 @@ def _command_disable(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
 ) -> int:
     """Disable an enabled package"""
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
     disable(
         Installer(path_config.installed_packages_dir),
-        PackageStore(),
+        package_store,
         path_config,
         callbacks,
-        _get_package_id(args.name, args.version),
+        _get_package_id(args.name, args.version, package_store),
     )
     return 0
 
@@ -479,7 +531,7 @@ def _command_package(
 ) -> int:
     """Create an .mkp file from the provided manifest.
 
-    You can use the `template` command ot create a manifest template.
+    You can use the `template` command to create a manifest template.
     """
     if (package := read_manifest_optionally(args.manifest_file)) is None:
         return 1
@@ -490,7 +542,11 @@ def _command_package(
         sys.stderr.write(f"{exc}\n")
         return 1
 
-    store = PackageStore()
+    store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
     installer = Installer(path_config.installed_packages_dir)
     try:
         manifest = store.store(create_mkp_object(package, path_config))
@@ -506,11 +562,12 @@ def _command_package(
 def _get_package_id(
     name: PackageName,
     version: PackageVersion | None,
+    package_store: PackageStore,
 ) -> PackageID:
     if version is not None:
         return PackageID(name=name, version=version)
 
-    stored_packages = get_stored_manifests(PackageStore())
+    stored_packages = get_stored_manifests(package_store)
     match [
         *(p for p in stored_packages.local if p.name == name),
         *(p for p in stored_packages.shipped if p.name == name),

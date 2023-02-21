@@ -39,6 +39,9 @@ _PATH_CONFIG = packaging.PathConfig(
     mib_dir=cmk.utils.paths.local_mib_dir,
     mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
     notifications_dir=cmk.utils.paths.local_notifications_dir,
+    packages_enabled_dir=cmk.utils.paths.local_enabled_packages_dir,
+    packages_local_dir=cmk.utils.paths.local_optional_packages_dir,
+    packages_shipped_dir=cmk.utils.paths.optional_packages_dir,
     pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
     tmp_dir=cmk.utils.paths.tmp_dir,
     web_dir=cmk.utils.paths.local_web_dir,
@@ -48,16 +51,18 @@ _PATH_CONFIG = packaging.PathConfig(
 _NO_CALLBACKS: dict[packaging.PackagePart, packaging.PackageOperationCallbacks] = {}
 
 
+_PACKAGE_STORE = packaging.PackageStore(
+    shipped_dir=_PATH_CONFIG.packages_shipped_dir,
+    local_dir=_PATH_CONFIG.packages_local_dir,
+    enabled_dir=_PATH_CONFIG.packages_enabled_dir,
+)
+
+
 @pytest.fixture(name="installer", scope="function")
 def _get_installer() -> Iterator[packaging.Installer]:
     cmk.utils.paths.installed_packages_dir.mkdir(parents=True, exist_ok=True)
     yield packaging.Installer(cmk.utils.paths.installed_packages_dir)
     shutil.rmtree(cmk.utils.paths.installed_packages_dir)
-
-
-@pytest.fixture(name="package_store", scope="function")
-def _get_package_store() -> Iterator[packaging.PackageStore]:
-    yield packaging.PackageStore()
 
 
 def _read_manifest(
@@ -226,11 +231,10 @@ def test_install(
     mkp_bytes: bytes,
     build_setup_search_index: Mock,
     installer: packaging.Installer,
-    package_store: packaging.PackageStore,
 ) -> None:
     packaging._install(
         installer,
-        package_store,
+        _PACKAGE_STORE,
         mkp_bytes,
         _PATH_CONFIG,
         _NO_CALLBACKS,
@@ -345,7 +349,7 @@ def test_unpackaged_files(installer: packaging.Installer) -> None:
 
 
 def test_get_optional_manifests_none() -> None:
-    stored = packaging.get_stored_manifests(packaging.PackageStore())
+    stored = packaging.get_stored_manifests(_PACKAGE_STORE)
     assert not stored.local
     assert not stored.shipped
 
@@ -361,7 +365,7 @@ def test_get_stored_manifests(
     _create_simple_test_package(installer, packaging.PackageName("optional"))
     expected_manifest = _read_manifest(installer, packaging.PackageName("optional"))
 
-    assert packaging.get_stored_manifests(packaging.PackageStore()) == packaging.StoredManifests(
+    assert packaging.get_stored_manifests(_PACKAGE_STORE) == packaging.StoredManifests(
         local=[expected_manifest],
         shipped=[],
     )

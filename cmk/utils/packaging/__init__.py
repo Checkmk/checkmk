@@ -118,10 +118,10 @@ class PackageStore:
     This should become the single source of truth regarding package contents.
     """
 
-    def __init__(self) -> None:
-        self.local_packages: Final = cmk.utils.paths.local_optional_packages_dir
-        self.shipped_packages: Final = cmk.utils.paths.optional_packages_dir
-        self.enabled_packages: Final = cmk.utils.paths.local_enabled_packages_dir
+    def __init__(self, *, shipped_dir: Path, local_dir: Path, enabled_dir: Path) -> None:
+        self.shipped_packages: Final = shipped_dir
+        self.local_packages: Final = local_dir
+        self.enabled_packages: Final = enabled_dir
 
     def store(self, file_content: bytes, overwrite: bool = False) -> Manifest:
 
@@ -221,7 +221,11 @@ def create(installer: Installer, manifest: Manifest, path_config: PathConfig) ->
     if installer.is_installed(manifest.name):
         raise PackageError("Packet already exists.")
 
-    package_store = PackageStore()
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
 
     _raise_for_nonexisting_files(manifest, path_config)
     _validate_package_files(manifest, installer)
@@ -239,7 +243,11 @@ def edit(
     if pacname != new_manifest.name:
         if installer.is_installed(new_manifest.name):
             raise PackageError("Cannot rename package: a package with that name already exists.")
-    package_store = PackageStore()
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
 
     _raise_for_nonexisting_files(new_manifest, path_config)
     _validate_package_files(new_manifest, installer)
@@ -582,7 +590,11 @@ def update_active_packages(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
 ) -> None:
     """Update which of the enabled packages are actually active (installed)"""
-    package_store = PackageStore()
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
     _deinstall_inapplicable_active_packages(
         installer, path_config, callbacks, post_package_change_actions=False
     )

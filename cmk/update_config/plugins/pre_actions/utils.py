@@ -39,6 +39,9 @@ _PATH_CONFIG = PathConfig(
     mib_dir=paths.local_mib_dir,
     mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
     notifications_dir=paths.local_notifications_dir,
+    packages_enabled_dir=paths.local_enabled_packages_dir,
+    packages_local_dir=paths.local_optional_packages_dir,
+    packages_shipped_dir=paths.optional_packages_dir,
     pnp_templates_dir=paths.local_pnp_templates_dir,
     tmp_dir=paths.tmp_dir,
     web_dir=paths.local_web_dir,
@@ -52,7 +55,11 @@ _CALLBACKS: Final = {
     ),
 }
 
-_PACKAGE_STORE = PackageStore()
+_PACKAGE_STORE = PackageStore(
+    shipped_dir=_PATH_CONFIG.packages_shipped_dir,
+    local_dir=_PATH_CONFIG.packages_local_dir,
+    enabled_dir=_PATH_CONFIG.packages_enabled_dir,
+)
 
 
 class ConflictMode(enum.StrEnum):

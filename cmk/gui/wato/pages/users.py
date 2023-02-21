@@ -862,8 +862,7 @@ class ModeEditUser(WatoMode):
         # ID
         forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
-            vs_user_id = UserID(allow_empty=False)
-
+            vs_user_id = UserID(allow_empty=False, size=73)
         else:
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
@@ -875,7 +874,7 @@ class ModeEditUser(WatoMode):
                 html.write_text(value)
                 html.hidden_field(name, value)
             else:
-                html.text_input(name, value, size=50)
+                html.text_input(name, value, size=73)
 
         # Full name
         forms.section(_("Full name"), is_required=True)
@@ -886,7 +885,7 @@ class ModeEditUser(WatoMode):
         forms.section(_("Email address"))
         email = self._user.get("email", "")
         if not self._is_locked("email"):
-            EmailAddress().render_input("email", email)
+            EmailAddress(size=73).render_input("email", email)
         else:
             html.write_text(email)
             html.hidden_field("email", email)

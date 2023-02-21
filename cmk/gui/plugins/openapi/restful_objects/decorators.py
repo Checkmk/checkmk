@@ -537,12 +537,12 @@ class Endpoint:
             )
 
             if request.environ.get("paste.testing"):
-                raise PermissionError(
-                    f"Required permissions not declared for this endpoint.\n"
-                    f"Endpoint: {self}\n"
+                raise RestAPIPermissionException(
+                    title="Required permissions not declared for this endpoint.",
+                    detail=f"Endpoint: {self}\n"
                     f"Permission: {pname}\n"
                     f"Used permission: {self._used_permissions}\n"
-                    f"Declared: {self.permissions_required}\n"
+                    f"Declared: {self.permissions_required}\n",
                 )
 
     def remember_checked_permission(self, permission: str) -> None:
@@ -798,21 +798,21 @@ class Endpoint:
                 )
 
                 if request.environ.get("paste.testing"):
-                    raise PermissionError(
-                        "Permission mismatch\n"
-                        "There can be some causes for this error:\n"
+                    raise RestAPIPermissionException(
+                        title="Permission mismatch",
+                        detail="There can be some causes for this error:\n"
                         "* a permission which was required (successfully) was not declared\n"
                         "* a permission which was declared (not optional) was not required\n"
                         "* No permission was required at all, although permission were declared\n"
                         f"Endpoint: {self}\n"
                         f"Params: {_params!r}\n"
                         f"Required: {required_permissions}\n"
-                        f"Declared: {declared_permissions}\n"
+                        f"Declared: {declared_permissions}\n",
                     )
 
                 raise RestAPIPermissionException(
-                    title="Internal Server Error",
-                    detail="Permission mismatch. See the server logs for more information.",
+                    title="Permission mismatch",
+                    detail="See the server logs for more information.",
                 )
 
         if self.output_empty and response.status_code < 400 and response.data:
@@ -828,8 +828,12 @@ class Endpoint:
         if response.status_code not in self._expected_status_codes:
             raise RestAPIResponseException(
                 title=f"Unexpected status code returned: {response.status_code}",
-                detail=f"Endpoint {self.operation_id}\nThis is a bug, please report.",
-                ext=EXT({"codes": self._expected_status_codes}),
+                detail=f"Endpoint {self.operation_id}",
+                ext=EXT(
+                    {
+                        "The following status codes are allowed for this endpoint": self._expected_status_codes
+                    }
+                ),
             )
 
         # We assume something has been modified and increase the config generation ID

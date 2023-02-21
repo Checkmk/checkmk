@@ -1076,6 +1076,7 @@ AUTH_PASSWORD = fields.String(
     required=False,
     description="The password for login",
     example="password",
+    minLength=1,
 )
 
 AUTH_SECRET = fields.String(

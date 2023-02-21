@@ -3810,6 +3810,7 @@ def _valuespec_extra_host_conf_notification_interval():
     return Migrate(
         Optional(
             valuespec=Float(
+                size=7,
                 minvalue=0.05,
                 default_value=120.0,
                 label=_("Interval:"),
@@ -3842,7 +3843,11 @@ def _valuespec_extra_service_conf_notification_interval():
     return Migrate(
         Optional(
             valuespec=Float(
-                minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
+                size=7,
+                minvalue=0.05,
+                default_value=120.0,
+                label=_("Interval:"),
+                unit=_("minutes"),
             ),
             title=_("Periodic notifications during service problems"),
             help=_(

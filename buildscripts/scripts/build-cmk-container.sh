@@ -51,11 +51,7 @@ docker_push() {
     if [[ "$VERSION_TAG" == *"-rc"* ]]; then
         echo "${VERSION_TAG} was a release candidate, do a retagging before pushing".
         RELEASE_VERSION=$(echo -n "${VERSION_TAG}" | sed 's/-rc[0-9]*//g')
-        if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-            docker_tag "" "checkmk" "${RELEASE_VERSION}"
-        else
-            docker_tag "registry.checkmk.com" "/${EDITION}" "${RELEASE_VERSION}"
-        fi
+        docker_tag "${REGISTRY}" "${NAMESPACE}" "${RELEASE_VERSION}"
     else
         RELEASE_VERSION="${VERSION_TAG}"
     fi
@@ -86,20 +82,11 @@ build_image() {
     log "Verschiebe Image-Tarball..."
     mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "${SOURCE_PATH}/"
 
-    if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-        docker_tag "" "checkmk"
-    else
-        docker_tag "registry.checkmk.com" "/${EDITION}"
-    fi
+    docker_tag "${REGISTRY}" "${NAMESPACE}"
 }
 
 push_image() {
-    if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-        docker_push "" "checkmk"
-    else
-        docker_push "registry.checkmk.com" "/${EDITION}"
-    fi
-
+    docker_push "${REGISTRY}" "${NAMESPACE}"
 }
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ] || [ "$7" = "" ]; then
@@ -119,10 +106,18 @@ ACTION=$7
 
 VERSION_TAG=$(basename "${SOURCE_PATH}")
 
+# Default to our internal registry, set it to "" if you want push it to dockerhub
+REGISTRY="registry.checkmk.com"
+NAMESPACE="/${EDITION}"
+
 if [ "$EDITION" = raw ]; then
     SUFFIX=.cre
+    REGISTRY=""
+    NAMESPACE="checkmk"
 elif [ "$EDITION" = free ]; then
     SUFFIX=.cfe
+    REGISTRY=""
+    NAMESPACE="checkmk"
 elif [ "$EDITION" = enterprise ]; then
     SUFFIX=.cee
 elif [ "$EDITION" = managed ]; then

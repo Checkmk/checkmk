@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 2.1.0p22
+Version: 2.1.0p23
 
 Previously, the dcd would stop updating and deleting the host configurations, if they were in 
 an inconsistent state. The following error would be shown:

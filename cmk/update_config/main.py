@@ -30,6 +30,7 @@ from cmk.base import config as base_config
 from cmk.base.check_api import get_check_api_context
 
 from cmk.gui import main_modules
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
@@ -39,27 +40,41 @@ from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from .pre_update_check import ConflictMode, passed_pre_checks
-from .registry import update_action_registry
+from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+
+from .registry import pre_update_action_registry, update_action_registry
 from .update_state import UpdateState
 
 
 def main(args: Sequence[str]) -> int:
     arguments = _parse_arguments(args)
 
-    if not passed_pre_checks(arguments.conflict):
-        sys.exit(
-            "\nUpdate aborted due incompatible local files.\n"
+    if arguments.debug:
+        debug.enable()
+
+    _load_pre_plugins()
+    try:
+        ConfigChecker(arguments.conflict)()
+    except MKUserError as e:
+        sys.stderr.write(
+            f"\nUpdate aborted due {e}.\n"
             "The Checkmk configuration has not been modified.\n\n"
             "You can downgrade to your previous version again using "
-            "'omd update' and start the site again."
+            "'omd update' and start the site again.\n"
+        )
+        return 1
+    except Exception as e:
+        if debug.enabled():
+            raise
+        sys.stderr.write(
+            "Unknown error on pre update action.\n"
+            f"Error: {e}\n\n"
+            "Please repair this and run 'cmk-update-config'"
+            "BEFORE starting the site again."
         )
         return 1
 
     logger = _setup_logging(arguments)
-
-    if arguments.debug:
-        debug.enable()
 
     update_state = UpdateState.load(Path(paths.var_dir))
     _load_plugins(logger)
@@ -141,6 +156,30 @@ def _load_plugins(logger: logging.Logger) -> None:
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if debug.enabled():
             raise exc
+
+
+def _load_pre_plugins() -> None:
+    for plugin, exc in load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"):
+        sys.stderr.write("Error in pre action plugin %s: %s\n" % (plugin, exc))
+        if debug.enabled():
+            raise exc
+
+
+class ConfigChecker:
+    def __init__(self, conflict_mode: ConflictMode) -> None:
+        self.conflict_mode = conflict_mode
+
+    def __call__(self) -> None:
+        pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
+        total = len(pre_update_actions)
+        sys.stdout.write("Processing pre update actions...\n")
+        for count, pre_action in enumerate(pre_update_actions, start=1):
+            sys.stdout.write(
+                f" {tty.bgmagenta}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...\n"
+            )
+            pre_action(self.conflict_mode)
+
+        sys.stdout.write("Finished pre update actions...\n")
 
 
 class ConfigUpdater:

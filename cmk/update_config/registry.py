@@ -9,6 +9,8 @@ from typing import Final
 
 from cmk.utils.plugin_registry import Registry
 
+from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+
 from .update_state import UpdateActionState
 
 
@@ -39,3 +41,30 @@ class UpdateActionRegistry(Registry[UpdateAction]):
 
 
 update_action_registry = UpdateActionRegistry()
+
+
+class PreUpdateAction(ABC):
+    """Base class for all pre update actions"""
+
+    def __init__(
+        self,
+        *,
+        name: str,
+        title: str,
+        sort_index: int,
+    ) -> None:
+        self.name: Final = name
+        self.title: Final = title
+        self.sort_index: Final = sort_index
+
+    @abstractmethod
+    def __call__(self, conflict_mode: ConflictMode) -> None:
+        """Execute the update action"""
+
+
+class PreUpdateActionRegistry(Registry[PreUpdateAction]):
+    def plugin_name(self, instance: PreUpdateAction) -> str:
+        return instance.name
+
+
+pre_update_action_registry = PreUpdateActionRegistry()

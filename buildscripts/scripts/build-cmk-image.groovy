@@ -66,9 +66,7 @@ def main() {
         docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
             withCredentials([
                 usernamePassword(
-                    credentialsId: (EDITION == "raw") ? // FIXME getCredentialsId() mergen
-                        "11fb3d5f-e44e-4f33-a651-274227cc48ab" :
-                        "registry.checkmk.com",
+                    credentialsId: registry_credentials_id(EDITION),
                     passwordVariable: 'DOCKER_PASSPHRASE',
                     usernameVariable: 'DOCKER_USERNAME'),
                 usernamePassword(
@@ -154,4 +152,12 @@ def main() {
         }
     }
 }
+
+def registry_credentials_id(edition) {
+    if (!["raw", "free", "managed", "cloud"].contains(edition)) {
+        throw new Exception("Cannot provide registry credentials id for edition '${edition}'")
+    }
+    return edition in ["raw", "free"] ? '11fb3d5f-e44e-4f33-a651-274227cc48ab' : "registry.checkmk.com"
+}
+
 return this;

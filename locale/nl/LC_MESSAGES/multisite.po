@@ -1814,17 +1814,6 @@ msgstr ""
 "blijven de logboekvermeldingen behouden, maar wordt de status ervan "
 "gewijzigd.</p>"
 
-#, fuzzy, python-format
-msgid ""
-"<p>You can optionally define one or multiple regular expressions where a "
-"matching case will result in the exclusion of the concerning %s(s). This "
-"allows to ignore services which are known to fail beforehand. </p>"
-msgstr ""
-"<p>U kunt optioneel een of meer reguliere expressies definiëren waarbij een "
-"overeenkomend geval zal resulteren in de uitsluiting van de betreffende "
-"dienst(en). Dit maakt het mogelijk om diensten te negeren waarvan vooraf "
-"bekend is dat ze falen. </p>"
-
 msgid ""
 "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
 msgstr "<p>U bent uitgelogd. Herlaad de pagina om u opnieuw aan te melden.</p>"
@@ -3132,6 +3121,10 @@ msgstr "Actief en inactief geheugen"
 
 msgid "Active check"
 msgstr "Actieve controle"
+
+#, fuzzy
+msgid "Active check helper usage"
+msgstr "Gebruik van helper controleren"
 
 msgid "Active checks"
 msgstr "Actieve controles"
@@ -6202,9 +6195,6 @@ msgstr "Beschikbaar tot"
 msgid "Average"
 msgstr "Gemiddeld"
 
-msgid "Average Checkmk latency"
-msgstr "Gemiddelde Checkmk latentie"
-
 msgid "Average Holding Time For Incoming Messages"
 msgstr "Gemiddelde wachttijd voor inkomende berichten"
 
@@ -6217,7 +6207,12 @@ msgstr "Gemiddelde latentie"
 msgid "Average Outgoing Queue Delay"
 msgstr "Gemiddelde Uitgaande wachtrijvertraging"
 
-msgid "Average check latency"
+#, fuzzy
+msgid "Average active check latency"
+msgstr "Gemiddelde controle latentie"
+
+#, fuzzy
+msgid "Average checker latency"
 msgstr "Gemiddelde controle latentie"
 
 msgid "Average disk I/O-queue length"
@@ -9575,25 +9570,25 @@ msgstr ""
 "naam heeft gemaakt. In het geval dat een gebruiker een view niet mag zien, "
 "zal er een foutmelding verschijnen."
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a %s is allowed to be in a "
+"Choose time levels (in seconds) for which a unit is allowed to be in a "
 "'reloading' state"
 msgstr ""
 "Kies de tijd (in seconden) gedurende welke een dienst in een \"herladen\" "
 "toestand mag zijn"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a %s is allowed to be in an "
+"Choose time levels (in seconds) for which a unti is allowed to be in an "
 "'deactivating' state"
 msgstr ""
 "Kies tijdniveaus (in seconden) gedurende welke een dienst in een "
 "'deactiverende' toestand mag zijn"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"Choose time levels for which a %s is allowed to be in an 'activating' state"
+"Choose time levels for which a unit is allowed to be in an 'activating' state"
 msgstr ""
 "Kies tijdniveaus gedurende welke een dienst in een 'activerende' staat mag "
 "zijn"
@@ -10715,15 +10710,14 @@ msgstr ""
 "heeft gespecificeerd niet is toegestaan en zal resulteren in een fout. De "
 "reden hiervoor is dat zo'n regel geen effect zou hebben."
 
-#, fuzzy, python-format
 msgid ""
-"Configure the discovery of single systemd %(singular)s. To be discovered, a "
-"%(singular)s must match at least one description condition, one name "
-"condition and one state condition, if configured. To simply discover all "
-"systemd %(plural)s, do not configure any restrictions. Note that "
-"independently of this ruleset, some systemd %(plural)s which are used by the "
-"Checkmk agent ('check-mk-agent@...') will never be discovered because they "
-"appear and disappear frequently."
+"Configure the discovery of single systemd services. To be discovered, a "
+"service must match at least one description condition, one name condition "
+"and one state condition, if configured. To simply discover all systemd "
+"services, do not configure any restrictions. Note that independently of this "
+"ruleset, some systemd service units which are used by the Checkmk agent "
+"('check-mk-agent@...') will never be discovered because they appear and "
+"disappear frequently."
 msgstr ""
 "Configureer de ontdekking van enkele systemd diensten. Om ontdekt te worden, "
 "moet een dienst overeenkomen met ten minste één beschrijvingvoorwaarde, één "
@@ -10733,14 +10727,14 @@ msgstr ""
 "gebruikt worden door de Checkmk agent ('check-mk-agent@...') nooit ontdekt "
 "zullen worden omdat ze vaak verschijnen en verdwijnen."
 
+#, fuzzy
 msgid ""
-"Configure the discovery of single systemd services. To be discovered, a "
-"service must match at least one description condition, one name condition "
-"and one state condition, if configured. To simply discover all systemd "
-"services, do not configure any restrictions. Note that independently of this "
-"ruleset, some systemd service units which are used by the Checkmk agent "
-"('check-mk-agent@...') will never be discovered because they appear and "
-"disappear frequently."
+"Configure the discovery of single systemd units (sockets or services). To be "
+"discovered, a unit must match at least one condition each: One description "
+"condition, one name condition and one state condition, if configured. To "
+"discover all units, do not configure any restrictions. Independently of this "
+"ruleset, some systemd units created by the Checkmk agent ('check-mk-"
+"agent@...') will never be discovered. They appear and disappear frequently."
 msgstr ""
 "Configureer de ontdekking van enkele systemd diensten. Om ontdekt te worden, "
 "moet een dienst overeenkomen met ten minste één beschrijvingvoorwaarde, één "
@@ -13453,18 +13447,6 @@ msgstr ""
 
 msgid "Define a range of syslog priorities this rule matches"
 msgstr "Definieer een bereik van syslog prioriteiten waar deze regel op past"
-
-#, fuzzy, python-format
-msgid "Define a tolerating time period for activating %s"
-msgstr "Definieer een tolerante periode voor het activeren van diensten"
-
-#, fuzzy, python-format
-msgid "Define a tolerating time period for deactivating %s"
-msgstr "Definieer een tolerante periode voor het deactiveren van diensten"
-
-#, fuzzy, python-format
-msgid "Define a tolerating time period for reloading %s"
-msgstr "Bepaal een tolerante periode voor herlaaddiensten"
 
 msgid ""
 "Define a translation of the possible LED colors to monitoring states, i.e. "
@@ -17918,10 +17900,6 @@ msgstr "Exclusief"
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr "Sluit \"Wijzigingen activeren\" uit voor tijdbereiken"
 
-#, fuzzy, python-format
-msgid "Exclude %s matching provided regex patterns"
-msgstr "Uitsluiten van diensten die overeenkomen met opgegeven regexpatronen"
-
 msgid "Exclude Nodes based on their role"
 msgstr "Knooppunten uitsluiten op basis van hun rol"
 
@@ -17976,6 +17954,10 @@ msgstr "Sluit de volgende SID's uit (indien gevonden)"
 
 msgid "Exclude times out of notification period"
 msgstr "Exclusief tijden buiten de meldingsperiode"
+
+#, fuzzy
+msgid "Exclude units matching provided regex patterns"
+msgstr "Uitsluiten van diensten die overeenkomen met opgegeven regexpatronen"
 
 msgid "Exclude volume from service name"
 msgstr "Volume uitsluiten van dienstnaam"
@@ -24450,6 +24432,21 @@ msgstr ""
 "Als je 60 minuten hebt gekozen als interval voor de update checks, dan "
 "zouden alle hosts hier in de lijst moeten staan."
 
+#, fuzzy
+msgid ""
+"If you leave the permissions at \"default\", they get their settings from "
+"the factory defaults (for builtin roles) or from the factory default of "
+"their base role (for user define roles). Factory defaults may change due to "
+"software updates. When choosing another base role, all permissions that are "
+"on default will reflect the new base role."
+msgstr ""
+"Als je de rechten op &quot;default&quot; laat staan, dan krijgen ze hun "
+"instellingen van de fabrieksinstellingen (voor ingebouwde rollen) of van de "
+"fabrieksinstellingen van hun basisrol (voor door gebruikers gedefinieerde "
+"rollen). Fabrieksinstellingen kunnen veranderen door software updates. Als u "
+"een andere basisrol kiest, zullen alle rechten die op standaard staan, "
+"overeenkomen met de nieuwe basisrol."
+
 msgid ""
 "If you leave this empty then the database will appear on the host where the "
 "<tt>mk_oracle</tt> plugin is running. In this case the SIDs of all monitored "
@@ -27573,8 +27570,9 @@ msgstr "Niveaus Gastheren"
 msgid "Levels Latency Check"
 msgstr "Niveaus Latency Check"
 
-msgid "Levels Latency Checkmk"
-msgstr "Niveaus Latency Checkmk"
+#, fuzzy
+msgid "Levels Latency Checker"
+msgstr "Niveaus Latency Check"
 
 msgid "Levels Latency Fetcher"
 msgstr "Niveaus Latency Fetcher"
@@ -28521,6 +28519,10 @@ msgstr "Liveproxy Daemon"
 msgid "Livestatus"
 msgstr "Livestatus"
 
+#, fuzzy
+msgid "Livestatus connections"
+msgstr "Livestatus-connecties"
+
 msgid "Livestatus encryption"
 msgstr "Livestatus encryptie"
 
@@ -28554,9 +28556,6 @@ msgstr "Livestatus proxy logging"
 
 msgid "Livestatus usage"
 msgstr "Livestatus gebruik"
-
-msgid "Livestatus-connections"
-msgstr "Livestatus-connecties"
 
 msgid "Load"
 msgstr "Laden"
@@ -31656,24 +31655,12 @@ msgstr "Controle staat"
 msgid "Monitoring state"
 msgstr "Controle staat"
 
-#, fuzzy, python-format
-msgid "Monitoring state for any other %s state"
-msgstr "Bewakingstoestand voor elke andere diensttoestand"
-
 msgid "Monitoring state for any other service state"
 msgstr "Bewakingstoestand voor elke andere diensttoestand"
 
-#, fuzzy, python-format
-msgid "Monitoring state if %s is active"
-msgstr "Bewakingstoestand als de dienst actief is"
-
-#, fuzzy, python-format
-msgid "Monitoring state if %s is failed"
-msgstr "Bewakingstoestand als de dienst mislukt"
-
-#, fuzzy, python-format
-msgid "Monitoring state if %s is inactive"
-msgstr "Bewakingstoestand als de dienst inactief is"
+#, fuzzy
+msgid "Monitoring state for any other unit state"
+msgstr "Bewakingstoestand voor elke andere diensttoestand"
 
 #, python-format
 msgid "Monitoring state if HAProxy frontend is %s"
@@ -31702,12 +31689,12 @@ msgid ""
 msgstr ""
 "Bewakingstoestand indien een bewaakte dienst helemaal niet gevonden wordt."
 
-#, fuzzy, python-format
-msgid "Monitoring state if a monitored %s is not found at all."
+msgid "Monitoring state if a monitored service is not found at all."
 msgstr ""
 "Bewakingstoestand indien een bewaakte dienst helemaal niet gevonden wordt."
 
-msgid "Monitoring state if a monitored service is not found at all."
+#, fuzzy
+msgid "Monitoring state if a monitored unit is not found at all."
 msgstr ""
 "Bewakingstoestand indien een bewaakte dienst helemaal niet gevonden wordt."
 
@@ -31764,6 +31751,18 @@ msgstr ""
 
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "Bewakingstoestand als de verkeerde eenheid actief/standby is"
+
+#, fuzzy
+msgid "Monitoring state if unit is active"
+msgstr "Bewakingstoestand als de dienst actief is"
+
+#, fuzzy
+msgid "Monitoring state if unit is failed"
+msgstr "Bewakingstoestand als de dienst mislukt"
+
+#, fuzzy
+msgid "Monitoring state if unit is inactive"
+msgstr "Bewakingstoestand als de dienst inactief is"
 
 msgid "Monitoring state in case of swap errors"
 msgstr "Bewakingstoestand in geval van swap-fouten"
@@ -32509,6 +32508,10 @@ msgid "Network interfaces: last hour view"
 msgstr "Netwerk interfaces: weergave laatste uur"
 
 #, fuzzy
+msgid "Network monitoring"
+msgstr "Geen bewakingskern"
+
+#, fuzzy
 msgid "Network out"
 msgstr "Netwerk"
 
@@ -32989,11 +32992,11 @@ msgstr "Geen rapport gedefinieerd met de naam '%s'."
 msgid "No response from update thread"
 msgstr "Geen reactie op update draad"
 
-#, fuzzy, python-format
-msgid "No restrictions (discover all systemd %s)"
+msgid "No restrictions (discover all systemd service units)"
 msgstr "Geen beperkingen (ontdek alle systemd service units)"
 
-msgid "No restrictions (discover all systemd service units)"
+#, fuzzy
+msgid "No restrictions (discover all units)"
 msgstr "Geen beperkingen (ontdek alle systemd service units)"
 
 msgid "No restrictions to specific objects"
@@ -34384,9 +34387,6 @@ msgstr "OK/Op"
 
 msgid "OMD Config"
 msgstr "OMD Config"
-
-msgid "OMD Site"
-msgstr "OMD-site"
 
 msgid "OMD config changes have been applied."
 msgstr "De OMD-configuratiewijzigingen zijn toegepast."
@@ -35914,6 +35914,10 @@ msgstr "Ouder scan loopt momenteel in <a href=\"%s\">achtergrond</a>."
 msgid "Parent scan finished"
 msgstr "Ouder scan klaar"
 
+#, fuzzy
+msgid "Parent/Child topology"
+msgstr "Ouder/kind topologie"
+
 msgid "Parents"
 msgstr "Ouders"
 
@@ -36409,9 +36413,6 @@ msgid ""
 msgstr ""
 "Prestatiegegevens met betrekking tot dimensionering, bv. aantal helpers, "
 "hosts, diensten"
-
-msgid "Performance Graphs"
-msgstr "Prestatiegrafieken"
 
 msgid "Performance Graphs of Checkmk Server"
 msgstr "Prestatiegrafieken van Checkmk Server"
@@ -39870,10 +39871,6 @@ msgstr "Beperk de toegang tot de volgende bron-IP-adressen"
 msgid "Restrict all"
 msgstr "Beperk alle"
 
-#, fuzzy, python-format
-msgid "Restrict by %s name"
-msgstr "Beperken per staat"
-
 msgid "Restrict by contact groups"
 msgstr "Beperken door contactgroepen"
 
@@ -39885,6 +39882,10 @@ msgstr "Beperken door beschrijving"
 
 msgid "Restrict by monitor tags"
 msgstr "Beperken door monitortags"
+
+#, fuzzy
+msgid "Restrict by name"
+msgstr "Beperken per staat"
 
 msgid "Restrict by service unit name"
 msgstr "Beperken op naam van service-eenheid"
@@ -39952,18 +39953,18 @@ msgstr "Beperk de volgende toetsen"
 msgid "Restrict the length of the lines"
 msgstr "Beperk de lengte van de lijnen"
 
-#, fuzzy, python-format
-msgid "Restrict the systemd %s by description."
-msgstr "Beperk de systemd diensten op beschrijving."
-
-#, fuzzy, python-format
-msgid "Restrict the systemd %s by its name."
-msgstr "Beperk de systemd diensten op unit naam."
-
 msgid "Restrict the systemd services by description."
 msgstr "Beperk de systemd diensten op beschrijving."
 
 msgid "Restrict the systemd services by unit name."
+msgstr "Beperk de systemd diensten op unit naam."
+
+#, fuzzy
+msgid "Restrict the systemd units by description."
+msgstr "Beperk de systemd diensten op beschrijving."
+
+#, fuzzy
+msgid "Restrict the systemd units by their name."
 msgstr "Beperk de systemd diensten op unit naam."
 
 msgid "Restrict to a single host"
@@ -42225,8 +42226,9 @@ msgstr "Niveaus instellen voor de Check Latency Time"
 msgid "Set Levels for the Check helper Usage"
 msgstr "Niveaus instellen voor de Check helper Usage"
 
-msgid "Set Levels for the Checkmk Latency Time"
-msgstr "Niveaus instellen voor de Checkmk latentietijd"
+#, fuzzy
+msgid "Set Levels for the Checker Latency Time"
+msgstr "Niveaus instellen voor de Check Latency Time"
 
 msgid "Set Levels for the Checkmk Livestatus Overflows"
 msgstr "Niveaus instellen voor de Checkmk Livestatus Overflows"
@@ -46408,26 +46410,23 @@ msgstr "Systeemtijd (tijdsynchronisatie)"
 msgid "System uptime"
 msgstr "Systeem uptime"
 
-msgid "Systemd Services Summary"
-msgstr "Systemd Services Samenvatting"
-
-#, fuzzy
-msgid "Systemd Sockets Summary"
-msgstr "Systemd Services Samenvatting"
-
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd tijdsynchronisatie"
 
 msgid "Systemd services"
 msgstr "Systemd diensten"
 
-#, fuzzy, python-format
-msgid "Systemd single %s discovery"
-msgstr "Systemd single services ontdekking"
+#, fuzzy
+msgid "Systemd services summary"
+msgstr "Systemd Services Samenvatting"
 
 #, fuzzy
 msgid "Systemd single service"
 msgstr "Systemd enkele diensten"
+
+#, fuzzy
+msgid "Systemd single service discovery"
+msgstr "Systemd single services ontdekking"
 
 msgid "Systemd single services"
 msgstr "Systemd enkele diensten"
@@ -46438,6 +46437,18 @@ msgstr "Systemd single services ontdekking"
 #, fuzzy
 msgid "Systemd single socket"
 msgstr "Systemd enkele diensten"
+
+#, fuzzy
+msgid "Systemd single socket discovery"
+msgstr "Systemd single services ontdekking"
+
+#, fuzzy
+msgid "Systemd single unit discovery"
+msgstr "Systemd single services ontdekking"
+
+#, fuzzy
+msgid "Systemd sockets summary"
+msgstr "Systemd Services Samenvatting"
 
 msgid "Systems larger than"
 msgstr "Systemen groter dan"
@@ -48410,16 +48421,16 @@ msgstr ""
 "'CONNECTED' is. De standaardtoestand is OK."
 
 #, python-format
-msgid ""
-"The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
-"average check latency of %.3fs."
-msgstr ""
-"Het huidige Checkmk helper gebruik is %.2f%%. De Checkmk services hebben een "
-"gemiddelde check latency van %.3fs."
-
-#, python-format
 msgid "The current check helper usage is %.2f%%"
 msgstr "Het huidige check helper gebruik is %.2f%%"
+
+#, fuzzy, python-format
+msgid ""
+"The current checker usage is %.2f%%. The checkers have an average latency of "
+"%.3fs."
+msgstr ""
+"Het huidige gebruik van de controleur is %.2f%%. De controles hebben een "
+"gemiddelde controlevertraging van %.3fs."
 
 #, python-format
 msgid ""
@@ -50441,6 +50452,7 @@ msgstr "De regelvoorwaarden komen niet overeen."
 msgid "The rule does not match"
 msgstr "De regel komt niet overeen met"
 
+#, fuzzy
 msgid ""
 "The rule gives the possibility to run any script using a given user account. "
 "There are two modes of the rule: <i>group mode</i>, in the case Windows "
@@ -50448,11 +50460,11 @@ msgid ""
 "script, or <i>user mode</i>, in this case you should specify the full "
 "credentials. The <i>group mode</i> is more secure, because no credentials "
 "need to be stored anywhere, except in the agent internally. When using the "
-"<i>user mode</i>, the provided credentials are stored on all Checkmk servers "
-"to which the configuration is applied. The credentials will also be baked "
-"into the agent bakery packages, distributed and installed with them on the "
-"target system.We highly recommend to use the <i>group mode</i> whenever "
-"possible."
+"<i>user mode</i>, the provided credentials are <b>stored in plain text</b> "
+"on all Checkmk servers to which the configuration is applied. The "
+"credentials (in plain text) will also be baked into the agent bakery "
+"packages, distributed and installed with them on the target system. We "
+"highly recommend to use the <i>group mode</i> whenever possible."
 msgstr ""
 "De regel geeft de mogelijkheid om eender welk script uit te voeren met een "
 "gegeven gebruikersaccount. Er zijn twee modi van de regel: <i>group mode</"
@@ -51205,6 +51217,16 @@ msgstr "De gebruikersnaam die wordt gebruikt voor de brokerauthenticatie."
 msgid "The username used to connect to the database"
 msgstr ""
 "De gebruikersnaam die wordt gebruikt om verbinding te maken met de database"
+
+#, python-format
+msgid ""
+"The value \"%s\" of HTTP variable \"%s\" is not a valid operator ({\"and\", "
+"\"or\", \"not\"})."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The value \"%s\" of HTTP variable \"%s\" is not an integer."
+msgstr "De parameter \"%s\" is geen geheel getal."
 
 #, python-format
 msgid "The value %r has the wrong type %s, but must be of type int"
@@ -54712,26 +54734,26 @@ msgstr ""
 "bepaalde technische implementaties zoals bestandssysteem controles via SNMP "
 "uit te schakelen op hosts waarop ook de Checkmk agent geïnstalleerd is."
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"This ruleset only applies to the Summary Systemd %s and not the individual "
-"Systemd %s."
+"This ruleset only applies to the summary Systemd service and not the "
+"individual one."
 msgstr ""
 "Deze regelset is alleen van toepassing op de samengevatte Systemd service en "
 "niet op de afzonderlijke Systemd services."
 
-#, fuzzy, python-format
 msgid ""
-"This ruleset only applies when individual Systemd %s are discovered. The "
-"user needs to configure this option in the discovery section."
+"This ruleset only applies when individual Systemd services are discovered. "
+"The user needs to configure this option in the discovery section."
 msgstr ""
 "Deze regelset is alleen van toepassing wanneer individuele Systemd diensten "
 "worden ontdekt. De gebruiker moet deze optie configureren in de sectie "
 "ontdekking."
 
+#, fuzzy
 msgid ""
-"This ruleset only applies when individual Systemd services are discovered. "
-"The user needs to configure this option in the discovery section."
+"This ruleset only applies when individual Systemd units are discovered. The "
+"user needs to configure this option in the discovery section."
 msgstr ""
 "Deze regelset is alleen van toepassing wanneer individuele Systemd diensten "
 "worden ontdekt. De gebruiker moet deze optie configureren in de sectie "
@@ -55720,6 +55742,10 @@ msgstr "Tijdsspanne om rapport te maken voor"
 msgid "Time resolution"
 msgstr "Tijd resolutie"
 
+#, fuzzy
+msgid "Time series graph"
+msgstr "Timeseries"
+
 msgid "Time since end of last backup"
 msgstr "Tijd sinds het einde van de laatste back-up"
 
@@ -56174,6 +56200,18 @@ msgstr "Token Bucket"
 
 msgid "Token authentication"
 msgstr "Token authenticatie"
+
+#, fuzzy
+msgid "Tolderance period for 'reloading' state"
+msgstr "Bepaal een tolerante periode voor herlaaddiensten"
+
+#, fuzzy
+msgid "Tolerance period for 'activating' state"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
+
+#, fuzzy
+msgid "Tolerance period for 'deactivating' state"
+msgstr "Definieer een tolerante periode voor het deactiveren van diensten"
 
 msgid "Tooltip"
 msgstr "Tooltip"
@@ -61548,20 +61586,6 @@ msgstr ""
 "contactgroepen van de host voorrang. "
 
 msgid ""
-"When you leave the permissions at &quot;default&quot; then they get their "
-"settings from the factory defaults (for builtin roles) or from the factory "
-"default of their base role (for user define roles). Factory defaults may "
-"change due to software updates. When choosing another base role, all "
-"permissions that are on default will reflect the new base role."
-msgstr ""
-"Als je de rechten op &quot;default&quot; laat staan, dan krijgen ze hun "
-"instellingen van de fabrieksinstellingen (voor ingebouwde rollen) of van de "
-"fabrieksinstellingen van hun basisrol (voor door gebruikers gedefinieerde "
-"rollen). Fabrieksinstellingen kunnen veranderen door software updates. Als u "
-"een andere basisrol kiest, zullen alle rechten die op standaard staan, "
-"overeenkomen met de nieuwe basisrol."
-
-msgid ""
 "When you point your browser to the Check_MK GUI, usually the dashboard is "
 "shown in the main (right) frame. You can replace this with any other URL you "
 "like here."
@@ -63001,6 +63025,17 @@ msgstr ""
 
 msgid "You can only create a new package if there are unpackaged files."
 msgstr "U kunt alleen een nieuw pakket maken als er onverpakte bestanden zijn."
+
+#, fuzzy
+msgid ""
+"You can optionally define one or multiple regular expressions. Matching "
+"units are excluded. This allows to ignore services which are known to fail "
+"beforehand."
+msgstr ""
+"<p>U kunt optioneel een of meer reguliere expressies definiëren waarbij een "
+"overeenkomend geval zal resulteren in de uitsluiting van de betreffende "
+"dienst(en). Dit maakt het mogelijk om diensten te negeren waarvan vooraf "
+"bekend is dat ze falen. </p>"
 
 msgid ""
 "You can optionally provide CA or self-signed certificates that will be used "
@@ -65011,7 +65046,7 @@ msgid "freeze the following %d aggregations?"
 msgstr "de volgende %d %s verwijderen?"
 
 #, fuzzy
-msgid "freeze the following aggregation"
+msgid "freeze the following aggregation?"
 msgstr "Verwijder deze aggregatie"
 
 msgid "from the beginning"
@@ -66360,6 +66395,56 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "Configure the discovery of single systemd services. To be discovered, a "
+#~| "service must match at least one description condition, one name "
+#~| "condition and one state condition, if configured. To simply discover all "
+#~| "systemd services, do not configure any restrictions. Note that "
+#~| "independently of this ruleset, some systemd service units which are used "
+#~| "by the Checkmk agent ('check-mk-agent@...') will never be discovered "
+#~| "because they appear and disappear frequently."
+#~ msgid ""
+#~ "Configure the discovery of single systemd %(singular)s. To be discovered, "
+#~ "a %(singular)s must match at least one description condition, one name "
+#~ "condition and one state condition, if configured. To simply discover all "
+#~ "systemd %(plural)s, do not configure any restrictions. Note that "
+#~ "independently of this ruleset, some systemd %(plural)s which are used by "
+#~ "the Checkmk agent ('check-mk-agent@...') will never be discovered because "
+#~ "they appear and disappear frequently."
+#~ msgstr ""
+#~ "Configureer de ontdekking van enkele systemd diensten. Om ontdekt te "
+#~ "worden, moet een dienst overeenkomen met ten minste één "
+#~ "beschrijvingvoorwaarde, één naamvoorwaarde en één toestandvoorwaarde, "
+#~ "indien geconfigureerd. Om gewoon alle systemd diensten te ontdekken, "
+#~ "configureer geen beperkingen. Merk op dat onafhankelijk van deze "
+#~ "regelset, sommige systemd service units die gebruikt worden door de "
+#~ "Checkmk agent ('check-mk-agent@...') nooit ontdekt zullen worden omdat ze "
+#~ "vaak verschijnen en verdwijnen."
+
+#~ msgid "OMD Site"
+#~ msgstr "OMD-site"
+
+#~ msgid "Performance Graphs"
+#~ msgstr "Prestatiegrafieken"
+
+#~ msgid "Average Checkmk latency"
+#~ msgstr "Gemiddelde Checkmk latentie"
+
+#~ msgid "Levels Latency Checkmk"
+#~ msgstr "Niveaus Latency Checkmk"
+
+#~ msgid "Set Levels for the Checkmk Latency Time"
+#~ msgstr "Niveaus instellen voor de Checkmk latentietijd"
+
+#, python-format
+#~ msgid ""
+#~ "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
+#~ "average check latency of %.3fs."
+#~ msgstr ""
+#~ "Het huidige Checkmk helper gebruik is %.2f%%. De Checkmk services hebben "
+#~ "een gemiddelde check latency van %.3fs."
 
 #~ msgid "Aggregation: complete tree"
 #~ msgstr "Aggregatie: volledige boom"

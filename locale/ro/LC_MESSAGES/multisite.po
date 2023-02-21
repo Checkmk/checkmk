@@ -1545,13 +1545,6 @@ msgid ""
 "them.</p>"
 msgstr ""
 
-#, python-format
-msgid ""
-"<p>You can optionally define one or multiple regular expressions where a "
-"matching case will result in the exclusion of the concerning %s(s). This "
-"allows to ignore services which are known to fail beforehand. </p>"
-msgstr ""
-
 msgid ""
 "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
 msgstr "<p>Ați fost deconectat. Reîncărcați pagina pentru autentificare.<p>"
@@ -2805,6 +2798,10 @@ msgstr ""
 
 msgid "Active check"
 msgstr "Verificare activă"
+
+#, fuzzy
+msgid "Active check helper usage"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Active checks"
 msgstr "Verificări active"
@@ -5885,9 +5882,6 @@ msgstr ""
 msgid "Average"
 msgstr ""
 
-msgid "Average Checkmk latency"
-msgstr ""
-
 msgid "Average Holding Time For Incoming Messages"
 msgstr ""
 
@@ -5900,8 +5894,13 @@ msgstr ""
 msgid "Average Outgoing Queue Delay"
 msgstr ""
 
-msgid "Average check latency"
-msgstr ""
+#, fuzzy
+msgid "Average active check latency"
+msgstr "Statusul Serverului"
+
+#, fuzzy
+msgid "Average checker latency"
+msgstr "Statusul Serverului"
 
 msgid "Average disk I/O-queue length"
 msgstr ""
@@ -8987,21 +8986,18 @@ msgid ""
 "a user is not permitted to see a view, an error message will be displayed."
 msgstr ""
 
-#, python-format
 msgid ""
-"Choose time levels (in seconds) for which a %s is allowed to be in a "
+"Choose time levels (in seconds) for which a unit is allowed to be in a "
 "'reloading' state"
 msgstr ""
 
-#, python-format
 msgid ""
-"Choose time levels (in seconds) for which a %s is allowed to be in an "
+"Choose time levels (in seconds) for which a unti is allowed to be in an "
 "'deactivating' state"
 msgstr ""
 
-#, python-format
 msgid ""
-"Choose time levels for which a %s is allowed to be in an 'activating' state"
+"Choose time levels for which a unit is allowed to be in an 'activating' state"
 msgstr ""
 
 msgid ""
@@ -10090,17 +10086,6 @@ msgid ""
 "would have no effect."
 msgstr ""
 
-#, python-format
-msgid ""
-"Configure the discovery of single systemd %(singular)s. To be discovered, a "
-"%(singular)s must match at least one description condition, one name "
-"condition and one state condition, if configured. To simply discover all "
-"systemd %(plural)s, do not configure any restrictions. Note that "
-"independently of this ruleset, some systemd %(plural)s which are used by the "
-"Checkmk agent ('check-mk-agent@...') will never be discovered because they "
-"appear and disappear frequently."
-msgstr ""
-
 msgid ""
 "Configure the discovery of single systemd services. To be discovered, a "
 "service must match at least one description condition, one name condition "
@@ -10109,6 +10094,15 @@ msgid ""
 "ruleset, some systemd service units which are used by the Checkmk agent "
 "('check-mk-agent@...') will never be discovered because they appear and "
 "disappear frequently."
+msgstr ""
+
+msgid ""
+"Configure the discovery of single systemd units (sockets or services). To be "
+"discovered, a unit must match at least one condition each: One description "
+"condition, one name condition and one state condition, if configured. To "
+"discover all units, do not configure any restrictions. Independently of this "
+"ruleset, some systemd units created by the Checkmk agent ('check-mk-"
+"agent@...') will never be discovered. They appear and disappear frequently."
 msgstr ""
 
 #, python-format
@@ -12910,18 +12904,6 @@ msgid ""
 msgstr ""
 
 msgid "Define a range of syslog priorities this rule matches"
-msgstr ""
-
-#, python-format
-msgid "Define a tolerating time period for activating %s"
-msgstr ""
-
-#, python-format
-msgid "Define a tolerating time period for deactivating %s"
-msgstr ""
-
-#, python-format
-msgid "Define a tolerating time period for reloading %s"
 msgstr ""
 
 msgid ""
@@ -17417,10 +17399,6 @@ msgstr ""
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr " Activează această opțiune"
 
-#, python-format
-msgid "Exclude %s matching provided regex patterns"
-msgstr ""
-
 #, fuzzy
 msgid "Exclude Nodes based on their role"
 msgstr "Linii de header adiționale"
@@ -17485,6 +17463,9 @@ msgid "Exclude the following SIDs (if found)"
 msgstr ""
 
 msgid "Exclude times out of notification period"
+msgstr ""
+
+msgid "Exclude units matching provided regex patterns"
 msgstr ""
 
 #, fuzzy
@@ -23254,6 +23235,14 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If you leave the permissions at \"default\", they get their settings from "
+"the factory defaults (for builtin roles) or from the factory default of "
+"their base role (for user define roles). Factory defaults may change due to "
+"software updates. When choosing another base role, all permissions that are "
+"on default will reflect the new base role."
+msgstr ""
+
+msgid ""
 "If you leave this empty then the database will appear on the host where the "
 "<tt>mk_oracle</tt> plugin is running. In this case the SIDs of all monitored "
 "databases must be unique."
@@ -26099,7 +26088,7 @@ msgid "Levels Latency Check"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
-msgid "Levels Latency Checkmk"
+msgid "Levels Latency Checker"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
@@ -27126,6 +27115,10 @@ msgid "Livestatus"
 msgstr ""
 
 #, fuzzy
+msgid "Livestatus connections"
+msgstr "Conexiuni Active"
+
+#, fuzzy
 msgid "Livestatus encryption"
 msgstr "Conexiuni Active"
 
@@ -27161,10 +27154,6 @@ msgstr "Conexiuni Active"
 
 msgid "Livestatus usage"
 msgstr ""
-
-#, fuzzy
-msgid "Livestatus-connections"
-msgstr "Conexiuni Active"
 
 msgid "Load"
 msgstr ""
@@ -30433,23 +30422,11 @@ msgstr " pe siteul de monitorizare: "
 msgid "Monitoring state"
 msgstr " pe siteul de monitorizare: "
 
-#, fuzzy, python-format
-msgid "Monitoring state for any other %s state"
-msgstr " pe siteul de monitorizare: "
-
 msgid "Monitoring state for any other service state"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Monitoring state if %s is active"
-msgstr " pe siteul de monitorizare: "
-
-#, fuzzy, python-format
-msgid "Monitoring state if %s is failed"
-msgstr " pe siteul de monitorizare: "
-
-#, fuzzy, python-format
-msgid "Monitoring state if %s is inactive"
+#, fuzzy
+msgid "Monitoring state for any other unit state"
 msgstr " pe siteul de monitorizare: "
 
 #, python-format
@@ -30477,12 +30454,12 @@ msgid ""
 "code)"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Monitoring state if a monitored %s is not found at all."
-msgstr " pe siteul de monitorizare: "
-
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr ""
+
+#, fuzzy
+msgid "Monitoring state if a monitored unit is not found at all."
+msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Monitoring state if failover link not up"
@@ -30532,6 +30509,18 @@ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Monitoring state if the wrong unit is active/standby"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring state if unit is active"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring state if unit is failed"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring state if unit is inactive"
 msgstr " pe siteul de monitorizare: "
 
 msgid "Monitoring state in case of swap errors"
@@ -31326,6 +31315,10 @@ msgid "Network interfaces: last hour view"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Network monitoring"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 msgid "Network out"
 msgstr "Adresă"
 
@@ -31823,12 +31816,12 @@ msgstr ""
 msgid "No response from update thread"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "No restrictions (discover all systemd %s)"
+#, fuzzy
+msgid "No restrictions (discover all systemd service units)"
 msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
-msgid "No restrictions (discover all systemd service units)"
+msgid "No restrictions (discover all units)"
 msgstr "(fără Nivel de serviciu)"
 
 msgid "No restrictions to specific objects"
@@ -33239,9 +33232,6 @@ msgstr ""
 #, fuzzy
 msgid "OMD Config"
 msgstr "foloseste numele portului"
-
-msgid "OMD Site"
-msgstr ""
 
 msgid "OMD config changes have been applied."
 msgstr ""
@@ -34745,6 +34735,9 @@ msgstr ""
 msgid "Parent scan finished"
 msgstr "Scanarea parintilor"
 
+msgid "Parent/Child topology"
+msgstr ""
+
 msgid "Parents"
 msgstr ""
 
@@ -35227,9 +35220,6 @@ msgstr ""
 
 msgid ""
 "Performance Data related to sizing, e.g. number of helpers, hosts, services"
-msgstr ""
-
-msgid "Performance Graphs"
 msgstr ""
 
 msgid "Performance Graphs of Checkmk Server"
@@ -38684,10 +38674,6 @@ msgstr ""
 msgid "Restrict all"
 msgstr "Eticheta de grup nou"
 
-#, fuzzy, python-format
-msgid "Restrict by %s name"
-msgstr "Eticheta de grup nou"
-
 #, fuzzy
 msgid "Restrict by contact groups"
 msgstr "Eticheta de grup nou"
@@ -38701,6 +38687,10 @@ msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Restrict by monitor tags"
+msgstr "Eticheta de grup nou"
+
+#, fuzzy
+msgid "Restrict by name"
 msgstr "Eticheta de grup nou"
 
 #, fuzzy
@@ -38770,20 +38760,20 @@ msgstr "Adaugă instanță NGINX"
 msgid "Restrict the length of the lines"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Restrict the systemd %s by description."
-msgstr "foloseste descrierea"
-
-#, fuzzy, python-format
-msgid "Restrict the systemd %s by its name."
-msgstr "foloseste descrierea"
-
 #, fuzzy
 msgid "Restrict the systemd services by description."
 msgstr "foloseste descrierea"
 
 msgid "Restrict the systemd services by unit name."
 msgstr ""
+
+#, fuzzy
+msgid "Restrict the systemd units by description."
+msgstr "foloseste descrierea"
+
+#, fuzzy
+msgid "Restrict the systemd units by their name."
+msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Restrict to a single host"
@@ -41101,7 +41091,7 @@ msgid "Set Levels for the Check helper Usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
-msgid "Set Levels for the Checkmk Latency Time"
+msgid "Set Levels for the Checker Latency Time"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
@@ -45044,14 +45034,6 @@ msgstr ""
 msgid "System uptime"
 msgstr ""
 
-#, fuzzy
-msgid "Systemd Services Summary"
-msgstr "servicii"
-
-#, fuzzy
-msgid "Systemd Sockets Summary"
-msgstr "servicii"
-
 msgid "Systemd Timesyncd time synchronisation"
 msgstr ""
 
@@ -45059,12 +45041,16 @@ msgstr ""
 msgid "Systemd services"
 msgstr "servicii"
 
-#, fuzzy, python-format
-msgid "Systemd single %s discovery"
-msgstr "Afectat de serviciu"
+#, fuzzy
+msgid "Systemd services summary"
+msgstr "servicii"
 
 #, fuzzy
 msgid "Systemd single service"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
+msgid "Systemd single service discovery"
 msgstr "Afectat de serviciu"
 
 #, fuzzy
@@ -45078,6 +45064,18 @@ msgstr "Afectat de serviciu"
 #, fuzzy
 msgid "Systemd single socket"
 msgstr "Afectat de serviciu"
+
+#, fuzzy
+msgid "Systemd single socket discovery"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
+msgid "Systemd single unit discovery"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
+msgid "Systemd sockets summary"
+msgstr "servicii"
 
 #, fuzzy
 msgid "Systems larger than"
@@ -46642,13 +46640,13 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid ""
-"The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
-"average check latency of %.3fs."
+msgid "The current check helper usage is %.2f%%"
 msgstr ""
 
 #, python-format
-msgid "The current check helper usage is %.2f%%"
+msgid ""
+"The current checker usage is %.2f%%. The checkers have an average latency of "
+"%.3fs."
 msgstr ""
 
 #, python-format
@@ -48253,11 +48251,11 @@ msgid ""
 "script, or <i>user mode</i>, in this case you should specify the full "
 "credentials. The <i>group mode</i> is more secure, because no credentials "
 "need to be stored anywhere, except in the agent internally. When using the "
-"<i>user mode</i>, the provided credentials are stored on all Checkmk servers "
-"to which the configuration is applied. The credentials will also be baked "
-"into the agent bakery packages, distributed and installed with them on the "
-"target system.We highly recommend to use the <i>group mode</i> whenever "
-"possible."
+"<i>user mode</i>, the provided credentials are <b>stored in plain text</b> "
+"on all Checkmk servers to which the configuration is applied. The "
+"credentials (in plain text) will also be baked into the agent bakery "
+"packages, distributed and installed with them on the target system. We "
+"highly recommend to use the <i>group mode</i> whenever possible."
 msgstr ""
 
 msgid "The rule is only applied to hosts directly in or below this folder."
@@ -48846,6 +48844,16 @@ msgid "The username used for broker authentication."
 msgstr "trimite notificare"
 
 msgid "The username used to connect to the database"
+msgstr ""
+
+#, python-format
+msgid ""
+"The value \"%s\" of HTTP variable \"%s\" is not a valid operator ({\"and\", "
+"\"or\", \"not\"})."
+msgstr ""
+
+#, python-format
+msgid "The value \"%s\" of HTTP variable \"%s\" is not an integer."
 msgstr ""
 
 #, python-format
@@ -51311,21 +51319,19 @@ msgid ""
 "the Checkmk agent installed."
 msgstr ""
 
-#, python-format
 msgid ""
-"This ruleset only applies to the Summary Systemd %s and not the individual "
-"Systemd %s."
-msgstr ""
-
-#, python-format
-msgid ""
-"This ruleset only applies when individual Systemd %s are discovered. The "
-"user needs to configure this option in the discovery section."
+"This ruleset only applies to the summary Systemd service and not the "
+"individual one."
 msgstr ""
 
 msgid ""
 "This ruleset only applies when individual Systemd services are discovered. "
 "The user needs to configure this option in the discovery section."
+msgstr ""
+
+msgid ""
+"This ruleset only applies when individual Systemd units are discovered. The "
+"user needs to configure this option in the discovery section."
 msgstr ""
 
 msgid ""
@@ -52077,6 +52083,10 @@ msgstr ""
 msgid "Time resolution"
 msgstr "Optiuni tabel"
 
+#, fuzzy
+msgid "Time series graph"
+msgstr "Perioada de timp Noua"
+
 msgid "Time since end of last backup"
 msgstr ""
 
@@ -52479,6 +52489,15 @@ msgstr ""
 #, fuzzy
 msgid "Token authentication"
 msgstr "trimite notificare"
+
+msgid "Tolderance period for 'reloading' state"
+msgstr ""
+
+msgid "Tolerance period for 'activating' state"
+msgstr ""
+
+msgid "Tolerance period for 'deactivating' state"
+msgstr ""
 
 msgid "Tooltip"
 msgstr ""
@@ -57507,14 +57526,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"When you leave the permissions at &quot;default&quot; then they get their "
-"settings from the factory defaults (for builtin roles) or from the factory "
-"default of their base role (for user define roles). Factory defaults may "
-"change due to software updates. When choosing another base role, all "
-"permissions that are on default will reflect the new base role."
-msgstr ""
-
-msgid ""
 "When you point your browser to the Check_MK GUI, usually the dashboard is "
 "shown in the main (right) frame. You can replace this with any other URL you "
 "like here."
@@ -58652,6 +58663,12 @@ msgid ""
 msgstr ""
 
 msgid "You can only create a new package if there are unpackaged files."
+msgstr ""
+
+msgid ""
+"You can optionally define one or multiple regular expressions. Matching "
+"units are excluded. This allows to ignore services which are known to fail "
+"beforehand."
 msgstr ""
 
 msgid ""
@@ -60361,7 +60378,7 @@ msgstr "Grup nou"
 
 # georgem ##############
 #, fuzzy
-msgid "freeze the following aggregation"
+msgid "freeze the following aggregation?"
 msgstr "Grup nou"
 
 msgid "from the beginning"
@@ -61770,6 +61787,14 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Levels Latency Checkmk"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Set Levels for the Checkmk Latency Time"
+#~ msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy, python-format
 #~ msgid "Online verification procedure was not successful, reason: %s"

@@ -1720,13 +1720,6 @@ msgid ""
 "them.</p>"
 msgstr ""
 
-#, python-format
-msgid ""
-"<p>You can optionally define one or multiple regular expressions where a "
-"matching case will result in the exclusion of the concerning %s(s). This "
-"allows to ignore services which are known to fail beforehand. </p>"
-msgstr ""
-
 msgid ""
 "<p>You have been logged out. Please reload the page to re-authenticate.</p>"
 msgstr ""
@@ -2992,6 +2985,10 @@ msgstr "アクティブおよび非アクティブメモリ"
 
 msgid "Active check"
 msgstr "アクティブチェック"
+
+#, fuzzy
+msgid "Active check helper usage"
+msgstr "ヘルパーの使用状況を確認する"
 
 msgid "Active checks"
 msgstr "アクティブチェック"
@@ -5962,9 +5959,6 @@ msgstr "まで利用可能"
 msgid "Average"
 msgstr "平均"
 
-msgid "Average Checkmk latency"
-msgstr "Checkmkの平均レイテンシ"
-
 msgid "Average Holding Time For Incoming Messages"
 msgstr "着信メッセージの平均保持時間"
 
@@ -5977,7 +5971,12 @@ msgstr "平均待ち時間"
 msgid "Average Outgoing Queue Delay"
 msgstr "平均発信キュー遅延"
 
-msgid "Average check latency"
+#, fuzzy
+msgid "Average active check latency"
+msgstr "平均チェック待ち時間"
+
+#, fuzzy
+msgid "Average checker latency"
 msgstr "平均チェック待ち時間"
 
 msgid "Average disk I/O-queue length"
@@ -9167,23 +9166,23 @@ msgstr ""
 "ば、別のユーザーが同じ名前のビューを作成した場合です。ユーザーがビューを表示"
 "することを許可されていない場合、エラーメッセージが表示されます。"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a %s is allowed to be in a "
+"Choose time levels (in seconds) for which a unit is allowed to be in a "
 "'reloading' state"
 msgstr ""
 "サービスが[リロード]状態になることを許可されるタイムレベル(秒単位)を選択しま"
 "す"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"Choose time levels (in seconds) for which a %s is allowed to be in an "
+"Choose time levels (in seconds) for which a unti is allowed to be in an "
 "'deactivating' state"
 msgstr "サービスが「停止」状態になるまでの時間(秒単位)を選択します"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"Choose time levels for which a %s is allowed to be in an 'activating' state"
+"Choose time levels for which a unit is allowed to be in an 'activating' state"
 msgstr "サービスが'activating'状態になることを許可される時間レベルを選択します"
 
 msgid ""
@@ -10267,17 +10266,6 @@ msgstr ""
 "許可されておらず、エラーが発生することに注意してください。その理由は、そのよ"
 "うなルールは効果がないからです。"
 
-#, python-format
-msgid ""
-"Configure the discovery of single systemd %(singular)s. To be discovered, a "
-"%(singular)s must match at least one description condition, one name "
-"condition and one state condition, if configured. To simply discover all "
-"systemd %(plural)s, do not configure any restrictions. Note that "
-"independently of this ruleset, some systemd %(plural)s which are used by the "
-"Checkmk agent ('check-mk-agent@...') will never be discovered because they "
-"appear and disappear frequently."
-msgstr ""
-
 msgid ""
 "Configure the discovery of single systemd services. To be discovered, a "
 "service must match at least one description condition, one name condition "
@@ -10286,6 +10274,15 @@ msgid ""
 "ruleset, some systemd service units which are used by the Checkmk agent "
 "('check-mk-agent@...') will never be discovered because they appear and "
 "disappear frequently."
+msgstr ""
+
+msgid ""
+"Configure the discovery of single systemd units (sockets or services). To be "
+"discovered, a unit must match at least one condition each: One description "
+"condition, one name condition and one state condition, if configured. To "
+"discover all units, do not configure any restrictions. Independently of this "
+"ruleset, some systemd units created by the Checkmk agent ('check-mk-"
+"agent@...') will never be discovered. They appear and disappear frequently."
 msgstr ""
 
 #, python-format
@@ -12918,18 +12915,6 @@ msgstr ""
 
 msgid "Define a range of syslog priorities this rule matches"
 msgstr "このルールが一致するsyslog優先度の範囲を定義します"
-
-#, fuzzy, python-format
-msgid "Define a tolerating time period for activating %s"
-msgstr "サービスをアクティブ化するための許容期間を定義します"
-
-#, fuzzy, python-format
-msgid "Define a tolerating time period for deactivating %s"
-msgstr "サービスを停止させるための許容期間を定義します"
-
-#, fuzzy, python-format
-msgid "Define a tolerating time period for reloading %s"
-msgstr "サービスをリロードするための許容期間を定義します"
 
 msgid ""
 "Define a translation of the possible LED colors to monitoring states, i.e. "
@@ -17283,10 +17268,6 @@ msgstr "除外する"
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr "時間範囲の\"変更のアクティブ化\"を除外する"
 
-#, fuzzy, python-format
-msgid "Exclude %s matching provided regex patterns"
-msgstr "状態一致の正規表現パターンを再分類します"
-
 msgid "Exclude Nodes based on their role"
 msgstr "役割に応じたノードの除外"
 
@@ -17341,6 +17322,10 @@ msgstr "次のSIDを除外します(見つかった場合)"
 
 msgid "Exclude times out of notification period"
 msgstr "通知期間外の時間を除外する"
+
+#, fuzzy
+msgid "Exclude units matching provided regex patterns"
+msgstr "状態一致の正規表現パターンを再分類します"
 
 msgid "Exclude volume from service name"
 msgstr "サービス名からボリュームを除外する"
@@ -23431,6 +23416,14 @@ msgstr ""
 "れているはずです。"
 
 msgid ""
+"If you leave the permissions at \"default\", they get their settings from "
+"the factory defaults (for builtin roles) or from the factory default of "
+"their base role (for user define roles). Factory defaults may change due to "
+"software updates. When choosing another base role, all permissions that are "
+"on default will reflect the new base role."
+msgstr ""
+
+msgid ""
 "If you leave this empty then the database will appear on the host where the "
 "<tt>mk_oracle</tt> plugin is running. In this case the SIDs of all monitored "
 "databases must be unique."
@@ -26419,8 +26412,9 @@ msgstr "レベルホスト"
 msgid "Levels Latency Check"
 msgstr "レベルレイテンシチェック"
 
-msgid "Levels Latency Checkmk"
-msgstr "Checkmkの遅延レベル"
+#, fuzzy
+msgid "Levels Latency Checker"
+msgstr "レベルレイテンシチェック"
 
 msgid "Levels Latency Fetcher"
 msgstr "レベルレイテンシフェッチャー"
@@ -27348,6 +27342,10 @@ msgstr "Liveproxyデーモン"
 msgid "Livestatus"
 msgstr "Livestatus"
 
+#, fuzzy
+msgid "Livestatus connections"
+msgstr "Livestatus 接続"
+
 msgid "Livestatus encryption"
 msgstr "ライブステータス暗号化"
 
@@ -27381,9 +27379,6 @@ msgstr "Livestatusプロキシロギング"
 
 msgid "Livestatus usage"
 msgstr "Livestatusの使用状況"
-
-msgid "Livestatus-connections"
-msgstr "Livestatus 接続"
 
 msgid "Load"
 msgstr "負荷"
@@ -30421,24 +30416,12 @@ msgstr "モニター状態"
 msgid "Monitoring state"
 msgstr "モニター状態"
 
-#, fuzzy, python-format
-msgid "Monitoring state for any other %s state"
-msgstr "その他のサービス状態の監視状態"
-
 msgid "Monitoring state for any other service state"
 msgstr "その他のサービス状態の監視状態"
 
-#, fuzzy, python-format
-msgid "Monitoring state if %s is active"
-msgstr "サービスがアクティブかどうかの状態の監視"
-
-#, fuzzy, python-format
-msgid "Monitoring state if %s is failed"
-msgstr "サービスが失敗した場合の状態の監視"
-
-#, fuzzy, python-format
-msgid "Monitoring state if %s is inactive"
-msgstr "サービスが非アクティブ場合、状態を監視する"
+#, fuzzy
+msgid "Monitoring state for any other unit state"
+msgstr "その他のサービス状態の監視状態"
 
 #, python-format
 msgid "Monitoring state if HAProxy frontend is %s"
@@ -30466,11 +30449,11 @@ msgid ""
 "code)"
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
-#, fuzzy, python-format
-msgid "Monitoring state if a monitored %s is not found at all."
+msgid "Monitoring state if a monitored service is not found at all."
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
-msgid "Monitoring state if a monitored service is not found at all."
+#, fuzzy
+msgid "Monitoring state if a monitored unit is not found at all."
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
 msgid "Monitoring state if failover link not up"
@@ -30517,6 +30500,18 @@ msgstr "READY状態に異常がある場合、または使用できない場合�
 
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr ""
+
+#, fuzzy
+msgid "Monitoring state if unit is active"
+msgstr "サービスがアクティブかどうかの状態の監視"
+
+#, fuzzy
+msgid "Monitoring state if unit is failed"
+msgstr "サービスが失敗した場合の状態の監視"
+
+#, fuzzy
+msgid "Monitoring state if unit is inactive"
+msgstr "サービスが非アクティブ場合、状態を監視する"
 
 msgid "Monitoring state in case of swap errors"
 msgstr "スワップエラー時の状態監視"
@@ -31256,6 +31251,10 @@ msgid "Network interfaces: last hour view"
 msgstr "ネットワークインターフェース:過去1時間のビュー"
 
 #, fuzzy
+msgid "Network monitoring"
+msgstr "モニタリングコアなし"
+
+#, fuzzy
 msgid "Network out"
 msgstr "ネットワーク"
 
@@ -31725,12 +31724,12 @@ msgstr "%s' という名前で定義されたレポートはありません。"
 msgid "No response from update thread"
 msgstr "更新スレッドからの応答がありません"
 
-#, python-format
-msgid "No restrictions (discover all systemd %s)"
-msgstr ""
-
 msgid "No restrictions (discover all systemd service units)"
 msgstr ""
+
+#, fuzzy
+msgid "No restrictions (discover all units)"
+msgstr "特定のオブジェクトに制限はありません"
 
 msgid "No restrictions to specific objects"
 msgstr "特定のオブジェクトに制限はありません"
@@ -33074,9 +33073,6 @@ msgstr "OK/アップ"
 
 msgid "OMD Config"
 msgstr "OMD設定"
-
-msgid "OMD Site"
-msgstr "OMDサイト"
 
 msgid "OMD config changes have been applied."
 msgstr "OMDの設定変更が適用されました。"
@@ -34561,6 +34557,10 @@ msgstr ""
 msgid "Parent scan finished"
 msgstr "親スキャンが終了しました"
 
+#, fuzzy
+msgid "Parent/Child topology"
+msgstr "親/子トポロジ"
+
 msgid "Parents"
 msgstr "親"
 
@@ -35038,9 +35038,6 @@ msgstr "キューの長さのパフォーマンスデータ"
 msgid ""
 "Performance Data related to sizing, e.g. number of helpers, hosts, services"
 msgstr ""
-
-msgid "Performance Graphs"
-msgstr "パフォーマンスグラフ"
 
 msgid "Performance Graphs of Checkmk Server"
 msgstr "Checkmkサーバーのパフォーマンスグラフ"
@@ -38391,10 +38388,6 @@ msgstr "次の送信元IPアドレスへのアクセスを制限します"
 msgid "Restrict all"
 msgstr "全てを制限"
 
-#, fuzzy, python-format
-msgid "Restrict by %s name"
-msgstr "状態による制限"
-
 msgid "Restrict by contact groups"
 msgstr "連絡先グループによる制限"
 
@@ -38406,6 +38399,10 @@ msgstr "説明による制限"
 
 msgid "Restrict by monitor tags"
 msgstr "監視タグによる制限"
+
+#, fuzzy
+msgid "Restrict by name"
+msgstr "状態による制限"
 
 msgid "Restrict by service unit name"
 msgstr "サービスユニット名で制限"
@@ -38465,19 +38462,19 @@ msgstr "次のキーを制限"
 msgid "Restrict the length of the lines"
 msgstr "行の長さを制限する"
 
-#, fuzzy, python-format
-msgid "Restrict the systemd %s by description."
-msgstr "説明によるsystemdサービスを制限。"
-
-#, fuzzy, python-format
-msgid "Restrict the systemd %s by its name."
-msgstr "説明によるsystemdサービスを制限。"
-
 msgid "Restrict the systemd services by description."
 msgstr "説明によるsystemdサービスを制限。"
 
 msgid "Restrict the systemd services by unit name."
 msgstr ""
+
+#, fuzzy
+msgid "Restrict the systemd units by description."
+msgstr "説明によるsystemdサービスを制限。"
+
+#, fuzzy
+msgid "Restrict the systemd units by their name."
+msgstr "説明によるsystemdサービスを制限。"
 
 msgid "Restrict to a single host"
 msgstr "単一のホストに制限する"
@@ -40680,8 +40677,9 @@ msgstr "チェック待ち時間のレベルを設定する"
 msgid "Set Levels for the Check helper Usage"
 msgstr "チェックヘルパーの使用法のレベルを設定する"
 
-msgid "Set Levels for the Checkmk Latency Time"
-msgstr "Checkmkレイテンシー時間のレベルを設定する"
+#, fuzzy
+msgid "Set Levels for the Checker Latency Time"
+msgstr "チェック待ち時間のレベルを設定する"
 
 msgid "Set Levels for the Checkmk Livestatus Overflows"
 msgstr "Checkmk ライブステータスの オーバーフローレベルを設定する"
@@ -44674,26 +44672,23 @@ msgstr "システム時刻(時刻同期)"
 msgid "System uptime"
 msgstr "システムの稼働時間"
 
-msgid "Systemd Services Summary"
-msgstr "Systemdサービスの概要"
-
-#, fuzzy
-msgid "Systemd Sockets Summary"
-msgstr "Systemdサービスの概要"
-
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd時間同期"
 
 msgid "Systemd services"
 msgstr "Systemdサービス"
 
-#, fuzzy, python-format
-msgid "Systemd single %s discovery"
-msgstr "Systemdシングルサービスディスカバリー"
+#, fuzzy
+msgid "Systemd services summary"
+msgstr "Systemdサービスの概要"
 
 #, fuzzy
 msgid "Systemd single service"
 msgstr "Systemdシングルサービス"
+
+#, fuzzy
+msgid "Systemd single service discovery"
+msgstr "Systemdシングルサービスディスカバリー"
 
 msgid "Systemd single services"
 msgstr "Systemdシングルサービス"
@@ -44704,6 +44699,18 @@ msgstr "Systemdシングルサービスディスカバリー"
 #, fuzzy
 msgid "Systemd single socket"
 msgstr "Systemdシングルサービス"
+
+#, fuzzy
+msgid "Systemd single socket discovery"
+msgstr "Systemdシングルサービスディスカバリー"
+
+#, fuzzy
+msgid "Systemd single unit discovery"
+msgstr "Systemdシングルサービスディスカバリー"
+
+#, fuzzy
+msgid "Systemd sockets summary"
+msgstr "Systemdサービスの概要"
 
 msgid "Systems larger than"
 msgstr "より大きいシステム"
@@ -46488,16 +46495,16 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid ""
-"The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
-"average check latency of %.3fs."
-msgstr ""
-"現在のCheckmkヘルパーの使用量は %.2f%%です。Checkmkサービスの平均チェック待ち"
-"時間は %.3fsです。"
-
-#, python-format
 msgid "The current check helper usage is %.2f%%"
 msgstr "現在のチェックヘルパーの使用率は %.2f%% です"
+
+#, fuzzy, python-format
+msgid ""
+"The current checker usage is %.2f%%. The checkers have an average latency of "
+"%.3fs."
+msgstr ""
+"現在のチェッカーの使用量は %.2f%%です。チェックの平均チェック待ち時間は %.3fs"
+"です。"
 
 #, python-format
 msgid ""
@@ -48307,11 +48314,11 @@ msgid ""
 "script, or <i>user mode</i>, in this case you should specify the full "
 "credentials. The <i>group mode</i> is more secure, because no credentials "
 "need to be stored anywhere, except in the agent internally. When using the "
-"<i>user mode</i>, the provided credentials are stored on all Checkmk servers "
-"to which the configuration is applied. The credentials will also be baked "
-"into the agent bakery packages, distributed and installed with them on the "
-"target system.We highly recommend to use the <i>group mode</i> whenever "
-"possible."
+"<i>user mode</i>, the provided credentials are <b>stored in plain text</b> "
+"on all Checkmk servers to which the configuration is applied. The "
+"credentials (in plain text) will also be baked into the agent bakery "
+"packages, distributed and installed with them on the target system. We "
+"highly recommend to use the <i>group mode</i> whenever possible."
 msgstr ""
 
 msgid "The rule is only applied to hosts directly in or below this folder."
@@ -48996,6 +49003,16 @@ msgstr "ブローカー認証に使用されるユーザー名。"
 
 msgid "The username used to connect to the database"
 msgstr "データベースへの接続に使用されるユーザー名"
+
+#, python-format
+msgid ""
+"The value \"%s\" of HTTP variable \"%s\" is not a valid operator ({\"and\", "
+"\"or\", \"not\"})."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The value \"%s\" of HTTP variable \"%s\" is not an integer."
+msgstr "パラメータ \"%s\" は整数ではありません。"
 
 #, python-format
 msgid "The value %r has the wrong type %s, but must be of type int"
@@ -52093,25 +52110,25 @@ msgstr ""
 "いるホストでSNMPを介したファイルシステムチェックなどの特定の技術的実装を無効"
 "にできます。"
 
-#, fuzzy, python-format
+#, fuzzy
 msgid ""
-"This ruleset only applies to the Summary Systemd %s and not the individual "
-"Systemd %s."
+"This ruleset only applies to the summary Systemd service and not the "
+"individual one."
 msgstr ""
 "このルールセットは、Summary Systemdサービスにのみ適用され、個々のSystemdサー"
 "ビスには適用されません。"
 
-#, fuzzy, python-format
 msgid ""
-"This ruleset only applies when individual Systemd %s are discovered. The "
-"user needs to configure this option in the discovery section."
+"This ruleset only applies when individual Systemd services are discovered. "
+"The user needs to configure this option in the discovery section."
 msgstr ""
 "このルールセットは、個々のSystemdサービスが検出された場合にのみ適用されます。"
 "ユーザーは、検出セクションでこのオプションを構成する必要があります。"
 
+#, fuzzy
 msgid ""
-"This ruleset only applies when individual Systemd services are discovered. "
-"The user needs to configure this option in the discovery section."
+"This ruleset only applies when individual Systemd units are discovered. The "
+"user needs to configure this option in the discovery section."
 msgstr ""
 "このルールセットは、個々のSystemdサービスが検出された場合にのみ適用されます。"
 "ユーザーは、検出セクションでこのオプションを構成する必要があります。"
@@ -53017,6 +53034,10 @@ msgstr "レポートを作成する時間範囲"
 msgid "Time resolution"
 msgstr "時間分解能"
 
+#, fuzzy
+msgid "Time series graph"
+msgstr "時系列"
+
 msgid "Time since end of last backup"
 msgstr "最後のバックアップが終了してからの時間"
 
@@ -53437,6 +53458,18 @@ msgstr "トークンバケット"
 
 msgid "Token authentication"
 msgstr "トークン認証"
+
+#, fuzzy
+msgid "Tolderance period for 'reloading' state"
+msgstr "サービスをリロードするための許容期間を定義します"
+
+#, fuzzy
+msgid "Tolerance period for 'activating' state"
+msgstr "サービスをアクティブ化するための許容期間を定義します"
+
+#, fuzzy
+msgid "Tolerance period for 'deactivating' state"
+msgstr "サービスを停止させるための許容期間を定義します"
 
 msgid "Tooltip"
 msgstr "ヒント"
@@ -58536,14 +58569,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"When you leave the permissions at &quot;default&quot; then they get their "
-"settings from the factory defaults (for builtin roles) or from the factory "
-"default of their base role (for user define roles). Factory defaults may "
-"change due to software updates. When choosing another base role, all "
-"permissions that are on default will reflect the new base role."
-msgstr ""
-
-msgid ""
 "When you point your browser to the Check_MK GUI, usually the dashboard is "
 "shown in the main (right) frame. You can replace this with any other URL you "
 "like here."
@@ -59853,6 +59878,12 @@ msgid "You can only create a new package if there are unpackaged files."
 msgstr ""
 "パッケージ化されていないファイルがある場合にのみ、新しいパッケージを作成でき"
 "ます。"
+
+msgid ""
+"You can optionally define one or multiple regular expressions. Matching "
+"units are excluded. This allows to ignore services which are known to fail "
+"beforehand."
+msgstr ""
 
 msgid ""
 "You can optionally provide CA or self-signed certificates that will be used "
@@ -61686,7 +61717,7 @@ msgid "freeze the following %d aggregations?"
 msgstr "次の %d%sを削除しますか？"
 
 #, fuzzy
-msgid "freeze the following aggregation"
+msgid "freeze the following aggregation?"
 msgstr "この集計を削除します"
 
 msgid "from the beginning"
@@ -63025,6 +63056,29 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "OMD Site"
+#~ msgstr "OMDサイト"
+
+#~ msgid "Performance Graphs"
+#~ msgstr "パフォーマンスグラフ"
+
+#~ msgid "Average Checkmk latency"
+#~ msgstr "Checkmkの平均レイテンシ"
+
+#~ msgid "Levels Latency Checkmk"
+#~ msgstr "Checkmkの遅延レベル"
+
+#~ msgid "Set Levels for the Checkmk Latency Time"
+#~ msgstr "Checkmkレイテンシー時間のレベルを設定する"
+
+#, python-format
+#~ msgid ""
+#~ "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
+#~ "average check latency of %.3fs."
+#~ msgstr ""
+#~ "現在のCheckmkヘルパーの使用量は %.2f%%です。Checkmkサービスの平均チェック"
+#~ "待ち時間は %.3fsです。"
 
 #~ msgid "Aggregation: complete tree"
 #~ msgstr "集計: 完全なツリー"

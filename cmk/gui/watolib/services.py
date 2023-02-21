@@ -11,7 +11,7 @@ import sys
 import time
 from collections.abc import Callable, Sequence
 from hashlib import sha256
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from mypy_extensions import NamedArg
 
@@ -63,10 +63,12 @@ from cmk.gui.watolib.rulesets import (
 # - passive: new/vanished/old/ignored/removed
 # - active/custom/legacy: old/ignored
 class DiscoveryState:
-    UNDECIDED = "new"
-    VANISHED = "vanished"
-    MONITORED = "old"
-    IGNORED = "ignored"
+    # not sure why `Literal` this is needed explicitly.
+    # Should be gone once we use `StrEnum`
+    UNDECIDED: Literal["new"] = "new"
+    VANISHED: Literal["vanished"] = "vanished"
+    MONITORED: Literal["old"] = "old"
+    IGNORED: Literal["ignored"] = "ignored"
     REMOVED = "removed"
 
     MANUAL = "manual"

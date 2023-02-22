@@ -54,8 +54,28 @@
     name: rpcbind.socket
   become: yes
 
-- name: Just force systemd to reread configs
+- name: remove snakeoil
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/ssl/private/ssl-cert-snakeoil.key
+    - /etc/ssl/certs/ssl-cert-snakeoil.pem
+  become: yes
+
+- name: Copy cert service
+  template:
+    src: files/cmk-cert.service
+    dest: /lib/systemd/system/cmk-cert.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: yes
+
+- name: enbale cert service
   ansible.builtin.systemd:
+    name: cmk-cert
+    enabled: true
     daemon_reload: yes
   become: yes
 

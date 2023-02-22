@@ -1,0 +1,11 @@
+[Unit]
+Description="generate snakeoil certs for cmk"
+After=network.target
+Before=apache2.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/make-ssl-cert generate-default-snakeoil
+
+[Install]
+WantedBy=multi-user.target

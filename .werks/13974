@@ -1,0 +1,15 @@
+Title: Correct ruleset search documentation text
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677071828
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The documentation text of the "deprecated" filter option in the 'list rulesets' endpoint incorrectly stated that
+it will include deprecated rules in the results.
+Instead it only shows deprecated rules, no non-deprecated rules.
+The documentation has been updated in order to reflect the current and correct behaviour.
+

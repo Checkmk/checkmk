@@ -99,7 +99,7 @@ main() {
 
     echo "<<<redis_info:sep(58)>>>"
 
-    for INSTANCE in ${REDIS_INSTANCES[*]}; do
+    for INSTANCE in "${REDIS_INSTANCES[@]}"; do
         redis_args "${INSTANCE}"
         # print server section
         echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"

@@ -196,29 +196,26 @@ def inventory_solaris_cpus(
     section_solaris_psrinfo_verbose: Optional[ProcessorInfo],
     section_solaris_psrinfo_table: Optional[ParsedTable],
 ) -> InventoryResult:
-    if section_solaris_psrinfo_physical is None:
-        return
-
-    if section_solaris_psrinfo_virtual is None:
-        return
+    inventory_attributes: Dict[str, Union[int, str]] = {}
 
     # cpus and threads are also (partly) available in section_solaris_psrinfo
     # and section_solaris_psrinfo_table, but these are more reliable
-    cpus = section_solaris_psrinfo_physical
-    threads = section_solaris_psrinfo_virtual
-
-    inventory_attributes: Dict[str, Union[int, str]] = {
-        "cpus": cpus,
-        "threads": threads,
-    }
+    if section_solaris_psrinfo_physical is not None:
+        inventory_attributes["cpus"] = section_solaris_psrinfo_physical
+    if section_solaris_psrinfo_virtual is not None:
+        inventory_attributes["threads"] = section_solaris_psrinfo_virtual
 
     if (
-        cores := _get_cores(
-            section_solaris_psrinfo_verbose,
-            section_solaris_psrinfo_table,
-            threads,
+        section_solaris_psrinfo_virtual is not None
+        and (
+            cores := _get_cores(
+                section_solaris_psrinfo_verbose,
+                section_solaris_psrinfo_table,
+                section_solaris_psrinfo_virtual,
+            )
         )
-    ) is not None:
+        is not None
+    ):
         inventory_attributes["cores"] = cores
 
     if section_solaris_psrinfo_verbose is not None:

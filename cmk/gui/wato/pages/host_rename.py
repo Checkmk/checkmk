@@ -6,6 +6,7 @@
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
+from collections.abc import Mapping
 from typing import Optional, Type
 
 from cmk.utils.regex import regex
@@ -545,7 +546,7 @@ def rename_hosts(renamings, job_interface=None):
     return action_texts, auth_problems
 
 
-def render_renaming_actions(action_counts):
+def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
     action_titles = {
         "folder": _("Folder"),
         "notify_user": _("Users' notification rule"),
@@ -575,6 +576,7 @@ def render_renaming_actions(action_counts):
         "retention": _("The current monitoring state (including acknowledgements and downtimes)"),
         "inv": _("Recent hardware/software inventory"),
         "invarch": _("History of hardware/software inventory"),
+        "uuid_link": _("UUID links for TLS-encrypting agent communication"),
     }
 
     texts = []

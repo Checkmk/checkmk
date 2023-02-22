@@ -14,11 +14,14 @@ def main() {
                 sh("./.f12");
             }
         }
+        def results_livestatus="livestatus/src/test_detail_livestatus.xml"
+        def results_core="enterprise/core/src/test_detail_core.xml"
+
         stage("Analyse Issues") {
             xunit([GoogleTest(
                 deleteOutputFiles: true,
                 failIfNotNew: true,
-                pattern: 'livestatus/src/test_detail.xml, enterprise/core/src/test_detail.xml',
+                pattern: "${results_livestatus}, ${results_core}",
                 skipNoTestFiles: false,
                 stopProcessingIfError: true
             )]);
@@ -31,6 +34,8 @@ def main() {
                     unstable: false,
                 ]]
             );
+            archiveArtifacts(artifacts: results_livestatus, followSymlinks: false);
+            archiveArtifacts(artifacts: results_core, followSymlinks: false);
         }
     }
 }

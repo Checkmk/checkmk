@@ -206,21 +206,27 @@ def inventory_solaris_cpus(
         inventory_attributes["threads"] = section_solaris_psrinfo_virtual
 
     if (
-        section_solaris_psrinfo_virtual is not None
-        and (
-            cores := _get_cores(
-                section_solaris_psrinfo_verbose,
-                section_solaris_psrinfo_table,
-                section_solaris_psrinfo_virtual,
-            )
+        cores := _get_cores(
+            section_solaris_psrinfo_verbose,
+            section_solaris_psrinfo_table,
+            section_solaris_psrinfo_virtual,
         )
-        is not None
-    ):
+    ) is not None:
         inventory_attributes["cores"] = cores
 
     if section_solaris_psrinfo_verbose is not None:
         inventory_attributes["model"] = section_solaris_psrinfo_verbose.model
         inventory_attributes["max_speed"] = section_solaris_psrinfo_verbose.maximum_speed
+
+        # See comment above: But if do not already have cpus or threads we use these ones:
+        if "cpus" not in inventory_attributes and section_solaris_psrinfo_verbose.cpus is not None:
+            inventory_attributes["cpus"] = section_solaris_psrinfo_verbose.cpus
+
+        if (
+            "threads" not in inventory_attributes
+            and section_solaris_psrinfo_verbose.threads is not None
+        ):
+            inventory_attributes["threads"] = section_solaris_psrinfo_verbose.threads
 
     yield Attributes(
         path=["hardware", "cpu"],
@@ -231,7 +237,7 @@ def inventory_solaris_cpus(
 def _get_cores(
     processor_info: Optional[ProcessorInfo],
     parsed_table: Optional[ParsedTable],
-    threads: int,
+    threads: Optional[int],
 ) -> Optional[int]:
     # 1st try: Obtain cores from parsed "psrinfo -t" table
     if parsed_table is not None and parsed_table.cores is not None:
@@ -244,6 +250,9 @@ def _get_cores(
     # Exit if section is not available at all (shouldn't happen)
     if processor_info.cores is not None:
         return processor_info.cores
+
+    if threads is None:
+        return None
 
     # Last resort if there's still no information about cores:
     # All "current" SPARC M, T, and S series processors have 8 threads per core,

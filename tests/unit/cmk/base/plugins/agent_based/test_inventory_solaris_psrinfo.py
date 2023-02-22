@@ -199,6 +199,9 @@ def _section(section_function: Callable[[StringTable], T], agent_output: str | N
                     inventory_attributes={
                         "model": "SPARC-T5",
                         "max_speed": "3600 MHz",
+                        "cpus": 1,
+                        "threads": 40,
+                        "cores": 5,
                     },
                 ),
             ],

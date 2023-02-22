@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# shellcheck shell=dash
+# shellcheck shell=dash # Actually it's a BusyBox ash
 
 #
 # BEGIN COMMON AGENT CODE
@@ -1016,7 +1016,7 @@ run_real_time_checks_for_remote() {
             #
             # This never works, we should make that more transparent or remove the code.
             # For now:
-            # shellcheck disable=SC2169 # In dash, /dev/{tcp,udp} is not supported
+            # shellcheck disable=SC2169,SC3025 # In dash, /dev/{tcp,udp} is not supported
             {
                 echo -n ${PROTOCOL}
                 get_epoch | tr -d '\n'

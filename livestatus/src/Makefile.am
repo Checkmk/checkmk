@@ -83,7 +83,7 @@ $(LIBLIVESTATUS_SO): always-rebuild-livestatus-lib
 
 unit-test: test_neb$(EXEEXT) $(LIBLIVESTATUS_SO)
 	LD_LIBRARY_PATH=$(dir $(LIBLIVESTATUS_SO)) \
-		GTEST_OUTPUT=xml \
+		GTEST_OUTPUT=xml:test_detail_livestatus.xml \
 		$(VALGRIND) \
 		./test_neb$(EXEEXT)
 

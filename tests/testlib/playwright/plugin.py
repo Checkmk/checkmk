@@ -12,6 +12,7 @@ See: https://github.com/microsoft/playwright-pytest
 import logging
 import os
 import typing as t
+import urllib
 
 import _pytest
 import pytest
@@ -46,7 +47,9 @@ def _build_artifact_test_folder(
     pytestconfig: t.Any, request: pytest.FixtureRequest, folder_or_file_name: str
 ) -> str:
     output_dir = pytestconfig.getoption("--output")
-    return os.path.join(output_dir, request.node.nodeid, folder_or_file_name)
+    return os.path.join(
+        output_dir, urllib.parse.urlencode(request.node.nodeid), folder_or_file_name
+    )
 
 
 @pytest.fixture(scope="session", name="playwright")

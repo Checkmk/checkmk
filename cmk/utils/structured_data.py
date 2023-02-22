@@ -729,16 +729,17 @@ class Table:
         self.add_key_columns(other.key_columns)
 
         for ident in compared_idents.only_old:
-            retentions_filter_func = _make_retentions_filter_func(
-                filter_func=filter_func,
-                intervals_by_keys=other.retentions.get(ident),
-                now=now,
-            )
             old_row: SDRow = {}
-            for key, value in other._rows[ident].items():
-                if retentions_filter_func(key):
-                    retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
-                    old_row.setdefault(key, value)
+            for key, value in _get_filtered_dict(
+                other._rows[ident],
+                _make_retentions_filter_func(
+                    filter_func=filter_func,
+                    intervals_by_keys=other.retentions.get(ident),
+                    now=now,
+                ),
+            ).items():
+                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
+                old_row.setdefault(key, value)
 
             if old_row:
                 # Update row with key column entries
@@ -777,9 +778,8 @@ class Table:
                 reasons.append(f"added row below {ident!r}")
 
         for ident in compared_idents.only_new:
-            for key in self._rows[ident]:
-                if filter_func(key):
-                    retentions.setdefault(ident, {})[key] = inv_intervals
+            for key in _get_filtered_dict(self._rows[ident], filter_func):
+                retentions.setdefault(ident, {})[key] = inv_intervals
 
         if retentions:
             self.set_retentions(retentions)

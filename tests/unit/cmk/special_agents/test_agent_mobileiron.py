@@ -5,6 +5,7 @@
 import argparse
 import json
 from pathlib import Path
+from typing import Type
 
 import pytest
 import requests
@@ -132,7 +133,9 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
     ],
 )
 @responses.activate
-def test_agent_raises_exceptions(exception) -> None:  # type:ignore[no-untyped-def]
+def test_agent_raises_exceptions(
+    exception: Type[requests.exceptions.HTTPError] | Type[requests.exceptions.SSLError],
+) -> None:
     args = argparse.Namespace(
         hostname="does_not_exist",
         key_fields=("entityName",),

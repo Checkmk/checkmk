@@ -26,6 +26,17 @@ import cmk.utils.password_store
 from cmk.special_agents.utils.crash_reporting import create_agent_crash_dump
 
 
+class CannotRecover(RuntimeError):
+    """Make the special agent fail gracefully
+    Raise this when there is no way to successfully proceed,
+    e.g. the server does not respond or credentials are not valid.
+    This will make the Check_MK service go critical
+    and display the passed message in the GUI.
+    In contrast to any other raised exception,
+    this will not create a crash report.
+    """
+
+
 class SectionManager:
     def __init__(self) -> None:
         self._data: list[str] = []
@@ -135,12 +146,14 @@ def _special_agent_main_core(
 
     try:
         return main_fn(args)
+    except CannotRecover as exc:
+        print(exc, file=sys.stderr)
     except Exception:
         if args.debug:
             raise
         crash_dump = create_agent_crash_dump()
         sys.stderr.write(crash_dump)
-        return 1
+    return 1
 
 
 def special_agent_main(

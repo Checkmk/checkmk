@@ -1112,3 +1112,25 @@ graph_info["aws_cloudfront_errors_rate"] = {
         ("aws_cloudfront_5xx_error_rate", "stack"),
     ],
 }
+
+# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
+graph_info["bucket_size"] = {
+    "title": _l("Bucket size"),
+    "metrics": [
+        ("aws_bucket_size", "line"),
+    ],
+}
+
+graph_info["num_objects"] = {
+    "title": _l("Number of bucket objects"),
+    "metrics": [
+        ("aws_num_objects", "line"),
+    ],
+}
+
+graph_info["buckets"] = {
+    "title": _l("Buckets"),
+    "metrics": [
+        ("aws_s3_buckets", "line"),
+    ],
+}

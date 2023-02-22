@@ -418,7 +418,7 @@ class CheckmkRESTAPI:
         self.url_map = Map(
             [
                 Submount(
-                    "/<path:_path>",
+                    "/<_site>/check_mk/api/<_version>/",
                     [
                         Rule("/ui/", endpoint="swagger-ui"),
                         Rule("/ui/<path:path>", endpoint="swagger-ui"),
@@ -448,8 +448,12 @@ class CheckmkRESTAPI:
             else:
                 endpoint = None
 
-            # Remove _path again (see Submount above), so the validators don't go crazy.
-            path_args = {key: value for key, value in matched_path_args.items() if key != "_path"}
+            # Remove _site & _version (see Submount above), so the validators don't go crazy.
+            path_args = {
+                key: value
+                for key, value in matched_path_args.items()
+                if key not in ("_site", "_version")
+            }
 
             # This is an implicit dependency, as we only know the args at runtime, but the
             # function at setup-time.

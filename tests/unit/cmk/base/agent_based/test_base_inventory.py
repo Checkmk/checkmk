@@ -238,7 +238,7 @@ def test__inventorize_real_host_only_items() -> None:
         "Table": {},
     }
     assert not update_result.save_tree
-    assert update_result.reason == "No retention intervals found."
+    assert not bool(update_result.reasons_by_path)
 
 
 @pytest.mark.parametrize(
@@ -418,10 +418,10 @@ def test__inventorize_real_host_only_intervals(
 
     if attrs_expected_retentions or table_expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason.startswith("retention intervals ")
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
 
 @pytest.mark.parametrize(
@@ -601,10 +601,10 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
 
     if attrs_expected_retentions or table_expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason.startswith("retention intervals ")
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
 
 def _make_tree_or_items(
@@ -743,11 +743,7 @@ def test__inventorize_real_host_no_items(
     assert trees.status_data.is_empty()
 
     assert not update_result.save_tree
-
-    if raw_intervals:
-        assert not update_result.reason
-    else:
-        assert update_result.reason == "No retention intervals found."
+    assert not bool(update_result.reasons_by_path)
 
 
 #   ---previous node--------------------------------------------------------
@@ -788,10 +784,10 @@ def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
     inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
     assert inv_node is not None
@@ -834,7 +830,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     assert isinstance(previous_node, StructuredDataNode)
 
     assert not update_result.save_tree
-    assert not update_result.reason
+    assert not bool(update_result.reasons_by_path)
 
     inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
     assert inv_node is not None
@@ -885,10 +881,10 @@ def test_updater_merge_previous_tables(
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
     inv_node = inv_tree.get_node(("path-to", "node-with-table"))
     assert inv_node is not None
@@ -935,7 +931,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     assert isinstance(previous_node, StructuredDataNode)
 
     assert not update_result.save_tree
-    assert not update_result.reason
+    assert not bool(update_result.reasons_by_path)
 
     inv_node = inv_tree.get_node(("path-to", "node-with-table"))
     assert inv_node is not None
@@ -990,10 +986,10 @@ def test_updater_merge_attributes(
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
     assert inv_node.attributes.retentions == expected_retentions
 
@@ -1049,10 +1045,10 @@ def test_updater_merge_attributes_outdated(
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
     assert inv_node.attributes.retentions == expected_retentions
 
@@ -1121,10 +1117,10 @@ def test_updater_merge_tables(
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
     assert inv_node.table.retentions == expected_retentions
 
@@ -1190,10 +1186,10 @@ def test_updater_merge_tables_outdated(
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert bool(update_result.reasons_by_path)
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not bool(update_result.reasons_by_path)
 
     assert inv_node.table.retentions == expected_retentions
 
@@ -1463,8 +1459,8 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             ),
             # No further impact, may not be realistic here
             StructuredDataNode(),
-            # No further impact, may not be realistic here
-            UpdateResult(save_tree=True, reason=""),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=True, do_save=False),
         ),
         (
@@ -1472,8 +1468,8 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
             ),
-            # No further impact, may not be realistic here
-            UpdateResult(save_tree=True, reason=""),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
@@ -1483,7 +1479,8 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
             ),
-            UpdateResult(save_tree=True, reason=""),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
@@ -1493,7 +1490,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "new value"}}, "Table": {}, "Nodes": {}}
             ),
-            UpdateResult(save_tree=False, reason=""),
+            UpdateResult(),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
@@ -1503,7 +1500,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
-            UpdateResult(save_tree=False, reason=""),
+            UpdateResult(),
             _SaveTreeActions(do_archive=False, do_save=False),
         ),
         (
@@ -1513,7 +1510,8 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             StructuredDataNode.deserialize(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
-            UpdateResult(save_tree=True, reason=""),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
     ],

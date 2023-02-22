@@ -1836,3 +1836,11 @@ graph_info["files_notification_spool"] = {
     ],
     "optional_metrics": ["deferred_files", "corrupted_files"],
 }
+
+# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
+graph_info["used_space"] = {
+    "title": _("Used storage space"),
+    "metrics": [
+        ("used_space", "line"),
+    ],
+}

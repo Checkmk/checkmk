@@ -2208,3 +2208,39 @@ graph_info["connection_count"] = {
         ("new_connections", "line"),
     ],
 }
+
+# workaround for showing single metrics of multiple hosts on the same combined graph dashlet
+graph_info["requests"] = {
+    "title": _("Requests"),
+    "metrics": [
+        ("requests", "line"),
+    ],
+}
+
+graph_info["transactions"] = {
+    "title": _("Transactions"),
+    "metrics": [
+        ("transactions", "line"),
+    ],
+}
+
+graph_info["server_latency"] = {
+    "title": _("Server latency"),
+    "metrics": [
+        ("server_latency", "line"),
+    ],
+}
+
+graph_info["e2e_latency"] = {
+    "title": _("End-to-end latency"),
+    "metrics": [
+        ("e2e_latency", "line"),
+    ],
+}
+
+graph_info["availability"] = {
+    "title": _("Availability"),
+    "metrics": [
+        ("availability", "line"),
+    ],
+}

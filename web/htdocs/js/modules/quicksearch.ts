@@ -9,8 +9,8 @@ let oCurrent: HTMLAnchorElement | null = null;
 let oldValue = "";
 
 // Register an input field to be a search field and add eventhandlers
-export function register_search_field(field) {
-    const oField = document.getElementById(field);
+export function register_search_field(field: string) {
+    const oField = document.getElementById(field) as HTMLInputElement | null;
     if (oField) {
         oField.onkeydown = function (e) {
             return mkSearchKeyDown(e, oField);
@@ -31,7 +31,7 @@ export function register_search_field(field) {
 }
 
 // On key release event handler
-function mkSearchKeyUp(e, oField) {
+function mkSearchKeyUp(e: KeyboardEvent, oField: HTMLInputElement) {
     const keyCode = e.which || e.keyCode;
 
     switch (keyCode) {
@@ -59,8 +59,10 @@ function mkSearchKeyUp(e, oField) {
 
 // On key press down event handler
 export function on_search_click() {
-    const oField = document.getElementById("mk_side_search_field");
-    const ev = {which: 0, keyCode: 13};
+    const oField = document.getElementById(
+        "mk_side_search_field"
+    ) as HTMLInputElement;
+    const ev = {which: 0, keyCode: 13} as KeyboardEvent;
     return mkSearchKeyDown(ev, oField);
 }
 
@@ -69,20 +71,20 @@ function search_dropdown_value() {
     else return null;
 }
 
-function mkSearchKeyDown(e, oField) {
+function mkSearchKeyDown(e: KeyboardEvent, oField: HTMLInputElement) {
     const keyCode = e.which || e.keyCode;
-
     switch (keyCode) {
         // Return/Enter
         case 13:
             if (oCurrent != null) {
                 mkSearchNavigate();
-                oField.value = search_dropdown_value();
+                oField.value = search_dropdown_value() ?? "";
                 close_popup();
             } else {
                 if (oField.value == "")
                     return; /* search field empty, rather not show all services! */
                 // When nothing selected, navigate with the current contents of the field
+                //@ts-ignore
                 top!.frames["main"].location.href =
                     "search_open.py?q=" + encodeURIComponent(oField.value);
                 close_popup();
@@ -123,11 +125,12 @@ function mkSearchKeyDown(e, oField) {
 
 // Navigate to the target of the selected event
 function mkSearchNavigate() {
-    top!.frames["main"].location.href = oCurrent?.href;
+    //@ts-ignore
+    top!.frames["main"].location.href = oCurrent!.href;
 }
 
 // Move one step of given size in the result list
-function mkSearchMoveElement(step) {
+function mkSearchMoveElement(step: number) {
     if (iCurrent == null) {
         iCurrent = -1;
     }
@@ -161,11 +164,11 @@ function mkSearchMoveElement(step) {
 
 // Is the result list shown at the moment?
 function mkSearchResultShown() {
-    return document.getElementById("mk_search_results") ? true : false;
+    return !!document.getElementById("mk_search_results");
 }
 
 // Toggle the result list
-function toggle_popup(oField) {
+function toggle_popup(oField: HTMLInputElement) {
     if (mkSearchResultShown()) {
         close_popup();
     } else {
@@ -184,13 +187,13 @@ export function close_popup() {
     oCurrent = null;
 }
 
-function handle_search_response(oField, code) {
+function handle_search_response(oField: HTMLInputElement, code: string) {
     if (code != "") {
         let oContainer = document.getElementById("mk_search_results");
         if (!oContainer) {
             oContainer = document.createElement("div");
             oContainer.setAttribute("id", "mk_search_results");
-            oField.parentNode.appendChild(oContainer);
+            oField.parentNode!.appendChild(oContainer);
         }
 
         oContainer.innerHTML = code;
@@ -200,7 +203,7 @@ function handle_search_response(oField, code) {
 }
 
 // Build a new result list and show it up
-function mkSearch(oField) {
+function mkSearch(oField: HTMLInputElement | null) {
     if (oField == null) return;
 
     const val = oField.value;

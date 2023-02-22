@@ -140,6 +140,9 @@ class Attributes:
         return f"{self.index}.{self.descr}.{self.alias}.{self.node}"
 
 
+Interface = Attributes  # CMK-12228
+
+
 @dataclass
 class Counters:
     in_octets: float | None = None

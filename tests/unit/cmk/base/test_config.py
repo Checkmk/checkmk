@@ -275,6 +275,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     ts.add_host("localhost")
     ts.add_host("undiscoverable")
     ts.add_host("no_ip", {"address_family": "no-ip"})
+    ts.add_host("dual_stack", {"address_family": "ip-v4v6"})
     ts.add_cluster("cluster")
     ts.set_option(
         "shadow_hosts",
@@ -317,6 +318,14 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.is_ipv4v6_host("no_ip") is False
     assert ip_address_of(config_cache, "no_ip", socket.AF_INET) is None
     assert ip_address_of(config_cache, "no_ip", socket.AF_INET6) is None
+
+    assert config_cache.default_address_family("dual_stack") is socket.AF_INET
+    assert config_cache.is_no_ip_host("dual_stack") is False
+    assert config_cache.is_ipv4_host("dual_stack") is True
+    assert config_cache.is_ipv6_host("dual_stack") is True
+    assert config_cache.is_ipv4v6_host("dual_stack") is True
+    assert ip_address_of(config_cache, "dual_stack", socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
+    assert ip_address_of(config_cache, "dual_stack", socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
 
     assert config_cache.default_address_family("cluster") is socket.AF_INET
     assert config_cache.is_no_ip_host("cluster") is False

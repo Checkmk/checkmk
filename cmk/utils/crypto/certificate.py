@@ -83,6 +83,10 @@ class EncryptedPrivateKeyPEM(_SerializedPEM):
     """A encrypted private key in pem format"""
 
 
+class PublicKeyPEM(_SerializedPEM):
+    """A public key in pem format"""
+
+
 class CertificatePEM(_SerializedPEM):
     """A certificate in pem format"""
 
@@ -647,6 +651,18 @@ class RsaPrivateKey:
 class RsaPublicKey:
     def __init__(self, key: rsa.RSAPublicKey) -> None:
         self._key = key
+
+    @classmethod
+    def load_pem(cls, pem_data: PublicKeyPEM) -> RsaPublicKey:
+        return RsaPublicKey(serialization.load_pem_public_key(pem_data.bytes))
+
+    def dump_pem(self) -> PublicKeyPEM:
+        return PublicKeyPEM(
+            self._key.public_bytes(
+                serialization.Encoding.PEM,
+                serialization.PublicFormat.PKCS1,
+            )
+        )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RsaPublicKey):

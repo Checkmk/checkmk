@@ -447,7 +447,7 @@ class BIAggregationPacksSchema(Schema):
 
 
 class BIHostRenamer:
-    def rename_host(self, oldname: str, newname: str, bi_packs: BIAggregationPacks) -> list:
+    def rename_host(self, oldname: str, newname: str, bi_packs: BIAggregationPacks) -> list[str]:
         bi_packs.load_config()
         renamed = 0
 

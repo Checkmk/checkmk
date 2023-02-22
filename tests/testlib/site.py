@@ -139,7 +139,15 @@ class Site:
         reload_time, timeout = time.time(), 40
         while not config_reloaded():
             if time.time() > reload_time + timeout:
-                raise Exception("Config did not update within %d seconds" % timeout)
+                ps_proc = subprocess.run(
+                    ["ps", "-ef"],
+                    capture_output=True,
+                    encoding="utf-8",
+                    check=True,
+                )
+                raise Exception(
+                    f"Config did not update within {timeout} seconds.\nOutput of ps -ef (to check if core is actually running):\n{ps_proc.stdout}"
+                )
             time.sleep(0.2)
 
         assert config_reloaded()

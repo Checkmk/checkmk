@@ -1844,3 +1844,11 @@ graph_info["used_space"] = {
         ("used_space", "line"),
     ],
 }
+
+graph_info["io_flow"] = {
+    "title": "IO flow",
+    "metrics": [
+        ("egress", "-area"),
+        ("ingress", "area"),
+    ],
+}

@@ -962,21 +962,24 @@ class Attributes:
 
         reasons = []
         retentions: RetentionIntervalsByKeys = {}
-        compared_keys = _compare_dict_keys(old_dict=other.pairs, new_dict=self.pairs)
-        retentions_filter_func = _make_retentions_filter_func(
-            filter_func=filter_func,
-            intervals_by_keys=other.retentions,
-            now=now,
+        compared_filtered_keys = _compare_dict_keys(
+            old_dict=_get_filtered_dict(
+                other.pairs,
+                _make_retentions_filter_func(
+                    filter_func=filter_func,
+                    intervals_by_keys=other.retentions,
+                    now=now,
+                ),
+            ),
+            new_dict=_get_filtered_dict(self.pairs, filter_func),
         )
         pairs: SDPairs = {}
-        for key in compared_keys.only_old:
-            if retentions_filter_func(key):
-                retentions[key] = other.retentions[key]
-                pairs.setdefault(key, other.pairs[key])
+        for key in compared_filtered_keys.only_old:
+            retentions[key] = other.retentions[key]
+            pairs.setdefault(key, other.pairs[key])
 
-        for key in compared_keys.both.union(compared_keys.only_new):
-            if filter_func(key):
-                retentions[key] = inv_intervals
+        for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
+            retentions[key] = inv_intervals
 
         if pairs:
             self.add_pairs(pairs)

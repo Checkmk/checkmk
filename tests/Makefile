@@ -5,6 +5,7 @@
 SHELL := /bin/bash -e
 SCRIPTS := $(realpath ../scripts)
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
+FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
@@ -40,23 +41,6 @@ AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defi
 # agents/plugins/Makefile)
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
-
-# evaluate this only if needed, it slows down tab expansion otherwise.
-# asio-asio*, googletest* and __pycache__ are excluded because they are present during CI call
-# "_deps" and "build" is excluded as an owned by cmake build
-SHELL_FILES_REL = $(shell cd ..; grep -rl \
-    --exclude-dir="_deps" \
-    --exclude-dir="build" \
-    --exclude-dir="asio-asio*" \
-    --exclude-dir="googletest*" \
-    --exclude-dir="__pycache__" \
-    --exclude-dir="deprecated" \
-    --exclude-dir="node_modules" \
-    --exclude-dir="omd" \
-    --exclude="LIVEPROXYD" \
-    --exclude="install-sh" \
-    --exclude="code_examples.py" \
-    '^\#!/.*sh' [^.]* 2>/dev/null)
 
 BROWSER_ENGINES = "chromium" "firefox"
 
@@ -147,7 +131,7 @@ bandit.ini:
 	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $$($(FIND_SHELL_FILES))
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -234,7 +218,7 @@ test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
 
 test-format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES_REL)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 test-format-js:
 	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
@@ -338,7 +322,7 @@ test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
-	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_REL)
+	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
 
 test-cycles:
 	$(CYCLES) \

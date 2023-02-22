@@ -24,9 +24,9 @@ T = TypeVar("T")
 
 
 class PsrInfo(NamedTuple):
-    psrinfo: str
+    psrinfo: str | None
     psrinfo_pv: str
-    psrinfo_p: str
+    psrinfo_p: str | None
     psrinfo_t: str | None
 
 
@@ -172,6 +172,31 @@ def _section(section_function: Callable[[StringTable], T], agent_output: str | N
                         "cpus": 2,
                         "cores": 2,
                         "threads": 16,
+                        "model": "SPARC-T5",
+                        "max_speed": "3600 MHz",
+                    },
+                ),
+            ],
+        ),
+        (
+            PsrInfo(
+                psrinfo=None,
+                psrinfo_pv=(
+                    "The physical processor has 5 cores and 40 virtual processors (0-39)\n"
+                    "  The core has 8 virtual processors (0-7)\n"
+                    "  The core has 8 virtual processors (8-15)\n"
+                    "  The core has 8 virtual processors (16-23)\n"
+                    "  The core has 8 virtual processors (24-31)\n"
+                    "  The core has 8 virtual processors (32-39)\n"
+                    "    SPARC-T5 (chipid 0, clock 3600 MHz)\n"
+                ),
+                psrinfo_p=None,
+                psrinfo_t=None,
+            ),
+            [
+                Attributes(
+                    path=["hardware", "cpu"],
+                    inventory_attributes={
                         "model": "SPARC-T5",
                         "max_speed": "3600 MHz",
                     },

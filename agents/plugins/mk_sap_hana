@@ -73,7 +73,7 @@ fi
 
 # Source the optional configuration file for this agent plugin
 if [ -e "$MK_CONFDIR/sap_hana.cfg" ]; then
-    # shellcheck disable=SC1090
+    # shellcheck source=/dev/null
     . "$MK_CONFDIR/sap_hana.cfg"
 else
     echo "No such file $MK_CONFDIR/sap_hana.cfg" >&2

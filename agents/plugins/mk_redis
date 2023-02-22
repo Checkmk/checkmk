@@ -32,7 +32,7 @@ CMK_VERSION="2.2.0b1"
 load_config() {
     # source optional configuration file
     if [ -e "$MK_CONFDIR/mk_redis.cfg" ]; then
-        # shellcheck disable=SC1090
+        # shellcheck source=../cfg_examples/mk_redis.cfg
         . "$MK_CONFDIR/mk_redis.cfg"
     fi
 }

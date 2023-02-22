@@ -23,6 +23,11 @@ def autouse_fix_ip_lookup(fixup_ip_lookup):
     pass
 
 
+@pytest.fixture(autouse=True)
+def no_io_ip_lookup_cache(tmp_path, monkeypatch):
+    monkeypatch.setattr(ip_lookup.IPLookupCache, "PATH", tmp_path / "cache")
+
+
 _PatchMapping = Mapping[ip_lookup.IPLookupCacheId, str | None]
 
 
@@ -260,11 +265,6 @@ def clear_config_caches_ip_lookup(monkeypatch: MonkeyPatch) -> None:
     _runtime_cache.clear()
 
 
-@pytest.fixture(autouse=True, scope="function")
-def clear_ip_lookup_cache_file(monkeypatch: MonkeyPatch) -> None:
-    ip_lookup.IPLookupCache.PATH.unlink(missing_ok=True)
-
-
 class TestIPLookupCacheSerialzer:
     def test_simple_cache(self) -> None:
         s = ip_lookup.IPLookupCacheSerializer()
@@ -370,16 +370,20 @@ class TestIPLookupCache:
 
 
 def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
-    def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
-        # Needs to return [(family, type, proto, canonname, sockaddr)] but only
-        # caring about the address
-        return {
+    def ip_lookup_cache() -> ip_lookup.IPLookupCache:
+        cache = ip_lookup.IPLookupCache({})
+        cache.load_persisted()
+        return cache
+
+    monkeypatch.setattr(
+        socket,
+        "getaddrinfo",
+        lambda host, port, family=None, socktype=None, proto=None, flags=None: {
             ("blub", socket.AF_INET): [(family, None, None, None, ("127.0.0.13", 1337))],
             ("bla", socket.AF_INET): [(family, None, None, None, ("127.0.0.37", 1337))],
             ("dual", socket.AF_INET): [(family, None, None, None, ("127.0.0.42", 1337))],
-        }[(host, family)]
-
-    monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
+        }[(host, family)],
+    )
 
     ts = Scenario()
     ts.add_host(HostName("blub"), tags={"criticality": "offline"})
@@ -388,7 +392,9 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.apply(monkeypatch)
 
     config_cache = config.get_config_cache()
-    assert ip_lookup.update_dns_cache(
+    assert ip_lookup_cache() == {}
+
+    result = ip_lookup.update_dns_cache(
         ip_lookup_configs=(
             config_cache.ip_lookup_config(hn) for hn in config_cache.all_active_hosts()
         ),
@@ -396,12 +402,23 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
         configured_ipv6_addresses={},
         simulation_mode=False,
         override_dns=None,
-    ) == (3, ["dual"])
+    )
+    assert ip_lookup_cache() == {
+        ("blub", socket.AF_INET): "127.0.0.13",
+        ("bla", socket.AF_INET): "127.0.0.37",
+        ("dual", socket.AF_INET): "127.0.0.42",
+    }
+    # Actual failure is:
+    # MKIPAddressLookupError("Failed to lookup IPv6 address of dual via DNS: ('dual', <AddressFamily.AF_INET6: 10>)")
+    assert result == (3, ["dual"])
 
     # Check persisted data
-    cache = ip_lookup.IPLookupCache({})
-    cache.load_persisted()
-    assert cache[(HostName("blub"), socket.AF_INET)] == "127.0.0.13"
+    cache = ip_lookup_cache()
+    assert cache.get((HostName("blub"), socket.AF_INET)) == "127.0.0.13"
+    assert cache.get((HostName("blub"), socket.AF_INET6)) is None
+    assert cache.get((HostName("bla"), socket.AF_INET)) == "127.0.0.37"
+    assert cache.get((HostName("bla"), socket.AF_INET6)) is None
+    assert cache.get((HostName("dual"), socket.AF_INET)) == "127.0.0.42"
     assert cache.get((HostName("dual"), socket.AF_INET6)) is None
 
 

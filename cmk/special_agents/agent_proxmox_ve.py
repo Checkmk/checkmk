@@ -36,6 +36,7 @@ import requests
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils.agent_common import (
+    CannotRecover,
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
@@ -51,14 +52,6 @@ BackupInfo = MutableMapping[str, Any]
 LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 
 LogCacheFilePath = tmp_dir / "special_agents" / "agent_proxmox_ve"
-
-
-class TimeoutOnFirstConnect(TimeoutError):
-    ...
-
-
-class ProxmoxVeAgentError(Exception):
-    ...
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -675,12 +668,12 @@ class ProxmoxVeSession:
                     .get("data")
                 )
             except requests.exceptions.ConnectTimeout:
-                raise TimeoutOnFirstConnect(
+                raise CannotRecover(
                     f"Could not connect to {base_url} (TimeoutError after {timeout}s)"
                 )
 
             if response is None:
-                raise ProxmoxVeAgentError(
+                raise CannotRecover(
                     "Couldn't authenticate %r @ %r"
                     % (credentials.get("username", "no-username"), ticket_url)
                 )
@@ -753,11 +746,9 @@ class ProxmoxVeSession:
         try:
             response_json = response.json()
         except JSONDecodeError as e:
-            raise ProxmoxVeAgentError("Couldn't parse API element %r" % path) from e
+            raise CannotRecover("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
-            raise ProxmoxVeAgentError(
-                "Could not fetch {!r} ({!r})".format(path, response_json["errors"])
-            )
+            raise CannotRecover("Could not fetch {!r} ({!r})".format(path, response_json["errors"]))
         return response_json.get("data")
 
 
@@ -896,18 +887,9 @@ class ProxmoxVeAPI:
         return rec_get_tree(None, requested_structure, [])
 
 
-def agent_proxmox_ve_main_error_handler(args: Args) -> int:
-    """Just wraps error handling"""
-    try:
-        return agent_proxmox_ve_main(args)
-    except (TimeoutOnFirstConnect, ProxmoxVeAgentError) as exc:
-        print(exc, file=sys.stderr)
-        return 1
-
-
 def main() -> int:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_proxmox_ve_main_error_handler)
+    return special_agent_main(parse_arguments, agent_proxmox_ve_main)
 
 
 if __name__ == "__main__":

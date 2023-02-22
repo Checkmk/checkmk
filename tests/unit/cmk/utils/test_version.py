@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.utils.version import Version
+from cmk.utils.version import parse_check_mk_version, Version
 
 
 class TestVersion:
@@ -65,6 +65,7 @@ class TestVersion:
             (Version("2024.03.14"), "2024.03.14"),
             (Version("3.4.5p8"), "3.4.5p8"),
             (Version("1.2.3-2024.09.09"), "1.2.3-2024.09.09"),
+            (Version("2022.06.23-sandbox-az-sles-15sp3"), "2022.06.23"),
         ],
     )
     def test_str(self, vers: Version, expected: str) -> None:
@@ -140,5 +141,4 @@ class TestVersion:
     )
     def test_parse_to_int(self, version_string: str, expected: int) -> None:
         assert Version(version_string).parse_to_int() == expected
-        # FIXME: test consistentcy
-        # assert parse_check_mk_version(version_string) == expected
+        assert parse_check_mk_version(version_string) == expected

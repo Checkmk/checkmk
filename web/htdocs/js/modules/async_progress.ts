@@ -18,9 +18,22 @@ import * as utils from "utils";
 //#   | the service discovery dialogs                                      |
 //#   '--------------------------------------------------------------------'
 
+interface AsyncProgressHandlerData {
+    update_url: string;
+    error_function: (arg0: any) => void;
+    update_function: (arg0: any, arg1: any) => void;
+    is_finished_function: (arg0: any) => any;
+    finish_function: (arg0: any) => void;
+    post_data: string;
+    start_time?: number;
+    host_name?: string;
+    folder_path?: string;
+    transid?: string;
+}
+
 // Is called after the activation has been started (got the activation_id) and
 // then in interval of 500 ms for updating the dialog state
-export function monitor(handler_data) {
+export function monitor(handler_data: AsyncProgressHandlerData) {
     ajax.call_ajax(handler_data.update_url, {
         response_handler: handle_update,
         error_handler: handle_error,
@@ -31,7 +44,10 @@ export function monitor(handler_data) {
     });
 }
 
-function handle_update(handler_data, response_json) {
+function handle_update(
+    handler_data: AsyncProgressHandlerData,
+    response_json: string
+) {
     const response = JSON.parse(response_json);
     if (response.result_code == 1) {
         handler_data.error_function(response.result);
@@ -49,8 +65,12 @@ function handle_update(handler_data, response_json) {
     }
 }
 
-function handle_error(handler_data, status_code, error_msg) {
-    if (utils.time() - handler_data.start_time <= 10 && status_code == 503) {
+function handle_error(
+    handler_data: AsyncProgressHandlerData,
+    status_code: string | number,
+    error_msg: string
+) {
+    if (utils.time() - handler_data.start_time! <= 10 && status_code == 503) {
         show_info(
             "Failed to fetch state. This may be normal for a period of some seconds."
         );
@@ -75,7 +95,7 @@ function handle_error(handler_data, status_code, error_msg) {
     }, 1000);
 }
 
-export function show_error(text) {
+export function show_error(text: string) {
     const container = document.getElementById("async_progress_msg")!;
     container.style.display = "block";
     const msg = container.childNodes[0] as HTMLElement;
@@ -86,7 +106,7 @@ export function show_error(text) {
     msg.innerHTML = text;
 }
 
-export function show_info(text) {
+export function show_info(text: string) {
     const container = document.getElementById("async_progress_msg")!;
     container.style.display = "block";
 

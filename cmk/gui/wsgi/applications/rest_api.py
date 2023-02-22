@@ -292,7 +292,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 methods=[endpoint.method],
             )
 
-        return Map([Submount("/<path:_path>", [*self._rules])])
+        return Map([Submount("/<_site>/check_mk/api/<_version>/", [*self._rules])])
 
     def add_rule(
         self,
@@ -322,8 +322,12 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         result: tuple[str, PathArgs] = urls.match(return_rule=False)
         endpoint_ident, matched_path_args = result
 
-        # Remove _path again (see the Submount in the rules Map), so the validators don't go crazy.
-        path_args = {key: value for key, value in matched_path_args.items() if key != "_path"}
+        # Remove _site & _version (see Submount above), so the validators don't go crazy.
+        path_args = {
+            key: value
+            for key, value in matched_path_args.items()
+            if key not in ("_site", "_version")
+        }
 
         return self._endpoints[endpoint_ident], path_args
 

@@ -106,18 +106,26 @@ def encode_label_groups_for_livestatus(
     column: str,
     label_groups: LabelGroups,
 ) -> str:
-    """
-    >>> encode_labels_for_livestatus("labels", [Label("key", "value", False), Label("x", "y", False)])
-    "Filter: labels = 'key' 'value'\\nFilter: labels = 'x' 'y'\\n"
-    >>> encode_labels_for_livestatus("labels", [])
+    """Apply the boolean standard prioritization of operators, i.e. NOT, AND, OR. Filter strings
+    for OR operators are added at the end of a group for label lvl ORs, and at the end of the entire
+    query for group lvl ORs.
+    >>> encode_label_groups_for_livestatus("host_labels", [])
     ''
+    >>> encode_label_groups_for_livestatus("host_labels", [("and", [("and", "label:a"), ("or", "label:b"), ("and", "even:true")])])
+    "Filter: host_labels = 'label' 'a'\\nFilter: host_labels = 'label' 'b'\\nFilter: host_labels = 'even' 'true'\\nAnd: 2\\nOr: 2\\n"
+    >>> encode_label_groups_for_livestatus("host_labels", [("and", [("not", "label:a")]), ("or", [("and", "label:b")]), ("not", [("and", "label:c")])])
+    "Filter: host_labels = 'label' 'a'\\nNegate:\\nFilter: host_labels = 'label' 'b'\\nFilter: host_labels = 'label' 'c'\\nNegate:\\nAnd: 2\\nOr: 2\\n"
     """
     filter_str: str = ""
+    group_lvl_or_operators_str: str = ""
     is_first_group: bool = True
     group_operator: AndOrNotLiteral
+
     for group_operator, label_group in label_groups:
+        label_lvl_or_operators_str: str = ""
         is_first_label: bool = True
         label_operator: AndOrNotLiteral
+
         for label_operator, label in label_group:
             if not label:
                 continue
@@ -126,14 +134,22 @@ def encode_label_groups_for_livestatus(
             filter_str += (
                 encode_label_for_livestatus(column, Label(label_id, label_val, False)) + "\n"
             )
-            filter_str += _operator_filter_str(label_operator, is_first_label)
+            if label_operator == "or":
+                label_lvl_or_operators_str += _operator_filter_str(label_operator, is_first_label)
+            else:
+                filter_str += _operator_filter_str(label_operator, is_first_label)
             is_first_label = False
 
-        if not is_first_label:
-            filter_str += _operator_filter_str(group_operator, is_first_group)
-        is_first_group = False
+        filter_str += label_lvl_or_operators_str
 
-    return filter_str
+        if not is_first_label:  # The current group holds at least one non empty label
+            if group_operator == "or":
+                group_lvl_or_operators_str += _operator_filter_str(group_operator, is_first_group)
+            else:
+                filter_str += _operator_filter_str(group_operator, is_first_group)
+            is_first_group = False
+
+    return filter_str + group_lvl_or_operators_str
 
 
 # Type of argument operator should be 'Operator'

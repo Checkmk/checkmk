@@ -5,16 +5,24 @@
 import * as ajax from "ajax";
 import $ from "jquery";
 
+interface AjaxJsonResponse<Result = any> {
+    result_code: number;
+    result: Result;
+    serverity: "success" | "error";
+}
+
 interface SiteState {
     livestatus: string;
     replication: string;
 }
+
 export function fetch_site_status() {
     ajax.call_ajax("wato_ajax_fetch_site_status.py", {
-        response_handler: function (handler_data, response_json) {
-            const response = JSON.parse(response_json);
+        response_handler: function (_handler_data: any, response_json: string) {
+            const response: AjaxJsonResponse<Record<string, SiteState>> =
+                JSON.parse(response_json);
             const success = response.result_code === 0;
-            const site_states: Record<string, SiteState> = response.result;
+            const site_states = response.result;
 
             if (!success) {
                 show_error("Site status update failed: " + site_states);
@@ -33,7 +41,11 @@ export function fetch_site_status() {
                 replication_container.innerHTML = site_status.replication;
             }
         },
-        error_handler: function (handler_data, status_code, error_msg) {
+        error_handler: function (
+            _handler_data: any,
+            status_code: number,
+            error_msg: string
+        ) {
             if (status_code != 0) {
                 show_error(
                     "Site status update failed [" +
@@ -48,7 +60,7 @@ export function fetch_site_status() {
     });
 }
 
-function show_error(msg) {
+function show_error(msg: string) {
     const o = document.getElementById("message_container");
     o!.innerHTML = "<div class=error>" + msg + "</div>";
 

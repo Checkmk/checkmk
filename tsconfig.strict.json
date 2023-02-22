@@ -27,7 +27,7 @@
         "./web/htdocs/js/modules/selection.ts",
         "./web/htdocs/js/modules/number_format.ts",
         "./web/htdocs/js/modules/ajax.ts",
-        //"./web/htdocs/js/modules/sites.ts",
+        "./web/htdocs/js/modules/sites.ts",
         "./web/htdocs/js/modules/foldable_container.ts",
         "./web/htdocs/js/modules/transfer.ts",
         //"./web/htdocs/js/modules/visibility_detection.ts",

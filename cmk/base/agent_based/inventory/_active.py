@@ -104,7 +104,7 @@ def _get_save_tree_actions(
         console.verbose("Inventory tree has changed. Add history entry.\n")
 
     if update_result.save_tree:
-        console.verbose(f"Updated inventory tree ({update_result.reason or ''}).\n")
+        console.verbose(str(update_result))
 
     return _SaveTreeActions(
         do_archive=has_changed,

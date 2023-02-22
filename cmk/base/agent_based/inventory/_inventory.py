@@ -94,7 +94,7 @@ def check_inventory_tree(
                 ),
             ),
             inventory_tree=inventory_tree,
-            update_result=UpdateResult(save_tree=False, reason=""),
+            update_result=UpdateResult(),
         )
 
     fetched = fetcher(host_name, ip_address=None)
@@ -470,10 +470,7 @@ def _may_update(
     previous_tree: StructuredDataNode,
 ) -> UpdateResult:
     if not raw_intervals_from_config:
-        return UpdateResult(
-            save_tree=False,
-            reason="No retention intervals found.",
-        )
+        return UpdateResult()
 
     raw_cache_info_by_path_and_type = {
         (tuple(item.path), item.__class__.__name__): items_of_inventory_plugin.raw_cache_info
@@ -528,10 +525,7 @@ def _may_update(
                 )
             )
 
-    return UpdateResult(
-        save_tree=any(result.save_tree for result in results),
-        reason=", ".join(result.reason for result in results if result.reason),
-    )
+    return UpdateResult.from_results(results)
 
 
 # .

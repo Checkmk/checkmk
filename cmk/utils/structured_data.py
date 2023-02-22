@@ -14,7 +14,7 @@ import io
 import pprint
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterator, Literal, NamedTuple, TypedDict
 
@@ -114,9 +114,43 @@ RawRetentionIntervalsByKeys = dict[SDKey, tuple[int, int, int]]
 RetentionIntervalsByKeys = dict[SDKey, RetentionIntervals]
 
 
-class UpdateResult(NamedTuple):
-    save_tree: bool
-    reason: str
+@dataclass(frozen=True)
+class UpdateResult:
+    reasons_by_path: dict[SDPath, list[str]] = field(default_factory=dict)
+
+    @property
+    def save_tree(self) -> bool:
+        return bool(self.reasons_by_path)
+
+    @classmethod
+    def from_results(cls, results: Iterable[UpdateResult]) -> UpdateResult:
+        update_result = cls()
+        for result in results:
+            for path, reasons in result.reasons_by_path.items():
+                update_result.reasons_by_path.setdefault(path, []).extend(reasons)
+        return update_result
+
+    def add_attr_reason(self, path: SDPath, name: str, iterable: Iterable[str]) -> None:
+        self.reasons_by_path.setdefault(path, []).append(
+            f"[Attributes] Added {name}: {', '.join(iterable)}"
+        )
+
+    def add_row_reason(
+        self, path: SDPath, ident: SDRowIdent, name: str, iterable: Iterable[str]
+    ) -> None:
+        self.reasons_by_path.setdefault(path, []).append(
+            f"[Table] '{', '.join(ident)}': Added {name}: {', '.join(iterable)}"
+        )
+
+    def __repr__(self) -> str:
+        if not self.reasons_by_path:
+            return "No tree update.\n"
+
+        lines = ["Updated inventory tree:"]
+        for path, reasons in self.reasons_by_path.items():
+            lines.append(f"  Path '{' > '.join(path)}':")
+            lines.extend(f"    {r}" for r in reasons)
+        return "\n".join(lines) + "\n"
 
 
 #   .--IO------------------------------------------------------------------.
@@ -747,7 +781,7 @@ class Table:
         )
 
         retentions: TableRetentions = {}
-        reasons = []
+        update_result = UpdateResult()
         for ident in compared_filtered_idents.only_old:
             old_row: SDRow = {}
             for key, value in old_filtered_rows[ident].items():
@@ -758,7 +792,7 @@ class Table:
                 # Update row with key column entries
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
-                reasons.append(f"added row below {ident!r}")
+                update_result.add_row_reason(self.path, ident, "row", old_row)
 
         for ident in compared_filtered_idents.both:
             compared_filtered_keys = _compare_dict_keys(
@@ -782,7 +816,7 @@ class Table:
                     }
                 )
                 self.add_row(ident, row)
-                reasons.append(f"added row below {ident!r}")
+                update_result.add_row_reason(self.path, ident, "row", row)
 
         for ident in compared_filtered_idents.only_new:
             for key in self_filtered_rows[ident]:
@@ -790,12 +824,10 @@ class Table:
 
         if retentions:
             self.set_retentions(retentions)
-            reasons.append("retention intervals %r" % retentions)
+            for ident, intervals in retentions.items():
+                update_result.add_row_reason(self.path, ident, "intervals", intervals)
 
-        return UpdateResult(
-            save_tree=bool(reasons),
-            reason=", ".join(reasons),
-        )
+        return update_result
 
     def set_retentions(self, table_retentions: TableRetentions) -> None:
         self.retentions = table_retentions
@@ -988,19 +1020,16 @@ class Attributes:
         for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
             retentions[key] = inv_intervals
 
-        reasons = []
+        update_result = UpdateResult()
         if pairs:
             self.add_pairs(pairs)
-            reasons.append("added pairs")
+            update_result.add_attr_reason(self.path, "pairs", pairs)
 
         if retentions:
             self.set_retentions(retentions)
-            reasons.append("retention intervals %r" % retentions)
+            update_result.add_attr_reason(self.path, "intervals", retentions)
 
-        return UpdateResult(
-            save_tree=bool(reasons),
-            reason=", ".join(reasons),
-        )
+        return update_result
 
     def set_retentions(self, intervals_by_keys: RetentionIntervalsByKeys) -> None:
         self.retentions = intervals_by_keys

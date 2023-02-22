@@ -5031,6 +5031,10 @@ msgid "Amazon Web Services (AWS)"
 msgstr "Amazon web Services (AWS)"
 
 #, fuzzy
+msgid "Amazon Web Services (AWS) Health"
+msgstr "Amazon web Services (AWS)"
+
+#, fuzzy
 msgid "Amount in billed currency"
 msgstr "Betrag in fakturierter Währung"
 
@@ -14350,6 +14354,10 @@ msgstr "Bereitstellen des netstat-Plugins"
 
 msgid "Deploy the plesk plugins"
 msgstr "Die plesk Plugins ausrollen"
+
+#, fuzzy
+msgid "Deploy the special agent"
+msgstr "alle Spezialagenten"
 
 msgid "Deploy without authentication."
 msgstr "Ohne Authentifizierung bereitstellen."
@@ -55223,6 +55231,10 @@ msgstr ""
 "Dieses Element zeigt Ihre Hosts in einem Baum angeordnet, basierend auf "
 "ihrer Zuordnung zu Hostmerkmalen. Welche Merkmalsgruppen dabei zu Einsatz "
 "kommen, legen Sie in den globalen Einstellung der Benutzeroberfläche fest."
+
+#, fuzzy
+msgid "This special agent does not require any configuration."
+msgstr "Lokale Konfiguration verwenden"
 
 msgid "This stored report does not exist."
 msgstr "Dieser gespeicherte Bericht existiert nicht."

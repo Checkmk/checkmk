@@ -5089,6 +5089,10 @@ msgstr "Amazon S3 Glacier (Glacier)"
 msgid "Amazon Web Services (AWS)"
 msgstr "Services Web d'Amazon (AWS)"
 
+#, fuzzy
+msgid "Amazon Web Services (AWS) Health"
+msgstr "Services Web d'Amazon (AWS)"
+
 msgid "Amount in billed currency"
 msgstr ""
 
@@ -14501,6 +14505,10 @@ msgstr "Déployer le plugin netstat"
 
 msgid "Deploy the plesk plugins"
 msgstr "Déployer les plugins plesk"
+
+#, fuzzy
+msgid "Deploy the special agent"
+msgstr "tous les agents spéciaux"
 
 msgid "Deploy without authentication."
 msgstr "Déployer sans authentification."
@@ -55850,6 +55858,10 @@ msgstr ""
 "Ce snapin affiche des vues arborescentes de vos hôtes en fonction de leurs "
 "classifications de balises. Vous pouvez configurer les balises à utiliser "
 "dans vos paramètres globaux de Multisite."
+
+#, fuzzy
+msgid "This special agent does not require any configuration."
+msgstr "Utilisez la configuration globale"
 
 msgid "This stored report does not exist."
 msgstr "Ce rapport stocké n'existe pas."

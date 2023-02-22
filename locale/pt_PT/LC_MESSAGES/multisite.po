@@ -5034,6 +5034,10 @@ msgstr "Glaciar S3 Amazônia (Glaciar)"
 msgid "Amazon Web Services (AWS)"
 msgstr "Serviços Web da Amazon (AWS)"
 
+#, fuzzy
+msgid "Amazon Web Services (AWS) Health"
+msgstr "Serviços Web da Amazon (AWS)"
+
 msgid "Amount in billed currency"
 msgstr ""
 
@@ -14404,6 +14408,10 @@ msgstr "Implementar o plugin netstat"
 
 msgid "Deploy the plesk plugins"
 msgstr "Implantar os plugins plesk"
+
+#, fuzzy
+msgid "Deploy the special agent"
+msgstr "Agente Especial"
 
 #, fuzzy
 msgid "Deploy without authentication."
@@ -55453,6 +55461,10 @@ msgstr ""
 "Este snapin mostra as vistas em árvore dos seus anfitriões com base nas suas "
 "classificações de tags. Você pode configurar quais tags usar em suas "
 "configurações globais do Multisite."
+
+#, fuzzy
+msgid "This special agent does not require any configuration."
+msgstr "Use a configuração global"
 
 msgid "This stored report does not exist."
 msgstr "Este relatório armazenado não existe."

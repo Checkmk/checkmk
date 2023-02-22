@@ -4779,6 +4779,10 @@ msgstr ""
 msgid "Amazon Web Services (AWS)"
 msgstr ""
 
+#, fuzzy
+msgid "Amazon Web Services (AWS) Health"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Amount in billed currency"
 msgstr ""
 
@@ -13779,6 +13783,10 @@ msgstr ""
 
 msgid "Deploy the plesk plugins"
 msgstr ""
+
+#, fuzzy
+msgid "Deploy the special agent"
+msgstr "Acces la Agenți"
 
 #, fuzzy
 msgid "Deploy without authentication."
@@ -51604,6 +51612,10 @@ msgid ""
 "classifications. You can configure which tags to use in your global settings "
 "of Multisite."
 msgstr ""
+
+#, fuzzy
+msgid "This special agent does not require any configuration."
+msgstr "foloseste configuratia locala"
 
 msgid "This stored report does not exist."
 msgstr ""

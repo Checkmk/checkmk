@@ -4847,6 +4847,10 @@ msgstr "Amazon S3 Glacier (Glacier)"
 msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
+#, fuzzy
+msgid "Amazon Web Services (AWS) Health"
+msgstr "Amazon Web Services (AWS)"
+
 msgid "Amount in billed currency"
 msgstr ""
 
@@ -13780,6 +13784,10 @@ msgstr "netstatプラグインをデプロイします"
 
 msgid "Deploy the plesk plugins"
 msgstr "pleskプラグインをデプロイする"
+
+#, fuzzy
+msgid "Deploy the special agent"
+msgstr "全ての特別なエージェント"
 
 msgid "Deploy without authentication."
 msgstr "パスワード認証を許可する。"
@@ -52479,6 +52487,10 @@ msgid ""
 msgstr ""
 "このスナップインは、タグ分類に基づいてホストのツリービューを表示します。マル"
 "チサイトのグローバル設定で使用するタグを構成できます。"
+
+#, fuzzy
+msgid "This special agent does not require any configuration."
+msgstr "グローバル構成を使用する"
 
 msgid "This stored report does not exist."
 msgstr ""

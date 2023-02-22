@@ -164,7 +164,7 @@ class UpdateResult:
 
 
 # TODO Centralize different stores and loaders of tree files:
-#   - inventory/HOSTNAME, inventory/HOSTNAME.gz
+#   - inventory/HOSTNAME, inventory/HOSTNAME.gz, inventory/.last
 #   - inventory_archive/HOSTNAME/TIMESTAMP,
 #   - inventory_delta_cache/HOSTNAME/TIMESTAMP_{TIMESTAMP,None}
 #   - status_data/HOSTNAME, status_data/HOSTNAME.gz
@@ -179,6 +179,7 @@ def load_tree(filepath: Path) -> StructuredDataNode:
 class TreeStore:
     def __init__(self, tree_dir: Path | str) -> None:
         self._tree_dir = Path(tree_dir)
+        self._last_filepath = Path(tree_dir) / ".last"
 
     def load(self, *, host_name: HostName | str) -> StructuredDataNode:
         return load_tree(self._tree_file(host_name))
@@ -197,7 +198,7 @@ class TreeStore:
         store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
 
         # Inform Livestatus about the latest inventory update
-        store.save_text_to_file(tree_file.with_name(".last"), "")
+        self._last_filepath.touch()
 
     def remove(self, *, host_name: HostName) -> None:
         self._tree_file(host_name).unlink(missing_ok=True)

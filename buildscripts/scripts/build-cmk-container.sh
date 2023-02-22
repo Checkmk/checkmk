@@ -124,6 +124,8 @@ elif [ "$EDITION" = managed ]; then
     SUFFIX=.cme
 elif [ "$EDITION" = cloud ]; then
     SUFFIX=.cce
+    REGISTRY=""
+    NAMESPACE="checkmk"
 else
     die "FEHLER: Unbekannte Edition '$EDITION'"
 fi

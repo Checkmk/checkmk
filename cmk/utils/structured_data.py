@@ -721,23 +721,37 @@ class Table:
             raise TypeError(f"Cannot update {type(self)} from {type(other)}")
 
         # TODO cleanup
-
+        old_filtered_rows = {
+            ident: filtered_row
+            for ident, row in other._rows.items()
+            if (
+                filtered_row := _get_filtered_dict(
+                    row,
+                    _make_retentions_filter_func(
+                        filter_func=filter_func,
+                        intervals_by_keys=other.retentions.get(ident),
+                        now=now,
+                    ),
+                )
+            )
+        }
+        self_filtered_rows = {
+            ident: filtered_row
+            for ident, row in self._rows.items()
+            if (filtered_row := _get_filtered_dict(row, filter_func))
+        }
         reasons = []
         retentions: TableRetentions = {}
-        compared_idents = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
+        compared_filtered_idents = _compare_dict_keys(
+            old_dict=old_filtered_rows,
+            new_dict=self_filtered_rows,
+        )
 
         self.add_key_columns(other.key_columns)
 
-        for ident in compared_idents.only_old:
+        for ident in compared_filtered_idents.only_old:
             old_row: SDRow = {}
-            for key, value in _get_filtered_dict(
-                other._rows[ident],
-                _make_retentions_filter_func(
-                    filter_func=filter_func,
-                    intervals_by_keys=other.retentions.get(ident),
-                    now=now,
-                ),
-            ).items():
+            for key, value in old_filtered_rows[ident].items():
                 retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
                 old_row.setdefault(key, value)
 
@@ -747,24 +761,18 @@ class Table:
                 self.add_row(ident, old_row)
                 reasons.append(f"added row below {ident!r}")
 
-        for ident in compared_idents.both:
-            compared_keys = _compare_dict_keys(
-                old_dict=other._rows[ident], new_dict=self._rows[ident]
-            )
-            retentions_filter_func = _make_retentions_filter_func(
-                filter_func=filter_func,
-                intervals_by_keys=other.retentions.get(ident),
-                now=now,
+        for ident in compared_filtered_idents.both:
+            compared_filtered_keys = _compare_dict_keys(
+                old_dict=old_filtered_rows[ident],
+                new_dict=self_filtered_rows[ident],
             )
             row: SDRow = {}
-            for key in compared_keys.only_old:
-                if retentions_filter_func(key):
-                    retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
-                    row.setdefault(key, other._rows[ident][key])
+            for key in compared_filtered_keys.only_old:
+                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
+                row.setdefault(key, other._rows[ident][key])
 
-            for key in compared_keys.both.union(compared_keys.only_new):
-                if filter_func(key):
-                    retentions.setdefault(ident, {})[key] = inv_intervals
+            for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
+                retentions.setdefault(ident, {})[key] = inv_intervals
 
             if row:
                 # Update row with key column entries
@@ -777,8 +785,8 @@ class Table:
                 self.add_row(ident, row)
                 reasons.append(f"added row below {ident!r}")
 
-        for ident in compared_idents.only_new:
-            for key in _get_filtered_dict(self._rows[ident], filter_func):
+        for ident in compared_filtered_idents.only_new:
+            for key in self_filtered_rows[ident]:
                 retentions.setdefault(ident, {})[key] = inv_intervals
 
         if retentions:

@@ -1444,8 +1444,38 @@ def test_table_update_from_previous() -> None:
             "c1": RetentionIntervals(4, 5, 6),
             "c2": RetentionIntervals(1, 2, 3),
             "c3": RetentionIntervals(4, 5, 6),
+            "kc": RetentionIntervals(4, 5, 6),
         }
     }
     assert current_table.rows == [
         {"c1": "C1: cur", "c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}
     ]
+
+
+def test_table_update_from_previous_filtered() -> None:
+    previous_table = Table(
+        key_columns=["kc"],
+        retentions={
+            ("KC",): {
+                "c1": RetentionIntervals(1, 2, 3),
+                "c2": RetentionIntervals(1, 2, 3),
+            }
+        },
+    )
+    previous_table.add_rows([{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}])
+    current_table = Table(key_columns=["kc"])
+    current_table.add_rows([{"kc": "KC", "c3": "C3: only cur"}])
+    current_table.update_from_previous(
+        0,
+        previous_table,
+        lambda k: k in ["c2", "c3"],
+        RetentionIntervals(4, 5, 6),
+    )
+    assert current_table.key_columns == ["kc"]
+    assert current_table.retentions == {
+        ("KC",): {
+            "c2": RetentionIntervals(1, 2, 3),
+            "c3": RetentionIntervals(4, 5, 6),
+        }
+    }
+    assert current_table.rows == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]

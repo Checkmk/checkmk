@@ -32,9 +32,9 @@
 # The physical processor has 8 virtual processors (0-7)
 #  SPARC-T5 (chipid 0, clock 3600 MHz)
 
-from typing import Optional
+from typing import Optional, Union
 
-from .agent_based_api.v1 import Attributes, register
+from .agent_based_api.v1 import Attributes, regex, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 KNOWN_PROCESSORS = {
@@ -73,12 +73,38 @@ register.agent_section(
 
 
 def inventory_solaris_psrinfo(section: StringTable) -> InventoryResult:
+    # Backport from >=2.2:
+    inventory_attributes: dict[str, Union[str, int]] = {
+        "model": section[-1][0],
+        "max_speed": f"{section[-1][-2]} {section[-1][-1].strip(')')}",
+    }
+
+    spec_line_regex = regex(
+        r".*physical processor"  # "The physical processor"
+        r"(?:.*?(\d+) cores?)?"  # Optional: "has 2 core(s)", capture number
+        r".*?(\d+) virtual processors?.*?"  # " and 16 virtual processor(s) (0-15)"
+    )
+
+    table_lines = [" ".join(line).lower() for line in section]
+    raw_matches = (spec_line_regex.match(line) for line in table_lines)
+    cpu_matches = [line.groups() for line in raw_matches if line is not None]
+
+    cpus = len(cpu_matches) or None
+    cores = sum(int(match[0]) for match in cpu_matches if match[0] is not None) or None
+    threads = sum(int(match[1]) for match in cpu_matches if match[1] is not None) or None
+
+    if cpus is not None:
+        inventory_attributes["cpus"] = cpus
+
+    if cores is not None:
+        inventory_attributes["cores"] = cores
+
+    if threads is not None:
+        inventory_attributes["threads"] = threads
+
     yield Attributes(
         path=["hardware", "cpu"],
-        inventory_attributes={
-            "model": section[-1][0],
-            "max_speed": f"{section[-1][-2]} {section[-1][-1].strip(')')}",
-        },
+        inventory_attributes=inventory_attributes,
     )
 
 

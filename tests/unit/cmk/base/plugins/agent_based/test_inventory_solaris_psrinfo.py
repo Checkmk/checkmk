@@ -20,9 +20,9 @@ from .utils_inventory import sort_inventory_result
 
 
 class PsrInfo(NamedTuple):
-    psrinfo: str
+    psrinfo: Optional[str]
     psrinfo_pv: str
-    psrinfo_p: str
+    psrinfo_p: Optional[str]
     psrinfo_t: Optional[str]
 
 
@@ -191,6 +191,9 @@ def test_inventory_solaris_cpus(test_set, expected_result):
                     inventory_attributes={
                         "model": "SPARC-S7",
                         "max_speed": "4267 MHz",
+                        "cpus": 2,
+                        "cores": 4,
+                        "threads": 32,
                     },
                 ),
             ],
@@ -203,6 +206,36 @@ def test_inventory_solaris_cpus(test_set, expected_result):
                     inventory_attributes={
                         "model": "SPARC-T5",
                         "max_speed": "3600 MHz",
+                        "cpus": 1,
+                        "threads": 16,
+                    },
+                ),
+            ],
+        ),
+        (
+            PsrInfo(
+                psrinfo=None,
+                psrinfo_pv=(
+                    "The physical processor has 5 cores and 40 virtual processors (0-39)\n"
+                    "  The core has 8 virtual processors (0-7)\n"
+                    "  The core has 8 virtual processors (8-15)\n"
+                    "  The core has 8 virtual processors (16-23)\n"
+                    "  The core has 8 virtual processors (24-31)\n"
+                    "  The core has 8 virtual processors (32-39)\n"
+                    "    SPARC-T5 (chipid 0, clock 3600 MHz)\n"
+                ),
+                psrinfo_p=None,
+                psrinfo_t=None,
+            ),
+            [
+                Attributes(
+                    path=["hardware", "cpu"],
+                    inventory_attributes={
+                        "model": "SPARC-T5",
+                        "max_speed": "3600 MHz",
+                        "cpus": 1,
+                        "threads": 40,
+                        "cores": 5,
                     },
                 ),
             ],

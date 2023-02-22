@@ -720,7 +720,8 @@ class Table:
         if not isinstance(other, Table):
             raise TypeError(f"Cannot update {type(self)} from {type(other)}")
 
-        # TODO cleanup
+        self.add_key_columns(other.key_columns)
+
         old_filtered_rows = {
             ident: filtered_row
             for ident, row in other._rows.items()
@@ -740,20 +741,18 @@ class Table:
             for ident, row in self._rows.items()
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
-        reasons = []
-        retentions: TableRetentions = {}
         compared_filtered_idents = _compare_dict_keys(
             old_dict=old_filtered_rows,
             new_dict=self_filtered_rows,
         )
 
-        self.add_key_columns(other.key_columns)
-
+        retentions: TableRetentions = {}
+        reasons = []
         for ident in compared_filtered_idents.only_old:
             old_row: SDRow = {}
             for key, value in old_filtered_rows[ident].items():
-                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
                 old_row.setdefault(key, value)
+                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
 
             if old_row:
                 # Update row with key column entries
@@ -768,8 +767,8 @@ class Table:
             )
             row: SDRow = {}
             for key in compared_filtered_keys.only_old:
-                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
                 row.setdefault(key, other._rows[ident][key])
+                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
 
             for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
                 retentions.setdefault(ident, {})[key] = inv_intervals
@@ -968,8 +967,6 @@ class Attributes:
         if not isinstance(other, Attributes):
             raise TypeError(f"Cannot update {type(self)} from {type(other)}")
 
-        reasons = []
-        retentions: RetentionIntervalsByKeys = {}
         compared_filtered_keys = _compare_dict_keys(
             old_dict=_get_filtered_dict(
                 other.pairs,
@@ -981,14 +978,17 @@ class Attributes:
             ),
             new_dict=_get_filtered_dict(self.pairs, filter_func),
         )
+
         pairs: SDPairs = {}
+        retentions: RetentionIntervalsByKeys = {}
         for key in compared_filtered_keys.only_old:
-            retentions[key] = other.retentions[key]
             pairs.setdefault(key, other.pairs[key])
+            retentions[key] = other.retentions[key]
 
         for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
             retentions[key] = inv_intervals
 
+        reasons = []
         if pairs:
             self.add_pairs(pairs)
             reasons.append("added pairs")

@@ -729,17 +729,17 @@ class Table:
         self.add_key_columns(other.key_columns)
 
         for ident in compared_idents.only_old:
+            retentions_filter_func = _make_retentions_filter_func(
+                filter_func=filter_func,
+                intervals_by_keys=other.retentions.get(ident),
+                now=now,
+            )
             old_row: SDRow = {}
             for key, value in other._rows[ident].items():
                 # Do not take key columns into account.
                 # These keys are mandatory and are added later.
-                if (
-                    key not in other.key_columns
-                    and filter_func(key)
-                    and (previous_intervals := other.retentions.get(ident, {}).get(key))
-                    and now <= previous_intervals.keep_until
-                ):
-                    retentions.setdefault(ident, {})[key] = previous_intervals
+                if key not in other.key_columns and retentions_filter_func(key):
+                    retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
                     old_row.setdefault(key, value)
 
             if old_row:
@@ -752,18 +752,17 @@ class Table:
             compared_keys = _compare_dict_keys(
                 old_dict=other._rows[ident], new_dict=self._rows[ident]
             )
-
+            retentions_filter_func = _make_retentions_filter_func(
+                filter_func=filter_func,
+                intervals_by_keys=other.retentions.get(ident),
+                now=now,
+            )
             row: SDRow = {}
             for key in compared_keys.only_old:
                 # Do not take key columns into account.
                 # These keys are mandatory and are added later.
-                if (
-                    key not in self.key_columns
-                    and filter_func(key)
-                    and (previous_intervals := other.retentions.get(ident, {}).get(key))
-                    and now <= previous_intervals.keep_until
-                ):
-                    retentions.setdefault(ident, {})[key] = previous_intervals
+                if key not in self.key_columns and retentions_filter_func(key):
+                    retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
                     row.setdefault(key, other._rows[ident][key])
 
             for key in compared_keys.both.union(compared_keys.only_new):
@@ -968,15 +967,15 @@ class Attributes:
         reasons = []
         retentions: RetentionIntervalsByKeys = {}
         compared_keys = _compare_dict_keys(old_dict=other.pairs, new_dict=self.pairs)
-
+        retentions_filter_func = _make_retentions_filter_func(
+            filter_func=filter_func,
+            intervals_by_keys=other.retentions,
+            now=now,
+        )
         pairs: SDPairs = {}
         for key in compared_keys.only_old:
-            if (
-                filter_func(key)
-                and (previous_intervals := other.retentions.get(key))
-                and now <= previous_intervals.keep_until
-            ):
-                retentions[key] = previous_intervals
+            if retentions_filter_func(key):
+                retentions[key] = other.retentions[key]
                 pairs.setdefault(key, other.pairs[key])
 
         for key in compared_keys.both.union(compared_keys.only_new):
@@ -1298,6 +1297,20 @@ def _compare_dict_keys(*, old_dict: dict, new_dict: dict) -> ComparedDictKeys:
         only_old=old_keys - new_keys,
         both=old_keys.intersection(new_keys),
         only_new=new_keys - old_keys,
+    )
+
+
+def _make_retentions_filter_func(
+    *,
+    filter_func: SDFilterFunc,
+    intervals_by_keys: RetentionIntervalsByKeys | None,
+    now: int,
+) -> SDFilterFunc:
+    return lambda k: bool(
+        filter_func(k)
+        and intervals_by_keys
+        and (intervals := intervals_by_keys.get(k))
+        and now <= intervals.keep_until
     )
 
 

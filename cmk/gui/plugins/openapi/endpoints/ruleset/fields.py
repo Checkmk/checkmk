@@ -78,7 +78,7 @@ class RulesetSearchOptions(base.BaseSchema):
     )
     deprecated = fields.Boolean(
         attribute="ruleset_deprecated",
-        description="Also show deprecated rulesets. Defaults to False.",
+        description="Only show deprecated rulesets. Defaults to False.",
         load_default=False,
     )
     used = fields.Boolean(

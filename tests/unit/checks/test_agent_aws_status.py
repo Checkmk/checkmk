@@ -6,9 +6,9 @@
 from tests.testlib import SpecialAgent
 
 
-def test_aws_health_argument_parsing() -> None:
+def test_aws_status_argument_parsing() -> None:
     # Assemble
-    agent = SpecialAgent("agent_aws_health")
+    agent = SpecialAgent("agent_aws_status")
     # Act
     arguments = agent.argument_func({}, "host", "ipaddress")
     # Assert

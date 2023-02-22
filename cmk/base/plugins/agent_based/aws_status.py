@@ -80,9 +80,9 @@ class AWSRSSFeed(pydantic.BaseModel):
 
 
 class AgentOutput(pydantic.BaseModel):
-    """Section scheme: aws_health
+    """Section scheme: aws_status
 
-    Internal json, which is used to forward the rss feed between agent_aws_health and the parse
+    Internal json, which is used to forward the rss feed between agent_aws_status and the parse
     function.
     """
 
@@ -102,22 +102,22 @@ class SortedEntries(list[Entry]):
 
 
 v1.register.agent_section(
-    name="aws_health",
+    name="aws_status",
     parse_function=parse_string_table,
 )
 
 
-def discover_aws_health(section: AWSRSSFeed) -> type_defs.DiscoveryResult:
+def discover_aws_status(section: AWSRSSFeed) -> type_defs.DiscoveryResult:
     yield v1.Service(item="Global")
     for _id, region in aws_constants.AWSRegions:
         yield v1.Service(item=region)
 
 
-def check_aws_health(item: str, section: AWSRSSFeed) -> type_defs.CheckResult:
-    yield from _check_aws_health(Seconds(time.time()), item, section)
+def check_aws_status(item: str, section: AWSRSSFeed) -> type_defs.CheckResult:
+    yield from _check_aws_status(Seconds(time.time()), item, section)
 
 
-def _check_aws_health(
+def _check_aws_status(
     current_time: Seconds,
     item: str,
     section: AWSRSSFeed,
@@ -129,7 +129,7 @@ def _check_aws_health(
     )
     if relevant_entries:
         for group in _group_by_service_identifier(relevant_entries):
-            yield from _check_aws_health_for_service(group)
+            yield from _check_aws_status_for_service(group)
     else:
         yield v1.Result(state=v1.State.OK, summary="No issues")
 
@@ -173,7 +173,7 @@ def _group_by_service_identifier(entries: SortedEntries) -> list[SortedEntries]:
     ]
 
 
-def _check_aws_health_for_service(entries: SortedEntries) -> type_defs.CheckResult:
+def _check_aws_status_for_service(entries: SortedEntries) -> type_defs.CheckResult:
     newest_entry = entries[0]
     yield v1.Result(state=_state_from_entry(newest_entry), summary=newest_entry.title)
     for entry in entries:
@@ -187,9 +187,9 @@ def _state_from_entry(entry: Entry) -> v1.State:
 
 
 v1.register.check_plugin(
-    name="aws_health",
+    name="aws_status",
     # TODO: CMK-8322
-    service_name="AWS Health %s",
-    discovery_function=discover_aws_health,
-    check_function=check_aws_health,
+    service_name="AWS Status %s",
+    discovery_function=discover_aws_status,
+    check_function=check_aws_status,
 )

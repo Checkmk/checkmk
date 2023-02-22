@@ -2,7 +2,7 @@
 # Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Special agent: agent_aws_health.
+"""Special agent: agent_aws_status.
 
 This agent retrieves the rss feed from https://status.aws.amazon.com/rss/all.rss.
 Since this feed is public, no authentication is required.
@@ -22,9 +22,9 @@ Seconds = typing.NewType("Seconds", float)
 
 
 class AgentOutput(pydantic.BaseModel):
-    """Section scheme: aws_health
+    """Section scheme: aws_status
 
-    Internal json, which is used to forward the rss feed between agent_aws_health and the check.
+    Internal json, which is used to forward the rss feed between agent_aws_status and the check.
     """
 
     rss_str: str
@@ -42,7 +42,7 @@ def _get_rss() -> requests.Response:
 def write_section(_args: Args, get_rss: typing.Callable[[], requests.Response] = _get_rss) -> int:
     response = get_rss()
     section = AgentOutput(rss_str=response.text)
-    with agent_common.SectionWriter("aws_health") as writer:
+    with agent_common.SectionWriter("aws_status") as writer:
         writer.append(section.json())
     return 0
 

@@ -6,7 +6,7 @@
 import pytest
 import requests
 
-from cmk.special_agents import agent_aws_health
+from cmk.special_agents import agent_aws_status
 
 RSS_STR = """
 <rss version="2.0">
@@ -33,15 +33,15 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
         response._content = RSS_STR.encode("utf-8")
         return response
 
-    args = agent_aws_health.parse_arguments([])
+    args = agent_aws_status.parse_arguments([])
 
     # Act
-    agent_aws_health.write_section(args, get_rss=_get_rss)
+    agent_aws_status.write_section(args, get_rss=_get_rss)
     # Assert
     captured = capsys.readouterr()
     assert captured.out.split("\n") == [
-        "<<<aws_health:sep(0)>>>",
-        agent_aws_health.AgentOutput(rss_str=RSS_STR).json(),
+        "<<<aws_status:sep(0)>>>",
+        agent_aws_status.AgentOutput(rss_str=RSS_STR).json(),
         "",
     ]
     assert captured.err == ""

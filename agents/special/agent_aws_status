@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.special_agents.agent_aws_health import main
+from cmk.special_agents.agent_aws_status import main
 
 if __name__ == "__main__":
     sys.exit(main())

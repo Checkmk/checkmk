@@ -1,5 +1,5 @@
-title: AWS: Health
-agents: aws_health
+title: AWS: Status
+agents: aws_status
 catalog: cloud/aws
 license: GPLv2
 distribution: check_mk
@@ -8,7 +8,7 @@ description:
  https://health.aws.amazon.com/health/status.
 
  To make this check work you have to configure the related special
- agent via {Amazon Web Service (AWS) Health}.
+ agent via {Amazon Web Service (AWS) Status}.
 
 item:
  The name of the region.

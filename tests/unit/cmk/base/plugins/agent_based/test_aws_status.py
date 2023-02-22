@@ -9,10 +9,10 @@ import time
 import pydantic_factories
 import pytest
 
-from cmk.base.plugins.agent_based import aws_health
+from cmk.base.plugins.agent_based import aws_status
 from cmk.base.plugins.agent_based.agent_based_api import v1
 
-CURRENT_TIME = aws_health.Seconds(1670000000.0)
+CURRENT_TIME = aws_status.Seconds(1670000000.0)
 
 
 def _random_time(oldest: float, newest: float) -> time.struct_time:
@@ -20,7 +20,7 @@ def _random_time(oldest: float, newest: float) -> time.struct_time:
 
 
 class EntryFactory(pydantic_factories.ModelFactory):
-    __model__ = aws_health.Entry
+    __model__ = aws_status.Entry
 
     @classmethod
     def published_parsed(cls) -> time.struct_time:
@@ -34,7 +34,7 @@ class RecentEntryFactory(EntryFactory):
     @classmethod
     def published_parsed(cls) -> time.struct_time:
         return _random_time(
-            oldest=CURRENT_TIME - aws_health._IGNORE_ENTRIES_OLDER_THAN + 1.0,
+            oldest=CURRENT_TIME - aws_status._IGNORE_ENTRIES_OLDER_THAN + 1.0,
             newest=CURRENT_TIME,
         )
 
@@ -44,7 +44,7 @@ class OutdatedEntryFactory(EntryFactory):
     def published_parsed(cls) -> time.struct_time:
         return _random_time(
             oldest=1.0,
-            newest=CURRENT_TIME - aws_health._IGNORE_ENTRIES_OLDER_THAN - 1.0,
+            newest=CURRENT_TIME - aws_status._IGNORE_ENTRIES_OLDER_THAN - 1.0,
         )
 
 
@@ -84,17 +84,17 @@ def test_parse_string_table() -> None:
       </channel>
     </rss>
     """
-    string_table = [[aws_health.AgentOutput(rss_str=rss_str).json()]]
+    string_table = [[aws_status.AgentOutput(rss_str=rss_str).json()]]
     # Act
-    section = aws_health.parse_string_table(string_table)
+    section = aws_status.parse_string_table(string_table)
     # Assert
     assert section.entries
 
 
 @pytest.mark.parametrize("size", [0, 2, 4])
-def test_discovery_aws_health(size: int) -> None:
-    section = aws_health.AWSRSSFeed(entries=EntryFactory.batch(size=size))
-    discovery_results = list(aws_health.discover_aws_health(section))
+def test_discovery_aws_status(size: int) -> None:
+    section = aws_status.AWSRSSFeed(entries=EntryFactory.batch(size=size))
+    discovery_results = list(aws_status.discover_aws_status(section))
     assert any(v1.Service(item="Global") == service for service in discovery_results)
 
 
@@ -119,7 +119,7 @@ def test_discovery_aws_health(size: int) -> None:
         ),
     ],
 )
-def test_service_region_id(entry: aws_health.Entry, expected_id: str) -> None:
+def test_service_region_id(entry: aws_status.Entry, expected_id: str) -> None:
     assert entry.service_region_id() == expected_id
 
 
@@ -144,18 +144,18 @@ def test_service_region_id(entry: aws_health.Entry, expected_id: str) -> None:
         ),
     ],
 )
-def test_region(entry: aws_health.Entry, expected_region: str) -> None:
+def test_region(entry: aws_status.Entry, expected_region: str) -> None:
     assert entry.region() == expected_region
 
 
-def test__check_aws_health_no_issues() -> None:
-    section = aws_health.AWSRSSFeed(entries=[])
-    check_result = list(aws_health._check_aws_health(CURRENT_TIME, "Global", section))
+def test__check_aws_status_no_issues() -> None:
+    section = aws_status.AWSRSSFeed(entries=[])
+    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", section))
     assert [v1.Result(state=v1.State.OK, summary="No issues")] == check_result
 
 
-def test__check_aws_health_remove_outdated() -> None:
-    section = aws_health.AWSRSSFeed(
+def test__check_aws_status_remove_outdated() -> None:
+    section = aws_status.AWSRSSFeed(
         entries=[
             OutdatedEntryFactory.build(
                 link="http://status.aws.amazon.com/",
@@ -167,12 +167,12 @@ def test__check_aws_health_remove_outdated() -> None:
             ),
         ]
     )
-    check_result = list(aws_health._check_aws_health(CURRENT_TIME, "Global", section))
+    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", section))
     assert [v1.Result(state=v1.State.OK, summary="No issues")] == check_result
 
 
-def test__check_aws_health_global_issues() -> None:
-    section = aws_health.AWSRSSFeed(
+def test__check_aws_status_global_issues() -> None:
+    section = aws_status.AWSRSSFeed(
         entries=[
             RecentEntryFactory.build(
                 link="http://status.aws.amazon.com/",
@@ -184,7 +184,7 @@ def test__check_aws_health_global_issues() -> None:
             ),
         ]
     )
-    check_result = list(aws_health._check_aws_health(CURRENT_TIME, "Global", section))
+    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", section))
     assert len(check_result) == 1 + len(section.entries)
 
 
@@ -203,25 +203,25 @@ def test__restrict_to_region() -> None:
             id="http://status.aws.amazon.com/#billingconsole_1660000001",
         ),
     ]
-    us_east_entries = aws_health._restrict_to_region(entries, "US East (N. Virginia)")
+    us_east_entries = aws_status._restrict_to_region(entries, "US East (N. Virginia)")
     assert us_east_entries == entries[:1]
 
 
 def test__sort_newest_entry_first() -> None:
     times = [1.0, 3.0, 2.0]
     entries = [EntryFactory.build(published_parsed=time.localtime(t)) for t in times]
-    sorted_entries = aws_health._sort_newest_entry_first(entries)
+    sorted_entries = aws_status._sort_newest_entry_first(entries)
     assert [time.mktime(e.published_parsed) for e in sorted_entries] == [3.0, 2.0, 1.0]
 
 
 def test__obtain_recent_entries() -> None:
-    entries = aws_health._sort_newest_entry_first(RecentEntryFactory.batch(size=3))
-    recent_entries = aws_health._obtain_recent_entries(CURRENT_TIME, entries)
+    entries = aws_status._sort_newest_entry_first(RecentEntryFactory.batch(size=3))
+    recent_entries = aws_status._obtain_recent_entries(CURRENT_TIME, entries)
     assert entries == recent_entries
 
 
 def test__group_by_service_identifier_single() -> None:
-    entries = aws_health.SortedEntries(
+    entries = aws_status.SortedEntries(
         [
             EntryFactory.build(
                 link="http://status.aws.amazon.com/",
@@ -229,7 +229,7 @@ def test__group_by_service_identifier_single() -> None:
             ),
         ]
     )
-    groups = aws_health._group_by_service_identifier(entries)
+    groups = aws_status._group_by_service_identifier(entries)
     assert groups == [entries]
 
 
@@ -241,24 +241,24 @@ def test__group_by_service_identifier_two() -> None:
         "http://status.aws.amazon.com/#supportcenter-us-east-1_1600000000",
     ]
 
-    entries = aws_health._sort_newest_entry_first(
+    entries = aws_status._sort_newest_entry_first(
         [EntryFactory.build(link="http://status.aws.amazon.com/", id=id_) for id_ in ids]
     )
-    groups = aws_health._group_by_service_identifier(entries)
+    groups = aws_status._group_by_service_identifier(entries)
     group_ids = sorted([{e.service_region_id() for e in group} for group in groups])
     assert group_ids == [{"#supportcenter-us-east-1"}, {"#rds-us-east-1"}]
-    assert any(group == aws_health._sort_newest_entry_first(group) for group in groups)
+    assert any(group == aws_status._sort_newest_entry_first(group) for group in groups)
 
 
-def test__check_aws_health_for_service() -> None:
+def test__check_aws_status_for_service() -> None:
     # Assemble
-    entries = aws_health._sort_newest_entry_first(RecentEntryFactory.batch(size=3))
+    entries = aws_status._sort_newest_entry_first(RecentEntryFactory.batch(size=3))
     newest_entry = entries[0]
     # Act
-    title_result, *entry_results = aws_health._check_aws_health_for_service(entries)
+    title_result, *entry_results = aws_status._check_aws_status_for_service(entries)
     # Assert
     assert title_result == v1.Result(
-        state=aws_health._state_from_entry(newest_entry), summary=newest_entry.title
+        state=aws_status._state_from_entry(newest_entry), summary=newest_entry.title
     )
     for r, e in zip(entry_results, entries):
         assert isinstance(r, v1.Result)
@@ -303,4 +303,4 @@ def test__check_aws_health_for_service() -> None:
 )
 def test__state_from_entry(title: str, expected_state: v1.State) -> None:
     entry = EntryFactory.build(title=title)
-    assert expected_state == aws_health._state_from_entry(entry)
+    assert expected_state == aws_status._state_from_entry(entry)

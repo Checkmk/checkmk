@@ -6,10 +6,10 @@
 from collections.abc import Sequence
 
 
-def agent_aws_health_arguments(
+def agent_aws_status_arguments(
     _params: object, _hostname: str, _ipaddress: None | str
 ) -> Sequence[str]:
     return []
 
 
-special_agent_info["aws_health"] = agent_aws_health_arguments
+special_agent_info["aws_status"] = agent_aws_status_arguments

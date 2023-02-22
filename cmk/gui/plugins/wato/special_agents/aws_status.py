@@ -9,11 +9,11 @@ from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import FixedValue
 
 
-def _valuespec_special_agents_aws_health() -> FixedValue:
+def _valuespec_special_agents_aws_status() -> FixedValue:
     # CMK-8322
     return FixedValue(
         value={},
-        title=_("Amazon Web Services (AWS) Health"),
+        title=_("Amazon Web Services (AWS) Status"),
         help=_("This special agent does not require any configuration."),
         totext=_("Deploy the special agent"),
     )
@@ -22,7 +22,7 @@ def _valuespec_special_agents_aws_health() -> FixedValue:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:aws_health",
-        valuespec=_valuespec_special_agents_aws_health,
+        name="special_agents:aws_status",
+        valuespec=_valuespec_special_agents_aws_status,
     )
 )

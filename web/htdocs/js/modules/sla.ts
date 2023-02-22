@@ -4,7 +4,11 @@
 
 import * as utils from "utils";
 
-export function details_period_hover(td, sla_period, onoff) {
+export function details_period_hover(
+    td: HTMLTableCellElement,
+    sla_period: string,
+    onoff: 0 | 1
+) {
     if (utils.has_class(td, "lock_hilite")) {
         return;
     }
@@ -19,7 +23,10 @@ export function details_period_hover(td, sla_period, onoff) {
     }
 }
 
-export function details_period_click(td, sla_period) {
+export function details_period_click(
+    td: HTMLTableCellElement,
+    sla_period: string
+) {
     var sla_period_elements = utils.querySelectorAllByClassName(sla_period);
     var onoff = utils.has_class(td, "lock_hilite");
     for (var i = 0; i < sla_period_elements.length; i++) {
@@ -33,11 +40,15 @@ export function details_period_click(td, sla_period) {
     }
 }
 
-export function details_table_hover(tr, row_id, onoff) {
+export function details_table_hover(
+    tr: HTMLTableRowElement,
+    row_id: string,
+    onoff: 1 | 0
+) {
     var sla_period_elements = tr
-        .closest("table")
-        .closest("tbody")
-        .getElementsByClassName(row_id);
+        .closest("table")!
+        .closest("tbody")!
+        .getElementsByClassName(row_id) as HTMLCollectionOf<HTMLElement>;
     for (var i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
             utils.add_class(sla_period_elements[i], "sla_hilite");

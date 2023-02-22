@@ -2326,3 +2326,10 @@ class html(ABCHTMLGenerator):
                     class_=oddeven,
                 )
         self.close_table()
+
+
+class DryRunHTMLGenerator(ABCHTMLGenerator):
+    """Generates HTML, but fails if you want to send it anywhere"""
+
+    def _write(self, _text: HTMLContent) -> None:
+        raise NotImplementedError

@@ -151,7 +151,8 @@ div.dashlet_inner div.stats {
   }
 }
 
-div.site_overview div.dashlet_inner {
+div.site_overview div.dashlet_inner,
+div.average_scatterplot div.dashlet_inner {
   overflow: visible;
 }
 

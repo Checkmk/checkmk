@@ -736,9 +736,7 @@ class Table:
             )
             old_row: SDRow = {}
             for key, value in other._rows[ident].items():
-                # Do not take key columns into account.
-                # These keys are mandatory and are added later.
-                if key not in other.key_columns and retentions_filter_func(key):
+                if retentions_filter_func(key):
                     retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
                     old_row.setdefault(key, value)
 
@@ -759,14 +757,12 @@ class Table:
             )
             row: SDRow = {}
             for key in compared_keys.only_old:
-                # Do not take key columns into account.
-                # These keys are mandatory and are added later.
-                if key not in self.key_columns and retentions_filter_func(key):
+                if retentions_filter_func(key):
                     retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
                     row.setdefault(key, other._rows[ident][key])
 
             for key in compared_keys.both.union(compared_keys.only_new):
-                if key not in self.key_columns and filter_func(key):
+                if filter_func(key):
                     retentions.setdefault(ident, {})[key] = inv_intervals
 
             if row:
@@ -782,7 +778,7 @@ class Table:
 
         for ident in compared_idents.only_new:
             for key in self._rows[ident]:
-                if key not in self.key_columns and filter_func(key):
+                if filter_func(key):
                     retentions.setdefault(ident, {})[key] = inv_intervals
 
         if retentions:

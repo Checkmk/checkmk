@@ -256,8 +256,8 @@ def test__inventorize_real_host_only_items() -> None:
         (
             "all",
             {
-                ("bar0",): {"col0": (10, 0, 5), "col1": (10, 0, 5)},
-                ("bar1",): {"col0": (10, 0, 5), "col1": (10, 0, 5)},
+                ("bar0",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
+                ("bar1",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
             },
         ),
         ("nothing", {}),
@@ -439,8 +439,8 @@ def test__inventorize_real_host_only_intervals(
         (
             "all",
             {
-                ("bar0",): {"col0": (1, 2, 5), "col1": (1, 2, 5)},
-                ("bar1",): {"col0": (1, 2, 5), "col1": (1, 2, 5)},
+                ("bar0",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
+                ("bar1",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
             },
         ),
         ("nothing", {}),

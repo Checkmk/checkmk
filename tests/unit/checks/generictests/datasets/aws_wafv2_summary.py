@@ -127,12 +127,12 @@ checks = {
             [
                 (0, "Total number of Web ACLs: 3"),
                 (0, "CloudFront: 1"),
-                (0, "EU (Frankfurt): 1"),
+                (0, "Europe (Frankfurt): 1"),
                 (0, "US East (N. Virginia): 1"),
                 (
                     0,
                     "\nCloudFront:\njoerg-herbel-acl-global -- Description: [no description], Number "
-                    "of rules and rule groups: 1\nEU (Frankfurt):\njoerg-herbel-acl -- Description: "
+                    "of rules and rule groups: 1\nEurope (Frankfurt):\njoerg-herbel-acl -- Description: "
                     "[no description], Number of rules and rule groups: 1\nUS East (N. Virginia):\n"
                     "us-acl -- Description: America, Number of rules and rule groups: 0",
                 ),

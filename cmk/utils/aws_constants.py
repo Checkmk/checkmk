@@ -17,6 +17,11 @@ from cmk.utils.i18n import _
 #   .--regions--------------------------------------------------------------
 
 AWSRegions = [
+    # Changes to the right-hand side of this list cause the following user facing changes:
+    # - Incompatible: the service name of the check `aws_status`
+    # - Compatible: in the summary of check `aws_elb_summary`
+    # - Compatible: The displayed options in the rules `Amazon Web Services (AWS)` and
+    #   `Amazon Web Services (AWS) Status` are updated.
     ("af-south-1", "Africa (Cape Town)"),
     ("ap-east-1", "Asia Pacific (Hong Kong)"),
     ("ap-south-1", "Asia Pacific (Mumbai)"),
@@ -30,14 +35,14 @@ AWSRegions = [
     ("ca-central-1", "Canada (Central)"),
     ("cn-north-1", "China (Beijing)"),
     ("cn-northwest-1", "China (Ningxia)"),
-    ("eu-central-1", "EU (Frankfurt)"),
+    ("eu-central-1", "Europe (Frankfurt)"),
     ("eu-central-2", "Europe (Zurich)"),
-    ("eu-west-1", "EU (Ireland)"),
-    ("eu-west-2", "EU (London)"),
-    ("eu-south-1", "EU (Milan)"),
+    ("eu-west-1", "Europe (Ireland)"),
+    ("eu-west-2", "Europe (London)"),
+    ("eu-south-1", "Europe (Milan)"),
     ("eu-south-2", "Europe (Spain)"),
-    ("eu-west-3", "EU (Paris)"),
-    ("eu-north-1", "EU (Stockholm)"),
+    ("eu-west-3", "Europe (Paris)"),
+    ("eu-north-1", "Europe (Stockholm)"),
     ("me-central-1", "Middle East (UAE)"),
     ("me-south-1", "Middle East (Bahrain)"),
     ("sa-east-1", "South America (Sao Paulo)"),
@@ -45,8 +50,8 @@ AWSRegions = [
     ("us-east-1", "US East (N. Virginia)"),
     ("us-west-1", "US West (N. California)"),
     ("us-west-2", "US West (Oregon)"),
-    ("us-gov-east-1", "AWS GovCloud (US-East)"),
-    ("us-gov-west-1", "AWS GovCloud (US-West)"),
+    ("us-gov-east-1", "GovCloud (US-East)"),
+    ("us-gov-west-1", "GovCloud (US-West)"),
 ]
 
 # .

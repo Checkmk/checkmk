@@ -345,11 +345,11 @@ checks = {
             {},
             [
                 (0, "Total number of tables: 4"),
-                (0, "EU (Frankfurt): 3"),
+                (0, "Europe (Frankfurt): 3"),
                 (0, "US East (N. Virginia): 1"),
                 (
                     0,
-                    "\nEU (Frankfurt):\njoerg-herbel-global-table -- Items: 2, Size: 123 B, "
+                    "\nEurope (Frankfurt):\njoerg-herbel-global-table -- Items: 2, Size: 123 B, "
                     "Status: ACTIVE\njoerg-herbel-on-demand -- Items: 1, Size: 10 B, Status: "
                     "ACTIVE\njoerg-herbel-table -- Items: 6, Size: 481 B, Status: ACTIVE\nUS "
                     "East (N. Virginia):\njoerg-herbel-global-table -- Items: 2, Size: 123 B, "

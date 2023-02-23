@@ -1368,21 +1368,22 @@ def create_namespace_api_sections(
 def create_resource_quota_api_sections(
     resource_quota: api.ResourceQuota, piggyback_name: str
 ) -> Iterator[WriteableSection]:
-    if resource_quota.spec.hard is None:
+    if (hard := resource_quota.spec.hard) is None:
         return
 
-    yield from (
-        WriteableSection(
+    if hard.memory is not None:
+        yield WriteableSection(
             section_name=SectionName("kube_resource_quota_memory_resources_v1"),
-            section=section.HardResourceRequirement.parse_obj(resource_quota.spec.hard.memory),
+            section=section.HardResourceRequirement.parse_obj(hard.memory),
             piggyback_name=piggyback_name,
-        ),
-        WriteableSection(
+        )
+
+    if hard.cpu is not None:
+        yield WriteableSection(
             section_name=SectionName("kube_resource_quota_cpu_resources_v1"),
-            section=section.HardResourceRequirement.parse_obj(resource_quota.spec.hard.cpu),
+            section=section.HardResourceRequirement.parse_obj(hard.cpu),
             piggyback_name=piggyback_name,
-        ),
-    )
+        )
 
 
 def write_nodes_api_sections(

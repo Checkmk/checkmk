@@ -49,9 +49,10 @@ import abc
 import copy
 import enum
 import logging
+import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Final, Generic, NamedTuple, TypeVar
+from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
 import cmk.utils
 import cmk.utils.paths
@@ -69,6 +70,7 @@ __all__ = [
     "FileCacheMode",
     "FileCacheOptions",
     "MaxAge",
+    "NoCache",
 ]
 
 
@@ -88,11 +90,11 @@ class MaxAge(NamedTuple):
     inventory: float
 
     @classmethod
-    def zero(cls):
+    def zero(cls) -> MaxAge:
         return cls(0.0, 0.0, 0.0)
 
     @classmethod
-    def unlimited(cls):
+    def unlimited(cls) -> MaxAge:
         return cls(float("inf"), float("inf"), float("inf"))
 
     def get(self, mode: Mode, *, default: float = 0.0) -> float:
@@ -273,6 +275,26 @@ class FileCache(Generic[TRawData], abc.ABC):
             _store.save_bytes_to_file(path, self._to_cache_file(raw_data))
         except Exception as e:
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
+
+
+class NoCache(FileCache[TRawData]):
+    def __init__(self, hostname: HostName, *args: object, **kw: object) -> None:
+        super().__init__(
+            hostname,
+            path_template=str(os.devnull),
+            max_age=MaxAge.zero(),
+            simulation=False,
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
+        )
+
+    @staticmethod
+    def _from_cache_file(raw_data: object) -> NoReturn:
+        raise TypeError("NoCache")
+
+    @staticmethod
+    def _to_cache_file(raw_data: TRawData) -> NoReturn:
+        raise TypeError("NoCache")
 
 
 class FileCacheOptions(NamedTuple):

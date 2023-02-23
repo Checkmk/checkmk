@@ -50,7 +50,14 @@ from cmk.fetchers import (
     TCPFetcher,
 )
 from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
-from cmk.fetchers.filecache import AgentFileCache, FileCache, FileCacheMode, MaxAge, SNMPFileCache
+from cmk.fetchers.filecache import (
+    AgentFileCache,
+    FileCache,
+    FileCacheMode,
+    MaxAge,
+    NoCache,
+    SNMPFileCache,
+)
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
 
 
@@ -98,6 +105,12 @@ class TestFileCache:
 
     def test_deserialization(self, file_cache: FileCache) -> None:
         assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
+
+
+class TestNoCache:
+    def test_serialization(self) -> None:
+        cache: NoCache = NoCache(HostName("testhost"))
+        assert cache.from_json(cache.to_json()) == cache
 
 
 # This is horrible to type since the AgentFileCache needs the AgentRawData and the

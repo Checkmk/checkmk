@@ -5,11 +5,17 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
+import {CMKAjaxReponse} from "types";
 
 let g_content_loc: null | string = null;
 let g_scrollbar: SimpleBar | null | undefined = null;
 
-export function initialize_sidebar(update_interval, refresh, restart, static_) {
+export function initialize_sidebar(
+    update_interval: number,
+    refresh: [string, string][],
+    restart: string[],
+    static_: string[]
+) {
     if (restart) {
         sidebar_restart_time = Math.floor(new Date().getTime() / 1000);
     }
@@ -54,7 +60,7 @@ export function register_event_handlers() {
 // frame while performing a drag scroll.
 // This is no 100% solution. When moving the mouse out of browser window
 // without moving the mouse over the edge elements the dragging is not ended.
-export function register_edge_listeners(obj) {
+export function register_edge_listeners(obj: Window | null) {
     // It is possible to open other domains in the content frame - don't register
     // the event in that case. It is not permitted by most browsers!
     if (!is_content_frame_accessible()) return;
@@ -108,7 +114,7 @@ export function snapin_start_drag(event: MouseEvent) {
     return utils.prevent_default_events(event);
 }
 
-function snapinDrag(event) {
+function snapinDrag(event: MouseEvent) {
     if (g_snapin_dragging === false) return true;
 
     // Is the mouse placed of the title bar of the snapin?
@@ -128,14 +134,14 @@ function snapinDrag(event) {
     line.setAttribute("id", "snapinDragIndicator");
     const o = getSnapinTargetPos();
     if (o != null) {
-        snapinAddBefore(o.parentNode, o, line);
+        snapinAddBefore(o.parentNode!, o, line);
     } else {
-        snapinAddBefore(g_snapin_dragging.parentNode, null, line);
+        snapinAddBefore(g_snapin_dragging.parentNode!, null, line);
     }
     return true;
 }
 
-function snapinAddBefore(par, o, add) {
+function snapinAddBefore(par: Node, o: Node | null, add: HTMLElement) {
     if (o != null) {
         par.insertBefore(add, o);
     } else {
@@ -150,7 +156,7 @@ function removeSnapinDragIndicator() {
     }
 }
 
-function snapinDrop(event, targetpos) {
+function snapinDrop(event: MouseEvent, targetpos: HTMLElement) {
     if (g_snapin_dragging === false) return true;
 
     // Reset properties
@@ -168,8 +174,8 @@ function snapinDrop(event, targetpos) {
     }
 
     const par = g_snapin_dragging.parentNode;
-    par?.removeChild(g_snapin_dragging);
-    snapinAddBefore(par, targetpos, g_snapin_dragging);
+    par!.removeChild(g_snapin_dragging);
+    snapinAddBefore(par!, targetpos, g_snapin_dragging);
 
     // Now send the new information to the backend
     const thisId = g_snapin_dragging.id.replace("snapin_container_", "");
@@ -190,17 +196,17 @@ function snapinTerminateDrag() {
     g_snapin_dragging = false;
 }
 
-export function snapin_stop_drag(event) {
+export function snapin_stop_drag(event: Event) {
     if (!g_snapin_dragging) return;
 
     removeSnapinDragIndicator();
-    snapinDrop(event, getSnapinTargetPos());
+    snapinDrop(event as MouseEvent, getSnapinTargetPos());
     g_snapin_dragging = false;
 }
 
-function getDivChildNodes(node) {
-    const children: ChildNode[] = [];
-    for (const child of node.childNodes) {
+function getDivChildNodes(node: Node) {
+    const children: HTMLElement[] = [];
+    for (const child of node.childNodes as NodeListOf<HTMLElement>) {
         if (child.tagName === "DIV") {
             children.push(child);
         }
@@ -209,11 +215,11 @@ function getDivChildNodes(node) {
 }
 
 function getSnapinList() {
-    const l: ChildNode[] = [];
+    const l: HTMLElement[] = [];
     g_snapin_dragging = g_snapin_dragging as HTMLElement;
-    for (const child of getDivChildNodes(g_snapin_dragging.parentNode)) {
+    for (const child of getDivChildNodes(g_snapin_dragging.parentNode!)) {
         // Skip non snapin objects and the currently dragged object
-        const id = (child as HTMLElement).id;
+        const id = child.id;
         if (id && id.substr(0, 7) == "snapin_" && id != g_snapin_dragging.id) {
             l.push(child);
         }
@@ -221,7 +227,7 @@ function getSnapinList() {
     return l;
 }
 
-function getSnapinCoords(obj) {
+function getSnapinCoords(obj: HTMLElement) {
     const snapinTop = (g_snapin_dragging as HTMLElement).offsetTop;
     // + document.getElementById("side_content").scrollTop;
 
@@ -254,15 +260,15 @@ function getSnapinTargetPos() {
         // Initialize with the first snapin in the list
         if (objId === -1) {
             objId = i;
-            const coords = getSnapinCoords(child);
+            const coords = getSnapinCoords(child as HTMLElement);
             objCorner = coords[3];
             continue;
         }
 
         // First check which corner is closer. Upper left or
         // the bottom left.
-        const curCoords = getSnapinCoords(childs[objId]);
-        const newCoords = getSnapinCoords(child);
+        const curCoords = getSnapinCoords(childs[objId] as HTMLElement);
+        const newCoords = getSnapinCoords(child as HTMLElement);
 
         // Is the upper left corner closer?
         if (newCoords[2] < curCoords[2]) {
@@ -292,7 +298,9 @@ export function is_content_frame_accessible() {
 
 export function update_content_location() {
     // initialize the original title
+    //@ts-ignore
     if (typeof window.parent["orig_title"] == "undefined") {
+        //@ts-ignore
         window.parent["orig_title"] = window.parent.document.title;
     }
 
@@ -303,8 +311,10 @@ export function update_content_location() {
     let page_title;
     if (content_frame.document.title != "") {
         page_title =
+            //@ts-ignore
             window.parent["orig_title"] + " - " + content_frame.document.title;
     } else {
+        //@ts-ignore
         page_title = window.parent["orig_title"];
     }
     window.parent.document.title = page_title;
@@ -338,7 +348,7 @@ export function update_content_location() {
 
 const g_scrolling = true;
 
-export function scroll_window(speed) {
+export function scroll_window(speed: number) {
     const c = document.getElementById("side_content");
 
     if (g_scrolling) {
@@ -384,12 +394,12 @@ let static_snapins: string[] = [];
 // Contains a timestamp which holds the time of the last nagios restart handling
 let sidebar_restart_time: number | null = null;
 // Configures the number of seconds to reload all snapins which request it
-let sidebar_update_interval = null;
+let sidebar_update_interval: number | null = null;
 
-export function add_snapin(name) {
+export function add_snapin(name: string) {
     ajax.call_ajax("sidebar_ajax_add_snapin.py?name=" + name, {
         method: "POST",
-        response_handler: function (_data, response) {
+        response_handler: function (_data: any, response: string) {
             const data = JSON.parse(response);
             if (data.result_code !== 0) {
                 return;
@@ -398,7 +408,7 @@ export function add_snapin(name) {
             const result = data.result;
 
             if (result.refresh) {
-                const entry: string[] = [result.name, result.url];
+                const entry: [string, string] = [result.name, result.url];
                 if (refresh_snapins.indexOf(entry) === -1) {
                     refresh_snapins.push(entry);
                 }
@@ -450,13 +460,14 @@ export function add_snapin(name) {
 }
 
 // Removes the snapin from the current sidebar and informs the server for persistance
-export function remove_sidebar_snapin(oLink, url) {
-    const container = oLink.parentNode.parentNode.parentNode.parentNode;
+export function remove_sidebar_snapin(oLink: HTMLButtonElement, url: string) {
+    const container = oLink.parentNode!.parentNode!.parentNode!
+        .parentNode as HTMLElement;
     const id = container.id.replace("snapin_container_", "");
 
     ajax.call_ajax(url, {
         handler_data: "snapin_" + id,
-        response_handler: function (id) {
+        response_handler: function (id: string) {
             remove_snapin(id);
         },
         method: "POST",
@@ -464,13 +475,18 @@ export function remove_sidebar_snapin(oLink, url) {
 }
 
 // Removes a snapin from the sidebar without reloading anything
-function remove_snapin(id) {
+function remove_snapin(id: string) {
     const container = document.getElementById(id)!.parentNode;
     const myparent = container!.parentNode;
     myparent!.removeChild(container!);
 
     const name = id.replace("snapin_", "");
 
+    //TODO: fix bug, see: https://review.lan.tribe29.com/c/check_mk/+/54277
+    // refresh_index always returns -1 because name is a string and indexOf expects
+    // [string, string] element. so the to be deleted element is never deleted from
+    // refresh_snapins array.
+    //@ts-ignore
     const refresh_index = refresh_snapins.indexOf(name);
     if (refresh_index !== -1) {
         refresh_snapins.splice(refresh_index, 1);
@@ -494,11 +510,12 @@ function remove_snapin(id) {
     }
 }
 
-export function toggle_sidebar_snapin(oH2, url) {
+export function toggle_sidebar_snapin(oH2: HTMLElement, url: string) {
     // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
-    const childs = oH2.parentNode.parentNode.childNodes;
+    const childs = oH2.parentNode!.parentNode!
+        .childNodes as NodeListOf<HTMLElement>;
 
-    let oContent, oHead;
+    let oContent: HTMLElement, oHead: HTMLElement;
     for (const i in childs) {
         const child = childs[i];
         if (child.tagName == "DIV" && child.className == "content")
@@ -511,20 +528,20 @@ export function toggle_sidebar_snapin(oH2, url) {
     }
 
     // FIXME: Does oContent really exist?
-    const closed = oContent.style.display == "none";
+    const closed = oContent!.style.display == "none";
     if (closed) {
-        oContent.style.display = "block";
-        utils.change_class(oHead, "closed", "open");
+        oContent!.style.display = "block";
+        utils.change_class(oHead!, "closed", "open");
     } else {
-        oContent.style.display = "none";
-        utils.change_class(oHead, "open", "closed");
+        oContent!.style.display = "none";
+        utils.change_class(oHead!, "open", "closed");
     }
     /* make this persistent -> save */
     ajax.call_ajax(url + (closed ? "open" : "closed"), {method: "POST"});
 }
 
 // TODO move to managed/web/htdocs/js
-export function switch_customer(customer_id, switch_state) {
+export function switch_customer(customer_id: string, switch_state: string) {
     ajax.call_ajax(
         "switch_customer.py?_customer_switch=" +
             customer_id +
@@ -534,7 +551,7 @@ export function switch_customer(customer_id, switch_state) {
     );
 }
 
-export function switch_site(url) {
+export function switch_site(url: string) {
     ajax.call_ajax(url, {
         method: "POST",
         response_handler: utils.reload_whole_page,
@@ -542,7 +559,7 @@ export function switch_site(url) {
     });
 }
 
-function bulk_update_contents(ids, codes) {
+function bulk_update_contents(ids: string[], codes: string) {
     codes = eval(codes);
     for (let i = 0; i < ids.length; i++) {
         if (restart_snapins.indexOf(ids[i].replace("snapin_", "")) !== -1) {
@@ -563,7 +580,7 @@ let g_seconds_to_update: null | number = null;
 let g_sidebar_scheduler_timer: null | number = null;
 let g_sidebar_full_reload = false;
 
-export function refresh_single_snapin(name) {
+export function refresh_single_snapin(name: string) {
     const url = "sidebar_snapin.py?names=" + name;
     const ids = ["snapin_" + name];
     ajax.call_ajax(url, {
@@ -681,9 +698,16 @@ export function execute_sidebar_scheduler() {
  * Save/Restore scroll position
  *************************************************/
 
-function setCookie(cookieName, value, expiredays) {
+// TODO: remove expiredays. this is either a null or number, though
+//  it is been used only one time as null and when we add date to null
+//  we get a very weird result so to be safer it's better to delete it
+function setCookie(
+    cookieName: string,
+    value: number,
+    expiredays: null | number
+) {
     const exdate = new Date();
-    exdate.setDate(exdate.getDate() + expiredays);
+    exdate.setDate(exdate.getDate() + (expiredays ?? 0));
     document.cookie =
         cookieName +
         "=" +
@@ -693,7 +717,7 @@ function setCookie(cookieName, value, expiredays) {
             : ";expires=" + exdate.toUTCString() + ";SameSite=Lax");
 }
 
-function getCookie(cookieName) {
+function getCookie(cookieName: string) {
     if (document.cookie.length == 0) return null;
 
     let cookieStart = document.cookie.indexOf(cookieName + "=");
@@ -732,7 +756,7 @@ let g_last_view = "dashboard.py?name=main";
 let g_last_folder = "";
 
 // highlight the followed link (when both needed snapins are available)
-function highlight_link(link_obj, container_id) {
+function highlight_link(link_obj: HTMLElement, container_id: string) {
     const this_snapin = document.getElementById(container_id);
     let other_snapin;
     if (container_id == "snapin_container_wato_folders")
@@ -741,10 +765,15 @@ function highlight_link(link_obj, container_id) {
         other_snapin = document.getElementById("snapin_container_wato_folders");
 
     if (this_snapin && other_snapin) {
-        let links;
+        let links: HTMLCollectionOf<HTMLElement>;
         if (this_snapin.getElementsByClassName)
-            links = this_snapin.getElementsByClassName("link");
-        else links = document.getElementsByClassName("link");
+            links = this_snapin.getElementsByClassName(
+                "link"
+            ) as HTMLCollectionOf<HTMLElement>;
+        else
+            links = document.getElementsByClassName(
+                "link"
+            ) as HTMLCollectionOf<HTMLElement>;
 
         for (let i = 0; i < links.length; i++) {
             links[i].style.fontWeight = "normal";
@@ -754,14 +783,17 @@ function highlight_link(link_obj, container_id) {
     }
 }
 
-export function wato_folders_clicked(link_obj, folderpath) {
+export function wato_folders_clicked(
+    link_obj: HTMLElement,
+    folderpath: string
+) {
     g_last_folder = folderpath;
     highlight_link(link_obj, "snapin_container_wato_folders");
     parent.frames[0].location =
         g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
 }
 
-export function wato_views_clicked(link_obj) {
+export function wato_views_clicked(link_obj: HTMLLinkElement) {
     g_last_view = link_obj.href;
 
     highlight_link(link_obj, "snapin_container_views");
@@ -783,7 +815,7 @@ export function wato_views_clicked(link_obj) {
  *************************************************/
 
 /* Foldable Tree in snapin */
-export function wato_tree_click(link_obj, folderpath) {
+export function wato_tree_click(_link_obj: string, folderpath: string) {
     const topic = (document.getElementById("topic") as HTMLInputElement).value;
     const target = (
         document.getElementById("target_" + topic) as HTMLInputElement
@@ -802,7 +834,7 @@ export function wato_tree_click(link_obj, folderpath) {
     parent.frames[0].location = href;
 }
 
-export function wato_tree_topic_changed(topic_field) {
+export function wato_tree_topic_changed(topic_field: HTMLSelectElement) {
     // First toggle the topic dropdown field
     const topic = topic_field.value;
 
@@ -829,7 +861,7 @@ export function wato_tree_topic_changed(topic_field) {
     });
 }
 
-export function wato_tree_target_changed(target_field) {
+export function wato_tree_target_changed(target_field: HTMLSelectElement) {
     const topic = target_field.id.substr(7, target_field.id.length);
     const target = target_field.value;
 
@@ -848,14 +880,21 @@ export function wato_tree_target_changed(target_field) {
  * Event console site selection
  *************************************************/
 
-export function set_snapin_site(event, ident, select_field) {
+export function set_snapin_site(
+    event: Event,
+    ident: string,
+    select_field: HTMLSelectElement
+) {
     ajax.call_ajax(
         "sidebar_ajax_set_snapin_site.py?ident=" +
             encodeURIComponent(ident) +
             "&site=" +
             encodeURIComponent(select_field.value),
         {
-            response_handler: function (_handler_data, _response_body) {
+            response_handler: function (
+                _handler_data: string,
+                _response_body: any
+            ) {
                 refresh_single_snapin(ident);
             },
         }
@@ -885,7 +924,10 @@ export function fetch_nagvis_snapin_contents() {
         "../nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps";
     ajax.call_ajax(nagvis_url, {
         add_ajax_id: false,
-        response_handler: function (_unused_handler_data, ajax_response) {
+        response_handler: function (
+            _unused_handler_data: any,
+            ajax_response: string
+        ) {
             // Then hand over the data to the python code which is responsible
             // to render the data.
             ajax.call_ajax("ajax_nagvis_maps_snapin.py", {
@@ -893,8 +935,8 @@ export function fetch_nagvis_snapin_contents() {
                 add_ajax_id: false,
                 post_data: "request=" + encodeURIComponent(ajax_response),
                 response_handler: function (
-                    _unused_handler_data,
-                    snapin_content_response
+                    _unused_handler_data: any,
+                    snapin_content_response: string
                 ) {
                     utils.update_contents(
                         "snapin_nagvis_maps",
@@ -907,7 +949,7 @@ export function fetch_nagvis_snapin_contents() {
                 fetch_nagvis_snapin_contents();
             }, nagvis_snapin_update_interval * 1000);
         },
-        error_handler: function (_unused, status_code) {
+        error_handler: function (_unused: any, status_code: number) {
             const msg = document.createElement("div");
             msg.classList.add("message", "error");
             msg.innerHTML = "Failed to update NagVis maps: " + status_code;
@@ -947,10 +989,18 @@ export function add_bookmark() {
 
 let g_needle_timeout: null | number = null;
 
+interface Speedometer {
+    scheduled_rate: number;
+    program_start: number;
+    percentage: number;
+    last_perc: number;
+    title: string;
+}
+
 export function speedometer_show_speed(
-    last_perc,
-    program_start,
-    scheduled_rate
+    last_perc: number,
+    program_start: number,
+    scheduled_rate: number
 ) {
     const url =
         "sidebar_ajax_speedometer.py" +
@@ -962,10 +1012,15 @@ export function speedometer_show_speed(
         program_start;
 
     ajax.call_ajax(url, {
-        response_handler: function (handler_data, response_body) {
-            let data;
+        response_handler: function (
+            handler_data: Speedometer,
+            response_body: string
+        ) {
+            let data: Speedometer;
             try {
-                data = JSON.parse(response_body);
+                const ajaxData: CMKAjaxReponse<Speedometer> =
+                    JSON.parse(response_body);
+                data = ajaxData.result;
 
                 let oDiv = document.getElementById("speedometer");
 
@@ -996,9 +1051,13 @@ export function speedometer_show_speed(
                 5000
             );
         },
-        error_handler: function (handler_data, _status_code, _error_msg) {
+        error_handler: function (
+            handler_data: Speedometer,
+            _status_code: number,
+            _error_msg: string
+        ) {
             setTimeout(
-                (function (data) {
+                (function (data: Speedometer) {
                     return function () {
                         return speedometer_show_speed(
                             data.percentage,
@@ -1020,7 +1079,7 @@ export function speedometer_show_speed(
     });
 }
 
-function show_speed(percentage) {
+function show_speed(percentage: number) {
     const canvas = document.getElementById("speedometer") as HTMLCanvasElement;
     if (!canvas) return;
 
@@ -1053,7 +1112,7 @@ function show_speed(percentage) {
     context.stroke();
 }
 
-function move_needle(from_perc, to_perc) {
+function move_needle(from_perc: number, to_perc: number) {
     const new_perc = from_perc * 0.9 + to_perc * 0.1;
 
     show_speed(new_perc);
@@ -1075,10 +1134,13 @@ function move_needle(from_perc, to_perc) {
  *************************************************/
 
 // integer representing interval in seconds or <null> when disabled.
-let g_sidebar_notify_interval;
+let g_sidebar_notify_interval: null | number;
 let g_may_ack = false;
 
-export function init_messages_and_werks(interval, may_ack) {
+export function init_messages_and_werks(
+    interval: null | number,
+    may_ack: boolean
+) {
     g_sidebar_notify_interval = interval;
     create_initial_ids("user", "messages", "user_message.py");
     // Are there pending messages? Render the initial state of
@@ -1098,8 +1160,17 @@ export function init_messages_and_werks(interval, may_ack) {
     update_unack_incomp_werks();
 }
 
-function handle_update_messages(_data, response_text) {
-    const response = JSON.parse(response_text);
+interface AjaxSidebarGetMessages {
+    popup_messages: {id: string; text: string}[];
+    hint_messages: {
+        text: string;
+        count: number;
+    };
+}
+
+function handle_update_messages(_data: any, response_text: string) {
+    const response: CMKAjaxReponse<AjaxSidebarGetMessages> =
+        JSON.parse(response_text);
     if (response.result_code !== 0) {
         return;
     }
@@ -1121,7 +1192,7 @@ function update_messages() {
     });
 }
 
-export function update_message_trigger(msg_text, msg_count) {
+export function update_message_trigger(msg_text: string, msg_count: number) {
     const l = document.getElementById("messages_label")!;
     if (msg_count === 0) {
         l.style.display = "none";
@@ -1136,15 +1207,26 @@ export function update_message_trigger(msg_text, msg_count) {
     user_messages.textContent = text_content;
 }
 
-function mark_message_read(msg_id, msg_text, msg_count) {
+function mark_message_read(
+    msg_id: string,
+    msg_text: string,
+    msg_count: number
+) {
     ajax.call_ajax("sidebar_message_read.py?id=" + msg_id);
 
     // Update the button state
     update_message_trigger(msg_text, msg_count);
 }
 
-function handle_update_unack_incomp_werks(_data, response_text) {
-    const response = JSON.parse(response_text);
+interface AjaxSidebarGetUnackIncompWerks {
+    count: number;
+    text: string;
+    tooltip: string;
+}
+
+function handle_update_unack_incomp_werks(_data: any, response_text: string) {
+    const response: CMKAjaxReponse<AjaxSidebarGetUnackIncompWerks> =
+        JSON.parse(response_text);
     if (response.result_code !== 0) {
         return;
     }
@@ -1159,7 +1241,11 @@ function update_unack_incomp_werks() {
     });
 }
 
-export function update_werks_trigger(werks_count, text, tooltip) {
+export function update_werks_trigger(
+    werks_count: number,
+    text: string,
+    tooltip: string
+) {
     const l = document.getElementById("werks_label")!;
     if (werks_count === 0) {
         l.style.display = "none";
@@ -1175,7 +1261,7 @@ export function update_werks_trigger(werks_count, text, tooltip) {
         werks_link.setAttribute("title", tooltip.toString());
     }
 }
-function create_initial_ids(menu, what, start_url) {
+function create_initial_ids(menu: string, what: string, start_url: string) {
     const mega_menu_help_div = document.getElementById(
         "popup_trigger_mega_menu_" + menu
     )!.firstChild;
@@ -1203,10 +1289,10 @@ function create_initial_ids(menu, what, start_url) {
 
 // for quick access options in user menu
 
-export function toggle_user_attribute(mode) {
+export function toggle_user_attribute(mode: string) {
     ajax.call_ajax(mode, {
         method: "POST",
-        response_handler: function (handler_data, ajax_response) {
+        response_handler: function (_handler_data: any, ajax_response: string) {
             const data = JSON.parse(ajax_response);
             if (data.result_code == 0) {
                 utils.reload_whole_page();

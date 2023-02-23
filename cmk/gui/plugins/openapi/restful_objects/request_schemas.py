@@ -387,7 +387,9 @@ class InputServiceGroup(InputGroup):
         should_exist=False,
     )
     alias = fields.String(
-        description="The name used for displaying in the GUI.", example="Environment Sensors"
+        description="The name used for displaying in the GUI.",
+        example="Environment Sensors",
+        required=True,
     )
 
 

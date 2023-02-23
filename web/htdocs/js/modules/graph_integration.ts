@@ -7,10 +7,10 @@ import * as ajax from "ajax";
 import * as hover from "hover";
 
 export function show_hover_graphs(
-    event_,
-    site_id,
-    host_name,
-    service_description
+    event_: MouseEvent,
+    site_id: string,
+    host_name: string,
+    service_description: string
 ) {
     hover.show(event_, '<div class="message">Loading...</div>');
 
@@ -18,7 +18,12 @@ export function show_hover_graphs(
     return utils.prevent_default_events(event_);
 }
 
-function show_check_mk_hover_graphs(site_id, host_name, service, event_) {
+function show_check_mk_hover_graphs(
+    site_id: string,
+    host_name: string,
+    service: string,
+    event_: MouseEvent
+) {
     const url =
         "host_service_graph_popup.py?site=" +
         encodeURIComponent(site_id) +
@@ -35,11 +40,17 @@ function show_check_mk_hover_graphs(site_id, host_name, service, event_) {
     });
 }
 
-function handle_check_mk_hover_graphs_response(handler_data, code) {
+function handle_check_mk_hover_graphs_response(
+    handler_data: {event_: MouseEvent},
+    code: string
+) {
     hover.update_content(code, handler_data.event_);
 }
 
-function handle_hover_graphs_error(handler_data, status_code) {
+function handle_hover_graphs_error(
+    handler_data: {event_: MouseEvent},
+    status_code: number
+) {
     const code = "<div class=error>Update failed (" + status_code + ")</div>";
     hover.update_content(code, handler_data.event_);
 }

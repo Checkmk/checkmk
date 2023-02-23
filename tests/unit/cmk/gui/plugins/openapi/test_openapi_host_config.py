@@ -1301,3 +1301,7 @@ def test_openapi_host_with_non_existing_site(
     )
 
     assert resp.json["extensions"]["attributes"]["site"] == "Unknown Site: a_non_existing_site"
+
+
+def test_openapi_bulk_create_permission_missmatch_regression(api_client: RestApiClient) -> None:
+    api_client.bulk_create_hosts()

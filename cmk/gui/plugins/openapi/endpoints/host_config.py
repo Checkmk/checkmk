@@ -116,6 +116,23 @@ PERMISSIONS = permissions.AllPerm(
     ]
 )
 
+BULK_CREATE_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Optional(permissions.Perm("wato.manage_hosts")),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+        permissions.Ignore(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("bi.see_all"),
+                    permissions.Perm("general.see_all"),
+                    permissions.Perm("mkeventd.seeall"),
+                ]
+            )
+        ),
+    ]
+)
+
 UPDATE_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
@@ -211,7 +228,7 @@ class BulkHostActionWithFailedHosts(api_error.ApiError):
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
-    permissions_required=PERMISSIONS,
+    permissions_required=BULK_CREATE_PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
 )
 def bulk_create_hosts(params: Mapping[str, Any]) -> Response:

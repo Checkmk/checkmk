@@ -126,6 +126,7 @@ class BulkCreateHost(BaseSchema):
         ],
         uniqueItems=True,
         description="A list of host entries.",
+        required=True,
     )
 
 
@@ -205,6 +206,7 @@ class BulkUpdateHost(BaseSchema):
         fields.Nested(UpdateHostEntry),
         example=[{"host_name": "example.com", "attributes": {}}],
         description="A list of host entries.",
+        required=True,
     )
 
 
@@ -280,6 +282,7 @@ class BulkInputHostGroup(BaseSchema):
         ],
         uniqueItems=True,
         description="A list of host group entries.",
+        required=True,
     )
 
 
@@ -317,6 +320,7 @@ class BulkUpdateHostGroup(BaseSchema):
             }
         ],
         description="A list of host group entries.",
+        required=True,
     )
 
 
@@ -349,6 +353,7 @@ class BulkInputContactGroup(BaseSchema):
         ],
         uniqueItems=True,
         description="A collection of contact group entries.",
+        required=True,
     )
 
 
@@ -379,6 +384,7 @@ class BulkUpdateContactGroup(BaseSchema):
             }
         ],
         description="A list of contact group entries.",
+        required=True,
     )
 
 
@@ -412,6 +418,7 @@ class BulkInputServiceGroup(BaseSchema):
         ],
         uniqueItems=True,
         description="A list of service group entries.",
+        required=True,
     )
 
 
@@ -436,6 +443,7 @@ class BulkUpdateServiceGroup(BaseSchema):
             }
         ],
         description="A list of service group entries.",
+        required=True,
     )
 
 
@@ -557,6 +565,7 @@ class BulkUpdateFolder(BaseSchema):
             }
         ],
         description="A list of folder entries.",
+        required=True,
     )
 
 

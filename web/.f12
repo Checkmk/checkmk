@@ -18,23 +18,23 @@ THEME_IMAGE_DIRS=$(for theme in $THEMES; do echo "$REPO_PATH/web/htdocs/themes/$
 THEME_RESOURCES="${THEME_CSS_FILES} ${THEME_JSON_FILES} ${THEME_IMAGE_DIRS}"
 
 echo "Updating compiled JS/CSS files..."
-# shellcheck disable=SC2086
+# shellcheck disable=SC2086 # yes, we want word splitting for JAVASCRIPT_MINI and THEME_CSS_FILES
 make -C .. WEBPACK_MODE="${WEBPACK_MODE:-development}" ${JAVASCRIPT_MINI} ${THEME_CSS_FILES}
 
 echo "Update site $SITE..."
 
 echo "Copy CRE files..."
-# shellcheck disable=SC2046
+# shellcheck disable=SC2046 # yes, we want word splitting for the loops below
 sudo rsync -arxR \
     app \
     htdocs/css \
     htdocs/images \
     htdocs/jquery \
     htdocs/openapi \
-    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#$REPO_PATH/web/}"; done) \
-    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#$REPO_PATH/web/}".map; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#"$REPO_PATH/web/"}"; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#"$REPO_PATH/web/"}".map; done) \
     htdocs/sounds \
-    $(for i in ${THEME_RESOURCES}; do echo "${i#$REPO_PATH/web/}"; done) \
+    $(for i in ${THEME_RESOURCES}; do echo "${i#"$REPO_PATH/web/"}"; done) \
     "$ROOT/share/check_mk/web/"
 
 # Also deploy all other directories of same type

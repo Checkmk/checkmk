@@ -55,6 +55,24 @@ def test_resource_quota_write_api_sections() -> None:
     }
 
 
+def test_resource_quota_write_partial_sections() -> None:
+    resource_quota = APIResourceQuotaFactory.build(
+        spec=api.ResourceQuotaSpec(
+            hard=api.HardRequirement(
+                cpu=None,
+                memory=api.HardResourceRequirement(limit=10.0, request=10.0),
+            )
+        )
+    )
+    sections = agent.create_resource_quota_api_sections(
+        resource_quota,
+        "namespace",
+    )
+    assert {s.section_name for s in sections} == {
+        "kube_resource_quota_memory_resources_v1",
+    }
+
+
 def test_filter_matching_namespace_resource_quota() -> None:
     namespace_name = api.NamespaceName("matching-namespace")
     resource_quotas = [

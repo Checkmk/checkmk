@@ -2,22 +2,30 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-let width;
-let height;
-let netto_width;
-let netto_height;
-let from_time;
-let until_time;
-let v_min;
-let v_max;
-let canvas_id;
+let width: number;
+let height: number;
+let netto_width: number;
+let netto_height: number;
+let from_time: number;
+let until_time: number;
+let v_min: number;
+let v_max: number;
+let canvas_id: string;
 
 const left_border = 90;
 const right_border = 50;
 const top_border = 40;
 const bottom_border = 50;
 
-export function create_graph(cid, ft, ut, vmi, vma) {
+//TODO: It might be better to create a Graph class and make the above variables
+//  its attributes?
+export function create_graph(
+    cid: string,
+    ft: number,
+    ut: number,
+    vmi: number,
+    vma: number
+) {
     // Keep important data as global variables, needed by
     // render_curve()
     canvas_id = cid;
@@ -33,26 +41,40 @@ export function create_graph(cid, ft, ut, vmi, vma) {
     netto_height = height - top_border - bottom_border;
 }
 
-function arrow_up(c, cx, cy, length, size, color) {
+function arrow_up(
+    c: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    length: number,
+    size: number,
+    color: string
+) {
     c.strokeStyle = color;
     c.moveTo(cx, cy);
     c.lineTo(cx, cy - length);
     c.stroke();
 
-    c.fillColor = color;
+    c.fillStyle = color;
     c.moveTo(cx - size / 2, cy - length);
     c.lineTo(cx + size / 2, cy - length);
     c.lineTo(cx, cy - size - length);
     c.fill();
 }
 
-function arrow_right(c, cx, cy, length, size, color) {
+function arrow_right(
+    c: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    length: number,
+    size: number,
+    color: string
+) {
     c.strokeStyle = color;
     c.moveTo(cx, cy);
     c.lineTo(cx + length, cy);
     c.stroke();
 
-    c.fillColor = color;
+    c.fillStyle = color;
     c.moveTo(cx + length, cy - size / 2);
     c.lineTo(cx + length, cy + size / 2);
     c.lineTo(cx + length + size, cy);
@@ -63,7 +85,10 @@ const linea = "#888888";
 const lineb = "#bbbbbb";
 const linec = "#bbbbbb";
 
-export function render_coordinates(v_scala, t_scala) {
+export function render_coordinates(
+    v_scala: [number, string][],
+    t_scala: [number, string][]
+) {
     // Create canvas
     const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     const c = canvas.getContext("2d")!;
@@ -135,7 +160,7 @@ export function render_coordinates(v_scala, t_scala) {
     );
 }
 
-function point(t, v) {
+function point(t: number, v: number): [number, number] {
     return [
         left_border +
             ((t - from_time) / (until_time - from_time)) * netto_width,
@@ -143,7 +168,13 @@ function point(t, v) {
     ];
 }
 
-function line(c, t0, v0, t1, v1) {
+function line(
+    c: CanvasRenderingContext2D,
+    t0: number,
+    v0: number,
+    t1: number,
+    v1: number
+) {
     const p0 = point(t0, v0);
     const p1 = point(t1, v1);
     c.beginPath();
@@ -152,7 +183,7 @@ function line(c, t0, v0, t1, v1) {
     c.stroke();
 }
 
-export function render_point(t, v, color) {
+export function render_point(t: number, v: number, color: string) {
     const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     const c = canvas.getContext("2d")!;
     const p = point(t, v);
@@ -166,7 +197,12 @@ export function render_point(t, v, color) {
     c.stroke();
 }
 
-export function render_curve(points, color, w, square) {
+export function render_curve(
+    points: number[],
+    color: string,
+    w: number,
+    square: boolean
+) {
     const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     const c = canvas.getContext("2d")!;
 
@@ -188,7 +224,7 @@ export function render_curve(points, color, w, square) {
             c.moveTo(p[0], p[1]);
             first = false;
         } else {
-            if (square) c.lineTo(p[0], op[1]);
+            if (square && op) c.lineTo(p[0], op[1]);
             c.lineTo(p[0], p[1]);
         }
         op = p;
@@ -196,15 +232,24 @@ export function render_curve(points, color, w, square) {
     c.stroke();
 }
 
-export function render_area(points, color, alpha) {
+export function render_area(points: number[], color: string, alpha: number) {
     render_dual_area(null, points, color, alpha);
 }
 
-export function render_area_reverse(points, color, alpha) {
+export function render_area_reverse(
+    points: number[],
+    color: string,
+    alpha: number
+) {
     render_dual_area(points, null, color, alpha);
 }
 
-export function render_dual_area(lower_points, upper_points, color, alpha) {
+export function render_dual_area(
+    lower_points: null | number[],
+    upper_points: null | number[],
+    color: string,
+    alpha: number
+) {
     const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     const c = canvas.getContext("2d")!;
 
@@ -212,7 +257,7 @@ export function render_dual_area(lower_points, upper_points, color, alpha) {
     c.globalAlpha = alpha;
     let num_points;
     if (lower_points) num_points = lower_points.length;
-    else num_points = upper_points.length;
+    else num_points = upper_points!.length;
 
     const time_step = (1.0 * (until_time - from_time)) / num_points;
     const pix_step = (1.0 * netto_width) / num_points;

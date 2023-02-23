@@ -2568,9 +2568,6 @@ msgstr "AWS/WAFV2 Grenzen"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "AWS/WAFV2 Web ACL Verzoeken"
 
-msgid "Abort"
-msgstr "Afbreken"
-
 msgid "Abort with an error"
 msgstr "Afbreken met een fout"
 
@@ -9140,6 +9137,9 @@ msgstr "Gecontroleerd"
 
 msgid "Checker helper usage"
 msgstr "Checker helper gebruik"
+
+msgid "Checking if Redis is reachable"
+msgstr ""
 
 msgid "Checking of Datadog monitors"
 msgstr "Controleren van Datadog monitors"
@@ -26432,10 +26432,6 @@ msgstr "Ongeldige waarde, moet '%r' zijn maar is '%r'"
 msgid "Invalid value: %s"
 msgstr "Ongeldige waarde: %s"
 
-#, fuzzy, python-format
-msgid "Invalid verification response: %s"
-msgstr "Globale kennisgevingsregels"
-
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "Ongeldig verticaal bereik: van moet lager zijn dan tot"
 
@@ -38815,6 +38811,10 @@ msgstr "Redis databases"
 
 msgid "Redis info"
 msgstr "Redis info"
+
+#, fuzzy
+msgid "Redis is reachable"
+msgstr "Gastheer wordt onbereikbaar"
 
 msgid "Redis persistence"
 msgstr "Redis persistentie"
@@ -51320,7 +51320,7 @@ msgid "The vault name"
 msgstr "De naam van de kluis"
 
 #, fuzzy
-msgid "The verification cannot be started due to missing public keys"
+msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
 
 #, python-format
@@ -55307,11 +55307,6 @@ msgstr ""
 msgid "This verification response cannot be uploaded: %s"
 msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
 
-#, fuzzy
-msgid ""
-"This verification response cannot be verified due to missing public keys"
-msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
-
 msgid "This view as PDF"
 msgstr "Deze weergave als PDF"
 
@@ -56681,6 +56676,10 @@ msgstr "Aantal transacties"
 
 msgid "Transactionlog"
 msgstr "Transactielog"
+
+#, fuzzy
+msgid "Transactions"
+msgstr "Vertalingen"
 
 #, python-format
 msgid "Transfering: %d new, %d changed and %d vanished files"
@@ -61782,10 +61781,6 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr "Creëert kind-knooppunten die de status van diensten weergeven."
 
-#, python-format
-msgid "Will wait for %d seconds and retry"
-msgstr "%d seconden wachten en opnieuw proberen"
-
 msgid "Windows"
 msgstr "Windows"
 
@@ -66407,6 +66402,24 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Abort"
+#~ msgstr "Afbreken"
+
+#, fuzzy, python-format
+#~| msgid "Global notification rules"
+#~ msgid "Invalid verification response: %s"
+#~ msgstr "Globale kennisgevingsregels"
+
+#, fuzzy
+#~| msgid "This package cannot be installed: %s"
+#~ msgid ""
+#~ "This verification response cannot be verified due to missing public keys"
+#~ msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
+
+#, python-format
+#~ msgid "Will wait for %d seconds and retry"
+#~ msgstr "%d seconden wachten en opnieuw proberen"
 
 #, fuzzy, python-format
 #~| msgid ""

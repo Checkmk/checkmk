@@ -2600,9 +2600,6 @@ msgstr "Limites de l'AWS/WAFV2"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "Demandes d'ACL Web AWS/WAFV2"
 
-msgid "Abort"
-msgstr "Abandonner"
-
 msgid "Abort with an error"
 msgstr "Abandonner avec une erreur"
 
@@ -9242,6 +9239,9 @@ msgstr "Vérifié"
 
 msgid "Checker helper usage"
 msgstr "Utilisation de l'aide de vérification"
+
+msgid "Checking if Redis is reachable"
+msgstr ""
 
 msgid "Checking of Datadog monitors"
 msgstr "Vérification des moniteurs Datadog"
@@ -26759,10 +26759,6 @@ msgstr "Valeur non valide, doit être '%r' mais est '%r'."
 msgid "Invalid value: %s"
 msgstr "Valeur non valide : %s"
 
-#, fuzzy, python-format
-msgid "Invalid verification response: %s"
-msgstr "Règles de notification globale"
-
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "Plage verticale non valide : de doit être inférieur à à à"
 
@@ -39291,6 +39287,10 @@ msgstr "Bases de données Redis"
 
 msgid "Redis info"
 msgstr "Informations sur Redis"
+
+#, fuzzy
+msgid "Redis is reachable"
+msgstr "L'hôte n'est pas joignable"
 
 msgid "Redis persistence"
 msgstr "Persistance Redis"
@@ -51956,7 +51956,7 @@ msgid "The vault name"
 msgstr "Le nom de la chambre forte"
 
 #, fuzzy
-msgid "The verification cannot be started due to missing public keys"
+msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Ce paquet ne peut pas être installé : %s"
 
 #, python-format
@@ -56010,11 +56010,6 @@ msgstr ""
 msgid "This verification response cannot be uploaded: %s"
 msgstr "Ce paquet ne peut pas être installé : %s"
 
-#, fuzzy
-msgid ""
-"This verification response cannot be verified due to missing public keys"
-msgstr "Ce paquet ne peut pas être installé : %s"
-
 msgid "This view as PDF"
 msgstr "Cette vue en PDF"
 
@@ -57388,6 +57383,10 @@ msgstr "Nombre de transactions"
 
 msgid "Transactionlog"
 msgstr "Journal des transactions"
+
+#, fuzzy
+msgid "Transactions"
+msgstr "Traductions"
 
 #, python-format
 msgid "Transfering: %d new, %d changed and %d vanished files"
@@ -62568,10 +62567,6 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr "Créera des noeuds enfants représentant l'état des services."
 
-#, python-format
-msgid "Will wait for %d seconds and retry"
-msgstr "Attendra %d secondes et réessayera."
-
 msgid "Windows"
 msgstr "Windows"
 
@@ -67266,6 +67261,24 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Abort"
+#~ msgstr "Abandonner"
+
+#, fuzzy, python-format
+#~| msgid "Global notification rules"
+#~ msgid "Invalid verification response: %s"
+#~ msgstr "Règles de notification globale"
+
+#, fuzzy
+#~| msgid "This package cannot be installed: %s"
+#~ msgid ""
+#~ "This verification response cannot be verified due to missing public keys"
+#~ msgstr "Ce paquet ne peut pas être installé : %s"
+
+#, python-format
+#~ msgid "Will wait for %d seconds and retry"
+#~ msgstr "Attendra %d secondes et réessayera."
 
 #, fuzzy, python-format
 #~| msgid ""

@@ -2206,9 +2206,6 @@ msgstr "Adaugă limite"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr ""
 
-msgid "Abort"
-msgstr "Renunț"
-
 msgid "Abort with an error"
 msgstr "Renunț cu o eroare"
 
@@ -8599,6 +8596,9 @@ msgstr ""
 #, fuzzy
 msgid "Checker helper usage"
 msgstr "Nivelurile maxime pentru voltaj"
+
+msgid "Checking if Redis is reachable"
+msgstr ""
 
 #, fuzzy
 msgid "Checking of Datadog monitors"
@@ -24937,10 +24937,6 @@ msgstr ""
 msgid "Invalid value: %s"
 msgstr " Parametrul este: %r"
 
-#, fuzzy, python-format
-msgid "Invalid verification response: %s"
-msgstr "Notificari"
-
 msgid "Invalid vertical range: from must be lower than to"
 msgstr ""
 
@@ -37602,6 +37598,10 @@ msgid "Redis info"
 msgstr ""
 
 #, fuzzy
+msgid "Redis is reachable"
+msgstr "Adaugă nume de senzor"
+
+#, fuzzy
 msgid "Redis persistence"
 msgstr "Adaugă nume de senzor"
 
@@ -48938,7 +48938,7 @@ msgid "The vault name"
 msgstr "foloseste numele portului"
 
 #, fuzzy
-msgid "The verification cannot be started due to missing public keys"
+msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, python-format
@@ -51728,11 +51728,6 @@ msgstr ""
 msgid "This verification response cannot be uploaded: %s"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
-#, fuzzy
-msgid ""
-"This verification response cannot be verified due to missing public keys"
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
 msgid "This view as PDF"
 msgstr ""
 
@@ -53035,6 +53030,10 @@ msgstr ""
 
 msgid "Transactionlog"
 msgstr ""
+
+#, fuzzy
+msgid "Transactions"
+msgstr "Numele Aplicatiei"
 
 #, python-format
 msgid "Transfering: %d new, %d changed and %d vanished files"
@@ -57670,10 +57669,6 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr ""
 
-#, python-format
-msgid "Will wait for %d seconds and retry"
-msgstr ""
-
 msgid "Windows"
 msgstr ""
 
@@ -61799,6 +61794,18 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "Abort"
+#~ msgstr "Renunț"
+
+#, fuzzy, python-format
+#~ msgid "Invalid verification response: %s"
+#~ msgstr "Notificari"
+
+#, fuzzy
+#~ msgid ""
+#~ "This verification response cannot be verified due to missing public keys"
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 #~ msgid "Levels Latency Checkmk"

@@ -2450,9 +2450,6 @@ msgstr "AWS/WAFV2の制限"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "AWS/WAFV2 Web ACLリクエスト"
 
-msgid "Abort"
-msgstr "アボート"
-
 msgid "Abort with an error"
 msgstr "エラーで中止"
 
@@ -8760,6 +8757,9 @@ msgstr "チェック済み"
 
 msgid "Checker helper usage"
 msgstr "チェッカーヘルパーの使用法"
+
+msgid "Checking if Redis is reachable"
+msgstr ""
 
 msgid "Checking of Datadog monitors"
 msgstr "監視するファイルのセクション"
@@ -25308,10 +25308,6 @@ msgstr "値が無効です '%r' である必要がありますが、 '%r'です"
 msgid "Invalid value: %s"
 msgstr "無効な値: %s"
 
-#, fuzzy, python-format
-msgid "Invalid verification response: %s"
-msgstr "グローバル通知ルール"
-
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "無効な垂直範囲: from は to よりも低くする必要があります"
 
@@ -37364,6 +37360,10 @@ msgstr "Redisデータベース"
 msgid "Redis info"
 msgstr "Redis情報"
 
+#, fuzzy
+msgid "Redis is reachable"
+msgstr "ホストが到達不能になる"
+
 msgid "Redis persistence"
 msgstr "Redisの永続性"
 
@@ -49099,7 +49099,7 @@ msgid "The vault name"
 msgstr "ボールト名"
 
 #, fuzzy
-msgid "The verification cannot be started due to missing public keys"
+msgid "The verification cannot be started due to missing CA certificate"
 msgstr "このパッケージはインストールできません: %s"
 
 #, python-format
@@ -52628,11 +52628,6 @@ msgstr "この変数は、<a href=\"%s\">グローバル設定</a>で構成さ�
 msgid "This verification response cannot be uploaded: %s"
 msgstr "このパッケージはインストールできません: %s"
 
-#, fuzzy
-msgid ""
-"This verification response cannot be verified due to missing public keys"
-msgstr "このパッケージはインストールできません: %s"
-
 msgid "This view as PDF"
 msgstr "このビューをPDFとして"
 
@@ -53933,6 +53928,10 @@ msgstr "トランザクション数"
 
 msgid "Transactionlog"
 msgstr "トランザクションログ"
+
+#, fuzzy
+msgid "Transactions"
+msgstr "翻訳"
 
 #, python-format
 msgid "Transfering: %d new, %d changed and %d vanished files"
@@ -58747,10 +58746,6 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr ""
 
-#, python-format
-msgid "Will wait for %d seconds and retry"
-msgstr "%d秒待ってから再試行します"
-
 msgid "Windows"
 msgstr "Windows"
 
@@ -63068,6 +63063,24 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Abort"
+#~ msgstr "アボート"
+
+#, fuzzy, python-format
+#~| msgid "Global notification rules"
+#~ msgid "Invalid verification response: %s"
+#~ msgstr "グローバル通知ルール"
+
+#, fuzzy
+#~| msgid "This package cannot be installed: %s"
+#~ msgid ""
+#~ "This verification response cannot be verified due to missing public keys"
+#~ msgstr "このパッケージはインストールできません: %s"
+
+#, python-format
+#~ msgid "Will wait for %d seconds and retry"
+#~ msgstr "%d秒待ってから再試行します"
 
 #~ msgid "OMD Site"
 #~ msgstr "OMDサイト"

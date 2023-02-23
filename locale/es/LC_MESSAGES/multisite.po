@@ -2584,9 +2584,6 @@ msgstr "Límites AWS/WAFV2"
 msgid "AWS/WAFV2 Web ACL Requests"
 msgstr "Solicitudes de ACL web de AWS/WAFV2"
 
-msgid "Abort"
-msgstr "Abortar"
-
 msgid "Abort with an error"
 msgstr "Abortar con un error"
 
@@ -9194,6 +9191,9 @@ msgstr "Comprobado"
 
 msgid "Checker helper usage"
 msgstr "Utilización de la ayuda de comprobación"
+
+msgid "Checking if Redis is reachable"
+msgstr ""
 
 msgid "Checking of Datadog monitors"
 msgstr "Selección de Datadog a monitorear"
@@ -26634,10 +26634,6 @@ msgstr "Valor no válido, debe ser '%r' pero es '%r'"
 msgid "Invalid value: %s"
 msgstr "Valor no válido: %s"
 
-#, fuzzy, python-format
-msgid "Invalid verification response: %s"
-msgstr "Normas de notificación global"
-
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "Rango vertical inválido: desde debe ser menor que hasta"
 
@@ -39127,6 +39123,10 @@ msgstr "Bases de datos Redis"
 
 msgid "Redis info"
 msgstr "Información sobre Redis"
+
+#, fuzzy
+msgid "Redis is reachable"
+msgstr "El anfitrión se vuelve inalcanzable"
 
 msgid "Redis persistence"
 msgstr "Persistencia de Redis"
@@ -51738,7 +51738,7 @@ msgid "The vault name"
 msgstr "El nombre de la bóveda"
 
 #, fuzzy
-msgid "The verification cannot be started due to missing public keys"
+msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Este paquete no puede ser instalado: %s"
 
 #, python-format
@@ -55763,11 +55763,6 @@ msgstr "Esta variable se configura en <a href=\"%s\">configuración global</a>."
 msgid "This verification response cannot be uploaded: %s"
 msgstr "Este paquete no puede ser instalado: %s"
 
-#, fuzzy
-msgid ""
-"This verification response cannot be verified due to missing public keys"
-msgstr "Este paquete no puede ser instalado: %s"
-
 msgid "This view as PDF"
 msgstr "Esta vista como PDF"
 
@@ -57146,6 +57141,10 @@ msgstr "Recuento de transacciones"
 
 msgid "Transactionlog"
 msgstr "Transactionlog"
+
+#, fuzzy
+msgid "Transactions"
+msgstr "Traducciones"
 
 #, python-format
 msgid "Transfering: %d new, %d changed and %d vanished files"
@@ -62286,10 +62285,6 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr "Creará nodos hijos que representen el estado de los servicios."
 
-#, python-format
-msgid "Will wait for %d seconds and retry"
-msgstr "Esperará durante %d segundos y volverá a intentarlo"
-
 msgid "Windows"
 msgstr "Windows"
 
@@ -66937,6 +66932,24 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Abort"
+#~ msgstr "Abortar"
+
+#, fuzzy, python-format
+#~| msgid "Global notification rules"
+#~ msgid "Invalid verification response: %s"
+#~ msgstr "Normas de notificación global"
+
+#, fuzzy
+#~| msgid "This package cannot be installed: %s"
+#~ msgid ""
+#~ "This verification response cannot be verified due to missing public keys"
+#~ msgstr "Este paquete no puede ser instalado: %s"
+
+#, python-format
+#~ msgid "Will wait for %d seconds and retry"
+#~ msgstr "Esperará durante %d segundos y volverá a intentarlo"
 
 #, fuzzy, python-format
 #~| msgid ""

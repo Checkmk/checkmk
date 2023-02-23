@@ -1483,14 +1483,15 @@ def write_namespaces_api_sections(
         _write_sections(sections)
 
     def output_resource_quota_sections(resource_quota: api.ResourceQuota) -> None:
+        if resource_quota.spec.hard is None:
+            return
+
+        hard = resource_quota.spec.hard
         sections = {
-            "kube_resource_quota_memory_resources_v1": lambda: resource_quota.spec.hard.memory
-            if resource_quota.spec.hard
-            else None,
-            "kube_resource_quota_cpu_resources_v1": lambda: resource_quota.spec.hard.cpu
-            if resource_quota.spec.hard
-            else None,
+            "kube_resource_quota_memory_resources_v1": lambda: hard.memory if hard.memory else None,
+            "kube_resource_quota_cpu_resources_v1": lambda: hard.cpu if hard.cpu else None,
         }
+
         _write_sections(sections)
 
     for api_namespace in api_namespaces:

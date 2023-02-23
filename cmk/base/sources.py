@@ -255,14 +255,14 @@ class _Builder:
 
         self._initialize_snmp_plugin_store()
         if protocol == "snmp":
+            source = SourceInfo(
+                self.host_name,
+                self.ipaddress,
+                "mgmt_snmp",
+                FetcherType.SNMP,
+                SourceType.MANAGEMENT,
+            )
             with suppress(TypeError):
-                source = SourceInfo(
-                    self.host_name,
-                    ensure_ipaddress(self.ipaddress),
-                    "mgmt_snmp",
-                    FetcherType.SNMP,
-                    SourceType.MANAGEMENT,
-                )
                 self._add(
                     source,
                     self.config_cache.make_snmp_fetcher(
@@ -283,16 +283,14 @@ class _Builder:
                     ),
                 )
         elif protocol == "ipmi":
+            source = SourceInfo(
+                self.host_name,
+                config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name),
+                "mgmt_ipmi",
+                FetcherType.IPMI,
+                SourceType.MANAGEMENT,
+            )
             with suppress(TypeError):
-                source = SourceInfo(
-                    self.host_name,
-                    ensure_ipaddress(
-                        config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
-                    ),
-                    "mgmt_ipmi",
-                    FetcherType.IPMI,
-                    SourceType.MANAGEMENT,
-                )
                 self._add(
                     source,
                     self.config_cache.make_ipmi_fetcher(

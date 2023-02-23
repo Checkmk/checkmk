@@ -178,9 +178,11 @@ class _Builder:
                     path_template=make_file_cache_path_template(
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
-                    max_age=MaxAge.unlimited()
-                    if self.file_cache_options.use_outdated
-                    else self.file_cache_max_age,
+                    max_age=(
+                        MaxAge.unlimited()
+                        if self.file_cache_options.use_outdated
+                        else self.file_cache_max_age
+                    ),
                     simulation=False,  # TODO Quickfix for SUP-9912
                     # Setting "use only cache" usually means we do not want to create network
                     # traffic or bother the monitored device for performance reasons.
@@ -355,9 +357,11 @@ class _Builder:
                         path_template=make_file_cache_path_template(
                             fetcher_type=source.fetcher_type, ident=source.ident
                         ),
-                        max_age=MaxAge.unlimited()
-                        if self.simulation_mode or self.file_cache_options.use_outdated
-                        else MaxAge(interval, interval, interval),
+                        max_age=(
+                            MaxAge.unlimited()
+                            if self.simulation_mode or self.file_cache_options.use_outdated
+                            else MaxAge(interval, interval, interval)
+                        ),
                         simulation=self.simulation_mode,
                         use_only_cache=True,
                         file_cache_mode=(

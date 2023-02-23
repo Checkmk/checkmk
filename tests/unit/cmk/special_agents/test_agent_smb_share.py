@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from unittest import mock
 
@@ -36,7 +37,7 @@ def folder(name: str) -> SharedFile:
 
 
 class MockShare:
-    def __init__(self, name) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, name: str) -> None:
         self._name = name
 
     @property
@@ -45,14 +46,15 @@ class MockShare:
 
 
 class MockSMBConnection:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(
         self,
-        *args,
-        filesystem=None,
-        shares=None,
-        is_direct_tcp=False,
+        *args: object,
+        filesystem: Mapping[str, Mapping[str, list[SharedFile]]] | None = None,
+        shares: Sequence[str] | None = None,
+        is_direct_tcp: bool = False,
         disallowed_paths: list[str] | None = None,
-    ):
+    ) -> None:
+
         self.filesystem = filesystem
         self.shares = shares
         self.is_direct_tcp = is_direct_tcp
@@ -63,14 +65,19 @@ class MockSMBConnection:
         return True
 
     def listPath(self, shared_folder: str, path: str) -> list[SharedFile]:
+
         if path in self.disallowed_paths:
             raise Exception(
                 f"The agent tries to decend into {path} but is not allowed to! "
                 f"Keep the agent as lazy as possible in order to have a performant execution!"
             )
-        if shared_folder not in self.filesystem:
+
+        if self.filesystem is None or shared_folder not in self.filesystem:
+
             return []
-        return self.filesystem[shared_folder].get(path)
+        result = self.filesystem[shared_folder].get(path)
+        assert result is not None
+        return result
 
     def listShares(self) -> list[MockShare]:
         if not self.shares:
@@ -84,7 +91,7 @@ class MockSMBConnection:
 class MockSectionWriter:
     writer: list[str] = []
 
-    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args: object, **kwargs: object) -> None:
         self.writer.clear()
 
     def __enter__(self):
@@ -353,11 +360,11 @@ def test_iter_shared_files(
         ),
     ],
 )
-def test_get_all_shared_files(  # type:ignore[no-untyped-def]
+def test_get_all_shared_files(
     patterns: list[str],
     file_data: list[tuple[str, str]],
     expected_file_data: list[tuple[str, list[tuple[str, str]]]],
-):
+) -> None:
     with mock.patch("cmk.special_agents.agent_smb_share.iter_shared_files", return_value=file_data):
         conn = MockSMBConnection(shares=["SharedFolder1", "SharedFolder2"])
         files_per_pattern = [
@@ -379,10 +386,10 @@ def test_get_all_shared_files(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_get_all_shared_files_errors(  # type:ignore[no-untyped-def]
+def test_get_all_shared_files_errors(
     patterns: list[str],
     expected_error_message: str,
-):
+) -> None:
     conn = MockSMBConnection()
     with pytest.raises(SMBShareAgentError, match=expected_error_message):
         dict(get_all_shared_files(conn, HOST_NAME, patterns))
@@ -436,9 +443,12 @@ def test_get_all_shared_files_errors(  # type:ignore[no-untyped-def]
 )
 @mock.patch("cmk.special_agents.agent_smb_share.SMBConnection", MockSMBConnection)
 @freezegun.freeze_time(datetime(2022, 1, 1, 7, 0, 0, 0))
-def test_smb_share_agent(arg_list, files, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_smb_share_agent(
+    arg_list: Sequence[str] | None,
+    files: Sequence[tuple[str, Sequence[File]]],
+    expected_result: Sequence[str],
+) -> None:
     args = parse_arguments(arg_list)
-
     with mock.patch("cmk.special_agents.agent_smb_share.get_all_shared_files", return_value=files):
         with mock.patch("cmk.special_agents.agent_smb_share.SectionWriter", MockSectionWriter):
             smb_share_agent(args)

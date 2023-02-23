@@ -1,0 +1,15 @@
+Title: Agent receiver is accessible via IPv4 and IPv6
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677149826
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The agent receiver listens on port 8000 (per default) on the Checkmk server.
+It handles all calls from the agent controller, e.g., agent registration.
+
+While it previously only listened on IPv4 networks, it's now accessible via IPv4 and IPv6.
+

@@ -36,7 +36,7 @@ case "$1" in
                 --certfile "$KEY_AND_CERT_FILE" \
                 --ca-certs "${CERT_STORE}" \
                 --cert-reqs 1 \
-                -b 0.0.0.0:$CONFIG_AGENT_RECEIVER_PORT \
+                -b [::]:$CONFIG_AGENT_RECEIVER_PORT \
                 -k agent_receiver.worker.ClientCertWorker 'agent_receiver.main:main_app()'
         if [ $? -eq 0 ]; then
             echo "OK"

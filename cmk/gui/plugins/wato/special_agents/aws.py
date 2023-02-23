@@ -512,7 +512,7 @@ def _valuespec_special_agents_aws() -> Migrate:
                     "regions",
                     ListChoice(
                         title=_("Regions to use"),
-                        choices=sorted(aws_constants.AWSRegions, key=lambda x: x[1]),
+                        choices=aws_constants.AWSRegions,
                     ),
                 ),
                 (

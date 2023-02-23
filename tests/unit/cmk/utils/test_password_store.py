@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 
@@ -20,12 +21,17 @@ PW_STORE_KEY = "from_store"
 
 
 @pytest.fixture(name="fixed_secret")
-def fixture_fixed_secret(tmp_path: Path) -> None:
-    """Write a fixed value to a tmp file and use that file for the password store secret"""
+def fixture_fixed_secret(tmp_path: Path) -> Iterator[None]:
+    """Write a fixed value to a tmp file and use that file for the password store secret
+
+    we need the old value since other tests rely on the general path mocking"""
+    old_path = PasswordStoreSecret.path
     secret = b"password-secret"
     secret_path = tmp_path / "password_store_fixed.secret"
     secret_path.write_bytes(secret)
     PasswordStoreSecret.path = secret_path
+    yield
+    PasswordStoreSecret.path = old_path
 
 
 def test_save() -> None:

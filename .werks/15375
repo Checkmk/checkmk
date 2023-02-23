@@ -1,0 +1,14 @@
+Title: service_group: alias field when creating is now required
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677161322
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue whereby the alias was not previously
+a required field when creating service groups. This resulted
+in a an exception when attempting to create a service group
+without one. The alias field is now required.

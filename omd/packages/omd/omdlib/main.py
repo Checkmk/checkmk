@@ -45,7 +45,7 @@ import traceback
 from collections.abc import Callable, Iterable
 from enum import auto, Enum
 from pathlib import Path
-from typing import BinaryIO, cast, Final, IO, Mapping, NamedTuple, NoReturn
+from typing import BinaryIO, cast, Final, IO, Literal, Mapping, NamedTuple, NoReturn
 
 import psutil  # type: ignore[import]
 
@@ -2774,6 +2774,9 @@ def main_update(  # pylint: disable=too-many-branches
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
     from_edition, to_edition = _get_edition(from_version), _get_edition(to_version)
+    if from_edition == "managed" and to_edition != "managed" and not global_opts.force:
+        bail_out(f"ERROR: Updating from {from_edition} to {to_edition} is not possible. Aborted.")
+
     if (
         from_edition != to_edition
         and not global_opts.force
@@ -2951,7 +2954,9 @@ def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:
     os.symlink(target, link_path)
 
 
-def _get_edition(omd_version: str) -> str:
+def _get_edition(
+    omd_version: str,
+) -> Literal["raw", "enterprise", "managed", "free", "cloud", "unknown"]:
     """Returns the long Checkmk Edition name or "unknown" of the given OMD version"""
     parts = omd_version.split(".")
     if parts[-1] == "demo":

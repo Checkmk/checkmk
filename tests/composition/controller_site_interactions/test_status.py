@@ -12,9 +12,10 @@ import pytest
 from tests.testlib.site import Site
 
 from tests.composition.controller_site_interactions.common import controller_status_json
-from tests.composition.utils import execute
 
 from cmk.utils.type_defs import HostAgentConnectionMode, HostName
+
+from .common import register_controller
 
 
 def _get_status_output_json(
@@ -26,24 +27,7 @@ def _get_status_output_json(
 ) -> Mapping[str, Any]:
     site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
     site.openapi.activate_changes_and_wait_for_completion()
-    execute(
-        [
-            "sudo",
-            agent_ctl.as_posix(),
-            "register",
-            "--server",
-            site.http_address,
-            "--site",
-            site.id,
-            "--hostname",
-            hostname,
-            "--user",
-            "cmkadmin",
-            "--password",
-            site.admin_password,
-            "--trust-cert",
-        ]
-    )
+    register_controller(agent_ctl, site, hostname)
     return controller_status_json(agent_ctl)
 
 

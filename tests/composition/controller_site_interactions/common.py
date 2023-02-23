@@ -16,6 +16,31 @@ from tests.composition.utils import execute
 from cmk.utils.type_defs import HostName
 
 
+def register_controller(
+    contoller_path: Path,
+    site: Site,
+    hostname: HostName,
+) -> None:
+    execute(
+        [
+            "sudo",
+            contoller_path.as_posix(),
+            "register",
+            "--server",
+            site.http_address,
+            "--site",
+            site.id,
+            "--hostname",
+            hostname,
+            "--user",
+            "cmkadmin",
+            "--password",
+            site.admin_password,
+            "--trust-cert",
+        ]
+    )
+
+
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
     return json.loads(
         execute(

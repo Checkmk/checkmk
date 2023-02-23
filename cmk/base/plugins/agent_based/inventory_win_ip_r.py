@@ -51,7 +51,7 @@ def parse_win_ip_r(string_table: StringTable) -> Section:
             target="{target}/{subnet}".format(
                 target=target,
                 # Convert subnetmask to CIDR
-                subnet=sum(bin(int(x)).count("1") for x in mask.split(".")),
+                subnet=sum(int(x).bit_count() for x in mask.split(".")),
             ),
             device=device,
             gateway=gateway,

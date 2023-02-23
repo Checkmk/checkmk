@@ -93,9 +93,20 @@ This is the data we can extract
 
 """
 
-import typing
+from typing import Any, List
 
-from cmk.base.plugins.agent_based.utils.ip_format import clean_v4_address, clean_v6_address
+from .agent_based_api.v1 import (
+    OIDBytes,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringByteTable
+from .utils.ip_format import clean_v4_address, clean_v6_address
 
 names = [
     # "Local address type",  #        2.1.2,
@@ -136,12 +147,10 @@ names = [
 ]
 
 
-def parse_arista_bgp(
-    info: typing.Sequence[typing.Sequence[typing.Any]],
-) -> typing.Dict[str, typing.Any]:
-    def convert(name: str, value: str) -> typing.Any:
+def parse_arista_bgp(string_table: List[StringByteTable]) -> dict[str, Any]:
+    def convert(name: str, value: str) -> Any:
         if name in {"Local address", "Local identifier", "Remote identifier"}:
-            if value == []:
+            if not value:
                 return "empty()"
             return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
         if name == "Admin state":
@@ -194,75 +203,52 @@ def parse_arista_bgp(
         )
 
     assert all(
-        len(entry) == len(names) + 1 for entry in info[0]
+        len(entry) == len(names) + 1 for entry in string_table[0]
     ), "Not all info elements have the size guessed from known names %d: %r" % (
         len(names) + 1,
-        [len(entry) for entry in info[0]],
+        [len(entry) for entry in string_table[0]],
     )
+    return {remote_addr(str(entry[-1])): create_item_data(entry) for entry in string_table[0]}
 
-    return {remote_addr(entry[-1]): create_item_data(entry) for entry in info[0]}  #
+
+def discover_arista_bgp(section: dict[str, Any]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-@get_parsed_item_data
 def check_arista_bgp(
-    item: str, params: typing.Dict[str, typing.Any], data: typing.Dict[str, typing.Any]
-) -> typing.Generator[typing.Tuple[int, str], None, None]:
-    for key, value in data.items():
-        yield 0, "%s: %r" % (key, value)
-    yield 0, "Remote address: %r" % item
+    item: str,
+    section: dict[str, Any],
+) -> CheckResult:
+    for key, value in section[item].items():
+        yield Result(state=State.OK, summary="%s: %r" % (key, value))
+    yield Result(state=State.OK, summary="Remote address: %r" % item)
 
 
-def scan_arista_bgp(oid: str) -> bool:
-    return oid(".1.3.6.1.2.1.1.1.0").lower().startswith("arista networks")
-
-
-check_info["arista_bgp"] = {
-    "parse_function": parse_arista_bgp,
-    "check_function": check_arista_bgp,
-    "inventory_function": discover(),
-    "service_description": "BGP Peer %s",
-    "snmp_info": [
-        (
-            ".1.3.6.1.4.1.30065.4.1.1",  # ARISTA-BGP4V2-MIB::aristaBgp4V2Objects
-            [
-                # "2.1.2",  #          LocalAddrType
-                BINARY("2.1.3"),  #  LocalAddr
-                # "2.1.6",  #          LocalPort
-                # "2.1.7",  #          LocalAs
-                BINARY("2.1.8"),  #  LocalIdentifier
-                # "2.1.9",  #          RemotePort
-                "2.1.10",  #         RemoteAs
-                BINARY("2.1.11"),  # RemoteIdentifier
-                "2.1.12",  #         AdminStatus
-                "2.1.13",  #         State
-                # "2.1.14",  #         Description
-                # "3.1.1",  #          LastErrorCodeReceived
-                # "3.1.2",  #          LastErrorSubCodeReceived
-                # "3.1.3",  #          LastErrorReceivedTime
-                "3.1.4",  #          LastErrorReceivedText
-                # "3.1.5",  #          LastErrorReceivedData
-                # "3.1.6",  #          LastErrorCodeSent
-                # "3.1.7",  #          LastErrorSubCodeSent
-                # "3.1.8",  #          LastErrorSentTime
-                # "3.1.9",  #          LastErrorSentText
-                # "3.1.10",  #         LastErrorSentData
-                # "4.1.1",  #          FsmEstablishedTime
-                # "4.1.2",  #          InUpdatesElapsedTime
-                # "5.1.1",  #          ConnectRetryInterval
-                # "5.1.2",  #          HoldTimeConfigured
-                # "5.1.3",  #          KeepAliveConfigured
-                # "5.1.4",  #          MinASOrigInterval
-                # "5.1.5",  #          MinRouteAdverInterval
-                # "6.1.1",  #          HoldTime
-                # "6.1.2",  #          KeepAlive
-                # "7.1.1",  #          InUpdates
-                # "7.1.2",  #          OutUpdates
-                # "7.1.3",  #          InTotalMessages
-                # "7.1.4",  #          OutTotalMessages
-                # "7.1.5",  #          FsmEstablishedTransitions
-                OID_END,
+register.snmp_section(
+    name="arista_bgp_peer",
+    parse_function=parse_arista_bgp,
+    parsed_section_name="arista_bgp",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.30065.4.1.1",  # ARISTA-BGP4V2-MIB::aristaBgp4V2Objects
+            oids=[
+                OIDBytes("2.1.3"),  # LocalAddr
+                OIDBytes("2.1.8"),  # LocalIdentifier
+                "2.1.10",  # RemoteAs
+                OIDBytes("2.1.11"),  # RemoteIdentifier
+                "2.1.12",  # AdminStatus
+                "2.1.13",  # State
+                "3.1.4",  # LastErrorReceivedTex
+                OIDEnd(),  # RemoteAddr
             ],
         )
     ],
-    "snmp_scan_function": scan_arista_bgp,
-}
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "arista networks"),
+)
+
+register.check_plugin(
+    name="arista_bgp",
+    service_name="BGP Peer %s",
+    discovery_function=discover_arista_bgp,
+    check_function=check_arista_bgp,
+)

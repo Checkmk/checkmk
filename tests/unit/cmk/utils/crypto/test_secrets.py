@@ -5,22 +5,7 @@
 
 from pathlib import Path
 
-import pytest
-
 import cmk.utils.crypto.secrets as secrets
-
-
-def test_empty_secret_raises_error(tmp_path: Path) -> None:
-    """Trying to load an existing but empty secret file raises an error"""
-
-    empty_secret_file = tmp_path / "empty.secret"
-    empty_secret_file.touch(0o600)
-
-    class EmptySecret(secrets._LocalSecret):
-        path = empty_secret_file
-
-    with pytest.raises(ValueError, match="is empty"):
-        EmptySecret()
 
 
 def test_create_secret_and_hmac(tmp_path: Path) -> None:

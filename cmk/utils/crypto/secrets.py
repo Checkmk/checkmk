@@ -23,16 +23,15 @@ class _LocalSecret(ABC):
 
         if self.path.exists():
             self.secret = self.path.read_bytes()
-            if not self.secret:
-                raise ValueError(f"Secret loaded from {self.path} is empty")
+            if self.secret:
+                return
 
-        else:
-            self.secret = secrets.token_bytes(32)
-            # TODO: mkdir is probably not really required here, just some cmc test failing.
-            #       Better way would be to fix the test setup.
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            self.path.touch(mode=0o600)
-            self.path.write_bytes(self.secret)
+        self.secret = secrets.token_bytes(32)
+        # TODO: mkdir is probably not really required here, just some cmc test failing.
+        #       Better way would be to fix the test setup.
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.touch(mode=0o600)
+        self.path.write_bytes(self.secret)
 
     @property
     @abstractmethod

@@ -1,0 +1,17 @@
+Title: Automatic host removal
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1677163610
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+This werk introduces a new feature, namely the automatic removal of hosts based on their properties.
+This auto-removal is configurable via the new ruleset <i>Automatic host removal</i>. At the moment,
+the only configuration option is the amount of time which the Check_MK service of a host spends in
+the monitoring status <i>CRITICAL</i> (eg. because the host is down) before this host is removed.
+
+Naturally, by default, the auto-removal is inactive and has to be explicitly activated via the
+ruleset mentioned above.

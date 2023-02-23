@@ -1330,60 +1330,59 @@ def write_cronjobs_api_sections(
             )
 
 
-def write_namespaces_api_sections(
-    api_namespaces: Sequence[api.Namespace],
-    api_resource_quotas: Sequence[api.ResourceQuota],
-    api_pods: Sequence[api.Pod],
+def create_namespace_api_sections(
+    api_namespace: api.Namespace,
+    namespace_api_pods: Sequence[api.Pod],
     host_settings: CheckmkHostSettings,
-    piggyback_formatter: PiggybackFormatter,
-) -> None:
-    def output_namespace_sections(
-        namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]
-    ) -> None:
-        sections = {
-            "kube_namespace_info_v1": lambda: namespace_info(
-                namespace,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_namespace_info_v1"),
+            section=namespace_info(
+                api_namespace,
                 host_settings.cluster_name,
                 host_settings.annotation_key_pattern,
                 host_settings.kubernetes_cluster_hostname,
             ),
-            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(namespaced_api_pods),
-            "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
-                namespaced_api_pods
-            ),
-            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(
-                namespaced_api_pods
-            ),
-        }
-        _write_sections(sections)
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=_pod_resources_from_api_pods(namespace_api_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=_collect_memory_resources_from_api_pods(namespace_api_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=_collect_cpu_resources_from_api_pods(namespace_api_pods),
+        ),
+    )
 
-    def output_resource_quota_sections(resource_quota: api.ResourceQuota) -> None:
-        sections = {
-            "kube_resource_quota_memory_resources_v1": lambda: section.HardResourceRequirement.parse_obj(
-                resource_quota.spec.hard.memory
-            )
-            if resource_quota.spec.hard
-            else None,
-            "kube_resource_quota_cpu_resources_v1": lambda: section.HardResourceRequirement.parse_obj(
-                resource_quota.spec.hard.cpu
-            )
-            if resource_quota.spec.hard
-            else None,
-        }
-        _write_sections(sections)
 
-    for api_namespace in api_namespaces:
-        with ConditionalPiggybackSection(piggyback_formatter(api_namespace)):
-            output_namespace_sections(
-                api_namespace, filter_pods_by_namespace(api_pods, namespace_name(api_namespace))
-            )
+def create_resource_quota_api_sections(
+    resource_quota: api.ResourceQuota, piggyback_name: str
+) -> Iterator[WriteableSection]:
+    if resource_quota.spec.hard is None:
+        return
 
-            if (
-                api_resource_quota := filter_matching_namespace_resource_quota(
-                    namespace_name(api_namespace), api_resource_quotas
-                )
-            ) is not None:
-                output_resource_quota_sections(api_resource_quota)
+    yield from (
+        WriteableSection(
+            section_name=SectionName("kube_resource_quota_memory_resources_v1"),
+            section=section.HardResourceRequirement.parse_obj(resource_quota.spec.hard.memory),
+            piggyback_name=piggyback_name,
+        ),
+        WriteableSection(
+            section_name=SectionName("kube_resource_quota_cpu_resources_v1"),
+            section=section.HardResourceRequirement.parse_obj(resource_quota.spec.hard.cpu),
+            piggyback_name=piggyback_name,
+        ),
+    )
 
 
 def write_nodes_api_sections(
@@ -2301,14 +2300,29 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             )
             if MonitoredObject.namespaces in arguments.monitored_objects:
                 LOGGER.info("Write namespaces sections based on API data")
-
-                write_namespaces_api_sections(
-                    monitored_api_namespaces,
-                    resource_quotas,
-                    api_data.pods,
-                    host_settings=checkmk_host_settings,
-                    piggyback_formatter=piggyback_formatter,
-                )
+                for api_namespace in monitored_api_namespaces:
+                    namespace_piggyback_name = piggyback_formatter(api_namespace)
+                    api_pods_from_namespace = filter_pods_by_namespace(
+                        api_data.pods, namespace_name(api_namespace)
+                    )
+                    namespace_sections = create_namespace_api_sections(
+                        api_namespace,
+                        api_pods_from_namespace,
+                        host_settings=checkmk_host_settings,
+                        piggyback_name=namespace_piggyback_name,
+                    )
+                    if (
+                        api_resource_quota := filter_matching_namespace_resource_quota(
+                            namespace_name(api_namespace), resource_quotas
+                        )
+                    ) is not None:
+                        namespace_sections = chain(
+                            namespace_sections,
+                            create_resource_quota_api_sections(
+                                api_resource_quota, piggyback_name=namespace_piggyback_name
+                            ),
+                        )
+                    common.write_sections(namespace_sections)
 
             if MonitoredObject.daemonsets in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")

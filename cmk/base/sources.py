@@ -26,6 +26,7 @@ from cmk.fetchers.filecache import (
     FileCacheMode,
     FileCacheOptions,
     MaxAge,
+    NoCache,
     SNMPFileCache,
 )
 
@@ -173,26 +174,7 @@ class _Builder:
             self._add(
                 source,
                 self.config_cache.make_piggyback_fetcher(source.hostname, source.ipaddress),
-                AgentFileCache(
-                    source.hostname,
-                    path_template=make_file_cache_path_template(
-                        fetcher_type=source.fetcher_type, ident=source.ident
-                    ),
-                    max_age=(
-                        MaxAge.unlimited()
-                        if self.file_cache_options.use_outdated
-                        else self.file_cache_max_age
-                    ),
-                    simulation=False,  # TODO Quickfix for SUP-9912
-                    # Setting "use only cache" usually means we do not want to create network
-                    # traffic or bother the monitored device for performance reasons.
-                    # Piggybacked data is either available locally in the stored piggyback files,
-                    # or not at all, so a cache makes no sense.
-                    # Always allow "fetching" (which is reading from disk) and never even use the cache.
-                    # TODO: We probably should use "NoCache" here?
-                    use_only_cache=False,
-                    file_cache_mode=FileCacheMode.DISABLED,
-                ),
+                NoCache(source.hostname),
             )
 
     def _initialize_snmp_plugin_store(self) -> None:

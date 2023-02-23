@@ -19,11 +19,6 @@ import cmk.base.ip_lookup as ip_lookup
 
 
 @pytest.fixture(autouse=True)
-def autouse_fix_ip_lookup(fixup_ip_lookup):
-    pass
-
-
-@pytest.fixture(autouse=True)
 def no_io_ip_lookup_cache(tmp_path, monkeypatch):
     monkeypatch.setattr(ip_lookup.IPLookupCache, "PATH", tmp_path / "cache")
 
@@ -468,14 +463,18 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
-    ts.add_host(
-        hostname,
-        tags={
-            "address_family": "ip-v6-only",
-        },
+    ts.add_host(hostname, tags={"address_family": "ip-v6-only"})
+    config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(
+        socket,
+        "getaddrinfo",
+        lambda host, port, family=None, socktype=None, proto=None, flags=None: {
+            # That looks like a tautological tests.  It's most likely useless.
+            ("localhost", socket.AF_INET6): [(family, None, None, None, (result_address, 0))],
+            ("::1", socket.AF_INET6): [(family, None, None, None, (result_address, 0))],
+        }[(host, family)],
     )
 
-    config_cache = ts.apply(monkeypatch)
     assert config.lookup_mgmt_board_ip_address(config_cache, hostname) == result_address
 
 

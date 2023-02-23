@@ -140,7 +140,7 @@ def test_commandline_arguments_list_with_invalid_type() -> None:
         )
 
 
-def test_get_host_attributes(fixup_ip_lookup, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_host_attributes(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ts = Scenario()
     ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.set_option(

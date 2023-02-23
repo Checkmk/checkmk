@@ -266,7 +266,6 @@ def test_is_ipv4v6_host(
     assert config_cache.is_ipv4v6_host(hostname) == result
 
 
-@pytest.mark.usefixtures("fixup_ip_lookup")
 def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     _FALLBACK_ADDRESS_IPV4: Final = "0.0.0.0"
     _FALLBACK_ADDRESS_IPV6: Final = "::"
@@ -292,6 +291,14 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         },
     )
     config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(
+        socket,
+        "getaddrinfo",
+        lambda host, port, family=None, *args, **kwargs: {
+            ("localhost", socket.AF_INET): [(family, None, None, None, ("127.0.0.1", 0))],
+            ("localhost", socket.AF_INET6): [(family, None, None, None, ("::1", 0))],
+        }[(host, family)],
+    )
 
     assert config_cache.default_address_family("localhost") is socket.AF_INET
     assert config_cache.is_no_ip_host("localhost") is False

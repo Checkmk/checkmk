@@ -7,7 +7,6 @@ import copy
 import logging
 import os
 import shutil
-import socket
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import Any, Generator, NamedTuple
@@ -214,30 +213,6 @@ def clear_caches_per_module():
 def clear_caches_per_function():
     """Ensures that each test is executed with a non-polluted cache from a previous test."""
     _clear_caches()
-
-
-# TODO: This fixes our unit tests when executing the tests while the local
-# resolver uses a search domain which uses wildcard resolution. e.g. in a
-# network where mathias-kettner.de is in the domain search list and
-# [anything].mathias-kettner.de resolves to an IP address.
-# Clean this up once we don't have this situation anymore e.g. via VPN.
-@pytest.fixture()
-def fixup_ip_lookup(monkeypatch):
-    # Fix IP lookup when
-    def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
-        if host not in ("localhost", "::1", "127.0.0.1"):
-            return None
-        if family == socket.AF_INET:
-            return [
-                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("127.0.0.1", 0)),
-            ]
-        if family == socket.AF_INET6:
-            return [
-                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("::1", 0)),
-            ]
-        raise NotImplementedError()
-
-    monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
 
 
 class FixRegister:

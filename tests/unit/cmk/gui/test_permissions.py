@@ -637,6 +637,9 @@ def test_registered_permissions() -> None:
 
     if cmk_version.is_cloud_edition():
         expected_permissions += [
+            "dashboard.aws_s3_overview",
+            "dashboard.azure_storage_overview",
+            "dashboard.gcp_storage_overview",
             "agent_registration.register_any_new_host",
             "agent_registration.register_new_host_in_managed_folder",
             "dashboard.aws_ec2_overview",

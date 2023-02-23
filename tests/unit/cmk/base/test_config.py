@@ -277,20 +277,6 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     ts.add_host("no_ip", {"address_family": "no-ip"})
     ts.add_host("dual_stack", {"address_family": "ip-v4v6"})
     ts.add_cluster("cluster")
-    ts.set_option(
-        "shadow_hosts",
-        {
-            "shadow_host_name": {
-                "alias": "shadow_host_name_alias",
-                "address": "173.33.133.133",
-                "custom_variables": {
-                    "ADDRESS_FAMILY": "4",
-                    "ADDRESS_4": "173.33.133.133",
-                    "ADDRESS_6": "",
-                },
-            }
-        },
-    )
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(
         socket,
@@ -305,13 +291,6 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.address_family("localhost") is AddressFamily.IPv4
     assert ip_address_of(config_cache, "localhost", socket.AF_INET) == "127.0.0.1"
     assert ip_address_of(config_cache, "localhost", socket.AF_INET6) == "::1"
-
-    assert config_cache.default_address_family("shadow_host_name") is socket.AF_INET
-    assert config_cache.address_family("shadow_host_name") is AddressFamily.IPv4
-    assert ip_address_of(config_cache, "shadow_host_name", socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
-    assert (
-        ip_address_of(config_cache, "shadow_host_name", socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
-    )
 
     assert config_cache.default_address_family("no_ip") is socket.AF_INET
     assert config_cache.address_family("no_ip") is AddressFamily.NO_IP

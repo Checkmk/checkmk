@@ -10,7 +10,7 @@ description:
  The check can be configured via the rule "GCP Health".
 
  To make this check work you have to configure the related
- special agent {Google Cloud Platform (GCP)}.
+ special agent {Google Cloud Platform (GCP) Status}.
 
 
 discovery:

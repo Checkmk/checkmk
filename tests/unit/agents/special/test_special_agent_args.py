@@ -144,6 +144,7 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
     "agent_cisco_meraki": ["HOSTNAME", "API_KEY"],
     "agent_azure_status": ["REGION1 REGION2"],
     "agent_aws_status": [],
+    "agent_gcp_status": ["--date", "2022-01-15"],
 }
 
 

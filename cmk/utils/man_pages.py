@@ -296,6 +296,7 @@ CATALOG_TITLES: Final = {
     "mobileiron": "Mobileiron",
     "azure_status": "Microsoft Azure Status",
     "aws_status": "Amazon Web Service (AWS) Status",
+    "gcp_status": "Google Cloud Platform (GCP) Status",
 }
 
 # TODO: Do we need a more generic place for this?

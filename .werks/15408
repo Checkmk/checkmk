@@ -1,0 +1,28 @@
+Title: Re-structure permissions for agent registration
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1677164057
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+In werk <a href="https://checkmk.com/werk/14079">14079</a>, we clarified the permissions required
+for registering agents. These permissions have been re-worked. To register agents, users now need
+one of the following permissions:
+
+LI: <i>Register any existing host</i> (newly introduced): This permission authorizes users to register agents for any existing host.
+LI: <i>Register managed existing host</i> (newly introduced): This permission authorizes users to register agents for all existing hosts they are a contact of.
+LI: Alternatively, users can also register agents for all hosts to which they have read and write access, as before.
+
+This new permission structure allows for separating the registration of agents from the Checkmk
+administration, since the two new permissions mentioned above do not authorize users to do anything
+else other than agent registration. To further support this separation, we have introduced a new
+user role called <i>Agent registration user</i>, which only has these two new permissions.
+
+Note that the <i>Agent pairing</i> permission mentioned in werk <a href="https://checkmk.com/werk/14079">14079</a>
+is now deprecated, however, it is still configurable in Checkmk. This is because the changes
+mentioned in this werk only affect agents with version 2.2 or higher. For the registration of 2.1
+agents with 2.2 sites, the old permissions described in werk <a href="https://checkmk.com/werk/14079">14079</a>
+still apply (including <i>Agent pairing</i>).

@@ -70,6 +70,7 @@ pipfile = "*" # for generating import names during int tests
 py-import-cycles = "*"  # used in tests/Makefile
 types-pysaml2 = "*"  # typing extension for pysaml2
 telnetlib3 = "*"  # used by Windows Agent tests
+httpx = "*"  # will be removed later - is needed for the agent receiever tests as the new startlette version needs it
 ruff = "==0.0.240"  # newer versions have problems with the match statement
 
 [packages]

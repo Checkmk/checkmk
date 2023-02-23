@@ -12,8 +12,8 @@ from unittest import mock
 from uuid import uuid4
 from zlib import compress
 
+import httpx
 import pytest
-import requests
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
@@ -432,7 +432,7 @@ def _call_register_new_ongoing_cce(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
-) -> requests.Response:
+) -> httpx.Response:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.cce,

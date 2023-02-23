@@ -154,7 +154,7 @@ def main() {
 }
 
 def registry_credentials_id(edition) {
-    if (!["raw", "free", "managed", "cloud"].contains(edition)) {
+    if (!["enterprise", "raw", "free", "managed", "cloud"].contains(edition)) {
         throw new Exception("Cannot provide registry credentials id for edition '${edition}'")
     }
     return edition in ["raw", "free", "cloud"] ? '11fb3d5f-e44e-4f33-a651-274227cc48ab' : "registry.checkmk.com"

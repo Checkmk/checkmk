@@ -6,7 +6,8 @@ from pathlib import Path
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
-import cmk.gui.watolib.utils as watolib_utils
+from cmk.utils.paths import default_config_dir
+
 from cmk.gui import sites
 from cmk.gui.i18n import _
 
@@ -26,7 +27,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> str:
-        return str(Path(watolib_utils.multisite_dir()) / "bi_config.bi")
+        return str(Path(default_config_dir) / "multisite.d" / "wato" / "bi_config.bi")
 
 
 def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:

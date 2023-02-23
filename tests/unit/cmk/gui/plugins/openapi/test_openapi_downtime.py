@@ -12,9 +12,12 @@ from tests.testlib.rest_api_client import RestApiClient
 
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
+from cmk.utils import version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.plugins.openapi.endpoints.downtime import _with_defaulted_timezone
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
@@ -1019,6 +1022,7 @@ def test_openapi_downtime_invalid_single(
         )
 
 
+@managedtest
 @pytest.mark.usefixtures("with_host")
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_user_in_service_but_not_in_host_contact_group_regression(

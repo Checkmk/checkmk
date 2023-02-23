@@ -120,9 +120,12 @@ class _Builder:
         self.simulation_mode: Final = simulation_mode
         self.file_cache_options: Final = file_cache_options
         self.file_cache_max_age: Final = file_cache_max_age
-        self._elems: dict[str, tuple[SourceInfo, FileCache, Fetcher]] = {}
 
-        self._initialize()
+        assert not self.config_cache.is_cluster(self.host_name)
+        self._elems: dict[str, tuple[SourceInfo, FileCache, Fetcher]] = {}
+        self._initialize_agent_based()
+        self._initialize_snmp_based()
+        self._initialize_mgmt_boards()
 
     @property
     def sources(self) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
@@ -134,16 +137,6 @@ class _Builder:
                 args[0].ident,
             ),
         )
-
-    def _initialize(self) -> None:
-        if self.config_cache.is_cluster(self.host_name):
-            # Cluster hosts do not have any actual data sources
-            # Instead all data is provided by the nodes
-            return
-
-        self._initialize_agent_based()
-        self._initialize_snmp_based()
-        self._initialize_mgmt_boards()
 
     def _initialize_agent_based(self) -> None:
         # agent-based data sources use the cache and persisted directories
@@ -473,6 +466,11 @@ def make_sources(
     file_cache_max_age: MaxAge,
 ) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
+    if config_cache.is_cluster(host_name):
+        # Cluster hosts do not have any actual data sources
+        # Instead all data is provided by the nodes
+        return ()
+
     return _Builder(
         host_name,
         ipaddress,

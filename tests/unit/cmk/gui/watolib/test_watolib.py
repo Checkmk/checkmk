@@ -64,6 +64,7 @@ def test_registered_automation_commands() -> None:
         "remove-tls-registration",
         "get-audit-logs",
         "hosts-for-auto-removal",
+        "rename-hosts-uuid-link",
     ]
 
     if not cmk_version.is_raw_edition():

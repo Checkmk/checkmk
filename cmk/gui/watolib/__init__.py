@@ -31,6 +31,9 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
+from cmk.gui.watolib.host_rename import (
+    AutomationRenameHostsUUIDLink as _AutomationRenameHostsUUIDLink,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     rebuild_folder_lookup_cache as _rebuild_folder_lookup_cache,
 )
@@ -45,6 +48,7 @@ def _register_automation_commands() -> None:
     clss: Sequence[type[_automation_commands.AutomationCommand]] = (
         _automation_commands.AutomationPing,
         _automatic_host_removal.AutomationHostsForAutoRemoval,
+        _AutomationRenameHostsUUIDLink,
     )
     for cls in clss:
         _automation_commands.automation_command_registry.register(cls)

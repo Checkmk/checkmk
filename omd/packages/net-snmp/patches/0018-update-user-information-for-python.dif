@@ -1,0 +1,92 @@
+diff --git a/include/net-snmp/library/snmp_api.h b/include/net-snmp/library/snmp_api.h
+index 24eaac6..fb07fb5 100644
+--- a/include/net-snmp/library/snmp_api.h
++++ b/include/net-snmp/library/snmp_api.h
+@@ -384,6 +384,9 @@ typedef struct request_list {
+     NETSNMP_IMPORT
+     void            init_snmp(const char *);
+ 
++    NETSNMP_IMPORT
++    void            snmp_always_create_new_user(int);
++
+     NETSNMP_IMPORT
+     int
+     snmp_build(u_char ** pkt, size_t * pkt_len, size_t * offset,
+diff --git a/python/netsnmp/client.py b/python/netsnmp/client.py
+index daf11a4..641330c 100644
+--- a/python/netsnmp/client.py
++++ b/python/netsnmp/client.py
+@@ -4,6 +4,9 @@ from sys import stderr
+ import netsnmp
+ import netsnmp.client_intf
+ 
++def always_create_new_user():
++    netsnmp.client_intf.always_create_new_user()
++
+ # control verbosity of error output
+ verbose = 1
+ 
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+index e5e7372..9a47e6d 100644
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -1897,6 +1897,11 @@ netsnmp_walk(PyObject *self, PyObject *args)
+   return (val_tuple ? val_tuple : Py_BuildValue(""));
+ }
+ 
++static PyObject *
++netsnmp_always_create_new_user(PyObject *self, PyObject * Py_UNUSED(args)) {
++  snmp_always_create_new_user(1);
++  Py_RETURN_NONE;
++}
+ 
+ static PyObject *
+ netsnmp_getbulk(PyObject *self, PyObject *args)
+@@ -2270,6 +2275,8 @@ static PyMethodDef ClientMethods[] = {
+    "perform an SNMP SET operation."},
+   {"walk",  netsnmp_walk, METH_VARARGS,
+    "perform an SNMP WALK operation."},
++  {"always_create_new_user",  netsnmp_always_create_new_user, METH_NOARGS,
++   "create new user during sesssion creation."},
+   {NULL, NULL, 0, NULL}        /* Sentinel */
+ };
+ 
+diff --git a/snmplib/snmpusm.c b/snmplib/snmpusm.c
+index 1e1adb9..5abe0d7 100644
+--- a/snmplib/snmpusm.c
++++ b/snmplib/snmpusm.c
+@@ -3427,6 +3427,12 @@ err:
+     return SNMPERR_GENERR;
+ }
+ 
++static int always_create_new_user = 0;
++
++void snmp_always_create_new_user(int allowed){
++    always_create_new_user = allowed;
++}
++
+ /*
+  * usm_create_user_from_session(netsnmp_session *session):
+  * 
+@@ -3470,6 +3476,12 @@ usm_create_user_from_session(netsnmp_session * session)
+                                   session->securityEngineIDLen,
+                                   session->securityName,
+                                   usm_get_userList(), 0);
++    if (always_create_new_user) {
++        if (user != NULL && usm_remove_user(user) != NULL) {
++           usm_free_user(user);
++        }
++        user = NULL;
++    }
+     if (NULL != user) {
+         DEBUGMSGTL(("usm", "user exists x=%p\n", user));
+     } else {
+@@ -3608,7 +3620,7 @@ usm_create_user_from_session(netsnmp_session * session)
+          * add the user into the database 
+          */
+         user->userStatus = RS_ACTIVE;
+-        user->userStorageType = ST_READONLY;
++        user->userStorageType = ST_OTHER; /* see RFC 2574, usmUserStorageType DESCRIPTION */
+         usm_add_user(user);
+     }
+     DEBUGMSGTL(("9:usm", "user created\n"));

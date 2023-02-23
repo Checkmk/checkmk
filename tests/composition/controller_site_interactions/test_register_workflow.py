@@ -12,8 +12,8 @@ from tests.testlib.site import Site
 
 from cmk.utils.type_defs import HostAgentConnectionMode, HostName
 
-from ..utils import execute, LOGGER
-from .common import wait_until_host_has_services, wait_until_host_receives_data
+from ..utils import LOGGER
+from .common import register_controller, wait_until_host_has_services, wait_until_host_receives_data
 
 
 def _test_register_workflow(
@@ -26,24 +26,7 @@ def _test_register_workflow(
     site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
     site.openapi.activate_changes_and_wait_for_completion()
 
-    execute(
-        [
-            "sudo",
-            agent_ctl.as_posix(),
-            "register",
-            "--server",
-            site.http_address,
-            "--site",
-            site.id,
-            "--hostname",
-            hostname,
-            "--user",
-            "cmkadmin",
-            "--password",
-            site.admin_password,
-            "--trust-cert",
-        ]
-    )
+    register_controller(agent_ctl, site, hostname)
 
     LOGGER.info("Waiting for controller to open TCP socket or push data")
     wait_until_host_receives_data(site, hostname)

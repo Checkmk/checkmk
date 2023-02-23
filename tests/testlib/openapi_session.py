@@ -218,7 +218,7 @@ class CMKOpenApiSession(requests.Session):
         folder: str = "/",
         attributes: dict[str, Any] | None = None,
         bake_agent: bool = False,
-    ) -> None:
+    ) -> requests.Response:
         query_string = "?bake_agent=1" if bake_agent else ""
         response = self.post(
             f"/domain-types/host_config/collections/all{query_string}",
@@ -226,6 +226,7 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
+        return response
 
     def delete_host(self, hostname: str) -> None:
         response = self.delete(f"/objects/host_config/{hostname}")

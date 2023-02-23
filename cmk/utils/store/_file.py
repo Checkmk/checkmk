@@ -88,11 +88,21 @@ def _check_permissions(path: Path) -> None:
     Raise an exception otherwise."""
     stat = path.stat()
     # we trust root and ourselves
-    owned_by_site_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
+    owned_by_current_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
     world_writable = S_IMODE(stat.st_mode) & S_IWOTH != 0
 
-    if not owned_by_site_user_or_root:
-        raise MKGeneralException(_('Refusing to read file not owned by site user: "%s"') % path)
+    if path.resolve() == Path("/etc/cma/backup.conf"):
+        # The file is group-owned by omd. To fix this in the appliance will
+        # take more time, considering the compatibility with older versions
+        # So we check for owner and world and don't care for group...
+        if not stat.st_uid in [0, getuid()] or world_writable:
+            raise MKGeneralException(
+                _("/etc/cma/backup.conf has wrong permissions. Refusing to read file")
+            )
+        return
+
+    if not owned_by_current_user_or_root:
+        raise MKGeneralException(_('Refusing to read file not owned by us: "%s"') % path)
     if world_writable:
         raise MKGeneralException(_('Refusing to read world writable file: "%s"') % path)
 

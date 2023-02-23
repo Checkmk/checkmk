@@ -4,16 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Dict, List, Optional
 from typing import Tuple as _Tuple
 from typing import Union
 
+from pydantic import BaseModel
+
 from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.agent_registration import get_uuid_link_manager, UUIDLinkManager
+from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.bi.bi_packs import BIHostRenamer
 from cmk.utils.type_defs import HostName
 
@@ -22,7 +25,11 @@ from cmk.gui import userdb
 from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
+from cmk.gui.sites import get_site_config, site_is_local
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text
 from cmk.gui.watolib.check_mk_automations import rename_hosts
 from cmk.gui.watolib.hosts_and_folders import (
@@ -89,7 +96,8 @@ def perform_rename_hosts(
     # 2. Checkmk stuff ------------------------------------------------
     update_interface(_("Renaming host(s) in base configuration, rrd, history files, etc."))
     update_interface(_("This might take some time and involves a core restart..."))
-    action_counts = _rename_hosts_in_check_mk(successful_renamings)
+    renamings_by_site = _group_renamings_by_site(successful_renamings)
+    action_counts = _rename_hosts_in_check_mk(renamings_by_site)
 
     # 3. Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
@@ -100,10 +108,7 @@ def perform_rename_hosts(
 
     # 4. Update UUID links
     update_interface(_("Renaming host(s): Update UUID links..."))
-    actions += _rename_host_in_uuid_link_manager(
-        get_uuid_link_manager(),
-        [(oldname, newname) for _folder, oldname, newname in successful_renamings],
-    )
+    actions += _rename_host_in_uuid_link_manager(renamings_by_site)
 
     for action in actions:
         action_counts.setdefault(action, 0)
@@ -214,10 +219,10 @@ def _rename_host_in_bi(oldname: HostName, newname: HostName) -> list[str]:
 
 
 def _rename_hosts_in_check_mk(
-    renamings: Iterable[tuple[CREFolder, HostName, HostName]]
+    renamings_by_site: Mapping[SiteId, Sequence[tuple[HostName, HostName]]],
 ) -> Dict[str, int]:
     action_counts: Dict[str, int] = {}
-    for site_id, name_pairs in _group_renamings_by_site(renamings).items():
+    for site_id, name_pairs in renamings_by_site.items():
         message = _("Renamed host %s") % ", ".join(
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs]
         )
@@ -372,7 +377,37 @@ def _group_renamings_by_site(
 
 
 def _rename_host_in_uuid_link_manager(
-    uuid_link_manager: UUIDLinkManager,
-    successful_renamings: Sequence[tuple[HostName, HostName]],
+    renamings_by_site: Mapping[SiteId, Sequence[tuple[HostName, HostName]]],
 ) -> list[str]:
-    return ["uuid_link"] * len(uuid_link_manager.rename(successful_renamings))
+    n_relinked = 0
+    for site_id, renamings in renamings_by_site.items():
+        if site_is_local(site_id):
+            n_relinked += len(get_uuid_link_manager().rename(renamings))
+        else:
+            n_relinked += do_remote_automation(
+                get_site_config(site_id),
+                "rename-hosts-uuid-link",
+                [
+                    (
+                        "renamings",
+                        json.dumps(renamings),
+                    )
+                ],
+            )
+    return ["uuid_link"] * n_relinked
+
+
+class _RenameHostsUUIDLinkRequest(BaseModel):
+    renamings: Sequence[tuple[HostName, HostName]]
+
+
+@automation_command_registry.register
+class AutomationRenameHostsUUIDLink(AutomationCommand):
+    def command_name(self) -> str:
+        return "rename-hosts-uuid-link"
+
+    def execute(self, api_request: _RenameHostsUUIDLinkRequest) -> int:
+        return len(get_uuid_link_manager().rename(api_request.renamings))
+
+    def get_request(self) -> _RenameHostsUUIDLinkRequest:
+        return _RenameHostsUUIDLinkRequest(renamings=json.loads(request.get_request()["renamings"]))

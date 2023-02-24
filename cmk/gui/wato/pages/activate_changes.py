@@ -67,7 +67,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.search import build_index_background
+from cmk.gui.watolib.search import request_index_rebuild
 
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
@@ -271,7 +271,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         for site_id in activation_sites():
             self.confirm_site_changes(site_id)
 
-        build_index_background()
+        request_index_rebuild()
 
         make_header(
             html,

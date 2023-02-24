@@ -88,6 +88,9 @@ class HtpasswdUserConnector(UserConnector):
         if self._is_automation_user(user_id):
             raise MKUserError(None, _("Automation user rejected"))
 
+        if pw_hash.startswith("!"):
+            raise MKUserError(None, _("User is locked"))
+
         try:
             password_hashing.verify(password, pw_hash)
         except (password_hashing.PasswordInvalidError, ValueError):

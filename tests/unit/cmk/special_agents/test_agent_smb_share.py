@@ -46,17 +46,28 @@ class MockShare:
 
 class MockSMBConnection:
     def __init__(  # type:ignore[no-untyped-def]
-        self, *args, filesystem=None, shares=None, is_direct_tcp=False
-    ) -> None:
+        self,
+        *args,
+        filesystem=None,
+        shares=None,
+        is_direct_tcp=False,
+        disallowed_paths: list[str] | None = None,
+    ):
         self.filesystem = filesystem
         self.shares = shares
         self.is_direct_tcp = is_direct_tcp
+        self.disallowed_paths = disallowed_paths if disallowed_paths else []
 
     @staticmethod
     def connect(*args):
         return True
 
     def listPath(self, shared_folder: str, path: str) -> list[SharedFile]:
+        if path in self.disallowed_paths:
+            raise Exception(
+                f"The agent tries to decend into {path} but is not allowed to! "
+                f"Keep the agent as lazy as possible in order to have a performant execution!"
+            )
         if shared_folder not in self.filesystem:
             return []
         return self.filesystem[shared_folder].get(path)
@@ -108,7 +119,7 @@ def test_parse_arguments() -> None:
 
 
 @pytest.mark.parametrize(
-    "filesystem, pattern, expected_file_data",
+    "filesystem, disallowed_paths, pattern, expected_file_data",
     [
         pytest.param(
             {
@@ -120,6 +131,7 @@ def test_parse_arguments() -> None:
                     ],
                 }
             },
+            [],
             ["Subfolder1", "My File"],
             [(f"{SHARE_BASE}\\Subfolder1\\My File", "My File")],
             id="exact pattern for one file to match",
@@ -134,8 +146,10 @@ def test_parse_arguments() -> None:
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
+                        file("Ordner"),
                         file("file2"),
                     ],
+                    "Subfolder1\\Ordner\\": [],
                     "Subfolder1\\Subfolder2\\": [
                         file("file3"),
                         file("file4"),
@@ -145,6 +159,7 @@ def test_parse_arguments() -> None:
                     ],
                 }
             },
+            ["Subfolder1\\Ordner\\"],
             ["Subfolder1", "*folder*", "*ile*"],
             [
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\file3", "file3"),
@@ -182,6 +197,7 @@ def test_parse_arguments() -> None:
                     ],
                 }
             },
+            [],
             ["Subfolder1", "*", "*", "some_file"],
             [
                 (
@@ -200,8 +216,10 @@ def test_parse_arguments() -> None:
                 SHARED_FOLDER: {
                     "": [
                         folder("Subfolder1"),
+                        folder("do_not_go_here"),
                         file("some_file"),
                     ],
+                    "do_not_go_here\\": [],
                     "Subfolder1\\": [
                         folder("Subfolder2"),
                         folder("Subfolder3"),
@@ -223,6 +241,7 @@ def test_parse_arguments() -> None:
                     ],
                 }
             },
+            ["do_not_go_here\\"],
             ["Subfolder1", "**", "some_file"],
             [
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
@@ -241,8 +260,12 @@ def test_parse_arguments() -> None:
                         file("file1"),
                         file("file2"),
                     ],
+                    "Subfolder1\\": [
+                        file("file3"),
+                    ],
                 }
             },
+            ["Subfolder1\\"],
             ["*"],
             [
                 (f"{SHARE_BASE}\\file1", "file1"),
@@ -254,12 +277,40 @@ def test_parse_arguments() -> None:
             {
                 SHARED_FOLDER: {
                     "": [
+                        folder("sub1"),
+                        file("root.txt"),
+                    ],
+                    "sub1\\": [
+                        folder("sub2"),
+                        file("sub1.txt"),
+                    ],
+                    "sub1\\sub2\\": [
+                        folder("sub3"),
+                        file("sub2.txt"),
+                    ],
+                    "sub1\\sub2\\sub3\\": [
+                        file("sub3.txt"),
+                    ],
+                }
+            },
+            ["sub1\\sub2\\sub3\\"],
+            ["sub1", "*", "*.txt"],
+            [
+                ("\\\\HOSTNAME\\My Shared Folder\\sub1\\sub2\\sub2.txt", "sub2.txt"),
+            ],
+            id="glob one folder hierarchy and find all files with .txt suffix",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
                         folder("."),
                         folder(".."),
                     ],
                     "..": [file("file")],
                 }
             },
+            [],
             ["..", "file"],
             [],
             id="do not look into ..",
@@ -268,10 +319,11 @@ def test_parse_arguments() -> None:
 )
 def test_iter_shared_files(
     filesystem: dict,
+    disallowed_paths: list[str],
     pattern: list[str],
     expected_file_data: list[tuple[str, str]],
 ) -> None:
-    conn = MockSMBConnection(filesystem=filesystem)
+    conn = MockSMBConnection(filesystem=filesystem, disallowed_paths=disallowed_paths)
     files = list(iter_shared_files(conn, HOST_NAME, SHARED_FOLDER, pattern))
     file_data = [(f.path, f.file.filename) for f in files]
 

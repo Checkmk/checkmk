@@ -182,21 +182,21 @@ section_misc_sections() {
     # collect netstat values and interface number
     for NS in $NETSTAT_OUTPUT; do
         NI=$((NI + 1))
-        INTERFACES[$NI]=$(echo "$NS" | awk '{ print $1 }')
-        MC[$NI]=$(echo "$NS" | awk '{ print $4 }')
-        PI[$NI]=$(echo "$NS" | awk '{ print $5 }')
-        EI[$NI]=$(echo "$NS" | awk '{ print $6 }')
-        PO[$NI]=$(echo "$NS" | awk '{ print $7 }')
-        EO[$NI]=$(echo "$NS" | awk '{ print $8 }')
-        CO[$NI]=$(echo "$NS" | awk '{ print $9 }')
+        INTERFACES[NI]=$(echo "$NS" | awk '{ print $1 }')
+        MC[NI]=$(echo "$NS" | awk '{ print $4 }')
+        PI[NI]=$(echo "$NS" | awk '{ print $5 }')
+        EI[NI]=$(echo "$NS" | awk '{ print $6 }')
+        PO[NI]=$(echo "$NS" | awk '{ print $7 }')
+        EO[NI]=$(echo "$NS" | awk '{ print $8 }')
+        CO[NI]=$(echo "$NS" | awk '{ print $9 }')
     done
 
     # need NIC counter again for byte values - reset it
     NI=0
     for NS in $NETSTAT_OUTPUT_BYTES; do
         NI=$((NI + 1))
-        BI[$NI]=$(echo "$NS" | awk '{ print $5 }')
-        BO[$NI]=$(echo "$NS" | awk '{ print $6 }')
+        BI[NI]=$(echo "$NS" | awk '{ print $5 }')
+        BO[NI]=$(echo "$NS" | awk '{ print $6 }')
     done
 
     # what is this for?

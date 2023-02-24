@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import operator
 from collections.abc import Callable, Sequence
 from logging import Logger
 from typing import Any, Literal
@@ -60,11 +61,11 @@ OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
 # around that somehow: We either duplicate the operator names below or we introduce a case in
 # operator_for(). We're choosing evil no. 1... :-/
 _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = {
-    "=": ("=", lambda a, b: a == b),
-    ">": (">", lambda a, b: a > b),
-    "<": ("<", lambda a, b: a < b),
-    ">=": (">=", lambda a, b: a >= b),
-    "<=": ("<=", lambda a, b: a <= b),
+    "=": ("=", operator.eq),
+    ">": (">", operator.gt),
+    "<": ("<", operator.lt),
+    ">=": (">=", operator.ge),
+    "<=": ("<=", operator.le),
     "~": ("~", lambda a, b: bool(cmk.utils.regex.regex(b).search(a))),
     "=~": ("=~", lambda a, b: a.lower() == b.lower()),
     "~~": ("~~", lambda a, b: bool(cmk.utils.regex.regex(b.lower()).search(a.lower()))),

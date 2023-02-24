@@ -54,7 +54,7 @@ main() {
                 fi
                 ;;
             World*)
-                if [ $DMP = "yes" ]; then
+                if [ "$DMP" = "yes" ]; then
                     echo "WWID: $val"
                     get_stats "$LUN"
                 fi

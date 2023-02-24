@@ -160,7 +160,7 @@ if inpath smartctl >/dev/null 2>&1; then
             CMD="smartctl -d ata -v 9,raw48 -A $D"
         fi
 
-        if [ $VEND == "NVME" ]; then
+        if [ "$VEND" == "NVME" ]; then
             echo "$DNAME $VEND $MODEL"
             [ -n "$CMD" ] && $CMD | sed -e '1,5d; /^$/d'
         else

@@ -28,7 +28,7 @@ if ! which ipmi-raw >/dev/null 2>&1; then
     OUT="\nE ipmi-raw is missing" && ERR=1
 fi
 
-if [ -z $ERR ]; then
+if [ -z "$ERR" ]; then
     # No cache file existing? => give more time to create it
     if [ ! -e "/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1" ]; then
         TIMEOUT=50
@@ -46,7 +46,7 @@ if [ -z $ERR ]; then
         ERR=1
     fi
 
-    if [ -z $ERR ]; then
+    if [ -z "$ERR" ]; then
         SLOTS="$(echo "$SENSORS" | grep DIMM | cut -d' ' -f 2 | uniq)"
 
         # Use ipmi-sensors to get all memory slots of TX-120

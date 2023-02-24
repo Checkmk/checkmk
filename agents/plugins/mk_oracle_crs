@@ -124,7 +124,7 @@ set_has_env
 echo "<<<oracle_crs_res>>>"
 echo "<<<oracle_crs_version>>>"
 echo "<<<oracle_crs_votedisk>>>"
-if [ $local_has_type = 'FALSE' ]; then
+if [ "$local_has_type" = 'FALSE' ]; then
     printcrsdata
 else
     printhasdata

@@ -696,7 +696,7 @@ section_cups_queues() { # TODO: this seems broken. Don't we need to export cups_
             cups_queues() {
                 CPRINTCONF=/etc/cups/printers.conf
                 if [ -r "${CPRINTCONF}" ]; then
-                    LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" ${CPRINTCONF} | awk '{print $2}' | sed -e 's/>//')
+                    LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" "${CPRINTCONF}" | awk '{print $2}' | sed -e 's/>//')
                     # SC2162: read without -r will mangle backslashes.
                     # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
                     # Since escaping of field seperators is not relevant when reading into one variable, we probably
@@ -987,7 +987,7 @@ section_pvecm() {
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks_for_remote() {
     PIDFILE=${MK_VARDIR}/real_time_checks.pid
-    echo $$ >${PIDFILE}
+    echo $$ >"${PIDFILE}"
 
     # shellcheck source=agents/cfg_examples/real_time_checks.cfg
     . "${MK_CONFDIR}/real_time_checks.cfg"
@@ -1038,7 +1038,7 @@ run_real_time_checks() {
     # Start new liveupdate process in background on each agent execution. Starting
     # a new live update process will terminate the old one automatically after
     # max. 1 sec.
-    if [ -e ${MK_CONFDIR}/real_time_checks.cfg ]; then
+    if [ -e "${MK_CONFDIR}/real_time_checks.cfg" ]; then
         if [ -z "${REMOTE}" ]; then
             echo "ERROR: \${REMOTE} not specified. Not sending real-time data." >&2
         elif ! inpath openssl; then

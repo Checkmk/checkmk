@@ -126,10 +126,6 @@ class MatchItemGeneratorLocDep(ABCMatchItemGenerator):
         match_texts=["localization_dependent"],
     )
 
-    @property
-    def name(self) -> str:
-        return "localization_dependent"
-
     def generate_match_items(self) -> MatchItems:
         yield self.match_item
 
@@ -149,10 +145,6 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
         url="",
         match_texts=["change_dependent"],
     )
-
-    @property
-    def name(self) -> str:
-        return "change_dependent"
 
     def generate_match_items(self) -> MatchItems:
         yield self.match_item
@@ -206,7 +198,7 @@ class TestIndexBuilder:
         self,
         index_builder: IndexBuilder,
     ) -> None:
-        index_builder.build_changed_sub_indices("something")
+        index_builder.build_changed_sub_indices(["something"])
         assert not index_builder.index_is_built(index_builder._redis_client)
 
     @pytest.mark.usefixtures("with_admin_login")
@@ -261,7 +253,7 @@ class TestIndexBuilderAndSearcher:
         index_searcher: IndexSearcher,
     ) -> None:
         index_builder._mark_index_as_built()
-        index_builder.build_changed_sub_indices("something")
+        index_builder.build_changed_sub_indices(["something"])
         assert not self._evaluate_search_results_by_topic(index_searcher.search("**"))
 
     @pytest.mark.usefixtures("with_admin_login")
@@ -271,7 +263,7 @@ class TestIndexBuilderAndSearcher:
         index_searcher: IndexSearcher,
     ) -> None:
         index_builder._mark_index_as_built()
-        index_builder.build_changed_sub_indices("some_change_dependent_whatever")
+        index_builder.build_changed_sub_indices(["some_change_dependent_whatever"])
         assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
         ]
@@ -299,7 +291,7 @@ class TestIndexBuilderAndSearcher:
             empty_match_item_gen,
         )
 
-        index_builder.build_changed_sub_indices("some_change_dependent_whatever")
+        index_builder.build_changed_sub_indices(["some_change_dependent_whatever"])
         assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
         ]

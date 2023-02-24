@@ -24,6 +24,7 @@ import webtest  # type: ignore[import]
 from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
 from mypy_extensions import KwArg
+from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
 from tests.testlib.plugin_registry import reset_registries
@@ -85,7 +86,18 @@ HTTPMethod = Literal[
 
 
 @pytest.fixture(autouse=True)
-def gui_cleanup_after_test():
+def deactivate_search_index_building_at_requenst_end(mocker: MockerFixture) -> None:
+    mocker.patch(
+        "cmk.gui.watolib.search._updates_requested",
+        return_value=False,
+    )
+
+
+@pytest.fixture(autouse=True)
+def gui_cleanup_after_test(
+    request_context: None,
+    deactivate_search_index_building_at_requenst_end: None,
+) -> Iterator[None]:
     yield
 
     # In case some tests use @request_memoize but don't use the request context, we'll emit the

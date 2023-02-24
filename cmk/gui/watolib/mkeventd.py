@@ -15,7 +15,7 @@ def load_mkeventd_rules():  # TODO: We get quite a few error with this! -> Seque
     return ec.load_rule_packs()
 
 
-def _get_rule_stats_from_ec() -> Mapping[str, int]:
+def get_rule_stats_from_ec() -> Mapping[str, int]:
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
     # statistics directly from that file.

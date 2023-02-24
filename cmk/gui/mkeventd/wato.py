@@ -50,8 +50,8 @@ from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mkeventd import (
-    _get_rule_stats_from_ec,
     export_mkp_rule_pack,
+    get_rule_stats_from_ec,
     load_mkeventd_rules,
     save_mkeventd_rules,
 )
@@ -1881,7 +1881,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         have_match = False
 
-        rule_stats = _get_rule_stats_from_ec()
+        rule_stats = get_rule_stats_from_ec()
         rule_pack_hits: dict[str, int] = {}
         for rp in ec.load_rule_packs():
             pack_hits = 0
@@ -2308,7 +2308,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
-            hits = _get_rule_stats_from_ec()
+            hits = get_rule_stats_from_ec()
             for nr, rule in enumerate(self._rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
@@ -2440,7 +2440,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     dict(service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]),
                 )
 
-                table.cell(_("Hits"), str(hits[rule["id"]]) if hits else "", css=["number"])
+                rh = hits.get(rule["id"], 0)
+                table.cell(_("Hits"), str(rh) if hits else "", css=["number"])
 
                 # Text to match
                 table.cell(_("Text to match"), rule.get("match"))

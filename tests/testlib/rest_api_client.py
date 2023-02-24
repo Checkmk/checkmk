@@ -301,7 +301,7 @@ class RestApiClient:
         attributes: Mapping[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        return self._request(
+        return self.request(
             "post",
             url="/domain-types/folder_config/collections/all",
             body={

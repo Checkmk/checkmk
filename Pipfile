@@ -71,6 +71,7 @@ py-import-cycles = "*"  # used in tests/Makefile
 types-pysaml2 = "*"  # typing extension for pysaml2
 telnetlib3 = "*"  # used by Windows Agent tests
 schemathesis = "*"  # used for openapi tests
+httpx = "*"  # used by agent receiver tests
 ruff = "==0.0.240"  # newer versions have problems with the match statement
 
 [packages]

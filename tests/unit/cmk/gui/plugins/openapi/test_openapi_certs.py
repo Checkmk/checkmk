@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from unittest.mock import MagicMock
+from collections.abc import Iterator
+from unittest.mock import patch
 from urllib.parse import urljoin
 
 import pytest
@@ -89,25 +90,24 @@ Oaxu+XnWKm3p
 """
 
 
-@pytest.fixture(name="user_may_not")
-def fixture_user_may_not(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch(
+@pytest.fixture
+def forbid_agent_pairing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:
+    with patch(
         "cmk.gui.logged_in.LoggedInUser.may",
         return_value=False,
-    )
+    ) as user_may_not:
+        yield
+        user_may_not.assert_called_once_with("general.agent_pairing")
 
 
-def test_root_cert_403(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    user_may_not: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("forbid_agent_pairing")
+def test_root_cert_403(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "get",
         _URL_ROOT_CERT,
         status=403,
         headers={"Accept": "application/json"},
     )
-    user_may_not.assert_called_once_with("general.agent_pairing")
 
 
 def test_root_cert_200(
@@ -127,10 +127,8 @@ def test_root_cert_200(
     assert resp.json_body["cert"] == "fake_root_cert"
 
 
-def test_csr_403(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    user_may_not: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("forbid_agent_pairing")
+def test_csr_403(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         _URL_CSR,
@@ -139,7 +137,6 @@ def test_csr_403(
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
-    user_may_not.assert_called_once_with("general.agent_pairing")
 
 
 @pytest.mark.parametrize(

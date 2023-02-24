@@ -32,6 +32,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.hooks import register_builtin
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.logged_in import user
@@ -68,11 +69,10 @@ MatchItemsByTopic = dict[str, MatchItems]
 
 class ABCMatchItemGenerator(ABC):
     def __init__(self, name: str) -> None:
-        self._name: Final[str] = name
+        self.name: Final[str] = name
 
-    @property
-    def name(self) -> str:
-        return self._name
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     @abstractmethod
     def generate_match_items(self) -> MatchItems:
@@ -92,6 +92,9 @@ class ABCMatchItemGenerator(ABC):
 class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
     def plugin_name(self, instance: ABCMatchItemGenerator) -> str:
         return instance.name
+
+
+match_item_generator_registry = MatchItemGeneratorRegistry()
 
 
 class IndexBuilder:
@@ -238,11 +241,14 @@ class IndexBuilder:
         self._build_index(self._registry.values())
         self._mark_index_as_built()
 
-    def build_changed_sub_indices(self, change_action_name: str) -> None:
+    def build_changed_sub_indices(self, change_action_names: Collection[str]) -> None:
         self._build_index(
-            match_item_generator
-            for match_item_generator in self._registry.values()
-            if match_item_generator.is_affected_by_change(change_action_name)
+            {
+                match_item_generator
+                for change_action_name in change_action_names
+                for match_item_generator in self._registry.values()
+                if match_item_generator.is_affected_by_change(change_action_name)
+            }
         )
 
     @classmethod
@@ -582,6 +588,12 @@ def _verify_redis_is_reachable(
     raise redis.ConnectionError("Failed to connect to local Redis server")
 
 
+def _actual_index_building_in_background_job(job_interface: BackgroundProcessInterface) -> None:
+    job_interface.send_progress_update(_("Building of search index started"))
+    IndexBuilder(match_item_generator_registry).build_full_index()
+    job_interface.send_result_message(_("Search index successfully built"))
+
+
 def _build_index_background(
     job_interface: BackgroundProcessInterface,
     n_attempts_redis_connection: int = 1,
@@ -592,9 +604,7 @@ def _build_index_background(
         n_attempts_max=n_attempts_redis_connection,
         wait_between_attempts=wait_between_attempts,
     )
-    job_interface.send_progress_update(_("Building of search index started"))
-    IndexBuilder(match_item_generator_registry).build_full_index()
-    job_interface.send_result_message(_("Search index successfully built"))
+    _actual_index_building_in_background_job(job_interface)
 
 
 def build_index_background(
@@ -612,29 +622,55 @@ def build_index_background(
         )
 
 
-def _update_index_background(
-    change_action_name: str,
-    job_interface: BackgroundProcessInterface,
-) -> None:
+def _launch_requests_processing_background() -> None:
+    if not _updates_requested():
+        return
+    job = SearchIndexBackgroundJob()
+    with suppress(BackgroundJobAlreadyRunning):
+        job.start(_process_update_requests_background)
+
+
+register_builtin("request-end", _launch_requests_processing_background)
+
+
+def _updates_requested() -> bool:
+    return _PATH_UPDATE_REQUESTS.exists()
+
+
+def _process_update_requests_background(job_interface: BackgroundProcessInterface) -> None:
     _verify_redis_is_reachable(job_interface=job_interface)
 
-    job_interface.send_progress_update(_("Updating of search index started"))
+    while _updates_requested():
+        _process_update_requests(
+            _read_and_remove_update_requests(),
+            job_interface,
+        )
+
+
+def _read_and_remove_update_requests() -> _UpdateRequests:
+    with locked(_PATH_UPDATE_REQUESTS):
+        requests = _read_update_requests()
+        _PATH_UPDATE_REQUESTS.unlink(missing_ok=True)
+    return requests
+
+
+def _process_update_requests(
+    requests: _UpdateRequests, job_interface: BackgroundProcessInterface
+) -> None:
+    if requests["rebuild"]:
+        _actual_index_building_in_background_job(job_interface)
+        return
 
     if not IndexBuilder.index_is_built():
         job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
-        _build_index_background(job_interface)
+        _actual_index_building_in_background_job(job_interface)
         return
 
-    IndexBuilder(match_item_generator_registry).build_changed_sub_indices(change_action_name)
+    job_interface.send_progress_update(_("Updating of search index started"))
+    IndexBuilder(match_item_generator_registry).build_changed_sub_indices(
+        requests["change_actions"]
+    )
     job_interface.send_result_message(_("Search index successfully updated"))
-
-
-def update_index_background(change_action_name: str) -> None:
-    update_job = SearchIndexBackgroundJob()
-    with suppress(BackgroundJobAlreadyRunning):
-        update_job.start(
-            lambda job_interface: _update_index_background(change_action_name, job_interface)
-        )
 
 
 @job_registry.register
@@ -648,15 +684,14 @@ class SearchIndexBackgroundJob(BackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
+            # We deliberately do not provide an estimated duration here, since that involves I/O.
+            # We need to be as fast as possible here, since this is done at the end of HTTP
+            # requests.
             InitialStatusArgs(
                 title=_("Search index"),
                 stoppable=False,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
 
     def start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
         return super().start(target) if redis_enabled() else None
-
-
-match_item_generator_registry = MatchItemGeneratorRegistry()

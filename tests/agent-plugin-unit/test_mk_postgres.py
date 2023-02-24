@@ -44,6 +44,11 @@ VALID_CONFIG_WITH_INSTANCES = [
     "DBUSER=user_yz",
     "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass",
 ]
+VALID_CONFIG_WITH_PG_BINARY_PATH = [
+    "PG_BINARY_PATH=C:\\PostgreSQL\\15\\bin\\psql.exe",
+    "",
+    "DBUSER=user_xy",
+]
 PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 #   .--tests---------------------------------------------------------------.
@@ -109,7 +114,7 @@ class TestLinux:
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
         }  # type: Dict[str, Optional[str]]
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert myPostgresOnLinux.psql_binary_path == "usr/mydb-12.3/bin"
 
@@ -117,9 +122,21 @@ class TestLinux:
         self,
     ):
         sep = mk_postgres.helper_factory().get_conf_sep()
-        dbuser, instances = mk_postgres.parse_postgres_cfg(VALID_CONFIG_WITHOUT_INSTANCE, sep)
+        dbuser, _pg_path, instances = mk_postgres.parse_postgres_cfg(
+            VALID_CONFIG_WITHOUT_INSTANCE, sep
+        )
         assert dbuser == "user_xy"
         assert len(instances) == 0
+
+    def test_config_with_binary_path(
+        self,
+    ):
+        sep = mk_postgres.helper_factory().get_conf_sep()
+        dbuser, pg_binary, _instances = mk_postgres.parse_postgres_cfg(
+            VALID_CONFIG_WITH_PG_BINARY_PATH, sep
+        )
+        assert dbuser == "user_xy"
+        assert pg_binary == "C:\\PostgreSQL\\15\\bin\\psql.exe"
 
     def test_config_with_instance(
         self,
@@ -127,7 +144,7 @@ class TestLinux:
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_LINUX)
         sep = mk_postgres.helper_factory().get_conf_sep()
-        dbuser, instances = mk_postgres.parse_postgres_cfg(config, sep)
+        dbuser, _pg_path, instances = mk_postgres.parse_postgres_cfg(config, sep)
         assert dbuser == "user_yz"
         assert len(instances) == 1
         assert instances[0]["pg_port"] == "5432"
@@ -157,7 +174,7 @@ class TestLinux:
             "pg_port": "5432",
             "pg_passfile": "",
         }  # type: Dict[str, Optional[str]]
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
         assert myPostgresOnLinux.psql_binary_path == "/usr/lib/postgres/psql"
@@ -192,7 +209,7 @@ class TestLinux:
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
         assert myPostgresOnLinux.psql_binary_path == "/mydb/12.3/bin/psql"
@@ -229,7 +246,7 @@ class TestLinux:
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         process_mock = Mock()
         attrs = {
@@ -288,7 +305,7 @@ class TestLinux:
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
         process_mock = Mock()
 
         proc_list = []
@@ -349,7 +366,7 @@ class TestWindows:
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_WINDOWS)
         sep = mk_postgres.helper_factory().get_conf_sep()
-        dbuser, instances = mk_postgres.parse_postgres_cfg(config, sep)
+        dbuser, _pg_path, instances = mk_postgres.parse_postgres_cfg(config, sep)
         assert len(instances) == 1
         assert dbuser == "user_yz"
         assert instances[0]["pg_port"] == "5432"
@@ -377,7 +394,7 @@ class TestWindows:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
         }  # type: Dict[str, Optional[str]]
-        myPostgresOnWin = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
         assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
@@ -415,7 +432,7 @@ class TestWindows:
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 
-        myPostgresOnWin = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
         assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)

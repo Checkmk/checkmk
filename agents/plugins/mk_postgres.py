@@ -125,8 +125,8 @@ class PostgresBase:
     __metaclass__ = abc.ABCMeta
     _supported_pg_versions = ["12"]
 
-    def __init__(self, db_user, instance, process_match_patterns):
-        # type: (str, Dict, Sequence[re.Pattern]) -> None
+    def __init__(self, db_user, pg_binary_path, instance, process_match_patterns):
+        # type: (str, Optional[str], Dict, Sequence[re.Pattern]) -> None
         self.db_user = db_user
         self.name = instance["name"]
         self.pg_user = instance["pg_user"]
@@ -138,7 +138,10 @@ class PostgresBase:
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
         self.psql_binary_name = "psql"
-        self.psql_binary_path = self.get_psql_binary_path()
+        if pg_binary_path is None:
+            self.psql_binary_path = self.get_psql_binary_path()
+        else:
+            self.psql_binary_path = pg_binary_path
         self.psql_binary_dirname = self.get_psql_binary_dirname()
         self.conn_time = ""  # For caching as conn_time and version are in one query
         self.process_match_patterns = process_match_patterns
@@ -1064,12 +1067,12 @@ class PostgresLinux(PostgresBase):
         return self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
 
 
-def postgres_factory(db_user, pg_instance):
-    # type: (str, Dict[str, Optional[str]]) -> PostgresBase
+def postgres_factory(db_user, pg_binary_path, pg_instance):
+    # type: (str, Optional[str], Dict[str, Optional[str]]) -> PostgresBase
     if IS_LINUX:
-        return PostgresLinux(db_user, pg_instance, LINUX_PROCESS_MATCH_PATTERNS)
+        return PostgresLinux(db_user, pg_binary_path, pg_instance, LINUX_PROCESS_MATCH_PATTERNS)
     if IS_WINDOWS:
-        return PostgresWin(db_user, pg_instance, WINDOWS_PROCESS_MATCH_PATTERNS)
+        return PostgresWin(db_user, pg_binary_path, pg_instance, WINDOWS_PROCESS_MATCH_PATTERNS)
     raise OSNotImplementedError
 
 
@@ -1185,16 +1188,18 @@ def parse_env_file(env_file):
 
 
 def parse_postgres_cfg(postgres_cfg, config_separator):
-    # type: (List[str], str) -> Tuple[str, List[Dict[str, Optional[str]]]]
+    # type: (List[str], str) -> Tuple[str, Optional[str], List[Dict[str, Optional[str]]]]
     """
     Parser for Postgres config. x-Plattform compatible.
 
     Example for .cfg file:
     DBUSER=postgres
+    PG_BINARY_PATH=/usr/bin/psql
     INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
     INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass
     """
     dbuser = None
+    pg_binary_path = None
     instances = []
     for line in postgres_cfg:
         if line.startswith("#") or "=" not in line:
@@ -1203,6 +1208,8 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
         key, value = line.split("=")
         if key == "DBUSER":
             dbuser = value.rstrip()
+        if key == "PG_BINARY_PATH":
+            pg_binary_path = value.rstrip()
         if key == "INSTANCE":
             env_file, pg_user, pg_passfile = value.split(config_separator)
             env_file = env_file.strip()
@@ -1219,7 +1226,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
             )
     if dbuser is None:
         raise ValueError("DBUSER must be specified in postgres.cfg")
-    return dbuser, instances
+    return dbuser, pg_binary_path, instances
 
 
 def parse_arguments(argv):
@@ -1258,10 +1265,11 @@ def main(argv=None):
         )
         with open(postgres_cfg_path) as opened_file:
             postgres_cfg = opened_file.readlines()
-        dbuser, instances = parse_postgres_cfg(postgres_cfg, helper.get_conf_sep())
+        dbuser, pg_binary_path, instances = parse_postgres_cfg(postgres_cfg, helper.get_conf_sep())
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging
         dbuser = helper.get_default_postgres_user()
+        pg_binary_path = None
         LOGGER.debug("try_parse_config: exception: %s", str(e))
         LOGGER.debug('Using "%s" as default postgres user.', dbuser)
 
@@ -1280,7 +1288,7 @@ def main(argv=None):
         instances.append(default_postgres_installation_parameters)
 
     for instance in instances:
-        postgres = postgres_factory(dbuser, instance)
+        postgres = postgres_factory(dbuser, pg_binary_path, instance)
         if opt.test_connection:
             postgres.is_pg_ready()
             sys.exit(0)

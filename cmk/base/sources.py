@@ -17,7 +17,14 @@ from cmk.utils.type_defs import HostAddress, HostAgentConnectionMode, HostName, 
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-from cmk.fetchers import Fetcher, FetcherType, NoFetcher, ProgramFetcher, SNMPFetcher
+from cmk.fetchers import (
+    Fetcher,
+    FetcherType,
+    NoFetcher,
+    NoFetcherError,
+    ProgramFetcher,
+    SNMPFetcher,
+)
 from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_file_cache_path_template, make_persisted_section_dir
 from cmk.fetchers.filecache import (
@@ -329,7 +336,7 @@ class _Builder:
                         FetcherType.PUSH_AGENT,
                         SourceType.HOST,
                     ),
-                    NoFetcher(),
+                    NoFetcher(NoFetcherError.NO_FETCHER),
                     AgentFileCache(
                         self.host_name,
                         path_template=make_file_cache_path_template(

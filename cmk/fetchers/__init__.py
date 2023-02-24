@@ -17,7 +17,7 @@ from typing_extensions import assert_never
 from ._abstract import Fetcher, Mode
 from ._api import get_raw_data
 from ._ipmi import IPMIFetcher
-from ._nofetcher import NoFetcher
+from ._nofetcher import NoFetcher, NoFetcherError
 from ._piggyback import PiggybackFetcher
 from ._program import ProgramFetcher
 from ._snmp import SNMPFetcher, SNMPSectionMeta
@@ -25,6 +25,7 @@ from ._tcp import TCPEncryptionHandling, TCPFetcher
 from ._typedefs import FetcherType
 
 __all__ = [
+    "NoFetcherError",
     "Fetcher",
     "FetcherFactory",
     "FetcherType",

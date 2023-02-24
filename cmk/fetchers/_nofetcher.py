@@ -5,27 +5,35 @@
 
 from __future__ import annotations
 
+import enum
 import logging
 from collections.abc import Mapping
-from typing import Any, NoReturn
+from typing import Final, NoReturn
 
+from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 
-__all__ = ["NoFetcher"]
+__all__ = ["NoFetcherError", "NoFetcher"]
+
+
+@enum.unique
+class NoFetcherError(enum.Enum):
+    NO_FETCHER = enum.auto()
 
 
 class NoFetcher(Fetcher[AgentRawData]):
-    def __init__(self) -> None:
+    def __init__(self, /, canned: NoFetcherError) -> None:
         super().__init__(logger=logging.getLogger("cmk.helper.noop"))
+        self._canned: Final = canned
 
     @classmethod
-    def _from_json(cls, serialized: object) -> NoFetcher:
-        return NoFetcher()
+    def _from_json(cls, serialized: Mapping[str, str]) -> NoFetcher:
+        return NoFetcher(NoFetcherError[serialized["canned"]])
 
-    def to_json(self) -> Mapping[str, Any]:
-        return {}
+    def to_json(self) -> Mapping[str, str]:
+        return {"canned": self._canned.name}
 
     def open(self) -> None:
         pass
@@ -34,4 +42,4 @@ class NoFetcher(Fetcher[AgentRawData]):
         pass
 
     def _fetch_from_io(self, mode: Mode) -> NoReturn:
-        raise TypeError(self)
+        raise MKFetcherError("no fetcher configured")

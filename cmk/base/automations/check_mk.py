@@ -1478,6 +1478,7 @@ class AutomationDiagHost(Automation):
         for source, file_cache, fetcher in sources.make_sources(
             host_name,
             ipaddress,
+            ConfigCache.address_family(host_name),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
@@ -1814,6 +1815,7 @@ class AutomationGetAgentOutput(Automation):
                 for source, file_cache, fetcher in sources.make_sources(
                     hostname,
                     ipaddress,
+                    ConfigCache.address_family(hostname),
                     config_cache=config.get_config_cache(),
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,

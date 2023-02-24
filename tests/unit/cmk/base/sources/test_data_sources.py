@@ -10,6 +10,7 @@ from tests.testlib.base import Scenario
 from cmk.fetchers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
+from cmk.base.ip_lookup import AddressFamily
 from cmk.base.sources import make_sources
 
 
@@ -98,6 +99,7 @@ def test_host_config_creates_passing_source_sources(
         for _meta, _file_cache, fetcher in make_sources(
             hostname,
             "127.0.0.1",
+            AddressFamily.IPv4,
             config_cache=config_cache,
             simulation_mode=True,
             file_cache_options=FileCacheOptions(),

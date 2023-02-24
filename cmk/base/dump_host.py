@@ -182,6 +182,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         for source, _file_cache, fetcher in sources.make_sources(
             hostname,
             ipaddress,
+            ConfigCache.address_family(hostname),
             file_cache_options=FileCacheOptions(),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,

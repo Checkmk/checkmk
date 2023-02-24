@@ -215,16 +215,15 @@ class _Builder:
         if not self.config_cache.is_snmp_host(self.host_name):
             return
         self._initialize_snmp_plugin_store()
-        source = SourceInfo(
-            self.host_name,
-            self.ipaddress,
-            "snmp",
-            FetcherType.SNMP,
-            SourceType.HOST,
-        )
         with suppress(TypeError):
             self._add(
-                source,
+                SourceInfo(
+                    self.host_name,
+                    self.ipaddress,
+                    "snmp",
+                    FetcherType.SNMP,
+                    SourceType.HOST,
+                ),
                 self.config_cache.make_snmp_fetcher(
                     self.host_name,
                     ensure_ipaddress(self.ipaddress),
@@ -232,9 +231,9 @@ class _Builder:
                     selected_sections=self.selected_sections,
                 ),
                 SNMPFileCache(
-                    source.hostname,
+                    self.host_name,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=source.fetcher_type, ident=source.ident
+                        fetcher_type=FetcherType.SNMP, ident="snmp"
                     ),
                     max_age=self._max_age_snmp(),
                     simulation=self.simulation_mode,
@@ -250,26 +249,25 @@ class _Builder:
 
         self._initialize_snmp_plugin_store()
         if protocol == "snmp":
-            source = SourceInfo(
-                self.host_name,
-                self.ipaddress,
-                "mgmt_snmp",
-                FetcherType.SNMP,
-                SourceType.MANAGEMENT,
-            )
             with suppress(TypeError):
                 self._add(
-                    source,
+                    SourceInfo(
+                        self.host_name,
+                        self.ipaddress,
+                        "mgmt_snmp",
+                        FetcherType.SNMP,
+                        SourceType.MANAGEMENT,
+                    ),
                     self.config_cache.make_snmp_fetcher(
-                        source.hostname,
-                        ensure_ipaddress(source.ipaddress),
+                        self.host_name,
+                        ensure_ipaddress(self.ipaddress),
                         on_scan_error=self.on_scan_error,
                         selected_sections=self.selected_sections,
                     ),
                     SNMPFileCache(
-                        source.hostname,
+                        self.host_name,
                         path_template=make_file_cache_path_template(
-                            fetcher_type=source.fetcher_type, ident=source.ident
+                            fetcher_type=FetcherType.SNMP, ident="mgmt_snmp"
                         ),
                         max_age=self._max_age_snmp(),
                         simulation=self.simulation_mode,
@@ -278,23 +276,23 @@ class _Builder:
                     ),
                 )
         elif protocol == "ipmi":
-            source = SourceInfo(
-                self.host_name,
-                config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name),
-                "mgmt_ipmi",
-                FetcherType.IPMI,
-                SourceType.MANAGEMENT,
-            )
+            ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
             with suppress(TypeError):
                 self._add(
-                    source,
+                    SourceInfo(
+                        self.host_name,
+                        ip_address,
+                        "mgmt_ipmi",
+                        FetcherType.IPMI,
+                        SourceType.MANAGEMENT,
+                    ),
                     self.config_cache.make_ipmi_fetcher(
-                        source.hostname, ensure_ipaddress(source.ipaddress)
+                        self.host_name, ensure_ipaddress(ip_address)
                     ),
                     AgentFileCache(
-                        source.hostname,
+                        self.host_name,
                         path_template=make_file_cache_path_template(
-                            fetcher_type=source.fetcher_type, ident=source.ident
+                            fetcher_type=FetcherType.IPMI, ident="mgmt_ipmi"
                         ),
                         max_age=self._max_age_tcp(),
                         simulation=self.simulation_mode,
@@ -314,20 +312,19 @@ class _Builder:
 
     def _get_agent(self) -> None:
         with suppress(LookupError):
-            source = SourceInfo(
-                self.host_name,
-                self.ipaddress,
-                "agent",
-                FetcherType.PROGRAM,
-                SourceType.HOST,
-            )
             self._add(
-                source,
-                self.config_cache.make_program_fetcher(source.hostname, source.ipaddress),
+                SourceInfo(
+                    self.host_name,
+                    self.ipaddress,
+                    "agent",
+                    FetcherType.PROGRAM,
+                    SourceType.HOST,
+                ),
+                self.config_cache.make_program_fetcher(self.host_name, self.ipaddress),
                 AgentFileCache(
-                    source.hostname,
+                    self.host_name,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=source.fetcher_type, ident=source.ident
+                        fetcher_type=FetcherType.PROGRAM, ident="agent"
                     ),
                     max_age=self._max_age_tcp(),
                     simulation=self.simulation_mode,
@@ -340,22 +337,21 @@ class _Builder:
         connection_mode = self.config_cache.agent_connection_mode(self.host_name)
         match connection_mode:
             case HostAgentConnectionMode.PUSH:
-                source = SourceInfo(
-                    self.host_name,
-                    self.ipaddress,
-                    "push-agent",
-                    FetcherType.PUSH_AGENT,
-                    SourceType.HOST,
-                )
                 # convert to seconds and add grace period
                 interval = int(1.5 * 60 * self.config_cache.check_mk_check_interval(self.host_name))
                 self._add(
-                    source,
+                    SourceInfo(
+                        self.host_name,
+                        self.ipaddress,
+                        "push-agent",
+                        FetcherType.PUSH_AGENT,
+                        SourceType.HOST,
+                    ),
                     NoFetcher(),
                     AgentFileCache(
-                        source.hostname,
+                        self.host_name,
                         path_template=make_file_cache_path_template(
-                            fetcher_type=source.fetcher_type, ident=source.ident
+                            fetcher_type=FetcherType.PUSH_AGENT, ident="push-agent"
                         ),
                         max_age=(
                             MaxAge.unlimited()
@@ -373,23 +369,22 @@ class _Builder:
                     ),
                 )
             case HostAgentConnectionMode.PULL:
-                source = SourceInfo(
-                    self.host_name,
-                    self.ipaddress,
-                    "agent",
-                    FetcherType.TCP,
-                    SourceType.HOST,
-                )
                 with suppress(TypeError):
                     self._add(
-                        source,
+                        SourceInfo(
+                            self.host_name,
+                            self.ipaddress,
+                            "agent",
+                            FetcherType.TCP,
+                            SourceType.HOST,
+                        ),
                         self.config_cache.make_tcp_fetcher(
-                            source.hostname, ensure_ipaddress(source.ipaddress)
+                            self.host_name, ensure_ipaddress(self.ipaddress)
                         ),
                         AgentFileCache(
-                            source.hostname,
+                            self.host_name,
                             path_template=make_file_cache_path_template(
-                                fetcher_type=source.fetcher_type, ident=source.ident
+                                fetcher_type=FetcherType.TCP, ident="agent"
                             ),
                             max_age=self._max_age_tcp(),
                             simulation=self.simulation_mode,

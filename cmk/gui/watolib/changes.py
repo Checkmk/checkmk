@@ -52,7 +52,7 @@ def add_change(
     )
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    search.update_index_background(action_name)
+    search.request_index_update(action_name)
 
     ActivateChangesWriter().add_change(
         action_name,

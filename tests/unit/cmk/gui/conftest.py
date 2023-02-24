@@ -40,7 +40,6 @@ from tests.testlib.rest_api_client import (
     TimePeriodTestClient,
 )
 from tests.testlib.users import create_and_destroy_user
-from tests.testlib.utils import no_search_index_update_background
 
 import cmk.utils.log
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -400,12 +399,6 @@ def wsgi_app() -> WebTestAppForCMK:
 @pytest.fixture()
 def wsgi_app_debug_off() -> WebTestAppForCMK:
     return _make_webtest(debug=False, testing=False)
-
-
-@pytest.fixture(autouse=True)
-def avoid_search_index_update_background(monkeypatch):
-    with no_search_index_update_background():
-        yield
 
 
 @pytest.fixture()

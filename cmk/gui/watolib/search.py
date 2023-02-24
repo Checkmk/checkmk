@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
@@ -12,13 +13,15 @@ from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from time import sleep
-from typing import Final
+from typing import Final, TypedDict
 
 import redis
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.paths import tmp_dir
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
+from cmk.utils.store import locked
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -39,6 +42,8 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
+
+_PATH_UPDATE_REQUESTS = tmp_dir / "search_index_updates.json"
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -487,6 +492,59 @@ class IndexSearcher:
 class _SearchResultWithPermissionsCheck:
     result: SearchResult
     permissions_check: Callable[[str], bool]
+
+
+# no pydantic on purpose here to keep things as lean as possible
+class _UpdateRequests(TypedDict):
+    rebuild: bool
+    change_actions: list[str]
+
+
+def request_index_rebuild() -> None:
+    with locked(_PATH_UPDATE_REQUESTS):
+        _PATH_UPDATE_REQUESTS.write_text(
+            json.dumps(
+                {
+                    "change_actions": _read_update_requests()["change_actions"],
+                    "rebuild": True,
+                }
+            )
+        )
+
+
+def request_index_update(change_action_name: str) -> None:
+    with locked(_PATH_UPDATE_REQUESTS):
+        current_requests = _read_update_requests()
+        _PATH_UPDATE_REQUESTS.write_text(
+            json.dumps(
+                {
+                    "change_actions": list(
+                        {
+                            *current_requests["change_actions"],
+                            change_action_name,
+                        }
+                    ),
+                    "rebuild": current_requests["rebuild"],
+                }
+            )
+        )
+
+
+def _read_update_requests() -> _UpdateRequests:
+    if not _PATH_UPDATE_REQUESTS.exists():
+        return _noop_update_requests()
+    # locking the file touches it, so we must handle this case as well
+    if not (raw := _PATH_UPDATE_REQUESTS.read_text()):
+        return _noop_update_requests()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        # if the file was somehow corrupted, we start from scratch
+        return _noop_update_requests()
+
+
+def _noop_update_requests() -> _UpdateRequests:
+    return {"rebuild": False, "change_actions": []}
 
 
 def _verify_redis_is_reachable(

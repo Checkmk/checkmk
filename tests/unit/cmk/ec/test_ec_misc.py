@@ -9,6 +9,68 @@ from hypothesis import given, settings
 from hypothesis.strategies import ip_addresses
 
 from cmk.ec.export import match_ip_network
+from cmk.ec.main import allowed_ip, unmap_ipv4_address
+
+ACCESS_LIST = [
+    "::ffff:8.8.4.4",
+    "1.1.1.1",
+]
+
+
+@pytest.mark.parametrize(
+    "ip, access_list,  expected",
+    (
+        pytest.param(
+            "8.8.4.4",
+            ACCESS_LIST,
+            True,
+            id="IPv4 should be found even if mapped in the list",
+        ),
+        pytest.param(
+            "::ffff:1.1.1.1",
+            ACCESS_LIST,
+            True,
+            id="IPv6 mapped should be found even if stored as IPv4 in the list",
+        ),
+        pytest.param(
+            "::ffff:1.1.1.2",
+            ACCESS_LIST,
+            False,
+            id="Not found",
+        ),
+    ),
+)
+def test_allowed_ip(ip: str, access_list: list[str], expected: bool) -> None:
+    assert allowed_ip(ip, access_list) == expected
+
+
+@pytest.mark.parametrize(
+    "ip_address,  expected",
+    (
+        pytest.param(
+            "::ffff:8.8.4.4",
+            "8.8.4.4",
+            id="normal IPv4 mapped IPv6 address",
+        ),
+        pytest.param(
+            "8.8.4.4",
+            "8.8.4.4",
+            id="normal IPv4 address should be unchanged",
+        ),
+        pytest.param(
+            "2001:db00::1",
+            "2001:db00::1",
+            id="normal IPv6 address should be unchanged",
+        ),
+        pytest.param(
+            "some_hostname",
+            "some_hostname",
+            id="hostname should be unchanged",
+        ),
+    ),
+)
+def test_unmap_ipv4_address(ip_address: str, expected: str) -> None:
+    assert unmap_ipv4_address(ip_address) == expected
 
 
 @pytest.mark.parametrize(

@@ -16,6 +16,7 @@ import abc
 import ast
 import contextlib
 import errno
+import ipaddress
 import itertools
 import json
 import os
@@ -28,7 +29,7 @@ import sys
 import threading
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from logging import getLogger, Logger
 from pathlib import Path
@@ -235,6 +236,54 @@ class ECServerThread(threading.Thread):
 
     def terminate(self) -> None:
         self._terminate_event.set()
+
+
+def allowed_ip(ip: str, access_list: Container[str]) -> bool:
+    """
+    Checks if ip is in the access_list.
+    Takes care of mapped ipv6->ipv4 and ipv4->mapped_ipv6.
+    This is needed because the access_list could contain ipv4/ipv6/ipv6mapped.
+    """
+    ipaddress_object = ipaddress.ip_address(ip)
+
+    if str(ipaddress_object) in access_list:
+        return True
+
+    if f"::ffff:{str(ipaddress_object)}" in access_list:
+        return True
+
+    if (
+        isinstance(ipaddress_object, ipaddress.IPv6Address)
+        and str(ipaddress_object.ipv4_mapped) in access_list
+    ):
+        return True
+
+    return False
+
+
+def unmap_ipv4_address(ip_address: str) -> str:
+    """
+    Accepts addresses with ipv4_mapped hosts and
+    returns unmapped ipv4.
+
+    >>> unmap_ipv4_address('::FFFF:192.0.2.128')
+    '192.0.2.128'
+    """
+
+    try:
+        host = ipaddress.ip_address(ip_address)
+    except ValueError:
+        # in case address[0] is a hostname
+        return ip_address
+
+    if host.version == 4:
+        return ip_address
+
+    # If IPv6 is mapped to IPv4
+    if host.version == 6 and host.ipv4_mapped:
+        return str(host.ipv4_mapped)
+
+    return ip_address
 
 
 def terminate(
@@ -521,15 +570,38 @@ class EventServer(ECServerThread):
         endpoint = self.settings.options.syslog_udp
         try:
             if isinstance(endpoint, FileDescriptor):
-                self._syslog_udp = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
+                try:
+                    self._logger.info("Trying to use ipv6 for syslog-udp from file descriptor")
+                    self._syslog_udp = socket.fromfd(
+                        endpoint.value, socket.AF_INET6, socket.SOCK_DGRAM
+                    )
+                except OSError:
+                    self._logger.info("Binding ipv6 failed. Falling back to ipv4 for syslog-udp")
+                    self._syslog_udp = socket.fromfd(
+                        endpoint.value, socket.AF_INET, socket.SOCK_DGRAM
+                    )
                 os.close(endpoint.value)
                 self._logger.info(
                     "Opened builtin syslog server on inherited filedescriptor %d", endpoint.value
                 )
             if isinstance(endpoint, PortNumber):
-                self._syslog_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                self._syslog_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self._syslog_udp.bind(("0.0.0.0", endpoint.value))
+                try:
+                    self._logger.info("Trying to use ipv6 for syslog-udp")
+                    self._syslog_udp = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+                    self._syslog_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    try:
+                        self._logger.info("Trying to enable ipv6 dualstack for syslog-udp...")
+                        self._syslog_udp.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                    except (AttributeError, OSError):
+                        self._logger.info(
+                            "ipv6 dualstack failed. Continuing in ipv6-only mode for syslog-udp"
+                        )
+                    self._syslog_udp.bind(("::", endpoint.value))
+                except OSError:
+                    self._logger.info("Binding ipv6 failed. Falling back to ipv4 for syslog-udp")
+                    self._syslog_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    self._syslog_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._syslog_udp.bind(("0.0.0.0", endpoint.value))
                 self._logger.info("Opened builtin syslog server on UDP port %d", endpoint.value)
         except Exception as e:
             raise Exception("Cannot start builtin syslog server") from e
@@ -538,7 +610,16 @@ class EventServer(ECServerThread):
         endpoint = self.settings.options.syslog_tcp
         try:
             if isinstance(endpoint, FileDescriptor):
-                self._syslog_tcp = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_STREAM)
+                try:
+                    self._logger.info("Trying to use ipv6 for syslog-tcp from file descriptor")
+                    self._syslog_tcp = socket.fromfd(
+                        endpoint.value, socket.AF_INET6, socket.SOCK_STREAM
+                    )
+                except OSError:
+                    self._logger.exception("Binding ipv6 failed. Falling back to ipv4")
+                    self._syslog_tcp = socket.fromfd(
+                        endpoint.value, socket.AF_INET, socket.SOCK_STREAM
+                    )
                 self._syslog_tcp.listen(20)
                 os.close(endpoint.value)
                 self._logger.info(
@@ -546,9 +627,23 @@ class EventServer(ECServerThread):
                     endpoint.value,
                 )
             if isinstance(endpoint, PortNumber):
-                self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self._syslog_tcp.bind(("0.0.0.0", endpoint.value))
+                try:
+                    self._logger.info("Trying to use ipv6 for syslog-tcp")
+                    self._syslog_tcp = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                    self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    try:
+                        self._logger.info("Trying to enable ipv6 dualstack for syslog-tcp...")
+                        self._syslog_tcp.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                    except (AttributeError, OSError):
+                        self._logger.info(
+                            "ipv6 dualstack failed. Continuing in ipv6-only mode for syslog-tcp"
+                        )
+                    self._syslog_tcp.bind(("::", endpoint.value))
+                except OSError:
+                    self._logger.info("Binding ipv6 failed. Falling back to ipv4 for syslog-tcp")
+                    self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._syslog_tcp.bind(("0.0.0.0", endpoint.value))
                 self._syslog_tcp.listen(20)
                 self._logger.info("Opened builtin syslog-tcp server on TCP port %d", endpoint.value)
         except Exception as e:
@@ -558,15 +653,38 @@ class EventServer(ECServerThread):
         endpoint = self.settings.options.snmptrap_udp
         try:
             if isinstance(endpoint, FileDescriptor):
-                self._snmptrap = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
+                try:
+                    self._logger.info("Trying to use ipv6 for snmptrap from file descriptor")
+                    self._snmptrap = socket.fromfd(
+                        endpoint.value, socket.AF_INET6, socket.SOCK_DGRAM
+                    )
+                except OSError:
+                    self._logger.info("Binding ipv6 failed. Falling back to ipv4 for snmptrap")
+                    self._snmptrap = socket.fromfd(
+                        endpoint.value, socket.AF_INET, socket.SOCK_DGRAM
+                    )
                 os.close(endpoint.value)
                 self._logger.info(
                     "Opened builtin snmptrap server on inherited filedescriptor %d", endpoint.value
                 )
             if isinstance(endpoint, PortNumber):
-                self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self._snmptrap.bind(("0.0.0.0", endpoint.value))
+                try:
+                    self._logger.info("Trying to use ipv6 for snmptrap")
+                    self._snmptrap = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+                    self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    try:
+                        self._logger.info("Trying to enable ipv6 dualstack for snmptrap...")
+                        self._snmptrap.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                    except (AttributeError, OSError):
+                        self._logger.info(
+                            "ipv6 dualstack failed. Continuing in ipv6-only mode for snmptrap"
+                        )
+                    self._snmptrap.bind(("::", endpoint.value))
+                except OSError:
+                    self._logger.info("Binding ipv6 failed. Falling back to ipv4 for snmptrap")
+                    self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._snmptrap.bind(("0.0.0.0", endpoint.value))
                 self._logger.info("Opened builtin snmptrap server on UDP port %d", endpoint.value)
         except Exception as e:
             raise Exception("Cannot start builtin snmptrap server") from e
@@ -590,8 +708,8 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    def handle_snmptrap(self, trap: Iterable[tuple[str, str]], ipaddress: str) -> None:
-        self.process_event(create_event_from_trap(trap, ipaddress))
+    def handle_snmptrap(self, trap: Iterable[tuple[str, str]], ipaddress_: str) -> None:
+        self.process_event(create_event_from_trap(trap, ipaddress_))
 
     def serve(self) -> None:  # pylint: disable=too-many-branches
         pipe_fragment = b""
@@ -641,8 +759,8 @@ class EventServer(ECServerThread):
             # Same for the TCP syslog socket
             if self._syslog_tcp is not None and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
-                # We have an AF_INET socket, so the remote address is a pair (host: str, port: int),
-                # where host can be the domain name or an IPv4 address.
+                # We have an AF_INET or AF_INET6 socket, so the remote address is a pair (host: str, port: int),
+                # where host can be the domain name or an IPv4/IPv6 address.
                 if not (
                     isinstance(address, tuple)
                     and isinstance(address[0], str)
@@ -651,7 +769,11 @@ class EventServer(ECServerThread):
                     raise ValueError(
                         f"Invalid remote address '{address!r}' for syslog socket (TCP)"
                     )
-                client_sockets[client_socket.fileno()] = (client_socket, address, b"")
+                client_sockets[client_socket.fileno()] = (
+                    client_socket,
+                    (unmap_ipv4_address(address[0]), address[1]),
+                    b"",
+                )
 
             # Read data from existing event unix socket connections
             # NOTE: We modify client_socket in the loop, so we need to copy below!
@@ -724,8 +846,8 @@ class EventServer(ECServerThread):
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
                 message, address = self._syslog_udp.recvfrom(4096)
-                # We have an AF_INET socket, so the remote address is a pair (host: str, port: int),
-                # where host can be the domain name or an IPv4 address.
+                # We have an AF_INET or AF_INET6 socket, so the remote address is a pair (host: str, port: int),
+                # where host can be the domain name or an IPv4/IPv6 address.
                 if not (
                     isinstance(address, tuple)
                     and isinstance(address[0], str)
@@ -734,23 +856,26 @@ class EventServer(ECServerThread):
                     raise ValueError(
                         f"Invalid remote address '{address!r}' for syslog socket (UDP)"
                     )
-                self.process_raw_lines(message, address)
+                self.process_raw_lines(message, (unmap_ipv4_address(address[0]), address[1]))
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap in readable:
                 try:
                     message, address = self._snmptrap.recvfrom(65535)
-                    # We have an AF_INET socket, so the remote address is a pair (host: str, port: int),
-                    # where host can be the domain name or an IPv4 address.
+                    # We have an AF_INET or AF_INET6 socket, so the remote address is a pair (host: str, port: int),
+                    # where host can be the domain name or an IPv4/IPv6 address.
                     if not (
                         isinstance(address, tuple)
                         and isinstance(address[0], str)
                         and isinstance(address[1], int)
                     ):
                         raise ValueError(f"Invalid remote address '{address!r}' for SNMP trap")
-                    addr = address
                     self.process_raw_data(
-                        partial(self._snmp_trap_engine.process_snmptrap, message, addr)
+                        partial(
+                            self._snmp_trap_engine.process_snmptrap,
+                            message,
+                            (unmap_ipv4_address(address[0]), address[1]),
+                        )
                     )
                 except Exception:
                     self._logger.exception(
@@ -1810,15 +1935,15 @@ class EventServer(ECServerThread):
         return new_event
 
 
-def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress: str) -> Event:
+def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> Event:
     """New event with the trap OID as the application."""
     trapOIDs, other = partition(
         lambda binding: binding[0] in ("1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"), trap
     )
     return {
         "time": time.time(),
-        "host": scrub_string(ipaddress),
-        "ipaddress": scrub_string(ipaddress),
+        "host": scrub_string(ipaddress_),
+        "ipaddress": scrub_string(ipaddress_),
         "priority": 5,  # notice
         "facility": 31,  # not used by syslog -> we use this for all traps
         "application": scrub_string(trapOIDs[0][1] if trapOIDs else ""),
@@ -2142,10 +2267,25 @@ class StatusServer(ECServerThread):
                     self._tcp_access_list = self._config["remote_status"][2]
                 except Exception:
                     self._tcp_access_list = None
-
-                self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self._tcp_socket.bind(("0.0.0.0", self._tcp_port))
+                try:
+                    self._logger.info("Trying to use ipv6 for TCP socket port")
+                    self._tcp_socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                    self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    try:
+                        self._logger.info("Trying to enable ipv6 dualstack for tcp socket...")
+                        self._tcp_socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+                    except (AttributeError, OSError):
+                        self._logger.info(
+                            "ipv6 dualstack failed. Continuing in ipv6-only mode for tcp socket"
+                        )
+                    self._tcp_socket.bind(("::", self._tcp_port))
+                except OSError:
+                    self._logger.info(
+                        "Binding ipv6 failed. Falling back to ipv4 for TCP socket port"
+                    )
+                    self._tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._tcp_socket.bind(("0.0.0.0", self._tcp_port))
                 self._tcp_socket.listen(self._config["socket_queue_len"])
                 self._logger.info(
                     "Going to listen for status queries on TCP port %d", self._tcp_port
@@ -2213,9 +2353,8 @@ class StatusServer(ECServerThread):
                         allow_commands = self._tcp_allow_commands
                         if self.settings.options.debug:
                             self._logger.info("Handle status connection from %s:%d", addr_info)
-                        if (
-                            self._tcp_access_list is not None
-                            and addr_info[0] not in self._tcp_access_list
+                        if self._tcp_access_list is not None and allowed_ip(
+                            addr_info[0], self._tcp_access_list
                         ):
                             client_socket.close()
                             client_socket = None

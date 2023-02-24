@@ -171,7 +171,7 @@ tr.even3 { background-color: #ffefaf; }
     background-color: #00aaff; color: #ffffff;
 }
 
-b.stmarkOK {
+b.stmark.state0 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -183,7 +183,7 @@ b.stmarkOK {
     background-color: #0b3; color: #ffffff;
 }
 
-b.stmarkWARNING {
+b.stmark.state1 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -195,7 +195,7 @@ b.stmarkWARNING {
     background-color: #ffff00; color: #000000;
 }
 
-b.stmarkCRITICAL {
+b.stmark.state2 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -207,7 +207,7 @@ b.stmarkCRITICAL {
     background-color: #ff0000; color: #ffffff;
 }
 
-b.stmarkUNKNOWN {
+b.stmark.state3 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;

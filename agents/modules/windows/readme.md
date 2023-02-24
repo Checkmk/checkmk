@@ -1,10 +1,10 @@
 # Windows Modules to deploy wint Windows Agent 2.0 and later
 
-## Python 3.11.1 & Python 3.4.4
+## Python 3.11.2 & Python 3.4.4
 
 ### Source
 
-PYTHON 3.11.1, provided as source tarball by standard Checkmk development process
+PYTHON 3.11.2, provided as source tarball by standard Checkmk development process
 PYTHON 3.4.4, downloaded as msi installer from the python.org
 
 ### Changing or Updating the Python

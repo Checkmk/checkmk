@@ -106,16 +106,16 @@ pyghmi = "==1.5.13"  # needed by base for IPMI
 requests = {version = "==2.28.1",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr, versions >=0.13.0 depend on pyspnego, which pulls in gssapi, which in turn fails on SLES because of https://github.com/pythongssapi/python-gssapi/issues/212
-MarkupSafe = "==2.1.1"  # needed by Jinja2
+MarkupSafe = "==2.1.2"  # needed by Jinja2
 itsdangerous = "==2.1.2"  # needed by Flask
 Jinja2 = "==3.1.2"  # needed by Flask
 more-itertools = "==9.0.0"  # needed by connexion through zipp, pytest
 zipp = "==3.11.0"  # needed by importlib_metadata
-attrs = "==22.2.0"  # needed by jsonschema
+attrs = "==22.1.0"  # needed by jsonschema
 importlib_metadata = "==5.2.0"  # needed by jsonschema
-pyrsistent = "==0.18.0"  # needed by jsonschema
+pyrsistent = "==0.19.3"  # needed by jsonschema
 click = "==8.1.3"  # needed by Flask
-Werkzeug = "==2.2.2"  # direct dependency and needed by Flask
+Werkzeug = "==2.2.3"  # direct dependency and needed by Flask
 jsonschema = "==4.17.3"  # needed by openapi-spec-validator
 Flask = "==2.2.2"  # direct dependency
 pytz = "==2022.7"  # direct dependency
@@ -154,7 +154,7 @@ marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 mypy_extensions = "==0.4.3" # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
-typing_extensions = "==4.4.0"   # required by pydantic
+typing_extensions = "==4.5.0"   # required by pydantic
 pydantic = "==1.10.2"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"

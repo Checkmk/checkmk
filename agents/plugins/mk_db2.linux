@@ -13,6 +13,7 @@ CMK_VERSION="2.3.0b1"
 
 # Agent plugin to monitor DB/2 databases on Linux.
 
+# shellcheck disable=SC2317 # called indirectly
 function compare_version_greater_equal {
     local greater_one
     greater_one=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
@@ -21,9 +22,9 @@ function compare_version_greater_equal {
     else
         return 1
     fi
-    return 0
 }
 
+# shellcheck disable=SC2317 # called indirectly
 function get_sections_for_single_db {
     if [ ! -f "$HOME"/sqllib/db2profile ]; then
         exit 0

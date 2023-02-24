@@ -108,7 +108,6 @@ while true; do
             install
             verify_install
             exit 0
-            break
             ;;
         '-u' | '--user')
             INSTALL_PREFIX="${HOME}/.local"

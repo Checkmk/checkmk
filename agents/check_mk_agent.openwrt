@@ -693,6 +693,7 @@ section_cups_queues() { # TODO: this seems broken. Don't we need to export cups_
     if inpath lpstat; then
         if pgrep -f "\bcupsd" >/dev/null 2>&1; then
             # first define a function to check cups
+            # shellcheck disable=SC2317 # called indirectly
             cups_queues() {
                 CPRINTCONF=/etc/cups/printers.conf
                 if [ -r "${CPRINTCONF}" ]; then

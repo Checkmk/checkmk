@@ -14,6 +14,7 @@ MK_ORACLE_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_oracle"
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+# shellcheck disable=SC2317 # overwritten function called indirectly
 oneTimeSetUp() {
     export MK_CONFDIR=${SHUNIT_TMPDIR}
     export MK_VARDIR=${SHUNIT_TMPDIR}

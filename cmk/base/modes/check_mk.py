@@ -81,6 +81,7 @@ from cmk.base.agent_based.confcheckers import (
 )
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
+from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
@@ -447,6 +448,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         for source, file_cache, fetcher in sources.make_sources(
             hostname,
             ipaddress,
+            ConfigCache.address_family(hostname),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,

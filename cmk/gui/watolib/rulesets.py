@@ -1211,7 +1211,7 @@ class Rule:
         self,
         search_options: SearchOptions,
     ) -> bool:
-        if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(
+        if "rule_folder" in search_options and self.folder.path() not in self._get_search_folders(
             search_options
         ):
             return False
@@ -1291,11 +1291,9 @@ class Rule:
     def _get_search_folders(self, search_options: SearchOptions) -> list[str]:
         current_folder, do_recursion = search_options["rule_folder"]
         current_folder = Folder.folder(current_folder)
-        search_in_folders = [current_folder.name()]
+        search_in_folders = [current_folder.path()]
         if do_recursion:
-            search_in_folders = [
-                x.split("/")[-1] for x, _y in current_folder.recursive_subfolder_choices()
-            ]
+            search_in_folders = [x for x, _y in current_folder.recursive_subfolder_choices()]
         return search_in_folders
 
     def index(self) -> int:

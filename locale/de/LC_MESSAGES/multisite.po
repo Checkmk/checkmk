@@ -874,6 +874,9 @@ msgstr "... (%d mehr)"
 msgid ".Net/CLR Memory"
 msgstr ".Net/CLR-Speicher"
 
+msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
+msgstr ""
+
 msgid "/m"
 msgstr "/m"
 
@@ -5028,7 +5031,7 @@ msgid "Amazon Web Services (AWS)"
 msgstr "Amazon web Services (AWS)"
 
 #, fuzzy
-msgid "Amazon Web Services (AWS) Health"
+msgid "Amazon Web Services (AWS) Status"
 msgstr "Amazon web Services (AWS)"
 
 #, fuzzy
@@ -5207,10 +5210,6 @@ msgstr "Analysiere die Zeile"
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "Konfiguration analysieren"
-
-#, fuzzy
-msgid "And"
-msgstr "Hinzufügen"
 
 msgid "Android version regular expression"
 msgstr "Regulärer Ausdruck für die Android-Version"
@@ -6162,6 +6161,10 @@ msgstr "Verfügbar"
 msgid "Available (missing)"
 msgstr "Verfügbar (fehlt)"
 
+#, fuzzy
+msgid "Available Memory"
+msgstr "Verfügbar"
+
 msgid "Available Spare"
 msgstr "Verfügbare Reserven"
 
@@ -6174,6 +6177,10 @@ msgstr "Verfügbare Kapazität"
 #, fuzzy
 msgid "Available macros and search result(s)"
 msgstr "Anzahl der Suchergebnisse"
+
+#, fuzzy
+msgid "Available memory lower levels"
+msgstr "Untere Schwellwerte für die durchschnittliche Anzahl an Meldungen"
 
 msgid "Available options"
 msgstr "Verfügbare Optionen"
@@ -6391,6 +6398,12 @@ msgstr "Azure Traffic Manager Qps"
 
 msgid "Azure Usage Details (Costs)"
 msgstr "Azure Nutzungsdetails (Kosten)"
+
+msgid "Azure VM Burst CPU Credits"
+msgstr ""
+
+msgid "Azure VM Disk"
+msgstr ""
 
 msgid "Azure VNet Gateway"
 msgstr "Azure VNet Gateway"
@@ -15039,6 +15052,10 @@ msgstr "Plattenlatenz"
 msgid "Disk percentage usage"
 msgstr "Festplatte prozentuale Nutzung"
 
+#, fuzzy
+msgid "Disk read"
+msgstr "Platten-Writeback"
+
 msgid "Disk read latency"
 msgstr "Latenz beim Lesen der Festplatte"
 
@@ -15063,6 +15080,10 @@ msgstr "Festplattennutzung"
 
 msgid "Disk utilization"
 msgstr "Festplattenauslastung"
+
+#, fuzzy
+msgid "Disk write"
+msgstr "Platten-Writeback"
 
 msgid "Disk write latency"
 msgstr "Latenz beim Schreiben der Festplatte"
@@ -26571,10 +26592,6 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Iptables Filterkonfiguration"
 
-#, fuzzy
-msgid "Is"
-msgstr "s"
-
 msgid "Is CA"
 msgstr "Ist CA"
 
@@ -26593,10 +26610,6 @@ msgstr "Ist ein Mount-Point"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "Wird benötigt, um %s zu sehen, die andere Benutzer erstellt haben."
-
-#, fuzzy
-msgid "Is not"
-msgstr "Ist nicht"
 
 msgid "Is not available"
 msgstr "Ist nicht verfügbar"
@@ -27596,6 +27609,10 @@ msgid "Levels"
 msgstr "Schwellwerte"
 
 msgid "Levels CPU"
+msgstr "Stufen CPU"
+
+#, fuzzy
+msgid "Levels CPU credits"
 msgstr "Stufen CPU"
 
 #, fuzzy
@@ -35182,10 +35199,6 @@ msgstr "Optionen für Berichtsemails"
 msgid "Options: %s"
 msgstr "Optionen"
 
-#, fuzzy
-msgid "Or"
-msgstr "O"
-
 msgid "Oracle"
 msgstr "Oracle"
 
@@ -39206,6 +39219,10 @@ msgstr "Verbleibende offene Slots"
 msgid "Remaining Reads"
 msgstr "Verbleibende Leseoperationen"
 
+#, fuzzy
+msgid "Remaining credits lower levels"
+msgstr "Untere Schwellwerte für Container im Status running"
+
 msgid "Remaining days of validity"
 msgstr "Verbleibende Gültigkeitstage"
 
@@ -39370,6 +39387,14 @@ msgstr "Dieses Element entfernen"
 
 msgid "Remove this graph from the collection"
 msgstr "Diesen Graph aus der Sammlung entfernen"
+
+#, fuzzy
+msgid "Remove this label"
+msgstr "Dieses Element entfernen"
+
+#, fuzzy
+msgid "Remove this label group"
+msgstr "Snapin entfernen"
 
 msgid "Remove this package"
 msgstr "Dieses Erweiterungspaket entfernen"
@@ -57253,6 +57278,10 @@ msgstr "UUID"
 msgid "UUID and mountpoint"
 msgstr "UUID und Einhängepunkt"
 
+#, fuzzy
+msgid "UUID links for TLS-encrypting agent communication"
+msgstr "Unverschlüsselte Kommunikation erzwingen"
+
 msgid "Umlauts in User-IDs (deprecated)"
 msgstr "Umlaute in Benutzerkennungen (veraltet)"
 
@@ -61755,14 +61784,6 @@ msgstr ""
 "Immer wenn Sie erfolgreich Veränderungen anwenden wird ein Schnappshuss "
 "angelegt. Schnappschüsse können auch manuell erstellt werden. WATO löscht "
 "alte Schnappshüsse wenn ein vorgegebenes Maximum erreicht ist."
-
-#, fuzzy
-msgid "Where host label..."
-msgstr "Neues Host-Label: "
-
-#, fuzzy
-msgid "Where service label..."
-msgstr "Matche Service-Labels"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -66483,6 +66504,42 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "Amazon Web Services (AWS)"
+#~ msgid "Amazon Web Services (AWS) Health"
+#~ msgstr "Amazon web Services (AWS)"
+
+#, fuzzy
+#~| msgid "Add"
+#~ msgid "And"
+#~ msgstr "Hinzufügen"
+
+#, fuzzy
+#~| msgid "s"
+#~ msgid "Is"
+#~ msgstr "s"
+
+#, fuzzy
+#~| msgid "is not"
+#~ msgid "Is not"
+#~ msgstr "Ist nicht"
+
+#, fuzzy
+#~| msgid "O"
+#~ msgid "Or"
+#~ msgstr "O"
+
+#, fuzzy
+#~| msgid "New host label: "
+#~| msgid_plural "New host labels: "
+#~ msgid "Where host label..."
+#~ msgstr "Neues Host-Label: "
+
+#, fuzzy
+#~| msgid "Match service labels"
+#~ msgid "Where service label..."
+#~ msgstr "Matche Service-Labels"
 
 #~ msgid "Abort"
 #~ msgstr "Abbruch"
@@ -73152,9 +73209,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Popup Message in the GUI (shows up alert window)"
 #~ msgstr "Meldungsfenster, das in der GUI auftaucht"
-
-#~ msgid "Remove this snapin"
-#~ msgstr "Snapin entfernen"
 
 #~ msgid ""
 #~ "Schedule downtimes on the affected <b>hosts</b> instead of on the "

@@ -868,6 +868,9 @@ msgstr "... (%d mais)"
 msgid ".Net/CLR Memory"
 msgstr "Memória .Net/CLR"
 
+msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
+msgstr ""
+
 msgid "/m"
 msgstr "/m"
 
@@ -5032,7 +5035,7 @@ msgid "Amazon Web Services (AWS)"
 msgstr "Serviços Web da Amazon (AWS)"
 
 #, fuzzy
-msgid "Amazon Web Services (AWS) Health"
+msgid "Amazon Web Services (AWS) Status"
 msgstr "Serviços Web da Amazon (AWS)"
 
 msgid "Amount in billed currency"
@@ -5210,10 +5213,6 @@ msgstr "Analisar esta linha"
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "Analisar a configuração"
-
-#, fuzzy
-msgid "And"
-msgstr "Adicione"
 
 #, fuzzy
 msgid "Android version regular expression"
@@ -6171,6 +6170,10 @@ msgstr "Disponível em"
 msgid "Available (missing)"
 msgstr "Variável necessária em falta"
 
+#, fuzzy
+msgid "Available Memory"
+msgstr "Disponível em"
+
 msgid "Available Spare"
 msgstr "Sobressalentes disponíveis"
 
@@ -6183,6 +6186,10 @@ msgstr "Capacidade disponível"
 #, fuzzy
 msgid "Available macros and search result(s)"
 msgstr "Número de resultados da pesquisa"
+
+#, fuzzy
+msgid "Available memory lower levels"
+msgstr "Contagem média de mensagens níveis inferiores"
 
 msgid "Available options"
 msgstr "Opções disponíveis"
@@ -6404,6 +6411,12 @@ msgstr ""
 
 msgid "Azure Usage Details (Costs)"
 msgstr "Detalhes de Utilização do Azure (Custos)"
+
+msgid "Azure VM Burst CPU Credits"
+msgstr ""
+
+msgid "Azure VM Disk"
+msgstr ""
 
 msgid "Azure VNet Gateway"
 msgstr "Portal Azure VNet"
@@ -15107,6 +15120,10 @@ msgstr "Latência de disco"
 msgid "Disk percentage usage"
 msgstr "Utilização percentual do disco"
 
+#, fuzzy
+msgid "Disk read"
+msgstr "Regresso ao disco"
+
 msgid "Disk read latency"
 msgstr "Latência de leitura do disco"
 
@@ -15133,6 +15150,10 @@ msgstr "Estado de Disco"
 
 msgid "Disk utilization"
 msgstr "Utilização do disco"
+
+#, fuzzy
+msgid "Disk write"
+msgstr "Regresso ao disco"
 
 msgid "Disk write latency"
 msgstr "Latência de escrita em disco"
@@ -26661,10 +26682,6 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Configuração do filtro Iptables"
 
-#, fuzzy
-msgid "Is"
-msgstr "s"
-
 msgid "Is CA"
 msgstr "É CA"
 
@@ -26683,10 +26700,6 @@ msgstr "É ponto de montagem"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "É necessário para ver as %s que outros usuários criaram."
-
-#, fuzzy
-msgid "Is not"
-msgstr "não é"
 
 msgid "Is not available"
 msgstr "Não está disponível"
@@ -27715,6 +27728,10 @@ msgstr "Níveis"
 
 #, fuzzy
 msgid "Levels CPU"
+msgstr "Níveis"
+
+#, fuzzy
+msgid "Levels CPU credits"
 msgstr "Níveis"
 
 #, fuzzy
@@ -35416,10 +35433,6 @@ msgstr "Opções para relatórios por e-mail"
 msgid "Options: %s"
 msgstr "Opções"
 
-#, fuzzy
-msgid "Or"
-msgstr "O"
-
 msgid "Oracle"
 msgstr "Oracle"
 
@@ -39461,6 +39474,10 @@ msgstr "Restantes Caça-níqueis Abertos"
 msgid "Remaining Reads"
 msgstr "Leituras remanescentes"
 
+#, fuzzy
+msgid "Remaining credits lower levels"
+msgstr "Correr contentores em níveis inferiores"
+
 msgid "Remaining days of validity"
 msgstr "Restantes dias de validade"
 
@@ -39625,6 +39642,14 @@ msgstr "Remover este elemento"
 
 msgid "Remove this graph from the collection"
 msgstr "Remover este gráfico da colecção"
+
+#, fuzzy
+msgid "Remove this label"
+msgstr "Remover este elemento"
+
+#, fuzzy
+msgid "Remove this label group"
+msgstr "Eliminar este grupo de etiquetas"
 
 msgid "Remove this package"
 msgstr "Remover este pacote"
@@ -57484,6 +57509,10 @@ msgstr ""
 msgid "UUID and mountpoint"
 msgstr "UUID e ponto de montagem"
 
+#, fuzzy
+msgid "UUID links for TLS-encrypting agent communication"
+msgstr "Encriptar a comunicação"
+
 msgid "Umlauts in User-IDs (deprecated)"
 msgstr "Umlauts em User-IDs (depreciado)"
 
@@ -62019,14 +62048,6 @@ msgstr ""
 "da configuração. Você também pode criar instantâneos (snapshots) "
 "manualmente. WATO apagará instantâneos antigos quando o número máximo de "
 "instantâneos for atingido."
-
-#, fuzzy
-msgid "Where host label..."
-msgstr "Nova etiqueta de anfitrião: "
-
-#, fuzzy
-msgid "Where service label..."
-msgstr "Combinar etiquetas de serviço"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -66700,6 +66721,42 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Amazon Web Services (AWS)"
+#~ msgid "Amazon Web Services (AWS) Health"
+#~ msgstr "Serviços Web da Amazon (AWS)"
+
+#, fuzzy
+#~| msgid "Add"
+#~ msgid "And"
+#~ msgstr "Adicione"
+
+#, fuzzy
+#~| msgid "s"
+#~ msgid "Is"
+#~ msgstr "s"
+
+#, fuzzy
+#~| msgid "is not"
+#~ msgid "Is not"
+#~ msgstr "não é"
+
+#, fuzzy
+#~| msgid "O"
+#~ msgid "Or"
+#~ msgstr "O"
+
+#, fuzzy
+#~| msgid "New host label: "
+#~| msgid_plural "New host labels: "
+#~ msgid "Where host label..."
+#~ msgstr "Nova etiqueta de anfitrião: "
+
+#, fuzzy
+#~| msgid "Match service labels"
+#~ msgid "Where service label..."
+#~ msgstr "Combinar etiquetas de serviço"
 
 #~ msgid "Abort"
 #~ msgstr "Abortar"

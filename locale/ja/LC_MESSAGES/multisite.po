@@ -859,6 +859,9 @@ msgstr "...(%d more)"
 msgid ".Net/CLR Memory"
 msgstr ".Net/CLRメモリ"
 
+msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
+msgstr ""
+
 msgid "/m"
 msgstr "/m"
 
@@ -4845,7 +4848,7 @@ msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
 #, fuzzy
-msgid "Amazon Web Services (AWS) Health"
+msgid "Amazon Web Services (AWS) Status"
 msgstr "Amazon Web Services (AWS)"
 
 msgid "Amount in billed currency"
@@ -5016,10 +5019,6 @@ msgstr "この行を分析する"
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "構成を分析する"
-
-#, fuzzy
-msgid "And"
-msgstr "追加"
 
 msgid "Android version regular expression"
 msgstr "Androidバージョン正規表現"
@@ -5931,6 +5930,10 @@ msgstr "利用可能"
 msgid "Available (missing)"
 msgstr "利用可能(missing)"
 
+#, fuzzy
+msgid "Available Memory"
+msgstr "利用可能"
+
 msgid "Available Spare"
 msgstr "利用可能なスペア"
 
@@ -5943,6 +5946,10 @@ msgstr "利用可能な容量"
 #, fuzzy
 msgid "Available macros and search result(s)"
 msgstr "検索結果の数"
+
+#, fuzzy
+msgid "Available memory lower levels"
+msgstr "平均メッセージ数の下位レベル"
 
 msgid "Available options"
 msgstr "利用可能なオプション"
@@ -6159,6 +6166,12 @@ msgstr ""
 
 msgid "Azure Usage Details (Costs)"
 msgstr "Azureの使用状況の詳細(コスト)"
+
+msgid "Azure VM Burst CPU Credits"
+msgstr ""
+
+msgid "Azure VM Disk"
+msgstr ""
 
 msgid "Azure VNet Gateway"
 msgstr "AzureVNetゲートウェイ"
@@ -14447,6 +14460,10 @@ msgstr "ディスクの待ち時間"
 msgid "Disk percentage usage"
 msgstr "ディスク使用率"
 
+#, fuzzy
+msgid "Disk read"
+msgstr "ディスクライトバック"
+
 msgid "Disk read latency"
 msgstr "ディスク読み取りの待ち時間"
 
@@ -14471,6 +14488,10 @@ msgstr "Disk usage"
 
 msgid "Disk utilization"
 msgstr "ディスク使用率"
+
+#, fuzzy
+msgid "Disk write"
+msgstr "ディスクライトバック"
 
 msgid "Disk write latency"
 msgstr "ディスク書き込みの待ち時間"
@@ -25395,10 +25416,6 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Iptablesフィルター構成"
 
-#, fuzzy
-msgid "Is"
-msgstr "s"
-
 msgid "Is CA"
 msgstr "CAですか"
 
@@ -25417,10 +25434,6 @@ msgstr "マウントポイントです"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "他のユーザーが作成した %s を表示するために必要です。"
-
-#, fuzzy
-msgid "Is not"
-msgstr "ではありません"
 
 msgid "Is not available"
 msgstr "利用できません"
@@ -26392,6 +26405,10 @@ msgid "Levels"
 msgstr "レベル"
 
 msgid "Levels CPU"
+msgstr "CPUレベル"
+
+#, fuzzy
+msgid "Levels CPU credits"
 msgstr "CPUレベル"
 
 #, fuzzy
@@ -33784,10 +33801,6 @@ msgstr "レポートメールのオプション"
 msgid "Options: %s"
 msgstr "オプション"
 
-#, fuzzy
-msgid "Or"
-msgstr "O"
-
 msgid "Oracle"
 msgstr "オラクル"
 
@@ -37646,6 +37659,10 @@ msgstr "残りの空きスロット"
 msgid "Remaining Reads"
 msgstr "残りの読み取り"
 
+#, fuzzy
+msgid "Remaining credits lower levels"
+msgstr "実行中のコンテナの下位レベル"
+
 msgid "Remaining days of validity"
 msgstr "有効期間の残り日数"
 
@@ -37810,6 +37827,14 @@ msgstr "この要素を削除します"
 
 msgid "Remove this graph from the collection"
 msgstr "このグラフをコレクションから削除します"
+
+#, fuzzy
+msgid "Remove this label"
+msgstr "この要素を削除します"
+
+#, fuzzy
+msgid "Remove this label group"
+msgstr "このタググループを削除します"
 
 msgid "Remove this package"
 msgstr ""
@@ -54427,6 +54452,10 @@ msgstr ""
 msgid "UUID and mountpoint"
 msgstr ""
 
+#, fuzzy
+msgid "UUID links for TLS-encrypting agent communication"
+msgstr "非暗号化通信を強制する"
+
 msgid "Umlauts in User-IDs (deprecated)"
 msgstr "ユーザーIDのウムラウト(非推奨)"
 
@@ -58660,14 +58689,6 @@ msgid ""
 "will be created. You can also create snapshots manually. WATO will delete "
 "old snapshots when the maximum number of snapshots is reached."
 msgstr ""
-
-#, fuzzy
-msgid "Where host label..."
-msgstr "ホストラベルと一致する"
-
-#, fuzzy
-msgid "Where service label..."
-msgstr "サービスラベルを一致させる"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -63063,6 +63084,41 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Amazon Web Services (AWS)"
+#~ msgid "Amazon Web Services (AWS) Health"
+#~ msgstr "Amazon Web Services (AWS)"
+
+#, fuzzy
+#~| msgid "Add"
+#~ msgid "And"
+#~ msgstr "追加"
+
+#, fuzzy
+#~| msgid "s"
+#~ msgid "Is"
+#~ msgstr "s"
+
+#, fuzzy
+#~| msgid "is not"
+#~ msgid "Is not"
+#~ msgstr "ではありません"
+
+#, fuzzy
+#~| msgid "O"
+#~ msgid "Or"
+#~ msgstr "O"
+
+#, fuzzy
+#~| msgid "Match host labels"
+#~ msgid "Where host label..."
+#~ msgstr "ホストラベルと一致する"
+
+#, fuzzy
+#~| msgid "Match service labels"
+#~ msgid "Where service label..."
+#~ msgstr "サービスラベルを一致させる"
 
 #~ msgid "Abort"
 #~ msgstr "アボート"

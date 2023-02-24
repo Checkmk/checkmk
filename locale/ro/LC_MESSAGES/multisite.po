@@ -866,6 +866,9 @@ msgstr ""
 msgid ".Net/CLR Memory"
 msgstr ""
 
+msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
+msgstr ""
+
 msgid "/m"
 msgstr ""
 
@@ -4777,7 +4780,7 @@ msgid "Amazon Web Services (AWS)"
 msgstr ""
 
 #, fuzzy
-msgid "Amazon Web Services (AWS) Health"
+msgid "Amazon Web Services (AWS) Status"
 msgstr " pe siteul de monitorizare: "
 
 msgid "Amount in billed currency"
@@ -4933,10 +4936,6 @@ msgstr ""
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "Activare Configurare"
-
-#, fuzzy
-msgid "And"
-msgstr "Adaugă Condiție"
 
 #, fuzzy
 msgid "Android version regular expression"
@@ -5852,6 +5851,10 @@ msgid "Available (missing)"
 msgstr "spatiu utilizat"
 
 #, fuzzy
+msgid "Available Memory"
+msgstr "Optiuni tabel"
+
+#, fuzzy
 msgid "Available Spare"
 msgstr "Optiuni tabel"
 
@@ -5863,6 +5866,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Available macros and search result(s)"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Available memory lower levels"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
@@ -6091,6 +6098,12 @@ msgid "Azure Traffic Manager Qps"
 msgstr ""
 
 msgid "Azure Usage Details (Costs)"
+msgstr ""
+
+msgid "Azure VM Burst CPU Credits"
+msgstr ""
+
+msgid "Azure VM Disk"
 msgstr ""
 
 msgid "Azure VNet Gateway"
@@ -14505,6 +14518,10 @@ msgid "Disk percentage usage"
 msgstr "trei nivele"
 
 #, fuzzy
+msgid "Disk read"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Disk read latency"
 msgstr "Dezactiveaza Notificarile"
 
@@ -14532,6 +14549,10 @@ msgstr "% utilizare"
 
 #, fuzzy
 msgid "Disk utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Disk write"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
@@ -25029,10 +25050,6 @@ msgstr ""
 msgid "Iptables filter configuration"
 msgstr "Activare Configurare"
 
-#, fuzzy
-msgid "Is"
-msgstr "Adaugă Contoar"
-
 msgid "Is CA"
 msgstr ""
 
@@ -25051,9 +25068,6 @@ msgstr ""
 
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
-msgstr ""
-
-msgid "Is not"
 msgstr ""
 
 msgid "Is not available"
@@ -26061,6 +26075,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Levels CPU"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels CPU credits"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
@@ -33952,9 +33970,6 @@ msgstr ""
 msgid "Options: %s"
 msgstr "Grup nou"
 
-msgid "Or"
-msgstr ""
-
 msgid "Oracle"
 msgstr ""
 
@@ -37885,6 +37900,10 @@ msgstr ""
 msgid "Remaining Reads"
 msgstr ""
 
+#, fuzzy
+msgid "Remaining credits lower levels"
+msgstr "trei nivele"
+
 msgid "Remaining days of validity"
 msgstr ""
 
@@ -38060,6 +38079,14 @@ msgstr "Adaungă un nou element"
 
 msgid "Remove this graph from the collection"
 msgstr ""
+
+#, fuzzy
+msgid "Remove this label"
+msgstr "Adaungă un nou element"
+
+#, fuzzy
+msgid "Remove this label group"
+msgstr "Adaungă un nou element"
 
 #, fuzzy
 msgid "Remove this package"
@@ -53531,6 +53558,10 @@ msgstr ""
 msgid "UUID and mountpoint"
 msgstr " pe siteul de monitorizare: "
 
+#, fuzzy
+msgid "UUID links for TLS-encrypting agent communication"
+msgstr "Conexiune Noua"
+
 msgid "Umlauts in User-IDs (deprecated)"
 msgstr ""
 
@@ -57594,14 +57625,6 @@ msgid ""
 "will be created. You can also create snapshots manually. WATO will delete "
 "old snapshots when the maximum number of snapshots is reached."
 msgstr ""
-
-#, fuzzy
-msgid "Where host label..."
-msgstr "Verificări active"
-
-#, fuzzy
-msgid "Where service label..."
-msgstr "Numele Elementului"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -61794,6 +61817,22 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "And"
+#~ msgstr "Adaugă Condiție"
+
+#, fuzzy
+#~ msgid "Is"
+#~ msgstr "Adaugă Contoar"
+
+#, fuzzy
+#~ msgid "Where host label..."
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Where service label..."
+#~ msgstr "Numele Elementului"
 
 #~ msgid "Abort"
 #~ msgstr "Renunț"

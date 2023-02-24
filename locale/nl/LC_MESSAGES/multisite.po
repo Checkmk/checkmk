@@ -868,6 +868,9 @@ msgstr "... (%d more)"
 msgid ".Net/CLR Memory"
 msgstr ".Net/CLR Geheugen"
 
+msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
+msgstr ""
+
 msgid "/m"
 msgstr "/m"
 
@@ -5040,7 +5043,7 @@ msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
 #, fuzzy
-msgid "Amazon Web Services (AWS) Health"
+msgid "Amazon Web Services (AWS) Status"
 msgstr "Amazon Web Services (AWS)"
 
 msgid "Amount in billed currency"
@@ -5219,10 +5222,6 @@ msgstr "Analyseer deze lijn"
 #, fuzzy
 msgid "Analyzing the Checkmk site configuration"
 msgstr "Analyseren configuratie"
-
-#, fuzzy
-msgid "And"
-msgstr "Toevoegen"
 
 msgid "Android version regular expression"
 msgstr "Android versie reguliere expressie"
@@ -6167,6 +6166,10 @@ msgstr "Beschikbaar"
 msgid "Available (missing)"
 msgstr "Beschikbaar (ontbreekt)"
 
+#, fuzzy
+msgid "Available Memory"
+msgstr "Beschikbaar"
+
 msgid "Available Spare"
 msgstr "Beschikbare reserve"
 
@@ -6179,6 +6182,10 @@ msgstr "Beschikbare capaciteit"
 #, fuzzy
 msgid "Available macros and search result(s)"
 msgstr "Aantal zoekresultaten"
+
+#, fuzzy
+msgid "Available memory lower levels"
+msgstr "Gemiddeld aantal berichten lagere niveaus"
 
 msgid "Available options"
 msgstr "Beschikbare opties"
@@ -6398,6 +6405,12 @@ msgstr ""
 
 msgid "Azure Usage Details (Costs)"
 msgstr "Details Azure-gebruik (kosten)"
+
+msgid "Azure VM Burst CPU Credits"
+msgstr ""
+
+msgid "Azure VM Disk"
+msgstr ""
 
 msgid "Azure VNet Gateway"
 msgstr "Azure VNet Gateway"
@@ -15023,6 +15036,10 @@ msgstr "Schijf latency"
 msgid "Disk percentage usage"
 msgstr "Schijf percentage gebruik"
 
+#, fuzzy
+msgid "Disk read"
+msgstr "Schijf terugschrijven"
+
 msgid "Disk read latency"
 msgstr "Schijf lees latentie"
 
@@ -15047,6 +15064,10 @@ msgstr "Schijfgebruik"
 
 msgid "Disk utilization"
 msgstr "Schijfgebruik"
+
+#, fuzzy
+msgid "Disk write"
+msgstr "Schijf terugschrijven"
 
 msgid "Disk write latency"
 msgstr "Schijf schrijf latentie"
@@ -26519,10 +26540,6 @@ msgstr "Ipmitool"
 msgid "Iptables filter configuration"
 msgstr "Iptables filter configuratie"
 
-#, fuzzy
-msgid "Is"
-msgstr "s"
-
 msgid "Is CA"
 msgstr "Is CA"
 
@@ -26541,10 +26558,6 @@ msgstr "Is mountpoint"
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "Is nodig om %s te zien die andere gebruikers hebben gemaakt."
-
-#, fuzzy
-msgid "Is not"
-msgstr "is niet"
 
 msgid "Is not available"
 msgstr "Is niet beschikbaar"
@@ -27550,6 +27563,10 @@ msgid "Levels"
 msgstr "Niveaus"
 
 msgid "Levels CPU"
+msgstr "Niveaus CPU"
+
+#, fuzzy
+msgid "Levels CPU credits"
 msgstr "Niveaus CPU"
 
 #, fuzzy
@@ -35124,10 +35141,6 @@ msgstr "Opties voor rapport e-mails"
 msgid "Options: %s"
 msgstr "Opties"
 
-#, fuzzy
-msgid "Or"
-msgstr "O"
-
 msgid "Oracle"
 msgstr "Oracle"
 
@@ -39111,6 +39124,10 @@ msgstr "Overblijvende Open Slots"
 msgid "Remaining Reads"
 msgstr "Resterende Lezingen"
 
+#, fuzzy
+msgid "Remaining credits lower levels"
+msgstr "Lopende containers lagere niveaus"
+
 msgid "Remaining days of validity"
 msgstr "Resterende dagen van geldigheid"
 
@@ -39275,6 +39292,14 @@ msgstr "Verwijder dit element"
 
 msgid "Remove this graph from the collection"
 msgstr "Verwijder deze grafiek uit de verzameling"
+
+#, fuzzy
+msgid "Remove this label"
+msgstr "Verwijder dit element"
+
+#, fuzzy
+msgid "Remove this label group"
+msgstr "Verwijder deze tag groep"
 
 msgid "Remove this package"
 msgstr "Verwijder dit pakket"
@@ -57177,6 +57202,10 @@ msgstr "UUID"
 msgid "UUID and mountpoint"
 msgstr "UUID en koppelpunt"
 
+#, fuzzy
+msgid "UUID links for TLS-encrypting agent communication"
+msgstr "Forceer onversleutelde communicatie"
+
 msgid "Umlauts in User-IDs (deprecated)"
 msgstr "Umlauten in gebruikers-ID's (verouderd)"
 
@@ -61686,14 +61715,6 @@ msgstr ""
 "Telkens wanneer u wijzigingen met succes activeert, wordt een snapshot van "
 "de configuratie aangemaakt. U kunt ook manueel snapshots aanmaken. WATO zal "
 "oude snapshots verwijderen wanneer het maximum aantal snapshots is bereikt."
-
-#, fuzzy
-msgid "Where host label..."
-msgstr "Nieuw host label: "
-
-#, fuzzy
-msgid "Where service label..."
-msgstr "Overeenkomende dienst labels"
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -66402,6 +66423,42 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Amazon Web Services (AWS)"
+#~ msgid "Amazon Web Services (AWS) Health"
+#~ msgstr "Amazon Web Services (AWS)"
+
+#, fuzzy
+#~| msgid "Add"
+#~ msgid "And"
+#~ msgstr "Toevoegen"
+
+#, fuzzy
+#~| msgid "s"
+#~ msgid "Is"
+#~ msgstr "s"
+
+#, fuzzy
+#~| msgid "is not"
+#~ msgid "Is not"
+#~ msgstr "is niet"
+
+#, fuzzy
+#~| msgid "O"
+#~ msgid "Or"
+#~ msgstr "O"
+
+#, fuzzy
+#~| msgid "New host label: "
+#~| msgid_plural "New host labels: "
+#~ msgid "Where host label..."
+#~ msgstr "Nieuw host label: "
+
+#, fuzzy
+#~| msgid "Match service labels"
+#~ msgid "Where service label..."
+#~ msgstr "Overeenkomende dienst labels"
 
 #~ msgid "Abort"
 #~ msgstr "Afbreken"

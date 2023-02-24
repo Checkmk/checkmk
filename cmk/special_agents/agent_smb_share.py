@@ -71,12 +71,34 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         ),
         default=[],
     )
+
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help=("Use recursive pattern search"),
+    )
     return parser.parse_args(argv)
 
 
-def iter_shared_files(
-    conn: SMBConnection, hostname: str, share_name: str, pattern: list[str], subdir: str = ""
-) -> Generator[File, None, None]:
+def get_child_dirs(conn, share_name, subdir):
+    for shared_file in conn.listPath(share_name, subdir):
+        if shared_file.filename in (".", ".."):
+            continue
+
+        relative_path = f"{subdir}{shared_file.filename}"
+        if shared_file.isDirectory:
+            yield f"{relative_path}\\"
+            yield from get_child_dirs(conn, share_name, f"{relative_path}\\")
+
+
+def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=False):
+    if pattern[0] == "**" and recursive:
+        child_dirs = get_child_dirs(conn, share_name, subdir)
+        for child_dir in child_dirs:
+            yield from iter_shared_files(
+                conn, hostname, share_name, pattern[1:], subdir=child_dir, recursive=recursive
+            )
+        return
 
     for shared_file in conn.listPath(share_name, subdir):
         if shared_file.filename in (".", ".."):
@@ -90,7 +112,12 @@ def iter_shared_files(
 
         if shared_file.isDirectory and len(pattern) > 1:
             yield from iter_shared_files(
-                conn, hostname, share_name, pattern[1:], subdir=f"{relative_path}\\"
+                conn,
+                hostname,
+                share_name,
+                pattern[1:],
+                subdir=f"{relative_path}\\",
+                recursive=recursive,
             )
             continue
 
@@ -99,8 +126,8 @@ def iter_shared_files(
 
 
 def get_all_shared_files(
-    conn: SMBConnection, hostname: str, patterns: list[str]
-) -> Generator[tuple[str, list[File]], None, None]:
+    conn: SMBConnection, hostname: str, patterns: list[str], recursive: bool
+) -> Generator[tuple[str, set[File]], None, None]:
     share_names = [s.name for s in conn.listShares()]
     for pattern_string in patterns:
         pattern = pattern_string.strip("\\").split("\\")
@@ -116,10 +143,12 @@ def get_all_shared_files(
         if share_name not in share_names:
             raise SMBShareAgentError(f"Share {share_name} doesn't exist on host {hostname}")
 
-        yield pattern_string, list(iter_shared_files(conn, hostname, share_name, pattern[2:]))
+        yield pattern_string, set(
+            iter_shared_files(conn, hostname, share_name, pattern[2:], recursive=recursive)
+        )
 
 
-def write_section(all_files: Generator[tuple[str, list[File]], None, None]) -> None:
+def write_section(all_files: Generator[tuple[str, set[File]], None, None]) -> None:
     with SectionWriter("fileinfo", separator="|") as writer:
         now = datetime.utcnow().replace(tzinfo=timezone.utc)
         writer.append(int(datetime.timestamp(now)))
@@ -131,7 +160,7 @@ def write_section(all_files: Generator[tuple[str, list[File]], None, None]) -> N
                 writer.append(f"{pattern}|missing")
                 continue
 
-            for shared_file in shared_files:
+            for shared_file in sorted(shared_files):
                 file_obj = shared_file.file
                 age = int(file_obj.last_write_time)
                 file_info = f"{shared_file.path}|ok|{file_obj.file_size}|{age}"
@@ -169,7 +198,7 @@ def connect(
 def smb_share_agent(args: Args) -> int:
     try:
         with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
-            all_files = get_all_shared_files(conn, args.hostname, args.patterns)
+            all_files = get_all_shared_files(conn, args.hostname, args.patterns, args.recursive)
             logging.debug("Querying share files and writing fileinfo section")
             write_section(all_files)
     except SMBShareAgentError as err:

@@ -23,6 +23,9 @@ def agent_smb_share_arguments(
         args.append("--patterns")
         args.extend(patterns)
 
+    if params.get("recursive", False):
+        args.append("--recursive")
+
     return args
 
 

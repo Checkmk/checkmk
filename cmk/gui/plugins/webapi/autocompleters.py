@@ -6,7 +6,7 @@
 
 import re
 from itertools import chain
-from typing import Callable, Collection, Dict, Iterable, Mapping, Tuple
+from typing import Callable, Collection, Dict, Iterable, Mapping, Optional, Tuple
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
@@ -72,6 +72,10 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choic
     return __live_query_to_choices(_query_callback, limit, value, params)
 
 
+def _matches_id_or_title(ident: str, choice: tuple[Optional[str], str]) -> bool:
+    return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
+
+
 @autocompleter_registry.register_expression("monitored_hostname")
 def monitored_hostname_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
@@ -107,7 +111,7 @@ def sites_autocompleter(value: str, params: Dict) -> Choices:
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
 
     choices: Choices = sorted(
-        (v for v in sites_options() if value.lower() in v[1].lower()),
+        (v for v in sites_options() if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
@@ -124,7 +128,7 @@ def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     group_type = params["group_type"]
     choices: Choices = sorted(
-        (v for v in sites.all_groups(group_type) if value.lower() in v[1].lower()),
+        (v for v in sites.all_groups(group_type) if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
@@ -237,7 +241,7 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
         metrics = set(registered_metrics())
 
     return sorted(
-        (v for v in metrics if value.lower() in v[1].lower() or value == v[0]),
+        (v for v in metrics if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
@@ -245,7 +249,7 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("tag_groups")
 def tag_group_autocompleter(value: str, params: Dict) -> Choices:
     return sorted(
-        (v for v in config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
+        (v for v in config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
@@ -314,7 +318,9 @@ def graph_templates_autocompleter(value: str, params: Dict) -> Choices:
             )
         )
 
-    return sorted((v for v in choices if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
+    return sorted(
+        (v for v in choices if _matches_id_or_title(value, v)), key=lambda a: a[1].lower()
+    )
 
 
 def validate_autocompleter_data(api_request):

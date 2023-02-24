@@ -37,10 +37,10 @@ DATA = [
         ),
     ],
 )
-def test_discover_aruba_chassis_temp(  # type:ignore[no-untyped-def]
+def test_discover_aruba_chassis_temp(
     string_table: StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = aruba_chassis.parse_aruba_chassis(string_table)
     assert list(aruba_chassis.discover_aruba_chassis_temp(section)) == result
 
@@ -111,11 +111,11 @@ def test_discover_aruba_chassis_temp(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_aruba_chassis_temp(  # type:ignore[no-untyped-def]
+def test_check_aruba_chassis_temp(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_chassis.parse_aruba_chassis(string_table)
     assert (
         list(

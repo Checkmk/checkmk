@@ -226,7 +226,7 @@ PARAMS = {
 }
 
 
-def test_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
     monkeypatch.setattr("time.time", lambda: 0)
@@ -258,7 +258,7 @@ def test_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert result_lnx_if == result_interfaces
 
 
-def test_cluster_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):
@@ -921,7 +921,7 @@ def test_lnx_if_regression(
         ]
 
 
-def test_lnx_if_with_bonding(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
 
     section = lnx_if.parse_lnx_if(
         [

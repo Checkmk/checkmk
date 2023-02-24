@@ -47,10 +47,10 @@ DATA = [
         ),
     ],
 )
-def test_discover_aruba_fan_status(  # type:ignore[no-untyped-def]
+def test_discover_aruba_fan_status(
     string_table: StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = aruba_fans.parse_aruba_fans(string_table)
     assert list(aruba_fans.discover_aruba_fan_status(section)) == result
 
@@ -154,10 +154,10 @@ def test_discover_aruba_fan_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_aruba_fan_status(  # type:ignore[no-untyped-def]
+def test_check_aruba_fan_status(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_fans.parse_aruba_fans(string_table)
     assert list(aruba_fans.check_aruba_fan_status(item, section)) == result

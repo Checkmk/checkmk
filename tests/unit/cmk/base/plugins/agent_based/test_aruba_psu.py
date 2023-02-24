@@ -37,10 +37,10 @@ DATA = [
         ),
     ],
 )
-def test_discover_aruba_psu_status(  # type:ignore[no-untyped-def]
+def test_discover_aruba_psu_status(
     string_table: StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert list(aruba_psu.discover_aruba_psu(section)) == result
 
@@ -82,11 +82,11 @@ def test_discover_aruba_psu_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
+def test_check_aruba_psu_status(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert list(aruba_psu.check_aruba_psu_status(item, section)) == result
 
@@ -136,11 +136,11 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_aruba_psu_temp(  # type:ignore[no-untyped-def]
+def test_check_aruba_psu_temp(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert (
         list(
@@ -203,11 +203,11 @@ def test_check_aruba_psu_temp(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_aruba_psu_wattage(  # type:ignore[no-untyped-def]
+def test_check_aruba_psu_wattage(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert (
         list(

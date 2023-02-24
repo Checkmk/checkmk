@@ -5,9 +5,12 @@
 
 import pytest
 
+from tests.unit.conftest import FixRegister
+
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.docker_container_mem import parse_docker_container_mem
 
 # docker stats: 1007MiB / 4.347GiB
@@ -142,10 +145,10 @@ MK_DOCKER_CONTAINER_MEM_CGROUPV2 = [
         ],
     ],
 )
-def test_docker_container_diskstat(  # type:ignore[no-untyped-def]
-    fix_register,
-    string_table,
-    expected_result,
+def test_docker_container_diskstat(
+    fix_register: FixRegister,
+    string_table: StringTable,
+    expected_result: CheckResult,
 ) -> None:
     agent_section = fix_register.agent_sections[SectionName("docker_container_mem")]
     plugin = fix_register.check_plugins[CheckPluginName("mem_used")]

@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 from pydantic_factories import ModelFactory
+from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_node import inventory_kube_node
@@ -97,7 +98,7 @@ def test_inventory_kube_node(
     ) == sort_inventory_result(expected_check_result)
 
 
-def test_inventory_kube_node_calls_labels_to_table(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_kube_node_calls_labels_to_table(mocker: MockerFixture) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 

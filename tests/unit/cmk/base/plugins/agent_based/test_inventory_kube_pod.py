@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 from pydantic_factories import ModelFactory
+from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
@@ -280,7 +281,7 @@ def test_container_to_table(
     )
 
 
-def test_inventory_kube_pod_calls_labels_to_table(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_kube_pod_calls_labels_to_table(mocker: MockerFixture) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 

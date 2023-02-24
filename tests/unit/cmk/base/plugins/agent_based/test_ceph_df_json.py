@@ -6,6 +6,8 @@
 import pytest
 
 import cmk.base.plugins.agent_based.ceph_df_json_section as ceph_df
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.df import FSBlocks
 
 SECTION1 = [
     ("SUMMARY", 28536947.359375, 22427607.171875, 0),
@@ -30,5 +32,5 @@ STRING_TABLE1 = [
         (STRING_TABLE1, SECTION1),
     ],
 )
-def test_parse_ceph_df_json(string_table, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_ceph_df_json(string_table: StringTable, section: FSBlocks) -> None:
     assert ceph_df.parse_ceph_df_json(string_table) == section

@@ -138,7 +138,10 @@ class PostgresBase:
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
         self.psql_binary_name = "psql"
-        self.psql_binary_path = self.get_psql_binary_path()
+        if instance["pg_path"] == None:
+            self.psql_binary_path = self.get_psql_binary_path()
+        else:
+            self.psql_binary_path = instance["pg_path"] + self.sep + self.psql_binary_name
         self.psql_binary_dirname = self.get_psql_binary_dirname()
         self.conn_time = ""  # For caching as conn_time and version are in one query
         self.process_match_patterns = process_match_patterns
@@ -1175,6 +1178,7 @@ def parse_env_file(env_file):
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
     pg_version = None
+    pg_path = None
     for line in open_env_file(env_file):
         line = line.strip()
         if "PGDATABASE=" in line:
@@ -1183,9 +1187,11 @@ def parse_env_file(env_file):
             pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
         elif "PGVERSION=" in line:
             pg_version = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+        elif "PGPATH=" in line:
+            pg_path = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
-    return pg_database, pg_port, pg_version
+    return pg_database, pg_port, pg_version, pg_path
 
 
 def parse_postgres_cfg(postgres_cfg, config_separator):
@@ -1210,7 +1216,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
         if key == "INSTANCE":
             env_file, pg_user, pg_passfile = value.split(config_separator)
             env_file = env_file.strip()
-            pg_database, pg_port, pg_version = parse_env_file(env_file)
+            pg_database, pg_port, pg_version, pg_path = parse_env_file(env_file)
             instances.append(
                 {
                     "name": env_file.split(os.sep)[-1].split(".")[0],
@@ -1219,6 +1225,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
                     "pg_database": pg_database,
                     "pg_port": pg_port,
                     "pg_version": pg_version,
+                    "pg_path": pg_path,
                 }
             )
     if dbuser is None:

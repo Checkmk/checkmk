@@ -618,7 +618,8 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
     users[user_id]["locked"] = True
     userdb.save_users(users, now)
 
-    assert userdb.check_credentials(user_id, Password(password), now) is False
+    with pytest.raises(MKUserError, match="User is locked"):
+        userdb.check_credentials(user_id, Password(password), now)
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of

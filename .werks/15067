@@ -1,0 +1,12 @@
+Title: Show if user is locked
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1677228923
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With this Werk a user that is locked will be informed that the account is locked.
+Previously it was only shown that the login was invalid and lead users to more login attempts.

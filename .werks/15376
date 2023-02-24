@@ -1,0 +1,20 @@
+Title: dcd: Fixes 2 issues with phases 1.1 & 2.4 calling incorrectly formed urls.
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677228576
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes 2 issues with the dcd that were introduced after making
+the rest api url matching stricter.
+
+The first issue was with the Phase 2.4 Activate Changes failing, This was
+because of incorrectly formed redirect urls. The urls are now fixed.
+
+The second issue was with a distributed monitoring setup and with
+Phase 1.1 Executing on site... being called, again, with an incorrect
+url. The url has now been fixed here too.
+

@@ -67,5 +67,5 @@ SEENFILE=$CACHEFILE.seenby.$REMOTE_HOST
     fi
     # Send cache file and mark it as seen by our remote host
     cat $CACHEFILE
-    touch $SEENFILE
+    touch "$SEENFILE"
 ) 200>$LOCKFILE

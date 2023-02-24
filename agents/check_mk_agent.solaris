@@ -407,6 +407,7 @@ section_ps() {
     # ps command to get the full command line instead. What a hack.
     if [ -x /usr/ucb/ps ]; then
         UCB_PS=$(/usr/ucb/ps -agwwwx)
+        # shellcheck disable=SC2086 # yes, we want splitting on pszone
         PS=$(ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} |
             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /')
         while read -r LINE; do
@@ -429,6 +430,7 @@ section_ps() {
             fi
         done <<<"${PS}"
     else
+        # shellcheck disable=SC2086 # yes, we want splitting on pszone
         ps -o "user=USER............" -o vsz,rss,pcpu,etime,pid,args ${pszone} |
             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
     fi
@@ -512,6 +514,7 @@ section_uptime() {
 }
 
 section_ntp() {
+    # shellcheck disable=SC2086 # yes, we want splitting on pszone
     ps -o comm ${pszone} | grep -w ".*ntpd" &>/dev/null || return
 
     echo '<<<ntp>>>'

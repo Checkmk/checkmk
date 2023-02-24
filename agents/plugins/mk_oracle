@@ -607,7 +607,7 @@ set_ora_env() {
             test -f /etc/oratab && ORATAB=/etc/oratab
             # /var/opt/oracle/oratab is needed for Oracle Solaris
             test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
-            if ! test -f ${ORATAB:-""}; then
+            if ! test -f "${ORATAB:-""}"; then
                 logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
                 exit 1
             fi

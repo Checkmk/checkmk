@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, HostAddress, ListOfStrings, TextInput, Tuple
+from cmk.gui.valuespec import Checkbox, Dictionary, HostAddress, ListOfStrings, TextInput, Tuple
 
 
 def _valuespec_special_agents_smb_share():
@@ -67,6 +67,17 @@ def _valuespec_special_agents_smb_share():
                         " first one.</p>"
                     ),
                     valuespec=TextInput(size=80),
+                ),
+            ),
+            (
+                "recursive",
+                Checkbox(
+                    title=_("Recursive pattern search"),
+                    label=_("Match multiple directories with **"),
+                    help=_(
+                        "If ** is used in the pattern, the agent will recursively look into all the subfolders, "
+                        "so use this carefully on a deeply nested filesystems."
+                    ),
                 ),
             ),
         ],

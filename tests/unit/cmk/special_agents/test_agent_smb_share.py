@@ -126,7 +126,7 @@ def test_parse_arguments() -> None:
 
 
 @pytest.mark.parametrize(
-    "filesystem, disallowed_paths, pattern, expected_file_data",
+    "filesystem, disallowed_paths, pattern, recursive, expected_file_data",
     [
         pytest.param(
             {
@@ -140,7 +140,8 @@ def test_parse_arguments() -> None:
             },
             [],
             ["Subfolder1", "My File"],
-            [(f"{SHARE_BASE}\\Subfolder1\\My File", "My File")],
+            False,
+            {(f"{SHARE_BASE}\\Subfolder1\\My File", "My File")},
             id="exact pattern for one file to match",
         ),
         pytest.param(
@@ -168,11 +169,12 @@ def test_parse_arguments() -> None:
             },
             ["Subfolder1\\Ordner\\"],
             ["Subfolder1", "*folder*", "*ile*"],
-            [
+            True,
+            {
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\file3", "file3"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\file4", "file4"),
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\file5", "file5"),
-            ],
+            },
             id="wildcard in folder- and filename",
         ),
         pytest.param(
@@ -206,7 +208,8 @@ def test_parse_arguments() -> None:
             },
             [],
             ["Subfolder1", "*", "*", "some_file"],
-            [
+            False,
+            {
                 (
                     f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file",
                     "some_file",
@@ -215,7 +218,7 @@ def test_parse_arguments() -> None:
                     f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
                     "some_file",
                 ),
-            ],
+            },
             id="wildcard for 2 folder hierarchies",
         ),
         pytest.param(
@@ -250,14 +253,268 @@ def test_parse_arguments() -> None:
             },
             ["do_not_go_here\\"],
             ["Subfolder1", "**", "some_file"],
-            [
+            True,
+            {
                 (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
                 (
-                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file",
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file",
                     "some_file",
                 ),
-            ],
-            id="double star globbing, ignore one folder hierarchy and don't match in current folder",
+            },
+            id="recursive search using double star globbing but avoid looking into unneeded folders",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
+                        folder("Subfolder1"),
+                        folder("do_not_go_here"),
+                        file("some_file"),
+                    ],
+                    "do_not_go_here\\": [],
+                    "Subfolder1\\": [
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        folder("Subfolder4"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        folder("Subfolder5"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        file("some_file"),
+                    ],
+                }
+            },
+            ["do_not_go_here\\"],
+            ["Subfolder1", "**", "some_file"],
+            False,
+            {
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
+            },
+            id="non-recursive search using double star",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
+                        folder("Subfolder1"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\": [
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        folder("Subfolder4"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        folder("Subfolder5"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        file("some_file"),
+                    ],
+                }
+            },
+            [],
+            ["Subfolder1", "**", "Subfolder5", "some_file"],
+            True,
+            {
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+            },
+            id="double star globbing, folder after the double star",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
+                        folder("Subfolder1"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\": [
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        folder("Subfolder4"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        folder("Subfolder5"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        file("some_file"),
+                    ],
+                }
+            },
+            [],
+            ["Subfolder1", "**", "*"],
+            True,
+            {
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+            },
+            id="double star globbing, single star after the double star",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
+                        folder("Subfolder1"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\": [
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        folder("Subfolder4"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        folder("Subfolder5"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        folder("Subfolder6"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\": [
+                        file("some_file"),
+                    ],
+                }
+            },
+            [],
+            ["Subfolder1", "**", "**", "some_file"],
+            True,
+            {
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\some_file",
+                    "some_file",
+                ),
+            },
+            id="double star globbing twice",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
+                        folder("Subfolder1"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\": [
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        folder("Subfolder4"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        folder("Subfolder5"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        folder("Subfolder6"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\": [
+                        file("some_file"),
+                    ],
+                }
+            },
+            [],
+            ["Subfolder1", "**", "**", "some_file"],
+            False,
+            {
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder2\\Subfolder4\\some_file", "some_file"),
+                (f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\some_file", "some_file"),
+            },
+            id="non-recursive double star globbing twice",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
+                        folder("Subfolder1"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\": [
+                        folder("Subfolder2"),
+                        folder("Subfolder3"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\": [
+                        folder("Subfolder4"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder2\\Subfolder4\\": [
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\": [
+                        folder("Subfolder5"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\": [
+                        folder("Subfolder6"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\": [
+                        folder("Subfolder7"),
+                        file("some_file"),
+                    ],
+                    "Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\Subfolder7\\": [
+                        file("some_file"),
+                    ],
+                }
+            },
+            [],
+            ["Subfolder1", "**", "Subfolder*", "**", "some_file"],
+            True,
+            {
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\some_file",
+                    "some_file",
+                ),
+                (
+                    f"{SHARE_BASE}\\Subfolder1\\Subfolder3\\Subfolder5\\Subfolder6\\Subfolder7\\some_file",
+                    "some_file",
+                ),
+            },
+            id="double star globbing twice, with a folder in between",
         ),
         pytest.param(
             {
@@ -274,10 +531,11 @@ def test_parse_arguments() -> None:
             },
             ["Subfolder1\\"],
             ["*"],
-            [
+            True,
+            {
                 (f"{SHARE_BASE}\\file1", "file1"),
                 (f"{SHARE_BASE}\\file2", "file2"),
-            ],
+            },
             id="match everything with *",
         ),
         pytest.param(
@@ -302,9 +560,10 @@ def test_parse_arguments() -> None:
             },
             ["sub1\\sub2\\sub3\\"],
             ["sub1", "*", "*.txt"],
-            [
+            False,
+            {
                 ("\\\\HOSTNAME\\My Shared Folder\\sub1\\sub2\\sub2.txt", "sub2.txt"),
-            ],
+            },
             id="glob one folder hierarchy and find all files with .txt suffix",
         ),
         pytest.param(
@@ -319,7 +578,8 @@ def test_parse_arguments() -> None:
             },
             [],
             ["..", "file"],
-            [],
+            False,
+            set(),
             id="do not look into ..",
         ),
     ],
@@ -328,11 +588,12 @@ def test_iter_shared_files(
     filesystem: dict,
     disallowed_paths: list[str],
     pattern: list[str],
-    expected_file_data: list[tuple[str, str]],
+    recursive: bool,
+    expected_file_data: set[tuple[str, str]],
 ) -> None:
     conn = MockSMBConnection(filesystem=filesystem, disallowed_paths=disallowed_paths)
-    files = list(iter_shared_files(conn, HOST_NAME, SHARED_FOLDER, pattern))
-    file_data = [(f.path, f.file.filename) for f in files]
+    files = set(iter_shared_files(conn, HOST_NAME, SHARED_FOLDER, pattern, recursive=recursive))
+    file_data = {(f.path, f.file.filename) for f in files}
 
     assert file_data == expected_file_data
 
@@ -351,10 +612,10 @@ def test_iter_shared_files(
             [
                 (
                     "\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1",
-                    [
+                    {
                         ("path1", "file1"),
                         ("path2", "file2"),
-                    ],
+                    },
                 ),
             ],
         ),
@@ -363,13 +624,11 @@ def test_iter_shared_files(
 def test_get_all_shared_files(
     patterns: list[str],
     file_data: list[tuple[str, str]],
-    expected_file_data: list[tuple[str, list[tuple[str, str]]]],
+    expected_file_data: list[tuple[str, set[tuple[str, str]]]],
 ) -> None:
     with mock.patch("cmk.special_agents.agent_smb_share.iter_shared_files", return_value=file_data):
         conn = MockSMBConnection(shares=["SharedFolder1", "SharedFolder2"])
-        files_per_pattern = [
-            (p, list(f)) for p, f in get_all_shared_files(conn, HOST_NAME, patterns)
-        ]
+        files_per_pattern = list(get_all_shared_files(conn, HOST_NAME, patterns, False))
         assert files_per_pattern == expected_file_data
 
 
@@ -392,7 +651,7 @@ def test_get_all_shared_files_errors(
 ) -> None:
     conn = MockSMBConnection()
     with pytest.raises(SMBShareAgentError, match=expected_error_message):
-        dict(get_all_shared_files(conn, HOST_NAME, patterns))
+        dict(get_all_shared_files(conn, HOST_NAME, patterns, False))
 
 
 @pytest.mark.parametrize(
@@ -413,7 +672,7 @@ def test_get_all_shared_files_errors(
             [
                 (
                     "\\Share Folder 1\\*.log",
-                    [
+                    {
                         File(
                             "\\Share Folder 1\\smb_share.log",
                             SharedFile(0, 0, 0, 1111111, 100, 0, 16, "", "smb_share.log"),
@@ -422,7 +681,7 @@ def test_get_all_shared_files_errors(
                             "\\Share Folder 1\\error.log",
                             SharedFile(0, 0, 0, 1111112, 200, 0, 16, "", "error.log"),
                         ),
-                    ],
+                    },
                 ),
                 (
                     "\\Share Folder 2\\file.txt",
@@ -434,8 +693,8 @@ def test_get_all_shared_files_errors(
                 "[[[header]]]",
                 "name|status|size|time",
                 "[[[content]]]",
-                "\\Share Folder 1\\smb_share.log|ok|100|0",
                 "\\Share Folder 1\\error.log|ok|200|0",
+                "\\Share Folder 1\\smb_share.log|ok|100|0",
                 "\\Share Folder 2\\file.txt|missing",
             ],
         )

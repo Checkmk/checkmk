@@ -534,7 +534,7 @@ logging() {
                     ;;
 
                 *)
-                    args[$i]="$1"
+                    args[i]="$1"
                     i=$((i + 1))
                     shift
                     ;;

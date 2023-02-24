@@ -12,6 +12,7 @@ setUp() {
 }
 
 test_systemd2_version() {
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     _module_subfolders() {
         echo "/a/b/c/1_xinetd"
         echo "/a/b/c/0_systemd"

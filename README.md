@@ -1,5 +1,7 @@
 # Checkmk - Your complete IT monitoring solution
 
+![PR-CI status](https://github.com/tribe29/checkmk/actions/workflows/pr.yaml/badge.svg)
+
 Checkmk is available in several editions.
 The Checkmk Raw Edition is free and 100% open-source.
 The Checkmk Enterprise Edition includes several additional features and professional support from the authors, billed annually.

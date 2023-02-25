@@ -73,12 +73,16 @@ table.master_control {
   border-spacing: 0;
 
   td {
-    div.toggle_switch {
+    a.toggle_switch {
       float: right;
 
       a {
         font-weight: $font-weight-bold;
         text-transform: lowercase;
+      }
+      img.icon.iconbutton {
+        height: 14px;
+        width: 100%;
       }
     }
 

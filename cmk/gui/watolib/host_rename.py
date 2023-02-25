@@ -122,6 +122,7 @@ def perform_rename_hosts(
 
 def _rename_host_in_folder(folder: CREFolder, oldname: HostName, newname: HostName) -> list[str]:
     folder.rename_host(oldname, newname)
+    folder.invalidate_caches()
     return ["folder"]
 
 

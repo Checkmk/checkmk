@@ -21,9 +21,9 @@ from .utils.azure import (
 
 
 class PeeringAddresses(BaseModel):
-    defaultBgpIpAddresses: Sequence[str]
-    customBgpIpAddresses: Sequence[str]
-    tunnelIpAddresses: Sequence[str]
+    defaultBgpIpAddresses: Sequence[str] = []
+    customBgpIpAddresses: Sequence[str] = []
+    tunnelIpAddresses: Sequence[str] = []
 
 
 class BgpSettings(BaseModel):

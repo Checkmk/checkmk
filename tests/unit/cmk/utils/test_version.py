@@ -121,24 +121,24 @@ class TestVersion:
     def test_eq(self, one: Version, other: Version, equal: bool) -> None:
         assert (one == other) is equal
 
-    @pytest.mark.parametrize(
-        "version_string, expected",
-        [
-            ("1.5.0-2019.10.10", 1050090000),
-            ("1.6.0-2019.10.10", 1060090000),
-            ("1.5.0-2019.10.24", 1050090000),
-            ("1.2.4p1", 1020450001),
-            ("1.2.4", 1020450000),
-            ("1.2.4b1", 1020420100),
-            ("1.2.3p1", 1020350001),
-            ("1.2.3i1", 1020310100),
-            ("1.2.4p10", 1020450010),
-            ("1.5.0-2019.10.10", 1050090000),
-            ("1.5.0p22", 1050050022),
-            ("2020.05.26", 2020052690000),
-            ("2022.06.23-sandbox-az-sles-15sp3", 2022062390000),
-        ],
-    )
-    def test_parse_to_int(self, version_string: str, expected: int) -> None:
-        assert Version(version_string).parse_to_int() == expected
-        assert parse_check_mk_version(version_string) == expected
+
+@pytest.mark.parametrize(
+    "version_string, expected",
+    [
+        ("1.5.0-2019.10.10", 1050090000),
+        ("1.6.0-2019.10.10", 1060090000),
+        ("1.5.0-2019.10.24", 1050090000),
+        ("1.2.4p1", 1020450001),
+        ("1.2.4", 1020450000),
+        ("1.2.4b1", 1020420100),
+        ("1.2.3p1", 1020350001),
+        ("1.2.3i1", 1020310100),
+        ("1.2.4p10", 1020450010),
+        ("1.5.0-2019.10.10", 1050090000),
+        ("1.5.0p22", 1050050022),
+        ("2020.05.26", 2020052690000),
+        ("2022.06.23-sandbox-az-sles-15sp3", 2022062390000),
+    ],
+)
+def test_parse_check_mk_version(version_string: str, expected: int) -> None:
+    assert parse_check_mk_version(version_string) == expected

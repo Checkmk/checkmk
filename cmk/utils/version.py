@@ -313,30 +313,6 @@ class Version:
 
         return (v.date > o_v.date) - (v.date < o_v.date)
 
-    def parse_to_int(self) -> int:
-        v = self.version
-        var_map = {
-            # identifier: (base-val, multiplier)
-            "i": (10000, 100),  # innovation
-            "b": (20000, 100),  # beta
-            "p": (50000, 1),  # patch-level
-            "d": (90000, 0),  # daily
-        }
-
-        if isinstance(v, _MasterDailyVersion):
-            val = var_map["d"][0]
-            return int("%02d%02d%02d%05d" % (v.date.year, v.date.month, v.date.day, val))
-
-        if isinstance(v, _StableDailyVersion):
-            val = var_map["d"][0]
-        elif isinstance(v, _StableVersion):
-            val = var_map["p"][0]
-        else:
-            val, multiply = var_map[v.vtype]
-            val += v.patch * multiply
-
-        return int("%02d%02d%02d%05d" % (v.major, v.minor, v.sub, val))
-
 
 VERSION_PATTERN = re.compile(r"^([.\-a-z]+)?(\d+)")
 
@@ -348,6 +324,16 @@ def parse_check_mk_version(v: str) -> int:
     Parses versions of Checkmk and converts them into comparable integers.
 
     >>> p = parse_check_mk_version
+
+    Watch out! This function can do more than just parse Checkmk versions :-(
+    Changing this is incompatible, as it might render some rules for
+    "Checkmk Agent installation auditing" invalid.
+    >>> p("1.2")
+    1020050000
+
+    No idea why this should be allowed:
+    >>> p("1.2.3i12p4b43")
+    1020315504
 
     All dailies are built equal.
 

@@ -37,4 +37,6 @@ def changed_files(request: pytest.FixtureRequest) -> ChangedFiles:
     files = request.config.getoption("--changed-files")
     if not test_all_files and not files:
         pytest.skip()
-    return ChangedFiles(test_all_files=test_all_files, file_paths={Path(f) for f in files})
+    return ChangedFiles(
+        test_all_files=test_all_files, file_paths={Path("../" + f).resolve() for f in files}
+    )

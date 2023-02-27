@@ -20,10 +20,6 @@ VARIABLES:
     - NAME: CHANGED_FILES_REL
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | sed -E 's#(enterprise|managed|cloud)/cmk/#cmk/#g' | sort"
 
-    - NAME: CHANGED_FILES_ABS
-      # prefix ${WORKSPACE} to every line, make sure empty input won't be handled as a line
-      SH: "echo '${CHANGED_FILES_REL}' | sed 's|^\\(.\\)|${WORKSPACE}/\\1|g'"
-
     - NAME: CHANGED_MAKEFILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^Makefile' - || true"
 
@@ -179,11 +175,11 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python3-pipfile-junit.xml"
 
     - NAME: 'Python File Content Test'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_FILES_ABS
+      ONLY_WHEN_NOT_EMPTY: CHANGED_FILES_REL
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-file-content-junit.xml --color=no"
-        CHANGED_FILES: "${CHANGED_FILES_ABS}"
+        CHANGED_FILES_REL: "${CHANGED_FILES_REL}"
       COMMAND: "make test-file-content-docker"
       TEXT_ON_SKIP: 'No files changed'
       RESULT_CHECK_FILE_PATTERN: "results/python3-file-content-junit.xml"

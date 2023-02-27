@@ -37,6 +37,7 @@ def _core_api() -> CoreAPI:
 
 
 CALL_API = "cmk.special_agents.utils_kubernetes.api_server.client.ApiClient.call_api"
+SUPPORTED_VERSION_STR = "Supported versions are v1.22, v1.23, v1.24, v1.25, v1.26."
 
 
 def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
@@ -272,14 +273,9 @@ def test_decompose_git_version(
         (
             api.UnknownKubernetesVersion(git_version=api.GitVersion("")),
             [
-                "WARNING Unsupported Kubernetes version ''. "
-                "Supported versions are v1.21, v1.22, v1.23.",
+                "WARNING Unsupported Kubernetes version ''. " + SUPPORTED_VERSION_STR,
                 "WARNING Processing data is done on a best effort basis.",
             ],
-        ),
-        (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.21.0"), major=1, minor=21),
-            [],
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("v1.22.1"), major=1, minor=22),
@@ -291,9 +287,12 @@ def test_decompose_git_version(
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("v1.24.0"), major=1, minor=24),
+            [],
+        ),
+        (
+            api.KubernetesVersion(git_version=api.GitVersion("v1.27.0"), major=1, minor=27),
             [
-                "WARNING Unsupported Kubernetes version 'v1.24.0'. "
-                "Supported versions are v1.21, v1.22, v1.23.",
+                "WARNING Unsupported Kubernetes version 'v1.27.0'. " + SUPPORTED_VERSION_STR,
                 "WARNING Processing data is done on a best effort basis.",
             ],
         ),
@@ -316,13 +315,13 @@ def test__verify_version_support_continue_processing(
             api.KubernetesVersion(git_version=api.GitVersion("v1.16.0"), major=1, minor=16),
             "Unsupported Kubernetes version 'v1.16.0'. API Servers with version < v1.21 are "
             "known to return incompatible data. Aborting processing API data. "
-            "Supported versions are v1.21, v1.22, v1.23.",
+            + SUPPORTED_VERSION_STR,
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("1.14.0"), major=1, minor=14),
             "Unsupported Kubernetes version '1.14.0'. API Servers with version < v1.21 are "
             "known to return incompatible data. Aborting processing API data. "
-            "Supported versions are v1.21, v1.22, v1.23.",
+            + SUPPORTED_VERSION_STR,
         ),
     ],
 )

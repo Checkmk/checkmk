@@ -50,6 +50,7 @@ BROWSER_ENGINES = "chromium"
 	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
 	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
 	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker test-gui-e2e test-gui-e2e-docker \
+	test-update test-update-docker \
 	test-integration test-integration-docker test-integration-docker-debug \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
@@ -264,6 +265,12 @@ test-gui-e2e: prepare-playwright
 
 test-gui-e2e-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"
+
+test-update:
+	$(PYTEST) -T update --log-cli-level=INFO $(realpath update/test_update.py)
+
+test-update-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-update"
 
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"

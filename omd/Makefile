@@ -122,7 +122,7 @@ ARCH := $(shell uname -m)
 CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 BOM := bill-of-materials.json
 
-.PHONY: install cma rpm deb clean setversion install-clean
+.PHONY: install cma rpm deb clean install-clean
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL)
@@ -306,12 +306,6 @@ deb: debian/changelog debian/control
 	    -i.gitignore -I.gitignore \
 	    -rfakeroot \
 	    $$TARGET
-
-setversion:
-# NEW_VERSION should be set on the command line.  Replace all '/' since sed
-# tries to interpret them '/' might occur in custom branches filenames and sed
-# arguments should not contain '/'
-	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT) ; \
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)

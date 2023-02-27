@@ -34,6 +34,7 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
         return response
 
     args = agent_aws_status.parse_arguments([])
+    discovery_param = agent_aws_status.DiscoveryParam.parse_obj(vars(args))
 
     # Act
     agent_aws_status.write_section(args, get_rss=_get_rss)
@@ -41,7 +42,7 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert captured.out.split("\n") == [
         "<<<aws_status:sep(0)>>>",
-        agent_aws_status.AgentOutput(rss_str=RSS_STR).json(),
+        agent_aws_status.AgentOutput(discovery_param=discovery_param, rss_str=RSS_STR).json(),
         "",
     ]
     assert captured.err == ""

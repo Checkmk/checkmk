@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import calendar
+import dataclasses
 import enum
 import itertools
 import time
@@ -38,6 +39,8 @@ class TitleType(enum.StrEnum):
 Seconds = typing.NewType("Seconds", float)
 
 _IGNORE_ENTRIES_OLDER_THAN = Seconds(60 * 60 * 24 * 3)  # Product-Management decision
+
+AWS_REGIONS_MAP: typing.Final = dict(aws_constants.AWSRegions)
 
 
 class Entry(pydantic.BaseModel):
@@ -79,6 +82,17 @@ class AWSRSSFeed(pydantic.BaseModel):
         return cls.parse_obj(feedparser.parse(element))
 
 
+class DiscoveryParam(pydantic.BaseModel):
+    """Config scheme: discovery for aws_status.
+
+    This configuration not needed in the special agent, it is used by the discovery function of
+    aws_status. Configuration is passed in the special agent rule, so the user has a all-in-one
+    view.
+    """
+
+    regions: list[str]
+
+
 class AgentOutput(pydantic.BaseModel):
     """Section scheme: aws_status
 
@@ -86,12 +100,22 @@ class AgentOutput(pydantic.BaseModel):
     function.
     """
 
+    discovery_param: DiscoveryParam
     rss_str: str
 
 
-def parse_string_table(string_table: type_defs.StringTable) -> AWSRSSFeed:
+@dataclasses.dataclass(frozen=True)
+class Section:
+    discovery_param: DiscoveryParam
+    aws_rss_feed: AWSRSSFeed
+
+
+def parse_string_table(string_table: type_defs.StringTable) -> Section:
     agent_output = AgentOutput.parse_raw(string_table[0][0])
-    return AWSRSSFeed.parse_rss(agent_output.rss_str)
+    return Section(
+        discovery_param=agent_output.discovery_param,
+        aws_rss_feed=AWSRSSFeed.parse_rss(agent_output.rss_str),
+    )
 
 
 class SortedEntries(list[Entry]):
@@ -107,22 +131,22 @@ v1.register.agent_section(
 )
 
 
-def discover_aws_status(section: AWSRSSFeed) -> type_defs.DiscoveryResult:
+def discover_aws_status(section: Section) -> type_defs.DiscoveryResult:
     yield v1.Service(item="Global")
-    for _id, region in aws_constants.AWSRegions:
-        yield v1.Service(item=region)
+    for region in section.discovery_param.regions:
+        yield v1.Service(item=AWS_REGIONS_MAP[region])
 
 
-def check_aws_status(item: str, section: AWSRSSFeed) -> type_defs.CheckResult:
-    yield from _check_aws_status(Seconds(time.time()), item, section)
+def check_aws_status(item: str, section: Section) -> type_defs.CheckResult:
+    yield from _check_aws_status(Seconds(time.time()), item, section.aws_rss_feed)
 
 
 def _check_aws_status(
     current_time: Seconds,
     item: str,
-    section: AWSRSSFeed,
+    rss_feed: AWSRSSFeed,
 ) -> type_defs.CheckResult:
-    entries_for_region = _restrict_to_region(section.entries, item)
+    entries_for_region = _restrict_to_region(rss_feed.entries, item)
     relevant_entries = _obtain_recent_entries(
         current_time,
         _sort_newest_entry_first(entries_for_region),
@@ -188,7 +212,6 @@ def _state_from_entry(entry: Entry) -> v1.State:
 
 v1.register.check_plugin(
     name="aws_status",
-    # TODO: CMK-8322
     service_name="AWS Status %s",
     discovery_function=discover_aws_status,
     check_function=check_aws_status,

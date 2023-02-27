@@ -10,6 +10,6 @@ def test_aws_status_argument_parsing() -> None:
     # Assemble
     agent = SpecialAgent("agent_aws_status")
     # Act
-    arguments = agent.argument_func({}, "host", "ipaddress")
+    arguments = agent.argument_func({"regions": ["us-east-1"]}, "host", "ipaddress")
     # Assert
-    assert arguments == []
+    assert arguments == ["us-east-1"]

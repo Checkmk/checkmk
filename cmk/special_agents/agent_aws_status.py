@@ -21,17 +21,35 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 Seconds = typing.NewType("Seconds", float)
 
 
+class DiscoveryParam(pydantic.BaseModel):
+    """Config scheme: discovery for aws_status.
+
+    This configuration is not needed in the special agent, it is used by the discovery function of
+    aws_status. Configuration is passed in the special agent rule, so the user has a all-in-one
+    view.
+    """
+
+    regions: list[str]
+
+
 class AgentOutput(pydantic.BaseModel):
     """Section scheme: aws_status
 
     Internal json, which is used to forward the rss feed between agent_aws_status and the check.
     """
 
+    discovery_param: DiscoveryParam
     rss_str: str
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument(
+        "regions",
+        nargs="*",
+        metavar="REGION1 REGION2",
+        help="Regions, for which Checkmk services are discovered.",
+    )
     return parser.parse_args(argv)
 
 
@@ -39,9 +57,12 @@ def _get_rss() -> requests.Response:
     return requests.get("https://status.aws.amazon.com/rss/all.rss")
 
 
-def write_section(_args: Args, get_rss: typing.Callable[[], requests.Response] = _get_rss) -> int:
+def write_section(args: Args, get_rss: typing.Callable[[], requests.Response] = _get_rss) -> int:
     response = get_rss()
-    section = AgentOutput(rss_str=response.text)
+    section = AgentOutput(
+        discovery_param=DiscoveryParam.parse_obj(vars(args)),
+        rss_str=response.text,
+    )
     with agent_common.SectionWriter("aws_status") as writer:
         writer.append(section.json())
     return 0

@@ -48,6 +48,14 @@ class OutdatedEntryFactory(EntryFactory):
         )
 
 
+class DiscoveryParamFactory(pydantic_factories.ModelFactory):
+    __model__ = aws_status.DiscoveryParam
+
+
+class AgentOutputFactory(pydantic_factories.ModelFactory):
+    __model__ = aws_status.AgentOutput
+
+
 def test_parse_string_table() -> None:
     # Assemble
     rss_str = """
@@ -84,18 +92,23 @@ def test_parse_string_table() -> None:
       </channel>
     </rss>
     """
-    string_table = [[aws_status.AgentOutput(rss_str=rss_str).json()]]
+    string_table = [[AgentOutputFactory.build(rss_str=rss_str).json()]]
     # Act
     section = aws_status.parse_string_table(string_table)
     # Assert
-    assert section.entries
+    assert section.aws_rss_feed.entries
 
 
-@pytest.mark.parametrize("size", [0, 2, 4])
-def test_discovery_aws_status(size: int) -> None:
-    section = aws_status.AWSRSSFeed(entries=EntryFactory.batch(size=size))
+@pytest.mark.parametrize("feed_size", [0, 2, 4])
+def test_discovery_aws_status(feed_size: int) -> None:
+    regions = ["us-east-1", "us-east-2"]
+    section = aws_status.Section(
+        discovery_param=aws_status.DiscoveryParam(regions=regions),
+        aws_rss_feed=aws_status.AWSRSSFeed(entries=EntryFactory.batch(size=feed_size)),
+    )
     discovery_results = list(aws_status.discover_aws_status(section))
     assert any(v1.Service(item="Global") == service for service in discovery_results)
+    assert len(discovery_results) == 1 + len(regions)
 
 
 @pytest.mark.parametrize(
@@ -149,13 +162,13 @@ def test_region(entry: aws_status.Entry, expected_region: str) -> None:
 
 
 def test__check_aws_status_no_issues() -> None:
-    section = aws_status.AWSRSSFeed(entries=[])
-    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", section))
+    rss_feed = aws_status.AWSRSSFeed(entries=[])
+    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", rss_feed))
     assert [v1.Result(state=v1.State.OK, summary="No issues")] == check_result
 
 
 def test__check_aws_status_remove_outdated() -> None:
-    section = aws_status.AWSRSSFeed(
+    rss_feed = aws_status.AWSRSSFeed(
         entries=[
             OutdatedEntryFactory.build(
                 link="http://status.aws.amazon.com/",
@@ -167,12 +180,12 @@ def test__check_aws_status_remove_outdated() -> None:
             ),
         ]
     )
-    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", section))
+    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", rss_feed))
     assert [v1.Result(state=v1.State.OK, summary="No issues")] == check_result
 
 
 def test__check_aws_status_global_issues() -> None:
-    section = aws_status.AWSRSSFeed(
+    rss_feed = aws_status.AWSRSSFeed(
         entries=[
             RecentEntryFactory.build(
                 link="http://status.aws.amazon.com/",
@@ -184,8 +197,8 @@ def test__check_aws_status_global_issues() -> None:
             ),
         ]
     )
-    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", section))
-    assert len(check_result) == 1 + len(section.entries)
+    check_result = list(aws_status._check_aws_status(CURRENT_TIME, "Global", rss_feed))
+    assert len(check_result) == 1 + len(rss_feed.entries)
 
 
 def test__restrict_to_region() -> None:

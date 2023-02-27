@@ -308,7 +308,7 @@ class ApiErrorFactory:
     def error_from_data(error_data: Any) -> ApiError:
         try:
             error_code = error_data["code"]
-            error_cls = ApiErrorFactory._ERROR_CLASS_BY_CODE[error_code]
+            error_cls = ApiErrorFactory._ERROR_CLASS_BY_CODE.get(error_code, ApiError)
             return error_cls(error_data.get("message", error_data))
         except Exception:
             return ApiError(error_data)

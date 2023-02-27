@@ -121,29 +121,26 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
 
-        try:
-            store.acquire_lock(self._path)
+        with store.locked(self._path):
+            try:
+                if self._path.stat().st_mtime == self._last_sync:
+                    self._log_debug("already loaded")
+                else:
+                    self._log_debug("loading from disk")
+                    self._data = self._deserializer(
+                        store.load_text_from_file(self._path, default="{}", lock=False)
+                    )
 
-            if self._path.stat().st_mtime == self._last_sync:
-                self._log_debug("already loaded")
-            else:
-                self._log_debug("loading from disk")
-                self._data = self._deserializer(
-                    store.load_text_from_file(self._path, default="{}", lock=False)
-                )
+                if removed or updated:
+                    data = {k: v for k, v in self._data.items() if k not in removed}
+                    data.update(updated)
+                    self._log_debug("writing to disk")
+                    store.save_text_to_file(self._path, self._serializer(data))
+                    self._data = data
 
-            if removed or updated:
-                data = {k: v for k, v in self._data.items() if k not in removed}
-                data.update(updated)
-                self._log_debug("writing to disk")
-                store.save_text_to_file(self._path, self._serializer(data))
-                self._data = data
-
-            self._last_sync = self._path.stat().st_mtime
-        except Exception as exc:
-            raise MKGeneralException from exc
-        finally:
-            store.release_lock(self._path)
+                self._last_sync = self._path.stat().st_mtime
+            except Exception as exc:
+                raise MKGeneralException from exc
 
 
 class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too-many-ancestors

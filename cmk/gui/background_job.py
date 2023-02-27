@@ -644,11 +644,8 @@ class BackgroundJob:
         return status
 
     def start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
-        try:
-            store.acquire_lock(self._job_initializiation_lock)
+        with store.locked(self._job_initializiation_lock):
             self._start(target)
-        finally:
-            store.release_lock(self._job_initializiation_lock)
 
     def _start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
         if self.is_active():

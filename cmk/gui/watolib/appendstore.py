@@ -96,21 +96,15 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
 
     def append(self, entry: _VT) -> None:
         path = self._path
-        try:
-            store.acquire_lock(path)
-
-            with path.open("ab+") as f:
-                f.write(repr(self._serialize(entry)).encode("utf-8") + b"\0")
-                f.flush()
-                os.fsync(f.fileno())
-
-            path.chmod(0o660)
-
-        except Exception as e:
-            raise MKGeneralException(_('Cannot write file "%s": %s') % (path, e))
-
-        finally:
-            store.release_lock(path)
+        with store.locked(path):
+            try:
+                with path.open("ab+") as f:
+                    f.write(repr(self._serialize(entry)).encode("utf-8") + b"\0")
+                    f.flush()
+                    os.fsync(f.fileno())
+                path.chmod(0o660)
+            except Exception as e:
+                raise MKGeneralException(_('Cannot write file "%s": %s') % (path, e))
 
     def clear(self) -> None:
         self._path.unlink(missing_ok=True)

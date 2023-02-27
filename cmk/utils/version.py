@@ -146,15 +146,15 @@ _Version = Union[_DailyVersion, _NoneDailyVersion]
 @functools.total_ordering
 class Version:
     # Regular expression patterns
-    _PAT_BASE: str = r"([1-9]?\d)\.([1-9]?\d)\.([1-9]?\d)"  # e.g. "2.1.0"
-    _PAT_DATE: str = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
-    _PAT_BUILD: str = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
-    _pat_stable: str = rf"{_PAT_BASE}(?:{_PAT_BUILD})?"  # e.g. "2.1.0p17"
+    _PAT_BASE = r"([1-9]?\d)\.([1-9]?\d)\.([1-9]?\d)"  # e.g. "2.1.0"
+    _PAT_DATE = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
+    _PAT_BUILD = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
+    _RGX_STABLE = re.compile(rf"{_PAT_BASE}(?:{_PAT_BUILD})?")  # e.g. "2.1.0p17"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
-    _pat_daily: str = f"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?"
+    _RGX_DAILY = re.compile(rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?")
 
     def __init__(self, vstring: str) -> None:
         try:
@@ -172,8 +172,7 @@ class Version:
     @classmethod
     def _parse_release_version(cls, vstring: str) -> _NoneDailyVersion:
         # Match the version pattern on vstring and check if there is a match
-        match = re.match("^%s$" % cls._pat_stable, vstring)
-        if not match:
+        if not (match := cls._RGX_STABLE.fullmatch(vstring)):
             raise ValueError('Invalid version string "%s"' % vstring)
 
         major, minor, sub, vtype, patch = match.group(1, 2, 3, 4, 5)
@@ -194,8 +193,7 @@ class Version:
     @classmethod
     def _parse_daily_version(cls, vstring: str) -> _DailyVersion:
         # Match the version pattern on vstring and check if there is a match
-        match = re.match("^%s$" % cls._pat_daily, vstring)
-        if not match:
+        if not (match := cls._RGX_DAILY.fullmatch(vstring)):
             raise ValueError('Invalid version string "%s"' % vstring)
 
         (major, minor, sub, year, month, day) = match.group(1, 2, 3, 4, 5, 6)

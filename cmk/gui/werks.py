@@ -146,7 +146,7 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         )
         html.close_div()
 
-        version_major_minor = re.sub(r".\d+$", "", Version(__version__).version_base)
+        version_major_minor = re.sub(r".\d+$", "", Version.from_str(__version__).version_base)
         if version_major_minor:
             current_version_link = "https://checkmk.com/product/checkmk-%s" % version_major_minor
         else:
@@ -567,7 +567,7 @@ def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, Val
                     TextInput(label=_("to:"), size=12),
                 ],
             ),
-            (Version(__version__).version_base, ""),
+            (Version.from_str(__version__).version_base, ""),
         ),
         (
             "grouping",

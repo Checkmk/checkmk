@@ -55,7 +55,7 @@ def test_serialization() -> None:
         },
     )
     assert automation_res_test == AutomationResultTest.deserialize(
-        automation_res_test.serialize(cmk_version.Version(cmk_version.__version__))
+        automation_res_test.serialize(cmk_version.Version.from_str(cmk_version.__version__))
     )
 
 
@@ -92,7 +92,7 @@ class TestDiscoveryResult:
     def test_serialization(self) -> None:
         assert ServiceDiscoveryResult.deserialize(
             ServiceDiscoveryResult(self.HOSTS).serialize(
-                cmk_version.Version(cmk_version.__version__)
+                cmk_version.Version.from_str(cmk_version.__version__)
             )
         ) == ServiceDiscoveryResult(self.HOSTS)
 
@@ -124,7 +124,7 @@ class TestTryDiscoveryResult:
         )
         assert (
             ServiceDiscoveryPreviewResult.deserialize(
-                result.serialize(cmk_version.Version(cmk_version.__version__))
+                result.serialize(cmk_version.Version.from_str(cmk_version.__version__))
             )
             == result
         )

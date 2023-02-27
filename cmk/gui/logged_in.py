@@ -414,7 +414,7 @@ class LoggedInUser:
             return 0
 
     def get_docs_base_url(self) -> str:
-        version = Version(__version__).version_base
+        version = Version.from_str(__version__).version_base
         version = version if version != "" else "master"
         return "https://docs.checkmk.com/{}/{}".format(
             version, "de" if self.language == "de" else "en"

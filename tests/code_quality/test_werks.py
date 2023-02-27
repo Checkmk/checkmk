@@ -58,10 +58,10 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 
 
 def test_werk_versions(precompiled_werks: None) -> None:
-    parsed_version = cmk_version.Version(cmk_version.__version__)
+    parsed_version = cmk_version.Version.from_str(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
-        parsed_werk_version = cmk_version.Version(werk["version"])
+        parsed_werk_version = cmk_version.Version.from_str(werk["version"])
 
         assert (
             parsed_werk_version <= parsed_version
@@ -100,7 +100,7 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
         if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
             werk_tags = sorted(
                 _tags_containing_werk(werk_id),
-                key=lambda t: cmk_version.Version(t[1:]),
+                key=lambda t: cmk_version.Version.from_str(t[1:]),
             )
             list_of_offenders.append(
                 (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-")

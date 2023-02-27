@@ -76,7 +76,7 @@ class Automations:
         finally:
             profiling.output_profile()
 
-        out.output(result.serialize(cmk_version.Version(cmk_version.__version__)))
+        out.output(result.serialize(cmk_version.Version.from_str(cmk_version.__version__)))
         out.output("\n")
 
         return 0

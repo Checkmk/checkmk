@@ -61,7 +61,7 @@ class MKAutomationException(MKGeneralException):
 
 def cmk_version_of_remote_automation_source() -> cmk_version.Version:
     # The header is sent by Checkmk as of 2.0.0p1. In case it is missing, assume we are too old.
-    return cmk_version.Version(request.headers.get("x-checkmk-version", "1.6.0p1"))
+    return cmk_version.Version.from_str(request.headers.get("x-checkmk-version", "1.6.0p1"))
 
 
 def check_mk_local_automation_serialized(
@@ -723,6 +723,6 @@ def compatible_with_central_site(
         return EditionsIncompatible("Mix of CME and non-CME is not supported.")
 
     return cmk_version.versions_compatible(
-        cmk_version.Version(central_version),
-        cmk_version.Version(remote_version),
+        cmk_version.Version.from_str(central_version),
+        cmk_version.Version.from_str(remote_version),
     )

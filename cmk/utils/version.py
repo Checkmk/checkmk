@@ -11,7 +11,6 @@ from __future__ import annotations
 
 __version__ = "2.3.0b1"
 
-import datetime
 import enum
 import functools
 import os
@@ -22,9 +21,7 @@ import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Final, NamedTuple, Union
-
-from typing_extensions import assert_never
+from typing import Any, Final, NamedTuple, Self
 
 import cmk.utils.paths
 from cmk.utils.i18n import _
@@ -91,56 +88,54 @@ def is_cma() -> bool:
 # _PatchVersion:            <base><build>       e.g. 1.2.3p4
 # _MasterDailyVersion:      <date>              e.g. 2021.12.24
 # _StableDailyVersion:      <base>-<date>       e.g. 1.2.3-2021.12.24
-@dataclass
+
+
+class RType(enum.IntEnum):
+    i = 0
+    b = 1
+    na = 2
+    p = 3
+    daily = 4
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self.name}"
+
+
+@dataclass(order=True)
+class _BuildDate:
+    year: int
+    month: int
+    day: int
+
+    def __str__(self) -> str:
+        return f"{self.year:04}.{self.month:02}.{self.day:02}"
+
+
+@dataclass(order=True)
+class _Release:
+    r_type: RType
+    value: int | _BuildDate
+
+    def suffix(self) -> str:
+        if self.r_type is RType.na:
+            return ""
+        if self.r_type is RType.daily:
+            return f"-{self.value}"
+        return f"{self.r_type.name}{self.value}"
+
+    @classmethod
+    def unspecified(cls) -> Self:
+        return cls(RType.na, 0)
+
+
+@dataclass(order=True)
 class _BaseVersion:
     major: int
     minor: int
     sub: int
 
-
-@dataclass
-class _VersionDate:
-    date: datetime.date
-
-
-@dataclass
-class _StableVersion(_BaseVersion):
-    pass
-
-
-@dataclass
-class _BetaVersion(_BaseVersion):
-    vtype = "b"
-    patch: int
-
-
-@dataclass
-class _InnovationVersion(_BaseVersion):
-    vtype = "i"
-    patch: int
-
-
-@dataclass
-class _PatchVersion(_BaseVersion):
-    vtype = "p"
-    patch: int
-
-
-@dataclass
-class _MasterDailyVersion(_VersionDate):
-    pass
-
-
-@dataclass
-class _StableDailyVersion(_VersionDate, _BaseVersion):
-    # Order of attributes: major, minor, sub, date
-    pass
-
-
-_NoneDailyVersion = _StableVersion | _BetaVersion | _InnovationVersion | _PatchVersion
-_DailyVersion = _MasterDailyVersion | _StableDailyVersion
-# We still need "Union" because of https://github.com/python/mypy/issues/12005
-_Version = Union[_DailyVersion, _NoneDailyVersion]
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.sub}"
 
 
 @functools.total_ordering
@@ -156,160 +151,72 @@ class Version:
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
     _RGX_DAILY = re.compile(rf"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?")
 
-    def __init__(self, vstring: str) -> None:
+    @classmethod
+    def from_str(cls, raw: str) -> Self:
         try:
-            self.version: _Version = self._parse_release_version(vstring)
+            return cls._parse_release_version(raw)
         except ValueError:
-            self.version = self._parse_daily_version(vstring)
-
-    @property
-    def version_base(self) -> str:
-        v = self.version
-        if isinstance(v, _MasterDailyVersion):
-            return ""
-        return "%d.%d.%d" % (v.major, v.minor, v.sub)
+            return cls._parse_daily_version(raw)
 
     @classmethod
-    def _parse_release_version(cls, vstring: str) -> _NoneDailyVersion:
-        # Match the version pattern on vstring and check if there is a match
+    def _parse_release_version(cls, vstring: str) -> Self:
         if not (match := cls._RGX_STABLE.fullmatch(vstring)):
             raise ValueError('Invalid version string "%s"' % vstring)
 
-        major, minor, sub, vtype, patch = match.group(1, 2, 3, 4, 5)
+        match match.group(1, 2, 3, 4, 5):
+            case major, minor, sub, None, None:
+                return cls(_BaseVersion(int(major), int(minor), int(sub)), _Release.unspecified())
+            case major, minor, sub, r_type, patch:
+                return cls(
+                    _BaseVersion(int(major), int(minor), int(sub)),
+                    _Release(RType[r_type], int(patch)),
+                )
 
-        if vtype is None and patch is None:
-            return _StableVersion(int(major), int(minor), int(sub))
-        if vtype == "b":
-            return _BetaVersion(int(major), int(minor), int(sub), int(patch))
-        if vtype == "i":
-            return _InnovationVersion(int(major), int(minor), int(sub), int(patch))
-        if vtype == "p":
-            return _PatchVersion(int(major), int(minor), int(sub), int(patch))
-
-        raise ValueError(
-            f'Invalid version type "{vtype}". Cannot parse version string "{vstring}".'
-        )
+        raise ValueError(f'Cannot parse version string "{vstring}".')
 
     @classmethod
-    def _parse_daily_version(cls, vstring: str) -> _DailyVersion:
-        # Match the version pattern on vstring and check if there is a match
+    def _parse_daily_version(cls, vstring: str) -> Self:
         if not (match := cls._RGX_DAILY.fullmatch(vstring)):
             raise ValueError('Invalid version string "%s"' % vstring)
 
         (major, minor, sub, year, month, day) = match.group(1, 2, 3, 4, 5, 6)
 
-        if all(x is None for x in (major, minor, sub)):
-            return _MasterDailyVersion(datetime.date(int(year), int(month), int(day)))
-
-        return _StableDailyVersion(
-            int(major), int(minor), int(sub), datetime.date(int(year), int(month), int(day))
+        return cls(
+            None
+            if all(x is None for x in (major, minor, sub))
+            else _BaseVersion(int(major), int(minor), int(sub)),
+            _Release(RType.daily, _BuildDate(int(year), int(month), int(day))),
         )
 
+    def __init__(self, base: _BaseVersion | None, release: _Release) -> None:
+        self.base: Final = base
+        self.release: Final = release
+
+    @property
+    def version_base(self) -> str:
+        return "" if self.base is None else str(self.base)
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}('{self}')"
+        return f"{self.__class__.__name__}({self.base!r}, {self.release!r})"
 
     def __str__(self) -> str:
-        v = self.version
-        if isinstance(v, _StableVersion):
-            return "%d.%d.%d" % (v.major, v.minor, v.sub)
-
-        if isinstance(v, (_BetaVersion, _InnovationVersion, _PatchVersion)):
-            return "%d.%d.%d%s%d" % (v.major, v.minor, v.sub, v.vtype, v.patch)
-
-        if isinstance(v, _MasterDailyVersion):
-            return v.date.strftime("%Y.%m.%d")
-
-        if isinstance(v, _StableDailyVersion):
-            return "%d.%d.%d-%s" % (v.major, v.minor, v.sub, v.date.strftime("%Y.%m.%d"))
-
-        return assert_never(v)
+        return f"{'' if self.base is None else self.base}{self.release.suffix()}".lstrip("-")
 
     def __lt__(self, other: Version) -> bool:
-        return self._cmp(other) < 0
+        if not isinstance(other, Version):
+            return NotImplemented
+        if self.base == other.base:
+            return self.release < other.release
+        if self.base is None:
+            return False
+        if other.base is None:
+            return True
+        return self.base < other.base
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Version):
-            return self._cmp(other) == 0
-        raise ValueError('Invalid version comparison of non-version object "%s"' % other)
-
-    def _cmp(self, other: Version) -> int:
-        v = self.version
-        o_v = other.version
-
-        # Check for master daily version
-        if isinstance(v, _MasterDailyVersion):
-            if isinstance(o_v, _MasterDailyVersion):
-                return self._cmp_date(o_v)
-            return 1  # master daily > none master daily
-        if isinstance(o_v, _MasterDailyVersion):
-            return -1  # none master daily < master daily
-
-        # Compare version bases
-        base_cmp_result = self._cmp_version_base(o_v)
-        if base_cmp_result != 0:  # different version bases
-            return base_cmp_result
-
-        # Same version base -> Check for stable daily version
-        if isinstance(v, _StableDailyVersion):
-            if isinstance(o_v, _StableDailyVersion):
-                return self._cmp_date(o_v)
-            return 1  # stable daily > none stable daily
-        if isinstance(o_v, _StableDailyVersion):
-            return -1  # none stable daily < stable daily
-
-        # Compare version builds
-        return self._cmp_version_build(o_v)
-
-    def _cmp_version_base(self, o_v: _Version) -> int:
-        v = self.version
-
-        if isinstance(v, _MasterDailyVersion):
-            raise ValueError('%s does not have a version base "<major>.<minor>.<sub>"' % v)
-        if isinstance(o_v, _MasterDailyVersion):
-            raise ValueError('%s does not have a version base "<major>.<minor>.<sub>"' % o_v)
-
-        version_base: tuple[int, int, int] = (v.major, v.minor, v.sub)
-        o_version_base: tuple[int, int, int] = (o_v.major, o_v.minor, o_v.sub)
-
-        return (version_base > o_version_base) - (version_base < o_version_base)
-
-    def _cmp_version_build(self, o_v: _Version) -> int:
-        v = self.version
-
-        # Compare vtype and patch number with tuples holding numeric values for vtype and patch
-        # ([0-3], [0-9]+)
-        numeric_build: tuple[int, int] = self._get_numeric_build(v)
-        o_numeric_build: tuple[int, int] = self._get_numeric_build(o_v)
-
-        return (numeric_build > o_numeric_build) - (numeric_build < o_numeric_build)
-
-    @staticmethod
-    def _get_numeric_build(v: _Version) -> tuple[int, int]:
-        if isinstance(v, (_MasterDailyVersion, _StableDailyVersion)):
-            raise ValueError('%s does not have a version build "<vtype><patch>"' % v)
-
-        vtype_map: dict[str, int] = {
-            "i": 0,  # innovation
-            "b": 1,  # beta
-            "s": 2,  # stable
-            "p": 3,  # patch-level
-        }
-
-        if isinstance(v, (_StableVersion)):
-            return (vtype_map["s"], 0)
-        if isinstance(v, (_BetaVersion, _InnovationVersion, _PatchVersion)):
-            return (vtype_map[v.vtype], v.patch)
-        return None
-
-    def _cmp_date(self, o_v: _Version) -> int:
-        v = self.version
-
-        if not isinstance(v, (_MasterDailyVersion, _StableDailyVersion)):
-            raise ValueError('%s does not have a date "<year>.<month>.<day>".' % v)
-        if not isinstance(o_v, (_MasterDailyVersion, _StableDailyVersion)):
-            raise ValueError('%s does not have a date "<year>.<month>.<day>".' % o_v)
-
-        return (v.date > o_v.date) - (v.date < o_v.date)
+        if not isinstance(other, Version):
+            return NotImplemented
+        return self.base == other.base and self.release == other.release
 
 
 VERSION_PATTERN = re.compile(r"^([.\-a-z]+)?(\d+)")
@@ -506,63 +413,63 @@ def versions_compatible(
     Nightly build of master branch is always compatible as we don't know which major version it
     belongs to. It's also not that important to validate this case.
 
-    >>> isinstance(c(Version("2.0.0i1"), Version("2021.12.13")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.0.0i1"), Version.from_str("2021.12.13")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("2021.12.13"), Version("2.0.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2021.12.13"), Version.from_str("2.0.0i1")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("2021.12.13"), Version("2022.01.01")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2021.12.13"), Version.from_str("2022.01.01")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("2022.01.01"), Version("2021.12.13")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2022.01.01"), Version.from_str("2021.12.13")), VersionsCompatible)
     True
 
     Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
 
-    >>> isinstance(c(Version("2.0.0-2022.01.01"), Version("2.0.0p3")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.0.0-2022.01.01"), Version.from_str("2.0.0p3")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("2.0.0p3"), Version("2.0.0-2022.01.01")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.0.0p3"), Version.from_str("2.0.0-2022.01.01")), VersionsCompatible)
     True
 
     Same major is allowed
 
-    >>> isinstance(c(Version("2.0.0i1"), Version("2.0.0p3")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.0.0i1"), Version.from_str("2.0.0p3")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("2.0.0p3"), Version("2.0.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.0.0p3"), Version.from_str("2.0.0i1")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("2.0.0p3"), Version("2.0.0p3")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.0.0p3"), Version.from_str("2.0.0p3")), VersionsCompatible)
     True
 
     Prev major to new is allowed #1
 
-    >>> isinstance(c(Version("1.6.0i1"), Version("2.0.0")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("1.6.0i1"), Version.from_str("2.0.0")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("1.6.0p23"), Version("2.0.0")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("1.6.0p23"), Version.from_str("2.0.0")), VersionsCompatible)
     True
-    >>> isinstance(c(Version("2.0.0p12"), Version("2.1.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.0.0p12"), Version.from_str("2.1.0i1")), VersionsCompatible)
     True
 
     Prepre major to new not allowed
 
-    >>> str(c(Version("1.6.0p1"), Version("2.1.0p3")))
+    >>> str(c(Version.from_str("1.6.0p1"), Version.from_str("2.1.0p3")))
     'Target version too new (one major version jump at maximum).'
-    >>> str(c(Version("1.6.0p1"), Version("2.1.0b1")))
+    >>> str(c(Version.from_str("1.6.0p1"), Version.from_str("2.1.0b1")))
     'Target version too new (one major version jump at maximum).'
-    >>> str(c(Version("1.5.0i1"), Version("2.0.0")))
+    >>> str(c(Version.from_str("1.5.0i1"), Version.from_str("2.0.0")))
     'Target version too new (one major version jump at maximum).'
-    >>> str(c(Version("1.4.0"), Version("2.0.0")))
+    >>> str(c(Version.from_str("1.4.0"), Version.from_str("2.0.0")))
     'Target version too new (one major version jump at maximum).'
 
     New major to old not allowed
 
-    >>> str(c(Version("2.0.0"), Version("1.6.0p1")))
+    >>> str(c(Version.from_str("2.0.0"), Version.from_str("1.6.0p1")))
     'Target version too old (older major version is not supported).'
-    >>> str(c(Version("2.1.0"), Version("2.0.0b1")))
+    >>> str(c(Version.from_str("2.1.0"), Version.from_str("2.0.0b1")))
     'Target version too old (older major version is not supported).'
 
     Specific patch release requirements
 
-    >>> isinstance(c(Version("2.2.0p1"), Version("2.3.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.2.0p1"), Version.from_str("2.3.0i1")), VersionsCompatible)
     True
-    >>> str(c(Version("2.2.0b1000"), Version("2.3.0i1")))
+    >>> str(c(Version.from_str("2.2.0b1000"), Version.from_str("2.3.0i1")))
     'This target version requires at least 2.2.0p1'
     """
 
@@ -648,7 +555,7 @@ def versions_compatible(
 _REQUIRED_PATCH_RELEASES_MAP: Final = {
     # max can be evaluated in place, obviously, but we keep a list for documentation.
     (2, 3, 0): max(
-        (Version("2.2.0p1"),),  # at least the last major version, by default.
+        (Version.from_str("2.2.0p1"),),  # at least the last major version, by default.
     ),
 }
 

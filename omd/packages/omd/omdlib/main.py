@@ -2982,13 +2982,13 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
     """
     >>> f = _omd_to_check_mk_version
     >>> f("2.0.0p3.cee")
-    Version('2.0.0p3')
+    Version(_BaseVersion(major=2, minor=0, sub=0), _Release(r_type=RType.p, value=3))
     >>> f("1.6.0p3.cee.demo")
-    Version('1.6.0p3')
+    Version(_BaseVersion(major=1, minor=6, sub=0), _Release(r_type=RType.p, value=3))
     >>> f("2.0.0p3.cee")
-    Version('2.0.0p3')
+    Version(_BaseVersion(major=2, minor=0, sub=0), _Release(r_type=RType.p, value=3))
     >>> f("2021.12.13.cee")
-    Version('2021.12.13')
+    Version(None, _Release(r_type=RType.daily, value=_BuildDate(year=2021, month=12, day=13)))
     """
     parts = omd_version.split(".")
 
@@ -3000,7 +3000,7 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
     # Strip the edition suffix away
     del parts[-1]
 
-    return Version(".".join(parts))
+    return Version.from_str(".".join(parts))
 
 
 def main_umount(

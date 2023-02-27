@@ -27,7 +27,7 @@ class ResultTest(ABCAutomationResult):
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
             self._default_serialize()
-            if for_cmk_version >= cmk_version.Version("2.2.0i1")
+            if for_cmk_version >= cmk_version.Version.from_str("2.2.0i1")
             else SerializedResult("i was very different previously")
         )
 

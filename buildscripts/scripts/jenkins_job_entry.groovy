@@ -34,7 +34,9 @@ def main(job_definition_file) {
 
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {
-        load("${checkout_dir}/${job_definition_file}").main();
+        withEnv(["DOCKER_BUILDKIT=0"]) {
+            load("${checkout_dir}/${job_definition_file}").main();
+        }
     } catch(Exception e) {
         // sh("figlet ERROR");
         dir("${checkout_dir}") {

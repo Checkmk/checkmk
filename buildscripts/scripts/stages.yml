@@ -29,6 +29,9 @@ VARIABLES:
     - NAME: CHANGED_PYTHON_FILES
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-python-files --filter"
 
+    - NAME: CHANGED_SHELL_FILES
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-shell-files --filter"
+
     - NAME: CHANGED_AGENT_CONTROLLER_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
@@ -204,17 +207,20 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
 
     - NAME: 'Shell Format'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_SHELL_FILES
       DIR: 'tests'
       COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
 
     - NAME: 'Shell check'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_SHELL_FILES
       DIR: 'tests'
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
 
     - NAME: 'Shell Unit'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_SHELL_FILES
       DIR: 'tests'
       COMMAND: "make test-unit-shell-docker &> ${RESULTS}/shell-unit.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"

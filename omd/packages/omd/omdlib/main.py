@@ -48,6 +48,7 @@ from typing import (
     Dict,
     IO,
     Iterable,
+    Iterator,
     List,
     NamedTuple,
     NoReturn,
@@ -1498,7 +1499,7 @@ def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -
 
 def config_configure(
     site: SiteContext, global_opts: "GlobalOptions", config_hooks: ConfigHooks
-) -> list[str]:
+) -> Iterator[str]:
     hook_names = sorted(config_hooks.keys())
     current_hook_name: Optional[str] = ""
     menu_open = False
@@ -1532,7 +1533,7 @@ def config_configure(
                 "Exit",
             )
             if not change:
-                return []
+                return
             current_hook_name = None
             menu_open = True
 
@@ -1542,7 +1543,9 @@ def config_configure(
             )
             if change:
                 try:
-                    return config_configure_hook(site, global_opts, config_hooks, current_hook_name)
+                    yield from config_configure_hook(
+                        site, global_opts, config_hooks, current_hook_name
+                    )
                 except MKTerminate:
                     raise
                 except Exception as e:
@@ -1553,13 +1556,13 @@ def config_configure(
 
 def config_configure_hook(
     site: SiteContext, global_opts: "GlobalOptions", config_hooks: ConfigHooks, hook_name: str
-) -> list[str]:
+) -> Iterator[str]:
     if not site.is_stopped():
         if not dialog_yesno(
             "You cannot change configuration value while the "
             "site is running. Do you want me to stop the site now?"
         ):
-            return []
+            return
         stop_site(site)
         dialog_message("The site has been stopped.")
 
@@ -1585,8 +1588,7 @@ def config_configure_hook(
         config_set_value(site, config_hooks, cast(str, hook["name"]), new_value)
         save_site_conf(site)
         config_hooks = load_hook_dependencies(site, config_hooks)
-        return [hook_name]
-    return []
+        yield hook_name
 
 
 def init_action(
@@ -3198,8 +3200,7 @@ def main_config(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
-    if (len(args) == 0 or args[0] != "show") and not site.is_stopped() and global_opts.force:
+    if (not args or args[0] != "show") and not site.is_stopped() and global_opts.force:
         need_start = True
         stop_site(site)
     else:
@@ -3208,7 +3209,7 @@ def main_config(
     config_hooks = load_config_hooks(site)
     set_hooks: list[str] = []
     if len(args) == 0:
-        set_hooks = config_configure(site, global_opts, config_hooks)
+        set_hooks = list(config_configure(site, global_opts, config_hooks))
     else:
         command = args[0]
         args = args[1:]

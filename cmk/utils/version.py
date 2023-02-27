@@ -92,7 +92,7 @@ def is_cma() -> bool:
 # _MasterDailyVersion:      <date>              e.g. 2021.12.24
 # _StableDailyVersion:      <base>-<date>       e.g. 1.2.3-2021.12.24
 @dataclass
-class _VersionBase:
+class _BaseVersion:
     major: int
     minor: int
     sub: int
@@ -104,24 +104,24 @@ class _VersionDate:
 
 
 @dataclass
-class _StableVersion(_VersionBase):
+class _StableVersion(_BaseVersion):
     pass
 
 
 @dataclass
-class _BetaVersion(_VersionBase):
+class _BetaVersion(_BaseVersion):
     vtype = "b"
     patch: int
 
 
 @dataclass
-class _InnovationVersion(_VersionBase):
+class _InnovationVersion(_BaseVersion):
     vtype = "i"
     patch: int
 
 
 @dataclass
-class _PatchVersion(_VersionBase):
+class _PatchVersion(_BaseVersion):
     vtype = "p"
     patch: int
 
@@ -132,7 +132,7 @@ class _MasterDailyVersion(_VersionDate):
 
 
 @dataclass
-class _StableDailyVersion(_VersionDate, _VersionBase):
+class _StableDailyVersion(_VersionDate, _BaseVersion):
     # Order of attributes: major, minor, sub, date
     pass
 
@@ -146,19 +146,19 @@ _Version = Union[_DailyVersion, _NoneDailyVersion]
 @functools.total_ordering
 class Version:
     # Regular expression patterns
-    _pat_base: str = r"([1-9]?\d)\.([1-9]?\d)\.([1-9]?\d)"  # e.g. "2.1.0"
-    _pat_date: str = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
-    _pat_build: str = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
-    _pat_stable: str = rf"{_pat_base}(?:{_pat_build})?"  # e.g. "2.1.0p17"
+    _PAT_BASE: str = r"([1-9]?\d)\.([1-9]?\d)\.([1-9]?\d)"  # e.g. "2.1.0"
+    _PAT_DATE: str = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
+    _PAT_BUILD: str = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
+    _pat_stable: str = rf"{_PAT_BASE}(?:{_PAT_BUILD})?"  # e.g. "2.1.0p17"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
-    _pat_daily: str = f"(?:{_pat_base}-)?{_pat_date}(?:-sandbox.+)?"
+    _pat_daily: str = f"(?:{_PAT_BASE}-)?{_PAT_DATE}(?:-sandbox.+)?"
 
     def __init__(self, vstring: str) -> None:
         try:
-            self.version: _Version = self._parse_none_daily_version(vstring)
+            self.version: _Version = self._parse_release_version(vstring)
         except ValueError:
             self.version = self._parse_daily_version(vstring)
 
@@ -170,7 +170,7 @@ class Version:
         return "%d.%d.%d" % (v.major, v.minor, v.sub)
 
     @classmethod
-    def _parse_none_daily_version(cls, vstring: str) -> _NoneDailyVersion:
+    def _parse_release_version(cls, vstring: str) -> _NoneDailyVersion:
         # Match the version pattern on vstring and check if there is a match
         match = re.match("^%s$" % cls._pat_stable, vstring)
         if not match:

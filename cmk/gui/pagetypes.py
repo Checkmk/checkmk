@@ -600,6 +600,9 @@ class Overridable(Base):
 
     def is_published_to_me(self):
         """Whether or not the page is published to the currently active user"""
+        if not user.may("general.see_user_%s" % self.type_name()):
+            return False
+
         if self._["public"] is True:
             return self.publish_is_allowed()
 
@@ -811,7 +814,6 @@ class Overridable(Base):
             )
         )
 
-        # TODO: Bug: This permission does not seem to be used
         permission_registry.register(
             Permission(
                 section=PermissionSectionGeneral,

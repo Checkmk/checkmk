@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -11,12 +12,10 @@ import pytest
 
 class ChangedFiles(NamedTuple):
     test_all_files: bool
-    file_paths: Sequence[str]
+    file_paths: Collection[Path]
 
-    def is_changed(self, path):
-        if self.test_all_files:
-            return True
-        return str(path) in self.file_paths
+    def is_changed(self, path: Path) -> bool:
+        return self.test_all_files or str(path) in self.file_paths
 
 
 def pytest_addoption(parser):
@@ -38,4 +37,4 @@ def changed_files(request: pytest.FixtureRequest) -> ChangedFiles:
     files = request.config.getoption("--changed-files")
     if not test_all_files and not files:
         pytest.skip()
-    return ChangedFiles(test_all_files=test_all_files, file_paths=files)
+    return ChangedFiles(test_all_files=test_all_files, file_paths={Path(f) for f in files})

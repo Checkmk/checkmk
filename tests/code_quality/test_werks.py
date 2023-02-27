@@ -22,63 +22,6 @@ CVSS_REGEX = re.compile(
 )
 
 
-@pytest.mark.parametrize(
-    "version_str",
-    [
-        "1.2.0",
-        "1.2.0i1",
-        "1.2.0b1",
-        "1.2.0b10",
-        "1.2.0p10",
-        "2.0.0i1",
-        "1.6.0-2020.05.26",
-        "2020.05.26",
-    ],
-)
-def test_old_parse_check_mk_version_equals_new_version_class(
-    version_str: str,
-) -> None:
-    assert (
-        cmk_version.parse_check_mk_version(version_str)
-        == cmk_version.Version(version_str).parse_to_int()
-    )
-
-
-@pytest.mark.parametrize(
-    "version_str_a,version_str_b",
-    [
-        ("1.2.0", "1.2.0i1"),
-        ("1.2.0", "1.2.0b1"),
-        ("1.2.0p1", "1.2.0"),
-        ("1.2.0i2", "1.2.0i1"),
-        ("1.2.0b2", "1.2.0b1"),
-        ("1.2.0p2", "1.2.0p1"),
-        ("1.2.1", "1.2.0"),
-        ("1.3.0", "1.2.1"),
-        ("2.0.0", "1.2.1"),
-        ("2.0.0-2020.05.26", "2.0.0-2020.05.25"),
-        ("2.0.0-2020.05.26", "2.0.0-2020.04.26"),
-        ("2.0.0-2020.05.26", "2.0.0-2019.05.26"),
-        ("2.0.1-2020.05.26", "2.0.0-2020.05.26"),
-        ("2.1.0-2020.05.26", "2.0.0-2020.05.26"),
-        ("2.0.0-2020.05.26", "2.0.0i2"),
-        ("2.0.0-2020.05.26", "2.0.0b2"),
-        ("2.0.0-2020.05.26", "2.0.0"),
-        ("2.0.0-2020.05.26", "2.0.0p7"),
-        ("2020.05.26", "2020.05.25"),
-        ("2020.05.26", "2020.04.26"),
-        ("2020.05.26", "2.0.0-2020.05.25"),
-        ("2022.06.02-sandbox-lm-2.2-thing", "2022.06.01"),
-        ("2.1.0-2022.06.02-sandbox-lm-2.2-thing", "2.1.0-2022.06.01"),
-    ],
-)
-def test_version_comparison(version_str_a: str, version_str_b: str) -> None:
-    a = cmk_version.Version(version_str_a)
-    b = cmk_version.Version(version_str_b)
-
-    assert a > b
-
-
 @pytest.fixture(scope="function", name="precompiled_werks")
 def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")

@@ -586,6 +586,12 @@ def make_special_agent_cmdline(
     agentname: str,
     params: dict,
 ) -> str:
+    """
+    Raises:
+        KeyError if the special agent is deactivated.
+
+    """
+
     def _make_source_path(agentname: str) -> Path:
         file_name = "agent_%s" % agentname
         local_path = cmk.utils.paths.local_agents_dir / "special" / file_name

@@ -440,21 +440,25 @@ class _Builder:
                 FetcherType.SPECIAL_AGENT,
                 SourceType.HOST,
             )
-            fetcher = ProgramFetcher(
-                cmdline=core_config.make_special_agent_cmdline(
-                    self.host_name,
-                    self.ipaddress,
-                    agentname,
-                    params,
-                ),
-                stdin=core_config.make_special_agent_stdin(
-                    self.host_name,
-                    self.ipaddress,
-                    agentname,
-                    params,
-                ),
-                is_cmc=config.is_cmc(),
-            )
+            try:
+                fetcher = ProgramFetcher(
+                    cmdline=core_config.make_special_agent_cmdline(
+                        self.host_name,
+                        self.ipaddress,
+                        agentname,
+                        params,
+                    ),
+                    stdin=core_config.make_special_agent_stdin(
+                        self.host_name,
+                        self.ipaddress,
+                        agentname,
+                        params,
+                    ),
+                    is_cmc=config.is_cmc(),
+                )
+            except KeyError:
+                # Special agent has been deactivated.
+                continue
             file_cache = AgentFileCache(
                 source.hostname,
                 path_template=make_file_cache_path_template(

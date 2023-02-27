@@ -472,14 +472,17 @@ class MgmtApiClient(BaseApiClient):
         super().__init__(base_url)
 
     @staticmethod
-    def _get_available_metrics_from_exception(desired_names, api_error):
+    def _get_available_metrics_from_exception(
+        desired_names: str, api_error: ApiError
+    ) -> str | None:
+        error_message = api_error.args[0]
         if not (
-            api_error.message.startswith("Failed to find metric configuration for provider")
-            and "Valid metrics: " in api_error.message
+            error_message.startswith("Failed to find metric configuration for provider")
+            and "Valid metrics: " in error_message
         ):
             return None
 
-        available_names = api_error.message.split("Valid metrics: ")[1]
+        available_names = error_message.split("Valid metrics: ")[1]
         retry_names = set(desired_names.split(",")) & set(available_names.split(","))
         return ",".join(sorted(retry_names))
 

@@ -276,6 +276,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
 
     - NAME: 'NEB/CMC Compile'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"

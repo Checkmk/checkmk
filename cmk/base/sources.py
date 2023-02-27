@@ -102,10 +102,8 @@ class _Builder:
         config_cache: ConfigCache,
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
-        force_snmp_cache_refresh: bool,
-        simulation_mode: bool,
-        file_cache_options: FileCacheOptions,
-        file_cache_max_age: MaxAge,
+        max_age_agent: MaxAge,
+        max_age_snmp: MaxAge,
     ) -> None:
         super().__init__()
         self.host_name: Final = host_name
@@ -114,10 +112,8 @@ class _Builder:
         self.address_family: Final = address_family
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
-        self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
-        self.simulation_mode: Final = simulation_mode
-        self.file_cache_options: Final = file_cache_options
-        self.file_cache_max_age: Final = file_cache_max_age
+        self.max_age_agent: Final = max_age_agent
+        self.max_age_snmp: Final = max_age_snmp
 
         assert not self.config_cache.is_cluster(self.host_name)
         self._elems: dict[str, Source] = {}
@@ -192,7 +188,7 @@ class _Builder:
             SNMPSource(
                 self.host_name,
                 self.ipaddress,
-                max_age=self._max_age_snmp(),
+                max_age=self.max_age_snmp,
                 on_scan_error=self.on_scan_error,
                 selected_sections=self.selected_sections,
             )
@@ -214,7 +210,7 @@ class _Builder:
                 MgmtSNMPSource(
                     self.host_name,
                     self.ipaddress,
-                    max_age=self._max_age_snmp(),
+                    max_age=self.max_age_snmp,
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
                 )
@@ -226,7 +222,7 @@ class _Builder:
             if ip_address is None:
                 self._add(MissingIPSource(self.host_name, ip_address, "mgmt_ipmi"))
                 return
-            self._add(IPMISource(self.host_name, ip_address, max_age=self._max_age_tcp()))
+            self._add(IPMISource(self.host_name, ip_address, max_age=self.max_age_agent))
         else:
             raise LookupError()
 
@@ -240,7 +236,7 @@ class _Builder:
                     self.host_name,
                     self.ipaddress,
                     config_cache=self.config_cache,
-                    max_age=self._max_age_tcp(),
+                    max_age=self.max_age_agent,
                 )
             )
             return
@@ -267,7 +263,7 @@ class _Builder:
                     TCPSource(
                         self.host_name,
                         self.ipaddress,
-                        max_age=self._max_age_tcp(),
+                        max_age=self.max_age_agent,
                     )
                 )
             case _:
@@ -279,26 +275,10 @@ class _Builder:
                 yield SpecialAgentSource(
                     self.host_name,
                     self.ipaddress,
-                    max_age=self._max_age_tcp(),
+                    max_age=self.max_age_agent,
                     agent_name=agentname,
                     params=params,
                 )
-
-    def _max_age_snmp(self) -> MaxAge:
-        if self.simulation_mode:
-            return MaxAge.unlimited()
-        if self.force_snmp_cache_refresh:
-            return MaxAge.zero()
-        if self.file_cache_options.use_outdated:
-            return MaxAge.unlimited()
-        return self.file_cache_max_age
-
-    def _max_age_tcp(self) -> MaxAge:
-        if self.simulation_mode:
-            return MaxAge.unlimited()
-        if self.file_cache_options.use_outdated:
-            return MaxAge.unlimited()
-        return self.file_cache_max_age
 
 
 def make_sources(
@@ -320,6 +300,22 @@ def make_sources(
         # Instead all data is provided by the nodes
         return ()
 
+    def max_age_snmp() -> MaxAge:
+        if simulation_mode:
+            return MaxAge.unlimited()
+        if force_snmp_cache_refresh:
+            return MaxAge.zero()
+        if file_cache_options.use_outdated:
+            return MaxAge.unlimited()
+        return file_cache_max_age
+
+    def max_age_agent() -> MaxAge:
+        if simulation_mode:
+            return MaxAge.unlimited()
+        if file_cache_options.use_outdated:
+            return MaxAge.unlimited()
+        return file_cache_max_age
+
     return [
         (
             source.source_info(),
@@ -336,9 +332,7 @@ def make_sources(
             config_cache=config_cache,
             selected_sections=selected_sections,
             on_scan_error=on_scan_error,
-            force_snmp_cache_refresh=force_snmp_cache_refresh,
-            simulation_mode=simulation_mode,
-            file_cache_options=file_cache_options,
-            file_cache_max_age=file_cache_max_age,
+            max_age_agent=max_age_agent(),
+            max_age_snmp=max_age_snmp(),
         ).sources
     ]

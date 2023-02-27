@@ -516,6 +516,9 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     def is_published_to_me(self) -> bool:
         """Whether the page is published to the currently active user"""
+        if not user.may("general.see_user_%s" % self.type_name()):
+            return False
+
         if self._["public"] is True:
             return self.publish_is_allowed()
 

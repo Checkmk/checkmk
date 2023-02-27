@@ -620,6 +620,7 @@ def available(
             n not in visuals
             and published_to_user(visual)
             and user_may(u, "general.force_" + what)
+            and user.may("general.see_user_" + what)
             and not restricted_visual(n)
         ):
             visuals[n] = visual

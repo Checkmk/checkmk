@@ -413,7 +413,8 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
     for (u, n), visual in all_visuals.items():
         # Honor original permissions for the current user
         if n not in visuals and published_to_user(visual) and config.user_may(
-                u, "general.force_" + what) and not restricted_visual(n):
+                u, "general.force_" + what) and config.user.may("general.see_user_" +
+                                                                what) and not restricted_visual(n):
             visuals[n] = visual
 
     # 3. Builtin visuals, if allowed.

@@ -33,6 +33,7 @@ import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config
 from cmk.utils.backup.targets.aws_s3_bucket import S3Target
 from cmk.utils.backup.targets.azure_blob_storage import BlobStorageTarget
@@ -48,9 +49,6 @@ from cmk.utils.backup.utils import (
 )
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
-
-VERSION = "2.3.0b1"
-
 
 # Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
 # files available... :-/
@@ -1092,7 +1090,7 @@ def parse_arguments():
         if o in ["-h", "--help"]:
             usage()
         elif o == "--version":
-            sys.stdout.write("mkbackup %s\n" % VERSION)
+            sys.stdout.write("mkbackup %s\n" % cmk_version.__version__)
             sys.exit(0)
         elif o == "--verbose":
             opt_verbose += 1

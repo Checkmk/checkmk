@@ -51,9 +51,19 @@ from cmk.gui.watolib import (
 from cmk.gui.watolib.automations import (
     check_mk_automation,)
 from cmk.gui.watolib.rulespecs import rulespec_registry
-from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, execute_discovery_job,
-                                      get_check_table, DiscoveryAction, CheckTable, CheckTableEntry,
-                                      DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
+from cmk.gui.watolib.services import (
+    checkbox_id,
+    CheckTable,
+    CheckTableEntry,
+    Discovery,
+    DiscoveryAction,
+    DiscoveryOptions,
+    DiscoveryResult,
+    DiscoveryState,
+    execute_discovery_job,
+    get_check_table,
+    StartDiscoveryRequest,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
@@ -960,47 +970,86 @@ class DiscoveryPageRenderer:
         num_buttons = 0
         if table_source == DiscoveryState.MONITORED:
             if config.user.may("wato.service_discovery_to_undecided"):
-                self._icon_button(table_source, checkbox_name, DiscoveryState.UNDECIDED,
-                                  "undecided", button_classes)
+                self._icon_button(
+                    table_source,
+                    checkbox_name,
+                    DiscoveryState.UNDECIDED,
+                    "undecided",
+                    button_classes,
+                )
                 num_buttons += 1
             if may_edit_ruleset("ignored_services") \
                and config.user.may("wato.service_discovery_to_ignored"):
-                self._icon_button(table_source, checkbox_name, DiscoveryState.IGNORED, "disabled",
-                                  button_classes)
+                self._icon_button(
+                    table_source,
+                    checkbox_name,
+                    DiscoveryState.IGNORED,
+                    "disabled",
+                    button_classes,
+                )
                 num_buttons += 1
 
         elif table_source == DiscoveryState.IGNORED:
             if may_edit_ruleset("ignored_services"):
                 if config.user.may("wato.service_discovery_to_monitored"):
-                    self._icon_button(table_source, checkbox_name, DiscoveryState.MONITORED,
-                                      "monitored", button_classes)
+                    self._icon_button(
+                        table_source,
+                        checkbox_name,
+                        DiscoveryState.MONITORED,
+                        "monitored",
+                        button_classes,
+                    )
                     num_buttons += 1
                 if config.user.may("wato.service_discovery_to_ignored"):
-                    self._icon_button(table_source, checkbox_name, DiscoveryState.UNDECIDED,
-                                      "undecided", button_classes)
+                    self._icon_button(
+                        table_source,
+                        checkbox_name,
+                        DiscoveryState.UNDECIDED,
+                        "undecided",
+                        button_classes,
+                    )
                     num_buttons += 1
                 self._disabled_services_button(descr)
                 num_buttons += 1
 
         elif table_source == DiscoveryState.VANISHED:
             if config.user.may("wato.service_discovery_to_removed"):
-                self._icon_button_removed(table_source, checkbox_name, button_classes)
+                self._icon_button_removed(
+                    table_source,
+                    checkbox_name,
+                    button_classes,
+                )
                 num_buttons += 1
             if may_edit_ruleset("ignored_services") \
                and config.user.may("wato.service_discovery_to_ignored"):
-                self._icon_button(table_source, checkbox_name, DiscoveryState.IGNORED, "disabled",
-                                  button_classes)
+                self._icon_button(
+                    table_source,
+                    checkbox_name,
+                    DiscoveryState.IGNORED,
+                    "disabled",
+                    button_classes,
+                )
                 num_buttons += 1
 
         elif table_source == DiscoveryState.UNDECIDED:
             if config.user.may("wato.service_discovery_to_monitored"):
-                self._icon_button(table_source, checkbox_name, DiscoveryState.MONITORED,
-                                  "monitored", button_classes)
+                self._icon_button(
+                    table_source,
+                    checkbox_name,
+                    DiscoveryState.MONITORED,
+                    "monitored",
+                    button_classes,
+                )
                 num_buttons += 1
             if may_edit_ruleset("ignored_services") \
                and config.user.may("wato.service_discovery_to_ignored"):
-                self._icon_button(table_source, checkbox_name, DiscoveryState.IGNORED, "disabled",
-                                  button_classes)
+                self._icon_button(
+                    table_source,
+                    checkbox_name,
+                    DiscoveryState.IGNORED,
+                    "disabled",
+                    button_classes,
+                )
                 num_buttons += 1
 
         while num_buttons < 2:
@@ -1025,13 +1074,15 @@ class DiscoveryPageRenderer:
             title=_("Move to %s services") % descr_target,
             icon="service_to_%s" % descr_target,
             class_=button_classes,
-            onclick=_start_js_call(self._host,
-                                   options,
-                                   request_vars={
-                                       "update_target": table_target,
-                                       "update_source": table_source,
-                                       "update_services": [checkbox_name],
-                                   }),
+            onclick=_start_js_call(
+                self._host,
+                options,
+                request_vars={
+                    "update_target": table_target,
+                    "update_source": table_source,
+                    "update_services": [checkbox_name],
+                },
+            ),
         )
 
     def _icon_button_removed(self, table_source, checkbox_name, button_classes):
@@ -1041,13 +1092,15 @@ class DiscoveryPageRenderer:
             title=_("Remove service"),
             icon="service_to_removed",
             class_=button_classes,
-            onclick=_start_js_call(self._host,
-                                   options,
-                                   request_vars={
-                                       "update_target": DiscoveryState.REMOVED,
-                                       "update_source": table_source,
-                                       "update_services": [checkbox_name],
-                                   }),
+            onclick=_start_js_call(
+                self._host,
+                options,
+                request_vars={
+                    "update_target": DiscoveryState.REMOVED,
+                    "update_source": table_source,
+                    "update_services": [checkbox_name],
+                },
+            ),
         )
 
     def _rulesets_button(self, descr):

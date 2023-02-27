@@ -222,6 +222,9 @@ def _generate_livestatus_results(
                 if key == "average_latency_cmk":
                     # may happen if we are trying to query new host
                     value = factor * float(status["average_latency_checker"])
+                elif key == "helper_usage_cmk":
+                    # may happen if we are trying to query new host
+                    value = factor * float(status["helper_usage_checker"])
                 elif key in [
                     # may happen if we are trying to query old host
                     "helper_usage_fetcher",

@@ -10,6 +10,7 @@ from collections.abc import Callable
 from typing import Any, TypedDict
 
 import cmk.utils.store as store
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.exceptions import MKUserError
@@ -25,7 +26,6 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
-from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     Alternative,

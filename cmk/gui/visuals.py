@@ -1431,7 +1431,7 @@ def page_edit_visual(
             for key, _value in visibility_elements:
                 visual[key] = general_properties["visibility"].get(key, False)
 
-            if not user.may("general.publish_" + what):
+            if not is_user_with_publish_permissions("visual", user.id, what):
                 visual["public"] = False
 
             if create_handler:

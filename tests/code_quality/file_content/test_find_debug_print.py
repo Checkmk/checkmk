@@ -6,6 +6,7 @@
 import logging
 import os
 import re
+from pathlib import Path
 
 import pytest
 
@@ -70,7 +71,7 @@ def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
         for filename in filenames:
             file_path = f"{dirpath}/{filename}"
 
-            if not changed_files.is_changed(file_path):
+            if not changed_files.is_changed(Path(file_path)):
                 continue
 
             if [folder for folder in exclude_folders if folder in file_path]:

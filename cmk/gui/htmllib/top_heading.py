@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from cmk.utils.licensing.state import is_licensed
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
@@ -97,7 +97,7 @@ def top_heading(
 
 
 def _may_show_license_expiry(writer: HTMLWriter) -> None:
-    if is_raw_edition():  # TODO: cleanup conditional imports and solve this via registration
+    if not is_cloud_edition():  # TODO: cleanup conditional imports and solve this via registration
         return
 
     if in_user_warning_header_phase_trial():

@@ -21,7 +21,7 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.render as render
 from cmk.utils.licensing import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.licensing.state import is_expired_trial, is_licensed
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -95,7 +95,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         self._license_usage_report_validity = get_license_usage_report_validity()
         self._license_verification_response = (
             None
-            if is_raw_edition()
+            if not is_cloud_edition()
             else (
                 None
                 if (verified_response := load_verified_response()) is None
@@ -212,7 +212,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         license_usage_report_valid = (
             self._license_usage_report_validity != LicenseUsageReportValidity.older_than_five_days
         )
-        if is_raw_edition():
+        if not is_cloud_edition():
             return license_usage_report_valid
         return (
             not is_after_expiration_grace_period(now, self._license_verification_response)
@@ -448,7 +448,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         # TODO: cleanup conditional imports and solve this via registration
         if (
-            not is_raw_edition()
+            is_cloud_edition()
             and self._license_verification_response is not None
             and (
                 cee_error := activate_changes.get_cee_license_validity_error(

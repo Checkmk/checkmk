@@ -53,7 +53,7 @@ from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.state import is_expired_trial
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
-from cmk.utils.version import __version__, is_raw_edition, Version
+from cmk.utils.version import __version__, is_cloud_edition, is_raw_edition, Version
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -2729,7 +2729,7 @@ def activate_changes_start(
 
     """
     # TODO: cleanup conditional imports and solve this via registration
-    if not is_raw_edition() and (verified_response := load_verified_response()) is not None:
+    if is_cloud_edition() and (verified_response := load_verified_response()) is not None:
         if (
             license_error := get_cee_license_validity_error(verified_response.response)
         ) is not None:

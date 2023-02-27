@@ -59,7 +59,6 @@ class RulesetSearchOptions(base.BaseSchema):
         "fulltext": None,
         "ruleset_deprecated": False,
         "ruleset_used": False,
-        "ruleset_group": False,
         "ruleset_name": False,
         "ruleset_title": False,
         "ruleset_help": False,
@@ -86,10 +85,6 @@ class RulesetSearchOptions(base.BaseSchema):
         attribute="ruleset_used",
         description="Only show used rulesets. Defaults to True.",
         load_default=True,
-    )
-    group = fields.String(
-        attribute="ruleset_group",
-        description="The specific group to search for rules in.",
     )
     name = fields.String(
         attribute="ruleset_name",

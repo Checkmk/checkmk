@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
 from pathlib import Path
 
 from tests.testlib import cmk_path
@@ -20,7 +21,7 @@ def test_find_debug_code(changed_files: ChangedFiles) -> None:
                 assert not l.startswith("html.debug("), 'Found "html.debug(...)" call'
 
 
-def _files_to_scan(changed_files: ChangedFiles):  # type:ignore[no-untyped-def]
+def _files_to_scan(changed_files: ChangedFiles) -> Iterable[Path]:
     to_scan = [Path(cmk_path(), "web", "app", "index.wsgi")]
     for matched_file in Path(cmk_path(), "cmk", "gui").glob("**/*.py"):
         if matched_file.is_file() and changed_files.is_changed(matched_file):

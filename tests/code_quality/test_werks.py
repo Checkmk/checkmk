@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import os
 import re
 import subprocess
@@ -81,8 +79,8 @@ def test_version_comparison(version_str_a: str, version_str_b: str) -> None:
     assert a > b
 
 
-@pytest.fixture(scope="function")
-def precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture(scope="function", name="precompiled_werks")
+def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
     cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", all_werks)
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)

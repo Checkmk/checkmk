@@ -62,7 +62,7 @@ def test_find_debugs_false(changed_files: ChangedFiles, line: str) -> None:
         if os.path.exists(p)
     ],
 )
-def test_find_debug_code(changed_files: ChangedFiles, path) -> None:  # type:ignore[no-untyped-def]
+def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
     scanned = 0
 
     for dirpath, _, filenames in os.walk(path):

@@ -10,7 +10,6 @@ import socket
 import subprocess
 import sys
 from email.utils import formataddr, formatdate, parseaddr
-from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
 from typing import Dict, List, NamedTuple, Optional, Tuple
@@ -20,6 +19,7 @@ import requests
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.notify import find_wato_folder
 from cmk.utils.store import load_text_from_file
@@ -113,7 +113,6 @@ def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
         "CONTACTALIAS",
         "CONTACTNAME",
         "CONTACTEMAIL",
-        "PARAMETER_INSERT_HTML_SECTION",
         "PARAMETER_BULK_SUBJECT",
         "PARAMETER_HOST_SUBJECT",
         "PARAMETER_SERVICE_SUBJECT",
@@ -124,15 +123,26 @@ def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
         "PARAMETER_REPLY_TO_DISPLAY_NAME",
         "SERVICEDESC",
     }
+    permissive_variables = {
+        "PARAMETER_INSERT_HTML_SECTION",
+    }
     if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    return {
-        variable: html_escape(value) if variable not in unescaped_variables else value
-        for variable, value in context.items()
-    }
+    def _escape_or_not_escape(varname: str, value: str) -> str:
+        """currently we escape by default with a large list of exceptions.
+
+        Next step is permissive escaping for certain fields..."""
+
+        if varname in unescaped_variables:
+            return value
+        if varname in permissive_variables:
+            return escape_permissive(value)
+        return escape(value)
+
+    return {variable: _escape_or_not_escape(variable, value) for variable, value in context.items()}
 
 
 def add_debug_output(template, context):
@@ -143,7 +153,7 @@ def add_debug_output(template, context):
         ascii_output += "%s=%s\n" % (varname, value)
         html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
             varname,
-            html_escape(value),
+            escape(value),
         )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)

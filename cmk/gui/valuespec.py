@@ -58,6 +58,7 @@ from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds, user_id_22_regex
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
@@ -7258,7 +7259,7 @@ class RuleComment(TextAreaUnicode):
 
 def DocumentationURL() -> TextInput:
     def _validate_documentation_url(value: str, varprefix: str) -> None:
-        if utils.is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+        if is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
             return
         raise MKUserError(
             varprefix,

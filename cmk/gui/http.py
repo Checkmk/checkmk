@@ -16,8 +16,8 @@ from six import ensure_str
 from werkzeug.utils import get_content_type
 
 from cmk.utils.site import url_prefix
+from cmk.utils.urls import is_allowed_url
 
-import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 
@@ -372,7 +372,7 @@ class Request(
         url = self.var(varname)
         assert url is not None
 
-        if not utils.is_allowed_url(url):
+        if not is_allowed_url(url):
             if deflt:
                 return deflt
             raise MKUserError(varname, _('The parameter "%s" is not a valid URL.') % varname)

@@ -257,6 +257,14 @@ def test_api_endpoint_url(monkeypatch, value, result):
                 "PARAMETER_REPLY_TO_ADDRESS": "d&d&+$@example.com",
             },
         ),
+        (
+            {
+                "PARAMETER_INSERT_HTML_SECTION": "<h1>Important</h1><script>alert(1)</script>",
+            },
+            {
+                "PARAMETER_INSERT_HTML_SECTION": "<h1>Important</h1>&lt;script&gt;alert(1)&lt;/script&gt;",
+            },
+        ),
         # ... all variables will be escaped
         (
             {"FOO": "<h1>Important</h1>"},

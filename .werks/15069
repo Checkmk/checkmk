@@ -1,0 +1,18 @@
+Title: Fix Email HTML Injection
+Class: security
+Compatible: compat
+Component: notifications
+Date: 1678264782
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p25
+
+Previously an authenticated attacker with permissions to configure HTML notifications was able to inject HTML into E-Mails via <i>Insert HTML section between body and table</i>.
+
+All versions up to 1.6. are subject to this vulnerability.
+
+To detect previous exploitation of this vulnerability one can check <tt>etc/check_mk/conf.d/wato/notifications.mk</tt>. Search for <tt>insert_html_section</tt> and malicious HTML.
+
+This vulnerability was found internally. We calculated a CVSS3.1 score of 4.1 (Medium) CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:N/A:N and assigned CVE-2023-22288.

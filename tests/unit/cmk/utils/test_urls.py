@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.utils import is_allowed_url
+from cmk.utils.urls import is_allowed_url
 
 
 @pytest.mark.parametrize(

@@ -8,6 +8,7 @@ import urllib.parse
 from typing import Any, Callable
 
 import cmk.utils.store as store
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.exceptions import MKUserError
@@ -23,7 +24,6 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
 )
 from cmk.gui.type_defs import RoleName
-from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     Alternative,

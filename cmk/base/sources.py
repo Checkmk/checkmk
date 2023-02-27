@@ -17,35 +17,32 @@ from cmk.utils.type_defs import HostAddress, HostAgentConnectionMode, HostName, 
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-from cmk.fetchers import (
-    Fetcher,
-    FetcherType,
-    NoFetcher,
-    NoFetcherError,
-    ProgramFetcher,
-    SNMPFetcher,
-)
+from cmk.fetchers import Fetcher, FetcherType, SNMPFetcher
 from cmk.fetchers.cache import SectionStore
-from cmk.fetchers.config import make_file_cache_path_template, make_persisted_section_dir
-from cmk.fetchers.filecache import (
-    AgentFileCache,
-    FileCache,
-    FileCacheMode,
-    FileCacheOptions,
-    MaxAge,
-    NoCache,
-    SNMPFileCache,
-)
+from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkers import Parser, SNMPParser, SourceInfo, SourceType
+from cmk.checkers import Parser, SNMPParser, SourceInfo
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.core_config as core_config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
+
+from ._sources import (
+    IPMISource,
+    MgmtSNMPSource,
+    MissingIPSource,
+    PiggybackSource,
+    ProgramSource,
+    PushAgentSource,
+    SNMPSource,
+    Source,
+    SpecialAgentSource,
+    TCPSource,
+)
 
 __all__ = [
     "make_sources",
@@ -96,8 +93,6 @@ def make_parser(
 
 
 class _Builder:
-    """Build a source list from host config and raw sections."""
-
     def __init__(
         self,
         host_name: HostName,
@@ -125,19 +120,19 @@ class _Builder:
         self.file_cache_max_age: Final = file_cache_max_age
 
         assert not self.config_cache.is_cluster(self.host_name)
-        self._elems: dict[str, tuple[SourceInfo, FileCache, Fetcher]] = {}
+        self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
         self._initialize_snmp_based()
         self._initialize_mgmt_boards()
 
     @property
-    def sources(self) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
+    def sources(self) -> Sequence[Source]:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
             key=lambda args: (
-                args[0].fetcher_type is FetcherType.PIGGYBACK,
-                args[0].ident,
+                args.source_info().fetcher_type is FetcherType.PIGGYBACK,
+                args.source_info().ident,
             ),
         )
 
@@ -152,32 +147,21 @@ class _Builder:
         if self.config_cache.is_all_agents_host(self.host_name):
             self._get_agent()
             for elem in self._get_special_agents():
-                self._add(*elem)
+                self._add(elem)
 
         elif self.config_cache.is_all_special_agents_host(self.host_name):
             for elem in self._get_special_agents():
-                self._add(*elem)
+                self._add(elem)
 
         elif self.config_cache.is_tcp_host(self.host_name):
             special_agents = tuple(self._get_special_agents())
             if special_agents:
-                self._add(*special_agents[0])
+                self._add(special_agents[0])
             else:
                 self._get_agent()
 
         if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
-            source = SourceInfo(
-                self.host_name,
-                self.ipaddress,
-                "piggyback",
-                FetcherType.PIGGYBACK,
-                SourceType.HOST,
-            )
-            self._add(
-                source,
-                self.config_cache.make_piggyback_fetcher(source.hostname, source.ipaddress),
-                NoCache(source.hostname),
-            )
+            self._add(PiggybackSource(self.host_name, self.ipaddress))
 
     def _initialize_snmp_plugin_store(self) -> None:
         if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
@@ -201,39 +185,17 @@ class _Builder:
         if self.address_family is AddressFamily.NO_IP:
             return
         if self.ipaddress is None:
-            self._add(
-                SourceInfo(
-                    self.host_name, self.ipaddress, "snmp", FetcherType.NONE, SourceType.HOST
-                ),
-                NoFetcher(NoFetcherError.MISSING_IP),
-                NoCache(self.host_name),
-            )
+            self._add(MissingIPSource(self.host_name, self.ipaddress, "snmp"))
             return
         self._initialize_snmp_plugin_store()
         self._add(
-            SourceInfo(
+            SNMPSource(
                 self.host_name,
                 self.ipaddress,
-                "snmp",
-                FetcherType.SNMP,
-                SourceType.HOST,
-            ),
-            self.config_cache.make_snmp_fetcher(
-                self.host_name,
-                self.ipaddress,
+                max_age=self._max_age_snmp(),
                 on_scan_error=self.on_scan_error,
                 selected_sections=self.selected_sections,
-            ),
-            SNMPFileCache(
-                self.host_name,
-                path_template=make_file_cache_path_template(
-                    fetcher_type=FetcherType.SNMP, ident="snmp"
-                ),
-                max_age=self._max_age_snmp(),
-                simulation=self.simulation_mode,
-                use_only_cache=self.file_cache_options.use_only_cache,
-                file_cache_mode=self.file_cache_options.file_cache_mode(),
-            ),
+            )
         )
 
     def _initialize_mgmt_boards(self) -> None:
@@ -246,117 +208,40 @@ class _Builder:
             if self.address_family is AddressFamily.NO_IP:
                 return
             if self.ipaddress is None:
-                self._add(
-                    SourceInfo(
-                        self.host_name,
-                        self.ipaddress,
-                        "mgmt_snmp",
-                        FetcherType.NONE,
-                        SourceType.MANAGEMENT,
-                    ),
-                    NoFetcher(NoFetcherError.MISSING_IP),
-                    NoCache(self.host_name),
-                )
+                self._add(MissingIPSource(self.host_name, self.ipaddress, "mgmt_snmp"))
                 return
             self._add(
-                SourceInfo(
+                MgmtSNMPSource(
                     self.host_name,
                     self.ipaddress,
-                    "mgmt_snmp",
-                    FetcherType.SNMP,
-                    SourceType.MANAGEMENT,
-                ),
-                self.config_cache.make_snmp_fetcher(
-                    self.host_name,
-                    self.ipaddress,
+                    max_age=self._max_age_snmp(),
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
-                ),
-                SNMPFileCache(
-                    self.host_name,
-                    path_template=make_file_cache_path_template(
-                        fetcher_type=FetcherType.SNMP, ident="mgmt_snmp"
-                    ),
-                    max_age=self._max_age_snmp(),
-                    simulation=self.simulation_mode,
-                    use_only_cache=self.file_cache_options.use_only_cache,
-                    file_cache_mode=self.file_cache_options.file_cache_mode(),
-                ),
+                )
             )
         elif protocol == "ipmi":
             if self.address_family is AddressFamily.NO_IP:
                 return
             ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
             if ip_address is None:
-                self._add(
-                    SourceInfo(
-                        self.host_name,
-                        ip_address,
-                        "mgmt_ipmi",
-                        FetcherType.NONE,
-                        SourceType.MANAGEMENT,
-                    ),
-                    NoFetcher(NoFetcherError.MISSING_IP),
-                    NoCache(self.host_name),
-                )
+                self._add(MissingIPSource(self.host_name, ip_address, "mgmt_ipmi"))
                 return
-            self._add(
-                SourceInfo(
-                    self.host_name,
-                    ip_address,
-                    "mgmt_ipmi",
-                    FetcherType.IPMI,
-                    SourceType.MANAGEMENT,
-                ),
-                self.config_cache.make_ipmi_fetcher(self.host_name, ip_address),
-                AgentFileCache(
-                    self.host_name,
-                    path_template=make_file_cache_path_template(
-                        fetcher_type=FetcherType.IPMI, ident="mgmt_ipmi"
-                    ),
-                    max_age=self._max_age_tcp(),
-                    simulation=self.simulation_mode,
-                    use_only_cache=self.file_cache_options.use_only_cache,
-                    file_cache_mode=self.file_cache_options.file_cache_mode(),
-                ),
-            )
+            self._add(IPMISource(self.host_name, ip_address, max_age=self._max_age_tcp()))
         else:
             raise LookupError()
 
-    def _add(self, source: SourceInfo, fetcher: Fetcher, file_cache: FileCache) -> None:
-        self._elems[source.ident] = (
-            source,
-            file_cache,
-            fetcher,
-        )
+    def _add(self, source: Source) -> None:
+        self._elems[source.source_info().ident] = source
 
     def _get_agent(self) -> None:
         with suppress(LookupError):
             self._add(
-                SourceInfo(
+                ProgramSource(
                     self.host_name,
                     self.ipaddress,
-                    "agent",
-                    FetcherType.PROGRAM,
-                    SourceType.HOST,
-                ),
-                ProgramFetcher(
-                    cmdline=self.config_cache.make_program_commandline(
-                        self.host_name, self.ipaddress
-                    ),
-                    stdin=None,
-                    is_cmc=config.is_cmc(),
-                ),
-                AgentFileCache(
-                    self.host_name,
-                    path_template=make_file_cache_path_template(
-                        fetcher_type=FetcherType.PROGRAM, ident="agent"
-                    ),
+                    config_cache=self.config_cache,
                     max_age=self._max_age_tcp(),
-                    simulation=self.simulation_mode,
-                    use_only_cache=self.file_cache_options.use_only_cache,
-                    file_cache_mode=self.file_cache_options.file_cache_mode(),
-                ),
+                )
             )
             return
 
@@ -366,116 +251,38 @@ class _Builder:
                 # convert to seconds and add grace period
                 interval = int(1.5 * 60 * self.config_cache.check_mk_check_interval(self.host_name))
                 self._add(
-                    SourceInfo(
+                    source=PushAgentSource(
                         self.host_name,
                         self.ipaddress,
-                        "push-agent",
-                        FetcherType.PUSH_AGENT,
-                        SourceType.HOST,
-                    ),
-                    NoFetcher(NoFetcherError.NO_FETCHER),
-                    AgentFileCache(
-                        self.host_name,
-                        path_template=make_file_cache_path_template(
-                            fetcher_type=FetcherType.PUSH_AGENT, ident="push-agent"
-                        ),
-                        max_age=(
-                            MaxAge.unlimited()
-                            if self.simulation_mode or self.file_cache_options.use_outdated
-                            else MaxAge(interval, interval, interval)
-                        ),
-                        simulation=self.simulation_mode,
-                        use_only_cache=True,
-                        file_cache_mode=(
-                            # Careful: at most read-only!
-                            FileCacheMode.DISABLED
-                            if self.file_cache_options.disabled
-                            else FileCacheMode.READ
-                        ),
-                    ),
+                        max_age=MaxAge(interval, interval, interval),
+                    )
                 )
             case HostAgentConnectionMode.PULL:
                 if self.address_family is AddressFamily.NO_IP:
                     return
                 if self.ipaddress is None:
-                    self._add(
-                        SourceInfo(
-                            self.host_name,
-                            self.ipaddress,
-                            "agent",
-                            FetcherType.NONE,
-                            SourceType.HOST,
-                        ),
-                        NoFetcher(NoFetcherError.MISSING_IP),
-                        NoCache(self.host_name),
-                    )
+                    self._add(MissingIPSource(self.host_name, self.ipaddress, "agent"))
                     return
                 self._add(
-                    SourceInfo(
+                    TCPSource(
                         self.host_name,
                         self.ipaddress,
-                        "agent",
-                        FetcherType.TCP,
-                        SourceType.HOST,
-                    ),
-                    self.config_cache.make_tcp_fetcher(self.host_name, self.ipaddress),
-                    AgentFileCache(
-                        self.host_name,
-                        path_template=make_file_cache_path_template(
-                            fetcher_type=FetcherType.TCP, ident="agent"
-                        ),
                         max_age=self._max_age_tcp(),
-                        simulation=self.simulation_mode,
-                        use_only_cache=self.file_cache_options.tcp_use_only_cache
-                        or self.file_cache_options.use_only_cache,
-                        file_cache_mode=self.file_cache_options.file_cache_mode(),
-                    ),
+                    )
                 )
             case _:
                 assert_never(connection_mode)
 
-    def _get_special_agents(self) -> Iterable[tuple[SourceInfo, Fetcher, FileCache]]:
-        def make_id(agentname: str) -> str:
-            return f"special_{agentname}"
-
+    def _get_special_agents(self) -> Iterable[Source]:
         for agentname, params in self.config_cache.special_agents(self.host_name):
-            source = SourceInfo(
-                self.host_name,
-                self.ipaddress,
-                make_id(agentname),
-                FetcherType.SPECIAL_AGENT,
-                SourceType.HOST,
-            )
-            try:
-                fetcher = ProgramFetcher(
-                    cmdline=core_config.make_special_agent_cmdline(
-                        self.host_name,
-                        self.ipaddress,
-                        agentname,
-                        params,
-                    ),
-                    stdin=core_config.make_special_agent_stdin(
-                        self.host_name,
-                        self.ipaddress,
-                        agentname,
-                        params,
-                    ),
-                    is_cmc=config.is_cmc(),
+            with suppress(KeyError):
+                yield SpecialAgentSource(
+                    self.host_name,
+                    self.ipaddress,
+                    max_age=self._max_age_tcp(),
+                    agent_name=agentname,
+                    params=params,
                 )
-            except KeyError:
-                # Special agent has been deactivated.
-                continue
-            file_cache = AgentFileCache(
-                source.hostname,
-                path_template=make_file_cache_path_template(
-                    fetcher_type=source.fetcher_type, ident=source.ident
-                ),
-                max_age=self._max_age_tcp(),
-                simulation=self.simulation_mode,
-                use_only_cache=self.file_cache_options.use_only_cache,
-                file_cache_mode=self.file_cache_options.file_cache_mode(),
-            )
-            yield source, fetcher, file_cache
 
     def _max_age_snmp(self) -> MaxAge:
         if self.simulation_mode:
@@ -513,15 +320,25 @@ def make_sources(
         # Instead all data is provided by the nodes
         return ()
 
-    return _Builder(
-        host_name,
-        ipaddress,
-        address_family,
-        config_cache=config_cache,
-        selected_sections=selected_sections,
-        on_scan_error=on_scan_error,
-        force_snmp_cache_refresh=force_snmp_cache_refresh,
-        simulation_mode=simulation_mode,
-        file_cache_options=file_cache_options,
-        file_cache_max_age=file_cache_max_age,
-    ).sources
+    return [
+        (
+            source.source_info(),
+            source.file_cache(
+                simulation=simulation_mode,
+                file_cache_options=file_cache_options,
+            ),
+            source.fetcher(config_cache),
+        )
+        for source in _Builder(
+            host_name,
+            ipaddress,
+            address_family,
+            config_cache=config_cache,
+            selected_sections=selected_sections,
+            on_scan_error=on_scan_error,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
+            simulation_mode=simulation_mode,
+            file_cache_options=file_cache_options,
+            file_cache_max_age=file_cache_max_age,
+        ).sources
+    ]

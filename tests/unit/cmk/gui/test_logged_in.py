@@ -235,7 +235,6 @@ MONITORING_USER_BUTTONCOUNTS = {
 MONITORING_USER_FAVORITES = ["heute;CPU load"]
 
 
-@pytest.mark.usefixtures("request_context")
 @pytest.fixture(name="monitoring_user")
 def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     """Returns a "Normal monitoring user" object."""

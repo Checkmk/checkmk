@@ -91,7 +91,6 @@ def gui_cleanup_after_test():
     hooks.call("request-end")
 
 
-@pytest.mark.usefixtures("patch_omd_site")
 @pytest.fixture()
 def request_context(flask_app: Flask) -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
@@ -391,13 +390,11 @@ def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleR
 
 
 @pytest.fixture()
-@pytest.mark.usefixtures("monkeypatch")
 def wsgi_app() -> WebTestAppForCMK:
     return _make_webtest(debug=False, testing=True)
 
 
 @pytest.fixture()
-@pytest.mark.usefixtures("monkeypatch")
 def wsgi_app_debug_off() -> WebTestAppForCMK:
     return _make_webtest(debug=False, testing=False)
 

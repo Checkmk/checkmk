@@ -826,9 +826,6 @@ def test_registered_painters() -> None:
     assert sorted(painters) == sorted(expected_painters)
 
 
-# We only get all painters after the plugins and config have been loaded. Since there currently no
-# way to create test parameters while depending on a fixture we can not use pytests parametrization
-@pytest.mark.usefixtures("load_config")
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
     return sorted(list(painters_of_datasource("services").keys()))

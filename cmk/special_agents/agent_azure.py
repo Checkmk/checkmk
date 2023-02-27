@@ -16,7 +16,7 @@ import sys
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
-from typing import Any, List, Mapping, Sequence, Tuple, Type
+from typing import Any, List, Mapping, Optional, Sequence, Tuple, Type
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
@@ -360,14 +360,17 @@ class MgmtApiClient(BaseApiClient):
         super().__init__(base_url)
 
     @staticmethod
-    def _get_available_metrics_from_exception(desired_names, api_error):
+    def _get_available_metrics_from_exception(
+        desired_names: str, api_error: ApiError
+    ) -> Optional[str]:
+        error_message = api_error.args[0]
         if not (
-            api_error.message.startswith("Failed to find metric configuration for provider")
-            and "Valid metrics: " in api_error.message
+            error_message.startswith("Failed to find metric configuration for provider")
+            and "Valid metrics: " in error_message
         ):
             return None
 
-        available_names = api_error.message.split("Valid metrics: ")[1]
+        available_names = error_message.split("Valid metrics: ")[1]
         retry_names = set(desired_names.split(",")) & set(available_names.split(","))
         return ",".join(sorted(retry_names))
 

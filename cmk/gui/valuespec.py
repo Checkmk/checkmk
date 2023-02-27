@@ -75,6 +75,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds, TimeRange, UserId
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.forms as forms
 import cmk.gui.site_config as site_config
@@ -8284,7 +8285,7 @@ class RuleComment(TextAreaUnicode):
 
 def DocumentationURL() -> TextInput:
     def _validate_documentation_url(value: str, varprefix: str) -> None:
-        if utils.is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+        if is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
             return
         raise MKUserError(
             varprefix,

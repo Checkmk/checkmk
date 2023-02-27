@@ -91,6 +91,7 @@ docker run -a stdout -a stderr \
     -e BAZEL_CACHE_USER \
     -e BAZEL_CACHE_PASSWORD \
     -e CI \
+    -e DOCKER_BUILDKIT \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"

@@ -136,6 +136,7 @@ build {
     inline = [
       "sudo passwd --expire $(whoami)",
     ]
+    only = ["azure-arm.builder", "qemu.builder"]
   }
   # run azure playbook
   provisioner "ansible-local" {
@@ -149,5 +150,14 @@ build {
       "sudo apt-get remove -y -q software-properties-common ansible",
       "sudo apt autoremove -y -q"
     ]
+  }
+  # automated removal does not work for ubuntu user. However the images we use only have an ubuntu user
+  # https://github.com/buildkite/elastic-ci-stack-for-aws/issues/544
+  provisioner "shell" {
+    inline = [
+      "rm /home/ubuntu/.ssh/authorized_keys",
+      "sudo rm /root/.ssh/authorized_keys",
+    ]
+    only = ["amazon-ebs.builder"]
   }
 }

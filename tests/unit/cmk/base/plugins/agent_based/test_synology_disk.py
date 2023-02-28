@@ -9,11 +9,11 @@ from cmk.base.plugins.agent_based import synology_disks
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 SECTION_TABLE = [
-    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33"],
-    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33"],
-    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33"],
-    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33"],
-    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33"],
+    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33", "1"],
+    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33", "1"],
+    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33", "1"],
+    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33", "1"],
+    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33", "1"],
 ]
 
 
@@ -29,9 +29,17 @@ def test_discovery() -> None:
 
 
 def make_section(
-    state: int = 1, temperature: float = 42.1, disk: str = "none", model: str = "hello"
+    state: int = 1,
+    temperature: float = 42.1,
+    disk: str = "none",
+    model: str = "hello",
+    health: int = 1,
 ) -> synology_disks.Section:
-    return {disk: synology_disks.Disk(state=state, temperature=temperature, disk=disk, model=model)}
+    return {
+        disk: synology_disks.Disk(
+            state=state, temperature=temperature, disk=disk, model=model, health=health
+        )
+    }
 
 
 @pytest.mark.parametrize(
@@ -41,9 +49,8 @@ def make_section(
 def test_result_state(state: int, expected: State) -> None:
     section = make_section(state=state)
     item = list(section.keys())[0]
-    result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))[-1]
-    assert isinstance(result, Result)
-    assert result.state == expected
+    result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
+    assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
 def test_temperature_metric() -> None:
@@ -68,8 +75,5 @@ def test_check_cached_is_ok(used_as_cache: bool, expected: State) -> None:
     section = make_section(state=3)
     item = list(section.keys())[0]
     params = {"used_as_cache": used_as_cache}
-    result = list(synology_disks.check_synology_disks(section=section, item=item, params=params))[
-        -1
-    ]
-    assert isinstance(result, Result)
-    assert result.state == expected
+    result = list(synology_disks.check_synology_disks(section=section, item=item, params=params))
+    assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected

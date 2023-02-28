@@ -82,9 +82,9 @@ check_info["azure_storageaccounts.flow"] = {
 def check_azure_storageaccounts_performance(_item, params, resource):
 
     for key, cmk_key, displ in (
-        ("total_SuccessServerLatency", "server_latency", "Success server latency"),
-        ("total_SuccessE2ELatency", "e2e_latency", "End-to-end server latency"),
-        ("total_Availability", "availability", "Availability"),
+        ("average_SuccessServerLatency", "server_latency", "Success server latency"),
+        ("average_SuccessE2ELatency", "e2e_latency", "End-to-end server latency"),
+        ("average_Availability", "availability", "Availability"),
     ):
         levels = params.get("%s_levels" % cmk_key, (None, None))
         mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels)
@@ -94,7 +94,7 @@ def check_azure_storageaccounts_performance(_item, params, resource):
 
 check_info["azure_storageaccounts.performance"] = {
     "inventory_function": discover_azure_by_metrics(
-        "total_SuccessServerLatency", "total_SuccessE2ELatency", "total_Availability"
+        "average_SuccessServerLatency", "average_SuccessE2ELatency", "average_Availability"
     ),
     "check_function": check_azure_storageaccounts_performance,
     "service_description": "Storage %s performance",

@@ -187,7 +187,7 @@ def test_transform_replaced_wato_rulesets_and_params(
 @pytest.mark.usefixtures("request_context")
 def test_remove_removed_check_plugins_from_ignored_checks() -> None:
     ruleset = Ruleset("ignored_checks", {})
-    ruleset.from_config(
+    ruleset.replace_folder_config(
         Folder(""),
         [
             {

@@ -272,7 +272,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         }
 
         rulesets = FolderRulesets.load_folder_rulesets(Folder.root_folder())
-        rulesets.from_config(Folder.root_folder(), ruleset_config)
+        rulesets.replace_folder_config(Folder.root_folder(), ruleset_config)
         rulesets.save()
 
         notification_rules = [

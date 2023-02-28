@@ -149,7 +149,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec):
     )
     error = "Found old style tuple ruleset"
     with pytest.raises(MKGeneralException, match=error):
-        ruleset.from_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
+        ruleset.replace_folder_config(hosts_and_folders.Folder.root_folder(), [rule_spec])
 
 
 @pytest.mark.parametrize(
@@ -467,7 +467,7 @@ def test_ruleset_to_config(  # type:ignore[no-untyped-def]
         ruleset = rulesets.Ruleset(
             "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
         )
-        ruleset.from_config(
+        ruleset.replace_folder_config(
             hosts_and_folders.Folder.root_folder(),
             [
                 {
@@ -527,7 +527,7 @@ def test_ruleset_to_config_sub_folder(  # type:ignore[no-untyped-def]
         hosts_and_folders.Folder.create_missing_folders("abc")
         folder = hosts_and_folders.Folder.folder("abc")
 
-        ruleset.from_config(
+        ruleset.replace_folder_config(
             folder,
             [
                 {

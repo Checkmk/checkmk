@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any, Literal, NamedTuple, TypedDict, Union
 
 from pydantic import BaseModel
+from typing_extensions import NotRequired
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto import HashAlgorithm
@@ -233,6 +234,7 @@ class LinkFromSpec(TypedDict, total=False):
 
 class Visual(_VisualMandatory):
     link_from: LinkFromSpec
+    packaged: NotRequired[bool]
 
 
 class VisualLinkSpec(NamedTuple):

@@ -111,6 +111,8 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
+    store.makedirs(cmk.utils.paths.local_dashboards_dir)
+    store.makedirs(cmk.utils.paths.local_views_dir)
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
     _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
 

@@ -13,6 +13,7 @@ import re
 import sys
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from contextlib import suppress
 from itertools import chain, starmap
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
@@ -25,6 +26,8 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.packaging import all_rule_pack_files, Installer, PackageName, visual_to_mkp
+from cmk.utils.store import save_object_to_file
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.forms as forms
@@ -307,7 +310,7 @@ def save(
         # deserialize LasyStrings again. Decide on their fixed str representation now.
         name: _fix_lazy_strings(visual)
         for (owner_id, name), visual in visuals.items()
-        if user_id == owner_id
+        if user_id == owner_id and not visual.get("packaged")
     }
     save_user_file("user_" + what, user_visuals, user_id=user_id)
     _CombinedVisualsCache(what).invalidate_cache()
@@ -532,6 +535,13 @@ def _load_custom_user_visuals(
         except SyntaxError as e:
             raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, visual_path, e))
 
+    visuals.update(
+        _get_packaged_visuals(
+            what,
+            internal_to_runtime_transformer,
+        )
+    )
+
     return visuals
 
 
@@ -553,6 +563,26 @@ def load_visuals_of_a_user(
         user_visuals[(user_id, name)] = visual
 
     return user_visuals
+
+
+def _get_packaged_visuals(
+    visual_type: VisualTypeName,
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
+) -> CustomUserVisuals[T]:
+    local_visuals: CustomUserVisuals[T] = {}
+    local_path = _get_local_path(visual_type)
+    for dirname in local_path.iterdir():
+        for name, raw_visual in store.try_load_file_from_pickle_cache(dirname, default={}).items():
+            visual = internal_to_runtime_transformer(raw_visual)
+            visual["owner"] = UserId.builtin()
+            visual["name"] = name
+            visual["packaged"] = True
+
+            # Declare custom permissions
+            declare_visual_permission(visual_type, name, visual)
+
+            local_visuals[(UserId.builtin(), name)] = visual
+    return local_visuals
 
 
 def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
@@ -770,7 +800,8 @@ def page_list(  # pylint: disable=too-many-branches
             html.user_error(e)
 
     available_visuals = available(what, visuals)
-    for title1, visual_group in _partition_visuals(visuals, what):
+    installed_packages: dict[str, PackageName | None] = _get_installed_packages(what)
+    for source, title1, visual_group in _partition_visuals(visuals, what):
         html.h3(title1, class_="table")
 
         with table_element(css="data", limit=None) as table:
@@ -796,8 +827,14 @@ def page_list(  # pylint: disable=too-many-branches
                 )
                 html.icon_button(clone_url, buttontext, "clone")
 
+                is_packaged = visual["packaged"]
+
                 # Delete
-                if owner and (owner == user.id or user.may("general.delete_foreign_%s" % what)):
+                if (
+                    owner
+                    and (owner == user.id or user.may("general.delete_foreign_%s" % what))
+                    and not is_packaged
+                ):
                     add_vars: HTTPVariables = [("_delete", visual_name)]
                     confirm_message = _("ID: %s") % visual_name
                     if owner != user.id:
@@ -815,9 +852,10 @@ def page_list(  # pylint: disable=too-many-branches
                     )
 
                 # Edit
-                if owner == user.id or (
-                    owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what)
-                ):
+                if (
+                    owner == user.id
+                    or (owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what))
+                ) and not is_packaged:
                     edit_vars: HTTPVariables = [
                         ("mode", "edit"),
                         ("load_name", visual_name),
@@ -834,6 +872,20 @@ def page_list(  # pylint: disable=too-many-branches
                 # Custom buttons - visual specific
                 if render_custom_buttons:
                     render_custom_buttons(visual_name, visual)
+
+                # Packaged visuals have builtin user as owner, so we have to
+                # make sure to not show packaged related icons for builtin
+                # visuals
+                if user.may("wato.manage_mkps") and source != "builtin":
+                    _render_extension_package_icons(
+                        table,
+                        visual_name,
+                        owner,
+                        what_s,
+                        installed_packages,
+                        is_packaged,
+                        backurl,
+                    )
 
                 # visual Name
                 table.cell(_("ID"), visual_name)
@@ -875,6 +927,88 @@ def page_list(  # pylint: disable=too-many-branches
     html.footer()
 
 
+def _render_extension_package_icons(
+    table: Table,
+    visual_name: VisualName,
+    owner: UserId,
+    what_s: str,
+    installed_packages: dict[str, PackageName | None],
+    is_packaged: object,
+    backurl: str,
+) -> None:
+    """Render icons needed for extension package handling of visuals"""
+    if not is_packaged:
+        export_url = makeuri_contextless(
+            request,
+            [
+                ("mode", "export"),
+                ("owner", owner),
+                ("load_name", visual_name),
+                ("back", backurl),
+            ],
+            filename="edit_%s.py" % what_s,
+        )
+        html.icon_button(
+            export_url,
+            _("Make this %s available in the extension packages module") % what_s,
+            {
+                "icon": "mkps",
+                "emblem": "add",
+            },
+        )
+
+    if is_packaged and not (mkp_name := installed_packages.get(visual_name)):
+        delete_url = makeuri_contextless(
+            request,
+            [
+                ("mode", "delete"),
+                ("owner", owner),
+                ("load_name", visual_name),
+                ("back", backurl),
+            ],
+            filename="edit_%s.py" % what_s,
+        )
+        html.icon_button(
+            delete_url,
+            _("Remove this %s from the extension packages module") % what_s,
+            {
+                "icon": "mkps",
+                "emblem": "disable",
+            },
+        )
+
+    table.cell(_("State"), css=["buttons"])
+    if is_packaged:
+        if mkp_name:
+            html.icon(
+                "mkps",
+                _("This %s is provided via the MKP '%s'.") % (what_s, mkp_name),
+            )
+        else:
+            html.icon(
+                "mkps",
+                _("This %s can be packaged with the extension packages module.") % what_s,
+            )
+
+
+def _get_installed_packages(what: VisualTypeName) -> dict[str, PackageName | None]:
+    return (
+        {}
+        if cmk_version.is_raw_edition() or not user.may("wato.manage_mkps")
+        else visual_to_mkp(
+            Installer(cmk.utils.paths.installed_packages_dir),
+            _all_local_visuals_files(what),
+        )
+    )
+
+
+def _all_local_visuals_files(what: VisualTypeName) -> set[Path]:
+    local_path = _get_local_path(what)
+    with suppress(FileNotFoundError):
+        return {Path(what) / f.relative_to(local_path) for f in local_path.iterdir()}
+    return set()
+
+
 def _add_doc_references(
     page_menu: PageMenu,
     what: VisualTypeName,
@@ -906,7 +1040,7 @@ def _visual_can_be_linked(
 
 def _partition_visuals(
     visuals: dict[tuple[UserId, VisualName], T], what: str
-) -> list[tuple[str, list[tuple[UserId, VisualName, T]]]]:
+) -> list[tuple[str, str, list[tuple[UserId, VisualName, T]]]]:
     keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
@@ -927,9 +1061,9 @@ def _partition_visuals(
             foreign_visuals.append((owner, visual_name, visual))
 
     return [
-        (_("Customized"), my_visuals),
-        (_("Owned by other users"), foreign_visuals),
-        (_("Builtin"), builtin_visuals),
+        ("custom", _("Customized"), my_visuals),
+        ("foreign", _("Owned by other users"), foreign_visuals),
+        ("builtin", _("Builtin"), builtin_visuals),
     ]
 
 
@@ -1307,6 +1441,8 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
             return _get_visual("", "builtins")
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
+    back_url = request.get_url_input("back", "edit_%s.py" % what)
+
     if visualname:
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
         visual = _get_visual(owner_id, mode)
@@ -1319,6 +1455,14 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
                     )
             owner_user_id = owner_id
             title = _("Edit %s") % visual_type.title
+        elif mode == "export":
+            _move_visual_to_local(all_visuals, what)
+            _CombinedVisualsCache(what).invalidate_cache()
+            raise HTTPRedirect(back_url)
+        elif mode == "delete":
+            _delete_local_file(what, visualname)
+            _CombinedVisualsCache(what).invalidate_cache()
+            raise HTTPRedirect(back_url)
         else:  # clone explicit or edit from builtin that needs copy
             title = _("Clone %s") % visual_type.title
             visual = copy.deepcopy(visual)
@@ -1348,8 +1492,6 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
                 if key not in visual_info_registry:
                     raise MKUserError("single_infos", _("The info %s does not exist.") % key)
         visual["single_infos"] = single_infos
-
-    back_url = request.get_url_input("back", "edit_%s.py" % what)
 
     breadcrumb = visual_page_breadcrumb(what, title, mode)
     page_menu = pagetypes.make_edit_form_page_menu(
@@ -2330,6 +2472,44 @@ def may_add_site_hint(
         return False
 
     return True
+
+
+def _get_local_path(visual_type: VisualTypeName) -> Path:
+    if visual_type == "dashboards":
+        return cmk.utils.paths.local_dashboards_dir
+    if visual_type == "views":
+        return cmk.utils.paths.local_views_dir
+    if visual_type == "reports":
+        return cmk.utils.paths.local_reports_dir
+
+    raise MKUserError(None, _("This package type is not supported."))
+
+
+def _move_visual_to_local(
+    all_visuals: dict[tuple[UserId, VisualName], T],
+    visual_type: VisualTypeName,
+) -> None:
+    """Create a file within ~/local with content of the visual"""
+    visual_id = request.get_str_input_mandatory("load_name")
+    owner: UserId = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
+    local_path = _get_local_path(visual_type)
+
+    if source_visual := all_visuals.get((owner, visual_id)):
+        visual = {}
+        visual[visual_id] = source_visual
+        if "owner" in visual[visual_id]:
+            del visual[visual_id]["owner"]
+
+        save_object_to_file(
+            path=local_path / visual_id,
+            data=visual,
+            pretty=True,
+        )
+
+
+def _delete_local_file(visual_type: VisualTypeName, visual_name: str) -> None:
+    visuals_path = _get_local_path(visual_type) / visual_name
+    visuals_path.unlink(missing_ok=True)
 
 
 # .

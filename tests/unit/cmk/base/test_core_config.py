@@ -405,7 +405,7 @@ def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyP
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache._translate_ds_program_source_cmdline(
+    assert config_cache.translate_program_commandline(
         hostname, ipaddress, template
     ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
 

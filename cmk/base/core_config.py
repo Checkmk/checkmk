@@ -584,7 +584,7 @@ def make_special_agent_cmdline(
     hostname: HostName,
     ipaddress: HostAddress | None,
     agentname: str,
-    params: dict,
+    params: Mapping[str, object],
 ) -> str:
     """
     Raises:
@@ -603,7 +603,6 @@ def make_special_agent_cmdline(
         hostname: HostName,
         ipaddress: HostAddress | None,
         agentname: str,
-        params: dict,
     ) -> str:
         info_func = config.special_agent_info[agentname]
         # TODO: CMK-3812 (see above)
@@ -615,7 +614,6 @@ def make_special_agent_cmdline(
         hostname,
         ipaddress,
         agentname,
-        params,
     )
     return f"{path} {args}"
 
@@ -624,7 +622,7 @@ def make_special_agent_stdin(
     hostname: HostName,
     ipaddress: HostAddress | None,
     agentname: str,
-    params: dict,
+    params: Mapping[str, object],
 ) -> str | None:
     info_func = config.special_agent_info[agentname]
     # TODO: We call a user supplied function here.

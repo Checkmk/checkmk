@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from typing import Any, Literal
 
 import livestatus
-from livestatus import SiteId
 
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import HostName, ServiceName
@@ -45,7 +44,6 @@ def register_command_groups(registry: CommandGroupRegistry) -> None:
 
 
 def register_commands(registry: CommandRegistry) -> None:
-
     registry.register(CommandReschedule)
     registry.register(CommandNotifications)
     registry.register(CommandToggleActiveChecks)
@@ -58,7 +56,6 @@ def register_commands(registry: CommandRegistry) -> None:
     registry.register(CommandScheduleDowntimes)
     registry.register(CommandRemoveDowntime)
     registry.register(CommandRemoveComments)
-    registry.register(CommandFavorites)
 
 
 class CommandGroupVarious(CommandGroup):
@@ -1512,78 +1509,3 @@ class CommandRemoveComments(Command):
             )
             return (f"REMOVE_{cmdtag}_ACKNOWLEDGEMENT;{spec}"), ""
         return (f"DEL_{cmdtag}_COMMENT;{spec}"), ""
-
-
-# .
-#   .--Stars * (Favorites)-------------------------------------------------.
-#   |                   ____  _                                            |
-#   |                  / ___|| |_ __ _ _ __ ___  __/\__                    |
-#   |                  \___ \| __/ _` | '__/ __| \    /                    |
-#   |                   ___) | || (_| | |  \__ \ /_  _\                    |
-#   |                  |____/ \__\__,_|_|  |___/   \/                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-PermissionActionStar = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="star",
-        title=_l("Use favorites"),
-        description=_l(
-            "This permission allows a user to make certain host and services "
-            "his personal favorites. Favorites can be used for a having a fast "
-            "access to items that are needed on a regular base."
-        ),
-        defaults=["user", "admin"],
-    )
-)
-
-
-class CommandFavorites(Command):
-    @property
-    def ident(self) -> str:
-        return "favorites"
-
-    @property
-    def title(self) -> str:
-        return _("Favorites")
-
-    @property
-    def icon_name(self):
-        return "favorite"
-
-    @property
-    def permission(self) -> Permission:
-        return PermissionActionStar
-
-    @property
-    def tables(self):
-        return ["host", "service"]
-
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
-        html.button("_star", _("Add to Favorites"), cssclass="hot")
-        html.button("_unstar", _("Remove from Favorites"))
-
-    def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
-    ) -> CommandActionResult:
-        if request.var("_star") or request.var("_unstar"):
-            star = 1 if request.var("_star") else 0
-            if star:
-                title = _("<b>add to your favorites</b>")
-            else:
-                title = _("<b>remove from your favorites</b>")
-            return f"STAR;{star};{spec}", title
-        return None
-
-    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
-        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
-        # object type for the command
-        assert isinstance(command, str)
-        _unused, star, spec = command.split(";", 2)
-        stars = user.stars
-        if star == "0" and spec in stars:
-            stars.remove(spec)
-        elif star == "1":
-            stars.add(spec)
-        user.save_stars()

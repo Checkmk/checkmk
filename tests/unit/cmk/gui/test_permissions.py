@@ -72,7 +72,6 @@ def test_registered_permissions() -> None:
         "action.notifications",
         "action.remove_all_downtimes",
         "action.reschedule",
-        "action.star",
         "action.delete_crash_report",
         "agent_registration.register_any_existing_host",
         "agent_registration.register_managed_existing_host",

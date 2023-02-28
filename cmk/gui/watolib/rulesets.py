@@ -313,10 +313,10 @@ class RulesetCollection:
             else:
                 config_dict[varname] = []
 
-        self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
+        self.replace_folder_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
-    def from_config(  # type:ignore[no-untyped-def]
-        self, folder: CREFolder, rulesets_config, only_varname: RulesetName | None = None
+    def replace_folder_config(  # type:ignore[no-untyped-def]
+        self, folder: CREFolder, loaded_file_config, only_varname: RulesetName | None = None
     ) -> None:
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         config_varname: str
@@ -324,19 +324,19 @@ class RulesetCollection:
         for varname in varnames:
             if ":" in varname:
                 config_varname, subkey = varname.split(":", 1)
-                rulegroup_config = rulesets_config.get(config_varname, {})
+                rulegroup_config = loaded_file_config.get(config_varname, {})
                 if subkey not in rulegroup_config:
                     continue  # Nothing configured: nothing left to do
 
                 ruleset_config = rulegroup_config[subkey]
             else:
                 config_varname, subkey = varname, None
-                ruleset_config = rulesets_config.get(config_varname, [])
+                ruleset_config = loaded_file_config.get(config_varname, [])
 
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 
-            self._rulesets[varname].from_config(folder, ruleset_config)
+            self._rulesets[varname].replace_folder_config(folder, ruleset_config)
 
     def save(self) -> None:
         raise NotImplementedError()
@@ -622,7 +622,11 @@ class Ruleset:
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def from_config(self, folder: CREFolder, rules_config) -> None:  # type:ignore[no-untyped-def]
+    def replace_folder_config(  # type:ignore[no-untyped-def]
+        self,
+        folder: CREFolder,
+        rules_config,
+    ) -> None:
         if not rules_config:
             return
 

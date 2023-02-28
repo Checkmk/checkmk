@@ -66,7 +66,7 @@ def main() {
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
         dir("${checkout_dir}/tests") {
-            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$BRANCH' EDITION='$EDITION' VERSION='$cmk_version'";
+            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' BRANCH='$BRANCH' EDITION='$branch_name' VERSION='$cmk_version'";
             on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
                 sh(cmd);
             }

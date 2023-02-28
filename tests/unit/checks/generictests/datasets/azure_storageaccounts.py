@@ -24,9 +24,9 @@ info = [
     ['{"name": "Ingress", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 31620.0, "unit": "bytes"}'],
     ['{"name": "Egress", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 237007090.0, "unit": "bytes"}'],
     ['{"name": "Transactions", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 62.0, "unit": "count"}'],
-    ['{"name": "SuccessServerLatency", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 5624.0, "unit": "milli_seconds"}'],
-    ['{"name": "SuccessE2ELatency", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 9584.0, "unit": "milli_seconds"}'],
-    ['{"name": "Availability", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 6200.0, "unit": "percent"}'],
+    ['{"name": "SuccessServerLatency", "timestamp": "1544595420", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 5624.0, "unit": "milli_seconds"}'],
+    ['{"name": "SuccessE2ELatency", "timestamp": "1544595420", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 9584.0, "unit": "milli_seconds"}'],
+    ['{"name": "Availability", "timestamp": "1544595420", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 6200.0, "unit": "percent"}'],
     ['Resource'],
     [
         '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "Storage", "group":'
@@ -41,9 +41,9 @@ info = [
     ['{"name": "Ingress", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 43202937.0, "unit": "bytes"}'],
     ['{"name": "Egress", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 5835881.0, "unit": "bytes"}'],
     ['{"name": "Transactions", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 1907.0, "unit": "count"}'],
-    ['{"name": "SuccessServerLatency", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 20105.0, "unit": "milli_seconds"}'],
-    ['{"name": "SuccessE2ELatency", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 37606.0, "unit": "milli_seconds"}'],
-    ['{"name": "Availability", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 190700.0, "unit": "percent"}'],
+    ['{"name": "SuccessServerLatency", "timestamp": "1544602380", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 20105.0, "unit": "milli_seconds"}'],
+    ['{"name": "SuccessE2ELatency", "timestamp": "1544602380", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 37606.0, "unit": "milli_seconds"}'],
+    ['{"name": "Availability", "timestamp": "1544602380", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 190700.0, "unit": "percent"}'],
 ]
 
 _common_discovery = [(u'glastonburydiag381', {}), (u'st0ragetestaccount', {})]

@@ -53,10 +53,15 @@ METRICS_SELECTED = {
     ],
     "Microsoft.Storage/storageAccounts": [
         (
-            "UsedCapacity,Ingress,Egress,Transactions,"
-            "SuccessServerLatency,SuccessE2ELatency,Availability",
+            "UsedCapacity,Ingress,Egress,Transactions",
             "PT1H",
             "total",
+            None,
+        ),
+        (
+            "SuccessServerLatency,SuccessE2ELatency,Availability",
+            "PT1H",
+            "average",
             None,
         ),
     ],

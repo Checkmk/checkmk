@@ -5,10 +5,9 @@
 # mypy: disallow_untyped_defs
 
 import datetime
-import json
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from typing import Any
+from collections.abc import Sequence
+
+import pydantic
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -24,24 +23,20 @@ _DISPLAYED_AGE = render.timespan(_IGNORE_ENTRIES_OLDER_THAN.total_seconds()).rem
 )
 
 
-# to lazy to type the full schema for incidents.
-# https://status.cloud.google.com/incidents.schema.json
-@dataclass(frozen=True)
-class Incident:
-    affected_products: Sequence[str]
-    affected_location: Sequence[str]
-    end: datetime.datetime | None
-    description: str
-    uri: str
+class AffectedProduct(pydantic.BaseModel):
+    title: str
 
-    @classmethod
-    def from_json(cls, data: Mapping[str, Any]) -> "Incident":
-        desc = data["external_desc"].replace("\n", "")
-        products = [el["title"] for el in data["affected_products"]]
-        locations = [el["id"] for el in data["most_recent_update"]["affected_locations"]]
-        end = datetime.datetime.fromisoformat(data["end"]) if "end" in data else None
-        uri = data["uri"]
-        return cls(products, locations, end, desc, uri)
+
+class AffectedLocation(pydantic.BaseModel):
+    id_: str = pydantic.Field(..., alias="id")
+
+
+class Incident(pydantic.BaseModel):
+    affected_products: Sequence[AffectedProduct]
+    currently_affected_locations: Sequence[AffectedLocation]
+    end: datetime.datetime | None
+    external_desc: str
+    uri: str
 
     def in_reference(self, smallest_accepted_time: datetime.datetime) -> bool:
         # checking the last known status might not work because it was not set to available.
@@ -49,14 +44,15 @@ class Incident:
         return self.end is None or smallest_accepted_time < self.end
 
 
-@dataclass(frozen=True)
-class Section:
-    incidents: Sequence[Incident]
+class Section(pydantic.BaseModel):
+    # health_info corresponds to gcp json scheme provided here:
+    # https://status.cloud.google.com/incidents.schema.json
+    # Some fields have been omitted.
+    health_info: Sequence[Incident]
 
 
 def parse(string_table: StringTable) -> Section:
-    incidents = [Incident.from_json(el) for el in json.loads(string_table[0][0])]
-    return Section(incidents)
+    return Section.parse_raw(string_table[0][0])
 
 
 register.agent_section(name="gcp_health", parse_function=parse)
@@ -65,12 +61,18 @@ register.agent_section(name="gcp_health", parse_function=parse)
 def check(section: Section) -> CheckResult:
     smallest_accepted_time = datetime.datetime.now(datetime.UTC) - _IGNORE_ENTRIES_OLDER_THAN
     no_incident_found = True
-    for incident in section.incidents:
+    for incident in section.health_info:
         if incident.in_reference(smallest_accepted_time):
+            product_description = "Products: " + ", ".join(
+                p.title for p in incident.affected_products
+            )
+            location_description = "Locations: " + ", ".join(
+                l.id_ for l in incident.currently_affected_locations
+            )
             yield Result(
                 state=State.CRIT,
-                summary=incident.description,
-                details=f"Products: {', '.join(incident.affected_products)} \n Locations: {', '.join(incident.affected_location)}, \n {BASE_URL}{incident.uri}",
+                summary=incident.external_desc.replace("\n", ""),
+                details=f"{product_description} \n {location_description} \n {BASE_URL}{incident.uri}",
             )
             no_incident_found = False
     if no_incident_found:

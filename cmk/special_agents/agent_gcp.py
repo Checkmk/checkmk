@@ -180,6 +180,12 @@ class Service:
 Labels = Mapping[str, str]
 
 
+@dataclass(frozen=True)
+class HostLabelSection:
+    labels: Labels
+    name: str = "labels"
+
+
 class PiggyBackService:
     """
     How are piggy back hosts determined?
@@ -204,7 +210,7 @@ class PiggyBackService:
         metric_label: str,
         # used to determine host name from asset information. Does not need to equal asset_label
         name_label: str,
-        labeler: Callable[[Asset], Labels],
+        labeler: Callable[[Asset], HostLabelSection],
         services: Sequence[Service],
     ):
         self.name = name
@@ -257,7 +263,7 @@ class ResultSection:
 class PiggyBackSection:
     name: str
     service_name: str
-    labels: Labels
+    labels: HostLabelSection
     sections: Iterator[ResultSection]
 
 
@@ -303,7 +309,14 @@ class ExceptionSection:
         return f"{self.exc_type.__name__}:{self.source}:{self.exception}".replace("\n", "")
 
 
-Section = AssetSection | ResultSection | PiggyBackSection | CostSection | ExceptionSection
+Section = (
+    AssetSection
+    | ResultSection
+    | PiggyBackSection
+    | CostSection
+    | ExceptionSection
+    | HostLabelSection
+)
 
 #################
 # Serialization #
@@ -325,8 +338,7 @@ def _result_serializer(section: ResultSection) -> None:
 
 def _piggyback_serializer(section: PiggyBackSection) -> None:
     with ConditionalPiggybackSection(section.name):
-        with SectionWriter("labels") as w:
-            w.append(json.dumps(section.labels))
+        _label_serializer(section.labels)
         for s in section.sections:
             new_s = ResultSection(f"{section.service_name}_{s.name}", s.results)
             _result_serializer(new_s)
@@ -345,6 +357,11 @@ def _exception_serializer(section: ExceptionSection) -> None:
             w.append(section.serialize())
 
 
+def _label_serializer(section: HostLabelSection) -> None:
+    with SectionWriter("labels") as w:
+        w.append(json.dumps(section.labels))
+
+
 def gcp_serializer(sections: Iterable[Section]) -> None:
     for section in sections:
         if isinstance(section, AssetSection):
@@ -357,6 +374,8 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
             _cost_serializer(section)
         elif isinstance(section, ExceptionSection):
             _exception_serializer(section)
+        elif isinstance(section, HostLabelSection):
+            _label_serializer(section)
         else:
             typing_extensions.assert_never(section)
 
@@ -449,7 +468,9 @@ def piggy_back(
         yield PiggyBackSection(
             name=name,
             service_name=service.name,
-            labels=service.labeler(host) | {"cmk/gcp/projectId": client.project},
+            labels=HostLabelSection(
+                labels=service.labeler(host).labels | {"cmk/gcp/projectId": client.project}
+            ),
             sections=sections,
         )
 
@@ -511,6 +532,7 @@ def run(
     cost: CostArgument | None,
     piggy_back_prefix: str,
 ) -> None:
+    serializer([HostLabelSection(labels={"cmk/gcp/projectId": client.project})])
     try:
         assets = run_assets(
             client, [s.name for s in services] + [s.name for s in piggy_back_services]
@@ -1023,14 +1045,18 @@ HTTP_LOADBALANCER = Service(
 )
 
 
-def default_labeler(asset: Asset) -> Labels:
+def default_labeler(asset: Asset) -> HostLabelSection:
     if "labels" in asset.asset.resource.data:
-        return {f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
-    return {}
+        return HostLabelSection(
+            labels={
+                f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()
+            }
+        )
+    return HostLabelSection(labels={})
 
 
-def gce_labeler(asset: Asset) -> Labels:
-    return {**default_labeler(asset), "cmk/gcp/gce": "instance"}
+def gce_labeler(asset: Asset) -> HostLabelSection:
+    return HostLabelSection(labels={**default_labeler(asset).labels, "cmk/gcp/gce": "instance"})
 
 
 GCE = PiggyBackService(

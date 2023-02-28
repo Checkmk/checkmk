@@ -614,6 +614,23 @@ def rule_pack_id_to_mkp(
     }
 
 
+def visual_to_mkp(
+    installer: Installer, rule_pack_files: Iterable[Path]
+) -> dict[str, PackageName | None]:
+    """
+    Returns a dictionary of visual name to MKP package for a given manifest.
+    Every visual is contained exactly once in this mapping. If no corresponding
+    MKP exists, the value of that mapping is None.
+    """
+    package_map = {
+        file: manifest.name
+        for manifest in installer.get_installed_manifests()
+        for file in manifest.files.get(PackagePart.GUI, ())
+    }
+
+    return {f.stem: package_map.get(f) for f in rule_pack_files}
+
+
 def update_active_packages(installer: Installer, path_config: PathConfig) -> None:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore()

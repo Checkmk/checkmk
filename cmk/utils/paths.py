@@ -130,6 +130,9 @@ local_enabled_packages_dir = local_share_dir / "enabled_packages"
 
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)
+local_dashboards_dir = local_gui_plugins_dir / "dashboard"
+local_views_dir = local_gui_plugins_dir / "views"
+local_reports_dir = local_gui_plugins_dir / "reports"
 
 licensing_dir = Path(var_dir, "licensing")
 

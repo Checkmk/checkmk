@@ -296,24 +296,37 @@ class RulesetCollection:
         if not os.path.exists(path):
             return  # Do not initialize rulesets when no rule at all exists
 
-        config_dict = {
+        self.replace_folder_config(
+            folder,
+            store.load_mk_file(
+                path, {**self._context_helpers(folder), **self._prepare_empty_rulesets()}
+            ),
+            only_varname,
+        )
+
+    @staticmethod
+    def _context_helpers(folder: CREFolder) -> Mapping[str, object]:
+        return {
             "ALL_HOSTS": ALL_HOSTS,
             "ALL_SERVICES": ALL_SERVICES,
             "NEGATE": NEGATE,
             "FOLDER_PATH": folder.path(),
         }
 
-        # Prepare empty rulesets so that rules.mk has something to
-        # append to. We need to initialize all variables here, even
-        # when only loading with only_varname.
-        for varname in rulespec_registry.keys():
-            if ":" in varname:
-                dictname, _subkey = varname.split(":")
-                config_dict[dictname] = {}
-            else:
-                config_dict[varname] = []
+    @staticmethod
+    def _prepare_empty_rulesets() -> Mapping[str, list[object] | dict[str, object]]:
+        """Prepare empty rulesets so that rules.mk has something to append to
 
-        self.replace_folder_config(folder, store.load_mk_file(path, config_dict), only_varname)
+        We need to initialize all variables here, even when only loading with only_varname.
+        """
+
+        def _make_dict() -> list[object] | dict[str, object]:
+            return {}
+
+        return dict(
+            ((name.split(":")[0], _make_dict()) if ":" in name else (name, []))
+            for name in rulespec_registry.keys()
+        )
 
     def replace_folder_config(  # type:ignore[no-untyped-def]
         self, folder: CREFolder, loaded_file_config, only_varname: RulesetName | None = None

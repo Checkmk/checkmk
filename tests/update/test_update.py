@@ -27,8 +27,10 @@ def test_update(test_site):
         fallback_edition=Edition.CEE,
         fallback_branch=current_base_branch_name(),
     )
+    target_site = conftest.update_site(target_version)
 
-    conftest.update_site(target_version.version)
+    assert target_site.version.version == target_version.version, "Target version mismatch!"
+    assert target_site.version.edition == target_version.edition, "Target edition mismatch!"
 
     # TODO: check target installation
     # TODO: check config

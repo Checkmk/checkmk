@@ -1,0 +1,29 @@
+Title: Fix improper certificate validation in agent updater
+Class: security
+Compatible: compat
+Component: agents
+Date: 1677590652
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The compiled version of the agent-updater uses its own collection of trusted Certificate Authorities.
+This collection comes from the Python package certifi and is based on the collection of Mozilla Firefox.
+The used Python package and therefore the collection was outdated and is subject to CVE-2022-23491.
+This collection included a CA certificate of TrustCor which is not considered trustworthy anymore.
+(See: https://security.googleblog.com/2023/01/sustaining-digital-certificate-security_13.html)
+
+If an attacker was able to create certificates for arbitrary domains signed by this CA, machine-in-the-middle attacks could be possible.
+
+To mitigate this vulnerability please update and rollout the agent-updater (typical agent-update is sufficient).
+If an update is currently not possible one can set the <tt>Certificates for HTTPS verification</tt> option for the agent updater.
+If this option is set a custom list of trusted certificates is used to verify the HTTPS connection instead of the CA collection.
+
+All versions up to 1.6 are vulnerable.
+
+This vulnerability was found internally.
+
+We calculated a CVSS 3.1 score of 6.2 (medium) with the following vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N/E:U/RL:O/RC:R
+
+Please note that we rate this rather low since this is more a hypothetical attack and no wrong-doing of the CA was ever proven.

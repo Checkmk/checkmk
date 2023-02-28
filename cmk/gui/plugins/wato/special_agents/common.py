@@ -6,6 +6,8 @@
 
 from typing import Any
 
+from cmk.utils import aws_constants
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -496,3 +498,14 @@ def ssl_verification():
             default_value=False,
         ),
     )
+
+
+def aws_region_to_monitor() -> list[tuple[str, str]]:
+    def key(regionid_display: tuple[str, str]) -> str:
+        return regionid_display[1]
+
+    regions_by_display_order = [
+        *sorted((r for r in aws_constants.AWSRegions if "GovCloud" not in r[1]), key=key),
+        *sorted((r for r in aws_constants.AWSRegions if "GovCloud" in r[1]), key=key),
+    ]
+    return [(id_, " | ".join((region, id_))) for id_, region in regions_by_display_order]

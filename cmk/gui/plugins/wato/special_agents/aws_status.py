@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils import aws_constants
-
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
+from cmk.gui.plugins.wato.special_agents import common
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, ListChoice
 
@@ -18,7 +16,7 @@ def _valuespec_special_agents_aws_status() -> Dictionary:
                 "regions",
                 ListChoice(
                     title=_("Regions to monitor"),
-                    choices=aws_constants.AWSRegions,
+                    choices=common.aws_region_to_monitor(),
                 ),
             ),
         ],
@@ -29,7 +27,7 @@ def _valuespec_special_agents_aws_status() -> Dictionary:
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupVMCloudContainer,
+        group=common.RulespecGroupVMCloudContainer,
         name="special_agents:aws_status",
         valuespec=_valuespec_special_agents_aws_status,
     )

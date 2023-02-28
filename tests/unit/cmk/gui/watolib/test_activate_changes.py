@@ -57,6 +57,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ReplicationPath(
             ty="dir", ident="omd", site_path="etc/omd", excludes=["allocated_ports", "site.conf"]
         ),
+        ReplicationPath(
+            ty="dir",
+            ident="frozen_aggregations",
+            site_path="var/check_mk/frozen_aggregations",
+            excludes=[],
+        ),
     ]
 
     if edition is not cmk_version.Edition.CRE:

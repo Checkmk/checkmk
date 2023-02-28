@@ -34,7 +34,7 @@
   }
 }
 
-.frozen_bi.only_in_frozen_aggregation {
+.frozen_aggregation.only_in_frozen_aggregation {
   background: $bi-new-element-dim;
   a,
   img,
@@ -45,11 +45,11 @@
     }
   }
 }
-.frozen_bi.missing_in_frozen_aggregation {
+.frozen_aggregation.missing_in_frozen_aggregation {
   background: $bi-missing-element-dim;
 }
 
-.frozen_bi .frozen_marker {
+.frozen_aggregation .frozen_marker {
   margin-left: -24px;
   padding: 8px;
   display: inline-block;

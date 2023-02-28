@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 import logging
-import os
 
 import pytest
 
@@ -17,27 +16,24 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class BaseVersions:
     BASE_VERSIONS = [
-        "2.1.0p1",
+        CMKVersion("2.1.0p1", Edition.CEE, current_base_branch_name()),
+        CMKVersion("2.1.0p11", Edition.CEE, current_base_branch_name()),
+        CMKVersion("2.1.0p22", Edition.CEE, current_base_branch_name()),
     ]
-    IDS = [f"base-version: {base_version}" for base_version in BASE_VERSIONS]
+    IDS = [f"from_{base_version.version_directory()}_to_daily" for base_version in BASE_VERSIONS]
 
 
-def _get_site(version: str, update: bool) -> Site:
-
-    # we need to provide the version here for install-cmk.py
-    os.environ["VERSION"] = version
-
-    # we need to skip the enforce_non_localized_gui() call since it will fail for older releases
-    os.environ["SKIP_ENFORCE_NON_LOCALIZED_GUI"] = "1"
+def _get_site(version: CMKVersion, update: bool) -> Site:
+    """Install or update the test site with the given version."""
 
     sf = SiteFactory(
-        version=CMKVersion(version, Edition.CEE, current_base_branch_name()),
+        version=CMKVersion(version.version, version.edition, current_base_branch_name()),
         prefix="update_",
         update_from_git=False,
         install_test_python_modules=False,
         update=update,
+        enforce_english_gui=False,
     )
-
     site = sf.get_existing_site("central")
 
     logger.info("Site exists: %s", site.exists())
@@ -57,10 +53,12 @@ def _get_site(version: str, update: bool) -> Site:
 
 @pytest.fixture(name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS)
 def get_site(request: pytest.FixtureRequest) -> Site:
+    """Install the test site with the base version."""
     base_version = request.param
     logger.info("Setting up test-site ...")
     return _get_site(base_version, update=False)
 
 
-def update_site(target_version: str) -> Site:
+def update_site(target_version: CMKVersion) -> Site:
+    """Update the test site to the target version."""
     return _get_site(target_version, update=True)

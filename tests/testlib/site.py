@@ -46,6 +46,7 @@ class Site:
         install_test_python_modules: bool = True,
         admin_password: str = "cmk",
         update: bool = False,
+        enforce_english_gui: bool = True,
     ) -> None:
         assert site_id
         self.id = site_id
@@ -65,6 +66,7 @@ class Site:
         self.admin_password = admin_password
 
         self.update = update
+        self.enforce_english_gui = enforce_english_gui
 
         self.openapi = CMKOpenApiSession(
             host=self.http_address,
@@ -492,6 +494,7 @@ class Site:
                     "run",
                     f"{cmk_path()}/tests/scripts/install-cmk.py",
                 ],
+                env=dict(os.environ, VERSION=self.version.version),
                 check=False,
             )
             if completed_process.returncode != 0:
@@ -504,7 +507,7 @@ class Site:
             raise Exception("The site %s already exists." % self.id)
 
         if self.update or not self.exists():
-            logger.info("Creating site '%s'", self.id)
+            logger.info("Updating site '%s'" if self.update else "Creating site '%s'", self.id)
             completed_process = subprocess.run(
                 [
                     "/usr/bin/sudo",
@@ -513,6 +516,7 @@ class Site:
                     "-V",
                     self.version.version_directory(),
                     "update",
+                    "--conflict=install",
                     self.id,
                 ]
                 if self.update
@@ -942,9 +946,9 @@ class Site:
     def prepare_for_tests(self) -> None:
         self.verify_cmk()
 
-        web = CMKWebSession(self)
-        web.login()
-        if not os.getenv("SKIP_ENFORCE_NON_LOCALIZED_GUI") == "1":
+        if self.enforce_english_gui:
+            web = CMKWebSession(self)
+            web.login()
             self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
 
@@ -968,8 +972,7 @@ class Site:
 
         user_spec, etag = self.openapi.get_user("cmkadmin")
         user_spec["language"] = "en"
-        if os.environ.get("STRIP_ENFORCE_PASSWORD_CHANGE") == "1":
-            user_spec.pop("enforce_password_change", None)
+        user_spec.pop("enforce_password_change", None)
         self.openapi.edit_user("cmkadmin", user_spec, etag)
 
         # Verify the language is as expected now
@@ -1124,6 +1127,7 @@ class SiteFactory:
         install_test_python_modules: bool = True,
         prefix: str | None = None,
         update: bool = False,
+        enforce_english_gui: bool = True,
     ) -> None:
         self._version = version
         self._base_ident = prefix or "s_%s_" % version.branch[:6]
@@ -1132,6 +1136,7 @@ class SiteFactory:
         self._update_from_git = update_from_git
         self._install_test_python_modules = install_test_python_modules
         self._update = update
+        self._enforce_english_gui = enforce_english_gui
 
     @property
     def sites(self) -> Mapping[str, Site]:
@@ -1179,6 +1184,7 @@ class SiteFactory:
             update_from_git=self._update_from_git,
             install_test_python_modules=self._install_test_python_modules,
             update=self._update,
+            enforce_english_gui=self._enforce_english_gui,
         )
 
     def _new_site(self, name: str) -> Site:

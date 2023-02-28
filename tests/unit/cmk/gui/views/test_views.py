@@ -255,11 +255,6 @@ def test_registered_commands() -> None:
             "tables": ["host", "service"],
             "title": "Reschedule active checks",
         },
-        "favorites": {
-            "permission": "action.star",
-            "tables": ["host", "service"],
-            "title": "Favorites",
-        },
         "ec_update_event": {
             "permission": "mkeventd.update",
             "tables": ["event"],

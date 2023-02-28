@@ -114,7 +114,6 @@ from cmk.fetchers import (
     FetcherType,
     IPMIFetcher,
     PiggybackFetcher,
-    ProgramFetcher,
     SNMPFetcher,
     SNMPSectionMeta,
     TCPEncryptionHandling,
@@ -2721,24 +2720,14 @@ class ConfigCache:
             password=ipmi_credentials.get("password"),
         )
 
-    def make_program_fetcher(
-        self, host_name: HostName, ip_address: HostAddress | None, template: str | None = None
-    ) -> ProgramFetcher:
-        """Return a fetcher
-
-        raise: LookupError if no datasource is configured.
-
+    def make_program_commandline(self, host_name: HostName, ip_address: HostAddress | None) -> str:
         """
-        return ProgramFetcher(
-            cmdline=self._translate_ds_program_source_cmdline(
-                host_name,
-                ip_address,
-                self.host_extra_conf(host_name, datasource_programs)[0]
-                if template is None
-                else template,
-            ),
-            stdin=None,
-            is_cmc=is_cmc(),
+        raise: LookupError if no datasource is configured.
+        """
+        return self.translate_program_commandline(
+            host_name,
+            ip_address,
+            self.host_extra_conf(host_name, datasource_programs)[0],
         )
 
     def make_piggyback_fetcher(
@@ -4328,7 +4317,7 @@ class ConfigCache:
 
         return s
 
-    def _translate_ds_program_source_cmdline(
+    def translate_program_commandline(
         self,
         host_name: HostName,
         ip_address: HostAddress | None,

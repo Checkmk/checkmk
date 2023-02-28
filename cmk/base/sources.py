@@ -340,7 +340,13 @@ class _Builder:
                     FetcherType.PROGRAM,
                     SourceType.HOST,
                 ),
-                self.config_cache.make_program_fetcher(self.host_name, self.ipaddress),
+                ProgramFetcher(
+                    cmdline=self.config_cache.make_program_commandline(
+                        self.host_name, self.ipaddress
+                    ),
+                    stdin=None,
+                    is_cmc=config.is_cmc(),
+                ),
                 AgentFileCache(
                     self.host_name,
                     path_template=make_file_cache_path_template(

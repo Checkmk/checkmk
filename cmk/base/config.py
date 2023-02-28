@@ -373,7 +373,7 @@ SpecialAgentInfoFunctionResult = (
     str | Sequence[Union[str, int, float, tuple[str, str, str]]] | SpecialAgentConfiguration
 )
 SpecialAgentInfoFunction = Callable[
-    [Mapping[str, Any], str, str | None], SpecialAgentInfoFunctionResult
+    [Mapping[str, object], str, str | None], SpecialAgentInfoFunctionResult
 ]
 HostCheckCommand = Union[None, str, tuple[str, int | str]]
 PingLevels = dict[str, Union[int, tuple[float, float]]]
@@ -2597,7 +2597,7 @@ class ConfigCache:
         self.__computed_datasources: dict[HostName, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
         self.__active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
-        self.__special_agents: dict[HostName, Sequence[tuple[str, dict]]] = {}
+        self.__special_agents: dict[HostName, Sequence[tuple[str, Mapping[str, object]]]] = {}
         self.__hostgroups: dict[HostName, Sequence[HostgroupName]] = {}
         self.__contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
@@ -3280,9 +3280,9 @@ class ConfigCache:
 
         return self.__active_checks.setdefault(host_name, make_active_checks())
 
-    def special_agents(self, host_name: HostName) -> Sequence[tuple[str, dict]]:
-        def special_agents_impl() -> Sequence[tuple[str, dict]]:
-            matched: list[tuple[str, dict]] = []
+    def special_agents(self, host_name: HostName) -> Sequence[tuple[str, Mapping[str, object]]]:
+        def special_agents_impl() -> Sequence[tuple[str, Mapping[str, object]]]:
+            matched: list[tuple[str, Mapping[str, object]]] = []
             # Previous to 1.5.0 it was not defined in which order the special agent
             # rules overwrite each other. When multiple special agents were configured
             # for a single host a "random" one was picked (depending on the iteration

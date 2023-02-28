@@ -227,7 +227,7 @@ def test_openapi_create_rule(
     # Check that the format on disk is as expected.
     rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
     environ = load_mk_file(rules_mk, default={})
-    stored_condition = environ[values["ruleset"]][0]["condition"]
+    stored_condition = environ[values["ruleset"]][0]["condition"]  # type: ignore[index]
     expected_condition = {
         "host_tags": {"criticality": "prod", "networking": {"$ne": "wan"}},
         "host_labels": {"os": "windows"},

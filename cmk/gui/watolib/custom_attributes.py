@@ -41,6 +41,7 @@ def load_custom_attrs_from_mk_file(lock):
     attrs = {}
     for what in ["user", "host"]:
         attributes = vars_.get("wato_%s_attrs" % what, [])
+        assert isinstance(attributes, list)
         if what == "host":
             attributes = transform_pre_16_host_topics(attributes)
         attrs[what] = attributes

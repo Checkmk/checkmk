@@ -208,7 +208,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return self.load()
 
     def load(self, site_specific=False, custom_site_path=None):
-        cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
+        cleanup_settings = {**store.load_mk_file(self.diskspace_config, default={})}
         if not cleanup_settings:
             return {}
 

@@ -11,7 +11,7 @@ import pprint
 import shutil
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -105,11 +105,13 @@ def makedirs(path: Path | str, mode: int = 0o770) -> None:
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
-def load_mk_file(path: Path | str, default: Any = None, lock: bool = False) -> Any:
+def load_mk_file(
+    path: Path | str, default: Mapping[str, object], lock: bool = False
+) -> Mapping[str, object]:
     if not isinstance(path, Path):
         path = Path(path)
 
-    if default is None:
+    if default is None:  # leave this for now, we still have a lot of `Any`s flying around
         raise MKGeneralException(
             _(
                 "You need to provide a config dictionary to merge with the "

@@ -5,15 +5,53 @@
 
 import pytest
 
+from tests.testlib.snmp import get_parsed_snmp_section
+
+from tests.unit.conftest import FixRegister
+
+from cmk.utils.type_defs import SectionName
+
 from cmk.base.plugins.agent_based import synology_disks
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
+# SUP-13080
+DATA_0 = """
+.1.3.6.1.2.1.1.1.0 Linux PPPPPP 1.1.111+ #00000 SMP Tue Nov 11 11:11:11 CST 1111 x86_64
+.1.3.6.1.4.1.6574.2.1.1.2.0 Disk 1
+.1.3.6.1.4.1.6574.2.1.1.2.1 Disk 2
+.1.3.6.1.4.1.6574.2.1.1.2.2 Disk 3
+.1.3.6.1.4.1.6574.2.1.1.2.3 Disk 4
+.1.3.6.1.4.1.6574.2.1.1.3.0 HAT5300-8T
+.1.3.6.1.4.1.6574.2.1.1.3.1 HAT5300-8T
+.1.3.6.1.4.1.6574.2.1.1.3.2 HAT5300-8T
+.1.3.6.1.4.1.6574.2.1.1.3.3 HAT5300-8T
+.1.3.6.1.4.1.6574.2.1.1.5.0 1
+.1.3.6.1.4.1.6574.2.1.1.5.1 1
+.1.3.6.1.4.1.6574.2.1.1.5.2 1
+.1.3.6.1.4.1.6574.2.1.1.5.3 1
+.1.3.6.1.4.1.6574.2.1.1.6.0 27
+.1.3.6.1.4.1.6574.2.1.1.6.1 26
+.1.3.6.1.4.1.6574.2.1.1.6.2 26
+.1.3.6.1.4.1.6574.2.1.1.6.3 25
+.1.3.6.1.4.1.6574.2.1.1.13.0 1
+.1.3.6.1.4.1.6574.2.1.1.13.1 1
+.1.3.6.1.4.1.6574.2.1.1.13.2 3
+.1.3.6.1.4.1.6574.2.1.1.13.3 1
+"""
+
+DATA_1 = """
+.1.3.6.1.4.1.6574.2.1.1.2.0 Disk 1
+.1.3.6.1.4.1.6574.2.1.1.3.0 HAT5300-8T
+.1.3.6.1.4.1.6574.2.1.1.5.0 1
+.1.3.6.1.4.1.6574.2.1.1.6.0 27
+"""
+
 SECTION_TABLE = [
-    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33"],
-    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33"],
-    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33"],
-    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33"],
-    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33"],
+    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33", "1"],
+    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33", "1"],
+    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33", "1"],
+    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33", "1"],
+    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33", "1"],
 ]
 
 
@@ -29,9 +67,17 @@ def test_discovery() -> None:
 
 
 def make_section(
-    state: int = 1, temperature: float = 42.1, disk: str = "none", model: str = "hello"
+    state: int = 1,
+    temperature: float = 42.1,
+    disk: str = "none",
+    model: str = "hello",
+    health: int = 1,
 ) -> synology_disks.Section:
-    return {disk: synology_disks.Disk(state=state, temperature=temperature, disk=disk, model=model)}
+    return {
+        disk: synology_disks.Disk(
+            state=state, temperature=temperature, disk=disk, model=model, health=health
+        )
+    }
 
 
 @pytest.mark.parametrize(
@@ -41,9 +87,8 @@ def make_section(
 def test_result_state(state: int, expected: State) -> None:
     section = make_section(state=state)
     item = list(section.keys())[0]
-    result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))[-1]
-    assert isinstance(result, Result)
-    assert result.state == expected
+    result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
+    assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
 def test_temperature_metric() -> None:
@@ -68,8 +113,29 @@ def test_check_cached_is_ok(used_as_cache: bool, expected: State) -> None:
     section = make_section(state=3)
     item = list(section.keys())[0]
     params = {"used_as_cache": used_as_cache}
-    result = list(synology_disks.check_synology_disks(section=section, item=item, params=params))[
-        -1
+    result = list(synology_disks.check_synology_disks(section=section, item=item, params=params))
+    assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
+
+
+def test_disk_health_status(fix_register: FixRegister) -> None:
+    parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_0)
+    assert parsed is not None
+    assert list(synology_disks.check_synology_disks("Disk 3", {}, parsed)) == [
+        Metric("temp", 26.0),
+        Result(state=State.OK, summary="Temperature: 26.0°C"),
+        Result(state=State.OK, summary="Allocation status: OK"),
+        Result(state=State.OK, summary="Model: HAT5300-8T"),
+        Result(state=State.CRIT, summary="Health: Critical"),
     ]
-    assert isinstance(result, Result)
-    assert result.state == expected
+
+
+def test_disk_health_status_missing(fix_register: FixRegister) -> None:
+    parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_1)
+    assert parsed is not None
+    assert list(synology_disks.check_synology_disks("Disk 1", {}, parsed)) == [
+        Metric("temp", 27.0),
+        Result(state=State.OK, summary="Temperature: 27.0°C"),
+        Result(state=State.OK, summary="Allocation status: OK"),
+        Result(state=State.OK, summary="Model: HAT5300-8T"),
+        Result(state=State.OK, summary="Health: Not provided (available with DSM 7.1 and above)"),
+    ]

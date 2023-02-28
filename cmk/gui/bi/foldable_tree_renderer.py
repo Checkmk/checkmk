@@ -262,7 +262,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                     if not node[2].get("hidden"):
                         new_path = path + [node[2]["title"]]
                         frozen_marker = node[2].get("frozen_marker")
-                        frozen_bi_css = ""
+                        frozen_aggregation_css = ""
                         tooltip_text = ""
                         if not frozen_marker_set and frozen_marker and self._show_frozen_difference:
                             is_leaf = self._is_leaf(new_path)
@@ -273,7 +273,9 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                                     tooltip_text = _(
                                         "These nodes are not in the frozen aggregation"
                                     )
-                                frozen_bi_css = "frozen_bi missing_in_frozen_aggregation"
+                                frozen_aggregation_css = (
+                                    "frozen_aggregation missing_in_frozen_aggregation"
+                                )
                             else:
                                 if is_leaf:
                                     tooltip_text = _("This node is only in the frozen aggregation")
@@ -281,16 +283,21 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                                     tooltip_text = _(
                                         "These nodes are only in the frozen aggregation"
                                     )
-                                frozen_bi_css = "frozen_bi only_in_frozen_aggregation"
-                        html.open_li(class_=frozen_bi_css)
-                        if frozen_bi_css:
+                                frozen_aggregation_css = (
+                                    "frozen_aggregation only_in_frozen_aggregation"
+                                )
+                        html.open_li(class_=frozen_aggregation_css)
+                        if frozen_aggregation_css:
                             html.span(
                                 "+" if frozen_marker.status == "new" else "-",
                                 class_=["frozen_marker", frozen_marker.status],
                                 title=tooltip_text,
                             )
                         self._show_subtree(
-                            node, new_path, show_host, frozen_marker_set or bool(frozen_bi_css)
+                            node,
+                            new_path,
+                            show_host,
+                            frozen_marker_set or bool(frozen_aggregation_css),
                         )
                         html.close_li()
 

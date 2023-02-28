@@ -24,6 +24,8 @@ import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 from cmk.gui.config import active_config
 
+from cmk.bi.type_defs import frozen_aggregations_dir
+
 
 @pytest.fixture(name="mocked_responses")
 def fixture_mocked_responses() -> Iterable[responses.RequestsMock]:
@@ -103,6 +105,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> None:
 
     (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
     Path(cmk.utils.paths.var_dir, "packages").mkdir(parents=True, exist_ok=True)
+    frozen_aggregations_dir.mkdir(parents=True, exist_ok=True)
 
     gui_conf_dir = Path(cmk.utils.paths.default_config_dir) / "multisite.d" / "wato"
     gui_conf_dir.mkdir(parents=True, exist_ok=True)
@@ -282,6 +285,7 @@ def _get_expected_paths(
         "var/check_mk/web/%s/num_failed_logins.mk" % user_id,
         "var/check_mk/web/%s/serial.mk" % user_id,
         "var/check_mk/stored_passwords",
+        "var/check_mk/frozen_aggregations",
     ]
 
     # The new sync directories create all needed files on the central site now

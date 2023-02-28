@@ -38,6 +38,4 @@ class AggrConfigDict(TypedDict, total=True):
     aggregation_visualization: Any
 
 
-frozen_aggregations_dir = (
-    Path(cmk.utils.paths.default_config_dir) / "multisite.d" / "wato" / "frozen_bi"
-)
+frozen_aggregations_dir = Path(cmk.utils.paths.var_dir) / "frozen_aggregations"

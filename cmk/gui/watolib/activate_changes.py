@@ -111,6 +111,8 @@ from cmk.gui.watolib.hosts_and_folders import (
 )
 from cmk.gui.watolib.site_changes import SiteChanges
 
+from cmk.bi.type_defs import frozen_aggregations_dir
+
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         ActivationBlock,
@@ -276,6 +278,12 @@ def get_replication_paths() -> list[ReplicationPath]:
             ident="omd",
             site_path="etc/omd",
             excludes=["allocated_ports", "site.conf"],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="frozen_aggregations",
+            site_path=os.path.relpath(frozen_aggregations_dir, cmk.utils.paths.omd_root),
+            excludes=[],
         ),
     ]
 

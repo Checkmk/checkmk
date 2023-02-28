@@ -9,8 +9,6 @@ Since this feed is public, no authentication is required.
 """
 
 import dataclasses
-import datetime
-import json
 import sys
 import typing
 from collections.abc import Sequence
@@ -23,7 +21,6 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 
 @dataclasses.dataclass(frozen=True)
 class HealthSection:
-    date: datetime.date
     # I do not want to make an explicit type for the incident schema
     # https://status.cloud.google.com/incidents.schema.json
     health_info: str
@@ -34,17 +31,11 @@ class HealthSection:
 
 def _health_serializer(section: HealthSection) -> None:
     with agent_common.SectionWriter("gcp_health") as w:
-        w.append(json.dumps({"date": section.date.isoformat()}))
         w.append(section.serialize())
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
-    parser.add_argument(
-        "--date",
-        type=datetime.date.fromisoformat,
-        help="date when agent was executed in iso format",
-    )
     return parser.parse_args(argv)
 
 
@@ -57,7 +48,7 @@ def _health_info() -> str:
 
 def write_section(args: Args, health_info: typing.Callable[[], str] = _health_info) -> int:
     response = health_info()
-    section = HealthSection(date=args.date, health_info=response)
+    section = HealthSection(health_info=response)
     _health_serializer(section)
     return 0
 

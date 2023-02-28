@@ -8,10 +8,9 @@ import datetime
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from re import Pattern
 from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
@@ -19,18 +18,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 
 BASE_URL = "https://status.cloud.google.com/"
-
-
-@dataclass(frozen=True)
-class Interval:
-    start: datetime.datetime
-    end: datetime.datetime
-
-    def __post_init__(self) -> None:
-        if self.end and self.start > self.end:
-            raise ValueError(
-                f"Expect that start {self.start} is always earlier than end {self.end}"
-            )
+_IGNORE_ENTRIES_OLDER_THAN = datetime.timedelta(days=3)  # Product-Management decision
+_DISPLAYED_AGE = render.timespan(_IGNORE_ENTRIES_OLDER_THAN.total_seconds()).removesuffix(
+    " 0 hours"
+)
 
 
 # to lazy to type the full schema for incidents.
@@ -39,10 +30,8 @@ class Interval:
 class Incident:
     affected_products: Sequence[str]
     affected_location: Sequence[str]
-    begin: datetime.datetime
     end: datetime.datetime | None
     description: str
-    is_on_going: bool
     uri: str
 
     @classmethod
@@ -50,73 +39,36 @@ class Incident:
         desc = data["external_desc"].replace("\n", "")
         products = [el["title"] for el in data["affected_products"]]
         locations = [el["id"] for el in data["most_recent_update"]["affected_locations"]]
-        begin = datetime.datetime.fromisoformat(data["begin"])
         end = datetime.datetime.fromisoformat(data["end"]) if "end" in data else None
+        uri = data["uri"]
+        return cls(products, locations, end, desc, uri)
+
+    def in_reference(self, smallest_accepted_time: datetime.datetime) -> bool:
         # checking the last known status might not work because it was not set to available.
         # for truly on going incidents the end marker is not existing.
-        on_going = end is None
-        uri = data["uri"]
-        return cls(products, locations, begin, end, desc, on_going, uri)
-
-    # ignore pathological cases occuring when used incorrectly. I.e. the agent is run with a date parameter in the past.
-    # That could lead to finding an incident that has started in our refernce window and concluded after it.
-    def in_reference(self, ref: Interval) -> bool:
-        if self.end is None:
-            raise ValueError("Do not call in_refernce on open incident")
-        if ref.start < self.end and self.end < ref.end:
-            return True
-        return False
+        return self.end is None or smallest_accepted_time < self.end
 
 
 @dataclass(frozen=True)
 class Section:
-    date: datetime.datetime
     incidents: Sequence[Incident]
 
 
 def parse(string_table: StringTable) -> Section:
-    date_str = json.loads(string_table[0][0])["date"]
-    date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-    # needed for comparison in equal timezone later. Since we only care about a day this is fine.
-    date = date.replace(tzinfo=datetime.timezone.utc)
-    incidents = [Incident.from_json(el) for el in json.loads(string_table[1][0])]
-    return Section(date, incidents)
+    incidents = [Incident.from_json(el) for el in json.loads(string_table[0][0])]
+    return Section(incidents)
 
 
 register.agent_section(name="gcp_health", parse_function=parse)
 
 
-def report_incident(
-    incident: Incident,
-    reference_interval: Interval,
-    product_regex: Sequence[Pattern[str]],
-    region_regex: Sequence[Pattern[str]],
-) -> bool:
-    if len(product_regex) != 0:
-        if not any(prex.search(p) for p in incident.affected_products for prex in product_regex):
-            return False
-    if len(region_regex) != 0:
-        if not (
-            any(rrex.search(r) for r in incident.affected_location for rrex in region_regex)
-            or "global" in incident.affected_location
-        ):
-            return False
-    return incident.is_on_going or incident.in_reference(reference_interval)
-
-
-def check(params: Mapping[str, Any], section: Section) -> CheckResult:
-    reference_interval = Interval(
-        section.date - datetime.timedelta(days=params["time_window"]), section.date
-    )
-    product_regex = [regex(el) for el in params["product_filter"]]
-    region_regex = [regex(el) for el in params["region_filter"]]
-    if len(params["product_filter"]) != 0 or len(params["region_filter"]) != 0:
-        yield Result(state=State.OK, notice="We apply a filter to the monitored GCP services.")
+def check(section: Section) -> CheckResult:
+    smallest_accepted_time = datetime.datetime.now(datetime.UTC) - _IGNORE_ENTRIES_OLDER_THAN
     no_incident_found = True
     for incident in section.incidents:
-        if report_incident(incident, reference_interval, product_regex, region_regex):
+        if incident.in_reference(smallest_accepted_time):
             yield Result(
-                state=State.CRIT if incident.is_on_going else State.WARN,
+                state=State.CRIT,
                 summary=incident.description,
                 details=f"Products: {', '.join(incident.affected_products)} \n Locations: {', '.join(incident.affected_location)}, \n {BASE_URL}{incident.uri}",
             )
@@ -124,7 +76,7 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
     if no_incident_found:
         yield Result(
             state=State.OK,
-            summary=f"No known incident in the past {params['time_window']} days {BASE_URL}",
+            summary=f"No known incident in the past {_DISPLAYED_AGE} {BASE_URL}",
         )
 
 
@@ -137,6 +89,4 @@ register.check_plugin(
     service_name="GCP Health",
     discovery_function=discovery,
     check_function=check,
-    check_ruleset_name="gcp_health",
-    check_default_parameters={"time_window": 2, "region_filter": [], "product_filter": []},
 )

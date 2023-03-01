@@ -3,19 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils import gcp_constants
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import FixedValue
+from cmk.gui.valuespec import Dictionary, ListChoice
 
 
-def _valuespec_special_agents_gcp_status() -> FixedValue:
-    # CMK-8322
-    return FixedValue(
-        value={},
+def _regions_to_monitor() -> list[tuple[str, str]]:
+    return [
+        (k, f"{v} | {k}")
+        for k, v in sorted(gcp_constants.RegionMap.items(), key=lambda item: item[1])
+    ]
+
+
+def _valuespec_special_agents_gcp_status() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "regions",
+                ListChoice(
+                    title=_("Regions to monitor"),
+                    choices=_regions_to_monitor(),
+                ),
+            ),
+        ],
         title=_("Google Cloud Platform (GCP) Status"),
-        help=_("This special agent does not require any configuration."),
-        totext=_("Deploy the special agent"),
+        required_keys=["regions"],
     )
 
 

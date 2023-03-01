@@ -10,6 +10,6 @@ def test_gcp_status_argument_parsing() -> None:
     # Assemble
     agent = SpecialAgent("agent_gcp_status")
     # Act
-    arguments = agent.argument_func({}, "host", "ipaddress")
+    arguments = agent.argument_func({"regions": ["asia-east1"]}, "host", "ipaddress")
     # Assert
-    assert arguments == []
+    assert arguments == ["asia-east1"]

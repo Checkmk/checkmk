@@ -13,13 +13,17 @@ def test_health_serialization(capsys: pytest.CaptureFixture[str]) -> None:
     def _health_info() -> str:
         return '{"fake": "test"}'
 
-    args = agent_gcp_status.parse_arguments([])
-    health_info = agent_gcp_status.AgentOutput(health_info=_health_info())
+    args = agent_gcp_status.parse_arguments(["Regions"])
+    discovery_param = agent_gcp_status.DiscoveryParam.parse_obj(vars(args))
+    output = agent_gcp_status.AgentOutput(
+        discovery_param=discovery_param,
+        health_info=_health_info(),
+    )
     # Act
     agent_gcp_status.write_section(args, health_info=_health_info)
     captured = capsys.readouterr()
     lines = captured.out.rstrip().split("\n")
     # Assert
     assert lines[0] == "<<<gcp_health:sep(0)>>>"
-    assert lines[1] == health_info.json()
+    assert lines[1] == output.json()
     assert len(lines) == 2

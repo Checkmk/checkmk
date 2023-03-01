@@ -19,12 +19,23 @@ from cmk.special_agents.utils import agent_common
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
+class DiscoveryParam(pydantic.BaseModel):
+    """Config scheme: discovery for gcp_status.
+
+    This is used by the discovery function of gcp_status. Configuration is passed in the special
+    agent rule, so the user has a all-in-one view.
+    """
+
+    regions: list[str]
+
+
 class AgentOutput(pydantic.BaseModel):
     """Section scheme: gcp_status
 
     Internal json, which is used to forward json between agent_gcp_status and the check.
     """
 
+    discovery_param: DiscoveryParam
     # I do not want to make an explicit type for the incident schema
     # https://status.cloud.google.com/incidents.schema.json
     health_info: pydantic.Json
@@ -37,6 +48,12 @@ def _health_serializer(section: AgentOutput) -> None:
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument(
+        "regions",
+        nargs="*",
+        metavar="REGION1 REGION2",
+        help="Regions, for which Checkmk services are discovered.",
+    )
     return parser.parse_args(argv)
 
 
@@ -49,7 +66,10 @@ def _health_info() -> str:
 
 def write_section(args: Args, health_info: typing.Callable[[], str] = _health_info) -> int:
     response = health_info()
-    section = AgentOutput(health_info=response)
+    section = AgentOutput(
+        discovery_param=DiscoveryParam.parse_obj(vars(args)),
+        health_info=response,
+    )
     _health_serializer(section)
     return 0
 

@@ -9,6 +9,8 @@ from collections.abc import Sequence
 
 import pydantic
 
+from cmk.utils import gcp_constants  # pylint: disable=cmk-module-layer-violation
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -21,6 +23,16 @@ _IGNORE_ENTRIES_OLDER_THAN = datetime.timedelta(days=3)  # Product-Management de
 _DISPLAYED_AGE = render.timespan(_IGNORE_ENTRIES_OLDER_THAN.total_seconds()).removesuffix(
     " 0 hours"
 )
+
+
+class DiscoveryParam(pydantic.BaseModel):
+    """Config scheme: discovery for gcp_status.
+
+    This is used by the discovery function of gcp_status. Configuration is passed in the special
+    agent rule, so the user has a all-in-one view.
+    """
+
+    regions: list[str]
 
 
 class AffectedProduct(pydantic.BaseModel):
@@ -38,6 +50,9 @@ class Incident(pydantic.BaseModel):
     external_desc: str
     uri: str
 
+    def region_ids(self) -> list[str]:
+        return [l.id_ for l in self.currently_affected_locations]
+
     def in_reference(self, smallest_accepted_time: datetime.datetime) -> bool:
         # checking the last known status might not work because it was not set to available.
         # for truly on going incidents the end marker is not existing.
@@ -45,6 +60,7 @@ class Incident(pydantic.BaseModel):
 
 
 class Section(pydantic.BaseModel):
+    discovery_param: DiscoveryParam
     # health_info corresponds to gcp json scheme provided here:
     # https://status.cloud.google.com/incidents.schema.json
     # Some fields have been omitted.
@@ -58,24 +74,22 @@ def parse(string_table: StringTable) -> Section:
 register.agent_section(name="gcp_health", parse_function=parse)
 
 
-def check(section: Section) -> CheckResult:
+def check(item: str, section: Section) -> CheckResult:
     smallest_accepted_time = datetime.datetime.now(datetime.UTC) - _IGNORE_ENTRIES_OLDER_THAN
-    no_incident_found = True
-    for incident in section.health_info:
-        if incident.in_reference(smallest_accepted_time):
-            product_description = "Products: " + ", ".join(
-                p.title for p in incident.affected_products
-            )
-            location_description = "Locations: " + ", ".join(
-                l.id_ for l in incident.currently_affected_locations
-            )
-            yield Result(
-                state=State.CRIT,
-                summary=incident.external_desc.replace("\n", ""),
-                details=f"{product_description} \n {location_description} \n {BASE_URL}{incident.uri}",
-            )
-            no_incident_found = False
-    if no_incident_found:
+    relevant_incidents = [
+        incident
+        for incident in section.health_info
+        if incident.in_reference(smallest_accepted_time) and item in incident.region_ids()
+    ]
+    for incident in relevant_incidents:
+        product_description = "Products: " + ", ".join(p.title for p in incident.affected_products)
+        location_description = "Locations: " + ", ".join(incident.region_ids())
+        yield Result(
+            state=State.CRIT,
+            summary=incident.external_desc.replace("\n", ""),
+            details=f"{product_description} \n {location_description} \n {BASE_URL}{incident.uri}",
+        )
+    if not relevant_incidents:
         yield Result(
             state=State.OK,
             summary=f"No known incident in the past {_DISPLAYED_AGE} {BASE_URL}",
@@ -83,12 +97,14 @@ def check(section: Section) -> CheckResult:
 
 
 def discovery(section: Section) -> DiscoveryResult:
-    yield Service()
+    yield Service(item="Global")
+    for region in section.discovery_param.regions:
+        yield Service(item=gcp_constants.RegionMap[region])
 
 
 register.check_plugin(
     name="gcp_health",
-    service_name="GCP Health",
+    service_name="GCP Status %s",
     discovery_function=discovery,
     check_function=check,
 )

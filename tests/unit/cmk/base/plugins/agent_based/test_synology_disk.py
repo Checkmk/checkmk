@@ -33,6 +33,10 @@ DATA_0 = """
 .1.3.6.1.4.1.6574.2.1.1.6.1 26
 .1.3.6.1.4.1.6574.2.1.1.6.2 26
 .1.3.6.1.4.1.6574.2.1.1.6.3 25
+.1.3.6.1.4.1.6574.2.1.1.7.0 data
+.1.3.6.1.4.1.6574.2.1.1.7.1 data
+.1.3.6.1.4.1.6574.2.1.1.7.2 data
+.1.3.6.1.4.1.6574.2.1.1.7.3 data
 .1.3.6.1.4.1.6574.2.1.1.13.0 1
 .1.3.6.1.4.1.6574.2.1.1.13.1 1
 .1.3.6.1.4.1.6574.2.1.1.13.2 3
@@ -46,12 +50,21 @@ DATA_1 = """
 .1.3.6.1.4.1.6574.2.1.1.6.0 27
 """
 
+# SUP-13490
+DATA_2 = """
+.1.3.6.1.4.1.6574.2.1.1.2.3 Disk 4
+.1.3.6.1.4.1.6574.2.1.1.3.3 WD40000000-6666666
+.1.3.6.1.4.1.6574.2.1.1.5.3 3
+.1.3.6.1.4.1.6574.2.1.1.6.3 35
+.1.3.6.1.4.1.6574.2.1.1.7.3 hotspare
+"""
+
 SECTION_TABLE = [
-    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33", "1"],
-    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33", "1"],
-    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33", "1"],
-    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33", "1"],
-    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33", "1"],
+    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33", "data", "1"],
+    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33", "data", "1"],
+    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33", "data", "1"],
+    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33", "data", "1"],
+    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33", "data", "1"],
 ]
 
 
@@ -71,11 +84,12 @@ def make_section(
     temperature: float = 42.1,
     disk: str = "none",
     model: str = "hello",
+    role: str = "data",
     health: int = 1,
 ) -> synology_disks.Section:
     return {
         disk: synology_disks.Disk(
-            state=state, temperature=temperature, disk=disk, model=model, health=health
+            state=state, temperature=temperature, disk=disk, model=model, role=role, health=health
         )
     }
 
@@ -101,19 +115,14 @@ def test_temperature_metric() -> None:
     assert result.name == "temp"
 
 
-@pytest.mark.parametrize("model, expected", [("mSSD", True), ("mNVME", True), ("HDD", None)])
-def test_discovery_detect_cached(model: str, expected: bool) -> None:
-    section = make_section(model=model, state=3)
-    service = list(synology_disks.discover_synology_disks(section))[0]
-    assert service.parameters.get("used_as_cache") is expected
-
-
-@pytest.mark.parametrize("used_as_cache, expected", [(True, State.OK), (False, State.WARN)])
-def test_check_cached_is_ok(used_as_cache: bool, expected: State) -> None:
-    section = make_section(state=3)
+@pytest.mark.parametrize(
+    "role, expected",
+    [("hotspare", State.OK), ("ssd_cache", State.OK), ("none", State.WARN), ("data", State.WARN)],
+)
+def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) -> None:
+    section = make_section(role=role, state=3)
     item = list(section.keys())[0]
-    params = {"used_as_cache": used_as_cache}
-    result = list(synology_disks.check_synology_disks(section=section, item=item, params=params))
+    result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
@@ -137,5 +146,17 @@ def test_disk_health_status_missing(fix_register: FixRegister) -> None:
         Result(state=State.OK, summary="Temperature: 27.0°C"),
         Result(state=State.OK, summary="Allocation status: OK"),
         Result(state=State.OK, summary="Model: HAT5300-8T"),
+        Result(state=State.OK, summary="Health: Not provided (available with DSM 7.1 and above)"),
+    ]
+
+
+def test_hotspare(fix_register: FixRegister) -> None:
+    parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_2)
+    assert parsed is not None
+    assert list(synology_disks.check_synology_disks("Disk 4", {}, parsed)) == [
+        Metric("temp", 35.0),
+        Result(state=State.OK, summary="Temperature: 35.0°C"),
+        Result(state=State.OK, summary="Allocation status: disk is hotspare"),
+        Result(state=State.OK, summary="Model: WD40000000-6666666"),
         Result(state=State.OK, summary="Health: Not provided (available with DSM 7.1 and above)"),
     ]

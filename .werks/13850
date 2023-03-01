@@ -32,4 +32,4 @@ The second controller has been marked 'f':
 <li><i>RAID Adapt/Enc/Sl f03/4</i> becomes <i>RAID physical disk /c1/e03/s04</i></li>
 </ul>
 
-While the new item name (e.g. <i>/c0/e0/s1</i> instead of <i>e0/1</i>) will be used for all newly discovered servces, users that upgraded from an older Checkmk version need to enable the new service description using the global sestting "<i>Use new service descriptions</i>".
+While the new item name (e.g. <i>/c0/e0/s1</i> instead of <i>e0/1</i>) will be used for all newly discovered services, users that upgraded from an older Checkmk version need to enable the new service description using the global sestting "<i>Use new service descriptions</i>".

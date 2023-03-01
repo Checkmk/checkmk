@@ -15,19 +15,11 @@ def test_automatic_host_removal(
 ) -> None:
     central_site.openapi.create_host(
         hostname="not-dns-resovable-central",
-        attributes={
-            "site": central_site.id,
-            # CMK-12425: without an IP address, the Check_MK service will not go CRIT, even if the
-            # hostname is not DNS-resolvable. Once this is fixed, we can remove the IP address.
-            "ipaddress": "1.2.3.4",
-        },
+        attributes={"site": central_site.id},
     )
     central_site.openapi.create_host(
         hostname="not-dns-resovable-remote",
-        attributes={
-            "site": remote_site.id,
-            "ipaddress": "1.2.3.5",
-        },
+        attributes={"site": remote_site.id},
     )
     central_site.openapi.create_rule(
         ruleset_name="automatic_host_removal",

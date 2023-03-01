@@ -21,6 +21,85 @@ def test_get_a_time_period(timeperiod_client: TimePeriodTestClient) -> None:
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_create_two_time_periods_same_name(timeperiod_client: TimePeriodTestClient) -> None:
+    timeperiod_client.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foobar",
+            "active_time_ranges": [{"day": "all"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        }
+    )
+    timeperiod_client.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foobar",
+            "active_time_ranges": [{"day": "all"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_openapi_time_period_invalid_active_time_ranges(
+    timeperiod_client: TimePeriodTestClient,
+) -> None:
+    timeperiod_client.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foo",
+            "active_time_ranges": [
+                {"time_ranges": [{"start": "non-time-format", "end": "23:45:59"}]}
+            ],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_openapi_time_period_active_time_ranges(timeperiod_client: TimePeriodTestClient) -> None:
+    resp1 = timeperiod_client.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foo",
+            "active_time_ranges": [{}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+    )
+
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    assert resp1.json["extensions"]["active_time_ranges"] == [
+        {"day": day, "time_ranges": [{"end": "23:59", "start": "00:00"}]} for day in days
+    ]
+
+    resp2 = timeperiod_client.create(
+        time_period_data={
+            "name": "bar",
+            "alias": "bar",
+            "active_time_ranges": [{"day": "tuesday"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+    )
+
+    assert resp2.json["extensions"]["active_time_ranges"] == [
+        {"day": "tuesday", "time_ranges": [{"end": "23:59", "start": "00:00"}]}
+    ]
+
+    resp3 = timeperiod_client.create(
+        time_period_data={
+            "name": "times_only",
+            "alias": "times_only",
+            "active_time_ranges": [{"time_ranges": [{"start": "18:11:34", "end": "23:45:59"}]}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+    )
+
+    assert resp3.json["extensions"]["active_time_ranges"] == [
+        {"day": day, "time_ranges": [{"start": "18:11", "end": "23:45"}]} for day in days
+    ]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_time_period_time_ranges(timeperiod_client: TimePeriodTestClient) -> None:
     timeperiod_client.create(
         time_period_data={
@@ -40,7 +119,9 @@ def test_openapi_time_period_time_ranges(timeperiod_client: TimePeriodTestClient
             ],
         },
     )
-    assert resp1.json["extensions"]["active_time_ranges"] == []
+    assert resp1.json["extensions"]["active_time_ranges"] == [
+        {"day": "friday", "time_ranges": [{"end": "23:59", "start": "00:00"}]}
+    ]
     assert resp1.json["extensions"]["exceptions"][0] == {
         "date": "2023-02-02",
         "time_ranges": [{"start": "18:32", "end": "21:15"}],

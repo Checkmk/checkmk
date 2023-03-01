@@ -388,7 +388,14 @@ def _mk_time_format(time_or_str: str | dt.time) -> str:
     """
     if isinstance(time_or_str, str):
         parts = time_or_str.split(":")
-        time = dt.time(int(parts[0]), int(parts[1]))
+        try:
+            time = dt.time(int(parts[0]), int(parts[1]))
+        except ValueError:
+            raise ProblemException(
+                400,
+                title="Invalid time format",
+                detail=f"{time_or_str} is not a valid time format.",
+            )
     elif isinstance(time_or_str, dt.time):
         time = time_or_str
     else:

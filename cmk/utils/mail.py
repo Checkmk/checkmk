@@ -18,6 +18,7 @@ from cmk.utils.store import load_text_from_file
 def send_mail_sendmail(m: Message, target: str, from_address: str | None) -> None:
     cmd = [_sendmail_path()]
     if from_address:
+        # TODO this is no longer needed since firmware 1.5.6, remove it one day.
         # sendmail of the appliance can not handle "FULLNAME <my@mail.com>" format
         # TODO Currently we only see problems on appliances, so we just change
         # that handling for now.

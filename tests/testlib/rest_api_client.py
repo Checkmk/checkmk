@@ -161,7 +161,7 @@ class StringMatcher(TypedDict):
 
 
 class HostTagMatcher(TypedDict):
-    key: list[str]
+    key: str
     operator: Literal["is", "is_not", "none_of", "one_if"]
     value: str
 
@@ -589,36 +589,6 @@ class RestApiClient:
             "get", url="/domain-types/ruleset/collections/all?" + query_params, expect_ok=expect_ok
         )
 
-    def list_rules(self, ruleset: str, expect_ok: bool = True) -> Response:
-        return self.request(
-            "get",
-            url=f"/domain-types/rule/collections/all?ruleset_name={ruleset}",
-            expect_ok=expect_ok,
-        )
-
-    def create_rule(
-        self,
-        ruleset: str,
-        value_raw: str,
-        conditions: RuleConditions,
-        folder: str = "~",
-        properties: RuleProperties | None = None,
-        expect_ok: bool = True,
-    ) -> Response:
-        body = _only_set_keys(
-            {
-                "ruleset": ruleset,
-                "folder": folder,
-                "properties": properties,
-                "value_raw": value_raw,
-                "conditions": conditions,
-            }
-        )
-
-        return self.request(
-            "post", url="/domain-types/rule/collections/all", body=body, expect_ok=expect_ok
-        )
-
     def show_user(self, username: str, expect_ok: bool = True) -> Response:
         return self.request("get", url=f"/objects/user_config/{username}", expect_ok=expect_ok)
 
@@ -839,3 +809,115 @@ class TimePeriodTestClient(RestApiClient):
         )
 
         return resp
+
+
+# === Rules Endpoint Client ===
+
+
+class RulesTestClient(RestApiClient):
+    domain: Literal["rule"] = "rule"
+
+    def get(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{rule_id}",
+            expect_ok=expect_ok,
+        )
+
+    def list_rules(self, ruleset: str, expect_ok: bool = True) -> Response:
+        url = f"/domain-types/{self.domain}/collections/all"
+        if ruleset:
+            url = f"/domain-types/{self.domain}/collections/all?ruleset_name={ruleset}"
+
+        return self.request(
+            "get",
+            url=url,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, rule_id: str, expect_ok: bool = True) -> Response:
+        etag = self.get(rule_id).headers["ETag"]
+        resp = self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{rule_id}",
+            headers={"If-Match": etag, "Accept": "application/json"},
+        )
+        if expect_ok:
+            resp.assert_status_code(204)
+        return resp
+
+    def create(
+        self,
+        ruleset: str,
+        value_raw: str,
+        conditions: RuleConditions,
+        folder: str = "~",
+        properties: RuleProperties | None = None,
+        expect_ok: bool = False,
+    ) -> Response:
+        body = _only_set_keys(
+            {
+                "ruleset": ruleset,
+                "folder": folder,
+                "properties": properties,
+                "value_raw": value_raw,
+                "conditions": conditions,
+            }
+        )
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def move(self, rule_id: str, options: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/rule/{rule_id}/actions/move/invoke",
+            body=options,
+            expect_ok=expect_ok,
+        )
+
+
+# === Rulesets Endpoint Client ===
+
+
+class RulesetTestClient(RestApiClient):
+    domain: Literal["ruleset"] = "ruleset"
+
+    def get_all(self, search_options: str | None = None, expect_ok: bool = True) -> Response:
+        url = f"/domain-types/{self.domain}/collections/all"
+        if search_options is not None:
+            url = f"/domain-types/{self.domain}/collections/all{search_options}"
+
+        return self.request("get", url=url, expect_ok=expect_ok)
+
+    def get(self, ruleset_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{ruleset_id}",
+            expect_ok=expect_ok,
+        )
+
+
+# === ContactGroup Endpoint Client ===
+
+
+class ContactGroupTestClient(RestApiClient):
+    domain: Literal["contact_group_config"] = "contact_group_config"
+
+    def create(self, name: str, alias: str, expect_ok: bool = True) -> Response:
+        body = {"name": name, "alias": alias}
+        if version.is_managed_edition():
+            body["customer"] = "provider"
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    # TODO: Add other contact group endpoints

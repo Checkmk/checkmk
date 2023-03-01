@@ -1262,7 +1262,7 @@ _non_comment_lines() {
 }
 
 _mrpe_get_interval() {
-    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+    echo "${1}" | grep -E '^\([^)]*\)' | sed -n 's/^.*interval=\([^:)]*\).*$/\1/p'
 }
 
 run_remote_plugins() {

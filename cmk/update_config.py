@@ -402,7 +402,7 @@ class UpdateConfig:
         global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
             full_config=True
         )
-        self._update_global_config(global_config)
+        global_config = self._update_global_config(global_config)
         cmk.gui.watolib.global_settings.save_global_settings(global_config)
 
     def _update_site_specific_global_settings(self) -> None:
@@ -411,8 +411,7 @@ class UpdateConfig:
             return
 
         global_config = cmk.gui.watolib.global_settings.load_site_global_settings()
-        self._update_global_config(global_config)
-
+        global_config = self._update_global_config(global_config)
         cmk.gui.watolib.global_settings.save_site_global_settings(global_config)
 
     def _update_remote_site_specific_global_settings(self) -> None:
@@ -421,7 +420,9 @@ class UpdateConfig:
         configured_sites = site_mgmt.load_sites()
         for site_id, site_spec in configured_sites.items():
             if site_globals_editable(site_id, site_spec):
-                self._update_global_config(site_spec.setdefault("globals", {}))
+                site_globals = site_spec.get("globals", {})
+                if site_globals:
+                    site_spec["globals"] = self._update_global_config(site_globals)
         site_mgmt.save_sites(configured_sites, activate=False)
 
     def _update_global_config(

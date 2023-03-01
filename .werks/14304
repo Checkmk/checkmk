@@ -1,0 +1,17 @@
+Title: Fix global setting migration during site update
+Class: fix
+Compatible: compat
+Component: core
+Date: 1677686647
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0p24
+
+The Checkmk config update routine (cmk-update-config) was not dealing with
+global setting migration correctly. Instead of migrating global and site
+specific settings during the site update, the values were only migrated
+ad-hoc during runtime in some places and could lead to exceptions in other
+places.
+
+This fixes a regression introduced with #14473 in 2.1.0p11.

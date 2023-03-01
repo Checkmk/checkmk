@@ -1,0 +1,18 @@
+Title: timeperiod: day & time_ranges now load defaults when not included in the request
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1677686615
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk is to fix an issue when creating time periods via the rest-api.
+Previously when creating a time period, you could send an empty nested
+value for active_time_ranges. Now, if the attributes, day or time_ranges
+are not given, the defaults are used.
+
+
+
+

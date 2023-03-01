@@ -16,7 +16,7 @@ from cmk.utils.store import load_text_from_file
 
 
 def send_mail_sendmail(m: Message, target: str, from_address: str | None) -> None:
-    cmd = [sendmail_path()]
+    cmd = [_sendmail_path()]
     if from_address:
         # sendmail of the appliance can not handle "FULLNAME <my@mail.com>" format
         # TODO Currently we only see problems on appliances, so we just change
@@ -33,27 +33,20 @@ def send_mail_sendmail(m: Message, target: str, from_address: str | None) -> Non
             cmd += ["-F", from_address, "-f", from_address]
     cmd += ["-i", target]
 
-    try:
-        completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string())
-    except OSError:
-        raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
+    completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string())
 
     if completed_process.returncode:
-        raise Exception("sendmail returned with exit code: %d" % completed_process.returncode)
+        raise RuntimeError("sendmail returned with exit code: %d" % completed_process.returncode)
 
 
-def sendmail_path() -> str:
-    # We normally don't deliver the sendmail command, but our notification integration tests
+def _sendmail_path() -> str:
+    # We normally don't ship the sendmail command, but our notification integration tests
     # put some fake sendmail command into the site to prevent actual sending of mails.
 
-    for path in [
-        "%s/local/bin/sendmail" % paths.omd_root,
-        "/usr/sbin/sendmail",
-    ]:
-        if os.path.exists(path):
-            return path
-
-    raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
+    site_sendmail = "%s/local/bin/sendmail" % paths.omd_root
+    if os.path.exists(site_sendmail):
+        return site_sendmail
+    return "/usr/sbin/sendmail"
 
 
 def default_from_address() -> str:

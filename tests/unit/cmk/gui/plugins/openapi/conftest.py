@@ -11,9 +11,12 @@ import pytest
 
 from tests.testlib.rest_api_client import (
     AuxTagTestClient,
+    ContactGroupTestClient,
     RequestHandler,
     Response,
     RestApiClient,
+    RulesetTestClient,
+    RulesTestClient,
     TimePeriodTestClient,
 )
 
@@ -76,3 +79,20 @@ def auxtag_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> AuxTag
 @pytest.fixture()
 def timeperiod_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> TimePeriodTestClient:
     return TimePeriodTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def rule_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RulesTestClient:
+    return RulesTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def ruleset_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RulesetTestClient:
+    return RulesetTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def contactgroup_client(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
+) -> ContactGroupTestClient:
+    return ContactGroupTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

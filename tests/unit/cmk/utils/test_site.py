@@ -27,7 +27,6 @@ def test_get_omd_config() -> None:
         "CONFIG_MKEVENTD_SYSLOG_TCP": "off",
         "CONFIG_MULTISITE_AUTHORISATION": "on",
         "CONFIG_MULTISITE_COOKIE_AUTH": "on",
-        "CONFIG_NAGIOS_THEME": "classicui",
         "CONFIG_NSCA": "off",
         "CONFIG_NSCA_TCP_PORT": "5667",
         "CONFIG_PNP4NAGIOS": "on",

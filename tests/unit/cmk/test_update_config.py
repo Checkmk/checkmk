@@ -35,18 +35,19 @@ from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
 from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableGroupUserInterface
-from cmk.gui.plugins.wato.utils import config_variable_registry, ConfigDomainGUI
-from cmk.gui.plugins.watolib.utils import ConfigVariable
+from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariable
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.valuespec import TextInput, Transform
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import Folder
 
 # pylint: disable=redefined-outer-name
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
+from cmk.gui.watolib.sites import SiteManagementFactory
 
 import cmk.update_config as update_config
 
@@ -958,17 +959,11 @@ def test_password_sanitizer_multiline() -> None:
     assert entry.diff_text == expected
 
 
-def test_update_global_config_transform_values(
-    mocker: MockerFixture,
-    monkeypatch: pytest.MonkeyPatch,
-    uc: update_config.UpdateConfig,
-) -> None:
-    # Disable variable filtering by known Checkmk variables
-    mocker.patch.object(
-        update_config, "filter_unknown_settings", lambda global_config: global_config
-    )
+@pytest.fixture(name="test_var")
+def fixture_test_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    test_var_name = "test_var"
 
-    class ConfigVariableKey(ConfigVariable):
+    class ConfigVariableTestVar(ConfigVariable):
         def group(self):
             return ConfigVariableGroupUserInterface
 
@@ -976,14 +971,70 @@ def test_update_global_config_transform_values(
             return ConfigDomainGUI
 
         def ident(self):
-            return "key"
+            return test_var_name
 
         def valuespec(self):
             return Transform(TextInput(), forth=lambda x: "new" if x == "old" else x)
 
     with reset_registries([config_variable_registry]):
-        config_variable_registry.register(ConfigVariableKey)
-        assert uc._update_global_config({"key": "old"}) == {"key": "new"}
+        config_variable_registry.register(ConfigVariableTestVar)
+        yield test_var_name
+
+
+def test_update_global_config_transform_values(
+    mocker: MockerFixture,
+    uc: update_config.UpdateConfig,
+    test_var: str,
+) -> None:
+    # Disable variable filtering by known Checkmk variables
+    mocker.patch.object(
+        update_config, "filter_unknown_settings", lambda global_config: global_config
+    )
+
+    assert uc._update_global_config({test_var: "old"}) == {test_var: "new"}
+
+
+@pytest.mark.usefixtures("request_context")
+def test_update_global_settings_migrates_global_settings(
+    uc: update_config.UpdateConfig, test_var: str
+) -> None:
+    cmk.gui.watolib.global_settings.save_global_settings(
+        {
+            "test_var": "old",
+        }
+    )
+    uc._update_global_settings()
+    assert cmk.gui.watolib.global_settings.load_configuration_settings(full_config=True) == {
+        "test_var": "new"
+    }
+
+
+@pytest.mark.usefixtures("request_context")
+def test_update_global_settings_migrates_site_specific_settings(
+    monkeypatch: pytest.MonkeyPatch, uc: update_config.UpdateConfig, test_var: str
+) -> None:
+    monkeypatch.setattr(update_config, "is_wato_slave_site", lambda: True)
+    cmk.gui.watolib.global_settings.save_site_global_settings(
+        {
+            "test_var": "old",
+        }
+    )
+    uc._update_global_settings()
+    assert cmk.gui.watolib.global_settings.load_site_global_settings() == {"test_var": "new"}
+
+
+@pytest.mark.usefixtures("request_context")
+def test_update_global_settings_migrates_remote_site_specific_settings(
+    monkeypatch: pytest.MonkeyPatch, uc: update_config.UpdateConfig, test_var: str
+) -> None:
+    monkeypatch.setattr(update_config, "site_globals_editable", lambda site, spec: True)
+    site_mgmt = SiteManagementFactory().factory()
+    configured_sites = site_mgmt.load_sites()
+    configured_sites["NO_SITE"]["globals"] = {"test_var": "old"}
+    site_mgmt.save_sites(configured_sites, activate=False)
+
+    uc._update_global_settings()
+    assert site_mgmt.load_sites()["NO_SITE"]["globals"] == {"test_var": "new"}
 
 
 def test_update_global_config_rename_variables_and_change_values(

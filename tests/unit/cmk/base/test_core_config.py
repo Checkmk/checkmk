@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
@@ -140,7 +140,7 @@ def test_commandline_arguments_list_with_invalid_type() -> None:
         )
 
 
-def test_get_host_attributes(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host("test-host", tags={"agent": "no-agent"})
     ts.set_option(
@@ -316,11 +316,11 @@ def test_get_tag_attributes(tag_groups, result) -> None:  # type:ignore[no-untyp
         )
     ],
 )
-def test_get_host_config(  # type:ignore[no-untyped-def]
+def test_get_host_config(
     hostname: str,
     host_attrs: config.ObjectAttributes,
     expected_result: core_config.HostAddressConfiguration,
-):
+) -> None:
     host_config = core_config._get_host_address_config(hostname, host_attrs)
     assert host_config == expected_result
 

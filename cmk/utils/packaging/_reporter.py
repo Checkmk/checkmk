@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from itertools import chain
@@ -36,17 +35,17 @@ def all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[
         resolved for p in local_files_including_symlinks if (resolved := p.resolve()) != p
     }
 
-    categorized_files: dict[PackagePart | None, set[Path]] = defaultdict(set)
+    categorized_files: dict[PackagePart | None, set[Path]] = {}
     for full_path in sorted(local_files_including_symlinks - resolved_symlinks):
         if (package_part := path_config.get_part(full_path)) is not None:
-            categorized_files[package_part].add(
+            categorized_files.setdefault(package_part, set()).add(
                 _relative_path(package_part, full_path, path_config)
             )
         else:
             # These are rogue files that do not belong to a PackagePart.
             # Worth reporting nevertheless:
             # They *are* being used, and relevant for diagnostics.
-            categorized_files[None].add(full_path)
+            categorized_files.setdefault(None, set()).add(full_path)
     return categorized_files
 
 

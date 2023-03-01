@@ -587,7 +587,7 @@ def get_unpackaged_files(
     present = all_local_files(path_config)
     return {
         **{
-            part: sorted(present[part] - (packaged.get(part) or set()))
+            part: sorted(set(present.get(part, ())) - set(packaged.get(part, ())))
             for part in PackagePart
             if part is not None
         },

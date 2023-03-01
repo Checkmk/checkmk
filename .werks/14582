@@ -1,4 +1,4 @@
-Title: aws_health: Monitor AWS Health
+Title: aws_status: Monitor AWS Status
 Class: feature
 Compatible: compat
 Component: checks
@@ -13,6 +13,6 @@ available at https://health.aws.amazon.com/health/status. Since this
 site is publicly available, no authentication is required for this
 monitoring.
 
-This feature consists of a special agent, agent_aws_health, and a new
-check, aws_health. The special agent can be configured via the rule
+This feature consists of a special agent, agent_aws_status, and a new
+check, aws_status. The special agent can be configured via the rule
 Amazon Web Service (AWS) Health.

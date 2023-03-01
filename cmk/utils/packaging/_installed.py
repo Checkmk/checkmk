@@ -9,7 +9,7 @@ from typing import Final
 
 from ._mkp import Manifest, read_manifest_optionally
 from ._parts import PackagePart
-from ._type_defs import PackageName
+from ._type_defs import PackageID, PackageName
 
 
 class Installer:
@@ -39,11 +39,13 @@ class Installer:
 
     def get_packaged_files(
         self,
-    ) -> Mapping[PackagePart, set[Path]]:
-        packaged_files: dict[PackagePart, set[Path]] = {p: set() for p in PackagePart}
+    ) -> Mapping[PackagePart, Mapping[Path, PackageID]]:
+        packaged_files: dict[PackagePart, dict[Path, PackageID]] = {p: {} for p in PackagePart}
         for manifest in self.get_installed_manifests():
             for part in PackagePart:
-                packaged_files[part].update(manifest.files.get(part, ()))
+                packaged_files[part].update(
+                    (path, manifest.id) for path in manifest.files.get(part, ())
+                )
         return packaged_files
 
     def is_installed(self, name: PackageName) -> bool:

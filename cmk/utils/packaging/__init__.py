@@ -436,7 +436,7 @@ def _conflicting_files(
     packaged_files = installer.get_packaged_files()
     # Before installing check for conflicts
     for part, files in package.files.items():
-        packaged = packaged_files.get(part, ())
+        packaged = packaged_files.get(part, {})
 
         old_files = set(old_package.files.get(part, [])) if old_package else set()
 
@@ -444,8 +444,8 @@ def _conflicting_files(
             if fn in old_files:
                 continue
             path = path_config.get_path(part) / fn
-            if fn in packaged:
-                yield path, "part of another package"
+            if (collision := packaged.get(fn)) is not None:
+                yield path, f"already part of {collision.name} {collision.version}"
             elif path.exists():
                 yield path, "already existing"
 
@@ -584,17 +584,15 @@ def get_unpackaged_files(
     installer: Installer, path_config: PathConfig
 ) -> dict[PackagePart, list[Path]]:
     packaged = installer.get_packaged_files()
-    present = all_local_files(path_config)
-    return {
-        **{
-            part: sorted(set(present.get(part, ())) - set(packaged.get(part, ())))
-            for part in PackagePart
-            if part is not None
-        },
-        PackagePart.EC_RULE_PACKS: sorted(
-            all_rule_pack_files(path_config.get_path(PackagePart.EC_RULE_PACKS))
-            - packaged[PackagePart.EC_RULE_PACKS]
+    present: dict[PackagePart | None, set[Path]] = {
+        **all_local_files(path_config),
+        PackagePart.EC_RULE_PACKS: all_rule_pack_files(
+            path_config.get_path(PackagePart.EC_RULE_PACKS)
         ),
+    }
+    return {
+        part: sorted(set(present.get(part, ())) - set(packaged.get(part, ())))
+        for part in PackagePart
     }
 
 
@@ -606,13 +604,12 @@ def rule_pack_id_to_mkp(
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-    package_map = {
-        file: manifest.name
-        for manifest in installer.get_installed_manifests()
-        for file in manifest.files.get(PackagePart.EC_RULE_PACKS, ())
+    package_map = installer.get_packaged_files()[PackagePart.EC_RULE_PACKS]
+    return {
+        f.stem: package_id.name
+        for f in rule_pack_files
+        if (package_id := package_map.get(f)) is not None
     }
-
-    return {f.stem: package_map.get(f) for f in rule_pack_files}
 
 
 def update_active_packages(installer: Installer, path_config: PathConfig) -> None:

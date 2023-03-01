@@ -70,16 +70,11 @@ class FileMetaInfo(TypedDict):
 
 def files_inventory(installer: Installer, path_config: PathConfig) -> Sequence[FileMetaInfo]:
     """return an overview of all relevant files found on disk"""
-    package_map = {
-        (part / file): manifest.id
-        for manifest in installer.get_installed_manifests()
-        for part, files in manifest.files.items()
-        for file in files
-    }
+    package_map = installer.get_packaged_files()
 
     files_and_packages = sorted(
         (
-            (part, file, package_map.get((part / file) if part else file))
+            (part, file, package_map[part].get(file) if part else None)
             for part, files in chain(
                 all_local_files(path_config).items(),
                 (

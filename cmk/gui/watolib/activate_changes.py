@@ -30,7 +30,6 @@ import time
 import traceback
 from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from itertools import filterfalse
 from pathlib import Path
 from typing import Any, Iterator, NamedTuple, Sequence
@@ -50,10 +49,10 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing import save_extensions
 from cmk.utils.licensing.export import LicenseUsageExtensions
-from cmk.utils.licensing.state import is_expired_trial
+from cmk.utils.licensing.state import is_expired_trial, is_licensed
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
-from cmk.utils.version import __version__, is_cloud_edition, is_raw_edition, Version
+from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -114,13 +113,12 @@ from cmk.gui.watolib.site_changes import SiteChanges
 
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        is_after_expiration_grace_period,
-        is_max_version_valid,
+        ActivationBlock,
+        licensing_user_effect_expired_trial,
+        licensing_user_effect_licensed,
         load_verified_response,
     )
-    from cmk.utils.cee.licensing.export import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        VerificationResponse,
-    )
+
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -171,28 +169,6 @@ def get_trial_expired_message() -> str:
         "In case you want to test distributed setups, please contact us at "
         "https://checkmk.com/contact"
     )
-
-
-def get_license_expired_message(expiration_ts: int) -> str:
-    return _(
-        "The currently applied license is expired since: %s (> 60 days)."
-    ) % datetime.fromtimestamp(expiration_ts).strftime("%Y-%m-%d")
-
-
-def get_license_max_version_invalid_message(max_version: str) -> str:
-    return _(
-        "Your license allows you to use Checkmk until version %s, but you are using %s. "
-        "Operating in 'unlicensed' mode."
-    ) % (max_version, Version(__version__))
-
-
-def get_cee_license_validity_error(verification_response: VerificationResponse) -> str | None:
-    now = int(datetime.now().timestamp())
-    if is_after_expiration_grace_period(now, verification_response):
-        return get_license_expired_message(verification_response.subscription_expiration_ts)
-    if not is_max_version_valid(verification_response):
-        return get_license_max_version_invalid_message(verification_response.checkmk_max_version)
-    return None
 
 
 # TODO: find a way to make this more obvious/transparent in code
@@ -2704,6 +2680,21 @@ def get_restapi_response_for_activation_id(
     )
 
 
+def _licensing_allows_activation() -> None:
+    # TODO: cleanup conditional imports and solve this via registration
+    if not is_cloud_edition():
+        return
+    if is_expired_trial():
+        effect = licensing_user_effect_expired_trial(len(collect_all_hosts()))
+        if isinstance(effect, ActivationBlock):
+            raise MKLicensingError(effect.message)
+
+    if is_licensed() and (verified_response := load_verified_response()) is not None:
+        effect = licensing_user_effect_licensed(verified_response.response)
+        if isinstance(effect, ActivationBlock):
+            raise MKLicensingError(effect.message)
+
+
 def activate_changes_start(
     sites: list[SiteId],
     comment: str | None = None,
@@ -2728,12 +2719,7 @@ def activate_changes_start(
         An ActivationRestAPIResponseExtensions instance.
 
     """
-    # TODO: cleanup conditional imports and solve this via registration
-    if is_cloud_edition() and (verified_response := load_verified_response()) is not None:
-        if (
-            license_error := get_cee_license_validity_error(verified_response.response)
-        ) is not None:
-            raise MKLicensingError(license_error)
+    _licensing_allows_activation()
 
     changes = ActivateChanges()
     changes.load()

@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from enum import auto, Enum
 from typing import Final, NamedTuple, Protocol, TypedDict
 from uuid import UUID
@@ -40,10 +40,6 @@ class LicenseUsageReportVersionError(Exception):
 
 
 class SubscriptionDetailsError(Exception):
-    pass
-
-
-class SubscriptionPeriodError(Exception):
     pass
 
 
@@ -217,21 +213,6 @@ class SubscriptionDetails(NamedTuple):
         ]:
             if raw_subscription_details.get(key) is None:
                 raise SubscriptionDetailsError()
-
-
-def validate_subscription_period(attrs: dict[str, object]) -> None:
-    start = attrs["subscription_start"]
-    if not isinstance(start, (int, float)):
-        raise TypeError()
-
-    end = attrs["subscription_end"]
-    if not isinstance(end, (int, float)):
-        raise TypeError()
-
-    delta = date.fromtimestamp(end) - date.fromtimestamp(start)
-    # full year is e.g. 01.01.1970-31.12.1970 (364 days)
-    if delta.days < 364:
-        raise SubscriptionPeriodError()
 
 
 # .

@@ -307,10 +307,7 @@ def test_unpackaged_files(installer: packaging.Installer) -> None:
     with p.open("w", encoding="utf-8") as f:
         f.write("huhu\n")
 
-    assert {
-        part.ident: files
-        for part, files in packaging.get_unpackaged_files(installer, _PATH_CONFIG).items()
-    } == {
+    assert packaging.get_unpackaged_files(installer, _PATH_CONFIG) == {
         packaging.PackagePart.AGENT_BASED: [Path("dada")],
         packaging.PackagePart.AGENTS: [],
         packaging.PackagePart.ALERT_HANDLERS: [],

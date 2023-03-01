@@ -28,7 +28,6 @@ def test_hooks(site: Site) -> None:
         "MKEVENTD_SYSLOG_TCP",
         "MULTISITE_AUTHORISATION",
         "MULTISITE_COOKIE_AUTH",
-        "NAGIOS_THEME",
         "PNP4NAGIOS",
         "TMPFS",
     ]

@@ -2,7 +2,7 @@ NAGIOS := nagios
 NAGIOS_VERS := 3.5.1
 NAGIOS_DIR := $(NAGIOS)-$(NAGIOS_VERS)
 # Increase this to enforce a recreation of the build cache
-NAGIOS_BUILD_ID := 3-$(EDITION_SHORT)
+NAGIOS_BUILD_ID := 4-$(EDITION_SHORT)
 
 NAGIOS_UNPACK := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-unpack
 NAGIOS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-patching
@@ -61,8 +61,6 @@ $(NAGIOS_INTERMEDIATE_INSTALL): $(NAGIOS_BUILD)
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(NAGIOS_INSTALL_DIR)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(NAGIOS)/diskspace $(NAGIOS_INSTALL_DIR)/share/diskspace/nagios
-	$(MKDIR) $(NAGIOS_INSTALL_DIR)/lib/omd/hooks
-	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/NAGIOS_THEME $(NAGIOS_INSTALL_DIR)/lib/omd/hooks/
 	$(TOUCH) $@
 
 

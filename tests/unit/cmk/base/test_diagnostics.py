@@ -284,7 +284,6 @@ CONFIG_MKEVENTD_SYSLOG='on'
 CONFIG_MKEVENTD_SYSLOG_TCP='off'
 CONFIG_MULTISITE_AUTHORISATION='on'
 CONFIG_MULTISITE_COOKIE_AUTH='on'
-CONFIG_NAGIOS_THEME='classicui'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
@@ -315,7 +314,6 @@ CONFIG_TMPFS='on'"""
         "CONFIG_MKEVENTD_SYSLOG_TCP",
         "CONFIG_MULTISITE_AUTHORISATION",
         "CONFIG_MULTISITE_COOKIE_AUTH",
-        "CONFIG_NAGIOS_THEME",
         "CONFIG_NSCA",
         "CONFIG_NSCA_TCP_PORT",
         "CONFIG_PNP4NAGIOS",
@@ -344,7 +342,6 @@ CONFIG_TMPFS='on'"""
             "off",
             "on",
             "on",
-            "classicui",
             "off",
             "5667",
             "on",

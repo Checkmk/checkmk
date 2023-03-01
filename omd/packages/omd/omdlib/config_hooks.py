@@ -29,7 +29,7 @@ of the following arguments:
 default - return the default value of the hook. Mandatory
 set     - implements a new setting for the hook
 choices - available choices for enumeration hooks
-depends - exists with 1, if this hook misses its dependent hook settings
+depends - exits with 1, if this hook misses its dependent hook settings
 """
 
 import logging

@@ -139,7 +139,8 @@ void setThreadName(std::string name) {
 
 std::string getThreadName() { return thread_name; }
 
-file_lock::file_lock(const char *name) : fd_(::open(name, O_RDWR)) {
+file_lock::file_lock(const std::filesystem::path &name)
+    : fd_{::open(name.c_str(), O_RDWR)} {
     if (fd_ == -1) {
         throw generic_error("could not open lock file");
     }

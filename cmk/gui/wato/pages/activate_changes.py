@@ -72,8 +72,10 @@ from cmk.gui.watolib.search import request_index_rebuild
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         ActivationBlock,
+        get_num_services_for_trial_free_edition,
         licensing_user_effect_expired_trial,
         licensing_user_effect_licensed,
+        service_reducing_change_pending,
     )
     from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         load_verified_response,
@@ -453,8 +455,10 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 errors.append(effect.message)
 
         if is_expired_trial():
-            effect = licensing_user_effect_expired_trial(len(collect_all_hosts()))
-            if isinstance(effect, ActivationBlock):
+            effect = licensing_user_effect_expired_trial(get_num_services_for_trial_free_edition())
+            if isinstance(effect, ActivationBlock) and not service_reducing_change_pending(
+                self._changes
+            ):
                 errors.append(effect.message)
 
         if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:

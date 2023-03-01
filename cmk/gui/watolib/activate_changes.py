@@ -28,7 +28,7 @@ import shutil
 import subprocess
 import time
 import traceback
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
@@ -116,8 +116,10 @@ from cmk.bi.type_defs import frozen_aggregations_dir
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         ActivationBlock,
+        get_num_services_for_trial_free_edition,
         licensing_user_effect_expired_trial,
         licensing_user_effect_licensed,
+        service_reducing_change_pending,
     )
     from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         load_verified_response,
@@ -2696,13 +2698,13 @@ def get_restapi_response_for_activation_id(
     )
 
 
-def _licensing_allows_activation() -> None:
+def _licensing_allows_activation(changes: Sequence[tuple[str, Mapping[str, Any]]]) -> None:
     # TODO: cleanup conditional imports and solve this via registration
     if not is_cloud_edition():
         return
     if is_expired_trial():
-        effect = licensing_user_effect_expired_trial(len(collect_all_hosts()))
-        if isinstance(effect, ActivationBlock):
+        effect = licensing_user_effect_expired_trial(get_num_services_for_trial_free_edition())
+        if isinstance(effect, ActivationBlock) and not service_reducing_change_pending(changes):
             raise MKLicensingError(effect.message)
 
     if is_licensed() and (verified_response := load_verified_response()) is not None:
@@ -2735,10 +2737,11 @@ def activate_changes_start(
         An ActivationRestAPIResponseExtensions instance.
 
     """
-    _licensing_allows_activation()
 
     changes = ActivateChanges()
     changes.load()
+
+    _licensing_allows_activation(changes._changes)
 
     if changes.has_foreign_changes():
         if not user.may("wato.activateforeign"):

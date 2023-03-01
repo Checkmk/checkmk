@@ -1,0 +1,13 @@
+Title: Fix crash in mk-job.solaris
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1677671301
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p23
+
+mk-job.solaris started crashing in version 2.1.p1 with an error:
+"exit: : numeric argument required".

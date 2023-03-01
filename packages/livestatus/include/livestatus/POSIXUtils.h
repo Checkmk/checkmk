@@ -13,6 +13,7 @@
 #include <array>
 #include <cerrno>
 #include <chrono>
+#include <filesystem>
 #include <functional>
 #include <optional>
 #include <string>
@@ -69,7 +70,7 @@ public:
     file_lock &operator=(const file_lock &) = delete;
 
     file_lock() : fd_(-1) {}
-    explicit file_lock(const char *name);
+    explicit file_lock(const std::filesystem::path &name);
     file_lock(file_lock &&moved) noexcept : fd_(-1) { this->swap(moved); }
 
     file_lock &operator=(file_lock &&moved) noexcept {

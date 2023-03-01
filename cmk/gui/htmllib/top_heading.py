@@ -26,8 +26,8 @@ from .generator import HTMLWriter
 
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        get_days_until_expiration,
         get_num_hosts,
+        get_remaining_license_time,
         get_remaining_trial_time,
         in_admin_warning_header_phase,
         in_user_warning_header_phase_licensed,
@@ -136,7 +136,7 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
     if "admin" in user.role_ids and in_admin_warning_header_phase(now, response):
         writer.show_warning(
             _("Your license expires in %i days")
-            % get_days_until_expiration(now, response.subscription_expiration_ts)
+            % get_remaining_license_time(now, response.subscription_expiration_ts).days
         )
 
 

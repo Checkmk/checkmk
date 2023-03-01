@@ -474,7 +474,11 @@ class UpdateConfig:
         config_var: str,
         config_val: Any,
     ) -> Any:
-        return config_variable_registry[config_var]().valuespec().transform_value(config_val)
+        try:
+            config_variable_cls = config_variable_registry[config_var]
+        except KeyError:
+            return config_val
+        return config_variable_cls().valuespec().transform_value(config_val)
 
     def _transform_global_config_values(
         self,

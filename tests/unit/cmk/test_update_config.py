@@ -33,9 +33,13 @@ from cmk.utils.type_defs import (
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
+from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableGroupUserInterface
+from cmk.gui.plugins.wato.utils import ConfigDomainGUI
+from cmk.gui.plugins.watolib.utils import ConfigVariable, ConfigVariableRegistry
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.valuespec import TextInput, Transform
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.hosts_and_folders import Folder
 
@@ -953,7 +957,37 @@ def test_password_sanitizer_multiline() -> None:
     assert entry.diff_text == expected
 
 
-def test_update_global_config(
+def test_update_global_config_transform_values(
+    mocker: MockerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    uc: update_config.UpdateConfig,
+) -> None:
+    # Disable variable filtering by known Checkmk variables
+    mocker.patch.object(
+        update_config, "filter_unknown_settings", lambda global_config: global_config
+    )
+
+    class ConfigVariableKey(ConfigVariable):
+        def group(self):
+            return ConfigVariableGroupUserInterface
+
+        def domain(self):
+            return ConfigDomainGUI
+
+        def ident(self):
+            return "key"
+
+        def valuespec(self):
+            return Transform(TextInput(), forth=lambda x: "new" if x == "old" else x)
+
+    registry = ConfigVariableRegistry()
+    registry.register(ConfigVariableKey)
+    monkeypatch.setattr(update_config, "config_variable_registry", registry)
+
+    assert uc._update_global_config({"key": "old"}) == {"key": "new"}
+
+
+def test_update_global_config_rename_variables_and_change_values(
     mocker: MockerFixture,
     uc: update_config.UpdateConfig,
 ) -> None:
@@ -966,34 +1000,24 @@ def test_update_global_config(
             ("missing", "new_missing", {}),
         ],
     )
+
+    # Disable variable filtering by known Checkmk variables
     mocker.patch.object(
-        update_config,
-        "filter_unknown_settings",
-        lambda global_config: {k: v for k, v in global_config.items() if k != "unknown"},
+        update_config, "filter_unknown_settings", lambda global_config: global_config
     )
-    mocker.patch.object(
-        update_config.UpdateConfig,
-        "_transform_global_config_value",
-        lambda _self, config_var, config_val: {
-            "new_global_a": config_val,
-            "new_global_b": 15,
-            "global_c": ["x", "y", "z"],
-            "unchanged": config_val,
-        }[config_var],
-    )
+
     assert uc._update_global_config(
         {
             "global_a": True,
             "global_b": 14,
-            "global_c": None,
-            "unchanged": "please leave me alone",
+            "keep": "do not remove me",
             "unknown": "How did this get here?",
         }
     ) == {
-        "global_c": ["x", "y", "z"],
-        "unchanged": "please leave me alone",
+        "keep": "do not remove me",
+        "unknown": "How did this get here?",
         "new_global_a": 1,
-        "new_global_b": 15,
+        "new_global_b": 14,
     }
 
 

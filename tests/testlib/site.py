@@ -1135,7 +1135,7 @@ class SiteFactory:
     def get_site(self, name: str) -> Site:
         if f"{self._base_ident}{name}" in self._sites:
             return self._sites[f"{self._base_ident}{name}"]
-        # For convenience, allow to retreive site by name or full ident
+        # For convenience, allow to retrieve site by name or full ident
         if name in self._sites:
             return self._sites[name]
         return self._new_site(name)
@@ -1143,7 +1143,7 @@ class SiteFactory:
     def get_existing_site(self, name: str) -> Site:
         if f"{self._base_ident}{name}" in self._sites:
             return self._sites[f"{self._base_ident}{name}"]
-        # For convenience, allow to retreive site by name or full ident
+        # For convenience, allow to retrieve site by name or full ident
         if name in self._sites:
             return self._sites[name]
         return self._site_obj(name)

@@ -1493,10 +1493,17 @@ def _is_monitored(
 def process_resource_health(
     mgmt_client: MgmtApiClient, monitored_resources: Sequence[AzureResource], args: Args
 ) -> Iterator[AzureSection]:
-    resource_health_view = mgmt_client.resource_health_view()
+    try:
+        resource_health_view = mgmt_client.resource_health_view()
+    except Exception as exc:
+        if args.debug:
+            raise
+        write_exception_to_agent_info_section(exc, "Management client")
+        return
+
     health_section: defaultdict[str, list[str]] = defaultdict(list)
 
-    for health in resource_health_view["value"]:
+    for health in resource_health_view.get("value", []):
         health_id = health.get("id")
         _, group = get_params_from_azure_id(health_id)
         resource_id = "/".join(health_id.split("/")[:-4])

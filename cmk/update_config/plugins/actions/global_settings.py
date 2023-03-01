@@ -54,7 +54,7 @@ def _update_installation_wide_global_settings(logger: Logger) -> None:
     save_global_settings(
         _handle_community_translations(
             logger,
-            _update_global_config(
+            update_global_config(
                 logger,
                 # Load full config (with undefined settings)
                 load_configuration_settings(full_config=True),
@@ -68,7 +68,7 @@ def _update_site_specific_global_settings(logger: Logger) -> None:
     if not is_wato_slave_site():
         return
     save_site_global_settings(
-        _update_global_config(
+        update_global_config(
             logger,
             load_site_global_settings(),
         )
@@ -82,7 +82,7 @@ def _update_remote_site_specific_global_settings(logger: Logger) -> None:
     for site_id, site_spec in configured_sites.items():
         if site_globals_editable(site_id, site_spec):
             site_spec["globals"] = dict(
-                _update_global_config(
+                update_global_config(
                     logger,
                     site_spec.setdefault("globals", {}),
                 )
@@ -90,7 +90,7 @@ def _update_remote_site_specific_global_settings(logger: Logger) -> None:
     site_mgmt.save_sites(configured_sites, activate=False)
 
 
-def _update_global_config(
+def update_global_config(
     logger: Logger,
     global_config: GlobalSettings,
 ) -> GlobalSettings:
@@ -121,11 +121,12 @@ def _update_removed_global_config_vars(
     return filter_unknown_settings(global_config_updated)
 
 
-def _transform_global_config_value(
-    config_var: str,
-    config_val: object,
-) -> object:
-    return config_variable_registry[config_var]().valuespec().transform_value(config_val)
+def _transform_global_config_value(config_var: str, config_val: object) -> object:
+    try:
+        config_variable_cls = config_variable_registry[config_var]
+    except KeyError:
+        return config_val
+    return config_variable_cls().valuespec().transform_value(config_val)
 
 
 def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSettings:

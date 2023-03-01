@@ -116,7 +116,7 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
     "cmk/update",
     method="put",
     tag_group="Setup",
-    path_params=[AuxTagID],
+    path_params=[AuxTagIDShouldExist],
     request_schema=AuxTagAttrsUpdate,
     response_schema=AuxTagResponse,
     permissions_required=RW_PERMISSIONS,

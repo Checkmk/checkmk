@@ -185,3 +185,15 @@ def test_delete_custom_aux_tag(auxtag_client: AuxTagTestClient) -> None:
     auxtag_client.get(aux_tag_id="aux_tag_id_1", expect_ok=False).assert_status_code(
         status_code=404
     )
+
+
+def test_edit_non_existing_aux_tag(auxtag_client: AuxTagTestClient) -> None:
+    auxtag_client.edit(
+        aux_tag_id="aux_tag_id_1",
+        tag_data=auxtag_client.edit_model(
+            title="edited_title",
+            topic="edited_topic",
+        ),
+        expect_ok=False,
+        with_etag=False,
+    ).assert_status_code(404)

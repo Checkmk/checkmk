@@ -41,8 +41,9 @@ permission_registry.register(
         name="agent_pairing",
         title=_l("Agent pairing"),
         description=_l(
-            "Pairing of Checkmk agents with the monitoring site. This step establishes trust "
-            "between the agent and the monitoring site."
+            "Only relevant for the agent controller shipped with Checkmk 2.1."
+            " Pairing of Checkmk agents with the monitoring site."
+            " This step establishes trust between the agent and the monitoring site."
         ),
         defaults=["admin"],
     )

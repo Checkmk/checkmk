@@ -29,7 +29,7 @@ def _section(name: str, parsed_section_name: str, supersedes: set[str]) -> Secti
 
 
 class _FakeParser(dict):
-    def parse(self, section_name: SectionName, *args: object):  # type:ignore[no-untyped-def]
+    def parse(self, section_name: SectionName, *args: object) -> object:
         return self.get(str(section_name))
 
     def disable(self, names: Iterable[SectionName]) -> None:

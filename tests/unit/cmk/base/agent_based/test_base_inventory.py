@@ -756,10 +756,10 @@ def test__inventorize_real_host_no_items(
         (("choices", ["old", "keyz"]), {"old": RetentionIntervals(1, 2, 3)}),
     ],
 )
-def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
+def test_updater_merge_previous_attributes(
     choices: tuple[str, list[str]],
     expected_retentions: dict,
-):
+) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={"old": (1, 2, 3)},
         previous_table_retentions={},

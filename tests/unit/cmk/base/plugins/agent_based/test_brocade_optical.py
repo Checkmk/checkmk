@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from cmk.base.plugins.agent_based import brocade_optical
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
@@ -67,7 +70,9 @@ from cmk.base.plugins.agent_based.utils import interfaces
         ),
     ],
 )
-def test_discover_brocade_optical(params, expect_service) -> None:  # type:ignore[no-untyped-def]
+def test_discover_brocade_optical(
+    params: Sequence[Mapping[str, object]], expect_service: bool
+) -> None:
     section: brocade_optical.Section = {
         "1410": {
             "description": "10GigabitEthernet23/2",
@@ -168,8 +173,8 @@ def test_discover_brocade_optical(params, expect_service) -> None:  # type:ignor
         ),
     ],
 )
-def test_check_brocade_optical(  # type:ignore[no-untyped-def]
-    item, params, section, expected
+def test_check_brocade_optical(
+    item: str, params: Mapping[str, object], section: brocade_optical.Section, expected: CheckResult
 ) -> None:
     assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
 

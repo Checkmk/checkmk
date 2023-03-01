@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -21,6 +21,7 @@ from cmk.checkers.checkresults import ServiceCheckResult
 import cmk.base.agent_based.checking._checking as checking
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 
 def make_timespecific_params_list(
@@ -189,9 +190,12 @@ def make_timespecific_params_list(
         ),
     ],
 )
-def test_time_resolved_check_parameters(  # type:ignore[no-untyped-def]
-    monkeypatch, rules: TimespecificParameters, active_timeperiods, expected_result
-):
+def test_time_resolved_check_parameters(
+    monkeypatch: MonkeyPatch,
+    rules: TimespecificParameters,
+    active_timeperiods: Sequence[str],
+    expected_result: LegacyCheckParameters,
+) -> None:
     assert expected_result == rules.evaluate(lambda tp: tp in active_timeperiods)
 
 
@@ -221,9 +225,7 @@ def test_time_resolved_check_parameters(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_aggregate_result(  # type:ignore[no-untyped-def]
-    subresults, aggregated_results: ServiceCheckResult
-) -> None:
+def test_aggregate_result(subresults: CheckResult, aggregated_results: ServiceCheckResult) -> None:
     assert checking._aggregate_results(consume_check_results(subresults)) == aggregated_results
 
 

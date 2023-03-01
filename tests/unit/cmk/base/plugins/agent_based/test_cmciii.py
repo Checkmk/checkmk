@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from cmk.utils.type_defs import CheckPluginName, SectionName
@@ -12,6 +14,8 @@ import cmk.base.plugins.agent_based.cmciii as cmciii
 import cmk.base.plugins.agent_based.cmciii_phase as cmciii_phase
 import cmk.base.plugins.agent_based.cmciii_status as cmciii_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils.cmciii import SensorType, Variable
 
 
 @pytest.mark.parametrize(
@@ -23,7 +27,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ("one.two.three", ["one", "two", "three"]),
     ],
 )
-def test_sanitize_variable(variable, expected) -> None:  # type:ignore[no-untyped-def]
+def test_sanitize_variable(variable: str, expected: Variable) -> None:
     assert cmciii.sanitize_variable(variable) == expected
 
 
@@ -39,7 +43,7 @@ def test_sanitize_variable(variable, expected) -> None:  # type:ignore[no-untype
         ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "END"], "THREE FOUR"),
     ],
 )
-def test_sensor_key(table, var_type, variable, expected) -> None:  # type:ignore[no-untyped-def]
+def test_sensor_key(table: SensorType, var_type: str, variable: Variable, expected: str) -> None:
     assert cmciii.sensor_key(table, var_type, variable) == expected
 
 
@@ -59,7 +63,7 @@ def test_sensor_key(table, var_type, variable, expected) -> None:  # type:ignore
         ("other_sensors", ["one", "two"], "device one"),
     ],
 )
-def test_sensor_id(sensor_type, variable, expected) -> None:  # type:ignore[no-untyped-def]
+def test_sensor_id(sensor_type: SensorType, variable: Variable, expected: str) -> None:
     assert cmciii.sensor_id(sensor_type, variable, "device") == expected
 
 
@@ -133,7 +137,7 @@ def _leakage_info(status, position):
         ),
     ],
 )
-def test_cmciii_leakage_sensors(status, position, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_leakage_sensors(status: str, position: str, expected: CheckResult) -> None:
     assert (
         run_check(
             "cmciii",
@@ -225,7 +229,7 @@ def _lcp_sensor():
         ),
     ],
 )
-def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_lcp_discovery(plugin: str, expected: DiscoveryResult) -> None:
     assert run_discovery("cmciii", plugin, _lcp_sensor(), params={}) == expected
 
 
@@ -268,7 +272,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
         ),
     ],
 )
-def test_cmciii_lcp_check(item, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_lcp_check(item: str, expected: CheckResult) -> None:
     assert run_check("cmciii", "cmciii_temp_in_out", item, _lcp_sensor(), params={}) == expected
 
 
@@ -472,7 +476,7 @@ def test_phase_sensors() -> None:
         ),
     ],
 )
-def test_cmciii_phase_check(item, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_phase_check(item: str, expected: CheckResult) -> None:
     assert run_check("cmciii", "cmciii_phase", item, _phase_sensor(), params={}) == expected
 
 
@@ -509,7 +513,7 @@ def _status_info(variable, status):
         "Ignition",
     ],
 )
-def test_cmciii_status_discovery(variable) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_status_discovery(variable: str) -> None:
     service_description = "DET-AC_III_Master %s" % variable
     params = {"use_sensor_description": False}
     section = cmciii.parse_cmciii(_status_info(variable, "OK"))
@@ -527,7 +531,7 @@ def test_cmciii_status_discovery(variable) -> None:  # type:ignore[no-untyped-de
         ("Battery change", "Service", [Result(state=State.CRIT, summary="Status: Service")]),
     ],
 )
-def test_cmciii_status_sensors(variable, status, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_status_sensors(variable: str, status: str, expected: CheckResult) -> None:
     assert (
         run_check(
             "cmciii",
@@ -984,8 +988,8 @@ def _generictest_cmciii():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
-    plugin, params, expected
+def test_genericdataset_cmciii_discovery(
+    plugin: str, params: Mapping[object, object] | None, expected: DiscoveryResult
 ) -> None:
     assert run_discovery("cmciii", plugin, _generictest_cmciii(), params) == expected
 
@@ -1237,7 +1241,9 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_genericdataset_cmciii_check(plugin, params, items) -> None:  # type:ignore[no-untyped-def]
+def test_genericdataset_cmciii_check(
+    plugin: str, params: Mapping[str, object], items: Sequence[tuple[str, CheckResult]]
+) -> None:
     for item, expected in items:
         assert run_check("cmciii", plugin, item, _generictest_cmciii(), params,) == expected, (
             "Item %s does not match" % item
@@ -1347,8 +1353,8 @@ def _generictest_cmciii_input_regression():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_input_regression_discovery(  # type:ignore[no-untyped-def]
-    plugin, params, expected
+def test_genericdataset_cmciii_input_regression_discovery(
+    plugin: str, params: Mapping[object, object] | None, expected: DiscoveryResult
 ) -> None:
     assert (
         run_discovery(
@@ -1449,8 +1455,8 @@ def test_genericdataset_cmciii_input_regression_discovery(  # type:ignore[no-unt
         ),
     ],
 )
-def test_genericdataset_cmciii_input_regression_check(  # type:ignore[no-untyped-def]
-    plugin, params, items
+def test_genericdataset_cmciii_input_regression_check(
+    plugin: str, params: Mapping[object, object] | None, items: Sequence[tuple[str, CheckResult]]
 ) -> None:
     for item, expected in items:
         assert (

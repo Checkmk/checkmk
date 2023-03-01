@@ -221,8 +221,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/check_parameters/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cce/plugins/agent_based/__init__.py
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk

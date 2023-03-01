@@ -242,6 +242,7 @@ def _valuespec_special_agents_kube():
                             "namespaces",
                             "nodes",
                             "pods",
+                            "pvcs",
                         ],
                         allow_empty=False,
                         title=_("Collect information about..."),

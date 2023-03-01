@@ -30,7 +30,6 @@ pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     let name = name.build();
 
     let mut crt_builder = X509Req::builder()?;
-    crt_builder.set_version(2)?;
     crt_builder.set_subject_name(&name)?;
     crt_builder.set_pubkey(&key_pair)?;
     crt_builder.sign(&key_pair, MessageDigest::sha256())?;
@@ -243,6 +242,18 @@ pub fn rustls_certificate(cert_pem: &str) -> AnyhowResult<RustlsCertificate> {
 mod test_cn_no_uuid {
     use super::super::constants;
     use super::*;
+
+    #[test]
+    fn test_csr_version() {
+        let (csr, _key_pair) = make_csr("stuff").unwrap();
+        let csr_obj = X509Req::from_pem(csr.as_bytes()).unwrap();
+        // A CSR is a simple x509 structure without any extensions, and must be of version 1,
+        // which equals to a raw version value of 0.
+        // See also https://www.rfc-editor.org/rfc/rfc2986 .
+        // This is actually tested in recent versions of python-cryptography and a registration call
+        // with a non-compliant CSR would fail.
+        assert!(csr_obj.version() == 0)
+    }
 
     #[test]
     fn test_cn_extraction() {

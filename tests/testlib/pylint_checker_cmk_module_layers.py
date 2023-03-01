@@ -143,6 +143,7 @@ def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
                 imported=imported,
                 component=component,
             ),
+            _in_component(imported, Component("cmk.cee.helpers")),
             _in_component(imported, Component("cmk.cee.bakery")),
         )
     )
@@ -245,6 +246,7 @@ _COMPONENTS = (
     (Component("cmk.base"), _allow_default_plus_fetchers_checkers_snmplib_and_bakery),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
     (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.checkers"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _allow_default_plus_fetchers_checkers_bakery),
@@ -272,7 +274,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("enterprise/bin/dcd"): Component("cmk.cee.dcd"),
-    ModulePath("enterprise/bin/fetcher"): Component("cmk.checkers"),
+    ModulePath("enterprise/bin/fetcher"): Component("cmk.cee.helpers"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),

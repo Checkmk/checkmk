@@ -703,14 +703,23 @@ class AuxTagTestClient(RestApiClient):
         return resp
 
     def edit(
-        self, aux_tag_id: str, tag_data: AuxTagEditRequest, expect_ok: bool = True
+        self,
+        aux_tag_id: str,
+        tag_data: AuxTagEditRequest,
+        expect_ok: bool = True,
+        with_etag: bool = True,
     ) -> Response:
-        etag = self.get(aux_tag_id).headers["ETag"]
+        headers = None
+        if with_etag:
+            headers = {
+                "If-Match": self.get(aux_tag_id).headers["ETag"],
+                "Accept": "application/json",
+            }
         resp = self.request(
             "put",
             url=f"/objects/{self.domain}/{aux_tag_id}",
             pydantic_basemodel_body=tag_data,
-            headers={"If-Match": etag, "Accept": "application/json"},
+            headers=headers,
             expect_ok=expect_ok,
         )
         if expect_ok:

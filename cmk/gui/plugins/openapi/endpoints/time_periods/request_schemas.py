@@ -117,11 +117,12 @@ class TimeRangeActive(BaseSchema):
         description="The day for which time ranges are to be specified. The 'all' "
         "option allows to specify time ranges for all days.",
         pattern=f"all|{'|'.join(weekday_ids())}",
+        load_default="all",
     )
     time_ranges = fields.List(
         fields.Nested(TimeRange),
-        load_default=[],
         example=[{"start": "13:00", "end": "19:00"}],
+        load_default=[{"start": "00:00", "end": "23:59"}],
     )
 
 

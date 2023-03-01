@@ -30,6 +30,7 @@ if sys.version_info < (2, 6):
 
 import ast
 import binascii
+import codecs
 import glob
 import io
 import itertools
@@ -51,6 +52,7 @@ try:
         Iterable,
         Iterator,
         Sequence,
+        Tuple,
     )
 except ImportError:
     # We need typing only for testing
@@ -95,6 +97,7 @@ CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
+PY_GE_35 = PY3 and sys.version_info[1] >= 5
 
 if PY3:
     text_type = str
@@ -154,6 +157,45 @@ def ensure_text_type(s, encoding="utf-8", errors="strict"):
       - `bytes` -> decoded to `str`
     """
     return s if isinstance(s, text_type) else s.decode(encoding, errors)
+
+
+def int_to_escaped_char(char):
+    # type: (int) -> text_type
+    return ensure_text_type("\\x{:02x}".format(char))
+
+
+def bytestring_to_escaped_char(char):
+    # type: (binary_type) -> text_type
+    return ensure_text_type("\\x{:02x}".format(ord(char)))
+
+
+if PY3:
+    escaped = int_to_escaped_char
+else:
+    escaped = bytestring_to_escaped_char
+
+if PY_GE_35:
+    backslashreplace_decode = codecs.backslashreplace_errors
+else:
+    # Python 2 and Python < 3.4 don't support decoding with "backslashreplace" error handler,
+    # but we need it to uniquely represent UNIX paths in monitoring.
+    def backslashreplace_decode(exception):
+        # type: (UnicodeError) -> Tuple[text_type, int]
+
+        if not isinstance(exception, UnicodeDecodeError):
+            # We'll use this error handler only for decoding, as the original
+            # "backslashreplace" handler is capable of encoding in all Python versions.
+            raise exception
+
+        bytestring, start, end = exception.object, exception.start, exception.end
+
+        return (
+            ensure_text_type("").join(escaped(c) for c in bytestring[start:end]),
+            end,
+        )
+
+
+codecs.register_error("backslashreplace_decode", backslashreplace_decode)
 
 
 def init_logging(verbosity):
@@ -959,7 +1001,7 @@ def find_matching_logfiles(glob_pattern):
             continue
 
         # match is bytes in Linux and unicode/str in Windows
-        match_readable = ensure_text_type(match, errors="replace")
+        match_readable = ensure_text_type(match, errors="backslashreplace_decode")
 
         file_refs.append((match, match_readable))
 

@@ -47,8 +47,8 @@ if os.name == "nt":
     _OH_NO_BYTES = _OH_NO.encode()
     _WAT_BAD_BYTES = _WAT_BAD.encode()
 else:
-    _OH_NO_STR = u"oh-no-\uFFFD"  # replace char
-    _WAT_BAD_STR = u"wat\u203D"  # actual interobang
+    _OH_NO_STR = u"oh-no-\\x89"  # backslash replace
+    _WAT_BAD_STR = u"wat\u203D"  # actual interrobang
     _OH_NO_BYTES = _OH_NO
     _WAT_BAD_BYTES = _WAT_BAD
 

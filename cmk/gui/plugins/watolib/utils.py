@@ -104,7 +104,7 @@ class ABCConfigDomain(abc.ABC):
 
         try:
             with filename.open("rb") as f:
-                exec(f.read(), settings, settings)
+                exec(f.read(), {}, settings)
 
             return settings
 

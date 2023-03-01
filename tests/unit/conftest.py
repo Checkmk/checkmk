@@ -8,7 +8,7 @@ import logging
 import shutil
 import socket
 from pathlib import Path
-from typing import Any, Iterable, Mapping, NamedTuple
+from typing import Any, Iterable, List, Mapping, NamedTuple
 from unittest import mock
 
 import pytest
@@ -16,6 +16,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from fakeredis import FakeRedis  # type: ignore[import]
 
 from tests.testlib import is_enterprise_repo, is_managed_repo, is_plus_repo
+from tests.testlib.plugin_registry import reset_registries
 
 import livestatus
 
@@ -26,6 +27,7 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.site import omd_site
 
 import cmk.gui.dashboard
@@ -400,7 +402,7 @@ def initialised_item_state():
 @pytest.fixture(autouse=True)
 def registry_reset():
     """Fixture to reset registries to its default entries."""
-    registries = [
+    registries: List[Registry] = [
         cmk.gui.dashboard.dashlet_registry,
         cmk.gui.views.icon_and_action_registry,
         cmk.gui.permissions.permission_registry,
@@ -412,14 +414,8 @@ def registry_reset():
         )
         registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
 
-    defaults_per_registry = [(registry, list(registry)) for registry in registries]  # type: ignore[call-overload]
-    try:
+    with reset_registries(registries):
         yield
-    finally:
-        for registry, defaults in defaults_per_registry:
-            for entry in list(registry):  # type: ignore[call-overload]
-                if entry not in defaults:
-                    registry.unregister(entry)  # type: ignore[attr-defined]
 
 
 @pytest.fixture(autouse=True)

@@ -5,9 +5,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
-from cmk.utils.licensing.state import is_licensed
+from cmk.utils.licensing.state import is_licensed, is_trial
 from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 import cmk.gui.utils.escaping as escaping
@@ -26,12 +24,10 @@ from .generator import HTMLWriter
 
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        get_days_until_expiration,
         get_num_hosts,
-        get_remaining_trial_time,
-        in_admin_warning_header_phase,
-        in_user_warning_header_phase_licensed,
-        in_user_warning_header_phase_trial,
+        HeaderNotification,
+        licensing_user_effect_licensed,
+        licensing_user_effect_trial,
         load_verified_response,
     )
 
@@ -100,44 +96,20 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
     if not is_cloud_edition():  # TODO: cleanup conditional imports and solve this via registration
         return
 
-    if in_user_warning_header_phase_trial():
-        # TODO change to correct link once available
-        licensing_link = "https://checkmk.com/contact"
-        writer.show_warning(
-            _(
-                "Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
-                "hosts is supported, currently %s hosts are being monitored. "
-                "Adjust your configuration or see here how to proceed: %s  "
-            )
-            % (get_remaining_trial_time().days, get_num_hosts(), licensing_link)
-        )
+    if is_trial():
+        effect = licensing_user_effect_trial(get_num_hosts())
+        if isinstance(effect, HeaderNotification) and (
+            set(effect.roles).intersection(user.role_ids)
+        ):
+            writer.show_warning(effect.message)
         return
 
-    if not is_licensed():
-        return
-
-    if (verified_response := load_verified_response()) is None:
-        return
-    response = verified_response.response
-
-    now = int(datetime.now().timestamp())
-    if in_user_warning_header_phase_licensed(now, response):
-        # TODO change to correct link once available
-        licensing_link = "https://checkmk.com/contact"
-        writer.show_warning(
-            _("Your license is expired since %s. See here how to proceed: %s")
-            % (
-                datetime.fromtimestamp(response.subscription_expiration_ts).strftime("%Y-%m-%d"),
-                licensing_link,
-            )
-        )
-        return
-
-    if "admin" in user.role_ids and in_admin_warning_header_phase(now, response):
-        writer.show_warning(
-            _("Your license expires in %i days")
-            % get_days_until_expiration(now, response.subscription_expiration_ts)
-        )
+    if is_licensed() and (verified_response := load_verified_response()) is not None:
+        effect = licensing_user_effect_licensed(verified_response.response)
+        if isinstance(effect, HeaderNotification) and (
+            set(effect.roles).intersection(user.role_ids)
+        ):
+            writer.show_warning(effect.message)
 
 
 def _make_default_page_state(

@@ -11,7 +11,6 @@ import os
 import tarfile
 from collections.abc import Collection, Iterator
 from dataclasses import asdict
-from datetime import datetime
 from typing import NamedTuple
 
 from six import ensure_str
@@ -72,8 +71,9 @@ from cmk.gui.watolib.search import build_index_background
 
 if not is_raw_edition():  # TODO solve this via registration
     from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        is_after_expiration_grace_period,
-        is_max_version_valid,
+        ActivationBlock,
+        licensing_user_effect_expired_trial,
+        licensing_user_effect_licensed,
         load_verified_response,
     )
 
@@ -202,23 +202,21 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        now = int(datetime.now().timestamp())
-
-        if not is_licensed() or self._license_verification_response is None:
-            if is_expired_trial() and len(collect_all_hosts()) > 25:
-                return False
-            return True
-
         license_usage_report_valid = (
             self._license_usage_report_validity != LicenseUsageReportValidity.older_than_five_days
         )
         if not is_cloud_edition():
             return license_usage_report_valid
-        return (
-            not is_after_expiration_grace_period(now, self._license_verification_response)
-            and is_max_version_valid(self._license_verification_response)
-            and license_usage_report_valid
-        )
+
+        if is_expired_trial():
+            effect = licensing_user_effect_expired_trial(len(collect_all_hosts()))
+            return not isinstance(effect, ActivationBlock) and license_usage_report_valid
+
+        if is_licensed() and self._license_verification_response is not None:
+            effect = licensing_user_effect_licensed(self._license_verification_response)
+            return not isinstance(effect, ActivationBlock) and license_usage_report_valid
+
+        return True
 
     def _may_activate_changes(self) -> bool:
         if not user.may("wato.activate"):
@@ -447,27 +445,15 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         warnings = []
 
         # TODO: cleanup conditional imports and solve this via registration
-        if (
-            is_cloud_edition()
-            and self._license_verification_response is not None
-            and (
-                cee_error := activate_changes.get_cee_license_validity_error(
-                    self._license_verification_response
-                )
-            )
-            is not None
-        ):
-            errors.append(cee_error)
+        if is_cloud_edition() and self._license_verification_response is not None and is_licensed():
+            effect = licensing_user_effect_licensed(self._license_verification_response)
+            if isinstance(effect, ActivationBlock):
+                errors.append(effect.message)
 
-        if is_expired_trial() and (num_active_hosts := len(collect_all_hosts())) > 25:
-            errors.append(
-                _(
-                    "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
-                    "Your Checkmk installation can handle 25 hosts after the 30-day trial period, "
-                    "not %d. Please adjust your configuration accordingly and try again."
-                )
-                % num_active_hosts
-            )
+        if is_expired_trial():
+            effect = licensing_user_effect_expired_trial(len(collect_all_hosts()))
+            if isinstance(effect, ActivationBlock):
+                errors.append(effect.message)
 
         if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
             errors.append(_("The license usage history is older than five days."))

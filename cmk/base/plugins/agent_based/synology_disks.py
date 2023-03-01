@@ -30,13 +30,20 @@ class Disk:
     temperature: float
     disk: str
     model: str
+    role: str
     health: Union[int, None]
 
     @classmethod
     def from_row(cls, row: Sequence[str]) -> "Disk":
-        health = int(health_raw) if (health_raw := row[4]) != "" else None
+        health = int(health_raw) if (health_raw := row[5]) != "" else None
+        role = row[4]
         return cls(
-            disk=row[0], model=row[1], state=int(row[2]), temperature=float(row[3]), health=health
+            disk=row[0],
+            model=row[1],
+            state=int(row[2]),
+            temperature=float(row[3]),
+            role=role,
+            health=health,
         )
 
 
@@ -61,21 +68,21 @@ register.snmp_section(
             "3",  # SYNOLOGY-DISK-MIB::diskModel
             "5",  # SYNOLOGY-DISK-MIB::diskStatus
             "6",  # SYNOLOGY-DISK-MIB::diskTemperature
-            "13",  # diskHealthStatus (available from DSM 7.1. and above)
+            "7",  # diskRole (available from DSM 7.0 and above)
+            # data => Used by storage pool
+            # hotspare => Assigned as a hot spare disk
+            # ssd_cache => Used by SSD Cache
+            # none => Not used by storage pool, nor hot spare, nor SSD Cache
+            # unknown => Some error occurred
+            "13",  # diskHealthStatus (available from DSM 7.1 and above)
         ],
     ),
 )
 
 
 def discover_synology_disks(section: Section) -> DiscoveryResult:
-    for item, disk in section.items():
-        # SSD and NVME used as cache are "not initialized". We remember that
-        # here. TODO: Really true always in todays time and age?
-        if (("SSD" in disk.model) or ("NVME" in disk.model)) and disk.state == 3:
-            params = {"used_as_cache": True}
-        else:
-            params = {}
-        yield Service(item=item, parameters=params)
+    for item in section:
+        yield Service(item=item, parameters={})
 
 
 def check_synology_disks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -100,9 +107,9 @@ def check_synology_disks(item: str, params: Mapping[str, Any], section: Section)
         5: (State.CRIT, "crashed"),
     }
     state, text = states[disk.state]
-    if disk.state == 3 and params.get("used_as_cache"):
-        text = "used as cache"
+    if (role := disk.role) in {"hotspare", "ssd_cache"} and disk.state == 3:
         state = State.OK
+        text = f"disk is {role}"
     yield Result(state=state, summary=f"Allocation status: {text}")
     yield Result(state=State.OK, summary=f"Model: {disk.model}")
 

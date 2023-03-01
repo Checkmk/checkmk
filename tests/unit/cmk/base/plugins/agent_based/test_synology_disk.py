@@ -9,11 +9,11 @@ from cmk.base.plugins.agent_based import synology_disks
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 SECTION_TABLE = [
-    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33", "1"],
-    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33", "1"],
-    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33", "1"],
-    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33", "1"],
-    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33", "1"],
+    ["Disk 1", "WD40EFAX-68JH4N0", "1", "33", "data", "1"],
+    ["Disk 2", "WD40EFAX-68JH4N0", "2", "33", "data", "1"],
+    ["Disk 3", "WD40EFAX-68JH4N0", "3", "33", "data", "1"],
+    ["Disk 4", "WD40EFAX-68JH4N0", "4", "33", "data", "1"],
+    ["Disk 5", "WD40EFAX-68JH4N0", "5", "33", "data", "1"],
 ]
 
 
@@ -33,11 +33,12 @@ def make_section(
     temperature: float = 42.1,
     disk: str = "none",
     model: str = "hello",
+    role: str = "data",
     health: int = 1,
 ) -> synology_disks.Section:
     return {
         disk: synology_disks.Disk(
-            state=state, temperature=temperature, disk=disk, model=model, health=health
+            state=state, temperature=temperature, disk=disk, model=model, role=role, health=health
         )
     }
 
@@ -63,17 +64,12 @@ def test_temperature_metric() -> None:
     assert result.name == "temp"
 
 
-@pytest.mark.parametrize("model, expected", [("mSSD", True), ("mNVME", True), ("HDD", None)])
-def test_discovery_detect_cached(model: str, expected: bool) -> None:
-    section = make_section(model=model, state=3)
-    service = list(synology_disks.discover_synology_disks(section))[0]
-    assert service.parameters.get("used_as_cache") is expected
-
-
-@pytest.mark.parametrize("used_as_cache, expected", [(True, State.OK), (False, State.WARN)])
-def test_check_cached_is_ok(used_as_cache: bool, expected: State) -> None:
-    section = make_section(state=3)
+@pytest.mark.parametrize(
+    "role, expected",
+    [("hotspare", State.OK), ("ssd_cache", State.OK), ("none", State.WARN), ("data", State.WARN)],
+)
+def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) -> None:
+    section = make_section(role=role, state=3)
     item = list(section.keys())[0]
-    params = {"used_as_cache": used_as_cache}
-    result = list(synology_disks.check_synology_disks(section=section, item=item, params=params))
+    result = list(synology_disks.check_synology_disks(item=item, section=section, params={}))
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected

@@ -11,7 +11,7 @@ import datetime
 
 import pytest
 
-from cmk.base.plugins.agent_based import gcp_health
+from cmk.base.plugins.agent_based import gcp_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -101,17 +101,17 @@ STRING_TABLE: StringTable = [
 
 
 @pytest.fixture(name="section", scope="module")
-def _section() -> gcp_health.Section:
-    return gcp_health.parse(STRING_TABLE)
+def _section() -> gcp_status.Section:
+    return gcp_status.parse(STRING_TABLE)
 
 
 @pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_parsing(section: gcp_health.Section) -> None:
+def test_parsing(section: gcp_status.Section) -> None:
     assert section.date == datetime.datetime(
         year=2022, month=7, day=20, tzinfo=datetime.timezone.utc
     )
     assert section.incidents == [
-        gcp_health.Incident(
+        gcp_status.Incident(
             affected_products=["Secret Manager"],
             affected_location=["europe-west2"],
             begin=datetime.datetime(2022, 7, 19, 14, 17, tzinfo=datetime.timezone.utc),
@@ -120,7 +120,7 @@ def test_parsing(section: gcp_health.Section) -> None:
             is_on_going=True,
             uri="incidents/mLBHeCxhRia17anXCSX1",
         ),
-        gcp_health.Incident(
+        gcp_status.Incident(
             affected_products=["Secret Manager", "Google Cloud SQL"],
             affected_location=["europe-west2", "global"],
             begin=datetime.datetime(2022, 7, 9, 14, 17, tzinfo=datetime.timezone.utc),
@@ -129,7 +129,7 @@ def test_parsing(section: gcp_health.Section) -> None:
             is_on_going=False,
             uri="incidents/mLBHeCxhRia17anXCSX1",
         ),
-        gcp_health.Incident(
+        gcp_status.Incident(
             affected_products=["Secret Manager"],
             affected_location=["europe-west1"],
             begin=datetime.datetime(2022, 7, 19, 14, 17, tzinfo=datetime.timezone.utc),
@@ -143,9 +143,9 @@ def test_parsing(section: gcp_health.Section) -> None:
 
 @pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
 def test_no_indicents() -> None:
-    section = gcp_health.Section(date=datetime.datetime(year=1999, month=3, day=12), incidents=[])
+    section = gcp_status.Section(date=datetime.datetime(year=1999, month=3, day=12), incidents=[])
     results = list(
-        gcp_health.check(
+        gcp_status.check(
             section=section,
         )
     )
@@ -158,9 +158,9 @@ def test_no_indicents() -> None:
 
 
 @pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_one_result_per_incident(section: gcp_health.Section) -> None:
+def test_one_result_per_incident(section: gcp_status.Section) -> None:
     results = list(
-        gcp_health.check(
+        gcp_status.check(
             section=section,
         )
     )
@@ -184,9 +184,9 @@ def test_one_result_per_incident(section: gcp_health.Section) -> None:
 
 
 @pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_indicents_in_selected_time_window(section: gcp_health.Section) -> None:
+def test_indicents_in_selected_time_window(section: gcp_status.Section) -> None:
     results = list(
-        gcp_health.check(
+        gcp_status.check(
             section=section,
         )
     )
@@ -206,9 +206,9 @@ def test_indicents_in_selected_time_window(section: gcp_health.Section) -> None:
 
 
 @pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_product_filter(section: gcp_health.Section) -> None:
+def test_product_filter(section: gcp_status.Section) -> None:
     results = list(
-        gcp_health.check(
+        gcp_status.check(
             section=section,
         )
     )
@@ -223,9 +223,9 @@ def test_product_filter(section: gcp_health.Section) -> None:
 
 
 @pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_region_filter(section: gcp_health.Section) -> None:
+def test_region_filter(section: gcp_status.Section) -> None:
     results = list(
-        gcp_health.check(
+        gcp_status.check(
             section=section,
         )
     )

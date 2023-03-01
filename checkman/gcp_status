@@ -1,4 +1,4 @@
-title: GCP Health
+title: GCP Status
 agents: gcp
 catalog: cloud/gcp
 license: GPLv2

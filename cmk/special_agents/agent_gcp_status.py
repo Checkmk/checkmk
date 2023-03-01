@@ -42,7 +42,7 @@ class AgentOutput(pydantic.BaseModel):
 
 
 def _health_serializer(section: AgentOutput) -> None:
-    with agent_common.SectionWriter("gcp_health") as w:
+    with agent_common.SectionWriter("gcp_status") as w:
         w.append(section.json())
 
 

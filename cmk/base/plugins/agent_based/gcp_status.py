@@ -71,7 +71,7 @@ def parse(string_table: StringTable) -> Section:
     return Section.parse_raw(string_table[0][0])
 
 
-register.agent_section(name="gcp_health", parse_function=parse)
+register.agent_section(name="gcp_status", parse_function=parse)
 
 
 def check(item: str, section: Section) -> CheckResult:
@@ -103,7 +103,7 @@ def discovery(section: Section) -> DiscoveryResult:
 
 
 register.check_plugin(
-    name="gcp_health",
+    name="gcp_status",
     service_name="GCP Status %s",
     discovery_function=discovery,
     check_function=check,

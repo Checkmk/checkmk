@@ -269,46 +269,55 @@ def agent_mobileiron_main(args: Args) -> int:
     {"...": ...}
     <<<<>>>>
     """
+    try:
+        LOGGER.info("Fetch general device information...")
 
-    LOGGER.info("Fetch general device information...")
+        if args.debug:
+            LOGGER.debug("Initialize Mobileiron API")
 
-    if args.debug:
-        LOGGER.debug("Initialize Mobileiron API")
+        with MobileironAPI(
+            api_host=args.hostname,
+            key_fields=args.key_fields,
+            regex_patterns=Regexes(args.android_regex, args.ios_regex, args.other_regex),
+            auth=(args.username, args.password),
+            proxy=args.proxy,
+        ) as mobileiron_api:
 
-    with MobileironAPI(
-        api_host=args.hostname,
-        key_fields=args.key_fields,
-        regex_patterns=Regexes(args.android_regex, args.ios_regex, args.other_regex),
-        auth=(args.username, args.password),
-        proxy=args.proxy,
-    ) as mobileiron_api:
+            all_devices = mobileiron_api.get_all_devices(
+                partitions=[] if args.partition is None else args.partition
+            )
 
-        all_devices = mobileiron_api.get_all_devices(
-            partitions=[] if args.partition is None else args.partition
-        )
+        if args.debug:
+            LOGGER.debug("Received the following devices: %s", all_devices)
 
-    if args.debug:
-        LOGGER.debug("Received the following devices: %s", all_devices)
-
-    LOGGER.info("Write agent output..")
-    for device in all_devices:
-        if "total_count" in all_devices[device]:
-            with SectionWriter("mobileiron_statistics") as writer:
-                writer.append_json(all_devices[device])
-        else:
-            with ConditionalPiggybackSection(device), SectionWriter("mobileiron_section") as writer:
-                writer.append_json(all_devices[device])
-            if uptime := all_devices[device]["uptime"]:
-                with ConditionalPiggybackSection(device), SectionWriter("uptime") as writer:
-                    writer.append_json(uptime)
-            with ConditionalPiggybackSection(device), SectionWriter("mobileiron_df") as writer:
-                writer.append_json(
-                    {
-                        "totalCapacity": all_devices[device].get("totalCapacity"),
-                        "availableCapacity": all_devices[device].get("availableCapacity"),
-                    }
-                )
-
+        LOGGER.info("Write agent output..")
+        for device in all_devices:
+            if "total_count" in all_devices[device]:
+                with SectionWriter("mobileiron_statistics") as writer:
+                    writer.append_json(all_devices[device])
+            else:
+                with ConditionalPiggybackSection(device), SectionWriter(
+                    "mobileiron_section"
+                ) as writer:
+                    writer.append_json(all_devices[device])
+                if uptime := all_devices[device]["uptime"]:
+                    with ConditionalPiggybackSection(device), SectionWriter("uptime") as writer:
+                        writer.append_json(uptime)
+                with ConditionalPiggybackSection(device), SectionWriter("mobileiron_df") as writer:
+                    writer.append_json(
+                        {
+                            "totalCapacity": all_devices[device].get("totalCapacity"),
+                            "availableCapacity": all_devices[device].get("availableCapacity"),
+                        }
+                    )
+    except (
+        requests.Timeout,
+        requests.exceptions.SSLError,
+        requests.exceptions.HTTPError,
+        requests.exceptions.JSONDecodeError,
+    ) as exc:
+        sys.stderr.write(f"{type(exc).__name__}: {exc}")
+        return 1
     return 0
 
 

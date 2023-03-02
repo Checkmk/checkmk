@@ -203,23 +203,31 @@ body.login {
     }
 
     #label_pass {
+      position: absolute;
       top: 153px;
+      left: 40px;
     }
 
     #input_pass {
+      position: absolute;
       top: 146px;
+      left: 135px;
     }
 
     #_use_backup_code {
       bottom: 20px;
+      left: 40px;
+      padding: 8px 16px;
+      position: absolute;
+      width: calc(100% - 80px);
     }
 
     .foldable {
+      height: 140px;
       .foldable_header {
         position: absolute;
         top: 125px;
         left: 40px;
-        text-align: left;
 
         b {
           font-weight: normal;

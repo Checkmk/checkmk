@@ -214,10 +214,6 @@ class HTMLWriter:
     def img(self, src: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_img(src, **attrs))
 
-    def open_button(self, type_: str, **attrs: HTMLTagAttributeValue) -> None:
-        attrs["type"] = type_
-        self.write_html(render_start_tag("button", close_tag=True, **attrs))
-
     def play_sound(self, url: str) -> None:
         self.write_html(render_start_tag("audio autoplay", src_=url))
 
@@ -276,9 +272,6 @@ class HTMLWriter:
     def h1(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("h1", content, **kwargs))
 
-    def h4(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_element("h4", content, **kwargs))
-
     def style(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("style", content, **kwargs))
 
@@ -314,9 +307,6 @@ class HTMLWriter:
 
     def canvas(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("canvas", content, **kwargs))
-
-    def strong(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_element("strong", content, **kwargs))
 
     def b(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("b", content, **kwargs))
@@ -375,36 +365,6 @@ class HTMLWriter:
     def render_h3(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("h3", content, **kwargs)
 
-    def open_h1(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("h1", close_tag=False, **kwargs))
-
-    def close_h1(self) -> None:
-        self.write_html(render_end_tag("h1"))
-
-    @staticmethod
-    def render_h1(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("h1", content, **kwargs)
-
-    def open_h4(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("h4", close_tag=False, **kwargs))
-
-    def close_h4(self) -> None:
-        self.write_html(render_end_tag("h4"))
-
-    @staticmethod
-    def render_h4(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("h4", content, **kwargs)
-
-    def open_header(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("header", close_tag=False, **kwargs))
-
-    def close_header(self) -> None:
-        self.write_html(render_end_tag("header"))
-
-    @staticmethod
-    def render_header(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("header", content, **kwargs)
-
     def open_tag(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("tag", close_tag=False, **kwargs))
 
@@ -431,29 +391,11 @@ class HTMLWriter:
     def close_select(self) -> None:
         self.write_html(render_end_tag("select"))
 
-    @staticmethod
-    def render_select(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("select", content, **kwargs)
-
-    def open_row(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("row", close_tag=False, **kwargs))
-
-    def close_row(self) -> None:
-        self.write_html(render_end_tag("row"))
-
-    @staticmethod
-    def render_row(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("row", content, **kwargs)
-
     def open_style(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("style", close_tag=False, **kwargs))
 
     def close_style(self) -> None:
         self.write_html(render_end_tag("style"))
-
-    @staticmethod
-    def render_style(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("style", content, **kwargs)
 
     def open_span(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("span", close_tag=False, **kwargs))
@@ -464,26 +406,6 @@ class HTMLWriter:
     @staticmethod
     def render_span(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("span", content, **kwargs)
-
-    def open_sub(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("sub", close_tag=False, **kwargs))
-
-    def close_sub(self) -> None:
-        self.write_html(render_end_tag("sub"))
-
-    @staticmethod
-    def render_sub(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("sub", content, **kwargs)
-
-    def open_script(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("script", close_tag=False, **kwargs))
-
-    def close_script(self) -> None:
-        self.write_html(render_end_tag("script"))
-
-    @staticmethod
-    def render_script(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("script", content, **kwargs)
 
     def open_tt(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("tt", close_tag=False, **kwargs))
@@ -511,10 +433,6 @@ class HTMLWriter:
     def close_tbody(self) -> None:
         self.write_html(render_end_tag("tbody"))
 
-    @staticmethod
-    def render_tbody(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("tbody", content, **kwargs)
-
     def open_li(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("li", close_tag=False, **kwargs))
 
@@ -531,10 +449,6 @@ class HTMLWriter:
     def close_html(self) -> None:
         self.write_html(render_end_tag("html"))
 
-    @staticmethod
-    def render_html(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("html", content, **kwargs)
-
     def open_th(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("th", close_tag=False, **kwargs))
 
@@ -545,21 +459,9 @@ class HTMLWriter:
     def render_th(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("th", content, **kwargs)
 
-    def open_sup(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("sup", close_tag=False, **kwargs))
-
-    def close_sup(self) -> None:
-        self.write_html(render_end_tag("sup"))
-
     @staticmethod
     def render_sup(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("sup", content, **kwargs)
-
-    def open_input(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("input", close_tag=False, **kwargs))
-
-    def close_input(self) -> None:
-        self.write_html(render_end_tag("input"))
 
     def open_td(self, colspan: int | None = None, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(
@@ -588,19 +490,11 @@ class HTMLWriter:
     def close_thead(self) -> None:
         self.write_html(render_end_tag("thead"))
 
-    @staticmethod
-    def render_thead(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("thead", content, **kwargs)
-
     def open_body(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("body", close_tag=False, **kwargs))
 
     def close_body(self) -> None:
         self.write_html(render_end_tag("body"))
-
-    @staticmethod
-    def render_body(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("body", content, **kwargs)
 
     def open_head(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("head", close_tag=False, **kwargs))
@@ -608,35 +502,11 @@ class HTMLWriter:
     def close_head(self) -> None:
         self.write_html(render_end_tag("head"))
 
-    @staticmethod
-    def render_head(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("head", content, **kwargs)
-
-    def open_fieldset(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("fieldset", close_tag=False, **kwargs))
-
-    def close_fieldset(self) -> None:
-        self.write_html(render_end_tag("fieldset"))
-
-    @staticmethod
-    def render_fieldset(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("fieldset", content, **kwargs)
-
     def open_optgroup(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("optgroup", close_tag=False, **kwargs))
 
     def close_optgroup(self) -> None:
         self.write_html(render_end_tag("optgroup"))
-
-    def open_option(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("option", close_tag=False, **kwargs))
-
-    def close_option(self) -> None:
-        self.write_html(render_end_tag("option"))
-
-    @staticmethod
-    def render_option(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("option", content, **kwargs)
 
     def open_form(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("form", close_tag=False, **kwargs))
@@ -648,25 +518,9 @@ class HTMLWriter:
     def render_form(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("form", content, **kwargs)
 
-    def open_tags(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("tags", close_tag=False, **kwargs))
-
-    def close_tags(self) -> None:
-        self.write_html(render_end_tag("tags"))
-
     @staticmethod
     def render_tags(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("tags", content, **kwargs)
-
-    def open_canvas(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("canvas", close_tag=False, **kwargs))
-
-    def close_canvas(self) -> None:
-        self.write_html(render_end_tag("canvas"))
-
-    @staticmethod
-    def render_canvas(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("canvas", content, **kwargs)
 
     def open_nobr(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("nobr", close_tag=False, **kwargs))
@@ -677,18 +531,6 @@ class HTMLWriter:
     @staticmethod
     def render_nobr(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("nobr", content, **kwargs)
-
-    def open_br(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("br", close_tag=False, **kwargs))
-
-    def close_br(self) -> None:
-        self.write_html(render_end_tag("br"))
-
-    def open_strong(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("strong", close_tag=False, **kwargs))
-
-    def close_strong(self) -> None:
-        self.write_html(render_end_tag("strong"))
 
     @staticmethod
     def render_strong(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
@@ -717,34 +559,9 @@ class HTMLWriter:
     def render_center(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("center", content, **kwargs)
 
-    def open_footer(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("footer", close_tag=False, **kwargs))
-
-    def close_footer(self) -> None:
-        self.write_html(render_end_tag("footer"))
-
-    @staticmethod
-    def render_footer(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("footer", content, **kwargs)
-
-    def open_i(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("i", close_tag=False, **kwargs))
-
-    def close_i(self) -> None:
-        self.write_html(render_end_tag("i"))
-
     @staticmethod
     def render_i(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("i", content, **kwargs)
-
-    def close_button(self) -> None:
-        self.write_html(render_end_tag("button"))
-
-    def open_title(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("title", close_tag=False, **kwargs))
-
-    def close_title(self) -> None:
-        self.write_html(render_end_tag("title"))
 
     @staticmethod
     def render_title(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
@@ -759,22 +576,6 @@ class HTMLWriter:
     @staticmethod
     def render_p(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("p", content, **kwargs)
-
-    def open_u(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("u", close_tag=False, **kwargs))
-
-    def close_u(self) -> None:
-        self.write_html(render_end_tag("u"))
-
-    @staticmethod
-    def render_u(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return render_element("u", content, **kwargs)
-
-    def open_iframe(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("iframe", close_tag=False, **kwargs))
-
-    def close_iframe(self) -> None:
-        self.write_html(render_end_tag("iframe"))
 
     @staticmethod
     def render_iframe(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:

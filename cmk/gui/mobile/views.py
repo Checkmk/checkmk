@@ -924,7 +924,7 @@ def render_mobile_table(
                 colspan = None
 
             cell.paint(row, render_link_to_view, colspan=colspan)
-        html.close_row()
+        html.close_tr()
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
 

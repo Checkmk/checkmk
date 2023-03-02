@@ -86,6 +86,7 @@ std::string to_multi_line(const std::string &str);
 #ifdef CMC
 std::string ipv4ToString(in_addr_t ipv4_address);
 #endif
+bool is_utf8(std::string_view s);
 }  // namespace mk
 
 template <size_t N>

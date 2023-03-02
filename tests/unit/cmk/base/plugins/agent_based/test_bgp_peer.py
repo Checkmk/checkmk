@@ -22,16 +22,16 @@ def test_bgp_peer_parse_simple() -> None:
         ]
     ]
     assert bgp_peer.parse_arista_bgp([data]) == {
-        "192.168.1.2": {
-            "Admin state": "running",
-            "BGP version": 4,
-            "Last received error": "Cease/other configuration change",
-            "Local address": "192.168.1.1",
-            "Local identifier": "10.10.10.10",
-            "Peer state": "established",
-            "Remote AS number": 65000,
-            "Remote identifier": "192.168.2.0",
-        }
+        "192.168.1.2": bgp_peer.BGPData(
+            admin_state="running",
+            bgp_version=4,
+            last_received_error="Cease/other configuration change",
+            local_address="192.168.1.1",
+            local_identifier="10.10.10.10",
+            peer_state="established",
+            remote_as_number=65000,
+            remote_identifier="192.168.2.0",
+        )
     }
 
 
@@ -49,16 +49,16 @@ def test_bgp_peer_parse_empty_address() -> None:
         ]
     ]
     assert bgp_peer.parse_arista_bgp([data]) == {
-        "192.168.1.2": {
-            "Admin state": "running",
-            "BGP version": 4,
-            "Last received error": "",
-            "Local address": "empty()",
-            "Local identifier": "0.0.0.0",
-            "Peer state": "idle",
-            "Remote AS number": 65007,
-            "Remote identifier": "0.0.0.0",
-        },
+        "192.168.1.2": bgp_peer.BGPData(
+            admin_state="running",
+            bgp_version=4,
+            last_received_error="",
+            local_address="empty()",
+            local_identifier="0.0.0.0",
+            peer_state="idle",
+            remote_as_number=65007,
+            remote_identifier="0.0.0.0",
+        ),
     }
 
 

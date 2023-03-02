@@ -93,7 +93,7 @@ This is the data we can extract
 
 """
 
-from typing import Any, List
+from typing import List, Mapping, NamedTuple
 
 from .agent_based_api.v1 import (
     OIDBytes,
@@ -108,81 +108,55 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringByteTable
 from .utils.ip_format import clean_v4_address, clean_v6_address
 
-names = [
-    # "Local address type",  #        2.1.2,
-    "Local address",  #             2.1.3
-    # "Local port",  #                2.1.6
-    # "Local AS number",  #           2.1.7
-    "Local identifier",  #          2.1.8
-    # "RemotePort",  #                2.1.9
-    "Remote AS number",  #            2.1.10
-    "Remote identifier",  #          2.1.11
-    "Admin state",  #               2.1.12
-    "Peer state",  #                     2.1.13
-    # "Description",  #               2.1.14
-    # "LastErrorCodeReceived",  #     3.1.1
-    # "LastErrorSubCodeReceived",  #  3.1.2
-    # "LastErrorReceivedTime",  #     3.1.3
-    "Last received error",  #       3.1.4
-    # "LastErrorReceivedData",  #     3.1.5
-    # "LastErrorCodeSent",  #         3.1.6
-    # "LastErrorSubCodeSent",  #      3.1.7
-    # "LastErrorSentTime",  #         3.1.8
-    # "LastErrorSentText",  #         3.1.9
-    # "LastErrorSentData",  #         3.1.10
-    # "FsmEstablishedTime",  #        4.1.1
-    # "InUpdatesElapsedTime",  #      4.1.2
-    # "ConnectRetryInterval",  #      5.1.1
-    # "HoldTimeConfigured",  #        5.1.2
-    # "KeepAliveConfigured",  #       5.1.3
-    # "MinASOrigInterval",  #         5.1.4
-    # "MinRouteAdverInterval",  #     5.1.5
-    # "HoldTime",  #                  6.1.1
-    # "KeepAlive",  #                 6.1.2
-    # "InUpdates",  #                 7.1.1
-    # "OutUpdates",  #                7.1.2
-    # "InTotalMessages",  #           7.1.3
-    # "OutTotalMessages",  #          7.1.4
-    # "FsmEstablishedTransitions",  # 7.1.5
-]
+
+class BGPData(NamedTuple):
+    local_address: str
+    local_identifier: str
+    remote_as_number: int
+    remote_identifier: str
+    admin_state: str
+    peer_state: str
+    last_received_error: str
+    bgp_version: int
 
 
-def parse_arista_bgp(string_table: List[StringByteTable]) -> dict[str, Any]:
-    def convert(name: str, value: str) -> Any:
-        if name in {"Local address", "Local identifier", "Remote identifier"}:
-            if not value:
-                return "empty()"
+Section = Mapping[str, BGPData]
+
+
+def parse_arista_bgp(string_table: List[StringByteTable]) -> Section:
+    def convert_address(value: str | list[int]) -> str:
+        if not value:
+            return "empty()"
+        if isinstance(value, list):
             return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
-        if name == "Admin state":
-            return {
+        split_value = value.split(".")
+        return (
+            clean_v4_address(split_value)
+            if len(split_value) == 4
+            else clean_v6_address(split_value)
+        )
+
+    def create_item_data(entry: list[str | list[int]]) -> BGPData:
+        return BGPData(
+            local_address=convert_address(entry[0]),
+            local_identifier=convert_address(entry[1]),
+            remote_as_number=int(entry[2]) if isinstance(entry[2], str) else 0,
+            remote_identifier=convert_address(entry[3]),
+            admin_state={
                 "1": "halted",
                 "2": "running",
-            }.get(value, "unknown(%r)" % value)
-        if name == "Peer state":
-            return {
+            }.get(entry[4] if isinstance(entry[4], str) else "0", "unknown(%r)" % entry[4]),
+            peer_state={
                 "1": "idle",
                 "2": "connect",
                 "3": "active",
                 "4": "opensent",
                 "5": "openconfirm",
                 "6": "established",
-            }.get(value, "unknown(%r)" % value)
-        if "Address type" in name:
-            return {
-                "1": "IPv4",
-                "2": "IPv6",
-                "3": "IPv4z",
-                "4": "IPv6z",
-            }.get(value, "unknown(%r)" % value)
-        if "AS number" in name:
-            return int(value)
-        return value
-
-    def create_item_data(entry):
-        return {
-            **{name: convert(name, element) for name, element in zip(names, entry[:-1])},
-            **{"BGP version": 4},
-        }
+            }.get(entry[5] if isinstance(entry[5], str) else "0", "unknown(%r)" % entry[5]),
+            last_received_error=entry[6] if isinstance(entry[6], str) else "unknown(%r)" % entry[6],
+            bgp_version=4,
+        )
 
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
@@ -203,25 +177,33 @@ def parse_arista_bgp(string_table: List[StringByteTable]) -> dict[str, Any]:
         )
 
     assert all(
-        len(entry) == len(names) + 1 for entry in string_table[0]
+        len(entry) == len(BGPData.__annotations__) for entry in string_table[0]
     ), "Not all info elements have the size guessed from known names %d: %r" % (
-        len(names) + 1,
+        len(BGPData.__annotations__),
         [len(entry) for entry in string_table[0]],
     )
     return {remote_addr(str(entry[-1])): create_item_data(entry) for entry in string_table[0]}
 
 
-def discover_arista_bgp(section: dict[str, Any]) -> DiscoveryResult:
+def discover_arista_bgp(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
 def check_arista_bgp(
     item: str,
-    section: dict[str, Any],
+    section: Section,
 ) -> CheckResult:
-    for key, value in section[item].items():
-        yield Result(state=State.OK, summary="%s: %r" % (key, value))
-    yield Result(state=State.OK, summary="Remote address: %r" % item)
+    if not (peer := section.get(item)):
+        return
+    yield Result(state=State.OK, summary=f"Local address: {peer.local_address!r}")
+    yield Result(state=State.OK, summary=f"Local identifier: {peer.local_identifier!r}")
+    yield Result(state=State.OK, summary=f"Remote AS number: {peer.remote_as_number}")
+    yield Result(state=State.OK, summary=f"Remote identifier: {peer.remote_identifier!r}")
+    yield Result(state=State.OK, summary=f"Admin state: {peer.admin_state!r}")
+    yield Result(state=State.OK, summary=f"Peer state: {peer.peer_state!r}")
+    yield Result(state=State.OK, summary=f"Last received error: {peer.last_received_error!r}")
+    yield Result(state=State.OK, summary=f"BGP version: {peer.bgp_version}")
+    yield Result(state=State.OK, summary=f"Remote address: {item!r}")
 
 
 register.snmp_section(

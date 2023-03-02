@@ -46,6 +46,7 @@ class Site:
         install_test_python_modules: bool = True,
         admin_password: str = "cmk",
         update: bool = False,
+        update_conflict_mode: str = "install",
         enforce_english_gui: bool = True,
     ) -> None:
         assert site_id
@@ -66,6 +67,7 @@ class Site:
         self.admin_password = admin_password
 
         self.update = update
+        self.update_conflict_mode = update_conflict_mode
         self.enforce_english_gui = enforce_english_gui
 
         self.openapi = CMKOpenApiSession(
@@ -516,7 +518,7 @@ class Site:
                     "-V",
                     self.version.version_directory(),
                     "update",
-                    "--conflict=install",
+                    f"--conflict={self.update_conflict_mode}",
                     self.id,
                 ]
                 if self.update
@@ -1127,6 +1129,7 @@ class SiteFactory:
         install_test_python_modules: bool = True,
         prefix: str | None = None,
         update: bool = False,
+        update_conflict_mode: str = "install",
         enforce_english_gui: bool = True,
     ) -> None:
         self._version = version
@@ -1136,6 +1139,7 @@ class SiteFactory:
         self._update_from_git = update_from_git
         self._install_test_python_modules = install_test_python_modules
         self._update = update
+        self._update_conflict_mode = update_conflict_mode
         self._enforce_english_gui = enforce_english_gui
 
     @property

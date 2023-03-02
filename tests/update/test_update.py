@@ -6,32 +6,52 @@ import logging
 
 import pytest
 
+from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
 
-from . import conftest
+from .conftest import get_host_data, get_site_status, update_config, update_site
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.type("update")
-def test_update(test_site):
-    # TODO: check source installation
+def test_update(test_site: Site) -> None:
+    # TODO: check source installation (version check done in test_site fixture)
     # TODO: set config
-    # TODO: get baseline monitoring data
 
+    # get baseline monitoring data
+    base_data = get_host_data(test_site)
+    logger.debug("Base data: %s", base_data)
+
+    # get version data
+    base_version = test_site.version
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
         fallback_branch=current_base_branch_name(),
     )
-    target_site = conftest.update_site(target_version)
 
-    assert target_site.version.version == target_version.version, "Target version mismatch!"
-    assert target_site.version.edition == target_version.edition, "Target edition mismatch!"
+    target_site = update_site(target_version)
 
-    # TODO: check target installation
+    # TODO: check target installation (version check done in update_site function)
     # TODO: check config
-    # TODO: compare baseline monitoring data
+
+    # Dumping cmc config as parseable object (JSON)
+    # cmk --dump-cmc-config
+
+    # Triggering cmk config update
+    assert update_config(target_site) == 0, "Updating config failed unexpectedly!"
+
+    # get update monitoring data
+    target_data = get_host_data(target_site)
+    logger.debug("Target data: %s", target_data)
+
+    # get the service status codes and check them
+    assert get_site_status(target_site) == "running", "Invalid service status after updating!"
+
+    logger.info("Successfully tested updating %s>%s!", base_version, target_version)
+
+    # TODO: Compare data

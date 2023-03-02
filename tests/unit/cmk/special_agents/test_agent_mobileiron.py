@@ -133,8 +133,9 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
     ],
 )
 @responses.activate
-def test_agent_raises_exceptions(
+def test_agent_handles_exceptions(
     exception: Type[requests.exceptions.HTTPError] | Type[requests.exceptions.SSLError],
+    capsys: pytest.CaptureFixture,
 ) -> None:
     args = argparse.Namespace(
         hostname="does_not_exist",
@@ -150,8 +151,9 @@ def test_agent_raises_exceptions(
     )
     responses.get(
         f"https://{args.hostname}:/api/v1/device?rows=200&start=0&dmPartitionId={args.partition[0]}",
-        body=exception(),
+        body=exception("exception_message"),
     )
 
-    with pytest.raises(exception):
-        agent_mobileiron_main(args)
+    return_code = agent_mobileiron_main(args)
+    assert return_code == 1
+    assert capsys.readouterr().err == f"{exception.__name__}: exception_message"

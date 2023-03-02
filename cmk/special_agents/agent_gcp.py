@@ -259,7 +259,6 @@ class Result:
 class AssetSection:
     name: str
     assets: Sequence[Asset]
-    project: str
     config: Sequence[str]
 
 
@@ -347,7 +346,7 @@ Section = (
 
 def _asset_serializer(section: AssetSection) -> None:
     with SectionWriter("gcp_assets") as w:
-        w.append(json.dumps(dict(project=section.project, config=section.config)))
+        w.append(json.dumps(dict(config=section.config)))
         for a in section.assets:
             w.append(Asset.serialize(a))
 
@@ -479,7 +478,7 @@ def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
 
 
 def run_assets(client: ClientProtocol, config: Sequence[str]) -> AssetSection:
-    return AssetSection("asset", gather_assets(client), client.project, config)
+    return AssetSection("asset", gather_assets(client), config)
 
 
 ##############

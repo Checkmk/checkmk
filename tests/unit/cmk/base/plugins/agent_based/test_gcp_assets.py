@@ -16,4 +16,4 @@ ASSET_TABLE = [
 
 def test_skip_parsing_unkown_asset_type() -> None:
     section = parse_assets(ASSET_TABLE)
-    assert section == AssetSection(project="backup-255820", config=Config(services=[]), _assets={})
+    assert section == AssetSection(config=Config(services=[]), _assets={})

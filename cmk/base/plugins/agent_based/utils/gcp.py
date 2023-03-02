@@ -125,7 +125,6 @@ Section = Mapping[Item, SectionItem]
 
 @dataclass(frozen=True)
 class AssetSection:
-    project: Project
     config: Config
     _assets: Mapping[AssetType, AssetTypeSection]
 
@@ -210,7 +209,7 @@ class MetricSpec:
 
 def validate_asset_section(section_gcp_assets: AssetSection | None, service: str) -> AssetSection:
     if section_gcp_assets is None or not section_gcp_assets.config.is_enabled(service):
-        return AssetSection(Project(""), Config(services=[]), _assets={})
+        return AssetSection(Config(services=[]), _assets={})
     return section_gcp_assets
 
 

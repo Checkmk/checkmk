@@ -61,7 +61,6 @@ class TestGCSDiscover(DiscoverTester):
     def expected_labels(self) -> set[ServiceLabel]:
         return {
             ServiceLabel("cmk/gcp/location", "us-central1-a"),
-            ServiceLabel("cmk/gcp/projectId", "backup-255820"),
             ServiceLabel("cmk/gcp/labels/amon", "amarth"),
             ServiceLabel("cmk/gcp/labels/judas", "priest"),
         }
@@ -82,7 +81,6 @@ def test_discover_disk_labels_without_user_labels() -> None:
     labels = disks[0].labels
     assert set(labels) == {
         ServiceLabel("cmk/gcp/location", "us-central1-a"),
-        ServiceLabel("cmk/gcp/projectId", "backup-255820"),
     }
 
 

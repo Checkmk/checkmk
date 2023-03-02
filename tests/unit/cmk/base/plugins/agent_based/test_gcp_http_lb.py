@@ -48,9 +48,7 @@ class TestHTTPLoadBalancerDiscover(DiscoverTester):
 
     @property
     def expected_labels(self) -> set[ServiceLabel]:
-        return {
-            ServiceLabel("cmk/gcp/projectId", "backup-255820"),
-        }
+        return set()
 
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
         yield from discover(section_gcp_service_http_lb=None, section_gcp_assets=assets)

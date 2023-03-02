@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import register, render, Service, ServiceLabel
+from .agent_based_api.v1 import register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import gcp
 
@@ -29,8 +29,7 @@ def discover(
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "http_lb")
     for item, _ in assets[ASSET_TYPE].items():
-        labels = [ServiceLabel("cmk/gcp/projectId", assets.project)]
-        yield Service(item=item, labels=labels)
+        yield Service(item=item, labels=[])
 
 
 def check_requests(

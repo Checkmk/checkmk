@@ -32,7 +32,6 @@ def discover(
         data = bucket.resource_data
         labels = [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
         labels.append(ServiceLabel("cmk/gcp/location", bucket.location))
-        labels.append(ServiceLabel("cmk/gcp/projectId", assets.project))
         yield Service(item=item, labels=labels)
 
 

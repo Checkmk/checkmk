@@ -26,9 +26,9 @@ class LocatorHelper(ABC):
     def locator(self, selector: str = "xpath=.") -> Locator:
         """return locator for this subpart"""
 
-    def check_success(self, message: str | Pattern) -> None:
+    def check_success(self, message: str | Pattern, timeout_ms: float = 5000) -> None:
         """check for a success div and its content"""
-        expect(self.locator("div.success")).to_have_text(message)
+        expect(self.locator("div.success")).to_have_text(message, timeout=timeout_ms)
 
     def check_error(self, message: str | Pattern) -> None:
         """check for an error div and its content"""

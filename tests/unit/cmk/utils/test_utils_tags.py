@@ -217,23 +217,6 @@ def test_tag_config_get_tag_ids(test_cfg: tags.TagConfig) -> None:
     }
 
 
-def test_tag_config_get_tag_ids_with_group_prefix(test_cfg: tags.TagConfig) -> None:
-    assert test_cfg.get_tag_ids_by_group() == {
-        ("bla", "bla"),
-        ("criticality", "critical"),
-        ("criticality", "offline"),
-        ("criticality", "prod"),
-        ("criticality", "test"),
-        ("networking", "dmz"),
-        ("networking", "lan"),
-        ("networking", "wan"),
-        ("none_2", "none_val_2"),
-        ("none_2", "none_val"),
-        ("none_choice", None),
-        ("none_choice", "none_val"),
-    }
-
-
 def test_tag_config_get_tag_or_aux_tag(test_cfg: tags.TagConfig) -> None:
     assert test_cfg.get_tag_or_aux_tag("nonexisting_group", "blä") is None
     assert isinstance(test_cfg.get_tag_or_aux_tag("nonexisting_group", "bla"), tags.AuxTag)

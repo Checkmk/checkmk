@@ -253,12 +253,6 @@ class TagGroup:
     def default_value(self) -> TagID | None:
         return self.tags[0].id
 
-    def get_tag(self, tag_id: TagID) -> GroupedTag | None:
-        for tag in self.tags:
-            if tag_id == tag.id:
-                return tag
-        return None
-
     def get_tag_ids(self) -> set[TagID | None]:
         if self.is_checkbox_tag_group:
             return {None, self.tags[0].id}
@@ -379,9 +373,6 @@ class TagConfig:
                 aux_tag_map[grouped_tag.id] = grouped_tag.aux_tag_ids
         return aux_tag_map
 
-    def get_aux_tag_by_id(self, tag_group_id: TagID) -> AuxTag:
-        return self.aux_tag_list.get_aux_tag(tag_group_id)
-
     def insert_aux_tag(self, aux_tag: AuxTag) -> None:
         self.aux_tag_list.append(aux_tag)
         self.aux_tag_list.validate()
@@ -406,17 +397,6 @@ class TagConfig:
             response.update(tag_group.get_tag_ids())
 
         response.update(self.aux_tag_list.get_tag_ids())
-        return response
-
-    def get_tag_ids_by_group(self) -> set[tuple[TaggroupID, TagID | None]]:
-        """Returns a set of (tag_group_id, tag_id) pairs"""
-        response: set[tuple[TaggroupID, TagID | None]] = set()
-        for tag_group in self.tag_groups:
-            response.update([(tag_group.id, tag) for tag in tag_group.get_tag_ids()])
-
-        response.update(
-            [(aux_tag_id, aux_tag_id) for aux_tag_id in self.aux_tag_list.get_tag_ids()]
-        )
         return response
 
     def get_tag_or_aux_tag(

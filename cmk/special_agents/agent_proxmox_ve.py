@@ -673,7 +673,7 @@ class ProxmoxVeSession:
                 )
 
             if response is None:
-                raise RuntimeError(
+                raise CannotRecover(
                     "Couldn't authenticate %r @ %r"
                     % (credentials.get("username", "no-username"), ticket_url)
                 )
@@ -746,9 +746,9 @@ class ProxmoxVeSession:
         try:
             response_json = response.json()
         except JSONDecodeError as e:
-            raise RuntimeError("Couldn't parse API element %r" % path) from e
+            raise CannotRecover("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
-            raise RuntimeError("Could not fetch {!r} ({!r})".format(path, response_json["errors"]))
+            raise CannotRecover("Could not fetch {!r} ({!r})".format(path, response_json["errors"]))
         return response_json.get("data")
 
 

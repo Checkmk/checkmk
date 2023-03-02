@@ -11,13 +11,14 @@ from .autodiscovery import (
     schedule_discovery_check,
 )
 from .commandline import commandline_discovery
-from .preview import get_check_preview
+from .preview import get_check_preview, SourcesFailedError
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = [
     "DiscoveryMode",
     "QualifiedDiscovery",
     "automation_discovery",
+    "SourcesFailedError",
     "commandline_discovery",
     "discover_marked_hosts",
     "execute_check_discovery",

@@ -111,6 +111,7 @@ from cmk.base.agent_based.confcheckers import (
     CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
+    ConfiguredSummarizer,
     SectionPluginMapper,
 )
 from cmk.base.automations import Automation, automations, MKAutomationError
@@ -280,9 +281,13 @@ def _get_discovery_preview(
     buf = io.StringIO()
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
-        check_preview_table, host_label_result = _execute_discovery(
-            host_name, perform_scan, on_error
-        )
+
+        try:
+            check_preview_table, host_label_result = _execute_discovery(
+                host_name, perform_scan, on_error
+            )
+        except discovery.SourcesFailedError:
+            check_preview_table, host_label_result = [], discovery.QualifiedDiscovery.empty()
 
         def make_discovered_host_labels(
             labels: Sequence[HostLabel],
@@ -343,6 +348,12 @@ def _execute_discovery(
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        failure_summarizer=ConfiguredSummarizer(
+            config_cache,
+            host_name,
+            include_ok_results=False,
+            override_non_ok_state=None,
+        ),
         section_plugins=SectionPluginMapper(),
         check_plugins=CheckPluginMapper(),
         find_service_description=config.service_description,

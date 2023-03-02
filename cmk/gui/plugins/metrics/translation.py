@@ -473,6 +473,7 @@ check_metrics["check_mk-fjdarye200_pools"] = df_translation
 check_metrics["check_mk-dell_compellent_folder"] = df_translation
 check_metrics["check_mk-nimble_volumes"] = df_translation
 check_metrics["check_mk-ceph_df"] = df_translation
+check_metrics["check_mk-kube_pvc"] = df_translation
 check_metrics["check_mk-lvm_vgs"] = df_translation
 check_metrics["check_mk-sansymphony_pool"] = {
     **df_translation,

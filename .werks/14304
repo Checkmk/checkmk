@@ -6,7 +6,7 @@ Date: 1677686647
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.1.0p24
+Version: 2.1.0p23
 
 The Checkmk config update routine (cmk-update-config) was not dealing with
 global setting migration correctly. Instead of migrating global and site

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p24
+Version: 2.1.0p23
 
 There were several bugs in the Azure Storage performance check plugin.
 Success server latency and End-to-end server latency had no units in the service

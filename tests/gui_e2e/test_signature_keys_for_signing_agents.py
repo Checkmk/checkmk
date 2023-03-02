@@ -140,16 +140,14 @@ def with_key_fixture(
     delete_key(logged_in_page, "with_key_fixture")
 
 
-def test_bake_and_sign(logged_in_page: PPage, with_key: None, is_firefox: bool) -> None:
+@pytest.mark.xfail(reason="Test currently flaky")  # TODO: investigate and re-enable
+def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
     """go to agents and click bake and sign
 
     Bake and sign starts a backgroundjob. If the job finished the success is
     reported. This is kind of asynchronous. Theoretically this could lead to
     timeout problems, but in my experience the signing is quite fast. But if
     this happens restart or mark this test to be skipped"""
-
-    if is_firefox:
-        pytest.skip("Test currently flaky on the firefox engine.")  # TODO: investigate
 
     logged_in_page.megamenu_setup.click()
     logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX").click()

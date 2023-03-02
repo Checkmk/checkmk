@@ -57,6 +57,10 @@ class TimeoutOnFirstConnect(TimeoutError):
     ...
 
 
+class ProxmoxVeAgentError(Exception):
+    ...
+
+
 def parse_arguments(argv: Sequence[str] | None) -> Args:
     """parse command line arguments and return argument object"""
     parser = create_default_argument_parser(description=__doc__)
@@ -676,7 +680,7 @@ class ProxmoxVeSession:
                 )
 
             if response is None:
-                raise RuntimeError(
+                raise ProxmoxVeAgentError(
                     "Couldn't authenticate %r @ %r"
                     % (credentials.get("username", "no-username"), ticket_url)
                 )
@@ -749,9 +753,11 @@ class ProxmoxVeSession:
         try:
             response_json = response.json()
         except JSONDecodeError as e:
-            raise RuntimeError("Couldn't parse API element %r" % path) from e
+            raise ProxmoxVeAgentError("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
-            raise RuntimeError("Could not fetch {!r} ({!r})".format(path, response_json["errors"]))
+            raise ProxmoxVeAgentError(
+                "Could not fetch {!r} ({!r})".format(path, response_json["errors"])
+            )
         return response_json.get("data")
 
 
@@ -894,7 +900,7 @@ def agent_proxmox_ve_main_error_handler(args: Args) -> int:
     """Just wraps error handling"""
     try:
         return agent_proxmox_ve_main(args)
-    except TimeoutOnFirstConnect as exc:
+    except (TimeoutOnFirstConnect, ProxmoxVeAgentError) as exc:
         print(exc, file=sys.stderr)
         return 1
 

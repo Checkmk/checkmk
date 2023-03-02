@@ -34,7 +34,6 @@ def discover(
         labels.append(ServiceLabel("cmk/gcp/location", data["location"]))
         labels.append(ServiceLabel("cmk/gcp/bucket/storageClass", data["storageClass"]))
         labels.append(ServiceLabel("cmk/gcp/bucket/locationType", data["locationType"]))
-        labels.append(ServiceLabel("cmk/gcp/projectId", assets.project))
         yield Service(item=item, labels=labels)
 
 

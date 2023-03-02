@@ -43,7 +43,6 @@ class TestDiscover(DiscoverTester):
         return {
             ServiceLabel("cmk/gcp/location", "us-central1-a"),
             ServiceLabel("cmk/gcp/filestore/name", "test"),
-            ServiceLabel("cmk/gcp/projectId", "backup-255820"),
             ServiceLabel("cmk/gcp/labels/foo", "bar"),
         }
 
@@ -64,7 +63,6 @@ def test_discover_labels_labels_without_user_labels() -> None:
     assert set(labels) == {
         ServiceLabel("cmk/gcp/location", "us-central1-a"),
         ServiceLabel("cmk/gcp/filestore/name", "test"),
-        ServiceLabel("cmk/gcp/projectId", "backup-255820"),
     }
 
 

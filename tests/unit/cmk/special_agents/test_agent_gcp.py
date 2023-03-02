@@ -227,7 +227,6 @@ def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Sect
     assert "asset" in {s.name for s in agent_output}
     asset_sections = list(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     assert len(asset_sections) == 1
-    assert asset_sections[0].project == "test"
 
 
 def test_metric_serialization(
@@ -274,7 +273,7 @@ def test_asset_serialization(
     captured = capsys.readouterr()
     lines = captured.out.rstrip().split("\n")
     assert lines[0] == "<<<gcp_assets:sep(0)>>>"
-    assert json.loads(lines[1]) == {"project": "test", "config": list(agent_gcp.SERVICES)}
+    assert json.loads(lines[1]) == {"config": list(agent_gcp.SERVICES)}
     for line in lines[2:]:
         agent_gcp.Asset.deserialize(line)
 

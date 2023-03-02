@@ -43,7 +43,6 @@ def discover(
         labels = [
             ServiceLabel("cmk/gcp/location", share.location),
             ServiceLabel("cmk/gcp/filestore/name", item),
-            ServiceLabel("cmk/gcp/projectId", assets.project),
         ]
         labels.extend(
             [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]

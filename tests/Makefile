@@ -36,6 +36,8 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 
+PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO --log-cli-format="%(asctime)s %(levelname)s %(message)s"
+
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
 # agents/plugins/Makefile)
@@ -183,18 +185,6 @@ prepare-playwright:
 		../scripts/run-pipenv run playwright install $$browser_engine; \
 	done
 
-test-integration-docker-debug test-composition-docker-debug:
-	$(PIPENV) run scripts/run-dockerized.py debug
-
-test-build-js:
-	npm ci && ENTERPRISE=yes MANAGED=no npm run build
-
-test-composition-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-composition"
-
-test-composition:
-	$(PYTEST) -p no:cov -T composition $(realpath composition)
-
 test-docker-docker:
 	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
 	    ../scripts/run-in-docker.sh make --quiet test-docker
@@ -246,34 +236,46 @@ test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
 test-gui-crawl: prepare-playwright
-	$(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
+	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-xss-crawl"
 
-test-integration:
-	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
-
 test-gui-e2e: prepare-playwright
-	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" --log-cli-level=INFO $(realpath gui_e2e/)  --numprocesses=1
+	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
 test-gui-e2e-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"
 
+test-integration:
+	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
+
+test-integration-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-integration"
+
+test-composition:
+	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
+
+test-composition-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-composition"
+
 test-update:
-	$(PYTEST) -T update --log-cli-level=INFO $(realpath update/test_update.py)
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
 
 test-update-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-update"
 
-test-integration-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-integration"
+test-integration-docker-debug test-composition-docker-debug:
+	$(PIPENV) run scripts/run-dockerized.py debug
+
+test-build-js:
+	npm ci && ENTERPRISE=yes MANAGED=no npm run build
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \

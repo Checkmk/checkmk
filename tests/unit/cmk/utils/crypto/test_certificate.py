@@ -159,8 +159,7 @@ def test_verify_rsa_key(data: bytes) -> None:
         private_key.public_key.verify(Signature(b"nope"), data, HashAlgorithm.Sha512)
 
 
-def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
-    pw = Password("unittest")
+def test_loading_combined_file_content_empty_invalid_certificate() -> None:
     with pytest.raises(ValueError, match="Could not find certificate"):
         CertificateWithPrivateKey.load_combined_file_content("", None)
 
@@ -169,12 +168,21 @@ def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateK
             "-----BEGIN CERTIFICATE-----a-----END CERTIFICATE-----", None
         )
 
+
+def test_loading_combined_file_content_empty_key(
+    self_signed_cert: CertificateWithPrivateKey,
+) -> None:
     file_content = self_signed_cert.certificate.dump_pem().str
     with pytest.raises(ValueError, match="Could not find private key"):
         CertificateWithPrivateKey.load_combined_file_content(file_content, None)
     with pytest.raises(ValueError, match="Could not find encrypted private key"):
-        CertificateWithPrivateKey.load_combined_file_content(file_content, pw)
+        CertificateWithPrivateKey.load_combined_file_content(file_content, Password("unittest"))
 
+
+def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
+    pw = Password("unittest")
+
+    file_content = self_signed_cert.certificate.dump_pem().str
     assert (
         CertificateWithPrivateKey.load_combined_file_content(
             file_content + "\n" + self_signed_cert.private_key.dump_pem(None).str, None

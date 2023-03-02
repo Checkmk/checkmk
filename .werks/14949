@@ -1,0 +1,17 @@
+Title: Malformed UTF-8 data no longer result in loss of state file
+Class: fix
+Compatible: compat
+Component: core
+Date: 1677753607
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, if for some reason a plugin sent a malformed UTF-8 string, 
+it broke the integrity of state.pb and resulted in the loss of the state 
+data. This behavior is explained by the fact that the Protobuf API 
+allows to write incorrect UTF-8 strings, but does not allow to read them.
+
+This issue has been resolved in this release.
+

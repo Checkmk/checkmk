@@ -25,7 +25,8 @@ public:
         line_too_long,
         eof,
         empty_request,
-        timeout
+        timeout,
+        invalid_utf8
     };
 
     friend std::ostream &operator<<(std::ostream &os, const Result &r);

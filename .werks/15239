@@ -1,0 +1,14 @@
+Title: Unknown services on discovery page of SNMP devices
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1677755498
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p24
+
+A regression in Checkmk version 2.1.0p21 led to a lot of unknown services on the discovery page under certain circumstances.
+This occured whenever no cached discovery information was available at all.
+A rescan would resolve this.
+We now rather completely hide the services, preventing users from accidently removing them.

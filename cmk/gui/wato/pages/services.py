@@ -655,6 +655,9 @@ class DiscoveryPageRenderer:
             return
 
         if not discovery_result.check_table:
+            html.show_message(
+                _("Could not find any service for this host. You might need to trigger a rescan.")
+            )
             return
 
         # We currently don't get correct information from cmk.base (the data sources). Better

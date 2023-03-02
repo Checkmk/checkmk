@@ -245,12 +245,15 @@ class AutomationTryDiscovery(Automation):
             on_error = OnError.WARN
 
         with _simulation_mode(use_simulation_mode):
-            return discovery.get_check_preview(
-                host_name=HostName(args[0]),
-                max_cachefile_age=config.max_cachefile_age(),
-                use_cached_snmp_data=use_cached_snmp_data,
-                on_error=on_error,
-            )
+            try:
+                return discovery.get_check_preview(
+                    host_name=HostName(args[0]),
+                    max_cachefile_age=config.max_cachefile_age(),
+                    use_cached_snmp_data=use_cached_snmp_data,
+                    on_error=on_error,
+                )
+            except discovery.SourcesFailedError:
+                return [], discovery.QualifiedDiscovery.empty()
 
 
 @contextmanager

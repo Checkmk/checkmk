@@ -1206,6 +1206,10 @@ def _cluster_service_entry(
     # In all other cases either both must be "new" or "vanished" -> let it be
 
 
+class SourcesFailedError(RuntimeError):
+    ...
+
+
 def get_check_preview(
     *,
     host_name: HostName,
@@ -1224,7 +1228,7 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
     cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
 
-    parsed_sections_broker, _source_results, _fetcher_messages = make_broker(
+    parsed_sections_broker, source_results, _fetcher_messages = make_broker(
         config_cache=config_cache,
         host_config=host_config,
         ip_address=ip_address,
@@ -1235,6 +1239,10 @@ def get_check_preview(
         force_snmp_cache_refresh=not use_cached_snmp_data,
         on_scan_error=on_error,
     )
+    if failed_sources_results := list(
+        check_sources(source_results=source_results, mode=Mode.DISCOVERY, include_ok_results=False)
+    ):
+        raise SourcesFailedError("\n".join(r.summary for r in failed_sources_results))
 
     host_labels = analyse_host_labels(
         host_config=host_config,

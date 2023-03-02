@@ -18,7 +18,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, Se
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkers import FetcherFunction, ParserFunction
+from cmk.checkers import FetcherFunction, ParserFunction, SummarizerFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ServiceCheckResult
 
@@ -43,7 +43,11 @@ from ._host_labels import analyse_host_labels, discover_host_labels, do_load_lab
 from .autodiscovery import _Transition
 from .utils import QualifiedDiscovery
 
-__all__ = ["get_check_preview"]
+__all__ = ["get_check_preview", "SourcesFailedError"]
+
+
+class SourcesFailedError(RuntimeError):
+    ...
 
 
 def get_check_preview(
@@ -52,6 +56,7 @@ def get_check_preview(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
@@ -71,9 +76,13 @@ def get_check_preview(
     host_attrs = config_cache.get_host_attributes(host_name)
 
     fetched = fetcher(host_name, ip_address=ip_address)
-    host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
-    store_piggybacked_sections(host_sections)
-    parsed_sections_broker = make_broker(host_sections, section_plugins)
+    host_sections = parser((f[0], f[1]) for f in fetched)
+    if failed_sources_results := list(failure_summarizer(host_sections)):
+        raise SourcesFailedError("\n".join(r.summary for r in failed_sources_results))
+
+    host_sections_no_error = filter_out_errors(parser((f[0], f[1]) for f in fetched))
+    store_piggybacked_sections(host_sections_no_error)
+    parsed_sections_broker = make_broker(host_sections_no_error, section_plugins)
 
     host_labels = analyse_host_labels(
         host_name,

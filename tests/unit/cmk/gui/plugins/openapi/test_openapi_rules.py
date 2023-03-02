@@ -119,6 +119,13 @@ def site_with_test_folders(api_client: RestApiClient) -> tuple[str, str]:
     return test_folder_name_one, test_folder_name_two
 
 
+def test_openapi_get_non_existing_rule(rule_client: RulesTestClient) -> None:
+    rule_client.get(
+        rule_id="non_existing_rule_id",
+        expect_ok=False,
+    ).assert_status_code(404)
+
+
 def test_openapi_create_rule_regression(rule_client: RulesTestClient) -> None:
     value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
     rule_client.create(

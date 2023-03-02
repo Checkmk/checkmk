@@ -289,9 +289,9 @@ def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:
                 )
 
     raise ProblemException(
-        status=400,
+        status=404,
         title="Unknown rule.",
-        detail=f"Rule with UUID {rule_uuid} was not found.",
+        detail=f"Rule with UUID '{rule_uuid}' was not found.",
     )
 
 

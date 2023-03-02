@@ -1,0 +1,16 @@
+Title: rule: Return a 404 when a rule doesn't exist on the GET endpoint
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677764463
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p24
+
+This werk is to fix an issue with the GET rule endpoint.  Previously
+the response contained a bug report when the rule didn't exist.
+Now we conform to our other endpoints and return a 404 problem
+response.
+

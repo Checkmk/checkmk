@@ -575,10 +575,10 @@ def versions_compatible(
 
     Specific patch release requirements
 
-    >>> isinstance(c(Version("2.1.0p20"), Version("2.2.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version("2.1.0p23"), Version("2.2.0i1")), VersionsCompatible)
     True
     >>> str(c(Version("2.1.0p4"), Version("2.2.0i1")))
-    'This target version requires at least 2.1.0p20'
+    'This target version requires at least 2.1.0p23'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -668,6 +668,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
         Version("2.1.0p17"),  # added severity_new_host_label to sample config and Werk #14938
         Version("2.1.0p19"),  # fixup of broken SNMP v3 configuration (Werk #14990)
         Version("2.1.0p20"),  # fixup of broken enabled_packages (Werk #15113)
+        Version("2.1.0p23"),  # fixup of broken global settings migration (Werk #14304)
     ),
 }
 

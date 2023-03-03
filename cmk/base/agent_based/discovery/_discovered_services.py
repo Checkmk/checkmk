@@ -130,8 +130,11 @@ def _discover_services(
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(
         parsed_sections_broker,
-        run_plugin_names,
-        check_plugins,
+        [
+            (plugin_name, plugin.sections)
+            for plugin_name, plugin in check_plugins.items()
+            if plugin_name in run_plugin_names
+        ],
     )
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
@@ -179,8 +182,7 @@ def _discover_services(
 
 def _find_candidates(
     broker: ParsedSectionsBroker,
-    run_plugin_names: Container[CheckPluginName],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]],
 ) -> set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
     contain data for.
@@ -197,10 +199,6 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]] = list(
-        (p.name, p.sections) for p in check_plugins.values() if p.name in run_plugin_names
-    )
-
     # Flattened list of ParsedSectionName, optimization only.
     parsed_sections_of_interest: Sequence[ParsedSectionName] = list(
         frozenset(

@@ -60,6 +60,7 @@ def fixture_rulespec_with_migration() -> Rulespec:
         is_binary_ruleset=False,
         factory_default={"key": 0},
         help_func=None,
+        doc_references=None,
     )
 
 
@@ -89,6 +90,7 @@ def fixture_replaced_rulespec() -> Rulespec:
         is_binary_ruleset=False,
         factory_default={"key": 0},
         help_func=None,
+        doc_references=None,
     )
 
 

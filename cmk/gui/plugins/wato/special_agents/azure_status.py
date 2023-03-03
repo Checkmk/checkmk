@@ -8,6 +8,7 @@ from cmk.utils.azure_constants import AZURE_REGIONS
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Dictionary, ListChoice
 
 
@@ -32,5 +33,6 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:azure_status",
         valuespec=_valuespec_special_agents_azure_status,
+        doc_references={DocReference.AZURE: _("Monitoring Microsoft Azure")},
     )
 )

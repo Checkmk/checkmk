@@ -14,6 +14,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -226,6 +227,7 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:azure",
         valuespec=_valuespec_special_agents_azure,
+        doc_references={DocReference.AZURE: _("Monitoring Microsoft Azure")},
     )
 )
 

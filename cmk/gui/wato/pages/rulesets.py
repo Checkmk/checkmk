@@ -922,6 +922,7 @@ class ModeEditRuleset(WatoMode):
             ],
             breadcrumb=breadcrumb,
         )
+        _add_doc_references(menu, self._rulespec.doc_references)
         return menu
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:

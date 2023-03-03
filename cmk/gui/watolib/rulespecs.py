@@ -291,6 +291,7 @@ class Rulespec(abc.ABC):
         is_binary_ruleset: bool,
         factory_default: Any,
         help_func: Callable[[], str] | None,
+        doc_references: dict[DocReference, str] | None,
     ) -> None:
         super().__init__()
 
@@ -329,6 +330,7 @@ class Rulespec(abc.ABC):
         self._is_for_services = is_for_services
         self._factory_default = factory_default
         self._help = help_func
+        self._doc_references = doc_references
 
     @property
     def name(self) -> str:
@@ -437,6 +439,11 @@ class Rulespec(abc.ABC):
     def is_deprecated(self) -> bool:
         return self._is_deprecated
 
+    @property
+    def doc_references(self) -> dict[DocReference, str]:
+        """Doc references of this rulespec and their titles"""
+        return self._doc_references or {}
+
 
 class HostRulespec(Rulespec):
     """Base class for all rulespecs managing host rule sets with values"""
@@ -454,6 +461,7 @@ class HostRulespec(Rulespec):
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -466,6 +474,7 @@ class HostRulespec(Rulespec):
             is_binary_ruleset=is_binary_ruleset,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Excplicit set
             is_for_services=False,
             item_type=None,
@@ -496,6 +505,7 @@ class ServiceRulespec(Rulespec):
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -512,6 +522,7 @@ class ServiceRulespec(Rulespec):
             is_deprecated=is_deprecated,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Excplicit set
             is_for_services=True,
         )
@@ -529,6 +540,7 @@ class BinaryHostRulespec(HostRulespec):
         is_deprecated: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -539,6 +551,7 @@ class BinaryHostRulespec(HostRulespec):
             is_deprecated=is_deprecated,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Explicit set
             is_binary_ruleset=True,
             valuespec=self._binary_host_valuespec,
@@ -570,6 +583,7 @@ class BinaryServiceRulespec(ServiceRulespec):
         is_deprecated: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -584,6 +598,7 @@ class BinaryServiceRulespec(ServiceRulespec):
             item_help=item_help,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Explicit set
             is_binary_ruleset=True,
             valuespec=self._binary_service_valuespec,

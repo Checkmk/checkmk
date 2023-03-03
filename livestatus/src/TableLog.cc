@@ -128,7 +128,8 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     }),
                               false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->ctc.get();
+        const auto &c = r.rawData<LogRow>()->ctc;
+        return c ? c->handle() : nullptr;
     }));
     TableCommands::addColumns(this, "current_command_", offsets.add([](Row r) {
         return &r.rawData<LogRow>()->command;

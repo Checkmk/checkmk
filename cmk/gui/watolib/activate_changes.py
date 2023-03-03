@@ -1805,7 +1805,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             "receive-config-sync",
             [
                 ("site_id", self._site_id),
-                ("sync_archive", sync_archive),
                 ("to_delete", repr(files_to_delete)),
                 ("config_generation", "%d" % remote_config_generation),
             ],

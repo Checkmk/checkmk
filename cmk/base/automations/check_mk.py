@@ -113,7 +113,6 @@ from cmk.base.agent_based.confcheckers import (
     ConfiguredParser,
     SectionPluginMapper,
 )
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.config import ConfigCache, IgnoredServices
 from cmk.base.core import CoreAction, do_restart
@@ -1248,7 +1247,7 @@ class AutomationGetCheckInformation(Automation):
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),
                 {
-                    "title": self._get_title(manuals, plugin),
+                    "title": self._get_title(manuals, plugin.name),
                     "name": str(plugin.name),
                     "service_description": str(plugin.service_name),
                 },
@@ -1263,16 +1262,16 @@ class AutomationGetCheckInformation(Automation):
         return GetCheckInformationResult(plugin_infos)
 
     @staticmethod
-    def _get_title(manuals: Mapping[str, str], plugin: CheckPlugin) -> str:
-        manfile = manuals.get(str(plugin.name))
+    def _get_title(manuals: Mapping[str, str], plugin_name: CheckPluginName) -> str:
+        manfile = manuals.get(str(plugin_name))
         if manfile:
             try:
                 return cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise
-                raise MKAutomationError(f"Failed to parse man page '{plugin.name}': {e}")
-        return str(plugin.name)
+                raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
+        return str(plugin_name)
 
 
 automations.register(AutomationGetCheckInformation())

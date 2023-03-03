@@ -1,0 +1,17 @@
+Title: Added missing perfometer for cloud strorage services
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1677870488
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Perf-O-Meters have been missing for the following services
+and are now added:
+* GCP/GCS objects
+* GCP/GCS requests
+* GCP/GCS networks
+* AWS/S3 Limits Global
+

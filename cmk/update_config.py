@@ -371,8 +371,10 @@ class UpdateConfig:
         # Failing to load the config here will result in the loss of *all*
         # services due to an exception thrown by cmk.base.config.service_description
         # in _parse_autocheck_entry of cmk.base.autochecks.
-        cmk.base.config.load()
         cmk.base.config.load_all_agent_based_plugins(cmk.base.check_api.get_check_api_context)
+        # Watch out: always load the plugins before loading the config.
+        # The validation step will not be executed otherwise.
+        cmk.base.config.load()
 
     # FS_USED UPDATE DELETE THIS FOR CMK 1.8, THIS ONLY migrates 1.6->2.0
     def _update_fs_used_name(self) -> None:

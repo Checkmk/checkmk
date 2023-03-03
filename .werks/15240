@@ -1,0 +1,13 @@
+Title: Call variable validation during cmk-update-config
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677861728
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p24
+
+A validation step during cmk-update-config was unintentionally skipped.
+This validation is regularly called during regular operation, but we
+intended to already show them during update.

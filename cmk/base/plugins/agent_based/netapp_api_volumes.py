@@ -93,6 +93,20 @@ def _check_single_netapp_api_volume(  # type: ignore[no-untyped-def]
     )
 
     yield from _generate_volume_metrics(value_store, params, volume)
+    if volume.get("is-space-enforcement-logical") == "false":
+        logical_used = volume["logical-used"]
+        size_total = volume["size-total"]
+        logical_available = size_total - logical_used
+        yield Metric(
+            name="logical_used",
+            value=logical_used,
+            boundaries=(0.0, volume["size-total"]),
+        )
+        yield Metric(
+            name="space_savings",
+            value=volume["size-available"] - logical_available,
+            boundaries=(0.0, volume["size-total"]),
+        )
 
 
 def _generate_volume_metrics(

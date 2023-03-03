@@ -39,6 +39,14 @@ def register_netapp_api_vs_traffic_metrics():
         "color": "44/a",
     }
 
+    metric_info["space_savings"] = {"title": _("Saved space"), "unit": "bytes", "color": "45/a"}
+
+    metric_info["logical_used"] = {
+        "title": _("Used logical space"),
+        "unit": "bytes",
+        "color": "41/b",
+    }
+
     for volume_info in ["NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI"]:
         for what, unit in [
             ("data", "bytes"),
@@ -91,6 +99,22 @@ def register_netapp_api_vs_traffic_graphs():
             ("read_data", "-area"),
             ("write_data", "area"),
         ],
+    }
+
+    graph_info["savings"] = {
+        "title": _("Space savings"),
+        "metrics": [
+            ("fs_used", "area"),
+            ("fs_free", "stack"),
+            ("fs_used,fs_free,+#006040", "line", "Filesystem size"),
+            ("logical_used", "line"),
+            ("space_savings", "line"),
+        ],
+        "scalars": [
+            "fs_used:warn",
+            "fs_used:crit",
+        ],
+        "range": (0, "logical_used:max"),
     }
 
     for what, text in [

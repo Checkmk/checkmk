@@ -434,7 +434,7 @@ class Certificate:
 
         # Check if the signer is allowed to sign certificates. Self-signed, non-CA certificates do
         # not need to set the usage bit. See also https://github.com/openssl/openssl/issues/1418.
-        if not self._may_sign_certificates() and not self._is_self_signed():
+        if not signer.may_sign_certificates() and not self._is_self_signed():
             raise ValueError(
                 "Signer certificate does not allow certificate signature verification "
                 "(CA flag or keyCertSign bit missing)."
@@ -446,7 +446,7 @@ class Certificate:
             HashAlgorithm.from_cryptography(self._cert.signature_hash_algorithm),
         )
 
-    def _may_sign_certificates(self) -> bool:
+    def may_sign_certificates(self) -> bool:
         """
         Check if this certificate may be used to sign other certificates, that is, has the
         cA flag set and allows key usage KeyCertSign.
@@ -686,4 +686,4 @@ class RsaPublicKey:
         try:
             self._key.verify(signature, message, padding_scheme, digest_algorithm.value)
         except cryptography.exceptions.InvalidSignature as e:
-            raise InvalidSignatureError(e)
+            raise InvalidSignatureError(e) from e

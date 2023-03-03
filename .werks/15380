@@ -1,0 +1,21 @@
+Title: activate_changes/service_discovery: responses for non-existing activate_ids/jobs now updated to include detail
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677692912
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk an issue with problem responses in two endpoints.
+
+Endpoints affected
+* activate_changes (GET)
+* service_discovery (GET)
+
+Previously, they would return a 404 with a title attribute only.  They now conform to
+our other endpoints and return a problem response with status code, title and detail
+attribute.
+
+

@@ -21,6 +21,40 @@ def test_get_a_time_period(timeperiod_client: TimePeriodTestClient) -> None:
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_create_two_time_periods_same_name(timeperiod_client: TimePeriodTestClient) -> None:
+    timeperiod_client.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foobar",
+            "active_time_ranges": [{"day": "all"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        }
+    )
+    timeperiod_client.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foobar",
+            "active_time_ranges": [{"day": "all"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_send_invalid_request(timeperiod_client: TimePeriodTestClient) -> None:
+    timeperiod_client.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foobar",
+            "active_active_time_ranges": [{"day": "all"}],
+            "exceptions_exceptions": [{"date": "2020-01-01"}],
+        },
+        expect_ok=False,
+    )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_time_period_time_ranges(timeperiod_client: TimePeriodTestClient) -> None:
     timeperiod_client.create(
         time_period_data={

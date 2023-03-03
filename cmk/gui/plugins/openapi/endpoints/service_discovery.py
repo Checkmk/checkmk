@@ -355,8 +355,11 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     job = ServiceDiscoveryBackgroundJob(host.name())
     if not job.exists():
         raise ProblemException(
-            status=404, title=f"Service discovery job for host {host.name()} not found."
+            status=404,
+            title="The requested service discovery job was not found",
+            detail=f"Could not find a service discovery for host {host.name()}",
         )
+
     if job.is_active():
         response = Response(status=302)
         response.location = request.url
@@ -670,7 +673,8 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     if job.get_job_id() != job_id:
         raise ProblemException(
             status=404,
-            title=f"Background job {job_id} not found.",
+            title="The requested background job_id was not found",
+            detail=f"Could not find a background job with id {job_id}.",
         )
     return _serve_background_job(job)
 

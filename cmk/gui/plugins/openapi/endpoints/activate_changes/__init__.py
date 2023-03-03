@@ -177,7 +177,12 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     try:
         manager = load_activate_change_manager_with_id(activation_id)
     except MKUserError:
-        raise ProblemException(status=404, title=f"Activation {activation_id!r} not found.")
+        raise ProblemException(
+            status=404,
+            title="The requested activation was not found",
+            detail=f"Could not find an activation with id {activation_id!r}.",
+        )
+
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
         response = Response(status=302)
@@ -211,7 +216,8 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     except MKUserError:
         raise ProblemException(
             status=404,
-            title=f"Activation {activation_id!r} not found.",
+            title="The requested activation was not found",
+            detail=f"Could not find an activation with id {activation_id!r}.",
         )
 
     return serve_json(_activation_run_domain_object(activation_response))

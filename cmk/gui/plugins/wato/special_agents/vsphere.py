@@ -11,6 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
@@ -217,5 +218,6 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:vsphere",
         valuespec=_valuespec_special_agents_vsphere,
+        doc_references={DocReference.VMWARE: _("Monitoring VMWare ESXi")},
     )
 )

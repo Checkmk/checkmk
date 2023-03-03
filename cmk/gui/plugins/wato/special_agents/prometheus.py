@@ -14,6 +14,7 @@ from cmk.gui.plugins.wato.special_agents.common import (
     ssl_verification,
 )
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -594,5 +595,6 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:prometheus",
         valuespec=_valuespec_generic_metrics_prometheus,
+        doc_references={DocReference.PROMETHEUS: _("Integrating Prometheus")},
     )
 )

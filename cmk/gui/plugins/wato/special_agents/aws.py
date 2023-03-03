@@ -18,6 +18,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -541,5 +542,6 @@ rulespec_registry.register(
         name="special_agents:aws",
         title=lambda: _("Amazon Web Services (AWS)"),
         valuespec=_valuespec_special_agents_aws,
+        doc_references={DocReference.AWS: _("Monitoring Amazon Web Services (AWS)")},
     )
 )

@@ -15,6 +15,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
 
 RAW_GCP_SERVICES: Final = [
@@ -115,5 +116,6 @@ rulespec_registry.register(
         name="special_agents:gcp",
         title=lambda: _("Google Cloud Platform (GCP)"),
         valuespec=_valuespec_special_agents_gcp,
+        doc_references={DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)")},
     )
 )

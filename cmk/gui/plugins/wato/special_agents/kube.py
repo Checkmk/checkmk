@@ -17,6 +17,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -398,5 +399,6 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:kube",
         valuespec=_valuespec_special_agents_kube,
+        doc_references={DocReference.KUBERNETES: _("Monitoring Kubernetes")},
     )
 )

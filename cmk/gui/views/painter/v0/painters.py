@@ -1490,10 +1490,14 @@ class PainterCheckManpage(Painter):
         else:
             checktype = command[9:]
 
-        page = man_pages.load_man_page(checktype)
-
-        if page is None:
-            return "", _("Man page %s not found.") % checktype
+        if (
+            page := man_pages.load_man_page(
+                checktype.split()[
+                    0
+                ]  # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
+            )
+        ) is None:
+            return "", ""
 
         description = (
             escaping.escape_attribute(page.description)

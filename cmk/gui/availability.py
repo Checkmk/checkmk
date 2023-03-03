@@ -135,7 +135,8 @@ AVTimelineLabelling = Literal[
 AVIconSpec = tuple[str, str, str]
 
 AVTimelineStateName = str
-AVTimelineRows = list[tuple[AVSpan, AVTimelineStateName]]
+AVTimelineRow = tuple[AVSpan, AVTimelineStateName]
+AVTimelineRows = list[AVTimelineRow]
 AVTimelineStates = dict[AVTimelineStateName, int]
 AVTimelineStatistics = dict[AVTimelineStateName, tuple[int, int, int]]
 AVTimelineStyle = str

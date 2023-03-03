@@ -82,7 +82,7 @@ from cmk.gui.site_config import (  # noqa: F401 # pylint: disable=unused-import
     is_wato_slave_site,
 )
 from cmk.gui.type_defs import Choices, ChoiceText
-from cmk.gui.user_sites import get_activation_site_choices
+from cmk.gui.user_sites import get_activation_site_choices, get_configured_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.html import HTML
@@ -2276,25 +2276,27 @@ class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
 
 def _simple_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
-        _site_rule_match_condition(),
+        _site_rule_match_condition(only_sites_with_replication=False),
         _single_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
 def multifolder_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
-        _site_rule_match_condition(),
+        _site_rule_match_condition(only_sites_with_replication=True),
         _multi_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
-def _site_rule_match_condition() -> DictionaryEntry:
+def _site_rule_match_condition(only_sites_with_replication: bool) -> DictionaryEntry:
     return (
         "match_site",
         DualListChoice(
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of the selected sites."),
-            choices=get_activation_site_choices,
+            choices=get_activation_site_choices
+            if only_sites_with_replication
+            else get_configured_site_choices,
         ),
     )
 

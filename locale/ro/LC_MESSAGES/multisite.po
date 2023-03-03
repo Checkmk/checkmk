@@ -1188,10 +1188,6 @@ msgstr "<b>confirmă problemele%s</b> lui"
 msgid "<b>add a comment to</b>"
 msgstr "adaugă un comentariu la"
 
-#, fuzzy
-msgid "<b>add to your favorites</b>"
-msgstr "<b>adaugă la favoritele tale</b>"
-
 msgid "<b>archive</b>"
 msgstr "<b>arhivează</b>"
 
@@ -1225,9 +1221,6 @@ msgstr "<b>șterge confirmările</b> de la"
 
 msgid "<b>remove all scheduled downtimes</b> of "
 msgstr "<b>șterge toți timpii morți programați</b> pentru "
-
-msgid "<b>remove from your favorites</b>"
-msgstr "<b>șterge din favoritele tale</b>"
 
 #, fuzzy, python-format
 msgid "<b>schedule a downtime from %s to %s</b>"
@@ -3469,9 +3462,6 @@ msgstr "Adaugă Condiție"
 #, python-format
 msgid "Add to %s"
 msgstr ""
-
-msgid "Add to Favorites"
-msgstr "Adaugă la Favorite"
 
 #, fuzzy
 msgid "Add to bookmark list"
@@ -13798,10 +13788,6 @@ msgid "Deploy the plesk plugins"
 msgstr ""
 
 #, fuzzy
-msgid "Deploy the special agent"
-msgstr "Acces la Agenți"
-
-#, fuzzy
 msgid "Deploy without authentication."
 msgstr "Confirma Parola"
 
@@ -18322,9 +18308,6 @@ msgstr ""
 msgid "Favorite entry of user"
 msgstr ""
 
-msgid "Favorites"
-msgstr ""
-
 msgid "February"
 msgstr ""
 
@@ -19533,19 +19516,12 @@ msgid "GCP Cost"
 msgstr ""
 
 #, fuzzy
-msgid "GCP Health"
-msgstr "Numele Elementului"
-
-#, fuzzy
 msgid "GCP piggyback services"
 msgstr " (potrivire exactă)"
 
 #, fuzzy
 msgid "GCP services to monitor"
 msgstr "Adaugă instanță pentru monitorizare"
-
-msgid "GCP status product selection"
-msgstr ""
 
 #, fuzzy
 msgid "GCP/Cloud Run CPU utilization"
@@ -19897,6 +19873,9 @@ msgid "Google Cloud Platform"
 msgstr ""
 
 msgid "Google Cloud Platform (GCP)"
+msgstr ""
+
+msgid "Google Cloud Platform (GCP) Status"
 msgstr ""
 
 msgid "Google Compute Engine (GCE)"
@@ -20673,7 +20652,7 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in downtime overrules all other coloring."
+"coloring for host in dowtime overrules all other coloring."
 msgstr ""
 
 msgid ""
@@ -26796,6 +26775,10 @@ msgstr "licente nefolosite"
 
 msgid "Licensing Status"
 msgstr ""
+
+#, fuzzy
+msgid "Licensing notification settings"
+msgstr "<b>activează notficările</b> pentru"
 
 #, fuzzy
 msgid "Licensing online verification"
@@ -37718,11 +37701,12 @@ msgstr "Numele Aplicatiei"
 msgid "Regions to monitor"
 msgstr "Adaugă instanță pentru monitorizare"
 
-msgid "Regions to use"
-msgstr ""
-
 #, fuzzy
 msgid "Registered"
+msgstr "ieri"
+
+#, fuzzy
+msgid "Registered admins"
 msgstr "ieri"
 
 msgid "Registered agents"
@@ -38045,9 +38029,6 @@ msgstr ""
 #, fuzzy
 msgid "Remove filter"
 msgstr "Adaugă filtre"
-
-msgid "Remove from Favorites"
-msgstr ""
 
 #, fuzzy
 msgid "Remove label condition"
@@ -38399,6 +38380,10 @@ msgstr ""
 
 msgid "Report to schedule"
 msgstr ""
+
+#, fuzzy
+msgid "Report verification result"
+msgstr "Notificari"
 
 msgid "Reporting"
 msgstr ""
@@ -48968,6 +48953,10 @@ msgstr "foloseste numele portului"
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
+#, fuzzy, python-format
+msgid "The verification could not be processed successfully: %s"
+msgstr "Numele Aplicatiei"
+
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr ""
@@ -51640,10 +51629,6 @@ msgid ""
 "of Multisite."
 msgstr ""
 
-#, fuzzy
-msgid "This special agent does not require any configuration."
-msgstr "foloseste configuratia locala"
-
 msgid "This stored report does not exist."
 msgstr ""
 
@@ -51750,10 +51735,6 @@ msgstr ""
 #, python-format
 msgid "This variable is configured in <a href=\"%s\">global settings</a>."
 msgstr ""
-
-#, fuzzy, python-format
-msgid "This verification response cannot be uploaded: %s"
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "This view as PDF"
 msgstr ""
@@ -55737,6 +55718,10 @@ msgid "User interface theme"
 msgstr ""
 
 #, fuzzy
+msgid "User is locked"
+msgstr "Ascude regulile de utilizator"
+
+#, fuzzy
 msgid "User management"
 msgstr "foloseste numele portului"
 
@@ -56236,7 +56221,7 @@ msgid "Verification"
 msgstr "trimite notificare"
 
 #, fuzzy, python-format
-msgid "Verification %s: %s"
+msgid "Verification failed (%s)"
 msgstr "trimite notificare"
 
 #, fuzzy
@@ -56252,8 +56237,8 @@ msgid "Verification failed: %s"
 msgstr "trimite notificare"
 
 #, fuzzy
-msgid "Verification successful"
-msgstr "Numele Aplicatiei"
+msgid "Verified verification response"
+msgstr "Notificari"
 
 #, fuzzy
 msgid "Verify certificates"
@@ -58815,18 +58800,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns to monitor specific products. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"products are monitored."
-msgstr ""
-
-msgid ""
-"You can specify a list of regex patterns to monitor specific regions. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"regions are monitored."
-msgstr ""
-
-msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
 "on demand."
@@ -59503,6 +59476,19 @@ msgstr ""
 msgid "Your %s has been saved."
 msgstr ""
 
+msgid "Your Checkmk license is about to expire"
+msgstr ""
+
+msgid "Your Checkmk trial is about to expire"
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
+"hosts is supported, currently %s hosts are being monitored. Adjust your "
+"configuration or see here how to proceed: %s  "
+msgstr ""
+
 msgid "Your WebAuthn credential is already in use"
 msgstr ""
 
@@ -59772,10 +59758,6 @@ msgstr ""
 
 msgid "add ISL"
 msgstr ""
-
-#, fuzzy
-msgid "add new pattern"
-msgstr "Adaugă model/tipar"
 
 #, fuzzy
 msgid "aggregation"
@@ -60316,10 +60298,6 @@ msgstr "Verificări active"
 
 msgid "explicitly specified groups"
 msgstr ""
-
-#, fuzzy
-msgid "failed"
-msgstr "Adăugat %s"
 
 msgid "failures"
 msgstr ""
@@ -61175,10 +61153,6 @@ msgstr ""
 msgid "path levels"
 msgstr ""
 
-#, fuzzy
-msgid "pattern"
-msgstr "Adaugă model/tipar"
-
 msgid "pending"
 msgstr ""
 
@@ -61510,10 +61484,6 @@ msgstr ""
 msgid "success"
 msgstr "Punct de Acces"
 
-#, fuzzy
-msgid "successful"
-msgstr "Punct de Acces"
-
 msgid "synchronize"
 msgstr ""
 
@@ -61819,6 +61789,57 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~| msgid "<b>add to you favorites</b>"
+#~ msgid "<b>add to your favorites</b>"
+#~ msgstr "<b>adaugă la favoritele tale</b>"
+
+#~ msgid "<b>remove from your favorites</b>"
+#~ msgstr "<b>șterge din favoritele tale</b>"
+
+#~ msgid "Add to Favorites"
+#~ msgstr "Adaugă la Favorite"
+
+#, fuzzy
+#~ msgid "Deploy the special agent"
+#~ msgstr "Acces la Agenți"
+
+#, fuzzy
+#~ msgid "GCP Health"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "This special agent does not require any configuration."
+#~ msgstr "foloseste configuratia locala"
+
+#, fuzzy
+#~ msgid "add new pattern"
+#~ msgstr "Adaugă model/tipar"
+
+#, fuzzy
+#~ msgid "pattern"
+#~ msgstr "Adaugă model/tipar"
+
+#, fuzzy, python-format
+#~ msgid "This verification response cannot be uploaded: %s"
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy, python-format
+#~ msgid "Verification %s: %s"
+#~ msgstr "trimite notificare"
+
+#, fuzzy
+#~ msgid "failed"
+#~ msgstr "Adăugat %s"
+
+#, fuzzy
+#~ msgid "successful"
+#~ msgstr "Punct de Acces"
+
+#, fuzzy
+#~ msgid "Verification successful"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
 #~ msgid "And"
 #~ msgstr "Adaugă Condiție"
 
@@ -61857,10 +61878,6 @@ msgstr ""
 #, fuzzy, python-format
 #~ msgid "Online verification procedure was not successful, reason: %s"
 #~ msgstr "Numele Aplicatiei"
-
-#, fuzzy
-#~ msgid "Submit verification request"
-#~ msgstr "Notificari"
 
 #, fuzzy
 #~ msgid "Cannot be a certificate chain"
@@ -64758,10 +64775,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Edit permitted maps"
 #~ msgstr "Proprietatile Folderului"
-
-#, fuzzy
-#~ msgid "Edit personal notification settings"
-#~ msgstr "<b>activează notficările</b> pentru"
 
 #, fuzzy
 #~ msgid "Edit personal user attributes"

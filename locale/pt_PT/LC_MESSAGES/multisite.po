@@ -1217,10 +1217,6 @@ msgstr "<b>conhecer os problemas%s</b> de"
 msgid "<b>add a comment to</b>"
 msgstr "<b>add um comentário para</b>"
 
-#, fuzzy
-msgid "<b>add to your favorites</b>"
-msgstr "<b>add para os seus favoritos</b>"
-
 msgid "<b>archive</b>"
 msgstr "<b>archive</b>"
 
@@ -1254,9 +1250,6 @@ msgstr "<b>remove reconhecimentos</b> de"
 
 msgid "<b>remove all scheduled downtimes</b> of "
 msgstr "<b>d>disponibilizar todos os tempos de paragem programados</b> de "
-
-msgid "<b>remove from your favorites</b>"
-msgstr "<b>remove dos seus favoritos</b>"
 
 #, python-format
 msgid "<b>schedule a downtime from %s to %s</b>"
@@ -3650,9 +3643,6 @@ msgstr "Adicione a"
 #, python-format
 msgid "Add to %s"
 msgstr "Adicionar a %s"
-
-msgid "Add to Favorites"
-msgstr "Adicionar aos Favoritos"
 
 msgid "Add to bookmark list"
 msgstr "Adicionar à lista de favoritos"
@@ -14423,10 +14413,6 @@ msgid "Deploy the plesk plugins"
 msgstr "Implantar os plugins plesk"
 
 #, fuzzy
-msgid "Deploy the special agent"
-msgstr "Agente Especial"
-
-#, fuzzy
 msgid "Deploy without authentication."
 msgstr "Permitir a autenticação de senha"
 
@@ -18934,9 +18920,6 @@ msgstr "Velocidade do ventilador de dispositivos de hardware (em porcentagem)"
 msgid "Favorite entry of user"
 msgstr "Entrada favorita do usuário"
 
-msgid "Favorites"
-msgstr "Favoritos"
-
 msgid "February"
 msgstr "Fevereiro"
 
@@ -20196,20 +20179,12 @@ msgid "GCP Cost"
 msgstr "Ligação TCP"
 
 #, fuzzy
-msgid "GCP Health"
-msgstr "Saúde"
-
-#, fuzzy
 msgid "GCP piggyback services"
 msgstr "Editar serviços"
 
 #, fuzzy
 msgid "GCP services to monitor"
 msgstr "Serviços globais para monitorar"
-
-#, fuzzy
-msgid "GCP status product selection"
-msgstr "Selecção de contactos"
 
 #, fuzzy
 msgid "GCP/Cloud Run CPU utilization"
@@ -20564,6 +20539,10 @@ msgstr ""
 
 msgid "Google Cloud Platform (GCP)"
 msgstr ""
+
+#, fuzzy
+msgid "Google Cloud Platform (GCP) Status"
+msgstr "Armazenamento em Bloco Elástico (EBS)"
 
 #, fuzzy
 msgid "Google Compute Engine (GCE)"
@@ -21379,10 +21358,10 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in downtime overrules all other coloring."
+"coloring for host in dowtime overrules all other coloring."
 msgstr ""
 "Aqui você pode configurar a cor de fundo para estados específicos. A "
-"coloração para o host em downtime substitui todas as outras colorações."
+"coloração para o host em dowtime substitui todas as outras colorações."
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -28386,6 +28365,10 @@ msgid "Licensing"
 msgstr "Status do licenciamento"
 
 msgid "Licensing Status"
+msgstr "Status do licenciamento"
+
+#, fuzzy
+msgid "Licensing notification settings"
 msgstr "Status do licenciamento"
 
 #, fuzzy
@@ -39282,11 +39265,12 @@ msgstr "Nome da região"
 msgid "Regions to monitor"
 msgstr "Filas de espera para monitorar"
 
-msgid "Regions to use"
-msgstr "Regiões a utilizar"
-
 msgid "Registered"
 msgstr "Registado em"
+
+#, fuzzy
+msgid "Registered admins"
+msgstr "Agentes registados"
 
 msgid "Registered agents"
 msgstr "Agentes registados"
@@ -39614,9 +39598,6 @@ msgstr "Remover arquivos e subdiretórios gerenciados pelo agente Checkmk"
 
 msgid "Remove filter"
 msgstr "Remover filtro"
-
-msgid "Remove from Favorites"
-msgstr "Remover dos Favoritos"
 
 msgid "Remove label condition"
 msgstr "Remover o estado da etiqueta"
@@ -39973,6 +39954,10 @@ msgstr "Relatório para criar"
 
 msgid "Report to schedule"
 msgstr "Relatório a programar"
+
+#, fuzzy
+msgid "Report verification result"
+msgstr "Regras de notificação global"
 
 msgid "Reporting"
 msgstr "Relatório"
@@ -51699,6 +51684,10 @@ msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Este pacote não pode ser instalado: %s"
 
 #, fuzzy, python-format
+msgid "The verification could not be processed successfully: %s"
+msgstr "Assar com sucesso"
+
+#, fuzzy, python-format
 msgid "The version of this site is not a %s"
 msgstr "O valor desta regra não é válido. "
 
@@ -55487,10 +55476,6 @@ msgstr ""
 "classificações de tags. Você pode configurar quais tags usar em suas "
 "configurações globais do Multisite."
 
-#, fuzzy
-msgid "This special agent does not require any configuration."
-msgstr "Use a configuração global"
-
 msgid "This stored report does not exist."
 msgstr "Este relatório armazenado não existe."
 
@@ -55627,10 +55612,6 @@ msgstr "Esta variável está nas configurações de fábrica."
 #, python-format
 msgid "This variable is configured in <a href=\"%s\">global settings</a>."
 msgstr "Esta variável é configurada em <a href=\"%s\">global settings</a>."
-
-#, fuzzy, python-format
-msgid "This verification response cannot be uploaded: %s"
-msgstr "Este pacote não pode ser instalado: %s"
 
 msgid "This view as PDF"
 msgstr "Esta vista em PDF"
@@ -59736,6 +59717,10 @@ msgid "User interface theme"
 msgstr "Tema da interface do usuário"
 
 #, fuzzy
+msgid "User is locked"
+msgstr "Chave da loja do usuário"
+
+#, fuzzy
 msgid "User management"
 msgstr "Gestão de usuários"
 
@@ -60279,7 +60264,7 @@ msgid "Verification"
 msgstr "Notificação do usuário"
 
 #, fuzzy, python-format
-msgid "Verification %s: %s"
+msgid "Verification failed (%s)"
 msgstr "Notificação do usuário"
 
 #, fuzzy
@@ -60295,8 +60280,8 @@ msgid "Verification failed: %s"
 msgstr "Notificação do usuário"
 
 #, fuzzy
-msgid "Verification successful"
-msgstr "Assar com sucesso"
+msgid "Verified verification response"
+msgstr "Regras de notificação global"
 
 #, fuzzy
 msgid "Verify certificates"
@@ -63544,18 +63529,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns to monitor specific products. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"products are monitored."
-msgstr ""
-
-msgid ""
-"You can specify a list of regex patterns to monitor specific regions. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"regions are monitored."
-msgstr ""
-
-msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
 "on demand."
@@ -64446,6 +64419,20 @@ msgid "Your %s has been saved."
 msgstr "As suas %s foram salvas."
 
 #, fuzzy
+msgid "Your Checkmk license is about to expire"
+msgstr "Estado quando a licença expira"
+
+msgid "Your Checkmk trial is about to expire"
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
+"hosts is supported, currently %s hosts are being monitored. Adjust your "
+"configuration or see here how to proceed: %s  "
+msgstr ""
+
+#, fuzzy
 msgid "Your WebAuthn credential is already in use"
 msgstr "Credenciais por defeito"
 
@@ -64748,10 +64735,6 @@ msgstr "adicionar \"ISL\" à descrição do serviço para links de interswitch"
 
 msgid "add ISL"
 msgstr "adicionar ISL"
-
-#, fuzzy
-msgid "add new pattern"
-msgstr "Adicionar novo padrão"
 
 #, fuzzy
 msgid "aggregation"
@@ -65275,10 +65258,6 @@ msgstr "etiquetas de anfitrião explícitas"
 
 msgid "explicitly specified groups"
 msgstr "grupos expressamente especificados"
-
-#, fuzzy
-msgid "failed"
-msgstr "Falha"
 
 msgid "failures"
 msgstr "falhas"
@@ -66097,10 +66076,6 @@ msgstr "eco do caminho"
 msgid "path levels"
 msgstr "níveis do caminho"
 
-#, fuzzy
-msgid "pattern"
-msgstr "Padrão"
-
 msgid "pending"
 msgstr "pendente"
 
@@ -66419,10 +66394,6 @@ msgstr "subcategorias"
 msgid "success"
 msgstr "sucesso"
 
-#, fuzzy
-msgid "successful"
-msgstr "sucesso"
-
 msgid "synchronize"
 msgstr "sincronizar"
 
@@ -66723,6 +66694,81 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #, fuzzy
+#~| msgid "<b>add to you favorites</b>"
+#~ msgid "<b>add to your favorites</b>"
+#~ msgstr "<b>add para os seus favoritos</b>"
+
+#~ msgid "<b>remove from your favorites</b>"
+#~ msgstr "<b>remove dos seus favoritos</b>"
+
+#~ msgid "Add to Favorites"
+#~ msgstr "Adicionar aos Favoritos"
+
+#~ msgid "Favorites"
+#~ msgstr "Favoritos"
+
+#~ msgid "Remove from Favorites"
+#~ msgstr "Remover dos Favoritos"
+
+#, fuzzy
+#~| msgid "Special Agent"
+#~ msgid "Deploy the special agent"
+#~ msgstr "Agente Especial"
+
+#, fuzzy
+#~| msgid "Health"
+#~ msgid "GCP Health"
+#~ msgstr "Saúde"
+
+#, fuzzy
+#~| msgid "Contact Selection"
+#~ msgid "GCP status product selection"
+#~ msgstr "Selecção de contactos"
+
+#~ msgid "Regions to use"
+#~ msgstr "Regiões a utilizar"
+
+#, fuzzy
+#~| msgid "Use the global configuration"
+#~ msgid "This special agent does not require any configuration."
+#~ msgstr "Use a configuração global"
+
+#, fuzzy
+#~| msgid "Add new pattern"
+#~ msgid "add new pattern"
+#~ msgstr "Adicionar novo padrão"
+
+#, fuzzy
+#~| msgid "Pattern"
+#~ msgid "pattern"
+#~ msgstr "Padrão"
+
+#, fuzzy, python-format
+#~| msgid "This package cannot be installed: %s"
+#~ msgid "This verification response cannot be uploaded: %s"
+#~ msgstr "Este pacote não pode ser instalado: %s"
+
+#, fuzzy, python-format
+#~| msgid "User notification"
+#~ msgid "Verification %s: %s"
+#~ msgstr "Notificação do usuário"
+
+#, fuzzy
+#~| msgid "Failed"
+#~ msgid "failed"
+#~ msgstr "Falha"
+
+#, fuzzy
+#~| msgid "success"
+#~ msgid "successful"
+#~ msgstr "sucesso"
+
+#, fuzzy
+#~| msgid "Baking successful"
+#~ msgid "Verification successful"
+#~ msgstr "Assar com sucesso"
+
+#, fuzzy
 #~| msgid "Amazon Web Services (AWS)"
 #~ msgid "Amazon Web Services (AWS) Health"
 #~ msgstr "Serviços Web da Amazon (AWS)"
@@ -66811,11 +66857,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 #~| msgid "Baking successful"
 #~ msgid "Online verification procedure was not successful, reason: %s"
 #~ msgstr "Assar com sucesso"
-
-#, fuzzy
-#~| msgid "Global notification rules"
-#~ msgid "Submit verification request"
-#~ msgstr "Regras de notificação global"
 
 #~ msgid "Physical memory usage"
 #~ msgstr "Uso de memória física"

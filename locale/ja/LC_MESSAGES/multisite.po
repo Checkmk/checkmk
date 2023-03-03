@@ -1195,10 +1195,6 @@ msgstr "<b>問題%sを確認する</b>"
 msgid "<b>add a comment to</b>"
 msgstr "<b>コメントを追加</b>"
 
-#, fuzzy
-msgid "<b>add to your favorites</b>"
-msgstr "<b>お気に入りに追加</b>"
-
 msgid "<b>archive</b>"
 msgstr "<b>アーカイブ</b>"
 
@@ -1232,9 +1228,6 @@ msgstr "<b>承認を削除</b>"
 
 msgid "<b>remove all scheduled downtimes</b> of "
 msgstr "<b>予定されているすべてのダウンタイムを削除</b> "
-
-msgid "<b>remove from your favorites</b>"
-msgstr "<b>お気に入りから削除</b>"
 
 #, python-format
 msgid "<b>schedule a downtime from %s to %s</b>"
@@ -3533,9 +3526,6 @@ msgstr "追加"
 #, python-format
 msgid "Add to %s"
 msgstr "%sに追加"
-
-msgid "Add to Favorites"
-msgstr "お気に入りに追加"
 
 msgid "Add to bookmark list"
 msgstr "ブックマークリストに追加"
@@ -13798,10 +13788,6 @@ msgstr "netstatプラグインをデプロイします"
 msgid "Deploy the plesk plugins"
 msgstr "pleskプラグインをデプロイする"
 
-#, fuzzy
-msgid "Deploy the special agent"
-msgstr "全ての特別なエージェント"
-
 msgid "Deploy without authentication."
 msgstr "パスワード認証を許可する。"
 
@@ -18162,9 +18148,6 @@ msgstr "ハードウェアデバイスのファン速度(パーセント)"
 msgid "Favorite entry of user"
 msgstr "ユーザーのお気に入りのエントリ"
 
-msgid "Favorites"
-msgstr "お気に入り"
-
 msgid "February"
 msgstr "2月"
 
@@ -19363,19 +19346,11 @@ msgid "GCP Cost"
 msgstr "TCPコネクト"
 
 #, fuzzy
-msgid "GCP Health"
-msgstr "健康"
-
-#, fuzzy
 msgid "GCP piggyback services"
 msgstr "明示的なサービス"
 
 msgid "GCP services to monitor"
 msgstr "監視するGCPサービス"
-
-#, fuzzy
-msgid "GCP status product selection"
-msgstr "連絡先の選択"
 
 #, fuzzy
 msgid "GCP/Cloud Run CPU utilization"
@@ -19714,6 +19689,10 @@ msgstr ""
 
 msgid "Google Cloud Platform (GCP)"
 msgstr ""
+
+#, fuzzy
+msgid "Google Cloud Platform (GCP) Status"
+msgstr "Google Cloudストレージ (GCS)"
 
 msgid "Google Compute Engine (GCE)"
 msgstr "Google Compute Engine (GCE)"
@@ -20497,7 +20476,7 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in downtime overrules all other coloring."
+"coloring for host in dowtime overrules all other coloring."
 msgstr ""
 
 msgid ""
@@ -27035,6 +27014,10 @@ msgid "Licensing"
 msgstr "ライセンスステータス"
 
 msgid "Licensing Status"
+msgstr "ライセンスステータス"
+
+#, fuzzy
+msgid "Licensing notification settings"
 msgstr "ライセンスステータス"
 
 #, fuzzy
@@ -37474,11 +37457,12 @@ msgstr "リージョン名"
 msgid "Regions to monitor"
 msgstr "監視するキュー"
 
-msgid "Regions to use"
-msgstr ""
-
 msgid "Registered"
 msgstr "登録済み"
+
+#, fuzzy
+msgid "Registered admins"
+msgstr "登録エージェント"
 
 msgid "Registered agents"
 msgstr "登録エージェント"
@@ -37799,9 +37783,6 @@ msgstr ""
 
 msgid "Remove filter"
 msgstr "フィルタを取り外します"
-
-msgid "Remove from Favorites"
-msgstr "お気に入りから削除"
 
 msgid "Remove label condition"
 msgstr "ラベル条件を削除します"
@@ -38139,6 +38120,10 @@ msgstr "作成するレポート"
 
 msgid "Report to schedule"
 msgstr "スケジュールに報告する"
+
+#, fuzzy
+msgid "Report verification result"
+msgstr "グローバル通知ルール"
 
 msgid "Reporting"
 msgstr "報告"
@@ -49127,6 +49112,10 @@ msgstr "ボールト名"
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "このパッケージはインストールできません: %s"
 
+#, fuzzy, python-format
+msgid "The verification could not be processed successfully: %s"
+msgstr "登録完了"
+
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "このサイトのバージョンは %s ではありません"
@@ -52513,10 +52502,6 @@ msgstr ""
 "このスナップインは、タグ分類に基づいてホストのツリービューを表示します。マル"
 "チサイトのグローバル設定で使用するタグを構成できます。"
 
-#, fuzzy
-msgid "This special agent does not require any configuration."
-msgstr "グローバル構成を使用する"
-
 msgid "This stored report does not exist."
 msgstr ""
 
@@ -52648,10 +52633,6 @@ msgstr "この変数は工場出荷時の設定です。"
 #, python-format
 msgid "This variable is configured in <a href=\"%s\">global settings</a>."
 msgstr "この変数は、<a href=\"%s\">グローバル設定</a>で構成されます。"
-
-#, fuzzy, python-format
-msgid "This verification response cannot be uploaded: %s"
-msgstr "このパッケージはインストールできません: %s"
 
 msgid "This view as PDF"
 msgstr "このビューをPDFとして"
@@ -56565,6 +56546,10 @@ msgstr "ユーザーインターフェイスの設定"
 msgid "User interface theme"
 msgstr "ユーザーインターフェイスのテーマ"
 
+#, fuzzy
+msgid "User is locked"
+msgstr "ユーザーストアキー"
+
 msgid "User management"
 msgstr "ユーザー管理"
 
@@ -57073,7 +57058,7 @@ msgid "Verification"
 msgstr "ユーザー通知"
 
 #, fuzzy, python-format
-msgid "Verification %s: %s"
+msgid "Verification failed (%s)"
 msgstr "ユーザー通知"
 
 #, fuzzy
@@ -57089,8 +57074,8 @@ msgid "Verification failed: %s"
 msgstr "ユーザー通知"
 
 #, fuzzy
-msgid "Verification successful"
-msgstr "登録完了"
+msgid "Verified verification response"
+msgstr "グローバル通知ルール"
 
 msgid "Verify certificates"
 msgstr "証明書を確認する"
@@ -60059,18 +60044,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns to monitor specific products. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"products are monitored."
-msgstr ""
-
-msgid ""
-"You can specify a list of regex patterns to monitor specific regions. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"regions are monitored."
-msgstr ""
-
-msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
 "on demand."
@@ -60862,6 +60835,20 @@ msgstr "%s が削除されました。"
 msgid "Your %s has been saved."
 msgstr "%s が保存されました。"
 
+#, fuzzy
+msgid "Your Checkmk license is about to expire"
+msgstr "ライセンスの有効期限が切れたときの状態"
+
+msgid "Your Checkmk trial is about to expire"
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
+"hosts is supported, currently %s hosts are being monitored. Adjust your "
+"configuration or see here how to proceed: %s  "
+msgstr ""
+
 msgid "Your WebAuthn credential is already in use"
 msgstr "WebAuthn認証はすでに使用されています"
 
@@ -61148,10 +61135,6 @@ msgstr "スイッチ間リンクのサービスの説明に\"ISL\"を追加"
 
 msgid "add ISL"
 msgstr "ISLを追加"
-
-#, fuzzy
-msgid "add new pattern"
-msgstr "新しいパターンを追加する"
 
 #, fuzzy
 msgid "aggregation"
@@ -61662,10 +61645,6 @@ msgstr "明示的なホストラベル"
 
 msgid "explicitly specified groups"
 msgstr "明示的に指定されたグループ"
-
-#, fuzzy
-msgid "failed"
-msgstr "失敗しました"
 
 msgid "failures"
 msgstr "失敗"
@@ -62467,10 +62446,6 @@ msgstr "パスエコー"
 msgid "path levels"
 msgstr "パスレベル"
 
-#, fuzzy
-msgid "pattern"
-msgstr "パターン"
-
 msgid "pending"
 msgstr "保留中"
 
@@ -62782,10 +62757,6 @@ msgstr "サブカテゴリ"
 msgid "success"
 msgstr "成功"
 
-#, fuzzy
-msgid "successful"
-msgstr "成功"
-
 msgid "synchronize"
 msgstr "同期する"
 
@@ -63086,6 +63057,78 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #, fuzzy
+#~| msgid "<b>add to you favorites</b>"
+#~ msgid "<b>add to your favorites</b>"
+#~ msgstr "<b>お気に入りに追加</b>"
+
+#~ msgid "<b>remove from your favorites</b>"
+#~ msgstr "<b>お気に入りから削除</b>"
+
+#~ msgid "Add to Favorites"
+#~ msgstr "お気に入りに追加"
+
+#~ msgid "Favorites"
+#~ msgstr "お気に入り"
+
+#~ msgid "Remove from Favorites"
+#~ msgstr "お気に入りから削除"
+
+#, fuzzy
+#~| msgid "all special agents"
+#~ msgid "Deploy the special agent"
+#~ msgstr "全ての特別なエージェント"
+
+#, fuzzy
+#~| msgid "Health"
+#~ msgid "GCP Health"
+#~ msgstr "健康"
+
+#, fuzzy
+#~| msgid "Contact Selection"
+#~ msgid "GCP status product selection"
+#~ msgstr "連絡先の選択"
+
+#, fuzzy
+#~| msgid "Use the global configuration"
+#~ msgid "This special agent does not require any configuration."
+#~ msgstr "グローバル構成を使用する"
+
+#, fuzzy
+#~| msgid "Add new pattern"
+#~ msgid "add new pattern"
+#~ msgstr "新しいパターンを追加する"
+
+#, fuzzy
+#~| msgid "Pattern"
+#~ msgid "pattern"
+#~ msgstr "パターン"
+
+#, fuzzy, python-format
+#~| msgid "This package cannot be installed: %s"
+#~ msgid "This verification response cannot be uploaded: %s"
+#~ msgstr "このパッケージはインストールできません: %s"
+
+#, fuzzy, python-format
+#~| msgid "User notification"
+#~ msgid "Verification %s: %s"
+#~ msgstr "ユーザー通知"
+
+#, fuzzy
+#~| msgid "Failed"
+#~ msgid "failed"
+#~ msgstr "失敗しました"
+
+#, fuzzy
+#~| msgid "success"
+#~ msgid "successful"
+#~ msgstr "成功"
+
+#, fuzzy
+#~| msgid "Registration successful"
+#~ msgid "Verification successful"
+#~ msgstr "登録完了"
+
+#, fuzzy
 #~| msgid "Amazon Web Services (AWS)"
 #~ msgid "Amazon Web Services (AWS) Health"
 #~ msgstr "Amazon Web Services (AWS)"
@@ -63172,11 +63215,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~| msgid "Registration successful"
 #~ msgid "Online verification procedure was not successful, reason: %s"
 #~ msgstr "登録完了"
-
-#, fuzzy
-#~| msgid "Global notification rules"
-#~ msgid "Submit verification request"
-#~ msgstr "グローバル通知ルール"
 
 #~ msgid "Physical memory usage"
 #~ msgstr "物理メモリ使用量"

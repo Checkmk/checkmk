@@ -1222,10 +1222,6 @@ msgstr "<b>ken de problemen%s</b> van"
 msgid "<b>add a comment to</b>"
 msgstr "<b>een reactie toevoegen aan</b>"
 
-#, fuzzy
-msgid "<b>add to your favorites</b>"
-msgstr "<b>aan uw favorieten toevoegen</b>"
-
 msgid "<b>archive</b>"
 msgstr "<b>archief</b>"
 
@@ -1259,9 +1255,6 @@ msgstr "<b>bevestigingen</b> verwijderen uit"
 
 msgid "<b>remove all scheduled downtimes</b> of "
 msgstr "<b>verwijder alle geplande downtimes</b> van "
-
-msgid "<b>remove from your favorites</b>"
-msgstr "<b>verwijderen uit uw favorieten</b>"
 
 #, python-format
 msgid "<b>schedule a downtime from %s to %s</b>"
@@ -3674,9 +3667,6 @@ msgstr "Toevoegen aan"
 #, python-format
 msgid "Add to %s"
 msgstr "Toevoegen aan %s"
-
-msgid "Add to Favorites"
-msgstr "Toevoegen aan Favorieten"
 
 msgid "Add to bookmark list"
 msgstr "Toevoegen aan favorietenlijst"
@@ -14351,10 +14341,6 @@ msgstr "Implementeer de netstat plugin"
 msgid "Deploy the plesk plugins"
 msgstr "Implementeer de plesk plugins"
 
-#, fuzzy
-msgid "Deploy the special agent"
-msgstr "alle speciale agenten"
-
 msgid "Deploy without authentication."
 msgstr "Implementeer zonder authenticatie."
 
@@ -18810,9 +18796,6 @@ msgstr "Ventilatorsnelheid van hardware-apparaten (in procenten)"
 msgid "Favorite entry of user"
 msgstr "Favoriete invoer van gebruiker"
 
-msgid "Favorites"
-msgstr "Favorieten"
-
 msgid "February"
 msgstr "Februari"
 
@@ -20069,19 +20052,11 @@ msgid "GCP Cost"
 msgstr "TCP Verbinden"
 
 #, fuzzy
-msgid "GCP Health"
-msgstr "Gezondheid"
-
-#, fuzzy
 msgid "GCP piggyback services"
 msgstr "Expliciete diensten"
 
 msgid "GCP services to monitor"
 msgstr "GCP-diensten voor toezicht"
-
-#, fuzzy
-msgid "GCP status product selection"
-msgstr "Contact Selectie"
 
 #, fuzzy
 msgid "GCP/Cloud Run CPU utilization"
@@ -20422,6 +20397,10 @@ msgid "Google Cloud Platform"
 msgstr "Google Cloud Platform"
 
 msgid "Google Cloud Platform (GCP)"
+msgstr "Google-cloudplatform (GCP)"
+
+#, fuzzy
+msgid "Google Cloud Platform (GCP) Status"
 msgstr "Google-cloudplatform (GCP)"
 
 msgid "Google Compute Engine (GCE)"
@@ -21240,10 +21219,10 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in downtime overrules all other coloring."
+"coloring for host in dowtime overrules all other coloring."
 msgstr ""
 "Hier kunt u de achtergrondkleur voor specifieke toestanden instellen. De "
-"kleur voor host in downtime overrulet alle andere kleuren."
+"kleur voor host in dowtime overrulet alle andere kleuren."
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -28201,6 +28180,10 @@ msgid "Licensing"
 msgstr "Licentiestatus"
 
 msgid "Licensing Status"
+msgstr "Licentiestatus"
+
+#, fuzzy
+msgid "Licensing notification settings"
 msgstr "Licentiestatus"
 
 #, fuzzy
@@ -38935,11 +38918,12 @@ msgstr "Naam van de regio"
 msgid "Regions to monitor"
 msgstr "Te bewaken wachtrijen"
 
-msgid "Regions to use"
-msgstr "Te gebruiken regio's"
-
 msgid "Registered"
 msgstr "Geregistreerd"
+
+#, fuzzy
+msgid "Registered admins"
+msgstr "Geregistreerde agenten"
 
 msgid "Registered agents"
 msgstr "Geregistreerde agenten"
@@ -39264,9 +39248,6 @@ msgstr "Verwijder bestanden en submappen beheerd door de Checkmk agent"
 
 msgid "Remove filter"
 msgstr "Verwijder filter"
-
-msgid "Remove from Favorites"
-msgstr "Verwijderen uit favorieten"
 
 msgid "Remove label condition"
 msgstr "Etiketvoorwaarde verwijderen"
@@ -39614,6 +39595,10 @@ msgstr "Verslag te maken"
 
 msgid "Report to schedule"
 msgstr "Rapport aan schema"
+
+#, fuzzy
+msgid "Report verification result"
+msgstr "Globale kennisgevingsregels"
 
 msgid "Reporting"
 msgstr "Melding"
@@ -51348,6 +51333,10 @@ msgstr "De naam van de kluis"
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
 
+#, fuzzy, python-format
+msgid "The verification could not be processed successfully: %s"
+msgstr "Registratie succesvol"
+
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "De versie van deze site is geen %s"
@@ -55184,10 +55173,6 @@ msgstr ""
 "classificaties. U kunt configureren welke tags te gebruiken in uw globale "
 "instellingen van Multisite."
 
-#, fuzzy
-msgid "This special agent does not require any configuration."
-msgstr "Gebruik de globale configuratie"
-
 msgid "This stored report does not exist."
 msgstr "Dit opgeslagen rapport bestaat niet."
 
@@ -55327,10 +55312,6 @@ msgstr "Deze variabele staat op fabrieksinstellingen."
 msgid "This variable is configured in <a href=\"%s\">global settings</a>."
 msgstr ""
 "Deze variabele is geconfigureerd in <a href=\"%s\">globale instellingen</a>."
-
-#, fuzzy, python-format
-msgid "This verification response cannot be uploaded: %s"
-msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
 
 msgid "This view as PDF"
 msgstr "Deze weergave als PDF"
@@ -59399,6 +59380,10 @@ msgstr "Instellingen gebruikersinterface"
 msgid "User interface theme"
 msgstr "Thema gebruikersinterface"
 
+#, fuzzy
+msgid "User is locked"
+msgstr "Sleutel voor gebruikersopslag"
+
 msgid "User management"
 msgstr "Gebruikersbeheer"
 
@@ -59931,7 +59916,7 @@ msgid "Verification"
 msgstr "Kennisgeving gebruiker"
 
 #, fuzzy, python-format
-msgid "Verification %s: %s"
+msgid "Verification failed (%s)"
 msgstr "Kennisgeving gebruiker"
 
 #, fuzzy
@@ -59947,8 +59932,8 @@ msgid "Verification failed: %s"
 msgstr "Kennisgeving gebruiker"
 
 #, fuzzy
-msgid "Verification successful"
-msgstr "Registratie succesvol"
+msgid "Verified verification response"
+msgstr "Globale kennisgevingsregels"
 
 msgid "Verify certificates"
 msgstr "Certificaten verifiëren"
@@ -63244,26 +63229,6 @@ msgstr ""
 "monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
 "zullen gemonitord worden."
 
-#, fuzzy
-msgid ""
-"You can specify a list of regex patterns to monitor specific products. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"products are monitored."
-msgstr ""
-"U kunt een lijst van regexpatronen specificeren om specifieke namespaces te "
-"monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
-"zullen gemonitord worden."
-
-#, fuzzy
-msgid ""
-"You can specify a list of regex patterns to monitor specific regions. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"regions are monitored."
-msgstr ""
-"U kunt een lijst van regexpatronen specificeren om specifieke namespaces te "
-"monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
-"zullen gemonitord worden."
-
 msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
@@ -64173,6 +64138,20 @@ msgstr "Uw %s is verwijderd."
 msgid "Your %s has been saved."
 msgstr "Uw %s is opgeslagen."
 
+#, fuzzy
+msgid "Your Checkmk license is about to expire"
+msgstr "Staat wanneer de vergunning is verlopen"
+
+msgid "Your Checkmk trial is about to expire"
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
+"hosts is supported, currently %s hosts are being monitored. Adjust your "
+"configuration or see here how to proceed: %s  "
+msgstr ""
+
 msgid "Your WebAuthn credential is already in use"
 msgstr "Uw WebAuthn referentie is al in gebruik"
 
@@ -64474,10 +64453,6 @@ msgstr "ISL\" toevoegen aan dienstbeschrijving voor interswitch links"
 
 msgid "add ISL"
 msgstr "ISL toevoegen"
-
-#, fuzzy
-msgid "add new pattern"
-msgstr "Nieuw patroon toevoegen"
 
 #, fuzzy
 msgid "aggregation"
@@ -64991,10 +64966,6 @@ msgstr "expliciete host labels"
 
 msgid "explicitly specified groups"
 msgstr "uitdrukkelijk gespecificeerde groepen"
-
-#, fuzzy
-msgid "failed"
-msgstr "Mislukt"
 
 msgid "failures"
 msgstr "mislukkingen"
@@ -65801,10 +65772,6 @@ msgstr "pad-echo"
 msgid "path levels"
 msgstr "padniveaus"
 
-#, fuzzy
-msgid "pattern"
-msgstr "Patroon"
-
 msgid "pending"
 msgstr "in afwachting van"
 
@@ -66121,10 +66088,6 @@ msgstr "subcategorieën"
 msgid "success"
 msgstr "succes"
 
-#, fuzzy
-msgid "successful"
-msgstr "succes"
-
 msgid "synchronize"
 msgstr "synchroniseren"
 
@@ -66425,6 +66388,107 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #, fuzzy
+#~| msgid "<b>add to you favorites</b>"
+#~ msgid "<b>add to your favorites</b>"
+#~ msgstr "<b>aan uw favorieten toevoegen</b>"
+
+#~ msgid "<b>remove from your favorites</b>"
+#~ msgstr "<b>verwijderen uit uw favorieten</b>"
+
+#~ msgid "Add to Favorites"
+#~ msgstr "Toevoegen aan Favorieten"
+
+#~ msgid "Favorites"
+#~ msgstr "Favorieten"
+
+#~ msgid "Remove from Favorites"
+#~ msgstr "Verwijderen uit favorieten"
+
+#, fuzzy
+#~| msgid "all special agents"
+#~ msgid "Deploy the special agent"
+#~ msgstr "alle speciale agenten"
+
+#, fuzzy
+#~| msgid "Health"
+#~ msgid "GCP Health"
+#~ msgstr "Gezondheid"
+
+#, fuzzy
+#~| msgid "Contact Selection"
+#~ msgid "GCP status product selection"
+#~ msgstr "Contact Selectie"
+
+#~ msgid "Regions to use"
+#~ msgstr "Te gebruiken regio's"
+
+#, fuzzy
+#~| msgid "Use the global configuration"
+#~ msgid "This special agent does not require any configuration."
+#~ msgstr "Gebruik de globale configuratie"
+
+#, fuzzy
+#~| msgid ""
+#~| "You can specify a list of regex patterns to monitor specific namespaces. "
+#~| "Only those that do match the predefined patterns will be monitored."
+#~ msgid ""
+#~ "You can specify a list of regex patterns to monitor specific products. "
+#~ "Only those that do match the predefined patterns will be monitored. If "
+#~ "empty all products are monitored."
+#~ msgstr ""
+#~ "U kunt een lijst van regexpatronen specificeren om specifieke namespaces "
+#~ "te monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde "
+#~ "patronen zullen gemonitord worden."
+
+#, fuzzy
+#~| msgid ""
+#~| "You can specify a list of regex patterns to monitor specific namespaces. "
+#~| "Only those that do match the predefined patterns will be monitored."
+#~ msgid ""
+#~ "You can specify a list of regex patterns to monitor specific regions. "
+#~ "Only those that do match the predefined patterns will be monitored. If "
+#~ "empty all regions are monitored."
+#~ msgstr ""
+#~ "U kunt een lijst van regexpatronen specificeren om specifieke namespaces "
+#~ "te monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde "
+#~ "patronen zullen gemonitord worden."
+
+#, fuzzy
+#~| msgid "Add new pattern"
+#~ msgid "add new pattern"
+#~ msgstr "Nieuw patroon toevoegen"
+
+#, fuzzy
+#~| msgid "Pattern"
+#~ msgid "pattern"
+#~ msgstr "Patroon"
+
+#, fuzzy, python-format
+#~| msgid "This package cannot be installed: %s"
+#~ msgid "This verification response cannot be uploaded: %s"
+#~ msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
+
+#, fuzzy, python-format
+#~| msgid "User notification"
+#~ msgid "Verification %s: %s"
+#~ msgstr "Kennisgeving gebruiker"
+
+#, fuzzy
+#~| msgid "Failed"
+#~ msgid "failed"
+#~ msgstr "Mislukt"
+
+#, fuzzy
+#~| msgid "success"
+#~ msgid "successful"
+#~ msgstr "succes"
+
+#, fuzzy
+#~| msgid "Registration successful"
+#~ msgid "Verification successful"
+#~ msgstr "Registratie succesvol"
+
+#, fuzzy
 #~| msgid "Amazon Web Services (AWS)"
 #~ msgid "Amazon Web Services (AWS) Health"
 #~ msgstr "Amazon Web Services (AWS)"
@@ -66539,11 +66603,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~| msgid "Registration successful"
 #~ msgid "Online verification procedure was not successful, reason: %s"
 #~ msgstr "Registratie succesvol"
-
-#, fuzzy
-#~| msgid "Global notification rules"
-#~ msgid "Submit verification request"
-#~ msgstr "Globale kennisgevingsregels"
 
 #~ msgid "Physical memory usage"
 #~ msgstr "Fysiek geheugengebruik"

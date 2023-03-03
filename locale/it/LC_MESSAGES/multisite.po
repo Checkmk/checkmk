@@ -1223,10 +1223,6 @@ msgstr "<b>conoscere i problemi%s</b> di"
 msgid "<b>add a comment to</b>"
 msgstr "<b>aggiungere un commento a</b>"
 
-#, fuzzy
-msgid "<b>add to your favorites</b>"
-msgstr "<b>aggiungere ai preferiti</b>"
-
 msgid "<b>archive</b>"
 msgstr "<b>archivio</b>"
 
@@ -1260,9 +1256,6 @@ msgstr "<b>rimuovere i riconoscimenti</b> da"
 
 msgid "<b>remove all scheduled downtimes</b> of "
 msgstr "<b>rimuovi tutti i tempi di inattività programmati</b> di "
-
-msgid "<b>remove from your favorites</b>"
-msgstr "<b>rimuovi dai tuoi preferiti</b>"
 
 #, python-format
 msgid "<b>schedule a downtime from %s to %s</b>"
@@ -3690,9 +3683,6 @@ msgstr "Aggiungi a"
 #, python-format
 msgid "Add to %s"
 msgstr "Aggiungi a %s"
-
-msgid "Add to Favorites"
-msgstr "Aggiungi ai preferiti"
 
 msgid "Add to bookmark list"
 msgstr "Aggiungi alla lista dei preferiti"
@@ -14545,10 +14535,6 @@ msgid "Deploy the plesk plugins"
 msgstr "Distribuire i plugin plesk"
 
 #, fuzzy
-msgid "Deploy the special agent"
-msgstr "Agente speciale"
-
-#, fuzzy
 msgid "Deploy without authentication."
 msgstr "Permettere l'autenticazione con password"
 
@@ -19100,9 +19086,6 @@ msgstr "Velocità della ventola dei dispositivi hardware (in percentuale)"
 msgid "Favorite entry of user"
 msgstr "Voce preferita dell'utente"
 
-msgid "Favorites"
-msgstr "Preferiti"
-
 msgid "February"
 msgstr "Febbraio"
 
@@ -20371,19 +20354,11 @@ msgid "GCP Cost"
 msgstr "TCP Connect"
 
 #, fuzzy
-msgid "GCP Health"
-msgstr "Salute"
-
-#, fuzzy
 msgid "GCP piggyback services"
 msgstr "Modifica dei servizi"
 
 msgid "GCP services to monitor"
 msgstr "Servizi globali per monitorare"
-
-#, fuzzy
-msgid "GCP status product selection"
-msgstr "Selezione dei contatti"
 
 #, fuzzy
 msgid "GCP/Cloud Run CPU utilization"
@@ -20737,6 +20712,10 @@ msgid "Google Cloud Platform"
 msgstr "Piattaforma cloud di Google"
 
 msgid "Google Cloud Platform (GCP)"
+msgstr "Piattaforma cloud di Google (GCP)"
+
+#, fuzzy
+msgid "Google Cloud Platform (GCP) Status"
 msgstr "Piattaforma cloud di Google (GCP)"
 
 #, fuzzy
@@ -21560,10 +21539,10 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in downtime overrules all other coloring."
+"coloring for host in dowtime overrules all other coloring."
 msgstr ""
 "Qui puoi configurare il colore di sfondo per stati specifici. La colorazione "
-"per l'host in downtime sovrascrive tutte le altre colorazioni."
+"per l'host in dowtime sovrascrive tutte le altre colorazioni."
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "
@@ -28622,6 +28601,10 @@ msgid "Licensing"
 msgstr "Stato delle licenze"
 
 msgid "Licensing Status"
+msgstr "Stato delle licenze"
+
+#, fuzzy
+msgid "Licensing notification settings"
 msgstr "Stato delle licenze"
 
 #, fuzzy
@@ -39569,11 +39552,12 @@ msgstr "Nome della regione"
 msgid "Regions to monitor"
 msgstr "Code da monitorare"
 
-msgid "Regions to use"
-msgstr "Regioni da utilizzare"
-
 msgid "Registered"
 msgstr "Registrato"
+
+#, fuzzy
+msgid "Registered admins"
+msgstr "Agenti registrati"
 
 msgid "Registered agents"
 msgstr "Agenti registrati"
@@ -39903,9 +39887,6 @@ msgstr "Rimuovere i file e le sottodirectory gestiti dall'agente Checkmk"
 
 msgid "Remove filter"
 msgstr "Rimuovi filtro"
-
-msgid "Remove from Favorites"
-msgstr "Rimuovi dai preferiti"
 
 msgid "Remove label condition"
 msgstr "Rimuovere la condizione dell'etichetta"
@@ -40267,6 +40248,10 @@ msgstr "Rapporto da creare"
 
 msgid "Report to schedule"
 msgstr "Rapporto al programma"
+
+#, fuzzy
+msgid "Report verification result"
+msgstr "Regole di notifica globale"
 
 msgid "Reporting"
 msgstr "Segnalare"
@@ -52139,6 +52124,10 @@ msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Questo pacchetto non può essere installato: %s"
 
 #, fuzzy, python-format
+msgid "The verification could not be processed successfully: %s"
+msgstr "Cottura di successo"
+
+#, fuzzy, python-format
 msgid "The version of this site is not a %s"
 msgstr "Il valore di questa regola non è valido. "
 
@@ -55997,10 +55986,6 @@ msgstr ""
 "classificazioni di tag. Puoi configurare quali tag utilizzare nelle "
 "impostazioni globali di Multisite."
 
-#, fuzzy
-msgid "This special agent does not require any configuration."
-msgstr "Utilizzare la configurazione globale"
-
 msgid "This stored report does not exist."
 msgstr "Questo rapporto memorizzato non esiste."
 
@@ -56138,10 +56123,6 @@ msgstr "Questa variabile è alle impostazioni di fabbrica."
 msgid "This variable is configured in <a href=\"%s\">global settings</a>."
 msgstr ""
 "Questa variabile è configurata in <a href=\"%s\">impostazioni globali</a>."
-
-#, fuzzy, python-format
-msgid "This verification response cannot be uploaded: %s"
-msgstr "Questo pacchetto non può essere installato: %s"
 
 msgid "This view as PDF"
 msgstr "Questa vista come PDF"
@@ -60278,6 +60259,10 @@ msgid "User interface theme"
 msgstr "Tema dell'interfaccia utente"
 
 #, fuzzy
+msgid "User is locked"
+msgstr "Chiave del negozio dell'utente"
+
+#, fuzzy
 msgid "User management"
 msgstr "Gestione degli utenti"
 
@@ -60821,7 +60806,7 @@ msgid "Verification"
 msgstr "Notifica dell'utente"
 
 #, fuzzy, python-format
-msgid "Verification %s: %s"
+msgid "Verification failed (%s)"
 msgstr "Notifica dell'utente"
 
 #, fuzzy
@@ -60837,8 +60822,8 @@ msgid "Verification failed: %s"
 msgstr "Notifica dell'utente"
 
 #, fuzzy
-msgid "Verification successful"
-msgstr "Cottura di successo"
+msgid "Verified verification response"
+msgstr "Regole di notifica globale"
 
 #, fuzzy
 msgid "Verify certificates"
@@ -64150,26 +64135,6 @@ msgstr ""
 "nomi specifici. Verranno monitorati solo quelli che corrispondono agli "
 "schemi predefiniti."
 
-#, fuzzy
-msgid ""
-"You can specify a list of regex patterns to monitor specific products. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"products are monitored."
-msgstr ""
-"È possibile specificare un elenco di pattern regex per monitorare spazi dei "
-"nomi specifici. Verranno monitorati solo quelli che corrispondono agli "
-"schemi predefiniti."
-
-#, fuzzy
-msgid ""
-"You can specify a list of regex patterns to monitor specific regions. Only "
-"those that do match the predefined patterns will be monitored. If empty all "
-"regions are monitored."
-msgstr ""
-"È possibile specificare un elenco di pattern regex per monitorare spazi dei "
-"nomi specifici. Verranno monitorati solo quelli che corrispondono agli "
-"schemi predefiniti."
-
 msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
@@ -65085,6 +65050,20 @@ msgid "Your %s has been saved."
 msgstr "Il tuo %s è stato salvato."
 
 #, fuzzy
+msgid "Your Checkmk license is about to expire"
+msgstr "Stato in cui la licenza è scaduta"
+
+msgid "Your Checkmk trial is about to expire"
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
+"hosts is supported, currently %s hosts are being monitored. Adjust your "
+"configuration or see here how to proceed: %s  "
+msgstr ""
+
+#, fuzzy
 msgid "Your WebAuthn credential is already in use"
 msgstr "Credenziali predefinite"
 
@@ -65391,10 +65370,6 @@ msgstr ""
 
 msgid "add ISL"
 msgstr "aggiungere ISL"
-
-#, fuzzy
-msgid "add new pattern"
-msgstr "Aggiungi un nuovo modello"
 
 #, fuzzy
 msgid "aggregation"
@@ -65916,10 +65891,6 @@ msgstr "etichette host esplicite"
 
 msgid "explicitly specified groups"
 msgstr "gruppi esplicitamente specificati"
-
-#, fuzzy
-msgid "failed"
-msgstr "Fallito"
 
 msgid "failures"
 msgstr "fallimenti"
@@ -66735,10 +66706,6 @@ msgstr "percorso eco"
 msgid "path levels"
 msgstr "livelli di percorso"
 
-#, fuzzy
-msgid "pattern"
-msgstr "Modello"
-
 msgid "pending"
 msgstr "in attesa di"
 
@@ -67059,10 +67026,6 @@ msgstr "sottocategorie"
 msgid "success"
 msgstr "successo"
 
-#, fuzzy
-msgid "successful"
-msgstr "successo"
-
 msgid "synchronize"
 msgstr "sincronizzare"
 
@@ -67363,6 +67326,107 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #, fuzzy
+#~| msgid "<b>add to you favorites</b>"
+#~ msgid "<b>add to your favorites</b>"
+#~ msgstr "<b>aggiungere ai preferiti</b>"
+
+#~ msgid "<b>remove from your favorites</b>"
+#~ msgstr "<b>rimuovi dai tuoi preferiti</b>"
+
+#~ msgid "Add to Favorites"
+#~ msgstr "Aggiungi ai preferiti"
+
+#~ msgid "Favorites"
+#~ msgstr "Preferiti"
+
+#~ msgid "Remove from Favorites"
+#~ msgstr "Rimuovi dai preferiti"
+
+#, fuzzy
+#~| msgid "Special Agent"
+#~ msgid "Deploy the special agent"
+#~ msgstr "Agente speciale"
+
+#, fuzzy
+#~| msgid "Health"
+#~ msgid "GCP Health"
+#~ msgstr "Salute"
+
+#, fuzzy
+#~| msgid "Contact Selection"
+#~ msgid "GCP status product selection"
+#~ msgstr "Selezione dei contatti"
+
+#~ msgid "Regions to use"
+#~ msgstr "Regioni da utilizzare"
+
+#, fuzzy
+#~| msgid "Use the global configuration"
+#~ msgid "This special agent does not require any configuration."
+#~ msgstr "Utilizzare la configurazione globale"
+
+#, fuzzy
+#~| msgid ""
+#~| "You can specify a list of regex patterns to monitor specific namespaces. "
+#~| "Only those that do match the predefined patterns will be monitored."
+#~ msgid ""
+#~ "You can specify a list of regex patterns to monitor specific products. "
+#~ "Only those that do match the predefined patterns will be monitored. If "
+#~ "empty all products are monitored."
+#~ msgstr ""
+#~ "È possibile specificare un elenco di pattern regex per monitorare spazi "
+#~ "dei nomi specifici. Verranno monitorati solo quelli che corrispondono "
+#~ "agli schemi predefiniti."
+
+#, fuzzy
+#~| msgid ""
+#~| "You can specify a list of regex patterns to monitor specific namespaces. "
+#~| "Only those that do match the predefined patterns will be monitored."
+#~ msgid ""
+#~ "You can specify a list of regex patterns to monitor specific regions. "
+#~ "Only those that do match the predefined patterns will be monitored. If "
+#~ "empty all regions are monitored."
+#~ msgstr ""
+#~ "È possibile specificare un elenco di pattern regex per monitorare spazi "
+#~ "dei nomi specifici. Verranno monitorati solo quelli che corrispondono "
+#~ "agli schemi predefiniti."
+
+#, fuzzy
+#~| msgid "Add new pattern"
+#~ msgid "add new pattern"
+#~ msgstr "Aggiungi un nuovo modello"
+
+#, fuzzy
+#~| msgid "Pattern"
+#~ msgid "pattern"
+#~ msgstr "Modello"
+
+#, fuzzy, python-format
+#~| msgid "This package cannot be installed: %s"
+#~ msgid "This verification response cannot be uploaded: %s"
+#~ msgstr "Questo pacchetto non può essere installato: %s"
+
+#, fuzzy, python-format
+#~| msgid "User notification"
+#~ msgid "Verification %s: %s"
+#~ msgstr "Notifica dell'utente"
+
+#, fuzzy
+#~| msgid "Failed"
+#~ msgid "failed"
+#~ msgstr "Fallito"
+
+#, fuzzy
+#~| msgid "success"
+#~ msgid "successful"
+#~ msgstr "successo"
+
+#, fuzzy
+#~| msgid "Baking successful"
+#~ msgid "Verification successful"
+#~ msgstr "Cottura di successo"
+
+#, fuzzy
 #~| msgid "Amazon Web Services (AWS)"
 #~ msgid "Amazon Web Services (AWS) Health"
 #~ msgstr "Servizi Web Amazon (AWS)"
@@ -67477,11 +67541,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #~| msgid "Baking successful"
 #~ msgid "Online verification procedure was not successful, reason: %s"
 #~ msgstr "Cottura di successo"
-
-#, fuzzy
-#~| msgid "Global notification rules"
-#~ msgid "Submit verification request"
-#~ msgstr "Regole di notifica globale"
 
 #~ msgid "Physical memory usage"
 #~ msgstr "Utilizzo della memoria fisica"

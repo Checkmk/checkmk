@@ -21,7 +21,7 @@ from .forward import SyslogForwarderUnixSocket, SyslogMessage
 from .main import SyslogFacility, SyslogPriority
 
 # TODO remove match_ipv4_network when the GUI uses the EC logic.
-from .rule_matcher import match_ipv4_network, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
+from .rule_matcher import match_ip_network, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import (
     ECRuleSpec,
     export_rule_pack,

@@ -8,7 +8,7 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import ip_addresses
 
-from cmk.ec.export import match_ipv4_network
+from cmk.ec.export import match_ip_network
 
 
 @pytest.mark.parametrize(
@@ -19,6 +19,12 @@ from cmk.ec.export import match_ipv4_network
             "10.10.0.1",
             True,
             id="normal host in 256 host network",
+        ),
+        pytest.param(
+            "10.10.0.0/24",
+            "010.10.0.1",
+            False,
+            id="Invalid ip never matches",
         ),
         pytest.param(
             "10.10.0.0/32",
@@ -40,52 +46,67 @@ from cmk.ec.export import match_ipv4_network
         ),
     ),
 )
-def test_match_ipv4_network(pattern: str, ip: str, expected: bool) -> None:
+def test_match_ip_network_ipv4(pattern: str, ip: str, expected: bool) -> None:
 
-    assert match_ipv4_network(pattern, ip) == expected
+    assert match_ip_network(pattern, ip) == expected
 
 
 @pytest.mark.parametrize(
-    "pattern, ip",
+    "pattern, ip, expected",
     (
         pytest.param(
-            "127.0.0.x/0",
-            "127.0.0.1",
-            id="one octet is not decimal",
+            "2001:db00::0/24",
+            "2001:db00::1",
+            True,
+            id="normal host",
         ),
         pytest.param(
-            "somestring/0",
-            "127.0.0.1",
-            id="nonsense string with network bit",
+            "2001:db00::0/24",
+            "2001:0db00::1",
+            False,
+            id="Invalid ip never matches",
         ),
         pytest.param(
-            "somestring",
-            "127.0.0.1",
-            id="nonsense string ",
+            "2001:db00::0/128",
+            "2001:db00::1/128",
+            False,
+            id="one host one network",
         ),
         pytest.param(
+            "2001:db00::1/24",
+            "2001:db00::1",
+            True,
+            id="network pattern contains hosts (an interface)",
+        ),
+        pytest.param(
+            "2001:db00::0/0",
             "",
-            "",
-            id="empty pattern",
-        ),
-        pytest.param(
-            "10.10.0.0/x",
-            "127.0.0.1",
-            id="non-decimal network bit",
+            True,
+            id="empty ip with network bit 0",
         ),
     ),
 )
-def test_match_ipv4_network_exceptions(pattern: str, ip: str) -> None:
+def test_match_ip_network_ipv6(pattern: str, ip: str, expected: bool) -> None:
 
-    with pytest.raises(ValueError, match="invalid literal for int"):
-        match_ipv4_network(pattern, ip)
+    assert match_ip_network(pattern, ip) == expected
 
 
 @given(ip_addresses(v=4).map(str))
 def test_match_ipv4_network_all_ip(ip: str) -> None:
     """Generated ip ipv4 addresses with network bits added manually"""
 
-    assert match_ipv4_network(f"{ip}/24", ip) is True
-    assert match_ipv4_network(f"{ip}/0", ip) is True
-    assert match_ipv4_network(ip, f"{ip}/24") is False
-    assert match_ipv4_network(f"{ip}/0", "") is True
+    assert match_ip_network(f"{ip}/24", ip) is True
+    assert match_ip_network(f"{ip}/0", ip) is True
+    assert match_ip_network(ip, f"{ip}/24") is False
+    assert match_ip_network(f"{ip}/0", "") is True
+
+
+@given(ip_addresses(v=6).map(str))
+def test_match_ipv6_network_all_ip(ip: str) -> None:
+    """Generated ip ipv6 addresses with network bits added manually"""
+
+    assert match_ip_network(f"{ip}/128", ip) is True
+    assert match_ip_network(f"{ip}/ffff:ff00::", ip) is False
+    assert match_ip_network(f"{ip}/0", ip) is True
+    assert match_ip_network(ip, f"{ip}/128") is False
+    assert match_ip_network(f"{ip}/0", "") is True

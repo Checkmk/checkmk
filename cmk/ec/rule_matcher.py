@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 from collections.abc import Callable
 from dataclasses import dataclass
 from logging import Logger
@@ -59,40 +60,26 @@ def format_pattern(pattern: TextPattern) -> str:
     return pattern.pattern
 
 
-def parse_ipv4_address(text: str) -> int:
-    parts = list(map(int, text.split(".")))
-    return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
-
-
-def parse_ipv4_network(text: str) -> tuple[int, int]:
-    if "/" not in text:
-        return parse_ipv4_address(text), 32
-
-    network_text, bits_text = text.split("/")
-    return parse_ipv4_address(network_text), int(bits_text)
-
-
-def match_ipv4_network(pattern: str, ipaddress_text: str) -> bool:
-    network, network_bits = parse_ipv4_network(pattern)  # is validated by valuespec
-    if network_bits == 0:
-        return True  # event if ipaddress is empty
+def match_ip_network(pattern: str, ipaddress_text: str) -> bool:
+    """
+    Return True if ipaddress belongs to the network.
+    Works for both ipv6 and ipv4 addresses.
+    """
     try:
-        ipaddress = parse_ipv4_address(ipaddress_text)
-    except Exception:
+        # strict=False is for 0.0.0.0/0 to be evaluated
+        network = ipaddress.ip_network(pattern, strict=False)
+    except ValueError:
+        return False
+
+    if int(network.netmask) == 0:
+        return True  # event if ipaddress is empty
+
+    try:
+        ipaddress_ = ipaddress.ip_address(ipaddress_text)
+    except ValueError:
         return False  # invalid address never matches
 
-    # first network_bits of network and ipaddress must be
-    # identical. Create a bitmask.
-    bitmask = 0
-    for n in range(32):
-        bitmask = bitmask << 1
-        if n < network_bits:
-            bit = 1
-        else:
-            bit = 0
-        bitmask += bit
-
-    return (network & bitmask) == (ipaddress & bitmask)
+    return ipaddress_ in network
 
 
 class RuleMatcher:
@@ -268,7 +255,7 @@ class RuleMatcher:
         return MatchSuccess(cancelling=False, match_groups={})
 
     def event_rule_matches_ip(self, rule: Rule, event: Event) -> MatchResult:
-        if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+        if not match_ip_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             return MatchFailure(
                 f"Did not match because of wrong source IP address {event['ipaddress']!r} (need {rule.get('match_ipaddress')!r})"
             )

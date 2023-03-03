@@ -34,7 +34,7 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
     rule: ec.Rule,
     event: ec.Event,
 ) -> ec.MatchResult:
-    if not ec.match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+    if not ec.match_ip_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return ec.MatchFailure(_("The source IP address does not match."))
 
     if match(rule.get("match_host"), event["host"], complete=True) is False:

@@ -320,6 +320,11 @@ def test_match_host(result: MatchResult, rule: Rule, event: Event) -> None:
         ),
         (
             MatchSuccess(cancelling=False, match_groups={}),
+            {"match_ipaddress": "2001:db00::0/24"},
+            {"ipaddress": "2001:db00::1"},
+        ),
+        (
+            MatchSuccess(cancelling=False, match_groups={}),
             {"match_ipaddress": "10.0.0.0/8"},
             {"ipaddress": "10.3.3.4"},
         ),
@@ -329,6 +334,13 @@ def test_match_host(result: MatchResult, rule: Rule, event: Event) -> None:
             ),
             {"match_ipaddress": "11.0.0.0/8"},
             {"ipaddress": "10.3.3.4"},
+        ),
+        (
+            MatchFailure(
+                reason="Did not match because of wrong source IP address '2002:db00::1' (need '2001:db00::0/24')"
+            ),
+            {"match_ipaddress": "2001:db00::0/24"},
+            {"ipaddress": "2002:db00::1"},
         ),
         (
             MatchFailure(

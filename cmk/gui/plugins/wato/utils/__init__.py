@@ -83,7 +83,7 @@ from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unus
     sample_config_generator_registry,
     SampleConfigGenerator,
 )
-from cmk.gui.sites import get_activation_site_choices, get_site_config
+from cmk.gui.sites import get_activation_site_choices, get_configured_site_choices, get_site_config
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
@@ -2619,25 +2619,27 @@ def transform_simple_to_multi_host_rule_match_conditions(value):
 
 def _simple_host_rule_match_conditions():
     return [
-        _site_rule_match_condition(),
+        _site_rule_match_condition(only_sites_with_replication=False),
         _single_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
 def multifolder_host_rule_match_conditions():
     return [
-        _site_rule_match_condition(),
+        _site_rule_match_condition(only_sites_with_replication=True),
         _multi_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
-def _site_rule_match_condition():
+def _site_rule_match_condition(only_sites_with_replication: bool):
     return (
         "match_site",
         DualListChoice(
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of " "the selected sites."),
-            choices=get_activation_site_choices,
+            choices=get_activation_site_choices
+            if only_sites_with_replication
+            else get_configured_site_choices,
         ),
     )
 

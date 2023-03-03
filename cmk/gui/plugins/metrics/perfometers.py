@@ -800,6 +800,26 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "logarithmic",
+                "metric": "net_data_recv",
+                "half_value": 5000000,
+                "exponent": 5,
+            },
+            {
+                "type": "logarithmic",
+                "metric": "net_data_sent",
+                "half_value": 5000000,
+                "exponent": 5,
+            },
+        ],
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "dual",
+        "perfometers": [
+            {
+                "type": "logarithmic",
                 "metric": "if_in_bps",
                 "half_value": 5000000,
                 "exponent": 5,
@@ -2047,6 +2067,32 @@ perfometer_info.append(
         "type": "logarithmic",
         "metric": "mobileiron_policyviolationcount",
         "half_value": 4.0,
+        "exponent": 2,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "aws_bucket_size",
+        "half_value": GB,
+        "exponent": 2,
+    }
+)
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "aws_s3_buckets",
+        "half_value": 50,
+        "exponent": 2,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "requests",
+        "half_value": 100.0,
         "exponent": 2,
     }
 )

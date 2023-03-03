@@ -36,6 +36,14 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
 AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
 
+
+SYSTEM_TESTS := \
+    test-integration \
+    test-composition \
+    test-update \
+    test-gui-crawl \
+    test-xss-crawl \
+    test-gui-e2e
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov" --log-cli-level=INFO --log-cli-format="%(asctime)s %(levelname)s %(message)s"
 
 # Since the unit tests (that are written for Python 3) are executed with Python
@@ -48,12 +56,12 @@ BROWSER_ENGINES = "chromium" "firefox"
 
 .PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
-	test-bandit test-code-quality test-code-quality-docker test-composition test-composition-docker \
-	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
+	test-bandit test-code-quality test-code-quality-docker
+	test-docker test-docker-docker test-format-python test-format-python-docker \
 	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
-	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker test-gui-e2e test-gui-e2e-docker \
-	test-update test-update-docker \
-	test-integration test-integration-docker test-integration-docker-debug \
+	$(SYSTEM_TESTS) \
+	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
+	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
@@ -78,13 +86,15 @@ help:
 	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
+	@for i in $(SYSTEM_TESTS); do \
+	    echo "$${i}              - Run $${i} locally"; \
+	    echo "$${i}-docker       - Run $${i} in container"; \
+	    echo "$${i}-docker-debug - Run $${i} in container for manual debugging"; \
+	done
 	@echo "test-bandit                         - Run bandit (security) tests"
 	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
 	@echo "test-code-quality                   - Run code quality tests locally"
 	@echo "test-code-quality-docker            - Run code quality tests in container"
-	@echo "test-composition                    - Run composition tests locally"
-	@echo "test-composition-docker             - Run composition tests in container"
-	@echo "test-composition-docker-debug       - Run test container for manual debugging"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-format-python                  - Run formatting tests"
@@ -94,15 +104,8 @@ help:
 	@echo "test-format-js-docker               - Run the JavaScript formatting in docker"
 	@echo "test-format-css                     - Run the CSS formatting"
 	@echo "test-format-css-docker              - Run the CSS formatting in docker"
-	@echo "test-gui-crawl                      - Run GUI crawl locally"
-	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
-	@echo "test-xss-crawl                      - Run XSS crawl locally"
-	@echo "test-xss-crawl-docker               - Run XSS crawl in container"
 	@echo "test-gui-e2e                        - Run GUI End-to-End locally"
 	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
-	@echo "test-integration                    - Run integration tests locally"
-	@echo "test-integration-docker             - Run integration tests in container"
-	@echo "test-integration-docker-debug       - Run test container for manual debugging"
 	@echo "test-mypy                           - Run mypy"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
 	@echo "test-mypy-docker                    - Run mypy in docker"
@@ -238,40 +241,26 @@ test-format-css-docker:
 test-gui-crawl: prepare-playwright
 	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
-test-gui-crawl-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
-
 test-xss-crawl: prepare-playwright
 	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
-
-test-xss-crawl-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-xss-crawl"
 
 test-gui-e2e: prepare-playwright
 	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
-test-gui-e2e-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"
-
 test-integration:
 	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
-
-test-integration-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
 test-composition:
 	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
 
-test-composition-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-composition"
-
 test-update:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
 
-test-update-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-update"
 
-test-integration-docker-debug test-composition-docker-debug:
+$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
+	$(PIPENV) run scripts/run-dockerized.py "$*"
+
+$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
 	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-build-js:

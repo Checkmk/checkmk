@@ -3763,7 +3763,9 @@ class ConfigCache:
         if piggyback.has_piggyback_raw_data(host_name, time_settings):
             return True
 
-        return Path(cmk.utils.paths.var_dir, "persisted_sections", "piggyback", host_name).exists()
+        return make_persisted_section_dir(
+            fetcher_type=FetcherType.PIGGYBACK, host_name=host_name, ident="piggyback"
+        ).exists()
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
         rules = self.host_extra_conf(host_name, piggybacked_host_files)

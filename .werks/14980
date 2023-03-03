@@ -1,0 +1,15 @@
+Title: service details view: unable to render view due to long filename
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677857283
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Some service details views displayed an error with a crash report reading the
+message "OSError ((36, 'File name too long'))". This was for example the case
+when configuring a long commandline with the "Integrate Nagios plugins" rule.
+This has been fixed.
+

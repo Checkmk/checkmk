@@ -11,7 +11,7 @@ import pprint
 import re
 from collections.abc import Callable, Container, Mapping
 from enum import auto, Enum
-from typing import Any, cast, Final
+from typing import Any, cast, Final, Iterable
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -662,29 +662,37 @@ class Ruleset:
             self._rules_by_id[rule.id] = rule
 
     def to_config(self, folder: CREFolder) -> str:
+        return self.format_raw_value(
+            self.name,
+            (r.to_config() for r in self._rules[folder.path()]),
+            self.is_optional(),
+        )
+
+    @staticmethod
+    def format_raw_value(name: str, rule_specs: Iterable[RuleSpec], is_optional: bool) -> str:
         content = ""
 
-        if ":" in self.name:
-            dictname, subkey = self.name.split(":")
+        if ":" in name:
+            dictname, subkey = name.split(":")
             varname = f"{dictname}[{subkey!r}]"
 
             content += f"\n{dictname}.setdefault({subkey!r}, [])\n"
         else:
-            varname = self.name
+            varname = name
 
             content += "\nglobals().setdefault(%r, [])\n" % (varname)
 
-            if self.is_optional():
+            if is_optional:
                 content += f"\nif {varname} is None:\n    {varname} = []\n"
 
         content += "\n%s = [\n" % varname
-        for rule in self._rules[folder.path()]:
+        for rule_spec in rule_specs:
             # When using pprint we get a deterministic representation of the
             # data structures because it cares about sorting of the dict keys
             if active_config.wato_use_git:
-                text = pprint.pformat(rule.to_config())
+                text = pprint.pformat(rule_spec)
             else:
-                text = repr(rule.to_config())
+                text = repr(rule_spec)
 
             content += "%s,\n" % text
         content += "] + %s\n\n" % varname

@@ -59,8 +59,8 @@ class HostConfig:
             if self._cache_timestamp is None or self._cache_timestamp < timestamp:
                 self._update_cache()
                 self._cache_timestamp = timestamp
-        except Exception:
-            self._logger.exception("Failed to get host info from core. Try again later.")
+        except Exception as e:
+            self._logger.error(f"Cannot get host info from core: {e}")
             return False
         return True
 

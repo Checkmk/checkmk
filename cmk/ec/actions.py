@@ -482,7 +482,8 @@ def _add_contact_information_to_context(
 ) -> None:
     try:
         contact_names = query_contactgroups_members(contact_groups)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Cannot get contact group members, assuming none: {e}")
         contact_names = set()
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
@@ -499,7 +500,7 @@ def _core_has_notifications_enabled(logger: Logger) -> bool:
     try:
         return query_status_enable_notifications()
     except Exception as e:
-        logger.info(
-            f"Cannot determine whether notifications are enabled in core: {e}. Assuming YES."
+        logger.error(
+            f"Cannot determine whether notifications are enabled in core, assuming YES: {e}"
         )
         return True

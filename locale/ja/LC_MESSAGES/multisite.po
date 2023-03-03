@@ -20497,7 +20497,7 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in dowtime overrules all other coloring."
+"coloring for host in downtime overrules all other coloring."
 msgstr ""
 
 msgid ""

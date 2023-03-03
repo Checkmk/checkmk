@@ -21483,7 +21483,7 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in dowtime overrules all other coloring."
+"coloring for host in downtime overrules all other coloring."
 msgstr ""
 "Ici, vous pouvez configurer la couleur de fond pour des états spécifiques. "
 "La couleur pour l'hôte en temps d'arrêt a priorité sur toutes les autres "

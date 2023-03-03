@@ -279,6 +279,7 @@ class RulesetCollection:
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
         self._rulesets = rulesets
+        self._unknown_rulesets: dict[str, dict[str, list]] = {}
 
     @staticmethod
     def _initialize_rulesets(
@@ -331,10 +332,26 @@ class RulesetCollection:
     def replace_folder_config(  # type:ignore[no-untyped-def]
         self, folder: CREFolder, loaded_file_config, only_varname: RulesetName | None = None
     ) -> None:
-        varnames = [only_varname] if only_varname else rulespec_registry.keys()
-        config_varname: str
-        subkey: str | None
-        for varname in varnames:
+        if only_varname:
+            variable_names_to_load = [only_varname]
+        else:
+
+            def varnames_from_item(name: str, value: object) -> list[str]:
+                if isinstance(value, dict):
+                    return [f"{name}:{key}" for key in value]
+                if isinstance(value, list):
+                    return [name]
+                return []
+
+            helpers = self._context_helpers(folder)
+            variable_names_to_load = [
+                name
+                for config_varname, value in loaded_file_config.items()
+                for name in varnames_from_item(config_varname, value)
+                if name not in helpers
+            ]
+
+        for varname in variable_names_to_load:
             if ":" in varname:
                 config_varname, subkey = varname.split(":", 1)
                 rulegroup_config = loaded_file_config.get(config_varname, {})
@@ -349,7 +366,10 @@ class RulesetCollection:
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 
-            self._rulesets[varname].replace_folder_config(folder, ruleset_config)
+            if varname in self._rulesets:
+                self._rulesets[varname].replace_folder_config(folder, ruleset_config)
+            else:
+                self._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
 
     def save(self) -> None:
         raise NotImplementedError()
@@ -361,12 +381,17 @@ class RulesetCollection:
         store.mkdir(folder.get_root_dir())
 
         content = [
-            ruleset.to_config(folder)
-            for varname, ruleset in sorted(self._rulesets.items())
-            if (
-                varname in rulespec_registry  # don't save unknown rulesets
-                and not ruleset.is_empty_in_folder(folder)  # don't save empty rule sets
-            )
+            *(
+                ruleset.to_config(folder)
+                for _name, ruleset in sorted(self._rulesets.items())
+                if not ruleset.is_empty_in_folder(folder)
+            ),
+            *(
+                Ruleset.format_raw_value(varname, raw_value, False)
+                for varname, raw_value in sorted(
+                    self._unknown_rulesets.get(folder.path(), {}).items()
+                )
+            ),
         ]
 
         rules_file_path = folder.rules_file_path()

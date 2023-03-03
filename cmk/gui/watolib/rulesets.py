@@ -360,32 +360,33 @@ class RulesetCollection:
     def _save_folder(self, folder: CREFolder) -> None:
         store.mkdir(folder.get_root_dir())
 
-        has_content = False
-        content = ""
-        for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
-            if varname not in rulespec_registry:
-                continue  # don't save unknown rulesets
-
-            if ruleset.is_empty_in_folder(folder):
-                continue  # don't save empty rule sets
-
-            has_content = True
-            content += ruleset.to_config(folder)
+        content = [
+            ruleset.to_config(folder)
+            for varname, ruleset in sorted(self._rulesets.items())
+            if (
+                varname in rulespec_registry  # don't save unknown rulesets
+                and not ruleset.is_empty_in_folder(folder)  # don't save empty rule sets
+            )
+        ]
 
         rules_file_path = folder.rules_file_path()
         try:
-            # Remove rules files if it has no content. This prevents needless reads
-            if not has_content:
-                if os.path.exists(rules_file_path):
-                    os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+            # Remove empty rules files. This prevents needless reads
+            if not content:
+                try:
+                    os.unlink(rules_file_path)
+                except FileNotFoundError:
+                    pass
                 return
 
-            # Adding this instead of the full path makes it easy to move config
-            # files around. The real FOLDER_PATH will be added dynamically while
-            # loading the file in cmk.base.config
-            content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
-
-            store.save_mk_file(rules_file_path, content, add_header=not active_config.wato_use_git)
+            store.save_mk_file(
+                rules_file_path,
+                # Adding this instead of the full path makes it easy to move config
+                # files around. The real FOLDER_PATH will be added dynamically while
+                # loading the file in cmk.base.config
+                "".join(content).replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH"),
+                add_header=not active_config.wato_use_git,
+            )
         finally:
             if may_use_redis():
                 get_wato_redis_client().folder_updated(folder.filesystem_path())

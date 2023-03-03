@@ -39,6 +39,11 @@ rustup update stable
 cargo -V
 rustc -V
 
+:: On windows we want to kill exe before starting rebuild. 
+:: Use case CI starts testing, for some reasoms process hangs up longer as expected thus 
+:: rebuild/retest will be not possible: we get strange/inconsistent results.
+call scripts\kill_processes_in_targets.cmd %target%\release
+
 :: Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
 :: which is not provided by libucrt. The latter is needed for static linking.
 :: https://github.com/rust-lang/cc-rs#external-configuration-via-environment-variables

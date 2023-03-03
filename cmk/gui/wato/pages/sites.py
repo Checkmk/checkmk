@@ -1032,10 +1032,12 @@ class ReplicationStatusFetcher:
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
+            raw_result = do_remote_automation(site, "ping", [], timeout=5)
+            assert isinstance(raw_result, dict)
             result = ReplicationStatus(
                 site_id=site_id,
                 success=True,
-                response=PingResult(**do_remote_automation(site, "ping", [], timeout=5)),
+                response=PingResult(**raw_result),
             )
             self._logger.debug("[%s] Finished" % site_id)
         except Exception as e:

@@ -228,16 +228,16 @@ def _execute_site_sync(
         logger.debug(_("[%s] Starting sync for site"), site_id)
 
         # timeout=100: Use a value smaller than the default apache request timeout
-        result = DiscoveredHostLabelSyncResponse(
-            **do_remote_automation(
-                site_spec,
-                "discovered-host-label-sync",
-                [
-                    ("request", repr(site_request.serialize())),
-                ],
-                timeout=100,
-            )
+        raw_result = do_remote_automation(
+            site_spec,
+            "discovered-host-label-sync",
+            [
+                ("request", repr(site_request.serialize())),
+            ],
+            timeout=100,
         )
+        assert isinstance(raw_result, dict)
+        result = DiscoveredHostLabelSyncResponse(**raw_result)
 
         logger.debug(_("[%s] Finished sync for site"), site_id)
         return SiteResult(

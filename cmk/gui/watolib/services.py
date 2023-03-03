@@ -788,13 +788,15 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     sync_changes_before_remote_automation(discovery_request.host.site_id())
 
     return DiscoveryResult.deserialize(
-        do_remote_automation(
-            get_site_config(discovery_request.host.site_id()),
-            "service-discovery-job",
-            [
-                ("host_name", discovery_request.host.name()),
-                ("options", json.dumps(discovery_request.options._asdict())),
-            ],
+        str(
+            do_remote_automation(
+                get_site_config(discovery_request.host.site_id()),
+                "service-discovery-job",
+                [
+                    ("host_name", discovery_request.host.name()),
+                    ("options", json.dumps(discovery_request.options._asdict())),
+                ],
+            )
         )
     )
 

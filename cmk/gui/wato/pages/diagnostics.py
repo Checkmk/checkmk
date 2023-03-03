@@ -668,13 +668,15 @@ class PageDownloadDiagnosticsDump(Page):
         if site_is_local(site):
             return _get_diagnostics_dump_file(tarfile_name)
 
-        return do_remote_automation(
+        raw_response = do_remote_automation(
             get_site_config(site),
             "diagnostics-dump-get-file",
             [
                 ("tarfile_name", tarfile_name),
             ],
         )
+        assert isinstance(raw_response, bytes)
+        return raw_response
 
 
 @automation_command_registry.register

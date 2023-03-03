@@ -340,7 +340,7 @@ class TimePeriods:
                 self._active = query_timeperiods_in()
                 self._cache_timestamp = timestamp
         except Exception as e:
-            self._logger.info(f"Cannot update time period information: {e}")
+            self._logger.error(f"Cannot update time period information: {e}")
             raise
 
     def active(self, name: TimeperiodName) -> bool:
@@ -1493,7 +1493,10 @@ class EventServer(ECServerThread):
             return False  # Found no host in core: Not in downtime!
         try:
             return query_hosts_scheduled_downtime_depth(host_name) >= 1
-        except Exception:
+        except Exception as e:
+            self._logger.error(
+                f"Cannot get downtime info for host '{host_name}', assuming no downtime: {e}"
+            )
             return False
 
     def event_rule_matches(self, rule: Rule, event: Event) -> MatchResult:

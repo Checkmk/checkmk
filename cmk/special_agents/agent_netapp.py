@@ -978,6 +978,8 @@ def process_clustermode(  # pylint: disable=too-many-branches
                 config_report=[
                     "volume-space-attributes.size-available",
                     "volume-space-attributes.size-total",
+                    "volume-space-attributes.is-space-enforcement-logical",
+                    "volume-space-attributes.logical-used",
                     "volume-state-attributes.state",
                     "volume-id-attributes.owning-vserver-name",
                     "volume-id-attributes.name",
@@ -989,6 +991,8 @@ def process_clustermode(  # pylint: disable=too-many-branches
                 config_rename={
                     "volume-space-attributes.size-available": "size-available",
                     "volume-space-attributes.size-total": "size-total",
+                    "volume-space-attributes.is-space-enforcement-logical": "is-space-enforcement-logical",
+                    "volume-space-attributes.logical-used": "logical-used",
                     "volume-state-attributes.state": "state",
                     "volume-id-attributes.owning-vserver-name": "vserver_name",
                     "volume-id-attributes.name": "name",

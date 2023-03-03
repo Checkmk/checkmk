@@ -434,12 +434,14 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = automation.execute(automation.get_request())
 
             else:
-                results_data = do_remote_automation(
+                raw_results_data = do_remote_automation(
                     get_site_config(site_id),
                     "check-analyze-config",
                     [],
                     timeout=request.request_timeout - 10,
                 )
+                assert isinstance(raw_results_data, list)
+                results_data = raw_results_data
 
             self._logger.debug("[%s] Finished" % site_id)
 

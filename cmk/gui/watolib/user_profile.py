@@ -211,7 +211,7 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
         site.get("insecure", False),
         data={
             "user_id": user_id,
-            "profile": mk_repr(profile),
+            "profile": mk_repr(profile).decode("ascii"),
         },
         timeout=60,
     )

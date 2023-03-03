@@ -11,9 +11,10 @@ import logging
 import re
 import subprocess
 import uuid
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from io import BytesIO
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import requests
 import urllib3
@@ -67,7 +68,7 @@ def check_mk_local_automation_serialized(
     *,
     command: str,
     args: Sequence[str] | None = None,
-    indata: Any = "",
+    indata: object = "",
     stdin_data: str | None = None,
     timeout: int | None = None,
 ) -> tuple[Sequence[str], SerializedResult]:
@@ -146,13 +147,13 @@ def check_mk_local_automation_serialized(
     return cmd, SerializedResult(completed_process.stdout)
 
 
-def local_automation_failure(  # type:ignore[no-untyped-def]
-    command,
-    cmdline,
-    code=None,
-    out=None,
-    err=None,
-    exc=None,
+def local_automation_failure(
+    command: str,
+    cmdline: Iterable[str],
+    code: int | None = None,
+    out: str | None = None,
+    err: str | None = None,
+    exc: Exception | None = None,
 ) -> MKGeneralException:
     call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
@@ -167,7 +168,7 @@ def local_automation_failure(  # type:ignore[no-untyped-def]
     return MKGeneralException(msg)
 
 
-def _hilite_errors(outdata):
+def _hilite_errors(outdata: str) -> str:
     return re.sub("\nError: *([^\n]*)", "\n<div class=err><b>Error:</b> \\1</div>", outdata)
 
 
@@ -176,7 +177,7 @@ def check_mk_remote_automation_serialized(
     site_id: SiteId,
     command: str,
     args: Sequence[str] | None,
-    indata: Any,
+    indata: object,
     stdin_data: str | None = None,
     timeout: int | None = None,
     sync: Callable[[SiteId], None],
@@ -210,10 +211,10 @@ def check_mk_remote_automation_serialized(
             command="checkmk-automation",
             vars_=[
                 ("automation", command),  # The Checkmk automation command
-                ("arguments", mk_repr(args)),  # The arguments for the command
-                ("indata", mk_repr(indata)),  # The input data
-                ("stdin_data", mk_repr(stdin_data)),  # The input data for stdin
-                ("timeout", mk_repr(timeout)),  # The timeout
+                ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
+                ("indata", mk_repr(indata).decode("ascii")),  # The input data
+                ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
+                ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
             ],
         )
     )
@@ -227,7 +228,7 @@ def check_mk_remote_automation_serialized(
 # The registered hooks are called with a dictionary as parameter which
 # holds all available with the hostnames as keys and the attributes of
 # the hosts as values.
-def call_hook_pre_activate_changes():
+def call_hook_pre_activate_changes() -> None:
     if hooks.registered("pre-activate-changes"):
         # TODO: Cleanup this local import
         import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
@@ -244,7 +245,7 @@ def call_hook_pre_activate_changes():
 # The registered hooks are called with a dictionary as parameter which
 # holds all available with the hostnames as keys and the attributes of
 # the hosts as values.
-def call_hook_activate_changes():
+def call_hook_activate_changes() -> None:
     if hooks.registered("activate-changes"):
         # TODO: Cleanup this local import
         import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
@@ -252,13 +253,13 @@ def call_hook_activate_changes():
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
-def _do_remote_automation_serialized(  # type:ignore[no-untyped-def]
+def _do_remote_automation_serialized(
     *,
-    site,
-    command,
-    vars_,
-    files=None,
-    timeout=None,
+    site: SiteConfiguration,
+    command: str,
+    vars_: Sequence[tuple[str, str]],
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
 ) -> str:
     auto_logger.info("RUN [%s]: %s", site, command)
     auto_logger.debug("VARS: %r", vars_)
@@ -291,22 +292,29 @@ def _do_remote_automation_serialized(  # type:ignore[no-untyped-def]
 
 
 def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult:
-    command_args = {
-        "request_format": "python",
-        "request": repr(
-            {"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}
+    command_args = [
+        ("request_format", "python"),
+        (
+            "request",
+            repr({"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}),
         ),
-    }
+    ]
     return ast.literal_eval(
-        do_remote_automation(
-            site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+        str(
+            do_remote_automation(
+                site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+            )
         )
     )
 
 
-def do_remote_automation(  # type:ignore[no-untyped-def]
-    site, command, vars_, files=None, timeout=None
-) -> Any:
+def do_remote_automation(
+    site: SiteConfiguration,
+    command: str,
+    vars_: Sequence[tuple[str, str]],
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> object:
     serialized_response = _do_remote_automation_serialized(
         site=site,
         command=command,
@@ -327,7 +335,14 @@ def do_remote_automation(  # type:ignore[no-untyped-def]
         )
 
 
-def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
+def get_url_raw(
+    url: str,
+    insecure: bool,
+    auth: tuple[str, str] | None = None,
+    data: Mapping[str, str] | None = None,
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> requests.Response:
     response = requests.post(
         url,
         data=data,
@@ -399,11 +414,25 @@ def _verify_compatibility(response: requests.Response) -> None:
         )
 
 
-def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
+def get_url(
+    url: str,
+    insecure: bool,
+    auth: tuple[str, str] | None = None,
+    data: Mapping[str, str] | None = None,
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> str:
     return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
-def get_url_json(url, insecure, auth=None, data=None, files=None, timeout=None):
+def get_url_json(
+    url: str,
+    insecure: bool,
+    auth: tuple[str, str] | None = None,
+    data: Mapping[str, str] | None = None,
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> object:
     return get_url_raw(url, insecure, auth, data, files, timeout).json()
 
 
@@ -457,9 +486,12 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
 class CheckmkAutomationRequest(NamedTuple):
     command: str
     args: Sequence[str] | None
-    indata: Any
+    indata: object
     stdin_data: str | None
     timeout: int | None
+
+
+RemoteAutomationGetStatusResponseRaw = tuple[dict[str, object], str]
 
 
 class CheckmkAutomationGetStatusResponse(NamedTuple):
@@ -492,6 +524,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
                 ("request", repr(job_id)),
             ],
         )
+        assert isinstance(raw_response, tuple)
         response = CheckmkAutomationGetStatusResponse(
             JobStatusSpec.parse_obj(raw_response[0]),
             raw_response[1],
@@ -512,12 +545,14 @@ def _start_remote_automation_job(
     site_config: SiteConfiguration, automation_request: CheckmkAutomationRequest
 ) -> str:
     auto_logger.info("Starting remote automation in background job")
-    job_id = do_remote_automation(
-        site_config,
-        "checkmk-remote-automation-start",
-        [
-            ("request", repr(tuple(automation_request))),
-        ],
+    job_id = str(
+        do_remote_automation(
+            site_config,
+            "checkmk-remote-automation-start",
+            [
+                ("request", repr(tuple(automation_request))),
+            ],
+        )
     )
 
     auto_logger.info("Started background job: %s", job_id)
@@ -557,7 +592,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     def _load_result(path: Path) -> str:
         return store.load_text_from_file(path)
 
-    def execute(self, api_request: str) -> tuple[dict[str, Any], str]:
+    def execute(self, api_request: str) -> RemoteAutomationGetStatusResponseRaw:
         job_id = api_request
         job = CheckmkAutomationBackgroundJob(job_id)
         response = CheckmkAutomationGetStatusResponse(

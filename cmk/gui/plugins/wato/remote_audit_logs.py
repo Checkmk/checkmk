@@ -177,10 +177,12 @@ class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
         self, site_id: SiteId, last_audit_log_timestamp: int
     ) -> Sequence[AuditLogStore.Entry]:
         return self._audit_log_store.from_json(
-            do_remote_automation(
-                get_site_config(site_id),
-                "get-audit-logs",
-                [("last_audit_log_timestamp", str(last_audit_log_timestamp))],
+            str(
+                do_remote_automation(
+                    get_site_config(site_id),
+                    "get-audit-logs",
+                    [("last_audit_log_timestamp", str(last_audit_log_timestamp))],
+                )
             )
         )
 

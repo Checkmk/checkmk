@@ -108,10 +108,12 @@ def _hosts_to_be_removed_for_site(
         hostnames = _hosts_to_be_removed_local()
     else:
         try:
-            hostnames_serialized = do_remote_automation(
-                get_site_config(site_id),
-                "hosts-for-auto-removal",
-                [],
+            hostnames_serialized = str(
+                do_remote_automation(
+                    get_site_config(site_id),
+                    "hosts-for-auto-removal",
+                    [],
+                )
             )
         except MKUserError:  # Site may be down
             job_interface.send_progress_update(f"Skipping remote site {site_id}, might be down")

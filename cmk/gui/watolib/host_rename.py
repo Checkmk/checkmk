@@ -365,15 +365,19 @@ def _rename_host_in_uuid_link_manager(
         if site_is_local(site_id):
             n_relinked += len(get_uuid_link_manager().rename(renamings))
         else:
-            n_relinked += do_remote_automation(
-                get_site_config(site_id),
-                "rename-hosts-uuid-link",
-                [
-                    (
-                        "renamings",
-                        json.dumps(renamings),
+            n_relinked += int(
+                str(
+                    do_remote_automation(
+                        get_site_config(site_id),
+                        "rename-hosts-uuid-link",
+                        [
+                            (
+                                "renamings",
+                                json.dumps(renamings),
+                            )
+                        ],
                     )
-                ],
+                )
             )
     return ["uuid_link"] * n_relinked
 

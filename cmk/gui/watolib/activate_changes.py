@@ -1785,6 +1785,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             [("replication_paths", repr([tuple(r) for r in replication_paths]))],
         )
 
+        assert isinstance(response, tuple)
         return {k: ConfigSyncFileInfo(*v) for k, v in response[0].items()}, response[1]
 
     def _synchronize_files(
@@ -1855,6 +1856,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             raise
 
         # If request.settings is empty no `omd-config-change` job is started
+        assert isinstance(response, dict)
         if any(request.name == omd_ident and request.settings for request in domain_requests):
             response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
 
@@ -1873,6 +1875,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     [("request", repr("omd-config-change"))],
                 )
 
+                assert isinstance(raw_omd_response, tuple)
                 omd_response = cmk.gui.watolib.automations.CheckmkAutomationGetStatusResponse(
                     JobStatusSpec.parse_obj(raw_omd_response[0]),
                     raw_omd_response[1],

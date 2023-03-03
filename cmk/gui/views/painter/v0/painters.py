@@ -2457,7 +2457,7 @@ class PainterHost(Painter):
                     title=_("Coloring"),
                     help=_(
                         "Here you can configure the background color for specific states. "
-                        "The coloring for host in dowtime overrules all other coloring."
+                        "The coloring for host in downtime overrules all other coloring."
                     ),
                 ),
             )

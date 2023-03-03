@@ -21337,10 +21337,10 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in dowtime overrules all other coloring."
+"coloring for host in downtime overrules all other coloring."
 msgstr ""
 "Aqui você pode configurar a cor de fundo para estados específicos. A "
-"coloração para o host em dowtime substitui todas as outras colorações."
+"coloração para o host em downtime substitui todas as outras colorações."
 
 msgid ""
 "Here you can configure the list of possible service levels for hosts, "

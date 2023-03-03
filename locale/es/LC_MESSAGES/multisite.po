@@ -21354,7 +21354,7 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in dowtime overrules all other coloring."
+"coloring for host in downtime overrules all other coloring."
 msgstr ""
 "Aquí puede configurar el color de fondo para estados específicos. El color "
 "para el host en tiempo de inactividad anula todos los demás colores."

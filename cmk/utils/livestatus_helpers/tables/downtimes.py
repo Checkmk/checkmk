@@ -1784,9 +1784,9 @@ class Downtimes(Table):
     triggered_by = Column(
         'triggered_by',
         col_type='int',
-        description='The ID of the downtime triggering this dowtime or 0 if there is none',
+        description='The ID of the downtime triggering this downtime or 0 if there is none',
     )
-    """The ID of the downtime triggering this dowtime or 0 if there is none"""
+    """The ID of the downtime triggering this downtime or 0 if there is none"""
 
     type = Column(
         'type',

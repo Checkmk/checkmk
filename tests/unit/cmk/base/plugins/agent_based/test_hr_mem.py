@@ -6,6 +6,7 @@
 import pytest
 
 import cmk.base.plugins.agent_based.hr_mem as hr_mem
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
 @pytest.mark.parametrize(
@@ -150,7 +151,7 @@ import cmk.base.plugins.agent_based.hr_mem as hr_mem
         ),
     ],
 )
-def test_hr_mem(string_table, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
+def test_hr_mem(string_table: list[StringTable], expected_parsed_data: hr_mem.PreParsed) -> None:
     assert hr_mem.pre_parse_hr_mem(string_table) == expected_parsed_data
 
 

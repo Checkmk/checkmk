@@ -6,7 +6,8 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.ibm_mq_channels import inventory_ibm_mq_channels
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from cmk.base.plugins.agent_based.ibm_mq_channels import inventory_ibm_mq_channels, Section
 
 from .utils_inventory import sort_inventory_result
 
@@ -62,7 +63,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inv_aix_baselevel(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inv_aix_baselevel(parsed: Section, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(inventory_ibm_mq_channels(parsed)) == sort_inventory_result(
         expected_result
     )

@@ -6,7 +6,8 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.ibm_mq_queues import inventory_ibm_mq_queues
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from cmk.base.plugins.agent_based.ibm_mq_queues import inventory_ibm_mq_queues, Section
 
 from .utils_inventory import sort_inventory_result
 
@@ -68,7 +69,7 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_ibm_mq_queues(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_ibm_mq_queues(parsed: Section, expected_result: InventoryResult) -> None:
     assert sort_inventory_result(inventory_ibm_mq_queues(parsed)) == sort_inventory_result(
         expected_result
     )

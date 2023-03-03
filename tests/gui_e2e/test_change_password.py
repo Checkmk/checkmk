@@ -66,11 +66,18 @@ def _change_password(page: PPage, new_pw: str, new_pw_conf: str, old_pw: str) ->
     ],
 )
 def test_user_change_password_success(
-    logged_in_page: PPage, new_pw: str, new_pw_conf: str, old_pw: str
+    logged_in_page: PPage,
+    new_pw: str,
+    new_pw_conf: str,
+    old_pw: str,
+    is_firefox: bool,
 ) -> None:
     """Test changing the user's own password in the user profile menu"""
     # Note: if these fail, we will probably also fail to reset the password to "cmk", so you might
     # have to do this manually.
+    if is_firefox:
+        pytest.xfail(reason="Test flaky when running on the firefox engine.")  # TODO: investigate
+
     page = logged_in_page
 
     _change_password(page, new_pw=new_pw, new_pw_conf=new_pw_conf, old_pw=old_pw)

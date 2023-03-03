@@ -779,9 +779,7 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_candidates(
-        broker,
-        run_plugin_names=EVERYTHING,
-        check_plugins=CheckPluginMapper(),
+        broker, [(name, p.sections) for name, p in CheckPluginMapper().items()]
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),

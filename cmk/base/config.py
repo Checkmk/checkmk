@@ -3189,13 +3189,11 @@ class ConfigCache:
 
         return self.__is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
-    def is_agent_host(self, host_name: HostName) -> bool:
-        return self.is_tcp_host(host_name) or self.is_piggyback_host(host_name)
-
     def is_ping_host(self, host_name: HostName) -> bool:
         return not (
             self.is_snmp_host(host_name)
-            or self.is_agent_host(host_name)
+            or self.is_tcp_host(host_name)
+            or self.is_piggyback_host(host_name)
             or self.has_management_board(host_name)
         )
 

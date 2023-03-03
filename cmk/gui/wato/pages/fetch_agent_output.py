@@ -196,12 +196,14 @@ class PageFetchAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return do_remote_automation(
-            get_site_config(self._request.host.site_id()),
-            "fetch-agent-output-get-status",
-            [
-                ("request", repr(self._request.serialize())),
-            ],
+        return JobStatusSpec.parse_obj(
+            do_remote_automation(
+                get_site_config(self._request.host.site_id()),
+                "fetch-agent-output-get-status",
+                [
+                    ("request", repr(self._request.serialize())),
+                ],
+            )
         )
 
 
@@ -327,13 +329,15 @@ class PageDownloadAgentOutput(AgentOutputPage):
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
-        return do_remote_automation(
+        raw_response = do_remote_automation(
             get_site_config(self._request.host.site_id()),
             "fetch-agent-output-get-file",
             [
                 ("request", repr(self._request.serialize())),
             ],
         )
+        assert isinstance(raw_response, bytes)
+        return raw_response
 
 
 @automation_command_registry.register

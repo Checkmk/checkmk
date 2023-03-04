@@ -3,10 +3,10 @@ Class: feature
 Compatible: compat
 Component: checks
 Date: 1677670821
-Edition: cce
+Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.3.0b1
+Version: 2.2.0b1
 
 With this werk, it is possible to monitor the GCP Health Dashboard,
 available at https://status.cloud.google.com/. Since this

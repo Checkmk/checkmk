@@ -21272,9 +21272,10 @@ msgstr ""
 "Hier können Sie die Schwellwerte für die 3.3 V und 12 V Versorgungsspannung "
 "für jedes Netzteil konfigurieren."
 
+#, fuzzy
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in dowtime overrules all other coloring."
+"coloring for host in downtime overrules all other coloring."
 msgstr ""
 "Hier können Sie die Hintergrundfarbe für bestimmte Zustände konfigurieren. "
 "Die Einfärbung für Host in der Ausfallzeit überschreibt alle anderen "
@@ -64216,13 +64217,6 @@ msgstr "Ihr %s wurde gelöscht."
 msgid "Your %s has been saved."
 msgstr "Ihr %s wurde gespeichert."
 
-#, fuzzy
-msgid "Your Checkmk license is about to expire"
-msgstr "Zustand, wann die Lizenz abgelaufen ist"
-
-msgid "Your Checkmk trial is about to expire"
-msgstr ""
-
 #, python-format
 msgid ""
 "Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
@@ -64321,7 +64315,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy, python-format
-msgid "Your license expires in %i days"
+msgid "Your license expires in %i days."
 msgstr "Testversion läuft in %s Tagen ab"
 
 #, python-format
@@ -66467,6 +66461,11 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "State when license is expired"
+#~ msgid "Your Checkmk license is about to expire"
+#~ msgstr "Zustand, wann die Lizenz abgelaufen ist"
 
 #, fuzzy
 #~| msgid "<b>add to you favorites</b>"

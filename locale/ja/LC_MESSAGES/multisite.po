@@ -20476,7 +20476,7 @@ msgstr ""
 
 msgid ""
 "Here you can configure the background color for specific states. The "
-"coloring for host in dowtime overrules all other coloring."
+"coloring for host in downtime overrules all other coloring."
 msgstr ""
 
 msgid ""
@@ -60835,13 +60835,6 @@ msgstr "%s が削除されました。"
 msgid "Your %s has been saved."
 msgstr "%s が保存されました。"
 
-#, fuzzy
-msgid "Your Checkmk license is about to expire"
-msgstr "ライセンスの有効期限が切れたときの状態"
-
-msgid "Your Checkmk trial is about to expire"
-msgstr ""
-
 #, python-format
 msgid ""
 "Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
@@ -60937,7 +60930,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Your license expires in %i days"
+msgid "Your license expires in %i days."
 msgstr ""
 
 #, python-format
@@ -63055,6 +63048,11 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "State when license is expired"
+#~ msgid "Your Checkmk license is about to expire"
+#~ msgstr "ライセンスの有効期限が切れたときの状態"
 
 #, fuzzy
 #~| msgid "<b>add to you favorites</b>"

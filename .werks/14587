@@ -1,0 +1,9 @@
+Title: KUBE: Support CRI-O container runtime
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1677933797
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1

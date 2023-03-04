@@ -297,9 +297,14 @@ def _verify_version_support(version: api.KubernetesVersion | api.UnknownKubernet
         isinstance(version, api.KubernetesVersion)
         and (version.major, version.minor) < LOWEST_FUNCTIONING_VERSION
     ):
+        # The agent will always abort processing data, if the version is
+        # known to be unsupported. If one does not abort data processing
+        # for version 1.20 or below, then the agent will crash for sure.
+        # E.g., it is possible that the agent succeeds in parsing version
+        # 1.21 API data, if the following exception is not raised. However,
+        # for 1.20 it will crash anyway with a less helpful message.
         raise UnsupportedEndpointData(
-            f"Unsupported Kubernetes version '{version.git_version}'. API "
-            "Servers with version < v1.21 are known to return incompatible data. "
+            f"Unsupported Kubernetes version '{version.git_version}'. "
             "Aborting processing API data. "
             f"Supported versions are {SUPPORTED_VERSIONS_DISPLAY}.",
         )

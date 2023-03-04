@@ -6,9 +6,11 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.f5_bigip_vcmpguests import (
     check_f5_bigip_vcmpguests,
     parse_f5_bigip_vcmpguests,
+    Section,
 )
 
 
@@ -22,8 +24,8 @@ from cmk.base.plugins.agent_based.f5_bigip_vcmpguests import (
         ([[]], None),
     ],
 )
-def test_parse_f5_bigip_vcmpguests(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_f5_bigip_vcmpguests(
+    string_table: list[StringTable], expected_parsed_data: Section | None
 ) -> None:
     assert parse_f5_bigip_vcmpguests(string_table) == expected_parsed_data
 
@@ -41,5 +43,5 @@ def test_parse_f5_bigip_vcmpguests(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_f5_bigip_vcmpguests(section, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_f5_bigip_vcmpguests(section: Section, result: CheckResult) -> None:
     assert list(check_f5_bigip_vcmpguests(section)) == result

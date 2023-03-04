@@ -313,14 +313,12 @@ def test__verify_version_support_continue_processing(
     [
         (
             api.KubernetesVersion(git_version=api.GitVersion("v1.16.0"), major=1, minor=16),
-            "Unsupported Kubernetes version 'v1.16.0'. API Servers with version < v1.21 are "
-            "known to return incompatible data. Aborting processing API data. "
+            "Unsupported Kubernetes version 'v1.16.0'. Aborting processing API data. "
             + SUPPORTED_VERSION_STR,
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("1.14.0"), major=1, minor=14),
-            "Unsupported Kubernetes version '1.14.0'. API Servers with version < v1.21 are "
-            "known to return incompatible data. Aborting processing API data. "
+            "Unsupported Kubernetes version '1.14.0'. Aborting processing API data. "
             + SUPPORTED_VERSION_STR,
         ),
     ],

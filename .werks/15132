@@ -1,0 +1,12 @@
+Title: Fix crendential input field in subscription settings
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1678024888
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p24
+
+Unlike our text indicated, the user needs to enter the application account
+credentials and not his/her personal customer portal credentials.

@@ -500,7 +500,6 @@ def load(
     _initialize_config()
 
     _load_config(with_conf_d, exclude_parents_mk)
-    _transform_mgmt_config_vars_from_140_to_150()
     _initialize_derived_config_variables()
 
     _perform_post_config_loading_actions()
@@ -686,21 +685,6 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     # the lookup performance and the helper_vars are no longer available anyway..
     all_hosts = list(all_hosts)
     clusters = dict(clusters)
-
-
-def _transform_mgmt_config_vars_from_140_to_150() -> None:
-    # FIXME We have to transform some configuration variables from host attributes
-    # to cmk.base configuration variables because during the migration step from
-    # 1.4.0 to 1.5.0 some config variables are not known in cmk.base. These variables
-    # are 'management_protocol' and 'management_snmp_community'.
-    # Clean this up one day!
-    for hostname, attributes in host_attributes.items():
-        if attributes.get("management_protocol"):
-            management_protocol.setdefault(hostname, attributes["management_protocol"])
-        if attributes.get("management_snmp_community"):
-            management_snmp_credentials.setdefault(
-                hostname, attributes["management_snmp_community"]
-            )
 
 
 def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None:

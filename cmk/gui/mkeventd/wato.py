@@ -2587,7 +2587,6 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         self._verify_ec_enabled()
         html.begin_form("rule_pack")
         vs = self._valuespec()
-        assert not isinstance(self._rule_pack, ec.MkpRulePackProxy)
         vs.render_input("rule_pack", dict(self._rule_pack))
         vs.set_focus("rule_pack")
         html.hidden_fields()

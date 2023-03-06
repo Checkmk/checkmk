@@ -694,10 +694,6 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
         global_dict["service_descriptions"] = {
             maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
         }
-    if "use_new_descriptions_for" in global_dict:
-        global_dict["use_new_descriptions_for"] = [
-            maincheckify(n) for n in global_dict["use_new_descriptions_for"]
-        ]
     if "ignored_checktypes" in global_dict:
         global_dict["ignored_checktypes"] = [
             maincheckify(n) for n in global_dict["ignored_checktypes"]

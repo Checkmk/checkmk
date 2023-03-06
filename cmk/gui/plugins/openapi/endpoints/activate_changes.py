@@ -163,7 +163,11 @@ def activate_changes_wait_for_completion(params):
     try:
         manager.load_activation(activation_id)
     except MKUserError:
-        raise ProblemException(status=404, title=f"Activation {activation_id!r} not found.")
+        raise ProblemException(
+            status=404,
+            title="The requested activation was not found",
+            detail=f"Could not find an activation with id {activation_id!r}.",
+        )
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
         response = Response(status=302)
@@ -195,7 +199,8 @@ def show_activation(params):
     except MKUserError:
         raise ProblemException(
             status=404,
-            title=f"Activation {activation_id!r} not found.",
+            title="The requested activation was not found",
+            detail=f"Could not find an activation with id {activation_id!r}.",
         )
     return _serve_activation_run(activation_id, is_running=manager.is_running())
 

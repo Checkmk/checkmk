@@ -499,8 +499,6 @@ def load(
 ) -> None:
     _initialize_config()
 
-    vars_before_config = all_nonfunction_vars()
-
     _load_config(with_conf_d, exclude_parents_mk)
     _transform_mgmt_config_vars_from_140_to_150()
     _initialize_derived_config_variables()
@@ -509,12 +507,6 @@ def load(
 
     if validate_hosts:
         _verify_non_duplicate_hosts()
-
-    # Such validation only makes sense when all checks have been loaded
-    if all_checks_loaded():
-        _validate_configuraton_variables(vars_before_config)
-
-    _verify_no_deprecated_variables_used()
 
 
 def load_packed_config(config_path: ConfigPath) -> None:
@@ -793,60 +785,6 @@ def _verify_non_duplicate_hosts() -> None:
         # TODO: Raise an exception
         console.error("Error in configuration: duplicate hosts: %s\n", ", ".join(duplicates))
         sys.exit(3)
-
-
-def _validate_configuraton_variables(vars_before_config: set[str]) -> None:
-    """Check for invalid and deprecated configuration variables"""
-    ignored_variables = {
-        "hostname",
-        "host_service_levels",
-        "inventory_check_do_scan",
-        "parts",
-        "seen_hostnames",
-        "service_service_levels",
-        "taggedhost",
-        "vars_before_config",
-    }
-    deprecated_variables = {
-        # variable name                                # warning introduced *after* version
-        "oracle_tablespaces_check_default_increment",  # 1.6
-        "logwatch_dir",  # 1.6
-        "logwatch_max_filesize",  # 1.6
-        "logwatch_service_output",  # 1.6
-        "logwatch_spool_dir",  # 1.6
-        "agent_min_version",  # 2.0
-    }
-
-    unhandled_variables = all_nonfunction_vars() - vars_before_config - ignored_variables
-    deprecated_found = unhandled_variables.intersection(deprecated_variables)
-    invalid_found = unhandled_variables - deprecated_variables
-
-    if deprecated_found:
-        for name in sorted(deprecated_found):
-            console.error("Deprecated configuration variable %r\n", name)
-        console.error("--> Found %d deprecated variables\n" % len(deprecated_found))
-        console.error("These variables will have no effect at best. Consider removing them.\n")
-
-    if invalid_found:
-        for name in sorted(invalid_found):
-            console.error("Invalid configuration variable %r\n", name)
-        console.error("--> Found %d invalid variables\n" % len(invalid_found))
-        console.error("If you use own helper variables, please prefix them with _.\n")
-        sys.exit(1)
-
-
-def _verify_no_deprecated_variables_used() -> None:
-    if isinstance(snmp_communities, dict):
-        console.error("ERROR: snmp_communities cannot be a dict any more.\n")
-        sys.exit(1)
-
-
-def all_nonfunction_vars() -> set[str]:
-    return {
-        name
-        for name, value in globals().items()
-        if name[0] != "_" and not hasattr(value, "__call__")
-    }
 
 
 def save_packed_config(config_path: ConfigPath, config_cache: ConfigCache) -> None:

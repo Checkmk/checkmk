@@ -77,7 +77,7 @@ def test_discover_liebert_system_events(
     string_table: Mapping[str, Mapping[str, str]], discovered_item: Sequence[object]
 ) -> None:
     check = Check("liebert_system_events")
-    assert check.run_discovery(string_table) == discovered_item
+    assert list(check.run_discovery(string_table)) == discovered_item
 
 
 @pytest.mark.parametrize(

@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 from collections.abc import Mapping
-from typing import Final, Generic
+from typing import Final
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from cmk.snmplib.type_defs import SNMPRawData, TRawData
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import Fetcher, FetcherType, NoFetcher, NoFetcherError, ProgramFetcher
 from cmk.fetchers.config import make_file_cache_path_template
@@ -24,7 +23,7 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 
-from cmk.checkers import SourceInfo, SourceType
+from cmk.checkers import Source, SourceInfo, SourceType
 from cmk.checkers.type_defs import SectionNameCollection
 
 import cmk.base.config as config  # This module should be free from base deps.
@@ -32,7 +31,6 @@ import cmk.base.core_config as core_config
 from cmk.base.config import ConfigCache
 
 __all__ = [
-    "Source",
     "SNMPSource",
     "MgmtSNMPSource",
     "IPMISource",
@@ -43,33 +41,6 @@ __all__ = [
     "PiggybackSource",
     "MissingIPSource",
 ]
-
-
-class Source(Generic[TRawData], abc.ABC):
-    """Abstract source factory.
-
-    Note:
-        Pass arguments to `__init__` if they depend on the type of the source;
-        pass arguments to the factory method if they are independent.
-
-    See Also:
-        https://refactoring.guru/design-patterns/abstract-factory
-
-    """
-
-    @abc.abstractmethod
-    def source_info(self) -> SourceInfo:
-        ...
-
-    @abc.abstractmethod
-    def fetcher(self) -> Fetcher[TRawData]:
-        ...
-
-    @abc.abstractmethod
-    def file_cache(
-        self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[TRawData]:
-        ...
 
 
 class SNMPSource(Source[SNMPRawData]):

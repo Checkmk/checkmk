@@ -33,6 +33,7 @@ from ._api import (
     ParserFunction,
     PInventoryPlugin,
     PInventoryResult,
+    Source,
     SummarizerFunction,
 )
 from ._markers import PiggybackMarker, SectionMarker

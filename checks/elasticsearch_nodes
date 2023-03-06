@@ -51,17 +51,17 @@ factory_settings["elasticsearch_nodes"] = {"cpu_levels": (75.0, 90.0)}
 
 @get_parsed_item_data
 def check_elasticsearch_nodes(item, params, item_data):
-    for key, hr_func in [
-        ("cpu_percent", get_percent_human_readable),
-        ("cpu_total_in_millis", int),
-        ("mem_total_virtual_in_bytes", get_bytes_human_readable),
-        ("open_file_descriptors", int),
-        ("max_file_descriptors", int),
+    for data_key, params_key, hr_func in [
+        ("cpu_percent", "cpu_levels", get_percent_human_readable),
+        ("cpu_total_in_millis", "cpu_total_in_millis", int),
+        ("mem_total_virtual_in_bytes", "mem_total_virtual_in_bytes", get_bytes_human_readable),
+        ("open_file_descriptors", "open_file_descriptors", int),
+        ("max_file_descriptors", "max_file_descriptors", int),
     ]:
-        value, infotext = item_data[key]
+        value, infotext = item_data[data_key]
 
         yield check_levels(
-            value, key, params.get(key), human_readable_func=hr_func, infoname=infotext
+            value, data_key, params.get(params_key), human_readable_func=hr_func, infoname=infotext
         )
 
 

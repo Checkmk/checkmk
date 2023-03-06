@@ -50,7 +50,7 @@ checks = {
             "DGfRL2s",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 157950",
@@ -77,7 +77,7 @@ checks = {
             "ZwGy2o7",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 97700",
@@ -104,7 +104,7 @@ checks = {
             "fKw8YbK",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 94820",
@@ -131,7 +131,7 @@ checks = {
             "g8YT0-P",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 104530",
@@ -158,7 +158,7 @@ checks = {
             "huh3AiI",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 96740",

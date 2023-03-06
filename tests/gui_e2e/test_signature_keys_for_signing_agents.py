@@ -22,8 +22,7 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
 
 def go_to_signature_page(page: PPage) -> None:
-    """go to the `Signature keys for signing agents` page
-    I haven't found a easier way, so here we go..."""
+    """Go to the `Signature keys for signing agents` page."""
     page.megamenu_setup.click()
     page.main_menu.get_text("Windows, Linux, Solaris, AIX").click()
     page.main_area.locator("#page_menu_dropdown_agents >> text=Agents >> visible=true").click()
@@ -32,11 +31,10 @@ def go_to_signature_page(page: PPage) -> None:
 
 
 def delete_key(page: PPage, identifier: str) -> None:
-    """Delete a key based on some text, e.g. alias or hash
+    """Delete a key based on some text, e.g. alias or hash.
 
-    you already have to be on the `Signature keys for signing agents` site
+    Note: you already have to be on the `Signature keys for signing agents` site.
     """
-
     page.main_area.locator(
         f"tr.data:has-text('{identifier}') >> td.buttons >> a[title='Delete this key']"
     ).click()
@@ -44,7 +42,7 @@ def delete_key(page: PPage, identifier: str) -> None:
 
 
 def send_pem_content(page: PPage, description: str, password: str, content: str) -> None:
-    """upload a combined pem file (private key and certificate) via the Paste textarea method"""
+    """Upload a combined pem file (private key and certificate) via the Paste textarea method."""
     go_to_signature_page(page)
     page.main_area.get_suggestion("Upload key").click()
     page.main_area.check_page_title("Upload agent signature key")
@@ -57,7 +55,7 @@ def send_pem_content(page: PPage, description: str, password: str, content: str)
 
 
 def send_pem_file(page: PPage, description: str, password: str, content: str) -> None:
-    """upload a combined pem file (private key and certificate) via upload"""
+    """Upload a combined pem file (private key and certificate) via upload."""
     go_to_signature_page(page)
     page.main_area.get_suggestion("Upload key").click()
     page.main_area.check_page_title("Upload agent signature key")
@@ -75,7 +73,8 @@ def test_upload_signing_keys(
     self_signed_cert: CertificateWithPrivateKey,
     upload_function: Callable[[PPage, str, str, str], None],
 ) -> None:
-    """send a few payloads to the `Signature keys for signing agents` page and check the responses"""
+    """Send a few payloads to the `Signature keys for signing agents` page and check the
+    responses."""
 
     # pem is invalid
     upload_function(logged_in_page, "Some description", "password", "invalid")
@@ -101,7 +100,7 @@ def test_upload_signing_keys(
 
 
 def test_add_key(logged_in_page: PPage) -> None:
-    """add a key, aka let Checkmk generate it"""
+    """Add a key, aka let Checkmk generate it."""
     go_to_signature_page(logged_in_page)
     logged_in_page.main_area.get_suggestion("Add key").click()
     logged_in_page.main_area.check_page_title("Add agent signature key")
@@ -124,7 +123,7 @@ def test_add_key(logged_in_page: PPage) -> None:
 def with_key_fixture(
     logged_in_page: PPage, self_signed_cert: CertificateWithPrivateKey
 ) -> Iterator[None]:
-    """create a signing key via the gui, yield and then delete it again"""
+    """Create a signing key via the GUI, yield and then delete it again."""
 
     password = Password("foo")
     combined_file = (
@@ -141,12 +140,11 @@ def with_key_fixture(
 
 
 def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
-    """go to agents and click bake and sign
+    """Go to agents and click bake and sign.
 
-    Bake and sign starts a backgroundjob. If the job finished the success is
-    reported. This is kind of asynchronous. Theoretically this could lead to
-    timeout problems, but in my experience the signing is quite fast. But if
-    this happens restart or mark this test to be skipped"""
+    Bake and sign starts a background job. If the job finished the success is reported. This is kind
+    of asynchronous. Theoretically this could lead to timeout problems, but in my experience the
+    signing is quite fast. But if this happens restart or mark this test to be skipped."""
 
     logged_in_page.megamenu_setup.click()
     logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX").click()
@@ -165,8 +163,7 @@ def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
 
 
 def test_bake_and_sign_disabled(logged_in_page: PPage) -> None:
-    """go to agents and click bake and sign and check that the sign buttons are
-    disabled"""
+    """Go to agents and click bake and sign and check that the sign buttons are disabled."""
 
     logged_in_page.megamenu_setup.click()
     logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX").click()

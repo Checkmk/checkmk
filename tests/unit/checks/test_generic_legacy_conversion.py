@@ -838,7 +838,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "apc_inputs",
         "apc_inrow_airflow",
         "apc_inrow_fanspeed",
-        "apc_inrow_system_events",
         "apc_inrow_temp",
         "apc_mod_pdu_modules",
         "apc_netbotz_drycontact",

@@ -1010,7 +1010,7 @@ class PersistentVolumeClaims(Section):
 
 class PersistentVolumeSpec(BaseModel):
     access_modes: list[AccessMode]
-    storage_class_name: str
+    storage_class_name: str | None = None
     volume_mode: str
 
 

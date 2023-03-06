@@ -1702,7 +1702,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "liebert_maintenance",
         "liebert_pump",
         "liebert_reheating",
-        "liebert_system_events",
         "liebert_temp_general",
         "logins",
         "lparstat_aix",

@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Mapping, TypedDict
+from typing import Mapping, TypedDict
 
-from cmk.base.check_legacy_includes.liebert import scan_liebert
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.liebert import parse_liebert_without_unit
+from cmk.base.plugins.agent_based.utils.liebert import DETECT_LIEBERT, parse_liebert_without_unit
 
-CheckResult = Iterable[tuple]
-DiscoveryResult = Iterable[tuple]
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.100.4618 Ambient Air Temperature Sensor Issue
@@ -33,7 +32,7 @@ def parse_liebert_system_events(string_table: StringTable) -> Section:
 
 
 def discover_liebert_system_events(section: Section) -> DiscoveryResult:
-    yield None, {}
+    yield Service()
 
 
 def _is_active_event(event_name: str, event_type: str) -> bool:
@@ -43,28 +42,32 @@ def _is_active_event(event_name: str, event_type: str) -> bool:
     return event_type.lower() != "inactive event"
 
 
-def check_liebert_system_events(_no_item: None, _no_params: dict, section: Section) -> CheckResult:
+def check_liebert_system_events(section: Section) -> CheckResult:
     active_events = [e for e in section["events"].items() if _is_active_event(*e)]
 
     if not active_events:
-        yield 0, "Normal"
+        yield Result(state=State.OK, summary="Normal")
         return
 
-    yield from ((2, f"{k}: {v}") for k, v in active_events)
+    yield from (Result(state=State.CRIT, summary=f"{k}: {v}") for k, v in active_events)
 
 
-check_info["liebert_system_events"] = {
-    "parse_function": parse_liebert_system_events,
-    "inventory_function": discover_liebert_system_events,
-    "check_function": check_liebert_system_events,
-    "service_description": "System events",
-    "snmp_info": (
-        ".1.3.6.1.4.1.476.1.42.3.9.20.1",
-        [
+register.snmp_section(
+    name="liebert_system_events",
+    parse_function=parse_liebert_system_events,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
+        oids=[
             "10.1.2.100",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
             "20.1.2.100",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
         ],
     ),
-    "snmp_scan_function": scan_liebert,
-    "handle_empty_info": True,
-}
+    detect=DETECT_LIEBERT,
+)
+
+register.check_plugin(
+    name="liebert_system_events",
+    discovery_function=discover_liebert_system_events,
+    check_function=check_liebert_system_events,
+    service_name="System events",
+)

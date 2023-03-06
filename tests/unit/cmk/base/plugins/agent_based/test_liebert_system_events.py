@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib import Check
-
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
+from cmk.base.plugins.agent_based import liebert_system_events as lse
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 pytestmark = pytest.mark.checks
 
@@ -44,13 +43,12 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_parse_liebert_system_events(string_table: StringTable, section: Section) -> None:
-    check = Check("liebert_system_events")
-    assert check.run_parse(string_table) == section
+def test_parse_liebert_system_events(string_table: StringTable, section: lse.Section) -> None:
+    assert lse.parse_liebert_system_events(string_table) == section
 
 
 @pytest.mark.parametrize(
-    "string_table, discovered_item",
+    "section, discovered_item",
     [
         pytest.param(
             {
@@ -61,27 +59,26 @@ def test_parse_liebert_system_events(string_table: StringTable, section: Section
                     "Supply Fluid Under Temp": "Inactive Event",
                 },
             },
-            [(None, {})],
+            [Service()],
             id="One service is discovered if there are any events",
         ),
         pytest.param(
             {
                 "events": {},
             },
-            [(None, {})],
+            [Service()],
             id="One service is discovered even if there are no events",
         ),
     ],
 )
 def test_discover_liebert_system_events(
-    string_table: Mapping[str, Mapping[str, str]], discovered_item: Sequence[object]
+    section: lse.Section, discovered_item: Sequence[Service]
 ) -> None:
-    check = Check("liebert_system_events")
-    assert list(check.run_discovery(string_table)) == discovered_item
+    assert list(lse.discover_liebert_system_events(section)) == discovered_item
 
 
 @pytest.mark.parametrize(
-    "string_table, check_results",
+    "section, check_results",
     [
         pytest.param(
             {
@@ -92,14 +89,14 @@ def test_discover_liebert_system_events(
                     "Supply Fluid Under Temp": "Inactive Event",
                 },
             },
-            [(2, "Supply Fluid Temp Sensor Issue: Active Warning")],
+            [Result(state=State.CRIT, summary="Supply Fluid Temp Sensor Issue: Active Warning")],
             id="State is WARN when there is at least one event with an active warning",
         ),
         pytest.param(
             {
                 "events": {},
             },
-            [(0, "Normal")],
+            [Result(state=State.OK, summary="Normal")],
             id="State is OK when there are no events",
         ),
         pytest.param(
@@ -109,13 +106,10 @@ def test_discover_liebert_system_events(
                     "Supply Fluid Over Temp": "Inactive Event",
                 },
             },
-            [(0, "Normal")],
+            [Result(state=State.OK, summary="Normal")],
             id="State is OK when there are only incative events",
         ),
     ],
 )
-def test_check_liebert_system_events(
-    string_table: Mapping[str, Mapping[str, str]], check_results: Sequence[tuple[int, str]]
-) -> None:
-    check = Check("liebert_system_events")
-    assert list(check.run_check(None, {}, string_table)) == check_results
+def test_check_liebert_system_events(section: lse.Section, check_results: Sequence[Result]) -> None:
+    assert list(lse.check_liebert_system_events(section)) == check_results

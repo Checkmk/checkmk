@@ -34,7 +34,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkers import parse_raw_data, PInventoryPlugin, SourceInfo
+from cmk.checkers import parse_raw_data, PInventoryPlugin, Source, SourceInfo
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.summarize import summarize
@@ -58,14 +58,17 @@ __all__ = [
 
 
 def _fetch_all(
-    sources: Iterable[tuple[SourceInfo, FileCache, Fetcher]],
-    *,
-    mode: Mode,
+    sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
 ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     return [
-        _do_fetch(source_info, file_cache, fetcher, mode=mode)
-        for source_info, file_cache, fetcher in sources
+        _do_fetch(
+            source.source_info(),
+            source.file_cache(simulation=simulation, file_cache_options=file_cache_options),
+            source.fetcher(),
+            mode=mode,
+        )
+        for source in sources
     ]
 
 
@@ -255,6 +258,8 @@ class ConfiguredFetcher:
                 )
                 for host_name_, ip_address_ in hosts
             ),
+            simulation=self.simulation_mode,
+            file_cache_options=self.file_cache_options,
             mode=self.mode,
         )
 

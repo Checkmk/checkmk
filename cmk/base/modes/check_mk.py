@@ -445,7 +445,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source, file_cache, fetcher in sources.make_sources(
+        for source in sources.make_sources(
             hostname,
             ipaddress,
             ConfigCache.address_family(hostname),
@@ -454,14 +454,22 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if source.fetcher_type is FetcherType.SNMP:
+            source_info = source.source_info()
+            if source_info.fetcher_type is FetcherType.SNMP:
                 continue
 
-            raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
+            raw_data = get_raw_data(
+                source.file_cache(
+                    simulation=config.simulation_mode,
+                    file_cache_options=file_cache_options,
+                ),
+                source.fetcher(),
+                FetchMode.CHECKING,
+            )
             host_sections = parse_raw_data(
                 make_parser(
                     config_cache,
-                    source,
+                    source_info,
                     checking_sections=config_cache.make_checking_sections(
                         hostname, selected_sections=NO_SELECTION
                     ),
@@ -472,20 +480,20 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 selection=NO_SELECTION,
             )
             source_results = summarize(
-                source.hostname,
-                source.ipaddress,
+                hostname,
+                ipaddress,
                 host_sections,
-                exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                exit_spec=config_cache.exit_code_spec(hostname, source_info.ident),
                 time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
                 is_piggyback=config_cache.is_piggyback_host(hostname),
-                fetcher_type=source.fetcher_type,
+                fetcher_type=source_info.fetcher_type,
             )
             if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",
-                    source.ident,
+                    source_info.ident,
                     ", ".join(r.summary for r in source_results),
                 )
                 has_errors = True

@@ -14,17 +14,10 @@ from cmk.utils.type_defs import HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.fetchers import (
-    Fetcher,
-    IPMIFetcher,
-    PiggybackFetcher,
-    ProgramFetcher,
-    SNMPFetcher,
-    TCPFetcher,
-)
+from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkers import SourceInfo, SourceType
+from cmk.checkers import Source, SourceType
 from cmk.checkers.check_table import LegacyCheckParameters
 
 import cmk.base.config as config
@@ -35,8 +28,8 @@ from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
 
 
-def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
-    # pylint: disable=too-many-branches
+def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
+    fetcher = source.fetcher()
     if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
         items = []
@@ -73,7 +66,9 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
             bulk = "no"
 
         return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
-            "SNMP" if source.source_type is SourceType.HOST else "Management board - SNMP",
+            "SNMP"
+            if source.source_info().source_type is SourceType.HOST
+            else "Management board - SNMP",
             credentials_text,
             bulk,
             snmp_config.port,
@@ -178,8 +173,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        dump_source(source, fetcher)
-        for source, _file_cache, fetcher in sources.make_sources(
+        dump_source(source)
+        for source in sources.make_sources(
             hostname,
             ipaddress,
             ConfigCache.address_family(hostname),

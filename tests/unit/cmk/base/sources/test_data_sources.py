@@ -95,8 +95,8 @@ def test_host_config_creates_passing_source_sources(
     config_cache = ts.apply(monkeypatch)
 
     assert [
-        type(fetcher)
-        for _meta, _file_cache, fetcher in make_sources(
+        type(source.fetcher())
+        for source in make_sources(
             hostname,
             "127.0.0.1",
             AddressFamily.IPv4,

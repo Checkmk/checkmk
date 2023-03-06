@@ -268,6 +268,7 @@ def test_wato_disabled_exception(auxtag_client: AuxTagTestClient, set_config: Se
                 aux_tag_id="aux_tag_id_1",
                 title="aux_tag_1",
                 topic="topic_1",
+                help="HELP",
             ),
             expect_ok=False,
         )

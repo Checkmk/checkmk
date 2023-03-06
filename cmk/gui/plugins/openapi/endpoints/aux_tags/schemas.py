@@ -51,8 +51,20 @@ class AuxTagTitleField(fields.String):
         )
 
 
+class AuxTagHelpField(fields.String):
+    def __init__(self, **kwargs):
+        super().__init__(
+            description="The help of the Auxiliary tag",
+            example="AuxTagExampleHelp",
+            **kwargs,
+        )
+
+
 class AuxTagAttrsResponse(BaseSchema):
     topic = AuxTagTopicField(
+        required=True,
+    )
+    help = AuxTagHelpField(
         required=True,
     )
 
@@ -68,6 +80,10 @@ class AuxTagAttrsCreate(BaseSchema):
     title = AuxTagTitleField(
         required=True,
     )
+    help = AuxTagHelpField(
+        required=False,
+        load_default="",
+    )
 
 
 class AuxTagAttrsUpdate(BaseSchema):
@@ -75,6 +91,9 @@ class AuxTagAttrsUpdate(BaseSchema):
         required=False,
     )
     title = AuxTagTitleField(
+        required=False,
+    )
+    help = AuxTagHelpField(
         required=False,
     )
 
@@ -92,6 +111,7 @@ EXAMPLE_AUX_TAG = {
     "id": "snmp",
     "title": "Monitoring via SNMP",
     "topic": "Monitoring agents",
+    "help": "Your help text",
 }
 
 

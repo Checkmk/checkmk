@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.testlib.rest_api_client import AuxTagTestClient
+from tests.testlib.rest_api_client import AuxTagTestClient, Response
 
 
 def test_create_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
@@ -14,6 +14,7 @@ def test_create_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
             aux_tag_id="aux_tag_id_1",
             title="",
             topic="topic_1",
+            help="HELP",
         ),
     ).assert_status_code(400)
 
@@ -23,6 +24,7 @@ def test_create_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
             aux_tag_id="aux_tag_id_1",
             title=None,
             topic="topic_1",
+            help="HELP",
         ),
     ).assert_status_code(400)
 
@@ -32,6 +34,7 @@ def test_create_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
             aux_tag_id="aux_tag_id_1",
             title="aux_tag_1",
             topic="",
+            help="HELP",
         ),
     ).assert_status_code(400)
 
@@ -41,6 +44,7 @@ def test_create_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
             aux_tag_id="aux_tag_id_1",
             title="aux_tag_1",
             topic=None,
+            help="HELP",
         ),
     ).assert_status_code(400)
 
@@ -51,6 +55,7 @@ def test_update_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
             aux_tag_id="aux_tag_id_1",
             title="aux_tag_1",
             topic="topic_1",
+            help="HELP",
         )
     )
     auxtag_client.edit(
@@ -68,6 +73,7 @@ def test_update_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
         tag_data=auxtag_client.edit_model(
             title=None,
             topic="topic_1",
+            help="HELP",
         ),
     ).assert_status_code(400)
 
@@ -77,6 +83,7 @@ def test_update_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
         tag_data=auxtag_client.edit_model(
             title="aux_tag_1",
             topic="",
+            help="HELP",
         ),
     ).assert_status_code(400)
 
@@ -86,13 +93,14 @@ def test_update_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
         tag_data=auxtag_client.edit_model(
             title="aux_tag_1",
             topic=None,
+            help="HELP",
         ),
     ).assert_status_code(400)
 
 
 def test_get_auxtag(auxtag_client: AuxTagTestClient) -> None:
     resp = auxtag_client.get(aux_tag_id="ping")
-    assert resp.json["extensions"].keys() == {"topic"}
+    assert resp.json["extensions"].keys() == {"topic", "help"}
     assert {link["method"] for link in resp.json["links"]} == {
         "GET",
         "DELETE",
@@ -117,6 +125,7 @@ def test_get_builtin_and_custom_auxtags(auxtag_client: AuxTagTestClient) -> None
             aux_tag_id="aux_tag_id_1",
             title="aux_tag_1",
             topic="topic_1",
+            help="HELP",
         )
     )
 
@@ -137,6 +146,7 @@ def test_update_custom_aux_tag_title(auxtag_client: AuxTagTestClient) -> None:
             aux_tag_id="aux_tag_id_1",
             title="aux_tag_1",
             topic="topic_1",
+            help="HELP",
         )
     )
     assert (
@@ -145,30 +155,34 @@ def test_update_custom_aux_tag_title(auxtag_client: AuxTagTestClient) -> None:
             tag_data=auxtag_client.edit_model(
                 title="edited_title",
                 topic="topic_1",
+                help="HELP",
             ),
         ).json["title"]
         == "edited_title"
     )
 
 
-def test_update_custom_aux_tag_topic(auxtag_client: AuxTagTestClient) -> None:
+def test_update_custom_aux_tag_topic_and_help(auxtag_client: AuxTagTestClient) -> None:
     auxtag_client.create(
         tag_data=auxtag_client.create_model(
             aux_tag_id="aux_tag_id_1",
             title="aux_tag_1",
             topic="topic_1",
+            help="HELP",
         )
     )
-    assert (
-        auxtag_client.edit(
-            aux_tag_id="aux_tag_id_1",
-            tag_data=auxtag_client.edit_model(
-                title="edited_title",
-                topic="edited_topic",
-            ),
-        ).json["extensions"]["topic"]
-        == "edited_topic"
+
+    response: Response = auxtag_client.edit(
+        aux_tag_id="aux_tag_id_1",
+        tag_data=auxtag_client.edit_model(
+            title="edited_title",
+            topic="edited_topic",
+            help="edited_help",
+        ),
     )
+
+    assert response.json["extensions"]["topic"] == "edited_topic"
+    assert response.json["extensions"]["help"] == "edited_help"
 
 
 def test_delete_custom_aux_tag(auxtag_client: AuxTagTestClient) -> None:
@@ -177,6 +191,7 @@ def test_delete_custom_aux_tag(auxtag_client: AuxTagTestClient) -> None:
             aux_tag_id="aux_tag_id_1",
             title="aux_tag_1",
             topic="topic_1",
+            help="HELP",
         )
     )
 

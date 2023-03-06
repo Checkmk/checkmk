@@ -72,7 +72,9 @@ function table_init_rowselect(oTable: HTMLElement) {
 
 // Container is an DOM element to search below or a list of DOM elements
 // to search below
-function get_all_checkboxes(container: HTMLElement | HTMLElement[]) {
+function get_all_checkboxes(
+    container: HTMLElement | HTMLElement[] | HTMLDocument
+) {
     const checkboxes: HTMLInputElement[] = [];
     let childs;
     if (container instanceof HTMLElement || container instanceof HTMLDocument) {
@@ -267,7 +269,7 @@ function update_row_selection_information() {
 // container are highlighted.
 // It is also possible to give an array of DOM elements as parameter to toggle
 // all checkboxes below these objects.
-export function toggle_all_rows(obj: HTMLElement | HTMLElement[]) {
+export function toggle_all_rows(obj?: HTMLElement | HTMLElement[]) {
     const checkboxes = get_all_checkboxes(obj || document);
 
     let all_selected = true;

@@ -26,6 +26,16 @@ def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
     )
 
 
+def test_openapi_get_non_existing_activation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/activation_run/random_activation_id",
+        status=404,
+        headers={"Accept": "application/json"},
+    )
+
+
 def test_openapi_show_single_activation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     aut_user_auth_wsgi_app.call_method(

@@ -1474,7 +1474,7 @@ class AutomationDiagHost(Automation):
         file_cache_options: FileCacheOptions,
     ) -> tuple[int, str]:
         state, output = 0, ""
-        for source, file_cache, fetcher in sources.make_sources(
+        for source in sources.make_sources(
             host_name,
             ipaddress,
             ConfigCache.address_family(host_name),
@@ -1483,17 +1483,19 @@ class AutomationDiagHost(Automation):
             file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if source.fetcher_type is FetcherType.SNMP:
+            source_info = source.source_info()
+            if source_info.fetcher_type is FetcherType.SNMP:
                 continue
 
-            if source.fetcher_type is FetcherType.PROGRAM and cmd:
+            fetcher = source.fetcher()
+            if source_info.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     cmdline=config_cache.translate_program_commandline(host_name, ipaddress, cmd),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
                 )
-            elif source.fetcher_type is FetcherType.TCP:
+            elif source_info.fetcher_type is FetcherType.TCP:
                 assert isinstance(fetcher, TCPFetcher)
                 port = agent_port or fetcher.address[1]
                 timeout = tcp_connect_timeout or fetcher.timeout
@@ -1506,7 +1508,14 @@ class AutomationDiagHost(Automation):
                     pre_shared_secret=fetcher.pre_shared_secret,
                 )
 
-            raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
+            raw_data = get_raw_data(
+                source.file_cache(
+                    simulation=config.simulation_mode,
+                    file_cache_options=file_cache_options,
+                ),
+                fetcher,
+                Mode.CHECKING,
+            )
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
@@ -1815,7 +1824,7 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = config.lookup_ip_address(config_cache, hostname)
             if ty == "agent":
-                for source, file_cache, fetcher in sources.make_sources(
+                for source in sources.make_sources(
                     hostname,
                     ipaddress,
                     ConfigCache.address_family(hostname),
@@ -1824,16 +1833,23 @@ class AutomationGetAgentOutput(Automation):
                     file_cache_options=file_cache_options,
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
-                    if source.fetcher_type is FetcherType.SNMP:
+                    source_info = source.source_info()
+                    if source_info.fetcher_type is FetcherType.SNMP:
                         continue
 
-                    raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
+                    raw_data = get_raw_data(
+                        source.file_cache(
+                            simulation=config.simulation_mode, file_cache_options=file_cache_options
+                        ),
+                        source.fetcher(),
+                        Mode.CHECKING,
+                    )
                     host_sections = parse_raw_data(
                         make_parser(
                             config_cache,
-                            source,
+                            source_info,
                             checking_sections=config_cache.make_checking_sections(
-                                source.hostname, selected_sections=NO_SELECTION
+                                hostname, selected_sections=NO_SELECTION
                             ),
                             keep_outdated=file_cache_options.keep_outdated,
                             logger=logging.getLogger("cmk.base.checking"),
@@ -1842,22 +1858,20 @@ class AutomationGetAgentOutput(Automation):
                         selection=NO_SELECTION,
                     )
                     source_results = summarize(
-                        source.hostname,
-                        source.ipaddress,
+                        hostname,
+                        ipaddress,
                         host_sections,
-                        exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                        exit_spec=config_cache.exit_code_spec(hostname, source_info.ident),
                         time_settings=config_cache.get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
                         is_piggyback=config_cache.is_piggyback_host(hostname),
-                        fetcher_type=source.fetcher_type,
+                        fetcher_type=source_info.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources
                         success = False
-                        output += (
-                            f"[{source.ident}] {', '.join(r.summary for r in source_results)}\n"
-                        )
+                        output += f"[{source_info.ident}] {', '.join(r.summary for r in source_results)}\n"
                     assert raw_data.ok is not None
                     info += raw_data.ok
             else:

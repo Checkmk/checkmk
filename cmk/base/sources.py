@@ -17,10 +17,10 @@ from cmk.utils.type_defs import HostAddress, HostAgentConnectionMode, HostName, 
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-from cmk.fetchers import Fetcher, FetcherType, SNMPFetcher
+from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
-from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkers import Parser, SNMPParser, Source, SourceInfo
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
@@ -43,10 +43,7 @@ from ._sources import (
     TCPSource,
 )
 
-__all__ = [
-    "make_sources",
-    "make_parser",
-]
+__all__ = ["make_sources", "make_parser", "Source"]
 
 
 def make_parser(
@@ -299,7 +296,7 @@ def make_sources(
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
-) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
+) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if config_cache.is_cluster(host_name):
         # Cluster hosts do not have any actual data sources
@@ -322,23 +319,13 @@ def make_sources(
             return MaxAge.unlimited()
         return file_cache_max_age
 
-    return [
-        (
-            source.source_info(),
-            source.file_cache(
-                simulation=simulation_mode,
-                file_cache_options=file_cache_options,
-            ),
-            source.fetcher(),
-        )
-        for source in _Builder(
-            host_name,
-            ipaddress,
-            address_family,
-            config_cache=config_cache,
-            selected_sections=selected_sections,
-            on_scan_error=on_scan_error,
-            max_age_agent=max_age_agent(),
-            max_age_snmp=max_age_snmp(),
-        ).sources
-    ]
+    return _Builder(
+        host_name,
+        ipaddress,
+        address_family,
+        config_cache=config_cache,
+        selected_sections=selected_sections,
+        on_scan_error=on_scan_error,
+        max_age_agent=max_age_agent(),
+        max_age_snmp=max_age_snmp(),
+    ).sources

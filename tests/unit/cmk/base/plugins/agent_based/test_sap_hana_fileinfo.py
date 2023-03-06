@@ -21,12 +21,13 @@ from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
 @pytest.mark.parametrize(
     "item, parsed, expected_result",
     [
-        (
+        pytest.param(
             "file1234.txt",
             Fileinfo(),
             [Result(state=State.UNKNOWN, summary="Missing reference timestamp")],
+            id="missing reference timestamp",
         ),
-        (
+        pytest.param(
             "C:\\Datentransfer\\ORU\\KC\\KC_41135.hl7",
             Fileinfo(
                 reftime=1563288717,
@@ -41,11 +42,12 @@ from cmk.base.plugins.agent_based.utils.fileinfo import Fileinfo, FileinfoItem
                 },
             ),
             [
-                Result(state=State.OK, summary="Size: 2,414 B"),
+                Result(state=State.OK, summary="Size: 2.36 KiB"),
                 Metric("size", 2414.0),
                 Result(state=State.OK, summary="Age: 4 years 249 days"),
                 Metric("age", 147662799.0),
             ],
+            id="file found",
         ),
     ],
 )

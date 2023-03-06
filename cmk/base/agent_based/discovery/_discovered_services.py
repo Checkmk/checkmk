@@ -17,7 +17,7 @@ from cmk.checkers import HostKey, plugin_contexts, SourceType
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker, Provider
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
@@ -29,7 +29,7 @@ def analyse_discovered_services(
     config_cache: ConfigCache,
     host_name: HostName,
     *,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
@@ -42,7 +42,7 @@ def analyse_discovered_services(
         discovered_services=_discover_services(
             config_cache,
             host_name,
-            parsed_sections_broker=parsed_sections_broker,
+            providers=providers,
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
             on_error=on_error,
@@ -122,14 +122,14 @@ def _discover_services(
     config_cache: ConfigCache,
     host_name: HostName,
     *,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     run_plugin_names: Container[CheckPluginName],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     on_error: OnError,
 ) -> list[AutocheckEntry]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(
-        parsed_sections_broker,
+        providers,
         [
             (plugin_name, plugin.sections)
             for plugin_name, plugin in check_plugins.items()
@@ -161,7 +161,7 @@ def _discover_services(
                                         else SourceType.HOST
                                     ),
                                 ),
-                                parsed_sections_broker=parsed_sections_broker,
+                                providers=providers,
                                 on_error=on_error,
                             )
                         }
@@ -181,7 +181,7 @@ def _discover_services(
 
 
 def _find_candidates(
-    broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]],
 ) -> set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
@@ -207,19 +207,18 @@ def _find_candidates(
     )
 
     return _find_host_candidates(
-        broker, preliminary_candidates, parsed_sections_of_interest
-    ) | _find_mgmt_candidates(broker, preliminary_candidates, parsed_sections_of_interest)
+        providers, preliminary_candidates, parsed_sections_of_interest
+    ) | _find_mgmt_candidates(providers, preliminary_candidates, parsed_sections_of_interest)
 
 
 def _find_host_candidates(
-    broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
     parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 
-    available_parsed_sections = broker.filter_available(
-        parsed_sections_of_interest,
-        SourceType.HOST,
+    available_parsed_sections = ParsedSectionsBroker.filter_available(
+        parsed_sections_of_interest, SourceType.HOST, providers
     )
 
     return {
@@ -232,14 +231,13 @@ def _find_host_candidates(
 
 
 def _find_mgmt_candidates(
-    broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
     parsed_sections_of_interest: Iterable[ParsedSectionName],
 ) -> set[CheckPluginName]:
 
-    available_parsed_sections = broker.filter_available(
-        parsed_sections_of_interest,
-        SourceType.MANAGEMENT,
+    available_parsed_sections = ParsedSectionsBroker.filter_available(
+        parsed_sections_of_interest, SourceType.MANAGEMENT, providers
     )
 
     return {
@@ -256,7 +254,7 @@ def _discover_plugins_services(
     check_plugin_name: CheckPluginName,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     host_key: HostKey,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Iterator[AutocheckEntry]:
     # Skip this check type if is ignored for that host
@@ -271,7 +269,7 @@ def _discover_plugins_services(
         return
 
     try:
-        kwargs = get_section_kwargs(parsed_sections_broker, host_key, check_plugin.sections)
+        kwargs = get_section_kwargs(providers, host_key, check_plugin.sections)
     except Exception as exc:
         if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise

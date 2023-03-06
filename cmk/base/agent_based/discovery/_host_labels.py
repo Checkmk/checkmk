@@ -14,7 +14,7 @@ from cmk.utils.type_defs import HostName
 from cmk.checkers import HostKey, SourceType
 
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ResolvedResult
+from cmk.base.agent_based.data_provider import Provider, ResolvedResult
 
 from .utils import QualifiedDiscovery
 
@@ -30,7 +30,7 @@ __all__ = [
 def discover_cluster_labels(
     nodes: Sequence[HostName],
     *,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     load_labels: bool,
     save_labels: bool,
     on_error: OnError,
@@ -39,11 +39,7 @@ def discover_cluster_labels(
     for node in nodes:
         node_labels = QualifiedDiscovery[HostLabel](
             preexisting=do_load_labels(node) if load_labels else (),
-            current=discover_host_labels(
-                node,
-                parsed_sections_broker=parsed_sections_broker,
-                on_error=on_error,
-            ),
+            current=discover_host_labels(node, providers=providers, on_error=on_error),
             key=lambda hl: hl.label,
         )
         if save_labels:
@@ -125,20 +121,18 @@ def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabe
 def discover_host_labels(
     host_name: HostName,
     *,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Sequence[HostLabel]:
 
     # make names unique
     labels_by_name = {
         **_discover_host_labels_for_source_type(
-            host_key=HostKey(host_name, SourceType.HOST),
-            parsed_sections_broker=parsed_sections_broker,
-            on_error=on_error,
+            host_key=HostKey(host_name, SourceType.HOST), providers=providers, on_error=on_error
         ),
         **_discover_host_labels_for_source_type(
             host_key=HostKey(host_name, SourceType.MANAGEMENT),
-            parsed_sections_broker=parsed_sections_broker,
+            providers=providers,
             on_error=on_error,
         ),
     }
@@ -146,10 +140,11 @@ def discover_host_labels(
 
 
 def _all_parsing_results(
-    host_key: HostKey, broker: ParsedSectionsBroker
+    host_key: HostKey,
+    providers: Mapping[HostKey, Provider],
 ) -> Sequence[ResolvedResult]:
     try:
-        resolver, parser = broker.providers[host_key]
+        resolver, parser = providers[host_key]
     except KeyError:
         return ()
 
@@ -166,13 +161,13 @@ def _all_parsing_results(
 def _discover_host_labels_for_source_type(
     *,
     host_key: HostKey,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Mapping[str, HostLabel]:
 
     host_labels = {}
     try:
-        parsed_results = _all_parsing_results(host_key, parsed_sections_broker)
+        parsed_results = _all_parsing_results(host_key, providers)
 
         console.vverbose(
             "Trying host label discovery with: %s\n"

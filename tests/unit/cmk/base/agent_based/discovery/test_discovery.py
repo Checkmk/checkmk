@@ -47,11 +47,7 @@ from cmk.base.agent_based.confcheckers import (
     ConfiguredParser,
     SectionPluginMapper,
 )
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionsBroker,
-    ParsedSectionsResolver,
-    SectionsParser,
-)
+from cmk.base.agent_based.data_provider import ParsedSectionsResolver, Provider, SectionsParser
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.agent_based.discovery._discovery import _check_service_lists
 from cmk.base.agent_based.discovery._host_labels import (
@@ -703,51 +699,49 @@ def test__check_service_table(
 
 @pytest.mark.usefixtures("fix_register")
 def test__find_candidates() -> None:
-    broker = ParsedSectionsBroker(
-        {
-            # we just care about the keys here, content set to arbitrary values that can be parsed.
-            # section names are chosen arbitrarily.
-            HostKey(HostName("test_node"), SourceType.HOST): (
-                ParsedSectionsResolver(
-                    section_plugins=[
-                        agent_based_register.get_section_plugin(SectionName("kernel")),
-                        agent_based_register.get_section_plugin(SectionName("uptime")),
-                    ],
-                ),
-                SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
-                        {
-                            SectionName("kernel"): [],  # host only
-                            SectionName("uptime"): [["123"]],  # host & mgmt
-                        }
-                    ),
-                    host_name=HostName("test_node"),
-                ),
+    providers = {
+        # we just care about the keys here, content set to arbitrary values that can be parsed.
+        # section names are chosen arbitrarily.
+        HostKey(HostName("test_node"), SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[
+                    agent_based_register.get_section_plugin(SectionName("kernel")),
+                    agent_based_register.get_section_plugin(SectionName("uptime")),
+                ],
             ),
-            HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
-                ParsedSectionsResolver(
-                    section_plugins=[
-                        agent_based_register.get_section_plugin(SectionName("uptime")),
-                        agent_based_register.get_section_plugin(SectionName("liebert_fans")),
-                        agent_based_register.get_section_plugin(SectionName("mgmt_snmp_info")),
-                    ],
+            SectionsParser(
+                host_sections=HostSections[AgentRawDataSection](
+                    {
+                        SectionName("kernel"): [],  # host only
+                        SectionName("uptime"): [["123"]],  # host & mgmt
+                    }
                 ),
-                SectionsParser(
-                    host_sections=HostSections[SNMPRawDataSection](
-                        {
-                            # host & mgmt:
-                            SectionName("uptime"): [["123"]],
-                            # mgmt only:
-                            SectionName("liebert_fans"): [[["Fan", "67", "umin"]]],
-                            # is already mgmt_ prefixed:
-                            SectionName("mgmt_snmp_info"): [[["a", "b", "c", "d"]]],
-                        }
-                    ),
-                    host_name=HostName("test_node"),
-                ),
+                host_name=HostName("test_node"),
             ),
-        }
-    )
+        ),
+        HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
+            ParsedSectionsResolver(
+                section_plugins=[
+                    agent_based_register.get_section_plugin(SectionName("uptime")),
+                    agent_based_register.get_section_plugin(SectionName("liebert_fans")),
+                    agent_based_register.get_section_plugin(SectionName("mgmt_snmp_info")),
+                ],
+            ),
+            SectionsParser(
+                host_sections=HostSections[SNMPRawDataSection](
+                    {
+                        # host & mgmt:
+                        SectionName("uptime"): [["123"]],
+                        # mgmt only:
+                        SectionName("liebert_fans"): [[["Fan", "67", "umin"]]],
+                        # is already mgmt_ prefixed:
+                        SectionName("mgmt_snmp_info"): [[["a", "b", "c", "d"]]],
+                    }
+                ),
+                host_name=HostName("test_node"),
+            ),
+        ),
+    }
 
     preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
     parsed_sections_of_interest = {
@@ -757,7 +751,7 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_host_candidates(
-        broker,
+        providers,
         ((p.name, p.sections) for p in preliminary_candidates),
         parsed_sections_of_interest,
     ) == {
@@ -769,7 +763,7 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_mgmt_candidates(
-        broker,
+        providers,
         ((p.name, p.sections) for p in preliminary_candidates),
         parsed_sections_of_interest,
     ) == {
@@ -779,7 +773,7 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_candidates(
-        broker, [(name, p.sections) for name, p in CheckPluginMapper().items()]
+        providers, [(name, p.sections) for name, p in CheckPluginMapper().items()]
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),
@@ -912,7 +906,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
 class RealHostScenario(NamedTuple):
     hostname: HostName
     config_cache: ConfigCache
-    parsed_sections_broker: ParsedSectionsBroker
+    providers: Mapping[HostKey, Provider]
 
     @property
     def host_key(self) -> HostKey:
@@ -958,58 +952,56 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
         }
     )
 
-    broker = ParsedSectionsBroker(
-        {
-            HostKey(hostname=hostname, source_type=SourceType.HOST,): (
-                ParsedSectionsResolver(
-                    section_plugins=[
-                        agent_based_register.get_section_plugin(SectionName("labels")),
-                        agent_based_register.get_section_plugin(SectionName("df")),
-                    ],
-                ),
-                SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
-                        sections={
-                            SectionName("labels"): [
-                                [
-                                    '{"cmk/check_mk_server":"yes"}',
-                                ],
-                            ],
-                            SectionName("df"): [
-                                [
-                                    "/dev/sda1",
-                                    "vfat",
-                                    "523248",
-                                    "3668",
-                                    "519580",
-                                    "1%",
-                                    "/boot/test-efi",
-                                ],
-                                [
-                                    "tmpfs",
-                                    "tmpfs",
-                                    "8152916",
-                                    "244",
-                                    "8152672",
-                                    "1%",
-                                    "/opt/omd/sites/test-heute/tmp",
-                                ],
-                            ],
-                        }
-                    ),
-                    host_name=hostname,
-                ),
+    providers = {
+        HostKey(hostname=hostname, source_type=SourceType.HOST,): (
+            ParsedSectionsResolver(
+                section_plugins=[
+                    agent_based_register.get_section_plugin(SectionName("labels")),
+                    agent_based_register.get_section_plugin(SectionName("df")),
+                ],
             ),
-        }
-    )
+            SectionsParser(
+                host_sections=HostSections[AgentRawDataSection](
+                    sections={
+                        SectionName("labels"): [
+                            [
+                                '{"cmk/check_mk_server":"yes"}',
+                            ],
+                        ],
+                        SectionName("df"): [
+                            [
+                                "/dev/sda1",
+                                "vfat",
+                                "523248",
+                                "3668",
+                                "519580",
+                                "1%",
+                                "/boot/test-efi",
+                            ],
+                            [
+                                "tmpfs",
+                                "tmpfs",
+                                "8152916",
+                                "244",
+                                "8152672",
+                                "1%",
+                                "/opt/omd/sites/test-heute/tmp",
+                            ],
+                        ],
+                    }
+                ),
+                host_name=hostname,
+            ),
+        ),
+    }
 
-    return RealHostScenario(hostname, config_cache, broker)
+    return RealHostScenario(hostname, config_cache, providers)
 
 
 class ClusterScenario(NamedTuple):
     parent: HostName
     config_cache: ConfigCache
-    parsed_sections_broker: ParsedSectionsBroker
+    providers: Mapping[HostKey, Provider]
     node1_hostname: HostName
     node2_hostname: HostName
 
@@ -1075,95 +1067,93 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
         }
     )
 
-    broker = ParsedSectionsBroker(
-        {
-            HostKey(hostname=node1_hostname, source_type=SourceType.HOST): (
-                ParsedSectionsResolver(
-                    section_plugins=[
-                        agent_based_register.get_section_plugin(SectionName("labels")),
-                        agent_based_register.get_section_plugin(SectionName("df")),
-                    ],
-                ),
-                SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
-                        sections={
-                            SectionName("labels"): [
-                                [
-                                    '{"cmk/check_mk_server":"yes"}',
-                                ]
-                            ],
-                            SectionName("df"): [
-                                [
-                                    "/dev/sda1",
-                                    "vfat",
-                                    "523248",
-                                    "3668",
-                                    "519580",
-                                    "1%",
-                                    "/boot/test-efi",
-                                ],
-                                [
-                                    "tmpfs",
-                                    "tmpfs",
-                                    "8152916",
-                                    "244",
-                                    "8152672",
-                                    "1%",
-                                    "/opt/omd/sites/test-heute/tmp",
-                                ],
-                            ],
-                        }
-                    ),
-                    host_name=node1_hostname,
-                ),
+    providers = {
+        HostKey(hostname=node1_hostname, source_type=SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[
+                    agent_based_register.get_section_plugin(SectionName("labels")),
+                    agent_based_register.get_section_plugin(SectionName("df")),
+                ],
             ),
-            HostKey(hostname=node2_hostname, source_type=SourceType.HOST): (
-                ParsedSectionsResolver(
-                    section_plugins=[
-                        agent_based_register.get_section_plugin(SectionName("labels")),
-                        agent_based_register.get_section_plugin(SectionName("df")),
-                    ],
-                ),
-                SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
-                        sections={
-                            SectionName("labels"): [
-                                [
-                                    '{"node2_live_label":"true"}',
-                                ],
+            SectionsParser(
+                host_sections=HostSections[AgentRawDataSection](
+                    sections={
+                        SectionName("labels"): [
+                            [
+                                '{"cmk/check_mk_server":"yes"}',
+                            ]
+                        ],
+                        SectionName("df"): [
+                            [
+                                "/dev/sda1",
+                                "vfat",
+                                "523248",
+                                "3668",
+                                "519580",
+                                "1%",
+                                "/boot/test-efi",
                             ],
-                            SectionName("df"): [
-                                [
-                                    "/dev/sda1",
-                                    "vfat",
-                                    "523248",
-                                    "3668",
-                                    "519580",
-                                    "1%",
-                                    "/boot/test-efi",
-                                ],
-                                [
-                                    "tmpfs",
-                                    "tmpfs",
-                                    "8152916",
-                                    "244",
-                                    "8152672",
-                                    "1%",
-                                    "/opt/omd/sites/test-heute2/tmp",
-                                ],
+                            [
+                                "tmpfs",
+                                "tmpfs",
+                                "8152916",
+                                "244",
+                                "8152672",
+                                "1%",
+                                "/opt/omd/sites/test-heute/tmp",
                             ],
-                        }
-                    ),
-                    host_name=node2_hostname,
+                        ],
+                    }
                 ),
+                host_name=node1_hostname,
             ),
-        }
-    )
+        ),
+        HostKey(hostname=node2_hostname, source_type=SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[
+                    agent_based_register.get_section_plugin(SectionName("labels")),
+                    agent_based_register.get_section_plugin(SectionName("df")),
+                ],
+            ),
+            SectionsParser(
+                host_sections=HostSections[AgentRawDataSection](
+                    sections={
+                        SectionName("labels"): [
+                            [
+                                '{"node2_live_label":"true"}',
+                            ],
+                        ],
+                        SectionName("df"): [
+                            [
+                                "/dev/sda1",
+                                "vfat",
+                                "523248",
+                                "3668",
+                                "519580",
+                                "1%",
+                                "/boot/test-efi",
+                            ],
+                            [
+                                "tmpfs",
+                                "tmpfs",
+                                "8152916",
+                                "244",
+                                "8152672",
+                                "1%",
+                                "/opt/omd/sites/test-heute2/tmp",
+                            ],
+                        ],
+                    }
+                ),
+                host_name=node2_hostname,
+            ),
+        ),
+    }
 
     return ClusterScenario(
         hostname,
         config_cache,
-        broker,
+        providers,
         node1_hostname,
         node2_hostname,
     )
@@ -1515,7 +1505,7 @@ def test__discover_host_labels_and_services_on_realhost(
             host_name=scenario.hostname,
             discovered_host_labels=discover_host_labels(
                 scenario.hostname,
-                parsed_sections_broker=scenario.parsed_sections_broker,
+                providers=scenario.providers,
                 on_error=OnError.RAISE,
             ),
             ruleset_matcher=scenario.config_cache.ruleset_matcher,
@@ -1528,7 +1518,7 @@ def test__discover_host_labels_and_services_on_realhost(
     discovered_services = discovery._discovered_services._discover_services(
         scenario.config_cache,
         scenario.hostname,
-        parsed_sections_broker=scenario.parsed_sections_broker,
+        providers=scenario.providers,
         check_plugins=CheckPluginMapper(),
         on_error=OnError.RAISE,
         run_plugin_names=EVERYTHING,
@@ -1549,9 +1539,7 @@ def test__perform_host_label_discovery_on_realhost(
     host_label_result = analyse_host_labels(
         host_name=scenario.hostname,
         discovered_host_labels=discover_host_labels(
-            scenario.hostname,
-            parsed_sections_broker=scenario.parsed_sections_broker,
-            on_error=OnError.RAISE,
+            scenario.hostname, providers=scenario.providers, on_error=OnError.RAISE
         ),
         ruleset_matcher=scenario.config_cache.ruleset_matcher,
         existing_host_labels=(
@@ -1592,7 +1580,7 @@ def test__discover_services_on_cluster(
             scenario.parent,
             discovered_host_labels=discover_cluster_labels(
                 nodes,
-                parsed_sections_broker=scenario.parsed_sections_broker,
+                providers=scenario.providers,
                 load_labels=discovery_test_case.load_labels,
                 save_labels=discovery_test_case.save_labels,
                 on_error=OnError.RAISE,
@@ -1607,7 +1595,7 @@ def test__discover_services_on_cluster(
     discovered_services = _get_cluster_services(
         scenario.parent,
         config_cache=scenario.config_cache,
-        parsed_sections_broker=scenario.parsed_sections_broker,
+        providers=scenario.providers,
         check_plugins=CheckPluginMapper(),
         find_service_description=config.service_description,
         on_error=OnError.RAISE,
@@ -1631,7 +1619,7 @@ def test__perform_host_label_discovery_on_cluster(
         scenario.parent,
         discovered_host_labels=discover_cluster_labels(
             nodes,
-            parsed_sections_broker=scenario.parsed_sections_broker,
+            providers=scenario.providers,
             load_labels=discovery_test_case.load_labels,
             save_labels=discovery_test_case.save_labels,
             on_error=OnError.RAISE,
@@ -1703,7 +1691,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     assert _get_node_services(
         config_cache,
         HostName("horst"),
-        parsed_sections_broker=ParsedSectionsBroker({}),
+        providers={},
         check_plugins={},
         find_service_description=lambda *_args: "desc",
         host_of_clustered_service=lambda hn, _svcdescr: hn,

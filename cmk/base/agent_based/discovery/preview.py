@@ -18,7 +18,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, Item, SectionName, Se
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkers import FetcherFunction, ParserFunction, SummarizerFunction
+from cmk.checkers import FetcherFunction, HostKey, ParserFunction, SummarizerFunction
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ServiceCheckResult
 
@@ -27,8 +27,9 @@ import cmk.base.config as config
 import cmk.base.core
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
-    make_broker,
+    make_providers,
     ParsedSectionsBroker,
+    Provider,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
@@ -38,9 +39,8 @@ from cmk.base.api.agent_based.value_store import load_host_value_store, ValueSto
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
 
-from ._discovery import get_host_services
 from ._host_labels import analyse_host_labels, discover_host_labels, do_load_labels
-from .autodiscovery import _Transition
+from .autodiscovery import _Transition, get_host_services
 from .utils import QualifiedDiscovery
 
 __all__ = ["get_check_preview", "SourcesFailedError"]
@@ -82,13 +82,13 @@ def get_check_preview(
 
     host_sections_no_error = filter_out_errors(parser((f[0], f[1]) for f in fetched))
     store_piggybacked_sections(host_sections_no_error)
-    parsed_sections_broker = make_broker(host_sections_no_error, section_plugins)
+    providers = make_providers(host_sections_no_error, section_plugins)
 
     host_labels = analyse_host_labels(
         host_name,
         discovered_host_labels=discover_host_labels(
             host_name,
-            parsed_sections_broker=parsed_sections_broker,
+            providers=providers,
             on_error=on_error,
         ),
         ruleset_matcher=config_cache.ruleset_matcher,
@@ -96,14 +96,14 @@ def get_check_preview(
         save_labels=False,
     )
 
-    for result in check_parsing_errors(parsed_sections_broker.parsing_errors()):
+    for result in check_parsing_errors(ParsedSectionsBroker.parsing_errors(providers)):
         for line in result.details:
             console.warning(line)
 
     grouped_services = get_host_services(
         host_name,
         config_cache=config_cache,
-        parsed_sections_broker=parsed_sections_broker,
+        providers=providers,
         check_plugins=check_plugins,
         find_service_description=find_service_description,
         on_error=on_error,
@@ -129,7 +129,7 @@ def get_check_preview(
                     service_labels={n: ServiceLabel(n, v) for n, v in entry.service_labels.items()},
                 ),
                 check_source=check_source,
-                parsed_sections_broker=parsed_sections_broker,
+                providers=providers,
                 found_on_nodes=found_on_nodes,
                 value_store_manager=value_store_manager,
             )
@@ -142,7 +142,7 @@ def get_check_preview(
                 service=service,
                 check_plugins=check_plugins,
                 check_source="manual",  # "enforced" would be nicer
-                parsed_sections_broker=parsed_sections_broker,
+                providers=providers,
                 found_on_nodes=[host_name],
                 value_store_manager=value_store_manager,
             )
@@ -171,7 +171,7 @@ def _check_preview_table_row(
     service: ConfiguredService,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
@@ -186,7 +186,7 @@ def _check_preview_table_row(
         checking.get_aggregated_result(
             host_name,
             config_cache,
-            parsed_sections_broker,
+            providers,
             service,
             check_plugin,
             value_store_manager=value_store_manager,

@@ -199,6 +199,9 @@ class ParsedSectionsResolver:
         return self._memoized_results.setdefault(parsed_section_name, None)
 
 
+Provider = tuple[ParsedSectionsResolver, SectionsParser]
+
+
 class ParsedSectionsBroker:
     """Object for aggregating, parsing and disributing the sections
 
@@ -208,19 +211,10 @@ class ParsedSectionsBroker:
     of data (inventory, discovery, checking, host_labels).
     """
 
-    def __init__(
-        self,
-        providers: Mapping[HostKey, tuple[ParsedSectionsResolver, SectionsParser]],
-    ) -> None:
-        super().__init__()
-        self.providers: Final = providers
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(providers={self.providers!r})"
-
+    @staticmethod
     def get_cache_info(
-        self,
         parsed_section_names: Iterable[ParsedSectionName],
+        providers: Mapping[HostKey, Provider],
     ) -> _CacheInfo | None:
         # TODO: should't the host key be provided here?
         """Aggregate information about the age of the data in the agent sections
@@ -234,7 +228,7 @@ class ParsedSectionsBroker:
             resolved.parsed.cache_info
             for resolved in (
                 resolver.resolve(parser, parsed_section_name)
-                for resolver, parser in self.providers.values()
+                for resolver, parser in providers.values()
                 for parsed_section_name in parsed_section_names
             )
             if resolved is not None and resolved.parsed.cache_info is not None
@@ -248,13 +242,14 @@ class ParsedSectionsBroker:
             else None
         )
 
+    @staticmethod
     def get_parsed_section(
-        self,
         host_key: HostKey,
         parsed_section_name: ParsedSectionName,
+        providers: Mapping[HostKey, Provider],
     ) -> ParsedSectionContent | None:
         try:
-            resolver, parser = self.providers[host_key]
+            resolver, parser = providers[host_key]
         except KeyError:
             return None
 
@@ -264,14 +259,15 @@ class ParsedSectionsBroker:
             else resolved.parsed.data
         )
 
+    @staticmethod
     def filter_available(
-        self,
         parsed_section_names: Iterable[ParsedSectionName],
         source_type: SourceType,
+        providers: Mapping[HostKey, Provider],
     ) -> set[ParsedSectionName]:
         return {
             parsed_section_name
-            for host_key, (resolver, parser) in self.providers.items()
+            for host_key, (resolver, parser) in providers.items()
             for parsed_section_name in parsed_section_names
             if (
                 host_key.source_type is source_type
@@ -279,9 +275,10 @@ class ParsedSectionsBroker:
             )
         }
 
-    def parsing_errors(self) -> Sequence[str]:
+    @staticmethod
+    def parsing_errors(providers: Mapping[HostKey, Provider]) -> Sequence[str]:
         return sum(
-            (list(parser.parsing_errors) for _, parser in self.providers.values()),
+            (list(parser.parsing_errors) for _, parser in providers.values()),
             start=[],
         )
 
@@ -299,20 +296,18 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
         )
 
 
-def make_broker(
+def make_providers(
     host_sections: Mapping[HostKey, HostSections],
     section_plugins: Mapping[SectionName, SectionPlugin],
-) -> ParsedSectionsBroker:
-    return ParsedSectionsBroker(
-        {
-            host_key: (
-                ParsedSectionsResolver(
-                    section_plugins=[
-                        section_plugins[section_name] for section_name in host_sections.sections
-                    ],
-                ),
-                SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
-            )
-            for host_key, host_sections in host_sections.items()
-        }
-    )
+) -> Mapping[HostKey, Provider]:
+    return {
+        host_key: (
+            ParsedSectionsResolver(
+                section_plugins=[
+                    section_plugins[section_name] for section_name in host_sections.sections
+                ],
+            ),
+            SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
+        )
+        for host_key, host_sections in host_sections.items()
+    }

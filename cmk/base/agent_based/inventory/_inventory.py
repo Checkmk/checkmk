@@ -49,8 +49,9 @@ from cmk.checkers.host_sections import HostSections
 
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
-    make_broker,
+    make_providers,
     ParsedSectionsBroker,
+    Provider,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, get_section_kwargs
@@ -109,7 +110,7 @@ def check_inventory_tree(
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)
 
-    broker = make_broker(host_sections_no_error, section_plugins)
+    providers = make_providers(host_sections_no_error, section_plugins)
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -117,7 +118,7 @@ def check_inventory_tree(
             _collect_inventory_plugin_items(
                 host_name,
                 inventory_parameters=inventory_parameters,
-                parsed_sections_broker=broker,
+                providers=providers,
                 inventory_plugins=inventory_plugins,
                 run_plugin_names=run_plugin_names,
             )
@@ -130,7 +131,7 @@ def check_inventory_tree(
     # `_collect_inventory_plugin_items()` because the broker implements
     # an implicit protocol where `parsing_errors()` is empty until other
     # methods of the broker have been called.
-    parsing_errors = broker.parsing_errors()
+    parsing_errors = ParsedSectionsBroker.parsing_errors(providers)
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections
     ) or bool(parsing_errors)
@@ -264,7 +265,7 @@ def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
     inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
@@ -272,7 +273,7 @@ def inventorize_status_data_of_real_host(
         _collect_inventory_plugin_items(
             host_name,
             inventory_parameters=inventory_parameters,
-            parsed_sections_broker=parsed_sections_broker,
+            providers=providers,
             inventory_plugins=inventory_plugins,
             run_plugin_names=run_plugin_names,
         )
@@ -306,7 +307,7 @@ def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
     inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
@@ -320,9 +321,7 @@ def _collect_inventory_plugin_items(
         for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
             if not (
                 kwargs := get_section_kwargs(
-                    parsed_sections_broker,
-                    HostKey(host_name, source_type),
-                    inventory_plugin.sections,
+                    providers, HostKey(host_name, source_type), inventory_plugin.sections
                 )
             ):
                 console.vverbose(
@@ -358,7 +357,9 @@ def _collect_inventory_plugin_items(
 
             yield ItemsOfInventoryPlugin(
                 items=inventory_plugin_items,
-                raw_cache_info=parsed_sections_broker.get_cache_info(inventory_plugin.sections),
+                raw_cache_info=ParsedSectionsBroker.get_cache_info(
+                    inventory_plugin.sections, providers
+                ),
             )
 
             console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")

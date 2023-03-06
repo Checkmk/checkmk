@@ -17,14 +17,15 @@ from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
 
-from cmk.checkers import FetcherFunction, ParserFunction
+from cmk.checkers import FetcherFunction, HostKey, ParserFunction
 from cmk.checkers.discovery import AutochecksStore
 
 import cmk.base.core
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
-    make_broker,
+    make_providers,
     ParsedSectionsBroker,
+    Provider,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
@@ -72,11 +73,11 @@ def commandline_discovery(
             fetched = fetcher(host_name, ip_address=None)
             host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
             store_piggybacked_sections(host_sections)
-            parsed_sections_broker = make_broker(host_sections, section_plugins)
+            providers = make_providers(host_sections, section_plugins)
             _commandline_discovery_on_host(
                 host_name=host_name,
                 config_cache=config_cache,
-                parsed_sections_broker=parsed_sections_broker,
+                providers=providers,
                 check_plugins=check_plugins,
                 run_plugin_names=run_plugin_names,
                 only_new=arg_only_new,
@@ -132,7 +133,7 @@ def _analyse_node_labels(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     ruleset_matcher: RulesetMatcher,
     load_labels: bool,
     save_labels: bool,
@@ -146,16 +147,14 @@ def _analyse_node_labels(
 
         discovered_host_labels = discover_cluster_labels(
             nodes,
-            parsed_sections_broker=parsed_sections_broker,
+            providers=providers,
             load_labels=load_labels,
             save_labels=save_labels,
             on_error=on_error,
         )
     else:
         discovered_host_labels = discover_host_labels(
-            host_name,
-            parsed_sections_broker=parsed_sections_broker,
-            on_error=on_error,
+            host_name, providers=providers, on_error=on_error
         )
     return analyse_host_labels(
         host_name,
@@ -170,7 +169,7 @@ def _commandline_discovery_on_host(
     *,
     host_name: HostName,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
@@ -184,7 +183,7 @@ def _commandline_discovery_on_host(
     host_labels = _analyse_node_labels(
         host_name=host_name,
         config_cache=config_cache,
-        parsed_sections_broker=parsed_sections_broker,
+        providers=providers,
         ruleset_matcher=config_cache.ruleset_matcher,
         load_labels=load_labels,
         save_labels=True,
@@ -202,7 +201,7 @@ def _commandline_discovery_on_host(
     service_result = analyse_discovered_services(
         config_cache,
         host_name,
-        parsed_sections_broker=parsed_sections_broker,
+        providers=providers,
         check_plugins=check_plugins,
         run_plugin_names=run_plugin_names,
         forget_existing=not only_new,
@@ -221,6 +220,6 @@ def _commandline_discovery_on_host(
     count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} services")
 
-    for result in check_parsing_errors(parsed_sections_broker.parsing_errors()):
+    for result in check_parsing_errors(ParsedSectionsBroker.parsing_errors(providers)):
         for line in result.details:
             console.warning(line)

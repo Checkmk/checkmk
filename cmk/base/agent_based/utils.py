@@ -10,13 +10,13 @@ from cmk.utils.type_defs import ParsedSectionName, ServiceState
 from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult
 
-from .data_provider import ParsedSectionContent, ParsedSectionsBroker
+from .data_provider import ParsedSectionContent, ParsedSectionsBroker, Provider
 
 _SectionKwargs = Mapping[str, ParsedSectionContent]
 
 
 def get_section_kwargs(
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     host_key: HostKey,
     parsed_section_names: Sequence[ParsedSectionName],
 ) -> _SectionKwargs:
@@ -32,7 +32,7 @@ def get_section_kwargs(
     )
 
     kwargs = {
-        key: parsed_sections_broker.get_parsed_section(host_key, parsed_section_name)
+        key: ParsedSectionsBroker.get_parsed_section(host_key, parsed_section_name, providers)
         for key, parsed_section_name in zip(keys, parsed_section_names)
     }
     # empty it, if nothing was found:
@@ -43,7 +43,7 @@ def get_section_kwargs(
 
 
 def get_section_cluster_kwargs(
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     node_keys: Sequence[HostKey],
     parsed_section_names: Sequence[ParsedSectionName],
 ) -> Mapping[str, _SectionKwargs]:
@@ -54,7 +54,7 @@ def get_section_cluster_kwargs(
     """
     kwargs: dict[str, dict[str, ParsedSectionContent]] = {}
     for node_key in node_keys:
-        node_kwargs = get_section_kwargs(parsed_sections_broker, node_key, parsed_section_names)
+        node_kwargs = get_section_kwargs(providers, node_key, parsed_section_names)
         for key, sections_node_data in node_kwargs.items():
             kwargs.setdefault(key, {})[node_key.hostname] = sections_node_data
     # empty it, if nothing was found:

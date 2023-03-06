@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.tags import TagGroup, TagID
 from cmk.utils.version import is_cloud_edition, is_raw_edition
 
@@ -2545,131 +2546,134 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
         return "use_new_descriptions_for"
 
     def valuespec(self) -> ValueSpec:
-        return ListChoice(
-            title=_("Use new service descriptions"),
-            help=_(
-                "In order to make Check_MK more consistent, "
-                "the descriptions of several services have been renamed in newer "
-                "Check_MK versions. One example is the filesystem services that have "
-                "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
-                "of existing services has many implications - including existing rules, performance "
-                "data and availability history - these renamings are disabled per default for "
-                "existing installations. Here you can switch to the new descriptions for "
-                "selected check types"
+        return Migrate(
+            ListChoice(
+                title=_("Use new service descriptions"),
+                help=_(
+                    "In order to make Check_MK more consistent, "
+                    "the descriptions of several services have been renamed in newer "
+                    "Check_MK versions. One example is the filesystem services that have "
+                    "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
+                    "of existing services has many implications - including existing rules, performance "
+                    "data and availability history - these renamings are disabled per default for "
+                    "existing installations. Here you can switch to the new descriptions for "
+                    "selected check types"
+                ),
+                choices=[
+                    ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
+                    ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
+                    ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
+                    ("casa_cpu_temp", _("Casa module: CPU temperature")),
+                    ("cisco_mem", _("Cisco Memory Usage (%s)") % "cisco_mem"),
+                    ("cisco_mem_asa", _("Cisco Memory Usage (%s)") % "cisco_mem_asa"),
+                    ("cisco_mem_asa64", _("Cisco Memory Usage (%s)") % "cisco_mem_asa64"),
+                    ("cmciii_psm_current", _("Rittal CMC-III Units: Current")),
+                    ("cmciii_temp", _("Rittal CMC-III Units: Temperatures")),
+                    ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
+                    ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
+                    ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
+                    (
+                        "cmk_inventory",
+                        _("Monitor hosts for unchecked services (Checkmk Discovery)"),
+                    ),
+                    ("db2_mem", _("DB2 memory usage")),
+                    ("df", _("Used space in filesystems")),
+                    ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
+                    (
+                        "df_netapp32",
+                        _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
+                    ),
+                    ("docker_container_mem", _("Memory usage of Docker containers")),
+                    ("enterasys_temp", _("Enterasys Switch: Temperature")),
+                    ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
+                    ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
+                    ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory Usage of ESX Clusters")),
+                    ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
+                    ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
+                    (
+                        "fortigate_memory_base",
+                        _("Memory usage of Fortigate devices (fortigate_memory_base)"),
+                    ),
+                    ("fortigate_node_memory", _("Fortigate node memory")),
+                    ("hr_fs", _("Used space in filesystems via SNMP")),
+                    ("hr_mem", _("HR: Used memory via SNMP")),
+                    ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
+                    (
+                        "huawei_switch_mem",
+                        _("Memory percentage used of devices with modules (Huawei)"),
+                    ),
+                    ("hyperv_vms", _("Hyper-V Server: State of VMs")),
+                    (
+                        "ibm_svc_mdiskgrp",
+                        _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
+                    ),
+                    ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
+                    ("ibm_svc_systemstats_cache", _("IBM SVC / V7000: Cache Usage in Total")),
+                    (
+                        "ibm_svc_systemstats_disk_latency",
+                        _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
+                    ),
+                    (
+                        "ibm_svc_systemstats_diskio",
+                        _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"),
+                    ),
+                    (
+                        "ibm_svc_systemstats_iops",
+                        _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
+                    ),
+                    ("innovaphone_mem", _("Innovaphone Memory Usage")),
+                    ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
+                    ("juniper_mem", _("Juniper Memory Usage (%s)") % "juniper_mem"),
+                    (
+                        "juniper_screenos_mem",
+                        _("Juniper Memory Usage (%s)") % "juniper_screenos_mem",
+                    ),
+                    ("juniper_trpz_mem", _("Juniper Memory Usage (%s)") % "juniper_trpz_mem"),
+                    ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
+                    ("logwatch", _("Check logfiles for relevant new messages")),
+                    ("logwatch_groups", _("Check logfile groups")),
+                    ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
+                    ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
+                    ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
+                    ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
+                    ("mem_win", _("Memory usage for %s hosts") % "Windows"),
+                    ("mknotifyd", _("Notification Spooler")),
+                    ("mknotifyd_connection", _("Notification Spooler Connection")),
+                    ("mssql_backup", _("MSSQL Backup")),
+                    ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
+                    ("mssql_counters_cache_hits", _("MSSQL Cache Hits")),
+                    ("mssql_counters_file_sizes", _("MSSQL File Sizes")),
+                    ("mssql_counters_locks", _("MSSQL Locks")),
+                    ("mssql_counters_locks_per_batch", _("MSSQL Locks per Batch")),
+                    ("mssql_counters_pageactivity", _("MSSQL Page Activity")),
+                    ("mssql_counters_sqlstats", _("MSSQL SQL Stats")),
+                    ("mssql_counters_transactions", _("MSSQL Transactions")),
+                    ("mssql_databases", _("MSSQL Database")),
+                    ("mssql_datafiles", _("MSSQL Datafile")),
+                    ("mssql_tablespaces", _("MSSQL Tablespace")),
+                    ("mssql_transactionlogs", _("MSSQL Transactionlog")),
+                    ("mssql_versions", _("MSSQL Version")),
+                    ("netscaler_mem", _("Netscaler Memory Usage")),
+                    ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
+                    ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
+                    ("postfix_mailq", _("Postfix: Mail Queue")),
+                    ("ps", _("State and Count of Processes")),
+                    ("qmail_stats", _("Qmail: Mail Queue")),
+                    ("raritan_emx", _("Raritan EMX Rack: Temperature")),
+                    ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
+                    ("services", _("Windows Services")),
+                    ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
+                    ("sophos_memory", _("Sophos Memory utilization")),
+                    ("statgrab_mem", _("Statgrab Memory Usage")),
+                    ("tplink_mem", _("TP Link: Used memory via SNMP")),
+                    ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
+                    ("vms_diskstat_df", _("Disk space on OpenVMS")),
+                    ("wmic_process", _("Resource consumption of windows processes")),
+                    ("zfsget", _("Used space in ZFS pools and filesystems")),
+                ],
+                render_orientation="vertical",
             ),
-            choices=[
-                ("aix_memory", _("Memory usage for %s hosts") % "AIX"),
-                ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
-                ("brocade_sys_mem", _("Main memory usage for Brocade fibre channel switches")),
-                ("casa_cpu_temp", _("Casa module: CPU temperature")),
-                ("cisco_mem", _("Cisco Memory Usage (%s)") % "cisco_mem"),
-                ("cisco_mem_asa", _("Cisco Memory Usage (%s)") % "cisco_mem_asa"),
-                ("cisco_mem_asa64", _("Cisco Memory Usage (%s)") % "cisco_mem_asa64"),
-                ("cmciii_psm_current", _("Rittal CMC-III Units: Current")),
-                ("cmciii_temp", _("Rittal CMC-III Units: Temperatures")),
-                ("cmciii_lcp_airin", _("Rittal CMC-III LCP: Air In and Temperature")),
-                ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
-                ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
-                (
-                    "cmk_inventory",
-                    _("Monitor hosts for unchecked services (Checkmk Discovery)"),
-                ),
-                ("db2_mem", _("DB2 memory usage")),
-                ("df", _("Used space in filesystems")),
-                ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
-                (
-                    "df_netapp32",
-                    _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
-                ),
-                ("docker_container_mem", _("Memory usage of Docker containers")),
-                ("enterasys_temp", _("Enterasys Switch: Temperature")),
-                ("esx_vsphere_datastores", _("VMware ESX host systems: Used space")),
-                ("esx_vsphere_hostsystem_mem_usage", _("Main memory usage of ESX host system")),
-                ("esx_vsphere_hostsystem_mem_usage_cluster", _("Memory Usage of ESX Clusters")),
-                ("etherbox_temp", _("Etherbox / MessPC: Sensor Temperature")),
-                ("fortigate_memory", _("Memory usage of Fortigate devices (fortigate_memory)")),
-                (
-                    "fortigate_memory_base",
-                    _("Memory usage of Fortigate devices (fortigate_memory_base)"),
-                ),
-                ("fortigate_node_memory", _("Fortigate node memory")),
-                ("hr_fs", _("Used space in filesystems via SNMP")),
-                ("hr_mem", _("HR: Used memory via SNMP")),
-                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
-                (
-                    "huawei_switch_mem",
-                    _("Memory percentage used of devices with modules (Huawei)"),
-                ),
-                ("hyperv_vms", _("Hyper-V Server: State of VMs")),
-                (
-                    "ibm_svc_mdiskgrp",
-                    _("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
-                ),
-                ("ibm_svc_system", _("IBM SVC / V7000: System Info")),
-                ("ibm_svc_systemstats_cache", _("IBM SVC / V7000: Cache Usage in Total")),
-                (
-                    "ibm_svc_systemstats_disk_latency",
-                    _("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
-                ),
-                (
-                    "ibm_svc_systemstats_diskio",
-                    _("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"),
-                ),
-                (
-                    "ibm_svc_systemstats_iops",
-                    _("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
-                ),
-                ("innovaphone_mem", _("Innovaphone Memory Usage")),
-                ("innovaphone_temp", _("Innovaphone Gateway: Current Temperature")),
-                ("juniper_mem", _("Juniper Memory Usage (%s)") % "juniper_mem"),
-                (
-                    "juniper_screenos_mem",
-                    _("Juniper Memory Usage (%s)") % "juniper_screenos_mem",
-                ),
-                ("juniper_trpz_mem", _("Juniper Memory Usage (%s)") % "juniper_trpz_mem"),
-                ("liebert_bat_temp", _("Liebert UPS Device: Temperature sensor")),
-                ("logwatch", _("Check logfiles for relevant new messages")),
-                ("logwatch_groups", _("Check logfile groups")),
-                ("megaraid_pdisks", _("LSI MegaRAID: Physical Disks")),
-                ("megaraid_ldisks", _("LSI MegaRAID: Logical Disks")),
-                ("megaraid_bbu", _("LSI MegaRAID: Battery Backup Unit")),
-                ("mem_used", _("Main memory usage (UNIX / Other Devices)")),
-                ("mem_win", _("Memory usage for %s hosts") % "Windows"),
-                ("mknotifyd", _("Notification Spooler")),
-                ("mknotifyd_connection", _("Notification Spooler Connection")),
-                ("mssql_backup", _("MSSQL Backup")),
-                ("mssql_blocked_sessions", _("MSSQL Blocked Sessions")),
-                ("mssql_counters_cache_hits", _("MSSQL Cache Hits")),
-                ("mssql_counters_file_sizes", _("MSSQL File Sizes")),
-                ("mssql_counters_locks", _("MSSQL Locks")),
-                ("mssql_counters_locks_per_batch", _("MSSQL Locks per Batch")),
-                ("mssql_counters_pageactivity", _("MSSQL Page Activity")),
-                ("mssql_counters_sqlstats", _("MSSQL SQL Stats")),
-                ("mssql_counters_transactions", _("MSSQL Transactions")),
-                ("mssql_databases", _("MSSQL Database")),
-                ("mssql_datafiles", _("MSSQL Datafile")),
-                ("mssql_tablespaces", _("MSSQL Tablespace")),
-                ("mssql_transactionlogs", _("MSSQL Transactionlog")),
-                ("mssql_versions", _("MSSQL Version")),
-                ("netscaler_mem", _("Netscaler Memory Usage")),
-                ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
-                ("nvidia_temp", _("Temperatures of NVIDIA graphics card")),
-                ("postfix_mailq", _("Postfix: Mail Queue")),
-                ("ps", _("State and Count of Processes")),
-                ("qmail_stats", _("Qmail: Mail Queue")),
-                ("raritan_emx", _("Raritan EMX Rack: Temperature")),
-                ("raritan_pdu_inlet", _("Raritan PDU: Input Phases")),
-                ("services", _("Windows Services")),
-                ("solaris_mem", _("Memory usage for %s hosts") % "Solaris"),
-                ("sophos_memory", _("Sophos Memory utilization")),
-                ("statgrab_mem", _("Statgrab Memory Usage")),
-                ("tplink_mem", _("TP Link: Used memory via SNMP")),
-                ("ups_bat_temp", _("Generic UPS Device: Temperature sensor")),
-                ("vms_diskstat_df", _("Disk space on OpenVMS")),
-                ("wmic_process", _("Resource consumption of windows processes")),
-                ("zfsget", _("Used space in ZFS pools and filesystems")),
-            ],
-            render_orientation="vertical",
+            migrate=lambda values: [maincheckify(v) for v in values],
         )
 
 

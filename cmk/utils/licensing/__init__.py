@@ -120,6 +120,17 @@ def _create_sample() -> LicenseUsageSample:
     if not (instance_id := load_instance_id()):
         raise ValueError()
 
+    sample_time = int(
+        datetime.utcnow()
+        .replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        .timestamp()
+    )
+
     hosts_counter = _get_hosts_counter()
     shadow_hosts_counter = _get_shadow_hosts_counter()
     services_counter = _get_services_counter()
@@ -142,7 +153,7 @@ def _create_sample() -> LicenseUsageSample:
         num_services=services_counter.included,
         num_services_cloud=cloud_counter.services,
         num_services_excluded=services_counter.excluded,
-        sample_time=int(time.time()),
+        sample_time=sample_time,
         timezone=time.localtime().tm_zone,
         extension_ntop=extensions.ntop,
     )

@@ -157,7 +157,7 @@ class _Builder:
                 self._get_agent()
 
         if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
-            self._add(PiggybackSource(self.host_name, self.ipaddress))
+            self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
 
     def _initialize_snmp_plugin_store(self) -> None:
         if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
@@ -186,6 +186,7 @@ class _Builder:
         self._initialize_snmp_plugin_store()
         self._add(
             SNMPSource(
+                self.config_cache,
                 self.host_name,
                 self.ipaddress,
                 max_age=self.max_age_snmp,
@@ -208,6 +209,7 @@ class _Builder:
                 return
             self._add(
                 MgmtSNMPSource(
+                    self.config_cache,
                     self.host_name,
                     self.ipaddress,
                     max_age=self.max_age_snmp,
@@ -222,7 +224,11 @@ class _Builder:
             if ip_address is None:
                 self._add(MissingIPSource(self.host_name, ip_address, "mgmt_ipmi"))
                 return
-            self._add(IPMISource(self.host_name, ip_address, max_age=self.max_age_agent))
+            self._add(
+                IPMISource(
+                    self.config_cache, self.host_name, ip_address, max_age=self.max_age_agent
+                )
+            )
         else:
             raise LookupError()
 
@@ -233,9 +239,9 @@ class _Builder:
         with suppress(LookupError):
             self._add(
                 ProgramSource(
+                    self.config_cache,
                     self.host_name,
                     self.ipaddress,
-                    config_cache=self.config_cache,
                     max_age=self.max_age_agent,
                 )
             )
@@ -261,6 +267,7 @@ class _Builder:
                     return
                 self._add(
                     TCPSource(
+                        self.config_cache,
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,
@@ -323,7 +330,7 @@ def make_sources(
                 simulation=simulation_mode,
                 file_cache_options=file_cache_options,
             ),
-            source.fetcher(config_cache),
+            source.fetcher(),
         )
         for source in _Builder(
             host_name,

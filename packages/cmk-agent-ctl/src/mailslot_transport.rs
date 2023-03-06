@@ -110,12 +110,12 @@ pub fn build_own_mailslot_name() -> String {
 pub struct MailSlotBackend {
     srv: Option<JoinHandle<()>>, // option is need to call join(self) in drop
     stop_flag: Arc<AtomicBool>,
-    pub tx: Receiver<String>,
+    pub tx: Receiver<Vec<u8>>,
 }
 
 impl MailSlotBackend {
     pub fn new(name: &str) -> AnyhowResult<Self> {
-        let (rx, tx) = channel::<String>();
+        let (rx, tx) = channel::<Vec<u8>>();
         let stop = Arc::new(AtomicBool::new(false));
         let result = Self::start_mailslot_server(name, rx, Arc::clone(&stop));
         let Ok(srv) = result else { bail!(result.unwrap_err()); };
@@ -128,6 +128,8 @@ impl MailSlotBackend {
 
     /// Always returns correct string even if input is not valid utf8 sequence
     /// This is done to prevent crash/panic for the case if peer sends malformed data
+    /// DEPRECATED, will be cleaned upon fix confirmed
+    #[allow(dead_code)]
     fn try_as_utf8(msg: Vec<u8>) -> String {
         let decoded = String::from_utf8_lossy(&msg).into_owned();
         if decoded.contains(std::char::REPLACEMENT_CHARACTER) {
@@ -144,7 +146,7 @@ impl MailSlotBackend {
 
     fn mailslot_server_thread(
         base_name: String,
-        rx: Sender<String>,
+        rx: Sender<Vec<u8>>,
         cv_pair: &Arc<(Mutex<bool>, Condvar)>,
         stop: &AtomicBool,
     ) {
@@ -157,7 +159,7 @@ impl MailSlotBackend {
             Ok(mut server) => loop {
                 match server.get_next_unread() {
                     Ok(None) | Err(_) => sleep(Duration::from_millis(20)),
-                    Ok(Some(msg)) => rx.send(Self::try_as_utf8(msg)).unwrap_or_default(),
+                    Ok(Some(msg)) => rx.send(msg).unwrap_or_default(),
                 }
                 if stop.load(Ordering::Relaxed) {
                     break;
@@ -169,7 +171,7 @@ impl MailSlotBackend {
 
     fn start_mailslot_server(
         base_name: &str,
-        rx: Sender<String>,
+        rx: Sender<Vec<u8>>,
         stop: Arc<AtomicBool>,
     ) -> AnyhowResult<JoinHandle<()>> {
         let cv_pair = Arc::new((Mutex::new(false), Condvar::new()));
@@ -231,7 +233,7 @@ mod tests {
     }
 
     async fn receive_expected_messages_from_mailslot(
-        tx: &mut Receiver<String>,
+        tx: &mut Receiver<Vec<u8>>,
         count: i32,
     ) -> bool {
         for i in 0..count {
@@ -239,7 +241,7 @@ mod tests {
                 .await
                 .unwrap_or_default() // in tests we ignore elapsed
                 .unwrap_or_default(); // in tests we ignore errors
-            if i.to_string() != value {
+            if i.to_string().as_bytes() != value {
                 return false;
             }
         }
@@ -272,7 +274,7 @@ mod tests {
             .await
             .unwrap_or_default() // in tests we ignore elapsed
             .unwrap_or_default(); // in tests we ignore errors
-        Ok(value.as_bytes().to_owned())
+        Ok(value)
     }
 
     #[tokio::test(flavor = "multi_thread")]

@@ -128,11 +128,11 @@ async fn async_collect_from_mailslot(agent_mailslot: &str, remote_ip: IpAddr) ->
         .await
         .unwrap_or_else(|e| {
             warn!("Error on receive from channel {:?}", e);
-            Some("".to_string()) // we return empty string on timeout
+            Some(vec![]) // we return empty string on timeout
         })
         .unwrap_or_default();
 
-    Ok(value.as_bytes().to_owned())
+    Ok(value)
 }
 
 /// Sends the command to the agent channel and awaits

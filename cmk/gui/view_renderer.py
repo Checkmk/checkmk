@@ -539,7 +539,7 @@ class GUIViewRenderer(ABCViewRenderer):
             self.view.layout.can_display_checkboxes and not self.view.checkboxes_enforced
         )
         yield PageMenuEntry(
-            title=_("Hide checkboxes") if self.view.checkboxes_displayed else _("Show checkboxes"),
+            title=_("Show checkboxes"),
             icon_name="toggle_on" if self.view.checkboxes_displayed else "toggle_off",
             item=make_simple_link(
                 makeuri(

@@ -191,7 +191,7 @@ class ModeAuditLog(WatoMode):
                 title=_("Details"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Hide details") if self._show_details else _("Show details"),
+                        title=_("Show details"),
                         icon_name="toggle_on" if self._show_details else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(

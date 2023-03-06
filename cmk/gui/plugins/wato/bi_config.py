@@ -49,7 +49,6 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
-    make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
     make_simple_form_page_menu,
@@ -917,8 +916,7 @@ class ModeBIRules(ABCBIMode):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);"
-                            % make_checkbox_selection_json_text(),
+                            onclick="cmk.selection.toggle_all_rows(this.form);",
                             value="X",
                         ),
                         sortable=False,

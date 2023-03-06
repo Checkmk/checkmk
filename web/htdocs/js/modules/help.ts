@@ -21,14 +21,13 @@ function is_help_active() {
     return helpdivs.length !== 0 && helpdivs[0].style.display === "flex";
 }
 
-export function toggle(title_show: string, title_hide: string) {
+export function toggle() {
     if (is_help_active()) {
         switch_help(false);
-        toggle_help_page_menu_entry(title_show);
     } else {
         switch_help(true);
-        toggle_help_page_menu_entry(title_hide);
     }
+    toggle_help_page_menu_icon();
 }
 
 function switch_help(how: boolean) {
@@ -62,12 +61,10 @@ function switch_help(how: boolean) {
     ajax.call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
 
-function toggle_help_page_menu_entry(title: string) {
-    const entry = document.getElementById("menu_entry_inline_help")!;
-    const span = entry.getElementsByTagName("span")[0];
-    const icon = entry.getElementsByTagName("img")[0];
-
-    span.textContent = title;
+function toggle_help_page_menu_icon() {
+    const icon = document
+        .getElementById("menu_entry_inline_help")!
+        .getElementsByTagName("img")[0];
     icon.src = icon.src.includes("toggle_on")
         ? icon.src.replace("toggle_on", "toggle_off")
         : icon.src.replace("toggle_off", "toggle_on");

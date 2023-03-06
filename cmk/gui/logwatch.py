@@ -446,7 +446,7 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
             title=_("Context"),
             entries=[
                 PageMenuEntry(
-                    title=_("Show context") if context_hidden else _("Hide context"),
+                    title=_("Show context"),
                     icon_name="toggle_off" if context_hidden else "toggle_on",
                     item=make_simple_link(
                         makeactionuri(

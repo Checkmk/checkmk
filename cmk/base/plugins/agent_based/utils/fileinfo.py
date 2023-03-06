@@ -357,7 +357,7 @@ def check_fileinfo_data(
         else:
             age = reftime - file_info.time
             check_definition = [
-                MetricInfo("Size", "size", file_info.size, render.filesize),
+                MetricInfo("Size", "size", file_info.size, render.bytes),
                 MetricInfo("Age", "age", age, render.timespan),
             ]
             yield from _fileinfo_check_function(check_definition, params)
@@ -456,7 +456,7 @@ def _check_individual_files(
     if skip_ok_files and State(overall_state) == State.OK:
         return
 
-    size = render.filesize(file_size)
+    size = render.bytes(file_size)
     age = render.timespan(abs(adjusted_file_age))
 
     if adjusted_file_age < 0:
@@ -479,9 +479,9 @@ def _define_fileinfo_group_check(
     age_newest, age_oldest = files_matching["age_minmax"] or (None, None)
     return [
         MetricInfo("Count", "count", files_matching["count_all"], saveint),
-        MetricInfo("Size", "size", files_matching["size_all"], render.filesize),
-        MetricInfo("Largest size", "size_largest", size_largest, render.filesize),
-        MetricInfo("Smallest size", "size_smallest", size_smallest, render.filesize),
+        MetricInfo("Size", "size", files_matching["size_all"], render.bytes),
+        MetricInfo("Largest size", "size_largest", size_largest, render.bytes),
+        MetricInfo("Smallest size", "size_smallest", size_smallest, render.bytes),
         MetricInfo("Oldest age", "age_oldest", age_oldest, render.timespan),
         MetricInfo("Newest age", "age_newest", age_newest, render.timespan),
     ]

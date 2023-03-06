@@ -1,0 +1,18 @@
+Title: fileinfo: Show size in a human readable format
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678093310
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+With a migration to the new check API in version 2.1,
+fileinfo and fileinfo_group check plugin started showing
+size exclusively in bytes.
+Before, the file size was shown in a scaled unit (e.g. KiB, MiB, GiB, ...).
+
+With this werk, file size is shown in a human readable format again.
+

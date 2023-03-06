@@ -258,7 +258,7 @@ test-update:
 
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
-	$(PIPENV) run scripts/run-dockerized.py "$*"
+	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
 	$(PIPENV) run scripts/run-dockerized.py debug

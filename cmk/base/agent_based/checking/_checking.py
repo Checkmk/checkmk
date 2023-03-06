@@ -58,8 +58,9 @@ import cmk.base.core
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
-    make_broker,
+    make_providers,
     ParsedSectionsBroker,
+    Provider,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.inventory import inventorize_status_data_of_real_host
@@ -109,12 +110,12 @@ def execute_checkmk_checks(
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)
-    broker = make_broker(host_sections_no_error, section_plugins)
+    providers = make_providers(host_sections_no_error, section_plugins)
     with CPUTracker() as tracker:
         service_results = check_host_services(
             hostname,
             config_cache=config_cache,
-            parsed_sections_broker=broker,
+            providers=providers,
             services=services,
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
@@ -127,12 +128,12 @@ def execute_checkmk_checks(
                 inventory_parameters=config_cache.inventory_parameters,
                 inventory_plugins=inventory_plugins,
                 params=config_cache.hwsw_inventory_parameters(hostname),
-                parsed_sections_broker=broker,
+                providers=providers,
             )
         timed_results = itertools.chain(
             summarizer(host_sections),
             check_parsing_errors(
-                errors=broker.parsing_errors(),
+                errors=ParsedSectionsBroker.parsing_errors(providers),
             ),
             _check_plugins_missing_data(
                 service_results,
@@ -155,7 +156,7 @@ def _do_inventory_actions_during_checking_for(
     inventory_parameters: Callable[[HostName, PInventoryPlugin], dict[str, object]],
     inventory_plugins: Mapping[InventoryPluginName, PInventoryPlugin],
     params: HWSWInventoryParameters,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
 ) -> None:
     tree_store = TreeStore(cmk.utils.paths.status_data_dir)
 
@@ -167,7 +168,7 @@ def _do_inventory_actions_during_checking_for(
     status_data_tree = inventorize_status_data_of_real_host(
         host_name,
         inventory_parameters=inventory_parameters,
-        parsed_sections_broker=parsed_sections_broker,
+        providers=providers,
         inventory_plugins=inventory_plugins,
         run_plugin_names=EVERYTHING,
     )
@@ -268,7 +269,7 @@ def check_host_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
@@ -298,7 +299,7 @@ def check_host_services(
                     else get_aggregated_result(
                         host_name,
                         config_cache,
-                        parsed_sections_broker,
+                        providers,
                         service,
                         check_plugins[service.check_plugin_name],
                         value_store_manager=value_store_manager,
@@ -359,7 +360,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
 def get_aggregated_result(
     host_name: HostName,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
     plugin: CheckPlugin,
     *,
@@ -382,7 +383,7 @@ def get_aggregated_result(
     )
 
     section_kws, error_result = _get_monitoring_data_kwargs(
-        host_name, parsed_sections_broker, config_cache, service, plugin.sections
+        host_name, providers, config_cache, service, plugin.sections
     )
     if not section_kws:  # no data found
         return _AggregatedResult(
@@ -448,7 +449,7 @@ def get_aggregated_result(
         submit=True,
         data_received=True,
         result=result,
-        cache_info=parsed_sections_broker.get_cache_info(plugin.sections),
+        cache_info=ParsedSectionsBroker.get_cache_info(plugin.sections, providers),
     )
 
 
@@ -475,7 +476,7 @@ def _get_clustered_service_node_keys(
 
 def _get_monitoring_data_kwargs(
     host_name: HostName,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     config_cache: ConfigCache,
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
@@ -497,7 +498,7 @@ def _get_monitoring_data_kwargs(
         )
         return (
             get_section_cluster_kwargs(
-                parsed_sections_broker,
+                providers,
                 nodes,
                 sections,
             ),
@@ -506,7 +507,7 @@ def _get_monitoring_data_kwargs(
 
     return (
         get_section_kwargs(
-            parsed_sections_broker,
+            providers,
             HostKey(host_name, source_type),
             sections,
         ),

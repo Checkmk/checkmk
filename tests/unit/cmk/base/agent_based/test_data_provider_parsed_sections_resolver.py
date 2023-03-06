@@ -12,7 +12,6 @@ from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 from cmk.checkers import HostKey, SourceType
 
 from cmk.base.agent_based.data_provider import (
-    ParsedSectionsBroker,
     ParsedSectionsResolver,
     ParsingResult,
     ResolvedResult,
@@ -141,13 +140,9 @@ class TestParsedSectionsResolver:
             _section("section_thr", "parsed_section_thr", {"section_two"}),
             _section("section_fou", "parsed_section_fou", {"section_one"}),
         ]
-        broker = ParsedSectionsBroker(
-            {
-                host_key: self.make_provider(sections),  # type: ignore[dict-item]
-            }
-        )
+        providers = {host_key: self.make_provider(sections)}  # type: ignore[dict-item]
 
-        assert all_parsing_results(host_key, broker) == [
+        assert all_parsing_results(host_key, providers) == [  # type: ignore[arg-type]
             ResolvedResult(
                 parsed=ParsingResult(data=1, cache_info=None),
                 section=sections[0],

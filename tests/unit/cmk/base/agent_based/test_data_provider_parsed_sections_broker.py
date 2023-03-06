@@ -107,20 +107,19 @@ def test_get_parsed_section(
     node_sections: HostSections[AgentRawDataSection], expected_result: Mapping
 ) -> None:
 
-    parsed_sections_broker = ParsedSectionsBroker(
-        {
-            HostKey(HostName("node1"), SourceType.HOST): (
-                ParsedSectionsResolver(
-                    section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
-                ),
-                SectionsParser(host_sections=node_sections, host_name=HostName("node1")),
+    providers = {
+        HostKey(HostName("node1"), SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
             ),
-        }
-    )
+            SectionsParser(host_sections=node_sections, host_name=HostName("node1")),
+        ),
+    }
 
-    content = parsed_sections_broker.get_parsed_section(
+    content = ParsedSectionsBroker.get_parsed_section(
         HostKey(HostName("node1"), SourceType.HOST),
         ParsedSectionName("parsed"),
+        providers,
     )
 
     assert expected_result == content

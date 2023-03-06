@@ -28,7 +28,8 @@ from cmk.checkers.checkresults import ActiveCheckResult
 
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
-    make_broker,
+    make_providers,
+    ParsedSectionsBroker,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
@@ -67,13 +68,13 @@ def execute_check_discovery(
     host_sections = parser(fetched)
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)
-    parsed_sections_broker = make_broker(host_sections_no_error, section_plugins)
+    providers = make_providers(host_sections_no_error, section_plugins)
 
     host_labels = analyse_host_labels(
         host_name,
         discovered_host_labels=discover_host_labels(
             host_name,
-            parsed_sections_broker=parsed_sections_broker,
+            providers=providers,
             on_error=OnError.RAISE,
         ),
         ruleset_matcher=config_cache.ruleset_matcher,
@@ -83,7 +84,7 @@ def execute_check_discovery(
     services = get_host_services(
         host_name,
         config_cache=config_cache,
-        parsed_sections_broker=parsed_sections_broker,
+        providers=providers,
         check_plugins=check_plugins,
         find_service_description=find_service_description,
         on_error=OnError.RAISE,
@@ -104,7 +105,7 @@ def execute_check_discovery(
         discovery_mode,
     )
 
-    parsing_errors_results = check_parsing_errors(parsed_sections_broker.parsing_errors())
+    parsing_errors_results = check_parsing_errors(ParsedSectionsBroker.parsing_errors(providers))
 
     return ActiveCheckResult.from_subresults(
         *itertools.chain(

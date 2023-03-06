@@ -18,11 +18,7 @@ from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionsBroker,
-    ParsedSectionsResolver,
-    SectionsParser,
-)
+from cmk.base.agent_based.data_provider import ParsedSectionsResolver, SectionsParser
 from cmk.base.agent_based.utils import (
     check_parsing_errors,
     get_section_cluster_kwargs,
@@ -115,19 +111,17 @@ def test_get_section_kwargs(
 
     host_key = HostKey(HostName("node1"), SourceType.HOST)
 
-    parsed_sections_broker = ParsedSectionsBroker(
-        {
-            host_key: (
-                ParsedSectionsResolver(
-                    section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR]
-                ),
-                SectionsParser(host_sections=node_sections, host_name=host_key.hostname),
+    providers = {
+        host_key: (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR]
             ),
-        }
-    )
+            SectionsParser(host_sections=node_sections, host_name=host_key.hostname),
+        ),
+    }
 
     kwargs = get_section_kwargs(
-        parsed_sections_broker,
+        providers,
         host_key,
         [ParsedSectionName(n) for n in required_sections],
     )
@@ -192,25 +186,23 @@ def test_get_section_cluster_kwargs(
         }
     )
 
-    parsed_sections_broker = ParsedSectionsBroker(
-        {
-            HostKey(HostName("node1"), SourceType.HOST): (
-                ParsedSectionsResolver(
-                    section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
-                ),
-                SectionsParser(host_sections=node1_sections, host_name=HostName("node1")),
+    providers = {
+        HostKey(HostName("node1"), SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
             ),
-            HostKey(HostName("node2"), SourceType.HOST): (
-                ParsedSectionsResolver(
-                    section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
-                ),
-                SectionsParser(host_sections=node2_sections, host_name=HostName("node2")),
+            SectionsParser(host_sections=node1_sections, host_name=HostName("node1")),
+        ),
+        HostKey(HostName("node2"), SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
             ),
-        }
-    )
+            SectionsParser(host_sections=node2_sections, host_name=HostName("node2")),
+        ),
+    }
 
     kwargs = get_section_cluster_kwargs(
-        parsed_sections_broker,
+        providers,
         [
             HostKey(HostName("node1"), SourceType.HOST),
             HostKey(HostName("node2"), SourceType.HOST),

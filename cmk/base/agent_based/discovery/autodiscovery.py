@@ -32,15 +32,15 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.checkers import FetcherFunction, ParserFunction
+from cmk.checkers import FetcherFunction, HostKey, ParserFunction
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
 import cmk.base.config as config
 import cmk.base.core
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
-    make_broker,
-    ParsedSectionsBroker,
+    make_providers,
+    Provider,
     store_piggybacked_sections,
 )
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -127,14 +127,14 @@ def automation_discovery(
         fetched = fetcher(host_name, ip_address=None)
         host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
         store_piggybacked_sections(host_sections)
-        parsed_sections_broker = make_broker(host_sections, section_plugins)
+        providers = make_providers(host_sections, section_plugins)
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
                 host_name,
                 discovered_host_labels=discover_host_labels(
                     host_name,
-                    parsed_sections_broker=parsed_sections_broker,
+                    providers=providers,
                     on_error=on_error,
                 ),
                 ruleset_matcher=config_cache.ruleset_matcher,
@@ -154,7 +154,7 @@ def automation_discovery(
         services = _get_host_services(
             host_name,
             config_cache,
-            parsed_sections_broker,
+            providers,
             check_plugins=check_plugins,
             find_service_description=find_service_description,
             on_error=on_error,
@@ -196,7 +196,7 @@ def automation_discovery(
 def _get_host_services(
     host_name: HostName,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
@@ -207,7 +207,7 @@ def _get_host_services(
             **_get_cluster_services(
                 host_name,
                 config_cache=config_cache,
-                parsed_sections_broker=parsed_sections_broker,
+                providers=providers,
                 check_plugins=check_plugins,
                 find_service_description=find_service_description,
                 on_error=on_error,
@@ -219,7 +219,7 @@ def _get_host_services(
                 config_cache,
                 host_name,
                 check_plugins=check_plugins,
-                parsed_sections_broker=parsed_sections_broker,
+                providers=providers,
                 host_of_clustered_service=config_cache.host_of_clustered_service,
                 find_service_description=find_service_description,
                 on_error=on_error,
@@ -580,7 +580,7 @@ def get_host_services(
     *,
     config_cache: ConfigCache,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -590,7 +590,7 @@ def get_host_services(
             **_get_cluster_services(
                 host_name,
                 config_cache=config_cache,
-                parsed_sections_broker=parsed_sections_broker,
+                providers=providers,
                 check_plugins=check_plugins,
                 find_service_description=find_service_description,
                 on_error=on_error,
@@ -601,7 +601,7 @@ def get_host_services(
             **_get_node_services(
                 config_cache,
                 host_name,
-                parsed_sections_broker=parsed_sections_broker,
+                providers=providers,
                 check_plugins=check_plugins,
                 on_error=on_error,
                 host_of_clustered_service=config_cache.host_of_clustered_service,
@@ -623,8 +623,8 @@ def _get_node_services(
     config_cache: ConfigCache,
     host_name: HostName,
     *,
+    providers: Mapping[HostKey, Provider],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
     host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
@@ -633,7 +633,7 @@ def _get_node_services(
     service_result = analyse_discovered_services(
         config_cache,
         host_name,
-        parsed_sections_broker=parsed_sections_broker,
+        providers=providers,
         check_plugins=check_plugins,
         run_plugin_names=EVERYTHING,
         forget_existing=False,
@@ -717,7 +717,7 @@ def _get_cluster_services(
     *,
     config_cache: ConfigCache,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
@@ -734,7 +734,7 @@ def _get_cluster_services(
             config_cache,
             node,
             check_plugins=check_plugins,
-            parsed_sections_broker=parsed_sections_broker,
+            providers=providers,
             run_plugin_names=EVERYTHING,
             forget_existing=False,
             keep_vanished=False,

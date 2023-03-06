@@ -11,9 +11,6 @@ description:
  in {check_mk.ini}, please make sure, that the entry {234:phydisk}
  is present.
 
- Please add {"winperf.diskstat"} to you {ignored_checktypes} in {main.mk},
- if all of your agents support {winperf_phydisk}.
-
  This check share the same code and features as the check {diskstat},
  so the rest of this manual page is identical with that of diskstat.
 

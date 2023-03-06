@@ -694,10 +694,6 @@ def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None
         global_dict["service_descriptions"] = {
             maincheckify(k): str(v) for k, v in global_dict["service_descriptions"].items()
         }
-    if "ignored_checktypes" in global_dict:
-        global_dict["ignored_checktypes"] = [
-            maincheckify(n) for n in global_dict["ignored_checktypes"]
-        ]
 
 
 def _collect_parameter_rulesets_from_globals(global_dict: dict[str, Any]) -> None:
@@ -4323,9 +4319,6 @@ class ConfigCache:
             return False
 
         check_plugin_name_str = str(check_plugin_name)
-
-        if check_plugin_name_str in ignored_checktypes:
-            return True
 
         if _checktype_ignored_for_host(check_plugin_name_str):
             return True

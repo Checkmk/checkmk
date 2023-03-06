@@ -1,21 +1,6 @@
 # The following files contain a lot of ESLint warnings or errors.
 # These issues will be fixed on a file per file basis over a longer period of time.
 
-web/htdocs/js/modules/node_visualization/node_visualization_layout.*s
-web/htdocs/js/modules/node_visualization/node_visualization_infobox.*s
-web/htdocs/js/modules/node_visualization/node_visualization_viewport_layers.*s
-web/htdocs/js/modules/node_visualization/node_visualization_toolbar.*s
-web/htdocs/js/modules/node_visualization/node_visualization.*s
-web/htdocs/js/modules/node_visualization/node_visualization_search.*s
-web/htdocs/js/modules/node_visualization/node_visualization_viewport_utils.*s
-web/htdocs/js/modules/node_visualization/node_visualization_toolbar_utils.*s
-web/htdocs/js/modules/node_visualization/node_visualization_datasources.*s
-web/htdocs/js/modules/node_visualization/node_visualization_layouting.*s
-web/htdocs/js/modules/node_visualization/node_visualization_layout_styles.*s
-web/htdocs/js/modules/node_visualization/node_visualization_viewport.*s
-web/htdocs/js/modules/node_visualization/node_visualization_utils.*s
-web/htdocs/js/modules/node_visualization/node_visualization_layouting_utils.*s
-
 
 # These are just copied files and should be replaced
 # with npm dependencies in the future

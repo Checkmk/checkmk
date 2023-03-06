@@ -6,10 +6,8 @@
 from collections.abc import Callable, Mapping
 
 
-def scan(oid: Callable[[str], str]) -> str:
-    return oid(".1.3.6.1.4.1.674.*") and oid(  #
-        ".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0"
-    )  # shared with dell_hw_info (performance!)
+def scan(oid: Callable[[str], str]) -> bool:
+    return bool(oid(".1.3.6.1.4.1.674.*")) and bool(oid(".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0"))
 
 
 def discover(info):

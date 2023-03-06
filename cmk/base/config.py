@@ -1665,14 +1665,7 @@ def load_checks(  # pylint: disable=too-many-branches
         # The default_levels_variable of check_info also declares use of a global
         # variable. Register it here for this context.
         for check_plugin_name in new_checks:
-            # The check_info is not converted yet (convert_check_info()). This means we need
-            # to deal with old style tuple configured checks
-            if isinstance(check_info[check_plugin_name], tuple):
-                default_levels_varname = check_default_levels.get(check_plugin_name)
-            else:
-                default_levels_varname = check_info[check_plugin_name].get(
-                    "default_levels_variable"
-                )
+            default_levels_varname = check_info[check_plugin_name].get("default_levels_variable")
 
             if default_levels_varname:
                 # Add the initial configuration to the check context to have a consistent state
@@ -2041,54 +2034,25 @@ def convert_check_info() -> None:  # pylint: disable=too-many-branches
         section_name = section_name_of(check_plugin_name)
 
         if not isinstance(info, dict):
-            # Convert check declaration from old style to new API. We need some Kung Fu to
-            # explain this typing chaos to mypy, otherwise info has the funny type <nothing>.
-            old_skool_info: Any = info
-            check_function, descr, has_perfdata, inventory_function = old_skool_info
+            raise NotImplementedError("Please use the new check API")
 
-            scan_function = snmp_scan_functions.get(
-                check_plugin_name, snmp_scan_functions.get(section_name)
-            )
+        # Ensure that there are only the known keys set. Is meant to detect typos etc.
+        for key in info:
+            if key != "includes" and key not in check_info_defaults:
+                raise MKGeneralException(
+                    "The check '%s' declares an unexpected key '%s' in 'check_info'."
+                    % (check_plugin_name, key)
+                )
 
-            check_info[check_plugin_name] = {
-                "check_function": check_function,
-                "service_description": descr,
-                "has_perfdata": bool(has_perfdata),
-                "inventory_function": inventory_function,
-                # Insert check name as group if no group is being defined
-                "group": check_plugin_name,
-                "snmp_info": snmp_info.get(check_plugin_name),
-                # Sometimes the scan function is assigned to the check_plugin_name
-                # rather than to the base name.
-                "snmp_scan_function": scan_function,
-                # The 'handle_empty_info' feature predates the 'parse_function'
-                # and is not needed nor used anymore.
-                "handle_empty_info": False,
-                "handle_real_time_checks": False,
-                "default_levels_variable": check_default_levels.get(check_plugin_name),
-                "node_info": False,
-                "parse_function": None,
-                "extra_sections": [],
-                "management_board": None,
-            }
-        else:
-            # Ensure that there are only the known keys set. Is meant to detect typos etc.
-            for key in info:
-                if key != "includes" and key not in check_info_defaults:
-                    raise MKGeneralException(
-                        "The check '%s' declares an unexpected key '%s' in 'check_info'."
-                        % (check_plugin_name, key)
-                    )
+        # Check does already use new API. Make sure that all keys are present,
+        # extra check-specific information into file-specific variables.
+        for key, val in check_info_defaults.items():
+            info.setdefault(key, val)
 
-            # Check does already use new API. Make sure that all keys are present,
-            # extra check-specific information into file-specific variables.
-            for key, val in check_info_defaults.items():
-                info.setdefault(key, val)
-
-            # Include files are related to the check file (= the section_name),
-            # not to the (sub-)check. So we keep them in check_includes.
-            check_includes.setdefault(section_name, [])
-            check_includes[section_name] += info.get("includes", [])
+        # Include files are related to the check file (= the section_name),
+        # not to the (sub-)check. So we keep them in check_includes.
+        check_includes.setdefault(section_name, [])
+        check_includes[section_name] += info.get("includes", [])
 
     # Make sure that setting for node_info of check and subcheck matches
     for check_plugin_name, info in check_info.items():

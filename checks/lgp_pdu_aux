@@ -161,25 +161,17 @@ def check_lgp_pdu_aux(item, params, info):
     return (3, "Could not find given PDU.")
 
 
-check_info["lgp_pdu_aux"] = (check_lgp_pdu_aux, "Liebert PDU AUX %s", 1, inventory_lgp_pdu_aux)
-
-snmp_info["lgp_pdu_aux"] = (
-    ".1.3.6.1.4.1.476.1.42.3.8.60.15",
-    [
-        OID_END,
-        "1",  # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasTable
-    ],
-)
-
-snmp_scan_functions["lgp_pdu_aux"] = (
-    lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.476.1.42"
-)
-
-# check_info["lgp_pdu_aux"] = {
-#    "check_function"        : check_lgp_pdu_aux,
-#    "inventory_function"    : inventory_lgp_pdu_aux,
-#    "service_description"   : "Liebert PDU AUX %s",
-#    "has_perfdata"          : True,
-#    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == \
-#                                          ".1.3.6.1.4.1.476.1.42"
-# }
+check_info["lgp_pdu_aux"] = {
+    "check_function": check_lgp_pdu_aux,
+    "inventory_function": inventory_lgp_pdu_aux,
+    "service_description": "Liebert PDU AUX %s",
+    "has_perfdata": True,
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.476.1.42",
+    "snmp_info": (
+        ".1.3.6.1.4.1.476.1.42.3.8.60.15",
+        [
+            OID_END,
+            "1",  # LIEBERT-GP-PDU-MIB::lgpPduAuxMeasTable
+        ],
+    ),
+}

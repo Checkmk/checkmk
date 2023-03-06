@@ -17,6 +17,8 @@ from cmk.base.plugins.agent_based.utils.kube import (
     CreationTimestamp,
     FilteredAnnotations,
     kube_annotations_to_cmk_labels,
+    kube_labels_to_cmk_labels,
+    Labels,
 )
 
 
@@ -94,6 +96,7 @@ class Info(Protocol):
     namespace: str
     name: str
     annotations: FilteredAnnotations
+    labels: Labels
 
 
 def host_labels(
@@ -138,5 +141,6 @@ def host_labels(
         yield HostLabel("cmk/kubernetes/namespace", section.namespace)
         yield HostLabel(f"cmk/kubernetes/{object_type}", section.name)
         yield from kube_annotations_to_cmk_labels(section.annotations)
+        yield from kube_labels_to_cmk_labels(section.labels)
 
     return _host_labels

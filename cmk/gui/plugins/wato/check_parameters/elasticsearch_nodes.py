@@ -16,7 +16,7 @@ def _parameter_valuespec_elasticsearch_nodes():
     return Dictionary(
         elements=[
             (
-                "cpu_levels",
+                "cpu_percent",
                 Tuple(
                     title=_("Expected cpu usage"),
                     elements=[

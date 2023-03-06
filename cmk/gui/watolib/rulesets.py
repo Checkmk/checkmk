@@ -419,13 +419,13 @@ class RulesetCollection:
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
 
-    def get(self, name: RulesetName, deflt=None) -> Ruleset:  # type:ignore[no-untyped-def]
+    def get(self, name: RulesetName) -> Ruleset:
         return self._rulesets[name]
 
     def set(self, name: RulesetName, ruleset: Ruleset) -> None:
         self._rulesets[name] = ruleset
 
-    def delete(self, name: RulesetName):  # type:ignore[no-untyped-def]
+    def delete(self, name: RulesetName) -> None:
         del self._rulesets[name]
 
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:

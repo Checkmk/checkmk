@@ -116,6 +116,17 @@ def _load_history_dump() -> LicenseUsageHistoryDump:
 
 
 def _create_sample() -> Optional[LicenseUsageSample]:
+    sample_time = int(
+        datetime.utcnow()
+        .replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+        .timestamp()
+    )
+
     hosts_counter = _get_hosts_counter()
     services_counter = _get_services_counter()
 
@@ -137,7 +148,7 @@ def _create_sample() -> Optional[LicenseUsageSample]:
         num_hosts_excluded=hosts_counter.excluded,
         num_services=services_counter.included,
         num_services_excluded=services_counter.excluded,
-        sample_time=int(time.time()),
+        sample_time=sample_time,
         timezone=time.localtime().tm_zone,
         extensions=_get_extensions(),
     )

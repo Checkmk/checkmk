@@ -847,24 +847,6 @@ def _verify_no_deprecated_variables_used() -> None:
         console.error("ERROR: snmp_communities cannot be a dict any more.\n")
         sys.exit(1)
 
-    # Legacy checks have never been supported by CMC, were not configurable via WATO
-    # and have been removed with Checkmk 1.6
-    if legacy_checks:
-        console.error(
-            'Check_MK does not support the configuration variable "legacy_checks" anymore. '
-            "Please use custom_checks or active_checks instead.\n"
-        )
-        sys.exit(1)
-
-    # "checks" declarations were never possible via WATO. They can be configured using
-    # "static_checks" using the GUI. "checks" has been removed with Checkmk 1.6.
-    if checks:
-        console.error(
-            'Check_MK does not support the configuration variable "checks" anymore. '
-            'Please use "static_checks" instead (which is configurable via "Enforced services" in Setup).\n'
-        )
-        sys.exit(1)
-
 
 def all_nonfunction_vars() -> set[str]:
     return {

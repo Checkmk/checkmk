@@ -156,7 +156,6 @@ tag_config: TagConfigSpec = {
     "aux_tags": [],
     "tag_groups": [],
 }
-checks: list[RuleSpec[object]] = []
 static_checks: dict[str, list[RuleSpec[object]]] = {}
 check_parameters: list[RuleSpec[object]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[object]]] = {}
@@ -297,7 +296,6 @@ non_aggregated_hosts: list = []
 aggregate_check_mk = False
 aggregation_output_format = "multiline"  # new in 1.1.6. Possible also: "multiline"
 aggr_summary_hostname = "%s-s"
-legacy_checks: list[RuleSpec[object]] = []
 # END Kept for compatibility
 
 status_data_inventory: list[RuleSpec[object]] = []

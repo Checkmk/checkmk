@@ -48,7 +48,7 @@ checks = {
     "": [
         (
             "DGfRL2s",
-            {"cpu_levels": (75.0, 90.0)},
+            {"cpu_percent": (75.0, 90.0)},
             [
                 (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
                 (
@@ -75,7 +75,7 @@ checks = {
         ),
         (
             "ZwGy2o7",
-            {"cpu_levels": (75.0, 90.0)},
+            {"cpu_percent": (75.0, 90.0)},
             [
                 (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
                 (
@@ -102,7 +102,7 @@ checks = {
         ),
         (
             "fKw8YbK",
-            {"cpu_levels": (75.0, 90.0)},
+            {"cpu_percent": (75.0, 90.0)},
             [
                 (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
                 (
@@ -129,7 +129,7 @@ checks = {
         ),
         (
             "g8YT0-P",
-            {"cpu_levels": (75.0, 90.0)},
+            {"cpu_percent": (75.0, 90.0)},
             [
                 (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
                 (
@@ -156,7 +156,7 @@ checks = {
         ),
         (
             "huh3AiI",
-            {"cpu_levels": (75.0, 90.0)},
+            {"cpu_percent": (75.0, 90.0)},
             [
                 (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
                 (

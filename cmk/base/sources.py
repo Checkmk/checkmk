@@ -22,7 +22,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkers import Parser, SNMPParser, SourceInfo
+from cmk.checkers import Parser, SNMPParser, Source, SourceInfo
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -39,7 +39,6 @@ from ._sources import (
     ProgramSource,
     PushAgentSource,
     SNMPSource,
-    Source,
     SpecialAgentSource,
     TCPSource,
 )

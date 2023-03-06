@@ -48,17 +48,27 @@ class AuxTag:
             tag_id=tag_info["id"],
             title=tag_info["title"],
             topic=tag_info.get("topic"),
+            help=tag_info.get("help"),
         )
 
-    def __init__(self, tag_id: TagID, title: str, topic: Optional[str]) -> None:
+    def __init__(
+        self,
+        tag_id: TagID,
+        title: str,
+        topic: Optional[str],
+        help: Optional[str],  # pylint: disable=redefined-builtin
+    ) -> None:
         self.id = tag_id
         self.title = title
         self.topic = topic
+        self.help = help
 
     def to_config(self) -> AuxTagSpec:
         response = AuxTagSpec({"id": self.id, "title": self.title})
         if self.topic:
             response["topic"] = self.topic
+        if self.help:
+            response["help"] = self.help
         return response
 
     @property

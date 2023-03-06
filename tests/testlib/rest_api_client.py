@@ -598,6 +598,7 @@ class RestApiClient:
 class AuxTagEditRequest(BaseModel):
     title: Optional[StrictStr]
     topic: Optional[StrictStr]
+    help: Optional[StrictStr]
 
 
 class AuxTagCreateRequest(AuxTagEditRequest):
@@ -606,6 +607,7 @@ class AuxTagCreateRequest(AuxTagEditRequest):
 
 class AuxTagResponseObject(BaseModel):
     topic: StrictStr
+    help: StrictStr
 
 
 class AuxTagObjectResponse(ObjectResponse):
@@ -664,6 +666,7 @@ class AuxTagTestClient(RestApiClient):
             create_response = AuxTagObjectResponse(**resp.json)
             assert tag_data.aux_tag_id == create_response.id
             assert tag_data.topic == create_response.extensions.topic
+            assert tag_data.help == create_response.extensions.help
             assert tag_data.title == create_response.title
         return resp
 
@@ -691,6 +694,7 @@ class AuxTagTestClient(RestApiClient):
             edit_response = AuxTagObjectResponse(**resp.json)
             assert aux_tag_id == edit_response.id
             assert tag_data.topic == edit_response.extensions.topic
+            assert tag_data.help == edit_response.extensions.help
             assert tag_data.title == edit_response.title
         return resp
 

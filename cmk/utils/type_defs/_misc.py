@@ -200,6 +200,7 @@ class GroupedTagSpec(TypedDict):
 
 class _AuxTagSpecOpt(TypedDict, total=False):
     topic: str
+    help: str
 
 
 class AuxTagSpec(_AuxTagSpecOpt):

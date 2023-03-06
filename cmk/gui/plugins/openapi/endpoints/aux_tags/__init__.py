@@ -106,6 +106,7 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
         tag_id=params["body"]["aux_tag_id"],
         title=params["body"]["title"],
         topic=params["body"].get("topic"),
+        help=params["body"].get("help"),
     )
     tag_config.insert_aux_tag(aux_tag)
     update_tag_config(tag_config)
@@ -133,6 +134,7 @@ def put_aux_tag(params: Mapping[str, Any]) -> Response:
         tag_id=params["aux_tag_id"],
         title=params["body"].get("title", existing_tag.title),
         topic=params["body"].get("topic", existing_tag.topic),
+        help=params["body"].get("help", existing_tag.help),
     )
     tag_config.update_aux_tag(TagID(params["aux_tag_id"]), aux_tag)
     update_tag_config(tag_config)
@@ -165,6 +167,7 @@ def _serialize_aux_tag(aux_tag: AuxTag) -> DomainObject:
         title=aux_tag.title,
         extensions={
             "topic": "Tags" if aux_tag.topic is None else aux_tag.topic,
+            "help": "" if aux_tag.help is None else aux_tag.help,
         },
         editable=True,
         deletable=True,

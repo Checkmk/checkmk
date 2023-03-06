@@ -8,8 +8,9 @@
 # mypy: disable-error-code="arg-type,assignment,attr-defined,call-overload,comparison-overlap,dict-item,index,list-item,misc,name-defined,name-match,no-untyped-def,operator,str-format,type-var,union-attr,var-annotated"
 
 from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.config import CheckInfoElement
 
-check_info = {}
+check_info: dict[str, CheckInfoElement] = {}
 check_includes = {}
 precompile_params = {}
 check_default_levels = {}

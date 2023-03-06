@@ -33,7 +33,18 @@ from collections.abc import (
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, AnyStr, cast, Final, Literal, NamedTuple, Protocol, TypedDict, Union
+from typing import (
+    Any,
+    AnyStr,
+    cast,
+    Final,
+    Literal,
+    NamedTuple,
+    NotRequired,
+    Protocol,
+    TypedDict,
+    Union,
+)
 
 from typing_extensions import assert_never
 
@@ -1972,6 +1983,19 @@ def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
     return _check_contexts[check_plugin_name]
 
 
+class CheckInfoElement(TypedDict, total=True):
+    check_function: NotRequired[Callable]
+    inventory_function: NotRequired[Callable]
+    parse_function: NotRequired[Callable]
+    group: NotRequired[str]
+    snmp_info: NotRequired[tuple | list]
+    snmp_scan_function: NotRequired[Callable[[Callable], bool]]
+    default_levels_variable: NotRequired[str]
+    service_description: NotRequired[str]
+    has_perfdata: NotRequired[bool]
+    management_board: NotRequired[str]
+
+
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.
 def convert_check_info() -> None:  # pylint: disable=too-many-branches
@@ -2001,14 +2025,6 @@ def convert_check_info() -> None:  # pylint: disable=too-many-branches
 
         if not isinstance(info, dict):
             raise NotImplementedError("Please use the new check API")
-
-        # Ensure that there are only the known keys set. Is meant to detect typos etc.
-        for key in info:
-            if key != "includes" and key not in check_info_defaults:
-                raise MKGeneralException(
-                    "The check '%s' declares an unexpected key '%s' in 'check_info'."
-                    % (check_plugin_name, key)
-                )
 
         # Check does already use new API. Make sure that all keys are present,
         # extra check-specific information into file-specific variables.

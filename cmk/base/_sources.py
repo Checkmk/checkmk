@@ -62,7 +62,7 @@ class Source(Generic[TRawData], abc.ABC):
         ...
 
     @abc.abstractmethod
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[TRawData]:
+    def fetcher(self) -> Fetcher[TRawData]:
         ...
 
     @abc.abstractmethod
@@ -78,6 +78,7 @@ class SNMPSource(Source[SNMPRawData]):
 
     def __init__(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress,
         *,
@@ -86,6 +87,7 @@ class SNMPSource(Source[SNMPRawData]):
         selected_sections: SectionNameCollection,
     ) -> None:
         super().__init__()
+        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
@@ -101,8 +103,8 @@ class SNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[SNMPRawData]:
-        return config_cache.make_snmp_fetcher(
+    def fetcher(self) -> Fetcher[SNMPRawData]:
+        return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
             on_scan_error=self._on_scan_error,
@@ -131,6 +133,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
 
     def __init__(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress,
         *,
@@ -139,6 +142,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         selected_sections: SectionNameCollection,
     ) -> None:
         super().__init__()
+        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
@@ -154,8 +158,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[SNMPRawData]:
-        return config_cache.make_snmp_fetcher(
+    def fetcher(self) -> Fetcher[SNMPRawData]:
+        return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
             on_scan_error=self._on_scan_error,
@@ -183,12 +187,14 @@ class IPMISource(Source[AgentRawData]):
 
     def __init__(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
     ) -> None:
         super().__init__()
+        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
@@ -202,8 +208,8 @@ class IPMISource(Source[AgentRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[AgentRawData]:
-        return config_cache.make_ipmi_fetcher(self.host_name, self.ipaddress)
+    def fetcher(self) -> Fetcher[AgentRawData]:
+        return self.config_cache.make_ipmi_fetcher(self.host_name, self.ipaddress)
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
@@ -226,19 +232,20 @@ class ProgramSource(Source[AgentRawData]):
 
     def __init__(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress | None,
         *,
-        config_cache: ConfigCache,
         max_age: MaxAge,
     ) -> None:
         super().__init__()
+        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
         # `make_program_commandline()` may raise LookupError if no datasource
         # is configured.
-        self._cmdline: Final = config_cache.make_program_commandline(host_name, ipaddress)
+        self._cmdline: Final = self.config_cache.make_program_commandline(host_name, ipaddress)
         self._stdin: Final = None
         self._is_cmc: Final = config.is_cmc()
 
@@ -251,7 +258,7 @@ class ProgramSource(Source[AgentRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[AgentRawData]:
+    def fetcher(self) -> Fetcher[AgentRawData]:
         return ProgramFetcher(cmdline=self._cmdline, stdin=self._stdin, is_cmc=self._is_cmc)
 
     def file_cache(
@@ -294,7 +301,7 @@ class PushAgentSource(Source[AgentRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[AgentRawData]:
+    def fetcher(self) -> Fetcher[AgentRawData]:
         return NoFetcher(NoFetcherError.NO_FETCHER)
 
     def file_cache(
@@ -327,12 +334,14 @@ class TCPSource(Source[AgentRawData]):
 
     def __init__(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
     ) -> None:
         super().__init__()
+        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
@@ -346,8 +355,8 @@ class TCPSource(Source[AgentRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[AgentRawData]:
-        return config_cache.make_tcp_fetcher(self.host_name, self.ipaddress)
+    def fetcher(self) -> Fetcher[AgentRawData]:
+        return self.config_cache.make_tcp_fetcher(self.host_name, self.ipaddress)
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
@@ -395,7 +404,7 @@ class SpecialAgentSource(Source[AgentRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[AgentRawData]:
+    def fetcher(self) -> Fetcher[AgentRawData]:
         return ProgramFetcher(
             cmdline=core_config.make_special_agent_cmdline(
                 self.host_name,
@@ -433,10 +442,12 @@ class PiggybackSource(Source[AgentRawData]):
 
     def __init__(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress | None,
     ) -> None:
         super().__init__()
+        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
 
@@ -449,8 +460,8 @@ class PiggybackSource(Source[AgentRawData]):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher[AgentRawData]:
-        return config_cache.make_piggyback_fetcher(self.host_name, self.ipaddress)
+    def fetcher(self) -> Fetcher[AgentRawData]:
+        return self.config_cache.make_piggyback_fetcher(self.host_name, self.ipaddress)
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
@@ -477,7 +488,7 @@ class MissingIPSource(Source):
             self.source_type,
         )
 
-    def fetcher(self, /, config_cache: ConfigCache) -> Fetcher:
+    def fetcher(self) -> Fetcher:
         return NoFetcher(NoFetcherError.MISSING_IP)
 
     def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:

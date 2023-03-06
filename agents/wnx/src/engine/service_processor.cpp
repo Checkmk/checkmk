@@ -34,6 +34,36 @@ using namespace std::string_literals;
 namespace fs = std::filesystem;
 
 namespace cma::srv {
+enum class FirewallController { with, without };
+std::wstring_view RuleName() {
+    switch (GetModus()) {
+        case Modus::service:
+            return srv::kSrvFirewallRuleName;
+        case Modus::app:
+        case Modus::test:
+        case Modus::integration:
+            return srv::kAppFirewallRuleName;
+    }
+    // unreachable
+    return {};
+}
+
+void OpenFirewall(FirewallController w) {
+    const auto rule_name = RuleName();
+    switch (w) {
+        case FirewallController::with:
+            XLOG::l.i("Controller has started: firewall to controller");
+            ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
+                                         GetFirewallPort(), rule_name);
+            break;
+        case FirewallController::without:
+            XLOG::l.i("Controller has NOT started: firewall to agent");
+            ProcessFirewallConfiguration(wtools::GetArgv(0), GetFirewallPort(),
+                                         rule_name);
+            break;
+    }
+}
+
 void ServiceProcessor::startService() {
     if (thread_.joinable()) {
         XLOG::l("Attempt to start service twice, no way!");
@@ -556,7 +586,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         auto new_port = cfg::groups::global.port();
         if (new_ipv6 != ipv6 || new_port != port) {
             XLOG::l.i("Restarting server with new parameters [{}] ipv6:[{}]",
-                      new_port, new_port);
+                      new_port, new_ipv6);
             return Signal::restart;
         }
 
@@ -567,6 +597,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
                         controller_param->pid);
                 if (ac::IsConfiguredEmergencyOnCrash()) {
                     controller_param.reset();
+                    XLOG::d("Restarting");
                     return Signal::restart;
                 }
             }
@@ -621,51 +652,23 @@ void WaitForNetwork(std::chrono::seconds period) noexcept {
 ///  returns non empty port if controller had been started
 std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
     std::chrono::milliseconds validate_process_delay) {
-    if (!ac ::IsRunController(cfg::GetLoadedConfig())) {
-        return {};
-    }
-
-    if (auto pid = ac::StartAgentController()) {
-        std::this_thread::sleep_for(validate_process_delay);
-        if (wtools::GetProcessPath(*pid).empty()) {
+    if (ac ::IsRunController(cfg::GetLoadedConfig())) {
+        if (const auto pid = ac::StartAgentController()) {
+            std::this_thread::sleep_for(validate_process_delay);
+            if (!wtools::GetProcessPath(*pid).empty()) {
+                OpenFirewall(FirewallController::with);
+                return ServiceProcessor::ControllerParam{
+                    .port = ac::GetConfiguredAgentChannelPort(GetModus()),
+                    .pid = *pid,
+                };
+            }
             XLOG::l("Controller process pid={} died in {}ms", *pid,
                     validate_process_delay.count());
             ac::DeleteControllerInBin();
-            return {};
         }
-        return ServiceProcessor::ControllerParam{
-            .port = ac::GetConfiguredAgentChannelPort(GetModus()),
-            .pid = *pid,
-        };
     }
-
+    OpenFirewall(FirewallController::without);
     return {};
-}
-
-std::wstring_view RuleName() {
-    switch (GetModus()) {
-        case Modus::service:
-            return srv::kSrvFirewallRuleName;
-        case Modus::app:
-        case Modus::test:
-        case Modus::integration:
-            return srv::kAppFirewallRuleName;
-    }
-    // unreachable
-    return srv::kAppFirewallRuleName;
-}
-
-void OpenFirewall(bool controller) {
-    const auto rule_name = RuleName();
-    if (controller) {
-        XLOG::l.i("Controller has started: firewall to controller");
-        ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
-                                     GetFirewallPort(), rule_name);
-    } else {
-        XLOG::l.i("Controller has NOT started: firewall to agent");
-        ProcessFirewallConfiguration(wtools::GetArgv(0), GetFirewallPort(),
-                                     rule_name);
-    }
 }
 
 world::ExternalPort::IoParam AsIoParam(
@@ -712,8 +715,8 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         auto controller_params = OptionallyStartAgentController(1000ms);
+
         ON_OUT_OF_SCOPE(ac::KillAgentController());
-        OpenFirewall(controller_params.has_value());
         if (cap_installed) {
             ac::CreateArtifacts(fs::path{tools::win::GetSomeSystemFolder(
                                     FOLDERID_ProgramData)} /
@@ -735,10 +738,10 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             return;
         }
 
-        rt::Device rt_device;
-
         // Main Processing Loop
-        while (true) {
+        bool run = true;
+        while (run) {
+            rt::Device rt_device;
             rt_device.start();
             const auto io_param = AsIoParam(controller_params);
             XLOG::l.i("Starting io with {} {}", io_param.port, io_param.pid);
@@ -766,10 +769,20 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             }
 
             // we wait her to the end of the External port
-            if (mainWaitLoop(controller_params) == Signal::quit) {
-                break;
+            switch (mainWaitLoop(controller_params)) {
+                case Signal::quit:
+                    run = false;
+                    break;
+                case Signal::restart:
+                    XLOG::l.i("restart main loop");
+                    if (!controller_params) {
+                        break;
+                    }
+                    wtools::KillProcessesByFullPath(
+                        fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl);
+                    controller_params = OptionallyStartAgentController(1000ms);
+                    break;
             }
-            XLOG::l.i("restart main loop");
         }
 
         // the end of the fun
@@ -780,7 +793,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         XLOG::l.bp("Not expected exception. Fix it!");
     }
     internal_port_ = "";
-}  // namespace cma::srv
+}
 
 void ServiceProcessor::startTestingMainThread() {
     if (thread_.joinable()) {

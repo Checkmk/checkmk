@@ -657,7 +657,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         super().__init__()
 
         if self._new:
-            self._aux_tag = cmk.utils.tags.AuxTag(tag_id="", title="", topic=None)
+            self._aux_tag = cmk.utils.tags.AuxTag(tag_id="", title="", topic=None, help=None)
         else:
             self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
 

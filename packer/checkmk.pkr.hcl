@@ -132,16 +132,17 @@ build {
     "checkmk_server_download_pass=${var.cmk_download_pass}", ]
   }
   # update user
-  provisioner "shell" {
-    inline = [
-      "sudo passwd --expire $(whoami)",
-    ]
-    only = ["azure-arm.builder", "qemu.builder"]
+  provisioner "ansible-local" {
+    playbook_file = "./qemu-playbook.yml"
+    only          = ["qemu.builder"]
   }
-  # run azure playbook
   provisioner "ansible-local" {
     playbook_file = "./azure-playbook.yml"
     only          = ["azure-arm.builder"]
+  }
+  provisioner "ansible-local" {
+    playbook_file = "./aws-playbook.yml"
+    only          = ["amazon-ebs.builder"]
   }
   # uninstall ansible
   provisioner "shell" {
@@ -150,14 +151,5 @@ build {
       "sudo apt-get remove -y -q software-properties-common ansible",
       "sudo apt autoremove -y -q"
     ]
-  }
-  # automated removal does not work for ubuntu user. However the images we use only have an ubuntu user
-  # https://github.com/buildkite/elastic-ci-stack-for-aws/issues/544
-  provisioner "shell" {
-    inline = [
-      "rm /home/ubuntu/.ssh/authorized_keys",
-      "sudo rm /root/.ssh/authorized_keys",
-    ]
-    only = ["amazon-ebs.builder"]
   }
 }

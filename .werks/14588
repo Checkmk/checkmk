@@ -9,7 +9,7 @@ Level: 1
 Version: 2.1.0p24
 
 Previously, labels of the form 
-C++:
+C+:
 cmk/kubernetes/label/{kubernetes-label}
-C--:
+C-:
 would not created for Deployments, DaemonSets and StatefulSets.

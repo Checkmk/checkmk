@@ -267,11 +267,7 @@ function update_row_selection_information() {
 // container are highlighted.
 // It is also possible to give an array of DOM elements as parameter to toggle
 // all checkboxes below these objects.
-export function toggle_all_rows(
-    obj: HTMLElement | HTMLElement[],
-    name_select?: string,
-    name_deselect?: string
-) {
+export function toggle_all_rows(obj: HTMLElement | HTMLElement[]) {
     const checkboxes = get_all_checkboxes(obj || document);
 
     let all_selected = true;
@@ -292,33 +288,14 @@ export function toggle_all_rows(
     }
 
     const entry = document.getElementById("menu_entry_checkbox_selection")!;
-    let span: HTMLSpanElement | null = null;
-    let img: HTMLImageElement | null = null;
+    const img: HTMLImageElement = entry.getElementsByTagName("img")[0];
     // Toggle the state
-    if (name_select || name_deselect) {
-        span = entry.getElementsByTagName("span")[0];
-        img = entry.getElementsByTagName("img")[0];
-    }
     if (all_selected) {
         remove_selected_rows(checkboxes);
-        if (name_select) {
-            if (span) {
-                span.textContent = name_select;
-            }
-            if (img) {
-                img.src = img.src.replace("toggle_on", "toggle_off");
-            }
-        }
+        if (img) img.src = img.src.replace("toggle_on", "toggle_off");
     } else {
         select_all_rows(checkboxes, some_failed && none_selected);
-        if (name_deselect) {
-            if (span) {
-                span.textContent = name_deselect;
-            }
-            if (img) {
-                img.src = img.src.replace("toggle_off", "toggle_on");
-            }
-        }
+        if (img) img.src = img.src.replace("toggle_off", "toggle_on");
     }
 }
 

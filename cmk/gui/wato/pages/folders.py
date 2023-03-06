@@ -25,7 +25,6 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.page_menu import (
-    make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
     make_display_options_dropdown,
@@ -526,7 +525,7 @@ class ModeFolder(WatoMode):
             ("_show_explicit_labels", _("explicit host labels"), user.wato_folders_show_labels),
         ]:
             yield PageMenuEntry(
-                title=_("Hide %s") % title if setting else _("Show %s") % title,
+                title=_("Show %s") % title,
                 icon_name="toggle_on" if setting else "toggle_off",
                 item=make_simple_link(
                     makeuri(
@@ -939,8 +938,7 @@ class ModeFolder(WatoMode):
                 "_toggle_group",
                 type_="button",
                 class_="checkgroup",
-                onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);"
-                % make_checkbox_selection_json_text(),
+                onclick="cmk.selection.toggle_all_rows(this.form);",
                 value="X",
             ),
             sortable=False,

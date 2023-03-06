@@ -308,7 +308,7 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                 title=_("General display options"),
                 entries=[
                     PageMenuEntry(
-                        title=(_("Hide page navigation")),
+                        title=(_("Show page navigation")),
                         name="hide_navigation",
                         icon_name="toggle_on",
                         item=PageMenuLink(
@@ -344,8 +344,6 @@ def make_display_options_dropdown() -> PageMenuDropdown:
 
 
 def make_help_dropdown() -> PageMenuDropdown:
-    title_show_help = _("Show inline help")
-    title_hide_help = _("Hide inline help")
     return PageMenuDropdown(
         name="help",
         title=_("Help"),
@@ -354,11 +352,9 @@ def make_help_dropdown() -> PageMenuDropdown:
                 title=_("Context sensitive help"),
                 entries=[
                     PageMenuEntry(
-                        title=title_hide_help if user.show_help else title_show_help,
+                        title=_("Show inline help"),
                         icon_name="toggle_" + ("on" if user.show_help else "off"),
-                        item=make_javascript_link(
-                            f'cmk.help.toggle("{title_show_help}", "{title_hide_help}")'
-                        ),
+                        item=make_javascript_link("cmk.help.toggle()"),
                         name="inline_help",
                         is_enabled=False,
                         disabled_tooltip=_("This page does not provide an inline help."),
@@ -406,24 +402,16 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
-def make_checkbox_selection_json_text() -> tuple[str, str]:
-    return json.dumps(_("Select all checkboxes")), json.dumps(_("Deselect all checkboxes"))
-
-
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
     is_selected = user.get_rowselection(request.var("selection") or "", selection_key)
-    name_selected, name_deselected = make_checkbox_selection_json_text()
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
             PageMenuEntry(
                 name="checkbox_selection",
-                title=_("Deselect all checkboxes") if is_selected else _("Select all checkboxes"),
+                title=_("Select all checkboxes"),
                 icon_name="toggle_on" if is_selected else "toggle_off",
-                item=make_javascript_link(
-                    "cmk.selection.toggle_all_rows(this.form, %s, %s);"
-                    % (name_selected, name_deselected)
-                ),
+                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form);"),
                 is_enabled=is_enabled,
             ),
         ],

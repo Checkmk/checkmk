@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any
+from typing import Union
 
 import pytest
 
@@ -20,6 +20,7 @@ from cmk.base.plugins.agent_based.mssql_blocked_sessions import (
     DBInstance,
     DEFAULT_PARAMETERS,
     discovery_mssql_blocked_sessions,
+    Params,
     parse_mssql_blocked_sessions,
 )
 
@@ -44,6 +45,19 @@ INFO_1 = [
 ]
 
 
+def default_parameters(
+    *,
+    ignore_waittypes: Union[list[str], None] = None,
+    waittime: Union[tuple[float, float], None] = None,
+) -> Params:
+    params = DEFAULT_PARAMETERS.copy()
+    if ignore_waittypes is not None:
+        params["ignore_waittypes"] = ignore_waittypes
+    if waittime is not None:
+        params["waittime"] = waittime
+    return params
+
+
 def test_mssql_blocked_sessions_default(
     fix_register: FixRegister,
 ) -> None:
@@ -62,11 +76,11 @@ def test_mssql_blocked_sessions_default(
         Result(state=State.CRIT, summary="Summary: 119 blocked by 1 ID(s), 76 blocked by 1 ID(s)"),
         Result(
             state=State.OK,
-            summary="Session 119 blocked by 75 (Type: LCK_M_U, Wait: 2 days 16 hours)",
+            summary="Session 119 blocked by 75, Type: LCK_M_U, Wait: 2 days 16 hours",
         ),
         Result(
             state=State.OK,
-            summary="Session 76 blocked by 115 (Type: LCK_M_U, Wait: 2 days 13 hours)",
+            summary="Session 76 blocked by 115, Type: LCK_M_U, Wait: 2 days 13 hours",
         ),
     ]
 
@@ -94,7 +108,7 @@ def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
     assert list(
         check_mssql_blocked_sessions(
             item="",
-            params={**DEFAULT_PARAMETERS, "waittime": (10, 100)},
+            params=default_parameters(waittime=(10, 100)),
             section={
                 "": [
                     DBInstance(
@@ -107,14 +121,10 @@ def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
             },
         )
     ) == [
-        Result(state=State.CRIT, summary="Summary: sid blocked by 1 ID(s)"),
+        Result(state=State.OK, summary="Summary: sid blocked by 1 ID(s)"),
         Result(
             state=State.WARN,
-            summary="At least one session above thresholds (warn/crit at 10 seconds/1 minute 40 seconds)",
-        ),
-        Result(
-            state=State.WARN,
-            summary="Session sid blocked by bsid1 (Type: smth1, Wait: 25 seconds)",
+            summary="Session sid blocked by bsid1, Type: smth1, Wait: 25 seconds (warn/crit at 10 seconds/1 minute 40 seconds)",
         ),
     ]
 
@@ -123,7 +133,7 @@ def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> No
     assert list(
         check_mssql_blocked_sessions(
             item="",
-            params={**DEFAULT_PARAMETERS, "ignore_waittypes": ["smth1"]},
+            params=default_parameters(ignore_waittypes=["smth1"]),
             section={
                 "": [
                     DBInstance(
@@ -205,19 +215,19 @@ DATA_GENERIC_1 = [
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)",
+                    summary="Session 1 blocked by 2, Type: Foo, Wait: 2 days 16 hours",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 3 blocked by 4 (Type: Foo, Wait: 2 days 16 hours)",
+                    summary="Session 3 blocked by 4, Type: Foo, Wait: 2 days 16 hours",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 5 blocked by 6 (Type: Bar, Wait: 2 days 16 hours)",
+                    summary="Session 5 blocked by 6, Type: Bar, Wait: 2 days 16 hours",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 7 blocked by 8 (Type: Bar, Wait: 2 days 16 hours)",
+                    summary="Session 7 blocked by 8, Type: Bar, Wait: 2 days 16 hours",
                 ),
             ],
         ),
@@ -281,19 +291,19 @@ DATA_GENERIC_1 = [
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)",
+                    summary="Session 1 blocked by 2, Type: Foo, Wait: 2 days 16 hours",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 3 blocked by 4 (Type: Foo, Wait: 2 days 16 hours)",
+                    summary="Session 3 blocked by 4, Type: Foo, Wait: 2 days 16 hours",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 5 blocked by 6 (Type: Bar, Wait: 2 days 16 hours)",
+                    summary="Session 5 blocked by 6, Type: Bar, Wait: 2 days 16 hours",
                 ),
                 Result(
                     state=State.OK,
-                    summary="Session 7 blocked by 8 (Type: Bar, Wait: 2 days 16 hours)",
+                    summary="Session 7 blocked by 8, Type: Bar, Wait: 2 days 16 hours",
                 ),
             ],
         ),
@@ -302,7 +312,7 @@ DATA_GENERIC_1 = [
 def test_mssql_blocked_sessions_generic(
     fix_register: FixRegister,
     string_table: StringTable,
-    params: dict[str, Any],
+    params: Params,
     item: str,
     check_result: list[Result],
 ) -> None:
@@ -354,6 +364,6 @@ def test_mssql_blocked_sessions_generic_cluster(fix_register: FixRegister) -> No
         Result(state=State.CRIT, summary="[server-2]: Summary: 1 blocked by 1 ID(s)"),
         Result(
             state=State.OK,
-            notice="[server-2]: Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)",
+            notice="[server-2]: Session 1 blocked by 2, Type: Foo, Wait: 2 days 16 hours",
         ),
     ]

@@ -29,7 +29,7 @@ def _parameter_valuespec_mssql_instance_blocked_sessions():
                 Tuple(
                     title=_("Levels for wait"),
                     help=_(
-                        "The threshholds for wait_duration_ms. Will "
+                        "The thresholds for wait_duration_ms. Will "
                         "overwrite the default state set above."
                     ),
                     default_value=(0, 0),

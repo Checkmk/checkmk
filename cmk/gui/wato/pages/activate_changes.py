@@ -18,8 +18,8 @@ from six import ensure_str
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.render as render
-from cmk.utils.licensing import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.licensing.state import is_expired_trial, is_licensed
+from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 import cmk.gui.forms as forms

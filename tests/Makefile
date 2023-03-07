@@ -254,7 +254,7 @@ test-composition:
 	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
 
 test-update:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py) --log-cli-level=INFO
 
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):

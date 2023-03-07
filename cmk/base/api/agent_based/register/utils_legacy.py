@@ -23,4 +23,3 @@ class CheckInfoElement(TypedDict):
     extra_sections: NotRequired[list[str]]
     has_perfdata: NotRequired[bool]
     management_board: NotRequired[str]
-    includes: NotRequired[list[str]]

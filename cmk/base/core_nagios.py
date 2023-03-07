@@ -1419,25 +1419,10 @@ def _get_legacy_check_file_names_to_load(
     # check table.
     filenames: list[str] = []
     for check_plugin_name in needed_check_plugin_names:
-        section_name = section_name_of(check_plugin_name)
-        # Add library files needed by check (also look in local)
-        for lib in set(config.check_includes.get(section_name, [])):
-            local_path = cmk.utils.paths.local_checks_dir / lib
-            if local_path.exists():
-                to_add = str(local_path)
-            else:
-                to_add = cmk.utils.paths.checks_dir + "/" + lib
-
-            if to_add not in filenames:
-                filenames.append(to_add)
-
         # Now add check file(s) itself
         paths = _find_check_plugins(check_plugin_name)
         if not paths:
-            raise MKGeneralException(
-                "Cannot find check file %s needed for check type %s"
-                % (section_name, check_plugin_name)
-            )
+            raise MKGeneralException(f"Cannot find check file needed for {check_plugin_name}")
 
         for path in paths:
             if path not in filenames:

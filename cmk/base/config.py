@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import ast
 import contextlib
 import copy
 import ipaddress
@@ -20,7 +19,7 @@ import socket
 import struct
 import sys
 import types
-from collections import Counter, OrderedDict
+from collections import Counter
 from collections.abc import (
     Callable,
     Container,
@@ -1475,8 +1474,6 @@ _check_contexts: dict[str, Any] = {}
 check_info: dict[str, CheckInfoElement] = {}
 # Lookup for legacy names
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
-# library files needed by checks
-check_includes: dict[str, list[Any]] = {}
 # optional functions for parameter precompilation
 precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
 # dictionary-configured checks declare their default level variables here
@@ -1534,7 +1531,6 @@ def max_cachefile_age(
 def load_all_agent_based_plugins(
     get_check_api_context: GetCheckApiContext,
 ) -> list[str]:
-    """Load all checks and includes"""
     global _all_checks_loaded
 
     _initialize_data_structures()
@@ -1565,7 +1561,6 @@ def _initialize_data_structures() -> None:
     _check_contexts.clear()
     check_info.clear()
     legacy_check_plugin_names.clear()
-    check_includes.clear()
     precompile_params.clear()
     check_default_levels.clear()
     factory_settings.clear()
@@ -1614,7 +1609,6 @@ def load_checks(  # pylint: disable=too-many-branches
             known_checks = set(check_info)
             known_active_checks = set(active_check_info)
 
-            did_compile |= load_check_includes(f, check_context)
             did_compile |= load_precompiled_plugin(f, check_context)
 
             loaded_files.add(file_name)
@@ -1675,8 +1669,6 @@ def load_checks(  # pylint: disable=too-many-branches
     )
     _check_contexts.setdefault("__migrated_plugins_variables__", migrated_vars)
 
-    # Now convert check_info to new format.
-    convert_check_info()
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
     return _extract_agent_and_snmp_sections(
@@ -1699,7 +1691,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     # Add the data structures where the checks register with Checkmk
     context = {
         "check_info": check_info,
-        "check_includes": check_includes,
         "precompile_params": precompile_params,
         "check_default_levels": check_default_levels,
         "factory_settings": factory_settings,
@@ -1711,139 +1702,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     # this might consume too much memory, so we simply reference them.
     context.update(get_check_api_context())
     return context
-
-
-# Load the definitions of the required include files for this check
-# Working with imports when specifying the includes would be much cleaner,
-# sure. But we need to deal with the current check API.
-def load_check_includes(check_file_path: str, check_context: CheckContext) -> bool:
-    """Returns `True` if something has been compiled, else `False`."""
-    did_compile = False
-    for include_file_name in cached_includes_of_plugin(check_file_path):
-        include_file_path = check_include_file_path(include_file_name)
-        try:
-            did_compile |= load_precompiled_plugin(include_file_path, check_context)
-        except MKTerminate:
-            raise
-
-        except Exception as e:
-            console.error("Error in check include file %s: %s\n", include_file_path, e)
-            if cmk.utils.debug.enabled():
-                raise
-            continue
-
-    return did_compile
-
-
-def check_include_file_path(include_file_name: str) -> str:
-    return str(cmk.utils.paths.local_checks_dir / include_file_name)
-
-
-def cached_includes_of_plugin(check_file_path: str) -> CheckIncludes:
-    cache_file_path = _include_cache_file_path(check_file_path)
-    try:
-        return _get_cached_check_includes(check_file_path, cache_file_path)
-    except OSError:
-        pass  # No usable cache. Terminate
-
-    includes = includes_of_plugin(check_file_path)
-    _write_check_include_cache(cache_file_path, includes)
-    return includes
-
-
-def _get_cached_check_includes(check_file_path: str, cache_file_path: str) -> CheckIncludes:
-    check_stat = os.stat(check_file_path)
-    cache_stat = os.stat(cache_file_path)
-
-    if check_stat.st_mtime >= cache_stat.st_mtime:
-        raise OSError("Cache is too old")
-
-    # There are no includes (just the newline at the end)
-    if cache_stat.st_size == 1:
-        return []  # No includes
-
-    # store.save_text_to_file() creates file empty for locking (in case it does not exists).
-    # Skip loading the file.
-    # Note: When raising here this process will also write the file. This means it
-    # will write it another time after it was written by the other process. This
-    # could be optimized. Since the whole caching here is a temporary(tm) soltion,
-    # we leave it as it is.
-    if cache_stat.st_size == 0:
-        raise OSError("Cache generation in progress (file is locked)")
-
-    x = Path(cache_file_path).read_text().strip()
-    if not x:
-        return []  # Shouldn't happen. Empty files are handled above
-    return x.split("|")
-
-
-def _write_check_include_cache(cache_file_path: str, includes: CheckIncludes) -> None:
-    store.makedirs(os.path.dirname(cache_file_path))
-    store.save_text_to_file(cache_file_path, "%s\n" % "|".join(includes))
-
-
-def _include_cache_file_path(path: str) -> str:
-    is_local = path.startswith(str(cmk.utils.paths.local_checks_dir))
-    return os.path.join(
-        cmk.utils.paths.include_cache_dir,
-        "local" if is_local else "builtin",
-        os.path.basename(path),
-    )
-
-
-# Parse the check file without executing the code to find the check include
-# files the check uses. The following statements are extracted:
-# check_info[...] = { "includes": [...] }
-# inv_info[...] = { "includes": [...] }
-# check_includes[...] = [...]
-def includes_of_plugin(check_file_path: str) -> CheckIncludes:
-    include_names = OrderedDict()
-
-    def _load_from_check_info(node: ast.Assign) -> None:
-        if not isinstance(node.value, ast.Dict):
-            return
-
-        for key, val in zip(node.value.keys, node.value.values):
-            if not isinstance(key, ast.Constant):
-                continue
-            if key.s == "includes":
-                if isinstance(val, ast.List):
-                    for element in val.elts:
-                        if not isinstance(element, ast.Constant):
-                            raise MKGeneralException(
-                                "Includes must be a list of include file "
-                                "names, found '%s'" % type(element)
-                            )
-                        include_names[element.s] = True
-                else:
-                    raise MKGeneralException(
-                        "Includes must be a list of include file names, " "found '%s'" % type(val)
-                    )
-
-    def _load_from_check_includes(node: ast.Assign) -> None:
-        if isinstance(node.value, ast.List):
-            for element in node.value.elts:
-                if not isinstance(element, ast.Constant):
-                    raise MKGeneralException(
-                        "Includes must be a list of include file "
-                        "names, found '%s'" % type(element)
-                    )
-                include_names[element.s] = True
-
-    tree = ast.parse(Path(check_file_path).read_text())
-    for child in ast.iter_child_nodes(tree):
-        if not isinstance(child, ast.Assign):
-            continue  # We only care about top level assigns
-
-        # Filter out assignments to check_info dictionary
-        for target in child.targets:
-            if isinstance(target, ast.Subscript) and isinstance(target.value, ast.Name):
-                if target.value.id in ["check_info", "inv_info"]:
-                    _load_from_check_info(child)
-                elif target.value.id == "check_includes":
-                    _load_from_check_includes(child)
-
-    return list(include_names)
 
 
 def _plugin_pathnames_in_directory(path: str) -> list[str]:
@@ -1984,23 +1842,6 @@ def get_check_variables() -> CheckVariables:
 def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
     """Returns the context dictionary of the given check plugin"""
     return _check_contexts[check_plugin_name]
-
-
-# TODO: This is dead and will be dropped soon
-# FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
-# use the legacy variables which are not set by newer checks.
-def convert_check_info() -> None:  # pylint: disable=too-many-branches
-
-    for check_plugin_name, info in check_info.items():
-        section_name = section_name_of(check_plugin_name)
-
-        if not isinstance(info, dict):
-            raise NotImplementedError("Please use the new check API")
-
-        # Include files are related to the check file (= the section_name),
-        # not to the (sub-)check. So we keep them in check_includes.
-        check_includes.setdefault(section_name, [])
-        check_includes[section_name] += info.get("includes", [])
 
 
 AUTO_MIGRATION_ERR_MSG = (

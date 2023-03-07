@@ -903,6 +903,7 @@ def test_row_post_processor() -> None:
                 "hidden": False,
                 "hidebutton": False,
                 "public": False,
+                "packaged": False,
             },
             {},
         ),

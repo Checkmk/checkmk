@@ -882,6 +882,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         context={},
     )

@@ -140,6 +140,7 @@ TEST_DASHBOARD = DashboardConfig(
         "link_from": {},
         "add_context_to_title": True,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 

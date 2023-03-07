@@ -101,6 +101,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # View of all current service problems
         "mobile_svcproblems": {
@@ -154,6 +155,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # View of unhandled service problems
         "mobile_svcproblems_unack": {
@@ -213,6 +215,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Service details
         "mobile_service": {
@@ -259,6 +262,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All services of one host
         "mobile_host": {
@@ -304,6 +308,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Host details
         "mobile_hoststatus": {
@@ -366,6 +371,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Search hosts
         "mobile_searchhost": {
@@ -407,6 +413,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # List all host problems
         "mobile_hostproblems": {
@@ -451,6 +458,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # List unhandled host problems
         "mobile_hostproblems_unack": {
@@ -495,6 +503,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All Nagios Events at all
         "mobile_events": {
@@ -540,6 +549,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All Notifications at all
         "mobile_notifications": {
@@ -601,6 +611,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All events of a Host
         "mobile_hostsvcevents": {
@@ -649,6 +660,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All events of one service
         "mobile_svcevents": {
@@ -691,6 +703,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All Notfications of a contact
         "mobile_contactnotifications": {
@@ -751,6 +764,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All Notfications of Host
         "mobile_hostsvcnotifications": {
@@ -812,6 +826,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All Notfications of a service
         "mobile_svcnotifications": {
@@ -864,6 +879,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
     }
 )

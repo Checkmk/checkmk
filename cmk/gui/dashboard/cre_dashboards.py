@@ -223,6 +223,7 @@ ProblemsDashboard = DashboardConfig(
         "link_from": {},
         "add_context_to_title": True,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -343,6 +344,7 @@ SimpleProblemsDashboard = DashboardConfig(
         "link_from": {},
         "add_context_to_title": True,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -393,5 +395,6 @@ CheckmkOverviewDashboard = DashboardConfig(
         "public": True,
         "name": "checkmk",
         "is_show_more": False,
+        "packaged": False,
     }
 )

@@ -5,6 +5,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.kube_node_kubelet import check_kube_node_kubelet
 from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo
 
@@ -44,8 +45,6 @@ from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo
         ),
     ],
 )
-def test_check_kube_node_kubelet(  # type:ignore[no-untyped-def]
-    section: KubeletInfo, expected_result
-) -> None:
+def test_check_kube_node_kubelet(section: KubeletInfo, expected_result: CheckResult) -> None:
     result = list(check_kube_node_kubelet(section))
     assert result == expected_result

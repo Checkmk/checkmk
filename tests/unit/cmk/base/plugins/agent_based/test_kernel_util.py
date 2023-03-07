@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import freezegun
 import pytest
 
 from cmk.base.plugins.agent_based import kernel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 SECTION: kernel.Section = (
     11238,
@@ -488,7 +491,11 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(monkeypatch, parameters, additional_results) -> None:  # type:ignore[no-untyped-def]
+def test_check(
+    monkeypatch: pytest.MonkeyPatch,
+    parameters: Mapping[str, object],
+    additional_results: CheckResult,
+) -> None:
     monkeypatch.setattr(
         kernel,
         "get_value_store",

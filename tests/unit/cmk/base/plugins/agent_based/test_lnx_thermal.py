@@ -9,7 +9,7 @@ import pytest
 
 from cmk.base.plugins.agent_based import lnx_thermal
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 
 
 def splitter(text: str, split_symbol: str | None = None) -> Sequence[Sequence[str]]:
@@ -137,8 +137,8 @@ RESULT_CHECK = [
 @pytest.mark.parametrize(
     "string_table, discovered, results", list(zip(AGENT_INFO, RESULT_DISCOVERY, RESULT_CHECK))
 )
-def test_check_functions_perfdata(  # type:ignore[no-untyped-def]
-    string_table: StringTable, discovered: Sequence[Service], results
+def test_check_functions_perfdata(
+    string_table: StringTable, discovered: Sequence[Service], results: CheckResult
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal(string_table)
     for service, result in zip(discovered, results):

@@ -6,12 +6,18 @@
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
+from collections.abc import Iterable
 
 import pytest
 from pydantic import ValidationError
 
+from tests.unit.conftest import FixRegister
+
+from cmk.base.api.agent_based.checking_classes import CheckPlugin, Result
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
 from cmk.base.plugins.agent_based import kube_pod_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 
 MINUTE = 60
 TIMESTAMP = 359
@@ -149,7 +155,7 @@ def check_result(params, section):
 
 
 @pytest.fixture
-def agent_section(fix_register):
+def agent_section(fix_register: FixRegister) -> AgentSectionPlugin:
     for name, section in fix_register.agent_sections.items():
         if str(name) == "kube_pod_conditions_v1":
             return section
@@ -157,14 +163,14 @@ def agent_section(fix_register):
 
 
 @pytest.fixture
-def check_plugin(fix_register):
+def check_plugin(fix_register: FixRegister) -> CheckPlugin:
     for name, plugin in fix_register.check_plugins.items():
         if str(name) == "kube_pod_conditions":
             return plugin
     assert False, "Should be able to find the plugin"
 
 
-def test_parse(string_table) -> None:  # type:ignore[no-untyped-def]
+def test_parse(string_table: StringTable) -> None:
     section = kube_pod_conditions.parse(string_table)
     assert section.initialized == ready()
     assert section.scheduled == ready()
@@ -213,12 +219,12 @@ def test_parse_multi(
     "status_initialized, status_scheduled, status_containersready, status_ready",
     [(None, None, None, None)],
 )
-def test_parse_fails_when_all_conditions_empty(string_table) -> None:  # type:ignore[no-untyped-def]
+def test_parse_fails_when_all_conditions_empty(string_table: StringTable) -> None:
     with pytest.raises(ValidationError):
         kube_pod_conditions.parse(string_table)
 
 
-def test_discovery_returns_an_iterable(string_table) -> None:  # type:ignore[no-untyped-def]
+def test_discovery_returns_an_iterable(string_table: StringTable) -> None:
     parsed = kube_pod_conditions.parse(string_table)
     assert list(kube_pod_conditions.discovery(parsed))
 
@@ -226,27 +232,27 @@ def test_discovery_returns_an_iterable(string_table) -> None:  # type:ignore[no-
 @pytest.mark.parametrize(
     "status, expected_length", [(True, 1), (False, len(kube_pod_conditions.LOGICAL_ORDER))]
 )
-def test_check_yields_check_results(  # type:ignore[no-untyped-def]
-    check_result, expected_length
-) -> None:
+def test_check_yields_check_results(check_result: CheckResult, expected_length: int) -> None:
     assert len(list(check_result)) == expected_length
 
 
 @pytest.mark.parametrize("status", [True, False])
-def test_check_all_states_ok(check_result) -> None:  # type:ignore[no-untyped-def]
-    assert all(r.state == State.OK for r in check_result)
+def test_check_all_states_ok(check_result: CheckResult) -> None:
+    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
 
 
 @pytest.mark.parametrize("status", [True])
-def test_check_all_results_with_summary_status_true(  # type:ignore[no-untyped-def]
-    status, check_result, section
+def test_check_all_results_with_summary_status_true(
+    status: bool, check_result: CheckResult
 ) -> None:
-    assert list(r.summary for r in check_result) == ["Ready, all conditions passed"]
+    assert list(isinstance(r, Result) and r.summary for r in check_result) == [
+        "Ready, all conditions passed"
+    ]
 
 
 @pytest.mark.parametrize("status", [False])
-def test_check_all_results_with_summary_status_false(  # type:ignore[no-untyped-def]
-    status, check_result, section
+def test_check_all_results_with_summary_status_false(
+    status: bool, check_result: Iterable[Result]
 ) -> None:
     expected_summaries = [
         f"{k.upper()}: {status} ({REASON}: {DETAIL}) for 0 seconds"
@@ -257,10 +263,10 @@ def test_check_all_results_with_summary_status_false(  # type:ignore[no-untyped-
 
 @pytest.mark.parametrize("status", [True])
 @pytest.mark.parametrize("state", [0, WARN, CRIT])
-def test_check_results_state_ok_when_status_true(  # type:ignore[no-untyped-def]
-    check_result,
+def test_check_results_state_ok_when_status_true(
+    check_result: CheckResult,
 ) -> None:
-    assert all(r.state == State.OK for r in check_result)
+    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
 
 
 @pytest.mark.parametrize("status", [False])
@@ -268,10 +274,10 @@ def test_check_results_state_ok_when_status_true(  # type:ignore[no-untyped-def]
     "state, expected_state",
     [(OK, State.OK), (WARN, State.WARN), (CRIT, State.CRIT)],
 )
-def test_check_results_sets_state_when_status_false(  # type:ignore[no-untyped-def]
-    expected_state, check_result
+def test_check_results_sets_state_when_status_false(
+    expected_state: State, check_result: CheckResult
 ) -> None:
-    assert all(r.state == expected_state for r in check_result)
+    assert all(isinstance(r, Result) and r.state == expected_state for r in check_result)
 
 
 @pytest.mark.parametrize("status", [False])
@@ -287,25 +293,25 @@ def test_check_results_sets_state_when_status_false(  # type:ignore[no-untyped-d
     ],
 )
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_results_state_ok_when_status_false_and_no_levels(  # type:ignore[no-untyped-def]
-    check_result,
+def test_check_results_state_ok_when_status_false_and_no_levels(
+    check_result: CheckResult,
 ) -> None:
-    assert all(r.state == State.OK for r in check_result)
+    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
 
 
 @pytest.mark.parametrize("status", [False])
 @pytest.mark.parametrize("params", [{}])
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_results_state_ok_when_status_false_and_no_params(  # type:ignore[no-untyped-def]
-    check_result,
+def test_check_results_state_ok_when_status_false_and_no_params(
+    check_result: CheckResult,
 ) -> None:
-    assert all(r.state == State.OK for r in check_result)
+    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
 
 
 @pytest.mark.parametrize("status", [False])
 @pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_results_sets_summary_when_status_false(  # type:ignore[no-untyped-def]
-    state, check_result
+def test_check_results_sets_summary_when_status_false(
+    state: float, check_result: CheckResult
 ) -> None:
     time_diff = render.timespan(state * MINUTE)
     expected_prefixes = [
@@ -313,7 +319,7 @@ def test_check_results_sets_summary_when_status_false(  # type:ignore[no-untyped
         for k in kube_pod_conditions.LOGICAL_ORDER
     ]
     for expected_prefix, result in zip(expected_prefixes, check_result):
-        assert result.summary.startswith(expected_prefix)
+        assert isinstance(result, Result) and result.summary.startswith(expected_prefix)
 
 
 @pytest.mark.parametrize("status", [False])
@@ -412,7 +418,7 @@ def test_check_all_results_with_summary_status_mixed(
     assert [r.state for r in check_result] == expected_states
 
 
-def test_register_agent_section_calls(agent_section) -> None:  # type:ignore[no-untyped-def]
+def test_register_agent_section_calls(agent_section: AgentSectionPlugin) -> None:
     assert str(agent_section.name) == "kube_pod_conditions_v1"
     assert str(agent_section.parsed_section_name) == "kube_pod_conditions"
     assert agent_section.parse_function == kube_pod_conditions.parse

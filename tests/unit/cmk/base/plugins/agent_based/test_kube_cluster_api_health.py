@@ -5,6 +5,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.kube_cluster_api_health import check
 from cmk.base.plugins.agent_based.utils.kube import APIHealth, ClusterDetails, HealthZ
 
@@ -44,8 +45,8 @@ from cmk.base.plugins.agent_based.utils.kube import APIHealth, ClusterDetails, H
         ),
     ],
 )
-def test_check_kube_node_count_default_params(  # type:ignore[no-untyped-def]
-    cluster_details: ClusterDetails, expected_result
+def test_check_kube_node_count_default_params(
+    cluster_details: ClusterDetails, expected_result: CheckResult
 ) -> None:
     result = list(check(cluster_details))
     assert result == expected_result

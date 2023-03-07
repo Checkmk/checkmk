@@ -3,13 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple
+from collections import defaultdict
+from enum import Enum
+from typing import Mapping, NamedTuple, NotRequired, TypedDict
 
-from .agent_based_api.v1 import IgnoreResultsError, register, render, Result, Service, State
+from .agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.clusterize import make_node_notice_results
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-DEFAULT_PARAMETERS = {
+
+class CheckType(Enum):
+    COUNT = "count"
+    WAIT_TIME = "waittime"
+
+
+class Params(TypedDict):
+    waittime: NotRequired[tuple[float, float]]
+    state: int
+    ignore_waittypes: NotRequired[list[str]]
+
+
+DEFAULT_PARAMETERS: Params = {
     "state": 2,
 }
 
@@ -57,9 +79,9 @@ def parse_mssql_blocked_sessions(string_table: StringTable) -> dict[str, list[DB
     return parsed
 
 
-def check_mssql_blocked_sessions(  # pylint: disable=too-many-branches
-    item: str, params: dict[str, Any], section: dict[str, list[DBInstance]]
-) -> CheckResult:
+def check_mssql_blocked_sessions(
+    item: str, params: Params, section: dict[str, list[DBInstance]]
+) -> CheckResult:  # pylint: disable=too-many-branches
     if item is None:
         item = ""
 
@@ -72,56 +94,51 @@ def check_mssql_blocked_sessions(  # pylint: disable=too-many-branches
         yield Result(state=State.OK, summary=NO_BLOCKING_SESSIONS_MSG)
         return
 
-    summary: dict[str, int] = {}
+    blocked_sessions_counter: defaultdict[str, int] = defaultdict(int)
     details: list[Result] = []
     warn, crit = params.get("waittime", (None, None))
     ignored_waittypes = set()
     waittypes_to_be_ignored = params.get("ignore_waittypes", [])
+    # the default behaviour is that a single blocking session is changing the state of this check
+    # (no timing levels are checked at all)
+    check_type = CheckType.COUNT
+    if crit is not None and warn is not None:
+        # if levels are set, blocking sessions lower than the level will remain OK.
+        check_type = CheckType.WAIT_TIME
 
     for db_inst in data:
         if db_inst.wait_type in waittypes_to_be_ignored:
             ignored_waittypes.add(db_inst.wait_type)
             continue
 
-        if crit is not None and db_inst.wait_duration >= crit:
-            state = State.CRIT
-        elif warn is not None and db_inst.wait_duration >= warn:
-            state = State.WARN
+        (result,) = check_levels(
+            db_inst.wait_duration,
+            levels_upper=params.get("waittime"),
+            label=f"Session {db_inst.session_id} blocked by {db_inst.blocking_session_id}, Type: {db_inst.wait_type}, Wait",
+            render_func=render.timespan,
+        )
+        details.append(result)
+        blocked_sessions_counter[db_inst.session_id] += 1
+
+    if blocked_sessions_counter:
+        if check_type == CheckType.COUNT:
+            state = State(params["state"])
         else:
             state = State.OK
 
-        summary.setdefault(db_inst.session_id, 0)
-        summary[db_inst.session_id] += 1
-        details.append(
-            Result(
-                state=state,
-                summary="Session %s blocked by %s (Type: %s, Wait: %s)"
-                % (
-                    db_inst.session_id,
-                    db_inst.blocking_session_id,
-                    db_inst.wait_type,
-                    render.timespan(db_inst.wait_duration),
-                ),
-            )
-        )
-
-    if summary:
         yield Result(
-            state=State(params["state"]),
+            state=state,
             summary="Summary: %s"
-            % (", ".join(["%s blocked by %s ID(s)" % (k, v) for k, v in sorted(summary.items())])),
+            % (
+                ", ".join(
+                    [
+                        "%s blocked by %s ID(s)" % (k, v)
+                        for k, v in sorted(blocked_sessions_counter.items())
+                    ]
+                )
+            ),
         )
 
-        max_state = State.worst(*(r.state for r in details))
-        if max_state in {State.CRIT, State.WARN}:
-            yield Result(
-                state=max_state,
-                summary="At least one session above thresholds (warn/crit at %s/%s)"
-                % (
-                    render.timespan(warn),
-                    render.timespan(crit),
-                ),
-            )
         yield from details
     else:
         yield Result(state=State.OK, summary=NO_BLOCKING_SESSIONS_MSG)
@@ -138,7 +155,7 @@ def discovery_mssql_blocked_sessions(section: dict[str, list[DBInstance]]) -> Di
 
 
 def cluster_check_mssql_blocked_sessions(
-    item: str, params: dict[str, Any], section: Mapping[str, dict[str, list[DBInstance]] | None]
+    item: str, params: Params, section: Mapping[str, dict[str, list[DBInstance]] | None]
 ) -> CheckResult:
     for node_name, node_section in section.items():
         if not node_section:

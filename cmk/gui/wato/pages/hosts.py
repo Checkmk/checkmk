@@ -104,7 +104,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
         yield PageMenuEntry(
-            title=_("Save & go to folder"),
+            title=_("Save & view folder"),
             icon_name="save_to_folder",
             item=make_form_submit_link(form_name="edit_host", button_name="go_to_folder"),
             is_shortcut=True,
@@ -113,7 +113,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         if not self._is_cluster():
             yield PageMenuEntry(
-                title=_("Save & go to connection tests"),
+                title=_("Save & run connection tests"),
                 icon_name="connection_tests",
                 item=make_form_submit_link(form_name="edit_host", button_name="diag_host"),
                 is_shortcut=True,

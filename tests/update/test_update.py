@@ -5,6 +5,7 @@
 import logging
 
 import pytest
+from faker import Faker
 
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name
@@ -28,6 +29,23 @@ def test_update(test_site: Site) -> None:
 
     # get version data
     base_version = test_site.version
+
+    hostname = f"test-update-{Faker().first_name()}"
+    logger.info("Creating new host: %s", hostname)
+
+    test_site.openapi.create_host(
+        hostname=hostname,
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "tag_criticality": "test",
+        },
+    )
+
+    test_site.openapi.discover_services_and_wait_for_completion(
+        hostname, cmk_version=base_version.version
+    )
+    test_site.openapi.activate_changes_and_wait_for_completion()
+
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,

@@ -6432,10 +6432,11 @@ class Password(TextInput):
         self.password_meter = password_meter
         if self._is_stored_plain:
             plain_help = _(
-                "The password entered here is stored in plain text within the "
-                "monitoring site. This usually needed because the monitoring "
-                "process needs to have access to the unencrypted password "
-                "because it needs to submit it to authenticate with remote systems. "
+                "The password is stored in clear text within the monitoring "
+                "site. This is necessary because the monitoring process "
+                "needs to have access to the unencrypted password, as it "
+                "needs to provide it for authentication with remote "
+                "systems."
             )
             help = plain_help if help is None else (help + "<br><br>" + plain_help)
 

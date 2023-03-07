@@ -56,6 +56,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencod
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
 
+from .helpers import local_files_involved_in_crash
 from .views import CrashReportsRowTable
 
 
@@ -316,11 +317,7 @@ class PageCrash(ABCCrashReportPage):
 
     def _warn_about_local_files(self, crash_info: CrashInfo) -> None:
         if crash_info["crash_type"] == "check":
-            files = []
-            for filepath, _lineno, _func, _line in crash_info["exc_traceback"]:
-                if "/local/" in filepath:
-                    files.append(filepath)
-
+            files = local_files_involved_in_crash(crash_info["exc_traceback"])
             if files:
                 warn_text = escaping.escape_to_html(
                     _(

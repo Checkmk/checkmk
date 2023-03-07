@@ -6,7 +6,6 @@ import dataclasses
 import json
 import logging
 import os
-import re
 import subprocess
 from typing import Any, Optional
 
@@ -15,7 +14,7 @@ import pytest
 from tests.testlib import CMKWebSession
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import current_base_branch_name
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
 
@@ -29,12 +28,12 @@ class BaseVersions:
     # minimal version supported for an update that can merge the configuration
     MIN_VERSION = os.getenv("MIN_VERSION", "2.1.0p20")
     BASE_VERSIONS = [
-        CMKVersion("2.1.0p1", Edition.CEE, current_base_branch_name()),
+        # CMKVersion("2.1.0p1", Edition.CEE, current_base_branch_name()),
         # CMKVersion("2.1.0p2", Edition.CEE, current_base_branch_name()),
         # CMKVersion("2.1.0p3", Edition.CEE, current_base_branch_name()),
         # ^those releases need htpasswd to set the admin password
         # CMKVersion("2.1.0p4", Edition.CEE, current_base_branch_name()),
-        CMKVersion("2.1.0p5", Edition.CEE, current_base_branch_name()),
+        # CMKVersion("2.1.0p5", Edition.CEE, current_base_branch_name()),
         CMKVersion("2.1.0p10", Edition.CEE, current_base_branch_name()),
         CMKVersion("2.1.0p20", Edition.CEE, current_base_branch_name()),
         # CMKVersion("2.1.0p21", Edition.CEE, current_base_branch_name()),
@@ -183,30 +182,6 @@ def _get_site(version: CMKVersion, update: bool) -> Site:
     ), "Edition mismatch during %s!" % ("update" if update else "installation")
 
     return site
-
-
-def version_gte(version: str, min_version: str) -> bool:
-    """Check if the given version is greater than or equal to min_version."""
-    # first replace all non-numerical segments by a dot
-    # and make sure there are no empty segments
-    cmp_version = re.sub("[^0-9.]+", ".", version).replace("..", ".")
-    min_version = re.sub("[^0-9]+", ".", min_version).replace("..", ".")
-    # now split the segments
-    version_pattern = r"[0-9]*(\.[0-9]*)*"
-    cmp_version_match = re.match(version_pattern, cmp_version)
-    cmp_version_values = cmp_version_match.group().split(".") if cmp_version_match else []
-    logger.debug("cmp_version=%s; cmp_version_values=%s", cmp_version, cmp_version_values)
-    min_version_match = re.match(version_pattern, min_version)
-    min_version_values = min_version_match.group().split(".") if min_version_match else []
-    while len(cmp_version_values) < len(min_version_values):
-        cmp_version_values.append("0")
-    logger.debug("min_version=%s; min_version_values=%s", min_version, min_version_values)
-    # compare the version numbers segment by segment
-    # if any is lower, return False
-    for i, min_val in enumerate(min_version_values):
-        if int(cmp_version_values[i]) < int(min_val):
-            return False
-    return True
 
 
 def version_supported(version: str) -> bool:

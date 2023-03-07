@@ -123,14 +123,10 @@ def check_j4p_performance_mem(item, params, info):
 
 check_info["j4p_performance.mem"] = {
     "check_function": check_j4p_performance_mem,
-    "default_levels_variable": None,
     "group": "j4p_performance.mem",
     "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance(i, "mem"),
-    "node_info": False,
     "service_description": "JMX %s Memory",
-    "snmp_info": None,
-    "snmp_scan_function": None,
 }
 
 
@@ -167,14 +163,10 @@ def check_j4p_performance_threads(item, params, info):
 
 check_info["j4p_performance.threads"] = {
     "check_function": check_j4p_performance_threads,
-    "default_levels_variable": None,
     "group": "j4p_performance.threads",
     "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance(i, "threads"),
-    "node_info": False,
     "service_description": "JMX %s Threads",
-    "snmp_info": None,
-    "snmp_scan_function": None,
 }
 
 
@@ -200,14 +192,10 @@ def check_j4p_performance_uptime(item, _unused, info):
 
 check_info["j4p_performance.uptime"] = {
     "check_function": check_j4p_performance_uptime,
-    "default_levels_variable": None,
     "group": "j4p_performance.uptime",
     "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance(i, "uptime"),
-    "node_info": False,
     "service_description": "JMX %s Uptime",
-    "snmp_info": None,
-    "snmp_scan_function": None,
 }
 
 
@@ -223,13 +211,9 @@ def check_j4p_performance_app_state(item, _unused, info):
 
 check_info["j4p_performance.app_state"] = {
     "check_function": check_j4p_performance_app_state,
-    "default_levels_variable": None,
     "group": "j4p_performance.app_state",
     "inventory_function": lambda i: inventory_j4p_performance_apps(i, "app_state"),
-    "node_info": False,
     "service_description": "JMX %s State",
-    "snmp_info": None,
-    "snmp_scan_function": None,
 }
 
 
@@ -264,14 +248,10 @@ def check_j4p_performance_app_sess(item, params, info):
 
 check_info["j4p_performance.app_sess"] = {
     "check_function": check_j4p_performance_app_sess,
-    "default_levels_variable": None,
     "group": "j4p_performance.app_sess",
     "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance_apps(i, "app_sess"),
-    "node_info": False,
     "service_description": "JMX %s Sessions",
-    "snmp_info": None,
-    "snmp_scan_function": None,
 }
 
 
@@ -308,12 +288,8 @@ def check_j4p_performance_serv_req(item, params, info):
 
 check_info["j4p_performance.serv_req"] = {
     "check_function": check_j4p_performance_serv_req,
-    "default_levels_variable": None,
     "group": "j4p_performance.serv_req",
     "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance_serv(i, "serv_req"),
-    "node_info": False,
     "service_description": "JMX %s Requests",
-    "snmp_info": None,
-    "snmp_scan_function": None,
 }

@@ -402,6 +402,7 @@ dependencies = [
  "tokio-rustls",
  "toml",
  "uuid",
+ "winapi",
  "x509-parser",
 ]
 

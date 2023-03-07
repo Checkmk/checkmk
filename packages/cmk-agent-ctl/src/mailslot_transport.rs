@@ -15,6 +15,7 @@ use std::time::Duration;
 use tokio::sync::mpsc::{
     unbounded_channel as channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
 };
+use winapi;
 
 pub const SERVER_CREATION_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -88,15 +89,21 @@ pub fn send_to_mailslot(mailslot_name: &str, data_type: DataType, data: &[u8]) {
     }
 }
 
+#[inline]
+fn get_thread_id() -> usize {
+    unsafe { winapi::um::processthreadsapi::GetCurrentThreadId() as usize }
+}
+
 pub fn build_own_mailslot_name() -> String {
     format!(
-        "{}WinAgentCtl_{}",
+        "{}WinAgentCtl_{}_{}",
         if is_elevated() {
             "Global\\"
         } else {
             "user_mode_"
         },
-        std::process::id()
+        std::process::id(),
+        get_thread_id()
     )
 }
 

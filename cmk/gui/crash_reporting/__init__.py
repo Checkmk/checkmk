@@ -15,6 +15,7 @@ from .views import (
     DataSourceCrashReports,
     PainterCrashException,
     PainterCrashIdent,
+    PainterCrashSource,
     PainterCrashTime,
     PainterCrashType,
     PainterCrashVersion,
@@ -39,4 +40,5 @@ def register(
     painter_registry.register(PainterCrashIdent)
     painter_registry.register(PainterCrashTime)
     painter_registry.register(PainterCrashType)
+    painter_registry.register(PainterCrashSource)
     painter_registry.register(PainterCrashVersion)

@@ -5,7 +5,6 @@
 
 import os
 import tempfile
-from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
 from typing import assert_never
@@ -42,7 +41,7 @@ from agent_receiver.models import (
     RenewCertResponse,
     RequestForRegistration,
 )
-from agent_receiver.site_context import r4r_dir, site_name
+from agent_receiver.site_context import site_name
 from agent_receiver.utils import (
     internal_credentials,
     NotRegisteredException,
@@ -287,7 +286,7 @@ async def register_new_ongoing(
             return RegisterNewOngoingResponseDeclined(
                 reason=r4r.request.rejection_notice() or "Reason unknown"
             )
-        case RegistrationStatusEnum.READY | RegistrationStatusEnum.DISCOVERABLE:
+        case RegistrationStatusEnum.DISCOVERABLE:
             try:
                 host = RegisteredHost(uuid)
             except NotRegisteredException:
@@ -343,14 +342,6 @@ def _store_agent_data(
             os.rename(temp_file.name, target_dir / "agent_output")
         finally:
             Path(temp_file.name).unlink(missing_ok=True)
-
-
-def _move_ready_file(uuid: UUID4) -> None:
-    (dir_discoverable := r4r_dir() / RegistrationStatusEnum.DISCOVERABLE.name).mkdir(exist_ok=True)
-    with suppress(FileNotFoundError):
-        (r4r_dir() / RegistrationStatusEnum.READY.name / f"{uuid}.json").rename(
-            dir_discoverable / f"{uuid}.json"
-        )
 
 
 @UUID_VALIDATION_ROUTER.post(
@@ -414,8 +405,6 @@ async def agent_data(
         host.source_path,
         decompressed_agent_data,
     )
-
-    _move_ready_file(uuid)
 
     logger.info(
         "uuid=%s Agent data saved",

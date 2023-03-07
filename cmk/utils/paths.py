@@ -141,7 +141,6 @@ r4r_new_dir = _r4r_base_dir.joinpath("NEW")
 r4r_pending_dir = _r4r_base_dir.joinpath("PENDING")
 r4r_declined_dir = _r4r_base_dir.joinpath("DECLINED")
 r4r_declined_bundles_dir = _r4r_base_dir.joinpath("DECLINED-BUNDLES")
-r4r_ready_dir = _r4r_base_dir.joinpath("READY")
 r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
 

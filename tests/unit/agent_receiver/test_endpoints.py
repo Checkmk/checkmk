@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import io
-import logging
 import stat
 from collections.abc import Mapping
 from pathlib import Path
-from unittest import mock
 from uuid import uuid4
 from zlib import compress
 
@@ -532,18 +530,13 @@ def test_register_new_ongoing_in_declined(
 
 
 @pytest.mark.usefixtures("symlink_push_host")
-@pytest.mark.parametrize(
-    "status",
-    (RegistrationStatusEnum.READY, RegistrationStatusEnum.DISCOVERABLE),
-)
 def test_register_new_ongoing_success(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
-    status: RegistrationStatusEnum,
 ) -> None:
     R4R(
-        status=status,
+        status=RegistrationStatusEnum.DISCOVERABLE,
         request=RequestForRegistration(
             uuid=uuid,
             username="user",
@@ -680,46 +673,6 @@ def test_agent_data_success(
     assert file_path.read_text() == "mock file"
 
     assert response.status_code == 204
-
-
-@pytest.mark.usefixtures("symlink_push_host")
-def test_agent_data_move_error(
-    caplog: pytest.LogCaptureFixture,
-    client: TestClient,
-    uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
-    compressed_agent_data: io.BytesIO,
-) -> None:
-    caplog.set_level(logging.INFO)
-    with mock.patch("agent_receiver.endpoints.Path.rename") as move_mock:
-        move_mock.side_effect = FileNotFoundError()
-        response = client.post(
-            f"/agent_data/{uuid}",
-            headers=typeshed_issue_7724(agent_data_headers),
-            files={"monitoring_data": ("filename", compressed_agent_data)},
-        )
-
-    assert response.status_code == 204
-    assert caplog.records[0].message == f"uuid={uuid} Agent data saved"
-
-
-@pytest.mark.usefixtures("symlink_push_host")
-def test_agent_data_move_ready(
-    client: TestClient,
-    uuid: UUID4,
-    agent_data_headers: Mapping[str, str],
-    compressed_agent_data: io.BytesIO,
-) -> None:
-    (path_ready := site_context.r4r_dir() / "READY").mkdir()
-    (path_ready / f"{uuid}.json").touch()
-
-    client.post(
-        f"/agent_data/{uuid}",
-        headers=typeshed_issue_7724(agent_data_headers),
-        files={"monitoring_data": ("filename", compressed_agent_data)},
-    )
-
-    assert (site_context.r4r_dir() / "DISCOVERABLE" / f"{uuid}.json").exists()
 
 
 @pytest.fixture(name="registration_status_headers")

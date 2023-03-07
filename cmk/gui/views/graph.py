@@ -91,6 +91,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_graphs": {
             "browser_reload": 30,
@@ -129,6 +130,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
     }
 )

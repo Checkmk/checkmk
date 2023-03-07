@@ -941,6 +941,7 @@ def _dummy_view_spec() -> ViewSpec:
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         }
     )
 

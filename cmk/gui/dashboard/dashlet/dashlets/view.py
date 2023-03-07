@@ -342,6 +342,7 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "hidebutton": False,
             "public": False,
             "link_from": {},
+            "packaged": False,
         }
     )
 

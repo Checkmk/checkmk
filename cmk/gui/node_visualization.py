@@ -377,6 +377,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
             "context": {},
             "link_from": {},
             "add_context_to_title": True,
+            "packaged": False,
         }
 
 
@@ -1228,6 +1229,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "bi_map_hover_host": {
             "browser_reload": 0,
@@ -1265,6 +1267,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "bi_map_hover_service": {
             "browser_reload": 0,
@@ -1308,6 +1311,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "topology_hover_host": {
             "browser_reload": 0,
@@ -1347,6 +1351,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
     }
 )

@@ -1661,6 +1661,7 @@ def _register_views(
         "is_show_more": is_show_more,
         "owner": UserId.builtin(),
         "add_context_to_title": True,
+        "packaged": False,
     }
 
     # View for the items of one host
@@ -1700,6 +1701,7 @@ def _register_views(
         "is_show_more": is_show_more,
         "owner": UserId.builtin(),
         "add_context_to_title": True,
+        "packaged": False,
     }
 
 
@@ -1755,6 +1757,7 @@ multisite_builtin_views["inv_host"] = {
     "add_context_to_title": True,
     "sort_index": 99,
     "is_show_more": False,
+    "packaged": False,
 }
 
 # View with table of all hosts, with some basic information
@@ -1812,6 +1815,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     "link_from": {},
     "icon": None,
     "add_context_to_title": True,
+    "packaged": False,
 }
 
 # View with available and used ethernet ports
@@ -1865,6 +1869,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
     "link_from": {},
     "icon": None,
     "add_context_to_title": True,
+    "packaged": False,
 }
 
 # .
@@ -2128,6 +2133,7 @@ multisite_builtin_views["inv_host_history"] = {
     "context": {},
     "add_context_to_title": True,
     "sort_index": 99,
+    "packaged": False,
 }
 
 # .

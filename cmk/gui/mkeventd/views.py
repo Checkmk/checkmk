@@ -1511,6 +1511,7 @@ multisite_builtin_views["ec_events"] = mkeventd_view(
             ColumnSpec(name="event_count"),
         ],
         "is_show_more": True,
+        "packaged": False,
         "owner": UserId.builtin(),
         "name": "ec_events",
         "single_infos": [],
@@ -1592,6 +1593,7 @@ multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
         },
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1643,6 +1645,7 @@ multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
         },
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1693,6 +1696,7 @@ multisite_builtin_views["ec_event"] = mkeventd_view(
         "context": {},
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1734,6 +1738,7 @@ multisite_builtin_views["ec_history_recent"] = mkeventd_view(
             ColumnSpec(name="event_count"),
         ],
         "is_show_more": True,
+        "packaged": False,
         "owner": UserId.builtin(),
         "name": "ec_history_recent",
         "single_infos": [],
@@ -1817,6 +1822,7 @@ multisite_builtin_views["ec_historyentry"] = mkeventd_view(
         "context": {},
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1859,6 +1865,7 @@ multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
         "context": {},
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1929,6 +1936,7 @@ multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
         "add_context_to_title": True,
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1986,6 +1994,7 @@ multisite_builtin_views["ec_event_mobile"] = {
     "add_context_to_title": True,
     "sort_index": 99,
     "is_show_more": False,
+    "packaged": False,
 }
 
 multisite_builtin_views["ec_events_mobile"] = {
@@ -2072,4 +2081,5 @@ multisite_builtin_views["ec_events_mobile"] = {
     "add_context_to_title": True,
     "sort_index": 99,
     "is_show_more": False,
+    "packaged": False,
 }

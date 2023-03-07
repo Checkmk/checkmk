@@ -132,7 +132,11 @@ def execute_checkmk_checks(
             )
         timed_results = itertools.chain(
             summarizer(host_sections),
-            check_parsing_errors(ParsedSectionsBroker.parsing_errors(providers)),
+            check_parsing_errors(
+                itertools.chain.from_iterable(
+                    parser.parsing_errors for _, parser in providers.values()
+                )
+            ),
             _check_plugins_missing_data(
                 service_results,
                 exit_spec,

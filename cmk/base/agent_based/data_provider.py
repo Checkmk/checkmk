@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import itertools
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, NamedTuple
 
@@ -258,12 +257,6 @@ class ParsedSectionsBroker:
                 and resolver.resolve(parser, parsed_section_name) is not None
             )
         }
-
-    @staticmethod
-    def parsing_errors(providers: Mapping[HostKey, Provider]) -> Iterable[str]:
-        return itertools.chain.from_iterable(
-            parser.parsing_errors for _, parser in providers.values()
-        )
 
 
 def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:

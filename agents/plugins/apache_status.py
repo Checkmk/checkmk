@@ -23,6 +23,7 @@ __version__ = "2.2.0b1"
 # It is also possible to override or extend the ssl_ports variable to make the
 # check contact other ports than 443 with HTTPS requests.
 
+import contextlib
 import os
 import re
 import sys
@@ -259,10 +260,11 @@ def get_instance_name_map(cfg):
         for line in os.popen("omd sites").readlines():
             sitename = line.split()[0]
             path = "/opt/omd/sites/%s/etc/apache/listen-port.conf" % sitename
-            with open(path) as site_cfg_handle:
-                site_raw_conf = site_cfg_handle.readlines()
+            instance_name_map.setdefault("omd_sites", {})
+            with contextlib.suppress(PermissionError, FileNotFoundError):
+                with open(path) as site_cfg_handle:
+                    site_raw_conf = site_cfg_handle.readlines()
                 site_conf = site_raw_conf[-2].strip().split()[1]
-                instance_name_map.setdefault("omd_sites", {})
                 instance_name_map["omd_sites"][site_conf] = sitename
     return instance_name_map
 

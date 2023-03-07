@@ -109,6 +109,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     validate_all_hosts,
 )
+from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
 
 if not is_raw_edition():  # TODO solve this via registration
@@ -410,7 +411,7 @@ class ActivateChanges:
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
         for site_id in activation_sites():
-            site_changes = SiteChanges(SiteChanges.make_path(site_id)).read()
+            site_changes = SiteChanges(site_id).read()
             self._changes_by_site[site_id] = site_changes
 
             if not site_changes:
@@ -429,7 +430,7 @@ class ActivateChanges:
         self._changes = sorted(changes.items(), key=lambda k_v: k_v[1]["time"])
 
     def confirm_site_changes(self, site_id):
-        SiteChanges(SiteChanges.make_path(site_id)).clear()
+        SiteChanges(site_id).clear()
         cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     @staticmethod
@@ -438,7 +439,7 @@ class ActivateChanges:
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
         for site_id in activation_sites():
-            changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
+            changes_counter += len(SiteChanges(site_id).read())
         return changes_counter
 
     @staticmethod
@@ -1923,7 +1924,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return domain_requests
 
     def _confirm_activated_changes(self):
-        site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
+        site_changes = SiteChanges(self._site_id)
         changes = site_changes.read(lock=True)
 
         try:
@@ -1932,7 +1933,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             site_changes.write(changes)
 
     def _confirm_synchronized_changes(self):
-        site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
+        site_changes = SiteChanges(self._site_id)
         changes = site_changes.read(lock=True)
         try:
             for change in changes:
@@ -2529,7 +2530,7 @@ def _get_current_config_generation(lock: bool = False) -> int:
 
 
 def _config_generation_path() -> Path:
-    return Path(cmk.utils.paths.var_dir) / "wato" / "config-generation.mk"
+    return wato_var_dir() / "config-generation.mk"
 
 
 class ReceiveConfigSyncRequest(NamedTuple):

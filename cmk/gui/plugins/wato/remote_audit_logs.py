@@ -36,8 +36,7 @@ class AutomationGetAuditLogs(AutomationCommand):
         return "get-audit-logs"
 
     def execute(self, api_request: int) -> str:
-        audit_log_store = AuditLogStore(AuditLogStore.make_path())
-        return audit_log_store.to_json(audit_log_store.get_entries_since(timestamp=api_request))
+        return AuditLogStore.to_json(AuditLogStore().get_entries_since(timestamp=api_request))
 
     def get_request(self) -> int:
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
@@ -87,8 +86,7 @@ class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
         self._last_audit_log_timestamps_store = LastAuditLogTimestampsStore(
             self._last_audit_log_timestamps_path
         )
-        self._audit_log_store_path = AuditLogStore.make_path()
-        self._audit_log_store = AuditLogStore(self._audit_log_store_path)
+        self._audit_log_store = AuditLogStore()
 
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
         with store.locked(self._last_audit_log_timestamps_path):
@@ -106,7 +104,8 @@ class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
             )
 
         if last_audit_logs:
-            with store.locked(self._audit_log_store_path):
+            # TODO: We shouldn't lock externally, this should be done via AuditLogStore itself.
+            with store.locked(self._audit_log_store._path):
                 audit_logs_from_remote_sites = self._store_audit_logs(last_audit_logs)
 
         with store.locked(self._last_audit_log_timestamps_path):

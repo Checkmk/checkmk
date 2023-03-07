@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 from typing import Any
+
+from livestatus import SiteId
 
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -16,9 +17,8 @@ ChangeSpec = dict[str, Any]
 class SiteChanges(ABCAppendStore[ChangeSpec]):
     """Manage persisted changes of a single site"""
 
-    @staticmethod
-    def make_path(*args: str) -> Path:
-        return wato_var_dir() / ("replication_changes_%s.mk" % args[0])
+    def __init__(self, site_id: SiteId) -> None:
+        super().__init__(wato_var_dir() / (f"replication_changes_{site_id}.mk"))
 
     @staticmethod
     def _serialize(entry: ChangeSpec) -> object:

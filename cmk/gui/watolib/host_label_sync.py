@@ -14,7 +14,6 @@ from typing import Any
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import (
@@ -26,7 +25,6 @@ from cmk.utils.labels import (
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.log as log
-import cmk.gui.pages
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
@@ -43,6 +41,7 @@ from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.paths import wato_var_dir
 
 
 @dataclass
@@ -207,7 +206,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
 
     @staticmethod
     def newest_host_labels_per_site_path() -> Path:
-        return Path(cmk.utils.paths.var_dir) / "wato" / "newest_host_labels_per_site.mk"
+        return wato_var_dir() / "newest_host_labels_per_site.mk"
 
     def _load_newest_host_labels_per_site(self) -> dict[SiteId, float]:
         return store.load_object_from_file(

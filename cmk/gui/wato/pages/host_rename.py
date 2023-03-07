@@ -483,10 +483,7 @@ class ModeRenameHost(WatoMode):
     def action(self) -> ActionResult:
         local_site = omd_site()
         renamed_host_site = self._host.site_id()
-        if (
-            SiteChanges(SiteChanges.make_path(local_site)).read()
-            or SiteChanges(SiteChanges.make_path(renamed_host_site)).read()
-        ):
+        if SiteChanges(local_site).read() or SiteChanges(renamed_host_site).read():
             raise MKUserError(
                 "newname",
                 _(

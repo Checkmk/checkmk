@@ -153,7 +153,7 @@ class ActivateChangesWriter:
         if site_is_local(site_id) and need_restart is False:
             return
 
-        SiteChanges(SiteChanges.make_path(site_id)).append(
+        SiteChanges(site_id).append(
             {
                 "id": change_id,
                 "action_name": action_name,

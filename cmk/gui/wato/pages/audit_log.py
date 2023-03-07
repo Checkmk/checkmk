@@ -70,7 +70,7 @@ class ModeAuditLog(WatoMode):
     def __init__(self) -> None:
         self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super().__init__()
-        self._store = AuditLogStore(AuditLogStore.make_path())
+        self._store = AuditLogStore()
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
 
     def title(self) -> str:

@@ -35,20 +35,19 @@
 # Returns true/false whether or not the user is permitted
 
 import copy
-from pathlib import Path
 
-import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.utils.roles import get_role_permissions
+from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.utils import format_php
 
 
 def _auth_php():
-    return Path(cmk.utils.paths.var_dir) / "wato" / "auth" / "auth.php"
+    return wato_var_dir() / "auth" / "auth.php"
 
 
 def _create_php_file(callee, users, role_permissions, groups):

@@ -25,16 +25,6 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def make_path(*args: str) -> Path:
-        """Note:
-        Abstract static methods do not make any sense.  This should
-        be a free function.
-
-        """
-        raise NotImplementedError()
-
-    @staticmethod
-    @abc.abstractmethod
     def _serialize(entry: _VT) -> object:
         """Prepare _VT objects for serialization
 

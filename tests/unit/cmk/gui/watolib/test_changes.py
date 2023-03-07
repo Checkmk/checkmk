@@ -5,6 +5,7 @@
 
 import ast
 import time
+from typing import Iterable
 
 import pytest
 from pytest_mock import MockerFixture
@@ -71,8 +72,12 @@ class TestObjectRef:
 
 class TestAuditLogStore:
     @pytest.fixture(name="store")
-    def fixture_store(self, tmp_path):
-        return AuditLogStore(tmp_path / "audit.log")
+    def fixture_store(self) -> Iterable[AuditLogStore]:
+        store = AuditLogStore()
+        try:
+            yield store
+        finally:
+            store._path.unlink(missing_ok=True)
 
     def test_read_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
@@ -134,11 +139,15 @@ class TestAuditLogStore:
 
 class TestSiteChanges:
     @pytest.fixture(name="store")
-    def fixture_store(self, tmp_path):
-        return SiteChanges(tmp_path / ("replication_changes_mysite.mk"))
+    def fixture_store(self) -> Iterable[SiteChanges]:
+        store = SiteChanges(SiteId("mysite"))
+        try:
+            yield store
+        finally:
+            store._path.unlink(missing_ok=True)
 
     @pytest.fixture(name="entry")
-    def fixture_entry(self):
+    def fixture_entry(self) -> ChangeSpec:
         return {
             "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
             "action_name": "create-host",
@@ -232,7 +241,7 @@ def test_log_audit_with_object_diff() -> None:
             diff_text=make_diff_text(old, new),
         )
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,
@@ -255,7 +264,7 @@ def test_log_audit_with_html_message() -> None:
             message=HTML("Message <b>bla</b>"),
         )
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,
@@ -288,7 +297,7 @@ def test_log_audit_with_lazystring() -> None:
                 message=lazy_str,
             )
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert store.read() == [
         AuditLogStore.Entry(
             time=1523811000,

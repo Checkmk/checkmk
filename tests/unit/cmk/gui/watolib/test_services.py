@@ -318,7 +318,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     ]
     assert discovery_result.new_labels == {}
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
     ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]
@@ -568,7 +568,7 @@ def test_perform_discovery_single_update(
         if entry.check_plugin_name == "mem_linux"
     ] == ["old"]
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "set-autochecks"
     ] == [f"Saved check configuration of host '{sample_host_name}' with 2 services"]
@@ -762,7 +762,7 @@ def test_perform_discovery_action_update_services(
     )
     assert [entry.check_source for entry in discovery_result.check_table] == ["old"]
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "set-autochecks"
     ] == [f"Saved check configuration of host '{sample_host_name}' with 1 services"]
@@ -872,7 +872,7 @@ def test_perform_discovery_action_update_host_labels(
     )
     assert "cmk/check_mk_server" not in discovery_result.host_labels
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
     ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]

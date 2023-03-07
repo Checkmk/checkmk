@@ -57,11 +57,16 @@ def test_create_section_plugin_from_legacy(
 
 
 def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy: FixPluginLegacy) -> None:
-    assert set(fix_plugin_legacy.snmp_scan_functions) == set(fix_plugin_legacy.snmp_info)
+    for check_info_element in fix_plugin_legacy.check_info.values():
+        assert (check_info_element.get("snmp_scan_function") is None) is (
+            check_info_element.get("snmp_info") is None
+        )
 
 
 def test_snmp_tree_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
-    for info_spec in fix_plugin_legacy.snmp_info.values():
+    for check_info_element in fix_plugin_legacy.check_info.values():
+        if (info_spec := check_info_element.get("snmp_info")) is None:
+            continue
         new_trees, recover_function = _create_snmp_trees(info_spec)
         assert callable(recover_function)  # is tested separately
         assert isinstance(new_trees, list)
@@ -69,7 +74,9 @@ def test_snmp_tree_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
 
 
 def test_scan_function_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
-    for name, scan_func in fix_plugin_legacy.snmp_scan_functions.items():
+    for name, check_info_element in fix_plugin_legacy.check_info.items():
+        if (scan_func := check_info_element.get("snmp_scan_function")) is None:
+            continue
         if name in (
             # these are already migrated manually:
             "ucd_mem",
@@ -101,9 +108,18 @@ def test_explicit_conversion(func: Callable[[str], str]) -> None:
     assert created == explicit
 
 
-def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy: FixPluginLegacy) -> None:
-    for name in fix_plugin_legacy.snmp_info:
-        assert name == section_name_of(name)
+def test_subcheck_snmp_info_consistent(fix_plugin_legacy: FixPluginLegacy) -> None:
+    ref_info: dict = {section_name_of(name): {} for name in fix_plugin_legacy.check_info}
+    for name, check_info_element in fix_plugin_legacy.check_info.items():
+        if info := check_info_element.get("snmp_info"):
+            assert info == ref_info[section_name_of(name)].setdefault("snmp_info", info)
+        if scan := check_info_element.get("snmp_scan_function"):
+            assert (
+                scan.__code__.co_code
+                == ref_info[section_name_of(name)]
+                .setdefault("snmp_scan_function", scan)
+                .__code__.co_code
+            )
 
 
 def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister) -> None:

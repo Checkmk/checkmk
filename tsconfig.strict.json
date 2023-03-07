@@ -38,7 +38,7 @@
         "./web/htdocs/js/modules/popup_menu.ts",
         "./web/htdocs/js/modules/availability.ts",
         "./web/htdocs/js/modules/backup.ts",
-        //"./web/htdocs/js/modules/activation.ts",
+        "./web/htdocs/js/modules/activation.ts",
         "./web/htdocs/js/modules/graph_integration.ts",
         "./web/htdocs/js/modules/views.ts",
         "./web/htdocs/js/modules/hover.ts",

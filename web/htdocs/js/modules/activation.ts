@@ -6,6 +6,7 @@ import * as ajax from "ajax";
 import * as async_progress from "async_progress";
 import * as utils from "utils";
 import * as page_menu from "page_menu";
+import {CMKAjaxReponse} from "types";
 
 //#.
 //#   .-Activation---------------------------------------------------------.
@@ -27,7 +28,7 @@ import * as page_menu from "page_menu";
 //#   |    unlocked individually.                                          |
 //#   '--------------------------------------------------------------------'
 
-export function activate_changes(mode, site_id) {
+export function activate_changes(mode: "selected" | "site", site_id: string) {
     const sites: string[] = [];
 
     if (mode == "selected") {
@@ -61,7 +62,7 @@ export function activate_changes(mode, site_id) {
     if (comment_field && comment_field.value != "")
         comment = comment_field.value;
 
-    let activate_foreign = 0;
+    let activate_foreign: 0 | 1 = 0;
     const foreign_checkbox = document.getElementsByName(
         "activate_p_foreign"
     )[0] as HTMLInputElement | null;
@@ -71,7 +72,12 @@ export function activate_changes(mode, site_id) {
     initialize_site_progresses(sites);
 }
 
-function start_activation(sites, activate_until, comment, activate_foreign) {
+function start_activation(
+    sites: string[],
+    activate_until: string,
+    comment: string,
+    activate_foreign: 0 | 1
+) {
     async_progress.show_info("Initializing activation...");
 
     const post_data =
@@ -94,12 +100,12 @@ function start_activation(sites, activate_until, comment, activate_foreign) {
 
     lock_activation_controls(true);
 }
-
-function handle_start_activation(_unused, response_json) {
-    const response = JSON.parse(response_json);
+function handle_start_activation(_unused: unknown, response_json: string) {
+    const response: CMKAjaxReponse<{activation_id: string}> =
+        JSON.parse(response_json);
 
     if (response.result_code == 1) {
-        async_progress.show_error(response.result);
+        async_progress.show_error(String(response.result));
         lock_activation_controls(false);
     } else {
         async_progress.show_info("Activating...");
@@ -119,13 +125,17 @@ function handle_start_activation(_unused, response_json) {
     }
 }
 
-function handle_start_activation_error(_unused, status_code, error_msg) {
+function handle_start_activation_error(
+    _unused: unknown,
+    status_code: number,
+    error_msg: string
+) {
     async_progress.show_error(
         "Failed to start activation [" + status_code + "]: " + error_msg
     );
 }
 
-function lock_activation_controls(lock) {
+function lock_activation_controls(lock: boolean) {
     let elements: HTMLElement[] = [];
 
     elements = elements.concat(
@@ -160,7 +170,9 @@ function lock_activation_controls(lock) {
     page_menu.enable_menu_entry("discard_changes", !lock);
 }
 
-function is_activation_progress_finished(response) {
+function is_activation_progress_finished(response: {
+    sites: Record<string, any>;
+}) {
     for (const site_id in response["sites"]) {
         // skip loop if the property is from prototype
         if (!Object.prototype.hasOwnProperty.call(response["sites"], site_id))
@@ -173,7 +185,7 @@ function is_activation_progress_finished(response) {
     return true;
 }
 
-function initialize_site_progresses(sites) {
+function initialize_site_progresses(sites: string[]) {
     for (const site_id of sites) {
         const progress = document.getElementById(
             "site_" + site_id + "_progress"
@@ -186,7 +198,10 @@ function initialize_site_progresses(sites) {
     }
 }
 
-function update_activation_state(_unused_handler_data, response) {
+function update_activation_state(
+    _unused_handler_data: unknown,
+    response: {sites: Record<string, any>}
+) {
     for (const site_id in response["sites"]) {
         // skip loop if the property is from prototype
         if (!Object.prototype.hasOwnProperty.call(response["sites"], site_id))
@@ -211,7 +226,7 @@ function update_activation_state(_unused_handler_data, response) {
     }
 }
 
-export function update_site_activation_state(site_state) {
+export function update_site_activation_state(site_state: Record<string, any>) {
     // Show status text (overlay text on the progress bar)
     const msg = document.getElementById(
         "site_" + site_state["_site_id"] + "_status"
@@ -252,7 +267,7 @@ export function update_site_activation_state(site_state) {
     update_site_progress(site_state);
 }
 
-function update_site_progress(site_state) {
+function update_site_progress(site_state: Record<string, any>) {
     const max_width = 160;
 
     const progress = document.getElementById(
@@ -288,7 +303,7 @@ function update_site_progress(site_state) {
     progress.style.width = width + "px";
 }
 
-function finish_activation(result) {
+function finish_activation(result: {sites: Record<string, any>}) {
     utils.schedule_reload(utils.makeuri({_finished: "1"}), 1000);
 
     // Handle special state "Locked" with a timeout to show the message to the
@@ -303,7 +318,7 @@ function finish_activation(result) {
     }
 
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
-    if (is_warning == true) {
+    if (is_warning) {
         setTimeout(function () {
             utils.reload_whole_page();
         }, 1000);

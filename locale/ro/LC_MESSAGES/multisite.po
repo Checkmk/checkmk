@@ -5074,10 +5074,6 @@ msgid "Application Gateway"
 msgstr "Numele Aplicatiei"
 
 #, fuzzy
-msgid "Application ID"
-msgstr "Numele Aplicatiei"
-
-#, fuzzy
 msgid "Application Key"
 msgstr "Numele Aplicatiei"
 
@@ -5099,6 +5095,10 @@ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 msgid "Application Pool name"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Application account ID"
 msgstr "Numele Aplicatiei"
 
 msgid "Application and Network Load Balancing (ELBv2)"
@@ -15521,6 +15521,10 @@ msgstr ""
 #, python-format
 msgid "Download generic Checkmk Agent for folder %s"
 msgstr ""
+
+#, fuzzy
+msgid "Download license usage report"
+msgstr "% utilizare"
 
 #, fuzzy
 msgid "Download snmp walk"
@@ -26784,10 +26788,6 @@ msgstr "<b>activează notficările</b> pentru"
 msgid "Licensing online verification"
 msgstr "Activare Configurare"
 
-#, fuzzy
-msgid "Licensing settings"
-msgstr "Conexiuni Active"
-
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr ""
 
@@ -28364,10 +28364,6 @@ msgid "Makes the icon appear in the column instead of the dropdown menu."
 msgstr ""
 
 msgid "Man Page Browser"
-msgstr ""
-
-#, python-format
-msgid "Man page %s not found."
 msgstr ""
 
 msgid "Manage"
@@ -33418,6 +33414,10 @@ msgstr ""
 msgid "Offline sequences out"
 msgstr ""
 
+#, fuzzy
+msgid "Offline submission"
+msgstr "(fără elemente)"
+
 msgid "Offline to spare ratio"
 msgstr ""
 
@@ -33573,6 +33573,10 @@ msgstr ""
 #, python-format
 msgid "Online (Version: %s, Edition: %s)"
 msgstr ""
+
+#, fuzzy
+msgid "Online submission"
+msgstr "sesiuni"
 
 #, fuzzy
 msgid "Online verification"
@@ -44628,6 +44632,14 @@ msgid "Submit"
 msgstr ""
 
 #, fuzzy
+msgid "Submit license usage offline"
+msgstr "% utilizare"
+
+#, fuzzy
+msgid "Submit license usage online"
+msgstr "% utilizare"
+
+#, fuzzy
 msgid "Submit report"
 msgstr "Adaugă element"
 
@@ -44655,6 +44667,10 @@ msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Subscription Status"
+msgstr "foloseste descrierea"
+
+#, fuzzy
+msgid "Subscription settings"
 msgstr "foloseste descrierea"
 
 msgid "Substitution"
@@ -54091,6 +54107,10 @@ msgstr ""
 msgid "Upload key"
 msgstr ""
 
+#, fuzzy
+msgid "Upload license usage report"
+msgstr "% utilizare"
+
 msgid "Upload new:"
 msgstr ""
 
@@ -61783,6 +61803,14 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Application ID"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Licensing settings"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
 #~| msgid "<b>add to you favorites</b>"
 #~ msgid "<b>add to your favorites</b>"
 #~ msgstr "<b>adaugă la favoritele tale</b>"
@@ -62136,10 +62164,6 @@ msgstr ""
 #~ msgstr "foloseste descrierea"
 
 #, fuzzy
-#~ msgid "Subscription settings"
-#~ msgstr "foloseste descrierea"
-
-#, fuzzy
 #~ msgid "not a contact"
 #~ msgstr "<i>nu este un contact</i>"
 
@@ -62152,19 +62176,11 @@ msgstr ""
 #~ msgstr "Mesajul Text"
 
 #, fuzzy
-#~ msgid "Download license usage report"
-#~ msgstr "% utilizare"
-
-#, fuzzy
 #~ msgid "Download report"
 #~ msgstr "Descarca"
 
 #, fuzzy
 #~ msgid "Report usage"
-#~ msgstr "% utilizare"
-
-#, fuzzy
-#~ msgid "Submit or download license usage report"
 #~ msgstr "% utilizare"
 
 #, fuzzy
@@ -63600,10 +63616,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "OK services"
 #~ msgstr "servicii"
-
-#, fuzzy
-#~ msgid "Offline hosts"
-#~ msgstr "(fără elemente)"
 
 #, fuzzy
 #~ msgid "Oldest age"

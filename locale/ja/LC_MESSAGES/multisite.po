@@ -5158,10 +5158,6 @@ msgstr "アプリケーション/ Syslog-タグ"
 msgid "Application Gateway"
 msgstr "アプリケーションキー"
 
-#, fuzzy
-msgid "Application ID"
-msgstr "アプリケーション"
-
 msgid "Application Key"
 msgstr "アプリケーションキー"
 
@@ -5182,6 +5178,10 @@ msgstr "アプリケーションロードバランサー"
 
 msgid "Application Pool name"
 msgstr "アプリケーションプール名"
+
+#, fuzzy
+msgid "Application account ID"
+msgstr "アプリケーション"
 
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "アプリケーションとネットワークの負荷分散(ELBv2)"
@@ -15427,6 +15427,9 @@ msgstr "ファイル名をダウンロード"
 #, fuzzy, python-format
 msgid "Download generic Checkmk Agent for folder %s"
 msgstr "ホスト %s のCheckmkエージェントをダウンロードします"
+
+msgid "Download license usage report"
+msgstr "ライセンス使用状況レポートをダウンロードする"
 
 msgid "Download snmp walk"
 msgstr "snmpwalkをダウンロードする"
@@ -27024,10 +27027,6 @@ msgstr "ライセンスステータス"
 msgid "Licensing online verification"
 msgstr "SSL証明書の検証"
 
-#, fuzzy
-msgid "Licensing settings"
-msgstr "ライセンスステータス"
-
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr "Liebert UPSデバイス:温度センサー"
 
@@ -28534,10 +28533,6 @@ msgstr "ドロップダウンメニューの代わりにアイコンを列に表
 
 msgid "Man Page Browser"
 msgstr "マンページブラウザー"
-
-#, python-format
-msgid "Man page %s not found."
-msgstr "マニュアルページ %s が見つかりません。"
 
 msgid "Manage"
 msgstr "管理する"
@@ -33256,6 +33251,10 @@ msgstr "のオフラインシーケンス"
 msgid "Offline sequences out"
 msgstr "オフラインシーケンスアウト"
 
+#, fuzzy
+msgid "Offline submission"
+msgstr "のオフラインシーケンス"
+
 msgid "Offline to spare ratio"
 msgstr "オフラインとスペアの比率"
 
@@ -33408,6 +33407,10 @@ msgstr "オンライン"
 #, python-format
 msgid "Online (Version: %s, Edition: %s)"
 msgstr "オンライン(バージョン: %s、エディション: %s)"
+
+#, fuzzy
+msgid "Online submission"
+msgstr "サイトがありません"
 
 #, fuzzy
 msgid "Online verification"
@@ -44297,6 +44300,14 @@ msgstr "サービス通知の対象"
 msgid "Submit"
 msgstr "サブミット"
 
+#, fuzzy
+msgid "Submit license usage offline"
+msgstr "ライセンス使用状況レポートの送信..."
+
+#, fuzzy
+msgid "Submit license usage online"
+msgstr "ライセンス使用状況レポートの送信..."
+
 msgid "Submit report"
 msgstr "レポートを送信する"
 
@@ -44322,6 +44333,9 @@ msgstr "サブスクリプションID"
 
 msgid "Subscription Status"
 msgstr "サブスクリプションステータス"
+
+msgid "Subscription settings"
+msgstr "サブスクリプション設定"
 
 msgid "Substitution"
 msgstr "置換"
@@ -54986,6 +55000,10 @@ msgstr "アップロードアイコン"
 msgid "Upload key"
 msgstr "キーをアップロード"
 
+#, fuzzy
+msgid "Upload license usage report"
+msgstr "ライセンス使用状況レポートをダウンロードする"
+
 msgid "Upload new:"
 msgstr "新規アップロード:"
 
@@ -63050,6 +63068,20 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #, fuzzy
+#~| msgid "Application"
+#~ msgid "Application ID"
+#~ msgstr "アプリケーション"
+
+#, fuzzy
+#~| msgid "Licensing Status"
+#~ msgid "Licensing settings"
+#~ msgstr "ライセンスステータス"
+
+#, python-format
+#~ msgid "Man page %s not found."
+#~ msgstr "マニュアルページ %s が見つかりません。"
+
+#, fuzzy
 #~| msgid "State when license is expired"
 #~ msgid "Your Checkmk license is about to expire"
 #~ msgstr "ライセンスの有効期限が切れたときの状態"
@@ -63899,9 +63931,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Subscription details"
 #~ msgstr "サブスクリプションの詳細"
 
-#~ msgid "Subscription settings"
-#~ msgstr "サブスクリプション設定"
-
 #~ msgid "The list of services will never match"
 #~ msgstr "サービスのリストが一致することはありません"
 
@@ -63987,9 +64016,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ "<br> <a href=\"%s\">サブスクリプション設定</a>にカスタマーポータルの資格情"
 #~ "報とサブスクリプションの詳細を追加してください。"
 
-#~ msgid "Download license usage report"
-#~ msgstr "ライセンス使用状況レポートをダウンロードする"
-
 #~ msgid "Download report"
 #~ msgstr "レポートをダウンロード"
 
@@ -64033,9 +64059,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Submit or download license usage report"
 #~ msgstr "ライセンス使用状況レポートを送信またはダウンロードする"
-
-#~ msgid "Submitting license usage report..."
-#~ msgstr "ライセンス使用状況レポートの送信..."
 
 #~ msgid "Successfully submitted the license usage report."
 #~ msgstr "ライセンス使用状況レポートを正常に送信しました。"

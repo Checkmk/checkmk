@@ -5386,10 +5386,6 @@ msgstr "Aplicación / Syslog-Tag"
 msgid "Application Gateway"
 msgstr "Clave de aplicación"
 
-#, fuzzy
-msgid "Application ID"
-msgstr "Aplicación"
-
 msgid "Application Key"
 msgstr "Clave de aplicación"
 
@@ -5410,6 +5406,10 @@ msgstr "Equilibradores de carga de aplicaciones"
 
 msgid "Application Pool name"
 msgstr "Nombre del grupo de aplicaciones"
+
+#, fuzzy
+msgid "Application account ID"
+msgstr "Aplicación"
 
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Equilibrio de carga de aplicaciones y redes (ELBv2)"
@@ -16130,6 +16130,9 @@ msgstr "Descargar nombre de archivo"
 #, fuzzy, python-format
 msgid "Download generic Checkmk Agent for folder %s"
 msgstr "Descargar el agente Checkmk para el host %s"
+
+msgid "Download license usage report"
+msgstr "Descargar el informe de uso de licencias"
 
 msgid "Download snmp walk"
 msgstr "Descargar snmp walk"
@@ -28394,10 +28397,6 @@ msgstr "Estado de las licencias"
 msgid "Licensing online verification"
 msgstr "Verificación del certificado SSL"
 
-#, fuzzy
-msgid "Licensing settings"
-msgstr "Estado de las licencias"
-
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr "Dispositivo SAI Liebert: Sensor de temperatura"
 
@@ -29958,10 +29957,6 @@ msgstr ""
 
 msgid "Man Page Browser"
 msgstr "Navegador de páginas de hombre"
-
-#, python-format
-msgid "Man page %s not found."
-msgstr "Página man %s no encontrada."
 
 msgid "Manage"
 msgstr "Gestionar"
@@ -34836,6 +34831,10 @@ msgstr "Secuencias fuera de línea en"
 msgid "Offline sequences out"
 msgstr "Secuencias fuera de línea"
 
+#, fuzzy
+msgid "Offline submission"
+msgstr "Secuencias fuera de línea en"
+
 msgid "Offline to spare ratio"
 msgstr "Ratio de desconexión a la reserva"
 
@@ -34996,6 +34995,10 @@ msgstr "En línea"
 #, python-format
 msgid "Online (Version: %s, Edition: %s)"
 msgstr "En línea (Versión: %s, Edición: %s)"
+
+#, fuzzy
+msgid "Online submission"
+msgstr "Falta el sitio"
 
 #, fuzzy
 msgid "Online verification"
@@ -46422,6 +46425,14 @@ msgstr "Asunto de las notificaciones de servicio"
 msgid "Submit"
 msgstr "Enviar"
 
+#, fuzzy
+msgid "Submit license usage offline"
+msgstr "Presentar el informe de uso de la licencia..."
+
+#, fuzzy
+msgid "Submit license usage online"
+msgstr "Presentar el informe de uso de la licencia..."
+
 msgid "Submit report"
 msgstr "Enviar informe"
 
@@ -46447,6 +46458,9 @@ msgstr "Identificación de la suscripción"
 
 msgid "Subscription Status"
 msgstr "Estado de la suscripción"
+
+msgid "Subscription settings"
+msgstr "Configuración de la suscripción"
 
 msgid "Substitution"
 msgstr "Sustitución"
@@ -58232,6 +58246,10 @@ msgstr "Icono de carga"
 msgid "Upload key"
 msgstr "Subir la clave"
 
+#, fuzzy
+msgid "Upload license usage report"
+msgstr "Descargar el informe de uso de licencias"
+
 msgid "Upload new:"
 msgstr "Sube nuevo:"
 
@@ -66912,6 +66930,20 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
 #, fuzzy
+#~| msgid "Application"
+#~ msgid "Application ID"
+#~ msgstr "Aplicación"
+
+#, fuzzy
+#~| msgid "Licensing Status"
+#~ msgid "Licensing settings"
+#~ msgstr "Estado de las licencias"
+
+#, python-format
+#~ msgid "Man page %s not found."
+#~ msgstr "Página man %s no encontrada."
+
+#, fuzzy
 #~| msgid "State when license is expired"
 #~ msgid "Your Checkmk license is about to expire"
 #~ msgstr "Estado en el que la licencia ha caducado"
@@ -67913,9 +67945,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 #~ msgid "Subscription details"
 #~ msgstr "Detalles de la suscripción"
 
-#~ msgid "Subscription settings"
-#~ msgstr "Configuración de la suscripción"
-
 #~ msgid "The list of services will never match"
 #~ msgstr "La lista de servicios nunca coincidirá"
 
@@ -68030,9 +68059,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 #~ "portal del cliente y los detalles de la suscripción en la <a href=\"%s"
 #~ "\"configuración de la suscripción</a>."
 
-#~ msgid "Download license usage report"
-#~ msgstr "Descargar el informe de uso de licencias"
-
 #~ msgid "Download report"
 #~ msgstr "Descargar el informe"
 
@@ -68077,9 +68103,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Submit or download license usage report"
 #~ msgstr "Envíe o descargue el informe de uso de la licencia"
-
-#~ msgid "Submitting license usage report..."
-#~ msgstr "Presentar el informe de uso de la licencia..."
 
 #~ msgid "Successfully submitted the license usage report."
 #~ msgstr "Presentado con éxito el informe de uso de la licencia."

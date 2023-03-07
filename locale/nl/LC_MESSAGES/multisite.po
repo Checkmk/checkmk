@@ -5363,10 +5363,6 @@ msgstr "Toepassing / Syslog-Tag"
 msgid "Application Gateway"
 msgstr "Toepassingssleutel"
 
-#, fuzzy
-msgid "Application ID"
-msgstr "Toepassing"
-
 msgid "Application Key"
 msgstr "Toepassingssleutel"
 
@@ -5387,6 +5383,10 @@ msgstr "Load balancers voor toepassingen"
 
 msgid "Application Pool name"
 msgstr "Naam toepassingspool"
+
+#, fuzzy
+msgid "Application account ID"
+msgstr "Toepassing"
 
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Toepassing en netwerkbelasting balancering (ELBv2)"
@@ -16015,6 +16015,9 @@ msgstr "Bestandsnaam downloaden"
 #, fuzzy, python-format
 msgid "Download generic Checkmk Agent for folder %s"
 msgstr "Download Checkmk Agent voor host %s"
+
+msgid "Download license usage report"
+msgstr "Licentie gebruiksrapport downloaden"
 
 msgid "Download snmp walk"
 msgstr "Download snmp wandeling"
@@ -28191,10 +28194,6 @@ msgstr "Licentiestatus"
 msgid "Licensing online verification"
 msgstr "SSL-certificaat verificatie"
 
-#, fuzzy
-msgid "Licensing settings"
-msgstr "Licentiestatus"
-
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr "Liebert UPS apparaat: Temperatuursensor"
 
@@ -29737,10 +29736,6 @@ msgstr ""
 
 msgid "Man Page Browser"
 msgstr "Man Page Browser"
-
-#, python-format
-msgid "Man page %s not found."
-msgstr "Man pagina %s niet gevonden."
 
 msgid "Manage"
 msgstr "Beheer"
@@ -34572,6 +34567,10 @@ msgstr "Offline sequenties in"
 msgid "Offline sequences out"
 msgstr "Offline sequenties uit"
 
+#, fuzzy
+msgid "Offline submission"
+msgstr "Offline sequenties in"
+
 msgid "Offline to spare ratio"
 msgstr "Offline/reserve verhouding"
 
@@ -34730,6 +34729,10 @@ msgstr "Online"
 #, python-format
 msgid "Online (Version: %s, Edition: %s)"
 msgstr "Online (Versie: %s, Editie: %s)"
+
+#, fuzzy
+msgid "Online submission"
+msgstr "Site ontbreekt"
 
 #, fuzzy
 msgid "Online verification"
@@ -46030,6 +46033,14 @@ msgstr "Onderwerp voor dienstmededelingen"
 msgid "Submit"
 msgstr "Indienen"
 
+#, fuzzy
+msgid "Submit license usage offline"
+msgstr "Het indienen van licentie gebruiksrapport..."
+
+#, fuzzy
+msgid "Submit license usage online"
+msgstr "Het indienen van licentie gebruiksrapport..."
+
 msgid "Submit report"
 msgstr "Verslag indienen"
 
@@ -46055,6 +46066,9 @@ msgstr "Abonnement ID"
 
 msgid "Subscription Status"
 msgstr "Abonnementsstatus"
+
+msgid "Subscription settings"
+msgstr "Abonnement instellingen"
 
 msgid "Substitution"
 msgstr "Substitutie"
@@ -57757,6 +57771,10 @@ msgstr "Upload pictogram"
 msgid "Upload key"
 msgstr "Upload sleutel"
 
+#, fuzzy
+msgid "Upload license usage report"
+msgstr "Licentie gebruiksrapport downloaden"
+
 msgid "Upload new:"
 msgstr "Upload nieuw:"
 
@@ -66382,6 +66400,20 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #, fuzzy
+#~| msgid "Application"
+#~ msgid "Application ID"
+#~ msgstr "Toepassing"
+
+#, fuzzy
+#~| msgid "Licensing Status"
+#~ msgid "Licensing settings"
+#~ msgstr "Licentiestatus"
+
+#, python-format
+#~ msgid "Man page %s not found."
+#~ msgstr "Man pagina %s niet gevonden."
+
+#, fuzzy
 #~| msgid "State when license is expired"
 #~ msgid "Your Checkmk license is about to expire"
 #~ msgstr "Staat wanneer de vergunning is verlopen"
@@ -67377,9 +67409,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Subscription details"
 #~ msgstr "Abonnementsgegevens"
 
-#~ msgid "Subscription settings"
-#~ msgstr "Abonnement instellingen"
-
 #~ msgid "The list of services will never match"
 #~ msgstr "De lijst van diensten zal nooit overeenkomen"
 
@@ -67493,9 +67522,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ "'%s'.<br>Voeg klant portal credentials en abonnement details toe in de <a "
 #~ "href=\"%s\">abonnement instellingen</a>."
 
-#~ msgid "Download license usage report"
-#~ msgstr "Licentie gebruiksrapport downloaden"
-
 #~ msgid "Download report"
 #~ msgstr "Verslag downloaden"
 
@@ -67540,9 +67566,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Submit or download license usage report"
 #~ msgstr "Licentie gebruiksrapport indienen of downloaden"
-
-#~ msgid "Submitting license usage report..."
-#~ msgstr "Het indienen van licentie gebruiksrapport..."
 
 #~ msgid "Successfully submitted the license usage report."
 #~ msgstr "Met succes het licentie gebruiksrapport ingediend."

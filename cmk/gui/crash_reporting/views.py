@@ -26,6 +26,8 @@ from cmk.gui.views.painter.v0.base import Cell, Painter
 from cmk.gui.views.painter_options import paint_age
 from cmk.gui.views.sorter import cmp_simple_number, Sorter
 
+from .helpers import local_files_involved_in_crash
+
 
 class DataSourceCrashReports(DataSourceLivestatus):
     @property
@@ -186,7 +188,7 @@ class PainterCrashType(Painter):
         return "crash_type"
 
     def title(self, cell):
-        return _("Crash Type")
+        return _("Crash type")
 
     def short_title(self, cell):
         return _("Type")
@@ -197,6 +199,30 @@ class PainterCrashType(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["crash_type"])
+
+
+class PainterCrashSource(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_source"
+
+    def title(self, cell):
+        return _("Crash source")
+
+    def short_title(self, cell):
+        return _("Source")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_exc_traceback"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return (
+            None,
+            _("Extension")
+            if local_files_involved_in_crash(row["crash_exc_traceback"])
+            else _("Builtin"),
+        )
 
 
 class PainterCrashTime(Painter):

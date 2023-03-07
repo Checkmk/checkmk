@@ -4935,6 +4935,7 @@ builtin_views["crash_reports"] = {
     "painters": [
         ColumnSpec(name="crash_ident"),
         ColumnSpec(name="crash_type"),
+        ColumnSpec(name="crash_source"),
         ColumnSpec(name="crash_version"),
         ColumnSpec(name="crash_time"),
         ColumnSpec(name="crash_exception"),

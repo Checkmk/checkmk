@@ -1,0 +1,16 @@
+Title: Automatic creation and registration of hosts
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1678198708
+Edition: cce
+Knowledge: undoc
+Level: 2
+Version: 2.3.0b1
+
+Users of the Checkmk Cloud Edition can now create an agent package that will automatically add the host to the monitoring upon installation.
+
+If monitoring site and agent package are configured accordingly, the agent controller will contact the (remote) monitoring site, and post a request for registration.
+The (central) site will then process this request according to its configuration and potentially create a new host in the monitoring, discover the services and start monitoring it.
+
+Details can be found in the <a href="https://docs.checkmk.com/2.2.0/en/hosts_autoregister.html">user manual</a>.

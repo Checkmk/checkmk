@@ -1,0 +1,18 @@
+Title: New agent configuration: Push mode
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1678199258
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.3.0b1
+
+Users of the Checkmk Cloud Edition now have a new mode of operation for the agent controller at their disposal:
+The "<i>Push mode</i>".
+
+In the push mode, the Checkmk agent sends the monitoring data to the Checkmk server once per minute.
+The agent pushes the data transmission on its own and does not wait for a request from the server.
+The push mode is always required if the Checkmk server cannot access the network in which the host to be monitored and its agent are located, for example, in a cloud-based configuration.
+
+More on the setup can be found in our <a href="https://docs.checkmk.com/2.2.0/en/agent_linux.html">user manual</a>.

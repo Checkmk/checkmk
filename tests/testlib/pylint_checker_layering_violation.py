@@ -21,7 +21,7 @@ from collections.abc import Collection, Container, Hashable, Iterable, Mapping, 
 from pathlib import Path
 from typing import NewType, Protocol, TypeVar
 
-import jsonschema  # type: ignore[import]
+import jsonschema
 import yaml
 from astroid import nodes  # type: ignore[import]
 from pylint.checkers import BaseChecker  # type: ignore[import]

@@ -43,7 +43,7 @@ from cmk.gui.watolib.utils import rename_host_in_list
 from cmk.bi.packs import BIHostRenamer
 
 try:
-    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]
+    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
 except ImportError:
     alert_handling = None  # type: ignore[assignment]
 

@@ -30,8 +30,8 @@ class HTML:
         # Type hints are not used everywhere. So better be sure that we really have
         # the types we want.
         assert value is not None
-        assert not isinstance(value, (float, int))  # type: ignore[unreachable]
-        self.value = value if isinstance(value, str) else str(value)  # type: ignore[unreachable]
+        assert not isinstance(value, (float, int))
+        self.value = value if isinstance(value, str) else str(value)
 
     def _ensure_str(self, value: HTMLInput) -> str:
         """return escaped string or HTML as str

@@ -384,7 +384,7 @@ class UserConnector(abc.ABC):
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(  # type: ignore[no-untyped-def]
+    def do_sync(
         self,
         *,
         add_to_changelog: bool,

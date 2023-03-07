@@ -4480,7 +4480,7 @@ class CEEConfigCache(ConfigCache):
         # Keep CEEHostConfig instances created with the current configuration cache
         # This can be ignored for now -- it only is used privately as a cache, so the
         # contravariance is not a problem here.
-        self._host_configs: dict[HostName, CEEHostConfig] = {}  # type: ignore[assignment]
+        self._host_configs: dict[HostName, CEEHostConfig] = {}
 
     def make_cee_host_config(self, hostname: HostName) -> CEEHostConfig:
         """Returns a CEEHostConfig instance for the given host

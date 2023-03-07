@@ -74,9 +74,7 @@ def page_handler() -> None:
         )
 
     # config.current_customer can not be checked with CRE repos
-    if cmk_version.is_managed_edition() and not managed.is_provider(
-        active_config.current_customer
-    ):  # type: ignore[attr-defined]
+    if cmk_version.is_managed_edition() and not managed.is_provider(active_config.current_customer):
         raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
 
     current_mode = request.var("mode") or "main"

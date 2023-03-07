@@ -97,7 +97,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
                     lines[-1] += line
         return lines
 
-    def read_walk_data(self):  # type: ignore[no-untyped-def]
+    def read_walk_data(self) -> list[str]:
         path = Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
         try:
             return self.read_walk_from_path(path)

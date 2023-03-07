@@ -154,7 +154,7 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
             ]
             if protocol == "EWS"
             else []
-        ),  # type: ignore[arg-type]
+        ),
         validate=validate_common_email_parameters,
     )
 

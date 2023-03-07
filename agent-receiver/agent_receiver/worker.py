@@ -81,7 +81,7 @@ class _ClientCertProtocol(H11Protocol):
                 # ==================================================================================
 
                 raw_path, _, query_string = event.target.partition(b"?")
-                self.scope = {  # type: ignore[typeddict-item]
+                self.scope = {
                     "type": "http",
                     "asgi": {
                         "version": self.config.asgi_version,

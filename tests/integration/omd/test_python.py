@@ -16,7 +16,7 @@ from typing import NamedTuple, NewType
 import pkg_resources as pkg
 import pytest
 from pipfile import Pipfile  # type: ignore[import]
-from semver import VersionInfo  # type: ignore[import]
+from semver import VersionInfo
 
 from tests.testlib import repo_path
 from tests.testlib.site import Site
@@ -96,9 +96,7 @@ def _get_import_names_from_dist_name(dist_name: str) -> list[ImportName]:
         "repoze-profile": "repoze.profile",
     }
 
-    metadata_dir = pkg.get_distribution(
-        dist_renamings.get(dist_name, dist_name)
-    ).egg_info  # type: ignore[attr-defined]
+    metadata_dir = pkg.get_distribution(dist_renamings.get(dist_name, dist_name)).egg_info
     with open("{}/{}".format(metadata_dir, "top_level.txt")) as top_level:
         import_names = top_level.read().rstrip().split("\n")
         # Skip the private modules (starting with an underscore)

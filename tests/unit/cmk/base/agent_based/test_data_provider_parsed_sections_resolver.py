@@ -120,9 +120,9 @@ class TestParsedSectionsResolver:
                 "section_fou", "parsed_section_fou", {"section_one"}
             ),
         }
-        providers = {host_key: self.make_provider(sections)}  # type: ignore[dict-item]
+        providers = {host_key: self.make_provider(sections)}
 
-        assert all_parsing_results(host_key, providers) == [  # type: ignore[arg-type]
+        assert all_parsing_results(host_key, providers) == [
             ResolvedResult(section_name=SectionName("section_one"), parsed_data=1, cache_info=None),
             ResolvedResult(section_name=SectionName("section_thr"), parsed_data=3, cache_info=None),
         ]

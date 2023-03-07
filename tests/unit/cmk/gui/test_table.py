@@ -7,7 +7,7 @@ import re
 from typing import Literal
 
 import pytest
-from bs4 import BeautifulSoup as bs  # type: ignore[import]
+from bs4 import BeautifulSoup as bs
 from pytest import MonkeyPatch
 
 from tests.testlib import compare_html

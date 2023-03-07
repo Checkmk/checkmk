@@ -476,7 +476,7 @@ def test_automation_set_autochecks(test_cfg, site: Site) -> None:  # type: ignor
 
 def test_automation_update_dns_cache(
     test_cfg: TagConfig, site: Site, rest_api_client: RestApiClient
-) -> None:  # type: ignore[no-untyped-def]
+) -> None:
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):

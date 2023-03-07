@@ -239,7 +239,7 @@ async def register_new(
 @AGENT_RECEIVER_APP.post(
     "/register_new_ongoing/{uuid}",
     # https://fastapi.tiangolo.com/tutorial/extra-models/#union-or-anyof
-    response_model=RegisterNewOngoingResponseInProgress  # type: ignore[arg-type]
+    response_model=RegisterNewOngoingResponseInProgress
     | RegisterNewOngoingResponseDeclined
     | RegisterNewOngoingResponseSuccess,
 )

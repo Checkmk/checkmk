@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urls
 import playwright.async_api
 import requests
 import requests.utils
-from bs4 import BeautifulSoup  # type: ignore[import]
+from bs4 import BeautifulSoup
 from lxml import etree
 from playwright.async_api import async_playwright
 

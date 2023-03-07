@@ -626,7 +626,7 @@ def make_cme(
 
     with set_config(current_customer="test-customer"):
         # Fix CRE mypy tests that do not have this attribute defined
-        assert active_config.current_customer == "test-customer"  # type: ignore[attr-defined]
+        assert active_config.current_customer == "test-customer"
         yield
 
 

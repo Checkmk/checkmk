@@ -8,7 +8,7 @@ import os
 import sys
 import time
 
-import paramiko  # type: ignore[import]
+import paramiko
 
 from cmk.utils.password_store import replace_passwords
 

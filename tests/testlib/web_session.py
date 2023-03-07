@@ -10,7 +10,7 @@ import urllib.parse
 from collections.abc import Collection, Container
 
 import requests
-from bs4 import BeautifulSoup  # type: ignore[import]
+from bs4 import BeautifulSoup
 
 
 class APIError(Exception):

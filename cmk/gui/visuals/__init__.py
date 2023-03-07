@@ -395,7 +395,7 @@ def _get_range_filters():
         filter_ident
         for filter_ident, filter_object in filter_registry.items()
         if hasattr(filter_object, "query_filter")
-        and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)  # type: ignore[attr-defined]
+        and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)
     ]
 
 

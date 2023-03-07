@@ -41,7 +41,7 @@ class ProcessDef(NamedTuple):
 
 
 @pytest.fixture(name="snmp_data_dir", scope="module")
-def snmp_data_dir_fixture(request):
+def snmp_data_dir_fixture(request) -> Path:  # type:ignore[no-untyped-def]
     return Path(request.fspath.dirname) / "snmp_data"
 
 

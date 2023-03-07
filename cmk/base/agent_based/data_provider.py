@@ -243,23 +243,6 @@ class ParsedSectionsBroker:
         )
 
     @staticmethod
-    def get_parsed_section(
-        host_key: HostKey,
-        parsed_section_name: ParsedSectionName,
-        providers: Mapping[HostKey, Provider],
-    ) -> ParsedSectionContent | None:
-        try:
-            resolver, parser = providers[host_key]
-        except KeyError:
-            return None
-
-        return (
-            None
-            if (resolved := resolver.resolve(parser, parsed_section_name)) is None
-            else resolved.parsed.data
-        )
-
-    @staticmethod
     def filter_available(
         parsed_section_names: Iterable[ParsedSectionName],
         source_type: SourceType,

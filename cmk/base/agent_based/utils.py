@@ -10,7 +10,7 @@ from cmk.utils.type_defs import ParsedSectionName, ServiceState
 from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult
 
-from .data_provider import ParsedSectionContent, ParsedSectionsBroker, Provider
+from .data_provider import ParsedSectionContent, Provider
 
 _SectionKwargs = Mapping[str, ParsedSectionContent]
 
@@ -25,6 +25,11 @@ def get_section_kwargs(
     It returns a dictionary containing one entry (may be None) for each
     of the required sections, or an empty dictionary if no data was found at all.
     """
+    try:
+        resolver, parser = providers[host_key]
+    except KeyError:
+        return {}
+
     keys = (
         ["section"]
         if len(parsed_section_names) == 1
@@ -32,7 +37,11 @@ def get_section_kwargs(
     )
 
     kwargs = {
-        key: ParsedSectionsBroker.get_parsed_section(host_key, parsed_section_name, providers)
+        key: (
+            None
+            if (resolved := resolver.resolve(parser, parsed_section_name)) is None
+            else resolved.parsed.data
+        )
         for key, parsed_section_name in zip(keys, parsed_section_names)
     }
     # empty it, if nothing was found:

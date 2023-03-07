@@ -170,15 +170,19 @@ impl MaxConnectionsGuard {
             .active_connections
             .entry(ip_addr)
             .or_insert_with(|| Arc::new(Semaphore::new(self.max_connections)));
-        if let Ok(permit) = sem.clone().try_acquire_owned() {
+        if let Ok(permit) = Arc::clone(sem).try_acquire_owned() {
+            let task_num = self.max_connections - sem.available_permits();
             Ok(async move {
                 let res = fut.await;
                 drop(permit);
-                debug!("processed task!");
+                debug!(
+                    "processed task {} from ip {:?} result {:?}",
+                    task_num, ip_addr, res
+                );
                 res
             })
         } else {
-            debug!("Too many active connections");
+            debug!("Too many active connections at ip_addr {}", ip_addr);
             bail!("Too many active connections")
         }
     }
@@ -396,6 +400,7 @@ async fn handle_request(
     connection_timeout: u64,
 ) -> AnyhowResult<()> {
     if is_legacy_pull {
+        debug!("handle_request: starts in legacy mode from {:?}", remote_ip);
         return handle_legacy_pull_request(
             stream,
             agent_output_collector.plain_output(remote_ip),
@@ -403,7 +408,7 @@ async fn handle_request(
         )
         .await;
     }
-    debug!("handle_request starts");
+    debug!("handle_request: starts from {:?}", remote_ip);
 
     let handshake = with_timeout(
         async move {
@@ -419,9 +424,11 @@ async fn handle_request(
     let (mon_data, tls_stream) = tokio::join!(encoded_mondata, handshake);
     let mon_data = mon_data?;
     let mut tls_stream = tls_stream?;
+    debug!("handle_request: ready to be send {:?}", remote_ip);
     with_timeout(
         async move {
             tls_stream.write_all(&mon_data).await?;
+            debug!("handle_request: had been send {:?}", remote_ip);
             tls_stream.flush().await
         },
         connection_timeout,

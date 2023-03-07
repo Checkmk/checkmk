@@ -156,7 +156,12 @@ impl MailSlotBackend {
                     break;
                 }
             },
-            Err(e) => warn!("Mailslot server fails to create thread '{}'", e),
+            Err(e) => warn!(
+                "Mailslot server '{}' '{}' fails to create thread '{}'",
+                base_name,
+                full_name.to_string(),
+                e
+            ),
         }
     }
 

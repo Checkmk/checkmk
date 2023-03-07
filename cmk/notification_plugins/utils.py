@@ -8,7 +8,6 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from email.utils import formataddr
-from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
 from typing import Any, NamedTuple, NoReturn
@@ -17,6 +16,7 @@ import requests
 
 import cmk.utils.password_store
 import cmk.utils.paths
+from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.notify import find_wato_folder, NotificationContext
@@ -86,7 +86,6 @@ def html_escape_context(context: PluginNotificationContext) -> PluginNotificatio
         "CONTACTALIAS",
         "CONTACTNAME",
         "CONTACTEMAIL",
-        "PARAMETER_INSERT_HTML_SECTION",
         "PARAMETER_BULK_SUBJECT",
         "PARAMETER_HOST_SUBJECT",
         "PARAMETER_SERVICE_SUBJECT",
@@ -97,15 +96,26 @@ def html_escape_context(context: PluginNotificationContext) -> PluginNotificatio
         "PARAMETER_REPLY_TO_DISPLAY_NAME",
         "SERVICEDESC",
     }
+    permissive_variables = {
+        "PARAMETER_INSERT_HTML_SECTION",
+    }
     if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    return {
-        variable: html_escape(value) if variable not in unescaped_variables else value
-        for variable, value in context.items()
-    }
+    def _escape_or_not_escape(varname: str, value: str) -> str:
+        """currently we escape by default with a large list of exceptions.
+
+        Next step is permissive escaping for certain fields..."""
+
+        if varname in unescaped_variables:
+            return value
+        if varname in permissive_variables:
+            return escape_permissive(value)
+        return escape(value)
+
+    return {variable: _escape_or_not_escape(variable, value) for variable, value in context.items()}
 
 
 def add_debug_output(template: str, context: PluginNotificationContext) -> str:
@@ -116,7 +126,7 @@ def add_debug_output(template: str, context: PluginNotificationContext) -> str:
         ascii_output += f"{varname}={value}\n"
         html_output += "<tr><td class=varname>{}</td><td class=value>{}</td></tr>\n".format(
             varname,
-            html_escape(value),
+            escape(value),
         )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)

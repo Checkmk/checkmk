@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.utils.type_defs import ParsedSectionName, ServiceState
 
@@ -74,7 +74,7 @@ def get_section_cluster_kwargs(
 
 
 def check_parsing_errors(
-    errors: Sequence[str],
+    errors: Iterable[str],
     *,
     error_state: ServiceState = 1,
 ) -> Sequence[ActiveCheckResult]:

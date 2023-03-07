@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, NamedTuple
 
@@ -259,10 +260,9 @@ class ParsedSectionsBroker:
         }
 
     @staticmethod
-    def parsing_errors(providers: Mapping[HostKey, Provider]) -> Sequence[str]:
-        return sum(
-            (list(parser.parsing_errors) for _, parser in providers.values()),
-            start=[],
+    def parsing_errors(providers: Mapping[HostKey, Provider]) -> Iterable[str]:
+        return itertools.chain.from_iterable(
+            parser.parsing_errors for _, parser in providers.values()
         )
 
 

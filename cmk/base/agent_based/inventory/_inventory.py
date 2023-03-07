@@ -16,7 +16,7 @@ from __future__ import annotations
 import contextlib
 import itertools
 import time
-from collections.abc import Collection, Container, Iterable, Iterator, Mapping
+from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Literal
@@ -131,7 +131,7 @@ def check_inventory_tree(
     # `_collect_inventory_plugin_items()` because the broker implements
     # an implicit protocol where `parsing_errors()` is empty until other
     # methods of the broker have been called.
-    parsing_errors = ParsedSectionsBroker.parsing_errors(providers)
+    parsing_errors: Sequence[str] = list(ParsedSectionsBroker.parsing_errors(providers))
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections
     ) or bool(parsing_errors)
@@ -151,10 +151,7 @@ def check_inventory_tree(
                     no_data_or_files=no_data_or_files,
                 ),
                 summarizer(host_sections),
-                check_parsing_errors(
-                    errors=parsing_errors,
-                    error_state=parameters.fail_status,
-                ),
+                check_parsing_errors(parsing_errors, error_state=parameters.fail_status),
             )
         ),
         inventory_tree=trees.inventory,

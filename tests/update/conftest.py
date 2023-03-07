@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import subprocess
-from typing import Any, Optional
+from typing import Optional
 
 import pytest
 
@@ -47,14 +47,28 @@ class BaseVersions:
     ]
 
 
-def get_host_data(site: Site) -> list[Any]:
+def get_site_data(site: Site) -> list[dict]:
     web = CMKWebSession(site)
     web.login()
     raw_data = json.loads(web.get("view.py?output_format=json_export&view_name=allhosts").content)
     data = []
     for item in raw_data[1:]:
-        data.append({raw_data[0][i]: val} for i, val in enumerate(item))
+        data.append({raw_data[0][i]: val for i, val in enumerate(item)})
     return data
+
+
+def get_sum_services(site_data: list[dict], hostname: str) -> int:
+    """Return the total number of services from the given site-data."""
+    for host_data in site_data:
+        if host_data["host"] == hostname:
+            return (
+                int(host_data["num_services_ok"])
+                + int(host_data["num_services_warn"])
+                + int(host_data["num_services_unknown"])
+                + int(host_data["num_services_crit"])
+                + int(host_data["num_services_pending"])
+            )
+    raise Exception(f"{hostname} not found in the given site-data")
 
 
 def _run_as_site_user(

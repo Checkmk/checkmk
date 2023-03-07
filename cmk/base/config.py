@@ -982,10 +982,9 @@ def strip_tags(tagged_hostlist: list[str]) -> list[HostName]:
     cache = _config_cache.get("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
-    try:
+    with contextlib.suppress(KeyError):
         return cache[cache_id]
-    except KeyError:
-        return cache.setdefault(cache_id, [HostName(h.split("|", 1)[0]) for h in tagged_hostlist])
+    return cache.setdefault(cache_id, [HostName(h.split("|", 1)[0]) for h in tagged_hostlist])
 
 
 def get_shadow_hosts() -> ShadowHosts:
@@ -2732,6 +2731,9 @@ class ConfigCache:
         )
 
     def make_snmp_config(self, host_name: HostName, ip_address: HostAddress) -> SNMPHostConfig:
+        with contextlib.suppress(KeyError):
+            return self.__snmp_config[(host_name, ip_address)]
+
         return self.__snmp_config.setdefault(
             (host_name, ip_address),
             SNMPHostConfig(
@@ -2887,6 +2889,9 @@ class ConfigCache:
         Important if there are two rules for a host with the same combination of plugin name
         and item.
         """
+        with contextlib.suppress(KeyError):
+            return self.__enforced_services_table[hostname]
+
         return self.__enforced_services_table.setdefault(
             hostname,
             {
@@ -2947,6 +2952,9 @@ class ConfigCache:
 
             # Convert legacy rules to current dict format (just like the valuespec)
             return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
+
+        with contextlib.suppress(KeyError):
+            return self.__hwsw_inventory_parameters[host_name]
 
         return self.__hwsw_inventory_parameters.setdefault(
             host_name, get_hwsw_inventory_parameters()
@@ -3012,6 +3020,9 @@ class ConfigCache:
                 with contextlib.suppress(KeyError):
                     yield key, mapping[host_name]
 
+        with contextlib.suppress(KeyError):
+            return self.__explicit_host_attributes[host_name]
+
         return self.__explicit_host_attributes.setdefault(
             host_name, dict(make_explicit_host_attributes())
         )
@@ -3074,6 +3085,9 @@ class ConfigCache:
         return attrs
 
     def computed_datasources(self, host_name: HostName) -> ComputedDataSources:
+        with contextlib.suppress(KeyError):
+            return self.__computed_datasources[host_name]
+
         return self.__computed_datasources.setdefault(
             host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags(host_name))
         )
@@ -3093,6 +3107,9 @@ class ConfigCache:
                 return False
             # Legacy automatic detection
             return self._has_piggyback_data(host_name)
+
+        with contextlib.suppress(KeyError):
+            return self.__is_piggyback_host[host_name]
 
         return self.__is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
@@ -3142,6 +3159,9 @@ class ConfigCache:
                 rediscovery=entry.get("inventory_rediscovery", {}),
             )
 
+        with contextlib.suppress(KeyError):
+            return self.__discovery_check_parameters[host_name]
+
         return self.__discovery_check_parameters.setdefault(
             host_name, make_discovery_check_parameters()
         )
@@ -3184,6 +3204,9 @@ class ConfigCache:
 
             return configured_checks
 
+        with contextlib.suppress(KeyError):
+            return self.__active_checks[host_name]
+
         return self.__active_checks.setdefault(host_name, make_active_checks())
 
     def special_agents(self, host_name: HostName) -> Sequence[tuple[str, Mapping[str, object]]]:
@@ -3201,6 +3224,9 @@ class ConfigCache:
                     matched.append((agentname, params[0]))
             return matched
 
+        with contextlib.suppress(KeyError):
+            return self.__special_agents[host_name]
+
         return self.__special_agents.setdefault(host_name, special_agents_impl())
 
     def hostgroups(self, host_name: HostName) -> Sequence[HostgroupName]:
@@ -3214,6 +3240,9 @@ class ConfigCache:
             if not groups:
                 return [default_host_group]
             return groups
+
+        with contextlib.suppress(KeyError):
+            return self.__hostgroups[host_name]
 
         return self.__hostgroups.setdefault(host_name, hostgroups_impl())
 
@@ -3250,6 +3279,9 @@ class ConfigCache:
 
             return list(set(cgrs))
 
+        with contextlib.suppress(KeyError):
+            return self.__contactgroups[host_name]
+
         return self.__contactgroups.setdefault(host_name, contactgroups_impl())
 
     def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:
@@ -3262,6 +3294,9 @@ class ConfigCache:
                 return "ping"  # avoid problems when switching back to nagios core
 
             return entries[0]
+
+        with contextlib.suppress(KeyError):
+            return self.__explicit_check_command[host_name]
 
         return self.__explicit_check_command.setdefault(host_name, explicit_check_command_impl())
 
@@ -3302,6 +3337,9 @@ class ConfigCache:
 
             return None
 
+        with contextlib.suppress(KeyError):
+            return self.__snmp_fetch_interval[(host_name, section_name)]
+
         return self.__snmp_fetch_interval.setdefault(
             (host_name, section_name), snmp_fetch_interval_impl()
         )
@@ -3322,6 +3360,9 @@ class ConfigCache:
                 for name, is_disabled in merged_section_settings.items()
                 if is_disabled
             )
+
+        with contextlib.suppress(KeyError):
+            return self.__disabled_snmp_sections[host_name]
 
         return self.__disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
 
@@ -3450,12 +3491,21 @@ class ConfigCache:
                 host_name, notification_parameters.get(plugin_name, default)
             )
 
+        with contextlib.suppress(KeyError):
+            return self.__notification_plugin_parameters[(host_name, plugin_name)]
+
         return self.__notification_plugin_parameters.setdefault((host_name, plugin_name), _impl())
 
     def labels(self, host_name: HostName) -> Labels:
+        with contextlib.suppress(KeyError):
+            return self.__labels[host_name]
+
         return self.__labels.setdefault(host_name, self.ruleset_matcher.labels_of_host(host_name))
 
     def label_sources(self, host_name: HostName) -> LabelSources:
+        with contextlib.suppress(KeyError):
+            return self.__label_sources[host_name]
+
         return self.__label_sources.setdefault(
             host_name, self.ruleset_matcher.label_sources_of_host(host_name)
         )

@@ -13,7 +13,14 @@ from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
 
-from .conftest import get_host_data, get_site_status, update_config, update_site, version_supported
+from .conftest import (
+    get_site_data,
+    get_site_status,
+    get_sum_services,
+    update_config,
+    update_site,
+    version_supported,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +30,10 @@ def test_update(test_site: Site) -> None:
     # TODO: check source installation (version check done in test_site fixture)
     # TODO: set config
 
-    # get baseline monitoring data
-    base_data = get_host_data(test_site)
-    logger.debug("Base data: %s", base_data)
-
     # get version data
     base_version = test_site.version
 
+    # create a new host and perform a service discovery
     hostname = f"test-update-{Faker().first_name()}"
     logger.info("Creating new host: %s", hostname)
 
@@ -45,6 +49,13 @@ def test_update(test_site: Site) -> None:
         hostname, cmk_version=base_version.version
     )
     test_site.openapi.activate_changes_and_wait_for_completion()
+
+    # get baseline monitoring data
+    base_data = get_site_data(test_site)
+    sum_services_base = get_sum_services(base_data, hostname)
+    assert sum_services_base > 0
+
+    logger.info("Number of total services found in base-version: %s", sum_services_base)
 
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
@@ -72,13 +83,14 @@ def test_update(test_site: Site) -> None:
             update_config_result != 2
         ), "Trying to update the config resulted in an unexpected error!"
 
-    # get update monitoring data
-    target_data = get_host_data(target_site)
-    logger.debug("Target data: %s", target_data)
-
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
-    # TODO: Compare data
+    # get update monitoring data
+    target_data = get_site_data(target_site)
+    sum_services_target = get_sum_services(target_data, hostname)
+    logger.info("Number of total services found in target-version: %s", sum_services_target)
+
+    assert sum_services_base == sum_services_target

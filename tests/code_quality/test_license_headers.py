@@ -17,6 +17,7 @@ ignored_files = [
     "cmk/notification_plugins/signl4.py",
     "notifications/signl4",
     "omd/packages/maintenance/merge-crontabs",
+    "omd/packages/Python/pip",
 ]
 
 # Similar logic to our partial GitHub sync approach. Both select enterprise files or directories

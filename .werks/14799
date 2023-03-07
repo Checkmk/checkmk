@@ -1,0 +1,29 @@
+Title: pip3 command
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1678353808
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This regression exists since 2.1.0p19 and broke the <tt>pip3</tt> command due to a wrong shebang.
+C+:
+OMD[stable_p20]:~$ pip3
+bash: /omd/sites/stable_p20/bin/pip3: /bin/python: bad interpreter: No such file or directory
+C-:
+
+As of <a href="https://checkmk.com/werk/14792">Werk 14792</a>, a workaround was to use pip as a module.
+Please note that you would need to specify the installation target if you want the mkp tool to find your local packages:
+C+:
+OMD[stable_p21]:~$ python3 -m pip install --target local/lib/python3/ cx_Oracle
+Collecting cx_Oracle
+...
+Installing collected packages: cx_Oracle
+Successfully installed cx_Oracle-8.3.0
+C-:
+
+With this werk, <tt>pip3</tt> can be used again which automatically sets the installation target to the correct folder.
+

@@ -1,0 +1,15 @@
+Title: apache_status: Handle Permission Errors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678205520
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p35
+
+If {ENABLE_OMD_SITE_DETECTION} is set to True and the file 
+/opt/omd/sites/{site_name}/etc/apache/listen-port.conf is not accessible, then
+the agent plugin apache_status.py would not produce parseable data. With this
+werk, the respective data is skipped.

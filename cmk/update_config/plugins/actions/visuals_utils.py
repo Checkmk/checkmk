@@ -28,6 +28,7 @@ def update_visuals(
         # skip builtins, only users
         affected_user.update(owner for owner, _name in all_visuals if owner)
         _migrate_label_filter_configs(all_visuals)
+        _set_packaged_key(all_visuals)
 
 
 @contextmanager
@@ -42,6 +43,17 @@ def _save_user_visuals(
     # Now persist all modified instances
     for user_id in modified_user_instances:
         visuals.save(visual_type, all_visuals, user_id)
+
+
+def _set_packaged_key(all_visuals: dict[tuple[UserId, str], visuals.T]) -> None:
+    """2.2 introduced the mandatory key 'packaged', update old visuals with
+    this key"""
+    for (owner, _name), config in all_visuals.items():
+        if not owner:
+            continue
+        if "packaged" in config:
+            continue
+        config["packaged"] = False
 
 
 def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.T]) -> None:

@@ -5,7 +5,7 @@
 
 import argparse
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, NamedTuple
 
 import requests
@@ -16,6 +16,10 @@ import cmk.utils.password_store
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
 
+__version__ = "2.3.0b1"
+
+USER_AGENT = f"checkmk-special-splunk-{__version__}"
+
 
 class Section(NamedTuple):
     name: str
@@ -23,7 +27,7 @@ class Section(NamedTuple):
     handler: Callable[[Any], None]
 
 
-def main(argv=None):
+def main(argv: None | Sequence[str] = None) -> None | int:
     if argv is None:
         argv = sys.argv[1:]
     # Sections to query
@@ -72,7 +76,7 @@ def main(argv=None):
     return None
 
 
-def handle_request(args, sections):
+def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> None | int:
     url_base = "%s://%s:%d" % (args.proto, args.hostname, args.port)
 
     for section in sections:
@@ -84,6 +88,7 @@ def handle_request(args, sections):
                     url,
                     auth=(args.user, args.password),
                     data={"output_mode": "json"},
+                    headers={"User-Agent": USER_AGENT},
                 )
 
                 response.raise_for_status()

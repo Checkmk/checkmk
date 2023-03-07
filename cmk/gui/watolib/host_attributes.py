@@ -945,7 +945,7 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
         return self._tag_group.get_tag_group_config(value)
 
     def is_show_more(self) -> bool:
-        return self._tag_group.id in ["address_family", "criticality", "networking", "piggyback"]
+        return self._tag_group.id in ["criticality", "networking", "piggyback"]
 
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):

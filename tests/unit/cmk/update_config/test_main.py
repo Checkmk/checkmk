@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping
 from pathlib import Path
 
 import pytest
@@ -16,7 +16,7 @@ from cmk.update_config import main, registry
 
 
 @pytest.fixture(autouse=True)
-def ensure_logging_framework_not_altered():
+def ensure_logging_framework_not_altered() -> Iterator[None]:
     logger = logging.getLogger()
     before_handlers = list(logger.handlers)
     yield

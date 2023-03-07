@@ -826,13 +826,13 @@ class WithAttributes:
     # | ATTRIBUTES                                                         |
     # '--------------------------------------------------------------------'
     # TODO: Returning a mutable private field is an absolute no-no... :-P
-    def attributes(self):
+    def attributes(self) -> dict[str, Any]:
         return self._attributes
 
-    def attribute(self, attrname, default_value=None):
+    def attribute(self, attrname: str, default_value: Any = None) -> Any:
         return self.attributes().get(attrname, default_value)
 
-    def set_attribute(self, attrname, value):
+    def set_attribute(self, attrname: str, value: Any) -> None:
         self._attributes[attrname] = value
 
     def has_explicit_attribute(self, attrname) -> bool:  # type:ignore[no-untyped-def]
@@ -844,7 +844,7 @@ class WithAttributes:
     def effective_attribute(self, attrname, default_value=None):
         return self.effective_attributes().get(attrname, default_value)
 
-    def remove_attribute(self, attrname):
+    def remove_attribute(self, attrname: str) -> None:
         del self.attributes()[attrname]
 
     def drop_caches(self):
@@ -1335,7 +1335,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             clusters=variables["clusters"],
         )
 
-    def save_hosts(self):
+    def save_hosts(self) -> None:
         self.need_unlocked_hosts()
         self.need_permission("write")
         if self._hosts is not None:
@@ -1626,7 +1626,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def ident(self) -> str:
         return self.path()
 
-    def path(self):
+    def path(self) -> str:
         if may_use_redis() and self._path_existing_folder is not None:
             return self._path_existing_folder
 
@@ -2110,7 +2110,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if add_vars is None:
             add_vars = []
 
-        url_vars = [("folder", self.path())]
+        url_vars: HTTPVariables = [("folder", self.path())]
         have_mode = False
         for varname, _value in add_vars:
             if varname == "mode":

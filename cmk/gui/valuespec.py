@@ -7077,7 +7077,7 @@ class LabelGroup(ListOf):
     _sub_vs: ValueSpec = _SingleLabel(world=Labels.World.CORE)
     _magic: str = "@:@"  # Used by ListOf class to count through entries
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             valuespec=AndOrNotDropdown(
                 valuespec=self._sub_vs,

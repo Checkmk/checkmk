@@ -132,7 +132,8 @@ def _transformed_params(
         #       with old keys. As soon as we can remove the workaround below we should not
         #       handle any ruleset differently
         if str(check_plugin.check_ruleset_name) in {"if", "filesystem"}:
-            return new_params
+            # Valuespecs are currently Any...
+            return new_params  # type: ignore[no-any-return]
 
         # TODO: some transform_value() implementations (e.g. 'ps') return parameter with
         #       missing keys - so for safety-reasons we keep keys that don't exist in the

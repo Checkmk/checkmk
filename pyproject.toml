@@ -119,17 +119,19 @@ warn_unreachable = false  # 240 errors in 133 files
 
 [[tool.mypy.overrides]]
 module = [
+    "cmk.gui.background_job",
+    "cmk.gui.backup",
     "cmk.gui.mobile.views",
     "cmk.gui.views.layout",
     "cmk.gui.views.painter",
-    "cmk.gui.background_job",
-    "cmk.gui.backup",
     "cmk.notification_plugins.*",
+    "cmk.update_config.*",
     "cmk.utils.crypto.*",
     "tests.gui_e2e.*",
+    "tests.testlib.event_console",
     "tests.testlib.playwright.*",
     "tests.unit.cmk.ec.*",
-    "tests.testlib.event_console",
+    "tests.unit.cmk.update_config.*",
 ]
 disallow_untyped_calls = true
 disallow_untyped_defs = true

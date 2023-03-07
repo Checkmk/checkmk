@@ -316,23 +316,24 @@ class PageCrash(ABCCrashReportPage):
         )
 
     def _warn_about_local_files(self, crash_info: CrashInfo) -> None:
-        if crash_info["crash_type"] == "check":
-            files = local_files_involved_in_crash(crash_info["exc_traceback"])
-            if files:
-                warn_text = escaping.escape_to_html(
-                    _(
-                        "The following files located in the local hierarchy of your site are involved in this exception:"
-                    )
-                )
-                warn_text += HTMLWriter.render_ul(HTML("\n").join(map(HTMLWriter.render_li, files)))
-                warn_text += escaping.escape_to_html(
-                    _(
-                        "Maybe these files are not compatible with your current Checkmk "
-                        "version. Please verify and only report this crash when you think "
-                        "this should be working."
-                    )
-                )
-                html.show_warning(warn_text)
+        files = local_files_involved_in_crash(crash_info["exc_traceback"])
+        if not files:
+            return
+
+        warn_text = escaping.escape_to_html(
+            _(
+                "The following files located in the local hierarchy of your site are involved in this exception:"
+            )
+        )
+        warn_text += HTMLWriter.render_ul(HTML("\n").join(map(HTMLWriter.render_li, files)))
+        warn_text += escaping.escape_to_html(
+            _(
+                "Maybe these files are not compatible with your current Checkmk "
+                "version. Please verify and only report this crash when you think "
+                "this should be working."
+            )
+        )
+        html.show_warning(warn_text)
 
     def _show_report_form(self, crash_info: CrashInfo, details: ReportSubmitDetails) -> None:
         if crash_info["crash_type"] == "gui":

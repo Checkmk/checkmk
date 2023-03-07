@@ -180,7 +180,7 @@ def _persist_containers_store(
     path.mkdir(parents=True, exist_ok=True)
     common.LOGGER.debug("Persisting current containers store under %s", file_path)
     with open(file_path, "w") as f:
-        f.write(containers_store.json())
+        f.write(containers_store.json(by_alias=True))
 
 
 def _determine_cpu_rate_metrics(
@@ -189,7 +189,6 @@ def _determine_cpu_rate_metrics(
 ) -> Sequence[CPURateSample]:
     """Determine the rate metrics for each container based on the current and previous
     counter metric values"""
-
     common.LOGGER.debug("Determine rate metrics from the latest containers counters stores")
     cpu_metrics_old_map = {metric.container_name: metric for metric in cpu_metrics_old}
     return [

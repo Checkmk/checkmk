@@ -1119,6 +1119,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cmciii_lcp_waterflow",
         "cmctc.temp",
         "cmctc_config",
+        "cmctc_lcp",
         "cmctc_lcp.access",
         "cmctc_lcp.blower",
         "cmctc_lcp.blowergrade",

@@ -2002,23 +2002,6 @@ def convert_check_info() -> None:  # pylint: disable=too-many-branches
         check_includes.setdefault(section_name, [])
         check_includes[section_name] += info.get("includes", [])
 
-    # Make sure that setting for node_info of check and subcheck matches
-    for check_plugin_name, info in check_info.items():
-        if "." in check_plugin_name:
-            section_name = section_name_of(check_plugin_name)
-            if section_name not in check_info:
-                if info.get("node_info"):
-                    raise MKGeneralException(
-                        "Invalid check implementation: node_info for %s is "
-                        "True, but base check %s not defined" % (check_plugin_name, section_name)
-                    )
-
-            elif check_info[section_name].get("node_info") != info.get("node_info"):
-                raise MKGeneralException(
-                    "Invalid check implementation: node_info for %s "
-                    "and %s are different." % ((section_name, check_plugin_name))
-                )
-
 
 AUTO_MIGRATION_ERR_MSG = (
     "Failed to auto-migrate legacy plugin to %s: %s\n"

@@ -116,6 +116,8 @@ if not is_raw_edition():  # TODO solve this via registration
         ActivationBlock,
         licensing_user_effect_expired_trial,
         licensing_user_effect_licensed,
+    )
+    from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         load_verified_response,
     )
 

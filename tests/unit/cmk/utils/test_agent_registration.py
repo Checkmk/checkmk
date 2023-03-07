@@ -16,7 +16,6 @@ from cmk.utils.paths import (
     r4r_discoverable_dir,
     r4r_new_dir,
     r4r_pending_dir,
-    r4r_ready_dir,
     received_outputs_dir,
 )
 from cmk.utils.type_defs import HostAgentConnectionMode, HostName
@@ -192,7 +191,6 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
         (r4r_new_dir, False),
         (r4r_pending_dir, False),
         (r4r_declined_dir, False),
-        (r4r_ready_dir, True),
         (r4r_discoverable_dir, True),
     ],
 )

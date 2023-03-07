@@ -76,8 +76,6 @@ pub enum HostStatus {
     Pending,
     /// `declined`
     Declined,
-    /// `ready`
-    Ready,
     /// `discoverable`
     Discoverable,
 }

@@ -110,9 +110,8 @@ class UUIDLinkManager:
     def update_links(self, host_configs: Mapping[HostName, Mapping[str, Any]]) -> None:
         for link in self:
             if (host_config := host_configs.get(link.hostname)) is None:
-                if self._is_ready_or_discoverable(link.uuid):
-                    # Host may not be synced yet, thus we check if UUID is in READY or DISCOVERABLE
-                    # folder.
+                if self._is_discoverable(link.uuid):
+                    # Host may not be synced yet, thus we check if UUID is in DISCOVERABLE folder.
                     continue
                 link.unlink()
             else:
@@ -124,11 +123,8 @@ class UUIDLinkManager:
                 )
 
     @staticmethod
-    def _is_ready_or_discoverable(uuid: UUID) -> bool:
-        return any(
-            get_r4r_filepath(folder, uuid).exists()
-            for folder in [cmk.utils.paths.r4r_ready_dir, cmk.utils.paths.r4r_discoverable_dir]
-        )
+    def _is_discoverable(uuid: UUID) -> bool:
+        return get_r4r_filepath(cmk.utils.paths.r4r_discoverable_dir, uuid).exists()
 
     def rename(
         self, successful_renamings: Sequence[tuple[HostName, HostName]]

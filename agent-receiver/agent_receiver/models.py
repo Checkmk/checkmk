@@ -167,7 +167,6 @@ class RegistrationStatusEnum(Enum):
     NEW = "new"
     PENDING = "pending"
     DECLINED = "declined"
-    READY = "ready"
     DISCOVERABLE = "discoverable"
 
 

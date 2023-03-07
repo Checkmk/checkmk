@@ -261,10 +261,6 @@ def fake_version_and_paths() -> None:
         Path(cmk.utils.paths._r4r_base_dir, "DECLINED-BUNDLES"),
     )
     monkeypatch.setattr(
-        "cmk.utils.paths.r4r_ready_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "READY"),
-    )
-    monkeypatch.setattr(
         "cmk.utils.paths.r4r_discoverable_dir",
         Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
     )

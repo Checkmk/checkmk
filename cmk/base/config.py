@@ -117,7 +117,6 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
     SNMPBackendEnum,
     SNMPCredentials,
     SNMPHostConfig,
-    SNMPScanFunction,
     SNMPTiming,
 )
 
@@ -1489,10 +1488,6 @@ check_default_levels: dict[str, Any] = {}
 factory_settings: dict[str, dict[str, Any]] = {}
 # variables (names) in checks/* needed for check itself
 check_config_variables: list[Any] = []
-# whichs OIDs to fetch for which check (for tabular information)
-snmp_info: dict[str, tuple[Any] | list[tuple[Any]]] = {}
-# SNMP autodetection
-snmp_scan_functions: dict[str, SNMPScanFunction] = {}
 # definitions of active "legacy" checks
 active_check_info: dict[str, dict[str, Any]] = {}
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
@@ -1578,8 +1573,6 @@ def _initialize_data_structures() -> None:
     check_default_levels.clear()
     factory_settings.clear()
     del check_config_variables[:]
-    snmp_info.clear()
-    snmp_scan_functions.clear()
     active_check_info.clear()
     special_agent_info.clear()
 
@@ -1714,8 +1707,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
         "check_default_levels": check_default_levels,
         "factory_settings": factory_settings,
         "check_config_variables": check_config_variables,
-        "snmp_info": snmp_info,
-        "snmp_scan_functions": snmp_scan_functions,
         "active_check_info": active_check_info,
         "special_agent_info": special_agent_info,
     }
@@ -2073,17 +2064,6 @@ def convert_check_info() -> None:  # pylint: disable=too-many-branches
                     "and %s are different." % ((section_name, check_plugin_name))
                 )
 
-    # Now gather snmp_info and snmp_scan_function back to the
-    # original arrays. Note: these information is tied to a "agent section",
-    # not to a check. Several checks may use the same SNMP info and scan function.
-    for check_plugin_name, info in check_info.items():
-        section_name = section_name_of(check_plugin_name)
-        if info["snmp_info"] and section_name not in snmp_info:
-            snmp_info[section_name] = info["snmp_info"]
-
-        if info["snmp_scan_function"] and section_name not in snmp_scan_functions:
-            snmp_scan_functions[section_name] = info["snmp_scan_function"]
-
 
 AUTO_MIGRATION_ERR_MSG = (
     "Failed to auto-migrate legacy plugin to %s: %s\n"
@@ -2098,7 +2078,7 @@ def _extract_agent_and_snmp_sections(
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
-    in check_info, snmp_scan_functions and snmp_info to create API compliant section plugins.
+    in check_info to create API compliant section plugins.
     """
     errors = []
     # start with the "main"-checks, the ones without '.' in their names:
@@ -2110,13 +2090,13 @@ def _extract_agent_and_snmp_sections(
 
         check_info_dict = check_info.get(section_name, check_info[check_plugin_name])
         try:
-            if section_name in snmp_info:
+            if (checks_snmp_info := check_info_dict.get("snmp_info")) is not None:
                 agent_based_register.add_section_plugin(
                     create_snmp_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
-                        snmp_scan_functions[section_name],
-                        snmp_info[section_name],
+                        check_info_dict["snmp_scan_function"],
+                        checks_snmp_info,
                         validate_creation_kwargs=validate_creation_kwargs,
                     )
                 )

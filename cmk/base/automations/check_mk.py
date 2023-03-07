@@ -206,6 +206,12 @@ class AutomationDiscovery(DiscoveryAutomation):
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
+                failure_summarizer=ConfiguredSummarizer(
+                    config_cache,
+                    hostname,
+                    include_ok_results=False,
+                    override_non_ok_state=None,
+                ),
                 section_plugins=SectionPluginMapper(),
                 check_plugins=CheckPluginMapper(),
                 find_service_description=config.service_description,

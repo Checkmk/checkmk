@@ -32,11 +32,12 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.checkers import FetcherFunction, HostKey, ParserFunction
+from cmk.checkers import FetcherFunction, HostKey, ParserFunction, SummarizerFunction
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
 
 import cmk.base.config as config
 import cmk.base.core
+from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_providers,
@@ -101,6 +102,7 @@ def automation_discovery(
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
+    failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
@@ -125,7 +127,11 @@ def automation_discovery(
             )  # this is cluster-aware!
 
         fetched = fetcher(host_name, ip_address=None)
-        host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
+        parsed = parser((f[0], f[1]) for f in fetched)
+        if failed_sources_results := list(failure_summarizer(parsed)):
+            return DiscoveryResult(error_text=", ".join(r.summary for r in failed_sources_results))
+
+        host_sections = filter_out_errors(parsed)
         store_piggybacked_sections(host_sections)
         providers = make_providers(host_sections, section_plugins)
 
@@ -388,6 +394,12 @@ def discover_marked_hosts(
                 config_cache=config_cache,
                 parser=parser,
                 fetcher=fetcher,
+                failure_summarizer=ConfiguredSummarizer(
+                    config_cache,
+                    host_name,
+                    include_ok_results=False,
+                    override_non_ok_state=None,
+                ),
                 section_plugins=section_plugins,
                 check_plugins=check_plugins,
                 find_service_description=find_service_description,
@@ -433,6 +445,7 @@ def _discover_marked_host(
     config_cache: ConfigCache,
     fetcher: FetcherFunction,
     parser: ParserFunction,
+    failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
@@ -461,6 +474,7 @@ def _discover_marked_host(
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
+        failure_summarizer=failure_summarizer,
         section_plugins=section_plugins,
         check_plugins=check_plugins,
         find_service_description=find_service_description,

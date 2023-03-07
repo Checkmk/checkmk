@@ -644,7 +644,7 @@ def test_registered_permissions() -> None:
             "agent_registration.register_new_host_in_managed_folder",
             "dashboard.aws_ec2_overview",
             "dashboard.azure_vm_overview",
-            "dashboard.gcp_ce_overview",
+            "dashboard.gcp_gce_overview",
         ]
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())

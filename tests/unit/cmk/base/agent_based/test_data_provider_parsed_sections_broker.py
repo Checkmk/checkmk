@@ -5,23 +5,17 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 
-import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.checkers import HostKey, SourceType
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionsBroker,
-    ParsedSectionsResolver,
-    SectionsParser,
-)
+from cmk.base.agent_based.data_provider import ParsedSectionsResolver, SectionsParser
 
 
 def _test_section(
@@ -75,54 +69,6 @@ NODE_2: Sequence[AgentRawDataSection] = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]
-
-
-@pytest.mark.parametrize(
-    "node_sections,expected_result",
-    [
-        (HostSections[AgentRawDataSection](sections={}), None),
-        (
-            HostSections[AgentRawDataSection](sections={SectionName("one"): NODE_1}),
-            {"parsed_by": "one", "node": "node1"},
-        ),
-        (
-            HostSections[AgentRawDataSection](sections={SectionName("two"): NODE_1}),
-            {"parsed_by": "two", "node": "node1"},
-        ),
-        (
-            HostSections[AgentRawDataSection](
-                sections={
-                    SectionName("one"): NODE_1,
-                    SectionName("two"): NODE_1,
-                }
-            ),
-            {
-                "parsed_by": "two",
-                "node": "node1",
-            },
-        ),
-    ],
-)
-def test_get_parsed_section(
-    node_sections: HostSections[AgentRawDataSection], expected_result: Mapping
-) -> None:
-
-    providers = {
-        HostKey(HostName("node1"), SourceType.HOST): (
-            ParsedSectionsResolver(
-                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
-            ),
-            SectionsParser(host_sections=node_sections, host_name=HostName("node1")),
-        ),
-    }
-
-    content = ParsedSectionsBroker.get_parsed_section(
-        HostKey(HostName("node1"), SourceType.HOST),
-        ParsedSectionName("parsed"),
-        providers,
-    )
-
-    assert expected_result == content
 
 
 def _get_parser() -> SectionsParser:

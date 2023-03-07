@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import itertools
 from collections import Counter
 from collections.abc import Container, Mapping
 
@@ -24,7 +25,6 @@ import cmk.base.core
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_providers,
-    ParsedSectionsBroker,
     Provider,
     store_piggybacked_sections,
 )
@@ -220,6 +220,8 @@ def _commandline_discovery_on_host(
     count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} services")
 
-    for result in check_parsing_errors(ParsedSectionsBroker.parsing_errors(providers)):
+    for result in check_parsing_errors(
+        itertools.chain.from_iterable(parser.parsing_errors for _, parser in providers.values())
+    ):
         for line in result.details:
             console.warning(line)

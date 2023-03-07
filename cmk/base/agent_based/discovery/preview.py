@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 from collections.abc import Callable, Container, Mapping, Sequence
 from typing import Any, Literal
 
@@ -28,7 +29,6 @@ import cmk.base.core
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_providers,
-    ParsedSectionsBroker,
     Provider,
     store_piggybacked_sections,
 )
@@ -96,7 +96,9 @@ def get_check_preview(
         save_labels=False,
     )
 
-    for result in check_parsing_errors(ParsedSectionsBroker.parsing_errors(providers)):
+    for result in check_parsing_errors(
+        itertools.chain.from_iterable(parser.parsing_errors for _, parser in providers.values())
+    ):
         for line in result.details:
             console.warning(line)
 

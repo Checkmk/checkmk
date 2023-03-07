@@ -29,7 +29,6 @@ from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_providers,
-    ParsedSectionsBroker,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
@@ -105,7 +104,9 @@ def execute_check_discovery(
         discovery_mode,
     )
 
-    parsing_errors_results = check_parsing_errors(ParsedSectionsBroker.parsing_errors(providers))
+    parsing_errors_results = check_parsing_errors(
+        itertools.chain.from_iterable(parser.parsing_errors for _, parser in providers.values())
+    )
 
     return ActiveCheckResult.from_subresults(
         *itertools.chain(

@@ -2243,23 +2243,28 @@ def transform_simple_to_multi_host_rule_match_conditions(value):
 
 
 def _simple_host_rule_match_conditions():
-    return [_site_rule_match_condition(),
-            _single_folder_rule_match_condition()] + _common_host_rule_match_conditions()
+    return [
+        _site_rule_match_condition(only_sites_with_replication=False),
+        _single_folder_rule_match_condition()
+    ] + _common_host_rule_match_conditions()
 
 
 def multifolder_host_rule_match_conditions():
-    return [_site_rule_match_condition(),
-            _multi_folder_rule_match_condition()] + _common_host_rule_match_conditions()
+    return [
+        _site_rule_match_condition(only_sites_with_replication=True),
+        _multi_folder_rule_match_condition()
+    ] + _common_host_rule_match_conditions()
 
 
-def _site_rule_match_condition():
+def _site_rule_match_condition(only_sites_with_replication: bool):
     return (
         "match_site",
         DualListChoice(
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of "
                    "the selected sites."),
-            choices=config.get_activation_site_choices,
+            choices=config.get_activation_site_choices
+            if only_sites_with_replication else config.get_configured_site_choices,
         ),
     )
 

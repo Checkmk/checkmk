@@ -2010,37 +2010,12 @@ class CheckInfoElement(TypedDict, total=True):
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.
 def convert_check_info() -> None:  # pylint: disable=too-many-branches
-    check_info_defaults: CheckInfo = {
-        "check_function": None,
-        "inventory_function": None,
-        "parse_function": None,
-        "group": None,
-        "snmp_info": None,
-        "snmp_scan_function": None,
-        # The 'handle_empty_info' feature predates the 'parse_function'
-        # and is not needed nor used anymore.
-        "handle_empty_info": False,
-        # The handle_real_time_checks was only used to determine the valid choices of the
-        # WATO rule, these are now hardcoded.
-        "handle_real_time_checks": False,
-        "default_levels_variable": None,
-        "node_info": False,
-        "extra_sections": [],
-        "service_description": None,
-        "has_perfdata": False,
-        "management_board": None,
-    }
 
     for check_plugin_name, info in check_info.items():
         section_name = section_name_of(check_plugin_name)
 
         if not isinstance(info, dict):
             raise NotImplementedError("Please use the new check API")
-
-        # Check does already use new API. Make sure that all keys are present,
-        # extra check-specific information into file-specific variables.
-        for key, val in check_info_defaults.items():
-            info.setdefault(key, val)
 
         # Include files are related to the check file (= the section_name),
         # not to the (sub-)check. So we keep them in check_includes.
@@ -2052,13 +2027,13 @@ def convert_check_info() -> None:  # pylint: disable=too-many-branches
         if "." in check_plugin_name:
             section_name = section_name_of(check_plugin_name)
             if section_name not in check_info:
-                if info["node_info"]:
+                if info.get("node_info"):
                     raise MKGeneralException(
                         "Invalid check implementation: node_info for %s is "
                         "True, but base check %s not defined" % (check_plugin_name, section_name)
                     )
 
-            elif check_info[section_name]["node_info"] != info["node_info"]:
+            elif check_info[section_name].get("node_info") != info.get("node_info"):
                 raise MKGeneralException(
                     "Invalid check implementation: node_info for %s "
                     "and %s are different." % ((section_name, check_plugin_name))

@@ -51,7 +51,7 @@ def test_create_section_plugin_from_legacy(
         if section is None:
             continue
 
-        original_parse_function = check_info_dict["parse_function"]
+        original_parse_function = check_info_dict.get("parse_function")
         if original_parse_function is not None:
             assert original_parse_function.__name__ == section.parse_function.__name__
 
@@ -128,7 +128,7 @@ def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: F
     true_checks = {
         n.replace(".", "_").replace("-", "_")
         for n, i in fix_plugin_legacy.check_info.items()
-        if i["check_function"]
+        if i.get("check_function")
     }
     failures = true_checks - migrated
     assert not failures, f"failed to migrate: {failures!r}"

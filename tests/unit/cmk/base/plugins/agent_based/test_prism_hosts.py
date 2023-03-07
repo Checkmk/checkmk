@@ -2,10 +2,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.prism_hosts import check_prism_hosts, discovery_prism_hosts
@@ -93,7 +95,7 @@ def test_discovery_prism_hosts(
                 Result(state=State.OK, summary="has state NORMAL"),
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
-                Result(state=State.OK, summary="Boottime Thu Aug 11 13:40:02 2022"),
+                Result(state=State.OK, summary="Boottime Aug 11 2022 13:40:02"),
             ],
             id="If the host is connected and in the wanted state, the check is OK.",
         ),
@@ -105,7 +107,7 @@ def test_discovery_prism_hosts(
                 Result(state=State.WARN, summary="has state NORMAL(!) expected state OFFLINE"),
                 Result(state=State.OK, summary="Number of VMs 4"),
                 Result(state=State.OK, summary="Memory 376 GiB"),
-                Result(state=State.OK, summary="Boottime Thu Aug 11 13:40:02 2022"),
+                Result(state=State.OK, summary="Boottime Aug 11 2022 13:40:02"),
             ],
             id="If the host has not the expected state, the check is WARN.",
         ),
@@ -125,7 +127,9 @@ def test_check_prism_hosts(
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
+    monkeypatch: MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     assert (
         list(
             check_prism_hosts(

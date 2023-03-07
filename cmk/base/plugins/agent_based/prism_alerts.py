@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # ported by (c) Andreas Doehler <andreas.doehler@bechtle.com/andreas.doehler@gmail.com>
 from collections.abc import Mapping, Sequence
-from datetime import datetime
 from typing import Any
 
-from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.prism import load_json
 
@@ -59,7 +58,7 @@ def discovery_prism_alerts(section: Section) -> DiscoveryResult:
 
 def to_string(timestamp: str) -> str:
     """Turn a textual timestamp in microseconds into a readable format"""
-    return datetime.fromtimestamp(int(timestamp) // 1000000).strftime("%c")
+    return render.datetime(int(timestamp) / 1000000.0)
 
 
 def check_prism_alerts(params: StringMap, section: Section) -> CheckResult:

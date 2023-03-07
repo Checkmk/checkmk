@@ -10,7 +10,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import time
 from collections.abc import Mapping
 from typing import Any
 
@@ -53,8 +52,7 @@ def check_prism_hosts(item: str, params: Mapping[str, Any], section: Section) ->
     state_text = data["state"]
     num_vms = data["num_vms"]
     memory = render.bytes(data["memory_capacity_in_bytes"])
-    boottime = int(data["boot_time_in_usecs"] / 1000 / 1000)
-    uptime = time.strftime("%c", time.localtime(boottime))
+    boottime = data["boot_time_in_usecs"] / 1000000.0
 
     message = f"has state {state_text}"
     if state_text != wanted_state:
@@ -63,7 +61,7 @@ def check_prism_hosts(item: str, params: Mapping[str, Any], section: Section) ->
     yield Result(state=State(state), summary=message)
     yield Result(state=State.OK, summary=f"Number of VMs {num_vms}")
     yield Result(state=State.OK, summary=f"Memory {memory}")
-    yield Result(state=State.OK, summary=f"Boottime {uptime}")
+    yield Result(state=State.OK, summary=f"Boottime {render.datetime(boottime)}")
 
 
 register.check_plugin(

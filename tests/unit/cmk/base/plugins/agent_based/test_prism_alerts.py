@@ -2,10 +2,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.prism_alerts import check_prism_alerts, discovery_prism_alerts
@@ -70,16 +72,16 @@ def test_discovery_prism_alerts(
                 Result(state=State.OK, summary="2 alerts"),
                 Result(
                     state=State.OK,
-                    summary="Last worst on Thu Oct  6 14:16:27 2022: 'It is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.'",
+                    summary="Last worst on Oct 06 2022 14:16:27: 'It is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.'",
                 ),
                 Result(state=State.OK, notice="\nLast 10 Alerts\n"),
                 Result(
                     state=State.OK,
-                    notice="Thu Oct  6 14:16:27 2022\tIt is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
+                    notice="Oct 06 2022 14:16:27\tIt is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Thu Oct  6 14:16:27 2022\tIt is recommended that NGT on the VM SRV-SQL-02 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
+                    notice="Oct 06 2022 14:16:27\tIt is recommended that NGT on the VM SRV-SQL-02 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
                 ),
             ],
             id="If the disk is in expected mount state and healthy, the check result is OK.",
@@ -90,7 +92,9 @@ def test_check_prism_alerts(
     params: Mapping[str, str],
     section: Sequence[Mapping[Any, Any]],
     expected_check_result: Sequence[Result],
+    monkeypatch: MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(time, "localtime", time.gmtime)
     assert (
         list(
             check_prism_alerts(

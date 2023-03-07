@@ -47,9 +47,9 @@ import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.licensing import save_extensions
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.state import is_expired_trial, is_licensed
+from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 from cmk.utils.version import is_cloud_edition, is_raw_edition

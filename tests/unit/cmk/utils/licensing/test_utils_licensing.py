@@ -13,8 +13,16 @@ from pytest import MonkeyPatch
 
 import livestatus
 
-import cmk.utils.licensing as licensing
-from cmk.utils.licensing import (
+from cmk.utils.licensing import usage as licensing_usage
+from cmk.utils.licensing.export import (
+    LicenseUsageExtensions,
+    LicenseUsageSample,
+    SubscriptionDetails,
+    SubscriptionDetailsError,
+    SubscriptionDetailsLimit,
+    SubscriptionDetailsLimitType,
+)
+from cmk.utils.licensing.usage import (
     _get_cloud_counter,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
@@ -24,14 +32,6 @@ from cmk.utils.licensing import (
     LocalLicenseUsageHistory,
     RawLicenseUsageReport,
     update_license_usage,
-)
-from cmk.utils.licensing.export import (
-    LicenseUsageExtensions,
-    LicenseUsageSample,
-    SubscriptionDetails,
-    SubscriptionDetailsError,
-    SubscriptionDetailsLimit,
-    SubscriptionDetailsLimitType,
 )
 from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
 
@@ -45,39 +45,21 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     def _mock_service_livestatus() -> list[list[str]]:
         return [["host", "services"]]
 
+    monkeypatch.setattr(licensing_usage, "_get_shadow_hosts_counter", lambda: 7)
+    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
+    monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
     monkeypatch.setattr(
-        licensing,
-        "_get_shadow_hosts_counter",
-        lambda: 7,
-    )
-
-    monkeypatch.setattr(
-        licensing,
-        "_get_stats_from_livestatus",
-        _mock_livestatus,
-    )
-
-    monkeypatch.setattr(
-        licensing,
-        "_get_services_from_livestatus",
-        _mock_service_livestatus,
-    )
-
-    monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "_load_extensions",
         lambda: LicenseUsageExtensions(ntop=False),
     )
-
-    monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 0)
-
+    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
     monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "load_instance_id",
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
-
-    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
     assert update_license_usage() == 0
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 1
@@ -89,33 +71,20 @@ def test_update_license_usage_livestatus_socket_error(
     def _mock_livestatus(query: str) -> tuple[int, int]:
         raise livestatus.MKLivestatusSocketError()
 
+    monkeypatch.setattr(licensing_usage, "_get_shadow_hosts_counter", lambda: 7)
+    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
     monkeypatch.setattr(
-        licensing,
-        "_get_shadow_hosts_counter",
-        lambda: 7,
-    )
-
-    monkeypatch.setattr(
-        licensing,
-        "_get_stats_from_livestatus",
-        _mock_livestatus,
-    )
-
-    monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "_load_extensions",
         lambda: LicenseUsageExtensions(ntop=False),
     )
-
-    monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 0)
-
+    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
     monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "load_instance_id",
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
-
-    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
     assert update_license_usage() == 1
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
@@ -127,33 +96,20 @@ def test_update_license_usage_livestatus_not_found_error(
     def _mock_livestatus(query: str) -> tuple[int, int]:
         raise livestatus.MKLivestatusNotFoundError()
 
+    monkeypatch.setattr(licensing_usage, "_get_shadow_hosts_counter", lambda: 7)
+    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
     monkeypatch.setattr(
-        licensing,
-        "_get_shadow_hosts_counter",
-        lambda: 7,
-    )
-
-    monkeypatch.setattr(
-        licensing,
-        "_get_stats_from_livestatus",
-        _mock_livestatus,
-    )
-
-    monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "_load_extensions",
         lambda: LicenseUsageExtensions(ntop=False),
     )
-
-    monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 0)
-
+    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 0)
     monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "load_instance_id",
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
-
-    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
     assert update_license_usage() == 1
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
@@ -170,38 +126,21 @@ def test_update_license_usage_next_run_ts_not_reached(
     def _mock_service_livestatus() -> list[list[str]]:
         return [["host", "services"]]
 
+    monkeypatch.setattr(licensing_usage, "_get_shadow_hosts_counter", lambda: 7)
+    monkeypatch.setattr(licensing_usage, "_get_stats_from_livestatus", _mock_livestatus)
+    monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
     monkeypatch.setattr(
-        licensing,
-        "_get_shadow_hosts_counter",
-        lambda: 7,
-    )
-
-    monkeypatch.setattr(
-        licensing,
-        "_get_stats_from_livestatus",
-        _mock_livestatus,
-    )
-
-    monkeypatch.setattr(
-        licensing,
-        "_get_services_from_livestatus",
-        _mock_service_livestatus,
-    )
-    monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "_load_extensions",
         lambda: LicenseUsageExtensions(ntop=False),
     )
-
-    monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 2 * time.time())
-
+    monkeypatch.setattr(licensing_usage, "_get_next_run_ts", lambda fp: 2 * time.time())
     monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "load_instance_id",
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )
-
-    monkeypatch.setattr(licensing, "omd_site", lambda: "site-name")
+    monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
     assert update_license_usage() == 0
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
@@ -224,11 +163,7 @@ def test_get_cloud_counter(
     def _mock_service_livestatus() -> Sequence[Sequence[Any]]:
         return livestatus_response
 
-    monkeypatch.setattr(
-        licensing,
-        "_get_services_from_livestatus",
-        _mock_service_livestatus,
-    )
+    monkeypatch.setattr(licensing_usage, "_get_services_from_livestatus", _mock_service_livestatus)
 
     counter = _get_cloud_counter()
     assert counter.hosts == expected_hosts
@@ -652,7 +587,7 @@ def test_license_usage_report(
     expected_history: LocalLicenseUsageHistory,
 ) -> None:
     monkeypatch.setattr(
-        licensing,
+        licensing_usage,
         "load_instance_id",
         lambda: UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
     )

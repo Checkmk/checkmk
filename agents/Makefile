@@ -6,6 +6,7 @@ include ../defines.make
 include ../artifacts.make
 
 AGENTS_DIR := $(REPO_PATH)/agents
+SPECIAL_AGENTS_DIR := $(REPO_PATH)/cmk/special_agents
 RPM_VERSION := $(subst -,_,$(VERSION))
 NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(.*\)/\1/g')
 NAME := check-mk-agent
@@ -74,6 +75,11 @@ setversion:
 	    check_mk_agent.openbsd \
 	    check_mk_agent.openwrt \
 	    check_mk_agent.solaris
+	sed -i 's/__version__ = \"[0-9.a-z-]*\"/__version__ = \"$(NEW_VERSION)\"/g' \
+		$(SPECIAL_AGENTS_DIR)/agent_splunk.py \
+		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
+		$(SPECIAL_AGENTS_DIR)/agent_netapp.py \
+		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
 

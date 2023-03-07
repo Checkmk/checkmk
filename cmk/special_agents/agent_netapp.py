@@ -76,6 +76,10 @@ except ImportError:
     # 2.0 backwards compatibility
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
 
+__version__ = "2.2.0b1"
+
+USER_AGENT = f"checkmk-special-netapp-{__version__}"
+
 COUNTERS_CLUSTERMODE_MAX_RECORDS = 500
 QUERY_MAX_RECORDS = 500
 COUNTERS_CLUSTERMODE_MAX_INSTANCES_PER_REQUEST = 500
@@ -355,6 +359,7 @@ class NetAppConnection:
 
         self.headers = {}
         self.headers["Content-type"] = 'text/xml; charset="UTF-8"'
+        self.headers["User-Agent"] = USER_AGENT
         self.session = requests.Session()
         self.debug = debug
         self.dump_xml = dump_xml

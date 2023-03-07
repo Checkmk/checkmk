@@ -6,6 +6,7 @@
 
 __version__ = "2.2.0b1"
 
+USER_AGENT = "checkmk-agent-nginx_status-" + __version__
 # Checkmk-Agent-Plugin - Nginx Server Status
 #
 # Fetches the stub nginx_status page from detected or configured nginx
@@ -157,7 +158,7 @@ for server in servers:
         url = "%s://%s:%s/%s" % (proto, address, port, page)
         # Try to fetch the status page for each server
         try:
-            request = Request(url, headers={"Accept": "text/plain"})
+            request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
             fd = urlopen(request)  # nosec B310 # BNS:6b61d9
         except URLError as e:
             if "SSL23_GET_SERVER_HELLO:unknown protocol" in str(e):

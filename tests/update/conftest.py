@@ -27,18 +27,19 @@ class BaseVersions:
 
     # minimal version supported for an update that can merge the configuration
     MIN_VERSION = os.getenv("MIN_VERSION", "2.1.0p20")
+    BASE_VERSIONS_STR = [
+        # "2.1.0p1",
+        # "2.1.0p2",
+        # "2.1.0p3", # ^those releases need htpasswd to set the admin password
+        # "2.1.0p4",
+        # "2.1.0p5",
+        "2.1.0p10",
+        "2.1.0p20",
+        "2.1.0p23",
+    ]
     BASE_VERSIONS = [
-        # CMKVersion("2.1.0p1", Edition.CEE, current_base_branch_name()),
-        # CMKVersion("2.1.0p2", Edition.CEE, current_base_branch_name()),
-        # CMKVersion("2.1.0p3", Edition.CEE, current_base_branch_name()),
-        # ^those releases need htpasswd to set the admin password
-        # CMKVersion("2.1.0p4", Edition.CEE, current_base_branch_name()),
-        # CMKVersion("2.1.0p5", Edition.CEE, current_base_branch_name()),
-        CMKVersion("2.1.0p10", Edition.CEE, current_base_branch_name()),
-        CMKVersion("2.1.0p20", Edition.CEE, current_base_branch_name()),
-        # CMKVersion("2.1.0p21", Edition.CEE, current_base_branch_name()),
-        # CMKVersion("2.1.0p22", Edition.CEE, current_base_branch_name()),
-        CMKVersion("2.1.0p23", Edition.CEE, current_base_branch_name()),
+        CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
+        for base_version_str in BASE_VERSIONS_STR
     ]
     IDS = [
         f"from_{base_version.omd_version()}_to_{os.getenv('VERSION', 'daily')}"

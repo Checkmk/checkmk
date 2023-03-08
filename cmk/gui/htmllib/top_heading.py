@@ -23,14 +23,16 @@ from .debug_vars import debug_vars
 from .generator import HTMLWriter
 
 if not is_raw_edition():  # TODO solve this via registration
-    from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
+    from cmk.utils.cee.licensing.helper import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         get_num_services_for_trial_free_edition,
-        HeaderNotification,
-        licensing_user_effect_licensed,
-        licensing_user_effect_trial,
     )
     from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         load_verified_response,
+    )
+    from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
+        HeaderNotification,
+        licensing_user_effect_licensed,
+        licensing_user_effect_trial,
     )
 
 

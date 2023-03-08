@@ -70,15 +70,17 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import request_index_rebuild
 
 if not is_raw_edition():  # TODO solve this via registration
-    from cmk.utils.cee.licensing import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        ActivationBlock,
+    from cmk.utils.cee.licensing.helper import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         get_num_services_for_trial_free_edition,
-        licensing_user_effect_expired_trial,
-        licensing_user_effect_licensed,
         service_reducing_change_pending,
     )
     from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
         load_verified_response,
+    )
+    from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
+        ActivationBlock,
+        licensing_user_effect_expired_trial,
+        licensing_user_effect_licensed,
     )
 
 

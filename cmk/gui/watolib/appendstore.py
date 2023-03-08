@@ -68,7 +68,8 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
             return []
 
     def read(self) -> Sequence[_VT]:
-        return self.__read()
+        with store.locked(self._path):
+            return self.__read()
 
     def append(self, entry: _VT) -> None:
         with store.locked(self._path):

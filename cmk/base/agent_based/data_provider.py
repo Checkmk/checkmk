@@ -215,30 +215,15 @@ class ParsedSectionsBroker:
         }
 
     @staticmethod
-    def get_cache_info(
-        parsed_section_names: Iterable[ParsedSectionName],
-        providers: Iterable[Provider],
-    ) -> _CacheInfo | None:
+    def get_cache_info(cache_infos: Sequence[_CacheInfo]) -> _CacheInfo | None:
         # TODO: should't the host key be provided here?
-        """Aggregate information about the age of the data in the agent sections
+        """Aggregate information about the age of the data in the agent sections"""
+        if not cache_infos:
+            return None
 
-        In order to determine the caching info for a parsed section we must in fact
-        parse it, because otherwise we cannot know from which raw section to take
-        the caching info.
-        But fear not, the parsing itself is cached.
-        """
-        cache_infos = {
-            cache_info
-            for resolved in ParsedSectionsBroker.resolve(parsed_section_names, providers).values()
-            if (cache_info := resolved.cache_info) is not None
-        }
         return (
-            (
-                min(ats for ats, _intervals in cache_infos),
-                max(intervals for _ats, intervals in cache_infos),
-            )
-            if cache_infos
-            else None
+            min(ats for ats, _intervals in cache_infos),
+            max(intervals for _ats, intervals in cache_infos),
         )
 
 

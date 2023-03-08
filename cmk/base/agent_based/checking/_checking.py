@@ -451,7 +451,15 @@ def get_aggregated_result(
         submit=True,
         data_received=True,
         result=result,
-        cache_info=ParsedSectionsBroker.get_cache_info(plugin.sections, providers.values()),
+        cache_info=ParsedSectionsBroker.get_cache_info(
+            tuple(
+                cache_info
+                for resolved in ParsedSectionsBroker.resolve(
+                    plugin.sections, providers.values()
+                ).values()
+                if (cache_info := resolved.cache_info) is not None
+            )
+        ),
     )
 
 

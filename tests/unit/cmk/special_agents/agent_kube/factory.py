@@ -217,6 +217,10 @@ class CPURateSampleFactory(ModelFactory):
     __model__ = performance.CPURateSample
 
 
+class CPUSampleFactory(ModelFactory):
+    __model__ = performance.CPUSample
+
+
 class IdentifiableSampleFactory(ModelFactory):
     __model__ = common.IdentifiableSample
 

@@ -978,3 +978,21 @@ class HostConfigSchemaInternal(BaseSchema):
         required=True,
         description="Indicates if the host is a cluster host.",
     )
+
+
+class AgentObject(DomainObject):
+    domainType = fields.Constant(
+        "agent",
+        description="The domain type of the object.",
+    )
+
+
+class AgentCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "agent",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(AgentObject),
+        description="A list of agent objects.",
+    )

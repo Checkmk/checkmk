@@ -201,3 +201,24 @@ def test_kube_cron_job_with_running_params() -> None:
 
     assert result.state == State.WARN
     assert result.summary.startswith("Latest job: Running since")
+
+
+def test_kube_cronjob_with_no_pod() -> None:
+    # Some jobs have a condition like this (CMK-12592)
+    # "type": "Failed", "reason":"DeadlineExceeded","message":"Job was active longer than specified deadline"
+    current_time = 10.0
+    elapsed_running_time = 8.0
+
+    result = list(
+        kube_cronjob_status._cron_job_status(
+            current_time=Timestamp(current_time),
+            pending_levels=None,
+            running_levels=None,
+            job_status=kube_cronjob_status.JobStatusType.FAILED,
+            job_pod=None,
+            job_start_time=Timestamp(current_time - elapsed_running_time),
+        )
+    )[0]
+
+    assert result.state == State.CRIT
+    assert result.summary == "Latest job: Failed with no pod"

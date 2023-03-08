@@ -104,7 +104,7 @@ def _check_cron_job_status(
     if latest_job is None:
         raise IgnoreResultsError("No Job has been scheduled")
 
-    job_pod = latest_job.pods[0]
+    job_pod = latest_job.pods[0] if latest_job.pods else None
     job_status = _determine_job_status(latest_job.status.conditions, job_pod)
 
     yield from _cron_job_status(
@@ -135,7 +135,9 @@ def _check_cron_job_status(
         yield Metric(name="kube_cron_job_status_active", value=status.active_jobs_count)
 
 
-def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPod) -> JobStatusType:
+def _determine_job_status(
+    job_conditions: Sequence[JobCondition], job_pod: JobPod | None
+) -> JobStatusType:
     if job_conditions:
         for condition in job_conditions:
             if (
@@ -148,6 +150,9 @@ def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPo
                 and condition.status == ConditionStatus.TRUE
             ):
                 return JobStatusType.FAILED
+
+    if job_pod is None:
+        raise IgnoreResultsError("No Pod was scheduled, however the Job did not report failure.")
 
     if job_pod.lifecycle.phase is Phase.RUNNING:
         return JobStatusType.RUNNING
@@ -163,7 +168,7 @@ def _cron_job_status(
     pending_levels: tuple[int, int] | None,
     running_levels: tuple[int, int] | None,
     job_status: JobStatusType,
-    job_pod: JobPod,
+    job_pod: JobPod | None,
     job_start_time: Timestamp | None,
 ) -> Iterable[Result]:
     if job_start_time is None:
@@ -176,7 +181,10 @@ def _cron_job_status(
             status_message = "Completed"
         case JobStatusType.FAILED:
             state = State.CRIT
-            status_message = f"Failed ({pod_status_message(pod_containers=list(job_pod.containers.values()), pod_init_containers=list(job_pod.init_containers.values()), section_kube_pod_lifecycle=job_pod.lifecycle)})"
+            if job_pod is None:
+                status_message = "Failed with no pod"
+            else:
+                status_message = f"Failed ({pod_status_message(pod_containers=list(job_pod.containers.values()), pod_init_containers=list(job_pod.init_containers.values()), section_kube_pod_lifecycle=job_pod.lifecycle)})"
         case JobStatusType.PENDING:
             non_running_time = current_time - job_start_time
             result = list(

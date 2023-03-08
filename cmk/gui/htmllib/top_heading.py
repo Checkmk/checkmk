@@ -30,7 +30,6 @@ if not is_raw_edition():  # TODO solve this via registration
         load_verified_response,
     )
     from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        HeaderNotification,
         licensing_user_effect_licensed,
         licensing_user_effect_trial,
     )
@@ -102,18 +101,14 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
 
     if is_trial():
         effect = licensing_user_effect_trial(get_num_services_for_trial_free_edition())
-        if isinstance(effect, HeaderNotification) and (
-            set(effect.roles).intersection(user.role_ids)
-        ):
-            writer.show_warning(effect.message)
+        if effect.header and (set(effect.header.roles).intersection(user.role_ids)):
+            writer.show_warning(effect.header.message)
         return
 
     if is_licensed() and (verified_response := load_verified_response()) is not None:
         effect = licensing_user_effect_licensed(verified_response.response)
-        if isinstance(effect, HeaderNotification) and (
-            set(effect.roles).intersection(user.role_ids)
-        ):
-            writer.show_warning(effect.message)
+        if effect.header and (set(effect.header.roles).intersection(user.role_ids)):
+            writer.show_warning(effect.header.message)
 
 
 def _make_default_page_state(

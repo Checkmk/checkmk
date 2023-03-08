@@ -122,7 +122,6 @@ if not is_raw_edition():  # TODO solve this via registration
         load_verified_response,
     )
     from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        ActivationBlock,
         licensing_user_effect_expired_trial,
         licensing_user_effect_licensed,
     )
@@ -2706,13 +2705,12 @@ def _licensing_allows_activation(changes: Sequence[tuple[str, Mapping[str, Any]]
         return
     if is_expired_trial():
         effect = licensing_user_effect_expired_trial(get_num_services_for_trial_free_edition())
-        if isinstance(effect, ActivationBlock) and not service_reducing_change_pending(changes):
-            raise MKLicensingError(effect.message)
+        if effect.block and not service_reducing_change_pending(changes):
+            raise MKLicensingError(effect.block.message)
 
     if is_licensed() and (verified_response := load_verified_response()) is not None:
-        effect = licensing_user_effect_licensed(verified_response.response)
-        if isinstance(effect, ActivationBlock):
-            raise MKLicensingError(effect.message)
+        if (effect := licensing_user_effect_licensed(verified_response.response)).block:
+            raise MKLicensingError(effect.block.message)
 
 
 def activate_changes_start(

@@ -165,26 +165,20 @@ def show_password(params):
     constructors.collection_href("password"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.PasswordCollection,
     permissions_required=PERMISSIONS,
 )
 def list_passwords(params):
     """Show all passwords"""
     user.need_permission("wato.passwords")
-    password_collection = {
-        "id": "password",
-        "domainType": "password",
-        "value": [
-            constructors.collection_item(
-                domain_type="password",
-                title=details["title"],
-                identifier=password_id,
-            )
-            for password_id, details in load_passwords().items()
-        ],
-        "links": [constructors.link_rel("self", constructors.collection_href("password"))],
-    }
-    return serve_json(password_collection)
+    return serve_json(
+        constructors.collection_object(
+            domain_type="password",
+            value=[
+                serialize_password(ident, details) for ident, details in load_passwords().items()
+            ],
+        )
+    )
 
 
 def _serve_password(ident, password_details):
@@ -218,4 +212,6 @@ def serialize_password(ident, details):
                 "customer",
             )
         },
+        editable=True,
+        deletable=True,
     )

@@ -895,6 +895,17 @@ class PasswordObject(DomainObject):
     )
 
 
+class PasswordCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "password",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(PasswordObject),
+        description="A list of password objects.",
+    )
+
+
 class InstalledVersions(BaseSchema):
     site = fields.String(
         description="The site where this API call was made on.", example="production"

@@ -9,6 +9,7 @@ __version__ = "2.1.0p24"
 # Monitor leases if ISC-DHCPD
 import calendar
 import os
+import platform
 import re
 import sys
 import time
@@ -38,15 +39,10 @@ if not conf_file or not leases_file:
 def get_pid():
     cmd = "pidof dhcpd"
 
-    # workaround for bug in sysvinit-utils in debian buster
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
-    lsb_path = "/etc/lsb-release"
-    if os.path.exists(lsb_path):
-        with open(lsb_path) as lsb_file:
-            for line in lsb_file:
-                if "buster" in line:
-                    cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
-                    break
+    if "debian-10" in platform.platform().lower():
+        # workaround for bug in sysvinit-utils in debian buster
+        # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
+        cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
 
     return os.popen(cmd).read().strip()  # nosec
 

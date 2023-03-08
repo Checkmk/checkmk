@@ -192,41 +192,39 @@ class _Builder:
         )
 
     def _initialize_mgmt_boards(self) -> None:
+        if self.address_family is AddressFamily.NO_IP:
+            return
+
         protocol = self.config_cache.management_protocol(self.host_name)
         if protocol is None:
             return
 
-        self._initialize_snmp_plugin_store()
-        if protocol == "snmp":
-            if self.address_family is AddressFamily.NO_IP:
-                return
-            if self.ipaddress is None:
-                self._add(MissingIPSource(self.host_name, self.ipaddress, "mgmt_snmp"))
-                return
-            self._add(
-                MgmtSNMPSource(
-                    self.config_cache,
-                    self.host_name,
-                    self.ipaddress,
-                    max_age=self.max_age_snmp,
-                    on_scan_error=self.on_scan_error,
-                    selected_sections=self.selected_sections,
+        ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
+        if ip_address is None:
+            self._add(MissingIPSource(self.host_name, ip_address, f"mgmt_{protocol}"))
+            return
+
+        match protocol:
+            case "snmp":
+                self._initialize_snmp_plugin_store()
+                self._add(
+                    MgmtSNMPSource(
+                        self.config_cache,
+                        self.host_name,
+                        ip_address,
+                        max_age=self.max_age_snmp,
+                        on_scan_error=self.on_scan_error,
+                        selected_sections=self.selected_sections,
+                    )
                 )
-            )
-        elif protocol == "ipmi":
-            if self.address_family is AddressFamily.NO_IP:
-                return
-            ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
-            if ip_address is None:
-                self._add(MissingIPSource(self.host_name, ip_address, "mgmt_ipmi"))
-                return
-            self._add(
-                IPMISource(
-                    self.config_cache, self.host_name, ip_address, max_age=self.max_age_agent
+            case "ipmi":
+                self._add(
+                    IPMISource(
+                        self.config_cache, self.host_name, ip_address, max_age=self.max_age_agent
+                    )
                 )
-            )
-        else:
-            raise LookupError()
+            case _:
+                assert_never(protocol)
 
     def _add(self, source: Source) -> None:
         self._elems[source.source_info().ident] = source

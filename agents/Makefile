@@ -77,7 +77,8 @@ setversion:
 	    check_mk_agent.solaris
 	sed -i 's/__version__ = \"[0-9.a-z-]*\"/__version__ = \"$(NEW_VERSION)\"/g' \
 		$(SPECIAL_AGENTS_DIR)/agent_splunk.py \
-		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py
+		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
+		$(SPECIAL_AGENTS_DIR)/agent_netapp.py
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
 

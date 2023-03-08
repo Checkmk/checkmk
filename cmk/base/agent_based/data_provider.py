@@ -92,7 +92,7 @@ class SectionsParser:
             if (parsed := self._parse_raw_data(section_parser)) is None
             else ParsingResult(
                 data=parsed,
-                cache_info=self._get_cache_info(section_parser.section_name),
+                cache_info=self._host_sections.cache_info.get(section_parser.section_name),
             ),
         )
 
@@ -121,9 +121,6 @@ class SectionsParser:
                 )
             )
             return None
-
-    def _get_cache_info(self, section_name: SectionName) -> _CacheInfo | None:
-        return self._host_sections.cache_info.get(section_name)
 
 
 class ParsedSectionsResolver:

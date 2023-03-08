@@ -22,7 +22,7 @@ _VT = TypeVar("_VT")
 class ABCAppendStore(Generic[_VT], abc.ABC):
     """Managing a file with structured data that can be appended in a cheap way
 
-    The file holds basic python structures separated by "\0".
+    The file holds basic python structures separated by "\\0".
     """
 
     @staticmethod
@@ -55,31 +55,20 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
     def exists(self) -> bool:
         return self._path.exists()
 
-    # TODO: Implement this locking as context manager
-    def __read(self, *, lock: bool) -> Sequence[_VT]:
+    def __read(self) -> list[_VT]:
         """Parse the file and return the entries"""
-        path = self._path
-
-        if lock:
-            store.acquire_lock(path)
-
-        entries = []
         try:
-            with path.open("rb") as f:
-                for entry in f.read().split(b"\0"):
-                    if entry:
-                        entries.append(self._deserialize(ast.literal_eval(entry.decode("utf-8"))))
+            with self._path.open("rb") as f:
+                return [
+                    self._deserialize(ast.literal_eval(entry.decode("utf-8")))
+                    for entry in f.read().split(b"\0")
+                    if entry
+                ]
         except FileNotFoundError:
-            pass
-        except Exception:
-            if lock:
-                store.release_lock(path)
-            raise
-
-        return entries
+            return []
 
     def read(self) -> Sequence[_VT]:
-        return self.__read(lock=False)
+        return self.__read()
 
     def __write(self, entries: Iterable[_VT]) -> None:
         # First truncate the file
@@ -103,8 +92,9 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
 
     @contextmanager
     def mutable_view(self) -> Iterator[list[_VT]]:
-        entries = list(self.__read(lock=True))
-        try:
-            yield entries
-        finally:
-            self.__write(entries)
+        with store.locked(self._path):
+            entries = self.__read()
+            try:
+                yield entries
+            finally:
+                self.__write(entries)

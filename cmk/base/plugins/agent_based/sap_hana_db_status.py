@@ -9,6 +9,8 @@ from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, S
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
 
+MAP_DB_STATUS = {"OK": State.OK, "WARNING": State.WARN}
+
 
 def parse_sap_hana_db_status(string_table: StringTable) -> Dict[str, str]:
     return {
@@ -34,8 +36,7 @@ def check_sap_hana_db_status(item: str, section: Dict[str, str]) -> CheckResult:
     if not db_status:
         raise IgnoreResultsError("Login into database failed.")
 
-    state = State.OK if db_status == "OK" else State.CRIT
-    yield Result(state=state, summary=db_status)
+    yield Result(state=MAP_DB_STATUS.get(db_status, State.CRIT), summary=db_status)
 
 
 register.check_plugin(

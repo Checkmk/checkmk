@@ -172,10 +172,19 @@ class TestSiteChanges:
         store.append(entry)
         assert list(store.read()) == [entry]
 
-        entry2 = entry.copy()
-        entry2["id"] = "1"
-
+        entry2 = {**entry, "id": "1"}
         store.write([entry2])
+
+        assert list(store.read()) == [entry2]
+
+    def test_mutable_view(self, store: SiteChanges, entry: ChangeSpec) -> None:
+        store.append(entry)
+        assert list(store.read()) == [entry]
+
+        entry2 = {**entry, "id": "1"}
+        with store.mutable_view() as mv:
+            mv[:] = [entry2]
+
         assert list(store.read()) == [entry2]
 
     def test_append(self, store: SiteChanges, entry: ChangeSpec) -> None:

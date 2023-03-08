@@ -6,7 +6,8 @@
 import abc
 import ast
 import os
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -104,5 +105,13 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
         entries = self.__read(lock=True)
         try:
             entries = transformer(entries)
+        finally:
+            self.write(entries)
+
+    @contextmanager
+    def mutable_view(self) -> Iterator[list[_VT]]:
+        entries = list(self.__read(lock=True))
+        try:
+            yield entries
         finally:
             self.write(entries)

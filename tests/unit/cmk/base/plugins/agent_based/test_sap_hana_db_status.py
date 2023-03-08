@@ -64,21 +64,32 @@ def test_inventory_sap_hana_db_status(
 @pytest.mark.parametrize(
     "item, info, expected_result",
     [
-        (
+        pytest.param(
             "HXE 98",
             [
                 ["[[HXE 98]]"],
                 ["OK"],
             ],
             [Result(state=State.OK, summary="OK")],
+            id="db status OK",
         ),
-        (
+        pytest.param(
+            "HXE 98",
+            [
+                ["[[HXE 98]]"],
+                ["WARNING"],
+            ],
+            [Result(state=State.WARN, summary="WARNING")],
+            id="db status WARNING",
+        ),
+        pytest.param(
             "HXE 98",
             [
                 ["[[HXE 98]]"],
                 ["DB status failed: * -10104: Invalid value for KEY"],
             ],
             [Result(state=State.CRIT, summary="DB status failed: * -10104: Invalid value for KEY")],
+            id="db status error",
         ),
     ],
 )

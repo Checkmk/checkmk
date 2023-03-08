@@ -13,12 +13,6 @@ if [ "$CONFIG_AGENT_RECEIVER" != on ] ; then
     exit 5
 fi
 
-if [ -n "$(ip -6 addr)" ]; then
-    ANY_ADDRESS="[::]"
-else
-    ANY_ADDRESS="0.0.0.0"
-fi
-
 case "$1" in
 
     start)
@@ -42,7 +36,7 @@ case "$1" in
                 --certfile "$KEY_AND_CERT_FILE" \
                 --ca-certs "${CERT_STORE}" \
                 --cert-reqs 1 \
-                -b $ANY_ADDRESS:$CONFIG_AGENT_RECEIVER_PORT \
+                -b [::]:$CONFIG_AGENT_RECEIVER_PORT \
                 -k agent_receiver.worker.ClientCertWorker 'agent_receiver.main:main_app()'
         if [ $? -eq 0 ]; then
             echo "OK"

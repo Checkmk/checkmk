@@ -451,7 +451,7 @@ def get_aggregated_result(
         submit=True,
         data_received=True,
         result=result,
-        cache_info=ParsedSectionsBroker.get_cache_info(plugin.sections, providers),
+        cache_info=ParsedSectionsBroker.get_cache_info(plugin.sections, providers.values()),
     )
 
 

@@ -357,7 +357,7 @@ def _collect_inventory_plugin_items(
             yield ItemsOfInventoryPlugin(
                 items=inventory_plugin_items,
                 raw_cache_info=ParsedSectionsBroker.get_cache_info(
-                    inventory_plugin.sections, providers
+                    inventory_plugin.sections, providers.values()
                 ),
             )
 

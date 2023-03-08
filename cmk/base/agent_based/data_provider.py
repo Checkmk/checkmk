@@ -201,6 +201,18 @@ class ParsedSectionsBroker:
     """
 
     @staticmethod
+    def resolve(
+        parsed_section_names: Iterable[ParsedSectionName],
+        providers: Iterable[Provider],
+    ) -> Mapping[ParsedSectionName, ResolvedResult]:
+        return {
+            parsed_section_name: resolved
+            for resolver, parser in providers
+            for parsed_section_name in parsed_section_names
+            if (resolved := resolver.resolve(parser, parsed_section_name)) is not None
+        }
+
+    @staticmethod
     def get_cache_info(
         parsed_section_names: Iterable[ParsedSectionName],
         providers: Iterable[Provider],
@@ -213,15 +225,11 @@ class ParsedSectionsBroker:
         the caching info.
         But fear not, the parsing itself is cached.
         """
-        cache_infos = [
-            resolved.parsed.cache_info
-            for resolved in (
-                resolver.resolve(parser, parsed_section_name)
-                for resolver, parser in providers
-                for parsed_section_name in parsed_section_names
-            )
-            if resolved is not None and resolved.parsed.cache_info is not None
-        ]
+        cache_infos = {
+            cache_info
+            for resolved in ParsedSectionsBroker.resolve(parsed_section_names, providers).values()
+            if (cache_info := resolved.parsed.cache_info) is not None
+        }
         return (
             (
                 min(ats for ats, _intervals in cache_infos),
@@ -235,13 +243,8 @@ class ParsedSectionsBroker:
     def filter_available(
         parsed_section_names: Iterable[ParsedSectionName],
         providers: Iterable[Provider],
-    ) -> set[ParsedSectionName]:
-        return {
-            parsed_section_name
-            for resolver, parser in providers
-            for parsed_section_name in parsed_section_names
-            if resolver.resolve(parser, parsed_section_name) is not None
-        }
+    ) -> frozenset[ParsedSectionName]:
+        return frozenset(ParsedSectionsBroker.resolve(parsed_section_names, providers))
 
 
 def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:

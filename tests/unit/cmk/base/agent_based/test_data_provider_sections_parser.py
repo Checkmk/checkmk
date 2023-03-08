@@ -14,14 +14,15 @@ from cmk.checkers import crash_reporting
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection
 
-from cmk.base.agent_based.data_provider import SectionParser, SectionsParser
+from cmk.base.agent_based.data_provider import SectionsParser
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
+from cmk.base.api.agent_based.type_defs import AgentParseFunction
 
 
-def _section(name: str, parse_function: Callable) -> SectionParser:
+def _section(name: str, parse_function: Callable) -> tuple[SectionName, AgentParseFunction]:
     """create a simple section for testing"""
     section = trivial_section_factory(SectionName(name))
-    return SectionParser(section.name, parse_function)
+    return section.name, parse_function
 
 
 class TestSectionsParser:
@@ -40,10 +41,10 @@ class TestSectionsParser:
     @staticmethod
     def test_parse_function_called_once(sections_parser: SectionsParser) -> None:
         counter = iter((1,))
-        section = _section("one", lambda x: next(counter))
+        section_name, parse_function = _section("one", lambda x: next(counter))
 
-        _ = sections_parser.parse(section)
-        parsing_result = sections_parser.parse(section)
+        _ = sections_parser.parse(section_name, parse_function)
+        parsing_result = sections_parser.parse(section_name, parse_function)
 
         assert parsing_result is not None
         assert parsing_result.data == 1
@@ -60,9 +61,9 @@ class TestSectionsParser:
         )
         # Debug mode raises instead of creating the crash report that we want here.
         cmk.utils.debug.disable()
-        section = _section("one", lambda x: 1 / 0)
+        section_name, parse_function = _section("one", lambda x: 1 / 0)
 
-        assert sections_parser.parse(section) is None
+        assert sections_parser.parse(section_name, parse_function) is None
         assert len(sections_parser.parsing_errors) == 1
         assert sections_parser.parsing_errors[0].startswith(
             "Parsing of section one failed - please submit a crash report! (Crash-ID: "
@@ -71,8 +72,8 @@ class TestSectionsParser:
     @staticmethod
     def test_parse(sections_parser: SectionsParser) -> None:
         parsed_data = object()
-        section = _section("one", lambda x: parsed_data)
-        parsing_result = sections_parser.parse(section)
+        section_name, parse_function = _section("one", lambda x: parsed_data)
+        parsing_result = sections_parser.parse(section_name, parse_function)
 
         assert parsing_result is not None
         assert parsing_result.data is parsed_data
@@ -80,19 +81,21 @@ class TestSectionsParser:
 
     @staticmethod
     def test_disable(sections_parser: SectionsParser) -> None:
-        section = _section("one", lambda x: 42)
-        sections_parser.disable((SectionName("one"),))
+        section_name, parse_function = _section("one", lambda x: 42)
+        sections_parser.disable([section_name])
 
-        assert sections_parser.parse(section) is None
+        assert sections_parser.parse(section_name, parse_function) is None
 
     @staticmethod
     def test_parse_missing_section(sections_parser: SectionsParser) -> None:
-        missing_section = _section("missing_section", lambda x: 42)  # function does not matter
+        section_name, parse_function = _section(
+            "missing_section", lambda x: 42
+        )  # function does not matter
 
-        assert sections_parser.parse(missing_section) is None
+        assert sections_parser.parse(section_name, parse_function) is None
 
     @staticmethod
     def test_parse_section_returns_none(sections_parser: SectionsParser) -> None:
-        section = _section("one", lambda x: None)
+        section_name, parse_function = _section("one", lambda x: None)
 
-        assert sections_parser.parse(section) is None
+        assert sections_parser.parse(section_name, parse_function) is None

@@ -52,11 +52,6 @@ class ResolvedResult(NamedTuple):
     section: SectionPlugin
 
 
-class SectionParser(NamedTuple):
-    section_name: SectionName
-    parse: AgentParseFunction | SNMPParseFunction
-
-
 class SectionsParser:
     """Call the sections parse function and return the parsing result."""
 
@@ -82,17 +77,19 @@ class SectionsParser:
     def parsing_errors(self) -> Sequence[str]:
         return self._parsing_errors
 
-    def parse(self, section_parser: SectionParser) -> ParsingResult | None:
-        if section_parser.section_name in self._memoized_results:
-            return self._memoized_results[section_parser.section_name]
+    def parse(
+        self, section_name: SectionName, parse_function: AgentParseFunction | SNMPParseFunction
+    ) -> ParsingResult | None:
+        if section_name in self._memoized_results:
+            return self._memoized_results[section_name]
 
         return self._memoized_results.setdefault(
-            section_parser.section_name,
+            section_name,
             None
-            if (parsed := self._parse_raw_data(section_parser)) is None
+            if (parsed := self._parse_raw_data(section_name, parse_function)) is None
             else ParsingResult(
                 data=parsed,
-                cache_info=self._host_sections.cache_info.get(section_parser.section_name),
+                cache_info=self._host_sections.cache_info.get(section_name),
             ),
         )
 
@@ -100,21 +97,23 @@ class SectionsParser:
         for section_name in raw_section_names:
             self._memoized_results[section_name] = None
 
-    def _parse_raw_data(self, section_parser: SectionParser) -> Any:  # yes *ANY*
+    def _parse_raw_data(
+        self, section_name: SectionName, parse_function: AgentParseFunction | SNMPParseFunction
+    ) -> Any:  # yes *ANY*
         try:
-            raw_data = self._host_sections.sections[section_parser.section_name]
+            raw_data = self._host_sections.sections[section_name]
         except KeyError:
             return None
 
         try:
-            return section_parser.parse(list(raw_data))
+            return parse_function(list(raw_data))
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
             self._parsing_errors.append(
                 create_section_crash_dump(
                     operation="parsing",
-                    section_name=section_parser.section_name,
+                    section_name=section_name,
                     section_content=raw_data,
                     host_name=self._host_name,
                     rtc_package=None,
@@ -174,17 +173,10 @@ class ParsedSectionsResolver:
             # Before we can parse the section, we must parse all potential superseders.
             # Registration validates against indirect supersedings, no need to recurse
             for superseder in self._superseders.get(producer.name, ()):
-                if (
-                    parser.parse(SectionParser(superseder.name, superseder.parse_function))
-                    is not None
-                ):
+                if parser.parse(superseder.name, superseder.parse_function) is not None:
                     parser.disable(superseder.supersedes)
 
-            if (
-                parsing_result := parser.parse(
-                    SectionParser(producer.name, producer.parse_function)
-                )
-            ) is not None:
+            if (parsing_result := parser.parse(producer.name, producer.parse_function)) is not None:
                 return self._memoized_results.setdefault(
                     parsed_section_name,
                     ResolvedResult(

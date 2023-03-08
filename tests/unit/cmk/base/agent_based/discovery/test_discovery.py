@@ -757,13 +757,15 @@ def test__find_candidates() -> None:
 
     assert discovery._discovered_services._find_host_candidates(
         ((p.name, p.sections) for p in preliminary_candidates),
-        ParsedSectionsBroker.filter_available(
-            parsed_sections_of_interest,
-            (
-                provider
-                for host_key, provider in providers.items()
-                if host_key.source_type is SourceType.HOST
-            ),
+        frozenset(
+            ParsedSectionsBroker.resolve(
+                parsed_sections_of_interest,
+                (
+                    provider
+                    for host_key, provider in providers.items()
+                    if host_key.source_type is SourceType.HOST
+                ),
+            )
         ),
     ) == {
         CheckPluginName("docker_container_status_uptime"),
@@ -775,13 +777,15 @@ def test__find_candidates() -> None:
 
     assert discovery._discovered_services._find_mgmt_candidates(
         ((p.name, p.sections) for p in preliminary_candidates),
-        ParsedSectionsBroker.filter_available(
-            parsed_sections_of_interest,
-            (
-                provider
-                for host_key, provider in providers.items()
-                if host_key.source_type is SourceType.MANAGEMENT
-            ),
+        frozenset(
+            ParsedSectionsBroker.resolve(
+                parsed_sections_of_interest,
+                (
+                    provider
+                    for host_key, provider in providers.items()
+                    if host_key.source_type is SourceType.MANAGEMENT
+                ),
+            )
         ),
     ) == {
         CheckPluginName("mgmt_docker_container_status_uptime"),

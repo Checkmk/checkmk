@@ -101,7 +101,8 @@ def create_selectors(
     """Converts parsed metrics into Selectors."""
 
     metrics = _group_metric_types(container_metrics)
-    cpu_rate_metrics = _create_cpu_rate_metrics(cluster_name, metrics.cpu)
+    container_store_path = AGENT_TMP_PATH.joinpath(f"{cluster_name}_containers_counters.json")
+    cpu_rate_metrics = _create_cpu_rate_metrics(container_store_path, metrics.cpu)
     return (
         common.Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
         common.Selector(metrics.memory, aggregator=_aggregate_memory_metrics),
@@ -139,15 +140,11 @@ def _group_metric_types(metrics: Sequence[_AllSamples]) -> Samples:
 
 
 def _create_cpu_rate_metrics(
-    cluster_name: str, cpu_metrics: Sequence[CPUSample]
+    container_store_path: Path, cpu_metrics: Sequence[CPUSample]
 ) -> Sequence[CPURateSample]:
     # We only persist the relevant counter metrics (not all metrics)
     current_cycle_store = ContainersStore(cpu=cpu_metrics)
-    store_file_name = f"{cluster_name}_containers_counters.json"
-    previous_cycle_store = _load_containers_store(
-        path=AGENT_TMP_PATH,
-        file_name=store_file_name,
-    )
+    previous_cycle_store = _load_containers_store(container_store_path)
 
     # The agent will store the latest counter values returned by the collector overwriting the
     # previous ones. The collector will return the same metric values for a certain time interval
@@ -155,14 +152,14 @@ def _create_cpu_rate_metrics(
     # is polled too frequently (no performance section for the checks). All cases where no
     # performance section can be generated should be handled on the check side (reusing the same
     # value, etc.)
-    _persist_containers_store(current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name)
+    _persist_containers_store(container_store_path, current_cycle_store)
     return _determine_cpu_rate_metrics(current_cycle_store.cpu, previous_cycle_store.cpu)
 
 
-def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
-    common.LOGGER.debug("Load previous cycle containers store from %s", file_name)
+def _load_containers_store(container_store_path: Path) -> ContainersStore:
+    common.LOGGER.debug("Load previous cycle containers store from %s", container_store_path)
     try:
-        return ContainersStore.parse_file(f"{path}/{file_name}")
+        return ContainersStore.parse_file(container_store_path)
     except FileNotFoundError as e:
         common.LOGGER.info("Could not find metrics file. This is expected if the first run.")
         common.LOGGER.debug("Exception: %s", e)
@@ -173,13 +170,11 @@ def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
 
 
 def _persist_containers_store(
-    containers_store: ContainersStore, path: Path, file_name: str
+    container_store_path: Path, containers_store: ContainersStore
 ) -> None:
-    file_path = f"{path}/{file_name}"
-    common.LOGGER.debug("Creating directory %s for containers store file", path)
-    path.mkdir(parents=True, exist_ok=True)
-    common.LOGGER.debug("Persisting current containers store under %s", file_path)
-    with open(file_path, "w") as f:
+    common.LOGGER.debug("Persisting current containers store under %s", container_store_path)
+    container_store_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(container_store_path, "w") as f:
         f.write(containers_store.json(by_alias=True))
 
 

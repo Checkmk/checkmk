@@ -6007,6 +6007,10 @@ msgstr "Automatisch herladen van pagina's"
 msgid "Automatic page reload in %d seconds."
 msgstr "Automatische pagina herladen in %d seconden."
 
+#, fuzzy, python-format
+msgid "Automatic renewal: %s"
+msgstr "Automatisch verversen"
+
 msgid "Automatic takeover"
 msgstr "Automatische overname"
 
@@ -10800,6 +10804,14 @@ msgstr ""
 msgid "Configure the target mode for the system."
 msgstr "Configureer de doelmodus voor het systeem."
 
+#, fuzzy
+msgid "Configure the target state of the protection domain sync state."
+msgstr "Configureer de doelmodus voor het systeem."
+
+#, fuzzy
+msgid "Configure the target state of the remote support tunnel."
+msgstr "Configureer de doelmodus voor het systeem."
+
 msgid "Configure the user name here."
 msgstr "Configureer hier de gebruikersnaam."
 
@@ -11525,6 +11537,10 @@ msgstr "Kon het huidige thema niet bepalen."
 msgid "Could not find an entry matching %r in choices"
 msgstr "Kon de gevraagde crash %s niet vinden op site %s"
 
+msgid ""
+"Could not find any service for this host. You might need to trigger a rescan."
+msgstr ""
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -11702,8 +11718,16 @@ msgstr "Crash rapport: %s"
 msgid "Crash reports"
 msgstr "Crash rapporten"
 
+#, fuzzy
+msgid "Crash source"
+msgstr "Graylog bronnen"
+
 msgid "Crash time"
 msgstr "Crash tijd"
+
+#, fuzzy
+msgid "Crash type"
+msgstr "Type botsing"
 
 msgid "Crashed check"
 msgstr "Neergestorte cheque"
@@ -14428,9 +14452,6 @@ msgstr "Beschrijving zonder typevoorvoegsel"
 msgid "Descriptions"
 msgstr "Beschrijvingen"
 
-msgid "Deselect all checkboxes"
-msgstr "Deselecteer alle selectievakjes"
-
 msgid "Design This Graph"
 msgstr "Ontwerp deze grafiek"
 
@@ -15018,6 +15039,10 @@ msgstr "Schijfspoelinterval van bijgewerkte metriek"
 
 msgid "Disk latency"
 msgstr "Schijf latency"
+
+#, fuzzy
+msgid "Disk mount state"
+msgstr "Diskstate"
 
 msgid "Disk percentage usage"
 msgstr "Schijf percentage gebruik"
@@ -16106,6 +16131,9 @@ msgstr "Downtime zal niet meer starten na"
 
 msgid "Downtimes"
 msgstr "Downtimes"
+
+msgid "Draft"
+msgstr ""
 
 msgid "Driver type to use instead of doing an auto selection"
 msgstr "Bestuurderstype te gebruiken in plaats van een automatische selectie"
@@ -18321,6 +18349,10 @@ msgstr "Breid de Checkmk GUI uit met uw eigen iconen"
 
 msgid "Extended perfdata"
 msgstr "Uitgebreide perfagegevens"
+
+#, fuzzy
+msgid "Extension"
+msgstr "Uitbreidingen"
 
 #, fuzzy
 msgid "Extension package files"
@@ -20660,6 +20692,10 @@ msgstr "Groepspad"
 msgid "Group patterns"
 msgstr "Groepspatronen"
 
+#, fuzzy, python-format
+msgid "Group use: %s"
+msgstr "Groep basis DN"
+
 msgid "Group<nobr> </nobr>CN"
 msgstr "Groep<nobr> </nobr>CN"
 
@@ -21971,10 +22007,6 @@ msgstr ""
 msgid "Hidden"
 msgstr "Verborgen"
 
-#, fuzzy, python-format
-msgid "Hide %s"
-msgstr "Plaats %s"
-
 msgid "Hide Checkmk version"
 msgstr "Verberg Checkmk versie"
 
@@ -21986,26 +22018,6 @@ msgstr "Verberg annotatie in rapport"
 
 msgid "Hide bulks"
 msgstr "Verberg bulken"
-
-#, fuzzy
-msgid "Hide check parameters"
-msgstr "Ongeldige controleparameter"
-
-#, fuzzy
-msgid "Hide checkboxes"
-msgstr "Toon selectievakjes"
-
-#, fuzzy
-msgid "Hide context"
-msgstr "Verberg infotekst"
-
-#, fuzzy
-msgid "Hide details"
-msgstr "Licentie staat"
-
-#, fuzzy
-msgid "Hide discovered service labels"
-msgstr "Ontdekte service labels tonen"
 
 msgid "Hide folders without read permissions"
 msgstr "Verberg mappen zonder leesrechten"
@@ -22025,22 +22037,11 @@ msgstr "Verbergen in rapport"
 msgid "Hide infotext"
 msgstr "Verberg infotekst"
 
-msgid "Hide inline help"
-msgstr "Verberg inline help"
-
 msgid "Hide internal folder names in WATO"
 msgstr "Interne mapnamen in WATO verbergen"
 
 msgid "Hide names of configuration variables"
 msgstr "Verberg namen van configuratievariabelen"
-
-#, fuzzy
-msgid "Hide page navigation"
-msgstr "Deze pagina met navigatie"
-
-#, fuzzy
-msgid "Hide plugin names"
-msgstr "Toon plugin namen"
 
 msgid "Hide response from socket"
 msgstr "Verberg antwoord van socket"
@@ -23103,11 +23104,18 @@ msgstr "INotify Niveaus"
 msgid "INotify Operation"
 msgstr "INotify Werking"
 
+#, fuzzy
+msgid "IO Bandwith"
+msgstr "Bandbreedte"
+
 msgid "IO Groups"
 msgstr "IO Groepen"
 
 msgid "IO Latency"
 msgstr "IO latentie"
+
+msgid "IOPS"
+msgstr ""
 
 #, fuzzy
 msgid "IP - region - instance ID"
@@ -25372,6 +25380,10 @@ msgstr ""
 "je dit op 0 zet, kunnen er gevallen zijn waarin berichten toch in de cache "
 "moeten worden geplaatst."
 
+#, fuzzy
+msgid "In progress"
+msgstr "In uitvoering"
+
 msgid "In relation to normal check interval"
 msgstr "In verhouding tot het normale controle-interval"
 
@@ -25402,6 +25414,10 @@ msgstr ""
 "terwijl deze verkeerd worden geïnterpreteerd als Celsius. Met deze "
 "instelling kunt u forceren dat de uitlezing van de sensor wordt "
 "geïnterpreteerd als aangepast. "
+
+#, fuzzy
+msgid "In termination"
+msgstr "Pauze"
 
 msgid ""
 "In the history file all events like notifications and alerts are saved. This "
@@ -25661,6 +25677,10 @@ msgstr "Ondoeltreffend"
 
 msgid "Infections"
 msgstr "Infecties"
+
+#, fuzzy, python-format
+msgid "Infinite use of Checkmk up to version %s"
+msgstr "Minimaal vereiste versie van Checkmk"
 
 msgid "InfluxDB Connection"
 msgstr "InfluxDB-verbinding"
@@ -27663,6 +27683,18 @@ msgstr "Niveaus voor IO Stats Bytes"
 
 msgid "Levels for IO Stats Requests"
 msgstr "Niveaus voor IO Stats Verzoeken"
+
+#, fuzzy
+msgid "Levels for IO latency."
+msgstr "Niveaus op latentie"
+
+#, fuzzy
+msgid "Levels for IO operations per second."
+msgstr "Lees IO operaties per seconde"
+
+#, fuzzy
+msgid "Levels for IO traffic per second."
+msgstr "Bovenste niveaus voor \"ESI-waarschuwingen\" per seconde"
 
 msgid "Levels for Inodes"
 msgstr "Niveaus voor Inodes"
@@ -31025,6 +31057,10 @@ msgstr "Microsoft Hyper-V Server VM staat"
 msgid "Microsoft SQL Server (Windows)"
 msgstr "Microsoft SQL Server (Windows)"
 
+#, fuzzy
+msgid "Migrating"
+msgstr "Configuratie"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min.&nbsp;Versie:"
 
@@ -31639,6 +31675,10 @@ msgstr "Monitoring host waar deze database aan gekoppeld moet worden"
 msgid "Monitoring of applications such as processes, services or databases"
 msgstr "Monitoring van toepassingen zoals processen, diensten of databases"
 
+#, fuzzy
+msgid "Monitoring of classic virtual environment like ESX, Nutanix and HyperV"
+msgstr "Monitoring van cloudomgevingen zoals Microsoft Azure"
+
 msgid "Monitoring of cloud environments like Microsoft Azure"
 msgstr "Monitoring van cloudomgevingen zoals Microsoft Azure"
 
@@ -31821,6 +31861,10 @@ msgstr "Montagemogelijkheden"
 
 msgid "Mount point"
 msgstr "Montagepunt"
+
+#, fuzzy
+msgid "Mounted"
+msgstr "Tegen"
 
 msgid "Mountpoint"
 msgstr "Mountpoint"
@@ -32187,6 +32231,10 @@ msgstr "Naam van de harde schijf zoals gerapporteerd door OHM: hdd0, hdd1, ..."
 
 msgid "Name of the MP LUN"
 msgstr "Naam van de MP LUN"
+
+#, fuzzy
+msgid "Name of the Nutanix disk"
+msgstr "Naam van de taak"
 
 msgid "Name of the OMD site"
 msgstr "Naam van de OMD-site"
@@ -34323,11 +34371,70 @@ msgstr "Numerieke waarde"
 msgid "Numerical ID of the VHM, e.g. 102"
 msgstr "Numerieke ID van de VHM, b.v. 102"
 
+#, fuzzy
+msgid "Nutanix Cluster CPU utilization"
+msgstr "Cluster gebruik"
+
+#, fuzzy
+msgid "Nutanix Cluster IO utilization"
+msgstr "Cluster gebruik"
+
+#, fuzzy
+msgid "Nutanix Cluster memory usage"
+msgstr "Gebruik van gastgeheugen"
+
+#, fuzzy
+msgid "Nutanix Disk name"
+msgstr "Nutanix Prism"
+
+#, fuzzy
+msgid "Nutanix Host CPU utilization"
+msgstr "CPU-gebruik"
+
+#, fuzzy
+msgid "Nutanix Host Disk State"
+msgstr "Evaluatie van PDisk-staten"
+
+#, fuzzy
+msgid "Nutanix Host State"
+msgstr "Gastland"
+
+#, fuzzy
+msgid "Nutanix Host memory usage"
+msgstr "Host geheugengebruik"
+
 msgid "Nutanix Prism"
 msgstr "Nutanix Prism"
 
 msgid "Nutanix Prism Alerts"
 msgstr "Nutanix Prism Waarschuwingen"
+
+#, fuzzy
+msgid "Nutanix Prism MetroAvail Sync State"
+msgstr "Nutanix Prism Waarschuwingen"
+
+#, fuzzy
+msgid "Nutanix Prism Support State"
+msgstr "Nutanix Prism Waarschuwingen"
+
+#, fuzzy
+msgid "Nutanix Prism VM Tools"
+msgstr "Nutanix Prism Waarschuwingen"
+
+#, fuzzy
+msgid "Nutanix VM CPU utilization"
+msgstr "CPU-gebruik"
+
+#, fuzzy
+msgid "Nutanix VM State"
+msgstr "Citrix VM status"
+
+#, fuzzy
+msgid "Nutanix VM memory usage"
+msgstr "ESX VM geheugengebruik"
+
+msgid "Nutanix single VM State"
+msgstr ""
 
 msgid "Nvidia"
 msgstr "Nvidia"
@@ -34555,6 +34662,10 @@ msgstr "Oneven rijen"
 msgid "Of aggregations"
 msgstr "Van aggregaties"
 
+#, fuzzy
+msgid "Off"
+msgstr "van"
+
 msgid "Official Release version"
 msgstr "Officiële versie"
 
@@ -34617,6 +34728,10 @@ msgstr "Laat payload weg in ICMP-pakketten"
 
 msgid "Omit rows where all columns are identical"
 msgstr "Laat rijen weg waar alle kolommen identiek zijn"
+
+#, fuzzy
+msgid "On"
+msgstr "O"
 
 msgid "On Hold"
 msgstr "On Hold"
@@ -36060,6 +36175,9 @@ msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 "Patronen voor te controleren logfiles (die <tt>*</tt> en <tt>?</tt> toestaan)"
 
+msgid "Paused"
+msgstr "Pauzeer"
+
 msgid "Paused containers"
 msgstr "Gepauzeerde containers"
 
@@ -36068,6 +36186,10 @@ msgstr "Pauzeren containers lagere niveaus"
 
 msgid "Paused containers upper levels"
 msgstr "Pauzeren containers bovenste niveaus"
+
+#, fuzzy
+msgid "Pausing"
+msgstr "Pauzeer"
 
 msgid "Pd"
 msgstr "Pd"
@@ -37498,6 +37620,14 @@ msgstr "Uitgeschakeld"
 msgid "Powered ON"
 msgstr "AAN"
 
+#, fuzzy
+msgid "Powered Off"
+msgstr "AAN"
+
+#, fuzzy
+msgid "Powering on"
+msgstr "Vermogen"
+
 msgid "Pre-/Postfix for TNSALIAS"
 msgstr "Pre-/Postfix voor TNSALIAS"
 
@@ -37932,6 +38062,10 @@ msgstr "Eigenschappen van de gastheer"
 
 msgid "Protect agent data from unauthorized access"
 msgstr "Bescherm agentgegevens tegen ongeoorloofde toegang"
+
+#, fuzzy
+msgid "Protection Domain"
+msgstr "Verbindingsoptie"
 
 msgid "Protocol"
 msgstr "Protocol"
@@ -39730,6 +39864,10 @@ msgstr "Opnieuw plannen van actieve controles"
 msgid "Reschedule check"
 msgstr "Opnieuw plannen controle"
 
+#, fuzzy, python-format
+msgid "Reseller: %s"
+msgstr "Resultaten"
+
 msgid "Reserved DB instances"
 msgstr "Gereserveerde DB-instanties"
 
@@ -39777,6 +39915,10 @@ msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr ""
 "De regels van rule pack %s zijn teruggezet naar de regels die via MKP zijn "
 "aangeleverd"
+
+#, fuzzy
+msgid "Resetting"
+msgstr "Reset sortering"
 
 #, fuzzy
 msgid "Resident memory averaging"
@@ -40064,6 +40206,10 @@ msgstr "Resultaten"
 
 msgid "Resumables"
 msgstr "Resumables"
+
+#, fuzzy
+msgid "Resuming"
+msgstr "Resulterende staat"
 
 msgid "Retained messages"
 msgstr "Behouden berichten"
@@ -41005,12 +41151,6 @@ msgstr "Save"
 msgid "Save & go to %s"
 msgstr "Opslaan en naar %s gaan"
 
-msgid "Save & go to connection tests"
-msgstr "Opslaan en naar verbindingstesten gaan"
-
-msgid "Save & go to folder"
-msgstr "Opslaan en naar de map gaan"
-
 msgid "Save & go to host properties"
 msgstr "Opslaan en naar host eigenschappen gaan"
 
@@ -41018,11 +41158,19 @@ msgid "Save & go to list"
 msgstr "Opslaan en naar de lijst gaan"
 
 #, fuzzy
+msgid "Save & run connection tests"
+msgstr "Opslaan en naar verbindingstesten gaan"
+
+#, fuzzy
 msgid "Save & run service discovery"
 msgstr "Solaris service ontdekking"
 
 msgid "Save & test"
 msgstr "Opslaan en testen"
+
+#, fuzzy
+msgid "Save & view folder"
+msgstr "Opslaan en naar de map gaan"
 
 msgid "Save filters & go to designer"
 msgstr "Bewaar filters & ga naar ontwerper"
@@ -44384,6 +44532,10 @@ msgstr ""
 "relatieve niveaus alleen werken als er een max_size is ingesteld voor het "
 "bestand aan de kant van de database."
 
+#, fuzzy
+msgid "Specify levels if percentage of CPU ready state"
+msgstr "Niveaus opgeven in percentage van de totale ruimte"
+
 msgid "Specify levels in absolute usage"
 msgstr "Niveaus opgeven in absoluut gebruik"
 
@@ -44392,6 +44544,10 @@ msgstr "Niveaus opgeven in absolute gebruikswaarden"
 
 msgid "Specify levels in absolute values"
 msgstr "Niveaus opgeven in absolute waarden"
+
+#, fuzzy
+msgid "Specify levels in percentage of CPU usage"
+msgstr "Niveaus opgeven in percentage van de totale ruimte"
 
 msgid "Specify levels in percentage of storage processor usage"
 msgstr "Geef niveaus aan in percentage van het gebruik van de opslagprocessor"
@@ -46070,6 +46226,10 @@ msgstr "Abonnementsstatus"
 msgid "Subscription settings"
 msgstr "Abonnement instellingen"
 
+#, fuzzy, python-format
+msgid "Subscription stage: %s"
+msgstr "Abonnement instellingen"
+
 msgid "Substitution"
 msgstr "Substitutie"
 
@@ -46207,6 +46367,10 @@ msgstr "Opschorten"
 
 msgid "Suspended"
 msgstr "Opgeschort"
+
+#, fuzzy
+msgid "Suspending"
+msgstr "Opschorten"
 
 msgid "Swap"
 msgstr "Wissel"
@@ -46775,7 +46939,15 @@ msgstr "Doel Staat"
 msgid "Target group name"
 msgstr "Naam doelgroep"
 
+#, fuzzy
+msgid "Target remote tunnel state"
+msgstr "Doelstaten"
+
 msgid "Target states"
+msgstr "Doelstaten"
+
+#, fuzzy
+msgid "Target sync state"
 msgstr "Doelstaten"
 
 msgid "Targets"
@@ -50137,11 +50309,12 @@ msgstr ""
 "Het wachtwoord gebruikt niet genoeg tekengroepen. U moet een wachtwoord "
 "instellen dat er ten minste %d van gebruikt."
 
+#, fuzzy
 msgid ""
-"The password entered here is stored in plain text within the monitoring "
-"site. This usually needed because the monitoring process needs to have "
-"access to the unencrypted password because it needs to submit it to "
-"authenticate with remote systems. "
+"The password is stored in clear text within the monitoring site. This is "
+"necessary because the monitoring process needs to have access to the "
+"unencrypted password, as it needs to provide it for authentication with "
+"remote systems."
 msgstr ""
 "Het hier ingevoerde wachtwoord wordt in platte tekst opgeslagen binnen de "
 "monitoring site. Dit is meestal nodig omdat het monitoringproces toegang "
@@ -54078,6 +54251,25 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"cluster systems. The utilization percentage is shown for the whole cluster."
+msgstr ""
+"Deze regel configureert niveaus voor het CPU-gebruik (niet belasting) voor "
+"VMWare ESX hostsystemen. Het gebruikspercentage wordt berekend ten opzichte "
+"van het totaal aantal CPU's. "
+
+#, fuzzy
+msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"host systems. The utilization percentage is computed with respect to the "
+"total number of CPUs. "
+msgstr ""
+"Deze regel configureert niveaus voor het CPU-gebruik (niet belasting) voor "
+"VMWare ESX hostsystemen. Het gebruikspercentage wordt berekend ten opzichte "
+"van het totaal aantal CPU's. "
+
+#, fuzzy
+msgid ""
 "This rule configures levels for the CPU utilization (not load) for VMware "
 "ESX host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
@@ -56241,6 +56433,10 @@ msgstr "Definieer een tolerante periode voor het activeren van diensten"
 msgid "Tolerance period for 'deactivating' state"
 msgstr "Definieer een tolerante periode voor het deactiveren van diensten"
 
+#, fuzzy
+msgid "Tools install state"
+msgstr "Map instance state"
+
 msgid "Tooltip"
 msgstr "Tooltip"
 
@@ -57591,6 +57787,10 @@ msgid "Unlocked"
 msgstr "Unlocked"
 
 msgid "Unmonitored"
+msgstr "Ongecontroleerd"
+
+#, fuzzy
+msgid "Unmounted"
 msgstr "Ongecontroleerd"
 
 msgid "Unoptimized connections"
@@ -59673,6 +59873,10 @@ msgstr "VCenter-authenticatie"
 msgid "VEEAM tape backup jobs"
 msgstr "VEEAM-back-uptaken op tape"
 
+#, fuzzy
+msgid "VM"
+msgstr "VM's"
+
 msgid "VM distribution"
 msgstr "VM distributie"
 
@@ -59684,6 +59888,10 @@ msgstr "VM snapshot samenvatting"
 
 msgid "VM, Cloud, Container"
 msgstr "VM, cloud, container"
+
+#, fuzzy
+msgid "VMTools activation state"
+msgstr "Activeringsstatus"
 
 msgid "VMalloc Address Space"
 msgstr "VMalloc Adresruimte"
@@ -60355,6 +60563,20 @@ msgstr "Wachten op andere wissels om online te komen"
 
 msgid "Waiting for replication to start"
 msgstr "Wachten op replicatie om te beginnen"
+
+#, fuzzy
+msgid "Wanted Host State"
+msgstr "Gastland"
+
+msgid "Wanted Host State for defined Nutanix Host"
+msgstr ""
+
+#, fuzzy
+msgid "Wanted VM State"
+msgstr "Staat bijwerken"
+
+msgid "Wanted VM State for defined Nutanix VMs"
+msgstr ""
 
 msgid "Warn"
 msgstr "Waarschuw"
@@ -64925,6 +65147,10 @@ msgstr "maak het afdrukken van regels mogelijk"
 msgid "enable sounds"
 msgstr "geluiden inschakelen"
 
+#, fuzzy
+msgid "enabled"
+msgstr "inschakelen"
+
 msgid "entries"
 msgstr "inzendingen"
 
@@ -65304,6 +65530,10 @@ msgstr "init"
 msgid "inodes"
 msgstr "inodes"
 
+#, fuzzy
+msgid "installed"
+msgstr "RAM geïnstalleerd"
+
 msgid "instances"
 msgstr "instanties"
 
@@ -65318,6 +65548,9 @@ msgstr "inbraak"
 
 msgid "invalid:"
 msgstr "ongeldig:"
+
+msgid "iops"
+msgstr ""
 
 msgid "is"
 msgstr "is"
@@ -65622,6 +65855,10 @@ msgstr "niet geprobeerd"
 
 msgid "not available"
 msgstr "niet beschikbaar"
+
+#, fuzzy
+msgid "not installed"
+msgstr "RAM geïnstalleerd"
 
 msgid "not present"
 msgstr "niet aanwezig"
@@ -66398,6 +66635,52 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Deselect all checkboxes"
+#~ msgstr "Deselecteer alle selectievakjes"
+
+#, fuzzy, python-format
+#~| msgid "Site %s"
+#~ msgid "Hide %s"
+#~ msgstr "Plaats %s"
+
+#, fuzzy
+#~| msgid "Invalid check parameter"
+#~ msgid "Hide check parameters"
+#~ msgstr "Ongeldige controleparameter"
+
+#, fuzzy
+#~| msgid "Show checkboxes"
+#~ msgid "Hide checkboxes"
+#~ msgstr "Toon selectievakjes"
+
+#, fuzzy
+#~| msgid "Hide infotext"
+#~ msgid "Hide context"
+#~ msgstr "Verberg infotekst"
+
+#, fuzzy
+#~| msgid "License state"
+#~ msgid "Hide details"
+#~ msgstr "Licentie staat"
+
+#, fuzzy
+#~| msgid "Show discovered service labels"
+#~ msgid "Hide discovered service labels"
+#~ msgstr "Ontdekte service labels tonen"
+
+#~ msgid "Hide inline help"
+#~ msgstr "Verberg inline help"
+
+#, fuzzy
+#~| msgid "This page with navigation"
+#~ msgid "Hide page navigation"
+#~ msgstr "Deze pagina met navigatie"
+
+#, fuzzy
+#~| msgid "Show plugin names"
+#~ msgid "Hide plugin names"
+#~ msgstr "Toon plugin namen"
 
 #, fuzzy
 #~| msgid "Application"
@@ -68922,9 +69205,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Edit Dashboards"
 #~ msgstr "Dashboards bewerken"
 
-#~ msgid "Host State"
-#~ msgstr "Gastland"
-
 #~ msgid "Service State"
 #~ msgstr "Dienststaat"
 
@@ -70963,9 +71243,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Express Servicecode"
 #~ msgstr "Uitdrukkelijke Servicecode"
 
-#~ msgid "Extents"
-#~ msgstr "Uitbreidingen"
-
 #~ msgid "Extra bytes read/written"
 #~ msgstr "Extra bytes gelezen/geschreven"
 
@@ -71741,9 +72018,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Parameter"
 #~ msgstr "Parameter"
-
-#~ msgid "Paused"
-#~ msgstr "Pauzeer"
 
 #~ msgid "Peer IP Address"
 #~ msgstr "Peer IP-adres"
@@ -72807,9 +73081,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Problems (unhandled)"
 #~ msgstr "Problemen (niet afgehandeld)"
-
-#~ msgid "Automatic refresh"
-#~ msgstr "Automatisch verversen"
 
 #~ msgid "Full scan"
 #~ msgstr "Volledige scan"

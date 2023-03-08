@@ -5779,6 +5779,10 @@ msgstr "自動ページリロード"
 msgid "Automatic page reload in %d seconds."
 msgstr "%d 秒での自動ページリロード。"
 
+#, fuzzy, python-format
+msgid "Automatic renewal: %s"
+msgstr "自動テイクオーバー"
+
 msgid "Automatic takeover"
 msgstr "自動テイクオーバー"
 
@@ -10333,6 +10337,14 @@ msgstr ""
 msgid "Configure the target mode for the system."
 msgstr "システムのターゲットモードを構成します。"
 
+#, fuzzy
+msgid "Configure the target state of the protection domain sync state."
+msgstr "システムのターゲットモードを構成します。"
+
+#, fuzzy
+msgid "Configure the target state of the remote support tunnel."
+msgstr "システムのターゲットモードを構成します。"
+
 msgid "Configure the user name here."
 msgstr "ここでユーザー名を構成します。"
 
@@ -11022,6 +11034,10 @@ msgstr "現在のテーマを特定できませんでした。"
 msgid "Could not find an entry matching %r in choices"
 msgstr "サイト%sで要求されたクラッシュ%sが見つかりませんでした"
 
+msgid ""
+"Could not find any service for this host. You might need to trigger a rescan."
+msgstr ""
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -11193,8 +11209,16 @@ msgstr "クラッシュレポート: %s"
 msgid "Crash reports"
 msgstr "クラッシュレポート"
 
+#, fuzzy
+msgid "Crash source"
+msgstr "グレイログソース"
+
 msgid "Crash time"
 msgstr "クラッシュタイム"
+
+#, fuzzy
+msgid "Crash type"
+msgstr "クラッシュタイプ"
 
 msgid "Crashed check"
 msgstr "クラッシュしたチェック"
@@ -13874,9 +13898,6 @@ msgstr "タイププレフィックスなしの説明"
 msgid "Descriptions"
 msgstr "説明"
 
-msgid "Deselect all checkboxes"
-msgstr "すべてのチェックボックスの選択を解除します"
-
 msgid "Design This Graph"
 msgstr "このグラフを設計する"
 
@@ -14442,6 +14463,10 @@ msgstr "更新されたメトリックのディスクフラッシュ間隔"
 
 msgid "Disk latency"
 msgstr "ディスクの待ち時間"
+
+#, fuzzy
+msgid "Disk mount state"
+msgstr "Diskstate"
 
 msgid "Disk percentage usage"
 msgstr "ディスク使用率"
@@ -15519,6 +15544,9 @@ msgstr "ダウンタイムはその後開始されません"
 
 msgid "Downtimes"
 msgstr "ダウンタイム"
+
+msgid "Draft"
+msgstr ""
 
 msgid "Driver type to use instead of doing an auto selection"
 msgstr ""
@@ -17684,6 +17712,10 @@ msgstr "カスタムアイコンでCheckmk GUIを拡張する"
 
 msgid "Extended perfdata"
 msgstr "拡張perfdata"
+
+#, fuzzy
+msgid "Extension"
+msgstr "エクステント"
 
 #, fuzzy
 msgid "Extension package files"
@@ -19944,6 +19976,10 @@ msgstr "グループパス"
 msgid "Group patterns"
 msgstr "グループパターン"
 
+#, fuzzy, python-format
+msgid "Group use: %s"
+msgstr "グループベースDN"
+
 msgid "Group<nobr> </nobr>CN"
 msgstr "グループ<nobr> </nobr> CN"
 
@@ -21135,10 +21171,6 @@ msgstr ""
 msgid "Hidden"
 msgstr "隠し"
 
-#, fuzzy, python-format
-msgid "Hide %s"
-msgstr "サイト %s"
-
 msgid "Hide Checkmk version"
 msgstr "Checkmkバージョンを非表示"
 
@@ -21150,26 +21182,6 @@ msgstr "レポートで注釈を非表示にする"
 
 msgid "Hide bulks"
 msgstr "バルクを非表示"
-
-#, fuzzy
-msgid "Hide check parameters"
-msgstr "チェックパラメータが無効です"
-
-#, fuzzy
-msgid "Hide checkboxes"
-msgstr "チェックボックスを表示する"
-
-#, fuzzy
-msgid "Hide context"
-msgstr "情報テキストを非表示"
-
-#, fuzzy
-msgid "Hide details"
-msgstr "ライセンスの状態"
-
-#, fuzzy
-msgid "Hide discovered service labels"
-msgstr "発見されたラベル"
 
 msgid "Hide folders without read permissions"
 msgstr "読み取り権限なしでフォルダを非表示にする"
@@ -21189,22 +21201,11 @@ msgstr "レポートに非表示"
 msgid "Hide infotext"
 msgstr "情報テキストを非表示"
 
-msgid "Hide inline help"
-msgstr "インラインヘルプを非表示"
-
 msgid "Hide internal folder names in WATO"
 msgstr "WATOで内部フォルダ名を非表示にする"
 
 msgid "Hide names of configuration variables"
 msgstr "構成変数の名前を非表示にする"
-
-#, fuzzy
-msgid "Hide page navigation"
-msgstr "ナビゲーションあり"
-
-#, fuzzy
-msgid "Hide plugin names"
-msgstr "プラグイン名を表示する"
 
 msgid "Hide response from socket"
 msgstr "ソケットからの応答を非表示"
@@ -22251,11 +22252,18 @@ msgstr "INotifyレベル"
 msgid "INotify Operation"
 msgstr "INotify操作"
 
+#, fuzzy
+msgid "IO Bandwith"
+msgstr "帯域幅"
+
 msgid "IO Groups"
 msgstr "IOグループ"
 
 msgid "IO Latency"
 msgstr "IOレイテンシー"
+
+msgid "IOPS"
+msgstr ""
 
 #, fuzzy
 msgid "IP - region - instance ID"
@@ -24291,6 +24299,10 @@ msgstr ""
 "多くのRAMが必要になります。注意:これを0に設定しても、メッセージをキャッシュす"
 "る必要がある場合があります。"
 
+#, fuzzy
+msgid "In progress"
+msgstr "進行中"
+
 msgid "In relation to normal check interval"
 msgstr "通常のチェック間隔に関連して"
 
@@ -24319,6 +24331,10 @@ msgstr ""
 "まれに、センサーによって通知される単位が間違っている場合があります。たとえ"
 "ば、センサーが摂氏を誤解して華氏で値を送信します。この設定を使用すると、セン"
 "サーの読み取り値をカスタマイズされたものとして解釈するように強制できます。 "
+
+#, fuzzy
+msgid "In termination"
+msgstr "休憩"
 
 msgid ""
 "In the history file all events like notifications and alerts are saved. This "
@@ -24560,6 +24576,10 @@ msgstr "効果がない"
 
 msgid "Infections"
 msgstr "感染"
+
+#, fuzzy, python-format
+msgid "Infinite use of Checkmk up to version %s"
+msgstr "最低限必要なCheckmkバージョン"
 
 msgid "InfluxDB Connection"
 msgstr ""
@@ -26504,6 +26524,18 @@ msgstr "IO統計バイトのレベル"
 
 msgid "Levels for IO Stats Requests"
 msgstr "IO統計要求のレベル"
+
+#, fuzzy
+msgid "Levels for IO latency."
+msgstr "遅延のレベル"
+
+#, fuzzy
+msgid "Levels for IO operations per second."
+msgstr "1秒あたりのIO操作の読み取り"
+
+#, fuzzy
+msgid "Levels for IO traffic per second."
+msgstr "1秒あたりの\"ESI警告\"の上位レベル"
 
 msgid "Levels for Inodes"
 msgstr "Iノードのレベル"
@@ -29788,6 +29820,10 @@ msgstr "Microsoft Hyper-V ServerのVMの状態"
 msgid "Microsoft SQL Server (Windows)"
 msgstr "Microsoft SQL Server(Windows)"
 
+#, fuzzy
+msgid "Migrating"
+msgstr "コンフィギュレーション"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min&nbsp;バージョン:"
 
@@ -30399,6 +30435,10 @@ msgstr "このデータベースを監視ホストにマップする必要があ
 msgid "Monitoring of applications such as processes, services or databases"
 msgstr "プロセス、サービス、データベースなどのアプリケーションの監視"
 
+#, fuzzy
+msgid "Monitoring of classic virtual environment like ESX, Nutanix and HyperV"
+msgstr "Microsoft Azureのようなクラウド環境の監視"
+
 msgid "Monitoring of cloud environments like Microsoft Azure"
 msgstr "Microsoft Azureのようなクラウド環境の監視"
 
@@ -30568,6 +30608,10 @@ msgstr "マウントオプション"
 
 msgid "Mount point"
 msgstr "マウントポイント"
+
+#, fuzzy
+msgid "Mounted"
+msgstr "カウンター"
 
 msgid "Mountpoint"
 msgstr "マウントポイント"
@@ -30933,6 +30977,10 @@ msgstr "OHMによって報告されたハードディスクの名前: hdd0, hdd1
 
 msgid "Name of the MP LUN"
 msgstr "MP LUNの名前"
+
+#, fuzzy
+msgid "Name of the Nutanix disk"
+msgstr "タスクの名前"
 
 msgid "Name of the OMD site"
 msgstr "OMDサイトの名前"
@@ -33008,11 +33056,70 @@ msgstr "数値"
 msgid "Numerical ID of the VHM, e.g. 102"
 msgstr "VHMの数値ID、例: 102"
 
+#, fuzzy
+msgid "Nutanix Cluster CPU utilization"
+msgstr "クラスターの使用率"
+
+#, fuzzy
+msgid "Nutanix Cluster IO utilization"
+msgstr "クラスターの使用率"
+
+#, fuzzy
+msgid "Nutanix Cluster memory usage"
+msgstr "ゲストのメモリ使用量"
+
+#, fuzzy
+msgid "Nutanix Disk name"
+msgstr "ニュータニックスプリズム"
+
+#, fuzzy
+msgid "Nutanix Host CPU utilization"
+msgstr "CPU使用率"
+
+#, fuzzy
+msgid "Nutanix Host Disk State"
+msgstr "PDisk状態の評価"
+
+#, fuzzy
+msgid "Nutanix Host State"
+msgstr "ホストの状態"
+
+#, fuzzy
+msgid "Nutanix Host memory usage"
+msgstr "ホストのメモリ使用量"
+
 msgid "Nutanix Prism"
 msgstr "ニュータニックスプリズム"
 
 msgid "Nutanix Prism Alerts"
 msgstr "Nutanixプリズムアラート"
+
+#, fuzzy
+msgid "Nutanix Prism MetroAvail Sync State"
+msgstr "Nutanixプリズムアラート"
+
+#, fuzzy
+msgid "Nutanix Prism Support State"
+msgstr "Nutanixプリズムアラート"
+
+#, fuzzy
+msgid "Nutanix Prism VM Tools"
+msgstr "Nutanixプリズムアラート"
+
+#, fuzzy
+msgid "Nutanix VM CPU utilization"
+msgstr "CPU使用率"
+
+#, fuzzy
+msgid "Nutanix VM State"
+msgstr "Citrix VMの状態"
+
+#, fuzzy
+msgid "Nutanix VM memory usage"
+msgstr "ESX VMのメモリ使用量"
+
+msgid "Nutanix single VM State"
+msgstr ""
 
 msgid "Nvidia"
 msgstr "Nvidia"
@@ -33239,6 +33346,10 @@ msgstr "奇数行"
 msgid "Of aggregations"
 msgstr "集計の"
 
+#, fuzzy
+msgid "Off"
+msgstr "オフ"
+
 msgid "Official Release version"
 msgstr "公式リリース版"
 
@@ -33301,6 +33412,10 @@ msgstr "ICMPパケットのペイロードを省略します"
 
 msgid "Omit rows where all columns are identical"
 msgstr "すべての列が同一である行を省略します"
+
+#, fuzzy
+msgid "On"
+msgstr "O"
 
 msgid "On Hold"
 msgstr "保留"
@@ -34700,6 +34815,9 @@ msgstr "各ノードのパターン"
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr "監視するログファイルのパターン( <tt>*</tt> および<tt>?</tt>を許可)"
 
+msgid "Paused"
+msgstr "一時停止"
+
 msgid "Paused containers"
 msgstr "一時停止したコンテナ"
 
@@ -34708,6 +34826,10 @@ msgstr "一時停止されたコンテナの下位レベル"
 
 msgid "Paused containers upper levels"
 msgstr "一時停止されたコンテナの上位レベル"
+
+#, fuzzy
+msgid "Pausing"
+msgstr "一時停止"
 
 msgid "Pd"
 msgstr "Pd"
@@ -36057,6 +36179,14 @@ msgstr "電源オフ"
 msgid "Powered ON"
 msgstr "電源オン"
 
+#, fuzzy
+msgid "Powered Off"
+msgstr "電源オン"
+
+#, fuzzy
+msgid "Powering on"
+msgstr "Power"
+
 msgid "Pre-/Postfix for TNSALIAS"
 msgstr "TNSALIASの前/後修正"
 
@@ -36488,6 +36618,10 @@ msgstr "ホストのプロパティ"
 
 msgid "Protect agent data from unauthorized access"
 msgstr ""
+
+#, fuzzy
+msgid "Protection Domain"
+msgstr "接続オプション"
 
 msgid "Protocol"
 msgstr "プロトコル"
@@ -38249,6 +38383,10 @@ msgstr "アクティブなチェックを再スケジュールする"
 msgid "Reschedule check"
 msgstr "再スケジュールチェック"
 
+#, fuzzy, python-format
+msgid "Reseller: %s"
+msgstr "結果"
+
 msgid "Reserved DB instances"
 msgstr "予約済みDBインスタンス"
 
@@ -38294,6 +38432,10 @@ msgstr "構成変数 %s をデフォルトにリセットしました。"
 #, python-format
 msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr "ルールパック %s のルールをMKP経由で提供されたものにリセットしました"
+
+#, fuzzy
+msgid "Resetting"
+msgstr "並べ替えをリセット"
 
 #, fuzzy
 msgid "Resident memory averaging"
@@ -38571,6 +38713,10 @@ msgstr "結果"
 
 msgid "Resumables"
 msgstr "再開可能"
+
+#, fuzzy
+msgid "Resuming"
+msgstr "結果の状態"
 
 msgid "Retained messages"
 msgstr "保有メッセージ"
@@ -39497,12 +39643,6 @@ msgstr "保存する"
 msgid "Save & go to %s"
 msgstr "保存して%sに移動します"
 
-msgid "Save & go to connection tests"
-msgstr "保存して接続テストに移動します"
-
-msgid "Save & go to folder"
-msgstr "保存してフォルダに移動"
-
 msgid "Save & go to host properties"
 msgstr "保存してホストプロパティに移動します"
 
@@ -39510,11 +39650,19 @@ msgid "Save & go to list"
 msgstr "保存してリストに移動"
 
 #, fuzzy
+msgid "Save & run connection tests"
+msgstr "保存して接続テストに移動します"
+
+#, fuzzy
 msgid "Save & run service discovery"
 msgstr "Solarisサービスディスカバリ"
 
 msgid "Save & test"
 msgstr "保存してテストする"
+
+#, fuzzy
+msgid "Save & view folder"
+msgstr "保存してフォルダに移動"
 
 msgid "Save filters & go to designer"
 msgstr "フィルタを保存してデザイナーに移動"
@@ -42712,6 +42860,10 @@ msgstr ""
 "ベース側のファイルにmax_sizeが設定されている場合にのみ機能することに注意して"
 "ください。"
 
+#, fuzzy
+msgid "Specify levels if percentage of CPU ready state"
+msgstr "合計スペースのパーセンテージでレベルを指定します"
+
 msgid "Specify levels in absolute usage"
 msgstr "絶対使用量でレベルを指定する"
 
@@ -42720,6 +42872,10 @@ msgstr "絶対使用量でレベルを指定する"
 
 msgid "Specify levels in absolute values"
 msgstr "絶対値でレベルを指定する"
+
+#, fuzzy
+msgid "Specify levels in percentage of CPU usage"
+msgstr "合計スペースのパーセンテージでレベルを指定します"
 
 msgid "Specify levels in percentage of storage processor usage"
 msgstr "ストレージプロセッサの使用率でレベルを指定します"
@@ -44337,6 +44493,10 @@ msgstr "サブスクリプションステータス"
 msgid "Subscription settings"
 msgstr "サブスクリプション設定"
 
+#, fuzzy, python-format
+msgid "Subscription stage: %s"
+msgstr "サブスクリプション設定"
+
 msgid "Substitution"
 msgstr "置換"
 
@@ -44470,6 +44630,10 @@ msgid "Suspend"
 msgstr "一時停止"
 
 msgid "Suspended"
+msgstr "一時停止"
+
+#, fuzzy
+msgid "Suspending"
 msgstr "一時停止"
 
 msgid "Swap"
@@ -45032,7 +45196,15 @@ msgstr "ターゲット状態"
 msgid "Target group name"
 msgstr "ターゲットグループ名"
 
+#, fuzzy
+msgid "Target remote tunnel state"
+msgstr "ターゲットの状態"
+
 msgid "Target states"
+msgstr "ターゲットの状態"
+
+#, fuzzy
+msgid "Target sync state"
 msgstr "ターゲットの状態"
 
 msgid "Targets"
@@ -48033,11 +48205,12 @@ msgstr ""
 "パスワードは十分な文字グループを使用していません。少なくとも%dを使用するパス"
 "ワードを設定する必要があります。"
 
+#, fuzzy
 msgid ""
-"The password entered here is stored in plain text within the monitoring "
-"site. This usually needed because the monitoring process needs to have "
-"access to the unencrypted password because it needs to submit it to "
-"authenticate with remote systems. "
+"The password is stored in clear text within the monitoring site. This is "
+"necessary because the monitoring process needs to have access to the "
+"unencrypted password, as it needs to provide it for authentication with "
+"remote systems."
 msgstr ""
 "ここに入力したパスワードは、監視サイト内にプレーンテキストで保存されます。こ"
 "れは通常、監視プロセスがリモートシステムで認証するためにパスワードを送信する"
@@ -51529,6 +51702,17 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"cluster systems. The utilization percentage is shown for the whole cluster."
+msgstr ""
+
+msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"host systems. The utilization percentage is computed with respect to the "
+"total number of CPUs. "
+msgstr ""
+
+msgid ""
 "This rule configures levels for the CPU utilization (not load) for VMware "
 "ESX host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
@@ -53498,6 +53682,10 @@ msgstr "サービスをアクティブ化するための許容期間を定義し
 msgid "Tolerance period for 'deactivating' state"
 msgstr "サービスを停止させるための許容期間を定義します"
 
+#, fuzzy
+msgid "Tools install state"
+msgstr "インスタンスの状態をマップします"
+
 msgid "Tooltip"
 msgstr "ヒント"
 
@@ -54821,6 +55009,10 @@ msgid "Unlocked"
 msgstr "ロック解除"
 
 msgid "Unmonitored"
+msgstr "監視されていない"
+
+#, fuzzy
+msgid "Unmounted"
 msgstr "監視されていない"
 
 msgid "Unoptimized connections"
@@ -56814,6 +57006,10 @@ msgstr "VCenter認証"
 msgid "VEEAM tape backup jobs"
 msgstr "VEEAMテープバックアップジョブ"
 
+#, fuzzy
+msgid "VM"
+msgstr "VMs"
+
 msgid "VM distribution"
 msgstr "VMの配布"
 
@@ -56825,6 +57021,10 @@ msgstr "VMスナップショットの概要"
 
 msgid "VM, Cloud, Container"
 msgstr "VM、クラウド、コンテナ"
+
+#, fuzzy
+msgid "VMTools activation state"
+msgstr "アクティベーションステータス"
 
 msgid "VMalloc Address Space"
 msgstr "VMallocアドレス空間"
@@ -57486,6 +57686,20 @@ msgstr "他のスイッチがオンラインになるのを待っています"
 
 msgid "Waiting for replication to start"
 msgstr "レプリケーションの開始を待機しています"
+
+#, fuzzy
+msgid "Wanted Host State"
+msgstr "ホストの状態"
+
+msgid "Wanted Host State for defined Nutanix Host"
+msgstr ""
+
+#, fuzzy
+msgid "Wanted VM State"
+msgstr "状態の更新"
+
+msgid "Wanted VM State for defined Nutanix VMs"
+msgstr ""
 
 msgid "Warn"
 msgstr "警告"
@@ -61604,6 +61818,10 @@ msgstr "ルールのプリティプリントを有効にする"
 msgid "enable sounds"
 msgstr "サウンドを有効にする"
 
+#, fuzzy
+msgid "enabled"
+msgstr "有効にする"
+
 msgid "entries"
 msgstr "エントリ"
 
@@ -61979,6 +62197,10 @@ msgstr "初期化"
 msgid "inodes"
 msgstr "inodes"
 
+#, fuzzy
+msgid "installed"
+msgstr "インストールされたRAM"
+
 msgid "instances"
 msgstr "インスタンス"
 
@@ -61993,6 +62215,9 @@ msgstr ""
 
 msgid "invalid:"
 msgstr "無効:"
+
+msgid "iops"
+msgstr ""
 
 msgid "is"
 msgstr "です"
@@ -62296,6 +62521,10 @@ msgstr "試みられなかった"
 
 msgid "not available"
 msgstr "利用不可"
+
+#, fuzzy
+msgid "not installed"
+msgstr "インストールされたRAM"
 
 msgid "not present"
 msgstr "現在ではない"
@@ -63066,6 +63295,52 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Deselect all checkboxes"
+#~ msgstr "すべてのチェックボックスの選択を解除します"
+
+#, fuzzy, python-format
+#~| msgid "Site %s"
+#~ msgid "Hide %s"
+#~ msgstr "サイト %s"
+
+#, fuzzy
+#~| msgid "Invalid check parameter"
+#~ msgid "Hide check parameters"
+#~ msgstr "チェックパラメータが無効です"
+
+#, fuzzy
+#~| msgid "Show checkboxes"
+#~ msgid "Hide checkboxes"
+#~ msgstr "チェックボックスを表示する"
+
+#, fuzzy
+#~| msgid "Hide infotext"
+#~ msgid "Hide context"
+#~ msgstr "情報テキストを非表示"
+
+#, fuzzy
+#~| msgid "License state"
+#~ msgid "Hide details"
+#~ msgstr "ライセンスの状態"
+
+#, fuzzy
+#~| msgid "Discovered labels"
+#~ msgid "Hide discovered service labels"
+#~ msgstr "発見されたラベル"
+
+#~ msgid "Hide inline help"
+#~ msgstr "インラインヘルプを非表示"
+
+#, fuzzy
+#~| msgid "This page with navigation"
+#~ msgid "Hide page navigation"
+#~ msgstr "ナビゲーションあり"
+
+#, fuzzy
+#~| msgid "Show plugin names"
+#~ msgid "Hide plugin names"
+#~ msgstr "プラグイン名を表示する"
 
 #, fuzzy
 #~| msgid "Application"
@@ -65270,9 +65545,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Edit Dashboards"
 #~ msgstr "ダッシュボードの編集"
 
-#~ msgid "Host State"
-#~ msgstr "ホストの状態"
-
 #~ msgid "Service State"
 #~ msgstr "サービス状態"
 
@@ -67155,9 +67427,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Express Servicecode"
 #~ msgstr "エクスプレス サービス コード"
 
-#~ msgid "Extents"
-#~ msgstr "エクステント"
-
 #~ msgid "Extra bytes read/written"
 #~ msgstr "読み込み/書き込みされた余分なバイト"
 
@@ -67890,9 +68159,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Parameter"
 #~ msgstr "パラメータ"
-
-#~ msgid "Paused"
-#~ msgstr "一時停止"
 
 #~ msgid "Peer IP Address"
 #~ msgstr "ピアIPアドレス"

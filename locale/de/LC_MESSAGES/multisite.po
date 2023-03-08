@@ -6002,6 +6002,10 @@ msgstr "Seite automatisch aktualisieren"
 msgid "Automatic page reload in %d seconds."
 msgstr "Seite wird in %d Sekunden neu geladen."
 
+#, fuzzy, python-format
+msgid "Automatic renewal: %s"
+msgstr "Automatische Aktualisierung"
+
 msgid "Automatic takeover"
 msgstr "Automatische Übernahme"
 
@@ -10803,6 +10807,14 @@ msgstr ""
 msgid "Configure the target mode for the system."
 msgstr "Den Zielzustand für das System einstellen"
 
+#, fuzzy
+msgid "Configure the target state of the protection domain sync state."
+msgstr "Den Zielzustand für das System einstellen"
+
+#, fuzzy
+msgid "Configure the target state of the remote support tunnel."
+msgstr "Den Zielzustand für das System einstellen"
+
 msgid "Configure the user name here."
 msgstr "Konfigurieren Sie hier den Benutzernamen."
 
@@ -11529,6 +11541,10 @@ msgstr "Aktuelles Theme konnte nicht festgelegt werden"
 msgid "Could not find an entry matching %r in choices"
 msgstr "Konnte den angeforderten Absturz %s auf der Site %s nicht finden"
 
+msgid ""
+"Could not find any service for this host. You might need to trigger a rescan."
+msgstr ""
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -11709,8 +11725,16 @@ msgstr "Absturzbericht: %s"
 msgid "Crash reports"
 msgstr "Absturzberichte"
 
+#, fuzzy
+msgid "Crash source"
+msgstr "Graylog-Quellen"
+
 msgid "Crash time"
 msgstr "Absturz Zeit"
+
+#, fuzzy
+msgid "Crash type"
+msgstr "Fehlertyp"
 
 msgid "Crashed check"
 msgstr "abgestürzter Check"
@@ -14445,9 +14469,6 @@ msgstr "Beschreibung ohne Typprefix"
 msgid "Descriptions"
 msgstr "Beschreibungen"
 
-msgid "Deselect all checkboxes"
-msgstr "Alle Checkboxen abwählen"
-
 msgid "Design This Graph"
 msgstr "Diesen Graph gestalten"
 
@@ -15034,6 +15055,10 @@ msgstr "Schreibintervall für aktualisierte Metriken"
 
 msgid "Disk latency"
 msgstr "Plattenlatenz"
+
+#, fuzzy
+msgid "Disk mount state"
+msgstr "Plattenstatus"
 
 msgid "Disk percentage usage"
 msgstr "Festplatte prozentuale Nutzung"
@@ -16133,6 +16158,9 @@ msgstr "Wartungszeit startet nicht mehr nach"
 
 msgid "Downtimes"
 msgstr "Wartungszeiten"
+
+msgid "Draft"
+msgstr ""
 
 msgid "Driver type to use instead of doing an auto selection"
 msgstr "Zu verwendende Treiberart anstelle einer automatischen Auswahl"
@@ -18361,6 +18389,10 @@ msgstr "Erweitere die Checkmk GUI mit eigenen benutzerdefinierten Icons."
 
 msgid "Extended perfdata"
 msgstr "Erweiterte Performancedaten"
+
+#, fuzzy
+msgid "Extension"
+msgstr "Erweiterungen"
 
 #, fuzzy
 msgid "Extension package files"
@@ -20714,6 +20746,10 @@ msgstr "Gruppenpfad"
 msgid "Group patterns"
 msgstr "Gruppenmuster"
 
+#, fuzzy, python-format
+msgid "Group use: %s"
+msgstr "Gruppen Base DN"
+
 msgid "Group<nobr> </nobr>CN"
 msgstr "Gruppen-CN"
 
@@ -22040,10 +22076,6 @@ msgstr ""
 msgid "Hidden"
 msgstr "Versteckt"
 
-#, python-format
-msgid "Hide %s"
-msgstr "Blende %s aus"
-
 msgid "Hide Checkmk version"
 msgstr "Die Checkmk-Version verbergen"
 
@@ -22055,22 +22087,6 @@ msgstr "Anmerkung im Bericht ausblenden"
 
 msgid "Hide bulks"
 msgstr "Sammelalarme ausblenden"
-
-msgid "Hide check parameters"
-msgstr "Check-Parameter verstecken"
-
-msgid "Hide checkboxes"
-msgstr "Checkboxen verstecken"
-
-msgid "Hide context"
-msgstr "Kontext ausblenden"
-
-#, fuzzy
-msgid "Hide details"
-msgstr "Details ausblenden"
-
-msgid "Hide discovered service labels"
-msgstr "Erkannte Service-Labels ausblenden"
 
 msgid "Hide folders without read permissions"
 msgstr "Ordner ohne Leseberechtigung ausblenden"
@@ -22090,21 +22106,11 @@ msgstr "Im Report verbergen"
 msgid "Hide infotext"
 msgstr "Infotext verstecken"
 
-msgid "Hide inline help"
-msgstr "Hilfetexte ausblenden"
-
 msgid "Hide internal folder names in WATO"
 msgstr "Interne Ordnernamen in WATO verstecken"
 
 msgid "Hide names of configuration variables"
 msgstr "Namen der Konfigurationsvariablen verstecken"
-
-#, fuzzy
-msgid "Hide page navigation"
-msgstr "Diese Seite mit Navigation"
-
-msgid "Hide plugin names"
-msgstr "Namen von Plugins ausblenden"
 
 msgid "Hide response from socket"
 msgstr "Antwort von Socket verstecken"
@@ -23163,11 +23169,18 @@ msgstr "INotify-Schwellwerte"
 msgid "INotify Operation"
 msgstr "INotify Operation"
 
+#, fuzzy
+msgid "IO Bandwith"
+msgstr "Bandbreite"
+
 msgid "IO Groups"
 msgstr "IO-Gruppen"
 
 msgid "IO Latency"
 msgstr "IO Latenzzeit"
+
+msgid "IOPS"
+msgstr ""
 
 #, fuzzy
 msgid "IP - region - instance ID"
@@ -25425,6 +25438,10 @@ msgstr ""
 "diese Zahl auf 0 setzen, werden die Zeilen aus bis zu einer Logdatei "
 "zeitweise im Speicher gehalten."
 
+#, fuzzy
+msgid "In progress"
+msgstr "In Bearbeitung"
+
 msgid "In relation to normal check interval"
 msgstr "Im Verhältnis zum normalen Checkintervall"
 
@@ -25455,6 +25472,10 @@ msgstr ""
 "falsch und der Sensor meldet Werte in Fahrenheit, die eigentlich in Celsius "
 "sind. Mit dieser Einstellungen können Sie eine Interpretation einer "
 "bestimmten Einheit erzwingen. "
+
+#, fuzzy
+msgid "In termination"
+msgstr "Unterbrechung"
 
 msgid ""
 "In the history file all events like notifications and alerts are saved. This "
@@ -25711,6 +25732,10 @@ msgstr "Unwirksame Regeln"
 
 msgid "Infections"
 msgstr "Infizierungen"
+
+#, fuzzy, python-format
+msgid "Infinite use of Checkmk up to version %s"
+msgstr "Minimal benötigte Checkmk-Version"
 
 msgid "InfluxDB Connection"
 msgstr "InfluxDB-Verbindung"
@@ -27709,6 +27734,18 @@ msgstr "Schwellwerte für IO-Stats in Bytes"
 
 msgid "Levels for IO Stats Requests"
 msgstr "Schwellwerte für E/A-Stats-Anfragen"
+
+#, fuzzy
+msgid "Levels for IO latency."
+msgstr "Schwellwerte für die Latenzzeit"
+
+#, fuzzy
+msgid "Levels for IO operations per second."
+msgstr "Lesende IO-Operationen pro Sekunde"
+
+#, fuzzy
+msgid "Levels for IO traffic per second."
+msgstr "Obere Schwellen für \"ESI warnings\" pro Sekunde"
 
 msgid "Levels for Inodes"
 msgstr "Schwellen für Inodes"
@@ -31072,6 +31109,10 @@ msgstr "Microsoft Hyper-V Server VM-Status"
 msgid "Microsoft SQL Server (Windows)"
 msgstr "Microsoft SQL Server (Windows)"
 
+#, fuzzy
+msgid "Migrating"
+msgstr "Einstellungen"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min.&nbsp;Version:"
 
@@ -31686,6 +31727,10 @@ msgstr "Monitoring-Host, dem diese Datenbank zugeordnet werden soll"
 msgid "Monitoring of applications such as processes, services or databases"
 msgstr "Überwachung von Anwendungen wie Prozesse, Dienste, Datenbanken"
 
+#, fuzzy
+msgid "Monitoring of classic virtual environment like ESX, Nutanix and HyperV"
+msgstr "Überwachung von Cloud-Umgebungen wie Microsoft Azure"
+
 msgid "Monitoring of cloud environments like Microsoft Azure"
 msgstr "Überwachung von Cloud-Umgebungen wie Microsoft Azure"
 
@@ -31863,6 +31908,10 @@ msgstr "Mount Optionen"
 
 msgid "Mount point"
 msgstr "Mount-Point"
+
+#, fuzzy
+msgid "Mounted"
+msgstr "Zähler"
 
 msgid "Mountpoint"
 msgstr "Mountpunkt"
@@ -32229,6 +32278,10 @@ msgstr "Name der Platte so wie vom OHM angezeigt: hdd0, hdd1, ..."
 
 msgid "Name of the MP LUN"
 msgstr "Name des MP LUN"
+
+#, fuzzy
+msgid "Name of the Nutanix disk"
+msgstr "Name des Tasks"
 
 msgid "Name of the OMD site"
 msgstr "Name der OMD Instanz"
@@ -34376,11 +34429,70 @@ msgstr "Numerischer Wert"
 msgid "Numerical ID of the VHM, e.g. 102"
 msgstr "Numerische ID der VHM, z.B. 102"
 
+#, fuzzy
+msgid "Nutanix Cluster CPU utilization"
+msgstr "Cluster-Nutzung"
+
+#, fuzzy
+msgid "Nutanix Cluster IO utilization"
+msgstr "Cluster-Nutzung"
+
+#, fuzzy
+msgid "Nutanix Cluster memory usage"
+msgstr "Belegung des Gastspeichers"
+
+#, fuzzy
+msgid "Nutanix Disk name"
+msgstr "Nutanix Prism"
+
+#, fuzzy
+msgid "Nutanix Host CPU utilization"
+msgstr "CPU-Auslastung"
+
+#, fuzzy
+msgid "Nutanix Host Disk State"
+msgstr "Bewertung der PDisk-Zustände"
+
+#, fuzzy
+msgid "Nutanix Host State"
+msgstr "Gastgeberland"
+
+#, fuzzy
+msgid "Nutanix Host memory usage"
+msgstr "Speicher-Nutzung des Hosts"
+
 msgid "Nutanix Prism"
 msgstr "Nutanix Prism"
 
 msgid "Nutanix Prism Alerts"
 msgstr "Nutanix Prism-Alarme"
+
+#, fuzzy
+msgid "Nutanix Prism MetroAvail Sync State"
+msgstr "Nutanix Prism-Alarme"
+
+#, fuzzy
+msgid "Nutanix Prism Support State"
+msgstr "Nutanix Prism-Alarme"
+
+#, fuzzy
+msgid "Nutanix Prism VM Tools"
+msgstr "Nutanix Prism-Alarme"
+
+#, fuzzy
+msgid "Nutanix VM CPU utilization"
+msgstr "CPU-Auslastung"
+
+#, fuzzy
+msgid "Nutanix VM State"
+msgstr "Citrix VM-Zustand"
+
+#, fuzzy
+msgid "Nutanix VM memory usage"
+msgstr "ESX VM-Speicherverbrauch"
+
+msgid "Nutanix single VM State"
+msgstr ""
 
 msgid "Nvidia"
 msgstr "Nvidia"
@@ -34608,6 +34720,10 @@ msgstr "Ungerade Zeilen"
 msgid "Of aggregations"
 msgstr "Von Aggregaten"
 
+#, fuzzy
+msgid "Off"
+msgstr "aus"
+
 msgid "Official Release version"
 msgstr "Offizielles Release"
 
@@ -34671,6 +34787,10 @@ msgstr "ICMP-Pakete ohne Payload erzeugen"
 
 msgid "Omit rows where all columns are identical"
 msgstr "Zeilen mit nur identischen Spalten auslassen"
+
+#, fuzzy
+msgid "On"
+msgstr "O"
 
 msgid "On Hold"
 msgstr "In Wartestellung"
@@ -36114,6 +36234,9 @@ msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 "Muster für zu monitorende Logdateien (<tt>*</tt> und <tt>?</tt> erlaubt)"
 
+msgid "Paused"
+msgstr "Angehalten"
+
 msgid "Paused containers"
 msgstr "Pausiert"
 
@@ -36122,6 +36245,10 @@ msgstr "Untere Schwellwerte für Container im Zustand paused"
 
 msgid "Paused containers upper levels"
 msgstr "Obere Schwellwerte für pausierte Container"
+
+#, fuzzy
+msgid "Pausing"
+msgstr "Angehalten"
 
 msgid "Pd"
 msgstr "Pd"
@@ -37576,6 +37703,14 @@ msgstr "Ausgeschaltet"
 msgid "Powered ON"
 msgstr "Eingeschaltet"
 
+#, fuzzy
+msgid "Powered Off"
+msgstr "Eingeschaltet"
+
+#, fuzzy
+msgid "Powering on"
+msgstr "Ping"
+
 msgid "Pre-/Postfix for TNSALIAS"
 msgstr "Pre-/Suffix für TNS-Alias"
 
@@ -38016,6 +38151,10 @@ msgstr "Eigenschaften von Host"
 
 msgid "Protect agent data from unauthorized access"
 msgstr "Schützen Sie Agenten-Daten vor unberechtigtem Zugriff"
+
+#, fuzzy
+msgid "Protection Domain"
+msgstr "Verbindungsoption"
 
 msgid "Protocol"
 msgstr "Protokoll"
@@ -39826,6 +39965,10 @@ msgstr "Aktive Checks neu ansetzen"
 msgid "Reschedule check"
 msgstr "Check neu ansetzen"
 
+#, fuzzy, python-format
+msgid "Reseller: %s"
+msgstr "Ergebnis:"
+
 msgid "Reserved DB instances"
 msgstr "Reservierte DB-Instanzen"
 
@@ -39874,6 +40017,10 @@ msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr ""
 "Die Regeln des Regelpakets %s wurden auf die des bereitgestellten MKPs "
 "zurückgesetzt"
+
+#, fuzzy
+msgid "Resetting"
+msgstr "Sortierung zurücksetzen"
 
 #, fuzzy
 msgid "Resident memory averaging"
@@ -40166,6 +40313,10 @@ msgstr "Ergebnisse"
 
 msgid "Resumables"
 msgstr "Resumables"
+
+#, fuzzy
+msgid "Resuming"
+msgstr "Resultierender Zustand"
 
 msgid "Retained messages"
 msgstr "Zurückbehaltene Nachrichten"
@@ -41111,12 +41262,6 @@ msgstr "Speichern"
 msgid "Save & go to %s"
 msgstr "Speichern & gehen zu %s"
 
-msgid "Save & go to connection tests"
-msgstr "Speichern & zu den Verbindungstests gehen"
-
-msgid "Save & go to folder"
-msgstr "Speichern & zum Ordner gehen"
-
 msgid "Save & go to host properties"
 msgstr "Speichern und zu den Host-Eigenschaften gehen"
 
@@ -41124,11 +41269,19 @@ msgid "Save & go to list"
 msgstr "Speichern & zur Liste gehen"
 
 #, fuzzy
+msgid "Save & run connection tests"
+msgstr "Speichern & zu den Verbindungstests gehen"
+
+#, fuzzy
 msgid "Save & run service discovery"
 msgstr "Serviceerkennung von Solaris"
 
 msgid "Save & test"
 msgstr "Speichern & testen"
+
+#, fuzzy
+msgid "Save & view folder"
+msgstr "Speichern & zum Ordner gehen"
 
 msgid "Save filters & go to designer"
 msgstr "Filter speichern & zum Designer gehen"
@@ -44493,6 +44646,10 @@ msgstr ""
 "beachten Sie dass prozentuelle Angaben nur funktionieren wenn auf Seiten der "
 "Datenbank ein Limit für die Größe der Dateien festgelegt ist."
 
+#, fuzzy
+msgid "Specify levels if percentage of CPU ready state"
+msgstr "Legen Sie Schwellwerte in Prozent des verfügbaren Speichers fest"
+
 msgid "Specify levels in absolute usage"
 msgstr "Legen Sie Schwellwerte in absoluten Werten fest"
 
@@ -44501,6 +44658,10 @@ msgstr "Legen Sie Schwellwerte in absoluten Werten fest"
 
 msgid "Specify levels in absolute values"
 msgstr "Absolute Schwellwerte"
+
+#, fuzzy
+msgid "Specify levels in percentage of CPU usage"
+msgstr "Legen Sie Schwellwerte in Prozent des verfügbaren Speichers fest"
 
 msgid "Specify levels in percentage of storage processor usage"
 msgstr "Schwellwerte in Prozent für die Nutzung des Storageprozessors"
@@ -46176,6 +46337,10 @@ msgstr "Subskriptionsstatus"
 msgid "Subscription settings"
 msgstr "Einstellungen für die Subskription"
 
+#, fuzzy, python-format
+msgid "Subscription stage: %s"
+msgstr "Einstellungen für die Subskription"
+
 msgid "Substitution"
 msgstr "Substitution"
 
@@ -46313,6 +46478,10 @@ msgstr "Aussetzen"
 
 msgid "Suspended"
 msgstr "Angehalten"
+
+#, fuzzy
+msgid "Suspending"
+msgstr "Aussetzen"
 
 msgid "Swap"
 msgstr "Swap"
@@ -46886,7 +47055,15 @@ msgstr "Zielzustand"
 msgid "Target group name"
 msgstr "Name der Zielgruppe"
 
+#, fuzzy
+msgid "Target remote tunnel state"
+msgstr "Ziel Status"
+
 msgid "Target states"
+msgstr "Ziel Status"
+
+#, fuzzy
+msgid "Target sync state"
 msgstr "Ziel Status"
 
 msgid "Targets"
@@ -50234,11 +50411,12 @@ msgstr ""
 "wählen Sie ein Passwort, das Zeichen aus mindestens %d verschiedenen Gruppen "
 "verwenden."
 
+#, fuzzy
 msgid ""
-"The password entered here is stored in plain text within the monitoring "
-"site. This usually needed because the monitoring process needs to have "
-"access to the unencrypted password because it needs to submit it to "
-"authenticate with remote systems. "
+"The password is stored in clear text within the monitoring site. This is "
+"necessary because the monitoring process needs to have access to the "
+"unencrypted password, as it needs to provide it for authentication with "
+"remote systems."
 msgstr ""
 "Das hier eingegebene Password wird im Klartext in der Monitoring-Instanz "
 "gespeichert. Dies ist üblicherweise nötig, da das Passwort während des "
@@ -54158,6 +54336,25 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"cluster systems. The utilization percentage is shown for the whole cluster."
+msgstr ""
+"Diese Regel konfiguriert Stufen für die CPU-Auslastung (nicht die Last) für "
+"VMware ESX-Hostsysteme. Der Prozentsatz der Auslastung wird in Bezug auf die "
+"Gesamtzahl der CPUs berechnet. "
+
+#, fuzzy
+msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"host systems. The utilization percentage is computed with respect to the "
+"total number of CPUs. "
+msgstr ""
+"Diese Regel konfiguriert Stufen für die CPU-Auslastung (nicht die Last) für "
+"VMware ESX-Hostsysteme. Der Prozentsatz der Auslastung wird in Bezug auf die "
+"Gesamtzahl der CPUs berechnet. "
+
+#, fuzzy
+msgid ""
 "This rule configures levels for the CPU utilization (not load) for VMware "
 "ESX host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
@@ -56318,6 +56515,10 @@ msgid "Tolerance period for 'deactivating' state"
 msgstr ""
 "Definiere eine Dauer für die sich aktivierende Services toleriert werden"
 
+#, fuzzy
+msgid "Tools install state"
+msgstr "Instanzstatus abbilden"
+
 msgid "Tooltip"
 msgstr "Hinweis"
 
@@ -57675,6 +57876,10 @@ msgid "Unlocked"
 msgstr "Freigegeben"
 
 msgid "Unmonitored"
+msgstr "Ungemonitort"
+
+#, fuzzy
+msgid "Unmounted"
 msgstr "Ungemonitort"
 
 msgid "Unoptimized connections"
@@ -59764,6 +59969,10 @@ msgstr "VCenter-Authentifizierung"
 msgid "VEEAM tape backup jobs"
 msgstr "VEEAM Bandsicherungsjobs"
 
+#, fuzzy
+msgid "VM"
+msgstr "VMs"
+
 msgid "VM distribution"
 msgstr "VM Verteilung"
 
@@ -59775,6 +59984,10 @@ msgstr "Zusammenfassung der VM-Schnappschüsse"
 
 msgid "VM, Cloud, Container"
 msgstr "VM, Cloud, Container"
+
+#, fuzzy
+msgid "VMTools activation state"
+msgstr "Aktivierungszustand"
 
 msgid "VMalloc Address Space"
 msgstr "VMalloc-Adressraum"
@@ -60447,6 +60660,20 @@ msgstr "Warte auf andere Switche online zu gehen"
 
 msgid "Waiting for replication to start"
 msgstr "Warte auf den Beginn der Replikation"
+
+#, fuzzy
+msgid "Wanted Host State"
+msgstr "Gastgeberland"
+
+msgid "Wanted Host State for defined Nutanix Host"
+msgstr ""
+
+#, fuzzy
+msgid "Wanted VM State"
+msgstr "Updatestatus"
+
+msgid "Wanted VM State for defined Nutanix VMs"
+msgstr ""
 
 msgid "Warn"
 msgstr "Warn"
@@ -65007,6 +65234,10 @@ msgstr "aktiviere formatierte Ausgabe für Regeln"
 msgid "enable sounds"
 msgstr "aktiviere Tonausgabe"
 
+#, fuzzy
+msgid "enabled"
+msgstr "Einschalten"
+
 msgid "entries"
 msgstr "Einträge"
 
@@ -65386,6 +65617,10 @@ msgstr "initialisiere"
 msgid "inodes"
 msgstr "Inodes"
 
+#, fuzzy
+msgid "installed"
+msgstr "installierter RAM"
+
 msgid "instances"
 msgstr "Instanzen"
 
@@ -65400,6 +65635,9 @@ msgstr "Intrusion"
 
 msgid "invalid:"
 msgstr "ungültig:"
+
+msgid "iops"
+msgstr ""
 
 msgid "is"
 msgstr "ist"
@@ -65704,6 +65942,10 @@ msgstr "nicht ausgeführt"
 
 msgid "not available"
 msgstr "nicht verfügbar"
+
+#, fuzzy
+msgid "not installed"
+msgstr "installierter RAM"
 
 msgid "not present"
 msgstr "nicht vorhanden"
@@ -66479,6 +66721,41 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Deselect all checkboxes"
+#~ msgstr "Alle Checkboxen abwählen"
+
+#, python-format
+#~ msgid "Hide %s"
+#~ msgstr "Blende %s aus"
+
+#~ msgid "Hide check parameters"
+#~ msgstr "Check-Parameter verstecken"
+
+#~ msgid "Hide checkboxes"
+#~ msgstr "Checkboxen verstecken"
+
+#~ msgid "Hide context"
+#~ msgstr "Kontext ausblenden"
+
+#, fuzzy
+#~| msgid "Hide details"
+#~ msgid "Hide details"
+#~ msgstr "Details ausblenden"
+
+#~ msgid "Hide discovered service labels"
+#~ msgstr "Erkannte Service-Labels ausblenden"
+
+#~ msgid "Hide inline help"
+#~ msgstr "Hilfetexte ausblenden"
+
+#, fuzzy
+#~| msgid "This page with navigation"
+#~ msgid "Hide page navigation"
+#~ msgstr "Diese Seite mit Navigation"
+
+#~ msgid "Hide plugin names"
+#~ msgstr "Namen von Plugins ausblenden"
 
 #, fuzzy
 #~| msgid "Application"
@@ -69039,9 +69316,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Edit Dashboards"
 #~ msgstr "Übersichten bearbeiten"
-
-#~ msgid "Host State"
-#~ msgstr "Gastgeberland"
 
 #~ msgid "Service State"
 #~ msgstr "Service-Status"
@@ -71859,9 +72133,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Parameter"
 #~ msgstr "Parameter"
 
-#~ msgid "Paused"
-#~ msgstr "Angehalten"
-
 #~ msgid "Peer IP Address"
 #~ msgstr "IP-Adresse des Peers"
 
@@ -72979,9 +73250,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Problems (unhandled)"
 #~ msgstr "Probleme (offen)"
-
-#~ msgid "Automatic refresh"
-#~ msgstr "Automatische Aktualisierung"
 
 #~ msgid "Full scan"
 #~ msgstr "Vollständiger Scan"
@@ -78252,9 +78520,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "EC"
 #~ msgstr "EC"
 
-#~ msgid "Extensions"
-#~ msgstr "Erweiterungen"
-
 #~ msgid "Give verbose output"
 #~ msgstr "Ausführliche Ausgabe zurückgeben"
 
@@ -79021,9 +79286,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "<h1>Cannot activate changes</h1>%s"
 #~ msgstr "<h1>Kann Änderungen nicht anwenden</h1>%s"
-
-#~ msgid "Ping only"
-#~ msgstr "Ping"
 
 #~ msgid "Best practices"
 #~ msgstr "Bester Status"

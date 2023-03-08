@@ -5697,6 +5697,10 @@ msgstr ""
 msgid "Automatic page reload in %d seconds."
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Automatic renewal: %s"
+msgstr "doua nivele"
+
 msgid "Automatic takeover"
 msgstr ""
 
@@ -10150,6 +10154,13 @@ msgstr ""
 msgid "Configure the target mode for the system."
 msgstr ""
 
+msgid "Configure the target state of the protection domain sync state."
+msgstr ""
+
+#, fuzzy
+msgid "Configure the target state of the remote support tunnel."
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 msgid "Configure the user name here."
 msgstr ""
 
@@ -10885,6 +10896,10 @@ msgstr ""
 msgid "Could not find an entry matching %r in choices"
 msgstr ""
 
+msgid ""
+"Could not find any service for this host. You might need to trigger a rescan."
+msgstr ""
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -11066,7 +11081,15 @@ msgid "Crash reports"
 msgstr "rapoarte"
 
 #, fuzzy
+msgid "Crash source"
+msgstr "Tagul Aplicatiei in syslog"
+
+#, fuzzy
 msgid "Crash time"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Crash type"
 msgstr "Adresă"
 
 #, fuzzy
@@ -13873,10 +13896,6 @@ msgstr ""
 msgid "Descriptions"
 msgstr "foloseste descrierea"
 
-#, fuzzy
-msgid "Deselect all checkboxes"
-msgstr "Verificări active"
-
 msgid "Design This Graph"
 msgstr ""
 
@@ -14498,6 +14517,10 @@ msgstr ""
 #, fuzzy
 msgid "Disk latency"
 msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Disk mount state"
+msgstr "% utilizare"
 
 #, fuzzy
 msgid "Disk percentage usage"
@@ -15615,6 +15638,9 @@ msgid "Downtime will not start anymore after"
 msgstr ""
 
 msgid "Downtimes"
+msgstr ""
+
+msgid "Draft"
 msgstr ""
 
 msgid "Driver type to use instead of doing an auto selection"
@@ -17851,6 +17877,10 @@ msgstr ""
 
 msgid "Extended perfdata"
 msgstr ""
+
+#, fuzzy
+msgid "Extension"
+msgstr "Adaugă Conținut"
 
 #, fuzzy
 msgid "Extension package files"
@@ -20138,6 +20168,10 @@ msgstr ""
 msgid "Group patterns"
 msgstr "Adaugă model/tipar"
 
+#, fuzzy, python-format
+msgid "Group use: %s"
+msgstr "Numele Elementului"
+
 msgid "Group<nobr> </nobr>CN"
 msgstr ""
 
@@ -21165,10 +21199,6 @@ msgstr ""
 msgid "Hidden"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Hide %s"
-msgstr "Arata in masa"
-
 msgid "Hide Checkmk version"
 msgstr ""
 
@@ -21182,26 +21212,6 @@ msgstr ""
 #, fuzzy
 msgid "Hide bulks"
 msgstr "Arata in masa"
-
-#, fuzzy
-msgid "Hide check parameters"
-msgstr "(fără parametri)"
-
-#, fuzzy
-msgid "Hide checkboxes"
-msgstr "Verificări active"
-
-#, fuzzy
-msgid "Hide context"
-msgstr "cu context"
-
-#, fuzzy
-msgid "Hide details"
-msgstr "Stare adiministrativă"
-
-#, fuzzy
-msgid "Hide discovered service labels"
-msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Hide folders without read permissions"
@@ -21223,23 +21233,11 @@ msgstr "(nici un raport)"
 msgid "Hide infotext"
 msgstr ""
 
-#, fuzzy
-msgid "Hide inline help"
-msgstr "Cluster nou"
-
 msgid "Hide internal folder names in WATO"
 msgstr ""
 
 msgid "Hide names of configuration variables"
 msgstr ""
-
-#, fuzzy
-msgid "Hide page navigation"
-msgstr "Agregare noua"
-
-#, fuzzy
-msgid "Hide plugin names"
-msgstr "Numele Aplicatiei"
 
 msgid "Hide response from socket"
 msgstr ""
@@ -22323,10 +22321,17 @@ msgstr "Notifica utilizatorii"
 msgid "INotify Operation"
 msgstr "Notificari"
 
+#, fuzzy
+msgid "IO Bandwith"
+msgstr "latime"
+
 msgid "IO Groups"
 msgstr ""
 
 msgid "IO Latency"
+msgstr ""
+
+msgid "IOPS"
 msgstr ""
 
 #, fuzzy
@@ -23908,6 +23913,10 @@ msgid ""
 "cases where messages need to be cached anyway."
 msgstr ""
 
+#, fuzzy
+msgid "In progress"
+msgstr "Adresă"
+
 msgid "In relation to normal check interval"
 msgstr ""
 
@@ -23928,6 +23937,10 @@ msgid ""
 "Celsius. With this setting you can force the reading of the sensor to be "
 "interpreted as customized. "
 msgstr ""
+
+#, fuzzy
+msgid "In termination"
+msgstr "sesiuni"
 
 msgid ""
 "In the history file all events like notifications and alerts are saved. This "
@@ -24164,6 +24177,10 @@ msgstr "Reguli neaplicate"
 #, fuzzy
 msgid "Infections"
 msgstr "Conexiuni Active"
+
+#, fuzzy, python-format
+msgid "Infinite use of Checkmk up to version %s"
+msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "InfluxDB Connection"
@@ -26194,6 +26211,18 @@ msgstr "Nivelurile maxime pentru voltaj"
 #, fuzzy
 msgid "Levels for IO Stats Requests"
 msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels for IO latency."
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels for IO operations per second."
+msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Levels for IO traffic per second."
+msgstr "Nivel-urile exacte în bits sau bytes per secundă"
 
 msgid "Levels for Inodes"
 msgstr ""
@@ -29745,6 +29774,10 @@ msgstr ""
 msgid "Microsoft SQL Server (Windows)"
 msgstr ""
 
+#, fuzzy
+msgid "Migrating"
+msgstr "Activare Configurare"
+
 msgid "Min.&nbsp;Version:"
 msgstr ""
 
@@ -30406,6 +30439,9 @@ msgstr ""
 msgid "Monitoring of applications such as processes, services or databases"
 msgstr ""
 
+msgid "Monitoring of classic virtual environment like ESX, Nutanix and HyperV"
+msgstr ""
+
 msgid "Monitoring of cloud environments like Microsoft Azure"
 msgstr ""
 
@@ -30581,6 +30617,10 @@ msgstr "Opțiuni adiționale"
 
 msgid "Mount point"
 msgstr ""
+
+#, fuzzy
+msgid "Mounted"
+msgstr "Adaugă Contoar"
 
 msgid "Mountpoint"
 msgstr ""
@@ -30979,6 +31019,10 @@ msgstr ""
 
 msgid "Name of the MP LUN"
 msgstr ""
+
+#, fuzzy
+msgid "Name of the Nutanix disk"
+msgstr "Numele elementului pentru eveniment"
 
 msgid "Name of the OMD site"
 msgstr ""
@@ -33167,10 +33211,66 @@ msgstr ""
 msgid "Numerical ID of the VHM, e.g. 102"
 msgstr ""
 
+#, fuzzy
+msgid "Nutanix Cluster CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Nutanix Cluster IO utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Nutanix Cluster memory usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Nutanix Disk name"
+msgstr "Nume tablespace"
+
+#, fuzzy
+msgid "Nutanix Host CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Nutanix Host Disk State"
+msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Nutanix Host State"
+msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Nutanix Host memory usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Nutanix Prism"
 msgstr ""
 
 msgid "Nutanix Prism Alerts"
+msgstr ""
+
+msgid "Nutanix Prism MetroAvail Sync State"
+msgstr ""
+
+msgid "Nutanix Prism Support State"
+msgstr ""
+
+msgid "Nutanix Prism VM Tools"
+msgstr ""
+
+#, fuzzy
+msgid "Nutanix VM CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Nutanix VM State"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Nutanix VM memory usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
+msgid "Nutanix single VM State"
 msgstr ""
 
 msgid "Nvidia"
@@ -33402,6 +33502,9 @@ msgstr "randuri"
 msgid "Of aggregations"
 msgstr "Agregare noua"
 
+msgid "Off"
+msgstr ""
+
 msgid "Official Release version"
 msgstr ""
 
@@ -33466,6 +33569,9 @@ msgid "Omit payload in ICMP packets"
 msgstr ""
 
 msgid "Omit rows where all columns are identical"
+msgstr ""
+
+msgid "On"
 msgstr ""
 
 msgid "On Hold"
@@ -34880,6 +34986,10 @@ msgstr ""
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 
+#, fuzzy
+msgid "Paused"
+msgstr "(nefolosit)"
+
 msgid "Paused containers"
 msgstr ""
 
@@ -34888,6 +34998,10 @@ msgstr ""
 
 msgid "Paused containers upper levels"
 msgstr ""
+
+#, fuzzy
+msgid "Pausing"
+msgstr "(nefolosit)"
 
 msgid "Pd"
 msgstr ""
@@ -36210,6 +36324,12 @@ msgstr ""
 msgid "Powered ON"
 msgstr ""
 
+msgid "Powered Off"
+msgstr ""
+
+msgid "Powering on"
+msgstr ""
+
 msgid "Pre-/Postfix for TNSALIAS"
 msgstr ""
 
@@ -36668,6 +36788,10 @@ msgstr ""
 
 msgid "Protect agent data from unauthorized access"
 msgstr ""
+
+#, fuzzy
+msgid "Protection Domain"
+msgstr "Conexiune Noua"
 
 msgid "Protocol"
 msgstr ""
@@ -38524,6 +38648,10 @@ msgstr ""
 msgid "Reschedule check"
 msgstr "<b>reprogramează o verificare imediată"
 
+#, fuzzy, python-format
+msgid "Reseller: %s"
+msgstr "(altul: %s)"
+
 #, fuzzy
 msgid "Reserved DB instances"
 msgstr "spatiu utilizat"
@@ -38573,6 +38701,10 @@ msgstr ""
 #, python-format
 msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
 msgstr ""
+
+#, fuzzy
+msgid "Resetting"
+msgstr "Setari"
 
 #, fuzzy
 msgid "Resident memory averaging"
@@ -38873,6 +39005,9 @@ msgid "Results"
 msgstr ""
 
 msgid "Resumables"
+msgstr ""
+
+msgid "Resuming"
 msgstr ""
 
 #, fuzzy
@@ -39839,14 +39974,6 @@ msgid "Save & go to %s"
 msgstr ""
 
 #, fuzzy
-msgid "Save & go to connection tests"
-msgstr "Salveaza &amp; mergi la Servicii"
-
-#, fuzzy
-msgid "Save & go to folder"
-msgstr "Salveaza si mergi la"
-
-#, fuzzy
 msgid "Save & go to host properties"
 msgstr "Salveaza &amp; mergi la Servicii"
 
@@ -39855,12 +39982,20 @@ msgid "Save & go to list"
 msgstr "Salveaza si mergi la"
 
 #, fuzzy
+msgid "Save & run connection tests"
+msgstr "Salveaza &amp; mergi la Servicii"
+
+#, fuzzy
 msgid "Save & run service discovery"
 msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "Save & test"
 msgstr "Salveaza si Testeaza"
+
+#, fuzzy
+msgid "Save & view folder"
+msgstr "Salveaza si mergi la"
 
 #, fuzzy
 msgid "Save filters & go to designer"
@@ -43073,6 +43208,10 @@ msgid ""
 "database side."
 msgstr ""
 
+#, fuzzy
+msgid "Specify levels if percentage of CPU ready state"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 msgid "Specify levels in absolute usage"
 msgstr ""
 
@@ -43081,6 +43220,10 @@ msgstr ""
 
 msgid "Specify levels in absolute values"
 msgstr ""
+
+#, fuzzy
+msgid "Specify levels in percentage of CPU usage"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Specify levels in percentage of storage processor usage"
 msgstr ""
@@ -44673,6 +44816,10 @@ msgstr "foloseste descrierea"
 msgid "Subscription settings"
 msgstr "foloseste descrierea"
 
+#, fuzzy, python-format
+msgid "Subscription stage: %s"
+msgstr "foloseste descrierea"
+
 msgid "Substitution"
 msgstr ""
 
@@ -44816,6 +44963,10 @@ msgstr ""
 
 msgid "Suspended"
 msgstr ""
+
+#, fuzzy
+msgid "Suspending"
+msgstr "cereri"
 
 msgid "Swap"
 msgstr ""
@@ -45432,8 +45583,16 @@ msgstr ""
 msgid "Target group name"
 msgstr "Numele Elementului"
 
+#, fuzzy
+msgid "Target remote tunnel state"
+msgstr "Numele Elementului"
+
 msgid "Target states"
 msgstr ""
+
+#, fuzzy
+msgid "Target sync state"
+msgstr "Adaugă instanță NGINX"
 
 msgid "Targets"
 msgstr ""
@@ -48007,10 +48166,10 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The password entered here is stored in plain text within the monitoring "
-"site. This usually needed because the monitoring process needs to have "
-"access to the unencrypted password because it needs to submit it to "
-"authenticate with remote systems. "
+"The password is stored in clear text within the monitoring site. This is "
+"necessary because the monitoring process needs to have access to the "
+"unencrypted password, as it needs to provide it for authentication with "
+"remote systems."
 msgstr ""
 
 #, fuzzy
@@ -50890,6 +51049,17 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"cluster systems. The utilization percentage is shown for the whole cluster."
+msgstr ""
+
+msgid ""
+"This rule configures levels for the CPU utilization (not load) for Nutanix "
+"host systems. The utilization percentage is computed with respect to the "
+"total number of CPUs. "
+msgstr ""
+
+msgid ""
 "This rule configures levels for the CPU utilization (not load) for VMware "
 "ESX host systems. The utilization percentage is computed with respect to the "
 "total number of CPUs. "
@@ -52530,6 +52700,10 @@ msgstr ""
 msgid "Tolerance period for 'deactivating' state"
 msgstr ""
 
+#, fuzzy
+msgid "Tools install state"
+msgstr "ASM - Starea generală al instanței"
+
 msgid "Tooltip"
 msgstr ""
 
@@ -53911,6 +54085,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Unmonitored"
+msgstr "nemonitorizat"
+
+#, fuzzy
+msgid "Unmounted"
 msgstr "nemonitorizat"
 
 #, fuzzy
@@ -55966,6 +56144,9 @@ msgstr "trimite notificare"
 msgid "VEEAM tape backup jobs"
 msgstr ""
 
+msgid "VM"
+msgstr ""
+
 #, fuzzy
 msgid "VM distribution"
 msgstr "foloseste descrierea"
@@ -55980,6 +56161,10 @@ msgstr "urca snapshot-uri nesigure"
 
 msgid "VM, Cloud, Container"
 msgstr ""
+
+#, fuzzy
+msgid "VMTools activation state"
+msgstr " Activează această opțiune"
 
 msgid "VMalloc Address Space"
 msgstr ""
@@ -56665,6 +56850,20 @@ msgid "Waiting for other switches to come online"
 msgstr ""
 
 msgid "Waiting for replication to start"
+msgstr ""
+
+#, fuzzy
+msgid "Wanted Host State"
+msgstr "Numele Elementului"
+
+msgid "Wanted Host State for defined Nutanix Host"
+msgstr ""
+
+#, fuzzy
+msgid "Wanted VM State"
+msgstr " pe siteul de monitorizare: "
+
+msgid "Wanted VM State for defined Nutanix VMs"
 msgstr ""
 
 msgid "Warn"
@@ -60253,6 +60452,10 @@ msgstr ""
 msgid "enable sounds"
 msgstr ""
 
+#, fuzzy
+msgid "enabled"
+msgstr "Tabel"
+
 msgid "entries"
 msgstr ""
 
@@ -60670,6 +60873,10 @@ msgid "inodes"
 msgstr ""
 
 #, fuzzy
+msgid "installed"
+msgstr "Acces la Agenți"
+
+#, fuzzy
 msgid "instances"
 msgstr "Adaugă instanță NGINX"
 
@@ -60684,6 +60891,9 @@ msgid "intrusion"
 msgstr "sesiuni"
 
 msgid "invalid:"
+msgstr ""
+
+msgid "iops"
 msgstr ""
 
 msgid "is"
@@ -61003,6 +61213,10 @@ msgstr ""
 
 msgid "not available"
 msgstr ""
+
+#, fuzzy
+msgid "not installed"
+msgstr "Timpul maxim permis pentru uptime"
 
 msgid "not present"
 msgstr ""
@@ -61803,6 +62017,46 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Deselect all checkboxes"
+#~ msgstr "Verificări active"
+
+#, fuzzy, python-format
+#~ msgid "Hide %s"
+#~ msgstr "Arata in masa"
+
+#, fuzzy
+#~ msgid "Hide check parameters"
+#~ msgstr "(fără parametri)"
+
+#, fuzzy
+#~ msgid "Hide checkboxes"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Hide context"
+#~ msgstr "cu context"
+
+#, fuzzy
+#~ msgid "Hide details"
+#~ msgstr "Stare adiministrativă"
+
+#, fuzzy
+#~ msgid "Hide discovered service labels"
+#~ msgstr "spatiu utilizat"
+
+#, fuzzy
+#~ msgid "Hide inline help"
+#~ msgstr "Cluster nou"
+
+#, fuzzy
+#~ msgid "Hide page navigation"
+#~ msgstr "Agregare noua"
+
+#, fuzzy
+#~ msgid "Hide plugin names"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
 #~ msgid "Application ID"
 #~ msgstr "Numele Aplicatiei"
 
@@ -62597,10 +62851,6 @@ msgstr ""
 #~ msgstr "Inventariere in masa"
 
 #, fuzzy
-#~ msgid "Host State"
-#~ msgstr "Numele Elementului"
-
-#, fuzzy
 #~ msgid "Service State"
 #~ msgstr "Statusul Serverului"
 
@@ -63265,10 +63515,6 @@ msgstr ""
 #~ msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
-#~ msgid "Extents"
-#~ msgstr "Adaugă Conținut"
-
-#, fuzzy
 #~ msgid "Failed notifications"
 #~ msgstr "trimite notificare"
 
@@ -63387,10 +63633,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Indices"
 #~ msgstr "servicii"
-
-#, fuzzy
-#~ msgid "Ingress"
-#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "Init duration"
@@ -63644,10 +63886,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Parameter"
 #~ msgstr "(fără parametri)"
-
-#, fuzzy
-#~ msgid "Paused"
-#~ msgstr "(nefolosit)"
 
 #, fuzzy
 #~ msgid "Peer IP Address"
@@ -64611,10 +64849,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Configuration Replication"
 #~ msgstr "Portul TCP pentru conexiune"
-
-#, fuzzy
-#~ msgid "Configure details of the report"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #~ msgid ""
 #~ "Configure the default language to be used by the user in the user "

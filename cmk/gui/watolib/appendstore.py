@@ -6,7 +6,8 @@
 import abc
 import ast
 import os
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -80,7 +81,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
     def read(self) -> Sequence[_VT]:
         return self.__read(lock=False)
 
-    def write(self, entries: Iterable[_VT]) -> None:
+    def __write(self, entries: Iterable[_VT]) -> None:
         # First truncate the file
         with self._path.open("wb"):
             pass
@@ -100,9 +101,10 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
             except Exception as e:
                 raise MKGeneralException(_('Cannot write file "%s": %s') % (path, e))
 
-    def transform(self, transformer: Callable[[Sequence[_VT]], Sequence[_VT]]) -> None:
-        entries = self.__read(lock=True)
+    @contextmanager
+    def mutable_view(self) -> Iterator[list[_VT]]:
+        entries = list(self.__read(lock=True))
         try:
-            entries = transformer(entries)
+            yield entries
         finally:
-            self.write(entries)
+            self.__write(entries)

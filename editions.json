@@ -55,5 +55,11 @@
             "debian-10",
             "sles-12sp3"
         ]
+    },
+    "managed": {
+        "NAME": "Managed Edition",
+        "DISTROS": [
+            "ubuntu-22.04"
+        ]
     }
 }

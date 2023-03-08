@@ -535,6 +535,7 @@ class TopicMenuItem(NamedTuple):
     is_show_more: bool = False
     icon: Icon | None = None
     button_title: str | None = None
+    additional_matches_setup_search: Sequence[str] = ()
 
 
 class TopicMenuTopic(NamedTuple):

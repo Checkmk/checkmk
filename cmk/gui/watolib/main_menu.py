@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
 import cmk.utils.plugin_registry
@@ -164,6 +164,11 @@ class ABCMainModule(MenuItem, abc.ABC):
         """This class method allows for adding additional items to the breadcrumb navigation"""
         return
         yield  # pylint: disable=unreachable
+
+    @classmethod
+    def additional_matches_setup_search(cls) -> Sequence[str]:
+        """This class method allows adding additional match texts for the search"""
+        return []
 
 
 class MainModuleRegistry(cmk.utils.plugin_registry.Registry[type[ABCMainModule]]):

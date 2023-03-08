@@ -10,7 +10,9 @@ from cmk.utils import password_store, store
 from cmk.utils.password_store import Password
 
 import cmk.gui.userdb as userdb
+from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
@@ -89,7 +91,8 @@ def split_password_specs(
     return meta_data, passwords
 
 
-def passwordstore_choices() -> list[tuple[str, str]]:
+@request_memoize()
+def passwordstore_choices() -> Choices:
     pw_store = PasswordStore()
     return [
         (ident, pw["title"])

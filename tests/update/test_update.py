@@ -52,6 +52,6 @@ def test_update(test_site: Site) -> None:
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
-    logger.info("Successfully tested updating %s>%s!", base_version, target_version)
+    logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
     # TODO: Compare data

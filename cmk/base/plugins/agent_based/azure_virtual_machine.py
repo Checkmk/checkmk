@@ -30,12 +30,10 @@ from .utils.azure import (
     Section,
 )
 
-_MAP_PROVISIONING = {
+_MAP_STATES = {
+    # Provisioning states
     "succeeded": 0,
     "failed": 2,
-}
-
-_MAP_POWER = {
     # Power states listed here:
     # https://docs.microsoft.com/en-us/azure/virtual-machines/windows/tutorial-manage-vm
     "starting": 0,
@@ -46,6 +44,9 @@ _MAP_POWER = {
     "deallocated": 0,  # VMs in the Deallocated state do not incur compute charges.
     "unknown": 3,
 }
+
+_PROVISIONING_STATES = {"succeeded", "failed"}
+_POWER_STATES = set(_MAP_STATES) - _PROVISIONING_STATES
 
 
 class VMStatus(NamedTuple):
@@ -92,15 +93,15 @@ def get_statuses(resource: Resource) -> Iterator[tuple[str, VMStatus]]:
 
 
 def check_azure_virtual_machine(
-    item: str, params: Mapping[str, Mapping[str, int]], section: Section
+    item: str, params: Mapping[str, int], section: Section
 ) -> CheckResult:
     if (resource := section.get(item)) is None:
         raise IgnoreResultsError("Data not present at the moment")
 
     statuses = dict(get_statuses(resource))
 
-    map_provisioning_states = params.get("map_provisioning_states", {})
-    map_power_states = params.get("map_power_states", {})
+    map_provisioning_states = {k: v for k, v in params.items() if k in _PROVISIONING_STATES}
+    map_power_states = {k: v for k, v in params.items() if k in _POWER_STATES}
 
     for status_name, mapping, summary_template in (
         ("ProvisioningState", map_provisioning_states, "Provisioning"),
@@ -129,10 +130,7 @@ register.check_plugin(
     discovery_function=discover_azure_virtual_machine,
     check_function=check_azure_virtual_machine,
     check_ruleset_name="azure_vms",
-    check_default_parameters={
-        "map_provisioning_states": _MAP_PROVISIONING,
-        "map_power_states": _MAP_POWER,
-    },
+    check_default_parameters=_MAP_STATES,
 )
 
 
@@ -190,7 +188,7 @@ def check_azure_virtual_machine_summary(
         for s in all_statuses
     ]
     provisioning_levels = params.get("levels_provisioning", {})
-    provisioning_states = set(provisionings + list(_MAP_PROVISIONING))
+    provisioning_states = set(provisionings + list(_PROVISIONING_STATES))
 
     yield from get_status_result(
         "Provisioning", provisionings, provisioning_states, provisioning_levels
@@ -198,7 +196,7 @@ def check_azure_virtual_machine_summary(
 
     powers = [s["PowerState"].value if "PowerState" in s else "unknown" for s in all_statuses]
     power_levels = params.get("levels_power", {})
-    power_states = set(powers + list(_MAP_POWER))
+    power_states = set(powers + list(_POWER_STATES))
 
     yield from get_status_result("Power states", powers, power_states, power_levels)
 

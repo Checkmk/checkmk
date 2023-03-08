@@ -16,8 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.azure_virtual_machine import (
-    _MAP_POWER,
-    _MAP_PROVISIONING,
+    _MAP_STATES,
     check_azure_virtual_machine,
     check_azure_virtual_machine_summary,
     check_azure_vm_burst_cpu_credits,
@@ -33,11 +32,6 @@ from cmk.base.plugins.agent_based.azure_virtual_machine import (
 )
 from cmk.base.plugins.agent_based.utils import interfaces
 from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource, Section
-
-DEFAULT_PARAMS = {
-    "map_provisioning_states": _MAP_PROVISIONING,
-    "map_power_states": _MAP_POWER,
-}
 
 SECTION = {
     "VM-test-1": Resource(
@@ -183,7 +177,7 @@ def test_discover_azure_virtual_machine(
     [
         pytest.param(
             "VM-test-1",
-            DEFAULT_PARAMS,
+            _MAP_STATES,
             SECTION,
             [
                 Result(state=State.OK, summary="Provisioning succeeded"),
@@ -194,7 +188,7 @@ def test_discover_azure_virtual_machine(
         ),
         pytest.param(
             "VM-test-1",
-            DEFAULT_PARAMS,
+            _MAP_STATES,
             {
                 "VM-test-1": Resource(
                     id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test-group/providers/Microsoft.Compute/virtualMachines/VM-test-1",
@@ -219,7 +213,7 @@ def test_discover_azure_virtual_machine(
         ),
         pytest.param(
             "VM-test-1",
-            DEFAULT_PARAMS,
+            _MAP_STATES,
             {
                 "VM-test-1": Resource(
                     id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test-group/providers/Microsoft.Compute/virtualMachines/VM-test-1",
@@ -260,7 +254,7 @@ def test_discover_azure_virtual_machine(
         ),
         pytest.param(
             "VM-test-1",
-            DEFAULT_PARAMS,
+            _MAP_STATES,
             {
                 "VM-test-1": Resource(
                     id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test-group/providers/Microsoft.Compute/virtualMachines/VM-test-1",
@@ -301,7 +295,7 @@ def test_discover_azure_virtual_machine(
 )
 def test_check_azure_virtual_machines(
     item: str,
-    params: Mapping[str, Mapping[str, int]],
+    params: Mapping[str, int],
     section: Section,
     expected_result: CheckResult,
 ) -> None:

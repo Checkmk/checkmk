@@ -8,3 +8,4 @@
 Write-Host "shorten dir: " $new
 Set-Location $new
 &$args[2]
+[Environment]::Exit($LASTEXITCODE)

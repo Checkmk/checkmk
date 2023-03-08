@@ -35,6 +35,10 @@ import cmk.special_agents.utils as utils
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+__version__ = "2.3.0b1"
+
+USER_AGENT = f"checkmk-special-vsphere-{__version__}"
+
 AGENT_TMP_PATH = cmk.utils.paths.tmp_dir / "agents/agent_vsphere"
 
 REQUESTED_COUNTERS_KEYS = (
@@ -1078,7 +1082,7 @@ class ESXSession(requests.Session):
             {
                 "Content-Type": 'text/xml; charset="utf-8"',
                 "SOAPAction": "urn:vim25/5.0",
-                "User-Agent": "Checkmk special agent vsphere",
+                "User-Agent": USER_AGENT,
             }
         )
 

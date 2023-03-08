@@ -11,7 +11,8 @@ from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
 from cmk.checkers import HostKey, SourceType
 
-from cmk.base.agent_based.data_provider import ParsedSectionsResolver, ParsingResult, ResolvedResult
+from cmk.base.agent_based.data_provider import _ParsingResult as ParsingResult
+from cmk.base.agent_based.data_provider import ParsedSectionsResolver, ResolvedResult
 from cmk.base.agent_based.discovery._host_labels import _all_parsing_results as all_parsing_results
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.type_defs import SectionPlugin
@@ -65,10 +66,9 @@ class TestParsedSectionsResolver:
             parser,  # type: ignore[arg-type]
             ParsedSectionName("parsed_section_name"),
         )
-        assert resolved
-        parsed, section = resolved
-        assert parsed and parsed.data == 1
-        assert section and section.name == SectionName("section_one")
+        assert resolved is not None
+        assert resolved.parsed_data == 1
+        assert resolved.section.name == SectionName("section_one")
         assert (
             resolver.resolve(
                 parser,  # type: ignore[arg-type]
@@ -105,10 +105,9 @@ class TestParsedSectionsResolver:
             parser,  # type: ignore[arg-type]
             ParsedSectionName("parsed_section"),
         )
-        assert resolved
-        parsed, section = resolved
-        assert parsed and parsed.data == 2
-        assert section and section.name == SectionName("section_two")
+        assert resolved is not None
+        assert resolved.parsed_data == 2
+        assert resolved.section.name == SectionName("section_two")
 
     def test_superseder_has_no_data(self) -> None:
         resolver, parser = self.make_provider(
@@ -122,10 +121,9 @@ class TestParsedSectionsResolver:
             parser,  # type: ignore[arg-type]
             ParsedSectionName("parsed_section_one"),
         )
-        assert resolved
-        parsed, section = resolved
-        assert parsed and parsed.data == 1
-        assert section and section.name == SectionName("section_one")
+        assert resolved is not None
+        assert resolved.parsed_data == 1
+        assert resolved.section.name == SectionName("section_one")
 
     def test_iteration(self) -> None:
         host_key = HostKey(HostName("host"), SourceType.HOST)
@@ -138,12 +136,6 @@ class TestParsedSectionsResolver:
         providers = {host_key: self.make_provider(sections)}  # type: ignore[dict-item]
 
         assert all_parsing_results(host_key, providers) == [  # type: ignore[arg-type]
-            ResolvedResult(
-                parsed=ParsingResult(data=1, cache_info=None),
-                section=sections[0],
-            ),
-            ResolvedResult(
-                parsed=ParsingResult(data=3, cache_info=None),
-                section=sections[2],
-            ),
+            ResolvedResult(section=sections[0], parsed_data=1, cache_info=None),
+            ResolvedResult(section=sections[2], parsed_data=3, cache_info=None),
         ]

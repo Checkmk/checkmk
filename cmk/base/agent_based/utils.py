@@ -40,7 +40,7 @@ def get_section_kwargs(
         key: (
             None
             if (resolved := resolver.resolve(parser, parsed_section_name)) is None
-            else resolved.parsed.data
+            else resolved.parsed_data
         )
         for key, parsed_section_name in zip(keys, parsed_section_names)
     }

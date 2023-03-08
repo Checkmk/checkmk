@@ -173,7 +173,7 @@ def _discover_host_labels_for_source_type(
             "Trying host label discovery with: %s\n"
             % ", ".join(str(r.section.name) for r in parsed_results)
         )
-        for (section_data, _cache_info), section_plugin in parsed_results:
+        for section_plugin, section_data, _cache_info in parsed_results:
 
             kwargs = {"section": section_data}
 

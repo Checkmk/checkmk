@@ -6,6 +6,7 @@
 import abc
 import ast
 import os
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from typing import Generic, TypeVar
 
@@ -54,7 +55,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
         return self._path.exists()
 
     # TODO: Implement this locking as context manager
-    def read(self, lock: bool = False) -> list[_VT]:
+    def __read(self, *, lock: bool) -> Sequence[_VT]:
         """Parse the file and return the entries"""
         path = self._path
 
@@ -76,7 +77,10 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
 
         return entries
 
-    def write(self, entries: list[_VT]) -> None:
+    def read(self) -> Sequence[_VT]:
+        return self.__read(lock=False)
+
+    def write(self, entries: Iterable[_VT]) -> None:
         # First truncate the file
         with self._path.open("wb"):
             pass
@@ -95,3 +99,10 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
                 path.chmod(0o660)
             except Exception as e:
                 raise MKGeneralException(_('Cannot write file "%s": %s') % (path, e))
+
+    def transform(self, transformer: Callable[[Sequence[_VT]], Sequence[_VT]]) -> None:
+        entries = self.__read(lock=True)
+        try:
+            entries = transformer(entries)
+        finally:
+            self.write(entries)

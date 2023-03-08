@@ -1931,23 +1931,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         return domain_requests
 
-    def _confirm_activated_changes(self):
-        site_changes = SiteChanges(self._site_id)
-        changes = site_changes.read(lock=True)
+    def _confirm_activated_changes(self) -> None:
+        SiteChanges(self._site_id).transform(lambda changes: changes[len(self._site_changes) :])
 
-        try:
-            changes = changes[len(self._site_changes) :]
-        finally:
-            site_changes.write(changes)
-
-    def _confirm_synchronized_changes(self):
-        site_changes = SiteChanges(self._site_id)
-        changes = site_changes.read(lock=True)
-        try:
-            for change in changes:
-                change["need_sync"] = False
-        finally:
-            site_changes.write(changes)
+    def _confirm_synchronized_changes(self) -> None:
+        SiteChanges(self._site_id).transform(
+            lambda changes: [{**ch, "need_sync": False} for ch in changes]
+        )
 
     def _set_result(  # type:ignore[no-untyped-def]
         self,

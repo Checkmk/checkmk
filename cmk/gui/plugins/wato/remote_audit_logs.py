@@ -189,7 +189,8 @@ class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
         self, last_audit_logs: Mapping[SiteId, Sequence[AuditLogStore.Entry]]
     ) -> set[SiteId]:
         audit_logs_counter: Counter = Counter()
-        central_site_entries = self._audit_log_store.read()
+        # TODO: Where is the locking???
+        central_site_entries = list(self._audit_log_store.read())
         audit_logs_from_remote_sites: set[SiteId] = set()
 
         for site_id, entries in last_audit_logs.items():

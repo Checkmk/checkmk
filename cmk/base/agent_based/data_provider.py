@@ -203,7 +203,7 @@ class ParsedSectionsBroker:
     @staticmethod
     def get_cache_info(
         parsed_section_names: Iterable[ParsedSectionName],
-        providers: Mapping[HostKey, Provider],
+        providers: Iterable[Provider],
     ) -> _CacheInfo | None:
         # TODO: should't the host key be provided here?
         """Aggregate information about the age of the data in the agent sections
@@ -217,7 +217,7 @@ class ParsedSectionsBroker:
             resolved.parsed.cache_info
             for resolved in (
                 resolver.resolve(parser, parsed_section_name)
-                for resolver, parser in providers.values()
+                for resolver, parser in providers
                 for parsed_section_name in parsed_section_names
             )
             if resolved is not None and resolved.parsed.cache_info is not None
@@ -234,17 +234,13 @@ class ParsedSectionsBroker:
     @staticmethod
     def filter_available(
         parsed_section_names: Iterable[ParsedSectionName],
-        source_type: SourceType,
-        providers: Mapping[HostKey, Provider],
+        providers: Iterable[Provider],
     ) -> set[ParsedSectionName]:
         return {
             parsed_section_name
-            for host_key, (resolver, parser) in providers.items()
+            for resolver, parser in providers
             for parsed_section_name in parsed_section_names
-            if (
-                host_key.source_type is source_type
-                and resolver.resolve(parser, parsed_section_name) is not None
-            )
+            if resolver.resolve(parser, parsed_section_name) is not None
         }
 
 

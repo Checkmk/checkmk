@@ -47,7 +47,12 @@ from cmk.base.agent_based.confcheckers import (
     ConfiguredParser,
     SectionPluginMapper,
 )
-from cmk.base.agent_based.data_provider import ParsedSectionsResolver, Provider, SectionsParser
+from cmk.base.agent_based.data_provider import (
+    ParsedSectionsBroker,
+    ParsedSectionsResolver,
+    Provider,
+    SectionsParser,
+)
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.agent_based.discovery._discovery import _check_service_lists
 from cmk.base.agent_based.discovery._host_labels import (
@@ -751,9 +756,15 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_host_candidates(
-        providers,
         ((p.name, p.sections) for p in preliminary_candidates),
-        parsed_sections_of_interest,
+        ParsedSectionsBroker.filter_available(
+            parsed_sections_of_interest,
+            (
+                provider
+                for host_key, provider in providers.items()
+                if host_key.source_type is SourceType.HOST
+            ),
+        ),
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),
@@ -763,9 +774,15 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_mgmt_candidates(
-        providers,
         ((p.name, p.sections) for p in preliminary_candidates),
-        parsed_sections_of_interest,
+        ParsedSectionsBroker.filter_available(
+            parsed_sections_of_interest,
+            (
+                provider
+                for host_key, provider in providers.items()
+                if host_key.source_type is SourceType.MANAGEMENT
+            ),
+        ),
     ) == {
         CheckPluginName("mgmt_docker_container_status_uptime"),
         CheckPluginName("mgmt_liebert_fans"),

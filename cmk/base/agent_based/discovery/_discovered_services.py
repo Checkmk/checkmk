@@ -207,20 +207,32 @@ def _find_candidates(
     )
 
     return _find_host_candidates(
-        providers, preliminary_candidates, parsed_sections_of_interest
-    ) | _find_mgmt_candidates(providers, preliminary_candidates, parsed_sections_of_interest)
+        preliminary_candidates,
+        ParsedSectionsBroker.filter_available(
+            parsed_sections_of_interest,
+            (
+                provider
+                for host_key, provider in providers.items()
+                if host_key.source_type is SourceType.HOST
+            ),
+        ),
+    ) | _find_mgmt_candidates(
+        preliminary_candidates,
+        ParsedSectionsBroker.filter_available(
+            parsed_sections_of_interest,
+            (
+                provider
+                for host_key, provider in providers.items()
+                if host_key.source_type is SourceType.MANAGEMENT
+            ),
+        ),
+    )
 
 
 def _find_host_candidates(
-    providers: Mapping[HostKey, Provider],
     preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
-    parsed_sections_of_interest: Iterable[ParsedSectionName],
+    available_parsed_sections: Container[ParsedSectionName],
 ) -> set[CheckPluginName]:
-
-    available_parsed_sections = ParsedSectionsBroker.filter_available(
-        parsed_sections_of_interest, SourceType.HOST, providers
-    )
-
     return {
         name
         for (name, sections) in preliminary_candidates
@@ -231,15 +243,9 @@ def _find_host_candidates(
 
 
 def _find_mgmt_candidates(
-    providers: Mapping[HostKey, Provider],
     preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
-    parsed_sections_of_interest: Iterable[ParsedSectionName],
+    available_parsed_sections: Container[ParsedSectionName],
 ) -> set[CheckPluginName]:
-
-    available_parsed_sections = ParsedSectionsBroker.filter_available(
-        parsed_sections_of_interest, SourceType.MANAGEMENT, providers
-    )
-
     return {
         # *create* all management only names of the plugins
         name.create_management_name()

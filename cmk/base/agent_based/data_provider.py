@@ -42,14 +42,15 @@ def filter_out_errors(
     return output
 
 
-class ParsingResult(NamedTuple):
+class _ParsingResult(NamedTuple):
     data: ParsedSectionContent
     cache_info: _CacheInfo | None
 
 
 class ResolvedResult(NamedTuple):
-    parsed: ParsingResult
     section: SectionPlugin
+    parsed_data: ParsedSectionContent
+    cache_info: _CacheInfo | None
 
 
 class SectionsParser:
@@ -63,7 +64,7 @@ class SectionsParser:
         super().__init__()
         self._host_sections = host_sections
         self._parsing_errors: list[str] = []
-        self._memoized_results: dict[SectionName, ParsingResult | None] = {}
+        self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
 
     def __repr__(self) -> str:
@@ -79,7 +80,7 @@ class SectionsParser:
 
     def parse(
         self, section_name: SectionName, parse_function: AgentParseFunction | SNMPParseFunction
-    ) -> ParsingResult | None:
+    ) -> _ParsingResult | None:
         if section_name in self._memoized_results:
             return self._memoized_results[section_name]
 
@@ -87,7 +88,7 @@ class SectionsParser:
             section_name,
             None
             if (parsed := self._parse_raw_data(section_name, parse_function)) is None
-            else ParsingResult(
+            else _ParsingResult(
                 data=parsed,
                 cache_info=self._host_sections.cache_info.get(section_name),
             ),
@@ -180,8 +181,9 @@ class ParsedSectionsResolver:
                 return self._memoized_results.setdefault(
                     parsed_section_name,
                     ResolvedResult(
-                        parsed=parsing_result,
                         section=producer,
+                        parsed_data=parsing_result.data,
+                        cache_info=parsing_result.cache_info,
                     ),
                 )
 
@@ -228,7 +230,7 @@ class ParsedSectionsBroker:
         cache_infos = {
             cache_info
             for resolved in ParsedSectionsBroker.resolve(parsed_section_names, providers).values()
-            if (cache_info := resolved.parsed.cache_info) is not None
+            if (cache_info := resolved.cache_info) is not None
         }
         return (
             (

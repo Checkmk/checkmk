@@ -12,7 +12,7 @@ from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
 
-from .conftest import get_host_data, get_site_status, update_config, update_site
+from .conftest import get_host_data, get_site_status, update_config, update_site, version_supported
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,16 @@ def test_update(test_site: Site) -> None:
     # cmk --dump-cmc-config
 
     # Triggering cmk config update
-    assert update_config(target_site) == 0, "Updating config failed unexpectedly!"
+    update_config_result = update_config(target_site)
+    if version_supported(base_version.version):
+        assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
+    else:
+        assert (
+            update_config_result != 0
+        ), "Updating the configuration succeeded for an unsupported release!"
+        assert (
+            update_config_result != 2
+        ), "Trying to update the config resulted in an unexpected error!"
 
     # get update monitoring data
     target_data = get_host_data(target_site)

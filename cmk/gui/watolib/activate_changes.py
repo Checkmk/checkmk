@@ -1934,12 +1934,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return domain_requests
 
     def _confirm_activated_changes(self) -> None:
-        SiteChanges(self._site_id).transform(lambda changes: changes[len(self._site_changes) :])
+        with SiteChanges(self._site_id).mutable_view() as changes:
+            changes[: len(self._site_changes)] = []
 
     def _confirm_synchronized_changes(self) -> None:
-        SiteChanges(self._site_id).transform(
-            lambda changes: [{**ch, "need_sync": False} for ch in changes]
-        )
+        with SiteChanges(self._site_id).mutable_view() as changes:
+            for change in changes:
+                change["need_sync"] = False
 
     def _set_result(  # type:ignore[no-untyped-def]
         self,

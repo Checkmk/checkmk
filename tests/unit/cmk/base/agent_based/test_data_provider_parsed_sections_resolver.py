@@ -11,12 +11,7 @@ from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
 from cmk.checkers import HostKey, SourceType
 
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionsResolver,
-    ParsingResult,
-    ResolvedResult,
-    SectionParser,
-)
+from cmk.base.agent_based.data_provider import ParsedSectionsResolver, ParsingResult, ResolvedResult
 from cmk.base.agent_based.discovery._host_labels import _all_parsing_results as all_parsing_results
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.type_defs import SectionPlugin
@@ -33,8 +28,8 @@ def _section(name: str, parsed_section_name: str, supersedes: set[str]) -> Secti
 
 
 class _FakeParser(dict):
-    def parse(self, section_parser: SectionParser):  # type:ignore[no-untyped-def]
-        return self.get(str(section_parser.section_name))
+    def parse(self, section_name: SectionName, *args: object):  # type:ignore[no-untyped-def]
+        return self.get(str(section_name))
 
     def disable(self, names: Iterable[SectionName]) -> None:
         for name in names:

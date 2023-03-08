@@ -95,6 +95,3 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
                 path.chmod(0o660)
             except Exception as e:
                 raise MKGeneralException(_('Cannot write file "%s": %s') % (path, e))
-
-    def clear(self) -> None:
-        self._path.unlink(missing_ok=True)

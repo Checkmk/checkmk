@@ -42,3 +42,6 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
         else:
             raw["object"] = ObjectRef.deserialize(raw["object"]) if raw["object"] else None
         return raw
+
+    def clear(self) -> None:
+        self._path.unlink(missing_ok=True)

@@ -176,7 +176,7 @@ from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=un
     HostAttributeTopicMetaData,
     HostAttributeTopicNetworkScan,
 )
-from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.password_store import PasswordStore, passwordstore_choices
 from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
     BinaryHostRulespec,
     BinaryServiceRulespec,
@@ -698,14 +698,6 @@ def _group_choices(group_information: GroupSpecs) -> Choices:
         [(k, t["alias"] and t["alias"] or k) for (k, t) in group_information.items()],
         key=lambda x: x[1].lower(),
     )
-
-
-def passwordstore_choices() -> Choices:
-    pw_store = PasswordStore()
-    return [
-        (ident, pw["title"])
-        for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()
-    ]
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin

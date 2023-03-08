@@ -6,6 +6,7 @@
 
 __version__ = "2.3.0b1"
 
+USER_AGENT = "checkmk-agent-apache_status-" + __version__
 # Checkmk-Agent-Plugin - Apache Server Status
 #
 # Fetches the server-status page from detected or configured apache
@@ -228,7 +229,7 @@ def urlopen_with_ssl(request, timeout):
 
 def get_response(proto, cafile, address, portspec, page):
     url = "%s://%s%s/%s?auto" % (proto, address, portspec, page)
-    request = Request(url, headers={"Accept": "text/plain"})
+    request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
     is_local = address in ("127.0.0.1", "[::1]", "localhost")
     # Try to fetch the status page for each server
     try:

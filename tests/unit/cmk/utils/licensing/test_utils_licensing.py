@@ -201,7 +201,7 @@ def test_serialize_license_usage_report() -> None:
                 history=history.for_report(),
             )
         )
-        == b"LQ't#$x~}Qi Q`]dQ[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
+        == b"LQ't#$x~}Qi Qa]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 
@@ -486,53 +486,7 @@ def test_serialize_license_usage_report() -> None:
         ),
         (
             {
-                "VERSION": "1.4",
-                "history": [
-                    {
-                        "version": "",
-                        "edition": "",
-                        "platform": (
-                            "A very long string with len>50 describing the platform"
-                            " a Checkmk server is operating on."
-                        ),
-                        "is_cma": False,
-                        "sample_time": 1,
-                        "timezone": "",
-                        "num_hosts": 2,
-                        "num_shadow_hosts": 6,
-                        "num_hosts_excluded": 3,
-                        "num_services": 4,
-                        "num_services_excluded": 5,
-                        "extension_ntop": True,
-                    },
-                ],
-            },
-            LocalLicenseUsageHistory(
-                [
-                    LicenseUsageSample(
-                        instance_id=UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8"),
-                        site_hash="site-hash",
-                        version="",
-                        edition="",
-                        platform="A very long string with len>50 describing the plat",
-                        is_cma=False,
-                        sample_time=1,
-                        timezone="",
-                        num_hosts=2,
-                        num_shadow_hosts=6,
-                        num_hosts_excluded=3,
-                        num_services=4,
-                        num_services_excluded=5,
-                        num_hosts_cloud=0,
-                        num_services_cloud=0,
-                        extension_ntop=True,
-                    ),
-                ]
-            ),
-        ),
-        (
-            {
-                "VERSION": "1.5",
+                "VERSION": "2.0",
                 "history": [
                     {
                         "instance_id": "4b66f726-c4fc-454b-80a6-4917d1b386ce",

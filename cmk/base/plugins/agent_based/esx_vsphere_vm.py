@@ -5,7 +5,7 @@
 from typing import Dict, List, Mapping, Sequence
 
 from .agent_based_api.v1 import HostLabel, register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .utils.esx_vsphere import (
     ESXCpu,
     ESXDataStore,
@@ -144,7 +144,7 @@ def _parse_esx_datastore_section(
     return stores
 
 
-def host_label_esx_vshpere_vm(section):
+def host_label_esx_vshpere_vm(section: SectionVM) -> HostLabelGenerator:
     """Host label function
 
     Labels:
@@ -155,7 +155,7 @@ def host_label_esx_vshpere_vm(section):
             and to "vm" if the host is a virtual machine.
 
     """
-    if "runtime.host" in section:
+    if section and section.host is not None:
         yield HostLabel("cmk/vsphere_object", "vm")
 
 

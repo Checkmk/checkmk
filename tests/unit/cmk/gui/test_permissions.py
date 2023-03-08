@@ -233,6 +233,7 @@ def test_registered_permissions() -> None:
         "pagetype_topic.analyze",
         "pagetype_topic.applications",
         "pagetype_topic.bi",
+        "pagetype_topic.cloud",
         "pagetype_topic.events",
         "pagetype_topic.history",
         "pagetype_topic.inventory",

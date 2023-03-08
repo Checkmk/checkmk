@@ -2071,6 +2071,15 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "sort_index": 70,
                 "owner": UserId.builtin(),
             },
+            "cloud": {
+                "name": "cloud",
+                "title": _("Cloud"),
+                "icon_name": "plugins_cloud",
+                "description": "",
+                "public": True,
+                "sort_index": 75,
+                "owner": UserId.builtin(),
+            },
             "bi": {
                 "name": "bi",
                 "title": _("Business Intelligence"),

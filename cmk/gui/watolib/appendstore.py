@@ -81,14 +81,6 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
     def read(self) -> Sequence[_VT]:
         return self.__read(lock=False)
 
-    def write(self, entries: Iterable[_VT]) -> None:
-        # First truncate the file
-        with self._path.open("wb"):
-            pass
-
-        for entry in entries:
-            self.append(entry)
-
     def append(self, entry: _VT) -> None:
         path = self._path
         with store.locked(path):
@@ -107,4 +99,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
         try:
             yield entries
         finally:
-            self.write(entries)
+            with self._path.open("wb"):  # truncate the file
+                pass
+            for entry in entries:
+                self.append(entry)

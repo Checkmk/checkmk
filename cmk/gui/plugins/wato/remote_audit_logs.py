@@ -189,22 +189,16 @@ class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
         self, last_audit_logs: Mapping[SiteId, Sequence[AuditLogStore.Entry]]
     ) -> set[SiteId]:
         audit_logs_counter: Counter = Counter()
-        # TODO: Where is the locking???
-        central_site_entries = list(self._audit_log_store.read())
         audit_logs_from_remote_sites: set[SiteId] = set()
-
-        for site_id, entries in last_audit_logs.items():
-            for entry in entries:
-                if entry not in central_site_entries:
-                    audit_logs_counter.update({site_id: 1})
-                    central_site_entries.append(entry)
-                    audit_logs_from_remote_sites.add(site_id)
-
-        self._audit_log_store.write(central_site_entries)
-
+        with self._audit_log_store.mutable_view() as central_site_entries:
+            for site_id, entries in last_audit_logs.items():
+                for entry in entries:
+                    if entry not in central_site_entries:
+                        audit_logs_counter.update({site_id: 1})
+                        central_site_entries.append(entry)
+                        audit_logs_from_remote_sites.add(site_id)
         for site_id, num_entries in audit_logs_counter.items():
             logger.debug("Wrote %s audit log entries from site %s", num_entries, site_id)
-
         return audit_logs_from_remote_sites
 
 

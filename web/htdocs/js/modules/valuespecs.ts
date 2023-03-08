@@ -189,6 +189,8 @@ export function list_of_strings_add_new_field(input) {
             '"' + old_name + '"',
             '"' + new_name + '"'
         );
+        // Do not clone placeholder help texts
+        d3.select(new_div).select("input").attr("placeholder", null);
         // IE7 does not have quotes in innerHTML, trying to workaround this here.
         new_div.innerHTML = new_div.innerHTML.replace(
             "=" + old_name + " ",

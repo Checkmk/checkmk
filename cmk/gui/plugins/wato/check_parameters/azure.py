@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -17,6 +19,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Float,
     Integer,
+    Migrate,
     MonitoringState,
     Percentage,
     TextInput,
@@ -313,39 +316,51 @@ def _item_spec_azure_vms():
     return TextInput(title=_("VM name"))
 
 
-def _parameter_valuespec_azure_vms():
-    return Dictionary(
-        help=_(
-            "To obtain the data required for this check, please configure"
-            ' the datasource program "Microsoft Azure".'
+# the migration is introduced in 2.2.0b1
+def migrate_map_states(params: dict[str, Any]) -> dict[str, Any]:
+    map_provisioning = params.pop("map_provisioning_states", None)
+    map_power = params.pop("map_power_states", None)
+
+    if map_provisioning:
+        for state in ("succeeded", "failed"):
+            params[state] = map_provisioning.get(state, 1)
+
+    if map_power:
+        for state in (
+            "starting",
+            "running",
+            "stopping",
+            "stopped",
+            "deallocating",
+            "deallocated",
+            "unknown",
+        ):
+            params[state] = map_power.get(state, 1)
+
+    return params
+
+
+def _parameter_valuespec_azure_vms() -> Migrate:
+    return Migrate(
+        Dictionary(
+            help=_(
+                "To obtain the data required for this check, please configure"
+                ' the datasource program "Microsoft Azure".'
+            ),
+            title=_("Map provisioning and power states"),
+            elements=[
+                ("succeeded", MonitoringState(title="Provisioning state succeeded")),
+                ("failed", MonitoringState(title="Provisioning state failed", default_value=2)),
+                ("starting", MonitoringState(title="Power state starting")),
+                ("running", MonitoringState(title="Power state running")),
+                ("stopping", MonitoringState(title="Power state stopping", default_value=1)),
+                ("stopped", MonitoringState(title="Power state stopped", default_value=1)),
+                ("deallocating", MonitoringState(title="Power state deallocating")),
+                ("deallocated", MonitoringState(title="Power state deallocated")),
+                ("unknown", MonitoringState(title=_("Power state unknown"), default_value=3)),
+            ],
         ),
-        elements=[
-            (
-                "map_provisioning_states",
-                Dictionary(
-                    title=_("Map provisioning states"),
-                    elements=[
-                        ("succeeded", MonitoringState(title="succeeded")),
-                        ("failed", MonitoringState(title="failed", default_value=2)),
-                    ],
-                ),
-            ),
-            (
-                "map_power_states",
-                Dictionary(
-                    title=_("Map power states"),
-                    elements=[
-                        ("starting", MonitoringState(title="starting")),
-                        ("running", MonitoringState(title="running")),
-                        ("stopping", MonitoringState(title="stopping", default_value=1)),
-                        ("stopped", MonitoringState(title="stopped", default_value=1)),
-                        ("deallocating", MonitoringState(title="deallocating")),
-                        ("deallocated", MonitoringState(title="deallocated")),
-                        ("unknown", MonitoringState(title=_("unknown"), default_value=3)),
-                    ],
-                ),
-            ),
-        ],
+        migrate=migrate_map_states,
     )
 
 

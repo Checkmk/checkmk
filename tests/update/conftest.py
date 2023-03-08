@@ -84,6 +84,7 @@ def set_admin_password(site: Site, password: str = "cmk") -> int:
 
 
 def get_omd_version(site: Site, full: bool = False) -> str:
+    """Get the omd version for the given site."""
     cmd = ["/usr/bin/omd", "version", site.id]
     version = _run_as_site_user(site, cmd).stdout.split("\n", 1)[0]
     return version if full else version.rsplit(" ", 1)[-1]

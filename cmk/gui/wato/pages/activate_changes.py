@@ -78,7 +78,6 @@ if not is_raw_edition():  # TODO solve this via registration
         load_verified_response,
     )
     from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        ActivationBlock,
         licensing_user_effect_expired_trial,
         licensing_user_effect_licensed,
     )
@@ -216,11 +215,11 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         if is_expired_trial():
             effect = licensing_user_effect_expired_trial(len(collect_all_hosts()))
-            return not isinstance(effect, ActivationBlock) and license_usage_report_valid
+            return effect.block is None and license_usage_report_valid
 
         if is_licensed() and self._license_verification_response is not None:
             effect = licensing_user_effect_licensed(self._license_verification_response)
-            return not isinstance(effect, ActivationBlock) and license_usage_report_valid
+            return effect.block is None and license_usage_report_valid
 
         return True
 
@@ -452,16 +451,15 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         # TODO: cleanup conditional imports and solve this via registration
         if is_cloud_edition() and self._license_verification_response is not None and is_licensed():
-            effect = licensing_user_effect_licensed(self._license_verification_response)
-            if isinstance(effect, ActivationBlock):
-                errors.append(effect.message)
+            if (
+                effect := licensing_user_effect_licensed(self._license_verification_response)
+            ).block:
+                errors.append(effect.block.message)
 
         if is_expired_trial():
             effect = licensing_user_effect_expired_trial(get_num_services_for_trial_free_edition())
-            if isinstance(effect, ActivationBlock) and not service_reducing_change_pending(
-                self._changes
-            ):
-                errors.append(effect.message)
+            if effect.block and not service_reducing_change_pending(self._changes):
+                errors.append(effect.block.message)
 
         if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
             errors.append(_("The license usage history is older than five days."))

@@ -208,23 +208,27 @@ def _find_candidates(
 
     return _find_host_candidates(
         preliminary_candidates,
-        ParsedSectionsBroker.filter_available(
-            parsed_sections_of_interest,
-            (
-                provider
-                for host_key, provider in providers.items()
-                if host_key.source_type is SourceType.HOST
-            ),
+        frozenset(
+            ParsedSectionsBroker.resolve(
+                parsed_sections_of_interest,
+                (
+                    provider
+                    for host_key, provider in providers.items()
+                    if host_key.source_type is SourceType.HOST
+                ),
+            )
         ),
     ) | _find_mgmt_candidates(
         preliminary_candidates,
-        ParsedSectionsBroker.filter_available(
-            parsed_sections_of_interest,
-            (
-                provider
-                for host_key, provider in providers.items()
-                if host_key.source_type is SourceType.MANAGEMENT
-            ),
+        frozenset(
+            ParsedSectionsBroker.resolve(
+                parsed_sections_of_interest,
+                (
+                    provider
+                    for host_key, provider in providers.items()
+                    if host_key.source_type is SourceType.MANAGEMENT
+                ),
+            )
         ),
     )
 

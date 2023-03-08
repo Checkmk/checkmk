@@ -241,13 +241,6 @@ class ParsedSectionsBroker:
             else None
         )
 
-    @staticmethod
-    def filter_available(
-        parsed_section_names: Iterable[ParsedSectionName],
-        providers: Iterable[Provider],
-    ) -> frozenset[ParsedSectionName]:
-        return frozenset(ParsedSectionsBroker.resolve(parsed_section_names, providers))
-
 
 def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:
     for host_key, host_sections in collected_host_sections.items():

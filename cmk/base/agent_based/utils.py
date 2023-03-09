@@ -30,19 +30,15 @@ def get_section_kwargs(
     except KeyError:
         return {}
 
-    keys = (
-        ["section"]
-        if len(parsed_section_names) == 1
-        else ["section_%s" % s for s in parsed_section_names]
-    )
-
     kwargs = {
-        key: (
+        "section"
+        if len(parsed_section_names) == 1
+        else f"section_{parsed_section_name}": (
             None
             if (resolved := resolver.resolve(parser, parsed_section_name)) is None
             else resolved.parsed_data
         )
-        for key, parsed_section_name in zip(keys, parsed_section_names)
+        for parsed_section_name in parsed_section_names
     }
     # empty it, if nothing was found:
     if all(v is None for v in kwargs.values()):

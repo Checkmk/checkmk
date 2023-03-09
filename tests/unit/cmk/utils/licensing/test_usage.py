@@ -15,6 +15,7 @@ import livestatus
 
 from cmk.utils.licensing import usage as licensing_usage
 from cmk.utils.licensing.export import LicenseUsageExtensions, LicenseUsageSample
+from cmk.utils.licensing.helper import init_logging
 from cmk.utils.licensing.usage import (
     _get_cloud_counter,
     _serialize_dump,
@@ -24,12 +25,12 @@ from cmk.utils.licensing.usage import (
     load_license_usage_history,
     LocalLicenseUsageHistory,
     RawLicenseUsageReport,
-    update_license_usage,
+    try_update_license_usage,
 )
 from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
 
 
-def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
+def test_try_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     def _mock_livestatus(query: str) -> tuple[int, int]:
         if "GET hosts" in query:
             return 10, 5
@@ -54,11 +55,11 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     )
     monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
-    assert update_license_usage() == 0
+    try_update_license_usage(init_logging())
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 1
 
 
-def test_update_license_usage_livestatus_socket_error(
+def test_try_update_license_usage_livestatus_socket_error(
     monkeypatch: MonkeyPatch,
 ) -> None:
     def _mock_livestatus(query: str) -> tuple[int, int]:
@@ -79,11 +80,12 @@ def test_update_license_usage_livestatus_socket_error(
     )
     monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
-    assert update_license_usage() == 1
+    with pytest.raises(livestatus.MKLivestatusSocketError):
+        try_update_license_usage(init_logging())
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
-def test_update_license_usage_livestatus_not_found_error(
+def test_try_update_license_usage_livestatus_not_found_error(
     monkeypatch: MonkeyPatch,
 ) -> None:
     def _mock_livestatus(query: str) -> tuple[int, int]:
@@ -104,11 +106,12 @@ def test_update_license_usage_livestatus_not_found_error(
     )
     monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
-    assert update_license_usage() == 1
+    with pytest.raises(livestatus.MKLivestatusNotFoundError):
+        try_update_license_usage(init_logging())
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 
-def test_update_license_usage_next_run_ts_not_reached(
+def test_try_update_license_usage_next_run_ts_not_reached(
     monkeypatch: MonkeyPatch,
 ) -> None:
     def _mock_livestatus(query: str) -> tuple[int, int]:
@@ -135,7 +138,7 @@ def test_update_license_usage_next_run_ts_not_reached(
     )
     monkeypatch.setattr(licensing_usage, "omd_site", lambda: "site-name")
 
-    assert update_license_usage() == 0
+    try_update_license_usage(init_logging())
     assert len(load_license_usage_history(get_license_usage_report_filepath())) == 0
 
 

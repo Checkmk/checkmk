@@ -310,7 +310,7 @@ def save(
         # deserialize LasyStrings again. Decide on their fixed str representation now.
         name: _fix_lazy_strings(visual)
         for (owner_id, name), visual in visuals.items()
-        if user_id == owner_id and not visual.get("packaged")
+        if user_id == owner_id and not visual["packaged"]
     }
     save_user_file("user_" + what, user_visuals, user_id=user_id)
     _CombinedVisualsCache(what).invalidate_cache()
@@ -587,7 +587,7 @@ def _get_packaged_visuals(
 
 def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
-    if visual["public"] and permname not in permission_registry:
+    if (visual["public"] or visual["packaged"]) and permname not in permission_registry:
         declare_permission(
             permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
         )
@@ -802,8 +802,10 @@ def page_list(  # pylint: disable=too-many-branches
     available_visuals = available(what, visuals)
     installed_packages: dict[str, PackageName | None] = _get_installed_packages(what)
     for source, title1, visual_group in _partition_visuals(visuals, what):
-        html.h3(title1, class_="table")
+        if not visual_group:
+            continue
 
+        html.h3(title1, class_="table")
         with table_element(css="data", limit=None) as table:
 
             for owner, visual_name, visual in visual_group:
@@ -870,7 +872,7 @@ def page_list(  # pylint: disable=too-many-branches
                     html.icon_button(edit_url, _("Edit"), "edit")
 
                 # Custom buttons - visual specific
-                if render_custom_buttons:
+                if not is_packaged and render_custom_buttons:
                     render_custom_buttons(visual_name, visual)
 
                 # Packaged visuals have builtin user as owner, so we have to
@@ -880,6 +882,7 @@ def page_list(  # pylint: disable=too-many-branches
                     _render_extension_package_icons(
                         table,
                         visual_name,
+                        what,
                         owner,
                         what_s,
                         installed_packages,
@@ -930,6 +933,7 @@ def page_list(  # pylint: disable=too-many-branches
 def _render_extension_package_icons(
     table: Table,
     visual_name: VisualName,
+    what: VisualTypeName,
     owner: UserId,
     what_s: str,
     installed_packages: dict[str, PackageName | None],
@@ -955,9 +959,22 @@ def _render_extension_package_icons(
                 "icon": "mkps",
                 "emblem": "add",
             },
+            cssclass="service_button disabled"
+            if Path(_get_local_path(what) / visual_name).exists()
+            else "",
         )
+        return
 
-    if is_packaged and not (mkp_name := installed_packages.get(visual_name)):
+    html.icon_button(
+        "wato.py?mode=mkps",
+        _("Go to extension packages"),
+        {
+            "icon": "mkps",
+            "emblem": "more",
+        },
+    )
+
+    if not (mkp_name := installed_packages.get(visual_name)):
         delete_url = makeuri_contextless(
             request,
             [
@@ -978,17 +995,16 @@ def _render_extension_package_icons(
         )
 
     table.cell(_("State"), css=["buttons"])
-    if is_packaged:
-        if mkp_name:
-            html.icon(
-                "mkps",
-                _("This %s is provided via the MKP '%s'.") % (what_s, mkp_name),
-            )
-        else:
-            html.icon(
-                "mkps",
-                _("This %s can be packaged with the extension packages module.") % what_s,
-            )
+    if mkp_name:
+        html.icon(
+            "mkps",
+            _("This %s is provided via the MKP '%s'.") % (what_s, mkp_name),
+        )
+    else:
+        html.icon(
+            "mkps",
+            _("This %s can be packaged with the extension packages module.") % what_s,
+        )
 
 
 def _get_installed_packages(what: VisualTypeName) -> dict[str, PackageName | None]:
@@ -1043,12 +1059,16 @@ def _partition_visuals(
 ) -> list[tuple[str, str, list[tuple[UserId, VisualName, T]]]]:
     keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
 
-    my_visuals, foreign_visuals, builtin_visuals = [], [], []
+    my_visuals, foreign_visuals, builtin_visuals, packaged_visuals = [], [], [], []
     for (owner, visual_name) in keys_sorted:
         if owner == UserId.builtin() and not user.may(f"{what[:-1]}.{visual_name}"):
             continue  # not allowed to see this view
 
         visual = visuals[(owner, visual_name)]
+        if visual["packaged"]:
+            packaged_visuals.append((owner, visual_name, visual))
+            continue
+
         if visual["public"] and owner == UserId.builtin():
             builtin_visuals.append((owner, visual_name, visual))
         elif owner == user.id:
@@ -1063,6 +1083,7 @@ def _partition_visuals(
     return [
         ("custom", _("Customized"), my_visuals),
         ("foreign", _("Owned by other users"), foreign_visuals),
+        ("packaged", _("Extensions"), packaged_visuals),
         ("builtin", _("Builtin"), builtin_visuals),
     ]
 
@@ -1588,6 +1609,9 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
             old_visual = visual
             # TODO: Currently not editable, but keep settings
             visual = {"link_from": old_visual["link_from"]}
+
+            # Important for saving
+            visual["packaged"] = False
 
             # The dict of the value spec does not match exactly the dict
             # of the visual. We take over some keys...

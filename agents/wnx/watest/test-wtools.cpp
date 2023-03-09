@@ -145,6 +145,19 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     EXPECT_EQ(KillProcessesByDir("k:"), -1);
 }
 
+TEST_F(WtoolsKillProcFixture, KillProcsByFullPath) {
+    ASSERT_EQ(RunProcesses(1), 1);  // additional process
+    auto test_dir = test_dir_.wstring();
+    cma::tools::WideUpper(test_dir);
+
+    KillProcessesByFullPath(test_exe_);
+    cma::tools::sleep(500ms);
+
+    auto [path, pid] = FindExpectedProcess();
+    EXPECT_TRUE(path.empty());
+    EXPECT_EQ(pid, 0);
+}
+
 class WtoolsKillProcessTreeFixture : public ::testing::Test {
 protected:
     void SetUp() override {

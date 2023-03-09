@@ -154,6 +154,19 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
     return killed_count;
 }
 
+void KillProcessesByFullPath(const fs::path &path) noexcept {
+    ScanProcessList([path](const PROCESSENTRY32W &entry) {
+        const auto pid = entry.th32ProcessID;
+        const auto exe = fs::path{wtools::GetProcessPath(pid)};
+
+        if (exe == path) {
+            XLOG::d.i("Killing process '{}'", exe);
+            KillProcess(pid, 99);
+        }
+        return true;
+    });
+}
+
 void AppRunner::prepareResources(std::wstring_view command_line,
                                  bool create_pipe) noexcept {
     if (create_pipe) {

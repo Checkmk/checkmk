@@ -26,7 +26,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.packaging import all_rule_pack_files, Installer, PackageName, visual_to_mkp
+from cmk.utils.packaging import id_to_mkp, Installer, PackageName, PackagePart
 from cmk.utils.store import save_object_to_file
 from cmk.utils.type_defs import UserId
 
@@ -1011,9 +1011,10 @@ def _get_installed_packages(what: VisualTypeName) -> dict[str, PackageName | Non
     return (
         {}
         if cmk_version.is_raw_edition() or not user.may("wato.manage_mkps")
-        else visual_to_mkp(
+        else id_to_mkp(
             Installer(cmk.utils.paths.installed_packages_dir),
             _all_local_visuals_files(what),
+            PackagePart.GUI,
         )
     )
 

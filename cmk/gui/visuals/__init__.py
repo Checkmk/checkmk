@@ -1020,8 +1020,10 @@ def _get_installed_packages(what: VisualTypeName) -> dict[str, PackageName | Non
 
 def _all_local_visuals_files(what: VisualTypeName) -> set[Path]:
     local_path = _get_local_path(what)
+    # dashboard dir is singular in local web and gui folder
+    dir_name = "dashboard" if what == "dashboards" else what
     with suppress(FileNotFoundError):
-        return {Path(what) / f.relative_to(local_path) for f in local_path.iterdir()}
+        return {Path(dir_name) / f.relative_to(local_path) for f in local_path.iterdir()}
     return set()
 
 

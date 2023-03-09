@@ -281,6 +281,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
 std::optional<uint32_t> StartAgentController() {
     XLOG::l.i("starting controller");
     if (!AllowUseController(GetModus())) {
+        XLOG::l.i("not allowed");
         return {};
     }
 
@@ -291,6 +292,7 @@ std::optional<uint32_t> StartAgentController() {
             "Checkmk rule set \"Windows agent controller\" for this host.");
         return false;
     }
+    XLOG::l.i("try to kill");
     auto killed_count = wtools::KillProcessesByDir(cfg::GetUserBinDir());
     XLOG::d.i("killed {} processes in '{}'", killed_count,
               wtools::ToUtf8(cfg::GetUserBinDir()));

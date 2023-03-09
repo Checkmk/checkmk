@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import glob
 import logging
 import os
 import shutil
@@ -736,7 +737,14 @@ def _execute_post_package_change_actions(package: Manifest | None) -> None:
     _build_setup_search_index_background()
 
     if package is None or _package_contains_gui_files(package):
+        _invalidate_visuals_cache()
         _reload_apache()
+
+
+def _invalidate_visuals_cache():
+    """Invalidate visuals cache to use the current data"""
+    for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
+        file.unlink(missing_ok=True)
 
 
 def _build_setup_search_index_background() -> None:

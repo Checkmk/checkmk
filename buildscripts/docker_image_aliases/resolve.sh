@@ -16,7 +16,8 @@ if [ -n "$RESULT_IMAGE_ID" ]; then
 else
     echo "Could not resolve $1, error was:" 1>&2
     cat ${RESOLVE_ERROR_FILE} 1>&2
-    echo "Make sure the image alias exists, you're correctly logged into the registry and the image exists on the registry" 1>&2
+    echo "Make sure the image alias exists, you're correctly logged into the registry and the image exists on the registry.
+If IMAGE_TESTING got repinned recently, try a rebase!" 1>&2
     echo "INVALID_IMAGE_ID"
     # shellcheck disable=SC2242 # Can only exit with status 0-255
     exit -1

@@ -122,7 +122,7 @@ async fn async_collect_from_mailslot(agent_mailslot: &str, remote_ip: IpAddr) ->
     mailslot_transport::send_to_mailslot(
         agent_mailslot,
         mailslot_transport::DataType::Yaml,
-        make_yaml_command(&own_mailslot, remote_ip).as_bytes(),
+        make_yaml_command(backend.used_name(), remote_ip).as_bytes(),
     );
     let value = tokio::time::timeout(MAX_ANSWER_WAIT_TIME, backend.tx.recv())
         .await

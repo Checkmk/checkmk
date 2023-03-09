@@ -253,7 +253,7 @@ class BICompiler:
                 continue
             if path_object.name not in valid_aggregations:
                 path_object.unlink(missing_ok=True)
-            self._unfreeze_all_branches(path_object.name)
+                self._unfreeze_all_branches(path_object.name)
 
     def _verify_aggregation_title_uniqueness(
         self, compiled_aggregations: dict[str, BICompiledAggregation]

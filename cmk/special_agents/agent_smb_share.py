@@ -107,7 +107,7 @@ def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=
         relative_path = f"{subdir}{shared_file.filename}"
         absolute_path = f"\\\\{hostname}\\{share_name}\\{relative_path}"
 
-        if not fnmatch(shared_file.filename, pattern[0]):
+        if not fnmatch(shared_file.filename.lower(), pattern[0].lower()):
             continue
 
         if shared_file.isDirectory and len(pattern) > 1:

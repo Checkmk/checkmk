@@ -147,7 +147,14 @@ disable=
     consider-using-f-string,
     #---------------------------------------------------------------------------
     # New in version 2.15.0 which causes a few findings
-    missing-timeout
+    missing-timeout,
+    #---------------------------------------------------------------------------
+    # New in version 2.16.0 which causes a few findings
+    broad-exception-raised,
+    #---------------------------------------------------------------------------
+    # 2.16 also warns about call to dict() when passing keyword arguments
+    # Remove this soon!
+    use-dict-literal
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

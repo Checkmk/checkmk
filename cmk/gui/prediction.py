@@ -249,8 +249,9 @@ def stack(apoints, bpoints, scale):
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
     for points in swapped.values():
-        mmax = max(mmax, max(filter(None, points), default=0.0))
-        mmin = min(mmin, min(filter(None, points), default=0.0))
+        # NOTE: pylint emits false positives below
+        mmax = max(mmax, max(filter(None, points), default=0.0))  # pylint: disable=nested-min-max
+        mmin = min(mmin, min(filter(None, points), default=0.0))  # pylint: disable=nested-min-max
     return mmin, mmax
 
 

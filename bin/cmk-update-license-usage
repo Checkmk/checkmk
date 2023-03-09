@@ -5,7 +5,19 @@
 
 import sys
 
-from cmk.utils.licensing.usage import update_license_usage
+from cmk.utils.licensing.helper import init_logging
+from cmk.utils.licensing.usage import try_update_license_usage
+
+
+def main() -> int:
+    logger = init_logging()
+    try:
+        try_update_license_usage(logger)
+        return 0
+    except Exception as e:
+        logger.error("Error during license usage history update: %s", e)
+        return 1
+
 
 if __name__ == "__main__":
-    sys.exit(update_license_usage())
+    sys.exit(main())

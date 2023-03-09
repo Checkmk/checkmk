@@ -54,28 +54,14 @@ _LICENSE_LABEL_NAME = "cmk/licensing"
 _LICENSE_LABEL_EXCLUDE = "excluded"
 
 
-def update_license_usage() -> int:
+def try_update_license_usage(logger: logging.Logger) -> None:
     """Update the license usage history
 
     If a sample could not be created (due to livestatus errors) then the update process will be
     skipped. This is important for checking the mtime of the history file during activate changes.
 
     The history has a max. length of 400 (days)."""
-    logger = init_logging()
-
-    try:
-        return _try_update_license_usage(logger)
-    except Exception as e:
-        logger.error("Error during license usage history update: %s", e)
-        return 1
-
-
-def _try_update_license_usage(logger: logging.Logger) -> int:
-    try:
-        sample = _create_sample()
-    except (livestatus.MKLivestatusSocketError, livestatus.MKLivestatusNotFoundError) as e:
-        logger.error("Creation of sample failed due to a livestatus error: %s", e)
-        return 1
+    sample = _create_sample()
 
     report_filepath = get_license_usage_report_filepath()
     licensing_dir.mkdir(parents=True, exist_ok=True)
@@ -85,7 +71,7 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
         now = datetime.now()
 
         if now.timestamp() < _get_next_run_ts(next_run_filepath):
-            return 0
+            return
 
         history = load_license_usage_history(report_filepath)
         history.add_sample(sample)
@@ -98,8 +84,6 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
         )
 
         store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
-
-    return 0
 
 
 def _create_sample() -> LicenseUsageSample:
@@ -412,7 +396,7 @@ def get_license_usage_report_validity() -> LicenseUsageReportValidity:
 
     with store.locked(report_filepath):
         if report_filepath.stat().st_size == 0:
-            update_license_usage()
+            try_update_license_usage(init_logging())
             return LicenseUsageReportValidity.recent_enough
 
         age = time.time() - report_filepath.stat().st_mtime

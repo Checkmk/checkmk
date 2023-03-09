@@ -6,8 +6,9 @@
 
 import cmk.gui.pages
 import cmk.gui.config as config
-import cmk.gui.utils as utils
 from cmk.gui.globals import html, request
+from cmk.utils.urls import is_allowed_url
+
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.utils.urls import makeuri
@@ -26,7 +27,7 @@ def page_index() -> None:
 
 def _get_start_url() -> str:
     default_start_url = config.user.start_url or config.start_url
-    if not utils.is_allowed_url(default_start_url):
+    if not is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"
 
     return html.get_url_input("start_url", default_start_url)

@@ -23,12 +23,12 @@ from typing import (
     Tuple,
     Union,
 )
-import urllib.parse
 
 from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.regex
+from cmk.utils.urls import is_allowed_url
 from cmk.gui.hooks import request_memoize
 
 from cmk.gui.i18n import _
@@ -62,54 +62,6 @@ def cmp_num_split(a: str, b: str) -> int:
 def key_num_split(a: str) -> Tuple[Union[int, str], ...]:
     """Return a key from a string, separate numbers and non-numbers from before."""
     return num_split(a)
-
-
-def is_allowed_url(url: str,
-                   cross_domain: bool = False,
-                   schemes: Optional[List[str]] = None) -> bool:
-    """Check if url is allowed
-
-    >>> is_allowed_url("http://checkmk.com/")
-    False
-    >>> is_allowed_url("http://checkmk.com/", cross_domain=True, schemes=["http", "https"])
-    True
-    >>> is_allowed_url("/checkmk/", cross_domain=True, schemes=["http", "https"])
-    True
-    >>> is_allowed_url("//checkmk.com/", cross_domain=True)
-    True
-    >>> is_allowed_url("/foobar")
-    True
-    >>> is_allowed_url("//user:password@domain/", cross_domain=True)
-    True
-    >>> is_allowed_url("javascript:alert(1)")
-    False
-    >>> is_allowed_url("javascript:alert(1)", cross_domain=True, schemes=["javascript"])
-    True
-    >>> is_allowed_url('someXSSAttempt?"><script>alert(1)</script>')
-    False
-    """
-
-    try:
-        parsed = urllib.parse.urlparse(url)
-    except ValueError:
-        return False
-
-    if not cross_domain and parsed.netloc != "":
-        return False
-
-    if schemes is None and parsed.scheme != "":
-        return False
-    if schemes is not None and parsed.scheme and parsed.scheme not in schemes:
-        return False
-
-    urlchar_regex = cmk.utils.regex.regex(cmk.utils.regex.URL_CHAR_REGEX)
-    for part in parsed:
-        if not part:
-            continue
-        if not urlchar_regex.match(part):
-            return False
-
-    return True
 
 
 def validate_start_url(value: str, varprefix: str) -> None:

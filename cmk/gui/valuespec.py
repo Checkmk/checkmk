@@ -71,6 +71,7 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.type_defs import Seconds
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
@@ -6758,7 +6759,7 @@ class RuleComment(TextAreaUnicode):
 
 def DocumentationURL() -> TextInput:
     def _validate_documentation_url(value: str, varprefix: str) -> None:
-        if utils.is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
+        if is_allowed_url(value, cross_domain=True, schemes=["http", "https"]):
             return
         raise MKUserError(
             varprefix,

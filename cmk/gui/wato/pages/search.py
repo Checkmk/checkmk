@@ -92,6 +92,17 @@ class ModeSearch(WatoMode):
         return list(search_vars.items())
 
     def page(self) -> None:
+        html.help(
+            _(
+                "For the Hostname field, a partial word search (infix search) is used "
+                "— the entered text is searched, at any position, in the host name. "
+                "Furthermore, you can limit the search using other host attributes. Please note "
+                "that you can search for the attributes configured in the hosts and folders and "
+                "not the final settings applied to the monitoring once it's activated. For "
+                "in the labels field you are only searching for the explicitly configured labels "
+                "and not the effective labels of a host."
+            )
+        )
         # Show search form
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()

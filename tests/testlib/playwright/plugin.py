@@ -26,7 +26,8 @@ from playwright.sync_api import (
 )
 
 logger = logging.getLogger(__name__)
-_browser_engines = ["chromium", "firefox"]  # to align with what playwright installs (see Makefile).
+_browser_engines = ["chromium", "firefox"]  # engines selectable via CLI
+_browser_engines_ci = ["chromium"]  # align with what playwright installs in the CI (see Makefile)
 _mobile_devices = ["iPhone 6", "Galaxy S8"]
 
 
@@ -171,6 +172,8 @@ def _browser_name(request: _pytest.fixtures.SubRequest, pytestconfig: _pytest.co
             f"Only {', '.join(str(browser) for browser in browser_names_cli)} engine(s) selected "
             f"from the CLI"
         )
+    elif len(browser_names_cli) == 0 and browser_name_param not in _browser_engines_ci:
+        pytest.skip(f"{browser_name_param} engine not running in the CI. Still selectable via CLI")
     return browser_name_param
 
 

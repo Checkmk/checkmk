@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
 from typing import NamedTuple
 
@@ -45,7 +46,9 @@ def snmp_data_dir_fixture(request):
 
 
 @pytest.fixture(name="snmpsim", scope="module", autouse=True)
-def snmpsim_fixture(site: Site, snmp_data_dir, tmp_path_factory):  # type:ignore[no-untyped-def]
+def snmpsim_fixture(
+    site: Site, snmp_data_dir: Path, tmp_path_factory: pytest.TempPathFactory
+) -> Iterator[None]:
     tmp_path = tmp_path_factory.getbasetemp()
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
@@ -140,7 +143,7 @@ def _create_listening_condition(process_def):
     return lambda: _is_listening(process_def)
 
 
-def _is_listening(process_def) -> bool:  # type:ignore[no-untyped-def]
+def _is_listening(process_def: ProcessDef) -> bool:
     p = process_def.process
     port = process_def.port
     exitcode = p.poll()
@@ -162,6 +165,7 @@ def _is_listening(process_def) -> bool:  # type:ignore[no-untyped-def]
                 raise
             snmpsimd_died = True
     if snmpsimd_died:
+        assert p.stdout is not None and exitcode is not None
         error_msg = p.stdout.read().split("\n", 1)[0]
         raise Exception("snmpsimd died. Exit code: %d; error message: %s" % (exitcode, error_msg))
 

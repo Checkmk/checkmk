@@ -23,10 +23,9 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.delete_file("local/bin/sendmail")
 
 
+@pytest.mark.usefixtures("fake_sendmail")
 @pytest.fixture(name="test_log")
-def test_log_fixture(  # type:ignore[no-untyped-def]
-    site: Site, fake_sendmail
-) -> Iterator[WatchLog]:
+def test_log_fixture(site: Site) -> Iterator[WatchLog]:
     users = {
         "hh": {
             "fullname": "Harry Hirsch",

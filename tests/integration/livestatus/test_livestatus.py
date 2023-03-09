@@ -6,6 +6,7 @@
 import json as _json
 import time as _time
 import uuid as _uuid
+from collections.abc import Iterator, Mapping
 
 import pytest
 
@@ -133,8 +134,9 @@ def test_usage_counters(site: Site) -> None:
     assert all(isinstance(v, (int, float)) for v in rows[0])
 
 
+@pytest.mark.usefixtures("default_cfg")
 @pytest.fixture(name="configure_service_tags")
-def configure_service_tags_fixture(site: Site, default_cfg):  # type:ignore[no-untyped-def]
+def configure_service_tags_fixture(site: Site) -> Iterator[None]:
     site.openapi.create_host(
         "modes-test-host",
         attributes={
@@ -198,14 +200,14 @@ class TestCrashReport:
         yield
         site.delete_dir("var/check_mk/crashes/%s" % component)
 
-    def test_list_crash_report(self, site, component, uuid) -> None:  # type:ignore[no-untyped-def]
+    def test_list_crash_report(self, site: Site, component: str, uuid: str) -> None:
         rows = site.live.query("GET crashreports")
         assert rows
         assert ["component", "id"] in rows
         assert [component, uuid] in rows
 
-    def test_read_crash_report(  # type:ignore[no-untyped-def]
-        self, site, component, uuid, crash_info
+    def test_read_crash_report(
+        self, site: Site, component: str, uuid: str, crash_info: Mapping[str, str]
     ) -> None:
         rows = site.live.query(
             "\n".join(
@@ -219,7 +221,7 @@ class TestCrashReport:
         assert rows
         assert _json.loads(rows[0][0]) == crash_info
 
-    def test_del_crash_report(self, site, component, uuid) -> None:  # type:ignore[no-untyped-def]
+    def test_del_crash_report(self, site: Site, component: str, uuid: str) -> None:
         before = site.live.query("GET crashreports")
         assert [component, uuid] in before
 
@@ -230,7 +232,7 @@ class TestCrashReport:
         assert after != before
         assert [component, uuid] not in after
 
-    def test_other_crash_report(self, site, component, uuid) -> None:  # type:ignore[no-untyped-def]
+    def test_other_crash_report(self, site: Site, component: str, uuid: str) -> None:
         before = site.live.query("GET crashreports")
         assert [component, uuid] in before
 

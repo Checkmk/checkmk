@@ -21,6 +21,8 @@ from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
 from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.tags import TaggroupIDToTagID
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 from cmk.checkers.check_table import ConfiguredService
@@ -28,7 +30,7 @@ from cmk.checkers.check_table import ConfiguredService
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import (
     CollectedHostLabels,
     get_labels_from_attributes,
@@ -47,9 +49,7 @@ def fixture_config_path():
         shutil.rmtree(ConfigPath.ROOT)
 
 
-def test_do_create_config_nagios(  # type:ignore[no-untyped-def]
-    core_scenario: ConfigCache, config_path
-) -> None:
+def test_do_create_config_nagios(core_scenario: ConfigCache) -> None:
     core_config.do_create_config(create_core("nagios"), core_scenario, duplicates=())
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
@@ -88,8 +88,8 @@ def test_commandline_arguments_password_store(pw: str) -> None:
     ) == "--pwstore=2@11@pw-id arg1 '--password=%s' arg3" % ("*" * len(pw))
 
 
-def test_commandline_arguments_not_existing_password(  # type:ignore[no-untyped-def]
-    capsys,
+def test_commandline_arguments_not_existing_password(
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     assert (
         core_config.commandline_arguments(
@@ -197,8 +197,8 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
         ("blub", {"check_interval": 40.0}),
     ],
 )
-def test_get_cmk_passive_service_attributes(  # type:ignore[no-untyped-def]
-    monkeypatch, hostname, result
+def test_get_cmk_passive_service_attributes(
+    monkeypatch: pytest.MonkeyPatch, hostname: HostName, result: ObjectAttributes
 ) -> None:
     ts = Scenario()
     ts.add_host("localhost")
@@ -280,7 +280,9 @@ def test_get_cmk_passive_service_attributes(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_get_tag_attributes(tag_groups, result) -> None:  # type:ignore[no-untyped-def]
+def test_get_tag_attributes(
+    tag_groups: TaggroupIDToTagID | Labels | LabelSources, result: ObjectAttributes
+) -> None:
     attributes = ConfigCache._get_tag_attributes(tag_groups, "TAG")
     assert attributes == result
     for k, v in attributes.items():
@@ -374,14 +376,14 @@ def test_get_host_config(
         ),
     ],
 )
-def test_iter_active_check_services(  # type:ignore[no-untyped-def]
+def test_iter_active_check_services(
     check_name: str,
     active_check_info: Mapping[str, Mapping[str, str]],
     hostname: str,
     host_attrs: dict[str, Any],
     expected_result: Sequence[tuple[str, str]],
-    monkeypatch,
-):
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 

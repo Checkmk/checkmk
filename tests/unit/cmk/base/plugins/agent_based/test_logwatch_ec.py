@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,7 @@ import cmk.utils.paths
 
 from cmk.base.plugins.agent_based import logwatch_ec
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
 
 INFO1 = [
@@ -122,8 +124,11 @@ SECTION1 = logwatch_ec.logwatch.Section(
         ),
     ],
 )
-def test_logwatch_ec_inventory_single(  # type:ignore[no-untyped-def]
-    monkeypatch, info, fwd_rule, expected_result
+def test_logwatch_ec_inventory_single(
+    monkeypatch: pytest.MonkeyPatch,
+    info: StringTable,
+    fwd_rule: Mapping[str, object],
+    expected_result: DiscoveryResult,
 ) -> None:
     parsed = parse_logwatch(info)
 
@@ -153,8 +158,11 @@ def test_logwatch_ec_inventory_single(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_logwatch_ec_inventory_groups(  # type:ignore[no-untyped-def]
-    monkeypatch, info, fwd_rule, expected_result
+def test_logwatch_ec_inventory_groups(
+    monkeypatch: pytest.MonkeyPatch,
+    info: StringTable,
+    fwd_rule: Mapping[str, object],
+    expected_result: DiscoveryResult,
 ) -> None:
     parsed = parse_logwatch(info)
 
@@ -245,7 +253,7 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     ]
 
 
-def test_check_logwatch_ec_common_spool(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(logwatch_ec, "host_name", lambda: "test-host")
     monkeypatch.setattr(logwatch_ec, "_MAX_SPOOL_SIZE", 32)
     assert list(

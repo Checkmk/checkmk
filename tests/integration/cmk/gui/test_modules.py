@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import pytest
+
 from tests.testlib import wait_until
 from tests.testlib.site import Site
 
 
-def test_load_dashboard_plugin(request, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_load_dashboard_plugin(request: pytest.FixtureRequest, site: Site) -> None:
     plugin_path = "local/lib/check_mk/gui/plugins/dashboard/test_plugin.py"
 
     def cleanup():

@@ -11,8 +11,11 @@ from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
+from tests.unit.cmk.gui.conftest import SetConfig
+
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.gui.inventory
 import cmk.gui.plugins.visuals
@@ -22,7 +25,7 @@ import cmk.gui.views
 import cmk.gui.visuals
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 
 
@@ -113,8 +116,8 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
-def test_filters_filter_with_empty_request(  # type:ignore[no-untyped-def]
-    request_context, filter_ident, live
+def test_filters_filter_with_empty_request(
+    filter_ident: str, live: MockLiveStatusConnection
 ) -> None:
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
@@ -608,7 +611,7 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(request_context, test, set_config) -> None:  # type:ignore[no-untyped-def]
+def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
     with set_config(
         wato_host_attrs=[{"name": "bla", "title": "Bla"}],  # Needed for ABCFilterCustomAttribute
         tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
@@ -622,7 +625,7 @@ def test_filters_filter(request_context, test, set_config) -> None:  # type:igno
 class FilterTableTest(NamedTuple):
     ident: str
     request_vars: Sequence[tuple[str, str]]
-    rows: Sequence[Mapping[str, Any]]
+    rows: Rows
     expected_rows: Sequence[Mapping[str, Any]]
 
 
@@ -1190,9 +1193,7 @@ filter_table_tests = [
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
-def test_filters_filter_table(  # type:ignore[no-untyped-def]
-    request_context, test, monkeypatch
-) -> None:
+def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyPatch) -> None:
     # Needed for DeploymentTristateFilter test
     def deployment_states(host_name):
         return {
@@ -1220,7 +1221,7 @@ def test_filters_filter_table(  # type:ignore[no-untyped-def]
     )
 
     # Needed for FilterAggrServiceUsed test
-    def is_part_of_aggregation_patch(host, service) -> bool:  # type:ignore[no-untyped-def]
+    def is_part_of_aggregation_patch(host: str, service: str) -> bool:
         return {("h", "srv1"): True}.get((host, service), False)
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
@@ -1235,9 +1236,7 @@ def test_filters_filter_table(  # type:ignore[no-untyped-def]
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(  # type:ignore[no-untyped-def]
-    request_context, live
-) -> None:
+def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> None:
     with live:
         for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
             with output_funnel.plugged():

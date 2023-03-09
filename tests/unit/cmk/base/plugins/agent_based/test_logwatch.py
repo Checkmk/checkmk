@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pathlib
+from typing import Set
 
 import pytest
 from pytest_mock import MockerFixture
@@ -52,8 +53,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
         ),
     ],
 )
-def test_logwatch_groups_of_logfile(  # type:ignore[no-untyped-def]
-    group_patterns, filename, expected
+def test_logwatch_groups_of_logfile(
+    group_patterns: list[tuple[str, logwatch.GroupingPattern]],
+    filename: str,
+    expected: dict[str, Set[logwatch.GroupingPattern]],
 ) -> None:
     actual = logwatch._groups_of_logfile(group_patterns, filename)
     assert actual == expected
@@ -65,8 +68,8 @@ def test_logwatch_groups_of_logfile(  # type:ignore[no-untyped-def]
         ([("%s_group", ("~.{6}.ack", ""))], "lumberjacks.log"),
     ],
 )
-def test_logwatch_groups_of_logfile_exception(  # type:ignore[no-untyped-def]
-    group_patterns, filename
+def test_logwatch_groups_of_logfile_exception(
+    group_patterns: list[tuple[str, logwatch.GroupingPattern]], filename: str
 ) -> None:
     with pytest.raises(RuntimeError):
         logwatch._groups_of_logfile(group_patterns, filename)
@@ -96,7 +99,7 @@ SECTION1 = logwatch.logwatch.Section(
 )
 
 
-def test_discovery_single(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(logwatch.logwatch, "get_ec_rule_params", lambda: [])
     assert sorted(logwatch.discover_logwatch_single([], SECTION1), key=lambda s: s.item or "",) == [
         Service(item="empty.log"),
@@ -107,7 +110,7 @@ def test_discovery_single(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert not list(logwatch.discover_logwatch_groups([], SECTION1))
 
 
-def test_check_single(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_single(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
     monkeypatch.setattr(logwatch, "_compile_params", lambda _item: [])
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
@@ -158,7 +161,7 @@ SECTION2 = logwatch.logwatch.Section(
 )
 
 
-def test_logwatch_discover_single_restrict(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_logwatch_discover_single_restrict(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         logwatch.logwatch,
         "get_ec_rule_params",
@@ -170,7 +173,7 @@ def test_logwatch_discover_single_restrict(monkeypatch) -> None:  # type:ignore[
     ]
 
 
-def test_logwatch_discover_single_groups(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> None:
     params = [
         {
             "grouping_patterns": [
@@ -186,7 +189,7 @@ def test_logwatch_discover_single_groups(monkeypatch) -> None:  # type:ignore[no
     ]
 
 
-def test_logwatch_discover_groups(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_logwatch_discover_groups(monkeypatch: pytest.MonkeyPatch) -> None:
     params = [
         {
             "grouping_patterns": [

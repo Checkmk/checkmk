@@ -579,9 +579,8 @@ def _cleanup_old_piggybacked_files(
             if e.errno == errno.ENOTEMPTY:
                 continue
             raise
-        else:
-            logger.log(
-                VERBOSE,
-                "Piggyback folder '%s' is empty. Removed it.",
-                piggybacked_host_folder,
-            )
+        logger.log(
+            VERBOSE,
+            "Piggyback folder '%s' is empty. Removed it.",
+            piggybacked_host_folder,
+        )

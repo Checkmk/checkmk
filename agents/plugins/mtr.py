@@ -168,15 +168,14 @@ def check_mtr_pid(pid):
         os.kill(pid, 0)
     except OSError:
         return False  # process does no longer exist
-    else:
-        pid_cmdline = "/proc/%d/cmdline" % pid
-        try:
-            return (
-                os.path.exists(pid_cmdline)
-                and "mtr\x00--report\x00--report-wide" in open(pid_cmdline).read()
-            )
-        except Exception:
-            return False  # any error
+    pid_cmdline = "/proc/%d/cmdline" % pid
+    try:
+        return (
+            os.path.exists(pid_cmdline)
+            and "mtr\x00--report\x00--report-wide" in open(pid_cmdline).read()
+        )
+    except Exception:
+        return False  # any error
 
 
 def parse_report(host, status):  # pylint: disable=too-many-branches

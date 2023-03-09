@@ -68,7 +68,7 @@ def get_omd_distro_name() -> str:
 
     rh = Path("/etc/redhat-release")
     if rh.exists():
-        content = rh.open().read()
+        content = rh.read_text()
         if content.startswith("CentOS release 6"):
             return "el6"
         if content.startswith("CentOS Linux release 7"):

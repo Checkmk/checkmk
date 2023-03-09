@@ -242,5 +242,5 @@ def test_check_function(monkeypatch: pytest.MonkeyPatch) -> None:
         Metric("State_Logging", 0),
         Metric("State_Finishing", 0),
         Metric("State_IdleCleanup", 0),
-        Result(state=State.OK, notice=("Scoreboard states:\n  Waiting: 49\n  SendingReply: 1")),
+        Result(state=State.OK, notice="Scoreboard states:\n  Waiting: 49\n  SendingReply: 1"),
     ]

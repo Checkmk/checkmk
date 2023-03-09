@@ -4765,7 +4765,7 @@ class TimeHelper:
         elif unit == "y":
             lt += relativedelta(years=count)
         else:
-            MKGeneralException("invalid time unit %s" % unit)
+            raise MKGeneralException("invalid time unit %s" % unit)
 
         return lt.timestamp()
 

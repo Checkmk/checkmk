@@ -668,7 +668,9 @@ class ProxmoxVeSession:
                     .get("data")
                 )
             except requests.exceptions.ConnectTimeout:
-                CannotRecover(f"Timeout after {timeout}s when trying to connect to {base_url}")
+                raise CannotRecover(
+                    f"Timeout after {timeout}s when trying to connect to {base_url}"
+                )
             except requests.exceptions.ConnectionError as exc:
                 raise CannotRecover(f"Could not connect to {base_url} ({exc})") from exc
 

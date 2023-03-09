@@ -1159,7 +1159,7 @@ class PrometheusResult(BaseModel):
                     "Incompatible data received: data did not match format expected from OpenShift"
                 )
             case ResultType.success:
-                return "Success"
+                return "Successfully queried usage data from Prometheus"
         assert_never(self.type_)
 
 

@@ -84,6 +84,7 @@ profile_dir = Path(var_dir, "web")
 crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
+visuals_cache_dir = Path(tmp_dir, "visuals_cache")
 
 share_dir = _omd_path_str("share/check_mk")
 checks_dir = _omd_path_str("share/check_mk/checks")

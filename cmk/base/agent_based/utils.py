@@ -80,3 +80,18 @@ def check_parsing_errors(
 ) -> Sequence[ActiveCheckResult]:
     state = error_state if errors else 0
     return [ActiveCheckResult(state, msg.split(" - ")[0], (msg,)) for msg in errors]
+
+
+_CacheInfo = tuple[int, int]
+
+
+def get_cache_info(cache_infos: Sequence[_CacheInfo]) -> _CacheInfo | None:
+    # TODO: should't the host key be provided here?
+    """Aggregate information about the age of the data in the agent sections"""
+    if not cache_infos:
+        return None
+
+    return (
+        min(ats for ats, _intervals in cache_infos),
+        max(intervals for _ats, intervals in cache_infos),
+    )

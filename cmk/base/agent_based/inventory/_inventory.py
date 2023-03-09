@@ -54,7 +54,7 @@ from cmk.base.agent_based.data_provider import (
     Provider,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import check_parsing_errors, get_section_kwargs
+from cmk.base.agent_based.utils import check_parsing_errors, get_cache_info, get_section_kwargs
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
@@ -356,7 +356,7 @@ def _collect_inventory_plugin_items(
 
             yield ItemsOfInventoryPlugin(
                 items=inventory_plugin_items,
-                raw_cache_info=ParsedSectionsBroker.get_cache_info(
+                raw_cache_info=get_cache_info(
                     tuple(
                         cache_info
                         for resolved in ParsedSectionsBroker.resolve(

@@ -66,6 +66,7 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.inventory import inventorize_status_data_of_real_host
 from cmk.base.agent_based.utils import (
     check_parsing_errors,
+    get_cache_info,
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
@@ -451,7 +452,7 @@ def get_aggregated_result(
         submit=True,
         data_received=True,
         result=result,
-        cache_info=ParsedSectionsBroker.get_cache_info(
+        cache_info=get_cache_info(
             tuple(
                 cache_info
                 for resolved in ParsedSectionsBroker.resolve(

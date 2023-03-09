@@ -20,7 +20,7 @@ from .core_queries import HostInfo, query_hosts_infos, query_status_program_star
 #   |                                                      |___/           |
 #   +----------------------------------------------------------------------+
 #   | Manages the configuration of the hosts of the local monitoring core. |
-#   | It fetches and caches the information during runtine of the EC.      |
+#   | It fetches and caches the information during runtime of the EC.      |
 #   '----------------------------------------------------------------------'
 
 

@@ -452,7 +452,7 @@ def _add_infos_from_monitoring_host(
 
     # Add custom variables to the notification context
     for key, val in config.custom_variables.items():
-        # TypedDict with dynamic keys... The typing we have is worth the supression
+        # TypedDict with dynamic keys... The typing we have is worth the suppression
         context[f"HOST_{key}"] = val  # type: ignore[literal-required]
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"

@@ -42,7 +42,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
         2. exported: A rule pack that is available in the Extension Packages, but not
                      yet part of a MKP.
         3. unmodified MKP: A rule pack that is packaged/provided in a MKP.
-        4. modified MKP: A rule pack that was orignially packaged/provided in a MKP but
+        4. modified MKP: A rule pack that was originally packaged/provided in a MKP but
                          was modified by a User and therefore replaced by a modified copy
                          of the rule pack.
 
@@ -145,7 +145,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-ma
                 rule["livetime"] = (livetime, ["open"])
 
     # Convert legacy rules into a default rule pack. Note that we completely
-    # ignore legacy rules if there are rule packs alreday. It's a bit unclear
+    # ignore legacy rules if there are rule packs already. It's a bit unclear
     # if we really want that, but at least that's how it worked in the past...
     if config["rules"] and not config["rule_packs"]:
         config["rule_packs"] = [default_rule_pack(config["rules"])]

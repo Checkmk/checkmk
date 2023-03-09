@@ -178,7 +178,7 @@ class ECRulePackSpec(TypedDict, total=False):
     id: str
     title: str
     disabled: bool
-    rules: Collection[Any]  # TODO: This should acutally be Collection[Rule]
+    rules: Collection[Any]  # TODO: This should actually be Collection[Rule]
     customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
 
 

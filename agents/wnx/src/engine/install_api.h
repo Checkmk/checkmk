@@ -58,7 +58,7 @@ private:
 
 constexpr std::wstring_view kDefaultMsiFileName{L"check_mk_agent.msi"};
 constexpr std::string_view kMsiLogFileName{"agent_msi.log"};
-constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.1"};
+constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.2"};
 namespace api_err {
 constexpr std::string_view kLogFileName{"install_api.log"};
 constexpr std::string_view kFailMarker{"fail: "};

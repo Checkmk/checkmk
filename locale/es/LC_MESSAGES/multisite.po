@@ -19248,6 +19248,9 @@ msgstr "Patrones de agrupación del sistema de archivos"
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "Opciones de montaje del sistema de archivos (Linux/UNIX)"
 
+msgid "Filesystem size"
+msgstr "Tamaño del sistema de archivos"
+
 msgid "Filesystem types to ignore"
 msgstr "Tipos de sistemas de archivos que deben ignorarse"
 
@@ -23492,6 +23495,11 @@ msgstr "Tiempo de espera en reposo"
 
 msgid "Idle workers"
 msgstr "Trabajadores ociosos"
+
+msgid ""
+"If ** is used in the pattern, the agent will recursively look into all the "
+"subfolders, so use this carefully on a deeply nested filesystems."
+msgstr ""
 
 msgid ""
 "If Windows event log generates multiple messages with same content, then "
@@ -30163,13 +30171,11 @@ msgstr "Asignar el estado operativo y administrativo de forma independiente"
 msgid "Map operational states"
 msgstr "Mapa de estados operativos"
 
-msgid "Map power states"
-msgstr "Mapa de estados de energía"
-
 msgid "Map process states"
 msgstr "Mapa de los estados del proceso"
 
-msgid "Map provisioning states"
+#, fuzzy
+msgid "Map provisioning and power states"
 msgstr "Mapa de estados de aprovisionamiento"
 
 #, fuzzy
@@ -30316,6 +30322,9 @@ msgstr "Anfitriones del partido"
 #, python-format
 msgid "Match interface %s (regex)"
 msgstr "Coincidencia de la interfaz %s (regex)"
+
+msgid "Match multiple directories with **"
+msgstr ""
 
 msgid "Match notification comment"
 msgstr "Comentario de la notificación del partido"
@@ -37917,6 +37926,10 @@ msgstr "Uso de la energía"
 msgid "Power consumption draw"
 msgstr "Consumo de energía de APC"
 
+#, fuzzy
+msgid "Power state unknown"
+msgstr "El estado del sitio es desconocido"
+
 msgid "Powered OFF"
 msgstr "Apagado"
 
@@ -39238,6 +39251,10 @@ msgstr "Tiempos de inactividad recurrentes para %s"
 
 msgid "Recursion"
 msgstr "Recursión"
+
+#, fuzzy
+msgid "Recursive pattern search"
+msgstr "Patrones de exclusión"
 
 msgid "Red"
 msgstr "Rojo"
@@ -44476,7 +44493,7 @@ msgstr "Sophos Utilización de la memoria"
 #, fuzzy, python-format
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
-"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"installation can handle %d services after the 30-day trial period, not %d. "
 "Please adjust your configuration accordingly and try again."
 msgstr ""
 "Lo sentimos, pero su prueba ilimitada de 30 días de Checkmk ha terminado. La "
@@ -64899,9 +64916,9 @@ msgstr "Tu %s ha sido guardado."
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
-"hosts is supported, currently %s hosts are being monitored. Adjust your "
-"configuration or see here how to proceed: %s  "
+"Your Checkmk trial will expire in %d days. After that monitoring of up to  "
+"services is supported, currently %d services are being monitored. Adjust "
+"your configuration or see here how to proceed: %s  "
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"
@@ -67165,6 +67182,9 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Map power states"
+#~ msgstr "Mapa de estados de energía"
 
 #~ msgid "Deselect all checkboxes"
 #~ msgstr "Desmarcar todas las casillas de verificación"
@@ -69763,9 +69783,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Filesystem growth"
 #~ msgstr "Crecimiento del sistema de archivos"
-
-#~ msgid "Filesystem size"
-#~ msgstr "Tamaño del sistema de archivos"
 
 #~ msgid "Filesystem size and usage"
 #~ msgstr "Tamaño y uso del sistema de archivos"

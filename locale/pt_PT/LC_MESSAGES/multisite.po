@@ -19229,6 +19229,9 @@ msgstr "Padrões de agrupamento de sistemas de arquivos"
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "Opções de montagem do sistema de arquivos (Linux/UNIX)"
 
+msgid "Filesystem size"
+msgstr "Tamanho do sistema de arquivos"
+
 msgid "Filesystem types to ignore"
 msgstr "Tipos de sistemas de arquivo a ignorar"
 
@@ -23474,6 +23477,11 @@ msgstr "Tempo de inactividade"
 
 msgid "Idle workers"
 msgstr "trabalhadores ociosos"
+
+msgid ""
+"If ** is used in the pattern, the agent will recursively look into all the "
+"subfolders, so use this carefully on a deeply nested filesystems."
+msgstr ""
 
 msgid ""
 "If Windows event log generates multiple messages with same content, then "
@@ -30142,13 +30150,11 @@ msgstr "Mapa estados operacionais"
 msgid "Map operational states"
 msgstr "Mapa estados operacionais"
 
-msgid "Map power states"
-msgstr "Estados de potência do mapa"
-
 msgid "Map process states"
 msgstr "Estados do processo do mapa"
 
-msgid "Map provisioning states"
+#, fuzzy
+msgid "Map provisioning and power states"
 msgstr "Estados de aprovisionamento de mapas"
 
 #, fuzzy
@@ -30297,6 +30303,9 @@ msgstr "Anfitriões de jogos"
 #, python-format
 msgid "Match interface %s (regex)"
 msgstr "Interface de correspondência %s (regex)"
+
+msgid "Match multiple directories with **"
+msgstr ""
 
 msgid "Match notification comment"
 msgstr "Comentário de notificação de jogo"
@@ -37942,6 +37951,10 @@ msgstr "Uso de energia"
 msgid "Power consumption draw"
 msgstr "Consumo de energia APC"
 
+#, fuzzy
+msgid "Power state unknown"
+msgstr "O estado do local é desconhecido"
+
 msgid "Powered OFF"
 msgstr "Desligado"
 
@@ -39266,6 +39279,10 @@ msgstr "Tempos de paragem recorrentes para %s"
 
 msgid "Recursion"
 msgstr "Recurssão"
+
+#, fuzzy
+msgid "Recursive pattern search"
+msgstr "Padrões de exclusão"
 
 msgid "Red"
 msgstr "Vermelho"
@@ -44491,7 +44508,7 @@ msgstr "Utilização da Memória Sophos"
 #, fuzzy, python-format
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
-"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"installation can handle %d services after the 30-day trial period, not %d. "
 "Please adjust your configuration accordingly and try again."
 msgstr ""
 "Desculpe, mas o seu julgamento ilimitado de 30 dias de Checkmk terminou. A "
@@ -64665,9 +64682,9 @@ msgstr "As suas %s foram salvas."
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
-"hosts is supported, currently %s hosts are being monitored. Adjust your "
-"configuration or see here how to proceed: %s  "
+"Your Checkmk trial will expire in %d days. After that monitoring of up to  "
+"services is supported, currently %d services are being monitored. Adjust "
+"your configuration or see here how to proceed: %s  "
 msgstr ""
 
 #, fuzzy
@@ -66945,6 +66962,9 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Map power states"
+#~ msgstr "Estados de potência do mapa"
 
 #~ msgid "Deselect all checkboxes"
 #~ msgstr "Desmarcar todas as caixas de seleção"
@@ -69559,9 +69579,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Filesystem growth"
 #~ msgstr "Crescimento do sistema de arquivos"
-
-#~ msgid "Filesystem size"
-#~ msgstr "Tamanho do sistema de arquivos"
 
 #~ msgid "Filesystem size and usage"
 #~ msgstr "Tamanho e utilização do sistema de arquivos"

@@ -18632,6 +18632,10 @@ msgstr ""
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr ""
 
+#, fuzzy
+msgid "Filesystem size"
+msgstr "Spațiu liber exact"
+
 msgid "Filesystem types to ignore"
 msgstr ""
 
@@ -22536,6 +22540,11 @@ msgid "Idle timeout"
 msgstr ""
 
 msgid "Idle workers"
+msgstr ""
+
+msgid ""
+"If ** is used in the pattern, the agent will recursively look into all the "
+"subfolders, so use this carefully on a deeply nested filesystems."
 msgstr ""
 
 msgid ""
@@ -28565,15 +28574,13 @@ msgstr "Optiuni tabel"
 msgid "Map operational states"
 msgstr "Optiuni tabel"
 
-msgid "Map power states"
-msgstr ""
-
 #, fuzzy
 msgid "Map process states"
 msgstr "Numele Elementului"
 
-msgid "Map provisioning states"
-msgstr ""
+#, fuzzy
+msgid "Map provisioning and power states"
+msgstr "Optiuni tabel"
 
 #, fuzzy
 msgid "Map roles"
@@ -28725,6 +28732,9 @@ msgstr "Cautare"
 # georgem ##############
 #, python-format
 msgid "Match interface %s (regex)"
+msgstr ""
+
+msgid "Match multiple directories with **"
 msgstr ""
 
 #, fuzzy
@@ -36318,6 +36328,9 @@ msgstr ""
 msgid "Power consumption draw"
 msgstr "APC consum de Curent"
 
+msgid "Power state unknown"
+msgstr ""
+
 msgid "Powered OFF"
 msgstr ""
 
@@ -37702,6 +37715,10 @@ msgstr ""
 
 msgid "Recursion"
 msgstr ""
+
+#, fuzzy
+msgid "Recursive pattern search"
+msgstr "Adaugă model/tipar"
 
 msgid "Red"
 msgstr ""
@@ -42867,7 +42884,7 @@ msgstr "Dezactiveaza Notificarile"
 #, python-format
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
-"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"installation can handle %d services after the 30-day trial period, not %d. "
 "Please adjust your configuration accordingly and try again."
 msgstr ""
 
@@ -59697,9 +59714,9 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
-"hosts is supported, currently %s hosts are being monitored. Adjust your "
-"configuration or see here how to proceed: %s  "
+"Your Checkmk trial will expire in %d days. After that monitoring of up to  "
+"services is supported, currently %d services are being monitored. Adjust "
+"your configuration or see here how to proceed: %s  "
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"

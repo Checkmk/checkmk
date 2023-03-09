@@ -19151,6 +19151,9 @@ msgstr "Dateisystemgruppen"
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "Dateisystem: Mountoptionen (Linux/UNIX)"
 
+msgid "Filesystem size"
+msgstr "Dateisystemgröße"
+
 msgid "Filesystem types to ignore"
 msgstr "Zu ignorierende Dateisystemtypen"
 
@@ -23385,6 +23388,11 @@ msgstr "Inaktivitätstimeout"
 
 msgid "Idle workers"
 msgstr "Untätige Workerprozesse"
+
+msgid ""
+"If ** is used in the pattern, the agent will recursively look into all the "
+"subfolders, so use this carefully on a deeply nested filesystems."
+msgstr ""
 
 msgid ""
 "If Windows event log generates multiple messages with same content, then "
@@ -29981,13 +29989,11 @@ msgstr "Betriebs- und Verwaltungszustand unabhängig voneinander abbilden"
 msgid "Map operational states"
 msgstr "Betriebszustände abbilden"
 
-msgid "Map power states"
-msgstr "Setze die Strom-Zustände"
-
 msgid "Map process states"
 msgstr "Prozesszustände abbilden"
 
-msgid "Map provisioning states"
+#, fuzzy
+msgid "Map provisioning and power states"
 msgstr "Setze den Provisioning-Status"
 
 #, fuzzy
@@ -30134,6 +30140,9 @@ msgstr "Matche Hosts"
 #, python-format
 msgid "Match interface %s (regex)"
 msgstr "Matche Schnittstelle %s (regex)"
+
+msgid "Match multiple directories with **"
+msgstr ""
 
 msgid "Match notification comment"
 msgstr "Alarmierungs-Kommentar"
@@ -37697,6 +37706,10 @@ msgstr "Energie Verbrauch"
 msgid "Power consumption draw"
 msgstr "USV Stromverbrauch"
 
+#, fuzzy
+msgid "Power state unknown"
+msgstr "Zustand der Instanz ist unbekannt"
+
 msgid "Powered OFF"
 msgstr "Ausgeschaltet"
 
@@ -39024,6 +39037,10 @@ msgstr "Zyklische Wartungszeiten für %s"
 
 msgid "Recursion"
 msgstr "Rekursion"
+
+#, fuzzy
+msgid "Recursive pattern search"
+msgstr "Ausschluss-Muster"
 
 msgid "Red"
 msgstr "Rot"
@@ -44216,7 +44233,7 @@ msgstr "Speicherauslastung von Sophos"
 #, fuzzy, python-format
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
-"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"installation can handle %d services after the 30-day trial period, not %d. "
 "Please adjust your configuration accordingly and try again."
 msgstr ""
 "Es tut uns leid, aber Ihre unbegrenzte 30-Tage-Testversion von Checkmk ist "
@@ -64464,9 +64481,9 @@ msgstr "Ihr %s wurde gespeichert."
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
-"hosts is supported, currently %s hosts are being monitored. Adjust your "
-"configuration or see here how to proceed: %s  "
+"Your Checkmk trial will expire in %d days. After that monitoring of up to  "
+"services is supported, currently %d services are being monitored. Adjust "
+"your configuration or see here how to proceed: %s  "
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"
@@ -66721,6 +66738,9 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Map power states"
+#~ msgstr "Setze die Strom-Zustände"
 
 #~ msgid "Deselect all checkboxes"
 #~ msgstr "Alle Checkboxen abwählen"
@@ -69322,9 +69342,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Filesystem growth"
 #~ msgstr "Dateisystemwachstum"
-
-#~ msgid "Filesystem size"
-#~ msgstr "Dateisystemgröße"
 
 #~ msgid "Filesystem size and usage"
 #~ msgstr "Größe und Nutzung des Dateisystems"

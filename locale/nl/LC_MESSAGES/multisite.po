@@ -19108,6 +19108,9 @@ msgstr "Groeperingspatronen bestandssysteem"
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "Bestandssysteem mount opties (Linux/UNIX)"
 
+msgid "Filesystem size"
+msgstr "Grootte bestandssysteem"
+
 msgid "Filesystem types to ignore"
 msgstr "Te negeren bestandssysteemtypes"
 
@@ -23318,6 +23321,11 @@ msgstr "Inactieve time-out"
 
 msgid "Idle workers"
 msgstr "Inactieve werknemers"
+
+msgid ""
+"If ** is used in the pattern, the agent will recursively look into all the "
+"subfolders, so use this carefully on a deeply nested filesystems."
+msgstr ""
 
 msgid ""
 "If Windows event log generates multiple messages with same content, then "
@@ -29938,13 +29946,11 @@ msgstr ""
 msgid "Map operational states"
 msgstr "Kaart operationele staten"
 
-msgid "Map power states"
-msgstr "Kaart vermogenstoestanden"
-
 msgid "Map process states"
 msgstr "Procestoestanden in kaart brengen"
 
-msgid "Map provisioning states"
+#, fuzzy
+msgid "Map provisioning and power states"
 msgstr "Provisioning states in kaart brengen"
 
 #, fuzzy
@@ -30089,6 +30095,9 @@ msgstr "Wedstrijd gastheren"
 #, python-format
 msgid "Match interface %s (regex)"
 msgstr "Overeenkomende interface %s (regex)"
+
+msgid "Match multiple directories with **"
+msgstr ""
 
 msgid "Match notification comment"
 msgstr "Opmerking bij kennisgeving wedstrijd"
@@ -37614,6 +37623,10 @@ msgstr "Stroomverbruik"
 msgid "Power consumption draw"
 msgstr "APC Stroomverbruik"
 
+#, fuzzy
+msgid "Power state unknown"
+msgstr "De staat van de site is onbekend"
+
 msgid "Powered OFF"
 msgstr "Uitgeschakeld"
 
@@ -38926,6 +38939,10 @@ msgstr "Terugkerende uitvaltijden voor %s"
 
 msgid "Recursion"
 msgstr "Recursie"
+
+#, fuzzy
+msgid "Recursive pattern search"
+msgstr "Uitsluitingspatronen"
 
 msgid "Red"
 msgstr "Red"
@@ -44105,7 +44122,7 @@ msgstr "Sophos Geheugengebruik"
 #, fuzzy, python-format
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
-"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"installation can handle %d services after the 30-day trial period, not %d. "
 "Please adjust your configuration accordingly and try again."
 msgstr ""
 "Sorry, maar uw onbeperkte 30-dagen proefperiode van Checkmk is afgelopen. De "
@@ -64381,9 +64398,9 @@ msgstr "Uw %s is opgeslagen."
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
-"hosts is supported, currently %s hosts are being monitored. Adjust your "
-"configuration or see here how to proceed: %s  "
+"Your Checkmk trial will expire in %d days. After that monitoring of up to  "
+"services is supported, currently %d services are being monitored. Adjust "
+"your configuration or see here how to proceed: %s  "
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"
@@ -66635,6 +66652,9 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Map power states"
+#~ msgstr "Kaart vermogenstoestanden"
 
 #~ msgid "Deselect all checkboxes"
 #~ msgstr "Deselecteer alle selectievakjes"
@@ -69210,9 +69230,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Filesystem growth"
 #~ msgstr "Bestandssysteem groei"
-
-#~ msgid "Filesystem size"
-#~ msgstr "Grootte bestandssysteem"
 
 #~ msgid "Filesystem size and usage"
 #~ msgstr "Bestandssysteem grootte en gebruik"

@@ -18448,6 +18448,9 @@ msgstr "ファイルシステムのグループ化パターン"
 msgid "Filesystem mount options (Linux/UNIX)"
 msgstr "ファイルシステムのマウントオプション(Linux/UNIX)"
 
+msgid "Filesystem size"
+msgstr "ファイルシステムのサイズ"
+
 msgid "Filesystem types to ignore"
 msgstr "無視するファイルシステムの種類"
 
@@ -22461,6 +22464,11 @@ msgstr "アイドルタイムアウト"
 
 msgid "Idle workers"
 msgstr "アイドルのワーカー"
+
+msgid ""
+"If ** is used in the pattern, the agent will recursively look into all the "
+"subfolders, so use this carefully on a deeply nested filesystems."
+msgstr ""
 
 msgid ""
 "If Windows event log generates multiple messages with same content, then "
@@ -28723,13 +28731,11 @@ msgstr "運用状態と管理状態を独立してマッピングする"
 msgid "Map operational states"
 msgstr "運用状態のマップ"
 
-msgid "Map power states"
-msgstr "電力状態をマップする"
-
 msgid "Map process states"
 msgstr "プロセス状態のマップ"
 
-msgid "Map provisioning states"
+#, fuzzy
+msgid "Map provisioning and power states"
 msgstr "マッププロビジョニングの状態"
 
 #, fuzzy
@@ -28869,6 +28875,9 @@ msgstr "ホストを一致させる"
 #, python-format
 msgid "Match interface %s (regex)"
 msgstr "インターフェイス %s に一致(正規表現)"
+
+msgid "Match multiple directories with **"
+msgstr ""
 
 msgid "Match notification comment"
 msgstr "通知コメントの一致"
@@ -36173,6 +36182,10 @@ msgstr "電力使用量"
 msgid "Power consumption draw"
 msgstr "APCの消費電力"
 
+#, fuzzy
+msgid "Power state unknown"
+msgstr "サイトの状態は不明です"
+
 msgid "Powered OFF"
 msgstr "電源オフ"
 
@@ -37473,6 +37486,10 @@ msgstr "%s の繰り返しのダウンタイム"
 
 msgid "Recursion"
 msgstr "再帰"
+
+#, fuzzy
+msgid "Recursive pattern search"
+msgstr "除外パターン"
 
 msgid "Red"
 msgstr "赤"
@@ -42450,7 +42467,7 @@ msgstr "Sophosのメモリ使用率"
 #, fuzzy, python-format
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
-"installation can handle 25 hosts after the 30-day trial period, not %d. "
+"installation can handle %d services after the 30-day trial period, not %d. "
 "Please adjust your configuration accordingly and try again."
 msgstr ""
 "申し訳ありませんが、Checkmkの30日間の無制限トライアルは終了しました。Checkmk "
@@ -61069,9 +61086,9 @@ msgstr "%s が保存されました。"
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %s days. After that monitoring of up to 25 "
-"hosts is supported, currently %s hosts are being monitored. Adjust your "
-"configuration or see here how to proceed: %s  "
+"Your Checkmk trial will expire in %d days. After that monitoring of up to  "
+"services is supported, currently %d services are being monitored. Adjust "
+"your configuration or see here how to proceed: %s  "
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"
@@ -63295,6 +63312,9 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Map power states"
+#~ msgstr "電力状態をマップする"
 
 #~ msgid "Deselect all checkboxes"
 #~ msgstr "すべてのチェックボックスの選択を解除します"
@@ -65550,9 +65570,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Filesystem growth"
 #~ msgstr "ファイルシステムの成長"
-
-#~ msgid "Filesystem size"
-#~ msgstr "ファイルシステムのサイズ"
 
 #~ msgid "Filesystem size and usage"
 #~ msgstr "ファイルシステムのサイズと使用法"

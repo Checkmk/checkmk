@@ -141,8 +141,8 @@ class HTMLWriter:
         self.write_html(render_start_tag("link", rel=rel, href=href, close_tag=True, **attrs))
 
     @staticmethod
-    def render_javascript(code: str) -> HTML:
-        return HTML('<script type="text/javascript">\n%s\n</script>\n' % code)
+    def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
+        return render_element("script", HTML(code), **attrs)
 
     def final_javascript(self, code: str) -> None:
         self._final_javascript.append(code)
@@ -155,8 +155,8 @@ class HTMLWriter:
             return
         self.javascript(self.final_javascript_code())
 
-    def javascript(self, code: str) -> None:
-        self.write_html(HTMLWriter.render_javascript(code))
+    def javascript(self, code: str, **attrs: HTMLTagAttributeValue) -> None:
+        self.write_html(HTMLWriter.render_javascript(code, **attrs))
 
     def javascript_file(self, src: str) -> None:
         """<script type="text/javascript" src="%(name)"/>\n"""

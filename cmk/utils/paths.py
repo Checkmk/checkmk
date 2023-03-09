@@ -84,6 +84,7 @@ profile_dir = Path(var_dir, "web")
 crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
+visuals_cache_dir = Path(tmp_dir, "visuals_cache")
 
 # persisted secret files
 # avoid using these paths directly; use wrappers in cmk.util.crypto.secrets instead

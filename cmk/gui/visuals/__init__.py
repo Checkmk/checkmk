@@ -420,7 +420,7 @@ def cleanup_context_filters(  # type:ignore[no-untyped-def]
 
 
 class _CombinedVisualsCache(Generic[T]):
-    _visuals_cache_dir: Final = cmk.utils.paths.tmp_dir / "visuals_cache"
+    _visuals_cache_dir: Final = cmk.utils.paths.visuals_cache_dir
 
     def __init__(self, visual_type: VisualTypeName) -> None:
         self._visual_type: Final = visual_type

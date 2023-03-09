@@ -287,9 +287,7 @@ def _start(
         logger.error(c.logs().decode("utf-8"))
         raise
 
-    else:
-        logger.debug(c.logs().decode("utf-8"))
-
+    logger.debug(c.logs().decode("utf-8"))
     return c
 
 

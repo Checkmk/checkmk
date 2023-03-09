@@ -863,7 +863,6 @@ class ActivateChangesManager(ActivateChanges):
                 )
 
     def _save_activation(self) -> None:
-        MKUserError(None, _("activation ID is not set"))
         if self._activation_id is None:
             raise MKUserError(None, _("activation ID is not set"))
 

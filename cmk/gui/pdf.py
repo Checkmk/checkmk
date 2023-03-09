@@ -459,7 +459,7 @@ class Document:
     # Functions for adding floating text
 
     def add_paragraph(self, txt: str) -> None:
-        lines = self.wrap_text(txt, width=(self._right - self._left))
+        lines = self.wrap_text(txt, width=self._right - self._left)
         for line in lines:
             self.add_text_line(line)
 

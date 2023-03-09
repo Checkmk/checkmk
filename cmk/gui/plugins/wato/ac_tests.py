@@ -250,13 +250,14 @@ class ACTestTmpfs(ACTest):
         # then in /proc/mounts the physical path will appear and be
         # different from tmp_path. We just check the suffix therefore.
         path_suffix = "sites/%s/tmp" % site_id
-        for line in Path("/proc/mounts").open(encoding="utf-8"):
-            try:
-                _device, mp, fstype, _options, _dump, _fsck = line.split()
-                if mp.endswith(path_suffix) and fstype == "tmpfs":
-                    return True
-            except Exception:
-                continue
+        with Path("/proc/mounts").open(encoding="utf-8") as f:
+            for line in f:
+                try:
+                    _device, mp, fstype, _options, _dump, _fsck = line.split()
+                    if mp.endswith(path_suffix) and fstype == "tmpfs":
+                        return True
+                except Exception:
+                    continue
         return False
 
 

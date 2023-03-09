@@ -206,7 +206,7 @@ def _handle_custom_query(jira, args):
 
 def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc):
     try:
-        issues = jira.search_issues(
+        return jira.search_issues(
             jql, maxResults=max_results, json_result=False, fields=field, validate_query=True
         )
     except JIRAError as jira_error:
@@ -221,8 +221,6 @@ def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc
         if args.debug:
             raise
         return None
-    else:
-        return issues
 
 
 def setup_logging(verbosity: int) -> None:

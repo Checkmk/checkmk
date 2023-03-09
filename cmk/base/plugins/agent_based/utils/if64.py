@@ -286,8 +286,7 @@ def _convert_type(if_type: str) -> str:
         int(if_type)
     except ValueError:
         return str(_PORT_TYPES.get(if_type, "1"))
-    else:
-        return if_type
+    return if_type
 
 
 def _convert_status(if_status: str) -> str:
@@ -295,8 +294,7 @@ def _convert_status(if_status: str) -> str:
         int(if_status)
     except ValueError:
         return str(_STATUS_NAMES.get(if_status, "4"))
-    else:
-        return if_status
+    return if_status
 
 
 def fix_if_64_highspeed(highspeed: str) -> str:

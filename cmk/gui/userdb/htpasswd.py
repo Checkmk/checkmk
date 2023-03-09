@@ -96,8 +96,7 @@ class HtpasswdUserConnector(UserConnector):
             password_hashing.verify(password, pw_hash)
         except (password_hashing.PasswordInvalidError, ValueError):
             return False
-        else:
-            return user_id
+        return user_id
 
     def _is_automation_user(self, user_id: UserId) -> bool:
         return AutomationUserSecret(user_id).exists()

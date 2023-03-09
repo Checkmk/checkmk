@@ -127,7 +127,7 @@ def check_mailboxes(args: Args) -> CheckResult:
                     )
 
             if args.crit_age_newest is not None and args.warn_age_newest is not None:
-                new_mails = sorted(mailbox.mails_by_date(after=(now - args.crit_age_newest)))
+                new_mails = sorted(mailbox.mails_by_date(after=now - args.crit_age_newest))
                 logging.debug("timestamps fetched from folder %r: %s", folder, new_mails)
 
                 if new_mails and (newest := now - new_mails[-1]) >= args.warn_age_newest:

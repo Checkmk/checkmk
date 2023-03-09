@@ -130,6 +130,8 @@ def main() -> NoReturn:
         content_txt = ""
         parameters, contexts = utils.read_bulk_contexts()
         hosts = set()
+        mailto = ""
+        subject = ""
         for context in contexts:
             context.update(parameters)
             content_txt += construct_content(context)

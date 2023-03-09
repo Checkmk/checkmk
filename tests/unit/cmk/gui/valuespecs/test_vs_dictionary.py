@@ -55,8 +55,8 @@ class TestValueSpecDictionary:
         expect_validate_failure(get_dictionary_vs(), ["a", "b"])  # type: ignore[misc]
 
         # required_keys do what you would expect
-        expect_validate_success(get_dictionary_vs(required_keys=("a")), {"a": "a"})
-        expect_validate_failure(get_dictionary_vs(required_keys=("a")), empty_dict)
+        expect_validate_success(get_dictionary_vs(required_keys=("a",)), {"a": "a"})
+        expect_validate_failure(get_dictionary_vs(required_keys=("a",)), empty_dict)
 
         # optional_keys invert required_keys internally:
         # optional_keys=[a,b,c] == required_keys=[d]

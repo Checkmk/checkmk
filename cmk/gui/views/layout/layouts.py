@@ -95,7 +95,7 @@ class LayoutSingleDataset(Layout):
         while rownum < len(rows):
             if rownum > 0:
                 html.open_tr(class_="gap")
-                html.td("", class_="gap", colspan=(num_columns + 1))
+                html.td("", class_="gap", colspan=num_columns + 1)
                 html.close_tr()
             thispart = rows[rownum : rownum + num_columns]
             for cell in cells:

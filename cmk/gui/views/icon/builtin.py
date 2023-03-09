@@ -1108,7 +1108,8 @@ class StarsIcon(Icon):
             starred = row["host_name"] in stars
             title = _("host")
         else:
-            starred = (row["host_name"] + ";" + row["service_description"]) in stars
+            svc = row["host_name"] + ";" + row["service_description"]
+            starred = svc in stars
             title = _("service")
 
         if starred:

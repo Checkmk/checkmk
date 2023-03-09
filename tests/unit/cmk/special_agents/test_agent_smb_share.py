@@ -582,6 +582,27 @@ def test_parse_arguments() -> None:
             set(),
             id="do not look into ..",
         ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
+                        folder("Subfolder1"),
+                        file("file1"),
+                        file("file2"),
+                    ],
+                    "Subfolder1\\": [
+                        file("file3"),
+                    ],
+                }
+            },
+            [],
+            ["SUBFOLDER1", "FILE*"],
+            True,
+            {
+                (f"{SHARE_BASE}\\Subfolder1\\file3", "file3"),
+            },
+            id="ignore case",
+        ),
     ],
 )
 def test_iter_shared_files(

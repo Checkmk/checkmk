@@ -2047,7 +2047,10 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         html.close_div()
 
         if count:
-            html.javascript("cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix))
+            html.javascript(
+                "cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix),
+                data_cmk_execute_after_replace="",
+            )
 
     def _show_entries(self, varprefix: str, value: ListOfModel[T]) -> None:
         if self._style == ListOf.Style.REGULAR:

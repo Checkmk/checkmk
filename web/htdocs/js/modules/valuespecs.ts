@@ -1120,9 +1120,12 @@ export function visual_filter_list_reset(
             let filter_list = document.getElementById(
                 varprefix + "_popup_filter_list_selected"
             )!;
-            filter_list.getElementsByClassName(
-                "simplebar-content"
-            )[0].innerHTML = filters_html;
+            set_inner_html_and_execute_scripts(
+                filter_list.getElementsByClassName(
+                    "simplebar-content"
+                )[0] as HTMLElement,
+                filters_html
+            );
             utils.add_simplebar_scrollbar(varprefix + "_popup_filter_list");
             listofmultiple_disable_selected_options(varprefix);
             forms.enable_dynamic_form_elements();
@@ -1134,6 +1137,24 @@ export function visual_filter_list_reset(
         varprefix + "_reset"
     ) as HTMLButtonElement;
     reset_button.disabled = true;
+}
+
+function set_inner_html_and_execute_scripts(elm: HTMLElement, html: string) {
+    elm.innerHTML = html;
+
+    for (const original_script of elm.getElementsByTagName("script")) {
+        if (!original_script.hasAttribute("data-cmk_execute_after_replace"))
+            continue;
+
+        const new_script: HTMLScriptElement = document.createElement("script");
+
+        for (const attr of original_script.attributes) {
+            new_script.setAttribute(attr.name, attr.value);
+        }
+
+        new_script.innerHTML = original_script.innerHTML;
+        original_script.parentNode!.replaceChild(new_script, original_script);
+    }
 }
 
 export function update_unit_selector(selectbox, metric_prefix) {

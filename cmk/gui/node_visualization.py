@@ -1110,8 +1110,8 @@ class ParentChildNetworkTopology(Topology):
         """Create a central node and add all monitoring sites as children"""
 
         central_node = {
-            "name": "",
-            "hostname": "Checkmk",
+            "name": "topology_center",
+            "hostname": "topology_center",
             "outgoing": [],
             "incoming": [],
             "node_type": "topology_center",
@@ -1119,7 +1119,7 @@ class ParentChildNetworkTopology(Topology):
 
         site_nodes: dict[str, Any] = {}
         for mesh in meshes:
-            for node_name in mesh:
+            for node_name in list(mesh):
                 site = self._known_nodes[node_name]["site"]
                 site_node_name = _("Site %s") % site
                 site_nodes.setdefault(
@@ -1130,23 +1130,24 @@ class ParentChildNetworkTopology(Topology):
                         "incoming": [],
                     },
                 )
+                mesh.add(site_node_name)
                 outgoing_nodes = self._known_nodes.get(node_name, {"outgoing": []})["outgoing"]
-                # Attach this node to the site not if it has no parents or if none of its parents are visible in the current mesh
-                if not outgoing_nodes or len(set(outgoing_nodes) - mesh) == len(outgoing_nodes):
+                # Attach this node to the site not if it has no parents
+                # or if none of its parents are visible in the current mesh
+                if not mesh.intersection(outgoing_nodes):
                     site_nodes[site_node_name]["incoming"].append(node_name)
 
         central_node["incoming"] = list(site_nodes.keys())
         self._known_nodes[str(central_node["name"])] = central_node
 
-        combinator_mesh = set(central_node["name"])
+        # The combinator mesh fuses all independent meshes at their site node
+        combinator_mesh = set([str(central_node["name"])])
         for node_name, settings in site_nodes.items():
             self._known_nodes[node_name] = settings
             combinator_mesh.add(node_name)
-            combinator_mesh.update(set(settings["incoming"]))
-
+            combinator_mesh.update(settings["outgoing"])
         meshes.append(combinator_mesh)
         self._integrate_new_meshes(meshes)
-
         return meshes
 
     def get_info_for_node(self, nodename: str, mesh: Mesh) -> dict[str, Any]:
@@ -1154,10 +1155,7 @@ class ParentChildNetworkTopology(Topology):
         host_info = self._known_nodes[nodename]
         info.update(host_info)
         for key in ["childs", "parents"]:
-            try:
-                del info[key]
-            except KeyError:
-                pass
+            info.pop(key, None)
 
         if "node_type" not in info:
             info["node_type"] = "topology"

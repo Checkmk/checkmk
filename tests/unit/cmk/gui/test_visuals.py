@@ -1282,6 +1282,15 @@ expected_filters: dict[str, dict[str, Any]] = {
         "sort_index": 800,
         "title": "Controller \u27a4 Version",
     },
+    "inv_hardware_system_device_number": {
+        "comment": None,
+        "filter_class": "FilterInvText",
+        "htmlvars": ["inv_hardware_system_device_number"],
+        "info": "host",
+        "link_columns": [],
+        "sort_index": 800,
+        "title": "System \u27a4 Device Number",
+    },
     "inv_hardware_system_expresscode": {
         "comment": None,
         "filter_class": "FilterInvText",

@@ -1011,6 +1011,11 @@ def test_registered_sorters() -> None:
             "load_inv": True,
             "title": "Inventory: Controller \u27a4 Version",
         },
+        "inv_hardware_system_device_number": {
+            "columns": ["host_inventory", "host_structured_status"],
+            "load_inv": True,
+            "title": "Inventory: System \u27a4 Device Number",
+        },
         "inv_hardware_system_expresscode": {
             "columns": ["host_inventory", "host_structured_status"],
             "load_inv": True,
@@ -2097,6 +2102,7 @@ def test_registered_display_hints() -> None:
         ".hardware.storage.disks:*.type",
         ".hardware.storage.disks:*.vendor",
         ".hardware.system.",
+        ".hardware.system.device_number",
         ".hardware.system.expresscode",
         ".hardware.system.manufacturer",
         ".hardware.system.model",

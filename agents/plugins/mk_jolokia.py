@@ -6,6 +6,8 @@
 
 __version__ = "2.3.0b1"
 
+USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
+
 import io
 import os
 import socket
@@ -378,7 +380,8 @@ class JolokiaInstance:
 
         return config
 
-    def __init__(self, config):
+    def __init__(self, config, user_agent):
+        # type: (object, str) -> None
         super().__init__()
         self._config = self._sanitize_config(config)
 
@@ -389,7 +392,7 @@ class JolokiaInstance:
         self.base_url = self._get_base_url()
         self.target = self._get_target()
         self.post_config = {"ignoreErrors": "true"}
-        self._session = self._initialize_http_session()
+        self._session = self._initialize_http_session(user_agent)
 
     def _get_base_url(self):
         return "%s://%s:%d/%s/" % (
@@ -412,7 +415,8 @@ class JolokiaInstance:
             "password": self._config["service_password"],
         }
 
-    def _initialize_http_session(self):
+    def _initialize_http_session(self, user_agent):
+        # type: (str) -> requests.Session
         session = requests.Session()
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
@@ -420,6 +424,7 @@ class JolokiaInstance:
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
+        session.headers["User-Agent"] = user_agent
 
         auth_method = self._config.get("mode")
         if auth_method is None:
@@ -732,7 +737,7 @@ def main(configs_iterable=None):
         configs_iterable = yield_configured_instances()
 
     for config in configs_iterable:
-        instance = JolokiaInstance(config)
+        instance = JolokiaInstance(config, USER_AGENT)
         try:
             query_instance(instance)
         except SkipInstance:

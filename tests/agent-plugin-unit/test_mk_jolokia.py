@@ -104,7 +104,7 @@ def test_config_legacy_cert_path_to_verify() -> None:
     ],
 )
 def test_jolokia_instance_base_url(config, base_url) -> None:  # type:ignore[no-untyped-def]
-    joloi = mk_jolokia.JolokiaInstance(config)
+    joloi = mk_jolokia.JolokiaInstance(config, mk_jolokia.USER_AGENT)
     assert joloi._get_base_url() == base_url
 
 

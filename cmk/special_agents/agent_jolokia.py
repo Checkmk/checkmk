@@ -4,6 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia
 """
+
+__version__ = "2.3.0b1"
+
+USER_AGENT = "checkmk-special-jolokia-" + __version__
+
 import argparse
 import os
 import sys
@@ -66,7 +71,7 @@ def main(sys_argv=None):
         if hasattr(args, key):
             config[key] = getattr(args, key)
 
-    instance = mk_jolokia.JolokiaInstance(config)
+    instance = mk_jolokia.JolokiaInstance(config, USER_AGENT)
     try:
         mk_jolokia.query_instance(instance)
     except mk_jolokia.SkipInstance:

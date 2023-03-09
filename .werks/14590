@@ -1,0 +1,23 @@
+Title: Agents identify themselves via User-Agent string
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1678356578
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With this werk the HTTP(s) requests sent by agents have been updated to have a more consistent User-Agent string.
+The following agents are affected.
+
+LI: <tt>apache_status</tt> uses <tt>checkmk-agent-apache_status-2.3.0p1</tt>
+LI: <tt>nginx_status</tt> uses <tt>checkmk-agent-nginx_status-2.3.0p1</tt>
+LI: <tt>mk_jolokia</tt> uses <tt>checkmk-agent-mk_jolokia-2.3.0p1</tt>
+LI: <tt>agent_jolokia</tt> uses <tt>checkmk-special-jolokia-2.3.0p1</tt>
+LI: <tt>agent_vsphere</tt> uses <tt>checkmk-special-vsphere-2.3.0p1</tt>
+LI: <tt>agent_netapp</tt> uses <tt>checkmk-special-netapp-2.3.0p1</tt>
+LI: <tt>agent_splunk</tt> uses <tt>checkmk-special-splunk-2.3.0p1</tt>
+
+The version at the end depends on the <tt>__version__</tt> of the agent.
+If the shipped (unmodified) agent is used it will match the Checkmk version of the site.

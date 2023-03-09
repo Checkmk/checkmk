@@ -599,37 +599,22 @@ def get_unpackaged_files(
     }
 
 
-def rule_pack_id_to_mkp(
-    installer: Installer, rule_pack_files: Iterable[Path]
+def id_to_mkp(
+    installer: Installer,
+    rule_pack_files: Iterable[Path],
+    package_part: PackagePart,
 ) -> dict[str, PackageName | None]:
     """
-    Returns a dictionary of rule pack ID to MKP package for a given manifest.
-    Every rule pack is contained exactly once in this mapping. If no corresponding
+    Returns a dictionary of ID to MKP package for a given manifest.
+    Every ID is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-    package_map = installer.get_packaged_files()[PackagePart.EC_RULE_PACKS]
+    package_map = installer.get_packaged_files()[package_part]
     return {
         f.stem: package_id.name
         for f in rule_pack_files
         if (package_id := package_map.get(f)) is not None
     }
-
-
-def visual_to_mkp(
-    installer: Installer, rule_pack_files: Iterable[Path]
-) -> dict[str, PackageName | None]:
-    """
-    Returns a dictionary of visual name to MKP package for a given manifest.
-    Every visual is contained exactly once in this mapping. If no corresponding
-    MKP exists, the value of that mapping is None.
-    """
-    package_map = {
-        file: manifest.name
-        for manifest in installer.get_installed_manifests()
-        for file in manifest.files.get(PackagePart.GUI, ())
-    }
-
-    return {f.stem: package_map.get(f) for f in rule_pack_files}
 
 
 def update_active_packages(installer: Installer, path_config: PathConfig) -> None:

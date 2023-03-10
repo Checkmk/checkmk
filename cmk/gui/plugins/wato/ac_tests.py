@@ -1165,10 +1165,9 @@ class ACTestDeprecatedCheckPlugins(ACTest):
     def help(self) -> str:
         return _(
             "The check plugin API for plugins in <tt>%s</tt> is deprecated."
-            " Plugin files in this folder are still considered, but starting from Checkmk version"
-            " 2.3 the API they are using may change at any time without notice."
+            " Plugin files in this folder are still considered, but the API they are using may change at any time without notice."
             " Please migrate the plugins to the new API."
-            " More information can be found in <a href='%s'>our online documentation</a>."
+            " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
             "/".join(local_checks_dir.parts[-4:]),
             doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
@@ -1180,7 +1179,7 @@ class ACTestDeprecatedCheckPlugins(ACTest):
     def execute(self) -> Iterator[ACResult]:
         with suppress(FileNotFoundError):
             if plugin_files := list(local_checks_dir.iterdir()):
-                yield ACResultWARN(
+                yield ACResultCRIT(
                     _("%d check plugins using the deprecated API: %s")
                     % (len(plugin_files), ", ".join(f.name for f in plugin_files))
                 )

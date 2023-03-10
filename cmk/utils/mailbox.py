@@ -273,6 +273,7 @@ class Mailbox:
                             self._args.fetch_password,
                         ),
                     ),
+                    default_timezone=EWSTimeZone("Europe/Berlin"),
                 )
             )
             self._connection = connection  # type: ignore[assignment]

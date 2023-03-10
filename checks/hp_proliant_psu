@@ -17,7 +17,7 @@ condition_map = {
 }
 
 factory_settings["hp_proliant_psu_levels"] = {
-    "levels": (80, 90),
+    "levels": (80.0, 90.0),
 }
 
 

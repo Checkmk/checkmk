@@ -13,7 +13,7 @@ def inventory_tplink_poe_summary(info):
 def check_tplink_poe_summary(_no_item, params, info):
     deci_watt = float(info[0][0])
     watt = deci_watt / 10
-    return check_levels(watt, "power", params, unit="Watt")
+    return check_levels(watt, "power", params.get("levels", (None, None)), unit="Watt")
 
 
 check_info["tplink_poe_summary"] = {

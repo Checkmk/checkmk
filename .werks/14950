@@ -1,0 +1,24 @@
+Title: Correct processing of the rule Install Python runtime environment
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1678443349
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+Previously, even if the rule "Installation" had been set to 
+"Never install Python", the "Python environment" rule might be 
+used by WATO when creating MSI file even though it contradicts 
+the "Never install" instruction. 
+If the rule "Python environment" is set in "Deploy standard
+environment", this results in the inability to use the MSI 
+installer on older operating system as Windows Vista and Windows
+Server 2008 R1 without a clear reason.
+This affected all systems with which Standard Python environment
+(Python 3.8 based) is incompatible.
+
+With this release, the problem has been fixed.
+
+CMK-12616

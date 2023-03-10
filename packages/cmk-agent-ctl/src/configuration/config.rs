@@ -9,6 +9,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_with::DisplayFromStr;
 use std::collections::HashMap;
+use std::ffi;
 use std::fs;
 use std::io;
 #[cfg(unix)]
@@ -324,7 +325,9 @@ impl Registry {
     }
 
     pub fn save(&self) -> io::Result<()> {
-        fs::write(&self.path, serde_json::to_string_pretty(&self.connections)?)?;
+        let tmp_path = self.tmp_path_for_save();
+        fs::write(&tmp_path, serde_json::to_string_pretty(&self.connections)?)?;
+        fs::rename(&tmp_path, &self.path)?;
         #[cfg(unix)]
         fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))?;
         self.legacy_pull_marker.remove()
@@ -474,6 +477,17 @@ impl Registry {
             }
         }
         None
+    }
+
+    fn tmp_path_for_save(&self) -> PathBuf {
+        let mut tmp_path = PathBuf::from(&self.path);
+        let mut ext = tmp_path
+            .extension()
+            .map(|ext| ext.to_owned())
+            .unwrap_or(ffi::OsString::from(""));
+        ext.push(".tmp");
+        tmp_path.set_extension(ext);
+        tmp_path
     }
 
     fn path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
@@ -943,6 +957,7 @@ mod test_registry {
 
         reg.save().unwrap();
         assert!(reg.path.exists());
+        assert!(!reg.tmp_path_for_save().exists());
         #[cfg(unix)]
         assert_eq!(
             fs::metadata(&reg.path).unwrap().permissions().mode(),
@@ -1245,5 +1260,19 @@ mod test_registry {
         assert!(registry.activate_legacy_pull().is_err());
         registry.save().unwrap();
         assert!(!registry.legacy_pull_marker.exists());
+    }
+
+    #[test]
+    fn test_tmp_path_for_save() {
+        let reg = Registry::new(PathBuf::from("/a/b/c.json")).unwrap();
+        assert_ne!(reg.path(), reg.tmp_path_for_save());
+        assert_eq!(reg.path().parent(), reg.tmp_path_for_save().parent());
+        assert!(reg
+            .tmp_path_for_save()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .contains(reg.path().file_name().unwrap().to_str().unwrap()));
     }
 }

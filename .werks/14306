@@ -1,0 +1,14 @@
+Title: DCD and InfluxDB configuration now respect "pretty print configuration files" option
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1678434341
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The configuration files for DCD and InfluxDB are now saved in pretty printed format in
+case the global setting "Pretty-Print configuration files" is enabled.
+

@@ -13,64 +13,6 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 |                                                                           |
 +---------------------------------------------------------------------------+
 
-Meaning all variables, functions etc. and default modules that are available to checks.
-
-Modules available by default (pre imported by Check_MK):
-    collections
-    enum
-    fnmatch
-    functools
-    math
-    os
-    re
-    socket
-    sys
-    time
-    pprint
-
-Global variables:
-    from cmk.utils.regex import regex
-    core_state_names     Names of states. Usually used to convert numeric states
-                         to their name for adding it to the plugin output.
-                         The mapping is like this:
-
-                           -1: 'PEND'
-                            0: 'OK'
-                            1: 'WARN'
-                            2: 'CRIT'
-                            3: 'UNKN'
-
-    state_markers        Symbolic representations of states in plugin output.
-                         Will be displayed colored by the Check_MK GUI.
-                         The mapping is like this:
-
-                            0: ''
-                            1: '(!)'
-                            2: '(!!)'
-                            3: '(?)'
-
-    nagios_illegal_chars Characters not allowed to be used in service
-                         descriptions. Can be used in discovery functions to
-                         remove unwanted characters from a string. The unwanted
-                         chars default are: `;~!$%^&*|\'"<>?,=
-
-
-    OID_BIN              TODO
-    OID_END              TODO
-    OID_END_BIN          TODO
-    OID_END_OCTET_STRING TODO
-    OID_STRING           TODO
-
-    MGMT_ONLY            Check is only executed for management boards.
-    HOST_PRECEDENCE      Use host address/credentials eg. when it's a SNMP HOST.
-    HOST_ONLY            Check is only executed for real SNMP hosts.
-
-    RAISE                Used as value for the "onwrap" argument of the get_rate()
-                         function. See get_rate() documentation for details
-    SKIP                 Used as value for the "onwrap" argument of the get_rate()
-                         function. See get_rate() documentation for details
-    ZERO                 Used as value for the "onwrap" argument of the get_rate()
-                         function. See get_rate() documentation for details
 """  # pylint: disable=pointless-string-statement
 
 # NOTE: The above suppression is necessary because our testing framework blindly
@@ -81,53 +23,30 @@ Global variables:
 # TODO: Move imports directly to checks?
 import collections  # noqa: F401 # pylint: disable=unused-import
 import enum  # noqa: F401 # pylint: disable=unused-import
-import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
-import math  # noqa: F401 # pylint: disable=unused-import
-import os  # noqa: F401 # pylint: disable=unused-import
-
-# NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # noqa: F401 # pylint: disable=unused-import
 import re  # noqa: F401 # pylint: disable=unused-import
-import socket  # noqa: F401 # pylint: disable=unused-import
-import sys  # noqa: F401 # pylint: disable=unused-import
+import socket
 import time
 from collections.abc import Callable, Iterable
-from contextlib import suppress
-from typing import Any, Dict, List, Literal, Mapping, NoReturn, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union
 
-import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
-import cmk.utils.defines as _defines
-import cmk.utils.paths as _paths
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.http_proxy_config import HTTPProxyConfig
-from cmk.utils.log import console as _console  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec as _RuleSpec
-
-# The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    EvalableFloat as as_float,
-)
-from cmk.utils.type_defs import HostName, MetricName
-from cmk.utils.type_defs import SectionName as _SectionName
-from cmk.utils.type_defs import ServiceDetails, ServiceState, state_markers
+from cmk.utils.type_defs import HostName, MetricName, ServiceDetails, ServiceState, state_markers
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
-from cmk.checkers.plugin_contexts import check_type
 from cmk.checkers.plugin_contexts import (
     host_name as _internal_host_name,  # pylint: disable=unused-import
 )
 from cmk.checkers.plugin_contexts import service_description
 
-import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
@@ -161,26 +80,6 @@ def host_name() -> str:
     return str(_internal_host_name())
 
 
-def HostLabel(*_a: object, **_kw: object) -> NoReturn:
-    raise NotImplementedError(
-        "Creation of HostLabels in legacy plugins is no longer supported"
-        " (see https://checkmk.de/check_mk-werks.php?werk_id=11117)."
-    )
-
-
-HostLabels = HostLabel
-
-
-def ServiceLabel(*_a: object, **_kw: object) -> NoReturn:
-    raise NotImplementedError(
-        "Creation of ServiceLabels in legacy plugins is no longer supported"
-        " (see https://checkmk.de/check_mk-werks.php?werk_id=13229)."
-    )
-
-
-ServiceLabels = ServiceLabel
-
-
 def get_check_api_context() -> _config.CheckContext:
     """This is called from cmk.base code to get the Check API things. Don't
     use this from checks."""
@@ -198,9 +97,6 @@ def get_check_api_context() -> _config.CheckContext:
 #   +----------------------------------------------------------------------+
 #   |  Helper API for being used in checks                                 |
 #   '----------------------------------------------------------------------'
-
-# Names of texts usually output by checks
-core_state_names = _defines.short_service_state_names()
 
 
 # backwards compatibility: allow to pass integer.
@@ -245,38 +141,10 @@ def savefloat(f: Any) -> float:
         return 0.0
 
 
-# Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
-def host_extra_conf(hostname: str, ruleset: Iterable[_RuleSpec]) -> List:
-    return _config.get_config_cache().host_extra_conf(HostName(hostname), ruleset)
-
-
-# Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
-def host_extra_conf_merged(hostname: str, conf: Iterable[_RuleSpec]) -> Dict[str, Any]:
-    return _config.get_config_cache().host_extra_conf_merged(HostName(hostname), conf)
-
-
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-def all_matching_hosts(condition: RuleConditionsSpec, with_foreign_hosts: bool) -> Set[HostName]:
-    return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        condition, with_foreign_hosts
-    )
-
-
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-def tags_of_host(hostname: HostName) -> Set[str]:
-    return _config.get_config_cache().tag_list(hostname)
-
-
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
 def is_ipv6_primary(hostname: HostName) -> bool:
     return _config.get_config_cache().default_address_family(hostname) is socket.AF_INET6
-
-
-nagios_illegal_chars = _config.nagios_illegal_chars
-is_cmc = _config.is_cmc
 
 
 def get_age_human_readable(seconds: float) -> str:
@@ -327,11 +195,6 @@ def get_number_with_precision(
     return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
 
 
-def get_checkgroup_parameters(group: str, deflt: Iterable[_RuleSpec]) -> Iterable[_RuleSpec]:
-    return _config.checkgroup_parameters.get(group, deflt)
-
-
-# TODO: Replace by some render.* function / move to render module?
 def get_filesize_human_readable(size: float) -> str:
     """Format size of a file for humans.
 
@@ -347,7 +210,6 @@ def get_filesize_human_readable(size: float) -> str:
     return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
 
 
-# TODO: Replace by some render.* function / move to render module?
 def get_timestamp_human_readable(timestamp: float) -> str:
     """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
     In case None is given or timestamp is 0, it returns "never"."""
@@ -356,7 +218,6 @@ def get_timestamp_human_readable(timestamp: float) -> str:
     return "never"
 
 
-# TODO: Replace by some render.* function / move to render module?
 def get_relative_date_human_readable(timestamp: float) -> str:
     """Formats the given timestamp for humans "in ..." for future times
     or "... ago" for past timestamps."""
@@ -376,8 +237,6 @@ clear_item_state = _item_state.clear_item_state
 
 get_rate = _item_state.get_rate
 get_average = _item_state.get_average
-
-last_counter_wrap = _item_state.last_counter_wrap
 
 SKIP = _item_state.SKIP
 RAISE = _item_state.RAISE
@@ -574,24 +433,6 @@ def check_levels(  # pylint: disable=too-many-branches
     return state, infotext, perfdata
 
 
-def get_effective_service_level() -> ServiceState:
-    """Get the service level that applies to the current service.
-    This can only be used within check functions, not during discovery nor parsing."""
-    config_cache = _config.get_config_cache()
-    service_level = config_cache.service_level_of_service(
-        _internal_host_name(),
-        service_description(),
-    )
-    if service_level is not None:
-        return service_level
-
-    service_level = config_cache.service_level(_internal_host_name())
-    if service_level is not None:
-        return service_level
-
-    return 0
-
-
 def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tuple[str, str, str]]:
     """Use this to prepare a command line argument for using a password from the
     Check_MK password store or an explicitly configured password."""
@@ -610,41 +451,6 @@ def get_http_proxy(http_proxy: Tuple[str, str]) -> HTTPProxyConfig:
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
     return _config.get_http_proxy(http_proxy)
-
-
-def get_agent_data_time() -> Optional[float]:
-    """Use this function to get the age of the agent data cache file
-    of tcp or snmp hosts or None in case of piggyback data because
-    we do not exactly know the latest agent data. Maybe one time
-    we can handle this. For cluster hosts an exception is raised."""
-    return _agent_cache_file_age(_internal_host_name(), check_type())
-
-
-def _agent_cache_file_age(
-    hostname: HostName,
-    check_plugin_name: str,
-) -> Optional[float]:
-    config_cache = _config.get_config_cache()
-    if config_cache.is_cluster(hostname):
-        raise MKGeneralException("get_agent_data_time() not valid for cluster")
-
-    # NOTE: This is a workaround for the 'old' API and will not be correct
-    # for the new one. This is a check plugin name, and the property of being
-    # 'TCP' or 'SNMP' is a property of the section.
-    # This function is deprecated for new plugins.
-    # For old-style plugins, plugin and section name are same, so check the
-    # corresponding section:
-    section_name_str = _cmk_utils.check_utils.section_name_of(check_plugin_name)
-    section = _agent_based_register.get_section_plugin(_SectionName(section_name_str))
-    if hasattr(section, "trees"):
-        cachefile = "%s/%s.%s" % (_paths.tcp_cache_dir, hostname, section_name_str)
-    else:
-        cachefile = "%s/%s" % (_paths.tcp_cache_dir, hostname)
-
-    with suppress(FileNotFoundError):
-        return _cmk_utils.cachefile_age(cachefile)
-
-    return None
 
 
 def get_parsed_item_data(check_function: Callable) -> Callable:

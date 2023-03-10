@@ -3,18 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import math
 from collections.abc import Mapping
 from typing import Any
 
 import pytest
-
-from tests.testlib.base import Scenario
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.checkers import plugin_contexts
 
 import cmk.base.config as config
 from cmk.base import check_api
@@ -343,52 +336,3 @@ def test_http_proxy(mocker) -> None:  # type: ignore[no-untyped-def]
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))
     assert proxy_patch.called_once()
-
-
-def test_get_effective_service_level(monkeypatch) -> None:  # type: ignore[no-untyped-def]
-    ts = Scenario()
-    ts.add_host("testhost1")
-    ts.add_host("testhost2")
-    ts.add_host("testhost3")
-    ts.set_ruleset(
-        "host_service_levels",
-        [
-            {"condition": {"host_name": ["testhost2"]}, "options": {}, "value": 10},
-            {"condition": {"host_name": ["testhost2"]}, "options": {}, "value": 2},
-        ],
-    )
-    ts.set_ruleset(
-        "service_service_levels",
-        [
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_name": ["testhost1"],
-                },
-                "options": {},
-                "value": 33,
-            }
-        ],
-    )
-    ts.apply(monkeypatch)
-
-    with plugin_contexts.current_service(CheckPluginName("cpu_loads"), "CPU load"):
-
-        with plugin_contexts.current_host("testhost1"):
-            assert check_api.get_effective_service_level() == 33
-
-        with plugin_contexts.current_host("testhost2"):
-            assert check_api.get_effective_service_level() == 10
-
-        with plugin_contexts.current_host("testhost3"):
-            assert check_api.get_effective_service_level() == 0
-
-
-def test_as_float() -> None:
-    assert check_api.as_float("8.00") == 8.0
-    assert str(check_api.as_float("inf")) == "inf"
-
-    strrep = str(list(map(check_api.as_float, ("8", "-inf", "1e-351"))))
-    assert strrep == "[8.0, -1e309, 0.0]"
-
-    assert ast.literal_eval(strrep) == [8.0, float("-inf"), 0.0]

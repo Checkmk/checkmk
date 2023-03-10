@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -157,7 +156,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_parse_arguments(params, expected_args) -> None:  # type: ignore[no-untyped-def]
+def test_parse_arguments(params: Mapping[str, object], expected_args: Sequence[str]) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(params, "host", "11.211.3.32")
@@ -515,9 +514,7 @@ def test_parse_namespace_patterns() -> None:
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_client_configuration_host(  # type: ignore[no-untyped-def]
-    params: Mapping[str, Any], host
-) -> None:
+def test_client_configuration_host(params: Mapping[str, object], host: str) -> None:
     agent = SpecialAgent("agent_kube")
     arguments: list[str] = []
     argument_raw: SpecialAgentInfoFunctionResult = agent.argument_func(params, "kubi", "127.0.0.1")
@@ -588,7 +585,7 @@ def test_client_configuration_host(  # type: ignore[no-untyped-def]
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_proxy_arguments(params, expected_proxy_arg) -> None:  # type: ignore[no-untyped-def]
+def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) -> None:
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(params, "host", "11.211.3.32")
     assert isinstance(arguments, list)

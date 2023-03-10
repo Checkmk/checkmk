@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any
 
 import pytest
@@ -14,6 +15,7 @@ import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
 import cmk.gui.visuals as visuals
 from cmk.gui.http import request
+from cmk.gui.type_defs import SingleInfos, VisualContext
 
 
 def test_get_filter() -> None:
@@ -5068,7 +5070,9 @@ def test_registered_info_attributes() -> None:
         ),
     ],
 )
-def test_context_to_uri_vars(context, expected_vars) -> None:  # type: ignore[no-untyped-def]
+def test_context_to_uri_vars(
+    context: VisualContext, expected_vars: Sequence[tuple[str, str]]
+) -> None:
     context_vars = visuals.context_to_uri_vars(context)
     assert sorted(context_vars) == sorted(expected_vars)
 
@@ -5127,16 +5131,13 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
 
 
 @pytest.mark.parametrize(
-    "uri_vars,visual,expected_context",
+    "uri_vars,infos,context_vis,expected_context",
     [
         # Single host context, set via URL, with some service filter, set via context
         (
             [("host", "aaa")],
-            {
-                "infos": ["host", "service"],
-                "single_infos": ["host"],
-                "context": {"service_regex": {"serviceregex": "abc"}},
-            },
+            ["host", "service"],
+            {"service_regex": {"serviceregex": "abc"}},
             {
                 "host": {"host": "aaa"},
                 "service_regex": {"serviceregex": "abc"},
@@ -5145,23 +5146,17 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
         # Single host context, set via context and URL
         (
             [("host", "aaa")],
+            ["host", "service"],
             {
-                "infos": ["host", "service"],
-                "single_infos": ["host"],
-                "context": {
-                    "host": {"host": "from_context"},
-                },
+                "host": {"host": "from_context"},
             },
             {"host": {"host": "from_context"}},
         ),
         # No single context with some host & service filter
         (
             [("host", "aaa")],
-            {
-                "infos": ["host", "service"],
-                "single_infos": [],
-                "context": {"service_regex": {"serviceregex": "abc"}},
-            },
+            ["host", "service"],
+            {"service_regex": {"serviceregex": "abc"}},
             {
                 "host": {"host": "aaa"},
                 "service_regex": {"serviceregex": "abc"},
@@ -5170,21 +5165,25 @@ def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_co
         # No single context with some host filter from URL
         (
             [("host", "aaa")],
-            {"infos": ["host", "service"], "single_infos": [], "context": {}},
+            ["host", "service"],
+            {},
             {
                 "host": {"host": "aaa"},
             },
         ),
     ],
 )
-def test_get_merged_context(  # type: ignore[no-untyped-def]
-    request_context, uri_vars, visual, expected_context
+def test_get_merged_context(
+    uri_vars: Sequence[tuple[str, str]],
+    infos: SingleInfos | None,
+    context_vis: VisualContext,
+    expected_context: VisualContext,
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
 
-    url_context = visuals.get_context_from_uri_vars(visual["infos"])
-    context = visuals.get_merged_context(url_context, visual["context"])
+    url_context = visuals.get_context_from_uri_vars(infos)
+    context = visuals.get_merged_context(url_context, context_vis)
 
     assert context == expected_context
 
@@ -5294,8 +5293,8 @@ def test_get_missing_single_infos_missing_context() -> None:
         ),
     ],
 )
-def test_cleanup_contexts(  # type: ignore[no-untyped-def]
-    context, single_infos, expected_context
+def test_cleanup_contexts(
+    context: VisualContext, single_infos: SingleInfos, expected_context: VisualContext
 ) -> None:
     assert visuals.cleanup_context_filters(context, single_infos) == expected_context
 

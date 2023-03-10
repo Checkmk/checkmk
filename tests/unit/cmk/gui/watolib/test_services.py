@@ -8,6 +8,8 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.type_defs.user_id import UserId
+
 from cmk.automations.results import (
     CheckPreviewEntry,
     DeleteHostsResult,
@@ -107,9 +109,9 @@ def fixture_sample_host_name() -> str:
 
 
 @pytest.fixture(name="sample_host")
-def fixture_sample_host(  # type: ignore[no-untyped-def]
-    request_context,
-    with_admin_login,
+def fixture_sample_host(
+    request_context: None,
+    with_admin_login: UserId,
     sample_host_name: str,
 ) -> Generator[CREHost, None, None]:
     hostname = sample_host_name

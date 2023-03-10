@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import ActiveCheck
@@ -76,7 +78,9 @@ from cmk.gui.plugins.wato.active_checks.dns import _migrate
         ),
     ],
 )
-def test_ac_check_dns_expected_addresses(params, result) -> None:  # type: ignore[no-untyped-def]
+def test_ac_check_dns_expected_addresses(
+    params: Mapping[str, object], result: Sequence[object]
+) -> None:
     active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == result
 
@@ -149,5 +153,7 @@ def test_ac_check_dns_expected_addresses(params, result) -> None:  # type: ignor
         ],
     ],
 )
-def test_legacy_params(params, result) -> None:  # type: ignore[no-untyped-def]
+def test_legacy_params(
+    params: Mapping[str, object] | tuple[str, Mapping[str, object]], result: Mapping[str, object]
+) -> None:
     assert _migrate(params) == result

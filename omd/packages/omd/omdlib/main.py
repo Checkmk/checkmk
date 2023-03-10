@@ -47,7 +47,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import BinaryIO, cast, Final, IO, Literal, Mapping, NamedTuple, NoReturn
 
-import psutil  # type: ignore[import]
+import psutil
 
 import omdlib
 import omdlib.backup

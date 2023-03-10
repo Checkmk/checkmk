@@ -20,7 +20,7 @@ from pathlib import Path
 from types import FrameType
 from typing import Any, NoReturn, TypedDict
 
-import psutil  # type: ignore[import]
+import psutil
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 

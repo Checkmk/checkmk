@@ -34,7 +34,7 @@ from itertools import filterfalse
 from pathlib import Path
 from typing import Any, Iterator, NamedTuple, Sequence
 
-import psutil  # type: ignore[import]
+import psutil
 from setproctitle import setthreadtitle
 
 from livestatus import SiteConfiguration, SiteId

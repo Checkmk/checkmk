@@ -27,14 +27,14 @@ class IisAppPoolStateCheckParams(TypedDict):
     state_mapping: Dict[str, int]
 
 
-DefaultCheckParameters: IisAppPoolStateCheckParams = dict(
-    state_mapping={
+DefaultCheckParameters: IisAppPoolStateCheckParams = {
+    "state_mapping": {
         app_state.name: {IisAppPoolState.Running: State.OK, IisAppPoolState.Initialized: State.WARN}
         .get(app_state, State.CRIT)
         .value
         for app_state in IisAppPoolState
     }
-)
+}
 
 
 def parse_iis_app_pool_state(string_table: StringTable) -> Section:

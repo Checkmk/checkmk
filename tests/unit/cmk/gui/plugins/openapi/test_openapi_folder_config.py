@@ -383,12 +383,12 @@ def test_openapi_create_folder_with_network_scan(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params=json.dumps(
-            dict(
-                name="my_folder_name",
-                title="some title",
-                parent="~",
-                attributes=dict(
-                    network_scan={
+            {
+                "name": "my_folder_name",
+                "title": "some title",
+                "parent": "~",
+                "attributes": {
+                    "network_scan": {
                         "addresses": [
                             {"type": "network_range", "network": "172.10.9.0/24"},
                             {
@@ -411,8 +411,8 @@ def test_openapi_create_folder_with_network_scan(
                         "run_as": user,
                         "translate_names": {"drop_domain": True, "convert_case": "lower"},
                     }
-                ),
-            )
+                },
+            }
         ),
         status=200,
         headers={"Accept": "application/json"},

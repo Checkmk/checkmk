@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
     [
         (
             "app",
-            dict(app=IisAppPoolState.Initialized),
+            {"app": IisAppPoolState.Initialized},
             DefaultCheckParameters,
             [
                 Result(state=State.WARN, summary="State: Initialized"),
@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
         (
             "app",
-            dict(app=IisAppPoolState.ShutdownPending),
+            {"app": IisAppPoolState.ShutdownPending},
             DefaultCheckParameters,
             [
                 Result(state=State.CRIT, summary="State: ShutdownPending"),
@@ -45,23 +45,23 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
         ),
         (
             "app",
-            dict(app=IisAppPoolState.Running),
-            dict(state_mapping={"Running": State.CRIT.value}),
+            {"app": IisAppPoolState.Running},
+            {"state_mapping": {"Running": State.CRIT.value}},
             [
                 Result(state=State.CRIT, summary="State: Running"),
             ],
         ),
         (
             "app",
-            dict(app=IisAppPoolState.Running),
-            dict(state_mapping={}),
+            {"app": IisAppPoolState.Running},
+            {"state_mapping": {}},
             [
                 Result(state=State.CRIT, summary="State: Running"),
             ],
         ),
         (
             "app",
-            dict(app=IisAppPoolState.Running),
+            {"app": IisAppPoolState.Running},
             {},
             [
                 Result(state=State.CRIT, summary="State: Running"),

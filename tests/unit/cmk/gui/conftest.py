@@ -357,7 +357,7 @@ def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request
     # environment dict. When however a Request is passed in, the environment of the Request will
     # not be touched.
     user_id, _ = with_user
-    yield http.Request(dict(**create_environ(), REMOTE_USER=str(user_id)))
+    yield http.Request({**create_environ(), "REMOTE_USER": str(user_id)})
 
 
 @pytest.fixture()
@@ -369,7 +369,7 @@ def admin_auth_request(
     # environment dict. When however a Request is passed in, the environment of the Request will
     # not be touched.
     user_id, _ = with_admin
-    yield http.Request(dict(**create_environ(), REMOTE_USER=str(user_id)))
+    yield http.Request({**create_environ(), "REMOTE_USER": str(user_id)})
 
 
 class SingleRequest(typing.Protocol):

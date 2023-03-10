@@ -141,12 +141,12 @@ def section(string_table):
 
 @pytest.fixture
 def params():
-    return dict(
-        initialized=("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        scheduled=("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        containersready=("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        ready=("levels", (WARN * MINUTE, CRIT * MINUTE)),
-    )
+    return {
+        "initialized": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
+        "scheduled": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
+        "containersready": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
+        "ready": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
+    }
 
 
 @pytest.fixture
@@ -429,10 +429,10 @@ def test_register_check_plugin_calls(check_plugin) -> None:  # type:ignore[no-un
     assert check_plugin.service_name == "Condition"
     assert check_plugin.discovery_function.__wrapped__ == kube_pod_conditions.discovery
     assert check_plugin.check_function.__wrapped__ == kube_pod_conditions.check
-    assert check_plugin.check_default_parameters == dict(
-        scheduled="no_levels",
-        initialized="no_levels",
-        containersready="no_levels",
-        ready="no_levels",
-    )
+    assert check_plugin.check_default_parameters == {
+        "scheduled": "no_levels",
+        "initialized": "no_levels",
+        "containersready": "no_levels",
+        "ready": "no_levels",
+    }
     assert str(check_plugin.check_ruleset_name) == "kube_pod_conditions"

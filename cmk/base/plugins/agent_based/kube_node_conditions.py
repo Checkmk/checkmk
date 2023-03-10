@@ -132,12 +132,12 @@ register.check_plugin(
     sections=["kube_node_conditions", "kube_node_custom_conditions"],
     discovery_function=discovery,
     check_function=check,
-    check_default_parameters=dict(
-        ready=int(State.CRIT),
-        memorypressure=int(State.CRIT),
-        diskpressure=int(State.CRIT),
-        pidpressure=int(State.CRIT),
-        networkunavailable=int(State.CRIT),
-    ),
+    check_default_parameters={
+        "ready": int(State.CRIT),
+        "memorypressure": int(State.CRIT),
+        "diskpressure": int(State.CRIT),
+        "pidpressure": int(State.CRIT),
+        "networkunavailable": int(State.CRIT),
+    },
     check_ruleset_name="kube_node_conditions",
 )

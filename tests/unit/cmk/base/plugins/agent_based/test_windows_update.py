@@ -83,11 +83,11 @@ def test_check_windows_updates_ok(
 ) -> None:
     assert list(
         check_windows_updates(
-            params=dict(
-                levels_important=(1, 2),
-                levels_optional=(1, 2),
-                levels_lower_forced_reboot=(604800, 172800),
-            ),
+            params={
+                "levels_important": (1, 2),
+                "levels_optional": (1, 2),
+                "levels_lower_forced_reboot": (604800, 172800),
+            },
             section=SECTION_OK,
         )
     ) == [
@@ -105,11 +105,11 @@ def test_check_windows_updates_ok(
 def test_check_windows_updates_failed(check_windows_updates: CheckFunction) -> None:
     assert list(
         check_windows_updates(
-            params=dict(
-                levels_important=(1, 2),
-                levels_optional=(1, 2),
-                levels_lower_forced_reboot=(604800, 172800),
-            ),
+            params={
+                "levels_important": (1, 2),
+                "levels_optional": (1, 2),
+                "levels_lower_forced_reboot": (604800, 172800),
+            },
             section=SECTION_FAILED,
         )
     ) == [
@@ -131,11 +131,11 @@ def test_reboot_required(check_windows_updates: CheckFunction) -> None:
     )
     assert list(
         check_windows_updates(
-            params=dict(
-                levels_important=None,
-                levels_optional=None,
-                levels_lower_forced_reboot=(604800, 172800),
-            ),
+            params={
+                "levels_important": None,
+                "levels_optional": None,
+                "levels_lower_forced_reboot": (604800, 172800),
+            },
             section=section,
         )
     ) == [
@@ -198,11 +198,11 @@ def test_time_until_force_reboot(
     assert (
         list(
             check_windows_updates(
-                params=dict(
-                    levels_important=None,
-                    levels_optional=None,
-                    levels_lower_forced_reboot=(604800, 172800),
-                ),
+                params={
+                    "levels_important": None,
+                    "levels_optional": None,
+                    "levels_lower_forced_reboot": (604800, 172800),
+                },
                 section=section,
             )
         )

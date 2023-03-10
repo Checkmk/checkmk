@@ -324,7 +324,7 @@ Section = (
 
 def _asset_serializer(section: AssetSection) -> None:
     with SectionWriter("gcp_assets") as w:
-        w.append(json.dumps(dict(config=section.config)))
+        w.append(json.dumps({"config": section.config}))
         for a in section.assets:
             w.append(Asset.serialize(a))
 

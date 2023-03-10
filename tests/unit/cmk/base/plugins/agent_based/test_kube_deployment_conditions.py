@@ -44,11 +44,11 @@ def condition_false(time_diff_minutes: int = 0) -> Mapping[str, str | int]:
 
 @pytest.fixture
 def params() -> Mapping[str, VSResultAge]:
-    return dict(
-        progressing=("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        available=("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        replicafailure=("levels", (WARN * MINUTE, CRIT * MINUTE)),
-    )
+    return {
+        "progressing": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
+        "available": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
+        "replicafailure": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
+    }
 
 
 @pytest.fixture

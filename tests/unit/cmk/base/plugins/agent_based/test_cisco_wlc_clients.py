@@ -122,17 +122,17 @@ def test_cisco_wlc_clients(item: str, result: CheckResult) -> None:
 PARAM_STATUS = [
     # summary: 186 connections
     [{}, State.OK],
-    [dict(levels=(300, 400)), State.OK],
-    [dict(levels=(100, 400)), State.WARN],
-    [dict(levels=(50, 100)), State.CRIT],
-    [dict(levels_lower=(100, 50)), State.OK],
-    [dict(levels_lower=(200, 100)), State.WARN],
-    [dict(levels_lower=(300, 200)), State.CRIT],
+    [{"levels": (300, 400)}, State.OK],
+    [{"levels": (100, 400)}, State.WARN],
+    [{"levels": (50, 100)}, State.CRIT],
+    [{"levels_lower": (100, 50)}, State.OK],
+    [{"levels_lower": (200, 100)}, State.WARN],
+    [{"levels_lower": (300, 200)}, State.CRIT],
     # check status when exactly on the defined level
-    [dict(levels=(186, 400)), State.WARN],
-    [dict(levels=(50, 186)), State.CRIT],
-    [dict(levels_lower=(186, 100)), State.OK],
-    [dict(levels_lower=(300, 186)), State.WARN],
+    [{"levels": (186, 400)}, State.WARN],
+    [{"levels": (50, 186)}, State.CRIT],
+    [{"levels_lower": (186, 100)}, State.OK],
+    [{"levels_lower": (300, 186)}, State.WARN],
 ]
 
 
@@ -150,15 +150,15 @@ def test_parse_cisco_wlc_clients() -> None:
         total_clients=186,
         clients_per_ssid={
             "FreePublicWifi": ClientsPerInterface(
-                per_interface=dict(
-                    guest1=0,
-                    guest2=114,
-                    guest3=68,
-                )
+                per_interface={
+                    "guest1": 0,
+                    "guest2": 114,
+                    "guest3": 68,
+                }
             ),
-            "AnotherWifiSSID": ClientsPerInterface(per_interface=dict(interface_name=0)),
-            "corp_internal_001": ClientsPerInterface(per_interface=dict(corp_intern_001=1)),
-            "corp_internal_003": ClientsPerInterface(per_interface=dict(corp_intern_003=3)),
+            "AnotherWifiSSID": ClientsPerInterface(per_interface={"interface_name": 0}),
+            "corp_internal_001": ClientsPerInterface(per_interface={"corp_intern_001": 1}),
+            "corp_internal_003": ClientsPerInterface(per_interface={"corp_intern_003": 3}),
         },
     )
 

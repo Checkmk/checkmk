@@ -44,13 +44,13 @@ class NodeCustomConditionsFactory(ModelFactory):
     )
 
 
-PARAMS = dict(
-    ready=int(State.CRIT),
-    memorypressure=int(State.CRIT),
-    diskpressure=int(State.CRIT),
-    pidpressure=int(State.CRIT),
-    networkunavailable=int(State.CRIT),
-)
+PARAMS = {
+    "ready": int(State.CRIT),
+    "memorypressure": int(State.CRIT),
+    "diskpressure": int(State.CRIT),
+    "pidpressure": int(State.CRIT),
+    "networkunavailable": int(State.CRIT),
+}
 
 
 @pytest.fixture

@@ -452,16 +452,18 @@ def _merge_sections(
             attributes=interfaces.Attributes(
                 **{
                     **asdict(interface.attributes),
-                    **dict(
-                        alias=add_if_data.alias,
-                        speed=add_if_data.speed or interface.attributes.speed,
-                        group=section_teaming[add_if_data.guid].team_name
+                    **{
+                        "alias": add_if_data.alias,
+                        "speed": add_if_data.speed or interface.attributes.speed,
+                        "group": section_teaming[add_if_data.guid].team_name
                         if add_if_data.guid in section_teaming
                         else None,
-                        oper_status=add_if_data.oper_status,
-                        oper_status_name=add_if_data.oper_status_name,
-                        phys_address=interfaces.mac_address_from_hexstring(add_if_data.mac_address),
-                    ),
+                        "oper_status": add_if_data.oper_status,
+                        "oper_status_name": add_if_data.oper_status_name,
+                        "phys_address": interfaces.mac_address_from_hexstring(
+                            add_if_data.mac_address
+                        ),
+                    },
                 },
             ),
             counters=interface.counters,

@@ -115,10 +115,10 @@ register.check_plugin(
     service_name="Condition",
     discovery_function=discovery,
     check_function=check,
-    check_default_parameters=dict(
-        available="no_levels",
-        progressing="no_levels",
-        replicafailure="no_levels",
-    ),
+    check_default_parameters={
+        "available": "no_levels",
+        "progressing": "no_levels",
+        "replicafailure": "no_levels",
+    },
     check_ruleset_name="kube_deployment_conditions",
 )

@@ -42,7 +42,8 @@ def check_esx_vsphere_hostsystem_mem_cluster(item, params, parsed):
     for key, value in parsed.items():
         if key in ["summary.quickStats.overallMemoryUsage", "hardware.memorySize", "name"]:
             data.setdefault(key, []).append(value[0])
-    sorted_params = sorted(params, reverse=True)
+    sorted_params = list(sorted(params, reverse=True))
+    sorted_params.append((0, (None, None)))
 
     nodes_count = len(data['name'])
     total_memory_usage = sum(

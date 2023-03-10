@@ -1,0 +1,15 @@
+Title: esx_vsphere_hostsystem_mem_usage_cluster: item not found when no limits configured
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678452702
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p35
+
+The check rule "Memory Usage of Clusters" adds a Memory service to the selected
+hosts as an enforced service. In case this rule was configured with the
+esx_vsphere_hostsystem_mem_usage_cluster checktype, and there were no limits
+configured, the service would show an UNKNOWN state and a summary reading "Item
+not found in monitoring data". This has been fixed.

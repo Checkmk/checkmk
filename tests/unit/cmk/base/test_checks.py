@@ -40,8 +40,6 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
         r"\bbinstring_to_int\b",
         r"\bcheck_type\b",
         r"\bcore_state_names\b",
-        r"\bhosttags_match_taglist\b",
-        r"\bin_extraconf_hostlist\b",
         r"\bis_cmc\b",
         r"\bnagios_illegal_chars\b",
         r"\bquote_shell_string\b",

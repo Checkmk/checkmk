@@ -29,11 +29,10 @@ from typing import (
     TypedDict,
 )
 
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    get_checkgroup_parameters,
-    host_extra_conf,
-    host_name,
-)
+from cmk.checkers.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+
+# from cmk.base.config import logwatch_rule will NOT work!
+import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
 from ..agent_based_api.v1 import regex, Result, State
 
@@ -46,6 +45,12 @@ class ItemData(TypedDict):
 class Section(NamedTuple):
     errors: Sequence[str]
     logfiles: Mapping[str, ItemData]
+
+
+def service_extra_conf(service: str) -> list:
+    return cmk.base.config.get_config_cache().service_extra_conf(
+        host_name(), service, cmk.base.config.logwatch_rules
+    )
 
 
 def extract_unseen_lines(
@@ -66,9 +71,9 @@ def extract_unseen_lines(
 
 def get_ec_rule_params() -> list:
     """Isolate the remaining API violation w.r.t. parameters"""
-    return host_extra_conf(
+    return cmk.base.config.get_config_cache().host_extra_conf(
         host_name(),
-        get_checkgroup_parameters("logwatch_ec", []),
+        cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),
     )
 
 

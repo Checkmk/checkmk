@@ -39,14 +39,10 @@ from cmk.utils.type_defs import (  # pylint: disable=cmk-module-layer-violation
     HostName,
 )
 
+from cmk.checkers.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-
-# import from legacy API until we come up with something better
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-    service_extra_conf,
-)
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
@@ -325,11 +321,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
 
         # Determine logwatch patterns specifically for this logfile
         if params.get("logwatch_reclassify"):
-            logfile_settings = service_extra_conf(
-                HostName(host_name()),
-                logfile,
-                cmk.base.config.logwatch_rules,
-            )
+            logfile_settings = logwatch.service_extra_conf(logfile)
             for settings in logfile_settings:
                 add_reclassify_settings(settings)
 

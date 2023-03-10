@@ -110,11 +110,6 @@ from cmk.utils.log import console as _console  # noqa: F401 # pylint: disable=un
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.rulesets.ruleset_matcher import RuleConditionsSpec
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec as _RuleSpec
-from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
-    get_rule_options,
-    hosttags_match_taglist,
-    in_extraconf_hostlist,
-)
 
 # The class 'as_float' has been moved; import it here under the old name
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
@@ -122,7 +117,7 @@ from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
 )
 from cmk.utils.type_defs import HostName, MetricName
 from cmk.utils.type_defs import SectionName as _SectionName
-from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState, state_markers
+from cmk.utils.type_defs import ServiceDetails, ServiceState, state_markers
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
@@ -255,13 +250,6 @@ def savefloat(f: Any) -> float:
         return float(f)
     except (TypeError, ValueError):
         return 0.0
-
-
-# Compatibility wrapper for the pre 1.6 existant config.service_extra_conf()
-def service_extra_conf(
-    hostname: HostName, service: ServiceName, ruleset: Iterable[_RuleSpec]
-) -> List:
-    return _config.get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()

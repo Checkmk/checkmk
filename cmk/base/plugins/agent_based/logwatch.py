@@ -37,12 +37,7 @@ from typing import (
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-# from cmk.base.config import logwatch_rule will NOT work!
-import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-    service_extra_conf,
-)
+from cmk.checkers.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -65,7 +60,7 @@ def _get_discovery_groups(params: AllParams) -> Sequence[List[Tuple[str, Groupin
 def _compile_params(item: str) -> Dict[str, Any]:
     compiled_params: Dict[str, Any] = {"reclassify_patterns": []}
 
-    for rule in service_extra_conf(host_name(), item, cmk.base.config.logwatch_rules):
+    for rule in logwatch.service_extra_conf(item):
         if isinstance(rule, dict):
             compiled_params["reclassify_patterns"].extend(rule["reclassify_patterns"])
             if "reclassify_states" in rule:

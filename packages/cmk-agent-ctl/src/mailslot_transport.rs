@@ -179,7 +179,7 @@ impl MailSlotBackend {
                     return;
                 }
                 Err(mail_slot::Error::Io(ref e))
-                    if e.kind() != std::io::ErrorKind::AlreadyExists =>
+                    if e.kind() == std::io::ErrorKind::AlreadyExists =>
                 {
                     warn!("Error server mailslot name {} is in use, retry...", name,);
                     continue;

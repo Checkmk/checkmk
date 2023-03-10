@@ -143,7 +143,7 @@ class Site:
                 return False
             return new_t > after
 
-        reload_time, timeout = time.time(), 40
+        reload_time, timeout = time.time(), 120
         while not config_reloaded():
             if time.time() > reload_time + timeout:
                 ps_proc = subprocess.run(

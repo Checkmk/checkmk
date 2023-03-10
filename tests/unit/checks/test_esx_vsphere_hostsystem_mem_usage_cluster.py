@@ -35,7 +35,21 @@ from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
                 ("summary.quickStats.overallMemoryUsage", ["322520"]),
             ]),
             [(0, (80.0, 90.0))],
-            None,
+            (
+                0,
+                "Usage: 20.51% - 314.96 GB of 1.50 TB",
+                [
+                    (
+                        "mem_used",
+                        338186731520.0,
+                        1319122554060.8,
+                        1484012873318.4001,
+                        0,
+                        1648903192576.0,
+                    ),
+                    ("mem_total", 1648903192576.0),
+                ],
+            ),
             id=("Mem usage 1 node with params"),
         ),
     ],
@@ -48,8 +62,6 @@ def test_check_esx_vsphere_hostsystem_mem_usage_cluster(
 ):
     check = Check("esx_vsphere_hostsystem.mem_usage_cluster")
 
-    check_result = None
-    with suppress(ZeroDivisionError):
-        check_result = check.run_check(None, params, section)
+    check_result = check.run_check(None, params, section)
 
     assert check_result == expected_check_result

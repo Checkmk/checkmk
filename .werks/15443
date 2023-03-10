@@ -1,0 +1,12 @@
+Title: esx_vsphere_hostsystem_mem_usage_cluster: crash with ZeroDivisionError
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678452025
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p35
+
+The check esx_vsphere_hostsystem_mem_usage_cluster crashed with the message
+"ZeroDivisionError (float division by zero)". This has been fixed.

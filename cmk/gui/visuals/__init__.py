@@ -100,6 +100,7 @@ from cmk.gui.utils.urls import (
     DocReference,
     file_name_and_query_vars_from_url,
     make_confirm_delete_link,
+    make_confirm_link,
     makeactionuri,
     makeuri,
     makeuri_contextless,
@@ -942,19 +943,25 @@ def _render_extension_package_icons(
 ) -> None:
     """Render icons needed for extension package handling of visuals"""
     if not is_packaged:
-        export_url = makeuri_contextless(
-            request,
-            [
-                ("mode", "export"),
-                ("owner", owner),
-                ("load_name", visual_name),
-                ("back", backurl),
-            ],
-            filename="edit_%s.py" % what_s,
+        export_url = make_confirm_link(
+            url=makeuri_contextless(
+                request,
+                [
+                    ("mode", "export"),
+                    ("owner", owner),
+                    ("load_name", visual_name),
+                    ("back", backurl),
+                ],
+                filename="edit_%s.py" % what_s,
+            ),
+            title=_("Clone %s for packaging") % what_s,
+            message=_("ID: %s") % visual_name,
+            confirm_button=_("Clone"),
+            cancel_button=_("Cancel"),
         )
         html.icon_button(
             export_url,
-            _("Make this %s available in the extension packages module") % what_s,
+            _("Clone this %s for packaging as extension package") % what_s,
             {
                 "icon": "mkps",
                 "emblem": "add",
@@ -965,6 +972,29 @@ def _render_extension_package_icons(
         )
         return
 
+    if not (mkp_name := installed_packages.get(visual_name)):
+        delete_url = make_confirm_delete_link(
+            url=makeuri_contextless(
+                request,
+                [
+                    ("mode", "delete"),
+                    ("owner", owner),
+                    ("load_name", visual_name),
+                    ("back", backurl),
+                ],
+                filename="edit_%s.py" % what_s,
+            ),
+            title=_("Remove %s from extensions") % what_s,
+            message=_("ID: %s") % visual_name,
+            confirm_button=_("Remove"),
+            cancel_button=_("Cancel"),
+        )
+        html.icon_button(
+            url=delete_url,
+            title=_("Remove this %s from the extension packages module") % what_s,
+            icon="delete",
+        )
+
     html.icon_button(
         "wato.py?mode=mkps",
         _("Go to extension packages"),
@@ -974,36 +1004,16 @@ def _render_extension_package_icons(
         },
     )
 
-    if not (mkp_name := installed_packages.get(visual_name)):
-        delete_url = makeuri_contextless(
-            request,
-            [
-                ("mode", "delete"),
-                ("owner", owner),
-                ("load_name", visual_name),
-                ("back", backurl),
-            ],
-            filename="edit_%s.py" % what_s,
-        )
-        html.icon_button(
-            delete_url,
-            _("Remove this %s from the extension packages module") % what_s,
-            {
-                "icon": "mkps",
-                "emblem": "disable",
-            },
-        )
-
     table.cell(_("State"), css=["buttons"])
     if mkp_name:
         html.icon(
             "mkps",
-            _("This %s is provided via the MKP '%s'.") % (what_s, mkp_name),
+            _("This %s is provided via the MKP '%s'") % (what_s, mkp_name),
         )
     else:
         html.icon(
             "mkps",
-            _("This %s can be packaged with the extension packages module.") % what_s,
+            _("This %s can be packaged with the extension packages module") % what_s,
         )
 
 

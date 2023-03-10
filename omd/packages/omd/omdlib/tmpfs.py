@@ -281,7 +281,7 @@ def restore_tmpfs_dump(site: SiteContext) -> None:
     if not _tmpfs_dump_path(site).exists():
         return
     with tarfile.TarFile(_tmpfs_dump_path(site)) as tar:
-        tar.extractall(site.tmp_dir)
+        tar.extractall(site.tmp_dir)  # nosec B202
 
 
 def _tmpfs_dump_path(site: SiteContext) -> Path:

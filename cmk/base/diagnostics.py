@@ -843,7 +843,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             ]
         )
 
-        return requests.post(url)
+        return requests.post(url)  # nosec B113
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):

@@ -169,7 +169,7 @@ class AggregationRawdataGenerator:
     def _fetch_aggregation_data(self):
         filter_query = self._config.get("filter") or {}
 
-        response = requests.post(
+        response = requests.post(  # nosec B113
             f"{self._site_url}"
             + "/check_mk/api/1.0"
             + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",

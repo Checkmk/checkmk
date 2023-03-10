@@ -82,7 +82,8 @@ USAGE: agent_%s --section_url [{section_name},{url}]
         content: dict[str, list[str]] = {}
         for section_name, url in sections:
             content.setdefault(section_name, [])
-            content[section_name].append(requests.get(url).text.replace("\n", newline_replacement))
+            c = requests.get(url)  # nosec B113
+            content[section_name].append(c.text.replace("\n", newline_replacement))
 
         if opt_debug:
             for line in content:

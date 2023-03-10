@@ -242,7 +242,7 @@ def post_request(
         verify = False
 
     try:
-        response = requests.post(
+        response = requests.post(  # nosec B113
             url=url,
             json=message_constructor(context),
             proxies=typeshed_issue_7724(

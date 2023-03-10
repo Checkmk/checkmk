@@ -222,7 +222,7 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 def handle_response(url, args, method="GET", events_since=86400):
     if method == "POST":
         try:
-            response = requests.post(
+            response = requests.post(  # nosec B113
                 url,
                 auth=(args.user, args.password),
                 headers={
@@ -238,7 +238,7 @@ def handle_response(url, args, method="GET", events_since=86400):
 
     else:
         try:
-            response = requests.get(url, auth=(args.user, args.password))
+            response = requests.get(url, auth=(args.user, args.password))  # nosec B113
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:

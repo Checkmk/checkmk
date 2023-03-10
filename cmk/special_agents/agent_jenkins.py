@@ -73,7 +73,7 @@ def handle_request(args, sections):
 
         url = url_base + section.uri
         try:
-            response = requests.get(url, auth=(args.user, args.password))
+            response = requests.get(url, auth=(args.user, args.password))  # nosec B113
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:

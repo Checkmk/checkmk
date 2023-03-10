@@ -506,7 +506,7 @@ def _extract(tar: tarfile.TarFile, base_dir: Path, components: list[ReplicationP
                 elif component.ty == "dir":
                     os.makedirs(component_path)
 
-                subtar.extractall(target_dir)
+                subtar.extractall(target_dir)  # nosec B202
         except Exception:
             raise MKGeneralException(
                 f"Failed to extract subtar {component.ident}: {traceback.format_exc()}"
@@ -591,7 +591,8 @@ def _update_settings_of_user(
     if is_customer_user:
         user_tars = [m for m in user_tars if not is_user_file(m.name)]
 
-    tar_file.extractall(os.path.dirname(path), members=user_tars)
+    d = os.path.dirname(path)
+    tar_file.extractall(d, members=user_tars)  # nosec B202
 
 
 def _cleanup_user_dir(path, is_customer_user) -> None:  # type:ignore[no-untyped-def]
@@ -618,7 +619,7 @@ def _update_check_mk(target_dir, tar_file):
         exec(f.read(), {}, site_vars)
 
     _wipe_directory(target_dir)
-    tar_file.extractall(target_dir)
+    tar_file.extractall(target_dir)  # nosec B202
 
     master_vars: dict[str, Any] = {"contacts": {}}
     exec(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)

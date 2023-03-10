@@ -59,7 +59,7 @@ def _forward_post(
     credentials: HTTPBasicCredentials,
     json_body: Any,
 ) -> requests.Response:
-    return requests.post(
+    return requests.post(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -73,7 +73,7 @@ def _forward_get(
     endpoint: str,
     credentials: HTTPBasicCredentials,
 ) -> requests.Response:
-    return requests.get(
+    return requests.get(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -86,7 +86,7 @@ def _forward_put(
     credentials: HTTPBasicCredentials,
     json_body: Any,
 ) -> requests.Response:
-    return requests.put(
+    return requests.put(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),

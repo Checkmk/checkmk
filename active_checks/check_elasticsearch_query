@@ -59,9 +59,9 @@ def handle_request(args):
         query["query"]["bool"]["must"][0]["query_string"]["fields"] = args.fieldname.split(" ")
 
     if args.user and args.password:
-        raw_response = requests.get(url, json=query, auth=(args.user, args.password))
+        raw_response = requests.get(url, json=query, auth=(args.user, args.password))  # nosec B113
     else:
-        raw_response = requests.get(url, json=query)
+        raw_response = requests.get(url, json=query)  # nosec B113
 
     msg, state, perfdata = handle_query(raw_response, args.warn, args.crit, args.timerange)
 

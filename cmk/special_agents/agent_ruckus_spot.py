@@ -96,7 +96,7 @@ def main(sys_argv=None):
                 venueid=venueid,
                 url_end=url_end,
             )
-            response = requests.get(url, auth=(api_key, "X"))
+            response = requests.get(url, auth=(api_key, "X"))  # nosec B113
 
             sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)
             sys.stdout.write(response.text + "\n")

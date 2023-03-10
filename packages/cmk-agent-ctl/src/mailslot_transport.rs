@@ -282,6 +282,18 @@ mod tests {
         assert_eq!(MailSlotBackend::try_as_utf8(GOOD_UTF8.to_vec()), "💖");
     }
 
+    #[test]
+    fn test_mailslot_names() {
+        {
+            let m1 = MailSlotBackend::new("x").expect("FAILURE!");
+            let m2 = MailSlotBackend::new("x").expect("FAILURE!");
+            assert_eq!(m1.used_name(), "x_0");
+            assert_eq!(m2.used_name(), "x_1");
+        }
+        let m = MailSlotBackend::new("x").expect("FAILURE!");
+        assert_eq!(m.used_name(), "x_0");
+    }
+
     #[tokio::test(flavor = "multi_thread")]
     async fn test_mailslot_backend() {
         let base_name = build_own_mailslot_name() + "_test";

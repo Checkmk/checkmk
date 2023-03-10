@@ -1982,7 +1982,7 @@ def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
     return _check_contexts[check_plugin_name]
 
 
-_DiscoveredParameters = object  # TODO: narrow this down
+_DiscoveredParameters = dict | tuple | str | None
 
 
 class CheckInfoElement(TypedDict, total=True):

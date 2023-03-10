@@ -1,24 +1,4 @@
 ---
-- name: Create private key (RSA, 4096 bits)
-  community.crypto.openssl_privatekey:
-    path: /etc/ssl/private/checkmk.key
-  become: true
-
-- name: Create certificate signing request (CSR) for self-signed certificate
-  community.crypto.openssl_csr_pipe:
-    privatekey_path: /etc/ssl/private/checkmk.key
-    common_name: localhost
-  register: csr
-  become: true
-
-- name: Create self-signed certificate from CSR
-  community.crypto.x509_certificate:
-    path: /etc/ssl/certs/checkmk.pem
-    csr_content: "{{ csr.csr }}"
-    privatekey_path: /etc/ssl/private/checkmk.key
-    provider: selfsigned
-  become: true
-
 - name: Enable the Apache2 module headers
   community.general.apache2_module:
     state: present

@@ -873,7 +873,11 @@ class Site:
 
     def ensure_running(self) -> None:
         if not self.is_running():
-            pytest.exit("Site was not running completely while it should. Enforcing stop.")
+            stdout = subprocess.check_output(["ps", "-ef"], text=True)
+            pytest.exit(
+                "Site was not running completely while it should. Enforcing stop. "
+                f"Output of ps -ef:\n{stdout}"
+            )
 
     def is_running(self) -> bool:
         return (

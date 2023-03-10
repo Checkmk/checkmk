@@ -943,6 +943,11 @@ class DiscoveryPageRenderer:
             return
 
         params = entry.effective_parameters
+        if not params:
+            # Avoid error message in this case.
+            # For instance: Ruleset requires a key, but discovered parameters are empty.
+            return
+
         rulespec = rulespec_registry[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:

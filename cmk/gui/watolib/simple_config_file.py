@@ -38,9 +38,11 @@ class WatoConfigFile(abc.ABC, Generic[_G]):
             lock=lock,
         )
 
-    def save(self, cfg: _G) -> None:
+    def save(self, cfg: _G, pretty: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(str(self._config_file_path), self._config_variable, cfg)
+        store.save_to_mk_file(
+            str(self._config_file_path), self._config_variable, cfg, pprint_value=pretty
+        )
 
 
 class WatoSingleConfigFile(WatoConfigFile[_T], Generic[_T]):

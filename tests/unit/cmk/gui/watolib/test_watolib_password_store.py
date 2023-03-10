@@ -101,7 +101,7 @@ def test_password_store_save(store: PasswordStore) -> None:
             }
         )
     }
-    store.save(entries)
+    store.save(entries, pretty=False)
 
     assert store.load_for_reading() == entries
 
@@ -120,7 +120,7 @@ def fixture_test_store(store: PasswordStore) -> PasswordStore:
             }
         )
     }
-    store.save(entries)
+    store.save(entries, pretty=False)
     return store
 
 

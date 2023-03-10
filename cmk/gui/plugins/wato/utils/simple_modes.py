@@ -21,6 +21,7 @@ from livestatus import SiteId
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -249,7 +250,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
             text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
             affected_sites=self._mode_type.affected_sites(entry),
         )
-        self._store.save(entries)
+        self._store.save(entries, pretty=active_config.wato_pprint_config)
 
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
         return redirect(mode_url(self._mode_type.list_mode_name()))
@@ -527,7 +528,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(self, entries: dict[str, _T]) -> None:
-        self._store.save(entries)
+        self._store.save(entries, active_config.wato_pprint_config)
 
     def page(self) -> None:
         html.begin_form("edit", method="POST")

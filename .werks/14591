@@ -1,0 +1,19 @@
+Title: Electrical Power for Devices with only one phase: Remove error message during discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678446967
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+During discovery the following error could occur
+C+:
+Invalid check parameter: The datatype must be a tuple, but is dict
+Variable: checkgroup_parameters:epower_single
+Parameters:
+{}
+C-:
+This error is cosmetic in nature and does not affect the behaviour of the check.
+This werk fixes the issue.

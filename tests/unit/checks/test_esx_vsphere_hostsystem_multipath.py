@@ -6,11 +6,13 @@
 
 import pytest
 
-from tests.testlib import Check
+from tests.unit.conftest import FixRegister
 
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.base.api.agent_based.checking_classes import CheckResult
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
-
-pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
@@ -48,8 +50,11 @@ pytestmark = pytest.mark.checks
             ),
             "bla2:A0:B2:C21",
             [
-                0,
-                "0 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nactive",
+                Result(
+                    state=State.OK,
+                    summary="0 active, 0 dead, 0 disabled, 0 standby, 0 unknown",
+                    details="0 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nactive",
+                ),
             ],
         ),
         (
@@ -66,6 +71,8 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_esx_vsphere_hostsystem_multipath(section, item, check_results):
-    check = Check("esx_vsphere_hostsystem.multipath")
-    assert list(check.run_check(item, {}, section) or ()) == check_results
+def test_check_esx_vsphere_hostsystem_multipath(
+    fix_register: FixRegister, section: Section, item: str, check_results: CheckResult
+) -> None:
+    check = fix_register.check_plugins[CheckPluginName("esx_vsphere_hostsystem_multipath")]
+    assert list(check.check_function(item=item, params={}, section=section)) == check_results

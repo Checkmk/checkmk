@@ -78,8 +78,6 @@ Global variables:
 
 # We import several modules here for the checks
 
-import calendar
-
 # TODO: Move imports directly to checks?
 import collections  # noqa: F401 # pylint: disable=unused-import
 import enum  # noqa: F401 # pylint: disable=unused-import
@@ -611,12 +609,6 @@ def get_effective_service_level() -> ServiceState:
         return service_level
 
     return 0
-
-
-def utc_mktime(time_struct: time.struct_time) -> int:
-    """Works like time.mktime() but assumes the time_struct to be in UTC,
-    not in local time."""
-    return calendar.timegm(time_struct)
 
 
 def passwordstore_get_cmdline(fmt: str, pw: Union[Tuple, str]) -> Union[str, Tuple[str, str, str]]:

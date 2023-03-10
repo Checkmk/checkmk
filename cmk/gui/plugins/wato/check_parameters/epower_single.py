@@ -10,16 +10,27 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple
 
 
 def _parameter_valuespec_epower_single():
-    return Tuple(
-        help=_("Levels for the electrical power consumption of a device "),
-        elements=[
-            Integer(title=_("warning if at"), unit="Watt", default_value=300),
-            Integer(title=_("critical if at"), unit="Watt", default_value=400),
-        ],
+    return Transform(
+        Dictionary(
+            help=_("Levels for the electrical power consumption of a device "),
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        elements=[
+                            Integer(title=_("warning if at"), unit="Watt", default_value=300),
+                            Integer(title=_("critical if at"), unit="Watt", default_value=400),
+                        ],
+                    ),
+                ),
+            ],
+            required_keys=["levels"],
+        ),
+        forth=lambda x: {"levels": x} if isinstance(x, tuple) else x,
     )
 
 

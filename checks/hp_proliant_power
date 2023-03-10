@@ -36,7 +36,7 @@ def check_hp_proliant_power(_item, params, info):
     return check_levels(
         reading,
         "watt",
-        params if params else (None, None),
+        params.get("levels", (None, None)),
         infoname="Current reading",
         unit="Watts",
     )

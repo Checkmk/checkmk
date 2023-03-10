@@ -5,7 +5,7 @@
 
 # comNET GmbH, Fabian Binder - 2018-05-07
 
-from typing import Final, Mapping, NamedTuple
+from typing import Final, Iterable, Mapping, NamedTuple
 
 from cmk.base.check_legacy_includes.cisco_ucs import map_operability, scan_cisco_ucs
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
@@ -42,7 +42,7 @@ def parse_cisco_ucs_hdd(string_table) -> Section:
     }
 
 
-def discover_cisco_ucs_hdd(section: Section):
+def discover_cisco_ucs_hdd(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((hdd.disk_id, {}) for hdd in section.values() if hdd.operability != "removed")
 
 

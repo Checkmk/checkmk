@@ -44,10 +44,11 @@
 #   SUSE Package Hub 12
 #   (PackageHub/12.5/x86_64)
 
+import time
+
 #   Registered
 ##.
-
-import time
+from typing import Iterable
 
 from cmk.base.plugins.agent_based.suseconnect import get_data, Section
 
@@ -58,7 +59,7 @@ factory_settings["sles_license_default_levels"] = {
 }
 
 
-def inventory_suseconnect(section: Section):
+def inventory_suseconnect(section: Section) -> Iterable[tuple[None, dict]]:
     if get_data(section) is not None:
         yield None, {}
 

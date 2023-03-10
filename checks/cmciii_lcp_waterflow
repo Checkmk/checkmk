@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Optional
+from typing import Iterable, NamedTuple, Optional
 
 
 class WaterflowReading(NamedTuple):
@@ -49,7 +49,7 @@ def parse_cmciii_lcp_waterflow(info) -> Section:
     )
 
 
-def inventory_cmciii_lcp_waterflow(section: Section):
+def inventory_cmciii_lcp_waterflow(section: Section) -> Iterable[tuple[None, dict]]:
     if section:
         yield None, {}
 

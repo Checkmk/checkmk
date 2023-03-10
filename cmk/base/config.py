@@ -1983,10 +1983,15 @@ def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
     return _check_contexts[check_plugin_name]
 
 
+_DiscoveredParameters = object  # TODO: narrow this down
+
+
 class CheckInfoElement(TypedDict, total=True):
     check_function: NotRequired[Callable]
-    inventory_function: NotRequired[Callable]
-    parse_function: NotRequired[Callable]
+    inventory_function: NotRequired[
+        Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]
+    ]
+    parse_function: NotRequired[Callable[[list], object]]
     group: NotRequired[str]
     snmp_info: NotRequired[tuple | list]
     snmp_scan_function: NotRequired[Callable[[Callable], bool]]

@@ -5,7 +5,7 @@
 
 import os
 from collections import defaultdict
-from typing import Counter, Dict, Literal, Mapping, NamedTuple
+from typing import Counter, Dict, Iterable, Literal, Mapping, NamedTuple
 
 # <<<inotify:sep(9)>>>
 # configured folder    /tmp/noti
@@ -48,7 +48,7 @@ def parse_inotify(info) -> Section:
     return Section(warnings, configured, stats)
 
 
-def discover_inotify(section: Section):
+def discover_inotify(section: Section) -> Iterable[tuple[str, dict]]:
     yield from ((f"{type_.title()} {path}", {}) for path, type_ in section.configured.items())
 
 

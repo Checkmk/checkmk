@@ -259,7 +259,7 @@ void CleanArtifacts() {
     fs::remove(ac::ControllerFlagFile(), ec);
     fs::remove(ac::ControllerFlagFile(), ec);
 }
-constexpr auto marker_new = "Checkmk monitoring agent service - 2.1, 64-bit";
+constexpr auto marker_new = "Checkmk monitoring agent service - 2.2, 64-bit";
 constexpr auto marker_old =
     "Check MK monitoring and management Service, 64-bit";
 

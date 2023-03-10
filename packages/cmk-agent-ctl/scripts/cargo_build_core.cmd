@@ -36,6 +36,7 @@ rustup default 1.66.0
 rustup target add %target%
 rustup update 1.66.0
 @echo RUST versions:
+cd
 cargo -V
 rustc -V
 

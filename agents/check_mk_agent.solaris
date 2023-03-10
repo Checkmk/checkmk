@@ -881,7 +881,7 @@ run_remote_plugins() {
 
     _non_comment_lines "${configfile}" | tr '[:blank:]' ' ' | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
-        cmdline="${rest#(*) }"
+        cmdline="${rest#\(*\) }"
 
         if [ -n "${prefix}" ]; then
             cmdline="${prefix} '${cmdline}'"

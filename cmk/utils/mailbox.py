@@ -300,6 +300,7 @@ class Mailbox:
                                 ),
                                 auth_type=OAUTH2,
                             ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
                         )
                     )
                 )
@@ -317,6 +318,7 @@ class Mailbox:
                                     self._args.fetch_password,
                                 ),
                             ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
                         )
                     )
                 )

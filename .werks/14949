@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p24
+Version: 2.1.0p25
 
 Previously, if for some reason a plugin sent a malformed UTF-8 string, 
 it broke the integrity of state.pb and resulted in the loss of the state 

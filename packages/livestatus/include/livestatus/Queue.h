@@ -172,10 +172,11 @@ std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::pop(
 
 template <typename T, typename Q>
 void Queue<T, Q>::join() {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        joinable_ = true;
-    }
+    // Locking before signaling is not a POSIX recommendation
+    // but still recommended by helgrind.  So let's keep the
+    // whole function under the lock guard.
+    std::lock_guard<std::mutex> lock(mutex_);
+    joinable_ = true;
     not_full_.notify_all();
     not_empty_.notify_all();
 }

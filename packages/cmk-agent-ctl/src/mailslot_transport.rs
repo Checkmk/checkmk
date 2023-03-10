@@ -179,7 +179,7 @@ impl MailSlotBackend {
                     return;
                 }
                 Err(mail_slot::Error::Io(ref e))
-                    if e.kind() != std::io::ErrorKind::AlreadyExists =>
+                    if e.kind() == std::io::ErrorKind::AlreadyExists =>
                 {
                     warn!("Error server mailslot name {} is in use, retry...", name,);
                     continue;
@@ -280,6 +280,18 @@ mod tests {
     fn test_try_as_utf8() {
         assert_eq!(MailSlotBackend::try_as_utf8(BAD_UTF8.to_vec()), " �(��  ");
         assert_eq!(MailSlotBackend::try_as_utf8(GOOD_UTF8.to_vec()), "💖");
+    }
+
+    #[test]
+    fn test_mailslot_names() {
+        {
+            let m1 = MailSlotBackend::new("x").expect("FAILURE!");
+            let m2 = MailSlotBackend::new("x").expect("FAILURE!");
+            assert_eq!(m1.used_name(), "x_0");
+            assert_eq!(m2.used_name(), "x_1");
+        }
+        let m = MailSlotBackend::new("x").expect("FAILURE!");
+        assert_eq!(m.used_name(), "x_0");
     }
 
     #[tokio::test(flavor = "multi_thread")]

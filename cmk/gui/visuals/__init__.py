@@ -81,6 +81,7 @@ from cmk.gui.type_defs import (
     FilterHTTPVariables,
     FilterName,
     HTTPVariables,
+    Icon,
     InfoName,
     PermissionName,
     SingleInfos,
@@ -959,17 +960,23 @@ def _render_extension_package_icons(
             confirm_button=_("Clone"),
             cancel_button=_("Cancel"),
         )
-        html.icon_button(
-            export_url,
-            _("Clone this %s for packaging as extension package") % what_s,
-            {
-                "icon": "mkps",
-                "emblem": "add",
-            },
-            cssclass="service_button disabled"
-            if Path(_get_local_path(what) / visual_name).exists()
-            else "",
-        )
+
+        clone_icon: Icon = {
+            "icon": "mkps",
+            "emblem": "add",
+        }
+        if Path(_get_local_path(what) / visual_name).exists():
+            html.icon(
+                title=_("This %s is already available for packaging as extension package") % what_s,
+                icon=clone_icon,
+                cssclass="service_button disabled tooltip",
+            )
+        else:
+            html.icon_button(
+                url=export_url,
+                title=_("Clone this %s for packaging as extension package") % what_s,
+                icon=clone_icon,
+            )
         return
 
     if not (mkp_name := installed_packages.get(visual_name)):

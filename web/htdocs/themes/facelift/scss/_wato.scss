@@ -216,8 +216,12 @@ table.data tr.data > td.bulkactions {
   border: none;
 }
 
-a.service_button.disabled {
-  pointer-events: none;
+a.service_button.disabled,
+span > img.service_button.disabled {
+  &:not(.tooltip) {
+    pointer-events: none;
+  }
+
   cursor: default;
   filter: grayscale(100%);
   -webkit-filter: grayscale(100%);

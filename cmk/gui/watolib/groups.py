@@ -13,10 +13,12 @@ import cmk.utils.version as cmk_version
 from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.type_defs import EventRule, timeperiod_spec_alias
 
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import (
     AllGroupSpecs,
@@ -358,7 +360,7 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
 def _find_usages_of_contact_group_in_ec_rules(name: str) -> list[tuple[str, str]]:
     """Is the contactgroup used in an eventconsole rule?"""
     used_in: list[tuple[str, str]] = []
-    rule_packs = mkeventd.load_mkeventd_rules()
+    rule_packs = ec.load_rule_packs()
     for pack in rule_packs:
         for nr, rule in enumerate(pack.get("rules", [])):
             if name in rule.get("contact_groups", {}).get("groups", []):

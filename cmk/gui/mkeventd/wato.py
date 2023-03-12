@@ -12,7 +12,7 @@ import socket
 import sys
 import time
 import zipfile
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from html import escape as html_escape
 from pathlib import Path
@@ -52,7 +52,6 @@ from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mkeventd import (
     export_mkp_rule_pack,
     get_rule_stats_from_ec,
-    load_mkeventd_rules,
     save_mkeventd_rules,
 )
 
@@ -358,7 +357,7 @@ def _vars_help() -> HTML:
 def ActionList(vs: ValueSpec, **kwargs: Any) -> ListOf:
     def validate_action_list(value: Any, varprefix: str) -> None:
         action_ids = [v["id"] for v in value]
-        rule_packs = load_mkeventd_rules()
+        rule_packs = ec.load_rule_packs()
         for rule_pack in rule_packs:
             for rule in rule_pack["rules"]:
                 for action_id in rule.get("actions", []):
@@ -1468,7 +1467,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 
 class ABCEventConsoleMode(WatoMode, abc.ABC):
     def __init__(self) -> None:
-        self._rule_packs = load_mkeventd_rules()
+        self._rule_packs = list(ec.load_rule_packs())
         super().__init__()
 
     def _verify_ec_enabled(self) -> None:
@@ -1779,9 +1778,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         elif request.has_var("_dissolve"):
             nr = request.get_integer_input_mandatory("_dissolve")
             try:
-                self._rule_packs[nr] = self._rule_packs[nr].rule_pack
+                rp = self._rule_packs[nr]
             except KeyError:
                 raise MKUserError("_dissolve", _("The requested rule pack does not exist"))
+            if not isinstance(rp, ec.MkpRulePackProxy):
+                raise MKUserError("_dissolve", _("rule pack was not exported"))
+            self._rule_packs[nr] = rp.get_rule_pack_spec()
             save_mkeventd_rules(self._rule_packs)
             ec.remove_exported_rule_pack(self._rule_packs[nr]["id"])
             self._add_change(
@@ -1793,14 +1795,14 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         elif request.has_var("_reset"):
             nr = request.get_integer_input_mandatory("_reset")
             try:
-                self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
+                rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
+                self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_reset", _("The requested rule pack does not exist"))
             save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "reset-rule-pack",
-                _("Reset the rules of rule pack %s to the ones provided via MKP")
-                % self._rule_packs[nr].id_,
+                _("Reset the rules of rule pack %s to the ones provided via MKP") % rp.id_,
             )
 
         # Synchronize modified rule pack with MKP
@@ -1808,17 +1810,18 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             nr = request.get_integer_input_mandatory("_synchronize")
             export_mkp_rule_pack(self._rule_packs[nr])
             try:
-                self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
+                rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
+                self._rule_packs[nr] = rp
             except KeyError:
                 raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
             save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "synchronize-rule-pack",
-                _("Synchronized MKP with the modified rule pack %s") % self._rule_packs[nr].id_,
+                _("Synchronized MKP with the modified rule pack %s") % rp.id_,
             )
 
         # Update data structure after actions
-        self._rule_packs = load_mkeventd_rules()
+        self._rule_packs = list(ec.load_rule_packs())
         return redirect(self.mode_url())
 
     def _copy_rules_from_master(self) -> None:
@@ -2075,7 +2078,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("Hits"), str(rule_pack_hits[rule_pack["id"]]), css=["number"])
 
     def _filter_mkeventd_rule_packs(
-        self, search_expression: str, rule_packs: Sequence[ec.ECRulePackSpec]
+        self, search_expression: str, rule_packs: Iterable[ec.ECRulePack]
     ) -> dict[str, list[ec.ECRuleSpec]]:
         found_packs: dict[str, list[ec.ECRuleSpec]] = {}
         for rule_pack in rule_packs:
@@ -2505,7 +2508,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         self._new = self._edit_nr < 0
 
         if self._new:
-            self._rule_pack = ec.default_rule_pack(rules=[])
+            self._rule_pack: ec.ECRulePack = ec.default_rule_pack(rules=[])
         else:
             try:
                 self._rule_pack = self._rule_packs[self._edit_nr]
@@ -2566,13 +2569,15 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                     )
 
         if self._new:
-            self._rule_packs = [self._rule_pack] + self._rule_packs
+            self._rule_packs.insert(0, self._rule_pack)
+        elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
+            rp.rule_pack = self._rule_pack
+            export_mkp_rule_pack(self._rule_pack)
         else:
             if self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
                 self._rule_packs[self._edit_nr] = self._rule_pack
             else:
-                self._rule_packs[self._edit_nr].rule_pack = self._rule_pack
-                export_mkp_rule_pack(self._rule_pack)
+                self._rule_packs[self._edit_nr] = self._rule_pack
 
         save_mkeventd_rules(self._rule_packs)
 

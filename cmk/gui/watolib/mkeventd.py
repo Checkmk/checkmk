@@ -11,10 +11,6 @@ import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 
 
-def load_mkeventd_rules():  # TODO: We get quite a few error with this! -> Sequence[ec.ECRulePackSpec]:
-    return ec.load_rule_packs()
-
-
 def get_rule_stats_from_ec() -> Mapping[str, int]:
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule

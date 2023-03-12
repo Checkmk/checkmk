@@ -10,6 +10,7 @@ import pytest
 
 import cmk.utils.paths
 
+import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
 from cmk.ec.export import ECRulePack
 
 import cmk.gui.groups as gui_groups
@@ -193,7 +194,7 @@ def test_find_usages_of_contact_group_in_ec_rules(
     rule_packs: list[ECRulePack],
     expected_result: list[tuple[str, str]],
 ) -> None:
-    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "load_mkeventd_rules", rule_packs)
+    monkeypatch.setattr(cmk.ec.export, "load_rule_packs", rule_packs)
     assert (
         groups._find_usages_of_contact_group_in_ec_rules(contact_group)
         == expected_result  # pylint: disable=protected-access

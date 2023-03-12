@@ -12,6 +12,9 @@ import cmk.utils.defines as defines
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import EventRule, timeperiod_spec_alias, UserId
 
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.userdb as userdb
@@ -62,7 +65,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.mkeventd import load_mkeventd_rules
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 
@@ -283,7 +285,7 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_ec_rules(self, tpname: str) -> list[TimeperiodUsage]:
         used_in: list[TimeperiodUsage] = []
-        rule_packs = load_mkeventd_rules()
+        rule_packs = ec.load_rule_packs()
         for rule_pack in rule_packs:
             for rule_index, rule in enumerate(rule_pack["rules"]):
                 if rule.get("match_timeperiod") == tpname:

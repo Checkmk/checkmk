@@ -33,7 +33,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
-    FolderAttributes,
+    FolderAttributesForBase,
     get_all_storage_readers,
     get_host_storage_loaders,
     get_hosts_file_variables,
@@ -1494,7 +1494,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 get_value_formatter(),
             )
 
-    def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributes]:
+    def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributesForBase]:
         # TODO:
         # At this time, this is the only attribute there is, at it only exists in the CEE.
         # This functionality should be moved to CEE specific code!

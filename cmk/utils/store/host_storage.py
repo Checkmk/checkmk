@@ -64,7 +64,7 @@ def get_hosts_file_variables() -> HostsData:
     }
 
 
-class FolderAttributes(TypedDict):
+class FolderAttributesForBase(TypedDict):
     bake_agent_package: bool
 
 
@@ -87,7 +87,7 @@ class HostsStorageData:
     contact_groups: ContactGroupsField
     explicit_host_conf: dict[str, dict[HostName, Any]]
     host_attributes: dict[HostName, Any]
-    folder_attributes: dict[str, FolderAttributes]
+    folder_attributes: dict[str, FolderAttributesForBase]
 
 
 class HostsStorageFieldsGenerator:

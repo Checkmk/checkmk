@@ -8,7 +8,7 @@ from typing import Any, Final, Literal
 from cmk.utils.labels import Labels
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
-from cmk.utils.store.host_storage import FolderAttributes
+from cmk.utils.store.host_storage import FolderAttributesForBase
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
@@ -278,7 +278,7 @@ service_tag_rules: list[RuleSpec[object]] = []
 # Rulesets for agent bakery
 agent_config: dict[str, list[RuleSpec[object]]] = {}
 bake_agents_on_restart = False
-folder_attributes: dict[str, FolderAttributes] = {}
+folder_attributes: dict[str, FolderAttributesForBase] = {}
 
 # BEGIN Kept for compatibility, but are deprecated and not used anymore
 inv_exports: dict = {}  # Rulesets for inventory export hooks

@@ -869,6 +869,14 @@ class BaseFolder:
     def hosts(self):
         raise NotImplementedError()
 
+    def delete_hosts(
+        self,
+        host_names: Sequence[HostName],
+        *,
+        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+    ) -> None:
+        raise NotImplementedError()
+
     def breadcrumb(self) -> Breadcrumb:
         breadcrumb = Breadcrumb()
 
@@ -2509,9 +2517,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             domain_settings=_generate_domain_settings("check_mk", [host_name]),
         )
 
-    def delete_hosts(  # type:ignore[no-untyped-def]
-        self, host_names, *, automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult]
-    ):
+    def delete_hosts(
+        self,
+        host_names: Sequence[HostName],
+        *,
+        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+    ) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
@@ -2921,11 +2932,16 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # | ACTIONS                                                            |
     # '--------------------------------------------------------------------'
 
-    def delete_hosts(self, host_names):
+    def delete_hosts(
+        self,
+        host_names: Sequence[HostName],
+        *,
+        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
+    ) -> None:
         auth_errors = []
         for folder, these_host_names in self._group_hostnames_by_folder(host_names):
             try:
-                folder.delete_hosts(these_host_names)
+                folder.delete_hosts(these_host_names, automation=automation)
             except MKAuthException as e:
                 auth_errors.append(
                     _("<li>Cannot delete hosts in folder %s: %s</li>") % (folder.alias_path(), e)
@@ -2936,7 +2952,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
                 _("Some hosts could not be deleted:<ul>%s</ul>") % "".join(auth_errors)
             )
 
-    def move_hosts(self, host_names, target_folder):
+    def move_hosts(self, host_names: Sequence[HostName], target_folder: CREFolder) -> None:
         auth_errors = []
         for folder, host_names1 in self._group_hostnames_by_folder(host_names):
             try:
@@ -2956,7 +2972,9 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # | PRIVATE METHODS                                                    |
     # '--------------------------------------------------------------------'
 
-    def _group_hostnames_by_folder(self, host_names):
+    def _group_hostnames_by_folder(
+        self, host_names: Sequence[HostName]
+    ) -> list[tuple[CREFolder, list[HostName]]]:
         by_folder: dict[str, list[CREHost]] = {}
         for host_name in host_names:
             host = self.load_host(host_name)

@@ -365,3 +365,19 @@ export function confirm_link(url, message, custom_args) {
         location.href = url;
     });
 }
+
+// On submit of the filter form (filter popup), remove unnecessary HTTP variables
+export function on_filter_form_submit_remove_vars(form_id) {
+    const form = document.getElementById(form_id) as HTMLFormElement;
+    _remove_listof_vars(form);
+}
+
+function _remove_listof_vars(form: HTMLFormElement) {
+    const rm_classes: string[] = ["vlof_prototype", "orig_index"];
+    for (const rm_class of rm_classes) {
+        const elements: HTMLCollection = form.getElementsByClassName(rm_class);
+        while (elements.length > 0) {
+            elements[0].parentNode!.removeChild(elements[0]);
+        }
+    }
+}

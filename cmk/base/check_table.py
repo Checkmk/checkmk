@@ -124,18 +124,28 @@ class _ServiceFilter:
         if not self._host_part_of_clusters:
             return self._mode is not FilterMode.ONLY_CLUSTERED
 
-        host_of_service = self._config_cache.host_of_clustered_service(
-            self._host_name,
-            service.description,
-            part_of_clusters=self._host_part_of_clusters,
-        )
-        svc_is_mine = self._host_name == host_of_service
+        svc_is_mine = self.is_mine(service)
 
         if self._mode is FilterMode.NONE:
             return svc_is_mine
 
         # self._mode is FilterMode.ONLY_CLUSTERED
         return not svc_is_mine
+
+    def is_mine(self, service: ConfiguredService) -> bool:
+        """Determine whether a service should be displayed on this host's service overview.
+
+        If the service should be displayed elsewhere, this means the service is clustered and
+        should be displayed on the cluster host's service overview.
+        """
+        return (
+            self._config_cache.host_of_clustered_service(
+                self._host_name,
+                service.description,
+                part_of_clusters=self._host_part_of_clusters,
+            )
+            == self._host_name
+        )
 
 
 def _get_static_check_entries(

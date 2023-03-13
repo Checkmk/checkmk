@@ -7001,6 +7001,7 @@ class AndOrNotDropdown(DropdownChoice):
         html.open_div(class_=["bool"])
         if self._vs_label and not self._choices:
             html.span(self._vs_label, class_=["vs_label"])
+            html.hidden_field(varprefix_bool, value[0] if value else None)
         else:
             super().render_input(varprefix_bool, value[0] if value else None)
         html.div("", class_=["line"])
@@ -7145,6 +7146,13 @@ class LabelGroups(LabelGroup):
         return _("Remove this label group")
 
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
+        # Remove all HTTP vars for the current varprefix before rendering. This ensures that
+        # rendering is based solely on the given argument 'value' (no interference from formerly
+        # submitted values under the same varname). Also this avoids the dragging on of unused HTTP
+        # vars in hidden input fields.
+        for varname, _value in request.itervars(prefix=varprefix):
+            request.del_var_from_env(varname)
+
         # Always append one empty row to groups
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)

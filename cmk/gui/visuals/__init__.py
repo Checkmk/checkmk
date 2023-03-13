@@ -2134,7 +2134,13 @@ def show_filter_form(
     info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
 ) -> None:
     html.show_user_errors()
-    html.begin_form("filter", method="GET", add_transid=False)
+    form_name: str = "filter"
+    html.begin_form(
+        form_name,
+        method="GET",
+        add_transid=False,
+        onsubmit=f"cmk.forms.on_filter_form_submit_remove_vars({json.dumps('form_' + form_name)});",
+    )
     varprefix = ""
     vs_filters = VisualFilterListWithAddPopup(info_list=info_list)
 

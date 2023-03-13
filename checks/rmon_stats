@@ -9,9 +9,14 @@
 # The MIB is called RMON-MIB
 
 
-from typing import Mapping
+import time
+from typing import Iterable, Mapping
 
+from cmk.base.check_api import check_levels, get_rate
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+DiscoveryResult = Iterable[tuple[str, None]]
+CheckResult = Iterable[tuple]
 
 PortStats = Mapping[str, int]
 
@@ -28,26 +33,27 @@ def parse_rmon_stats(string_table: StringTable) -> Mapping[str, PortStats]:
     }
 
 
-def discover_rmon_stats(section: Mapping[str, PortStats]):
+def discover_rmon_stats(section: Mapping[str, PortStats]) -> DiscoveryResult:
     if not in_binary_hostlist(host_name(), rmon_discovery):
         return
     yield from ((item, None) for item in section)
 
 
-def check_rmon_stats(item, _no_params, section: Mapping[str, PortStats]):
+def check_rmon_stats(
+    item: str, params: Mapping[str, object], section: Mapping[str, PortStats]
+) -> CheckResult:
     if (stats := section.get(item)) is None:
         return
 
-    perfdata = []
-    infotext = ""
     now = time.time()
-
-    for val, octets in stats.items():
-        rate = get_rate("%s-%s" % (item, val), now, octets)
-        perfdata.append((val, rate, 0, 0, 0))
-        infotext += "%s=%.0f " % (val, rate)
-        infotext += "octets/sec"
-    yield 0, infotext, perfdata
+    for metric, octets in stats.items():
+        yield check_levels(
+            get_rate(metric, now, octets),
+            metric,
+            None,
+            human_readable_func=lambda v: "%.0f octets/sec" % v,
+            infoname=metric,
+        )
 
 
 check_info["rmon_stats"] = {

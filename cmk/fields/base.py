@@ -410,6 +410,10 @@ class List(OpenAPIAttributes, fields.List, UniqueFields):
 
     """
 
+    default_error_messages = {
+        "minLength": "At least one entry is required",
+    }
+
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
         if self.metadata.get("uniqueItems"):
@@ -417,5 +421,8 @@ class List(OpenAPIAttributes, fields.List, UniqueFields):
                 self._verify_unique_schema_entries(value, self.inner.schema.fields)
             else:
                 self._verify_unique_scalar_entries(value)
+        if (min_length := self.metadata.get("minLength")) is not None:
+            if len(value) < min_length:
+                raise self.make_error("minLength")
 
         return value

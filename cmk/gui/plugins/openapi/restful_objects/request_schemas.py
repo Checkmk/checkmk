@@ -1569,6 +1569,7 @@ class InputHostTagGroup(BaseSchema):
         required=True,
         example=[{"ident": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",
+        minLength=1,
     )
 
 
@@ -1603,6 +1604,7 @@ class UpdateHostTagGroup(BaseSchema):
         required=False,
         example=[{"ident": "pod", "title": "Pod"}],
         description="A list of host tags belonging to the host tag group",
+        minLength=1,
     )
     repair = fields.Boolean(
         required=False,

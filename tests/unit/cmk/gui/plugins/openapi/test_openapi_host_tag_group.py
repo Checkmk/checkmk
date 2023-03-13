@@ -7,6 +7,8 @@ import json
 
 import pytest
 
+from tests.testlib.rest_api_client import HostTagGroupTestClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.tags import BuiltinTagConfig
@@ -382,4 +384,27 @@ def test_openapi_host_tags_groups_without_topic_and_tags(
         base + "/domain-types/host_tag_group/collections/all",
         headers={"Accept": "application/json"},
         status=200,
+    )
+
+
+def test_openapi_host_tag_group_empty_tags(host_tag_group_client: HostTagGroupTestClient) -> None:
+    host_tag_group_client.create(
+        ident="group_id999",
+        title="Kubernetes",
+        help_text="Kubernetes Pods",
+        tags=[],
+        expect_ok=False,
+    )
+
+    host_tag_group_client.create(
+        ident="group_id999",
+        title="Kubernetes",
+        help_text="Kubernetes Pods",
+        tags=[{"ident": "pod", "title": "Pod"}],
+    )
+
+    host_tag_group_client.edit(
+        ident="group_id999",
+        tags=[],
+        expect_ok=False,
     )

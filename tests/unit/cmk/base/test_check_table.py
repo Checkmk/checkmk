@@ -309,6 +309,11 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                 )
             },
         ),
+        (
+            "node4",
+            FilterMode.INCLUDE_CLUSTERED,
+            {},
+        ),
     ],
 )
 def test_check_table(
@@ -326,7 +331,8 @@ def test_check_table(
     ts.add_cluster("cluster1", nodes=["node1"])
     ts.add_host("node2")
     ts.add_host("node3")
-    ts.add_cluster("cluster2", nodes=["node2", "node3"])
+    ts.add_host("node4")
+    ts.add_cluster("cluster2", nodes=["node2", "node3", "node4"])
     ts.set_option(
         "static_checks",
         {
@@ -373,7 +379,7 @@ def test_check_table(
             {
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
-                    "host_name": ["node1", "node2", "node3"],
+                    "host_name": ["node1", "node2", "node3"],  # no node4 here!
                 },
                 "value": True,
             }

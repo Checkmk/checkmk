@@ -548,7 +548,6 @@ export class LayeredViewport {
             }
         }
 
-        this._chunks_changed = true;
         this._node_chunk_list.push(new_chunk);
     }
 

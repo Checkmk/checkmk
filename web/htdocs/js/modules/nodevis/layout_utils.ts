@@ -506,6 +506,8 @@ export class LayoutStyleFactory {
     }
 
     get_styles(): {[name: string]: typeof AbstractLayoutStyle} {
+        if (this._world.current_datasource == "topology")
+            return {fixed: layout_style_class_registry.get_class("fixed")};
         return layout_style_class_registry.get_classes();
     }
 

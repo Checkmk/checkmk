@@ -32,7 +32,7 @@ export class DatasourceManager {
         // Datasources lookup {id: instance}
         this.datasources = {};
         this._initialize_datasources();
-        // setInterval(() => this.schedule(true), 10000);
+        setInterval(() => this.schedule(true), 30000);
     }
 
     _initialize_datasources(): void {

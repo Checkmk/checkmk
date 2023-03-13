@@ -1508,6 +1508,15 @@ class LayoutApplier {
                 .layout_style_configuration()
                 .show_style_configuration(current_style);
         }
+
+        if (style_class == LayoutStyleFixed) {
+            this._world.viewport.get_all_nodes().forEach(node => {
+                const use_style = node.data.use_style;
+                if (!use_style) return;
+                use_style.update_style_indicator();
+            });
+        }
+
         this._world.layout_manager.create_undo_step();
     }
 

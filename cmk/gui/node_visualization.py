@@ -1088,6 +1088,7 @@ topology_registry = TopologyRegistry()
 
 class ParentChildNetworkTopology(Topology):
     _topology_site_node_type = "topology_site"
+    _topology_center_node_name = "topology_center"
     """ Generates parent/child topology view """
 
     @classmethod
@@ -1098,11 +1099,7 @@ class ParentChildNetworkTopology(Topology):
         return _("Parent / Child topology")
 
     def get_mesh_root(self, mesh: set[str]) -> str:
-        # The root of each parent/child chunk is the topology_site node
-        for nodename in mesh:
-            if self._known_nodes[nodename].get("node_type") == self._topology_site_node_type:
-                return nodename
-        return "unknown_root"
+        return self._topology_center_node_name
 
     def _fetch_data_for_hosts(self, hostnames: set[HostName]) -> list[dict]:
         hostname_filters = []
@@ -1142,11 +1139,11 @@ class ParentChildNetworkTopology(Topology):
         """Create a central node and add all monitoring sites as children"""
 
         central_node = {
-            "name": "topology_center",
-            "hostname": "topology_center",
+            "name": self._topology_center_node_name,
+            "hostname": self._topology_center_node_name,
             "outgoing": [],
             "incoming": [],
-            "node_type": "topology_center",
+            "node_type": self._topology_center_node_name,
         }
 
         site_nodes: dict[str, Any] = {}

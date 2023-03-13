@@ -52,6 +52,7 @@ import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
 from cmk.utils import password_store, version
+from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.crypto.password_hashing import is_insecure_hash
@@ -365,6 +366,7 @@ class UpdateConfig:
             (self._check_ec_rules, "Disabling unsafe EC rules"),
             (self._update_bakery, "Update bakery links and settings"),
             (self._remove_old_custom_logos, "Remove old custom logos (CME)"),
+            (self._fix_agent_receiver_symlinks, "Fix registered hosts symlinks"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -2007,6 +2009,15 @@ The following users in your current installation will become incompatible with C
             save_customers(customers)
         except MKGeneralException:
             pass
+
+    def _fix_agent_receiver_symlinks(self) -> None:
+        """Change absolute paths in registered hosts symlinks in var/agent-receiver/received-outputs to relative"""
+        link_manager = get_uuid_link_manager()
+
+        for link in link_manager:
+            if link.target.is_absolute():
+                link.unlink()
+                link_manager.create_link(link.hostname, link.uuid, create_target_dir=False)
 
 
 class PasswordSanitizer:

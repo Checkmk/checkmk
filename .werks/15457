@@ -1,0 +1,16 @@
+Title: agent-receiver: Update old symlinks to fix crash after omd cp
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1678703744
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p25
+
+With the werk 14707, the cause of the the crash was removed, but the sites
+what have hosts registered with the version before 2.1.0p19 still experienced
+the same problem.
+
+With this werk, the old symlinks are updated and the crash no longer appears on
+any of the sites.

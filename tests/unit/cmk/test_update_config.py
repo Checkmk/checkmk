@@ -23,6 +23,7 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import password_store, store, version
+from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.type_defs import (
     CheckPluginName,
     ContactgroupName,
@@ -1371,3 +1372,29 @@ def test_check_user_ids(
     uc._check_user_ids()
 
     assert mock_warner.call_count == (1 if should_warn else 0)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fix_agent_receiver_symlinks(uc: update_config.UpdateConfig):
+    source = Path(cmk.utils.paths.received_outputs_dir, "f0ca2e5d-06ea-4b04-89d1-67df0203d449")
+    source.parent.mkdir(parents=True, exist_ok=True)
+    target = Path(cmk.utils.paths.data_source_push_agent_dir, "my_new_host")
+    source.symlink_to(target)
+
+    link_manager = get_uuid_link_manager()
+
+    links = list(link_manager)
+    assert len(links) == 1
+    assert links[0].source == source
+    assert links[0].target == target
+
+    uc._fix_agent_receiver_symlinks()
+
+    links = list(link_manager)
+    assert len(links) == 1
+    assert links[0].source == source
+    assert links[0].target == Path(
+        "../../../../tmp/check_mk/data_source_cache/push-agent/my_new_host"
+    )
+
+    assert True

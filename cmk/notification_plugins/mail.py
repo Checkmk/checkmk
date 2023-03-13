@@ -649,7 +649,7 @@ def send_mail_smtp_impl(
     # in case of success. But we want it!
     conn.last_code = 0  # type: ignore[attr-defined]
     conn.last_repl = ""  # type: ignore[attr-defined]
-    conn.getreply = types.MethodType(getreply_wrapper, conn)  # type: ignore[assignment]
+    conn.getreply = types.MethodType(getreply_wrapper, conn)  # type: ignore[method-assign]
 
     if encryption == "starttls":
         conn.starttls()

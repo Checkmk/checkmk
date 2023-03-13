@@ -52,7 +52,7 @@ from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import parse_raw_data
+from cmk.checkers import parse_raw_data, SourceType
 from cmk.checkers.error_handling import CheckResultErrorHandler
 from cmk.checkers.submitters import get_submitter, Submitter
 from cmk.checkers.summarize import summarize
@@ -980,7 +980,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
+        snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         snmp_modes.do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
 
 
@@ -1052,7 +1052,7 @@ def mode_snmpget(args: list[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
+        snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         snmp_modes.do_snmpget(oid, backend=snmp_factory.make_backend(snmp_config, log.logger))
 
 

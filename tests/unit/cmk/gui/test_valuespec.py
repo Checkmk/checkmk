@@ -324,3 +324,27 @@ def test_canonical_value_in_cascading_dropdown(
 def test_mask_to_json(valuespec, value, expected):
     masked = valuespec.mask(value)
     assert valuespec.value_to_json(masked) == expected
+
+
+class TestAlternative:
+    def test_transform_value_ok(self) -> None:
+        assert (
+            vs.Alternative(
+                elements=[
+                    vs.Transform(
+                        vs.Integer(),
+                        to_valuespec=lambda v: v + 1,
+                        from_valuespec=lambda v: v,
+                    )
+                ]
+            ).transform_value(3)
+            == 3 + 1
+        )
+
+    def test_transform_value_no_match(self) -> None:
+        with pytest.raises(MKUserError):
+            vs.Alternative(
+                elements=[
+                    vs.Integer(),
+                ]
+            ).transform_value("strange")

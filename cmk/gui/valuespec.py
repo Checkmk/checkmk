@@ -5445,6 +5445,15 @@ class Alternative(ValueSpec[AlternativeModel]):
             _("The data type of the value does not match any of the allowed alternatives."),
         )
 
+    def transform_value(self, value: AlternativeModel) -> AlternativeModel:
+        vs, value = self.matching_alternative(value)
+        if not vs:
+            raise MKUserError(
+                None,
+                _("Found no matching alternative."),
+            )
+        return vs.transform_value(value)
+
 
 TT = TypeVar("TT", bound=tuple[Any, ...])
 

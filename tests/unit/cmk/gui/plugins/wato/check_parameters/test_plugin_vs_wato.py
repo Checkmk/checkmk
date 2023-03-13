@@ -419,7 +419,6 @@ class ErrorReporter:
         ("check", "genua_pfstate", "checkgroup_parameters:pf_used_states"),
         ("check", "hitachi_hnas_bossock", "checkgroup_parameters:bossock_fibers"),
         ("check", "hivemanager_devices", "checkgroup_parameters:hivemanager_devices"),
-        ("check", "hp_proliant_power", "checkgroup_parameters:epower_single"),
         ("check", "hpux_multipath", "checkgroup_parameters:hpux_multipath"),
         ("check", "huawei_osn_laser", "checkgroup_parameters:huawei_osn_laser"),
         ("check", "ibm_imm_fan", "checkgroup_parameters:hw_fans_perc"),

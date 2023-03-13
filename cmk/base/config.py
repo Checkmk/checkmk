@@ -123,7 +123,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser, PInventoryPlugin
+from cmk.checkers import AgentParser, PInventoryPlugin, SourceType
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -2515,7 +2515,7 @@ class ConfigCache:
             ],
         ] = {}
         self.__is_piggyback_host: dict[HostName, bool] = {}
-        self.__snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
+        self.__snmp_config: dict[tuple[HostName, HostAddress, SourceType], SNMPHostConfig] = {}
         self.__hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self.__computed_datasources: dict[HostName, ComputedDataSources] = {}
@@ -2659,6 +2659,7 @@ class ConfigCache:
         *,
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
+        snmp_config: SNMPHostConfig,
     ) -> SNMPFetcher:
         return SNMPFetcher(
             sections=self._make_snmp_sections(
@@ -2675,7 +2676,7 @@ class ConfigCache:
             section_store_path=make_persisted_section_dir(
                 host_name, fetcher_type=FetcherType.SNMP, ident="snmp"
             ),
-            snmp_config=self.make_snmp_config(host_name, ip_address),
+            snmp_config=snmp_config,
         )
 
     def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress) -> TCPFetcher:
@@ -2737,19 +2738,32 @@ class ConfigCache:
             is_dyndns_host=self.is_dyndns_host(host_name),
         )
 
-    def make_snmp_config(self, host_name: HostName, ip_address: HostAddress) -> SNMPHostConfig:
+    def make_snmp_config(
+        self, host_name: HostName, ip_address: HostAddress, source_type: SourceType
+    ) -> SNMPHostConfig:
         with contextlib.suppress(KeyError):
-            return self.__snmp_config[(host_name, ip_address)]
+            return self.__snmp_config[(host_name, ip_address, source_type)]
 
         return self.__snmp_config.setdefault(
-            (host_name, ip_address),
+            (host_name, ip_address, source_type),
             SNMPHostConfig(
                 is_ipv6_primary=self.default_address_family(host_name) is socket.AF_INET6,
                 hostname=host_name,
                 ipaddress=ip_address,
-                credentials=self._snmp_credentials(host_name),
+                credentials=(
+                    self._snmp_credentials(host_name)
+                    if source_type is SourceType.HOST
+                    else self.management_credentials(host_name, "snmp")
+                ),
                 port=self._snmp_port(host_name),
-                is_bulkwalk_host=self.in_binary_hostlist(host_name, bulkwalk_hosts),
+                is_bulkwalk_host=(
+                    self.in_binary_hostlist(
+                        host_name,
+                        bulkwalk_hosts
+                        if source_type is SourceType.HOST
+                        else management_bulkwalk_hosts,
+                    )
+                ),
                 is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(
                     host_name, snmpv2c_hosts
                 ),

@@ -24,6 +24,8 @@ from cmk.snmplib.type_defs import (
     SpecialColumn,
 )
 
+from cmk.checkers import SourceType
+
 from cmk.base.config import ConfigCache
 
 SNMPConfig = SNMPHostConfig(
@@ -126,7 +128,7 @@ def test_sanitize_snmp_encoding(
     )
     config_cache = ts.apply(monkeypatch)
 
-    snmp_config = config_cache.make_snmp_config("localhost", "")
+    snmp_config = config_cache.make_snmp_config("localhost", "", SourceType.HOST)
     assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
@@ -139,8 +141,8 @@ def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
     ts.add_host("abc")
     ts.add_host("localhost")
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_snmp_config("abc", "").is_bulkwalk_host is False
-    assert config_cache.make_snmp_config("localhost", "").is_bulkwalk_host is True
+    assert config_cache.make_snmp_config("abc", "", SourceType.HOST).is_bulkwalk_host is False
+    assert config_cache.make_snmp_config("localhost", "", SourceType.HOST).is_bulkwalk_host is True
 
 
 def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:

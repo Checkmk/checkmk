@@ -78,6 +78,9 @@ class SNMPSource(Source[SNMPRawData]):
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
+            snmp_config=self.config_cache.make_snmp_config(
+                self.host_name, self.ipaddress, SourceType.HOST
+            ),
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
         )
@@ -133,6 +136,9 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
+            snmp_config=self.config_cache.make_snmp_config(
+                self.host_name, self.ipaddress, SourceType.MANAGEMENT
+            ),
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
         )

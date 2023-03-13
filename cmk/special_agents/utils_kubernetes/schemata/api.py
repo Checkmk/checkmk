@@ -176,6 +176,16 @@ def parse_resource_value(value: str) -> float:
     return math.ceil(_parse_quantity(value))
 
 
+def parse_pod_number(value: str) -> int:
+    """Yes, pod numbers are described with quantities...
+
+    Examples:
+       >>> parse_pod_number("1k")
+       1000
+    """
+    return math.ceil(_parse_quantity(value))
+
+
 def _parse_quantity(value: str) -> float:
     # Kubernetes uses a common field for any entry in resources, which it refers to as Quantity.
     # See staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go
@@ -427,6 +437,7 @@ class NodeResources(BaseModel):
 
     _parse_cpu = validator("cpu", pre=True, allow_reuse=True)(parse_cpu_cores)
     _parse_memory = validator("memory", pre=True, allow_reuse=True)(parse_resource_value)
+    _parse_pods = validator("pods", pre=True, allow_reuse=True)(parse_pod_number)
 
 
 class HealthZ(BaseModel):

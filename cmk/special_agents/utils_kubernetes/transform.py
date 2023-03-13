@@ -50,6 +50,15 @@ def parse_memory(value: str) -> float:
     return math.ceil(_parse_quantity(value))
 
 
+def parse_pod_number(value: str) -> int:
+    """Yes, pod numbers are described with quantities...
+    Examples:
+       >>> parse_pod_number("1k")
+       1000
+    """
+    return math.ceil(_parse_quantity(value))
+
+
 def _parse_quantity(value: str) -> float:
     # Kubernetes uses a common field for any entry in resources, which it refers to as Quantity.
     # See staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go
@@ -379,13 +388,13 @@ def node_resources(capacity, allocatable) -> Dict[str, api.NodeResources]:
         resources["capacity"] = api.NodeResources(
             cpu=parse_frac_prefix(capacity.get("cpu", 0.0)),
             memory=parse_memory(capacity.get("memory", 0.0)),
-            pods=capacity.get("pods", 0),
+            pods=parse_pod_number(capacity.get("pods", 0)),
         )
     if allocatable:
         resources["allocatable"] = api.NodeResources(
             cpu=parse_frac_prefix(allocatable.get("cpu", 0.0)),
             memory=parse_memory(allocatable.get("memory", 0.0)),
-            pods=allocatable.get("pods", 0),
+            pods=parse_pod_number(allocatable.get("pods", 0)),
         )
     return resources
 

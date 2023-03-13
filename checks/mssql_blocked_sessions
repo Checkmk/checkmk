@@ -23,17 +23,28 @@
 # <<<mssql_blocked_sessions:sept(124)>>>
 # INST_ID1|No blocking sessions
 
-factory_settings["mssql_blocked_sessions_default_levels"] = {
+from typing import NamedTuple
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+
+DEFAULT_PARAMETERS = {
     "state": 2,
 }
 
 NO_BLOCKING_SESSIONS_MSG = "No blocking sessions"
 
 
+class DBInstance(NamedTuple):
+    session_id: str
+    wait_type: str
+    blocking_session_id: str
+    wait_duration: float
+
+
+NO_BLOCKING_SESSIONS_MSG = "No blocking sessions"
+
+
 def parse_mssql_blocked_sessions(info):
-    db_instance = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-        "DBInstance", ["session_id", "wait_type", "blocking_session_id", "wait_duration"]
-    )
     parsed = {}
     for line in info:
         if line[-1].startswith("ERROR:"):
@@ -46,7 +57,7 @@ def parse_mssql_blocked_sessions(info):
         elif len(line) == 4:
             session_id, wait_duration_ms, wait_type, blocking_session_id = line
             parsed.setdefault("", []).append(
-                db_instance(
+                DBInstance(
                     session_id,
                     wait_type,
                     blocking_session_id,
@@ -56,7 +67,7 @@ def parse_mssql_blocked_sessions(info):
         elif len(line) == 5:
             inst, session_id, wait_duration_ms, wait_type, blocking_session_id = line
             parsed.setdefault(inst, []).append(
-                db_instance(
+                DBInstance(
                     session_id,
                     wait_type,
                     blocking_session_id,
@@ -75,7 +86,7 @@ def check_mssql_blocked_sessions(item, params, parsed):  # pylint: disable=too-m
     if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to retrieve data from database")
+        raise IgnoreResultsError("Failed to retrieve data from database")
     if not data:
         yield 0, NO_BLOCKING_SESSIONS_MSG
         return
@@ -141,3 +152,5 @@ check_info["mssql_blocked_sessions"] = {
     "group": "mssql_instance_blocked_sessions",
     "default_levels_variable": "mssql_blocked_sessions_default_levels",
 }
+
+factory_settings["mssql_blocked_sessions_default_levels"] = DEFAULT_PARAMETERS

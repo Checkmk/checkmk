@@ -63,9 +63,9 @@ just to signal that real build script was not called -->
         <!-- Administrative rights is mandatory -->
         <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
 
-        <!-- ATTENTION: we do not support OS earlier as Windows Vista -->
-        <Condition Message="This version supports only Windows Vista, Windows Server 2008, or higher. Windows Build: [WindowsBuild], Version: [VersionNT]">
-            <![CDATA[Installed OR  (VersionNT >= 600)]]>
+        <!-- ATTENTION: we do not support OS earlier as Windows 7 -->
+        <Condition Message="This version supports only Windows 7, Windows Server 2008 R2, or higher. Windows Build: [WindowsBuild], Version: [VersionNT]">
+            <![CDATA[Installed OR  (VersionNT >= 601)]]>
         </Condition>
 
         <!-- ATTENTION: keep string below exactly ( VersionNT >= 600 ) -->

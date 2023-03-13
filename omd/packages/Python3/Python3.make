@@ -3,7 +3,7 @@ PYTHON3 := Python3
 PYTHON3_VERS := 3.8.16
 PYTHON3_DIR := Python-$(PYTHON3_VERS)
 # Increase this to enforce a recreation of the build cache
-PYTHON3_BUILD_ID := 9
+PYTHON3_BUILD_ID := 10
 
 PYTHON3_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-unpack
 PYTHON3_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-build
@@ -32,6 +32,7 @@ PYTHON3_PACKAGE_DIR := $(PACKAGE_DIR)/$(PYTHON3)
 PYTHON3_SITECUSTOMIZE_SOURCE := $(PYTHON3_PACKAGE_DIR)/sitecustomize.py
 PYTHON3_SITECUSTOMIZE_WORK := $(PYTHON3_WORK_DIR)/sitecustomize.py
 PYTHON3_SITECUSTOMIZE_COMPILED := $(PYTHON3_WORK_DIR)/__pycache__/sitecustomize.cpython-38.pyc
+PYTHON3_PIP_WRAPPER_SOURCE := $(PYTHON3_PACKAGE_DIR)/pip
 PYTHON3_PREFIX := /replace-me
 
 .NOTPARALLEL: $(PYTHON3_INSTALL)
@@ -110,10 +111,17 @@ $(PYTHON3_INTERMEDIATE_INSTALL): $(PYTHON3_BUILD)
 # the same one as before.
 	$(RSYNC) $(PYTHON3_INSTALL_DIR)$(PYTHON3_PREFIX)/* $(PYTHON3_INSTALL_DIR)
 	rm -r $(PYTHON3_INSTALL_DIR)$(PYTHON3_PREFIX)
-# Fix python interpreter
-	$(SED) -i '1s|^#!.*/python3\.8$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-3.8 idle3.8 pip3 pip3.8 pydoc3.8)
-# Fix pip3 configuration
-	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python3")' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,pip3 pip3.8)
+# Fix shebang of scripts
+	$(SED) -i '1s|^#!'$(PYTHON3_PREFIX)'.*|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-3.8 idle3.8 pydoc3.8)
+# Fix pip3 configuration by using own wrapper script
+# * PIP_TARGET currently has an issue when installing non-wheel packages, see https://github.com/pypa/pip/issues/8438
+# * The workaround is to set the target via the commandline
+# * The wrapper script we're using is based on what PipScriptMaker would create, see:
+# https://github.com/pypa/pip/blob/83c800d3b8b367b6ae1fbf92fd4f699612cecfc7/src/pip/_internal/operations/install/wheel.py#L422
+# * However, we may run into issues in the future again. It seems actually the module invocation (python -m pip) is more solid, see:
+# https://github.com/pypa/pip/issues/5599
+	install -m 755 --no-target-directory $(PYTHON3_PIP_WRAPPER_SOURCE) $(PYTHON3_INSTALL_DIR)/bin/pip3
+	install -m 755 --no-target-directory $(PYTHON3_PIP_WRAPPER_SOURCE) $(PYTHON3_INSTALL_DIR)/bin/pip3.8
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_SOURCE) $(PYTHON3_INSTALL_DIR)/lib/python3.8/
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_COMPILED) $(PYTHON3_INSTALL_DIR)/lib/python3.8/__pycache__
 	$(TOUCH) $@

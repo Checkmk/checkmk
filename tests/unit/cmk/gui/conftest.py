@@ -33,6 +33,7 @@ from tests.testlib.rest_api_client import (
     ContactGroupTestClient,
     expand_rel,
     get_link,
+    HostTagGroupTestClient,
     RequestHandler,
     Response,
     RestApiClient,
@@ -590,3 +591,10 @@ def contactgroup_client(
     aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
 ) -> ContactGroupTestClient:
     return ContactGroupTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def host_tag_group_client(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
+) -> HostTagGroupTestClient:
+    return HostTagGroupTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

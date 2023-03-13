@@ -928,3 +928,54 @@ class ContactGroupTestClient(RestApiClient):
         )
 
     # TODO: Add other contact group endpoints
+
+
+class HostTagGroupTestClient(RestApiClient):
+    domain: Literal["host_tag_group"] = "host_tag_group"
+
+    def create(
+        self,
+        ident: str,
+        title: str,
+        help_text: str,
+        tags: list[dict[str, str]],
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {"ident": ident, "title": title, "help": help_text, "tags": tags}
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get(self, ident: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{ident}",
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        ident: str,
+        title: str | None = None,
+        help_text: str | None = None,
+        tags: list[dict[str, str]] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        etag = self.get(ident).headers["ETag"]
+        body: dict[str, Any] = {"ident": ident}
+        if title is not None:
+            body["title"] = title
+        if help_text is not None:
+            body["help"] = help_text
+        if tags is not None:
+            body["tags"] = tags
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{ident}",
+            body=body,
+            expect_ok=expect_ok,
+            headers={"If-Match": etag, "Accept": "application/json"},
+        )

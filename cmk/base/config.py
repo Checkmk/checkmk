@@ -33,7 +33,7 @@ from collections.abc import (
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, AnyStr, cast, Final, Literal, NamedTuple, Protocol, TypedDict, Union
+from typing import Any, AnyStr, Final, Literal, NamedTuple, overload, Protocol, TypedDict, Union
 
 from typing_extensions import assert_never
 
@@ -382,7 +382,6 @@ ObjectAttributes = dict[str, Any]
 GroupDefinitions = dict[str, str]
 RecurringDowntime = dict[str, int | str]  # TODO(sk): TypedDict here
 CheckInfo = dict  # TODO: improve this type
-ManagementCredentials = SNMPCredentials | IPMICredentials
 
 
 class _NestedExitSpec(ExitSpec, total=False):
@@ -2627,7 +2626,7 @@ class ConfigCache:
         ] = {}
 
     def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
-        ipmi_credentials = self._ipmi_credentials(host_name)
+        ipmi_credentials = self.management_credentials(host_name, "ipmi")
         return IPMIFetcher(
             address=ip_address,
             username=ipmi_credentials.get("username"),
@@ -2984,27 +2983,31 @@ class ConfigCache:
 
         return ipaddresses.get(host_name)
 
-    def management_credentials(self, host_name: HostName) -> ManagementCredentials | None:
-        protocol = self.management_protocol(host_name)
-        credentials_variable: Mapping[HostName, ManagementCredentials]
-        default_value: ManagementCredentials | None = None
-        if protocol == "snmp":
-            credentials_variable = management_snmp_credentials
-            default_value = snmp_default_community
-        elif protocol == "ipmi":
-            credentials_variable = management_ipmi_credentials
-            default_value = None
-        elif protocol is None:
-            return None
-        else:
-            raise NotImplementedError()
+    @overload
+    def management_credentials(
+        self, host_name: HostName, protocol: Literal["snmp"]
+    ) -> SNMPCredentials:
+        ...
 
+    @overload
+    def management_credentials(
+        self, host_name: HostName, protocol: Literal["ipmi"]
+    ) -> IPMICredentials:
+        ...
+
+    def management_credentials(
+        self, host_name: HostName, protocol: Literal["snmp", "ipmi"]
+    ) -> SNMPCredentials | IPMICredentials:
         # First try to use the explicit configuration of the host
         # (set directly for a host or via folder inheritance in WATO)
-        try:
-            return credentials_variable[host_name]
-        except KeyError:
-            pass
+        with contextlib.suppress(KeyError):
+            match protocol:
+                case "snmp":
+                    return management_snmp_credentials[host_name]
+                case "ipmi":
+                    return management_ipmi_credentials[host_name]
+                case _:
+                    assert_never(protocol)
 
         # If a rule matches, use the first rule for the management board protocol of the host
         rule_settings = self.host_extra_conf(host_name, management_board_config)
@@ -3012,15 +3015,13 @@ class ConfigCache:
             if rule_protocol == protocol:
                 return credentials
 
-        return default_value
-
-    def _ipmi_credentials(self, host_name: HostName) -> IPMICredentials:
-        credentials = self.management_credentials(host_name)
-        if credentials is None:
-            return {}
-        # The cast is required because `management_credentials`
-        # has type `None | str | tuple[str, ...] | dict[str, str]]`
-        return cast(IPMICredentials, credentials)
+        match protocol:
+            case "snmp":
+                return snmp_default_community
+            case "ipmi":
+                return {}
+            case _:
+                assert_never(protocol)
 
     def explicit_host_attributes(self, host_name: HostName) -> ObjectAttributes:
         def make_explicit_host_attributes() -> Iterator[tuple[str, str]]:

@@ -6083,11 +6083,13 @@ class ElastiCacheSummary(AWSSection):
     def __init__(
         self,
         client: BaseClient,
+        tagging_client: BaseClient,
         region: str,
         config: AWSConfig,
         distributor: ResultDistributor | None = None,
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
+        self._tagging_client = tagging_client
         self._names = self._config.service_config["elasticache_names"]
         self._tags = self.prepare_tags_for_api_response(
             self._config.service_config["elasticache_tags"]
@@ -6141,12 +6143,13 @@ class ElastiCacheSummary(AWSSection):
             return
 
         if self._tags is not None:
-            for cluster in clusters:
-                cluster_tags = self._client.list_tags_for_resource(ResourceName=cluster.ARN)
+            matching_arns = fetch_resources_matching_tags(
+                self._tagging_client, self._tags, ["elasticache:replicationgroup"]
+            )
 
-                for cluster_tag in cluster_tags["TagList"]:
-                    if cluster_tag in self._tags:
-                        yield cluster
+            for cluster in clusters:
+                if cluster.ARN in matching_arns:
+                    yield cluster
             return
 
         yield from clusters
@@ -6811,7 +6814,7 @@ class AWSSectionsGeneric(AWSSections):
                 )
 
             elasticache_summary = ElastiCacheSummary(
-                elasticache_client, region, config, distributor
+                elasticache_client, tagging_client, region, config, distributor
             )
             distributor.add("elasticache_limits", elasticache_summary)
             self._sections.append(elasticache_summary)

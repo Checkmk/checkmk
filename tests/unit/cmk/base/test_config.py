@@ -9,7 +9,7 @@ import socket
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -455,9 +455,8 @@ def _management_config_ruleset() -> list[dict[str, Any]]:
 @pytest.mark.parametrize(
     "expected_result,protocol,credentials,ruleset",
     [
-        (None, None, None, []),
         ("public", "snmp", None, []),
-        (None, "ipmi", None, []),
+        ({}, "ipmi", None, []),
         ("aaa", "snmp", "aaa", []),
         (
             {"username": "aaa", "password": "aaa"},
@@ -465,7 +464,6 @@ def _management_config_ruleset() -> list[dict[str, Any]]:
             {"username": "aaa", "password": "aaa"},
             [],
         ),
-        (None, None, None, _management_config_ruleset()),
         ("eee", "snmp", None, _management_config_ruleset()),
         ({"username": "eee", "password": "eee"}, "ipmi", None, _management_config_ruleset()),
         ("aaa", "snmp", "aaa", _management_config_ruleset()),
@@ -479,7 +477,7 @@ def _management_config_ruleset() -> list[dict[str, Any]]:
 )
 def test_host_config_management_credentials(
     monkeypatch: MonkeyPatch,
-    protocol: str | None,
+    protocol: Literal["snmp", "ipmi"],
     credentials: dict[str, str] | None,
     expected_result: str | dict[str, str] | None,
     ruleset: list,
@@ -501,7 +499,7 @@ def test_host_config_management_credentials(
     ts.set_ruleset("management_board_config", ruleset)
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.management_credentials(hostname) == expected_result
+    assert config_cache.management_credentials(hostname, protocol) == expected_result
 
 
 @pytest.mark.parametrize(

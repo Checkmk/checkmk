@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,9 +23,13 @@
 # <<<mssql_blocked_sessions:sept(124)>>>
 # INST_ID1|No blocking sessions
 
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+CheckResult = Any
+Result = Any
 
 DEFAULT_PARAMETERS = {
     "state": 2,
@@ -42,12 +45,9 @@ class DBInstance(NamedTuple):
     wait_duration: float
 
 
-NO_BLOCKING_SESSIONS_MSG = "No blocking sessions"
-
-
-def parse_mssql_blocked_sessions(info):
-    parsed = {}
-    for line in info:
+def parse_mssql_blocked_sessions(string_table: StringTable) -> dict[str, list[DBInstance]]:
+    parsed: dict[str, list[DBInstance]] = {}
+    for line in string_table:
         if line[-1].startswith("ERROR:"):
             continue
 
@@ -79,11 +79,13 @@ def parse_mssql_blocked_sessions(info):
     return parsed
 
 
-def check_mssql_blocked_sessions(item, params, parsed):
+def check_mssql_blocked_sessions(  # pylint: disable=too-many-branches
+    item: str, params: dict[str, Any], section: dict[str, list[DBInstance]]
+) -> CheckResult:
     if item is None:
         item = ""
 
-    data = parsed.get(item)
+    data = section.get(item)
     if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
@@ -92,8 +94,8 @@ def check_mssql_blocked_sessions(item, params, parsed):
         yield 0, NO_BLOCKING_SESSIONS_MSG
         return
 
-    summary = {}
-    details = []
+    summary: dict[str, int] = {}
+    details: list[Result] = []
     warn, crit = params.get("waittime", (None, None))
     ignored_waittypes = set()
     waittypes_to_be_ignored = params.get("ignore_waittypes", [])

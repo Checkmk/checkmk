@@ -12,12 +12,21 @@ from openapi_spec_validator import validate_spec
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 
 def test_yaml_file_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+    if not cmk_version.is_raw_edition():
+        # needed for visuals.load()
+        cmk.utils.paths.local_reports_dir.mkdir(parents=True, exist_ok=True)
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-swagger-ui.yaml", status=401)
 
 
 def test_json_file_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+    if not cmk_version.is_raw_edition():
+        # needed for visuals.load()
+        cmk.utils.paths.local_reports_dir.mkdir(parents=True, exist_ok=True)
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-doc.json", status=401)
 
 

@@ -87,6 +87,7 @@ def test_update(test_site: Site) -> None:
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
+    test_site.openapi.activate_changes_and_wait_for_completion()
 
     # get update monitoring data
     target_data = get_site_data(target_site)

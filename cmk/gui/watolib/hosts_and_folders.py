@@ -1555,20 +1555,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             }
         return {}
 
-    def _get_alias_from_extra_conf(self, host_name, variables):
-        aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
-        if len(aliases) > 0:
-            return aliases[0]
-        return None
-
-    # This is a dummy implementation which works without tags
-    # and implements only a special case of Checkmk's real logic.
-    def _host_extra_conf(self, host_name, conflist):
-        for value, hostlist in conflist:
-            if host_name in hostlist:
-                return [value]
-        return []
-
     def _set_instance_data(self, wato_info: WATOFolderInfo) -> None:
         self._title = wato_info.get("title", self._fallback_title())
         self._attributes = dict(wato_info.get("attributes", {}))

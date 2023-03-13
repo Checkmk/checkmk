@@ -34,6 +34,7 @@ from tests.testlib.rest_api_client import (
     expand_rel,
     get_link,
     HostTagGroupTestClient,
+    PasswordTestClient,
     RequestHandler,
     Response,
     RestApiClient,
@@ -598,3 +599,8 @@ def host_tag_group_client(
     aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
 ) -> HostTagGroupTestClient:
     return HostTagGroupTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)
+
+
+@pytest.fixture()
+def password_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> PasswordTestClient:
+    return PasswordTestClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

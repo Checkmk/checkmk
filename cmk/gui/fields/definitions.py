@@ -1132,6 +1132,7 @@ class PasswordIdent(base.String):
     default_error_messages = {
         "should_exist": "Identifier missing: {name!r}",
         "should_not_exist": "Identifier {name!r} already exists.",
+        "contains_colon": "Identifier {name!r} contains a colon.",
     }
 
     def __init__(  # type:ignore[no-untyped-def]

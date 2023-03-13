@@ -979,3 +979,32 @@ class HostTagGroupTestClient(RestApiClient):
             expect_ok=expect_ok,
             headers={"If-Match": etag, "Accept": "application/json"},
         )
+
+
+class PasswordTestClient(RestApiClient):
+    domain: Literal["password"] = "password"
+
+    def create(
+        self,
+        ident: str,
+        title: str,
+        owner: str,
+        password: str,
+        shared: Sequence[str],
+        customer: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "ident": ident,
+            "title": title,
+            "owner": owner,
+            "password": password,
+            "shared": shared,
+            "customer": customer,
+        }
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )

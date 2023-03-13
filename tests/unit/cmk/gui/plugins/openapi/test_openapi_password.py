@@ -7,6 +7,8 @@ import json
 
 import pytest
 
+from tests.testlib.rest_api_client import PasswordTestClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import password_store, version
@@ -16,25 +18,28 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_password(
+    password_client: PasswordTestClient, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/password/collections/all",
-        params=json.dumps(
-            {
-                "ident": "foo",
-                "title": "foobar",
-                "owner": "admin",
-                "password": "tt",
-                "shared": ["all"],
-                "customer": "global",
-            }
-        ),
-        headers={"Accept": "application/json"},
-        status=200,
-        content_type="application/json",
+    password_client.create(
+        ident="foo:invalid",
+        title="foobar",
+        owner="admin",
+        password="tt",
+        shared=["all"],
+        customer="global",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    resp = password_client.create(
+        ident="foo",
+        title="foobar",
+        owner="admin",
+        password="tt",
+        shared=["all"],
+        customer="global",
     )
 
     _resp = aut_user_auth_wsgi_app.call_method(

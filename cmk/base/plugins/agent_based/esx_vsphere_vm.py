@@ -150,8 +150,7 @@ def host_label_esx_vshpere_vm(section: SectionVM) -> HostLabelGenerator:
     Labels:
 
         cmk/vsphere_object:
-            This label is set to "vcenter" if the corresponding host is a
-            VMware vCenter, to "server" if the host is an ESXi hostsystem
+            This label is set to "server" if the host is an ESXi hostsystem
             and to "vm" if the host is a virtual machine.
 
     """

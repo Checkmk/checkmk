@@ -38,6 +38,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes/cluster-host",
     "cmk/os_family",
     "cmk/vsphere_object",
+    "cmk/vsphere_vcenter",
 }
 
 

@@ -343,9 +343,6 @@ def locally_deliver_raw_context(
 ) -> NotifyAnalysisInfo | None:
     try:
 
-        if analyse:
-            return None
-
         logger.debug("Preparing rule based notifications")
         return notify_rulebased(raw_context, analyse=analyse)
 

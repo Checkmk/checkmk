@@ -217,12 +217,32 @@ def _aggregate_check_table_services(
         )
         return
 
-    # add all services from the nodes inside the host's clusters
-    # the host must try to fetch all services that are discovered in his clusters
-    # in case of failover, it has to provide the service data to the cluster
-    # even when the service was never discovered on it
+    # NOTE: as far as I can see, we only have two cases with the filter mode.
+    # Either we compute services to check, or we compute services for fetching.
+    if filter_mode is not FilterMode.INCLUDE_CLUSTERED:
+        return
+    # Now we are in the latter case.
+    # Since the clusters don't fetch data themselves, we may have to include more
+    # services than are attached to the host itself, so that we get the needed data
+    # even if a failover occurred since the last discovery.
+
+    # Consider the case where we've clustered 3 nodes `node{1,2,3}`.
+    # Let `service A` be
+    #  * (only) in the autochecks of node1
+    #  * clustered by a clustered service rule matching hosts node1 and node2.
+    #
+    # The following must include `service A` for node1 and node2 but *not* for node3.
+    # Failing to exclude node3 might add an undesired service to it.
+    # For node1 it was added from the autochecks above.
+
     yield from (
-        s for s in _get_services_from_cluster_nodes(config_cache, host_name) if sfilter.keep(s)
+        s
+        # ... this adds it for node2
+        for s in _get_services_from_cluster_nodes(config_cache, host_name)
+        if sfilter.keep(s)
+        # ... and this condition prevents it from being added on node3
+        # 'not is_mine' means: would it be there, it would be clustered.
+        and not sfilter.is_mine(s)
     )
 
 

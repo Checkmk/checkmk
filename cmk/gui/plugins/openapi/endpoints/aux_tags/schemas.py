@@ -99,7 +99,7 @@ class AuxTagAttrsUpdate(BaseSchema):
 
     @post_load
     def verify_at_least_one(self, *args, **kwargs):
-        at_least_one_of = {"topic", "title"}
+        at_least_one_of = {"topic", "title", "help"}
         if not at_least_one_of & set(args[0]):
             raise ValidationError(
                 f"At least one of the following parameters should be provided: {at_least_one_of}"

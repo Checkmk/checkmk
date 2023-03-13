@@ -104,6 +104,17 @@ HostsWithAttributes = Mapping[HostName, HostAttributes]
 AttributeType = tuple[str, str, dict[str, Any], str]  # host attr, cmk.base var name, value, title
 
 
+class WATOFolderInfo(TypedDict, total=False):
+    """The dictionary that is saved in the folder's .wato file"""
+
+    __id: str  # pylint: disable=unused-private-member
+    title: str
+    attributes: HostAttributes
+    num_hosts: int
+    lock: bool
+    lock_subfolders: bool
+
+
 class FolderMetaData:
     """Stores meta information for one CREFolder.
     Usually this class is instantiated with data from Redis"""
@@ -158,7 +169,6 @@ class FolderMetaData:
 # Names:
 # folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato
 #              The root folder is "". No trailing / is allowed here.
-# wato_info:   The dictionary that is saved in the folder's .wato file
 
 # Terms:
 # create, delete   mean actual filesystem operations
@@ -647,28 +657,28 @@ def _get_fully_loaded_wato_folders() -> Mapping[PathWithoutSlash, CREFolder]:
 
 
 class _ABCWATOInfoStorage:
-    def read(self, file_path: Path) -> dict[str, Any] | None:
+    def read(self, file_path: Path) -> WATOFolderInfo | None:
         raise NotImplementedError()
 
-    def write(self, file_path: Path, data: dict[str, Any]) -> None:
+    def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         raise NotImplementedError()
 
 
 class _StandardWATOInfoStorage(_ABCWATOInfoStorage):
-    def read(self, file_path: Path) -> dict[str, Any]:
+    def read(self, file_path: Path) -> WATOFolderInfo:
         return store.load_object_from_file(file_path, default={})
 
-    def write(self, file_path: Path, data: dict[str, Any]) -> None:
+    def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         store.save_object_to_file(file_path, data)
 
 
 class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
-    def read(self, file_path: Path) -> dict[str, Any] | None:
+    def read(self, file_path: Path) -> WATOFolderInfo | None:
         pickle_path = self._add_suffix(file_path)
         if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
             return None
         return store.ObjectStore(
-            pickle_path, serializer=store.PickleSerializer[dict[str, Any]]()
+            pickle_path, serializer=store.PickleSerializer[WATOFolderInfo]()
         ).read_obj(default={})
 
     def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
@@ -679,9 +689,9 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
 
         return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
 
-    def write(self, file_path: Path, data: dict[str, Any]) -> None:
+    def write(self, file_path: Path, data: WATOFolderInfo) -> None:
         pickle_store = store.ObjectStore(
-            self._add_suffix(file_path), serializer=store.PickleSerializer[dict[str, Any]]()
+            self._add_suffix(file_path), serializer=store.PickleSerializer[WATOFolderInfo]()
         )
         with pickle_store.locked():
             pickle_store.write_obj(data)
@@ -703,13 +713,13 @@ class _WATOInfoStorageManager:
             storages.append(_PickleWATOInfoStorage())
         return storages
 
-    def read(self, store_file: Path) -> dict[str, Any]:
+    def read(self, store_file: Path) -> WATOFolderInfo:
         for storage in self._read_storages:
             if (storage_data := storage.read(store_file)) is not None:
                 return storage_data
         return {}
 
-    def write(self, store_file: Path, data: dict[str, Any]) -> None:
+    def write(self, store_file: Path, data: WATOFolderInfo) -> None:
         for storage in self._write_storages:
             storage.write(store_file, data)
 
@@ -750,7 +760,7 @@ class WithUniqueIdentifier(abc.ABC):
         return folders[identifier]
 
     @classmethod
-    def wato_info_storage_manager(cls):
+    def wato_info_storage_manager(cls) -> _WATOInfoStorageManager:
         if "wato_info_storage_manager" not in g:
             g.wato_info_storage_manager = _WATOInfoStorageManager()
         return g.wato_info_storage_manager
@@ -783,7 +793,7 @@ class WithUniqueIdentifier(abc.ABC):
         self._set_instance_data(data)
 
     @abc.abstractmethod
-    def _set_instance_data(self, wato_info):
+    def _set_instance_data(self, wato_info: WATOFolderInfo) -> None:
         """Hook method which is called by 'load_instance'.
 
         This method should assign to the instance the information just loaded from the file."""
@@ -795,7 +805,7 @@ class WithUniqueIdentifier(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _get_instance_data(self) -> dict[str, Any]:
+    def _get_instance_data(self) -> WATOFolderInfo:
         """The data to persist to the file."""
         raise NotImplementedError()
 
@@ -1559,16 +1569,16 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 return [value]
         return []
 
-    def _set_instance_data(self, wato_info):
+    def _set_instance_data(self, wato_info: WATOFolderInfo) -> None:
         self._title = wato_info.get("title", self._fallback_title())
-        self._attributes = wato_info.get("attributes", {})
+        self._attributes = dict(wato_info.get("attributes", {}))
         # Can either be set to True or a string (which will be used as host lock message)
         self._locked = wato_info.get("lock", False)
         # Can either be set to True or a string (which will be used as host lock message)
         self._locked_subfolders = wato_info.get("lock_subfolders", False)
 
         if "num_hosts" in wato_info:
-            self._num_hosts = wato_info.get("num_hosts", None)
+            self._num_hosts = wato_info.get("num_hosts", 0)
         else:
             # We don't want to trigger any state modifying methods on loading, as this leads to
             # very unpredictable behaviour. We dictate that `hosts()` will only ever be called
@@ -1583,14 +1593,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _get_identifier(self):
         return uuid.uuid4().hex
 
-    def _get_instance_data(self):
+    def _get_instance_data(self) -> WATOFolderInfo:
         return self.get_wato_info()
 
     def _instance_saved_postprocess(self) -> None:
         if may_use_redis():
             get_wato_redis_client().save_folder_info(self)
 
-    def get_wato_info(self):
+    def get_wato_info(self) -> WATOFolderInfo:
         return {
             "title": self._title,
             "attributes": self._attributes,

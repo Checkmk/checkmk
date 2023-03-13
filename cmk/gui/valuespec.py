@@ -5308,23 +5308,21 @@ class Alternative(ValueSpec[AlternativeModel]):
     # that always one matches. No error handling here.
     # This may also tranform the input value in case it gets
     # "decorated" in the from_html_vars function
-    def matching_alternative(
-        self, value: AlternativeModel
-    ) -> tuple[ValueSpec[AlternativeModel] | None, AlternativeModel]:
+    def _matching_alternative(self, value: AlternativeModel) -> ValueSpec[AlternativeModel] | None:
         if self._match:
-            return self._elements[self._match(value)], value
+            return self._elements[self._match(value)]
 
         for vs in self._elements:
             try:
                 vs.validate_datatype(value, "")
-                return vs, value
+                return vs
             except Exception:
                 pass
 
-        return None, value
+        return None
 
     def render_input(self, varprefix: str, value: AlternativeModel) -> None:
-        mvs, value = self.matching_alternative(value)
+        mvs = self._matching_alternative(value)
         options: list[tuple[str | None, str]] = []
         sel_option = request.var(varprefix + "_use")
         for nr, vs in enumerate(self._elements):
@@ -5390,13 +5388,13 @@ class Alternative(ValueSpec[AlternativeModel]):
         return value
 
     def mask(self, value: AlternativeModel) -> AlternativeModel:
-        vs, match_value = self.matching_alternative(value)
+        vs = self._matching_alternative(value)
         if vs is None:
-            raise ValueError(_("Invalid value: %s") % (match_value,))
-        return vs.mask(match_value)
+            raise ValueError(_("Invalid value: %s") % (value,))
+        return vs.mask(value)
 
     def value_to_html(self, value: AlternativeModel) -> ValueSpecText:
-        vs, value = self.matching_alternative(value)
+        vs = self._matching_alternative(value)
         if vs:
             output = HTML()
             if self._show_alternative_title and (title := vs.title()):
@@ -5405,10 +5403,10 @@ class Alternative(ValueSpec[AlternativeModel]):
         return _("invalid:") + " " + str(value)
 
     def value_to_json(self, value: AlternativeModel) -> JSONValue:
-        vs, match_value = self.matching_alternative(value)
+        vs = self._matching_alternative(value)
         if vs is None:
-            raise ValueError(_("Invalid value: %s") % (match_value,))
-        return vs.value_to_json(match_value)
+            raise ValueError(_("Invalid value: %s") % (value,))
+        return vs.value_to_json(value)
 
     def value_from_json(self, json_value: JSONValue) -> AlternativeModel:
         # FIXME: This is wrong! value_to_json transforms tuples to lists. json_value could
@@ -5435,7 +5433,7 @@ class Alternative(ValueSpec[AlternativeModel]):
         )
 
     def _validate_value(self, value: AlternativeModel, varprefix: str) -> None:
-        vs, value = self.matching_alternative(value)
+        vs = self._matching_alternative(value)
         for nr, v in enumerate(self._elements):
             if vs == v:
                 vs.validate_value(value, varprefix + "_%d" % nr)
@@ -5446,7 +5444,7 @@ class Alternative(ValueSpec[AlternativeModel]):
         )
 
     def transform_value(self, value: AlternativeModel) -> AlternativeModel:
-        vs, value = self.matching_alternative(value)
+        vs = self._matching_alternative(value)
         if not vs:
             raise MKUserError(
                 None,

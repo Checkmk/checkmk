@@ -5135,6 +5135,15 @@ class Alternative(ValueSpec):
             if vs == v:
                 vs.validate_value(value, varprefix + "_%d" % nr)
 
+    def transform_value(self, value):
+        vs, value = self.matching_alternative(value)
+        if not vs:
+            raise MKUserError(
+                None,
+                _("Found no matching alternative."),
+            )
+        return vs.transform_value(value)
+
 
 class Tuple(ValueSpec):
     """Edit a n-tuple (with fixed size) of values"""

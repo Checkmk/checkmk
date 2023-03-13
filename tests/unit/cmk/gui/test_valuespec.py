@@ -633,3 +633,26 @@ def test_hash_password(pw1, pw2):
     hash1, hash2 = _hash_pw(pw1), _hash_pw(pw2)
     assert hash1.startswith("hash:") and hash2.startswith("hash:"), "hash is not empty"
     assert (pw1 == pw2) == (hash1 == hash2), "same password produces same hash"
+
+
+class TestAlternative:
+    def test_transform_value_ok(self) -> None:
+        assert (
+            vs.Alternative(
+                elements=[
+                    vs.Transform(
+                        vs.Integer(),
+                        forth=lambda v: v + 1,
+                    )
+                ]
+            ).transform_value(3)
+            == 3 + 1
+        )
+
+    def test_transform_value_no_match(self) -> None:
+        with pytest.raises(MKUserError):
+            vs.Alternative(
+                elements=[
+                    vs.Integer(),
+                ]
+            ).transform_value("strange")

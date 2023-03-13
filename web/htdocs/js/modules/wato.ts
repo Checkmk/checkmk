@@ -294,18 +294,6 @@ export function toggle_folder(
     oDiv: HTMLElement,
     on: boolean
 ) {
-    // Skip mouseout event when moving mouse over a child element of the
-    // folder element
-    if (!on) {
-        let node: HTMLElement | null | Node = event!.target as HTMLElement;
-        while (node) {
-            if (node == oDiv) {
-                return false;
-            }
-            node = node.parentNode;
-        }
-    }
-
     const obj = oDiv.parentNode as HTMLElement;
     const id = obj.id.substr(7);
 

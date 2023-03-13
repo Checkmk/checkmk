@@ -285,19 +285,6 @@ PARAMETER_GROUP_RESPONSE: Final[Sequence[Mapping[str, object]]] = [
     }
 ]
 
-TAGS: Final[Mapping[str, object]] = {
-    "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-2": {
-        "TagList": [
-            {"Key": "tag1", "Value": "value1"},
-        ]
-    },
-    "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3": {
-        "TagList": [
-            {"Key": "tag2", "Value": "value2"},
-        ]
-    },
-}
-
 
 class Paginator:
     def __init__(self, function: str, cluster_response: Sequence[Mapping[str, object]]) -> None:
@@ -322,9 +309,6 @@ class FakeElastiCacheClient:
 
     def get_paginator(self, function: str) -> Paginator:
         return Paginator(function, self.cluster_response)
-
-    def list_tags_for_resource(self, ResourceName: str = "") -> object:
-        return TAGS.get(ResourceName, {"TagList": []})
 
 
 class FakeQuotaClient:
@@ -358,6 +342,31 @@ class FakeQuotaClient:
         }
 
 
+class TaggingPaginator:
+    def paginate(self, *args, **kwargs):
+        yield {
+            "ResourceTagMappingList": [
+                {
+                    "ResourceARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-2",
+                    "Tags": [{"Key": "tag1", "Value": "value1"}],
+                },
+                {
+                    "ResourceARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3",
+                    "Tags": [
+                        {"Key": "tag2", "Value": "value2"},
+                    ],
+                },
+            ],
+        }
+
+
+class FakeTaggingClient:
+    def get_paginator(self, operation_name):
+        if operation_name == "get_resources":
+            return TaggingPaginator()
+        raise NotImplementedError
+
+
 @pytest.fixture()
 def get_elasticache_sections() -> GetSectionsCallable:
     def _create_elasticache_sections(
@@ -371,6 +380,7 @@ def get_elasticache_sections() -> GetSectionsCallable:
         fake_elasticache_client2 = FakeElastiCacheClient(CLUSTERS_RESPONSE2)
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_quota_client = FakeQuotaClient()
+        fake_tagging_client = FakeTaggingClient()
 
         distributor = ResultDistributor()
 
@@ -378,7 +388,7 @@ def get_elasticache_sections() -> GetSectionsCallable:
             fake_elasticache_client1, region, config, distributor, fake_quota_client
         )
         elasticache_summary = ElastiCacheSummary(
-            fake_elasticache_client2, region, config, distributor
+            fake_elasticache_client2, fake_tagging_client, region, config, distributor
         )
         elasticache = ElastiCache(fake_cloudwatch_client, region, config)
 

@@ -1,0 +1,14 @@
+Title: Update pymssql to 2.2.7
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1678718241
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+With the updated pymssql version, TDS 7.4 is now supported.
+This affects currently only the active check "check_sql".
+

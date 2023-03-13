@@ -3,35 +3,56 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+from collections import abc
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-# .2 cpqHePowerMeterStatus
-#    Description:        This value specifies whether Power Meter reading is supported by this Server .
-#    The following values are supported:
-#       other(1) Could not read the Power Meter status.
-#       present(2) The Power Meter data is available.
-#       absent(3) The Power Meter data is not available at this time.
+DiscoveryResult = abc.Iterable[typing.Any]
+CheckResult = abc.Iterable[tuple]
 
 
-def inventory_hp_proliant_power(info):
-    if len(info) > 0 and info[0][0] not in ["0", "3"]:
-        return [(None, None)]
-    return []
+class Params(typing.TypedDict, total=True):
+    levels: tuple[float, float]
 
 
-def check_hp_proliant_power(_item, params, info):
-    status_table = {
-        1: "other",
-        2: "present",
-        3: "absent",
-    }
-    status, reading = map(int, info[0])
-    if status != 2:
-        return 2, "Power Meter state: %s" % (status_table[status])
+Statuses = typing.Literal["other", "present", "absent"]
 
-    return check_levels(
+Section = tuple[Statuses, int]
+
+STATUS_TABLE: typing.Final[abc.Mapping[str, Statuses]] = {
+    # cpqHePowerMeterStatus
+    # Description:        This value specifies whether Power Meter reading is supported by this Server .
+    # The following values are supported:
+    #    other(1) Could not read the Power Meter status.
+    #    present(2) The Power Meter data is available.
+    #    absent(3) The Power Meter data is not available at this time.
+    "1": "other",
+    "2": "present",
+    "3": "absent",
+}
+
+
+def parse_hp_proliant_power(string_table: StringTable) -> Section:
+    status_code, reading = string_table[0]
+    return (STATUS_TABLE[status_code.strip()], int(reading))
+
+
+def discovery_hp_proliant_power(section: Section) -> DiscoveryResult:
+    if section[0] != "absent":
+        yield (None, None)
+
+
+def check_hp_proliant_power(_no_item: None, params: Params, section: Section) -> CheckResult:
+    status, reading = section
+    if status != "present":
+        yield 2, f"Power Meter state: {status}"
+        return
+
+    yield check_levels(
         reading,
         "watt",
         params.get("levels", (None, None)),
@@ -43,7 +64,8 @@ def check_hp_proliant_power(_item, params, info):
 check_info["hp_proliant_power"] = {
     "group": "epower_single",
     "check_function": check_hp_proliant_power,
-    "inventory_function": inventory_hp_proliant_power,
+    "parse_function": parse_hp_proliant_power,
+    "inventory_function": discovery_hp_proliant_power,
     "service_description": "HW Power Meter",
     "snmp_info": (
         ".1.3.6.1.4.1.232.6.2.15",

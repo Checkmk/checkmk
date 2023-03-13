@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, NamedTuple
+from typing import Any
 
 import pytest
 
@@ -14,16 +14,14 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-DEFAULT_PARAMETERS: dict[str, Any] = {"state": 2}  # TODO: import from check!
-
-
-class DBInstance(NamedTuple):  # TODO: import from check
-    session_id: str
-    wait_type: str
-    blocking_session_id: str
-    wait_duration: float
-
+from cmk.base.plugins.agent_based.mssql_blocked_sessions import (
+    check_mssql_blocked_sessions,
+    cluster_check_mssql_blocked_sessions,
+    DBInstance,
+    DEFAULT_PARAMETERS,
+    discovery_mssql_blocked_sessions,
+    parse_mssql_blocked_sessions,
+)
 
 INFO_0 = [
     ["Blocked _Sessions"],
@@ -64,8 +62,11 @@ def test_mssql_blocked_sessions_default(
         Result(state=State.CRIT, summary="Summary: 119 blocked by 1 ID(s), 76 blocked by 1 ID(s)"),
         Result(
             state=State.OK,
-            summary="2 additional details available",
-            details="Session 119 blocked by 75 (Type: LCK_M_U, Wait: 2 days 16 hours)\nSession 76 blocked by 115 (Type: LCK_M_U, Wait: 2 days 13 hours)",
+            summary="Session 119 blocked by 75 (Type: LCK_M_U, Wait: 2 days 16 hours)",
+        ),
+        Result(
+            state=State.OK,
+            summary="Session 76 blocked by 115 (Type: LCK_M_U, Wait: 2 days 13 hours)",
         ),
     ]
 
@@ -90,9 +91,6 @@ def test_mssql_blocked_sessions_no_blocking_sessions(
 
 
 def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("mssql_blocked_sessions")]
-    assert plugin is not None
-    check_mssql_blocked_sessions = plugin.check_function
     assert list(
         check_mssql_blocked_sessions(
             item="",
@@ -117,16 +115,12 @@ def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
         ),
         Result(
             state=State.WARN,
-            summary="1 additional detail available",
-            details="Session sid blocked by bsid1 (Type: smth1, Wait: 25 seconds)",
+            summary="Session sid blocked by bsid1 (Type: smth1, Wait: 25 seconds)",
         ),
     ]
 
 
 def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("mssql_blocked_sessions")]
-    assert plugin is not None
-    check_mssql_blocked_sessions = plugin.check_function
     assert list(
         check_mssql_blocked_sessions(
             item="",
@@ -146,16 +140,12 @@ def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> No
         Result(state=State.OK, summary="No blocking sessions"),
         Result(
             state=State.OK,
-            summary="1 additional detail available",
-            details="Ignored wait types: smth1",
+            summary="Ignored wait types: smth1",
         ),
     ]
 
 
 def test_mssql_blocked_sessions_parsing(fix_register: FixRegister) -> None:
-    plugin = fix_register.agent_sections[SectionName("mssql_blocked_sessions")]
-    assert plugin is not None
-    parse_mssql_blocked_sessions = plugin.parse_function
     assert parse_mssql_blocked_sessions([["ERROR: asd"]]) == {}
     assert parse_mssql_blocked_sessions([["No blocking sessions"]]) == {"": []}
     assert parse_mssql_blocked_sessions(
@@ -216,11 +206,19 @@ DATA_GENERIC_1 = [
                 ),
                 Result(
                     state=State.OK,
-                    summary="4 additional details available",
-                    details="Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)"
-                    "\nSession 3 blocked by 4 (Type: Foo, Wait: 2 days 16 hours)"
-                    "\nSession 5 blocked by 6 (Type: Bar, Wait: 2 days 16 hours)"
-                    "\nSession 7 blocked by 8 (Type: Bar, Wait: 2 days 16 hours)",
+                    summary="Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Session 3 blocked by 4 (Type: Foo, Wait: 2 days 16 hours)",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Session 5 blocked by 6 (Type: Bar, Wait: 2 days 16 hours)",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Session 7 blocked by 8 (Type: Bar, Wait: 2 days 16 hours)",
                 ),
             ],
         ),
@@ -284,11 +282,19 @@ DATA_GENERIC_1 = [
                 ),
                 Result(
                     state=State.OK,
-                    summary="4 additional details available",
-                    details="Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)"
-                    "\nSession 3 blocked by 4 (Type: Foo, Wait: 2 days 16 hours)"
-                    "\nSession 5 blocked by 6 (Type: Bar, Wait: 2 days 16 hours)"
-                    "\nSession 7 blocked by 8 (Type: Bar, Wait: 2 days 16 hours)",
+                    summary="Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Session 3 blocked by 4 (Type: Foo, Wait: 2 days 16 hours)",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Session 5 blocked by 6 (Type: Bar, Wait: 2 days 16 hours)",
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Session 7 blocked by 8 (Type: Bar, Wait: 2 days 16 hours)",
                 ),
             ],
         ),
@@ -301,12 +307,6 @@ def test_mssql_blocked_sessions_generic(
     item: str,
     check_result: list[Result],
 ) -> None:
-    section = fix_register.agent_sections[SectionName("mssql_blocked_sessions")]
-    assert section is not None
-    parse_mssql_blocked_sessions = section.parse_function
-    plugin = fix_register.check_plugins[CheckPluginName("mssql_blocked_sessions")]
-    assert plugin is not None
-    check_mssql_blocked_sessions = plugin.check_function
     assert (
         list(
             check_mssql_blocked_sessions(
@@ -334,13 +334,27 @@ def test_mssql_blocked_sessions_generic(
 def test_mssql_blocked_sessions_generic_discover(
     fix_register: FixRegister, string_table: StringTable, discovery_result: list[Service]
 ) -> None:
-    section = fix_register.agent_sections[SectionName("mssql_blocked_sessions")]
-    assert section is not None
-    parse_mssql_blocked_sessions = section.parse_function
-    plugin = fix_register.check_plugins[CheckPluginName("mssql_blocked_sessions")]
-    assert plugin is not None
-    discovery_mssql_blocked_sessions = plugin.discovery_function
     assert (
         list(discovery_mssql_blocked_sessions(parse_mssql_blocked_sessions(string_table)))
         == discovery_result
     )
+
+
+def test_mssql_blocked_sessions_generic_cluster(fix_register: FixRegister) -> None:
+    assert list(
+        cluster_check_mssql_blocked_sessions(
+            item="ID 1",
+            section={
+                "server-1": parse_mssql_blocked_sessions([["ID 1", "No blocking sessions"]]),
+                "server-2": parse_mssql_blocked_sessions([["ID 1", "1", "232292187", "Foo", "2"]]),
+            },
+            params={"state": 2},
+        )
+    ) == [
+        Result(state=State.OK, notice="[server-1]: No blocking sessions"),
+        Result(state=State.CRIT, summary="[server-2]: Summary: 1 blocked by 1 ID(s)"),
+        Result(
+            state=State.OK,
+            notice="[server-2]: Session 1 blocked by 2 (Type: Foo, Wait: 2 days 16 hours)",
+        ),
+    ]

@@ -23,13 +23,11 @@
 # <<<mssql_blocked_sessions:sept(124)>>>
 # INST_ID1|No blocking sessions
 
-from typing import Any, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-CheckResult = Any
-Result = Any
+from .agent_based_api.v1 import IgnoreResultsError, register, render, Result, Service, State
+from .agent_based_api.v1.clusterize import make_node_notice_results
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 DEFAULT_PARAMETERS = {
     "state": 2,
@@ -91,7 +89,7 @@ def check_mssql_blocked_sessions(  # pylint: disable=too-many-branches
         # by the "X Instance" service and skip this check.
         raise IgnoreResultsError("Failed to retrieve data from database")
     if not data:
-        yield 0, NO_BLOCKING_SESSIONS_MSG
+        yield Result(state=State.OK, summary=NO_BLOCKING_SESSIONS_MSG)
         return
 
     summary: dict[str, int] = {}
@@ -106,54 +104,83 @@ def check_mssql_blocked_sessions(  # pylint: disable=too-many-branches
             continue
 
         if crit is not None and db_inst.wait_duration >= crit:
-            state = 2
+            state = State.CRIT
         elif warn is not None and db_inst.wait_duration >= warn:
-            state = 1
+            state = State.WARN
         else:
-            state = 0
+            state = State.OK
 
         summary.setdefault(db_inst.session_id, 0)
         summary[db_inst.session_id] += 1
         details.append(
-            (
-                state,
-                "Session %s blocked by %s (Type: %s, Wait: %s)"
+            Result(
+                state=state,
+                summary="Session %s blocked by %s (Type: %s, Wait: %s)"
                 % (
                     db_inst.session_id,
                     db_inst.blocking_session_id,
                     db_inst.wait_type,
-                    get_age_human_readable(db_inst.wait_duration),
+                    render.timespan(db_inst.wait_duration),
                 ),
             )
         )
 
     if summary:
-        yield params["state"], "Summary: %s" % (
-            ", ".join(["%s blocked by %s ID(s)" % (k, v) for k, v in sorted(summary.items())])
+        yield Result(
+            state=State(params["state"]),
+            summary="Summary: %s"
+            % (", ".join(["%s blocked by %s ID(s)" % (k, v) for k, v in sorted(summary.items())])),
         )
 
-        max_state = max(state for state, _infotext in details)
-        if max_state:
-            yield max_state, "At least one session above thresholds (warn/crit at %s/%s)" % (
-                get_age_human_readable(warn),
-                get_age_human_readable(crit),
+        max_state = State.worst(*(r.state for r in details))
+        if max_state in {State.CRIT, State.WARN}:
+            yield Result(
+                state=max_state,
+                summary="At least one session above thresholds (warn/crit at %s/%s)"
+                % (
+                    render.timespan(warn),
+                    render.timespan(crit),
+                ),
             )
-        for state, infotext in details:
-            yield state, "\n%s" % infotext
+        yield from details
     else:
-        yield 0, NO_BLOCKING_SESSIONS_MSG
+        yield Result(state=State.OK, summary=NO_BLOCKING_SESSIONS_MSG)
 
     if ignored_waittypes:
-        yield 0, "\nIgnored wait types: %s" % ", ".join(ignored_waittypes)
+        yield Result(
+            state=State.OK, summary="Ignored wait types: %s" % ", ".join(ignored_waittypes)
+        )
 
 
-check_info["mssql_blocked_sessions"] = {
-    "parse_function": parse_mssql_blocked_sessions,
-    "inventory_function": discover(),
-    "check_function": check_mssql_blocked_sessions,
-    "service_description": "MSSQL %s Blocked Sessions",
-    "group": "mssql_instance_blocked_sessions",
-    "default_levels_variable": "mssql_blocked_sessions_default_levels",
-}
+def discovery_mssql_blocked_sessions(section: dict[str, list[DBInstance]]) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
-factory_settings["mssql_blocked_sessions_default_levels"] = DEFAULT_PARAMETERS
+
+def cluster_check_mssql_blocked_sessions(
+    item: str, params: dict[str, Any], section: Mapping[str, dict[str, list[DBInstance]] | None]
+) -> CheckResult:
+    for node_name, node_section in section.items():
+        if not node_section:
+            continue
+        yield from make_node_notice_results(
+            node_name,
+            check_mssql_blocked_sessions(item, params, node_section),
+        )
+
+
+register.agent_section(
+    name="mssql_blocked_sessions",
+    parse_function=parse_mssql_blocked_sessions,
+)
+
+register.check_plugin(
+    name="mssql_blocked_sessions",
+    sections=["mssql_blocked_sessions"],
+    service_name="MSSQL %s Blocked Sessions",
+    discovery_function=discovery_mssql_blocked_sessions,
+    check_function=check_mssql_blocked_sessions,
+    cluster_check_function=cluster_check_mssql_blocked_sessions,
+    check_default_parameters=DEFAULT_PARAMETERS,
+    check_ruleset_name="mssql_instance_blocked_sessions",
+)

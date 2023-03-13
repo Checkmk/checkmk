@@ -20,3 +20,6 @@ item:
 
 discovery:
  One is created for each host.
+
+cluster:
+ In a cluster setup all sessions are aggregated across all nodes.

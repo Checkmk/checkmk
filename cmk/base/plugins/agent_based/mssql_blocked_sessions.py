@@ -3,26 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#
-# session_id, wait_duration_ms, wait_type, blocking_session_id
-# <<<mssql_blocked_sessions>>>
-# Blocked _Sessions
-# 119 232292187 LCK_M_U 75
-# 76 221526672 LCK_M_U 115
-
-# <<<mssql_blocked_sessions:sep(124)>>>
-# Blocked _Sessions
-# 119|232292187|LCK_M_U|75
-# 76|221526672|LCK_M_U|115
-
-# <<<mssql_blocked_sessions:sep(124)>>>
-# Blocked _Sessions
-# INST_ID1|119|232292187|LCK_M_U|75
-# INST_ID2|76|221526672|LCK_M_U|115
-
-# <<<mssql_blocked_sessions:sept(124)>>>
-# INST_ID1|No blocking sessions
-
 from typing import Any, Mapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import IgnoreResultsError, register, render, Result, Service, State

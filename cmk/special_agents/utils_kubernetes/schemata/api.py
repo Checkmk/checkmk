@@ -161,7 +161,7 @@ def parse_cpu_cores(value: str) -> float:
     return math.ceil(1000 * _parse_quantity(value)) / 1000
 
 
-def parse_resource_value(value: str) -> float:
+def parse_resource_value(value: str) -> int:
     """Function which converts the reported resource value to its value in the appropriate
     base unit
 
@@ -432,7 +432,7 @@ class NodeCondition(ClientModel):
 
 class NodeResources(BaseModel):
     cpu: float = 0.0
-    memory: float = 0.0
+    memory: int = 0
     pods: int = 0
 
     _parse_cpu = validator("cpu", pre=True, allow_reuse=True)(parse_cpu_cores)
@@ -951,7 +951,7 @@ class Job(BaseModel):
 
 
 class StorageRequirement(BaseModel):
-    storage: float
+    storage: int
 
     _parse_storage = validator("storage", pre=True, allow_reuse=True)(parse_resource_value)
 

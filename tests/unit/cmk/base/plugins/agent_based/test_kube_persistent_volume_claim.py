@@ -45,7 +45,7 @@ def fixture_bounded_pvc() -> PersistentVolumeClaim:
     return PVCFactory.build(
         status=PVCStatusFactory.build(
             phase=PersistentVolumeClaimPhase.CLAIM_BOUND,
-            capacity=StorageRequirement(storage=1000.0),
+            capacity=StorageRequirement(storage=1000),
         )
     )
 
@@ -149,7 +149,7 @@ def test_pvc_first_time_pending_status():
     pending_pvc = PVCFactory.build(
         status=PVCStatusFactory.build(
             phase=PersistentVolumeClaimPhase.CLAIM_PENDING,
-            capacity=StorageRequirement(storage=1000.0),
+            capacity=StorageRequirement(storage=1000),
         )
     )
     value_store: MutableMapping[str, Any] = {}
@@ -173,7 +173,7 @@ def test_pvc_warn_pending_status():
     pending_pvc = PVCFactory.build(
         status=PVCStatusFactory.build(
             phase=PersistentVolumeClaimPhase.CLAIM_PENDING,
-            capacity=StorageRequirement(storage=1000.0),
+            capacity=StorageRequirement(storage=1000),
         )
     )
     check_result = list(
@@ -197,7 +197,7 @@ def test_pvc_lost_status_as_ok_state():
     lost_pvc = PVCFactory.build(
         status=PVCStatusFactory.build(
             phase=PersistentVolumeClaimPhase.CLAIM_LOST,
-            capacity=StorageRequirement(storage=1000.0),
+            capacity=StorageRequirement(storage=1000),
         )
     )
     check_result = list(

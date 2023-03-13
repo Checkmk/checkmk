@@ -689,7 +689,7 @@ class OpenShiftEndpoint(Section):
 
 
 class StorageRequirement(BaseModel):
-    storage: float
+    storage: int
 
 
 class PersistentVolumeClaimStatus(BaseModel):

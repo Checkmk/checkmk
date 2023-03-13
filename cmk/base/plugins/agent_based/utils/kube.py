@@ -983,7 +983,7 @@ class PersistentVolumeClaimPhase(enum.Enum):
 
 
 class StorageRequirement(BaseModel):
-    storage: float
+    storage: int
 
 
 class PersistentVolumeClaimStatus(BaseModel):

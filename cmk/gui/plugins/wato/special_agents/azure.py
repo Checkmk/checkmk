@@ -109,7 +109,7 @@ def _migrate_services(data):
     if "services" not in data:
         # Services selection was introduced after Azure monitoring so we want that the users with an
         # older version will have all services enabled as it was before this change
-        data["services"] = [service_id for service_id, _service_name in ALL_AZURE_SERVICES]
+        data["services"] = [service_id for service_id, _service_name in get_filtered_services()]
     return data
 
 
@@ -249,7 +249,7 @@ def get_services_vs() -> tuple[str, ValueSpec]:
             # require special permissions on the Azure app (Graph API permissions + admin consent).
             default_value=[
                 s[0]
-                for s in ALL_AZURE_SERVICES
+                for s in get_filtered_services()
                 if s[0] not in {"users_count", "ad_connect", "app_registrations"}
             ],
             allow_empty=True,

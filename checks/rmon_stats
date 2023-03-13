@@ -8,48 +8,52 @@
 # statistics(1). etherStatsTable(1). etherStatsEntry(1)
 # The MIB is called RMON-MIB
 
+
+from typing import Mapping
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+PortStats = Mapping[str, int]
+
+_FIELDS = ["bcast", "mcast", "0-63b", "64-127b", "128-255b", "256-511b", "512-1023b", "1024-1518b"]
+
+
 rmon_discovery = []
 
 
-def inventory_rmon_stats(info):
-    if in_binary_hostlist(host_name(), rmon_discovery):
-        inventory = []
-        for line in info:
-            inventory.append((line[0], None))
-        return inventory
-    return []
-
-
-def check_rmon_stats(item, _no_params, info):
-    bytes_map = {
-        1: "bcast",
-        2: "mcast",
-        3: "0-63b",
-        4: "64-127b",
-        5: "128-255b",
-        6: "256-511b",
-        7: "512-1023b",
-        8: "1024-1518b",
+def parse_rmon_stats(string_table: StringTable) -> Mapping[str, PortStats]:
+    return {
+        port: {k: int(v.replace(" Packets", "")) for k, v in zip(_FIELDS, row)}
+        for port, *row in string_table
     }
+
+
+def discover_rmon_stats(section: Mapping[str, PortStats]):
+    if not in_binary_hostlist(host_name(), rmon_discovery):
+        return
+    yield from ((item, None) for item in section)
+
+
+def check_rmon_stats(item, _no_params, section: Mapping[str, PortStats]):
+    if (stats := section.get(item)) is None:
+        return
+
     perfdata = []
     infotext = ""
     now = time.time()
-    for line in info:
-        if line[0] == item:
-            for i, val in bytes_map.items():
-                octets = int(re.sub(" Packets", "", line[i]))
-                rate = get_rate("%s-%s" % (item, val), now, octets)
-                perfdata.append((val, rate, 0, 0, 0))
-                infotext += "%s=%.0f " % (val, rate)
-            infotext += "octets/sec"
-            return 0, infotext, perfdata
 
-    return (3, "port not found")
+    for val, octets in stats.items():
+        rate = get_rate("%s-%s" % (item, val), now, octets)
+        perfdata.append((val, rate, 0, 0, 0))
+        infotext += "%s=%.0f " % (val, rate)
+        infotext += "octets/sec"
+    yield 0, infotext, perfdata
 
 
 check_info["rmon_stats"] = {
+    "parse_function": parse_rmon_stats,
     "check_function": check_rmon_stats,
-    "inventory_function": inventory_rmon_stats,
+    "inventory_function": discover_rmon_stats,
     "service_description": "RMON Stats IF %s",
     "has_perfdata": True,
     "snmp_info": (

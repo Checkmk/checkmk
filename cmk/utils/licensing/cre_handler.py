@@ -7,6 +7,7 @@ from cmk.utils.licensing.handler import (
     LicenseState,
     LicensingHandler,
     NotificationHandler,
+    PendingChanges,
     UserEffect,
 )
 
@@ -25,7 +26,10 @@ class CRELicensingHandler(LicensingHandler):
     def message(self) -> str:
         return ""
 
-    def _get_licensed_user_effect(self) -> UserEffect:
+    def effect_core(self, num_services: int) -> UserEffect:
+        return UserEffect(header=None, email=None, block=None)
+
+    def effect(self, changes: PendingChanges | None = None) -> UserEffect:
         return UserEffect(header=None, email=None, block=None)
 
     @property

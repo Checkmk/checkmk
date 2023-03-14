@@ -19,6 +19,8 @@ from .werk import Class, Compatibility, Edition, Level, Werk, WerkError, WerkTra
 
 
 class RawWerkV2(BaseModel):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
     werk_version: Literal["2"] = Field(default="2", alias="__version__")
     id: int
     class_: Class = Field(alias="class")

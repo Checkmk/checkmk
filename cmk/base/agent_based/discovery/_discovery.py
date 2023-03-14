@@ -85,7 +85,7 @@ def execute_check_discovery(
         config_cache=config_cache,
         providers=providers,
         check_plugins=check_plugins,
-        find_service_description=find_service_description,
+        get_service_description=find_service_description,
         on_error=OnError.RAISE,
     )
 

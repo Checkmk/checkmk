@@ -24,7 +24,7 @@ ComputeCheckParameters = Callable[
 ]
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
-HostOfClusteredService = Callable[[HostName, str], str]
+GetEffectviveHost = Callable[[HostName, str], str]
 
 
 class AutochecksManager:
@@ -48,7 +48,7 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
-        get_effective_hostname: HostOfClusteredService,
+        get_effective_host: GetEffectviveHost,
     ) -> Sequence[ConfiguredService]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = list(
@@ -56,7 +56,7 @@ class AutochecksManager:
                     hostname,
                     compute_check_parameters,
                     get_service_description,
-                    get_effective_hostname,
+                    get_effective_host,
                 )
             )
         return self._autochecks[hostname]
@@ -66,7 +66,7 @@ class AutochecksManager:
         hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         get_service_description: GetServiceDescription,
-        get_effective_hostname: HostOfClusteredService,
+        get_effective_host: GetEffectviveHost,
     ) -> Iterable[ConfiguredService]:
         """Read automatically discovered checks of one host"""
         for autocheck_entry in self._read_raw_autochecks(hostname):
@@ -77,7 +77,7 @@ class AutochecksManager:
                 item=autocheck_entry.item,
                 description=service_name,
                 parameters=compute_check_parameters(
-                    get_effective_hostname(hostname, service_name),
+                    get_effective_host(hostname, service_name),
                     *autocheck_entry.id(),
                     autocheck_entry.parameters,
                 ),
@@ -158,8 +158,8 @@ def set_autochecks_of_cluster(
     nodes: Iterable[HostName],
     hostname: HostName,
     new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
-    host_of_clustered_service: HostOfClusteredService,
-    service_description: GetServiceDescription,
+    get_effective_host: GetEffectviveHost,
+    get_service_description: GetServiceDescription,
 ) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
@@ -168,8 +168,7 @@ def set_autochecks_of_cluster(
         new_autochecks = [
             existing
             for existing in AutochecksStore(node).read()
-            if hostname
-            != host_of_clustered_service(node, service_description(node, *existing.id()))
+            if hostname != get_effective_host(node, get_service_description(node, *existing.id()))
         ] + [
             discovered
             for discovered, found_on_nodes in new_services_with_nodes
@@ -205,8 +204,8 @@ def _deduplicate(autochecks: Sequence[AutocheckEntry]) -> Sequence[AutocheckEntr
 def remove_autochecks_of_host(
     hostname: HostName,
     remove_hostname: HostName,
-    host_of_clustered_service: HostOfClusteredService,
-    service_description: GetServiceDescription,
+    get_effective_host: GetEffectviveHost,
+    get_service_description: GetServiceDescription,
 ) -> int:
     store = AutochecksStore(hostname)
     existing_entries = store.read()
@@ -214,9 +213,9 @@ def remove_autochecks_of_host(
         existing
         for existing in existing_entries
         if remove_hostname
-        != host_of_clustered_service(
+        != get_effective_host(
             hostname,
-            service_description(hostname, *existing.id()),
+            get_service_description(hostname, *existing.id()),
         )
     ]
     store.write(new_entries)

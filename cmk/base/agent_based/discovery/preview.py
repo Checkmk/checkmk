@@ -107,7 +107,7 @@ def get_check_preview(
         config_cache=config_cache,
         providers=providers,
         check_plugins=check_plugins,
-        find_service_description=find_service_description,
+        get_service_description=find_service_description,
         on_error=on_error,
     )
 

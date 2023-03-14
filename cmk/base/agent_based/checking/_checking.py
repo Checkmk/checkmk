@@ -474,19 +474,19 @@ def get_aggregated_result(
 
 def _get_clustered_service_node_keys(
     config_cache: ConfigCache,
-    host_name: HostName,
+    cluster_name: HostName,
     source_type: SourceType,
     service_descr: ServiceName,
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-    nodes = config_cache.nodes_of(host_name)
+    nodes = config_cache.nodes_of(cluster_name)
     used_nodes = (
         [
             nn
             for nn in (nodes or ())
-            if host_name == config_cache.host_of_clustered_service(nn, service_descr)
+            if cluster_name == config_cache.effective_host(nn, service_descr)
         ]
-        or nodes
+        or nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
         or ()
     )
 

@@ -214,7 +214,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 ),
                 section_plugins=SectionPluginMapper(),
                 check_plugins=CheckPluginMapper(),
-                find_service_description=config.service_description,
+                get_service_description=config.service_description,
                 mode=mode,
                 keep_clustered_vanished_services=True,
                 service_filters=None,
@@ -935,7 +935,7 @@ class AutomationAnalyseServices(Automation):
                 service
                 for node in config_cache.nodes_of(host_name) or []
                 for service in config_cache.get_autochecks_of(node)
-                if host_name == config_cache.host_of_clustered_service(node, service.description)
+                if host_name == config_cache.effective_host(node, service.description)
             ]
             if config_cache.is_cluster(host_name)
             else config_cache.get_autochecks_of(host_name)

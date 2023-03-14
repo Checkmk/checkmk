@@ -387,7 +387,7 @@ def test__get_post_discovery_services(
             grouped_services,
             service_filters,
             result,
-            find_service_description=lambda *args: f"Test Description {args[-1]}",
+            get_service_description=lambda *args: f"Test Description {args[-1]}",
             mode=mode,
             keep_clustered_vanished_services=True,
         ).values()
@@ -1626,7 +1626,7 @@ def test__discover_services_on_cluster(
         config_cache=scenario.config_cache,
         providers=scenario.providers,
         check_plugins=CheckPluginMapper(),
-        find_service_description=config.service_description,
+        get_service_description=config.service_description,
         on_error=OnError.RAISE,
     )
 
@@ -1722,8 +1722,8 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         HostName("horst"),
         providers={},
         check_plugins={},
-        find_service_description=lambda *_args: "desc",
-        host_of_clustered_service=lambda hn, _svcdescr: hn,
+        get_service_description=lambda *_args: "desc",
+        get_effective_host=lambda hn, _svcdescr: hn,
         on_error=OnError.RAISE,
     ) == {
         entry.id(): (

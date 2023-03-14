@@ -1528,7 +1528,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
         check_plugins=CheckPluginMapper(),
-        find_service_description=config.service_description,
+        get_service_description=config.service_description,
         on_error=OnError.IGNORE,
     )
 

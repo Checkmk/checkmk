@@ -306,7 +306,7 @@ class _ServiceFilter:
         should be displayed on the cluster host's service overview.
         """
         return (
-            self._config_cache.host_of_clustered_service(
+            self._config_cache.effective_host(
                 self._host_name,
                 service.description,
                 part_of_clusters=self._config_cache.clusters_of(self._host_name),
@@ -325,29 +325,29 @@ def _get_enforced_services(
 
 
 def _get_services_from_cluster_nodes(
-    config_cache: ConfigCache, hostname: HostName
+    config_cache: ConfigCache, node_name: HostName
 ) -> Iterable[ConfiguredService]:
-    for cluster in config_cache.clusters_of(hostname):
+    for cluster in config_cache.clusters_of(node_name):
         yield from _get_clustered_services(config_cache, cluster, False)
 
 
 def _get_clustered_services(
     config_cache: ConfigCache,
-    host_name: HostName,
+    cluster_name: HostName,
     skip_autochecks: bool,
 ) -> Iterable[ConfiguredService]:
-    for node in config_cache.nodes_of(host_name) or []:
+    for node in config_cache.nodes_of(cluster_name) or []:
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.
         node_checks = _get_enforced_services(config_cache, node)
-        if not (skip_autochecks or config_cache.is_ping_host(host_name)):
+        if not (skip_autochecks or config_cache.is_ping_host(cluster_name)):
             node_checks += config_cache.get_autochecks_of(node)
 
         yield from (
             service
             for service in node_checks
-            if config_cache.host_of_clustered_service(node, service.description) == host_name
+            if config_cache.effective_host(node, service.description) == cluster_name
         )
 
 
@@ -2598,9 +2598,7 @@ class ConfigCache:
         # Caches for nodes and clusters
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}
         self._nodes_of_cache: dict[HostName, list[HostName]] = {}
-        self._host_of_clustered_service_cache: dict[
-            tuple[HostName, ServiceName, tuple | None], HostName
-        ] = {}
+        self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
 
     def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
         ipmi_credentials = self.management_credentials(host_name, "ipmi")
@@ -2900,7 +2898,7 @@ class ConfigCache:
                         item=item,
                         description=descr,
                         parameters=compute_check_parameters(
-                            self.host_of_clustered_service(hostname, descr),
+                            self.effective_host(hostname, descr),
                             check_plugin_name,
                             item,
                             {},
@@ -3570,7 +3568,7 @@ class ConfigCache:
                     nodes,
                     hostname,
                     new_services,
-                    self.host_of_clustered_service,
+                    self.effective_host,
                     service_description,  # top level function!
                 )
         else:
@@ -3585,7 +3583,7 @@ class ConfigCache:
         nodes = self.nodes_of(hostname) or [hostname]
         return sum(
             autochecks.remove_autochecks_of_host(
-                node, hostname, self.host_of_clustered_service, service_description
+                node, hostname, self.effective_host, service_description
             )
             for node in nodes
         )
@@ -4029,7 +4027,7 @@ class ConfigCache:
             hostname,
             compute_check_parameters,
             service_description,  # this is the global function!
-            self.host_of_clustered_service,
+            self.effective_host,
         )
 
     def section_name_of(self, section: CheckPluginNameStr) -> str:
@@ -4436,9 +4434,9 @@ class ConfigCache:
         """
         return self._all_configured_clusters
 
-    def host_of_clustered_service(
+    def effective_host(
         self,
-        hostname: HostName,
+        node_name: HostName,
         servicedesc: str,
         part_of_clusters: list[HostName] | None = None,
     ) -> HostName:
@@ -4450,32 +4448,34 @@ class ConfigCache:
         If yes, return the cluster host of the service.
         If no, return the host name of the node.
         """
-        key = (hostname, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
-        if (actual_hostname := self._host_of_clustered_service_cache.get(key)) is not None:
+        key = (node_name, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
+        if (actual_hostname := self._effective_host_cache.get(key)) is not None:
             return actual_hostname
 
-        self._host_of_clustered_service_cache[key] = self._host_of_clustered_service(
-            hostname,
+        self._effective_host_cache[key] = self._effective_host(
+            node_name,
             servicedesc,
             part_of_clusters,
         )
-        return self._host_of_clustered_service_cache[key]
+        return self._effective_host_cache[key]
 
-    def _host_of_clustered_service(
+    def _effective_host(
         self,
-        hostname: HostName,
+        node_name: HostName,
         servicedesc: str,
         part_of_clusters: list[HostName] | None = None,
     ) -> HostName:
         if part_of_clusters:
             the_clusters = part_of_clusters
         else:
-            the_clusters = self.clusters_of(hostname)
+            the_clusters = self.clusters_of(node_name)
 
         if not the_clusters:
-            return hostname
+            return node_name
 
-        cluster_mapping = self.service_extra_conf(hostname, servicedesc, clustered_services_mapping)
+        cluster_mapping = self.service_extra_conf(
+            node_name, servicedesc, clustered_services_mapping
+        )
         for cluster in cluster_mapping:
             # Check if the host is in this cluster
             if cluster in the_clusters:
@@ -4489,15 +4489,17 @@ class ConfigCache:
                     "Invalid entry clustered_services_of['%s']: %s is not a cluster."
                     % (cluster, cluster)
                 )
-            if hostname in nodes and self.in_boolean_serviceconf_list(hostname, servicedesc, conf):
+            if node_name in nodes and self.in_boolean_serviceconf_list(
+                node_name, servicedesc, conf
+            ):
                 return cluster
 
         # 1. Old style: clustered_services assumes that each host belong to
         #    exactly on cluster
-        if self.in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
+        if self.in_boolean_serviceconf_list(node_name, servicedesc, clustered_services):
             return the_clusters[0]
 
-        return hostname
+        return node_name
 
     def get_clustered_service_configuration(
         self,

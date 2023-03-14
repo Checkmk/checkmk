@@ -105,7 +105,7 @@ def automation_discovery(
     failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
     keep_clustered_vanished_services: bool,
     service_filters: _ServiceFilters | None,
@@ -162,7 +162,7 @@ def automation_discovery(
             config_cache,
             providers,
             check_plugins=check_plugins,
-            find_service_description=find_service_description,
+            get_service_description=get_service_description,
             on_error=on_error,
         )
 
@@ -174,7 +174,7 @@ def automation_discovery(
             services,
             service_filters or _ServiceFilters.accept_all(),
             result,
-            find_service_description,
+            get_service_description,
             mode,
             keep_clustered_vanished_services,
         )
@@ -204,7 +204,7 @@ def _get_host_services(
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesByTransition:
     services: ServicesTable[_Transition]
@@ -215,7 +215,7 @@ def _get_host_services(
                 config_cache=config_cache,
                 providers=providers,
                 check_plugins=check_plugins,
-                find_service_description=find_service_description,
+                get_service_description=get_service_description,
                 on_error=on_error,
             )
         }
@@ -226,14 +226,14 @@ def _get_host_services(
                 host_name,
                 check_plugins=check_plugins,
                 providers=providers,
-                host_of_clustered_service=config_cache.host_of_clustered_service,
-                find_service_description=find_service_description,
+                get_effective_host=config_cache.effective_host,
+                get_service_description=get_service_description,
                 on_error=on_error,
             )
         }
 
     services.update(
-        _reclassify_disabled_items(config_cache, host_name, services, find_service_description)
+        _reclassify_disabled_items(config_cache, host_name, services, get_service_description)
     )
 
     # remove the ones shadowed by enforced services
@@ -246,7 +246,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     services: ServicesByTransition,
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
     keep_clustered_vanished_services: bool,
 ) -> Mapping[ServiceID, AutocheckServiceWithNodes]:
@@ -269,7 +269,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 new = {
                     s.service.id(): s
                     for s in discovered_services_with_nodes
-                    if service_filters.new(find_service_description(host_name, *s.service.id()))
+                    if service_filters.new(get_service_description(host_name, *s.service.id()))
                 }
                 result.self_new += len(new)
                 post_discovery_services.update(new)
@@ -291,7 +291,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                     DiscoveryMode.FIXALL,
                     DiscoveryMode.REMOVE,
                 ) and service_filters.vanished(
-                    find_service_description(host_name, *entry.service.id())
+                    get_service_description(host_name, *entry.service.id())
                 ):
                     result.self_removed += 1
                 else:
@@ -365,7 +365,7 @@ def discover_marked_hosts(
     fetcher: FetcherFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> None:
     """Autodiscovery"""
@@ -402,7 +402,7 @@ def discover_marked_hosts(
                 ),
                 section_plugins=section_plugins,
                 check_plugins=check_plugins,
-                find_service_description=find_service_description,
+                get_service_description=get_service_description,
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
@@ -448,7 +448,7 @@ def _discover_marked_host(
     failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
@@ -477,7 +477,7 @@ def _discover_marked_host(
         failure_summarizer=failure_summarizer,
         section_plugins=section_plugins,
         check_plugins=check_plugins,
-        find_service_description=find_service_description,
+        get_service_description=get_service_description,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
         keep_clustered_vanished_services=params.rediscovery.get(
             "keep_clustered_vanished_services", True
@@ -595,7 +595,7 @@ def get_host_services(
     config_cache: ConfigCache,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     providers: Mapping[HostKey, Provider],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesByTransition:
     services: ServicesTable[_Transition]
@@ -606,7 +606,7 @@ def get_host_services(
                 config_cache=config_cache,
                 providers=providers,
                 check_plugins=check_plugins,
-                find_service_description=find_service_description,
+                get_service_description=get_service_description,
                 on_error=on_error,
             )
         }
@@ -618,13 +618,13 @@ def get_host_services(
                 providers=providers,
                 check_plugins=check_plugins,
                 on_error=on_error,
-                host_of_clustered_service=config_cache.host_of_clustered_service,
-                find_service_description=find_service_description,
+                get_effective_host=config_cache.effective_host,
+                get_service_description=get_service_description,
             )
         }
 
     services.update(
-        _reclassify_disabled_items(config_cache, host_name, services, find_service_description)
+        _reclassify_disabled_items(config_cache, host_name, services, get_service_description)
     )
 
     # remove the ones shadowed by enforced services
@@ -640,8 +640,8 @@ def _get_node_services(
     providers: Mapping[HostKey, Provider],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     on_error: OnError,
-    host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
 
     service_result = analyse_discovered_services(
@@ -661,7 +661,7 @@ def _get_node_services(
                 config_cache,
                 host_name,
                 check_source=check_source,
-                cluster_name=host_of_clustered_service(host_name, service_name),
+                cluster_name=get_effective_host(host_name, service_name),
                 check_plugin_name=entry.check_plugin_name,
                 service_name=service_name,
             ),
@@ -669,7 +669,7 @@ def _get_node_services(
             [host_name],
         )
         for check_source, entry in service_result.chain_with_qualifier()
-        if (service_name := find_service_description(host_name, *entry.id()))
+        if (service_name := get_service_description(host_name, *entry.id()))
     }
 
 
@@ -701,14 +701,14 @@ def _reclassify_disabled_items(
     config_cache: ConfigCache,
     host_name: HostName,
     services: ServicesTable[_Transition],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> Iterable[tuple[ServiceID, ServicesTableEntry]]:
     """Handle disabled services -> 'ignored'"""
     yield from (
         (service.id(), ("ignored", service, [host_name]))
         for check_source, service, _found_on_nodes in services.values()
         if config_cache.service_ignored(
-            host_name, find_service_description(host_name, *service.id())
+            host_name, get_service_description(host_name, *service.id())
         )
         or config_cache.check_plugin_ignored(host_name, service.check_plugin_name)
     )
@@ -732,7 +732,7 @@ def _get_cluster_services(
     config_cache: ConfigCache,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     providers: Mapping[HostKey, Provider],
-    find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
     nodes = config_cache.nodes_of(host_name)
@@ -761,8 +761,8 @@ def _get_cluster_services(
                     check_source=check_source,
                     host_name=host_name,
                     node_name=node,
-                    services_cluster=config_cache.host_of_clustered_service(
-                        node, find_service_description(node, *entry.id())
+                    services_cluster=config_cache.effective_host(
+                        node, get_service_description(node, *entry.id())
                     ),
                     entry=entry,
                     existing_entry=cluster_items.get(entry.id()),

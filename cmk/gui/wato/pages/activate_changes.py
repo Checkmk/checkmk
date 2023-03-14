@@ -18,9 +18,9 @@ from six import ensure_str
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.render as render
-from cmk.utils.licensing.state import is_expired_trial, is_licensed
+from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
-from cmk.utils.version import is_cloud_edition, is_raw_edition
+from cmk.utils.version import is_cloud_edition
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -60,27 +60,9 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUni
 from cmk.gui.watolib import activate_changes, backup_snapshots
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
-from cmk.gui.watolib.hosts_and_folders import (
-    collect_all_hosts,
-    Folder,
-    folder_preserving_link,
-    Host,
-)
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import request_index_rebuild
-
-if not is_raw_edition():  # TODO solve this via registration
-    from cmk.utils.cee.licensing.helper import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        get_num_services_for_trial_free_edition,
-        service_reducing_change_pending,
-    )
-    from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        load_verified_response,
-    )
-    from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        licensing_user_effect_expired_trial,
-        licensing_user_effect_licensed,
-    )
 
 
 @mode_registry.register
@@ -98,15 +80,6 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         super().__init__()
         super().load()
         self._license_usage_report_validity = get_license_usage_report_validity()
-        self._license_verification_response = (
-            None
-            if not is_cloud_edition()
-            else (
-                None
-                if (verified_response := load_verified_response()) is None
-                else verified_response.response
-            )
-        )
 
     def title(self) -> str:
         return _("Activate pending changes")
@@ -207,19 +180,14 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        license_usage_report_valid = (
-            self._license_usage_report_validity != LicenseUsageReportValidity.older_than_five_days
-        )
-        if not is_cloud_edition():
-            return license_usage_report_valid
-
-        if is_expired_trial():
-            effect = licensing_user_effect_expired_trial(len(collect_all_hosts()))
-            return effect.block is None and license_usage_report_valid
-
-        if is_licensed() and self._license_verification_response is not None:
-            effect = licensing_user_effect_licensed(self._license_verification_response)
-            return effect.block is None and license_usage_report_valid
+        if is_cloud_edition():
+            # TODO: move to CCE handler to avoid is_cloud_edition check
+            license_usage_report_valid = (
+                self._license_usage_report_validity
+                != LicenseUsageReportValidity.older_than_five_days
+            )
+            block_effect = get_licensing_user_effect(changes=self._changes)
+            return block_effect.block is None and license_usage_report_valid
 
         return True
 
@@ -449,30 +417,27 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         errors = []
         warnings = []
 
-        # TODO: cleanup conditional imports and solve this via registration
-        if is_cloud_edition() and self._license_verification_response is not None and is_licensed():
+        if block_effect := get_licensing_user_effect(changes=self._changes).block:
+            errors.append(block_effect.message)
+
+        if is_cloud_edition():
+            # TODO move to CCE handler to avoid is_cloud_edition check
             if (
-                effect := licensing_user_effect_licensed(self._license_verification_response)
-            ).block:
-                errors.append(effect.block.message)
-
-        if is_expired_trial():
-            effect = licensing_user_effect_expired_trial(get_num_services_for_trial_free_edition())
-            if effect.block and not service_reducing_change_pending(self._changes):
-                errors.append(effect.block.message)
-
-        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
-            errors.append(_("The license usage history is older than five days."))
-        elif (
-            self._license_usage_report_validity == LicenseUsageReportValidity.older_than_three_days
-        ):
-            warnings.append(
-                _(
-                    "The license usage history was updated at least three days ago."
-                    "<br>Note: If it cannot be updated within five days activate changes"
-                    " will be blocked."
+                self._license_usage_report_validity
+                == LicenseUsageReportValidity.older_than_five_days
+            ):
+                errors.append(_("The license usage history is older than five days."))
+            elif (
+                self._license_usage_report_validity
+                == LicenseUsageReportValidity.older_than_three_days
+            ):
+                warnings.append(
+                    _(
+                        "The license usage history was updated at least three days ago."
+                        "<br>Note: If it cannot be updated within five days activate changes"
+                        " will be blocked."
+                    )
                 )
-            )
 
         if errors:
             error__msg = _("Activation not possible because of the following licensing issues:<br>")

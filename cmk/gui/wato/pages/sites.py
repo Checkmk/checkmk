@@ -19,7 +19,7 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.licensing.state import is_expired_trial
+from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -83,7 +83,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
-from cmk.gui.watolib.activate_changes import get_trial_expired_message
+from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
 from cmk.gui.watolib.global_settings import (
@@ -140,8 +140,8 @@ class ModeEditSite(WatoMode):
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
 
-        if is_expired_trial() and (self._new or self._site_id != omd_site()):
-            raise MKUserError(None, get_trial_expired_message())
+        if is_free() and (self._new or self._site_id != omd_site()):
+            raise MKUserError(None, get_free_message())
 
         configured_sites = self._site_mgmt.load_sites()
 
@@ -738,8 +738,8 @@ class ModeDistributedMonitoring(WatoMode):
     def page(self) -> None:
         sites = sort_sites(self._site_mgmt.load_sites())
 
-        if is_expired_trial():
-            html.show_message(get_trial_expired_message())
+        if is_free():
+            html.show_message(get_free_message())
 
         html.div("", id_="message_container")
         with table_element(

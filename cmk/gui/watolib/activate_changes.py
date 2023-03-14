@@ -48,11 +48,10 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
-from cmk.utils.licensing.state import is_expired_trial, is_licensed
+from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
-from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -113,20 +112,6 @@ from cmk.gui.watolib.site_changes import SiteChanges
 
 from cmk.bi.type_defs import frozen_aggregations_dir
 
-if not is_raw_edition():  # TODO solve this via registration
-    from cmk.utils.cee.licensing.helper import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        get_num_services_for_trial_free_edition,
-        service_reducing_change_pending,
-    )
-    from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        load_verified_response,
-    )
-    from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        licensing_user_effect_expired_trial,
-        licensing_user_effect_licensed,
-    )
-
-
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
 PHASE_INITIALIZED = "initialized"  # Process has been initialized (not in thread yet)
@@ -169,7 +154,7 @@ class MKLicensingError(Exception):
     pass
 
 
-def get_trial_expired_message() -> str:
+def get_free_message() -> str:
     return _(
         "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
         "Your Checkmk installation does not allow distributed setups after the 30-day trial period. "
@@ -1591,8 +1576,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             log_audit("activate-changes", "Started activation of site %s" % self._site_id)
 
-            if is_expired_trial() and self._site_id != omd_site():
-                raise MKGeneralException(get_trial_expired_message())
+            if is_free() and self._site_id != omd_site():
+                raise MKGeneralException(get_free_message())
 
             if self.is_sync_needed(self._site_id):
                 self._synchronize_site()
@@ -2699,17 +2684,8 @@ def get_restapi_response_for_activation_id(
 
 
 def _licensing_allows_activation(changes: Sequence[tuple[str, Mapping[str, Any]]]) -> None:
-    # TODO: cleanup conditional imports and solve this via registration
-    if not is_cloud_edition():
-        return
-    if is_expired_trial():
-        effect = licensing_user_effect_expired_trial(get_num_services_for_trial_free_edition())
-        if effect.block and not service_reducing_change_pending(changes):
-            raise MKLicensingError(effect.block.message)
-
-    if is_licensed() and (verified_response := load_verified_response()) is not None:
-        if (effect := licensing_user_effect_licensed(verified_response.response)).block:
-            raise MKLicensingError(effect.block.message)
+    if block_effect := get_licensing_user_effect(changes=changes).block:
+        raise MKLicensingError(block_effect.message)
 
 
 def activate_changes_start(

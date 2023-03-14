@@ -2576,9 +2576,6 @@ def test_get_inventory_display_hint() -> None:
 def test_view_page(
     logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    if not cmk_version.is_raw_edition():
-        # needed for visuals.load()
-        cmk.utils.paths.local_reports_dir.mkdir(parents=True, exist_ok=True)
     wsgi_app = logged_in_admin_wsgi_app
 
     def _prepend(prefix, dict_):

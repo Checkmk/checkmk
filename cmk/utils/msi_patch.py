@@ -21,7 +21,7 @@ _UUID_REGEX: Final = re.compile(
     "^{[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}}", re.I
 )
 
-_EXPECTED_WIN_VERSION: Final = "601"  # Windows 7: must be in sync with Windows Agent product.wxs
+_EXPECTED_WIN_VERSION: Final = "600"  # this value must be in sync with Windows Agent product.wxs
 _MSI_WIN_VERSION_TEMPLATE: Final = "( VersionNT >= {} )"  # must be in sync with product.wxs
 
 

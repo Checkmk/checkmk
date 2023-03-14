@@ -598,17 +598,6 @@ def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> Non
 # Load all users visuals just in order to declare permissions of custom visuals
 # TODO: Use regular load logic here, e.g. _load_custom_user_visuals()
 def declare_custom_permissions(what: VisualTypeName) -> None:
-    declare_user_visuals_permissons(what)
-    declare_packaged_visuals_permissons(what)
-
-
-def declare_packaged_visuals_permissons(what: VisualTypeName) -> None:
-    for dirname in _get_local_path(what).iterdir():
-        for name, visual in store.try_load_file_from_pickle_cache(dirname, default={}).items():
-            declare_visual_permission(what, name, visual)
-
-
-def declare_user_visuals_permissons(what: VisualTypeName) -> None:
     for dirpath in cmk.utils.paths.profile_dir.iterdir():
         try:
             if dirpath.is_dir():

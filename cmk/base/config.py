@@ -4442,6 +4442,14 @@ class ConfigCache:
         servicedesc: str,
         part_of_clusters: list[HostName] | None = None,
     ) -> HostName:
+        """Compute the effective host (node or cluster) of a service
+
+        This is the host where the service is shown at, at the one that triggers the checking.
+
+        Determine whether a service (found on the given node) is a clustered service.
+        If yes, return the cluster host of the service.
+        If no, return the host name of the node.
+        """
         key = (hostname, servicedesc, tuple(part_of_clusters) if part_of_clusters else None)
         if (actual_hostname := self._host_of_clustered_service_cache.get(key)) is not None:
             return actual_hostname
@@ -4459,10 +4467,6 @@ class ConfigCache:
         servicedesc: str,
         part_of_clusters: list[HostName] | None = None,
     ) -> HostName:
-        """Return hostname to assign the service to
-        Determine wether a service (found on a physical host) is a clustered
-        service and - if yes - return the cluster host of the service. If no,
-        returns the hostname of the physical host."""
         if part_of_clusters:
             the_clusters = part_of_clusters
         else:

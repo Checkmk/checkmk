@@ -24,15 +24,31 @@ from tests.testlib.site import Site
 ImportName = NewType("ImportName", "str")
 
 
+def _get_python_version_from_defines_make() -> VersionInfo:
+    with (repo_path() / "defines.make").open() as defines:
+        python_version = (
+            [line for line in defines.readlines() if re.match(r"^PYTHON_VERSION .*:=", line)][0]
+            .split(":=")[1]
+            .strip()
+        )
+    return VersionInfo.parse(python_version)
+
+
 class PipCommand(NamedTuple):
     command: list[str]
     needs_target_as_commandline: bool
 
 
+PYTHON_VERSION = _get_python_version_from_defines_make()
+
 SUPPORTED_PIP_CMDS: tuple[PipCommand, ...] = (
     PipCommand(["python3", "-m", "pip"], True),
-    PipCommand(["pip3"], False),  # Target is set in the wrapper script as cmd line
-    PipCommand(["pip3.9"], False),  # Target is set in the wrapper script as cmd line
+    PipCommand(
+        [f"pip{PYTHON_VERSION.major}"], False
+    ),  # Target is set in the wrapper script as cmd line
+    PipCommand(
+        [f"pip{PYTHON_VERSION.major}.{PYTHON_VERSION.minor}"], False
+    ),  # Target is set in the wrapper script as cmd line
 )
 
 
@@ -124,16 +140,6 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
         import_names.extend(_get_import_names_from_dist_name(dist_name))
     assert import_names
     return import_names
-
-
-def _get_python_version_from_defines_make() -> VersionInfo:
-    with (repo_path() / "defines.make").open() as defines:
-        python_version = (
-            [line for line in defines.readlines() if re.match(r"^PYTHON_VERSION .*:=", line)][0]
-            .split(":=")[1]
-            .strip()
-        )
-    return VersionInfo.parse(python_version)
 
 
 def test_01_python_interpreter_exists(site: Site) -> None:

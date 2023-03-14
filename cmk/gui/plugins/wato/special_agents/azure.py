@@ -30,7 +30,7 @@ from cmk.gui.valuespec import (
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent
-ALL_AZURE_SERVICES: list[tuple[str, str]] = [
+RAW_AZURE_SERVICES: Final = [
     ("users_count", _("Users in the Active Directory")),
     ("ad_connect", _("AD Connect Sync")),
     ("app_registrations", _("App Registrations")),
@@ -44,14 +44,19 @@ ALL_AZURE_SERVICES: list[tuple[str, str]] = [
     ("Microsoft.DBforPostgreSQL/servers", _("Database for PostgreSQL")),
     ("Microsoft.Network/trafficmanagerprofiles", _("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", _("Load Balancer")),
+]
+
+CCE_AZURE_SERVICES: Final = [
     ("Microsoft.RecoveryServices/vaults", _("Recovery Services Vault")),
     ("Microsoft.Network/applicationGateways", _("Application Gateway")),
 ]
 
-PLUS_ONLY_AZURE_SERVICES: Final = {
-    "Microsoft.RecoveryServices/vaults",
-    "Microsoft.Network/applicationGateways",
-}
+
+def get_azure_services() -> list[tuple[str, str]]:
+    if is_cloud_edition():
+        return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
+
+    return RAW_AZURE_SERVICES
 
 
 def _special_agents_azure_azure_explicit_config():
@@ -109,7 +114,7 @@ def _migrate_services(data):
     if "services" not in data:
         # Services selection was introduced after Azure monitoring so we want that the users with an
         # older version will have all services enabled as it was before this change
-        data["services"] = [service_id for service_id, _service_name in get_filtered_services()]
+        data["services"] = [service_id for service_id, _service_name in get_azure_services()]
     return data
 
 
@@ -232,24 +237,17 @@ rulespec_registry.register(
 )
 
 
-def get_filtered_services() -> list[tuple[str, str]]:
-    if is_cloud_edition():
-        return ALL_AZURE_SERVICES
-
-    return [service for service in ALL_AZURE_SERVICES if service[0] not in PLUS_ONLY_AZURE_SERVICES]
-
-
 def get_services_vs() -> tuple[str, ValueSpec]:
     return (
         "services",
         ListChoice(
             title=_("Azure services to monitor"),
-            choices=get_filtered_services(),
+            choices=get_azure_services(),
             # users_count, ad_connect and app_registration are disabled by default because they
             # require special permissions on the Azure app (Graph API permissions + admin consent).
             default_value=[
                 s[0]
-                for s in get_filtered_services()
+                for s in get_azure_services()
                 if s[0] not in {"users_count", "ad_connect", "app_registrations"}
             ],
             allow_empty=True,

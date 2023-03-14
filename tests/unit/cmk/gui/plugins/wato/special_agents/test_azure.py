@@ -5,7 +5,11 @@
 
 import copy
 
-from cmk.gui.plugins.wato.special_agents.azure import _migrate_services, ALL_AZURE_SERVICES
+from cmk.gui.plugins.wato.special_agents.azure import (
+    _migrate_services,
+    CCE_AZURE_SERVICES,
+    RAW_AZURE_SERVICES,
+)
 
 from cmk.special_agents.agent_azure import ALL_METRICS
 
@@ -31,7 +35,9 @@ def test_migrate_services_already_migrated():
 def test_all_services_present_in_gui():
     # Test that all services fetched by the agent are selectable in the GUI.
     # This is to avoid to forget to add a new service in the GUI when adding it to the agent.
-    all_gui_services = [service_id for service_id, _service_name in ALL_AZURE_SERVICES]
+    all_gui_services = [
+        service_id for service_id, _service_name in RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
+    ]
     all_agent_metrics = [metric_id for metric_id, metric_data in ALL_METRICS.items()]
     # "users_count", "ad_connect", "usage_details" and "Microsoft.Compute/virtualMachines" are
     # handled in a custom way by the agent so we are manually adding them

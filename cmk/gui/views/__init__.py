@@ -153,6 +153,7 @@ def load_plugins() -> None:
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("views"))
+    declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("views"))
 
 
 def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches

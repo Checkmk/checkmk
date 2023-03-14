@@ -154,6 +154,7 @@ def load_plugins() -> None:
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("dashboards"))
+    declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("dashboards"))
 
 
 def _register_pre_21_plugin_api() -> None:

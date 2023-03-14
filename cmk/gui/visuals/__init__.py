@@ -247,6 +247,13 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
     )
 
     declare_permission(
+        "general.see_packaged_" + what,
+        _("See packaged %s") % what_plural,
+        _("Is needed for seeing %s that are provided via extension packages.") % what_plural,
+        default_authorized_builtin_role_ids,
+    )
+
+    declare_permission(
         "general.force_" + what,
         _("Modify builtin %s") % what_plural,
         _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
@@ -455,8 +462,16 @@ class _CombinedVisualsCache(Generic[T]):
 
         if self._may_use_cache():
             if (content := self._read_from_cache()) is not None:
+                self._set_permissions(content)
                 return content
         return self._compute_and_write_cache(internal_to_runtime_transformer)
+
+    def _set_permissions(self, content: CustomUserVisuals) -> None:
+        """Make sure that all permissions are known to the current apache process"""
+        for name, visual in content.items():
+            declare_visual_permission(self._visual_type, name[1], visual)
+            if visual["packaged"]:
+                declare_packaged_visual_permission(self._visual_type, name[1], visual)
 
     def _may_use_cache(self) -> bool:
         if not self._content_filename.exists():
@@ -573,25 +588,43 @@ def _get_packaged_visuals(
 ) -> CustomUserVisuals[T]:
     local_visuals: CustomUserVisuals[T] = {}
     local_path = _get_local_path(visual_type)
-    for dirname in local_path.iterdir():
-        for name, raw_visual in store.try_load_file_from_pickle_cache(dirname, default={}).items():
-            visual = internal_to_runtime_transformer(raw_visual)
-            visual["owner"] = UserId.builtin()
-            visual["name"] = name
-            visual["packaged"] = True
+    for dirpath in local_path.iterdir():
+        try:
+            for name, raw_visual in store.try_load_file_from_pickle_cache(
+                dirpath, default={}
+            ).items():
+                visual = internal_to_runtime_transformer(raw_visual)
+                visual["owner"] = UserId.builtin()
+                visual["name"] = name
+                visual["packaged"] = True
 
-            # Declare custom permissions
-            declare_visual_permission(visual_type, name, visual)
+                # Declare custom permissions
+                declare_packaged_visual_permission(visual_type, name, visual)
 
-            local_visuals[(UserId.builtin(), name)] = visual
+                local_visuals[(UserId.builtin(), name)] = visual
+        except Exception:
+            logger.exception(
+                "Error on loading packaged visuals from file %s. Skipping it...", dirpath
+            )
     return local_visuals
 
 
 def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
-    if (visual["public"] or visual["packaged"]) and permname not in permission_registry:
+    if visual["public"] and permname not in permission_registry:
         declare_permission(
             permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
+        )
+
+
+def declare_packaged_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
+    permname = PermissionName(f"{what[:-1]}.{name}_packaged")
+    if visual["packaged"] and permname not in permission_registry:
+        declare_permission(
+            permname,
+            visual["title"] + _(" (packaged)"),
+            visual["description"],
+            default_authorized_builtin_role_ids,
         )
 
 
@@ -608,13 +641,30 @@ def declare_custom_permissions(what: VisualTypeName) -> None:
                 for name, visual in visuals.items():
                     declare_visual_permission(what, name, visual)
         except Exception:
+            logger.exception(
+                "Error on declaring permissions for customized visuals in file %s", dirpath
+            )
+            if active_config.debug:
+                raise
+
+
+def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
+    for dirpath in _get_local_path(what).iterdir():
+        try:
+            for name, visual in store.try_load_file_from_pickle_cache(dirpath, default={}).items():
+                visual["packaged"] = True
+                declare_packaged_visual_permission(what, name, visual)
+        except Exception:
+            logger.exception(
+                "Error on declaring permissions for packaged visuals in file %s", dirpath
+            )
             if active_config.debug:
                 raise
 
 
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
-def available(
+def available(  # pylint: disable=too-many-branches
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], T],
 ) -> dict[VisualName, T]:
@@ -635,8 +685,12 @@ def available(
 
         return False
 
-    def restricted_visual(visualname: VisualName):  # type:ignore[no-untyped-def]
+    def restricted_visual(visualname: VisualName) -> bool:
         permname = f"{permprefix}.{visualname}"
+        return permname in permission_registry and not user.may(permname)
+
+    def restricted_packaged_visual(visualname: VisualName) -> bool:
+        permname = f"{permprefix}.{visualname}_packaged"
         return permname in permission_registry and not user.may(permname)
 
     # 1. user's own visuals, if allowed to edit visuals
@@ -674,6 +728,14 @@ def available(
                 and user_may(u, "general.publish_" + what)
                 and not restricted_visual(n)
             ):
+                visuals[n] = visual
+
+    # 5. packaged visuals
+    if user.may("general.see_packaged_" + what):
+        for (u, n), visual in all_visuals.items():
+            if not visual["packaged"]:
+                continue
+            if not restricted_packaged_visual(n):
                 visuals[n] = visual
 
     return visuals
@@ -1081,11 +1143,14 @@ def _partition_visuals(
 
     my_visuals, foreign_visuals, builtin_visuals, packaged_visuals = [], [], [], []
     for (owner, visual_name) in keys_sorted:
-        if owner == UserId.builtin() and not user.may(f"{what[:-1]}.{visual_name}"):
+        visual = visuals[(owner, visual_name)]
+        if owner == UserId.builtin() and (
+            (not visual["packaged"] and not user.may(f"{what[:-1]}.{visual_name}"))
+            or (visual["packaged"] and not user.may(f"{what[:-1]}.{visual_name}_packaged"))
+        ):
             continue  # not allowed to see this view
 
-        visual = visuals[(owner, visual_name)]
-        if visual["packaged"]:
+        if visual["packaged"] and user.may("general.see_packaged_%s" % what):
             packaged_visuals.append((owner, visual_name, visual))
             continue
 

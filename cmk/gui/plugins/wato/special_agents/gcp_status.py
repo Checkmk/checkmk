@@ -12,10 +12,7 @@ from cmk.gui.valuespec import Dictionary, ListChoice
 
 
 def _regions_to_monitor() -> list[tuple[str, str]]:
-    return [
-        (k, f"{v} | {k}")
-        for k, v in sorted(gcp_constants.RegionMap.items(), key=lambda item: item[1])
-    ]
+    return [(k, f"{k} | {v}") for k, v in sorted(gcp_constants.RegionMap.items())]
 
 
 def _valuespec_special_agents_gcp_status() -> Dictionary:

@@ -44,7 +44,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.plugins.openapi.utils import serve_json
 
 PERMISSIONS = permissions.Perm("wato.groups")
@@ -123,7 +123,7 @@ def list_groups(params: Mapping[str, Any]) -> Response:
     constructors.object_href("host_group_config", "{name}"),
     ".../delete",
     method="delete",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
@@ -168,7 +168,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     constructors.object_href("host_group_config", "{name}"),
     ".../update",
     method="put",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     etag="both",
     response_schema=response_schemas.HostGroup,
     request_schema=request_schemas.UpdateGroup,
@@ -215,7 +215,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=response_schemas.HostGroup,
     etag="output",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
 def get(params: Mapping[str, Any]) -> Response:

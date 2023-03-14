@@ -1774,12 +1774,19 @@ _mrpe_get_interval() {
     echo "${1}" | grep -E '^\([^)]*\)' | sed -n 's/^.*interval=\([^:)]*\).*$/\1/p'
 }
 
+_mrpe_normalize_spaces() {
+    # watch out:
+    # * [:blank:] does not include \t on AIX
+    # * [:space:] does include \n on Linux
+    tr -s '\t' ' '
+}
+
 run_remote_plugins() {
     configfile="${1}"
     prefix="${2}"
     [ -f "${configfile}" ] || return
 
-    _non_comment_lines "${configfile}" | tr '[:blank:]' ' ' | while read -r descr rest; do
+    _non_comment_lines "${configfile}" | _mrpe_normalize_spaces | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
         cmdline="${rest#\(*\) }"
 

@@ -14,6 +14,8 @@ from cmk.utils.paths import log_dir, omd_root
 
 
 def init_logging() -> logging.Logger:
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
+
     formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
 
     handler = logging.FileHandler(filename=Path(log_dir, "licensing.log"), encoding="utf-8")

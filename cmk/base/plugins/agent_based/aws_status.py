@@ -38,7 +38,9 @@ class TitleType(enum.StrEnum):
 
 
 _IGNORE_ENTRIES_OLDER_THAN = datetime.timedelta(days=3)  # Product-Management decision
-
+_NO_ISSUES = v1.Result(
+    state=v1.State.OK, summary="No known issues. Details: http://status.aws.amazon.com"
+)
 AWS_REGIONS_MAP: typing.Final = dict(aws_constants.AWSRegions)
 
 
@@ -154,7 +156,7 @@ def _check_aws_status(
         for group in _group_by_service_identifier(relevant_entries):
             yield from _check_aws_status_for_service(group)
     else:
-        yield v1.Result(state=v1.State.OK, summary="No issues")
+        yield _NO_ISSUES
 
 
 def _restrict_to_region(entries: list[Entry], region: str) -> list[Entry]:

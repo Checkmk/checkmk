@@ -10,6 +10,10 @@ from pydantic import BaseModel
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
+_NO_ISSUES = Result(
+    state=State.OK, summary="No known issues. Details: https://azure.status.microsoft/en-us/status"
+)
+
 
 class AzureIssue(BaseModel, frozen=True):
     region: str
@@ -54,7 +58,7 @@ def check_azure_status(item: str, section: AzureStatusesPerRegion) -> CheckResul
         return
 
     if not issues:
-        yield Result(state=State.OK, summary=f"No issues: {section.link}")
+        yield _NO_ISSUES
         return
 
     issue_string = "issue" if len(issues) == 1 else "issues"

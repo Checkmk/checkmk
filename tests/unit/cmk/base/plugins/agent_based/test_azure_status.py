@@ -10,6 +10,7 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.azure_status import (
+    _NO_ISSUES,
     AzureIssue,
     AzureStatusesPerRegion,
     check_azure_status,
@@ -91,7 +92,7 @@ def test_discover_azure_status(
         pytest.param(
             "Central US",
             AZURE_STATUS,
-            [Result(state=State.OK, summary="No issues: https://status.azure.com/en-us/status/")],
+            [_NO_ISSUES],
             id="no_issues",
         ),
         pytest.param(

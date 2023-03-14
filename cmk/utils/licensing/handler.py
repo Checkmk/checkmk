@@ -68,43 +68,12 @@ class LicensingHandler(abc.ABC):
     def message(self) -> str:
         raise NotImplementedError()
 
-    def _get_num_services_for_trial_or_free(self):
-        raise NotImplementedError()
-
+    @abc.abstractmethod
     def effect_core(self, num_services: int) -> UserEffect:
-        if (license_state := self.state) is LicenseState.TRIAL:
-            return self._get_trial_user_effect(num_services)
-        if license_state is LicenseState.FREE:
-            return self._get_free_user_effect(num_services, [])
-        if license_state is LicenseState.LICENSED:
-            return self._get_licensed_user_effect()
-        if license_state is LicenseState.UNLICENSED:
-            return self._get_unlicensed_user_effect()
         raise NotImplementedError()
 
+    @abc.abstractmethod
     def effect(self, changes: PendingChanges | None = None) -> UserEffect:
-        if (license_state := self.state) is LicenseState.TRIAL:
-            return self._get_trial_user_effect(self._get_num_services_for_trial_or_free())
-        if license_state is LicenseState.FREE:
-            return self._get_free_user_effect(
-                self._get_num_services_for_trial_or_free(), changes if changes else []
-            )
-        if license_state is LicenseState.LICENSED:
-            return self._get_licensed_user_effect()
-        if license_state is LicenseState.UNLICENSED:
-            return self._get_unlicensed_user_effect()
-        raise NotImplementedError()
-
-    def _get_trial_user_effect(self, num_services: int) -> UserEffect:
-        raise NotImplementedError()
-
-    def _get_free_user_effect(self, num_services: int, changes: PendingChanges) -> UserEffect:
-        raise NotImplementedError()
-
-    def _get_licensed_user_effect(self) -> UserEffect:
-        raise NotImplementedError()
-
-    def _get_unlicensed_user_effect(self) -> UserEffect:
         raise NotImplementedError()
 
     @property

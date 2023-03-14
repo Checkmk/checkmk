@@ -12,6 +12,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal, NotRequired, TypedDict
 
+from pydantic import BaseModel
+
 from .targets import TargetId
 
 
@@ -38,3 +40,15 @@ class Job:
     config: JobConfig
     local_id: str
     id: str
+
+
+class JobState(BaseModel, frozen=True):
+    state: str | None
+    started: float | None
+    output: str
+    bytes_per_second: float | None = None
+    finished: float | None = None
+    next_schedule: str | float | None = None
+    pid: int | None = None
+    size: int | None = None
+    success: bool = False

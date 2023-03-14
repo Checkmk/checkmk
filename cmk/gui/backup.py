@@ -23,13 +23,12 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import cast, Final, Generic, TypeVar
 
-from pydantic import BaseModel
 from typing_extensions import assert_never
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
-from cmk.utils.backup.job import JobConfig, ScheduleConfig
+from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Params, S3Target
 from cmk.utils.backup.targets.azure_blob_storage import (
@@ -243,18 +242,6 @@ class Config:
 #   '----------------------------------------------------------------------'
 
 
-class StateConfig(BaseModel):
-    state: str | None
-    started: float | None
-    output: str
-    bytes_per_second: float | None = None
-    finished: float | None = None
-    next_schedule: str | float | None = None
-    pid: int | None = None
-    size: int | None = None
-    success: bool = False
-
-
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
 class MKBackupJob(abc.ABC):
     @classmethod
@@ -273,11 +260,11 @@ class MKBackupJob(abc.ABC):
     def cleanup(self) -> None:
         self.state_file_path().unlink(missing_ok=True)
 
-    def state(self) -> StateConfig:
+    def state(self) -> JobState:
         try:
-            state = StateConfig.parse_file(self.state_file_path())
+            state = JobState.parse_file(self.state_file_path())
         except FileNotFoundError:
-            state = StateConfig(
+            state = JobState(
                 state=None,
                 started=None,
                 output="",

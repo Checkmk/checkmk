@@ -102,6 +102,9 @@ _AGENT_OUTPUT_2 = [
     ["MSSQL_SQL2000MT02", "config", "8.0.2000.5", "Standard Edition", ""],
     ["MSSQL_SQL2000MT02", "state", "1", ""],
     ["MSSQL_SQL2000MT02", "details", "8.0.4053.23", "RTM", "Standard Edition (64-bit)"],
+    ["MSSQL_SQL2022MT02", "config", "16.0.1000.6", "Standard Edition", ""],
+    ["MSSQL_SQL2022MT02", "state", "1", "Connecting using provider msoledbsql."],
+    ["MSSQL_SQL2022MT02", "details", "16.0.4003.1", "RTM", "Standard Edition (64-bit)"],
 ]
 
 
@@ -128,6 +131,7 @@ _AGENT_OUTPUT_2 = [
                 Service(item="SQL2016MT02"),
                 Service(item="SQL2017MT02"),
                 Service(item="SQL2019MT02"),
+                Service(item="SQL2022MT02"),
             ],
         ),
     ],
@@ -249,6 +253,16 @@ def test_discover_mssql_instance(fix_register, string_table, expected_result):
                 Result(
                     state=State.OK,
                     summary="Version: Microsoft SQL Server 2019 (RTM) (15.0.4053.23) - Standard Edition (64-bit)",
+                )
+            ],
+        ),
+        (
+            _AGENT_OUTPUT_2,
+            "SQL2022MT02",
+            [
+                Result(
+                    state=State.OK,
+                    summary="Version: Microsoft SQL Server 2022 (RTM) (16.0.4003.1) - Standard Edition (64-bit)",
                 )
             ],
         ),

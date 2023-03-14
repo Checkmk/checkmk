@@ -5,6 +5,7 @@
 
 import calendar
 import dataclasses
+import datetime
 import enum
 import itertools
 import time
@@ -36,9 +37,7 @@ class TitleType(enum.StrEnum):
     disruption = "Service disruption"
 
 
-Seconds = typing.NewType("Seconds", float)
-
-_IGNORE_ENTRIES_OLDER_THAN = Seconds(60 * 60 * 24 * 3)  # Product-Management decision
+_IGNORE_ENTRIES_OLDER_THAN = datetime.timedelta(days=3)  # Product-Management decision
 
 AWS_REGIONS_MAP: typing.Final = dict(aws_constants.AWSRegions)
 
@@ -138,11 +137,11 @@ def discover_aws_status(section: Section) -> type_defs.DiscoveryResult:
 
 
 def check_aws_status(item: str, section: Section) -> type_defs.CheckResult:
-    yield from _check_aws_status(Seconds(time.time()), item, section.aws_rss_feed)
+    yield from _check_aws_status(datetime.datetime.now(tz=datetime.UTC), item, section.aws_rss_feed)
 
 
 def _check_aws_status(
-    current_time: Seconds,
+    current_time: datetime.datetime,
     item: str,
     rss_feed: AWSRSSFeed,
 ) -> type_defs.CheckResult:
@@ -170,13 +169,13 @@ def _sort_newest_entry_first(entries: list[Entry]) -> SortedEntries:
 
 
 def _obtain_recent_entries(
-    current_time: Seconds,
+    current_time: datetime.datetime,
     entries: SortedEntries,
-    ignore_entries_older_than: Seconds = _IGNORE_ENTRIES_OLDER_THAN,
+    ignore_entries_older_than: datetime.timedelta = _IGNORE_ENTRIES_OLDER_THAN,
 ) -> SortedEntries:
     smallest_accepted_time = current_time - ignore_entries_older_than
     for i, e in enumerate(entries):
-        if calendar.timegm(e.published_parsed) < smallest_accepted_time:
+        if calendar.timegm(e.published_parsed) < smallest_accepted_time.timestamp():
             return SortedEntries(entries[:i])
     return entries
 

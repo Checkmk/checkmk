@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import random
 import time
 
@@ -12,7 +13,7 @@ import pytest
 from cmk.base.plugins.agent_based import aws_status
 from cmk.base.plugins.agent_based.agent_based_api import v1
 
-CURRENT_TIME = aws_status.Seconds(1670000000.0)
+CURRENT_TIME = datetime.datetime.utcfromtimestamp(1670000000.0)
 
 
 def _random_time(oldest: float, newest: float) -> time.struct_time:
@@ -26,7 +27,7 @@ class EntryFactory(pydantic_factories.ModelFactory):
     def published_parsed(cls) -> time.struct_time:
         return _random_time(
             oldest=1.0,
-            newest=CURRENT_TIME,
+            newest=CURRENT_TIME.timestamp(),
         )
 
 
@@ -34,8 +35,8 @@ class RecentEntryFactory(EntryFactory):
     @classmethod
     def published_parsed(cls) -> time.struct_time:
         return _random_time(
-            oldest=CURRENT_TIME - aws_status._IGNORE_ENTRIES_OLDER_THAN + 1.0,
-            newest=CURRENT_TIME,
+            oldest=(CURRENT_TIME - aws_status._IGNORE_ENTRIES_OLDER_THAN).timestamp() + 1.0,
+            newest=CURRENT_TIME.timestamp(),
         )
 
 
@@ -44,7 +45,7 @@ class OutdatedEntryFactory(EntryFactory):
     def published_parsed(cls) -> time.struct_time:
         return _random_time(
             oldest=1.0,
-            newest=CURRENT_TIME - aws_status._IGNORE_ENTRIES_OLDER_THAN - 1.0,
+            newest=(CURRENT_TIME - aws_status._IGNORE_ENTRIES_OLDER_THAN).timestamp() - 1.0,
         )
 
 

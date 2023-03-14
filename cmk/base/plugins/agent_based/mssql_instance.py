@@ -11,6 +11,20 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 Section = Mapping[str, Mapping[str, str]]
 
 
+MSSQL_VERSION_MAPPING = {
+    "8": "2000",
+    "9": "2005",
+    "10": "2008",
+    "10.50": "2008R2",
+    "11": "2012",
+    "12": "2014",
+    "13": "2016",
+    "14": "2017",
+    "15": "2019",
+    "16": "2022",
+}
+
+
 def parse_mssql_instance(string_table: StringTable) -> Section:
     parsed: Dict[str, Dict[str, str]] = {}
     for line in string_table:
@@ -69,29 +83,15 @@ def parse_mssql_instance(string_table: StringTable) -> Section:
 
 
 def _parse_prod_version(entry: str) -> str:
-    if entry.startswith("8."):
-        version = "2000"
-    elif entry.startswith("9."):
-        version = "2005"
-    elif entry.startswith("10.0"):
-        version = "2008"
-    elif entry.startswith("10.50"):
-        version = "2008R2"
-    elif entry.startswith("11."):
-        version = "2012"
-    elif entry.startswith("12."):
-        version = "2014"
-    elif entry.startswith("13."):
-        version = "2016"
-    elif entry.startswith("14."):
-        version = "2017"
-    elif entry.startswith("15."):
-        version = "2019"
-    elif entry.startswith("16."):
-        version = "2022"
-    else:
-        return "unknown[%s]" % entry
-    return "Microsoft SQL Server %s" % version
+    major_version, minor_version = entry.split(".", 2)[:2]
+    if not (
+        version := MSSQL_VERSION_MAPPING.get(
+            f"{major_version}.{minor_version}",
+            MSSQL_VERSION_MAPPING.get(major_version),
+        )
+    ):
+        return f"unknown[{entry}]"
+    return f"Microsoft SQL Server {version}"
 
 
 register.agent_section(

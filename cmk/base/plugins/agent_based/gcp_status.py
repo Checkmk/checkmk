@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 
 BASE_URL = "https://status.cloud.google.com/"
+_NO_ISSUES = Result(state=State.OK, summary=f"No known issues. Details: {BASE_URL}")
 
 
 class DiscoveryParam(pydantic.BaseModel):
@@ -82,7 +83,7 @@ def check(item: str, section: Section) -> CheckResult:
             details=f"{product_description} \n {BASE_URL}{incident.uri}",
         )
     if not relevant_incidents:
-        yield Result(state=State.OK, summary=f"No known issues. Details: {BASE_URL}")
+        yield _NO_ISSUES
 
 
 def discovery(section: Section) -> DiscoveryResult:

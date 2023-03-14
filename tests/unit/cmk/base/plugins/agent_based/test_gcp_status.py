@@ -3,243 +3,155 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: CMK-8322
-# type: ignore
-# pylint: disable-all
 # mypy: disallow_untyped_defs
-import datetime
-
+import pydantic_factories
 import pytest
+
+from cmk.utils import gcp_constants
 
 from cmk.base.plugins.agent_based import gcp_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-# This is an edited incident report from google to facilitate testing. It follows the published schema, but leaves out fields not used by the check.
-# https://status.cloud.google.com/incidents.schema.json
-STRING_TABLE: StringTable = [
-    ['{"date": "2022-07-20"}'],
-    [
-        r"""[
-    {
-        "id": "mLBHeCxhRia17anXCSX1",
-        "number": "14970871909327597787",
-        "begin": "2022-07-19T14:17:00+00:00",
-        "created": "2022-07-20T13:39:01+00:00",
-        "modified": "2022-07-20T13:46:32+00:00",
-        "external_desc": "Secret Manager experienced service unavailability in europe-west2",
-        "most_recent_update": {
-            "created": "2022-07-20T13:44:35+00:00",
-            "modified": "2022-07-20T13:44:36+00:00",
-            "when": "2022-07-20T13:44:35+00:00",
-            "text": "We experienced an issue with Secret Manager beginning at Tuesday, 2022-07-19 07:17 US/Pacific.\nSelf-diagnosis: Customers who had their secrets exclusively in europe-west2 or attempted to create a secret in europe-west2 were seeing UNAVAILABLE / 5xx errors\nThe issue has been resolved for all affected projects as of Tuesday, 2022-07-19 08:47 US/Pacific.\nWe thank you for your patience while we worked on resolving the issue.",
-            "status": "SERVICE_OUTAGE",
-            "affected_locations": [{"title": "London (europe-west2)", "id": "europe-west2"}]
-        },
-        "status_impact": "SERVICE_DISRUPTION",
-        "severity": "medium",
-        "service_key": "kzGfErQK3HzkFhptoeHH",
-        "service_name": "Secret Manager",
-        "affected_products": [{"title": "Secret Manager", "id": "kzGfErQK3HzkFhptoeHH"}],
-        "uri": "incidents/mLBHeCxhRia17anXCSX1",
-        "currently_affected_locations": [],
-        "previously_affected_locations": [{"title": "London (europe-west2)", "id": "europe-west2"}]
-    },
-    {
-        "id": "mLBHeCxhRia17anXCSX1",
-        "number": "14970871909327597787",
-        "begin": "2022-07-09T14:17:00+00:00",
-        "created": "2022-07-20T13:39:01+00:00",
-        "end": "2022-07-10T15:47:00+00:00",
-        "modified": "2022-07-20T13:46:32+00:00",
-        "external_desc": "Secret Manager experienced service unavailability in europe-west2",
-        "most_recent_update": {
-            "created": "2022-07-20T13:44:35+00:00",
-            "modified": "2022-07-20T13:44:36+00:00",
-            "when": "2022-07-20T13:44:35+00:00",
-            "text": "We experienced an issue with Secret Manager beginning at Tuesday, 2022-07-19 07:17 US/Pacific.\nSelf-diagnosis: Customers who had their secrets exclusively in europe-west2 or attempted to create a secret in europe-west2 were seeing UNAVAILABLE / 5xx errors\nThe issue has been resolved for all affected projects as of Tuesday, 2022-07-19 08:47 US/Pacific.\nWe thank you for your patience while we worked on resolving the issue.",
-            "status": "AVAILABLE",
-            "affected_locations": [{"title": "London (europe-west2)", "id": "europe-west2"}, {"title": "Global", "id": "global"}]
-        },
-        "status_impact": "SERVICE_DISRUPTION",
-        "severity": "medium",
-        "service_key": "kzGfErQK3HzkFhptoeHH",
-        "service_name": "Secret Manager",
-        "affected_products": [{"title": "Secret Manager", "id": "kzGfErQK3HzkFhptoeHH"},{"title": "Google Cloud SQL", "id": "hV87iK5DcEXKgWU2kDri"}],
-        "uri": "incidents/mLBHeCxhRia17anXCSX1",
-        "currently_affected_locations": [],
-        "previously_affected_locations": [{"title": "London (europe-west2)", "id": "europe-west2"}, {"title": "Global", "id": "global"}]
-    },
-    {
-        "id": "mLBHeCxhRia17anXCSX1",
-        "number": "14970871909327597787",
-        "begin": "2022-07-19T14:17:00+00:00",
-        "created": "2022-07-20T13:39:01+00:00",
-        "end": "2022-07-19T15:47:00+00:00",
-        "modified": "2022-07-19T13:46:32+00:00",
-        "external_desc": "Secret Manager experienced service\n unavailability in europe-west1",
-        "most_recent_update": {
-            "created": "2022-07-20T13:44:35+00:00",
-            "modified": "2022-07-20T13:44:36+00:00",
-            "when": "2022-07-20T13:44:35+00:00",
-            "text": "We experienced an issue with Secret Manager beginning at Tuesday, 2022-07-19 07:17 US/Pacific.\nSelf-diagnosis: Customers who had their secrets exclusively in europe-west1 or attempted to create a secret in europe-west1 were seeing UNAVAILABLE / 5xx errors\nThe issue has been resolved for all affected projects as of Tuesday, 2022-07-19 08:47 US/Pacific.\nWe thank you for your patience while we worked on resolving the issue.",
-            "status": "AVAILABLE",
-            "affected_locations": [{"title": "London (europe-west1)", "id": "europe-west1"}]
-        },
-        "status_impact": "SERVICE_DISRUPTION",
-        "severity": "medium",
-        "service_key": "kzGfErQK3HzkFhptoeHH",
-        "service_name": "Secret Manager",
-        "affected_products": [{"title": "Secret Manager", "id": "kzGfErQK3HzkFhptoeHH"}],
-        "uri": "incidents/mLBHeCxhRia17anXCSX1",
-        "currently_affected_locations": [],
-        "previously_affected_locations": [{"title": "London (europe-west1)", "id": "europe-west1"}, {"title": "Global", "id": "global"}]
-    }
-]"""
-    ],
-]
+
+class IncidentFactory(pydantic_factories.ModelFactory):
+    __model__ = gcp_status.Incident
+
+
+class AgentOutputFactory(pydantic_factories.ModelFactory):
+    __model__ = gcp_status.AgentOutput
 
 
 @pytest.fixture(name="section", scope="module")
 def _section() -> gcp_status.Section:
-    return gcp_status.parse(STRING_TABLE)
+    # This is an agent output, which is edited to only have a single (unedited) incident.
+    # https://status.cloud.google.com/incidents.schema.json
+    string_table = [
+        [
+            r"""{
+      "discovery_param": {
+        "regions": [
+          "europe-north1"
+        ]
+      },
+      "health_info": [
+        {
+          "id": "rZvZvSKVdDHyWh4dZJ8D",
+          "number": "15564124031412553730",
+          "begin": "2023-03-10T14:09:43+00:00",
+          "created": "2023-03-10T14:26:24+00:00",
+          "end": "2023-03-10T14:54:50+00:00",
+          "modified": "2023-03-10T14:54:50+00:00",
+          "external_desc": "Retry errors for Google BigQuery in europe-north1",
+          "updates": [
+            {
+              "created": "2023-03-10T14:26:17+00:00",
+              "modified": "2023-03-10T14:26:28+00:00",
+              "when": "2023-03-10T14:26:17+00:00",
+              "text": "Summary: Retry errors for Google BigQuery in europe-north1\nDescription: We are experiencing an issue with Google BigQuery.\nOur engineering team continues to investigate the issue.\nWe will provide an update by Friday, 2023-03-10 07:30 US/Pacific with current details.\nDiagnosis: Customers may experience retry errors when running DatasetService.*, TableService.*, BigQueryRead.CreateReadSession, BigQueryRead.ReadRows and BigQueryWrite.* commands for Google BigQuery in europe-north1\nWorkaround: Retry requests",
+              "status": "SERVICE_INFORMATION",
+              "affected_locations": [
+                {
+                  "title": "Finland (europe-north1)",
+                  "id": "europe-north1"
+                }
+              ]
+            }
+          ],
+          "most_recent_update": {
+            "created": "2023-03-10T14:26:17+00:00",
+            "modified": "2023-03-10T14:26:28+00:00",
+            "when": "2023-03-10T14:26:17+00:00",
+            "text": "Summary: Retry errors for Google BigQuery in europe-north1\nDescription: We are experiencing an issue with Google BigQuery.\nOur engineering team continues to investigate the issue.\nWe will provide an update by Friday, 2023-03-10 07:30 US/Pacific with current details.\nDiagnosis: Customers may experience retry errors when running DatasetService.*, TableService.*, BigQueryRead.CreateReadSession, BigQueryRead.ReadRows and BigQueryWrite.* commands for Google BigQuery in europe-north1\nWorkaround: Retry requests",
+            "status": "SERVICE_INFORMATION",
+            "affected_locations": [
+              {
+                "title": "Finland (europe-north1)",
+                "id": "europe-north1"
+              }
+            ]
+          },
+          "status_impact": "SERVICE_INFORMATION",
+          "severity": "low",
+          "service_key": "9CcrhHUcFevXPSVaSxkf",
+          "service_name": "Google BigQuery",
+          "affected_products": [
+            {
+              "title": "Google BigQuery",
+              "id": "9CcrhHUcFevXPSVaSxkf"
+            }
+          ],
+          "uri": "incidents/rZvZvSKVdDHyWh4dZJ8D",
+          "currently_affected_locations": [
+            {
+              "title": "Finland (europe-north1)",
+              "id": "europe-north1"
+            }
+          ],
+          "previously_affected_locations": []
+        }
+      ]
+    }
+    """
+        ]
+    ]
+    return gcp_status.parse(string_table)
 
 
-@pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
 def test_parsing(section: gcp_status.Section) -> None:
-    assert section.date == datetime.datetime(
-        year=2022, month=7, day=20, tzinfo=datetime.timezone.utc
-    )
-    assert section.incidents == [
-        gcp_status.Incident(
-            affected_products=["Secret Manager"],
-            affected_location=["europe-west2"],
-            begin=datetime.datetime(2022, 7, 19, 14, 17, tzinfo=datetime.timezone.utc),
-            end=None,
-            description="Secret Manager experienced service unavailability in europe-west2",
-            is_on_going=True,
-            uri="incidents/mLBHeCxhRia17anXCSX1",
-        ),
-        gcp_status.Incident(
-            affected_products=["Secret Manager", "Google Cloud SQL"],
-            affected_location=["europe-west2", "global"],
-            begin=datetime.datetime(2022, 7, 9, 14, 17, tzinfo=datetime.timezone.utc),
-            end=datetime.datetime(2022, 7, 10, 15, 47, tzinfo=datetime.timezone.utc),
-            description="Secret Manager experienced service unavailability in europe-west2",
-            is_on_going=False,
-            uri="incidents/mLBHeCxhRia17anXCSX1",
-        ),
-        gcp_status.Incident(
-            affected_products=["Secret Manager"],
-            affected_location=["europe-west1"],
-            begin=datetime.datetime(2022, 7, 19, 14, 17, tzinfo=datetime.timezone.utc),
-            end=datetime.datetime(2022, 7, 19, 15, 47, tzinfo=datetime.timezone.utc),
-            description="Secret Manager experienced service unavailability in " "europe-west1",
-            is_on_going=False,
-            uri="incidents/mLBHeCxhRia17anXCSX1",
-        ),
-    ]
+    assert section.discovery_param == gcp_status.DiscoveryParam(regions=["europe-north1"])
+    assert section.data == {
+        "Finland": [
+            gcp_status.Incident(
+                affected_products=[gcp_status.AffectedProduct(title="Google BigQuery")],
+                currently_affected_locations=[gcp_status.AffectedLocation(id="europe-north1")],
+                external_desc="Retry errors for Google BigQuery in europe-north1",
+                uri="incidents/rZvZvSKVdDHyWh4dZJ8D",
+            )
+        ]
+    }
 
 
-@pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
 def test_no_indicents() -> None:
-    section = gcp_status.Section(date=datetime.datetime(year=1999, month=3, day=12), incidents=[])
-    results = list(
-        gcp_status.check(
-            section=section,
-        )
-    )
-    assert results == [
-        Result(
-            state=State.OK,
-            summary="No known incident in the past 3 days https://status.cloud.google.com/",
-        ),
-    ]
+    discovery_param = gcp_status.DiscoveryParam(regions=["us-east"])
+    section = gcp_status.Section(discovery_param=discovery_param, data={})
+    results = list(gcp_status.check(item=discovery_param.regions[0], section=section))
+    assert results == [gcp_status._NO_ISSUES]
 
 
-@pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_one_result_per_incident(section: gcp_status.Section) -> None:
-    results = list(
-        gcp_status.check(
-            section=section,
-        )
+def test_one_incident_per_region() -> None:
+    incident = IncidentFactory.build(
+        currently_affected_locations=[
+            gcp_status.AffectedLocation(id="asia-east1"),
+            gcp_status.AffectedLocation(id="asia-east2"),
+            gcp_status.AffectedLocation(id="asia-northeast1"),
+        ],
     )
+    agent_output = AgentOutputFactory.build(health_info=[incident])
+    section = gcp_status.parse([[agent_output.json(by_alias=True)]])
+    assert all(
+        gcp_constants.RegionMap[l.id_] in section.data
+        for l in incident.currently_affected_locations
+    )
+
+
+def test_result_per_incident() -> None:
+    incident_count = 3
+    item = gcp_constants.RegionMap["asia-east1"]
+    section = gcp_status.Section(
+        discovery_param=gcp_status.DiscoveryParam(regions=[]),
+        data={item: IncidentFactory.batch(size=incident_count)},
+    )
+    results = list(gcp_status.check(item, section=section))
+    assert sum(isinstance(r, Result) and r.state == State.CRIT for r in results) == incident_count
+
+
+def test_result_shows_up_correctly(section: gcp_status.Section) -> None:
+    item = gcp_constants.RegionMap["europe-north1"]
+    results = list(gcp_status.check(item, section=section))
     assert results == [
         Result(
             state=State.CRIT,
-            summary="Secret Manager experienced service unavailability in europe-west2",
-            details="Products: Secret Manager \n Locations: europe-west2, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
-        Result(
-            state=State.WARN,
-            summary="Secret Manager experienced service unavailability in europe-west2",
-            details="Products: Secret Manager, Google Cloud SQL \n Locations: europe-west2, global, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
-        Result(
-            state=State.WARN,
-            summary="Secret Manager experienced service unavailability in europe-west1",
-            details="Products: Secret Manager \n Locations: europe-west1, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
-    ]
-
-
-@pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_indicents_in_selected_time_window(section: gcp_status.Section) -> None:
-    results = list(
-        gcp_status.check(
-            section=section,
+            summary="Retry errors for Google BigQuery in europe-north1",
+            details="Products: Google BigQuery \n https://status.cloud.google.com/incidents/rZvZvSKVdDHyWh4dZJ8D",
         )
-    )
-    assert results == [
-        # always show ongoing incidents
-        Result(
-            state=State.CRIT,
-            summary="Secret Manager experienced service unavailability in europe-west2",
-            details="Products: Secret Manager \n Locations: europe-west2, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
-        Result(
-            state=State.WARN,
-            summary="Secret Manager experienced service unavailability in europe-west1",
-            details="Products: Secret Manager \n Locations: europe-west1, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
-    ]
-
-
-@pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_product_filter(section: gcp_status.Section) -> None:
-    results = list(
-        gcp_status.check(
-            section=section,
-        )
-    )
-    assert results == [
-        Result(state=State.OK, notice="We apply a filter to the monitored GCP services."),
-        Result(
-            state=State.WARN,
-            summary="Secret Manager experienced service unavailability in europe-west2",
-            details="Products: Secret Manager, Google Cloud SQL \n Locations: europe-west2, global, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
-    ]
-
-
-@pytest.mark.skip(reason="Correct behaviour to be discussed. CMK-8322")
-def test_region_filter(section: gcp_status.Section) -> None:
-    results = list(
-        gcp_status.check(
-            section=section,
-        )
-    )
-    # global is special. It is the set of all regions. So it should always come through
-    assert results == [
-        Result(state=State.OK, notice="We apply a filter to the monitored GCP services."),
-        Result(
-            state=State.WARN,
-            summary="Secret Manager experienced service unavailability in europe-west2",
-            details="Products: Secret Manager, Google Cloud SQL \n Locations: europe-west2, global, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
-        Result(
-            state=State.WARN,
-            summary="Secret Manager experienced service unavailability in europe-west1",
-            details="Products: Secret Manager \n Locations: europe-west1, \n https://status.cloud.google.com/incidents/mLBHeCxhRia17anXCSX1",
-        ),
     ]

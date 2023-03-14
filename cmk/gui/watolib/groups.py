@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.type_defs import EventRule, timeperiod_spec_alias
 
 import cmk.gui.hooks as hooks
@@ -64,7 +65,7 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
         raise MKUserError("name", _("Please specify a name of the new group."))
     if " " in name:
         raise MKUserError("name", _("Sorry, spaces are not allowed in group names."))
-    if not re.match(r"^[-a-z0-9A-Z_\.]*$", name):
+    if not re.match(GROUP_NAME_PATTERN, name):
         raise MKUserError(
             "name",
             _("Invalid group name. Only the characters a-z, A-Z, 0-9, _, . and - are allowed."),

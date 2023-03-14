@@ -10,7 +10,7 @@ import marshmallow
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.livestatus_helpers import tables
-from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
+from cmk.utils.regex import GROUP_NAME_PATTERN, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import fields as gui_fields
@@ -261,6 +261,7 @@ class InputHostGroup(InputGroup):
         required=True,
         should_exist=False,
         description="A name used as identifier",
+        pattern=GROUP_NAME_PATTERN,
     )
     alias = fields.String(
         required=True,
@@ -331,6 +332,7 @@ class InputContactGroup(InputGroup):
         required=True,
         example="OnCall",
         description="The name of the contact group.",
+        pattern=GROUP_NAME_PATTERN,
     )
     alias = fields.String(
         required=True,
@@ -397,6 +399,7 @@ class InputServiceGroup(InputGroup):
         required=True,
         description="A name used as identifier",
         should_exist=False,
+        pattern=GROUP_NAME_PATTERN,
     )
     alias = fields.String(
         description="The name used for displaying in the GUI.",

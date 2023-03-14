@@ -35,6 +35,8 @@ URL_CHAR_REGEX = r"^[%s]+$" % URL_CHAR_REGEX_CHARS
 WATO_FOLDER_PATH_NAME_CHARS = r"-\w"
 WATO_FOLDER_PATH_NAME_REGEX = r"^[%s]*$" % WATO_FOLDER_PATH_NAME_CHARS
 
+GROUP_NAME_PATTERN = r"^[-a-z0-9A-Z_\.]*$"
+
 
 def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
     """Compile regex or look it up in already compiled regexes.

@@ -38,10 +38,20 @@ def test_required_alias_field_create(
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
 def test_openapi_groups(
+    base: str,
     monkeypatch: pytest.MonkeyPatch,
     group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + f"/domain-types/{group_type}_group_config/collections/all",
+        params=json.dumps({"name": "Invalid%&name", "alias": "Invalid", "customer": "provider"}),
+        status=400,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
 
     name = _random_string(10)
     alias = _random_string(10)

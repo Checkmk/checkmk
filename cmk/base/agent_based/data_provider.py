@@ -204,12 +204,12 @@ class ParsedSectionsBroker:
 
     @staticmethod
     def resolve(
+        provider: Provider,
         parsed_section_names: Iterable[ParsedSectionName],
-        providers: Iterable[Provider],
     ) -> Mapping[ParsedSectionName, ResolvedResult]:
+        resolver, parser = provider
         return {
             parsed_section_name: resolved
-            for resolver, parser in providers
             for parsed_section_name in parsed_section_names
             if (resolved := resolver.resolve(parser, parsed_section_name)) is not None
         }

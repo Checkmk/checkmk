@@ -16,7 +16,7 @@ class LicenseState(Enum):
     TRIAL = auto()
     FREE = auto()
     LICENSED = auto()
-    EXPIRED = auto()
+    UNLICENSED = auto()
 
 
 @dataclass
@@ -78,8 +78,8 @@ class LicensingHandler(abc.ABC):
             return self._get_free_user_effect(num_services, [])
         if license_state is LicenseState.LICENSED:
             return self._get_licensed_user_effect()
-        if license_state is LicenseState.EXPIRED:
-            return self._get_expired_user_effect()
+        if license_state is LicenseState.UNLICENSED:
+            return self._get_unlicensed_user_effect()
         raise NotImplementedError()
 
     def effect(self, changes: PendingChanges | None = None) -> UserEffect:
@@ -91,8 +91,8 @@ class LicensingHandler(abc.ABC):
             )
         if license_state is LicenseState.LICENSED:
             return self._get_licensed_user_effect()
-        if license_state is LicenseState.EXPIRED:
-            return self._get_expired_user_effect()
+        if license_state is LicenseState.UNLICENSED:
+            return self._get_unlicensed_user_effect()
         raise NotImplementedError()
 
     def _get_trial_user_effect(self, num_services: int) -> UserEffect:
@@ -104,7 +104,7 @@ class LicensingHandler(abc.ABC):
     def _get_licensed_user_effect(self) -> UserEffect:
         raise NotImplementedError()
 
-    def _get_expired_user_effect(self) -> UserEffect:
+    def _get_unlicensed_user_effect(self) -> UserEffect:
         raise NotImplementedError()
 
     @property

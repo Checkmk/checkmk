@@ -1238,10 +1238,20 @@ export function single_label_on_change(select_elem: HTMLSelectElement) {
         add_element_button.click();
     }
 
-    // Automatically open (and focus) the newly added select2 element
+    // Let the new bool dropdown default to the value of the last one
     const new_row = tbody.children[tbody.children.length - 1]!;
-    const last_select_id = "#" + new_row.id.replace("vs_entry", "vs") + "_vs";
-    $(last_select_id).select2("open");
+    const last_bool_elem = document.getElementById(
+        select_elem.id.replace(/_vs$/, "_bool")
+    ) as HTMLSelectElement;
+    const new_bool_elem = document.getElementById(
+        new_row.id.replace("vs_entry", "vs") + "_bool"
+    ) as HTMLSelectElement;
+    new_bool_elem.value = last_bool_elem.value;
+    forms.enable_select2_dropdowns(new_row);
+
+    // Automatically open (and focus) the newly added select2 element
+    const new_vs_select_id = new_bool_elem.id.replace(/_bool$/, "_vs");
+    $("#" + new_vs_select_id).select2("open");
 }
 
 export function toggle_label_row_opacity(

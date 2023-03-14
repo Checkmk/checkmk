@@ -14,6 +14,8 @@ from .werk import Class, Compatibility, Edition, Level, NoWiki, Werk, WerkError
 
 
 class RawWerkV1(BaseModel):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
     class_: str = Field(alias="class")
     component: str
     date: int

@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.werks import load_werk_v1, load_werk_v2, RawWerkV2, WerkError
+from cmk.utils.werks import load_werk_v1, load_werk_v2, RawWerkV1, RawWerkV2, WerkError
 
 WERK = {
     "class": "fix",
@@ -24,6 +24,18 @@ WERK = {
     "edition": "cre",
     "description": [],
 }
+
+
+WERK_V1_MISSING_CLASS = """Title: APT: Fix service discovery when getting unexpected output from apt
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.0.0i1
+Date: 1569225628
+
+"""
 
 
 def write_werk(path: Path, werk_dict: Mapping[str, Any]) -> None:
@@ -202,3 +214,17 @@ this is the `description` with some *formatting.*
         "version": "2.0.0p7",
         "description": "<p>this is the <code>description</code> with some <em>formatting.</em></p>",
     }
+
+
+def _markdown_string_to_werkv1(tmp_path: Path, md: str) -> RawWerkV1:
+    with open(tmp_path / "1234", "w") as test_file:
+        test_file.write(md)
+    return load_werk_v1(tmp_path / "1234", werk_id=1234)
+
+
+def test_parse_werkv1_missing_class(tmp_path: Path) -> None:
+    with pytest.raises(WerkError, match="class\n  field required"):
+        assert _markdown_string_to_werkv1(
+            tmp_path,
+            WERK_V1_MISSING_CLASS,
+        )

@@ -14,27 +14,11 @@ def test_load(site: Site) -> None:
     assert len(werks) > 1000
 
 
-def test_make_sure_werks_have_mandatory_fields(site: Site) -> None:
-    mandatory_werk_fields = {
-        # ATTENTION! If you have to change this list, you have to talk
-        # to the website team first! They rely on those fields.
-        "class",
-        "compatible",
-        "component",
-        "date",
-        "description",
-        "edition",
-        "id",
-        "level",
-        "title",
-        "version",
-    }
-    werks = cmk.utils.werks.load()
-    for werk in werks.values():
-
-        missing_fields = mandatory_werk_fields - set(werk._asdict())
-        if missing_fields:
-            assert False, f"werk {werk} has missing fields: {missing_fields}"
+def test_make_sure_werks_can_be_loaded(site: Site) -> None:
+    # (this test once made sure, that all werk dictionaries have have a fixed
+    # list of fields, as we switched to pydantic models for writing and parsing
+    # werks, pydantic will already make sure that the fields exists)
+    cmk.utils.werks.load()
 
 
 def test_regular_werks(site: Site) -> None:

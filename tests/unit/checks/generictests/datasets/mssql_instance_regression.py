@@ -55,14 +55,18 @@ info = [
     [
         'MSSQL_SQL2000MT02', 'details', '8.0.4053.23', 'RTM',
         'Standard Edition (64-bit)'
-    ]
+    ],
+    ["MSSQL_SQL2022MT02", "config", "16.0.1000.6", "Standard Edition", ""],
+    ["MSSQL_SQL2022MT02", "state", "1", "Connecting using provider msoledbsql."],
+    ["MSSQL_SQL2022MT02", "details", "16.0.4003.1", "RTM", "Standard Edition (64-bit)"],
 ]
 
 discovery = {
     '': [
         ('SQL2000MT02', {}), ('SQL2005MT02', {}), ('SQL2008MT02', {}),
         ('SQL2008R2MT02', {}), ('SQL2012MT02', {}), ('SQL2014MT02', {}),
-        ('SQL2016MT02', {}), ('SQL2017MT02', {}), ('SQL2019MT02', {})
+        ('SQL2016MT02', {}), ('SQL2017MT02', {}), ('SQL2019MT02', {}),
+        ("SQL2022MT02", {}),
     ]
 }
 
@@ -148,6 +152,14 @@ checks = {
                     []
                 )
             ]
-        )
+        ),
+        (
+            "SQL2022MT02", {},
+            (
+                0,
+                "Version: Microsoft SQL Server 2022 (RTM) (16.0.4003.1) - Standard Edition (64-bit)",
+                []
+            ),
+        ),
     ]
 }

@@ -50,8 +50,8 @@ def is_licensed() -> bool:
     return _get_licensing_handler().state is LicenseState.LICENSED
 
 
-def is_expired() -> bool:  # TODO rename to unlicensed
-    return _get_licensing_handler().state is LicenseState.EXPIRED
+def is_unlicensed() -> bool:
+    return _get_licensing_handler().state is LicenseState.UNLICENSED
 
 
 def get_license_state() -> LicenseState:

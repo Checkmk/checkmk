@@ -5,8 +5,7 @@
 
 from __future__ import annotations
 
-from cmk.utils.licensing.state import is_licensed, is_trial
-from cmk.utils.version import is_cloud_edition, is_raw_edition
+from cmk.utils.licensing.registry import get_licensing_user_effect
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
@@ -21,18 +20,6 @@ from cmk.gui.utils.html import HTML
 
 from .debug_vars import debug_vars
 from .generator import HTMLWriter
-
-if not is_raw_edition():  # TODO solve this via registration
-    from cmk.utils.cee.licensing.helper import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        get_num_services_for_trial_free_edition,
-    )
-    from cmk.utils.cee.licensing.state import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        load_verified_response,
-    )
-    from cmk.utils.cee.licensing.user_effects import (  # type: ignore[import]  # pylint: disable=no-name-in-module, import-error
-        licensing_user_effect_licensed,
-        licensing_user_effect_trial,
-    )
 
 
 def top_heading(
@@ -96,19 +83,10 @@ def top_heading(
 
 
 def _may_show_license_expiry(writer: HTMLWriter) -> None:
-    if not is_cloud_edition():  # TODO: cleanup conditional imports and solve this via registration
-        return
-
-    if is_trial():
-        effect = licensing_user_effect_trial(get_num_services_for_trial_free_edition())
-        if effect.header and (set(effect.header.roles).intersection(user.role_ids)):
-            writer.show_warning(effect.header.message)
-        return
-
-    if is_licensed() and (verified_response := load_verified_response()) is not None:
-        effect = licensing_user_effect_licensed(verified_response.response)
-        if effect.header and (set(effect.header.roles).intersection(user.role_ids)):
-            writer.show_warning(effect.header.message)
+    if (header_effect := get_licensing_user_effect().header) and (
+        set(header_effect.roles).intersection(user.role_ids)
+    ):
+        writer.show_warning(header_effect.message)
 
 
 def _make_default_page_state(

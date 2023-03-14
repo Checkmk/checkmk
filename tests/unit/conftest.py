@@ -30,6 +30,7 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
+from cmk.utils.licensing.registry import LicenseState
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
@@ -387,9 +388,10 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
 
 @pytest.fixture(name="is_in_trial_state", scope="module")
 def fixture_is_in_trial_state(monkeypatch_module: pytest.MonkeyPatch) -> None:
-    monkeypatch_module.setattr("cmk.utils.licensing.state.is_licensed", lambda: True)
-    monkeypatch_module.setattr("cmk.utils.licensing.state.is_expired_trial", lambda: False)
-    monkeypatch_module.setattr("cmk.utils.licensing.state.license_status_message", lambda: "")
+    monkeypatch_module.setattr(
+        "cmk.utils.licensing.registry.get_license_state", lambda: LicenseState.TRIAL
+    )
+    monkeypatch_module.setattr("cmk.utils.licensing.registry.get_license_message", lambda: "")
 
 
 @pytest.fixture(name="suppress_license_expiry_header")

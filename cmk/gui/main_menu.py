@@ -8,7 +8,7 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
-from cmk.utils.licensing.state import license_status_message
+from cmk.utils.licensing.registry import get_license_message
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.version import __version__, edition
 
@@ -212,7 +212,7 @@ mega_menu_registry.register(
 
 
 def license_status() -> HTML | str:
-    status_message: HTML | str = license_status_message()
+    status_message: HTML | str = get_license_message()
     if not status_message:
         return ""
     if user.may("wato.licensing"):

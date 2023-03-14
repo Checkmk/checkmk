@@ -8,7 +8,7 @@
 
 from functools import partial
 
-from cmk.utils.licensing.state import register_get_license_state
+from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 import cmk.gui.pages
 from cmk.gui import autocompleters, crash_reporting, dashboard, mobile, views, visuals, wato
@@ -50,7 +50,7 @@ def register_sites_options() -> None:
     )
 
 
-register_get_license_state()
+register_cre_licensing_handler()
 visuals.register(cmk.gui.pages.page_registry)
 views.register(
     permission_section_registry,

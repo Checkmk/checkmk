@@ -248,7 +248,7 @@ class StateConfig(BaseModel):
     output: str
     bytes_per_second: float | None = None
     finished: float | None = None
-    next_schedule: None = None
+    next_schedule: str | float | None = None
     pid: int | None = None
     size: int | None = None
     success: bool = False

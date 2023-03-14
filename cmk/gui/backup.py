@@ -305,7 +305,7 @@ class MKBackupJob(abc.ABC):
         state = self.state()
         return state.state in ["started", "running"] and os.path.exists("/proc/%d" % state.pid)  # type: ignore[str-format]
 
-    def start(self, env: Mapping[str, str] | None = None) -> None:
+    def start(self, **env_updates: str) -> None:
         completed_process = subprocess.run(
             self._start_command(),
             close_fds=True,
@@ -313,7 +313,11 @@ class MKBackupJob(abc.ABC):
             stderr=subprocess.STDOUT,
             stdin=subprocess.DEVNULL,
             encoding="utf-8",
-            env=env,
+            env={
+                # we always need os.environ, otherwise, mkbackup won't start in the site context
+                **os.environ,
+                **env_updates,
+            },
             check=False,
         )
         if completed_process.returncode != 0:
@@ -1959,15 +1963,10 @@ class RestoreJob(MKBackupJob):
         assert self._backup_ident is not None
         return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
 
-    def start(self, env: Mapping[str, str] | None = None) -> None:
-        modified_env: dict[str, str] = {}
-        if env is not None:
-            modified_env.update(env)
-
-        if self._passphrase is not None:
-            modified_env.update(os.environ.copy())
-            modified_env["MKBACKUP_PASSPHRASE"] = self._passphrase.raw
-        super().start(modified_env)
+    def start(self, **env_updates: str) -> None:
+        if self._passphrase:
+            env_updates["MKBACKUP_PASSPHRASE"] = self._passphrase.raw
+        super().start(**env_updates)
 
 
 class PageBackupRestore:

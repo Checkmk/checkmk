@@ -199,36 +199,36 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    # Flattened list of ParsedSectionName, optimization only.
+
+    def __iter(
+        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+    ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
+        for host_key, provider in providers.items():
+            for section_name in ParsedSectionsBroker.resolve(provider, section_names):
+                yield host_key, section_name
+
     parsed_sections_of_interest: Sequence[ParsedSectionName] = list(
         frozenset(
             itertools.chain.from_iterable(sections for (_name, sections) in preliminary_candidates)
         )
     )
+    resolved: Sequence[tuple[HostKey, ParsedSectionName]] = tuple(
+        __iter(parsed_sections_of_interest, providers)
+    )
 
     return _find_host_candidates(
         preliminary_candidates,
         frozenset(
-            ParsedSectionsBroker.resolve(
-                parsed_sections_of_interest,
-                (
-                    provider
-                    for host_key, provider in providers.items()
-                    if host_key.source_type is SourceType.HOST
-                ),
-            )
+            section_name
+            for host_key, section_name in resolved
+            if host_key.source_type is SourceType.HOST
         ),
     ) | _find_mgmt_candidates(
         preliminary_candidates,
         frozenset(
-            ParsedSectionsBroker.resolve(
-                parsed_sections_of_interest,
-                (
-                    provider
-                    for host_key, provider in providers.items()
-                    if host_key.source_type is SourceType.MANAGEMENT
-                ),
-            )
+            section_name
+            for host_key, section_name in resolved
+            if host_key.source_type is SourceType.MANAGEMENT
         ),
     )
 

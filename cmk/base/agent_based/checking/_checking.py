@@ -61,6 +61,7 @@ from cmk.base.agent_based.data_provider import (
     make_providers,
     ParsedSectionsBroker,
     Provider,
+    ResolvedResult,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.inventory import inventorize_status_data_of_real_host
@@ -447,6 +448,12 @@ def get_aggregated_result(
             ),
         )
 
+    def __iter(
+        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+    ) -> Iterable[ResolvedResult]:
+        for provider in providers.values():
+            yield from ParsedSectionsBroker.resolve(provider, section_names).values()
+
     return _AggregatedResult(
         service=service,
         submit=True,
@@ -455,9 +462,7 @@ def get_aggregated_result(
         cache_info=get_cache_info(
             tuple(
                 cache_info
-                for resolved in ParsedSectionsBroker.resolve(
-                    plugin.sections, providers.values()
-                ).values()
+                for resolved in __iter(plugin.sections, providers)
                 if (cache_info := resolved.cache_info) is not None
             )
         ),

@@ -34,7 +34,13 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import HostName, HWSWInventoryParameters, InventoryPluginName, SectionName
+from cmk.utils.type_defs import (
+    HostName,
+    HWSWInventoryParameters,
+    InventoryPluginName,
+    ParsedSectionName,
+    SectionName,
+)
 
 from cmk.checkers import (
     FetcherFunction,
@@ -52,6 +58,7 @@ from cmk.base.agent_based.data_provider import (
     make_providers,
     ParsedSectionsBroker,
     Provider,
+    ResolvedResult,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, get_cache_info, get_section_kwargs
@@ -354,14 +361,18 @@ def _collect_inventory_plugin_items(
                 )
                 continue
 
+            def __iter(
+                section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+            ) -> Iterable[ResolvedResult]:
+                for provider in providers.values():
+                    yield from ParsedSectionsBroker.resolve(provider, section_names).values()
+
             yield ItemsOfInventoryPlugin(
                 items=inventory_plugin_items,
                 raw_cache_info=get_cache_info(
                     tuple(
                         cache_info
-                        for resolved in ParsedSectionsBroker.resolve(
-                            inventory_plugin.sections, providers.values()
-                        ).values()
+                        for resolved in __iter(inventory_plugin.sections, providers)
                         if (cache_info := resolved.cache_info) is not None
                     )
                 ),

@@ -7,7 +7,7 @@
 
 import logging
 from collections.abc import Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, Iterable, NamedTuple
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -48,6 +48,7 @@ from cmk.base.agent_based.confcheckers import (
     SectionPluginMapper,
 )
 from cmk.base.agent_based.data_provider import (
+    ParsedSectionName,
     ParsedSectionsBroker,
     ParsedSectionsResolver,
     Provider,
@@ -704,6 +705,10 @@ def test__check_service_table(
 
 @pytest.mark.usefixtures("fix_register")
 def test__find_candidates() -> None:
+    # This test doesn't test much:
+    #  1. It concentrates on implementation details and private functions.
+    #  2. Because it tests private functions, it also copy-pastes a lot of
+    #     production code!
     providers = {
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names are chosen arbitrarily.
@@ -755,17 +760,21 @@ def test__find_candidates() -> None:
         for parsed_section_name in plugin.sections
     }
 
+    def __iter(
+        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+    ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
+        for host_key, provider in providers.items():
+            for section_name in ParsedSectionsBroker.resolve(provider, section_names):
+                yield host_key, section_name
+
+    resolved = tuple(__iter(parsed_sections_of_interest, providers))
+
     assert discovery._discovered_services._find_host_candidates(
         ((p.name, p.sections) for p in preliminary_candidates),
         frozenset(
-            ParsedSectionsBroker.resolve(
-                parsed_sections_of_interest,
-                (
-                    provider
-                    for host_key, provider in providers.items()
-                    if host_key.source_type is SourceType.HOST
-                ),
-            )
+            section_name
+            for host_key, section_name in resolved
+            if host_key.source_type is SourceType.HOST
         ),
     ) == {
         CheckPluginName("docker_container_status_uptime"),
@@ -778,14 +787,9 @@ def test__find_candidates() -> None:
     assert discovery._discovered_services._find_mgmt_candidates(
         ((p.name, p.sections) for p in preliminary_candidates),
         frozenset(
-            ParsedSectionsBroker.resolve(
-                parsed_sections_of_interest,
-                (
-                    provider
-                    for host_key, provider in providers.items()
-                    if host_key.source_type is SourceType.MANAGEMENT
-                ),
-            )
+            section_name
+            for host_key, section_name in resolved
+            if host_key.source_type is SourceType.MANAGEMENT
         ),
     ) == {
         CheckPluginName("mgmt_docker_container_status_uptime"),

@@ -7,7 +7,6 @@ import fcntl
 import getopt
 import glob
 import grp
-import json
 import os
 import re
 import signal
@@ -22,7 +21,7 @@ from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager, ExitStack
 from hashlib import md5
 from pathlib import Path
-from typing import Any, IO, NamedTuple, NoReturn
+from typing import Any, Final, IO, NamedTuple, NoReturn
 
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
@@ -35,7 +34,7 @@ import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config
-from cmk.utils.backup.job import Job
+from cmk.utils.backup.job import Job, JobState
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.aws_s3_bucket import S3Target
 from cmk.utils.backup.targets.azure_blob_storage import BlobStorageTarget
@@ -59,33 +58,38 @@ from cmk.utils.paths import mkbackup_lock_dir
 # Utility Code #
 ################
 
-g_state: dict[str, Any] | None = None
-
 
 # The state file is in JSON format because it is 1:1 transferred
 # to the Checkmk server through the Checkmk agent.
 class State:
     def __init__(self, path: Path) -> None:
-        self.path = path
+        self.path: Final = path
+        self._state = JobState(
+            state="started",
+            pid=os.getpid(),
+            started=time.time(),
+            output="",
+            bytes_per_second=0,
+        )
+        self._save()
 
-    def save(self, new_attrs: Mapping[str, Any], update: bool = True) -> None:
-        if update:
-            state = _load_state(self.path)
-        else:
-            state = {}
-        state.update(new_attrs)
+    @property
+    def current_state(self) -> JobState:
+        return self._state
+
+    def update_and_save(self, **update: object) -> None:
+        self._state = self._state.copy(update=update)
+        self._save()
+
+    def _save(self) -> None:
         store.save_text_to_file(
             self.path,
-            json.dumps(
-                state,
+            self.current_state.json(
                 sort_keys=True,
                 indent=4,
                 separators=(",", ": "),
             ),
         )
-
-    def load(self) -> dict[str, Any]:
-        return _load_state(self.path)
 
 
 class ProgressLogger:
@@ -107,22 +111,8 @@ class ProgressLogger:
                 weight = weight_per_sec**timedif
                 bps = self._last_bps * weight + this_bps * (1 - weight)
 
-            self._state.save(new_attrs={"bytes_per_second": bps})
+            self._state.update_and_save(bytes_per_second=bps)
             self._last_state_update, self._last_bps = time.time(), bps
-
-
-def _load_state(path: Path) -> dict[str, Any]:
-    global g_state
-    if g_state is None:
-        g_state = json.loads(path.read_text())
-
-    return g_state
-
-
-def add_output(s: str, state: State) -> None:
-    state_content = state.load()
-    state_content["output"] += s
-    state.save(state_content, update=False)
 
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
@@ -149,7 +139,9 @@ class Log:
     def write(self, data: str) -> None:
         self.orig.write(data)
         try:
-            add_output(self.color_replace.sub("", data), self.state)
+            self.state.update_and_save(
+                output=self.state.current_state.output + self.color_replace.sub("", data)
+            )
         except Exception as e:
             self.orig.write("Failed to add output: %s\n" % e)
 
@@ -680,7 +672,6 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
     job = load_job(local_job_id, config)
     target = load_target(config, job.config["target"])
     target.check_ready()
-    state = backup_state(job)
 
     with ExitStack() as stack:
         for cm in [
@@ -688,23 +679,19 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
         ]:
             stack.enter_context(cm)
 
-        init_new_run(state)
+        state = backup_state(job)
         save_next_run(job, state)
 
         if "background" in opts:
             daemon.daemonize()
-            state.save({"pid": os.getpid()})
+            state.update_and_save(pid=os.getpid())
 
         start_logging(state)
         log(f"--- Starting backup ({job.id} to {target.id}) ---")
 
         success = False
         try:
-            state.save(
-                {
-                    "state": "running",
-                },
-            )
+            state.update_and_save(state="running")
             temp_path = target.start_backup(job)
             info = do_site_backup(temp_path, job, state)
             target.finish_backup(info, job)
@@ -724,12 +711,10 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
         finally:
             stop_logging()
-            state.save(
-                {
-                    "state": "finished",
-                    "finished": time.time(),
-                    "success": success,
-                },
+            state.update_and_save(
+                state="finished",
+                finished=time.time(),
+                success=success,
             )
 
 
@@ -797,16 +782,15 @@ def do_site_backup(backup_path: Path, job: Job, state: State) -> SiteBackupInfo:
     return info.info(job, site_id=site)
 
 
-def complete_backup(state: State, info: SiteBackupInfo) -> None:
-    state.save({"size": info.size})
-    state_content = state.load()
-    duration = time.time() - state_content["started"]
+def complete_backup(state_admin: State, info: SiteBackupInfo) -> None:
+    state_admin.update_and_save(size=info.size)
+    duration = time.time() - (state_admin.current_state.started or 0)
     log(
         "--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---"
         % (
             render.timespan(duration),
             render.fmt_bytes(info.size),
-            render.fmt_bytes(state_content["bytes_per_second"]),
+            render.fmt_bytes(state_admin.current_state.bytes_per_second or 0),
         )
     )
 
@@ -826,19 +810,6 @@ def globalize_job_id(local_job_id: str) -> str:
     return "-".join(p.replace("-", "+") for p in parts)
 
 
-def init_new_run(state: State) -> None:
-    state.save(
-        {
-            "state": "started",
-            "pid": os.getpid(),
-            "started": time.time(),
-            "output": "",
-            "bytes_per_second": 0,
-        },
-        update=False,
-    )
-
-
 def save_next_run(job: Job, state: State) -> None:
     schedule_cfg = job.config["schedule"]
     if not schedule_cfg:
@@ -854,7 +825,7 @@ def save_next_run(job: Job, state: State) -> None:
             times.append(schedule.next_scheduled_time(schedule_cfg["period"], timespec))
         next_schedule = min(times)
 
-    state.save({"next_schedule": next_schedule})
+    state.update_and_save(next_schedule=next_schedule)
 
 
 def cleanup_backup_job_states() -> None:
@@ -870,7 +841,6 @@ def cleanup_backup_job_states() -> None:
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = load_target(config, TargetId(target_id))
     target.check_ready()
-    state = restore_state()
 
     with ExitStack() as stack:
         for cm in [
@@ -878,11 +848,11 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
         ]:
             stack.enter_context(cm)
 
-        init_new_run(state)
+        state = restore_state()
 
         if "background" in opts:
             daemon.daemonize()
-            state.save({"pid": os.getpid()})
+            state.update_and_save(pid=os.getpid())
 
         start_logging(state)
 
@@ -893,11 +863,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
         success = False
         try:
-            state.save(
-                {
-                    "state": "running",
-                },
-            )
+            state.update_and_save(state="running")
 
             do_site_restore(backup, state)
             complete_restore(state)
@@ -916,12 +882,10 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
         finally:
             stop_logging()
-            state.save(
-                {
-                    "state": "finished",
-                    "finished": time.time(),
-                    "success": success,
-                },
+            state.update_and_save(
+                state="finished",
+                finished=time.time(),
+                success=success,
             )
 
 
@@ -963,11 +927,10 @@ def do_site_restore(
 
 def complete_restore(state: State) -> None:
     cleanup_backup_job_states()
-    state_content = state.load()
-    duration = time.time() - state_content["started"]
+    duration = time.time() - (state.current_state.started or 0)
     log(
         "--- Restore completed (Duration: %s, IO: %s/s) ---"
-        % (render.timespan(duration), render.fmt_bytes(state_content["bytes_per_second"]))
+        % (render.timespan(duration), render.fmt_bytes(state.current_state.bytes_per_second or 0))
     )
 
 

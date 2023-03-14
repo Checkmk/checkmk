@@ -20,7 +20,7 @@ def main(job_definition_file) {
             cmd_output("git gc");
         }
     }
-    
+
     docker_registry_no_http = DOCKER_REGISTRY.split('://')[1];
 
     /// in order to spoiler spooky effects encountered just
@@ -30,7 +30,7 @@ def main(job_definition_file) {
     build_date = (new SimpleDateFormat("yyyy.MM.dd")).format(new Date());
 
     // FIXME: should be defined elsewhere
-    DOCKER_TAG_FOLDER = "master-latest";
+    DOCKER_TAG_FOLDER = "2.2.0-latest";
 
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
     try {
@@ -45,4 +45,3 @@ def main(job_definition_file) {
     }
 }
 return this;
-

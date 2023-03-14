@@ -7,7 +7,8 @@ from logging import getLogger
 from pathlib import Path
 
 from cmk.utils.backup.config import CMASystemConfig, Config, SiteConfig
-from cmk.utils.backup.type_defs import LocalTargetParams, TargetId
+from cmk.utils.backup.targets import TargetId
+from cmk.utils.backup.targets.local import LocalTargetParams
 from cmk.utils.paths import default_config_dir
 
 from cmk.update_config.plugins.actions.backup import UpdateBackupConfig

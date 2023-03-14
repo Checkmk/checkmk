@@ -5,16 +5,33 @@
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal, TypedDict
 
 from azure.identity import ClientSecretCredential
 from azure.storage.blob import ContainerClient, LinearRetry
 from typing_extensions import assert_never
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
-from cmk.utils.backup.type_defs import BlobStorageCredentials, BlobStorageParams
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.password_store import extract
+from cmk.utils.password_store import extract, PasswordId
+
+
+class BlobStorageADCredentials(TypedDict):
+    tenant_id: str
+    client_id: str
+    client_secret: PasswordId
+
+
+BlobStorageCredentials = (
+    tuple[Literal["shared_key"], PasswordId]
+    | tuple[Literal["active_directory"], BlobStorageADCredentials]
+)
+
+
+class BlobStorageParams(TypedDict):
+    storage_account_name: str
+    container: str
+    credentials: BlobStorageCredentials
 
 
 class BlobStorage:

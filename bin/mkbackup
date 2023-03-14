@@ -35,11 +35,13 @@ import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config
+from cmk.utils.backup.job import Job
+from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.aws_s3_bucket import S3Target
 from cmk.utils.backup.targets.azure_blob_storage import BlobStorageTarget
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.targets.protocol import Target
-from cmk.utils.backup.type_defs import Backup, Job, SiteBackupInfo, TargetId
+from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
 from cmk.utils.backup.utils import (
     current_site_id,
     log,

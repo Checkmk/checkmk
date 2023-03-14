@@ -7,7 +7,10 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Protocol
 
-from cmk.utils.backup.type_defs import Backup, Job, SiteBackupInfo, TargetId
+from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
+
+from ..job import Job
+from . import TargetId
 
 
 class Target(Protocol):

@@ -8,15 +8,9 @@ import os
 import shutil
 from collections.abc import Iterator
 from pathlib import Path
+from typing import TypedDict
 
-from cmk.utils.backup.type_defs import (
-    Backup,
-    Job,
-    JobConfig,
-    LocalTargetParams,
-    SiteBackupInfo,
-    TargetId,
-)
+from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
 from cmk.utils.backup.utils import (
     BACKUP_INFO_FILENAME,
     current_site_id,
@@ -29,6 +23,14 @@ from cmk.utils.backup.utils import (
 )
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.version import is_cma
+
+from ..job import Job, JobConfig
+from . import TargetId
+
+
+class LocalTargetParams(TypedDict):
+    path: str
+    is_mountpoint: bool
 
 
 def archive_suffix(config: JobConfig) -> str:

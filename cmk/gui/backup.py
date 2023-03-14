@@ -29,23 +29,24 @@ from typing_extensions import assert_never
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
-from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Target
-from cmk.utils.backup.targets.azure_blob_storage import BlobStorage, BlobStorageTarget
-from cmk.utils.backup.targets.local import LocalTarget
-from cmk.utils.backup.targets.protocol import Target as TargetProtocol
-from cmk.utils.backup.targets.remote_interface import RemoteTarget, TRemoteStorage
-from cmk.utils.backup.type_defs import (
+from cmk.utils.backup.job import JobConfig, ScheduleConfig
+from cmk.utils.backup.targets import TargetId
+from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Params, S3Target
+from cmk.utils.backup.targets.azure_blob_storage import (
+    BlobStorage,
     BlobStorageParams,
-    JobConfig,
-    LocalTargetParams,
-    RemoteTargetParams,
-    S3Params,
-    ScheduleConfig,
-    SiteBackupInfo,
-    TargetConfig,
-    TargetId,
-    TRemoteParams,
+    BlobStorageTarget,
 )
+from cmk.utils.backup.targets.config import TargetConfig
+from cmk.utils.backup.targets.local import LocalTarget, LocalTargetParams
+from cmk.utils.backup.targets.protocol import Target as TargetProtocol
+from cmk.utils.backup.targets.remote_interface import (
+    RemoteTarget,
+    RemoteTargetParams,
+    TRemoteParams,
+    TRemoteStorage,
+)
+from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.exceptions import MKGeneralException

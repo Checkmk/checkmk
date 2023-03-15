@@ -2,7 +2,7 @@ NET_SNMP := net-snmp
 NET_SNMP_VERS := 5.9.1
 NET_SNMP_DIR := $(NET_SNMP)-$(NET_SNMP_VERS)
 # Increase this to enforce a recreation of the build cache
-NET_SNMP_BUILD_ID := 7
+NET_SNMP_BUILD_ID := 32
 # The cached package contains the python major/minor version, so include this in the cache name in order to trigger
 # a rebuild on a python version change.
 NET_SNMP_BUILD_ID := $(NET_SNMP_BUILD_ID)-python$(PYTHON_MAJOR_DOT_MINOR)

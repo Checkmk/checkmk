@@ -21,9 +21,10 @@ def init_logging() -> logging.Logger:
     handler = logging.FileHandler(filename=Path(log_dir, "licensing.log"), encoding="utf-8")
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger()
+    logger = logging.getLogger("licensing")
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
+    logger.propagate = False
 
     return logger
 

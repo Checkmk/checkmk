@@ -63,7 +63,7 @@ class SectionsParser:
     ) -> None:
         super().__init__()
         self._host_sections = host_sections
-        self._parsing_errors: list[str] = []
+        self.parsing_errors: list[str] = []
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
 
@@ -73,10 +73,6 @@ class SectionsParser:
             self._host_sections,
             self._host_name,
         )
-
-    @property
-    def parsing_errors(self) -> Sequence[str]:
-        return self._parsing_errors
 
     def parse(
         self, section_name: SectionName, parse_function: AgentParseFunction | SNMPParseFunction
@@ -111,7 +107,7 @@ class SectionsParser:
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
-            self._parsing_errors.append(
+            self.parsing_errors.append(
                 create_section_crash_dump(
                     operation="parsing",
                     section_name=section_name,
@@ -131,9 +127,11 @@ class ParsedSectionsResolver:
 
     def __init__(
         self,
+        parser: SectionsParser,
         *,
         section_plugins: Sequence[SectionPlugin],
     ) -> None:
+        self._parser: Final = parser
         self.section_plugins: Final = section_plugins
         self._superseders = ParsedSectionsResolver._init_superseders(section_plugins)
         self._producers = ParsedSectionsResolver._init_producers(section_plugins)
@@ -141,6 +139,10 @@ class ParsedSectionsResolver:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(section_plugins={self.section_plugins})"
+
+    @property
+    def parsing_errors(self) -> Sequence[str]:
+        return self._parser.parsing_errors
 
     @staticmethod
     def _init_superseders(
@@ -163,7 +165,6 @@ class ParsedSectionsResolver:
 
     def resolve(
         self,
-        parser: SectionsParser,
         parsed_section_name: ParsedSectionName,
     ) -> ResolvedResult | None:
         if parsed_section_name in self._memoized_results:
@@ -174,10 +175,12 @@ class ParsedSectionsResolver:
             # Before we can parse the section, we must parse all potential superseders.
             # Registration validates against indirect supersedings, no need to recurse
             for superseder in self._superseders.get(producer.name, ()):
-                if parser.parse(superseder.name, superseder.parse_function) is not None:
-                    parser.disable(superseder.supersedes)
+                if self._parser.parse(superseder.name, superseder.parse_function) is not None:
+                    self._parser.disable(superseder.supersedes)
 
-            if (parsing_result := parser.parse(producer.name, producer.parse_function)) is not None:
+            if (
+                parsing_result := self._parser.parse(producer.name, producer.parse_function)
+            ) is not None:
                 return self._memoized_results.setdefault(
                     parsed_section_name,
                     ResolvedResult(
@@ -190,7 +193,7 @@ class ParsedSectionsResolver:
         return self._memoized_results.setdefault(parsed_section_name, None)
 
 
-Provider = tuple[ParsedSectionsResolver, SectionsParser]
+Provider = ParsedSectionsResolver
 
 
 class ParsedSectionsBroker:
@@ -204,14 +207,13 @@ class ParsedSectionsBroker:
 
     @staticmethod
     def resolve(
-        provider: Provider,
+        resolver: ParsedSectionsResolver,
         parsed_section_names: Iterable[ParsedSectionName],
     ) -> Mapping[ParsedSectionName, ResolvedResult]:
-        resolver, parser = provider
         return {
             parsed_section_name: resolved
             for parsed_section_name in parsed_section_names
-            if (resolved := resolver.resolve(parser, parsed_section_name)) is not None
+            if (resolved := resolver.resolve(parsed_section_name)) is not None
         }
 
     @staticmethod
@@ -245,13 +247,11 @@ def make_providers(
     section_plugins: Mapping[SectionName, SectionPlugin],
 ) -> Mapping[HostKey, Provider]:
     return {
-        host_key: (
-            ParsedSectionsResolver(
-                section_plugins=[
-                    section_plugins[section_name] for section_name in host_sections.sections
-                ],
-            ),
+        host_key: ParsedSectionsResolver(
             SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
+            section_plugins=[
+                section_plugins[section_name] for section_name in host_sections.sections
+            ],
         )
         for host_key, host_sections in host_sections.items()
     }

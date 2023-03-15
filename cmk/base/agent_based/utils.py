@@ -26,7 +26,7 @@ def get_section_kwargs(
     of the required sections, or an empty dictionary if no data was found at all.
     """
     try:
-        resolver, parser = providers[host_key]
+        resolver = providers[host_key]
     except KeyError:
         return {}
 
@@ -35,7 +35,7 @@ def get_section_kwargs(
         if len(parsed_section_names) == 1
         else f"section_{parsed_section_name}": (
             None
-            if (resolved := resolver.resolve(parser, parsed_section_name)) is None
+            if (resolved := resolver.resolve(parsed_section_name)) is None
             else resolved.parsed_data
         )
         for parsed_section_name in parsed_section_names

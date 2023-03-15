@@ -10,7 +10,7 @@ import marshmallow
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.livestatus_helpers import tables
-from cmk.utils.regex import GROUP_NAME_PATTERN, WATO_FOLDER_PATH_NAME_REGEX
+from cmk.utils.regex import GROUP_NAME_PATTERN, REGEX_ID, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import fields as gui_fields
@@ -779,6 +779,7 @@ class InputPassword(BaseSchema):
         example="pass",
         description="An unique identifier for the password",
         should_exist=False,
+        pattern=REGEX_ID,
     )
     title = fields.String(
         required=True,

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.regex import GROUP_NAME_PATTERN
+from cmk.utils.regex import GROUP_NAME_PATTERN, REGEX_ID
 
 from cmk.gui.fields import FolderField, HostField
 from cmk.gui.watolib.timeperiods import TIMEPERIOD_ID_PATTERN
@@ -60,6 +60,14 @@ GROUP_NAME_FIELD = {
         description="A name used as an identifier. Can be of arbitrary (sensible) length.",
         example="pathname",
         pattern=GROUP_NAME_PATTERN,
+    )
+}
+
+NAME_ID_FIELD = {
+    "name": String(
+        description="A name used as an identifier. Can be of arbitrary (sensible) length.",
+        example="pathname",
+        pattern=REGEX_ID,
     )
 }
 

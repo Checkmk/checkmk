@@ -24,6 +24,16 @@ def test_openapi_password(
     base = "/NO_SITE/check_mk/api/1.0"
 
     password_client.create(
+        ident="invalid%$",
+        title="foobar",
+        owner="admin",
+        password="tt",
+        shared=["all"],
+        customer="global",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    password_client.create(
         ident="foo:invalid",
         title="foobar",
         owner="admin",

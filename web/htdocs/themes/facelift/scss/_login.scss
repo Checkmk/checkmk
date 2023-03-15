@@ -122,24 +122,14 @@ body.login {
   }
 
   h2.login_separator {
-    position: relative;
-    margin: 20px auto;
-    letter-spacing: 1px;
+    margin: 26px 0;
+    text-align: center;
+    border-bottom: 1px solid $font-color-light-grey;
+    line-height: 0.1em;
 
-    &::before,
-    &::after {
-      content: " ";
-      height: 8%;
-      width: 130px;
-      position: absolute;
-      top: 50%;
-      background: $font-color-light-grey;
-    }
-    &::before {
-      left: 0;
-    }
-    &::after {
-      right: 0;
+    span {
+      background-color: $navbar-color;
+      padding: 0 $spacing;
     }
   }
 

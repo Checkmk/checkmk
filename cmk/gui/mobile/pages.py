@@ -5,6 +5,8 @@
 
 from typing import Union
 
+from cmk.utils.site import omd_site
+
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
@@ -20,11 +22,14 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.urls import makeuri, requested_file_name
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.views.command import command_registry, CommandSpec, core_command
 from cmk.gui.views.data_source import ABCDataSource, data_source_registry
@@ -189,6 +194,12 @@ def page_login() -> None:
     origtarget = request.get_url_input("_origtarget", default_origtarget)
     html.hidden_field("_origtarget", escaping.escape_attribute(origtarget))
 
+    saml2_user_error: str | None = None
+    if saml_connections := [
+        c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+    ]:
+        saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
+
     html.text_input("_username", label=_("Username:"), autocomplete="username", id_="input_user")
     html.password_input(
         "_password",
@@ -199,6 +210,10 @@ def page_login() -> None:
     )
     html.br()
     html.button("_login", _("Login"))
+
+    if user_errors and not saml2_user_error:
+        show_user_errors("login_error")
+
     html.set_focus("_username")
     html.end_form()
     html.open_div(id_="loginfoot")

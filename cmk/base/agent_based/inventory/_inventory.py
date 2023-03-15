@@ -56,7 +56,6 @@ from cmk.checkers.host_sections import HostSections
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_providers,
-    ParsedSectionsBroker,
     Provider,
     ResolvedResult,
     store_piggybacked_sections,
@@ -365,7 +364,11 @@ def _collect_inventory_plugin_items(
                 section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
             ) -> Iterable[ResolvedResult]:
                 for provider in providers.values():
-                    yield from ParsedSectionsBroker.resolve(provider, section_names).values()
+                    yield from (
+                        resolved
+                        for section_name in section_names
+                        if (resolved := provider.resolve(section_name)) is not None
+                    )
 
             yield ItemsOfInventoryPlugin(
                 items=inventory_plugin_items,

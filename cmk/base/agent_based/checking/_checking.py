@@ -59,7 +59,6 @@ import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
     filter_out_errors,
     make_providers,
-    ParsedSectionsBroker,
     Provider,
     ResolvedResult,
     store_piggybacked_sections,
@@ -452,7 +451,11 @@ def get_aggregated_result(
         section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
     ) -> Iterable[ResolvedResult]:
         for provider in providers.values():
-            yield from ParsedSectionsBroker.resolve(provider, section_names).values()
+            yield from (
+                resolved
+                for section_name in section_names
+                if (resolved := provider.resolve(section_name)) is not None
+            )
 
     return _AggregatedResult(
         service=service,

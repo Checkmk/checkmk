@@ -197,25 +197,6 @@ Provider = ParsedSectionsResolver
 
 
 class ParsedSectionsBroker:
-    """Object for aggregating, parsing and disributing the sections
-
-    An instance of this class allocates all raw sections of a given host or cluster and
-    hands over the parsed sections and caching information after considering features like
-    'parsed_section_name' and 'supersedes' to all plugin functions that require this kind
-    of data (inventory, discovery, checking, host_labels).
-    """
-
-    @staticmethod
-    def resolve(
-        resolver: ParsedSectionsResolver,
-        parsed_section_names: Iterable[ParsedSectionName],
-    ) -> Mapping[ParsedSectionName, ResolvedResult]:
-        return {
-            parsed_section_name: resolved
-            for parsed_section_name in parsed_section_names
-            if (resolved := resolver.resolve(parsed_section_name)) is not None
-        }
-
     @staticmethod
     def get_cache_info(cache_infos: Sequence[_CacheInfo]) -> _CacheInfo | None:
         # TODO: should't the host key be provided here?

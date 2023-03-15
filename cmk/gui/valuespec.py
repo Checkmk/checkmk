@@ -8219,7 +8219,7 @@ def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
             "description",
             TextInput(
                 title=_("Description"),
-                help=_("A description or title of this rule"),
+                help=_("Add a title or describe this rule"),
                 size=80,
             ),
         ),
@@ -8232,7 +8232,10 @@ def rule_option_elements(disabling: bool = True) -> list[DictionaryEntry]:
                 "disabled",
                 Checkbox(
                     title=_("Rule activation"),
-                    help=_("Disabled rules are kept in the configuration but are not applied."),
+                    help=_(
+                        "Selecting this option will disable the rule, but it "
+                        "will remain in the configuration."
+                    ),
                     label=_("do not apply this rule"),
                 ),
             ),
@@ -8245,9 +8248,10 @@ class RuleComment(TextAreaUnicode):
         super().__init__(
             title=_("Comment"),
             help=_(
-                "An optional comment that may be used to explain the purpose of this object. "
-                "The comment is only visible in this dialog and may help other users "
-                "understanding the intentions of the configured attributes."
+                "Optionally, add a comment to explain the purpose of this "
+                "object. The comment is only visible in this dialog and can help "
+                "other users to understand the intentions of the configured "
+                "attributes."
             ),
             rows=4,
             cols=80,
@@ -8283,10 +8287,12 @@ def DocumentationURL() -> TextInput:
         title=_("Documentation URL"),
         help=HTML(
             _(
-                "An optional URL pointing to documentation or any other page. This will be displayed "
-                "as an icon %s and open a new page when clicked. "
-                "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
-                "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."
+                "Optionally, add a URL linking to a documentation or any other "
+                "page. An icon links to the page and opens in a new tab when "
+                "clicked. You can use either global URLs (starting with "
+                "<tt>http://</tt>), absolute local URLs (starting with "
+                "<tt>/</tt>) or relative URLs (relative to "
+                "<tt>check_mk/</tt>)."
             )
             % html.render_icon("url")
         ),

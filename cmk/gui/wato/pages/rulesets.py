@@ -2099,7 +2099,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
         return Dictionary(
-            title=_("Rule Properties"),
+            title=_("Rule properties"),
             optional_keys=False,
             render="form",
             elements=rule_option_elements(disabling)
@@ -2117,9 +2117,9 @@ class ABCEditRuleMode(WatoMode):
                         value=rule.ruleset.name,
                         title=_("Ruleset name"),
                         help=_(
-                            "The ruleset name is used to identify the ruleset within Checkmk. "
-                            "You may need it when working with the rule and ruleset related "
-                            "REST API calls."
+                            "The ruleset name identifies the ruleset within "
+                            "Checkmk. Use this name when working with the rules "
+                            "and ruleset REST API calls."
                         ),
                     ),
                 ),
@@ -2280,7 +2280,7 @@ class VSExplicitConditions(Transform):
     def _vs_folder(self) -> DropdownChoice:
         return DropdownChoice(
             title=_("Folder"),
-            help=_("The rule is only applied to hosts directly in or below this folder."),
+            help=_("Rule only applies to hosts directly in or below this folder."),
             choices=Folder.folder_choices,
             encode_value=False,
         )
@@ -2288,7 +2288,7 @@ class VSExplicitConditions(Transform):
     def _vs_host_label_condition(self) -> LabelCondition:
         return LabelCondition(
             title=_("Host labels"),
-            help_txt=_("Use this condition to select hosts based on the configured host labels."),
+            help_txt=_("Rule only applies to hosts matching the label conditions."),
         )
 
     def _vs_service_label_condition(self) -> LabelCondition:
@@ -2303,9 +2303,8 @@ class VSExplicitConditions(Transform):
         return DictHostTagCondition(
             title=_("Host tags"),
             help_txt=_(
-                "The rule will only be applied to hosts fulfilling all "
-                "of the host tag conditions listed here, even if they appear "
-                "in the list of explicit host names."
+                "Rule only applies to hosts that meet all of the host tag "
+                "conditions listed here",
             ),
         )
 

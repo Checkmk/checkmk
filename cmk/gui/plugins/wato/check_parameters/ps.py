@@ -649,6 +649,10 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
             "done. These services will be created with default parameters. They will get "
             "critical when no process is running and OK otherwise. You can parameterize "
             "the check with the ruleset <i>State and count of processes</i>."
+            "Care should be taken when removing vanished services, for example via "
+            "<i>Bulk Discovery</i>. When a process vanishes, so does the corresponding "
+            "service. So despite that the service is critical, it can be removed by discovery, "
+            "effectively turning off monitoring."
         ),
         elements=[
             ("descr", process_discovery_descr_option()),

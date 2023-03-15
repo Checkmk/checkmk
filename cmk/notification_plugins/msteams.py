@@ -79,9 +79,7 @@ def _get_text_fields(
     context: PluginNotificationContext,
     notify_what: str,
 ) -> tuple[str, str, str, str]:
-    subtitle: str = MAP_TYPES[
-        context["NOTIFICATIONTYPE"] if context["NOTIFICATIONTYPE"] in MAP_TYPES else ""
-    ]
+    subtitle: str = MAP_TYPES.get(context["NOTIFICATIONTYPE"], "")
     if notify_what == "SERVICE":
         return (
             context.get("PARAMETER_SERVICE_TITLE", ms_teams_tmpl_svc_title()),

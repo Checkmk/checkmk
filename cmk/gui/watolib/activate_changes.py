@@ -78,6 +78,7 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.nodevis_lib import topology_dir
 from cmk.gui.plugins.watolib.utils import (
     DomainRequest,
     DomainRequests,
@@ -271,6 +272,12 @@ def get_replication_paths() -> list[ReplicationPath]:
             ty="dir",
             ident="frozen_aggregations",
             site_path=os.path.relpath(frozen_aggregations_dir, cmk.utils.paths.omd_root),
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="topology",
+            site_path=os.path.relpath(topology_dir, cmk.utils.paths.omd_root),
             excludes=[],
         ),
     ]

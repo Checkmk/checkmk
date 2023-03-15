@@ -401,8 +401,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                     ID(
                         title=_("Unique ID"),
                         help=_(
-                            "The ID must be a unique text. It will be used as an internal key "
-                            "when objects refer to this object."
+                            "The ID must be unique. It acts as internal key "
+                            "when objects reference it."
                         ),
                         default_value=self._default_id,
                         allow_empty=False,
@@ -434,7 +434,10 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                     "disabled",
                     Checkbox(
                         title=_("Activation"),
-                        help=_("Disabled %s are kept in the configuration but are not active.")
+                        help=_(
+                            "Selecting this option will disable the %s, but "
+                            "it will remain in the configuration."
+                        )
                         % self._mode_type.name_singular(),
                         label=_("do not activate this %s") % self._mode_type.name_singular(),
                     ),
@@ -450,7 +453,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                     "title",
                     TextInput(
                         title=_("Title"),
-                        help=_("The title of the %s. It will be used as display name.")
+                        help=_("Name your %s for easy recognition.")
                         % (self._mode_type.name_singular()),
                         allow_empty=False,
                         size=80,

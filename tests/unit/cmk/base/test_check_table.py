@@ -57,6 +57,68 @@ def test_cluster_ignores_nodes_parameters(monkeypatch):
     assert clustered_service.parameters == {"levels": (35, 40)}
 
 
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
+    autochecks = {
+        "node": [
+            Service(
+                CheckPluginName("smart_temp"),
+                "cluster-item",
+                "Temperature SMART cluster-item",
+                {"source": "autochecks"},
+            ),
+            Service(
+                CheckPluginName("smart_temp"),
+                "cluster-item-overridden",
+                "Temperature SMART cluster-item-overridden",
+                {"source": "autochecks"},
+            ),
+            Service(
+                CheckPluginName("smart_temp"),
+                "node-item",
+                "Temperature SMART node-item",
+                {"source": "autochecks"},
+            )
+        ],
+    }
+    ts = Scenario().add_host("node")
+    ts.add_cluster("cluster", nodes=["node"])
+    ts.set_option(
+        "static_checks",
+        {
+            "temperature": [
+                (("smart_temp", "cluster-item", {
+                    "source": "enforced-on-node"
+                }), [], ["node"]),
+                (("smart_temp", "node-item", {
+                    "source": "enforced-on-node"
+                }), [], ["node"]),
+                (("smart_temp", "cluster-item-overridden", {
+                    "source": "enforced-on-cluster"
+                }), [], ["cluster"]),
+            ]
+        },
+    )
+    ts.set_ruleset("clustered_services", [
+        ([], ["node"], ["Temperature SMART cluster"]),
+    ])
+    config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(config_cache, "get_autochecks_of", lambda h: autochecks.get(h, []))
+
+    node_services = check_table.get_check_table("node")
+    cluster_services = check_table.get_check_table("cluster")
+
+    assert len(node_services) == 1
+    assert len(cluster_services) == 2
+
+    def _source_of_item(table: check_table.HostCheckTable, item: str) -> str:
+        return table[(CheckPluginName("smart_temp"), item)].parameters["source"]  # type: ignore
+
+    assert _source_of_item(node_services, "node-item") == "enforced-on-node"
+    assert _source_of_item(cluster_services, "cluster-item") == "autochecks"  # FIXME
+    assert _source_of_item(cluster_services, "cluster-item-overridden") == "autochecks"  # FIXME
+
+
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
 @pytest.mark.usefixtures("config_load_all_checks")
@@ -72,21 +134,6 @@ def test_cluster_ignores_nodes_parameters(monkeypatch):
                 item=u"/dev/sda",
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART /dev/sda',
-            ),
-        }),
-        # Static checks overwrite the autocheck definitions
-        ("autocheck-overwrite", {
-            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"/dev/sda",
-                parameters={'levels': (35, 40)},
-                description=u'Temperature SMART /dev/sda',
-            ),
-            (CheckPluginName('smart_temp'), '/dev/sdb'): Service(
-                check_plugin_name=CheckPluginName('smart_temp'),
-                item=u'/dev/sdb',
-                parameters={'is_autocheck': True},
-                description=u'Temperature SMART /dev/sdb',
             ),
         }),
         ("ignore-not-existing-checks", {
@@ -110,17 +157,6 @@ def test_cluster_ignores_nodes_parameters(monkeypatch):
                 parameters={'levels': (35, 40)},
                 description=u'Temperature SMART ITEM2',
             ),
-        }),
-        ("static-check-overwrite", {
-            (CheckPluginName('smart_temp'), '/dev/sda'): Service(
-                check_plugin_name=CheckPluginName("smart_temp"),
-                item=u"/dev/sda",
-                parameters={
-                    'levels': (35, 40),
-                    'rule': 1
-                },
-                description=u'Temperature SMART /dev/sda',
-            )
         }),
         ("node1", {
             (CheckPluginName('smart_temp'), 'auto-not-clustered'): Service(

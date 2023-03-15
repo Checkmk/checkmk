@@ -41,7 +41,7 @@ def _vs_aws_tags(title):
     return ListOf(
         valuespec=Tuple(
             help=_(
-                "How to configure AWS tags please see "
+                "For information on AWS tag configuration, visit "
                 "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"
             ),
             orientation="horizontal",
@@ -63,14 +63,15 @@ def _vs_element_aws_service_selection():
         CascadingDropdown(
             title=_("Selection of service instances"),
             help=_(
-                "<i>Gather all service instances and restrict by overall tags</i> means that "
-                "if overall tags are stated above then all service instances are filtered "
-                "by these tags. Otherwise all instances are gathered.<br>"
-                "With <i>Use explicit service tags and overwrite overall tags</i> you can "
-                "specify explicit tags for these services. The overall tags are ignored for "
-                "these services.<br>"
-                "<i>Use explicit service names and ignore overall tags</i>: With this selection "
-                "you can state explicit names. The overall tags are ignored for these service."
+                "<b>Gather all service instances and restrict by overall "
+                "tags:</b><br>If overall tags are specified above, then all "
+                "service instances will be filtered by those tags. Otherwise, "
+                "all instances will be collected.<br><br><b>Explicit service "
+                "tags and overwrite overall tags:</b><br>Specify explicit "
+                "tags for these services. The overall tags will be ignored for "
+                "these services.<br><br><b>Explicit service names and ignore "
+                "overall tags:</b><br>Use this option to specify explicit names. "
+                "The overall tags will be ignored for these services."
             ),
             choices=[
                 ("all", _("Gather all service instances and restrict by overall AWS tags")),
@@ -95,8 +96,9 @@ def _vs_element_aws_limits():
         FixedValue(
             value=True,
             help=_(
-                "If limits are enabled all instances are fetched regardless of "
-                "possibly configured restriction to names or tags"
+                "If limits are enabled, all instances will be fetched "
+                "regardless of any name or tag restrictions that may have been "
+                "configured."
             ),
             title=_("Service limits"),
             totext=_("Monitor service limits"),
@@ -120,14 +122,12 @@ def _vs_element_aws_piggyback_naming_convention() -> DictionaryEntry:
                 ),
             ],
             help=_(
-                "For each running EC2 instance a piggyback host is created. We offer different "
-                "ways of naming these hosts. Note, that not every host name is pingable. Moreover, "
-                "changes in the piggyback name will cause the piggyback host to be reset. "
-                "If you choose `IP - region - instance ID`, then the name includes the private IP "
-                "address, the region and the instance ID: {Private IPv4 address}-{region}-{Instance ID}. "
-                "This uniquely identifies the EC2 instance. This format was "
-                "included with the 1.6.0 release of Checkmk and has been the only format "
-                "until 2.2.0. This host name can not be pinged."
+                "Each EC2 instance creates a piggyback host.<br><b>Note:</b> "
+                "Not every hostname is pingable and changing the piggyback name "
+                "will reset the piggyback host.<br><br><b>IP - Region - Instance "
+                'ID:</b><br>The name consists of "{Private IPv4 '
+                'address}-{Region}-{Instance ID}". This uniquely identifies the '
+                "EC2 instance. It is not possible to ping this host name."
             ),
         ),
     )
@@ -362,8 +362,8 @@ class AWSSpecialAgentValuespecBuilder:
                                 totext=_("Monitor CloudFront WAFs"),
                                 title=_("CloudFront WAFs"),
                                 help=_(
-                                    "Include WAFs in front of CloudFront resources in the "
-                                    "monitoring"
+                                    "Include WAFs in front of CloudFront "
+                                    "resources in the monitoring."
                                 ),
                             ),
                         ),

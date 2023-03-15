@@ -1796,7 +1796,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         if self._split_on_paste:
             help_texts.append(
                 _(
-                    "You may paste a text from your clipboard which contains several "
+                    "<br><br>You may paste a text from your clipboard which contains several "
                     'parts separated by "%s" characters into the last input field. The text will '
                     "then be split by these separators and the single parts are added into dedicated "
                     "input fields."
@@ -6442,11 +6442,11 @@ class Password(TextInput):
         self.password_meter = password_meter
         if self._is_stored_plain:
             plain_help = _(
-                "The password is stored in clear text within the monitoring "
-                "site. This is necessary because the monitoring process "
-                "needs to have access to the unencrypted password, as it "
-                "needs to provide it for authentication with remote "
-                "systems."
+                "The password entered here is stored in clear text within "
+                "the monitoring site. This is necessary because the "
+                "monitoring process must have access to the unencrypted "
+                "password in order to provide it for authentication with "
+                "remote systems."
             )
             help = plain_help if help is None else (help + "<br><br>" + plain_help)
 

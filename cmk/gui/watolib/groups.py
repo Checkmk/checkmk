@@ -459,11 +459,11 @@ class HostAttributeContactGroups(ABCHostAttribute):
         )
         return (
             _(
-                "Only members of the contact groups listed here have WATO permission "
-                "to the host / folder. If you want, you can make those contact groups "
-                "automatically also <b>monitoring contacts</b>. This is completely "
-                "optional. Assignment of host to contact groups can be done by "
-                "<a href='%s'>rules</a> as well."
+                "Only members of the contact groups listed here have Setup "
+                "permission for the host/folder. Optionally, you can make these "
+                "contact groups automatically monitor contacts. The assignment "
+                "of hosts to contact groups can also be defined by "
+                "<a href='%s'>rules</a>."
             )
             % url
         )

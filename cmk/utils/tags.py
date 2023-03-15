@@ -579,16 +579,18 @@ class BuiltinTagConfig(TagConfig):
                 "title": _("Piggyback"),
                 "topic": _("Monitoring agents"),
                 "help": _(
-                    "By default every host has the piggyback data source "
-                    "<b>Use piggyback data from other hosts if present</b>. "
-                    "In this case the <tt>Check_MK</tt> service of this host processes the piggyback data "
-                    "but does not warn if no piggyback data is available. The related discovered services "
-                    "would become stale. "
-                    "If a host has configured <b>Always use and expect piggyback data</b> for the piggyback "
-                    "data source then this host expects piggyback data and the <tt>Check_MK</tt> service of "
-                    "this host warns if no piggyback data is available. "
-                    "In the last case, ie. <b>Never use piggyback data</b>, the <tt>Check_MK</tt> service "
-                    "does not process piggyback data at all and ignores it if available."
+                    "By default, each host has a piggyback data "
+                    "source.<br><br><b>Use piggyback data from other hosts if "
+                    "present:</b><br>If selected, the <tt>Check_MK</tt> service "
+                    "of this host will process the piggyback data, but will not "
+                    "warn if no piggyback data is available. The associated "
+                    "discovered services would become stale.<br><br><b>Always "
+                    "use and expect piggyback data:</b><br>The host will expect "
+                    "piggyback data, and the <tt>Check_MK</tt> service of this "
+                    "host will warn if no piggyback data is "
+                    "available.<br><br><b>Never use piggyback data:</b><br>The "
+                    "<tt>Check_MK</tt> service does not process piggybacking "
+                    "data at all, and will ignore it if it's available."
                 ),
                 "tags": [
                     {

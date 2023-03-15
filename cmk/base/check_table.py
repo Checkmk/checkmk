@@ -48,12 +48,6 @@ class HostCheckTable(CheckTable):
                 if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
             })
 
-        self.update({
-            service.id(): service
-            for service in self._get_static_check_entries(config_cache, host_config)
-            if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
-        })
-
         # Now add checks a cluster might receive from its nodes
         if host_config.is_cluster:
             self.update({
@@ -62,6 +56,12 @@ class HostCheckTable(CheckTable):
                                                             skip_autochecks)
                 if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
             })
+
+        self.update({
+            service.id(): service
+            for service in self._get_static_check_entries(config_cache, host_config)
+            if self._keep_service(config_cache, host_config, service, filter_mode, skip_ignored)
+        })
 
     @staticmethod
     def _get_static_check_entries(
@@ -142,11 +142,12 @@ class HostCheckTable(CheckTable):
         skip_autochecks: bool,
     ) -> Iterable[Service]:
         for node in host_config.nodes or []:
-            # TODO: Cleanup this to work exactly like the logic above (for a single host)
             node_config = config_cache.get_host_config(node)
-            node_checks = list(self._get_static_check_entries(config_cache, node_config))
+
+            node_checks = []
             if not skip_autochecks:
                 node_checks += config_cache.get_autochecks_of(node)
+            node_checks.extend(self._get_static_check_entries(config_cache, node_config))
 
             yield from (
                 service for service in node_checks

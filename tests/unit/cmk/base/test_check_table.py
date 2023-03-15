@@ -115,8 +115,8 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
         return table[(CheckPluginName("smart_temp"), item)].parameters["source"]  # type: ignore
 
     assert _source_of_item(node_services, "node-item") == "enforced-on-node"
-    assert _source_of_item(cluster_services, "cluster-item") == "autochecks"  # FIXME
-    assert _source_of_item(cluster_services, "cluster-item-overridden") == "autochecks"  # FIXME
+    assert _source_of_item(cluster_services, "cluster-item") == "enforced-on-node"
+    assert _source_of_item(cluster_services, "cluster-item-overridden") == "enforced-on-cluster"
 
 
 # TODO: This misses a lot of cases

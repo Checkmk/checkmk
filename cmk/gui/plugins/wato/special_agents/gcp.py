@@ -12,6 +12,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateNotUpdated,
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
@@ -41,6 +42,7 @@ def get_gcp_services() -> Sequence[tuple[str, str]]:
 
 
 def _valuespec_special_agents_gcp():
+    valid_service_choices = {c[0] for c in get_gcp_services()}
     return Dictionary(
         title=_("Google Cloud Platform"),
         elements=[
@@ -53,11 +55,15 @@ def _valuespec_special_agents_gcp():
             ),
             (
                 "services",
-                ListChoice(
-                    title=_("GCP services to monitor"),
-                    choices=get_gcp_services(),
-                    default_value=[s[0] for s in get_gcp_services()],
-                    allow_empty=True,
+                MigrateNotUpdated(
+                    valuespec=ListChoice(
+                        title=_("GCP services to monitor"),
+                        choices=get_gcp_services(),
+                        default_value=[s[0] for s in get_gcp_services()],
+                        allow_empty=True,
+                    ),
+                    # silently cut off invalid CCE only choices if we're CEE now.
+                    migrate=lambda slist: [s for s in slist if s in valid_service_choices],
                 ),
             ),
             (

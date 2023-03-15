@@ -52,11 +52,20 @@ def notify_error(error) {
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
     try {
+        def author_mail = get_author_email();
+        def is_internal_author = (
+            author_mail.endsWith("@tribe29.com") ||
+            author_mail.endsWith("@mathias-kettner.de"));
+
+        if (author_mail != "weblate@checkmk.com" && is_internal_author) {
+            mail_build_failed(author_mail, error);
+        }
+
         def isChangeValidation = currentBuild.fullProjectName.contains("change_validation");
         print("|| error-reporting: isChangeValidation=${isChangeValidation}");
 
-        def stateChanged = currentBuild.getPreviousBuild()?.result != "FAILURE";
-        print("|| error-reporting: stateChanged=${stateChanged}");
+        def isFirstFailure = currentBuild.getPreviousBuild()?.result == "FAILURE";
+        print("|| error-reporting: isFirstFailure=${isFirstFailure}");
 
         print("|| error-reporting: currentBuild.changeSets ${currentBuild.changeSets}");
         print("|| error-reporting: currentBuild.changeSets[0] ${currentBuild.changeSets[0]}");
@@ -64,27 +73,34 @@ def notify_error(error) {
         print("|| error-reporting: currentBuild.rawBuild.changeSets ${currentBuild.rawBuild.changeSets}");
         print("|| error-reporting: currentBuild.rawBuild.changeSets[0] ${currentBuild.rawBuild.changeSets[0]}");
 
-        if (isChangeValidation || stateChanged) {
+//        if (isFirstFailure) {
             currentBuild.changeSets.each { changeSet -> 
                 print("|| error-reporting:   changeSet=${changeSet}");
                 print("|| error-reporting:   changeSet.items=${changeSet.items}");
 
-                def culprits = changeSet.items.collectEntries { e -> [e.author]};
+                def culprits = changeSet.items.collectEntries {e -> e.authorEmail};
                 print("|| error-reporting:   culprits ${culprits}");
+                def culprits_emails = culprits.join(";");
+                print("|| error-reporting:   culprits_emails ${culprits_emails}");
             }
-        }
-    } catch(Exception exc) {
-        print("|| error-reporting: ERROR ${exc}");
-    }
+            mail(
+                to: "frans.fuerst@tribe29.com",
+                cc: '',
+                bcc: '',
+                from: JENKINS_MAIL,
+                replyTo: '',
+                subject: "Exception in ${env.JOB_NAME}",
+                body: ("""
+                    |Should go to ${culprits_emails}:
+                    |Build Failed:
+                    |    ${env.JOB_NAME} ${env.BUILD_NUMBER}
+                    |    ${env.BUILD_URL}
+                    |Error Message:
+                    |    ${error}
+                    |""".stripMargin()),
+               )
+//        }
 
-    try {
-        def author_mail = get_author_email();
-        def is_internal_author = (author_mail.endsWith("@tribe29.com") ||
-                                  author_mail.endsWith("@mathias-kettner.de"));
-
-        if (author_mail != "weblate@checkmk.com" && is_internal_author) {
-            mail_build_failed(author_mail, error);
-        }
     } catch(Exception exc) {
         print("Could not report error by mail - got ${exc}");
     }

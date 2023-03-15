@@ -17,7 +17,7 @@ from cmk.checkers import HostKey, plugin_contexts, SourceType
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker, Provider
+from cmk.base.agent_based.data_provider import Provider
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
@@ -204,7 +204,12 @@ def _find_candidates(
         section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
     ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
         for host_key, provider in providers.items():
-            for section_name in ParsedSectionsBroker.resolve(provider, section_names):
+            # filter section names for sections that cannot be resolved
+            for section_name in (
+                section_name
+                for section_name in section_names
+                if provider.resolve(section_name) is not None
+            ):
                 yield host_key, section_name
 
     parsed_sections_of_interest: Sequence[ParsedSectionName] = list(

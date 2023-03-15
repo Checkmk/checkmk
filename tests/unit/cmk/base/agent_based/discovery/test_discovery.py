@@ -49,7 +49,6 @@ from cmk.base.agent_based.confcheckers import (
 )
 from cmk.base.agent_based.data_provider import (
     ParsedSectionName,
-    ParsedSectionsBroker,
     ParsedSectionsResolver,
     Provider,
     SectionsParser,
@@ -764,7 +763,12 @@ def test__find_candidates() -> None:
         section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
     ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
         for host_key, provider in providers.items():
-            for section_name in ParsedSectionsBroker.resolve(provider, section_names):
+            # filter section names for sections that cannot be resolved
+            for section_name in (
+                section_name
+                for section_name in section_names
+                if provider.resolve(section_name) is not None
+            ):
                 yield host_key, section_name
 
     resolved = tuple(__iter(parsed_sections_of_interest, providers))

@@ -30,6 +30,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     Migrate,
+    MigrateNotUpdated,
     TextInput,
     Tuple,
     ValueSpec,
@@ -508,9 +509,16 @@ def _valuespec_special_agents_aws() -> Migrate:
                 ),
                 (
                     "global_services",
-                    Dictionary(
-                        title=_("Global services to monitor"),
-                        elements=global_services,
+                    MigrateNotUpdated(
+                        valuespec=Dictionary(
+                            title=_("Global services to monitor"),
+                            elements=global_services,
+                        ),
+                        migrate=lambda p: dict(
+                            valuespec_builder.filter_for_edition(
+                                p.items(), valuespec_builder.CCE_ONLY_GLOBAL_SERVICES
+                            )
+                        ),
                     ),
                 ),
                 (
@@ -522,10 +530,17 @@ def _valuespec_special_agents_aws() -> Migrate:
                 ),
                 (
                     "services",
-                    Dictionary(
-                        title=_("Services per region to monitor"),
-                        elements=regional_services,
-                        default_keys=regional_services_default_keys,
+                    MigrateNotUpdated(
+                        valuespec=Dictionary(
+                            title=_("Services per region to monitor"),
+                            elements=regional_services,
+                            default_keys=regional_services_default_keys,
+                        ),
+                        migrate=lambda p: dict(
+                            valuespec_builder.filter_for_edition(
+                                p.items(), valuespec_builder.CCE_ONLY_REGIONAL_SERVICES
+                            )
+                        ),
                     ),
                 ),
                 _vs_element_aws_piggyback_naming_convention(),

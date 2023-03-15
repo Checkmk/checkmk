@@ -487,10 +487,10 @@ class TestRealisticSearch:
         "fake_rrdcached_default_globals",
         "suppress_get_configuration_automation_call",
     )
-    def test_index_is_built_as_super_user(  # type: ignore[no-untyped-def]
+    def test_index_is_built_as_super_user(
         self,
         mock_livestatus: MockLiveStatusConnection,
-    ):
+    ) -> None:
         """
         We test that the index is always built as a super user.
         """
@@ -515,10 +515,10 @@ class TestRealisticSearch:
         "fake_rrdcached_default_globals",
         "suppress_get_configuration_automation_call",
     )
-    def test_dcd_not_found_if_not_super_user(  # type: ignore[no-untyped-def]
+    def test_dcd_not_found_if_not_super_user(
         self,
         monkeypatch: MonkeyPatch,
-    ):
+    ) -> None:
         """
         This test ensures that test_index_is_built_as_super_user makes sense, ie. that if we do not
         build as a super user, the entry "Custom host attributes" is not found.

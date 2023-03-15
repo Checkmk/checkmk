@@ -2,7 +2,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
+
 import pytest
+from pytest_mock import MockerFixture
 
 import cmk.gui.sidebar as sidebar
 from cmk.gui.config import active_config
@@ -80,8 +83,8 @@ def test_user_config_get_not_existing_snapin() -> None:
         ),
     ],
 )
-def test_user_config_move_snapin_before(  # type: ignore[no-untyped-def]
-    mocker, move_id, before_id, result
+def test_user_config_move_snapin_before(
+    move_id: str, before_id: str, result: Sequence[str]
 ) -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     del user_config.snapins[:]
@@ -112,7 +115,7 @@ def test_user_config_move_snapin_before(  # type: ignore[no-untyped-def]
     ]
 
 
-def test_load_default_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_load_default_config() -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     assert user_config.folded is False
     assert user_config.snapins == [
@@ -124,7 +127,7 @@ def test_load_default_config(monkeypatch) -> None:  # type: ignore[no-untyped-de
     ]
 
 
-def test_load_legacy_list_user_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_load_legacy_list_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -139,7 +142,7 @@ def test_load_legacy_list_user_config(monkeypatch) -> None:  # type: ignore[no-u
     ]
 
 
-def test_load_legacy_off_user_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_load_legacy_off_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -153,7 +156,7 @@ def test_load_legacy_off_user_config(monkeypatch) -> None:  # type: ignore[no-un
     ]
 
 
-def test_load_skip_not_existing(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_load_skip_not_existing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -167,9 +170,7 @@ def test_load_skip_not_existing(monkeypatch) -> None:  # type: ignore[no-untyped
     ]
 
 
-def test_load_skip_not_permitted(  # type: ignore[no-untyped-def]
-    monkeypatch, request_context
-) -> None:
+def test_load_skip_not_permitted(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -187,7 +188,7 @@ def test_load_skip_not_permitted(  # type: ignore[no-untyped-def]
     ]
 
 
-def test_load_user_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_load_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -208,7 +209,7 @@ def test_load_user_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     ]
 
 
-def test_save_user_config_denied(mocker, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_save_user_config_denied(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(user, "save_file")
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
@@ -216,9 +217,7 @@ def test_save_user_config_denied(mocker, monkeypatch) -> None:  # type: ignore[n
     save_user_file_mock.assert_not_called()
 
 
-def test_save_user_config_allowed(  # type: ignore[no-untyped-def]
-    request_context, mocker, monkeypatch
-) -> None:
+def test_save_user_config_allowed(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(user, "may", lambda x: x == "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(user, "save_file")
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
@@ -234,8 +233,8 @@ def test_save_user_config_allowed(  # type: ignore[no-untyped-def]
         (True, "", False),
     ],
 )
-def test_ajax_fold(  # type: ignore[no-untyped-def]
-    request_context, mocker, origin_state, fold_var, set_state
+def test_ajax_fold(
+    mocker: MockerFixture, origin_state: bool, fold_var: str, set_state: bool
 ) -> None:
     m_config = mocker.patch.object(
         user,
@@ -276,9 +275,7 @@ def test_ajax_fold(  # type: ignore[no-untyped-def]
         ("closed", "off"),
     ],
 )
-def test_ajax_openclose_close(  # type: ignore[no-untyped-def]
-    request_context, mocker, origin_state, set_state
-) -> None:
+def test_ajax_openclose_close(mocker: MockerFixture, origin_state: str, set_state: str) -> None:
     request.set_var("name", "tactical_overview")
     request.set_var("state", set_state)
     m_config = mocker.patch.object(
@@ -318,9 +315,7 @@ def test_ajax_openclose_close(  # type: ignore[no-untyped-def]
     )
 
 
-def test_move_snapin_not_permitted(  # type: ignore[no-untyped-def]
-    monkeypatch, mocker, request_context
-) -> None:
+def test_move_snapin_not_permitted(monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
     monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
     m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
     sidebar.move_snapin()
@@ -334,9 +329,7 @@ def test_move_snapin_not_permitted(  # type: ignore[no-untyped-def]
         ("not_existing", "performance", None),
     ],
 )
-def test_move_snapin(  # type: ignore[no-untyped-def]
-    request_context, mocker, move, before, do_save
-) -> None:
+def test_move_snapin(mocker: MockerFixture, move: str, before: str, do_save: bool) -> None:
     request.set_var("name", move)
     request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")

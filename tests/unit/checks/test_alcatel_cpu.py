@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 pytestmark = pytest.mark.checks
 
@@ -21,7 +25,7 @@ CHECK_NAME = "alcatel_cpu"
         ),
     ],
 )
-def test_inventory_function(info, result_expected) -> None:  # type: ignore[no-untyped-def]
+def test_inventory_function(info: StringTable, result_expected: Sequence[object]) -> None:
     check = Check(CHECK_NAME)
     result = list(check.run_discovery(info))
     assert result == result_expected
@@ -47,8 +51,12 @@ def test_inventory_function(info, result_expected) -> None:  # type: ignore[no-u
         ),
     ],
 )
-def test_check_function(  # type: ignore[no-untyped-def]
-    parameters, info, state_expected, infotext_expected, perfdata_expected
+def test_check_function(
+    parameters: tuple[int, int],
+    info: StringTable,
+    state_expected: int,
+    infotext_expected: str,
+    perfdata_expected: object,
 ) -> None:
     """
     Verifies if check function asserts warn and crit CPU levels.

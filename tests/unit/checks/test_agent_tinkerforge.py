@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from tests.testlib import SpecialAgent
@@ -29,7 +31,9 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_tinkerforge_argument_parsing(params, expected_args) -> None:  # type: ignore[no-untyped-def]
+def test_tinkerforge_argument_parsing(
+    params: Mapping[str, object], expected_args: list[str]
+) -> None:
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_tinkerforge")
     arguments = agent.argument_func(params, "host", "address")

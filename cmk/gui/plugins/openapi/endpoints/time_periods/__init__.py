@@ -32,7 +32,7 @@ from cmk.gui.plugins.openapi.endpoints.time_periods.response_schemas import (
     TimePeriodResponseCollection,
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import (
@@ -105,7 +105,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     constructors.object_href("time_period", "{name}"),
     ".../update",
     method="put",
-    path_params=[NAME_FIELD],
+    path_params=[TIMEPERIOD_NAME_FIELD],
     additional_status_codes=[405],
     request_schema=UpdateTimePeriod,
     response_schema=TimePeriodResponse,
@@ -145,7 +145,7 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     constructors.object_href("time_period", "{name}"),
     ".../delete",
     method="delete",
-    path_params=[NAME_FIELD],
+    path_params=[TIMEPERIOD_NAME_FIELD],
     etag="input",
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
@@ -167,7 +167,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     constructors.object_href("time_period", "{name}"),
     "cmk/show",
     method="get",
-    path_params=[NAME_FIELD],
+    path_params=[TIMEPERIOD_NAME_FIELD],
     response_schema=TimePeriodResponse,
     permissions_required=PERMISSIONS,
 )

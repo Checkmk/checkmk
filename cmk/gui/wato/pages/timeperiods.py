@@ -747,7 +747,7 @@ class ModeEditTimeperiod(WatoMode):
             # with numbers and so on. The ID() valuespec does not allow it.
             name_element: ValueSpec = TextInput(
                 title=_("Internal ID"),
-                regex=r"^[-a-z0-9A-Z_]*$",
+                regex=watolib.timeperiods.TIMEPERIOD_ID_PATTERN,
                 regex_error=_(
                     "Invalid time period name. Only the characters a-z, A-Z, 0-9, "
                     "_ and - are allowed."

@@ -63,6 +63,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             site_path="var/check_mk/frozen_aggregations",
             excludes=[],
         ),
+        ReplicationPath(
+            ty="dir",
+            ident="topology",
+            site_path="var/check_mk/topology",
+            excludes=[],
+        ),
     ]
 
     if edition is not cmk_version.Edition.CRE:

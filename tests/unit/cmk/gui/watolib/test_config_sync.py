@@ -23,6 +23,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 from cmk.gui.config import active_config
+from cmk.gui.nodevis_lib import topology_dir
 
 from cmk.bi.type_defs import frozen_aggregations_dir
 
@@ -106,6 +107,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> None:
     (cmk.utils.paths.omd_root / "local").mkdir(parents=True, exist_ok=True)
     Path(cmk.utils.paths.var_dir, "packages").mkdir(parents=True, exist_ok=True)
     frozen_aggregations_dir.mkdir(parents=True, exist_ok=True)
+    topology_dir.mkdir(parents=True, exist_ok=True)
 
     gui_conf_dir = Path(cmk.utils.paths.default_config_dir) / "multisite.d" / "wato"
     gui_conf_dir.mkdir(parents=True, exist_ok=True)
@@ -328,6 +330,7 @@ def _get_expected_paths(
             "etc/check_mk/mkeventd.d/wato/rules.mk",
             "local",
             "var/check_mk/packages",
+            "var/check_mk/topology",
         ]
 
     # TODO: Shouldn't we clean up these subtle differences?

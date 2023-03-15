@@ -12,6 +12,20 @@ from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Dictionary, ListChoice
 
 
+def _region_to_monitor() -> list[tuple[str, str]]:
+    def key(regionid_display: tuple[str, str]) -> str:
+        return regionid_display[1]
+
+    def is_gov(regionid_display: tuple[str, str]) -> bool:
+        return "DoD" in regionid_display[1] or "Gov" in regionid_display[1]
+
+    regions_by_display_order = [
+        *sorted((r for r in AZURE_REGIONS.items() if not is_gov(r)), key=key),
+        *sorted((r for r in AZURE_REGIONS.items() if is_gov(r)), key=key),
+    ]
+    return [(id_, f"{region} | {id_}") for id_, region in regions_by_display_order]
+
+
 def _valuespec_special_agents_azure_status() -> Dictionary:
     return Dictionary(
         elements=[
@@ -19,7 +33,7 @@ def _valuespec_special_agents_azure_status() -> Dictionary:
                 "regions",
                 ListChoice(
                     title=_("Regions to monitor"),
-                    choices=list(AZURE_REGIONS.items()),
+                    choices=_region_to_monitor(),
                 ),
             ),
         ],

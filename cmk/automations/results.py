@@ -215,6 +215,36 @@ result_type_registry.register(DiscoveryPreviewPre22NameResult)
 
 
 @dataclass
+class AutodiscoveryResult(ABCAutomationResult):
+    hosts: Mapping[HostName, SingleHostDiscoveryResult]
+    changes_activated: bool
+
+    def _hosts_to_dict(self) -> Mapping[HostName, Mapping[str, Any]]:
+        return {k: asdict(v) for k, v in self.hosts.items()}
+
+    @staticmethod
+    def _hosts_from_dict(
+        serialized: Mapping[HostName, Mapping[str, Any]]
+    ) -> Mapping[HostName, SingleHostDiscoveryResult]:
+        return {k: SingleHostDiscoveryResult(**v) for k, v in serialized.items()}
+
+    def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        return SerializedResult(repr((self._hosts_to_dict(), self.changes_activated)))
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> AutodiscoveryResult:
+        hosts, changes_activated = literal_eval(serialized_result)
+        return cls(cls._hosts_from_dict(hosts), changes_activated)
+
+    @staticmethod
+    def automation_call() -> str:
+        return "autodiscovery"
+
+
+result_type_registry.register(AutodiscoveryResult)
+
+
+@dataclass
 class SetAutochecksResult(ABCAutomationResult):
     @staticmethod
     def automation_call() -> str:

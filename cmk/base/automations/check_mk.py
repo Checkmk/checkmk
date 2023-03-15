@@ -55,6 +55,7 @@ from cmk.automations.results import (
     ActiveCheckResult,
     AnalyseHostResult,
     AnalyseServiceResult,
+    AutodiscoveryResult,
     CreateDiagnosticsDumpResult,
     DeleteHostsKnownRemoteResult,
     DeleteHostsResult,
@@ -121,6 +122,7 @@ from cmk.base.config import ConfigCache, IgnoredServices
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
+from cmk.base.modes.check_mk import mode_autodiscovery
 from cmk.base.sources import make_parser
 
 HistoryFile = str
@@ -373,6 +375,21 @@ def _execute_discovery(
         ignored_services=IgnoredServices(config_cache, host_name),
         on_error=on_error,
     )
+
+
+class AutomationAutodiscovery(DiscoveryAutomation):
+    cmd = "autodiscovery"
+    needs_config = True
+    needs_checks = True
+
+    def execute(self, args: list[str]) -> AutodiscoveryResult:
+        with redirect_stdout(open(os.devnull, "w")):
+            result = mode_autodiscovery({})
+
+        return AutodiscoveryResult(*result)
+
+
+automations.register(AutomationAutodiscovery())
 
 
 class AutomationSetAutochecks(DiscoveryAutomation):

@@ -81,6 +81,7 @@ from cmk.base.agent_based.confcheckers import (
     InventoryPluginMapper,
     SectionPluginMapper,
 )
+from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
 from cmk.base.agent_based.discovery.livestatus import schedule_discovery_check
 from cmk.base.agent_based.inventory import execute_active_check_inventory
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
@@ -1496,22 +1497,24 @@ modes.register(
 )
 
 # .
-#   .--discover-marked-hosts-----------------------------------------------.
-#   |           _ _                                 _            _         |
-#   |        __| (_)___  ___   _ __ ___   __ _ _ __| | _____  __| |        |
-#   |       / _` | / __|/ __| | '_ ` _ \ / _` | '__| |/ / _ \/ _` |        |
-#   |      | (_| | \__ \ (__ _| | | | | | (_| | |  |   <  __/ (_| |        |
-#   |       \__,_|_|___/\___(_)_| |_| |_|\__,_|_|  |_|\_\___|\__,_|        |
-#   |                                                                      |
+#   .--autodiscovery-------------------------------------------------------.
+#   |               _            _ _                                       |
+#   |    __ _ _   _| |_ ___   __| (_)___  ___ _____   _____ _ __ _   _     |
+#   |   / _` | | | | __/ _ \ / _` | / __|/ __/ _ \ \ / / _ \ '__| | | |    |
+#   |  | (_| | |_| | || (_) | (_| | \__ \ (_| (_) \ V /  __/ |  | |_| |    |
+#   |   \__,_|\__,_|\__\___/ \__,_|_|___/\___\___/ \_/ \___|_|   \__, |    |
+#   |                                                            |___/     |
 #   '----------------------------------------------------------------------'
 
 
-def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
+def mode_autodiscovery(
+    options: Mapping[str, Literal[True]]
+) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     file_cache_options = _handle_fetcher_options(options)._replace(use_outdated=True)
 
     if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
-        return
+        return {}, False
 
     config.load()
     config_cache = config.get_config_cache()
@@ -1534,7 +1537,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         # make sure we may use the file the active discovery check left behind:
         max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
-    activation_required = discovery.discover_marked_hosts(
+    discovery_results, activation_required = discovery.autodiscovery(
         queue,
         config_cache=config_cache,
         parser=parser,
@@ -1546,8 +1549,9 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         schedule_discovery_check=schedule_discovery_check,
         on_error=OnError.IGNORE,
     )
+
     if not activation_required:
-        return
+        return discovery_results, False
 
     console.verbose("\nRestarting monitoring core with updated configuration...\n")
     core = create_core(config.monitoring_core)
@@ -1576,22 +1580,8 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
             _config_cache.clear_all()
             config_cache.initialize()
 
+    return discovery_results, True
 
-modes.register(
-    Mode(
-        long_option="discover-marked-hosts",
-        handler_function=mode_discover_marked_hosts,
-        short_help="Run discovery for hosts known to have changed services",
-        long_help=[
-            "Run actual service discovery on all hosts that "
-            "are known to have new/vanished services due to an earlier run of "
-            "check-discovery. The results of this discovery may be activated "
-            "automatically if configured.",
-        ],
-        sub_options=_FETCHER_OPTIONS,
-        needs_config=False,
-    )
-)
 
 # .
 #   .--check-discovery-----------------------------------------------------.
@@ -1689,7 +1679,7 @@ def register_mode_check_discovery(
                 "Make Check_MK behave as monitoring plugins that checks if an "
                 "inventory would find new or vanished services for the host. "
                 "If configured to do so, this will queue those hosts for automatic "
-                "discover-marked-hosts"
+                "autodiscovery"
             ],
             sub_options=_FETCHER_OPTIONS,
         )
@@ -1917,7 +1907,7 @@ modes.register(
             "Make Check_MK behave as monitoring plugins that checks if an "
             "inventory would find new or vanished services for the host. "
             "If configured to do so, this will queue those hosts for automatic "
-            "discover-marked-hosts",
+            "autodiscovery",
             "Can be restricted to certain check types. Write '--checks df -I' if "
             "you just want to look for new filesystems. Use 'cmk -L' for a "
             "list of all check types.",

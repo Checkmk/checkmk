@@ -164,6 +164,13 @@ def discovery_preview(
     )
 
 
+def autodiscovery(site_id: SiteId) -> results.AutodiscoveryResult:
+    return _deserialize(
+        _automation_serialized("autodiscovery", siteid=site_id),
+        results.AutodiscoveryResult,
+    )
+
+
 def set_autochecks(
     site_id: SiteId,
     host_name: HostName,

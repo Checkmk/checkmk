@@ -20,6 +20,7 @@ def test_registered_jobs() -> None:
         "cmk.gui.plugins.wato.remote_audit_logs.execute_get_remote_audit_logs",
         "cmk.gui.watolib.automatic_host_removal.execute_host_removal_background_job",
         "cmk.gui.node_visualization.cleanup_topology_layouts",
+        "cmk.gui.watolib.autodiscovery.execute_autodiscovery",
     ]
 
     if not cmk_version.is_raw_edition():

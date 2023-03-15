@@ -298,7 +298,7 @@ def _make_diff(
     )
 
 
-def discover_marked_hosts(
+def autodiscovery(
     autodiscovery_queue: AutoQueue,
     *,
     config_cache: ConfigCache,
@@ -310,7 +310,7 @@ def discover_marked_hosts(
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     schedule_discovery_check: Callable[[HostName], object],
     on_error: OnError,
-) -> bool:
+) -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     """Autodiscovery"""
     autodiscovery_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),
@@ -319,13 +319,16 @@ def discover_marked_hosts(
 
     if (oldest_queued := autodiscovery_queue.oldest()) is None:
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
-        return False
+        return {}, False
 
     console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
+
     process_hosts = EVERYTHING if (up_hosts := get_up_hosts()) is None else up_hosts
     activation_required = False
     rediscovery_reference_time = time.time()
+
     hosts_processed = set()
+    discovery_results = {}
 
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(autodiscovery_queue.queued_hosts()):
@@ -333,7 +336,7 @@ def discover_marked_hosts(
                 continue
             hosts_processed.add(host_name)
 
-            activation_required |= _discover_marked_host(
+            discovery_result, activate_host = _autodiscovery(
                 host_name,
                 config_cache=config_cache,
                 parser=parser,
@@ -354,15 +357,19 @@ def discover_marked_hosts(
                 on_error=on_error,
             )
 
+            if discovery_result:
+                discovery_results[host_name] = discovery_result
+                activation_required |= activate_host
+
     cluster_info = config_cache.get_cluster_cache_info()
     rewrite_cluster_host_labels_file(
         hosts_processed, clusters_of=cluster_info.clusters_of, nodes_of=cluster_info.nodes_of
     )
 
-    return activation_required
+    return discovery_results, activation_required
 
 
-def _discover_marked_host(
+def _autodiscovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
@@ -378,12 +385,12 @@ def _discover_marked_host(
     reference_time: float,
     oldest_queued: float,
     on_error: OnError,
-) -> bool:
+) -> tuple[DiscoveryResult | None, bool]:
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
     if (params := config_cache.discovery_check_parameters(host_name)).commandline_only:
         console.verbose("  failed: discovery check disabled\n")
-        return False
+        return None, False
 
     reason = _may_rediscover(
         rediscovery_parameters=params.rediscovery,
@@ -392,7 +399,7 @@ def _discover_marked_host(
     )
     if reason:
         console.verbose(f"  skipped: {reason}\n")
-        return False
+        return None, False
 
     result = automation_discovery(
         host_name,
@@ -418,7 +425,7 @@ def _discover_marked_host(
         # delete the file even in error case, otherwise we might be causing the same error
         # every time the cron job runs
         autodiscovery_queue.remove(host_name)
-        return False
+        return None, False
 
     something_changed = (
         result.self_new != 0
@@ -453,7 +460,7 @@ def _discover_marked_host(
 
     autodiscovery_queue.remove(host_name)
 
-    return activation_required
+    return (result, activation_required) if something_changed else (None, False)
 
 
 def _may_rediscover(

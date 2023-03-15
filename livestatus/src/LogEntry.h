@@ -83,8 +83,9 @@ public:
         alert_handlers = 8,  // Started and stopped alert handlers
     };
 
-    // Constructed by Logfile::processLogLine(). All instances owned by
-    // Logfile::_entries.
+    /// Constructed by Logfile::processLogLine(). All instances owned by
+    /// Logfile::_entries.
+    /// Throws invalid_argument on malformed line
     LogEntry(size_t lineno, std::string line);
 
     [[nodiscard]] std::string state_info() const;

@@ -559,11 +559,16 @@ def _valuespec_inventory_processes_rules():
     return Transform(
         Dictionary(
             title=_('Process discovery'),
-            help=_("This ruleset defines criteria for automatically creating checks for running "
-                   "processes based upon what is running when the service discovery is "
-                   "done. These services will be created with default parameters. They will get "
-                   "critical when no process is running and OK otherwise. You can parameterize "
-                   "the check with the ruleset <i>State and count of processes</i>."),
+            help=_(
+                "This ruleset defines criteria for automatically creating checks for running "
+                "processes based upon what is running when the service discovery is "
+                "done. These services will be created with default parameters. They will get "
+                "critical when no process is running and OK otherwise. You can parameterize "
+                "the check with the ruleset <i>State and count of processes</i>."
+                "Care should be taken when removing vanished services, for example via "
+                "<i>Bulk Discovery</i>. When a process vanishes, so does the corresponding "
+                "service. So despite that the service is critical, it can be removed by discovery, "
+                "effectively turning off monitoring."),
             elements=[
                 ('descr', process_discovery_descr_option()),
                 ('match', process_match_options()),

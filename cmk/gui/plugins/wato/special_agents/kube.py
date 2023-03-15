@@ -63,10 +63,6 @@ def _tcp_timeouts():
     )
 
 
-def _cluster_collector_title() -> str:
-    return _("Use data from Checkmk Cluster Collector")
-
-
 def _usage_endpoint(cloud_edition: bool) -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
     if cloud_edition:
         return (
@@ -74,24 +70,22 @@ def _usage_endpoint(cloud_edition: bool) -> tuple[str, CascadingDropdown] | tupl
             CascadingDropdown(
                 title=("Enrich with usage data"),
                 choices=[
-                    (
-                        "cluster-collector",
-                        _cluster_collector_title(),
-                        _cluster_collector_endpoint(),
-                    ),
+                    _cluster_collector(),
                     _openshift(),
                 ],
             ),
         )
+
+    value, title, spec = _cluster_collector()
     return (
         "usage_endpoint",
         Tuple(
             elements=[
-                FixedValue(value="cluster-collector", totext=""),
-                _cluster_collector_endpoint(),
+                FixedValue(value=value, totext=""),
+                spec,
             ],
             show_titles=False,
-            title=_cluster_collector_title(),
+            title=title,
         ),
     )
 
@@ -136,33 +130,36 @@ def _openshift() -> tuple[str, str, Dictionary]:
     )
 
 
-def _cluster_collector_endpoint() -> Dictionary:
-    return Dictionary(  # TODO: adjust help texts depending on ingress inclusion
-        elements=[
-            (
-                "endpoint",
-                HTTPUrl(
-                    title=_("Collector NodePort / Ingress endpoint"),
-                    allow_empty=False,
-                    default_value="https://<service url>:30035",
-                    help=_(
-                        "The full URL to the Cluster Collector service including "
-                        "the protocol (http or https) and the port. Depending on "
-                        "the deployed configuration of the service this can "
-                        "either be the NodePort or the Ingress endpoint."
+def _cluster_collector() -> tuple[str, str, Dictionary]:
+    return (
+        "cluster-collector",
+        _("Use data from Checkmk Cluster Collector"),
+        Dictionary(  # TODO: adjust help texts depending on ingress inclusion
+            elements=[
+                (
+                    "endpoint",
+                    HTTPUrl(
+                        title=_("Collector NodePort / Ingress endpoint"),
+                        allow_empty=False,
+                        default_value="https://<service url>:30035",
+                        help=_(
+                            "The full URL to the Cluster Collector service including "
+                            "the protocol (http or https) and the port. Depending on "
+                            "the deployed configuration of the service this can "
+                            "either be the NodePort or the Ingress endpoint."
+                        ),
+                        size=80,
                     ),
-                    size=80,
                 ),
-            ),
-            ssl_verification(),
-            (
-                "proxy",
-                HTTPProxyReference(),
-            ),
-            _tcp_timeouts(),
-        ],
-        required_keys=["endpoint", "verify-cert"],
-        title=_cluster_collector_title(),
+                ssl_verification(),
+                (
+                    "proxy",
+                    HTTPProxyReference(),
+                ),
+                _tcp_timeouts(),
+            ],
+            required_keys=["endpoint", "verify-cert"],
+        ),
     )
 
 

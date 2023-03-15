@@ -35,6 +35,26 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
                     ],
                 ),
             ),
+            (
+                "time_to_resolve_dns",
+                Tuple(  # TODO: improve this type
+                    title=_("Upper levels for time to resolve DNS"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "time_consumed_by_rule_engine",
+                Tuple(  # TODO: improve this type
+                    title=_("Upper levels for time consumed by rule engine"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
         ],
     )
 

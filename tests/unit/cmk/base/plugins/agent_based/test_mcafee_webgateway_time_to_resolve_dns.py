@@ -13,28 +13,27 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.base.plugins.agent_based import mcafee_webgateway_misc
+from cmk.base.plugins.agent_based import mcafee_webgateway_time_to_resolve_dns
 from cmk.base.plugins.agent_based.agent_based_api import v1
 from cmk.base.plugins.agent_based.utils import mcafee_gateway
 
-# SUP-13087
 WALK = """
-.1.3.6.1.2.1.1.1.0 McAfee Web Gateway 7;Hyper-V;Microsoft Corporation
-.1.3.6.1.4.1.1230.2.7.2.5.1.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.2.0 2
-.1.3.6.1.4.1.1230.2.7.2.5.3.0 2
+.1.3.6.1.2.1.1.1.0 McAfee Web Gateway 7
+.1.3.6.1.4.1.1230.2.7.2.5.1.0 1
+.1.3.6.1.4.1.1230.2.7.2.5.2.0 16
+.1.3.6.1.4.1.1230.2.7.2.5.3.0 35
 .1.3.6.1.4.1.1230.2.7.2.5.4.0 0
 .1.3.6.1.4.1.1230.2.7.2.5.5.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.6.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.7.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.8.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.9.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.10.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.11.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.12.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.13.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.14.0 0
-.1.3.6.1.4.1.1230.2.7.2.5.15.0 41
+.1.3.6.1.4.1.1230.2.7.2.5.6.0 2000
+.1.3.6.1.4.1.1230.2.7.2.5.7.0 2
+.1.3.6.1.4.1.1230.2.7.2.5.8.0 177073
+.1.3.6.1.4.1.1230.2.7.2.5.9.0 14
+.1.3.6.1.4.1.1230.2.7.2.5.10.0 177073
+.1.3.6.1.4.1.1230.2.7.2.5.11.0 177073
+.1.3.6.1.4.1.1230.2.7.2.5.12.0 23
+.1.3.6.1.4.1.1230.2.7.2.5.13.0 23
+.1.3.6.1.4.1.1230.2.7.2.5.14.0 23
+.1.3.6.1.4.1.1230.2.7.2.5.15.0 32
 """
 
 
@@ -54,7 +53,7 @@ def test_discovery(fix_register: FixRegister) -> None:
     section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
     assert section is not None
     # Act
-    services = list(mcafee_webgateway_misc.discovery_mcafee_webgateway_misc(section=section))
+    services = list(mcafee_webgateway_time_to_resolve_dns.discovery(section=section))
     # Assert
     assert services == [v1.Service()]
 
@@ -65,35 +64,31 @@ def test_discovery(fix_register: FixRegister) -> None:
         pytest.param(
             {},
             [
-                v1.Result(state=v1.State.OK, summary="Clients: 2"),
-                v1.Result(state=v1.State.OK, summary="Open network sockets: 2"),
+                v1.Result(state=v1.State.OK, summary="2 seconds"),
             ],
             id="No levels",
         ),
         pytest.param(
-            {"clients": (3, 3), "network_sockets": (3, 3)},
+            {"time_to_resolve_dns": (3, 3)},
             [
-                v1.Result(state=v1.State.OK, summary="Clients: 2"),
-                v1.Result(state=v1.State.OK, summary="Open network sockets: 2"),
+                v1.Result(state=v1.State.OK, summary="2 seconds"),
             ],
             id="Levels, but OK",
         ),
         pytest.param(
-            {"clients": (2, 3), "network_sockets": (2, 3)},
+            {"time_to_resolve_dns": (2, 3)},
             [
-                v1.Result(state=v1.State.WARN, summary="Clients: 2 (warn/crit at 2/3)"),
                 v1.Result(
-                    state=v1.State.WARN, summary="Open network sockets: 2 (warn/crit at 2/3)"
+                    state=v1.State.WARN, summary="2 seconds (warn/crit at 2 seconds/3 seconds)"
                 ),
             ],
             id="Critical",
         ),
         pytest.param(
-            {"clients": (1, 2), "network_sockets": (1, 2)},
+            {"time_to_resolve_dns": (1, 2)},
             [
-                v1.Result(state=v1.State.CRIT, summary="Clients: 2 (warn/crit at 1/2)"),
                 v1.Result(
-                    state=v1.State.CRIT, summary="Open network sockets: 2 (warn/crit at 1/2)"
+                    state=v1.State.CRIT, summary="2 seconds (warn/crit at 1 second/2 seconds)"
                 ),
             ],
             id="Warning",
@@ -106,15 +101,15 @@ def test_check_results(
     expected_results: list[v1.Result],
 ) -> None:
     # Assemble
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
-    assert section is not None
     params = typing.cast(
         mcafee_gateway.MiscParams, mcafee_gateway.MISC_DEFAULT_PARAMS | params_misc
     )
+    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
+    assert section is not None
     # Act
     results = [
         r
-        for r in mcafee_webgateway_misc.check_mcafee_webgateway_misc(params=params, section=section)
+        for r in mcafee_webgateway_time_to_resolve_dns.check(params=params, section=section)
         if isinstance(r, v1.Result)
     ]
     # Assert
@@ -128,31 +123,10 @@ def test_check_metrics(fix_register: FixRegister) -> None:
     # Act
     metrics = [
         r
-        for r in mcafee_webgateway_misc.check_mcafee_webgateway_misc(
+        for r in mcafee_webgateway_time_to_resolve_dns.check(
             params=mcafee_gateway.MISC_DEFAULT_PARAMS, section=section
         )
         if isinstance(r, v1.Metric)
     ]
     # Assert
-    assert metrics == [v1.Metric("connections", 2.0), v1.Metric("open_network_sockets", 2.0)]
-
-
-def test_check_invalid_values(fix_register: FixRegister) -> None:
-    # Assemble
-    # This walk is made up, the final entry cannot be removed, because our fetcher will crash.
-    walk = """
-    .1.3.6.1.4.1.1230.2.7.2.5.2.0
-    .1.3.6.1.4.1.1230.2.7.2.5.3.0
-    .1.3.6.1.4.1.1230.2.7.2.6.1.0 0
-    """
-    section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), walk)
-    assert section is not None
-    # Act
-    results = list(
-        mcafee_webgateway_misc.check_mcafee_webgateway_misc(
-            params=mcafee_gateway.MISC_DEFAULT_PARAMS,
-            section=section,
-        )
-    )
-    # Assert
-    assert results == []
+    assert metrics == [v1.Metric("time_to_resolve_dns", 2.0, levels=(1500.0, 2000.0))]

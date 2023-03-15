@@ -1349,6 +1349,18 @@ metric_info["dns_nxdomain"] = {
     "color": "34/a",
 }
 
+metric_info["time_to_resolve_dns"] = {
+    "title": _("Time to resolve DNS"),
+    "unit": "s",
+    "color": "36/a",
+}
+
+metric_info["time_consumed_by_rule_engine"] = {
+    "title": _("Time consumed by rule engine"),
+    "unit": "s",
+    "color": "37/a",
+}
+
 metric_info["inside_macs"] = {
     "title": _("Number of unique inside MAC addresses"),
     "unit": "count",

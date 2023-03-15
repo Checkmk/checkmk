@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListChoice,
     ListOf,
-    Migrate,
+    MigrateNotUpdated,
     RegExp,
     Tuple,
 )
@@ -90,11 +90,18 @@ def _usage_endpoint(cloud_edition: bool) -> tuple[str, CascadingDropdown] | tupl
     )
 
 
+def _is_cre_spec(k: str, vs: object) -> bool:
+    if k != "usage_endpoint":
+        return True
+    return isinstance(vs, tuple) and vs[0] == "cluster-collector"
+
+
 def _migrate_usage_endpoint(p: dict[str, object]) -> dict[str, object]:
     cluster_collector = p.pop("cluster-collector", None)
     if cluster_collector is not None:
         p["usage_endpoint"] = ("cluster-collector", cluster_collector)
-    return p
+
+    return p if is_cloud_edition() else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
 
 
 def _openshift() -> tuple[str, str, Dictionary]:
@@ -164,7 +171,7 @@ def _cluster_collector() -> tuple[str, str, Dictionary]:
 
 
 def _valuespec_special_agents_kube():
-    return Migrate(
+    return MigrateNotUpdated(
         valuespec=Dictionary(
             elements=[
                 (

@@ -10,10 +10,10 @@ from typing import Any
 
 from pydantic import BaseModel, Extra, Field
 
-from .werk import Class, Compatibility, Edition, Level, NoWiki, Werk, WerkError
+from .werk import Class, Compatibility, Edition, Level, NoWiki, RawWerk, Werk, WerkError
 
 
-class RawWerkV1(BaseModel):
+class RawWerkV1(BaseModel, RawWerk):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
     class_: str = Field(alias="class")
@@ -35,8 +35,8 @@ class RawWerkV1(BaseModel):
         extra = Extra.forbid
         fields = {"class_": "class"}
 
-    def to_json(self) -> str:
-        return self.json(by_alias=True)
+    def to_json_dict(self) -> dict[str, object]:
+        return self.dict(by_alias=True)
 
     def to_werk(self) -> "Werk":
         return Werk(

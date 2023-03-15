@@ -6,3 +6,4 @@
 from ..agent_based_api.v1 import contains
 
 DETECT_EMAIL_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee email gateway")
+DETECT_WEB_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway")

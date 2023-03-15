@@ -9,8 +9,9 @@ from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
 
+from cmk.base.plugins.agent_based import mcafee_webgateway_misc
 from cmk.base.plugins.agent_based.agent_based_api import v1
 
 # SUP-13087
@@ -47,11 +48,10 @@ def test_parse(fix_register: FixRegister) -> None:
 
 def test_discovery(fix_register: FixRegister) -> None:
     # Assemble
-    plugin = fix_register.check_plugins[CheckPluginName("mcafee_webgateway_misc")]
     section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
     assert section is not None
     # Act
-    services = list(plugin.discovery_function(section=section))
+    services = list(mcafee_webgateway_misc.discovery_mcafee_webgateway_misc(section=section))
     # Assert
     assert services == [v1.Service()]
 
@@ -98,16 +98,17 @@ def test_discovery(fix_register: FixRegister) -> None:
     ],
 )
 def test_check_results(
-    fix_register: FixRegister, params: object, expected_results: list[v1.Result]
+    fix_register: FixRegister,
+    params: mcafee_webgateway_misc.Params,
+    expected_results: list[v1.Result],
 ) -> None:
     # Assemble
-    plugin = fix_register.check_plugins[CheckPluginName("mcafee_webgateway_misc")]
     section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
     assert section is not None
     # Act
     results = [
         r
-        for r in plugin.check_function(item=None, params=params, section=section)
+        for r in mcafee_webgateway_misc.check_mcafee_webgateway_misc(params=params, section=section)
         if isinstance(r, v1.Result)
     ]
     # Assert
@@ -116,13 +117,12 @@ def test_check_results(
 
 def test_check_metrics(fix_register: FixRegister) -> None:
     # Assemble
-    plugin = fix_register.check_plugins[CheckPluginName("mcafee_webgateway_misc")]
     section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), WALK)
     assert section is not None
     # Act
     metrics = [
         r
-        for r in plugin.check_function(item=None, params={}, section=section)
+        for r in mcafee_webgateway_misc.check_mcafee_webgateway_misc(params={}, section=section)
         if isinstance(r, v1.Metric)
     ]
     # Assert
@@ -131,7 +131,6 @@ def test_check_metrics(fix_register: FixRegister) -> None:
 
 def test_check_invalid_values(fix_register: FixRegister) -> None:
     # Assemble
-    plugin = fix_register.check_plugins[CheckPluginName("mcafee_webgateway_misc")]
     # This walk is made up, the final entry cannot be removed, because our fetcher will crash.
     walk = """
     .1.3.6.1.4.1.1230.2.7.2.5.2.0
@@ -141,6 +140,6 @@ def test_check_invalid_values(fix_register: FixRegister) -> None:
     section = get_parsed_snmp_section(SectionName("mcafee_webgateway_misc"), walk)
     assert section is not None
     # Act
-    results = list(plugin.check_function(item=None, params={}, section=section))
+    results = list(mcafee_webgateway_misc.check_mcafee_webgateway_misc(params={}, section=section))
     # Assert
     assert results == []

@@ -273,9 +273,9 @@ export class SearchFilters {
         update_browser_url({host_regex: host_regex});
     }
     get_filter_params() {
-        const inputs = this._root_node
-            .select("div.simplebar-content")
-            .selectAll<HTMLInputElement, null>("input,select");
+        const inputs = this._root_node.selectAll<HTMLInputElement, null>(
+            "input,select"
+        );
         const params = {};
         inputs.each((d, idx, nodes) => {
             const input = nodes[idx];
@@ -295,34 +295,45 @@ export class LiveSearch {
     _last_body = "";
     _sent_last_body = "";
     _check_interval = 300; // Check every 300ms
-    _stabilize_duration = 300; // Trigger update if there no changes since 500ms
+    _stabilize_duration = 300; // Trigger update if there are no additional changes for duration
     _start_update_at = 0;
     _update_active = false;
     _enabled = false;
+    _interval_id = 0;
     constructor(root_node, update_handler) {
         this._root_node = d3.select(root_node);
-        this._search_button = this._root_node
-            .select<HTMLInputElement>("input#_apply")
-            .property("value", "Live search");
-        this._search_button.style("pointer-events", "none");
+        this._search_button =
+            this._root_node.select<HTMLInputElement>("input#_apply");
         this._update_handler = update_handler;
-        setInterval(() => this._check_update(), this._check_interval);
     }
 
     enable(): void {
-        this._initialize_last_body();
         this._enabled = true;
+        clearInterval(this._interval_id);
+        this._search_button.property("value", "Live search");
+        this._search_button.style("pointer-events", "none");
+        this._initialize_last_body();
+        // @ts-ignore
+        this._interval_id = setInterval(
+            () => this._check_update(),
+            this._check_interval
+        );
     }
 
     disable(): void {
         this._enabled = false;
+        clearInterval(this._interval_id);
+        this._search_button.property("value", "Apply");
+        this._search_button.style("pointer-events", "all");
     }
 
-    _update_pending(eta) {
-        this._search_button.property(
-            "value",
-            "Live search starts in" + eta.toPrecision(2) + "s"
-        );
+    _update_pending(eta): void {
+        // May show an indicator for an upcoming update
+        return;
+        //this._search_button.property(
+        //    "value",
+        //    "Live search starts in" + eta.toPrecision(2) + "s"
+        //);
     }
 
     _update_started(): void {
@@ -341,6 +352,7 @@ export class LiveSearch {
     }
 
     _check_update(): void {
+        if (this._enabled == false) return;
         this._trigger_update_if_required(this.get_filter_params());
     }
 
@@ -354,11 +366,10 @@ export class LiveSearch {
         }
 
         if (Date.now() < this._start_update_at) {
-            //            this._update_pending((this._start_update_at - Date.now()) / 1000);
+            this._update_pending((this._start_update_at - Date.now()) / 1000);
             return;
         }
 
-        if (this._enabled == false) return;
         if (this._update_active) return;
         this._sent_last_body = body;
         this._update_started();

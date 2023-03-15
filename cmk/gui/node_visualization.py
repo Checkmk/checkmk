@@ -18,7 +18,6 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.bi as bi
@@ -55,7 +54,6 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.gui.watolib.utils import multisite_dir
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter
@@ -129,10 +127,11 @@ class TopologyFilterConfiguration:
     max_nodes: int = FilterTopologyMaxNodes().range_config.default
     mesh_depth: int = FilterTopologyMeshDepth().range_config.default
     growth_auto_max_nodes: int = 400
-    query: str = "default_query"
+    query: str = ""
 
-    def ident(self):
-        return "#".join(
+    @property
+    def ident(self) -> tuple[str, ...]:
+        return tuple(
             map(str, [self.max_nodes, self.mesh_depth, self.growth_auto_max_nodes, self.query])
         )
 
@@ -144,9 +143,29 @@ class TopologyConfiguration:
     filter: TopologyFilterConfiguration
 
 
+class TopologyQueryIdentifier:
+    """Describes the query parameters which were used to generate the result"""
+
+    def __init__(
+        self, topology_type: str, topology_filter_configuration: TopologyFilterConfiguration
+    ):
+        self._identifier: tuple[str, ...] = (
+            topology_type,
+            *topology_filter_configuration.ident,
+        )
+
+    @property
+    def identifier(self) -> tuple[str, ...]:
+        return self._identifier
+
+    def __hash__(self) -> int:
+        hash_object = hashlib.sha256("#".join(self._identifier).encode("utf-8"))
+        return int(hash_object.hexdigest(), 16)
+
+
 def _get_topology_configuration(
     topology_type: str, default_overlays: dict[str, Any] | None = None
-) -> TopologyConfiguration:
+) -> tuple[TopologyConfiguration, str]:
     topology_filters = _get_topology_settings_from_filters()
     mesh_depth = int(topology_filters["topology_mesh_depth"])
     max_nodes = int(topology_filters["topology_max_nodes"])
@@ -154,28 +173,51 @@ def _get_topology_configuration(
         mesh_depth=mesh_depth, max_nodes=max_nodes, query=_get_query_string()
     )
 
-    if request.var("search_frontend_settings") and (
-        value := _get_topology_frontend_configuration_for_filter(
-            topology_type, filter_configuration
-        )
-    ):
-        frontend_configuration = TopologyFrontendConfiguration.from_json_object(value)
-    elif frontend_config := request.get_str_input("topology_frontend_configuration"):
-        frontend_configuration = TopologyFrontendConfiguration.from_json_str(frontend_config)
-    else:
+    frontend_configuration, query_hash = _get_frontend_configuration_from_request(
+        topology_type, filter_configuration
+    )
+    if frontend_configuration is None:
         frontend_configuration = TopologyFrontendConfiguration()
         frontend_configuration.overlays_config = default_overlays or {}
+        query_hash = ""
 
-    topology_configuration = TopologyConfiguration(
-        topology_type, frontend_configuration, filter_configuration
+    return (
+        TopologyConfiguration(topology_type, frontend_configuration, filter_configuration),
+        query_hash,
     )
-    return topology_configuration
+
+
+def _get_frontend_configuration_from_request(
+    topology_type: str, filter_configuration: TopologyFilterConfiguration
+) -> tuple[None | TopologyFrontendConfiguration, str]:
+    """A frontend configuration may come from different sources
+    - An exact filter match
+    - A configuration based on topology_query_hash_hint
+    - A configuration fully specified in the POST or GET request
+    """
+    if request.var("search_frontend_settings"):
+        query_identifier = TopologyQueryIdentifier(topology_type, filter_configuration)
+        if value := _get_topology_frontend_configuration_for_filter(query_identifier):
+            return TopologyFrontendConfiguration.from_json_object(value), str(
+                hash(query_identifier)
+            )
+
+        if topology_query_hash_hint := request.get_str_input("topology_query_hash_hint"):
+            # The hidden var in the filter form provided a hint
+            if value := _get_topology_settings_for_hash(topology_query_hash_hint):
+                return (
+                    TopologyFrontendConfiguration.from_json_object(value),
+                    topology_query_hash_hint,
+                )
+
+    if frontend_config := request.get_str_input("topology_frontend_configuration"):
+        # The entire configuration is embedded in the url
+        return TopologyFrontendConfiguration.from_json_str(frontend_config), ""
+
+    return None, ""
 
 
 def _get_hostnames_for_query(topology_configuration: TopologyConfiguration) -> set[HostName]:
-    if topology_configuration.filter.query == "default_query":
-        return _get_default_view_hostnames(topology_configuration)
-
     site_id = (
         livestatus.SiteId(request.get_str_input_mandatory("site"))
         if request.get_str_input("site")
@@ -197,9 +239,6 @@ def _get_topology_settings_from_filters() -> dict[str, str]:
 
 
 def _get_query_string() -> str:
-    if not request.has_var("filled_in"):
-        return "default_query"
-
     # Determine hosts from filters
     filter_headers = "".join(get_livestatus_filter_headers(*get_topology_context_and_filters()))
     query = "GET hosts\nColumns: name"
@@ -208,79 +247,81 @@ def _get_query_string() -> str:
     return query
 
 
-def _get_default_view_hostnames(topology_configuration: TopologyConfiguration) -> set[HostName]:
-    """Returns all hosts without any parents"""
-    query = "GET hosts\nColumns: name\nFilter: parents ="
-    site_id = (
-        livestatus.SiteId(request.get_str_input_mandatory("site"))
-        if request.get_str_input("site")
-        else None
-    )
-    with sites.prepend_site(), sites.only_sites(site_id):
-        hosts = [(x[0], x[1]) for x in sites.live().query(query)]
-
-    # If no explicit site is set and the number of initially displayed hosts
-    # exceeds the auto growth range, only the hosts of the master site are shown
-    if len(hosts) > topology_configuration.filter.growth_auto_max_nodes:
-        hostnames = {x[1] for x in hosts if x[0] == omd_site()}
-    else:
-        hostnames = {x[1] for x in hosts}
-
-    return hostnames
+topology_dir = Path(cmk.utils.paths.var_dir) / "topology"
+_topology_settings_lookup = topology_dir / "topology_settings"
+_topology_configs = topology_dir / "configs"
 
 
-_topology_settings_file = Path(multisite_dir()) / "topology" / "topology_settings.json"
+def _settings_path(topology_hash: str) -> Path:
+    return _topology_configs / topology_hash
 
 
 def _delete_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
-    query_hash = _compute_topology_hash(topology_configuration)
-    if not _topology_settings_file.exists():
+    query_identifier = TopologyQueryIdentifier(
+        topology_configuration.type, topology_configuration.filter
+    )
+    if not _topology_settings_lookup.exists():
         return
 
     try:
-        data = json.loads(store.load_text_from_file(_topology_settings_file))
+        data = store.try_load_file_from_pickle_cache(_topology_settings_lookup, default={})
     except json.JSONDecodeError:
         data = {}
 
-    data.pop(query_hash, None)
-    store.save_text_to_file(_topology_settings_file, json.dumps(data))
+    data.pop(hash(query_identifier), None)
+    store.save_object_to_file(_topology_settings_lookup, data)
+    Path(_settings_path(str(hash(query_identifier)))).unlink(missing_ok=True)
 
 
 def _save_topology_configuration(topology_configuration: TopologyConfiguration) -> None:
-    query_hash = _compute_topology_hash(topology_configuration)
-    if not _topology_settings_file.exists():
-        _topology_settings_file.parent.mkdir(parents=True, exist_ok=True)
-        _topology_settings_file.touch()
+    query_identifier = TopologyQueryIdentifier(
+        topology_configuration.type, topology_configuration.filter
+    )
+    if not _topology_settings_lookup.exists():
+        _topology_configs.mkdir(parents=True, exist_ok=True)
+        _topology_settings_lookup.touch()
 
     try:
-        data = json.loads(store.load_text_from_file(_topology_settings_file))
+        data = store.try_load_file_from_pickle_cache(_topology_settings_lookup, default={})
     except json.JSONDecodeError:
         data = {}
 
-    data[query_hash] = topology_configuration.frontend.get_json_export_object()
-    store.save_text_to_file(_topology_settings_file, json.dumps(data))
+    topology_hash = str(hash(query_identifier))
+    data[query_identifier.identifier] = topology_hash
 
+    # Note: Since the lookup uses tuple[str, ...] as keys we cannot store it as json
+    store.save_object_to_file(_topology_settings_lookup, data)
 
-def _get_ident_hash(ident: str) -> str:
-    return hashlib.md5(ident.encode("utf-8"), usedforsecurity=False).hexdigest()
-
-
-def _compute_topology_hash(topology_configuration: TopologyConfiguration) -> str:
-    return _get_ident_hash(
-        "#".join([topology_configuration.type, topology_configuration.filter.ident()])
+    # The actual settings are stored in a separate file
+    store.save_text_to_file(
+        _settings_path(topology_hash),
+        json.dumps(topology_configuration.frontend.get_json_export_object()),
     )
 
 
 def _get_topology_frontend_configuration_for_filter(
-    topology_type: str, filter_configuration: TopologyFilterConfiguration
+    query_identifier: TopologyQueryIdentifier,
 ) -> dict[str, Any]:
-    query_hash = _get_ident_hash("#".join([topology_type, filter_configuration.ident()]))
-
-    if not _topology_settings_file.exists():
+    if not _topology_settings_lookup.exists():
         return {}
 
+    found_topology_hash = store.try_load_file_from_pickle_cache(
+        _topology_settings_lookup, default={}
+    ).get(query_identifier.identifier)
+    if found_topology_hash is None:
+        return {}
+
+    return _get_topology_settings_for_hash(found_topology_hash)
+
+
+def _get_topology_settings_for_hash(topology_hash: str) -> dict[str, Any]:
+    topology_file = _settings_path(topology_hash)
+    if not topology_file.exists():
+        return {}
+
+    topology_file.touch()  # Used for last usage statistics
     try:
-        return json.loads(store.load_text_from_file(_topology_settings_file)).get(query_hash)
+        return json.loads(store.load_text_from_file(topology_file))
     except json.JSONDecodeError:
         return {}
 
@@ -313,7 +354,7 @@ class ABCTopologyPage(Page):
         html.div("", id_=div_id)
 
         search_frontend_settings = not request.has_var("topology_frontend_configuration")
-        topology_configuration = _get_topology_configuration(
+        topology_configuration, _query_hash = _get_topology_configuration(
             self.visual_spec()["name"], self._get_overlays_config()
         )
 
@@ -333,6 +374,20 @@ class ABCTopologyPage(Page):
     def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
         context, _show_filters = get_topology_context_and_filters()
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+
+        topology_filters = _get_topology_settings_from_filters()
+        mesh_depth = int(topology_filters["topology_mesh_depth"])
+        max_nodes = int(topology_filters["topology_max_nodes"])
+
+        if not request.has_var("topology_query_hash_hint"):
+            query_identifier = TopologyQueryIdentifier(
+                self.ident(),
+                TopologyFilterConfiguration(
+                    mesh_depth=mesh_depth, max_nodes=max_nodes, query=_get_query_string()
+                ),
+            )
+            request.set_var("topology_query_hash_hint", str(hash(query_identifier)))
+
         display_dropdown.topics.insert(
             0,
             PageMenuTopic(
@@ -367,7 +422,7 @@ class ParentChildTopologyPage(ABCTopologyPage):
             "hidebutton": False,
             "public": True,
             "topic": "overview",
-            "title": _("Network topology"),
+            "title": _("Parent / Child topology"),
             "name": "parent_child_topology",
             "sort_index": 50,
             "is_show_more": False,
@@ -702,7 +757,7 @@ class AjaxGetAllBITemplateLayouts(AjaxPage):
 @page_registry.register_page("ajax_fetch_topology")
 class AjaxFetchTopology(AjaxPage):
     def page(self) -> PageResult:
-        topology_configuration = _get_topology_configuration(
+        topology_configuration, query_hash = _get_topology_configuration(
             request.get_str_input_mandatory("topology_type")
         )
         if request.has_var("delete_topology_configuration"):
@@ -722,6 +777,21 @@ class AjaxFetchTopology(AjaxPage):
             "errors": topology.errors(),
         }
 
+        total_mesh_nodes = len(list(itertools.chain.from_iterable(meshes)))
+        if total_mesh_nodes > topology_configuration.filter.max_nodes:
+            topology_info["headline"] = topology_info["headline"] + _(
+                " (Data incomplete, maximum number of nodes reached)"
+            )
+            meshes = self._reduce_mesh_nodes(
+                meshes, topology_configuration.filter.max_nodes, topology
+            )
+
+        if query_hash:
+            # Inform the frontend which query hash was used to compute the data
+            # This information can be used to keep the layout for subsequent calls without an
+            # explicit layout configuration
+            topology_info["query_hash"] = query_hash
+
         # Convert mesh information into a node visualization compatible format
         for mesh in meshes:
             if not mesh:
@@ -734,6 +804,51 @@ class AjaxFetchTopology(AjaxPage):
             "frontend_configuration"
         ] = topology_configuration.frontend.get_json_export_object()
         return topology_info
+
+    def _reduce_mesh_nodes(  # pylint: disable=too-many-branches
+        self, meshes: Meshes, limit: int, topology: "Topology"
+    ) -> Meshes:
+        """Reduce the number of nodes and put all nodes into a single mesh"""
+        reduced_mesh = set()
+
+        # Add special nodes with a node type
+        for node_name in itertools.chain.from_iterable(meshes):
+            if topology.has_node_type(node_name):
+                reduced_mesh.add(node_name)
+            if len(reduced_mesh) > limit:
+                return [reduced_mesh]
+
+        # Add explicit growth root nodes
+        for node_name in itertools.chain.from_iterable(meshes):
+            if topology.is_growth_root(node_name):
+                reduced_mesh.add(node_name)
+            if len(reduced_mesh) > limit:
+                return [reduced_mesh]
+
+        # Add nodes without parents
+        for node_name in itertools.chain.from_iterable(meshes):
+            if topology.is_root_node(node_name):
+                reduced_mesh.add(node_name)
+
+            if len(reduced_mesh) > limit:
+                return [reduced_mesh]
+
+        # Add remaining nodes till limit
+        # There is no guarantee that these nodes are connected to the root nodes
+        growth_depth_overview = topology.growth_depth_overview()
+        remaining_nodes = limit - len(reduced_mesh)
+        for i in range(50):
+            nodes = growth_depth_overview.get(i)
+            if nodes is None:
+                break
+            new_nodes = nodes - reduced_mesh
+            if len(new_nodes) <= remaining_nodes:
+                reduced_mesh.update(new_nodes)
+                remaining_nodes -= len(new_nodes)
+            elif len(new_nodes) > remaining_nodes:
+                reduced_mesh.update(list(new_nodes)[:remaining_nodes])
+                break
+        return [reduced_mesh]
 
     def _topology_instance_factory(
         self, topology_configuration: TopologyConfiguration
@@ -835,6 +950,8 @@ class Topology:
             # Valid interruption, since the growth should stop when a given number of nodes is exceeded
             pass
 
+        self._update_depth_information()
+
         # Remove border hosts from meshes, since they do not provide complete data
         for mesh in self._meshes:
             mesh -= self._border_hosts
@@ -844,6 +961,7 @@ class Topology:
 
     def _grow(self) -> None:
         self._fetch_root_nodes()
+        self._update_depth_information()
         self._growth_to_depth()
         self._growth_to_parents()
         self._growth_to_continue_nodes()
@@ -933,6 +1051,7 @@ class Topology:
         while self._current_iteration < self.mesh_depth:
             self._current_iteration += 1
             self._compute_meshes(self._border_hosts)
+            self._update_depth_information()
 
     def _growth_to_parents(self) -> None:
         while True:
@@ -999,6 +1118,15 @@ class Topology:
     def is_border_host(self, hostname: HostName) -> bool:
         return hostname in self._border_hosts
 
+    def has_node_type(self, hostname: HostName) -> bool:
+        return self._known_nodes[hostname].get("node_type") is not None
+
+    def growth_depth_overview(self) -> dict[int, set[str]]:
+        overview: dict[int, set[str]] = {}
+        for hostname, depth in self._depth_info.items():
+            overview.setdefault(depth, set()).add(hostname)
+        return overview
+
     def _update_meshes(self, new_hosts: list[dict[HostName, Any]]) -> None:
         # Data flow is child->parent
         # Incoming data comes from child
@@ -1036,15 +1164,11 @@ class Topology:
 
             self._meshes.append(set(itertools.chain.from_iterable(common_meshes)))
 
-    def _update_depth_information(self, meshes: Meshes) -> None:
-        for mesh_hosts in meshes:
-            self._update_depth_of_mesh(mesh_hosts)
-
-    def _update_depth_of_mesh(self, mesh_hosts: Mesh) -> None:
-        for hostname in list(mesh_hosts):
-            if hostname in self._depth_info:
+    def _update_depth_information(self) -> None:
+        for node_name in self._known_nodes:
+            if node_name in self._depth_info:
                 continue
-            self._depth_info[hostname] = self._current_iteration
+            self._depth_info[node_name] = self._current_iteration
 
 
 class TopologyRegistry(cmk.utils.plugin_registry.Registry[type[Topology]]):

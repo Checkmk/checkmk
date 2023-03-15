@@ -12,6 +12,8 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
 
+TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]*$"
+
 
 class TimePeriodNotFoundError(KeyError):
     pass

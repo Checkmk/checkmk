@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.fields import FolderField, HostField
+from cmk.gui.watolib.timeperiods import TIMEPERIOD_ID_PATTERN
 
 from cmk.fields import List, String
 
@@ -40,6 +41,14 @@ IDENT_FIELD = {
         ),
         example="49167bd012b44719a67956cf3ef7b3dd",
         pattern="[a-fA-F0-9]{32}|root",
+    )
+}
+
+TIMEPERIOD_NAME_FIELD = {
+    "name": String(
+        description="A name used as an identifier. Can be of arbitrary (sensible) length.",
+        example="pathname",
+        pattern=TIMEPERIOD_ID_PATTERN,
     )
 }
 

@@ -9,7 +9,7 @@ from cmk.utils.defines import weekday_ids
 
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.groups import is_alias_used
-from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
+from cmk.gui.watolib.timeperiods import TIMEPERIOD_ID_PATTERN, verify_timeperiod_name_exists
 
 from cmk import fields
 
@@ -147,6 +147,7 @@ class CreateTimePeriod(BaseSchema):
         description="A unique name for the time period.",
         required=True,
         should_exist=False,
+        pattern=TIMEPERIOD_ID_PATTERN,
     )
     alias = TimePeriodAlias(
         example="alias",

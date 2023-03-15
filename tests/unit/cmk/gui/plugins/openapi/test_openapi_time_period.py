@@ -20,6 +20,18 @@ def test_get_a_time_period(timeperiod_client: TimePeriodTestClient) -> None:
     timeperiod_client.get(time_period_id="24X7")
 
 
+def test_openapi_create_invalid_name(timeperiod_client: TimePeriodTestClient) -> None:
+    timeperiod_client.create(
+        time_period_data={
+            "name": "foo$%",
+            "alias": "foobar",
+            "active_time_ranges": [{"day": "all"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_create_two_time_periods_same_name(timeperiod_client: TimePeriodTestClient) -> None:
     timeperiod_client.create(

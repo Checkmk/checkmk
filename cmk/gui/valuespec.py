@@ -999,9 +999,9 @@ class RegExp(TextInput):
             )
 
         if self._case_sensitive is True:
-            help_text.append(_("The match is performed case sensitive."))
+            help_text.append(_("The match is case sensitive."))
         elif self._case_sensitive is False:
-            help_text.append(_("The match is performed case insensitive."))
+            help_text.append(_("The match is case insensitive."))
 
         help_text.append(
             _("Read more about [regexes|regular expression matching in Checkmk] in our user guide.")

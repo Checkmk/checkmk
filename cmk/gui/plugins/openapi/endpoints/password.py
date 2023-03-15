@@ -24,7 +24,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.watolib.passwords import (
     load_password,
@@ -90,7 +90,7 @@ def create_password(params: Mapping[str, Any]) -> Response:
     constructors.object_href("password", "{name}"),
     ".../update",
     method="put",
-    path_params=[NAME_FIELD],
+    path_params=[NAME_ID_FIELD],
     request_schema=request_schemas.UpdatePassword,
     etag="both",
     response_schema=response_schemas.PasswordObject,
@@ -119,7 +119,7 @@ def update_password(params: Mapping[str, Any]) -> Response:
     constructors.object_href("password", "{name}"),
     ".../delete",
     method="delete",
-    path_params=[NAME_FIELD],
+    path_params=[NAME_ID_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
@@ -142,7 +142,7 @@ def delete_password(params: Mapping[str, Any]) -> Response:
     constructors.object_href("password", "{name}"),
     "cmk/show",
     method="get",
-    path_params=[NAME_FIELD],
+    path_params=[NAME_ID_FIELD],
     response_schema=response_schemas.PasswordObject,
     permissions_required=PERMISSIONS,
 )

@@ -30,6 +30,7 @@ from cmk.utils.version import parse_check_mk_version
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.exceptions import http, MKHTTPException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -64,6 +65,10 @@ StackElement = Union[Atom, TransformedAtom]
 
 ScalarDefinition = Union[str, tuple[str, str | LazyString]]
 HorizontalRule = tuple[float, str, str, str | LazyString]
+
+
+class MKCombinedGraphLimitExceededError(MKHTTPException):
+    status = http.HTTPStatus.BAD_REQUEST
 
 
 class _CurveMandatory(TypedDict):

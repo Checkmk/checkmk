@@ -23,6 +23,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     Migrate,
+    MigrateNotUpdated,
     TextInput,
     Tuple,
     ValueSpec,
@@ -238,24 +239,29 @@ rulespec_registry.register(
 
 
 def get_services_vs() -> tuple[str, ValueSpec]:
+    valid_choices = {s[0] for s in get_azure_services()}
     return (
         "services",
-        ListChoice(
-            title=_("Azure services to monitor"),
-            choices=get_azure_services(),
-            # users_count, ad_connect and app_registration are disabled by default because they
-            # require special permissions on the Azure app (Graph API permissions + admin consent).
-            default_value=[
-                s[0]
-                for s in get_azure_services()
-                if s[0] not in {"users_count", "ad_connect", "app_registrations"}
-            ],
-            allow_empty=True,
-            help=_(
-                "Select which Azure services to monitor.\n"
-                "In case you want to monitor 'Users in the Active Directory' or 'AD Connect Sync',"
-                " you will need to grant the 'Directory.Read.All' graph permission to the Azure app"
-                " and to grant admin consent to it."
+        MigrateNotUpdated(
+            valuespec=ListChoice(
+                title=_("Azure services to monitor"),
+                choices=get_azure_services(),
+                # users_count, ad_connect and app_registration are disabled by default because they
+                # require special permissions on the Azure app (Graph API permissions + admin consent).
+                default_value=[
+                    s[0]
+                    for s in get_azure_services()
+                    if s[0] not in {"users_count", "ad_connect", "app_registrations"}
+                ],
+                allow_empty=True,
+                help=_(
+                    "Select which Azure services to monitor.\n"
+                    "In case you want to monitor 'Users in the Active Directory' or 'AD Connect Sync',"
+                    " you will need to grant the 'Directory.Read.All' graph permission to the Azure app"
+                    " and to grant admin consent to it."
+                ),
             ),
+            # silently drop values that are only valid in CCE if we're CEE now.
+            migrate=lambda slist: [s for s in slist if s in valid_choices],
         ),
     )

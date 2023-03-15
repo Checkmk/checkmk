@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -50,7 +49,7 @@ def write_werk(path: Path, werk_dict: Mapping[str, Any]) -> None:
 
 def test_werk_loading(tmp_path: Path) -> None:
     write_werk(tmp_path / "good", WERK)
-    loaded_data = json.loads(load_werk_v1(tmp_path / "good", 1).to_json())
+    loaded_data = load_werk_v1(tmp_path / "good", 1).to_json_dict()
     # loaded_data contains id, and other default values, WERK does not have
     for key, value in WERK.items():
         assert loaded_data[key] == value
@@ -201,7 +200,7 @@ edition | cre
 this is the `description` with some *formatting.*
 
 """
-    assert _markdown_string_to_werk(tmp_path, md).to_json() == {
+    assert _markdown_string_to_werk(tmp_path, md).to_json_dict() == {
         "__version__": "2",
         "id": 1234,
         "class": "fix",

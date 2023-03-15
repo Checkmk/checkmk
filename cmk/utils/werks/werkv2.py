@@ -15,10 +15,10 @@ from pydantic.error_wrappers import ValidationError
 
 from cmk.utils.version import parse_check_mk_version
 
-from .werk import Class, Compatibility, Edition, Level, Werk, WerkError, WerkTranslator
+from .werk import Class, Compatibility, Edition, Level, RawWerk, Werk, WerkError, WerkTranslator
 
 
-class RawWerkV2(BaseModel):
+class RawWerkV2(BaseModel, RawWerk):
     # ATTENTION! If you change this model, you have to inform
     # the website team first! They rely on those fields.
     werk_version: Literal["2"] = Field(default="2", alias="__version__")
@@ -57,8 +57,7 @@ class RawWerkV2(BaseModel):
 
         return cls.parse_obj(data)
 
-    def to_json(self) -> dict[str, object]:
-        # TODO: maybe this can be removed by pydantic?
+    def to_json_dict(self) -> dict[str, object]:
         return {
             "__version__": self.werk_version,
             "id": self.id,

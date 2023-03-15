@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import abc
 import datetime
 from enum import Enum
 from typing import NamedTuple, Union
@@ -154,3 +155,15 @@ class WerkTranslator:
 class NoWiki:
     def __init__(self, value: list[str]):
         self.value = value
+
+
+class RawWerk(abc.ABC):
+    @abc.abstractmethod
+    def to_json_dict(self) -> dict[str, object]:
+        """
+        returns a python dict structure that can be serialized to json
+        """
+
+    @abc.abstractmethod
+    def to_werk(self) -> Werk:
+        ...

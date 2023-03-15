@@ -467,11 +467,11 @@ def logwatch_forward_spool_directory(
 
     split_files = split_file_messages((message + "\n" for message in map(repr, syslog_messages)))
     for file_index, file in enumerate(split_files):
-        spool_file = get_new_spool_file(method, item)
+        spool_file = get_new_spool_file(method, item, file_index)
         with spool_file.open("w") as f:
             for message in file:
                 f.write(message)
-        spool_file.rename((spool_file.parent / spool_file.name[1:]).with_suffix(f".{file_index}"))
+        spool_file.rename(spool_file.parent / spool_file.name[1:])
 
     return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
 
@@ -491,14 +491,15 @@ def split_file_messages(file_messages: Generator[str, None, None]) -> list[list[
     return result
 
 
-def get_new_spool_file(method: str, item: Optional[str]) -> Path:
+def get_new_spool_file(method: str, item: Optional[str], file_index: int) -> Path:
     spool_file = Path(
         method[6:],
-        ".%s_%s%d"
+        ".%s_%s%d_%d"
         % (
             host_name(),
             (item.replace("/", "\\") + "_") if item else "",
             time.time(),
+            file_index,
         ),
     )
     spool_file.parent.mkdir(parents=True, exist_ok=True)

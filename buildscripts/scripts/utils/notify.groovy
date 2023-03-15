@@ -74,15 +74,18 @@ def notify_error(error) {
         print("|| error-reporting: currentBuild.rawBuild.changeSets[0] ${currentBuild.rawBuild.changeSets[0]}");
 
 //        if (isFirstFailure) {
+            def notify_emails = [];
             currentBuild.changeSets.each { changeSet -> 
                 print("|| error-reporting:   changeSet=${changeSet}");
                 print("|| error-reporting:   changeSet.items=${changeSet.items}");
 
-                def culprits = changeSet.items.collectEntries {e -> e.authorEmail};
-                print("|| error-reporting:   culprits ${culprits}");
-                def culprits_emails = culprits.join(";");
+                def culprits_emails = changeSet.items.collectEntries {e -> e.authorEmail};
                 print("|| error-reporting:   culprits_emails ${culprits_emails}");
+
+                notify_emails += culprits_emails
+                print("|| error-reporting:   notify_emails ${notify_emails}");
             }
+
             mail(
                 to: "frans.fuerst@tribe29.com",
                 cc: '',
@@ -91,14 +94,15 @@ def notify_error(error) {
                 replyTo: '',
                 subject: "Exception in ${env.JOB_NAME}",
                 body: ("""
-                    |Should go to ${culprits_emails}:
+                    |Should go to ${notify_emails}:
+                    |Should go to ${notify_emails.join(";")}:
                     |Build Failed:
                     |    ${env.JOB_NAME} ${env.BUILD_NUMBER}
                     |    ${env.BUILD_URL}
                     |Error Message:
                     |    ${error}
                     |""".stripMargin()),
-               )
+           )
 //        }
 
     } catch(Exception exc) {

@@ -40,7 +40,8 @@ def notify_error(error) {
         def isTriggerJob = currentBuild.fullProjectName.contains("trigger");
         print("|| error-reporting: isTriggerJob=${isTriggerJob}");
 
-        def isFirstFailure = currentBuild.getPreviousBuild()?.result == "FAILURE";
+        /// for now we assume this build to be in state "FAILURE"
+        def isFirstFailure = currentBuild.getPreviousBuild()?.result != "FAILURE";
         print("|| error-reporting: isFirstFailure=${isFirstFailure}");
 
         if (isFirstFailure && !isChangeValidation && !isTriggerJob) {
@@ -87,10 +88,8 @@ def notify_error(error) {
     |The error message was:
     |    ${error}
     |
-    |You get this mail because you are on the list of last submitters to a 
-    |production critical branch, which just turned red.
-    |Please help to get back to a clean state by either fixing a bug you introduced or
-    |helping investigate what has to be done and how to avoid this happening again.
+    |You get this mail because you are on the list of last submitters to a production critical branch, which just turned red.
+    |Please help to get back to a clean state by either fixing a bug you introduced or helping investigate what has to be done and how to avoid this happening again.
     |
     |If you feel you got this mail by mistake, please reply and let's fix this together.
     |""".stripMargin()),

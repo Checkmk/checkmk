@@ -103,9 +103,9 @@ def _instantiate_ruleset(
     rulespec: Rulespec | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
-    rule = Rule.from_ruleset_defaults(Folder(""), ruleset)
+    rule = Rule.from_ruleset_defaults(Folder(name=""), ruleset)
     rule.value = param_value
-    ruleset.append_rule(Folder(""), rule)
+    ruleset.append_rule(Folder(name=""), rule)
     assert ruleset.get_rules()
     return ruleset
 
@@ -193,7 +193,7 @@ def test_transform_replaced_wato_rulesets_and_params(
 def test_remove_removed_check_plugins_from_ignored_checks() -> None:
     ruleset = Ruleset("ignored_checks", {})
     ruleset.replace_folder_config(
-        Folder(""),
+        Folder(name=""),
         [
             {
                 "id": "1",

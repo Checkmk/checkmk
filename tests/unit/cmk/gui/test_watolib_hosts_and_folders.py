@@ -64,8 +64,8 @@ def test_folder_times() -> None:
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
-        Folder("test", parent_folder=root).save()
-        folder = Folder("test", "")
+        Folder(name="test", parent_folder=root).save()
+        folder = Folder(name="test", folder_path="")
         folder.save()
 
     meta_data = folder.attributes()["meta_data"]

@@ -164,12 +164,12 @@ def test_write_and_read_host_attributes(
     folder_path = str(tmp_path)
     # Used to write the data
     write_data_folder = hosts_and_folders.Folder(
-        "testfolder", folder_path=folder_path, parent_folder=None
+        name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
     # Used to read the previously written data
     read_data_folder = hosts_and_folders.Folder(
-        "testfolder", folder_path=folder_path, parent_folder=None
+        name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
     # Write data
@@ -201,10 +201,10 @@ def test_create_nested_folders(request_context: None) -> None:
     with in_chdir("/"):
         root = hosts_and_folders.Folder.root_folder()
 
-        folder1 = hosts_and_folders.Folder("folder1", parent_folder=root)
+        folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder2 = hosts_and_folders.Folder("folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder(name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
@@ -213,17 +213,17 @@ def test_create_nested_folders(request_context: None) -> None:
 def test_eq_operation(request_context: None) -> None:
     with in_chdir("/"):
         root = hosts_and_folders.Folder.root_folder()
-        folder1 = hosts_and_folders.Folder("folder1", parent_folder=root)
+        folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder1_new = hosts_and_folders.Folder("folder1")
+        folder1_new = hosts_and_folders.Folder(name="folder1", folder_path="folder1")
         folder1_new.load_instance()
 
         assert folder1 == folder1_new
         assert id(folder1) != id(folder1_new)
         assert folder1 in [folder1_new]
 
-        folder2 = hosts_and_folders.Folder("folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder(name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         assert folder1 not in [folder2]
@@ -449,7 +449,7 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
         may_see: bool = True,
     ) -> hosts_and_folders.CREFolder:
         folder = hosts_and_folders.Folder(
-            name, folder_path=None, parent_folder=parent_folder, title=title, root_dir=root_dir
+            name=name, folder_path=None, parent_folder=parent_folder, title=title, root_dir=root_dir
         )
         # Attribute only used for testing
         folder._may_see = may_see  # type: ignore[attr-defined]
@@ -610,7 +610,7 @@ def make_monkeyfree_folder(
     tree_structure: _TreeStructure, parent: hosts_and_folders.CREFolder | None = None
 ) -> hosts_and_folders.CREFolder:
     new_folder = hosts_and_folders.CREFolder(
-        tree_structure.path,
+        name=tree_structure.path,
         parent_folder=parent,
         title=f"Title of {tree_structure.path}",
         attributes=tree_structure.attributes,

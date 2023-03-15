@@ -651,7 +651,7 @@ class _RedisHelper:
 
 def _get_fully_loaded_wato_folders() -> Mapping[PathWithoutSlash, CREFolder]:
     wato_folders: dict[PathWithoutSlash, CREFolder] = {}
-    Folder("", "").add_to_dictionary(wato_folders)
+    Folder(name="", folder_path="").add_to_dictionary(wato_folders)
     return wato_folders
 
 
@@ -1182,7 +1182,14 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         g.wato_current_folder = folder
 
     def __init__(
-        self, name, folder_path=None, parent_folder=None, title=None, attributes=None, root_dir=None
+        self,
+        *,
+        name,
+        folder_path=None,
+        parent_folder=None,
+        title=None,
+        attributes=None,
+        root_dir=None,
     ):
         super().__init__()
         self._name = name
@@ -1507,8 +1514,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
                     subfolder_path = entry
 
                 loaded_subfolders[entry] = Folder(
-                    entry,
-                    subfolder_path,
+                    name=entry,
+                    folder_path=subfolder_path,
                     parent_folder=self,
                     root_dir=self._root_dir,
                 )
@@ -2260,7 +2267,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         attributes = update_metadata(attributes, created_by=user.id)
 
         # 2. Actual modification
-        new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
+        new_subfolder = Folder(name=name, parent_folder=self, title=title, attributes=attributes)
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
         new_subfolder.save_hosts()
@@ -2795,7 +2802,9 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder | None]):
         if folder_path != "":
             parent_folder = self[str(Path(folder_path).parent).lstrip(".")]
 
-        return Folder(os.path.basename(folder_path), folder_path, parent_folder)
+        return Folder(
+            name=os.path.basename(folder_path), folder_path=folder_path, parent_folder=parent_folder
+        )
 
 
 def validate_host_uniqueness(varname, host_name):

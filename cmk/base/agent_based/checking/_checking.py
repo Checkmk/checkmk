@@ -136,7 +136,7 @@ def execute_checkmk_checks(
             summarizer(host_sections),
             check_parsing_errors(
                 itertools.chain.from_iterable(
-                    parser.parsing_errors for _, parser in providers.values()
+                    resolver.parsing_errors for resolver in providers.values()
                 )
             ),
             _check_plugins_missing_data(

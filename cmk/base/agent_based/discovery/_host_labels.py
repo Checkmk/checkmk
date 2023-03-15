@@ -144,7 +144,7 @@ def _all_parsing_results(
     providers: Mapping[HostKey, Provider],
 ) -> Sequence[ResolvedResult]:
     try:
-        resolver, parser = providers[host_key]
+        resolver = providers[host_key]
     except KeyError:
         return ()
 
@@ -152,7 +152,7 @@ def _all_parsing_results(
         (
             res
             for psn in {section.parsed_section_name for section in resolver.section_plugins}
-            if (res := resolver.resolve(parser, psn)) is not None
+            if (res := resolver.resolve(psn)) is not None
         ),
         key=lambda r: r.section.name,
     )

@@ -41,86 +41,63 @@ class TestParsedSectionsResolver:
     @staticmethod
     def make_provider(
         section_plugins: Sequence[SectionPlugin],
-    ) -> tuple[ParsedSectionsResolver, _FakeParser]:
-        return (
-            ParsedSectionsResolver(
-                section_plugins=section_plugins,
-            ),
-            _FakeParser(
+    ) -> ParsedSectionsResolver:
+        return ParsedSectionsResolver(
+            _FakeParser(  # type: ignore[arg-type]
                 {
                     "section_one": ParsingResult(data=1, cache_info=None),
                     "section_two": ParsingResult(data=2, cache_info=None),
                     "section_thr": ParsingResult(data=3, cache_info=None),
                 }
             ),
+            section_plugins=section_plugins,
         )
 
     def test_straight_forward_case(self) -> None:
-        resolver, parser = self.make_provider(
+        resolver = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section_name", set()),
             ]
         )
 
-        resolved = resolver.resolve(
-            parser,  # type: ignore[arg-type]
-            ParsedSectionName("parsed_section_name"),
-        )
+        resolved = resolver.resolve(ParsedSectionName("parsed_section_name"))
         assert resolved is not None
         assert resolved.parsed_data == 1
         assert resolved.section.name == SectionName("section_one")
-        assert (
-            resolver.resolve(
-                parser,  # type: ignore[arg-type]
-                ParsedSectionName("no_such_section"),
-            )
-            is None
-        )
+        assert resolver.resolve(ParsedSectionName("no_such_section")) is None
 
     def test_superseder_is_present(self) -> None:
-        resolver, parser = self.make_provider(
+        resolver = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section_one", set()),
                 _section("section_two", "parsed_section_two", {"section_one"}),
             ]
         )
 
-        assert (
-            resolver.resolve(
-                parser,  # type: ignore[arg-type]
-                ParsedSectionName("parsed_section_one"),
-            )
-            is None
-        )
+        assert resolver.resolve(ParsedSectionName("parsed_section_one")) is None
 
     def test_superseder_with_same_name(self) -> None:
-        resolver, parser = self.make_provider(
+        resolver = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section", set()),
                 _section("section_two", "parsed_section", {"section_one"}),
             ]
         )
 
-        resolved = resolver.resolve(
-            parser,  # type: ignore[arg-type]
-            ParsedSectionName("parsed_section"),
-        )
+        resolved = resolver.resolve(ParsedSectionName("parsed_section"))
         assert resolved is not None
         assert resolved.parsed_data == 2
         assert resolved.section.name == SectionName("section_two")
 
     def test_superseder_has_no_data(self) -> None:
-        resolver, parser = self.make_provider(
+        resolver = self.make_provider(
             section_plugins=[
                 _section("section_one", "parsed_section_one", set()),
                 _section("section_iix", "parsed_section_iix", {"section_one"}),
             ]
         )
 
-        resolved = resolver.resolve(
-            parser,  # type: ignore[arg-type]
-            ParsedSectionName("parsed_section_one"),
-        )
+        resolved = resolver.resolve(ParsedSectionName("parsed_section_one"))
         assert resolved is not None
         assert resolved.parsed_data == 1
         assert resolved.section.name == SectionName("section_one")

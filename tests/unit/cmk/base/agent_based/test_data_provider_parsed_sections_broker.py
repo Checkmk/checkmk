@@ -71,7 +71,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
 ]
 
 
-def _get_parser() -> SectionsParser:
+def make_parser() -> SectionsParser:
     return SectionsParser(
         HostSections[AgentRawDataSection](
             sections={
@@ -84,20 +84,20 @@ def _get_parser() -> SectionsParser:
 
 
 def test_parse_sections_unsuperseded(monkeypatch: MonkeyPatch) -> None:
-
     assert (
         ParsedSectionsResolver(
+            make_parser(),
             section_plugins=(SECTION_ONE, SECTION_THREE),
-        ).resolve(_get_parser(), ParsedSectionName("parsed"))
+        ).resolve(ParsedSectionName("parsed"))
         is not None
     )
 
 
 def test_parse_sections_superseded(monkeypatch: MonkeyPatch) -> None:
-
     assert (
         ParsedSectionsResolver(
+            make_parser(),
             section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),
-        ).resolve(_get_parser(), ParsedSectionName("parsed"))
+        ).resolve(ParsedSectionName("parsed"))
         is None
     )

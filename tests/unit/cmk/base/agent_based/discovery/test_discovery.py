@@ -714,42 +714,42 @@ def test__find_candidates() -> None:
         # section names are chosen arbitrarily.
         HostKey(HostName("test_node"), SourceType.HOST): (
             ParsedSectionsResolver(
+                SectionsParser(
+                    host_sections=HostSections[AgentRawDataSection](
+                        {
+                            SectionName("kernel"): [],  # host only
+                            SectionName("uptime"): [["123"]],  # host & mgmt
+                        }
+                    ),
+                    host_name=HostName("test_node"),
+                ),
                 section_plugins=[
                     agent_based_register.get_section_plugin(SectionName("kernel")),
                     agent_based_register.get_section_plugin(SectionName("uptime")),
                 ],
-            ),
-            SectionsParser(
-                host_sections=HostSections[AgentRawDataSection](
-                    {
-                        SectionName("kernel"): [],  # host only
-                        SectionName("uptime"): [["123"]],  # host & mgmt
-                    }
-                ),
-                host_name=HostName("test_node"),
-            ),
+            )
         ),
         HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
             ParsedSectionsResolver(
+                SectionsParser(
+                    host_sections=HostSections[SNMPRawDataSection](
+                        {
+                            # host & mgmt:
+                            SectionName("uptime"): [["123"]],
+                            # mgmt only:
+                            SectionName("liebert_fans"): [[["Fan", "67", "umin"]]],
+                            # is already mgmt_ prefixed:
+                            SectionName("mgmt_snmp_info"): [[["a", "b", "c", "d"]]],
+                        }
+                    ),
+                    host_name=HostName("test_node"),
+                ),
                 section_plugins=[
                     agent_based_register.get_section_plugin(SectionName("uptime")),
                     agent_based_register.get_section_plugin(SectionName("liebert_fans")),
                     agent_based_register.get_section_plugin(SectionName("mgmt_snmp_info")),
                 ],
-            ),
-            SectionsParser(
-                host_sections=HostSections[SNMPRawDataSection](
-                    {
-                        # host & mgmt:
-                        SectionName("uptime"): [["123"]],
-                        # mgmt only:
-                        SectionName("liebert_fans"): [[["Fan", "67", "umin"]]],
-                        # is already mgmt_ prefixed:
-                        SectionName("mgmt_snmp_info"): [[["a", "b", "c", "d"]]],
-                    }
-                ),
-                host_name=HostName("test_node"),
-            ),
+            )
         ),
     }
 
@@ -978,46 +978,46 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     )
 
     providers = {
-        HostKey(hostname=hostname, source_type=SourceType.HOST,): (
+        HostKey(hostname=hostname, source_type=SourceType.HOST): (
             ParsedSectionsResolver(
+                SectionsParser(
+                    host_sections=HostSections[AgentRawDataSection](
+                        sections={
+                            SectionName("labels"): [
+                                [
+                                    '{"cmk/check_mk_server":"yes"}',
+                                ],
+                            ],
+                            SectionName("df"): [
+                                [
+                                    "/dev/sda1",
+                                    "vfat",
+                                    "523248",
+                                    "3668",
+                                    "519580",
+                                    "1%",
+                                    "/boot/test-efi",
+                                ],
+                                [
+                                    "tmpfs",
+                                    "tmpfs",
+                                    "8152916",
+                                    "244",
+                                    "8152672",
+                                    "1%",
+                                    "/opt/omd/sites/test-heute/tmp",
+                                ],
+                            ],
+                        }
+                    ),
+                    host_name=hostname,
+                ),
                 section_plugins=[
                     agent_based_register.get_section_plugin(SectionName("labels")),
                     agent_based_register.get_section_plugin(SectionName("df")),
                 ],
-            ),
-            SectionsParser(
-                host_sections=HostSections[AgentRawDataSection](
-                    sections={
-                        SectionName("labels"): [
-                            [
-                                '{"cmk/check_mk_server":"yes"}',
-                            ],
-                        ],
-                        SectionName("df"): [
-                            [
-                                "/dev/sda1",
-                                "vfat",
-                                "523248",
-                                "3668",
-                                "519580",
-                                "1%",
-                                "/boot/test-efi",
-                            ],
-                            [
-                                "tmpfs",
-                                "tmpfs",
-                                "8152916",
-                                "244",
-                                "8152672",
-                                "1%",
-                                "/opt/omd/sites/test-heute/tmp",
-                            ],
-                        ],
-                    }
-                ),
-                host_name=hostname,
-            ),
-        ),
+            )
+        )
     }
 
     return RealHostScenario(hostname, config_cache, providers)
@@ -1095,83 +1095,83 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
     providers = {
         HostKey(hostname=node1_hostname, source_type=SourceType.HOST): (
             ParsedSectionsResolver(
+                SectionsParser(
+                    host_sections=HostSections[AgentRawDataSection](
+                        sections={
+                            SectionName("labels"): [
+                                [
+                                    '{"cmk/check_mk_server":"yes"}',
+                                ]
+                            ],
+                            SectionName("df"): [
+                                [
+                                    "/dev/sda1",
+                                    "vfat",
+                                    "523248",
+                                    "3668",
+                                    "519580",
+                                    "1%",
+                                    "/boot/test-efi",
+                                ],
+                                [
+                                    "tmpfs",
+                                    "tmpfs",
+                                    "8152916",
+                                    "244",
+                                    "8152672",
+                                    "1%",
+                                    "/opt/omd/sites/test-heute/tmp",
+                                ],
+                            ],
+                        }
+                    ),
+                    host_name=node1_hostname,
+                ),
                 section_plugins=[
                     agent_based_register.get_section_plugin(SectionName("labels")),
                     agent_based_register.get_section_plugin(SectionName("df")),
                 ],
-            ),
-            SectionsParser(
-                host_sections=HostSections[AgentRawDataSection](
-                    sections={
-                        SectionName("labels"): [
-                            [
-                                '{"cmk/check_mk_server":"yes"}',
-                            ]
-                        ],
-                        SectionName("df"): [
-                            [
-                                "/dev/sda1",
-                                "vfat",
-                                "523248",
-                                "3668",
-                                "519580",
-                                "1%",
-                                "/boot/test-efi",
-                            ],
-                            [
-                                "tmpfs",
-                                "tmpfs",
-                                "8152916",
-                                "244",
-                                "8152672",
-                                "1%",
-                                "/opt/omd/sites/test-heute/tmp",
-                            ],
-                        ],
-                    }
-                ),
-                host_name=node1_hostname,
-            ),
+            )
         ),
         HostKey(hostname=node2_hostname, source_type=SourceType.HOST): (
             ParsedSectionsResolver(
+                SectionsParser(
+                    host_sections=HostSections[AgentRawDataSection](
+                        sections={
+                            SectionName("labels"): [
+                                [
+                                    '{"node2_live_label":"true"}',
+                                ],
+                            ],
+                            SectionName("df"): [
+                                [
+                                    "/dev/sda1",
+                                    "vfat",
+                                    "523248",
+                                    "3668",
+                                    "519580",
+                                    "1%",
+                                    "/boot/test-efi",
+                                ],
+                                [
+                                    "tmpfs",
+                                    "tmpfs",
+                                    "8152916",
+                                    "244",
+                                    "8152672",
+                                    "1%",
+                                    "/opt/omd/sites/test-heute2/tmp",
+                                ],
+                            ],
+                        }
+                    ),
+                    host_name=node2_hostname,
+                ),
                 section_plugins=[
                     agent_based_register.get_section_plugin(SectionName("labels")),
                     agent_based_register.get_section_plugin(SectionName("df")),
                 ],
-            ),
-            SectionsParser(
-                host_sections=HostSections[AgentRawDataSection](
-                    sections={
-                        SectionName("labels"): [
-                            [
-                                '{"node2_live_label":"true"}',
-                            ],
-                        ],
-                        SectionName("df"): [
-                            [
-                                "/dev/sda1",
-                                "vfat",
-                                "523248",
-                                "3668",
-                                "519580",
-                                "1%",
-                                "/boot/test-efi",
-                            ],
-                            [
-                                "tmpfs",
-                                "tmpfs",
-                                "8152916",
-                                "244",
-                                "8152672",
-                                "1%",
-                                "/opt/omd/sites/test-heute2/tmp",
-                            ],
-                        ],
-                    }
-                ),
-                host_name=node2_hostname,
-            ),
+            )
         ),
     }
 

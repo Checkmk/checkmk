@@ -139,7 +139,7 @@ def check_inventory_tree(
     # an implicit protocol where `parsing_errors()` is empty until other
     # methods of the broker have been called.
     parsing_errors: Sequence[str] = list(
-        itertools.chain.from_iterable(parser.parsing_errors for _, parser in providers.values())
+        itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     )
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections

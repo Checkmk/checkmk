@@ -221,7 +221,7 @@ def _commandline_discovery_on_host(
     section.section_success(f"Found {count} services")
 
     for result in check_parsing_errors(
-        itertools.chain.from_iterable(parser.parsing_errors for _, parser in providers.values())
+        itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     ):
         for line in result.details:
             console.warning(line)

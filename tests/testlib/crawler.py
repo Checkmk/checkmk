@@ -331,6 +331,7 @@ class Crawler:
             "application/x-redhat-package-manager",
             "application/x-pkg",
             "application/x-tar",
+            "application/x-yaml; charset=utf-8",
             "application/json",
             "application/pdf",
             "image/png",

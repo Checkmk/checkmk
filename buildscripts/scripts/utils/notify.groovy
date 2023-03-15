@@ -37,12 +37,16 @@ def notify_error(error) {
         def isChangeValidation = currentBuild.fullProjectName.contains("change_validation");
         print("|| error-reporting: isChangeValidation=${isChangeValidation}");
 
+        def isTriggerJob = currentBuild.fullProjectName.contains("trigger");
+        print("|| error-reporting: isTriggerJob=${isTriggerJob}");
+
         def isFirstFailure = currentBuild.getPreviousBuild()?.result == "FAILURE";
         print("|| error-reporting: isFirstFailure=${isFirstFailure}");
 
-        if (isFirstFailure && ! isChangeValidation) {
+        if (isFirstFailure && !isChangeValidation && !isTriggerJob) {
             /// include me for now to give me the chance to debug
             def notify_emails = [
+                "timotheus.bachinger@tribe29.com",
                 "frans.fuerst@tribe29.com",
             ];
             currentBuild.changeSets.each { changeSet -> 
@@ -74,7 +78,7 @@ def notify_error(error) {
                 cc: "", // the code owner maybe
                 bcc: "${notify_emails.join(',')}",
                 from: "\"Greetings from CI\" <${JENKINS_MAIL}>",
-                replyTo: "\"Team CI\" <${TEAM_CI_MAIL}>",
+                replyTo: "<${TEAM_CI_MAIL}>",
                 subject: "Exception in ${env.JOB_NAME}",
                 body: ("""
     |The following build failed:
@@ -83,11 +87,15 @@ def notify_error(error) {
     |The error message was:
     |    ${error}
     |
-    |If you wonder why you got this mail, please reply and let's together find out what went wrong
+    |You get this mail because you are on the list of last submitters to a 
+    |production critical branch, which just turned red.
+    |Please help to get back to a clean state by either fixing a bug you introduced or
+    |helping investigate what has to be done and how to avoid this happening again.
+    |
+    |If you feel you got this mail by mistake, please reply and let's fix this together.
     |""".stripMargin()),
            )
         }
-
     } catch(Exception exc) {
         print("Could not report error by mail - got ${exc}");
     }

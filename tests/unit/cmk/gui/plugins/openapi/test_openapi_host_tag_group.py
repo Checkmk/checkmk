@@ -15,8 +15,17 @@ from cmk.utils.tags import BuiltinTagConfig
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_tag_group_update(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_host_tag_group_update(
+    host_tag_group_client: HostTagGroupTestClient, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
+
+    host_tag_group_client.create(
+        ident="invalid%$",
+        title="foobar",
+        tags=[{"ident": "pod", "title": "Pod"}],
+        expect_ok=False,
+    ).assert_status_code(400)
 
     resp = aut_user_auth_wsgi_app.call_method(
         "post",

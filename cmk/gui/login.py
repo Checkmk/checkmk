@@ -8,7 +8,6 @@ import contextlib
 import http.client
 from collections.abc import Iterator
 from datetime import datetime
-from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -33,13 +32,13 @@ from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.session import session, UserContext
 from cmk.gui.userdb.session import auth_cookie_name
-from cmk.gui.userdb.type_defs import RelayState
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
 
 
@@ -247,7 +246,7 @@ class LoginPage(Page):
         if saml_connections := [
             c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
         ]:
-            saml2_user_error = _show_saml2_login(saml_connections, saml2_user_error, origtarget)
+            saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
         html.open_table()
         html.open_tr()
@@ -279,7 +278,7 @@ class LoginPage(Page):
         html.close_div()
 
         if user_errors and not saml2_user_error:
-            _show_user_errors("login_error")
+            show_user_errors("login_error")
 
         html.close_div()
 
@@ -325,49 +324,6 @@ class LoginPage(Page):
         html.close_div()
 
         html.footer()
-
-
-def _show_saml2_login(
-    saml_connections: list[dict[str, Any]],
-    saml2_user_error: str | None,
-    origtarget: str,
-) -> str | None:
-    saml_css_class: list[str] = ["hot"]
-    for connection in saml_connections:
-        relay_state = RelayState(target_url=origtarget, connection_id=connection["id"])
-        html.open_div(id_="saml_button")
-        html.buttonlink(
-            href=makeuri_contextless(
-                request, [("RelayState", str(relay_state))], filename="saml_sso.py"
-            ),
-            text=f"{_('Login with')} {connection['name']}",
-            obj_id="_saml2_login_button",
-            class_=saml_css_class,
-        )
-        saml_css_class = []
-        html.close_div()
-        if (
-            saml2_user_error := request.get_str_input("_saml2_user_error")
-        ) and request.get_str_input("_connection_id") == connection["id"]:
-            user_errors.add(
-                MKUserError(
-                    varname=None,
-                    message=saml2_user_error
-                    + str(HTMLWriter.render_p(_("Please contact your administrator."))),
-                )
-            )
-            _show_user_errors(id_="login_error_saml2")
-
-    if saml_connections:
-        html.h2("or", class_=["login_separator"])
-
-    return saml2_user_error
-
-
-def _show_user_errors(id_: str) -> None:
-    html.open_div(id_=id_)
-    html.show_user_errors()
-    html.close_div()
 
 
 @page_registry.register_page("logout")

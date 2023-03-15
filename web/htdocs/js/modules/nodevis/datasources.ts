@@ -20,6 +20,7 @@
 
 import * as d3 from "d3";
 import {DatasourceCallback} from "nodevis/type_defs";
+import * as utils from "../utils";
 
 // Takes care of all available datasources
 // Offers register and get methods for datasource
@@ -45,6 +46,7 @@ export class DatasourceManager {
     }
 
     schedule(enforce = false): void {
+        if (!utils.is_window_active()) return;
         const now = Math.floor(new Date().getTime() / 1000);
         for (const idx in this.datasources) {
             const datasource = this.datasources[idx];

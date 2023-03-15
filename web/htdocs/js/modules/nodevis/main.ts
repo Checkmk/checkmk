@@ -252,7 +252,7 @@ export class TopologyVisualization extends NodeVisualization {
     _topology_datasource: TopologyDatasource;
     _topology_type: string;
     _frontend_configuration: TopologyFrontendConfig | null = null;
-    _livesearch: LiveSearch | null = null;
+    _livesearch: LiveSearch;
 
     constructor(div_id, topology_type) {
         super(div_id);
@@ -262,9 +262,9 @@ export class TopologyVisualization extends NodeVisualization {
                 TopologyDatasource.id()
             ) as TopologyDatasource;
 
-        //        this._livesearch = new LiveSearch("form#form_filter", () =>
-        //            this.update_data()
-        //        );
+        this._livesearch = new LiveSearch("form#form_filter", () =>
+            this.update_data()
+        );
         this._custom_node_settings_memory = {};
 
         // Parameters used for throttling the GUI update
@@ -364,13 +364,18 @@ export class TopologyVisualization extends NodeVisualization {
     _show_topology() {
         const ds_data = this._topology_datasource.get_data();
         if (ds_data["headline"])
-            d3.select("tbody tr td.heading a").text(ds_data["headline"]);
+            d3.select("div.titlebar a.title").text(ds_data["headline"]);
 
         const topology_data: {[name: string]: any} = ds_data["topology_chunks"];
         this._show_topology_errors(ds_data["errors"]);
         this._update_overlay_config(
             ds_data.frontend_configuration.overlays_config
         );
+        if (ds_data["query_hash"])
+            d3.select("input[name=topology_query_hash_hint]").property(
+                "value",
+                ds_data["query_hash"]
+            );
 
         this._frontend_configuration = ds_data.frontend_configuration;
         const data_to_show: BackendChunkResponse = {chunks: []};
@@ -383,9 +388,8 @@ export class TopologyVisualization extends NodeVisualization {
         );
         this._world.viewport.feed_data(data_to_show);
         this._apply_styles_to_previously_known_nodes();
-        //        this._world.layout_manager.enable_node_dragging();
-        //        this._livesearch.update_finished();
-        //        this._livesearch.enable();
+        //this._livesearch.update_finished();
+        //this._livesearch.enable();
     }
 
     _apply_styles_to_previously_known_nodes() {

@@ -65,6 +65,10 @@ div.node_vis {
     img[title="Search"] {
       filter: $toggle-button-search-img-filter;
     }
+
+    &.down {
+      background: $node-vis-togglebox-enabled;
+    }
   }
 
   .node_element .growth_root {

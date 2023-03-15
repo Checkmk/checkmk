@@ -196,20 +196,6 @@ class ParsedSectionsResolver:
 Provider = ParsedSectionsResolver
 
 
-class ParsedSectionsBroker:
-    @staticmethod
-    def get_cache_info(cache_infos: Sequence[_CacheInfo]) -> _CacheInfo | None:
-        # TODO: should't the host key be provided here?
-        """Aggregate information about the age of the data in the agent sections"""
-        if not cache_infos:
-            return None
-
-        return (
-            min(ats for ats, _intervals in cache_infos),
-            max(intervals for _ats, intervals in cache_infos),
-        )
-
-
 def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:
     for host_key, host_sections in collected_host_sections.items():
         # Store piggyback information received from all sources of this host. This

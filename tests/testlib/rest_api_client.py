@@ -943,11 +943,17 @@ class HostTagGroupTestClient(RestApiClient):
         self,
         ident: str,
         title: str,
-        help_text: str,
         tags: list[dict[str, str]],
+        topic: str | None = None,
+        help_text: str | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        body = {"ident": ident, "title": title, "help": help_text, "tags": tags}
+        body = {"ident": ident, "title": title, "tags": tags}
+        if help_text is not None:
+            body["help"] = help_text
+        if topic is not None:
+            body["topic"] = topic
+
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",

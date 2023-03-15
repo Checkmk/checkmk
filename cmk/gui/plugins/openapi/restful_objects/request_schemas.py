@@ -1550,7 +1550,7 @@ class InputHostTagGroup(BaseSchema):
         example="group_id",
         description="An id for the host tag group",
         attribute="id",
-        pattern="[a-zA-Z_]+[-0-9a-zA-Z_]*",
+        pattern=REGEX_ID,
     )
     title = fields.String(
         required=True,

@@ -16,6 +16,7 @@ You can find an introduction to hosts including host tags and host tag groups in
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.regex import REGEX_ID
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
 from cmk.gui.http import Response
@@ -79,7 +80,7 @@ HOST_TAG_GROUP_NAME = {
     "name": HostTagGroupName(
         description="The name of the host tag group",
         example="datasource",
-        pattern="[a-zA-Z_]+[-0-9a-zA-Z_]*",
+        pattern=REGEX_ID,
         required=True,
     )
 }

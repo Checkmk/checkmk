@@ -28,82 +28,65 @@ def slack_build_failed(error) {
     )
 }
 
-// Send a build failed message via mail
-def mail_build_failed(address, error) {
-    mail(
-        to: address,
-        cc: '',
-        bcc: '',
-        from: JENKINS_MAIL,
-        replyTo: '',
-        subject: "Error in ${env.JOB_NAME}",
-        body: ("""
-            |Build Failed:
-            |    ${env.JOB_NAME} ${env.BUILD_NUMBER}
-            |    ${env.BUILD_URL}
-            |Error Message:
-            |    ${error}
-            |""".stripMargin()),
-       )
-}
 
 def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
     try {
-        def author_mail = get_author_email();
-        def is_internal_author = (
-            author_mail.endsWith("@tribe29.com") ||
-            author_mail.endsWith("@mathias-kettner.de"));
-
-        if (author_mail != "weblate@checkmk.com" && is_internal_author) {
-            mail_build_failed(author_mail, error);
-        }
-
         def isChangeValidation = currentBuild.fullProjectName.contains("change_validation");
         print("|| error-reporting: isChangeValidation=${isChangeValidation}");
 
         def isFirstFailure = currentBuild.getPreviousBuild()?.result == "FAILURE";
         print("|| error-reporting: isFirstFailure=${isFirstFailure}");
 
-        print("|| error-reporting: currentBuild.changeSets ${currentBuild.changeSets}");
-        print("|| error-reporting: currentBuild.changeSets[0] ${currentBuild.changeSets[0]}");
-
-        print("|| error-reporting: currentBuild.rawBuild.changeSets ${currentBuild.rawBuild.changeSets}");
-        print("|| error-reporting: currentBuild.rawBuild.changeSets[0] ${currentBuild.rawBuild.changeSets[0]}");
-
-//        if (isFirstFailure) {
-            def notify_emails = [];
+        if (isFirstFailure && ! isChangeValidation) {
+            /// include me for now to give me the chance to debug
+            def notify_emails = [
+                "frans.fuerst@tribe29.com",
+            ];
             currentBuild.changeSets.each { changeSet -> 
                 print("|| error-reporting:   changeSet=${changeSet}");
                 print("|| error-reporting:   changeSet.items=${changeSet.items}");
 
-                def culprits_emails = changeSet.items.collectEntries {e -> e.authorEmail};
+                def culprits_emails = changeSet.items.collect {e -> e.authorEmail};
                 print("|| error-reporting:   culprits_emails ${culprits_emails}");
 
-                notify_emails += culprits_emails
+                notify_emails += culprits_emails;
                 print("|| error-reporting:   notify_emails ${notify_emails}");
             }
 
+            // It seems the option "Allowed domains" is not working properly.
+            // See: https://ci.lan.tribe29.com/configure
+            // So ensure here we only notify internal addresses.
+            notify_emails = notify_emails.unique(false).findAll({
+                it != "weblate@checkmk.com" && it.endsWith("@tribe29.com")
+            });
+
+            /// fallback - for investigation
+            notify_emails = notify_emails ?: [
+                "timotheus.bachinger@tribe29.com", "frans.fuerst@tribe29.com"];
+
+            print("|| error-reporting: notify_emails ${notify_emails}");
+
             mail(
-                to: "frans.fuerst@tribe29.com",
-                cc: '',
-                bcc: '',
-                from: JENKINS_MAIL,
-                replyTo: '',
+                to: "", // no direct contact
+                cc: "", // the code owner maybe
+                bcc: "${notify_emails.join(',')}",
+                from: "\"Greetings from CI\" <${JENKINS_MAIL}>",
+                replyTo: "\"Team CI\" <${TEAM_CI_MAIL}>",
                 subject: "Exception in ${env.JOB_NAME}",
                 body: ("""
-                    |Should go to ${notify_emails}:
-                    |Should go to ${notify_emails.join(";")}:
-                    |Build Failed:
-                    |    ${env.JOB_NAME} ${env.BUILD_NUMBER}
-                    |    ${env.BUILD_URL}
-                    |Error Message:
-                    |    ${error}
-                    |""".stripMargin()),
+    |The following build failed:
+    |    ${env.BUILD_URL}
+    |
+    |The error message was:
+    |    ${error}
+    |
+    |If you wonder why you got this mail, please reply and let's together find out what went wrong
+    |""".stripMargin()),
            )
-//        }
+        }
 
     } catch(Exception exc) {
         print("Could not report error by mail - got ${exc}");

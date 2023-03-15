@@ -15,7 +15,6 @@ from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, Se
 
 class FilterMode(enum.Enum):
     NONE = enum.auto()
-    ONLY_CLUSTERED = enum.auto()
     INCLUDE_CLUSTERED = enum.auto()
 
 

@@ -269,7 +269,6 @@ class _ServiceFilter:
         """Filter services for a specific host
 
         FilterMode.NONE              -> default, returns only checks for this host
-        FilterMode.ONLY_CLUSTERED    -> returns only checks belonging to clusters
         FilterMode.INCLUDE_CLUSTERED -> returns checks of own host, including clustered checks
         """
         self._host_name = host_name
@@ -289,15 +288,12 @@ class _ServiceFilter:
             return True
 
         if not self._config_cache.clusters_of(self._host_name):
-            return self._mode is not FilterMode.ONLY_CLUSTERED
+            return True
 
         svc_is_mine = self.is_mine(service)
 
         if self._mode is FilterMode.NONE:
             return svc_is_mine
-
-        if self._mode is FilterMode.ONLY_CLUSTERED:
-            return not svc_is_mine
 
         return assert_never(self._mode)
 

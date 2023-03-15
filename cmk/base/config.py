@@ -286,14 +286,8 @@ class _ServiceFilter:
 
         if self._mode is FilterMode.INCLUDE_CLUSTERED:
             return True
-
-        if not self._config_cache.clusters_of(self._host_name):
-            return True
-
-        svc_is_mine = self.is_mine(service)
-
         if self._mode is FilterMode.NONE:
-            return svc_is_mine
+            return self.is_mine(service)
 
         return assert_never(self._mode)
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Container
+from typing import Iterable, TypeVar
 
 from cmk.utils.version import is_cloud_edition
 
@@ -133,6 +134,9 @@ def _vs_element_aws_piggyback_naming_convention() -> DictionaryEntry:
     )
 
 
+T = TypeVar("T")
+
+
 class AWSSpecialAgentValuespecBuilder:
     # Global services that should be present just in the CMK cloud edition
     CCE_ONLY_GLOBAL_SERVICES = {"cloudfront", "route53"}
@@ -143,20 +147,20 @@ class AWSSpecialAgentValuespecBuilder:
         self.is_cloud_edition = cloud_edition
 
     def get_global_services(self) -> ServicesValueSpec:
-        return self._get_edition_filtered_services(
+        return self.filter_for_edition(
             self._get_all_global_services(), self.CCE_ONLY_GLOBAL_SERVICES
         )
 
     def get_regional_services(self) -> ServicesValueSpec:
-        return self._get_edition_filtered_services(
+        return self.filter_for_edition(
             self._get_all_regional_services(), self.CCE_ONLY_REGIONAL_SERVICES
         )
 
-    def _get_edition_filtered_services(
-        self, all_services: ServicesValueSpec, cce_only_services: Container[str]
-    ) -> ServicesValueSpec:
+    def filter_for_edition(
+        self, all_services: Iterable[tuple[str, T]], cce_only_services: Container[str]
+    ) -> list[tuple[str, T]]:
         if self.is_cloud_edition:
-            return all_services
+            return list(all_services)
         return [s for s in all_services if s[0] not in cce_only_services]
 
     def _get_all_global_services(self) -> ServicesValueSpec:

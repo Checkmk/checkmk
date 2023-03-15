@@ -296,8 +296,10 @@ class _ServiceFilter:
         if self._mode is FilterMode.NONE:
             return svc_is_mine
 
-        # self._mode is FilterMode.ONLY_CLUSTERED
-        return not svc_is_mine
+        if self._mode is FilterMode.ONLY_CLUSTERED:
+            return not svc_is_mine
+
+        return assert_never(self._mode)
 
     def is_mine(self, service: ConfiguredService) -> bool:
         """Determine whether a service should be displayed on this host's service overview.

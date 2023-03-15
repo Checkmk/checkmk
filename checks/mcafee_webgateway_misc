@@ -3,45 +3,72 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
+import typing
+from collections import abc
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api import v1
 
-# -- Miscellaneous (these counter are NO lifetime counter; they show the actual number)
-# .1.3.6.1.4.1.1230.2.7.2.5.2.0 16 --> MCAFEE-MWG-MIB::stClientCount.0
-# .1.3.6.1.4.1.1230.2.7.2.5.3.0 35 --> MCAFEE-MWG-MIB::stConnectedSockets.0
+DiscoveryResult = abc.Iterable
+CheckResult = abc.Iterable[tuple]
 
 
-def check_mcafee_webgateway_misc(_no_item, params, info):
-    clients_str, sockets_str = info[0]
-    for what, value_str, paramskey, perfkey in [
-        ("Clients", clients_str, "clients", "connections"),
-        ("Open network sockets", sockets_str, "network_sockets", "open_network_sockets"),
-    ]:
-        try:
-            value = int(value_str)
-        except ValueError:
-            continue
-        state = 0
-        infotext = "%s: %d" % (what, value)
-        warn, crit = params.get(paramskey, (None, None))
-        if paramskey and paramskey in params:
-            if value >= crit:
-                state = 2
-            elif value >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
-        perfdata = []
-        if perfkey:
-            perfdata = [(perfkey, value, warn, crit)]
+@dataclasses.dataclass
+class Section:
+    client_count: typing.Optional[int]
+    socket_count: typing.Optional[int]
 
-        yield state, infotext, perfdata
+
+class Params(typing.TypedDict, total=True):
+    clients: typing.Tuple[int, int]
+    network_sockets: typing.Tuple[int, int]
+
+
+def parse_mcafee_webgateway_misc(
+    string_table: v1.type_defs.StringTable,
+) -> typing.Optional[Section]:
+    if not string_table:
+        return None
+    # -- Miscellaneous (these counter are NO lifetime counter; they show the actual number)
+    # .1.3.6.1.4.1.1230.2.7.2.5.2.0 16 --> MCAFEE-MWG-MIB::stClientCount.0
+    # .1.3.6.1.4.1.1230.2.7.2.5.3.0 35 --> MCAFEE-MWG-MIB::stConnectedSockets.0
+    clients_str, sockets_str = string_table[0]
+    return Section(
+        client_count=int(clients_str) if clients_str.isdigit() else None,
+        socket_count=int(sockets_str) if sockets_str.isdigit() else None,
+    )
+
+
+def discovery_mcafee_webgateway_misc(section: Section) -> DiscoveryResult:
+    yield (None, {})
+
+
+def check_mcafee_webgateway_misc(_no_item: None, params: Params, section: Section) -> CheckResult:
+    if section.client_count is not None:
+        yield check_levels(
+            section.client_count,
+            "connections",
+            params.get("clients", (None, None)),
+            infoname="Clients",
+            human_readable_func=int,
+        )
+    if section.socket_count is not None:
+        yield check_levels(
+            section.socket_count,
+            "open_network_sockets",
+            params.get("network_sockets", (None, None)),
+            infoname="Open network sockets",
+            human_readable_func=int,
+        )
 
 
 check_info["mcafee_webgateway_misc"] = {
-    "inventory_function": inventory_mcafee_gateway_generic,
+    "inventory_function": discovery_mcafee_webgateway_misc,
     "check_function": check_mcafee_webgateway_misc,
+    "parse_function": parse_mcafee_webgateway_misc,
     "service_description": "Web gateway miscellaneous",
     "snmp_info": (
         ".1.3.6.1.4.1.1230.2.7.2.5",

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Final, NamedTuple
 
 from cmk.utils.type_defs import ParsedSectionName, ServiceState
 
@@ -12,7 +13,14 @@ from cmk.checkers.checkresults import ActiveCheckResult
 
 from .data_provider import ParsedSectionContent, Provider
 
-_SectionKwargs = Mapping[str, ParsedSectionContent]
+_SectionKwargs = Mapping[str, ParsedSectionContent | None]
+
+
+class _NoParsedData(NamedTuple):
+    parsed_data: None = None
+
+
+_NO_PARSED_DATA: Final = _NoParsedData()
 
 
 def get_section_kwargs(
@@ -30,21 +38,21 @@ def get_section_kwargs(
     except KeyError:
         return {}
 
-    kwargs = {
-        "section"
-        if len(parsed_section_names) == 1
-        else f"section_{parsed_section_name}": (
-            None
-            if (resolved := resolver.resolve(parsed_section_name)) is None
-            else resolved.parsed_data
-        )
-        for parsed_section_name in parsed_section_names
+    resolved_map = {
+        name: resolved
+        for name in parsed_section_names
+        if (resolved := resolver.resolve(name)) is not None
     }
-    # empty it, if nothing was found:
-    if all(v is None for v in kwargs.values()):
+
+    if not resolved_map:
         return {}
 
-    return kwargs
+    return {
+        "section"
+        if len(parsed_section_names) == 1
+        else f"section_{name}": resolved_map.get(name, _NO_PARSED_DATA).parsed_data
+        for name in parsed_section_names
+    }
 
 
 def get_section_cluster_kwargs(

@@ -19,3 +19,7 @@ var/check_mk/wato/auth/auth.php 0660
 var/check_mk/wato/log 0770
 var/check_mk/wato/snapshots 0770
 var/check_mk/web 0770
+local/lib/python3/cmk/gui 0750
+local/lib/python3/cmk/gui/plugins 0750
+local/lib/python3/cmk/gui/plugins/dashboard 0750
+local/lib/python3/cmk/gui/plugins/views 0750

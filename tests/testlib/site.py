@@ -540,7 +540,6 @@ class Site:
 
             self._ensure_sample_config_is_present()
             if not self.version.is_raw_edition():
-                self._log_cmc_startup()
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
                 self._disable_cmc_log_rotation()
@@ -678,24 +677,6 @@ class Site:
                 "cmk.mkeventd.StatusServer": 10,
                 "cmk.mkeventd.lock": 20,
             },
-        )
-
-    def _log_cmc_startup(self) -> None:
-        tool = None  # sensible tools for us: None, "memcheck" or "helgrind"
-        valgrind = (
-            'PATH="/opt/bin:$PATH" '
-            f"valgrind --tool={tool} --quiet --num-callers=30 --error-exitcode=42 --exit-on-first-error=yes"
-        )
-        redirect = ">> $OMD_ROOT/var/log/cmc-startup.log 2>&1"
-        self.write_text_file(
-            "etc/init.d/cmc",
-            self.read_file("etc/init.d/cmc").replace(
-                "\n    if $DAEMON $CONFIGFILE; then\n",
-                "\n"  #
-                f"    date {redirect}\n"  #
-                f"    ps -fu {self.id} {redirect}\n"
-                f"    if {valgrind if tool else ''} $DAEMON $CONFIGFILE {redirect}; then\n",
-            ),
         )
 
     def _enable_cmc_core_dumps(self) -> None:

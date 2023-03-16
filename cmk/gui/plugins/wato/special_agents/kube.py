@@ -96,11 +96,7 @@ def _is_cre_spec(k: str, vs: object) -> bool:
     return isinstance(vs, tuple) and vs[0] == "cluster-collector"
 
 
-def _migrate_usage_endpoint(p: dict[str, object]) -> dict[str, object]:
-    cluster_collector = p.pop("cluster-collector", None)
-    if cluster_collector is not None:
-        p["usage_endpoint"] = ("cluster-collector", cluster_collector)
-
+def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
     return p if is_cloud_edition() else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
 
 
@@ -394,7 +390,7 @@ def _valuespec_special_agents_kube():
             default_keys=["usage_endpoint"],
             title=_("Kubernetes"),
         ),
-        migrate=_migrate_usage_endpoint,
+        migrate=_migrate_cce2cre,
     )
 
 

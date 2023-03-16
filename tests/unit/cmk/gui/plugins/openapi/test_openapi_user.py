@@ -114,7 +114,10 @@ def test_openapi_customer(
         "disable_login": False,
         "pager_address": "",
         "roles": [],
-        "auth_option": {"enforce_password_change": False, "auth_type": "password"},
+        # TODO: auth_option being an empty dict is a bug and should not
+        # happen: there should not be a user without connection type (this is
+        # what it's called in the GUI) see CMK-12723
+        "auth_option": {},
         "interface_options": {
             "interface_theme": "default",
             "mega_menu_icons": "topic",
@@ -242,7 +245,7 @@ def test_openapi_user_minimal_password_settings(
         )
 
     extensions = resp.json_body["extensions"]
-    assert extensions["auth_option"]["enforce_password_change"] is True
+    assert extensions["auth_option"] == {"auth_type": "automation"}
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
 

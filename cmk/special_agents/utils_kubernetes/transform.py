@@ -314,12 +314,6 @@ def cron_job_from_client(
 
 
 def parse_job_status(status: client.V1JobStatus) -> api.JobStatus:
-    def _parse_job_condition(condition: client.V1JobCondition) -> api.JobCondition:
-        return api.JobCondition(
-            type_=api.JobConditionType(condition.type.capitalize()),
-            status=api.ConditionStatus(condition.status.capitalize()),
-        )
-
     return api.JobStatus(
         active=status.active,
         start_time=convert_to_timestamp(status.start_time) if status.start_time else None,
@@ -328,10 +322,41 @@ def parse_job_status(status: client.V1JobStatus) -> api.JobStatus:
         else None,
         failed=status.failed,
         succeeded=status.succeeded,
-        conditions=[_parse_job_condition(condition) for condition in status.conditions]
-        if status.conditions is not None
-        else [],
+        conditions=_parse_and_remove_duplicate_conditions(status.conditions),
     )
+
+
+def _parse_and_remove_duplicate_conditions(
+    conditions: Sequence[client.V1JobCondition] | None,
+) -> Sequence[api.JobCondition]:
+    """Parse and remove duplicate job conditions
+
+    Note:
+        For Kubernetes < 1.25, in some cases the API reports duplicate conditions, we want to
+        filter these out before they are handled on the check. This has been resolved in 1.25
+        https://github.com/kubernetes/kubernetes/issues/109904
+
+    """
+    if conditions is None:
+        return []
+
+    def _parse_job_condition(condition: client.V1JobCondition) -> api.JobCondition:
+        return api.JobCondition(
+            type_=api.JobConditionType(condition.type.capitalize()),
+            status=api.ConditionStatus(condition.status.capitalize()),
+        )
+
+    def _condition_identifier(condition: client.V1JobCondition) -> str:
+        return f"{condition.type}-{condition.last_probe_time}"
+
+    parsed_conditions: dict[str, api.JobCondition] = {}
+
+    for job_condition in conditions:
+        parsed_conditions.setdefault(
+            _condition_identifier(job_condition), _parse_job_condition(job_condition)
+        )
+
+    return list(parsed_conditions.values())
 
 
 def job_from_client(

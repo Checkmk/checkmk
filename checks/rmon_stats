@@ -15,7 +15,7 @@ from typing import Iterable, Mapping
 from cmk.base.check_api import check_levels, get_rate
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-DiscoveryResult = Iterable[tuple[str, None]]
+DiscoveryResult = Iterable[tuple[str, dict]]
 CheckResult = Iterable[tuple]
 
 PortStats = Mapping[str, int]
@@ -34,9 +34,9 @@ def parse_rmon_stats(string_table: StringTable) -> Mapping[str, PortStats]:
 
 
 def discover_rmon_stats(section: Mapping[str, PortStats]) -> DiscoveryResult:
-    if not in_binary_hostlist(host_name(), rmon_discovery):
-        return
-    yield from ((item, None) for item in section)
+    params = host_extra_conf_merged(host_name(), rmon_discovery)
+    if params.get("discover", False):
+        yield from ((item, {}) for item in section)
 
 
 def check_rmon_stats(

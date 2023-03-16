@@ -271,11 +271,6 @@ def host_extra_conf(hostname: str, ruleset: Iterable[_RuleSpec]) -> List:
     return _config.get_config_cache().host_extra_conf(HostName(hostname), ruleset)
 
 
-# Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
-def in_binary_hostlist(hostname: HostName, ruleset: Iterable[_RuleSpec]) -> bool:
-    return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
-
-
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
 def host_extra_conf_merged(hostname: str, conf: Iterable[_RuleSpec]) -> Dict[str, Any]:
     return _config.get_config_cache().host_extra_conf_merged(HostName(hostname), conf)

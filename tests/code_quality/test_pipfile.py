@@ -238,10 +238,6 @@ def get_undeclared_dependencies() -> Iterable[ImportName]:
 
 
 CEE_UNUSED_PACKAGES = [
-    "Cython",
-    "MarkupSafe",
-    "PyMySQL",
-    "PyNaCl",
     "attrs",
     "bcrypt",
     "cachetools",
@@ -249,14 +245,16 @@ CEE_UNUSED_PACKAGES = [
     "cffi",
     "chardet",
     "click",
+    "cython",
     "defusedxml",
     "docutils",
     "grpcio",
     "gunicorn",
     "idna",
-    "importlib_metadata",
+    "importlib-metadata",
     "itsdangerous",
     "jmespath",
+    "markupsafe",
     "more-itertools",
     "multidict",
     "openapi-spec-validator",
@@ -268,16 +266,18 @@ CEE_UNUSED_PACKAGES = [
     "pycparser",
     "pykerberos",
     "pymssql",
+    "pymysql",
+    "pynacl",
     "pyprof2calltree",
     "pyrsistent",
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",
-    "setuptools_scm",
+    "setuptools-scm",
     "snmpsim",
     "tenacity",
-    "typing_extensions",
-    "websocket_client",
+    "typing-extensions",
+    "websocket-client",
     "wrapt",
     "yarl",
     "zipp",
@@ -288,7 +288,7 @@ def test_dependencies_are_used() -> None:
     unused_packages = CEE_UNUSED_PACKAGES
     if not is_enterprise_repo():
         unused_packages += ["PyPDF3", "numpy", "roman"]
-    unused_packages += ["docstring_parser"]  # TODO: Bug in the test code, it *is* used!
+    unused_packages += ["docstring-parser"]  # TODO: Bug in the test code, it *is* used!
 
     assert sorted(get_unused_dependencies()) == sorted(unused_packages)
 

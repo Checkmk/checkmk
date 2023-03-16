@@ -285,7 +285,7 @@ class CMKOpenApiSession(requests.Session):
         self, hostname: str, cmk_version: str = CMKVersion.DEFAULT
     ) -> None:
         timeout = 60
-        if version_gte(cmk_version, "2.2.0p0") or cmk_version == CMKVersion.DEFAULT:
+        if cmk_version == CMKVersion.DEFAULT or version_gte(cmk_version, "2.2.0p0"):
             with self._wait_for_completion(timeout):
                 self.discover_services(hostname)
         elif version_gte(cmk_version, "2.1.0p10"):

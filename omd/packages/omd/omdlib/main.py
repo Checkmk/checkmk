@@ -2895,6 +2895,7 @@ def main_update(  # pylint: disable=too-many-branches
             "OMD_TO_EDITION": to_edition,
             "OMD_FROM_VERSION": from_version,
             "OMD_TO_VERSION": to_version,
+            "OMD_FROM_EDITION": from_edition,
         },
     )
 

@@ -200,7 +200,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         secret = user_attrs["automation_secret"]
         if len(secret) < 10:
             raise MKUserError(
-                "secret", _("Please specify a secret of at least 10 characters length.")
+                "_auth_secret", _("Please enter an automation secret of at least 10 characters.")
             )
 
     # Email

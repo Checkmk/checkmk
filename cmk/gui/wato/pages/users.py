@@ -995,7 +995,7 @@ class ModeEditUser(WatoMode):
         )
 
         html.open_ul()
-        html.text_input(
+        html.password_input(
             "_auth_secret",
             "",
             size=30,

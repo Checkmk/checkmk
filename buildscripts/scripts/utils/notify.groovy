@@ -37,6 +37,9 @@ def notify_error(error) {
         def isChangeValidation = currentBuild.fullProjectName.contains("change_validation");
         print("|| error-reporting: isChangeValidation=${isChangeValidation}");
 
+        def isTesting = currentBuild.fullProjectName.contains("/Testing");
+        print("|| error-reporting: isTesting=${isTesting}");
+
         def isTriggerJob = currentBuild.fullProjectName.contains("trigger");
         print("|| error-reporting: isTriggerJob=${isTriggerJob}");
 
@@ -44,7 +47,7 @@ def notify_error(error) {
         def isFirstFailure = currentBuild.getPreviousBuild()?.result != "FAILURE";
         print("|| error-reporting: isFirstFailure=${isFirstFailure}");
 
-        if (isFirstFailure && !isChangeValidation && !isTriggerJob) {
+        if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
             def notify_emails = [
                 "timotheus.bachinger@tribe29.com",
@@ -75,12 +78,12 @@ def notify_error(error) {
             print("|| error-reporting: notify_emails ${notify_emails}");
 
             mail(
-                to: "", // no direct contact
-                cc: "", // the code owner maybe
-                bcc: "${notify_emails.join(',')}",
+                to: "${notify_emails.join(',')}",
+                cc: "", // the code owner maybe?
+                bcc: "",
                 from: "\"Greetings from CI\" <${JENKINS_MAIL}>",
                 replyTo: "<${TEAM_CI_MAIL}>",
-                subject: "Exception in ${env.JOB_NAME}",
+                subject: "Build failure in ${env.JOB_NAME}",
                 body: ("""
     |The following build failed:
     |    ${env.BUILD_URL}
@@ -89,7 +92,6 @@ def notify_error(error) {
     |    ${error}
     |
     |You get this mail because you are on the list of last submitters to a production critical branch, which just turned red.
-    |Please help to get back to a clean state by either fixing a bug you introduced or helping investigate what has to be done and how to avoid this happening again.
     |
     |If you feel you got this mail by mistake, please reply and let's fix this together.
     |""".stripMargin()),

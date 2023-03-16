@@ -4442,7 +4442,7 @@ class ConfigCache:
     ) -> HostName:
         """Compute the effective host (node or cluster) of a service
 
-        This is the host where the service is shown at, at the one that triggers the checking.
+        This is the host where the service is shown at, and the one that triggers the checking.
 
         Determine whether a service (found on the given node) is a clustered service.
         If yes, return the cluster host of the service.

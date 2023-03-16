@@ -366,20 +366,69 @@ RequestInfo ParseRequest(const std::string &request) {
     }
     return {.ip{table[0]}, .mailslot_name{table[1]}};
 }
+
+constexpr auto header_size = rt::kEncryptedHeader.size();
+
+std::optional<std::vector<uint8_t>> AllocateCryptoPackage(
+    const encrypt::Commander &commander, size_t sz) {
+    const size_t crypt_size = CalcCryptBufferSize(&commander, sz);
+    if (crypt_size == 0) {
+        return {};
+    }
+    std::vector<uint8_t> v;
+    try {
+        v.resize(crypt_size + header_size);
+        XLOG::d.i("Encryption crypt buffer {} bytes...", crypt_size);
+    } catch (const std::exception &e) {
+        XLOG::l.crit(XLOG_FUNC + " unexpected, but exception '{}'", e.what());
+        return {};
+    }
+    memcpy(v.data(), rt::kEncryptedHeader.data(), header_size);
+    return v;
+}
+
 }  // namespace
 
 bool SendDataToMailSlot(const std::string &mailslot_name,
-                        const std::vector<uint8_t> &data_block) {
+                        const std::vector<uint8_t> &data_block,
+                        const encrypt::Commander *commander) {
     if (mailslot_name.size() < 12) {
         XLOG::l("Invalid mailslot name '{}'", mailslot_name);
         return false;
     }
     mailslot::Slot postman(mailslot_name);
-    return postman.ExecPost(data_block.data(), data_block.size());
+    if (commander == nullptr) {
+        return postman.ExecPost(data_block.data(), data_block.size());
+    }
+
+    auto package = AllocateCryptoPackage(*commander, data_block.size());
+
+    if (!package) {
+        XLOG::l("Encrypt is requested, but encryption is failed");
+        postman.ExecPost(rt::kEncryptedHeader.data(),
+                         rt::kEncryptedHeader.size());
+        return false;
+    }
+
+    // encryption
+    void *buf = package->data() + header_size;
+    memcpy(buf, data_block.data(), data_block.size());
+    auto [success, len] = commander->encode(
+        buf, data_block.size(), package->size() - header_size, true);
+    // checking
+    if (!success) {
+        XLOG::l.crit(XLOG_FUNC + "CANNOT ENCRYPT {}.", len);
+        postman.ExecPost(rt::kEncryptedHeader.data(),
+                         rt::kEncryptedHeader.size());
+        return false;
+    }
+
+    return postman.ExecPost(package->data(), len + header_size);
 }
 
 void ExternalPort::processRequest(const ReplyFunc &reply,
-                                  const std::string &request) const {
+                                  const std::string &request,
+                                  const encrypt::Commander *commander) const {
     XLOG::d.i("Request is '{}'", request);
     auto r = ParseRequest(request);
     if (r.ip.empty()) {
@@ -394,7 +443,8 @@ void ExternalPort::processRequest(const ReplyFunc &reply,
     }
 
     const auto result = SendDataToMailSlot(
-        mailslot::BuildMailSlotNameRoot(".") + r.mailslot_name, send_back);
+        mailslot::BuildMailSlotNameRoot(".") + r.mailslot_name, send_back,
+        commander);
     XLOG::d.i("Send [{}] bytes of data to [{}] - {}", send_back.size(),
               r.mailslot_name, result ? "OK" : "FAIl");
 
@@ -403,13 +453,14 @@ void ExternalPort::processRequest(const ReplyFunc &reply,
 
 /// singleton thread
 void ExternalPort::processQueue(const world::ReplyFunc &reply) {
+    const auto crypt = encrypt::MakeCrypt();
     while (true) {
         try {
             if (auto as = getSession(); as) {
                 processSession(reply, std::move(as));
             }
             if (auto r = getRequest(); !r.empty()) {
-                processRequest(reply, r);
+                processRequest(reply, r, crypt.get());
             }
             timedWaitForSession();
 

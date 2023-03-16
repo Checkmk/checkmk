@@ -240,8 +240,8 @@ protected:
     void wakeThread();
     void timedWaitForSession();
     void processSession(const ReplyFunc &reply, AsioSession::s_ptr session);
-    void processRequest(const ReplyFunc &reply,
-                        const std::string &request) const;
+    void processRequest(const ReplyFunc &reply, const std::string &request,
+                        const encrypt::Commander *commander) const;
 
     bool isShutdown() const noexcept {
         std::lock_guard lk(io_thread_lock_);
@@ -298,7 +298,8 @@ protected:
 };
 
 bool SendDataToMailSlot(const std::string &mailslot_name,
-                        const std::vector<uint8_t> &data_block);
+                        const std::vector<uint8_t> &data_block,
+                        const encrypt::Commander *commander);
 
 }  // namespace cma::world
 

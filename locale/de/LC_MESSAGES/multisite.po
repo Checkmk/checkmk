@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-01-12 07:00+0000\n"
-"Last-Translator: RB <rb@tribe29.com>\n"
+"PO-Revision-Date: 2023-03-10 07:00+0000\n"
+"Last-Translator: Sebastian Kirchmeyer <sebastian.kirchmeyer@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -44,11 +44,19 @@ msgstr " (Kopie)"
 msgid " (day %d)"
 msgstr " (Tag %d)"
 
+#, fuzzy
+msgid " (in discards per second)"
+msgstr " (in Fehlern pro Sekunde)"
+
 msgid " (in errors per second)"
 msgstr " (in Fehlern pro Sekunde)"
 
 msgid " (in packets per second)"
 msgstr " (in Paketen pro Sekunde)"
+
+#, fuzzy
+msgid " (in relation to all packets (successful + discard))"
+msgstr " (in Bezug auf alle Pakete (erfolgreich + fehlgeschlagene))"
 
 msgid " (in relation to all packets (successful + error))"
 msgstr " (in Bezug auf alle Pakete (erfolgreich + fehlgeschlagene))"
@@ -1066,13 +1074,14 @@ msgstr "Prozent"
 msgid "99th percentile"
 msgstr "Prozent"
 
+#, fuzzy
 msgid ""
-"<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
-"translations</a> are performed before the piggyback connector creates hosts. "
-"This can e.g. be used in a setup with multiple docker nodes to prefix "
-"containers with the name of the corresponding docker node. Otherwise name "
-"collisions may occur if containers with the same name are present on more "
-"than one docker node."
+"<a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Piggybacktranslations</"
+"a>are performed before the piggyback connector creates hosts. Use this, for "
+"example, in a setup with multiple Docker nodes to prefix containers with the "
+"name of the corresponding Docker node. Otherwise, name collisions can occur "
+"if containers with the same name exist on more than one Docker Node."
 msgstr ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Huckepack "
 "Übersetzungen</a> werden durchgeführt, bevor der Huckepack Verbinder Hosts "
@@ -1132,11 +1141,13 @@ msgstr ""
 "werden. Bitte stellen Sie Sicher, dass Sie diesen Schlüssel entweder "
 "gesichert haben oder wirklich nicht mehr benötigen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<b>Beware:</b> The folder contains <b>%d</b> hosts, which will also be "
 "deleted!"
-msgstr " Ordner enthält <b>%d</b> Hosts, die auch gelöscht werden!"
+msgstr ""
+"<b>Vorsicht:</b> Der Ordner enthält <b>%d</b> Hosts, die somit auch gelöscht "
+"werden!"
 
 #, fuzzy
 msgid ""
@@ -1153,6 +1164,27 @@ msgid "<b>Beware:</b> This will leave your environment in an undefined state."
 msgstr ""
 "Wollen Sie die Wiederherstellung dieser Sicherung wirklich abbrechen? Dies "
 "wird - Ihre Umgebung in einem undefinierten Zustand lassen."
+
+#, fuzzy
+msgid ""
+"<b>Gather all service instances and restrict by overall tags:</b><br>If "
+"overall tags are specified above, then all service instances will be "
+"filtered by those tags. Otherwise, all instances will be collected."
+"<br><br><b>Explicit service tags and overwrite overall tags:</b><br>Specify "
+"explicit tags for these services. The overall tags will be ignored for these "
+"services.<br><br><b>Explicit service names and ignore overall tags:</"
+"b><br>Use this option to specify explicit names. The overall tags will be "
+"ignored for these services."
+msgstr ""
+"<i>Sammeln Sie alle Service-Instanzen und schränken Sie durch übergreifende "
+"Tags ein</i> bedeutet, dass, wenn übergreifende Tags vorangestellt werden, "
+"alle Service-Instanzen nach diesen Tags gefiltert werden. Andernfalls werden "
+"alle Instanzen gesammelt.<br>Mit <i>Explizite Service-Tags verwenden und "
+"übergreifende Tags überschreiben</i> können Sie explizite Tags für diese "
+"Dienste angeben. Die übergreifende Tags werden für diese Dienste ignoriert. "
+"<br><i><i>Verwenden Sie explizite Dienstnamen und ignorieren Sie "
+"übergreifende Tags</i>: Mit dieser Auswahl können Sie explizite Namen "
+"angeben. Die ü\\bergreifende Tags werden für diesen Dienst ignoriert."
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -1336,26 +1368,6 @@ msgstr ""
 #, python-format
 msgid "<i>%d more contact groups</i><br>"
 msgstr "<i>%d zusätzliche Kontaktgruppen</i><br>"
-
-msgid ""
-"<i>Gather all service instances and restrict by overall tags</i> means that "
-"if overall tags are stated above then all service instances are filtered by "
-"these tags. Otherwise all instances are gathered.<br>With <i>Use explicit "
-"service tags and overwrite overall tags</i> you can specify explicit tags "
-"for these services. The overall tags are ignored for these services."
-"<br><i>Use explicit service names and ignore overall tags</i>: With this "
-"selection you can state explicit names. The overall tags are ignored for "
-"these service."
-msgstr ""
-"<i>Sammeln Sie alle Service-Instanzen und schränken Sie durch übergreifende "
-"Tags ein</i> bedeutet, dass, wenn übergreifende Tags vorangestellt werden, "
-"alle Service-Instanzen nach diesen Tags gefiltert werden. Andernfalls werden "
-"alle Instanzen gesammelt.<br>Mit <i>Explizite Service-Tags verwenden und "
-"übergreifende Tags überschreiben</i> können Sie explizite Tags für diese "
-"Dienste angeben. Die übergreifende Tags werden für diese Dienste ignoriert. "
-"<br><i><i>Verwenden Sie explizite Dienstnamen und ignorieren Sie "
-"übergreifende Tags</i>: Mit dieser Auswahl können Sie explizite Namen "
-"angeben. Die ü\\bergreifende Tags werden für diesen Dienst ignoriert."
 
 #, python-format
 msgid "<li>Cannot delete hosts in folder %s: %s</li>"
@@ -1922,9 +1934,6 @@ msgid "A combination of the instance, database and (logical) file name."
 msgstr ""
 "Eine Kombination aus Instanz, Datanbank und dem (logischen) Dateinamen."
 
-msgid "A comment or description of this host"
-msgstr "Kommentar/Beschreibung für Host"
-
 msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
@@ -1963,9 +1972,6 @@ msgstr ""
 "Hier kann eine Verzögerung konfiguriert werden, um mehrere Hosts zu sammeln "
 "und gleichzeitig zu erkennen. Dies vermeidet häufige Core-Neustarts bei "
 "häufigen Serviceänderungen."
-
-msgid "A description or title of this rule"
-msgstr "Eine Beschreibung oder ein Titel dieser Regel"
 
 msgid "A descriptive title for this rule pack"
 msgstr "Ein erläuternder Titel für dieses Regelpaket"
@@ -2635,9 +2641,6 @@ msgstr "Absolute Schwellwerte für 'comitted heap space'"
 msgid "Absolute levels for decoded traffic"
 msgstr "Absolute Schellwerter für 'decoded traffic'"
 
-msgid "Absolute levels for discards rates"
-msgstr "Absolute Schellen für Fehlerraten"
-
 #, python-format
 msgid "Absolute levels for free %s"
 msgstr "Absolute Schwellen für freien %s"
@@ -3247,8 +3250,16 @@ msgstr "Regel-ID hinzufügen"
 msgid "Add Suffix"
 msgstr "Endung hinzufügen"
 
+#, fuzzy
+msgid "Add a comment or describe this host"
+msgstr "Kommentar/Beschreibung für Host"
+
 msgid "Add a first row with column titles"
 msgstr "Eine erste Zeile mit Spaltentiteln hinzufügen"
+
+#, fuzzy
+msgid "Add a title or describe this rule"
+msgstr "Eigenschaften dieser Regel bearbeiten"
 
 msgid "Add additional folder"
 msgstr "Zusätzlichen Ordner hinzufügen"
@@ -5156,15 +5167,6 @@ msgstr ""
 msgid "An optional alias name for your mysql socket"
 msgstr "Ein optionaler Alias für die mysql Instanz"
 
-msgid ""
-"An optional comment that may be used to explain the purpose of this object. "
-"The comment is only visible in this dialog and may help other users "
-"understanding the intentions of the configured attributes."
-msgstr ""
-"Optionaler Kommentar um den Sinn dieses Objektes zu beschreiben. Der "
-"Kommentar ist nur in diesem Dialog sichtbar und soll anderen dabei Helfen "
-"die konfigurierten Attribute zu verstehen."
-
 msgid "Analyse availability of this aggregation"
 msgstr "Verfügbarkeit dieser Aggregation analysieren"
 
@@ -6027,14 +6029,6 @@ msgstr "Automatisches Löschen von Hosts ohne Huckepackdaten"
 msgid "Automatically discover LDAP server"
 msgstr "LDAP-Server automatisch ermitteln"
 
-msgid ""
-"Automatically execute a service discovery on all new hosts created by this "
-"connection. New services will be added to the monitoring in this step."
-msgstr ""
-"Führt automatisch eine Serviceerkennung auf allen neuen Hosts durch, die "
-"durch diese Verbindung erstellt wurden. In diesem Schritt werden neue "
-"Services zur Überwachung hinzugefügt."
-
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr "Automatisch den Cache des Sensordatenspeichers (SDR) neu anlegen"
 
@@ -6044,6 +6038,15 @@ msgid ""
 msgstr ""
 "Automatisches Entfernen von Hosts, deren Check_MK-Service länger als die "
 "konfiguriertem Zeitraum im Status CRITICAL war."
+
+#, fuzzy
+msgid ""
+"Automatically runs a service discovery on any new hosts created by this "
+"connection. This step will add any new services to the monitoring."
+msgstr ""
+"Führt automatisch eine Serviceerkennung auf allen neuen Hosts durch, die "
+"durch diese Verbindung erstellt wurden. In diesem Schritt werden neue "
+"Services zur Überwachung hinzugefügt."
 
 msgid ""
 "Automatically schedule service discovery check after service configuration "
@@ -7453,30 +7456,6 @@ msgstr ""
 "Die Empfängeradresse dieser E-Mails kann hier konfiguriert werden."
 
 msgid ""
-"By default every host has the piggyback data source <b>Use piggyback data "
-"from other hosts if present</b>. In this case the <tt>Check_MK</tt> service "
-"of this host processes the piggyback data but does not warn if no piggyback "
-"data is available. The related discovered services would become stale. If a "
-"host has configured <b>Always use and expect piggyback data</b> for the "
-"piggyback data source then this host expects piggyback data and the "
-"<tt>Check_MK</tt> service of this host warns if no piggyback data is "
-"available. In the last case, ie. <b>Never use piggyback data</b>, the "
-"<tt>Check_MK</tt> service does not process piggyback data at all and ignores "
-"it if available."
-msgstr ""
-"Standardmäßig hat jeder Host die Piggyback-Datenquelle. <b> Die Piggyback-"
-"Daten von anderen Hosts verwenden, falls vorhanden</b>. In diesem Fall "
-"verarbeitet der <tt>Check_MK</tt>-Service dieses Hosts die Piggyback Daten, "
-"warnt aber nicht, wenn keine Piggyback-Daten vorhanden sind. Die ermittelten "
-"Services würden in diesem Fall in stale Zustand fallen. Wenn ein Host "
-"<b>Immer Piggyback-Daten verwenden und erwarten</b> für die Piggyback-"
-"Datenquelle konfiguriert hat, dann erwartet dieser Host Piggyback-Daten und "
-"der <tt>Check_MK</tt>-Service dieses Hosts warnt, wenn keine Piggyback-Daten "
-"verfügbar sind. Im letzten Fall, d. h. <b>Niemals Piggyback-Daten verwenden</"
-"b>, verarbeitet der <tt>Check_MK</tt>-Service überhaupt keine Piggyback-"
-"Daten und ignoriert sie, falls vorhanden."
-
-msgid ""
 "By default only the members of the owner contact group are permitted to use "
 "a a configured password. It is possible to share a password with other "
 "groups of users to make them able to use a password in checks."
@@ -7508,17 +7487,6 @@ msgstr ""
 "Agenten-Updater seinen Agenten von seiner remote Site abholt, müssen Sie "
 "diese Option konfigurieren. Somit kann die remote Site im Namen des Agenten-"
 "Updaters mit dem zentralen Site kommunizieren kann."
-
-msgid ""
-"By default the packages created by the agent bakery all use the name "
-"<tt>check-mk-agent</tt>. There may be reasons to rename this package to "
-"something different, e.g. to be possible to install multiple agents (with "
-"different configurations)."
-msgstr ""
-"Per Default nutzen die Pakete der Agent-Bakery den gleichen Paketnamen "
-"<tt>check-mk-agent</tt>. Es kann nötig sein diese Paketnamen anzupassen, z."
-"B. um es zu ermöglichen mehrere Agenen parallel (mit unterschiedlichen "
-"Konfigurationen) zu installieren."
 
 #, fuzzy, python-format
 msgid ""
@@ -7631,6 +7599,30 @@ msgstr ""
 "jeder anderen Ressource. Wenn die VM in Ihrem Monitoring als separater Host "
 "vorhanden ist, können Sie wählen, ob Sie die Daten an die VM selbst senden "
 "möchten."
+
+#, fuzzy
+msgid ""
+"By default, each host has a piggyback data source.<br><br><b>Use piggyback "
+"data from other hosts if present:</b><br>If selected, the <tt>Check_MK</tt> "
+"service of this host will process the piggyback data, but will not warn if "
+"no piggyback data is available. The associated discovered services would "
+"become stale.<br><br><b>Always use and expect piggyback data:</b><br>The "
+"host will expect piggyback data, and the <tt>Check_MK</tt> service of this "
+"host will warn if no piggyback data is available.<br><br><b>Never use "
+"piggyback data:</b><br>The <tt>Check_MK</tt> service does not process "
+"piggybacking data at all, and will ignore it if it's available."
+msgstr ""
+"Standardmäßig hat jeder Host die Piggyback-Datenquelle. <b> Die Piggyback-"
+"Daten von anderen Hosts verwenden, falls vorhanden</b>. In diesem Fall "
+"verarbeitet der <tt>Check_MK</tt>-Service dieses Hosts die Piggyback Daten, "
+"warnt aber nicht, wenn keine Piggyback-Daten vorhanden sind. Die ermittelten "
+"Services würden in diesem Fall in stale Zustand fallen. Wenn ein Host "
+"<b>Immer Piggyback-Daten verwenden und erwarten</b> für die Piggyback-"
+"Datenquelle konfiguriert hat, dann erwartet dieser Host Piggyback-Daten und "
+"der <tt>Check_MK</tt>-Service dieses Hosts warnt, wenn keine Piggyback-Daten "
+"verfügbar sind. Im letzten Fall, d. h. <b>Niemals Piggyback-Daten verwenden</"
+"b>, verarbeitet der <tt>Check_MK</tt>-Service überhaupt keine Piggyback-"
+"Daten und ignoriert sie, falls vorhanden."
 
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
@@ -9452,6 +9444,14 @@ msgid "Choose SNMP Backend (Enterprise Edition only)"
 msgstr "SNMP-Backend auswählen (Enterprise Edition only)"
 
 msgid ""
+"Choose a custom name for the baked Checkmk agent package, other than default "
+"<tt>check-mk-agent</tt>. Please note that this rule only affects the name "
+"that is used by the package manager (e.g., RPM) to identify the Checkmk "
+"agent package, rather than the contents of the package, e.g., service names. "
+"In particular, it doesn't support to install multiple agents on one machine."
+msgstr ""
+
+msgid ""
 "Choose a name here. If you choose <tt>foo</tt> then section header and thus "
 "the name of the required check plugin will be &lt;&lt;&lt;winperf_foo&gt;&gt;"
 "&gt;."
@@ -9897,6 +9897,10 @@ msgid "Clone %s"
 msgstr "Klone %s"
 
 #, python-format
+msgid "Clone %s for packaging"
+msgstr ""
+
+#, python-format
 msgid "Clone Aggregation %s"
 msgstr "Kopiere Aggregation %s"
 
@@ -9944,6 +9948,10 @@ msgstr "Gespeicherten Bericht klonen"
 msgid "Clone this %s"
 msgstr "Klone %s"
 
+#, fuzzy, python-format
+msgid "Clone this %s for packaging as extension package"
+msgstr "Eigenschaften des installierten Erweiterungspaketes %s geändert"
+
 msgid "Clone this connection in order to create a new one"
 msgstr "Eine neue Verbindung auf Basis einer Kopie von dieser anlegen"
 
@@ -9977,6 +9985,10 @@ msgstr "Zeitreise schließen"
 
 msgid "Closed"
 msgstr "geschlossen"
+
+#, fuzzy
+msgid "Cloud"
+msgstr "Wolkenlauf"
 
 msgid "Cloud Based Environments"
 msgstr "Cloud-basierte Umgebungen"
@@ -10538,14 +10550,6 @@ msgstr "Konfiguration des Datadog-Spezialagenten."
 msgid "Configuration of update plugin"
 msgstr "Konfiguration des Updateplugins"
 
-msgid ""
-"Configuration options for the creation of piggyback hosts. The first "
-"matching rule is used. You have to specify at least one rule to create hosts."
-msgstr ""
-"Konfigurations Optionen zur Erstellung von Huckepack-Hosts. Die erste "
-"greifende Regel wird verwendet. Es muss mindestens eine Regel geben um einen "
-"Host anzulegen."
-
 #, python-format
 msgid ""
 "Configuration update failed\n"
@@ -10693,6 +10697,19 @@ msgstr ""
 "Konfigurieren Sie hier die Basis-URL für die Monitoring Web-GUI und geben "
 "Sie den Namen der Site mit an. Die URL wird für Links zu check_mk aus Jira "
 "heraus verwendet."
+
+#, fuzzy, python-format
+msgid ""
+"Configure the community to be used when contacting this host via SNMP v1/v2 "
+"or v3. You can also configure the SNMP community using the <a href=\"%s"
+"\">SNMP Communities</a> ruleset. Configuring a community when creating a "
+"host overrides the community defined by the rules."
+msgstr ""
+"Mit dieser Option können sie die SNMP-Community konfigurieren, die benutzt "
+"wird, um Hosts mittels SNMP v1 oder v2 zu kontaktieren. Die SNMP-Community "
+"kann zwar auch in einen Regelsatz  <a href=\"%s\">SNMP Communities</a> "
+"konfiguriert werden, die hier konfigurierte Regel überschreibt jedoch die in "
+"den Regeln konfigurierte Community."
 
 msgid ""
 "Configure the discovery of services monitoring network interfaces and switch "
@@ -10913,6 +10930,10 @@ msgstr "Löschen der Tag-Gruppe bestätigen"
 
 msgid "Confirm tag modifications"
 msgstr "Bestätige Merkmaländerung"
+
+#, fuzzy
+msgid "Confirmed renewal"
+msgstr "Bestätige Zurücksetzen des Zählers"
 
 msgid "Connect"
 msgstr "Verbindungsaufbau"
@@ -11398,9 +11419,8 @@ msgstr "Ereignisregeln vom Master in lokale Konfiguration kopiert"
 msgid "Copies a view to a dashboard element"
 msgstr "Kopiert eine Ansicht in ein Dashboardelement"
 
-#, fuzzy
 msgid "Copy"
-msgstr " (Kopie)"
+msgstr "Kopieren"
 
 #, fuzzy
 msgid "Copy all event rules from the central site"
@@ -13784,13 +13804,6 @@ msgstr "Lösche Hosts"
 msgid "Delete hosts"
 msgstr "Lösche Hosts"
 
-msgid ""
-"Delete hosts that have been created by this connection which have no "
-"piggyback data available anymore."
-msgstr ""
-"Hosts löschen, die von dieser Verbindung angelegt wurden und keine Huckepack-"
-"Daten mehr haben."
-
 #, fuzzy, python-format
 msgid "Delete icon #%d"
 msgstr "Regel %s gelöscht"
@@ -13890,6 +13903,14 @@ msgstr "Lösche Merkmalgruppe"
 #, fuzzy, python-format
 msgid "Delete target #%d"
 msgstr "Regel %s gelöscht"
+
+#, fuzzy
+msgid ""
+"Delete the hosts created by this connection whose piggyback data is no "
+"longer present."
+msgstr ""
+"Hosts löschen, die von dieser Verbindung angelegt wurden und keine Huckepack-"
+"Daten mehr haben."
 
 #, python-format
 msgid "Delete this %s"
@@ -14865,12 +14886,6 @@ msgstr "Deaktivierung"
 msgid "Disabled "
 msgstr "Deaktiviert "
 
-#, python-format
-msgid "Disabled %s are kept in the configuration but are not active."
-msgstr ""
-"Deaktivierte %s werden in der Konfiguration beibehalten, sind aber nicht "
-"aktiv."
-
 msgid "Disabled (configured away by admin)"
 msgstr "Deaktiviert (vom Administrator wegkonfiguriert)"
 
@@ -14889,9 +14904,6 @@ msgstr "Deaktivierte benutzerdefinierte Prüfungen - definiert über eine Regel"
 #, fuzzy, python-format
 msgid "Disabled extension package %s %s"
 msgstr "Erweiterungspaket %s deaktivieren"
-
-msgid "Disabled legacy services - defined in main.mk"
-msgstr "Deaktivierte Legacy-Dienste - definiert in main.mk"
 
 msgid "Disabled or enabled sections (SNMP)"
 msgstr "Deaktivierte oder aktivierte Sektionen (SNMP)"
@@ -16159,9 +16171,6 @@ msgstr "Wartungszeit startet nicht mehr nach"
 msgid "Downtimes"
 msgstr "Wartungszeiten"
 
-msgid "Draft"
-msgstr ""
-
 msgid "Driver type to use instead of doing an auto selection"
 msgstr "Zu verwendende Treiberart anstelle einer automatischen Auswahl"
 
@@ -16393,6 +16402,14 @@ msgstr "EWS"
 
 msgid "EXITED"
 msgstr "EXITED"
+
+msgid ""
+"Each EC2 instance creates a piggyback host.<br><b>Note:</b> Not every "
+"hostname is pingable and changing the piggyback name will reset the "
+"piggyback host.<br><br><b>IP - Region - Instance ID:</b><br>The name "
+"consists of \"{Private IPv4 address}-{Region}-{Instance ID}\". This uniquely "
+"identifies the EC2 instance. It is not possible to ping this host name."
+msgstr ""
 
 msgid ""
 "Each SNMPv3 device has it's own engine ID. This is normally automatically "
@@ -18089,7 +18106,7 @@ msgstr "Plugins im Allgemeinen ausführen"
 
 #, fuzzy
 msgid ""
-"Execute the network scan in the Check_MK user context of the chosen user. "
+"Execute the network scan in the Checkmk user context of the chosen user. "
 "This user needs the permission to add new hosts to this folder."
 msgstr ""
 "Den Netzwerkscan im Kontext des gewählten Check_MK-Benutzers ausführen. "
@@ -18400,6 +18417,10 @@ msgstr "Erweiterungspakete"
 
 msgid "Extension packages"
 msgstr "Erweiterungspakete"
+
+#, fuzzy
+msgid "Extensions"
+msgstr "Erweiterungen"
 
 msgid "Extensions in <tt>~/local/</tt> and MKPs"
 msgstr "Erweiterungen in <tt>~/local/</tt> und MKPs"
@@ -19588,17 +19609,6 @@ msgstr ""
 "korrekt eingetragen. Andernfalls dient die IP-Adresse als Hostname."
 
 msgid ""
-"For each running EC2 instance a piggyback host is created. We offer "
-"different ways of naming these hosts. Note, that not every host name is "
-"pingable. Moreover, changes in the piggyback name will cause the piggyback "
-"host to be reset. If you choose `IP - region - instance ID`, then the name "
-"includes the private IP address, the region and the instance ID: {Private "
-"IPv4 address}-{region}-{Instance ID}. This uniquely identifies the EC2 "
-"instance. This format was included with the 1.6.0 release of Checkmk and has "
-"been the only format until 2.2.0. This host name can not be pinged."
-msgstr ""
-
-msgid ""
 "For each weekday you can setup no, one or several time ranges in the format "
 "<tt>23:39</tt>, in which the time period should be active."
 msgstr ""
@@ -19607,6 +19617,14 @@ msgstr ""
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
 msgstr "Zum Beispiel <tt>VMware vSphere 5 Standard</tt>"
+
+#, fuzzy
+msgid ""
+"For information on AWS tag configuration, visit https://docs.aws.amazon.com/"
+"AWSEC2/latest/UserGuide/Using_Tags.html"
+msgstr ""
+"Wie man AWS-Tags konfiguriert, erfahren Sie unter https://docs.aws.amazon."
+"com/AWSEC2/latest/UserGuide/Using_Tags.html."
 
 msgid ""
 "For running Check_MK based checks via the Micro Core keeps a pool of "
@@ -19657,6 +19675,16 @@ msgstr ""
 
 msgid "For specific SIDs"
 msgstr "Für bestimmte SIDs"
+
+msgid ""
+"For the Hostname field, a partial word search (infix search) is used — the "
+"entered text is searched, at any position, in the host name. Furthermore, "
+"you can limit the search using other host attributes. Please note that you "
+"can search for the attributes configured in the hosts and folders and not "
+"the final settings applied to the monitoring once it's activated. For in the "
+"labels field you are only searching for the explicitly configured labels and "
+"not the effective labels of a host."
+msgstr ""
 
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
@@ -19918,6 +19946,10 @@ msgstr "Es wurde keine History zum Zeitpunkt '%s' für den Host '%s' gefunden"
 
 msgid "Found no inventory data for this host."
 msgstr "Keine Inventurdate für diesen Host gefunden."
+
+#, fuzzy
+msgid "Found no matching alternative."
+msgstr "Es wurde kein passender Eintrag gefunden."
 
 msgid "Found no matching entry."
 msgstr "Es wurde kein passender Eintrag gefunden."
@@ -20461,6 +20493,10 @@ msgstr "Globbing-Muster für Eingabedateien"
 msgid "Go critical if all licenses are used"
 msgstr "Kritisch melden, wenn alle Lizenzen in Verwendung sind"
 
+#, fuzzy
+msgid "Go to extension packages"
+msgstr "Optionale Erweiterungspakete"
+
 msgid "Go to main page"
 msgstr "Zur Hauptübersicht"
 
@@ -20687,6 +20723,10 @@ msgstr "Gruppen Basis-DN"
 msgid "Group Werks by"
 msgstr "Werks gruppieren nach"
 
+#, python-format
+msgid "Group and managed services use: %s"
+msgstr ""
+
 msgid "Group base DN"
 msgstr "Gruppen Base DN"
 
@@ -20748,10 +20788,6 @@ msgstr "Gruppenpfad"
 
 msgid "Group patterns"
 msgstr "Gruppenmuster"
-
-#, fuzzy, python-format
-msgid "Group use: %s"
-msgstr "Gruppen Base DN"
 
 msgid "Group<nobr> </nobr>CN"
 msgstr "Gruppen-CN"
@@ -21076,9 +21112,6 @@ msgstr "Hardwarestatus"
 
 msgid "Hardware temperature, multiple sensors"
 msgstr "Hardware-Temperatur, mehrere Sensoren"
-
-msgid "Hardware temperature, single sensor"
-msgstr "Hardware-Temperatur, ein Sensor"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -21883,20 +21916,6 @@ msgstr ""
 "verwendet."
 
 msgid ""
-"Here you can specify additional IPv4 addresses. These can be used in some "
-"active checks like ICMP."
-msgstr ""
-"Hier können Sie weitere IPv4-Adressen angeben, die in einigen aktiven Checks "
-"wie ICMP verwendet werden können."
-
-msgid ""
-"Here you can specify additional IPv6 addresses. These can be used in some "
-"active checks like ICMP."
-msgstr ""
-"Hier können Sie zusätzliche IPv6-Adressen konfigurieren. Diese können in "
-"aktiven Checks, wie dem ICMP-Check, genutzt werden."
-
-msgid ""
 "Here you can specify alternative names that the service might have. This "
 "helps when the exact spelling of the services can changed from one version "
 "to another."
@@ -22341,6 +22360,11 @@ msgstr "Host- & Serviceparameter"
 
 msgid "Host and service rules related to the Event Console"
 msgstr "Host-/Service-Regeln bezogen auf die Event-Console"
+
+msgid ""
+"Host attributes apply to all new hosts from that connection. Changes apply "
+"on next execution."
+msgstr ""
 
 msgid ""
 "Host attributes are locked (You cannot create, edit or delete hosts in this "
@@ -22956,13 +22980,6 @@ msgid ""
 msgstr ""
 "Die Festplattenbezeichnung hängt vom Hardwaretyp ab. Beispiele finden Sie in "
 "bereits erkannten Checks."
-
-msgid ""
-"How to configure AWS tags please see https://docs.aws.amazon.com/AWSEC2/"
-"latest/UserGuide/Using_Tags.html"
-msgstr ""
-"Wie man AWS-Tags konfiguriert, erfahren Sie unter https://docs.aws.amazon."
-"com/AWSEC2/latest/UserGuide/Using_Tags.html."
 
 msgid "How to handle redirect"
 msgstr "Wie Umleitung behandeln"
@@ -23623,9 +23640,10 @@ msgstr ""
 "erstellt. Wenn die erforderliche Anzahl nicht erreicht wird, dann wird der "
 "Zähler auf <tt>0</tt> zurückgesetzt."
 
+#, fuzzy
 msgid ""
-"If limits are enabled all instances are fetched regardless of possibly "
-"configured restriction to names or tags"
+"If limits are enabled, all instances will be fetched regardless of any name "
+"or tag restrictions that may have been configured."
 msgstr ""
 "Wenn Limits aktiviert sind, werden alle Instanzen geholt, unabhängig von "
 "einer eventuell konfigurierten Einschränkung auf Namen oder Tags"
@@ -24334,16 +24352,6 @@ msgstr ""
 "                ENDED PRE-EMPTIVELY: WARN<br>\n"
 "                STATUS NOT AVAILABLE: OK<br>\n"
 "             "
-
-msgid ""
-"If you don't want to automatically create all hosts, you can restrict the "
-"creation with a regular expression. Important: This concerns the hosts to be "
-"created and not the hosts you have set up to monitor e.g. AWS."
-msgstr ""
-"Wenn Sie nicht alle Hosts automatisch erstellen möchten, können Sie die "
-"Erstellung mit einem regulären Ausdruck einschränken. Wichtig: Dies betrifft "
-"die anzulegenden Hosts und nicht die Hosts, die Sie zur Überwachung "
-"eingerichtet haben, z. B. AWS."
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -25193,57 +25201,6 @@ msgstr ""
 msgid "In case of an overflow..."
 msgstr "Im Überlaufsfall..."
 
-msgid ""
-"In case the name of the host is not resolvable via <tt>/etc/hosts</tt> or "
-"DNS by your monitoring server, you can specify an explicit IP address or a "
-"resolvable DNS name of the host here.<br> <b>Notes</b>:<br> 1. If you do not "
-"set this attribute, hostname resolution will be done when you activate the "
-"configuration. Check_MKs builtin DNS cache is activated per default in the "
-"global configuration to speed up the activation process. The cache is "
-"normally updated daily with a cron job. You can manually update the cache "
-"with the command <tt>cmk -v --update-dns-cache</tt>.<br>2. If you enter a "
-"DNS name here, the DNS resolution will be carried out each time the host is "
-"checked. Check_MKs DNS cache will NOT be queried. Use this only for hosts "
-"with dynamic IP addresses."
-msgstr ""
-"Wenn der Name des Hosts nicht über <tt>/etc/hosts</tt> oder DNS auf dem "
-"Monitoring-Server aufgelöst werden kann, dann können Sie hier eine IP "
-"Adresse oder einen auflösbaren Hostnamen festlegen. <b>Wichtig</b>: Wenn Sie "
-"dieses Feld nicht setzen, wird beim Aktivieren der Konfiguration die DNS "
-"Auflösung aktiviert. Aus Performancegründen hält Check_MK dabei einen Cache "
-"der IP-Adressen, welcher in den globalen Optionen per Default eingeschaltet "
-"ist. Üblicherweise wird der Cache einmal pro Tag aktualisiert. Das übernimmt "
-"in OMD-basierten Systemen ein Cronob, der <tt>cmk -v --update-dns-cache</tt> "
-"aufruft.Wenn Sie an dieser Stelle einen DNS Namen eintragen, dann wird die "
-"DNS Auflösung jedes Mal ausgeführt, wenn der Host geprüft wird. Verwenden "
-"Sie diese Einstellung nur für Hosts mit dynamischen IP Adressen."
-
-msgid ""
-"In case the name of the host is not resolvable via <tt>/etc/hosts</tt> or "
-"DNS by your monitoring server, you can specify an explicit IPv6 address or a "
-"resolvable DNS name of the host here.<br> <b>Notes</b>:<br> 1. If you do not "
-"set this attribute, hostname resolution will be done when you activate the "
-"configuration. Check_MKs builtin DNS cache is activated per default in the "
-"global configuration to speed up the activation process. The cache is "
-"normally updated daily with a cron job. You can manually update the cache "
-"with the command <tt>cmk -v --update-dns-cache</tt>.<br>2. If you enter a "
-"DNS name here, the DNS resolution will be carried out each time the host is "
-"checked. Check_MKs DNS cache will NOT be queried. Use this only for hosts "
-"with dynamic IP addresses."
-msgstr ""
-"Wenn der Name des Hosts nicht über <tt>/etc/hosts</tt> oder DNS auf dem "
-"Monitoring-Server aufgelöst werden kann, dann können Sie hier eine explizite "
-"IPv6-Adresse oder einen auflösbaren Hostnamen festlegen. <b>Hinweise</b>:1. "
-"Wenn Sie dieses Feld nicht setzen, wird beim Aktivieren der Konfiguration "
-"die DNS Auflösung aktiviert. Aus Performancegründen hält Check_MK dabei "
-"einen Cache der IP-Adressen, welcher in den globalen Optionen per Default "
-"eingeschaltet ist. Üblicherweise wird der Cache einmal pro Tag aktualisiert. "
-"Das übernimmt in ein Cronob, der <tt>cmk -v --update-dns-cache</tt> aufruft."
-"<br>2. Wenn Sie an dieser Stelle einen DNS Namen eintragen, dann wird die "
-"DNS Auflösung jedes Mal ausgeführt, wenn der Host geprüft wird. Der Check_MK-"
-"DNS-Cache wird in diesem Fall <b>nicht</b> verwendet. Verwenden Sie diese "
-"Einstellung nur für Hosts mit dynamischen IP Adressen."
-
 #, fuzzy
 msgid ""
 "In case you want to <i>unset</i> attributes on multiple hosts, you need to "
@@ -25446,10 +25403,6 @@ msgstr ""
 "diese Zahl auf 0 setzen, werden die Zeilen aus bis zu einer Logdatei "
 "zeitweise im Speicher gehalten."
 
-#, fuzzy
-msgid "In progress"
-msgstr "In Bearbeitung"
-
 msgid "In relation to normal check interval"
 msgstr "Im Verhältnis zum normalen Checkintervall"
 
@@ -25480,10 +25433,6 @@ msgstr ""
 "falsch und der Sensor meldet Werte in Fahrenheit, die eigentlich in Celsius "
 "sind. Mit dieser Einstellungen können Sie eine Interpretation einer "
 "bestimmten Einheit erzwingen. "
-
-#, fuzzy
-msgid "In termination"
-msgstr "Unterbrechung"
 
 msgid ""
 "In the history file all events like notifications and alerts are saved. This "
@@ -25558,7 +25507,8 @@ msgstr "Vorfall"
 msgid "Include Pattern"
 msgstr "Einschluss-Muster"
 
-msgid "Include WAFs in front of CloudFront resources in the monitoring"
+#, fuzzy
+msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "WAFs vor Cloudfront-Resourcen in die Überwachung einschließen"
 
 msgid "Include all Nodes"
@@ -27317,6 +27267,19 @@ msgstr "Labels"
 
 #, fuzzy
 msgid ""
+"Labels allow you to flexibly group your hosts in order to refer to them "
+"later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
+"b>  key:value<br><br>Checkmk does not perform any validation on the labels "
+"you use."
+msgstr ""
+"Mit Hilfe von Labels können Sie Ihre Hosts flexibel gruppieren, um später an "
+"anderer Stelle in Check_MK auf sie zu verweisen, z.B. in Regelketten. Ein "
+"Label besteht immer aus einer Kombination aus Schlüssel und Wert im Format "
+"\"key:value\". Ein Host kann nur einen Wert pro Schlüssel haben. Check_MK "
+"führt keine Überprüfung der von Ihnen verwendeten Labels durch."
+
+#, fuzzy
+msgid ""
 "Labels need to be in the format \"[KEY]:[VALUE]\". For example \"os:windows"
 "\"."
 msgstr ""
@@ -27572,9 +27535,6 @@ msgstr "Veraltetes Perfometer angetroffen: %r"
 msgid "Legacy run"
 msgstr "Veralteter Lauf"
 
-msgid "Legacy services - defined in main.mk"
-msgstr "Legacy-Dienste - definiert in main.mk"
-
 msgid "Legal"
 msgstr "Legal"
 
@@ -27811,6 +27771,10 @@ msgstr "Schwellen für Checkpoint-Zeit"
 
 msgid "Levels for data size"
 msgstr "Schwellwerte für Datengröße"
+
+#, fuzzy
+msgid "Levels for discards rates"
+msgstr "Absolute Schellen für Fehlerraten"
 
 msgid "Levels for disk usage"
 msgstr "Stufen für die Festplattennutzung"
@@ -32399,6 +32363,10 @@ msgid "Name resolution"
 msgstr "Namensauflösung"
 
 #, fuzzy, python-format
+msgid "Name your %s for easy recognition."
+msgstr "%d Benutzer für den Abgleich gefunden."
+
+#, fuzzy, python-format
 msgid "Name: %s"
 msgstr "Namen"
 
@@ -35042,12 +35010,12 @@ msgstr ""
 "Nur Port des eingestellten Typs werden in die Gruppe aufgenommen (z.B. 53 "
 "für propVirtual)."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Only members of the contact groups listed here have WATO permission to the "
-"host / folder. If you want, you can make those contact groups automatically "
-"also <b>monitoring contacts</b>. This is completely optional. Assignment of "
-"host to contact groups can be done by <a href='%s'>rules</a> as well."
+"Only members of the contact groups listed here have Setup permission for the "
+"host/folder. Optionally, you can make these contact groups automatically "
+"monitor contacts. The assignment of hosts to contact groups can also be "
+"defined by <a href='%s'>rules</a>."
 msgstr ""
 "Nur Mitglieder der hier aufgeführten Kontaktgruppen haben WATO-"
 "Berechtigungen auf den Host / Ordner. Wenn Sie möchten, können Sie diese "
@@ -35223,6 +35191,10 @@ msgstr "Operationelle Status, die überwacht werden sollen"
 msgid "Operational state"
 msgstr "Betriebszustand"
 
+#, fuzzy, python-format
+msgid "Operational state: %s"
+msgstr "Betriebszustände"
+
 msgid "Operational states"
 msgstr "Betriebszustände"
 
@@ -35304,6 +35276,35 @@ msgstr ""
 "Geben Sie optional Protokoll, Server und Standort für die "
 "Agentenregistrierung und/oder Updates an. Wenn Sie diese Daten hier nicht "
 "eingeben, können Sie sie bei der Registrierung angeben."
+
+#, fuzzy
+msgid ""
+"Optionally, add a URL linking to a documentation or any other page. An icon "
+"links to the page and opens in a new tab when clicked. You can use either "
+"global URLs (starting with <tt>http://</tt>), absolute local URLs (starting "
+"with <tt>/</tt>) or relative URLs (relative to <tt>check_mk/</tt>)."
+msgstr ""
+"Eine optionale URL, die auf die Dokumentation oder eine andere Seite "
+"verweist. Dies wird als Symbol %s angezeigt und öffnet beim Anklicken eine "
+"neue Seite. Sie können entweder globale URLs (beginnend mit <tt>http://</"
+"tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs "
+"(die relativ zu <tt>check_mk/</tt> sind) verwenden."
+
+#, fuzzy
+msgid ""
+"Optionally, add a comment to explain the purpose of this object. The comment "
+"is only visible in this dialog and can help other users to understand the "
+"intentions of the configured attributes."
+msgstr ""
+"Optionaler Kommentar um den Sinn dieses Objektes zu beschreiben. Der "
+"Kommentar ist nur in diesem Dialog sichtbar und soll anderen dabei Helfen "
+"die konfigurierten Attribute zu verstehen."
+
+msgid ""
+"Optionally, restrict host creation using regular expressions."
+"<br><b>Important:</b><br>This only applies to hosts created by this "
+"connection, not the monitoring host ('Dummy host').<br><br>"
+msgstr ""
 
 msgid "Options"
 msgstr "Optionen"
@@ -36108,14 +36109,15 @@ msgstr "Eltern-/Kinder-Topologie"
 msgid "Parents"
 msgstr "Parents"
 
+#, fuzzy
 msgid ""
-"Parents are used to configure the reachability of hosts by the monitoring "
-"server. A host is considered to be <b>unreachable</b> if all of its parents "
-"are unreachable or down. Unreachable hosts will not be actively monitored."
-"<br><br><b>Clusters</b> automatically configure all of their nodes as "
-"parents, but only if you do not configure parents manually.<br><br>In a "
-"distributed setup make sure that the host and all of its parents are "
-"monitored by the same site."
+"Parents are used to configure the reachability of hosts to the monitoring "
+"server. A host is considered unreachable if all of its parents are "
+"unreachable or down. Unreachable hosts are not actively monitored."
+"<br><br><b>Clusters</b> automatically configure all their nodes as Parents, "
+"but only if you do not manually configure Parents.<br><br><b>Distributed "
+"setup:</b><br>Make sure that the host and all its parents are monitored by "
+"the same site."
 msgstr ""
 "Parents werden verwendet, um die Erreichbarkeit von Hosts durch den "
 "Monitoring-Server zu konfigurieren. Ein Host gilt als <b>unerreichbar</b>, "
@@ -39458,6 +39460,10 @@ msgstr "Entfernt: Ereignisse an entfernten Syslog-Host senden"
 msgid "Remove"
 msgstr "Entferne"
 
+#, fuzzy, python-format
+msgid "Remove %s from extensions"
+msgstr "Aus den Favoriten streichen"
+
 msgid "Remove TLS registration"
 msgstr "TLS-Registrierung entfernen"
 
@@ -39522,6 +39528,10 @@ msgstr "Tag entfernen"
 
 msgid "Remove tag condition"
 msgstr "Tag-Bedingung entfernen"
+
+#, fuzzy, python-format
+msgid "Remove this %s from the extension packages module"
+msgstr "Regelpaket aus dem WATO-Modul Erweiterungspakete entfernen"
 
 msgid "Remove this element"
 msgstr "Dieses Element entfernen"
@@ -40563,6 +40573,19 @@ msgstr "Regel-Limit"
 
 msgid "Rule match and stop"
 msgstr "Regelübereinstimmung und Stopp"
+
+#, fuzzy
+msgid "Rule only applies to hosts directly in or below this folder."
+msgstr "Regel trifft nur auf Hosts in diesem Ordner (und darunter) zu."
+
+#, fuzzy
+msgid "Rule only applies to hosts matching the label conditions."
+msgstr "Regel trifft nur auf Hosts in diesem Ordner (und darunter) zu."
+
+msgid ""
+"Rule only applies to hosts that meet all of the host tag conditions listed "
+"here"
+msgstr ""
 
 msgid "Rule pack"
 msgstr "Regelpaket"
@@ -41921,6 +41944,20 @@ msgstr "Ausgewählte Sektionen werden nicht vom Agenten ausgeführt."
 msgid "Selected state"
 msgstr "Ausgewählter Zustand"
 
+#, python-format
+msgid ""
+"Selecting this option will disable the %s, but it will remain in the "
+"configuration."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Selecting this option will disable the rule, but it will remain in the "
+"configuration."
+msgstr ""
+"Das Intervall, in dem die Verbindung ausgeführt wird, um die Datenquelle "
+"abzufragen und die Konfiguration zu aktualisieren."
+
 msgid "Selection"
 msgstr "Auswahl"
 
@@ -42650,11 +42687,6 @@ msgid "Set period how long outdated piggyback data is treated as valid"
 msgstr ""
 "Zeitraum einstellen, wie lange veraltete Piggyback-Daten als gültig "
 "behandelt werden"
-
-msgid "Set period how long outdated piggyback data is treated as valid."
-msgstr ""
-"Zeitraum einstellen, wie lange veraltete Piggyback-Daten als gültig "
-"behandelt werden."
 
 msgid "Set relative levels"
 msgstr "Setze relative Schwellwerte"
@@ -44584,6 +44616,22 @@ msgstr ""
 "Geben Sie einen benutzerfreundlichen Namen an, der in den Servicedetails "
 "angezeigt werden soll, zusammen mit dem Muster, das übereinstimmen soll."
 
+#, fuzzy
+msgid ""
+"Specify additional IPv4 addresses here. These can be used in active checks "
+"such as ICMP."
+msgstr ""
+"Hier können Sie weitere IPv4-Adressen angeben, die in einigen aktiven Checks "
+"wie ICMP verwendet werden können."
+
+#, fuzzy
+msgid ""
+"Specify additional IPv6 addresses here. These can be used in active checks "
+"such as ICMP."
+msgstr ""
+"Hier können Sie zusätzliche IPv6-Adressen konfigurieren. Diese können in "
+"aktiven Checks, wie dem ICMP-Check, genutzt werden."
+
 msgid ""
 "Specify all expected mount options here. If the list of actually found "
 "options differs from this list, the check will go warning or critical. Just "
@@ -44597,6 +44645,57 @@ msgstr ""
 
 msgid "Specify an arbitrary name of this connection here"
 msgstr "Geben sie einen Namen ihrer Wahl für diese Verbindung an"
+
+#, fuzzy
+msgid ""
+"Specify an explicit IP address or resolvable DNS name here, if the hostname "
+"is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set this "
+"attribute, host name resolution will be performed when the configuration is "
+"enabled. Checkmk's built-in DNS cache is enabled by default in the global "
+"configuration to speed up the activation process. The cache is normally "
+"updated daily by a cron job. You can manually update the cache with the "
+"<tt>cmk -v --update-dns-cache</tt> command.<br><br><b>Dynamic IP addresses "
+"only:</b><br>If you enter a DNS name here, the DNS resolution will be "
+"performed each time the host is checked. Checkmk's DNS cache is <b>NOT</b> "
+"queried."
+msgstr ""
+"Wenn der Name des Hosts nicht über <tt>/etc/hosts</tt> oder DNS auf dem "
+"Monitoring-Server aufgelöst werden kann, dann können Sie hier eine IP "
+"Adresse oder einen auflösbaren Hostnamen festlegen. <b>Wichtig</b>: Wenn Sie "
+"dieses Feld nicht setzen, wird beim Aktivieren der Konfiguration die DNS "
+"Auflösung aktiviert. Aus Performancegründen hält Check_MK dabei einen Cache "
+"der IP-Adressen, welcher in den globalen Optionen per Default eingeschaltet "
+"ist. Üblicherweise wird der Cache einmal pro Tag aktualisiert. Das übernimmt "
+"in OMD-basierten Systemen ein Cronob, der <tt>cmk -v --update-dns-cache</tt> "
+"aufruft.Wenn Sie an dieser Stelle einen DNS Namen eintragen, dann wird die "
+"DNS Auflösung jedes Mal ausgeführt, wenn der Host geprüft wird. Verwenden "
+"Sie diese Einstellung nur für Hosts mit dynamischen IP Adressen."
+
+#, fuzzy
+msgid ""
+"Specify an explicit IPv6 address or resolvable DNS name here, if the "
+"hostname is not resolvable via <tt>/etc/hots</tt> or DNS. If you do not set "
+"this attribute, host name resolution will be performed when the "
+"configuration is enabled. Checkmk's built-in DNS cache is enabled by default "
+"in the global configuration to speed up the activation process. The cache is "
+"normally updated daily by a cron job. You can manually update the cache with "
+"the <tt>cmk -v --update-dns-cache</tt> command.<br><br><b>Dynamic IP "
+"addresses only:</b><br>If you enter a DNS name here, the DNS resolution will "
+"be performed each time the host is checked. Checkmk's DNS cache is <b>NOT</"
+"b> queried."
+msgstr ""
+"Wenn der Name des Hosts nicht über <tt>/etc/hosts</tt> oder DNS auf dem "
+"Monitoring-Server aufgelöst werden kann, dann können Sie hier eine explizite "
+"IPv6-Adresse oder einen auflösbaren Hostnamen festlegen. <b>Hinweise</b>:1. "
+"Wenn Sie dieses Feld nicht setzen, wird beim Aktivieren der Konfiguration "
+"die DNS Auflösung aktiviert. Aus Performancegründen hält Check_MK dabei "
+"einen Cache der IP-Adressen, welcher in den globalen Optionen per Default "
+"eingeschaltet ist. Üblicherweise wird der Cache einmal pro Tag aktualisiert. "
+"Das übernimmt in ein Cronob, der <tt>cmk -v --update-dns-cache</tt> aufruft."
+"<br>2. Wenn Sie an dieser Stelle einen DNS Namen eintragen, dann wird die "
+"DNS Auflösung jedes Mal ausgeführt, wenn der Host geprüft wird. Der Check_MK-"
+"DNS-Cache wird in diesem Fall <b>nicht</b> verwendet. Verwenden Sie diese "
+"Einstellung nur für Hosts mit dynamischen IP Adressen."
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -44867,9 +44966,10 @@ msgstr ""
 "Sie müssen eine passende Regel haben, um den Host in einem auf dieser Site "
 "überwachten Ordner zu erstellen."
 
+#, fuzzy
 msgid ""
-"Specify the site, this connector should run on. Only piggyback data from "
-"that site is being processed."
+"Specify the site where you want this connector to run. Only this site will "
+"process the piggyback data."
 msgstr ""
 "Geben Sie die Site an, auf dem dieser Konnektor laufen soll. Es werden nur "
 "Huckepackdaten von diesem Standort verarbeitet."
@@ -46354,10 +46454,6 @@ msgstr "Subskriptionsstatus"
 msgid "Subscription settings"
 msgstr "Einstellungen für die Subskription"
 
-#, fuzzy, python-format
-msgid "Subscription stage: %s"
-msgstr "Einstellungen für die Subskription"
-
 msgid "Substitution"
 msgstr "Substitution"
 
@@ -47171,13 +47267,6 @@ msgstr ""
 "Regel eingestellt werden."
 
 msgid ""
-"Temperature levels for hardware devices like DELL Powerconnect that have "
-"just one temperature sensor. "
-msgstr ""
-"Temperaturschwellwerte für Geräte wie DELL Powerconnect, die nur einen "
-"einzelnen Temperatursensor haben."
-
-msgid ""
 "Temperature levels for hardware devices with a single temperature sensor."
 msgstr ""
 "Temperaturschwellwerte für Geräte mit einem einzelnen Temperatursensor."
@@ -47686,6 +47775,13 @@ msgstr "ID wird bereits von anderer Rolle verwendet"
 msgid ""
 "The ID must be a unique text. It will be used as an internal key when "
 "objects refer to this object."
+msgstr ""
+"Die ID muss ein eindeutiger Text sein. Er wird als interner Schlüssel "
+"verwendet, wenn sich Objekte auf dieses Objekt beziehen."
+
+#, fuzzy
+msgid ""
+"The ID must be unique. It acts as internal key when objects reference it."
 msgstr ""
 "Die ID muss ein eindeutiger Text sein. Er wird als interner Schlüssel "
 "verwendet, wenn sich Objekte auf dieses Objekt beziehen."
@@ -48458,10 +48554,9 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "The check plugin API for plugins in <tt>%s</tt> is deprecated. Plugin files "
-"in this folder are still considered, but starting from Checkmk version 2.3 "
-"the API they are using may change at any time without notice. Please migrate "
-"the plugins to the new API. More information can be found in <a "
-"href='%s'>our online documentation</a>."
+"in this folder are still considered, but the API they are using may change "
+"at any time without notice. Please migrate the plugins to the new API. More "
+"information can be found in our <a href='%s'>User Guide</a>."
 msgstr ""
 "Die Check-Plugin-API für Plugins in <tt>%s</tt> ist veraltet. Plugin-Dateien "
 "in diesem Ordner werden weiterhin berücksichtigt, aber ab Checkmk Version "
@@ -48688,6 +48783,15 @@ msgstr ""
 msgid "The connection %r does not exist"
 msgstr "The connection %r does not exist"
 
+#, fuzzy
+msgid ""
+"The connection creates hosts in this particular folder. Once created, you "
+"can choose to move the host to another folder."
+msgstr ""
+"Alle Hosts, die durch diese Verbindung angelegt werden, werden in diesem "
+"Ordner erzeugt. Sie können die Hosts anschließend nach Belieben in einen "
+"anderen Ordner verschieben."
+
 msgid "The connection to this site has been disabled."
 msgstr "Die Verbindung zu dieser Seite wurde deaktiviert."
 
@@ -48701,6 +48805,10 @@ msgstr ""
 #, python-format
 msgid "The content element \"%s, %s\" cannot be rendered: %s"
 msgstr "Das Inhaltselement \"%s, %s\" kann nicht angezeigt werden: %s"
+
+#, fuzzy, python-format
+msgid "The content of this file could not be processed successfully: %s"
+msgstr "Anmeldung erfolgreich"
 
 msgid ""
 "The corresponding username in ntopng of the current checkmk user. It is "
@@ -49120,6 +49228,12 @@ msgid "The first line in the file contains titles."
 msgstr "Die erste Zeile der Datei beinhaltet Titel."
 
 msgid "The first matching rule defines the parameter."
+msgstr ""
+"Die erste Regel, die zutrifft, legt den Wert fest. Weitere Regeln werden "
+"nicht mehr ausgewertet."
+
+#, fuzzy
+msgid "The first matching rule is used. You must specify at least one rule."
 msgstr ""
 "Die erste Regel, die zutrifft, legt den Wert fest. Weitere Regeln werden "
 "nicht mehr ausgewertet."
@@ -49774,10 +49888,12 @@ msgstr "Der Betreff der Email wird als Syslog-Anwendung verwendet"
 msgid "The mandatory group name is missing"
 msgstr "Der obligatorische Gruppenname fehlt"
 
-msgid "The match is performed case insensitive."
+#, fuzzy
+msgid "The match is case insensitive."
 msgstr "Bei der Suche wird die Groß- und Kleinschreibung nicht beachtet."
 
-msgid "The match is performed case sensitive."
+#, fuzzy
+msgid "The match is case sensitive."
 msgstr ""
 "Die Suche wird unter Beachtung von Groß- und Kleinschreibung ausgeführt."
 
@@ -50430,9 +50546,9 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The password is stored in clear text within the monitoring site. This is "
-"necessary because the monitoring process needs to have access to the "
-"unencrypted password, as it needs to provide it for authentication with "
+"The password entered here is stored in clear text within the monitoring "
+"site. This is necessary because the monitoring process must have access to "
+"the unencrypted password in order to provide it for authentication with "
 "remote systems."
 msgstr ""
 "Das hier eingegebene Password wird im Klartext in der Monitoring-Instanz "
@@ -50804,14 +50920,6 @@ msgstr "Regel trifft nur auf Hosts in diesem Ordner (und darunter) zu."
 msgid "The rule pack you are trying to edit does not exist."
 msgstr "Das Regelpaket, welches Sie editieren möchten, existiert nicht."
 
-msgid ""
-"The rule will only be applied to hosts fulfilling all of the host tag "
-"conditions listed here, even if they appear in the list of explicit host "
-"names."
-msgstr ""
-"Regel trifft nur dann zu, wenn alle hier festgelegten Host-Merkmale passen - "
-"selbst wenn der Host in der Liste der expliziten Hostnamen vorhanden ist."
-
 msgid "The rule would match, but matching is inverted."
 msgstr "Die Regel würde greifen, die Bedingungen sind jedoch invertiert."
 
@@ -50864,9 +50972,10 @@ msgstr ""
 msgid "The ruleset \"%s\" does not exist."
 msgstr "Der Regelsatz \"%s\" existiert nicht."
 
+#, fuzzy
 msgid ""
-"The ruleset name is used to identify the ruleset within Checkmk. You may "
-"need it when working with the rule and ruleset related REST API calls."
+"The ruleset name identifies the ruleset within Checkmk. Use this name when "
+"working with the rules and ruleset REST API calls."
 msgstr ""
 "Der Regelsatzname wird verwendet, um den Regelsatz innerhalb von Checkmk zu "
 "identifizieren. Sie benötigen ihn möglicherweise bei der Arbeit mit den REST-"
@@ -51323,6 +51432,14 @@ msgstr ""
 "Schwellen für wait_duration_ms. Dieser Teil der Regel wird den oberen "
 "überschreiben."
 
+#, fuzzy
+msgid ""
+"The thresholds for wait_duration_ms. Will overwrite the default state set "
+"above."
+msgstr ""
+"Schwellen für wait_duration_ms. Dieser Teil der Regel wird den oberen "
+"überschreiben."
+
 msgid "The time interval statistical data is saved to disk"
 msgstr "Das Zeitinterval mit dem die statistischen Daten abgespeichert werden"
 
@@ -51625,10 +51742,6 @@ msgstr "Der Name des Tresors"
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Dieses Paket kann nicht installiert werden: %s"
 
-#, fuzzy, python-format
-msgid "The verification could not be processed successfully: %s"
-msgstr "Anmeldung erfolgreich"
-
 #, python-format
 msgid "The version of this site is not a %s"
 msgstr "Die Version dieser Website ist keine %s"
@@ -51774,15 +51887,6 @@ msgid "Thermal information"
 msgstr "Thermische Informationen"
 
 msgid ""
-"These attributes will be set for all hosts that are managed by this "
-"connection. In case you change these attributes, they will be changed for "
-"all hosts during next execution of the connection."
-msgstr ""
-"Diese Attribute werden für alle Hosts festgelegt, die von dieser Verbindung "
-"verwaltet werden. Wenn Sie diese Attribute ändern, werden sie bei der "
-"nächsten Ausführung der Verbindung für alle Hosts geändert."
-
-msgid ""
 "These backup targets can not be edited here. You need to open the device "
 "backup management."
 msgstr ""
@@ -51823,6 +51927,20 @@ msgid ""
 "These labels can be refered to by the ruleset \"%s\", to control the "
 "behaviour during host creation."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"These levels make the check go warning or critical whenever the "
+"<b>percentual discards rate</b> or the <b>absolute discards rate</b> of the "
+"monitored interface reaches the given bounds. The percentual discards rate "
+"is computed by the formula <b>(discards / (unicast + non-unicast + "
+"discards))*100</b> "
+msgstr ""
+"Diese Schwellwerte bewirken, dass der Check auf warning oder critical geht, "
+"wenn die <b>prozentuale Fehlerrate</b> oder die <b>absolute Fehlerrate</b> "
+"der überwachten Schnittstelle die angegebenen Grenzen erreicht. Die "
+"prozentuale Fehlerrate wird nach der Formel <b>(Fehler / (Unicast + Non-"
+"Unicast + Fehler))*100</b> berechnet "
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
@@ -51987,24 +52105,6 @@ msgstr ""
 "Überwachung konfiguriert."
 
 msgid ""
-"These services have been configured by the deprecated variable "
-"<tt>legacy_checks</tt> in <tt>main.mk</tt> or a similar configuration file."
-msgstr ""
-"Diese Services wurden mithilfe der veralteten Variable <tt>legacy_checks</"
-"tt> in <tt>main.mk</tt> oder einer ähnlichen Datei angelegt."
-
-msgid ""
-"These services have been configured by the deprecated variable "
-"<tt>legacy_checks</tt> in <tt>main.mk</tt> or a similar configuration file. "
-"These services have been disabled by creating a rule in the rule set "
-"<i>Disabled services</i> oder <i>Disabled checks</i>."
-msgstr ""
-"Diese Services wurden mithilfe der veralteten Variable <tt>legacy_checks</"
-"tt> in <tt>main.mk</tt> oder einer ähnlichen Datei angelegt. Sie sind aber "
-"durch eine Regel im Regelsatz <i>Deaktivierte Services</i> oder "
-"<i>Deaktivierte Checks</i> deaktiviert worden."
-
-msgid ""
 "These services have been found by the service discovery but are not yet "
 "added to the monitoring. You should either decide to monitor them or to "
 "permanently disable them. If you are sure that they are just transitional, "
@@ -52102,13 +52202,27 @@ msgstr ""
 "Sie wurden zuvor auf diesem Host gefunden, sind aber jetzt verschwunden. "
 "Beachten Sie, dass sie möglicherweise noch auf dem Cluster überwacht werden."
 
+#, fuzzy, python-format
+msgid "This %s can be packaged with the extension packages module"
+msgstr ""
+"Dieser Regelsatz kann mit dem WATO-Modul Erweiterungspakete exportiert "
+"werden."
+
 #, python-format
 msgid "This %s does not exist."
 msgstr "Diese %s existiert nicht."
 
+#, fuzzy, python-format
+msgid "This %s is already available for packaging as extension package"
+msgstr "Eigenschaften des installierten Erweiterungspaketes %s geändert"
+
 #, python-format
 msgid "This %s is one of your favorites"
 msgstr "Dieser %s ist einer deiner Favoriten"
+
+#, fuzzy, python-format
+msgid "This %s is provided via the MKP '%s'"
+msgstr "Dieses Regelpaket wird über das MKP %s bereitgestellt."
 
 msgid "This BI aggregation does not exist"
 msgstr "Diese BI-Aggregation existiert nicht."
@@ -52740,6 +52854,10 @@ msgstr ""
 "Daten vom 1. Mai bis zum 31. Mai abgefragt, und die Prognose wird vom 1. "
 "Juni bis zum 15. Juni berechnet, ohne Berücksichtigung der Daten vom 1. Juni "
 "bis zum 10. Juni."
+
+#, fuzzy, python-format
+msgid "This file cannot be uploaded: %s"
+msgstr "Dieses Paket kann nicht installiert werden: %s"
 
 msgid "This filter cannot be displayed"
 msgstr "Der Filter kann nicht dargestellt werden."
@@ -53576,6 +53694,10 @@ msgstr "Dieses Paket enthält noch keine Regeln."
 
 #, fuzzy
 msgid "This package is not installed."
+msgstr "Dieses Paket existiert nicht."
+
+#, fuzzy
+msgid "This package type is not supported."
 msgstr "Dieses Paket existiert nicht."
 
 #, fuzzy
@@ -54995,12 +55117,17 @@ msgstr ""
 "können entweder die textliche Beschreibung oder den Pfad des Prozesses "
 "innerhalb der Abgleichskriterien angeben."
 
+#, fuzzy
 msgid ""
 "This ruleset defines criteria for automatically creating checks for running "
 "processes based upon what is running when the service discovery is done. "
 "These services will be created with default parameters. They will get "
 "critical when no process is running and OK otherwise. You can parameterize "
-"the check with the ruleset <i>State and count of processes</i>."
+"the check with the ruleset <i>State and count of processes</i>.Care should "
+"be taken when removing vanished services, for example via <i>Bulk Discovery</"
+"i>. When a process vanishes, so does the corresponding service. So despite "
+"that the service is critical, it can be removed by discovery, effectively "
+"turning off monitoring."
 msgstr ""
 "Dieser Regelsatz definiert Kriterien für die automatische Erstellung von "
 "Checks für laufende Prozesse basierend auf dem, was ausgeführt wird, wenn "
@@ -56042,18 +56169,32 @@ msgstr "Zeitspanne für Temperatur-Trendberechnung"
 msgid "Time range from report context"
 msgstr "Zeitbereich aus Berichtskontext"
 
+msgid "Time range to consider"
+msgstr "Zu berücksichtigender Zeitbereich"
+
+#, fuzzy
+msgid "Time range to continue to consider outdated piggyback data as valid."
+msgstr ""
+"Zeitraum einstellen, wie lange veraltete Piggyback-Daten als gültig "
+"behandelt werden."
+
+msgid "Time range to create report for"
+msgstr "Bericht erzeugen für folgenden Zeitbereich:"
+
+#, fuzzy
 msgid ""
-"Time range that hosts are to be retained while the piggyback source only "
-"sends piggyback data for other hosts."
+"Time range to keep hosts when piggyback source only sends piggyback data for "
+"other hosts."
 msgstr ""
 "Zeitbereich, in dem Hosts erhalten bleiben sollen, während die Piggyback-"
 "Quelle nur Piggyback-Daten für andere Hosts sendet."
 
-msgid "Time range to consider"
-msgstr "Zu berücksichtigender Zeitbereich"
-
-msgid "Time range to create report for"
-msgstr "Bericht erzeugen für folgenden Zeitbereich:"
+msgid ""
+"Time range to prevent host deletion after site startup, e.g. when booting "
+"the Checkmk server. This is caused by the 'tmp' directory which needs more "
+"time to initialize and can result in missing piggyback information from some "
+"sources."
+msgstr ""
 
 msgid "Time resolution"
 msgstr "Zeitauflösung"
@@ -59836,20 +59977,6 @@ msgstr ""
 "Eigenschaft, um die Anmeldung über die GET-Methode für alle Benutzer zu "
 "aktivieren."
 
-#, python-format
-msgid ""
-"Using this option you can configure the community which should be used when "
-"contacting this host via SNMP v1/v2 or v3. It is possible to configure the "
-"SNMP community by using the <a href=\"%s\">SNMP Communities</a> ruleset, but "
-"when you configure a community here, this will override the community "
-"defined by the rules."
-msgstr ""
-"Mit dieser Option können sie die SNMP-Community konfigurieren, die benutzt "
-"wird, um Hosts mittels SNMP v1 oder v2 zu kontaktieren. Die SNMP-Community "
-"kann zwar auch in einen Regelsatz  <a href=\"%s\">SNMP Communities</a> "
-"konfiguriert werden, die hier konfigurierte Regel überschreibt jedoch die in "
-"den Regeln konfigurierte Community."
-
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
@@ -61042,22 +61169,6 @@ msgstr ""
 "Verfügung."
 
 msgid ""
-"When a Checkmk site have just been started, e.g. after booting the Checkmk "
-"server, the tmp directory may not have been fully initialized. For example "
-"the piggyback information from some sources may totally be missing until the "
-"first contact with the piggyback source. To protect against loosing "
-"piggyback based hosts in this situation, the deletion of hosts is disabled "
-"for some time after the site initialization."
-msgstr ""
-"Wenn eine Checkmk-Site gerade gestartet wurde, z.B. nach dem Booten des "
-"Checkmk-Servers, wurde das Verzeichnis tmp möglicherweise nicht vollständig "
-"initialisiert. So können beispielsweise die Huckepackinformationen aus "
-"einigen Quellen bis zum ersten Kontakt mit der Huckepackquelle völlig "
-"fehlen. Um in dieser Situation vor dem Verlust von huckepack-basierten Hosts "
-"zu schützen, wird das Löschen von Hosts für einige Zeit nach der "
-"Initialisierung der Site deaktiviert."
-
-msgid ""
 "When activated, the agent bakery will compress most of the agent packages. "
 "The compression applies to .deb packages, .rpm packages and to all .tar.gz "
 "packages that result from baking agents. Note: In order to avoid name "
@@ -62236,19 +62347,6 @@ msgid ""
 msgstr ""
 "Mit ServiceNow können Sie verschiedene Arten von Management-Problemen "
 "erstellen, derzeit werden Indikatoren und Fälle unterstützt."
-
-msgid ""
-"With the help of labels you can flexibly group your hosts in order to refer "
-"to them later at other places in Check_MK, e.g. in rule chains. A label "
-"always consists of a combination of key and value in the format \"key:value"
-"\". A host can only have one value per key. Check_MK will not perform any "
-"validation on the labels you use."
-msgstr ""
-"Mit Hilfe von Labels können Sie Ihre Hosts flexibel gruppieren, um später an "
-"anderer Stelle in Check_MK auf sie zu verweisen, z.B. in Regelketten. Ein "
-"Label besteht immer aus einer Kombination aus Schlüssel und Wert im Format "
-"\"key:value\". Ein Host kann nur einen Wert pro Schlüssel haben. Check_MK "
-"führt keine Überprüfung der von Ihnen verwendeten Labels durch."
 
 msgid ""
 "With the master switch you can immediately turn on or off the agent updates. "
@@ -64481,9 +64579,9 @@ msgstr "Ihr %s wurde gespeichert."
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %d days. After that monitoring of up to  "
+"Your Checkmk trial will expire in %d days. After that monitoring of up to "
 "services is supported, currently %d services are being monitored. Adjust "
-"your configuration or see here how to proceed: %s  "
+"your configuration or see here how to proceed: %s"
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"
@@ -64569,12 +64667,6 @@ msgstr ""
 
 msgid "Your input does not match the required format."
 msgstr "Ihre Eingabe entspricht nicht dem vorgeschriebenen Format."
-
-#, python-format
-msgid ""
-"Your license allows you to use Checkmk until version %s, but you are using "
-"%s. Operating in 'unlicensed' mode."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "Your license expires in %i days."
@@ -65158,9 +65250,6 @@ msgstr "Diese Sektion deaktivieren"
 
 msgid "disabled"
 msgstr "deaktiviert"
-
-msgid "discards"
-msgstr "Verworfene Pakete"
 
 msgid "disconnected"
 msgstr "unterbrochen"
@@ -66067,6 +66156,10 @@ msgstr "offen"
 msgid "optional"
 msgstr "optional"
 
+#, fuzzy
+msgid "or"
+msgstr "für"
+
 msgid "or "
 msgstr "oder "
 
@@ -66739,6 +66832,137 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "A description or title of this rule"
+#~ msgstr "Eine Beschreibung oder ein Titel dieser Regel"
+
+#~ msgid ""
+#~ "By default the packages created by the agent bakery all use the name "
+#~ "<tt>check-mk-agent</tt>. There may be reasons to rename this package to "
+#~ "something different, e.g. to be possible to install multiple agents (with "
+#~ "different configurations)."
+#~ msgstr ""
+#~ "Per Default nutzen die Pakete der Agent-Bakery den gleichen Paketnamen "
+#~ "<tt>check-mk-agent</tt>. Es kann nötig sein diese Paketnamen anzupassen, "
+#~ "z.B. um es zu ermöglichen mehrere Agenen parallel (mit unterschiedlichen "
+#~ "Konfigurationen) zu installieren."
+
+#~ msgid ""
+#~ "Configuration options for the creation of piggyback hosts. The first "
+#~ "matching rule is used. You have to specify at least one rule to create "
+#~ "hosts."
+#~ msgstr ""
+#~ "Konfigurations Optionen zur Erstellung von Huckepack-Hosts. Die erste "
+#~ "greifende Regel wird verwendet. Es muss mindestens eine Regel geben um "
+#~ "einen Host anzulegen."
+
+#, python-format
+#~ msgid "Disabled %s are kept in the configuration but are not active."
+#~ msgstr ""
+#~ "Deaktivierte %s werden in der Konfiguration beibehalten, sind aber nicht "
+#~ "aktiv."
+
+#~ msgid ""
+#~ "If you don't want to automatically create all hosts, you can restrict the "
+#~ "creation with a regular expression. Important: This concerns the hosts to "
+#~ "be created and not the hosts you have set up to monitor e.g. AWS."
+#~ msgstr ""
+#~ "Wenn Sie nicht alle Hosts automatisch erstellen möchten, können Sie die "
+#~ "Erstellung mit einem regulären Ausdruck einschränken. Wichtig: Dies "
+#~ "betrifft die anzulegenden Hosts und nicht die Hosts, die Sie zur "
+#~ "Überwachung eingerichtet haben, z. B. AWS."
+
+#, fuzzy, python-format
+#~| msgid "Subscription settings"
+#~ msgid "Subscription stage: %s"
+#~ msgstr "Einstellungen für die Subskription"
+
+#~ msgid ""
+#~ "The rule will only be applied to hosts fulfilling all of the host tag "
+#~ "conditions listed here, even if they appear in the list of explicit host "
+#~ "names."
+#~ msgstr ""
+#~ "Regel trifft nur dann zu, wenn alle hier festgelegten Host-Merkmale "
+#~ "passen - selbst wenn der Host in der Liste der expliziten Hostnamen "
+#~ "vorhanden ist."
+
+#~ msgid ""
+#~ "These attributes will be set for all hosts that are managed by this "
+#~ "connection. In case you change these attributes, they will be changed for "
+#~ "all hosts during next execution of the connection."
+#~ msgstr ""
+#~ "Diese Attribute werden für alle Hosts festgelegt, die von dieser "
+#~ "Verbindung verwaltet werden. Wenn Sie diese Attribute ändern, werden sie "
+#~ "bei der nächsten Ausführung der Verbindung für alle Hosts geändert."
+
+#~ msgid ""
+#~ "When a Checkmk site have just been started, e.g. after booting the "
+#~ "Checkmk server, the tmp directory may not have been fully initialized. "
+#~ "For example the piggyback information from some sources may totally be "
+#~ "missing until the first contact with the piggyback source. To protect "
+#~ "against loosing piggyback based hosts in this situation, the deletion of "
+#~ "hosts is disabled for some time after the site initialization."
+#~ msgstr ""
+#~ "Wenn eine Checkmk-Site gerade gestartet wurde, z.B. nach dem Booten des "
+#~ "Checkmk-Servers, wurde das Verzeichnis tmp möglicherweise nicht "
+#~ "vollständig initialisiert. So können beispielsweise die "
+#~ "Huckepackinformationen aus einigen Quellen bis zum ersten Kontakt mit der "
+#~ "Huckepackquelle völlig fehlen. Um in dieser Situation vor dem Verlust von "
+#~ "huckepack-basierten Hosts zu schützen, wird das Löschen von Hosts für "
+#~ "einige Zeit nach der Initialisierung der Site deaktiviert."
+
+#~ msgid "discards"
+#~ msgstr "Verworfene Pakete"
+
+#~ msgid "Hardware temperature, single sensor"
+#~ msgstr "Hardware-Temperatur, ein Sensor"
+
+#, fuzzy
+#~| msgid "In Progress"
+#~ msgid "In progress"
+#~ msgstr "In Bearbeitung"
+
+#, fuzzy
+#~| msgid "Intermission"
+#~ msgid "In termination"
+#~ msgstr "Unterbrechung"
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices like DELL Powerconnect that have "
+#~ "just one temperature sensor. "
+#~ msgstr ""
+#~ "Temperaturschwellwerte für Geräte wie DELL Powerconnect, die nur einen "
+#~ "einzelnen Temperatursensor haben."
+
+#~ msgid "Disabled legacy services - defined in main.mk"
+#~ msgstr "Deaktivierte Legacy-Dienste - definiert in main.mk"
+
+#, fuzzy, python-format
+#~| msgid "Group base DN"
+#~ msgid "Group use: %s"
+#~ msgstr "Gruppen Base DN"
+
+#~ msgid "Legacy services - defined in main.mk"
+#~ msgstr "Legacy-Dienste - definiert in main.mk"
+
+#~ msgid ""
+#~ "These services have been configured by the deprecated variable "
+#~ "<tt>legacy_checks</tt> in <tt>main.mk</tt> or a similar configuration "
+#~ "file."
+#~ msgstr ""
+#~ "Diese Services wurden mithilfe der veralteten Variable <tt>legacy_checks</"
+#~ "tt> in <tt>main.mk</tt> oder einer ähnlichen Datei angelegt."
+
+#~ msgid ""
+#~ "These services have been configured by the deprecated variable "
+#~ "<tt>legacy_checks</tt> in <tt>main.mk</tt> or a similar configuration "
+#~ "file. These services have been disabled by creating a rule in the rule "
+#~ "set <i>Disabled services</i> oder <i>Disabled checks</i>."
+#~ msgstr ""
+#~ "Diese Services wurden mithilfe der veralteten Variable <tt>legacy_checks</"
+#~ "tt> in <tt>main.mk</tt> oder einer ähnlichen Datei angelegt. Sie sind "
+#~ "aber durch eine Regel im Regelsatz <i>Deaktivierte Services</i> oder "
+#~ "<i>Deaktivierte Checks</i> deaktiviert worden."
+
 #~ msgid "Map power states"
 #~ msgstr "Setze die Strom-Zustände"
 
@@ -66809,9 +67033,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Favorites"
 #~ msgstr "Favoriten"
-
-#~ msgid "Remove from Favorites"
-#~ msgstr "Aus den Favoriten streichen"
 
 #, fuzzy
 #~| msgid "all special agents"
@@ -67039,9 +67260,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Cloud Functions"
 #~ msgstr "Cloud-Funktionen"
-
-#~ msgid "Cloud Run"
-#~ msgstr "Wolkenlauf"
 
 #~ msgid "Cloud SQL"
 #~ msgstr "Cloud-SQL"
@@ -68541,9 +68759,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Installed extension packages"
 #~ msgstr "Installierte Erweiterungspakete"
-
-#~ msgid "Optional extension packages"
-#~ msgstr "Optionale Erweiterungspakete"
 
 #~ msgid "Package not installed or corrupt"
 #~ msgstr "Paket nicht installiert oder beschädigt"
@@ -75001,9 +75216,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Confirm copying rules"
 #~ msgstr "Bestätige Kopieren von Regeln"
-
-#~ msgid "Confirm counter reset"
-#~ msgstr "Bestätige Zurücksetzen des Zählers"
 
 #~ msgid "Confirm deletion"
 #~ msgstr "Löschen bestätigen"

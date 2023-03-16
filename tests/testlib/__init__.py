@@ -15,7 +15,7 @@ from collections.abc import Callable, Collection, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
-from typing import Any, TextIO
+from typing import Any, Final, TextIO
 
 import freezegun
 import pytest
@@ -62,6 +62,15 @@ def skip_unwanted_test_types(item) -> None:  # type:ignore[no-untyped-def]
         pytest.skip("Not testing type %r" % test_type_name)
 
 
+_UNPATCHED_PATHS: Final = {
+    # FIXME :-(
+    # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
+    "local_dashboards_dir",
+    "local_views_dir",
+    "local_reports_dir",
+}
+
+
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
@@ -101,171 +110,26 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
     monkeypatch.setattr(cmk_version, "is_cloud_edition", is_cloud_repo)
 
+    original_omd_root = Path(cmk.utils.paths.omd_root)
+    for name, value in vars(cmk.utils.paths).items():
+        if name.startswith("_") or not isinstance(value, (str, Path)) or name in _UNPATCHED_PATHS:
+            continue
+
+        try:
+            monkeypatch.setattr(
+                f"cmk.utils.paths.{name}",
+                type(value)(tmp_dir / Path(value).relative_to(original_omd_root)),
+            )
+        except ValueError:
+            pass  # path is outside of omd_root
+
+    # these use cmk_path
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr(
-        "cmk.utils.paths.inventory_output_dir", os.path.join(tmp_dir, "var/check_mk/inventory")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.inventory_archive_dir",
-        os.path.join(tmp_dir, "var/check_mk/inventory_archive"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.inventory_delta_cache_dir",
-        os.path.join(tmp_dir, "var/check_mk/inventory_delta_cache"),
-    )
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.omd_root", Path(tmp_dir))
-    monkeypatch.setattr("cmk.utils.paths.tmp_dir", Path(tmp_dir, "tmp/check_mk"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.counters_dir", os.path.join(tmp_dir, "tmp/check_mk/counters")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir, "tmp/check_mk/cache")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.trusted_ca_file", Path(tmp_dir, "var/ssl/ca-certificates.crt")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.data_source_cache_dir",
-        os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.log_dir", os.path.join(tmp_dir, "var/log"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.core_helper_config_dir", Path(tmp_dir, "var/check_mk/core/helper_config")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.autochecks_dir", os.path.join(tmp_dir, "var/check_mk/autochecks")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.precompiled_checks_dir",
-        os.path.join(tmp_dir, "var/check_mk/precompiled_checks"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.crash_dir", Path(cmk.utils.paths.var_dir) / "crashes")
-    monkeypatch.setattr(
-        "cmk.utils.paths.include_cache_dir", os.path.join(tmp_dir, "tmp/check_mk/check_includes")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.check_mk_config_dir", os.path.join(tmp_dir, "etc/check_mk/conf.d")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.main_config_file", os.path.join(tmp_dir, "etc/check_mk/main.mk")
-    )
-    monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.piggyback_dir", Path(tmp_dir) / "var/check_mk/piggyback")
-    monkeypatch.setattr(
-        "cmk.utils.paths.piggyback_source_dir", Path(tmp_dir) / "var/check_mk/piggyback_sources"
-    )
-    monkeypatch.setattr("cmk.utils.paths.htpasswd_file", os.path.join(tmp_dir, "etc/htpasswd"))
-
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_agents_dir", Path(tmp_dir, "local/share/check_mk/agents")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_agent_based_plugins_dir",
-        Path(tmp_dir, "local/lib/check_mk/base/plugins/agent_based"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_alert_handlers_dir",
-        Path(tmp_dir, "local/share/check_mk/alert_handlers"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_bin_dir", Path(tmp_dir, "local/bin"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_check_manpages_dir", Path(tmp_dir, "local/share/check_mk/checkman")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_checks_dir", Path(tmp_dir, "local/share/check_mk/checks")
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_doc_dir", Path(tmp_dir, "local/share/doc/check_mk"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_gui_plugins_dir", Path(tmp_dir, "local/lib/check_mk/gui/plugins")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_inventory_dir", Path(tmp_dir, "local/share/check_mk/inventory")
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_lib_dir", Path(tmp_dir, "local/lib"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_locale_dir", Path(tmp_dir, "local/share/check_mk/locale")
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_mib_dir", Path(tmp_dir, "local/share/snmp/mibs"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_notifications_dir",
-        Path(tmp_dir, "local/share/check_mk/notifications"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_pnp_templates_dir",
-        Path(tmp_dir, "local/share/check_mk/pnp-templates"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_root", Path(tmp_dir, "local"))
-    monkeypatch.setattr("cmk.utils.paths.local_share_dir", Path(tmp_dir, "local/share/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.local_web_dir", Path(tmp_dir, "local/share/check_mk/web"))
-
-    monkeypatch.setattr(
-        "cmk.utils.paths.diagnostics_dir", Path(tmp_dir).joinpath("var/check_mk/diagnostics")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.site_config_dir", Path(cmk.utils.paths.var_dir, "site_configs")
-    )
-    monkeypatch.setattr("cmk.utils.paths.auth_secret_file", Path(tmp_dir) / "etc/auth.secret")
-    monkeypatch.setattr(
-        "cmk.utils.paths.password_store_secret_file", Path(tmp_dir) / "etc/password_store.secret"
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.disabled_packages_dir", Path(cmk.utils.paths.var_dir, "disabled_packages")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.nagios_objects_file",
-        os.path.join(tmp_dir, "etc/nagios/conf.d/check_mk_objects.cfg"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.precompiled_hostchecks_dir",
-        os.path.join(tmp_dir, "var/check_mk/precompiled"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.discovered_host_labels_dir",
-        Path(tmp_dir, "var/check_mk/discovered_host_labels"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
-
-    # Agent registration paths
-    monkeypatch.setattr(
-        "cmk.utils.paths.received_outputs_dir",
-        Path(cmk.utils.paths.var_dir, "agent-receiver/received-outputs"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.data_source_push_agent_dir",
-        Path(cmk.utils.paths.data_source_cache_dir, "push-agent"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths._r4r_base_dir",
-        Path(cmk.utils.paths.var_dir, "wato/requests-for-registration"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_new_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "NEW"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_pending_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "PENDING"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_declined_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "DECLINED"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_declined_bundles_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "DECLINED-BUNDLES"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_discoverable_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
-    )
-
-    monkeypatch.setattr("cmk.utils.paths.licensing_dir", Path(cmk.utils.paths.var_dir, "licensing"))
 
 
 def import_module_hack(pathname: str) -> ModuleType:

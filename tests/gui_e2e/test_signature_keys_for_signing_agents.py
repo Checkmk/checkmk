@@ -162,8 +162,11 @@ def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
     ).filter(has_text="with_key_fixture").click()
     logged_in_page.main_area.get_text("with_key_fixture").click()
     logged_in_page.main_area.get_input("key_p_passphrase").fill("foo")
-    logged_in_page.main_area.get_input("create").click()
-    logged_in_page.main_area.check_success("Agent baking successful", timeout_ms=30000)
+    logged_in_page.click_and_wait(
+        locator=logged_in_page.main_area.get_input("create"),
+        expected_locator=logged_in_page.main_area.get_text("Agent baking successful"),
+        reload_on_error=True,
+    )
 
 
 def test_bake_and_sign_disabled(logged_in_page: PPage) -> None:

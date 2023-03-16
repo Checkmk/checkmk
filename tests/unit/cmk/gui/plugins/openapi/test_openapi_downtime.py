@@ -407,15 +407,16 @@ def test_openapi_show_downtime_with_params(
         [
             "GET downtimes",
             "Columns: id host_name service_description is_service author start_time end_time recurring comment",
-            "Filter: host_name = example.com",
             "Filter: is_service = 0",
+            "Filter: host_name = example.com",
             "And: 2",
         ]
     )
     with live:
         resp = aut_user_auth_wsgi_app.call_method(
             "get",
-            base + "/domain-types/downtime/collections/all?host_name=example.com",
+            base
+            + "/domain-types/downtime/collections/all?host_name=example.com&downtime_type=host",
             headers={"Accept": "application/json"},
             status=200,
         )
@@ -464,8 +465,6 @@ def test_openapi_show_downtime_of_non_existing_host(
             "GET downtimes",
             "Columns: id host_name service_description is_service author start_time end_time recurring comment",
             "Filter: host_name = nothing",
-            "Filter: is_service = 0",
-            "And: 2",
         ]
     )
     with live:

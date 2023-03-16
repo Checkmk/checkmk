@@ -63,7 +63,9 @@ DowntimeType = Literal[
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
         description="The service description. No exception is raised when the specified service "
-        "description does not exist",
+        "description does not exist. This parameter can be combined with the host_name parameter "
+        "to only filter for service downtimes of on a specific host. Cannot be used "
+        "together with the query parameter.",
         example="Memory",
         required=False,
     )
@@ -71,9 +73,22 @@ SERVICE_DESCRIPTION_SHOW = {
 
 HOST_NAME_SHOW = {
     "host_name": gui_fields.HostField(
-        description="The host name. No exception is raised when the specified host name does not exist",
+        description="The host name. No exception is raised when the specified host name does not "
+        "exist. Using this parameter only will filter for host downtimes only. Cannot "
+        "be used together with the query parameter.",
         should_exist=None,  # we do not care
         example="example.com",
+        required=False,
+    )
+}
+
+DOWNTIME_TYPE = {
+    "downtime_type": fields.String(
+        description="The type of the downtime to be listed. Only filters the result when using "
+        "the host_name or service_description parameter.",
+        enum=["host", "service", "both"],
+        example="host",
+        load_default="both",
         required=False,
     )
 }
@@ -296,6 +311,7 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
         HOST_NAME_SHOW,
         SERVICE_DESCRIPTION_SHOW,
         DowntimeParameter,
+        DOWNTIME_TYPE,
     ],
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
@@ -338,15 +354,23 @@ def _show_downtimes(param):
             Downtimes.comment,
         ]
     )
+
     query_expr = param.get("query")
+    host_name = param.get("host_name")
+    service_description = param.get("service_description")
+
+    if (downtime_type := param["downtime_type"]) != "both":
+        q = q.filter(Downtimes.is_service.equals(1 if downtime_type == "service" else 0))
+
     if query_expr is not None:
         q = q.filter(query_expr)
-    host_name = param.get("host_name")
+
     if host_name is not None:
-        q = q.filter(And(Downtimes.host_name.op("=", host_name), Downtimes.is_service.equals(0)))
-    service_description = param.get("service_description")
+        q = q.filter(Downtimes.host_name.op("=", host_name))
+
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
+
     gen_downtimes = q.iterate(live)
     return serve_json(_serialize_downtimes(gen_downtimes))
 

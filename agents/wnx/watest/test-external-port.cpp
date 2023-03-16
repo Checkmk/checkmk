@@ -8,11 +8,16 @@
 
 #include "agent_controller.h"
 #include "asio.h"
+#include "carrier.h"
+#include "common/mailslot_transport.h"
 #include "external_port.h"
+#include "realtime.h"
 #include "test_tools.h"
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
+namespace views = std::views;
+namespace rs = std::ranges;
 using asio::ip::tcp;
 
 namespace wtools {
@@ -344,6 +349,64 @@ TEST(ExternalPortTest, IsIpAllowedAsExceptionNo) {
     for (const auto &t : ip_allowed) {
         EXPECT_FALSE(IsIpAllowedAsException(t.first));
     }
+}
+
+class ExternalPortMailSlotFixture : public ::testing::Test {
+public:
+    static bool MailboxCallback(const mailslot::Slot * /*slot*/,
+                                const void *data, int len, void *context) {
+        auto storage = static_cast<std::vector<uint8_t> *>(context);
+
+        const auto *d = static_cast<const uint8_t *>(data);
+        storage->assign(d, d + len);
+
+        return true;
+    }
+    void SetUp() override {
+        temp_fs = tst::TempCfgFs::CreateNoIo();
+        ASSERT_TRUE(temp_fs->loadFactoryConfig());
+        mailbox_.ConstructThread(&ExternalPortMailSlotFixture::MailboxCallback,
+                                 20, &result_, wtools::SecurityLevel::admin);
+        std::this_thread::sleep_for(100ms);  // wait for thread start
+    }
+
+    void TearDown() override { mailbox_.DismantleThread(); }
+
+    tst::TempCfgFs::ptr temp_fs;
+    mailslot::Slot mailbox_{"WinAgentExternalPortTest",
+                            ::GetCurrentProcessId()};
+    std::vector<uint8_t> result_;
+    std::vector<uint8_t> data_ = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    void wait_for_effect() {
+        std::this_thread::sleep_for(100ms);  // wait for thread
+        tst::WaitForSuccessSilent(2000ms,
+                                  [this]() { return !result_.empty(); });
+    }
+
+    std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> split_result()
+        const {
+        std::vector h(result_.begin(), result_.begin() + 2);
+        std::vector r(result_.begin() + 2, result_.end());
+        return {h, r};
+    }
+};
+
+TEST_F(ExternalPortMailSlotFixture, NonEncryptedIntegration) {
+    EXPECT_TRUE(SendDataToMailSlot(mailbox_.GetName(), data_, nullptr));
+    wait_for_effect();
+    EXPECT_EQ(data_, result_);
+}
+
+TEST_F(ExternalPortMailSlotFixture, EncryptedIntegration) {
+    const auto commander = std::make_unique<encrypt::Commander>("aa");
+    ASSERT_TRUE(SendDataToMailSlot(mailbox_.GetName(), data_, commander.get()));
+    wait_for_effect();
+    auto [r, h] = split_result();
+    ASSERT_EQ(result_[0], rt::kEncryptedHeader[0]);
+    ASSERT_EQ(result_[1], rt::kEncryptedHeader[1]);
+    const auto [success, sz] = commander->decode(r.data(), r.size());
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(rs::equal(views::take(r, sz), views::all(data_)));
 }
 
 }  // namespace cma::world

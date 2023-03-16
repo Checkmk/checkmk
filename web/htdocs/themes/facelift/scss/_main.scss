@@ -251,8 +251,11 @@ img.emblem {
   height: 10px;
 }
 
-td.buttons img.emblem {
+td.buttons img.emblem,
+table.data img.emblem {
   right: 0;
+  width: 11px;
+  height: 11px;
 }
 
 a.inline img.icon,

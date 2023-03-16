@@ -685,7 +685,7 @@ class DowntimesIcon(Icon):
         # for this host / service
         if row[what + "_scheduled_downtime_depth"] > 0:
             if what == "host":
-                icon = "derived_downtime"
+                icon = "downtime"
             else:
                 icon = "downtime"
 
@@ -699,7 +699,7 @@ class DowntimesIcon(Icon):
             title += detail_txt(row["host_downtimes_with_extra_info"])
 
             return (
-                "derived_downtime",
+                {"icon": "folder", "emblem": "downtime"},
                 title,
                 url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host")),
             )

@@ -441,9 +441,7 @@ class PainterAggrIcons(Painter):
                 avail_url, _("Analyse availability of this aggregation"), "availability"
             )
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon(
-                    "derived_downtime", _("A service or host in this aggregation is in downtime.")
-                )
+                html.icon("downtime", _("A service or host in this aggregation is in downtime."))
             if row["aggr_effective_state"]["acknowledged"]:
                 html.icon(
                     "ack",

@@ -71,22 +71,7 @@ def ensure_str(s, encoding="utf-8", errors="strict"):
     return s
 
 
-config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
-config_file = config_dir + "/nginx_status.cfg"
-
-# None or list of (proto, ipaddress, port) tuples.
-# proto is 'http' or 'https'
-servers = None
-ssl_ports = [
-    443,
-]
-
-if os.path.exists(config_file):
-    with open(config_file) as open_config_file:
-        exec(open_config_file.read())
-
-
-def try_detect_servers():
+def try_detect_servers(ssl_ports):
     pids = []
     results = []
     for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
@@ -134,50 +119,71 @@ def try_detect_servers():
     return results
 
 
-if servers is None:
-    servers = try_detect_servers()
+def main():  # pylint: disable=too-many-branches
+    config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
+    config_file = config_dir + "/nginx_status.cfg"
 
-if not servers:
-    sys.exit(0)
+    # None or list of (proto, ipaddress, port) tuples.
+    # proto is 'http' or 'https'
+    servers = None
+    ssl_ports = [
+        443,
+    ]
 
-sys.stdout.write("<<<nginx_status>>>\n")
-for server in servers:
-    if isinstance(server, tuple):
-        proto, address, port = server
-        page = "nginx_status"
-    else:
-        proto = server["protocol"]
-        address = server["address"]
-        port = server["port"]
-        page = server.get("page", "nginx_status")
+    if os.path.exists(config_file):
+        with open(config_file) as open_config_file:
+            exec(open_config_file.read())
 
-    try:
-        if proto not in ["http", "https"]:
-            raise ValueError("Scheme '%s' is not allowed" % proto)
+    if servers is None:
+        servers = try_detect_servers(ssl_ports)
 
-        url = "%s://%s:%s/%s" % (proto, address, port, page)
-        # Try to fetch the status page for each server
+    if not servers:
+        sys.exit(0)
+
+    sys.stdout.write("<<<nginx_status>>>\n")
+    for server in servers:
+        if isinstance(server, tuple):
+            proto, address, port = server
+            page = "nginx_status"
+        else:
+            proto = server["protocol"]
+            address = server["address"]
+            port = server["port"]
+            page = server.get("page", "nginx_status")
+
         try:
-            request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
-            fd = urlopen(request)  # nosec B310 # BNS:6b61d9
-        except URLError as e:
-            if "SSL23_GET_SERVER_HELLO:unknown protocol" in str(e):
-                # HACK: workaround misconfigurations where port 443 is used for
-                # serving non ssl secured http
-                url = "http://%s:%s/%s" % (address, port, page)
-                fd = urlopen(url)  # nosec B310 # BNS:6b61d9 # pylint: disable=consider-using-with
-            else:
-                raise
+            if proto not in ["http", "https"]:
+                raise ValueError("Scheme '%s' is not allowed" % proto)
 
-        for line in ensure_str(fd.read()).split("\n"):
-            if not line.strip():
-                continue
-            if line.lstrip()[0] == "<":
-                # seems to be html output. Skip this server.
-                break
-            sys.stdout.write("%s %s %s\n" % (address, port, line))
-    except HTTPError as e:
-        sys.stderr.write("HTTP-Error (%s:%d): %s %s\n" % (address, port, e.code, e))
+            url = "%s://%s:%s/%s" % (proto, address, port, page)
+            # Try to fetch the status page for each server
+            try:
+                request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
+                fd = urlopen(request)  # nosec B310 # BNS:6b61d9
+            except URLError as e:
+                if "SSL23_GET_SERVER_HELLO:unknown protocol" in str(e):
+                    # HACK: workaround misconfigurations where port 443 is used for
+                    # serving non ssl secured http
+                    url = "http://%s:%s/%s" % (address, port, page)
+                    fd = urlopen(  # pylint: disable=consider-using-with
+                        url
+                    )  # nosec B310 # BNS:6b61d9
+                else:
+                    raise
 
-    except Exception as e:
-        sys.stderr.write("Exception (%s:%d): %s\n" % (address, port, e))
+            for line in ensure_str(fd.read()).split("\n"):
+                if not line.strip():
+                    continue
+                if line.lstrip()[0] == "<":
+                    # seems to be html output. Skip this server.
+                    break
+                sys.stdout.write("%s %s %s\n" % (address, port, line))
+        except HTTPError as e:
+            sys.stderr.write("HTTP-Error (%s:%d): %s %s\n" % (address, port, e.code, e))
+
+        except Exception as e:
+            sys.stderr.write("Exception (%s:%d): %s\n" % (address, port, e))
+
+
+if __name__ == "__main__":
+    main()

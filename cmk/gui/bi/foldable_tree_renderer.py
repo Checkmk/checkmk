@@ -341,13 +341,15 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             html.open_span(class_=["content", "name"])
 
         icon_name, icon_title = None, None
+        # TODO: Check whehter tree[0]["in_downtime"] == 2 is possible at all. Seems like this is
+        #       deprecated and that by now the "in_downtime" field holds a boolean value
         if tree[0]["in_downtime"] == 2:
             icon_name = "downtime"
             icon_title = _("This element is currently in a scheduled downtime.")
 
         elif tree[0]["in_downtime"] == 1:
             # only display host downtime if the service has no own downtime
-            icon_name = "derived_downtime"
+            icon_name = "downtime"
             icon_title = _("One of the subelements is in a scheduled downtime.")
 
         if tree[0]["acknowledged"]:

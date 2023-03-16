@@ -501,6 +501,9 @@ def _get_monitoring_data_kwargs(
     sections: Sequence[ParsedSectionName],
     source_type: SourceType | None = None,
 ) -> tuple[Mapping[str, object], ServiceCheckResult]:
+    # Mapping[str, object] stands for either
+    #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
+    #  * Mapping[str, ParsedSectionContent | None] otherwise.
     if source_type is None:
         source_type = (
             SourceType.MANAGEMENT

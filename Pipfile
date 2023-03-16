@@ -182,7 +182,7 @@ psycopg2-binary = "==2.9.5"  # needed by check_sql active check
 apispec = "==5.2.2"  # direct dependency
 marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
-mypy_extensions = "==0.4.3" # direct dependency
+mypy_extensions = "==1.0.0" # direct dependency, NOTE: This should really be unpinned, because it must work with the unpinned mypy version! Otherwise e.g. the mypy LSP integration can break silently etc. But we have a silly test enforcing the pinning here... :-P * * *
 apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==4.5.0"   # required by pydantic
 pydantic = "==1.10.6"

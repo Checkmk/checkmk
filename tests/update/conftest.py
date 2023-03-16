@@ -33,9 +33,9 @@ class BaseVersions:
         # "2.1.0p3", # ^those releases need htpasswd to set the admin password
         # "2.1.0p4",
         # "2.1.0p5",
-        "2.1.0p10",
+        # "2.1.0p10",
         "2.1.0p20",
-        "2.1.0p23",
+        "2.1.0p24",
     ]
     BASE_VERSIONS = [
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
@@ -47,28 +47,31 @@ class BaseVersions:
     ]
 
 
-def get_site_data(site: Site) -> list[dict]:
+def get_host_data(site: Site, hostname: str) -> dict:
+    """Return dict with key=service and value=status for all services in the given site and host."""
     web = CMKWebSession(site)
     web.login()
-    raw_data = json.loads(web.get("view.py?output_format=json_export&view_name=allhosts").content)
-    data = []
+    raw_data = json.loads(
+        web.get(
+            f"view.py?host={hostname}&output_format="
+            f"json_export&site=update_central&view_name=host"
+        ).content
+    )
+    data = {}
     for item in raw_data[1:]:
-        data.append({raw_data[0][i]: val for i, val in enumerate(item)})
+        data[item[1]] = item[0]
     return data
 
 
-def get_sum_services(site_data: list[dict], hostname: str) -> int:
-    """Return the total number of services from the given site-data."""
-    for host_data in site_data:
-        if host_data["host"] == hostname:
-            return (
-                int(host_data["num_services_ok"])
-                + int(host_data["num_services_warn"])
-                + int(host_data["num_services_unknown"])
-                + int(host_data["num_services_crit"])
-                + int(host_data["num_services_pending"])
-            )
-    raise Exception(f"{hostname} not found in the given site-data")
+def get_services_with_status(
+    host_data: dict, service_status: str, skipped_services: list | tuple = ()
+) -> list:
+    """Return a list of services in the given status which are not in the 'skipped' list."""
+    service_list = []
+    for service in host_data:
+        if host_data[service] == service_status and service not in skipped_services:
+            service_list.append(service)
+    return service_list
 
 
 def _run_as_site_user(

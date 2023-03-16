@@ -14,9 +14,9 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.version import Edition
 
 from .conftest import (
-    get_site_data,
+    get_host_data,
+    get_services_with_status,
     get_site_status,
-    get_sum_services,
     update_config,
     update_site,
     version_supported,
@@ -51,11 +51,28 @@ def test_update(test_site: Site) -> None:
     test_site.openapi.activate_changes_and_wait_for_completion()
 
     # get baseline monitoring data
-    base_data = get_site_data(test_site)
-    sum_services_base = get_sum_services(base_data, hostname)
-    assert sum_services_base > 0
+    base_data_host = get_host_data(test_site, hostname)
 
-    logger.info("Number of total services found in base-version: %s", sum_services_base)
+    # force reschedule pending services
+    while len(get_services_with_status(base_data_host, "PEND")) > 0:
+        logger.info(
+            "The following services were found with pending status: %s. Rescheduling checks...",
+            get_services_with_status(base_data_host, "PEND"),
+        )
+        test_site.schedule_check(hostname, "Check_MK", 0)
+        base_data_host = get_host_data(test_site, hostname)
+
+    base_ok_services = get_services_with_status(base_data_host, "OK")
+    base_pend_services = get_services_with_status(base_data_host, "PEND")
+    base_warn_services = get_services_with_status(base_data_host, "WARN")
+    base_crit_services = get_services_with_status(base_data_host, "CRIT")
+
+    assert len(base_ok_services) > 0
+    assert len(base_pend_services) == 0
+
+    logger.info("Services found in `OK` status in base-version: %s", len(base_ok_services))
+    logger.info("Services found in `WARN` status in base-version: %s", len(base_warn_services))
+    logger.info("Services found in `CRIT` status in base-version: %s", len(base_crit_services))
 
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
@@ -87,11 +104,36 @@ def test_update(test_site: Site) -> None:
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
-    test_site.openapi.activate_changes_and_wait_for_completion()
+    target_site.openapi.discover_services_and_wait_for_completion(hostname)
+    target_site.openapi.activate_changes_and_wait_for_completion()
 
     # get update monitoring data
-    target_data = get_site_data(target_site)
-    sum_services_target = get_sum_services(target_data, hostname)
-    logger.info("Number of total services found in target-version: %s", sum_services_target)
+    target_data_host = get_host_data(target_site, hostname)
 
-    assert sum_services_base == sum_services_target
+    # force reschedule pending services
+    while len(get_services_with_status(target_data_host, "PEND")) > 0:
+        logger.info(
+            "The following services were found with pending status: %s. Rescheduling checks...",
+            get_services_with_status(target_data_host, "PEND"),
+        )
+        target_site.schedule_check(hostname, "Check_MK", 0)
+        target_data_host = get_host_data(target_site, hostname)
+
+    target_ok_services = get_services_with_status(target_data_host, "OK")
+    target_pend_services = get_services_with_status(target_data_host, "PEND")
+    target_warn_services = get_services_with_status(target_data_host, "WARN")
+    target_crit_services = get_services_with_status(target_data_host, "CRIT")
+
+    assert len(target_pend_services) == 0
+
+    logger.info("Services found in `OK` status in target-version: %s", len(target_ok_services))
+    logger.info("Services found in `WARN` status in target-version: %s", len(target_warn_services))
+    logger.info("Services found in `CRIT` status in target-version: %s", len(target_crit_services))
+
+    assert len(target_data_host) >= len(base_data_host)
+
+    err_msg = (
+        f"The following services were `OK` in base-version but not in target-version: "
+        f"{[service for service in base_ok_services if service not in target_ok_services]}"
+    )
+    assert set(base_ok_services).issubset(set(target_ok_services)), err_msg

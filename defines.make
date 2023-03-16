@@ -96,7 +96,7 @@ NPM_VERSION := 8
 # PyPi Mirror Configuration
 # By default our internal Python mirror is used.
 # To use the official Python mirror, please export `USE_EXTERNAL_PIPENV_MIRROR=true`.
-EXTERNAL_PYPI_MIRROR := https://pypi.python.org/simple
+EXTERNAL_PYPI_MIRROR := https://pypi.org/simple
 INTERNAL_PYPI_MIRROR :=  https://devpi.lan.tribe29.com/root/pypi
 
 ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})

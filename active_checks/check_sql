@@ -6,7 +6,7 @@
 # DB2 support requires installation of the IBM Data Server Client:
 #  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
 # as well as the ibm_db2 Python DBI driver for DB2:
-#  https://pypi.python.org/pypi/ibm_db
+#  https://pypi.org/pypi/ibm_db
 
 # SQLAnywhere support requires installation of the SAP SQL Anywhere binaries:
 # https://help.sap.com/docs/SAP_SQL_Anywhere/a3e900ad39b94d689987e838835f39fe/8157f2236ce21014a9f387041b1c1047.html?locale=en-US&version=17.0

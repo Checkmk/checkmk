@@ -76,6 +76,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import Seconds, TimeRange, UserId
 from cmk.utils.urls import is_allowed_url
+from cmk.utils.version import Version
 
 import cmk.gui.forms as forms
 import cmk.gui.site_config as site_config
@@ -1558,17 +1559,14 @@ def HTTPSUrl(  # pylint: disable=redefined-builtin
     )
 
 
-def CheckMKVersion(  # type: ignore[no-untyped-def]
-    # ValueSpec
-    title: str | None = None,
-    default_value: ValueSpecDefault[str] = DEF_VALUE,
-):
-    return TextInput(
-        regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
-        regex_error=_("This is not a valid Checkmk version number"),
-        title=title,
-        default_value=default_value,
-    )
+class CheckmkVersionInput(TextInput):
+    def _validate_value(self, value: str, varprefix: str) -> None:
+        try:
+            Version.from_str(value)
+        except ValueError:
+            raise MKUserError(varprefix, _("%s is not a valid version number.") % value)
+
+        super()._validate_value(value, varprefix)
 
 
 class TextAreaUnicode(TextInput):
@@ -3881,8 +3879,8 @@ class DualListChoice(ListChoice):
             html.write_text(_("There are no elements for selection."))
             return
 
-        # Use values from HTTP request in complain mode
-        if value is None:
+        # Use values from HTTP request in complain mode (value is empty or None)
+        if not value:
             value = self.from_html_vars(varprefix)
 
         selected = []

@@ -285,11 +285,7 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
     if "pager" in internal_attrs:
         api_attrs["pager_address"] = internal_attrs["pager"]
 
-    if "enforce_pw_change" in internal_attrs:
-        api_attrs["auth_option"] = {
-            "enforce_password_change": internal_attrs["enforce_pw_change"],
-            "auth_type": "password",
-        }
+    api_attrs.update(_auth_options_to_api_format(internal_attrs))
 
     api_attrs.update(
         {
@@ -325,18 +321,22 @@ def _idle_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict
     return {"idle_timeout": idle_details}
 
 
-def _auth_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict[str, str]]:
+def _auth_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict[str, str | bool]]:
+    # TODO: LDAP and SAML is completely missing here
+    result: dict[str, dict[str, str | bool]] = {"auth_option": {}}
     if "automation_secret" in internal_attributes:
-        return {
-            "auth_option": {
-                "auth_type": "automation",
-            }
+        result["auth_option"] = {
+            "auth_type": "automation",
         }
+    elif "password" in internal_attributes:
+        result["auth_option"] = {"auth_type": "password"}
+        if (
+            "enforce_pw_change" in internal_attributes
+            and (enforce_password_change := internal_attributes["enforce_pw_change"]) is not None
+        ):
+            result["auth_option"]["enforce_password_change"] = enforce_password_change
 
-    if "password" in internal_attributes:
-        return {"auth_option": {"auth_type": "password"}}
-
-    return {"auth_option": {}}
+    return result
 
 
 def _contact_options_to_api_format(internal_attributes):

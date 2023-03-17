@@ -40,6 +40,7 @@ __all__ = [
     "SpecialAgentSource",
     "PiggybackSource",
     "MissingIPSource",
+    "MissingSourceSource",
 ]
 
 
@@ -467,6 +468,32 @@ class MissingIPSource(Source):
 
     def fetcher(self) -> Fetcher:
         return NoFetcher(NoFetcherError.MISSING_IP)
+
+    def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
+        return NoCache(self.host_name)
+
+
+class MissingSourceSource(Source):
+    fetcher_type: Final = FetcherType.NONE
+    source_type: Final = SourceType.HOST
+
+    def __init__(self, host_name: HostName, ipaddress: HostAddress | None, ident: str) -> None:
+        super().__init__()
+        self.host_name: Final = host_name
+        self.ipaddress: Final = ipaddress
+        self.ident: Final = ident
+
+    def source_info(self) -> SourceInfo:
+        return SourceInfo(
+            self.host_name,
+            self.ipaddress,
+            self.ident,
+            self.fetcher_type,
+            self.source_type,
+        )
+
+    def fetcher(self) -> Fetcher:
+        return NoFetcher(NoFetcherError.NO_FETCHER)
 
     def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
         return NoCache(self.host_name)

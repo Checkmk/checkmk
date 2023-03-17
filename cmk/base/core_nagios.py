@@ -998,9 +998,11 @@ def _extra_service_conf_of(
     # Add contact groups to the config only if the user has defined them.
     # Otherwise inherit the contact groups from the host.
     # "check-mk-notify" is always returned for rulebased notifications and
-    # the Nagios core and not defined by the user.
+    # the Nagios core and not defined by the user.  "check-mk-notify" will not exist
+    # when rulebased notifications is disabled so we shouldn't add contact groups
+    # if sercgr evaluates as false.
     sercgr = config_cache.contactgroups_of_service(hostname, description)
-    if sercgr != ["check-mk-notify"]:
+    if sercgr and sercgr != ["check-mk-notify"]:
         service_spec["contact_groups"] = ",".join(sercgr)
         cfg.contactgroups_to_define.update(sercgr)
 

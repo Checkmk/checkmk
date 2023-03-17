@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import ActiveCheck
@@ -19,8 +21,8 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_disk_smb_argument_parsing(  # type: ignore[no-untyped-def]
-    params, expected_args
+def test_check_disk_smb_argument_parsing(
+    params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_disk_smb")

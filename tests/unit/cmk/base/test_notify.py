@@ -12,7 +12,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import ContactgroupName, ContactName
-from cmk.utils.type_defs.notify import NotificationContext
+from cmk.utils.type_defs.notify import EventContext, NotificationContext, NotifyPluginParams
 
 from cmk.base import notify
 
@@ -47,8 +47,8 @@ def test_os_environment_does_not_override_notification_script_env(monkeypatch: M
         ),
     ],
 )
-def test_raw_context_from_env_pipe_decoding(  # type: ignore[no-untyped-def]
-    environ, expected
+def test_raw_context_from_env_pipe_decoding(
+    environ: Mapping[str, str], expected: EventContext
 ) -> None:
     assert notify.raw_context_from_env(environ) == expected
 
@@ -75,8 +75,10 @@ def test_raw_context_from_env_pipe_decoding(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_create_plugin_context(  # type: ignore[no-untyped-def]
-    raw_context, params, expected
+def test_create_plugin_context(
+    raw_context: EventContext,
+    params: NotifyPluginParams | list[object],
+    expected: NotificationContext,
 ) -> None:
     assert notify.create_plugin_context(raw_context, params) == expected
 

@@ -7,6 +7,7 @@
 import pytest
 
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 pytestmark = pytest.mark.checks
 
@@ -25,7 +26,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_mysql_parse_per_item(info, expected_items) -> None:  # type: ignore[no-untyped-def]
+def test_mysql_parse_per_item(info: StringTable, expected_items: tuple[str, str]) -> None:
     @mysql_parse_per_item
     def dummy_parse(info):
         return "Whoop"

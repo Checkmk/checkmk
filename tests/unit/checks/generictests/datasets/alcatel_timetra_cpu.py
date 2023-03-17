@@ -11,7 +11,7 @@ checkname = "alcatel_timetra_cpu"
 
 info = [["92"]]
 
-discovery = {"": [(None, "alcatel_timetra_cpu_default_levels")]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [

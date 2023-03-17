@@ -11,15 +11,12 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.datapower_scan import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["datapower_cpu_default_levels"] = {
-    "levels": (80, 90),
-}
+factory_settings["datapower_cpu_default_levels"] = {"util": (80.0, 90.0)}
 
 
 def inventory_datapower_cpu(info):
     if info:
-        return [(None, {})]
-    return []
+        yield None, {}
 
 
 def check_datapower_cpu(_no_item, params, info):

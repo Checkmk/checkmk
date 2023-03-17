@@ -7,8 +7,8 @@
 from .cpu_util import check_cpu_util
 
 
-def inventory_fortigate_cpu(info, default_levels):
-    return [(None, default_levels)]
+def inventory_fortigate_cpu():
+    yield None, {}
 
 
 def check_fortigate_cpu(item, params, info):

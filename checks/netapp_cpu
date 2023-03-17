@@ -7,7 +7,7 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-netapp_cpu_default_levels = (80.0, 90.0)
+netapp_cpu_default_levels = {"util": (80.0, 90.0)}
 
 
 def check_netapp_cpu(item, params, info):

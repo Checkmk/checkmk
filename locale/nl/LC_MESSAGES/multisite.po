@@ -37000,6 +37000,10 @@ msgstr "Voer een geldig tijdstip in"
 msgid "Please enter an alias name or description for the site %s."
 msgstr "Voer een aliasnaam of beschrijving in voor de site %s."
 
+#, fuzzy
+msgid "Please enter an automation secret of at least 10 characters."
+msgstr "Geef een geheim op van ten minste 10 karakters lang."
+
 msgid "Please enter the Multisite URL of the slave site."
 msgstr "Voer de Multisite URL van de slavesite in."
 
@@ -37238,9 +37242,6 @@ msgstr ""
 
 msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr "Geef a.u.b. alleen een relatief pad op met a-z, 0-9, -, _, . en $"
-
-msgid "Please specify a secret of at least 10 characters length."
-msgstr "Geef een geheim op van ten minste 10 karakters lang."
 
 msgid "Please specify a tag ID"
 msgstr "Geef een tag ID"

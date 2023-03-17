@@ -37592,6 +37592,10 @@ msgstr "Si prega di inserire un intervallo di tempo valido del giorno"
 msgid "Please enter an alias name or description for the site %s."
 msgstr "Inserisci un nome alias o una descrizione per il sito %s."
 
+#, fuzzy
+msgid "Please enter an automation secret of at least 10 characters."
+msgstr "Si prega di specificare un segreto di almeno 10 caratteri."
+
 msgid "Please enter the Multisite URL of the slave site."
 msgstr "Inserisci l'URL Multisito del sito slave."
 
@@ -37842,9 +37846,6 @@ msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr ""
 "Si prega di specificare un percorso relativo utilizzando solo a-z, 0-9, -, _ "
 "e ."
-
-msgid "Please specify a secret of at least 10 characters length."
-msgstr "Si prega di specificare un segreto di almeno 10 caratteri."
 
 msgid "Please specify a tag ID"
 msgstr "Si prega di specificare un ID del tag"

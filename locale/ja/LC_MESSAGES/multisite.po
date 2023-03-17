@@ -35608,6 +35608,10 @@ msgstr "有効な時刻範囲を入力してください"
 msgid "Please enter an alias name or description for the site %s."
 msgstr "サイト %s のエイリアス名または説明を入力してください。"
 
+#, fuzzy
+msgid "Please enter an automation secret of at least 10 characters."
+msgstr "10文字以上のシークレットを指定してください。"
+
 msgid "Please enter the Multisite URL of the slave site."
 msgstr "スレーブサイトのマルチサイトURLを入力してください。"
 
@@ -35820,9 +35824,6 @@ msgstr ""
 
 msgid "Please specify a relative path only using a-z, 0-9, -, _, . and $"
 msgstr "a-z 0-9 - _. および $ を使用して相対パスのみを指定してください"
-
-msgid "Please specify a secret of at least 10 characters length."
-msgstr "10文字以上のシークレットを指定してください。"
 
 msgid "Please specify a tag ID"
 msgstr "タグIDを指定してください"

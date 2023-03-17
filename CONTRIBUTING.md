@@ -369,6 +369,37 @@ They make it hard to understand which names are really available and needed in t
 * Document the non-obvious. Don't document the how, do document the why.
 * Use doc-strings for classes and methods.
 
+### Doctests
+
+Doctests are documentation. They aren't tests. They are executed with our python
+unit test job by pytest to make sure that the documentation doesn't drift away
+from the code.
+
+In other words: Use doctests when you want to explain your function with the
+help of code examples. Don't use them to test the behavior of your function.
+
+Some indicators for *not* using doctests:
+
+* You need to import something
+* Without reformatting or using `pprint` either your function call or your output looks ugly
+* You need to write more than 5 doctests for a single function
+* Your docstring is 2 times longer than the body of the function
+
+Here it is fine to use doctests:
+
+```
+def worst_service_state(*states: int, default: int) -> int:
+    """Return the 'worst' aggregation of all states
+
+    Examples:
+
+    >>> worst_service_state(0, 0, default=0)
+    0
+    >>> worst_service_state(0, 1, 2, 3, default=0)
+    2
+    """
+```
+
 ### Code structuring
 
 * Use the right data structure for combining data.

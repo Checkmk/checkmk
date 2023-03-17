@@ -35,6 +35,7 @@ from ._sources import (
     IPMISource,
     MgmtSNMPSource,
     MissingIPSource,
+    MissingSourceSource,
     PiggybackSource,
     ProgramSource,
     PushAgentSource,
@@ -114,6 +115,15 @@ class _Builder:
         assert not self.config_cache.is_cluster(self.host_name)
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
+
+        if self.config_cache.is_tcp_host(self.host_name) and not self._elems:
+            # User wants a special agent, a CheckMK agent, or both.  But
+            # we didn't configure anything.  Let's report that.
+            self._add(MissingSourceSource(self.host_name, self.ipaddress, "agent"))
+
+        if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
+            self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
+
         self._initialize_snmp_based()
         self._initialize_mgmt_boards()
 
@@ -164,9 +174,6 @@ class _Builder:
                 self._add(special_agents[0])
             else:
                 self._add_agent()
-
-        if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
-            self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
 
     def _initialize_snmp_plugin_store(self) -> None:
         if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():

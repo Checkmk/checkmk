@@ -125,7 +125,7 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
         "idna": "idna",
         "jsonschema": "jsonschema",
         "pyparsing": "pyparsing",
-        "typing_extensions": "typing_extensions",
+        "typing-extensions": "typing_extensions",
         "uvicorn": "uvicorn",
         "more-itertools": "more_itertools",
         "ordered-set": "ordered_set",

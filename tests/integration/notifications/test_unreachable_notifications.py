@@ -5,10 +5,11 @@
 
 import os
 import time
+from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib import wait_until, WatchLog
+from tests.testlib import CMKWebSession, wait_until, WatchLog
 from tests.testlib.site import Site
 
 STATE_UP = 0
@@ -26,7 +27,13 @@ def get_test_id(unreachable_enabled):
     params=[True, False],
     ids=get_test_id,
 )
-def unreachable_enabled_fixture(request, web, site: Site):  # type:ignore[no-untyped-def]
+def unreachable_enabled_fixture(
+    request: pytest.FixtureRequest,
+    web: CMKWebSession,
+    site: Site,
+    disable_checks: None,
+    disable_flap_detection: None,
+) -> Iterator[bool]:
     unreachable_enabled = request.param
 
     rule_id = None
@@ -62,30 +69,12 @@ def unreachable_enabled_fixture(request, web, site: Site):  # type:ignore[no-unt
 
         site.activate_changes_and_wait_for_core_reload()
 
-        site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-parent" % time.time())
-        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-parent;PING" % time.time())
-        site.live.command(
-            "[%d] DISABLE_SVC_CHECK;notify-test-parent;Check_MK Discovery" % time.time()
-        )
-
-        site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-child" % time.time())
-        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-child;PING" % time.time())
-        site.live.command(
-            "[%d] DISABLE_SVC_CHECK;notify-test-child;Check_MK Discovery" % time.time()
-        )
-
-        site.live.command("[%d] DISABLE_FLAP_DETECTION" % time.time())
-
         yield unreachable_enabled
     finally:
         #
         # Cleanup code
         #
         print("Cleaning up default config")
-
-        site.live.command("[%d] ENABLE_FLAP_DETECTION" % time.time())
-        site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
-        site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-parent" % time.time())
 
         if rule_id is not None:
             site.openapi.delete_rule(rule_id)

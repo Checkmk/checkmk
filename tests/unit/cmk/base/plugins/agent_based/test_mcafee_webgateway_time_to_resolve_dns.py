@@ -62,7 +62,7 @@ def test_discovery(fix_register: FixRegister) -> None:
     "params_misc, expected_results",
     [
         pytest.param(
-            {},
+            {"time_to_resolve_dns": None},
             [
                 v1.Result(state=v1.State.OK, summary="2 seconds"),
             ],

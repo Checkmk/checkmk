@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Age, Dictionary, Integer
 
 
 def _parameter_valuespec_mcafee_web_gateway_misc():
@@ -17,42 +18,38 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
         elements=[
             (
                 "clients",
-                Tuple(
+                SimpleLevels(
+                    Integer,
                     title=_("Upper levels for clients"),
-                    elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
-                    ],
+                    default_levels=(0, 0),
+                    default_value=None,
                 ),
             ),
             (
                 "network_sockets",
-                Tuple(
+                SimpleLevels(
+                    Integer,
                     title=_("Upper levels for open network sockets"),
-                    elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
-                    ],
+                    default_levels=(0, 0),
+                    default_value=None,
                 ),
             ),
             (
                 "time_to_resolve_dns",
-                Tuple(  # TODO: improve this type
+                SimpleLevels(
+                    Age,
                     title=_("Upper levels for time to resolve DNS"),
-                    elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
-                    ],
+                    default_levels=(1500, 2000),
+                    default_value=(1500, 2000),
                 ),
             ),
             (
                 "time_consumed_by_rule_engine",
-                Tuple(  # TODO: improve this type
+                SimpleLevels(
+                    Age,
                     title=_("Upper levels for time consumed by rule engine"),
-                    elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
-                    ],
+                    default_levels=(1500, 2000),
+                    default_value=(1500, 2000),
                 ),
             ),
         ],

@@ -63,7 +63,7 @@ def test_discovery(fix_register: FixRegister) -> None:
     "params_misc, expected_results",
     [
         pytest.param(
-            {},
+            {"clients": None, "network_sockets": None},
             [
                 v1.Result(state=v1.State.OK, summary="Clients: 2"),
                 v1.Result(state=v1.State.OK, summary="Open network sockets: 2"),

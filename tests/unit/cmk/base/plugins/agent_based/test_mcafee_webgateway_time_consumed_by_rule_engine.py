@@ -62,7 +62,7 @@ def test_discovery(fix_register: FixRegister) -> None:
     "params_misc, expected_results",
     [
         pytest.param(
-            {},
+            {"time_consumed_by_rule_engine": None},
             [
                 v1.Result(state=v1.State.OK, summary="2 seconds"),
             ],

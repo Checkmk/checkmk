@@ -1,0 +1,15 @@
+Title: Agent bakery: Provide AIX tar.gz package in USTAR format
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1679043926
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+By default, the agent bakery packages the .tar.gz packages in PAX (POSIX.1-2001) format.
+
+AIX only supports PAX format since AIX 7.3.1 (released Dev 2022), and expects USTAR (POSIX.1-1988) format by default.<br>
+Hence, we now package AIX .tar.gz packages in USTAR format.
+

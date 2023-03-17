@@ -9,7 +9,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib import CMKWebSession, wait_until, WatchLog
+from tests.testlib import wait_until, WatchLog
 from tests.testlib.site import Site
 
 STATE_UP = 0

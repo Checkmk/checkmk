@@ -420,7 +420,7 @@ def logwatch_forward_spool_directory(
     if not messages:
         return LogwatchFordwardResult()
 
-    split_files = split_file_messages((message + "\n" for message in map(repr, messages)))
+    split_files = split_file_messages((message + "\n" for message in messages))
     for file_index, file in enumerate(split_files):
         spool_file = get_new_spool_file(method, item, file_index)
         with spool_file.open("w") as f:

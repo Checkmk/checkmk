@@ -151,7 +151,9 @@ def _all_parsing_results(
     return sorted(
         (
             res
-            for psn in {section.parsed_section_name for section in resolver.section_plugins}
+            for psn in {
+                section.parsed_section_name for section in resolver.section_plugins.values()
+            }
             if (res := resolver.resolve(psn)) is not None
         ),
         key=lambda r: r.section_name,

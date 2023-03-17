@@ -142,6 +142,14 @@ class _Builder:
 
         special_agents = tuple(make_special_agents())
 
+        # Translation of the options from WATO (properties of host > monitoring agents)
+        #
+        #                           all_special_agents  all_agents_host  tcp_host
+        # API else CheckMK agent     False               False            True
+        # API and Checkmk agent      False               True             True
+        # API, no Checkmk agent      True                False            True
+        # no API, no Checkmk agent   False               False            False
+
         if self.config_cache.is_all_agents_host(self.host_name):
             self._add_agent()
             for elem in special_agents:

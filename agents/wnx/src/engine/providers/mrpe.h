@@ -67,7 +67,8 @@ public:
     void createLine(std::string_view key);
     bool updateLine(std::string_view key, std::string_view data);
 
-    std::tuple<std::string, LineState> getLineData(std::string_view key, int max_age);
+    std::tuple<std::string, LineState> getLineData(std::string_view key,
+                                                   int max_age);
 
 private:
     std::unordered_map<std::string, Line> cache_;
@@ -82,7 +83,7 @@ public:
 
     void loadConfig() override;
 
-    auto entries() const noexcept { return entries_; }
+    const auto &entries() const noexcept { return entries_; }
     const auto &includes() const noexcept { return includes_; }
     const auto &checks() const noexcept { return checks_; }
 

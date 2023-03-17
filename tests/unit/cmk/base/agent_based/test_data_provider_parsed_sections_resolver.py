@@ -63,7 +63,7 @@ class TestParsedSectionsResolver:
         resolved = resolver.resolve(ParsedSectionName("parsed_section_name"))
         assert resolved is not None
         assert resolved.parsed_data == 1
-        assert resolved.section.name == SectionName("section_one")
+        assert resolved.section_name == SectionName("section_one")
         assert resolver.resolve(ParsedSectionName("no_such_section")) is None
 
     def test_superseder_is_present(self) -> None:
@@ -87,7 +87,7 @@ class TestParsedSectionsResolver:
         resolved = resolver.resolve(ParsedSectionName("parsed_section"))
         assert resolved is not None
         assert resolved.parsed_data == 2
-        assert resolved.section.name == SectionName("section_two")
+        assert resolved.section_name == SectionName("section_two")
 
     def test_superseder_has_no_data(self) -> None:
         resolver = self.make_provider(
@@ -100,7 +100,7 @@ class TestParsedSectionsResolver:
         resolved = resolver.resolve(ParsedSectionName("parsed_section_one"))
         assert resolved is not None
         assert resolved.parsed_data == 1
-        assert resolved.section.name == SectionName("section_one")
+        assert resolved.section_name == SectionName("section_one")
 
     def test_iteration(self) -> None:
         host_key = HostKey(HostName("host"), SourceType.HOST)
@@ -113,6 +113,16 @@ class TestParsedSectionsResolver:
         providers = {host_key: self.make_provider(sections)}  # type: ignore[dict-item]
 
         assert all_parsing_results(host_key, providers) == [  # type: ignore[arg-type]
-            ResolvedResult(section=sections[0], parsed_data=1, cache_info=None),
-            ResolvedResult(section=sections[2], parsed_data=3, cache_info=None),
+            ResolvedResult(
+                section_name=SectionName("section_one"),
+                section_plugin=sections[0],
+                parsed_data=1,
+                cache_info=None,
+            ),
+            ResolvedResult(
+                section_name=SectionName("section_thr"),
+                section_plugin=sections[2],
+                parsed_data=3,
+                cache_info=None,
+            ),
         ]

@@ -154,7 +154,7 @@ def _all_parsing_results(
             for psn in {section.parsed_section_name for section in resolver.section_plugins}
             if (res := resolver.resolve(psn)) is not None
         ),
-        key=lambda r: r.section.name,
+        key=lambda r: r.section_name,
     )
 
 
@@ -171,9 +171,9 @@ def _discover_host_labels_for_source_type(
 
         console.vverbose(
             "Trying host label discovery with: %s\n"
-            % ", ".join(str(r.section.name) for r in parsed_results)
+            % ", ".join(str(r.section_name) for r in parsed_results)
         )
-        for section_plugin, section_data, _cache_info in parsed_results:
+        for section_name, section_plugin, section_data, _cache_info in parsed_results:
 
             kwargs = {"section": section_data}
 
@@ -183,21 +183,15 @@ def _discover_host_labels_for_source_type(
 
             try:
                 for label in section_plugin.host_label_function(**kwargs):
-                    console.vverbose(f"  {label.name}: {label.value} ({section_plugin.name})\n")
-                    host_labels[label.name] = HostLabel(
-                        label.name,
-                        label.value,
-                        section_plugin.name,
-                    )
+                    console.vverbose(f"  {label.name}: {label.value} ({section_name})\n")
+                    host_labels[label.name] = HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as exc:
                 if on_error is OnError.RAISE:
                     raise
                 if on_error is OnError.WARN:
-                    console.error(
-                        f"Host label discovery of '{section_plugin.name}' failed: {exc}\n"
-                    )
+                    console.error(f"Host label discovery of '{section_name}' failed: {exc}\n")
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

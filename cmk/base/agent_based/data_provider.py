@@ -48,7 +48,8 @@ class _ParsingResult(NamedTuple):
 
 
 class ResolvedResult(NamedTuple):
-    section: SectionPlugin
+    section_name: SectionName
+    section_plugin: SectionPlugin
     parsed_data: ParsedSectionContent
     cache_info: _CacheInfo | None
 
@@ -184,7 +185,8 @@ class ParsedSectionsResolver:
                 return self._memoized_results.setdefault(
                     parsed_section_name,
                     ResolvedResult(
-                        section=producer,
+                        section_name=producer.name,
+                        section_plugin=producer,
                         parsed_data=parsing_result.data,
                         cache_info=parsing_result.cache_info,
                     ),

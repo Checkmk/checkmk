@@ -216,7 +216,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if not self.has_changes():
             return None
 
-        if self._license_allows_activation():
+        if not self._license_allows_activation():
             return None
 
         # Now remove all currently pending changes by simply restoring the last automatically

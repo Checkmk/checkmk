@@ -723,8 +723,8 @@ def test__find_candidates() -> None:
                     host_name=HostName("test_node"),
                 ),
                 section_plugins=[
-                    agent_based_register.get_section_plugin(SectionName("kernel")),
-                    agent_based_register.get_section_plugin(SectionName("uptime")),
+                    agent_based_register.get_section_plugin(section_name)
+                    for section_name in (SectionName("kernel"), SectionName("uptime"))
                 ],
             )
         ),
@@ -744,9 +744,12 @@ def test__find_candidates() -> None:
                     host_name=HostName("test_node"),
                 ),
                 section_plugins=[
-                    agent_based_register.get_section_plugin(SectionName("uptime")),
-                    agent_based_register.get_section_plugin(SectionName("liebert_fans")),
-                    agent_based_register.get_section_plugin(SectionName("mgmt_snmp_info")),
+                    agent_based_register.get_section_plugin(section_name)
+                    for section_name in (
+                        SectionName("uptime"),
+                        SectionName("liebert_fans"),
+                        SectionName("mgmt_snmp_info"),
+                    )
                 ],
             )
         ),
@@ -1017,8 +1020,8 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                     host_name=hostname,
                 ),
                 section_plugins=[
-                    agent_based_register.get_section_plugin(SectionName("labels")),
-                    agent_based_register.get_section_plugin(SectionName("df")),
+                    agent_based_register.get_section_plugin(section_name)
+                    for section_name in (SectionName("labels"), SectionName("df"))
                 ],
             )
         )
@@ -1132,8 +1135,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
                     host_name=node1_hostname,
                 ),
                 section_plugins=[
-                    agent_based_register.get_section_plugin(SectionName("labels")),
-                    agent_based_register.get_section_plugin(SectionName("df")),
+                    agent_based_register.get_section_plugin(section_name)
+                    for section_name in (SectionName("labels"), SectionName("df"))
                 ],
             )
         ),
@@ -1172,8 +1175,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
                     host_name=node2_hostname,
                 ),
                 section_plugins=[
-                    agent_based_register.get_section_plugin(SectionName("labels")),
-                    agent_based_register.get_section_plugin(SectionName("df")),
+                    agent_based_register.get_section_plugin(section_name)
+                    for section_name in (SectionName("labels"), SectionName("df"))
                 ],
             )
         ),

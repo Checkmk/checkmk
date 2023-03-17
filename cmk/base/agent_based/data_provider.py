@@ -130,7 +130,7 @@ class ParsedSectionsResolver:
         self,
         parser: SectionsParser,
         *,
-        section_plugins: Sequence[SectionPlugin],
+        section_plugins: Mapping[SectionName, SectionPlugin],
     ) -> None:
         self._parser: Final = parser
         self.section_plugins: Final = section_plugins
@@ -147,21 +147,21 @@ class ParsedSectionsResolver:
 
     @staticmethod
     def _init_superseders(
-        section_plugins: Iterable[SectionPlugin],
-    ) -> Mapping[SectionName, Sequence[SectionPlugin]]:
-        superseders: dict[SectionName, list[SectionPlugin]] = {}
-        for section in section_plugins:
+        section_plugins: Mapping[SectionName, SectionPlugin],
+    ) -> Mapping[SectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
+        superseders: dict[SectionName, list[tuple[SectionName, SectionPlugin]]] = {}
+        for section_name, section in section_plugins.items():
             for superseded in section.supersedes:
-                superseders.setdefault(superseded, []).append(section)
+                superseders.setdefault(superseded, []).append((section_name, section))
         return superseders
 
     @staticmethod
     def _init_producers(
-        section_plugins: Iterable[SectionPlugin],
-    ) -> Mapping[ParsedSectionName, Sequence[SectionPlugin]]:
-        producers: dict[ParsedSectionName, list[SectionPlugin]] = {}
-        for section in section_plugins:
-            producers.setdefault(section.parsed_section_name, []).append(section)
+        section_plugins: Mapping[SectionName, SectionPlugin],
+    ) -> Mapping[ParsedSectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
+        producers: dict[ParsedSectionName, list[tuple[SectionName, SectionPlugin]]] = {}
+        for section_name, section in section_plugins.items():
+            producers.setdefault(section.parsed_section_name, []).append((section_name, section))
         return producers
 
     def resolve(
@@ -172,20 +172,20 @@ class ParsedSectionsResolver:
             return self._memoized_results[parsed_section_name]
 
         # try all producers. If there can be multiple, supersedes should come into play
-        for producer in self._producers.get(parsed_section_name, ()):
+        for producer_name, producer in self._producers.get(parsed_section_name, ()):
             # Before we can parse the section, we must parse all potential superseders.
             # Registration validates against indirect supersedings, no need to recurse
-            for superseder in self._superseders.get(producer.name, ()):
-                if self._parser.parse(superseder.name, superseder.parse_function) is not None:
+            for superseder_name, superseder in self._superseders.get(producer_name, ()):
+                if self._parser.parse(superseder_name, superseder.parse_function) is not None:
                     self._parser.disable(superseder.supersedes)
 
             if (
-                parsing_result := self._parser.parse(producer.name, producer.parse_function)
+                parsing_result := self._parser.parse(producer_name, producer.parse_function)
             ) is not None:
                 return self._memoized_results.setdefault(
                     parsed_section_name,
                     ResolvedResult(
-                        section_name=producer.name,
+                        section_name=producer_name,
                         section_plugin=producer,
                         parsed_data=parsing_result.data,
                         cache_info=parsing_result.cache_info,
@@ -218,9 +218,10 @@ def make_providers(
     return {
         host_key: ParsedSectionsResolver(
             SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
-            section_plugins=[
-                section_plugins[section_name] for section_name in host_sections.sections
-            ],
+            section_plugins={
+                section_name: section_plugins[section_name]
+                for section_name in host_sections.sections
+            },
         )
         for host_key, host_sections in host_sections.items()
     }

@@ -420,6 +420,15 @@ void RemoveDuplicatedEntriesByName(UnitMap &um, bool local) {
 }
 
 namespace {
+std::optional<std::wstring> GetTrustee(const cfg::Plugins::ExeUnit &unit) {
+    if (!unit.group().empty()) {
+        return ObtainInternalUser(wtools::ConvertToUTF16(unit.group())).first;
+    }
+    if (unit.user().empty()) {
+        return {};
+    }
+    return PluginsExecutionUser2Iu(unit.user()).first;
+}
 
 void AllowAccess(const fs::path &f, std::wstring_view name) {
     wtools::ChangeAccessRights(
@@ -429,8 +438,9 @@ void AllowAccess(const fs::path &f, std::wstring_view name) {
 
 void ConditionallyAllowAccess(const fs::path &f,
                               const cfg::Plugins::ExeUnit &unit) {
-    AllowAccess(f, wtools::ConvertToUTF16(unit.group().empty() ? unit.user()
-                                                               : unit.group()));
+    if (const auto trustee = GetTrustee(unit)) {
+        AllowAccess(f, *trustee);
+    }
 }
 }  // namespace
 

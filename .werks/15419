@@ -1,0 +1,25 @@
+Title: Windows agent: Run plugins/local checks using non-system account
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679057327
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This Werk addresses a regression that appeared with Werk #14871, which introduced stricter access rights for the Windows agent's ProgramData directory.
+
+Windows agent plugins and local checks can be configured to run under a specific user or group, either by configuring the agent ruleset
+<i>Run plugins and local checks using non-system account</i> or by editing the <tt>check_mk.user.yaml</tt> file appropriately.
+
+Starting with Checkmk 2.1.0p15/the abovementioned Werk, plugins and local checks that are configured to run under a specific user failed to execute.<br>
+The reason for this behavior was that, due to a preexisting bug, the Windows agent service then failed to set the proper access rights on the underlying files.<br>
+With the stricter default access rights, the files were not accessible any longer.
+
+This only affected plugins/local checks that are configured with the option <i>Run as User</i>, while the ones configured with <i>Run as local group</i> did succeed.
+
+The abovementioned bug is now fixed, and plugins/local checks will resume to work as configured.
+
+To apply this fix, you need to update/reinstall the Windows Agent once.
+

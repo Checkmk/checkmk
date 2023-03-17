@@ -401,9 +401,9 @@ TEST_F(ExternalPortMailSlotFixture, EncryptedIntegration) {
     const auto commander = std::make_unique<encrypt::Commander>("aa");
     ASSERT_TRUE(SendDataToMailSlot(mailbox_.GetName(), data_, commander.get()));
     wait_for_effect();
-    auto [r, h] = split_result();
-    ASSERT_EQ(result_[0], rt::kEncryptedHeader[0]);
-    ASSERT_EQ(result_[1], rt::kEncryptedHeader[1]);
+    auto [h, r] = split_result();
+    ASSERT_EQ(h[0], rt::kEncryptedHeader[0]);
+    ASSERT_EQ(h[1], rt::kEncryptedHeader[1]);
     const auto [success, sz] = commander->decode(r.data(), r.size());
     EXPECT_TRUE(success);
     EXPECT_TRUE(rs::equal(views::take(r, sz), views::all(data_)));

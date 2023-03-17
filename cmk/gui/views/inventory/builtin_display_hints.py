@@ -1548,7 +1548,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "service_pack",
             ],
         },
-        ".software.os.name": {"title": _l("Operatin system"), "is_show_more": False},
+        ".software.os.name": {"title": _l("Operating system"), "is_show_more": False},
         ".software.os.version": {"title": _l("Version")},
         ".software.os.vendor": {"title": _l("Vendor")},
         ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"

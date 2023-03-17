@@ -666,7 +666,9 @@ class PackedConfigGenerator:
 
         # These functions purpose is to filter out hosts which are monitored on different sites
         active_hosts = self._config_cache.all_active_hosts()
-        active_clusters = self._config_cache.all_active_clusters()
+        # Include inactive cluster hosts.
+        # Otherwise services clustered to those hosts will wrongly be checked by the nodes.
+        sites_clusters = self._config_cache.all_sites_clusters()
 
         def filter_all_hosts(all_hosts_orig: AllHosts) -> List[HostName]:
             all_hosts_red = []
@@ -680,7 +682,7 @@ class PackedConfigGenerator:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
                 clustername = cluster_entry.split("|", 1)[0]
-                if clustername in active_clusters:
+                if clustername in sites_clusters:
                     clusters_red[cluster_entry] = cluster_nodes
             return clusters_red
 
@@ -3758,6 +3760,12 @@ class ConfigCache:
 
     def _get_all_configured_clusters(self) -> Set[HostName]:
         return set(strip_tags(list(clusters)))
+
+    def all_sites_clusters(self) -> Set[HostName]:
+        return {
+            c for c in self._all_configured_clusters if distributed_wato_site is None or
+            _host_is_member_of_site(self, c, distributed_wato_site)
+        }
 
     def host_of_clustered_service(self,
                                   hostname: HostName,

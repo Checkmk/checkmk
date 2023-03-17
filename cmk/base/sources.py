@@ -129,13 +129,6 @@ class _Builder:
         )
 
     def _initialize_agent_based(self) -> None:
-        # agent-based data sources use the cache and persisted directories
-        # that existed before the data source concept has been added where
-        # each data source has its own set of directories.
-        #
-        # TODO: We should cleanup these old directories one day, then we can
-        #       remove this special case.
-        #
         if self.config_cache.is_all_agents_host(self.host_name):
             self._get_agent()
             for elem in self._get_special_agents():

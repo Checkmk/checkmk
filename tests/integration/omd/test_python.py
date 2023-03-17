@@ -121,7 +121,7 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
     # --> huge maintenance effort...
     packagename_to_importname = {
         "black": "black",
-        "docstring_parser": "docstring_parser",
+        "docstring-parser": "docstring_parser",
         "idna": "idna",
         "jsonschema": "jsonschema",
         "pyparsing": "pyparsing",

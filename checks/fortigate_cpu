@@ -11,13 +11,11 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fortigate_cpu import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-fortigate_cpu_default_levels = (80.0, 90.0)
+fortigate_cpu_default_levels = {"util": (80.0, 90.0)}
 
 
 check_info["fortigate_cpu"] = {
-    "inventory_function": lambda info: inventory_fortigate_cpu(
-        info, "fortigate_cpu_default_levels"
-    ),
+    "inventory_function": inventory_fortigate_cpu,
     "check_function": check_fortigate_cpu,
     "service_description": "CPU utilization",
     "has_perfdata": True,

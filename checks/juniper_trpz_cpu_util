@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-juniper_trpz_cpu_util_default_levels = (80.0, 90.0)
+juniper_trpz_cpu_util_default_levels = {"util": (80.0, 90.0)}
 
 
 def inventory_juniper_trpz_cpu_util(info):
-    return [(None, "juniper_trpz_cpu_util_default_levels")]
+    yield None, {}
 
 
 def check_juniper_trpz_cpu_util(_no_item, params, info):

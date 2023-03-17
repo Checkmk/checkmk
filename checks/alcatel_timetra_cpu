@@ -7,11 +7,11 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-alcatel_timetra_cpu_default_levels = (90.0, 95.0)
+alcatel_timetra_cpu_default_levels = {"util": (90.0, 95.0)}
 
 
 def inventory_alcatel_timetra_cpu(info):
-    return [(None, "alcatel_timetra_cpu_default_levels")]
+    yield None, {}
 
 
 def check_alcatel_timetra_cpu(_no_item, params, info):

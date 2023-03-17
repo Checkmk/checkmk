@@ -202,7 +202,7 @@ def discovery_ibm_svc_systemstats_cpu(section: IBMSystemStats) -> DiscoveryResul
 
 
 def check_ibm_svc_systemstats_cpu(
-    params: Mapping[str, Any], section: IBMSystemStats
+    params: Mapping[str, tuple[float, float]], section: IBMSystemStats
 ) -> CheckResult:
     if section.cpu_pc is not None:
         yield from check_cpu_util(

@@ -347,7 +347,6 @@ class ErrorReporter:
         ("check", "apc_symmetra_temp", "checkgroup_parameters:temperature"),
         ("check", "appdynamics_sessions", "checkgroup_parameters:jvm_sessions"),
         ("check", "appdynamics_web_container", "checkgroup_parameters:jvm_threads"),
-        ("check", "avaya_88xx_cpu", "checkgroup_parameters:cpu_utilization"),
         (
             "check",
             "aws_dynamodb_table_read_capacity",
@@ -383,7 +382,6 @@ class ErrorReporter:
         ("check", "citrix_licenses", "checkgroup_parameters:citrix_licenses"),
         ("check", "citrix_serverload", "checkgroup_parameters:citrix_load"),
         ("check", "couchbase_buckets_mem", "checkgroup_parameters:memory_multiitem"),
-        ("check", "datapower_cpu", "checkgroup_parameters:cpu_utilization"),
         ("check", "db2_backup", "checkgroup_parameters:db2_backup"),
         ("check", "db2_mem", "checkgroup_parameters:db2_mem"),
         ("check", "ddn_s2a_faultsbasic_disks", "checkgroup_parameters:disk_failures"),
@@ -460,7 +458,6 @@ class ErrorReporter:
         ("check", "mssql_connections", "checkgroup_parameters:mssql_connections"),
         ("check", "mysql_slave", "checkgroup_parameters:mysql_slave"),
         ("check", "netapp_api_connection", "checkgroup_parameters:netapp_instance"),
-        ("check", "netapp_api_cpu_utilization", "checkgroup_parameters:cpu_utilization"),
         ("check", "netapp_api_environment_fan_faults", "checkgroup_parameters:hw_fans"),
         ("check", "netapp_api_environment_fans", "checkgroup_parameters:hw_fans"),
         ("check", "netscaler_health_fan", "checkgroup_parameters:hw_fans"),

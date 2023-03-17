@@ -7,9 +7,7 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-factory_settings["avaya_88xx_cpu_default_levels"] = {
-    "levels": (90, 95),
-}
+factory_settings["avaya_88xx_cpu_default_levels"] = {"util": (90.0, 95.0)}
 
 
 def inventory_avaya_88xx_cpu(info):

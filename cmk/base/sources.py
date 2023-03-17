@@ -96,6 +96,7 @@ class _Builder:
         ipaddress: HostAddress | None,
         address_family: AddressFamily,
         *,
+        simulation_mode: bool,
         config_cache: ConfigCache,
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
@@ -107,6 +108,7 @@ class _Builder:
         self.config_cache: Final = config_cache
         self.ipaddress: Final = ipaddress
         self.address_family: Final = address_family
+        self.simulation_mode: Final = simulation_mode
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
         self.max_age_agent: Final = max_age_agent
@@ -194,6 +196,20 @@ class _Builder:
     def _initialize_snmp_based(self) -> None:
         if not self.config_cache.is_snmp_host(self.host_name):
             return
+        if self.simulation_mode:
+            # Instead of a global "simulation mode" boolean, we should really have
+            # a special agent that takes canned data similar to the "create random
+            # monitoring data" one.
+            self._add(
+                SNMPSource(
+                    self.config_cache,
+                    self.host_name,
+                    "127.0.0.1",
+                    max_age=self.max_age_snmp,
+                    on_scan_error=self.on_scan_error,
+                    selected_sections=self.selected_sections,
+                )
+            )
         if self.address_family is AddressFamily.NO_IP:
             return
         if self.ipaddress is None:
@@ -329,6 +345,7 @@ def make_sources(
         host_name,
         ipaddress,
         address_family,
+        simulation_mode=config_cache.simulation_mode(host_name),
         config_cache=config_cache,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,

@@ -68,6 +68,7 @@ param.example is false or param.example)) %}{% continue %}{% endif %}
 CODE_TEMPLATE_URLLIB = """
 #!/usr/bin/env python3
 import json
+import pprint
 {%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
 {%- if downloadable %}
 import shutil{% endif %}

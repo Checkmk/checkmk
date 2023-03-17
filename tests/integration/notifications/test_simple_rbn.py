@@ -22,6 +22,7 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.delete_file("local/bin/sendmail")
 
 
+@pytest.fixture(name="test_user")
 def fixture_test_user(site: Site) -> Iterator[None]:
     users = {
         "hh": {

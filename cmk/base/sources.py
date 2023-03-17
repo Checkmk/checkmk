@@ -129,21 +129,33 @@ class _Builder:
         )
 
     def _initialize_agent_based(self) -> None:
+        def make_special_agents() -> Iterable[Source]:
+            for agentname, params in self.config_cache.special_agents(self.host_name):
+                with suppress(KeyError):
+                    yield SpecialAgentSource(
+                        self.host_name,
+                        self.ipaddress,
+                        max_age=self.max_age_agent,
+                        agent_name=agentname,
+                        params=params,
+                    )
+
+        special_agents = tuple(make_special_agents())
+
         if self.config_cache.is_all_agents_host(self.host_name):
-            self._get_agent()
-            for elem in self._get_special_agents():
+            self._add_agent()
+            for elem in special_agents:
                 self._add(elem)
 
         elif self.config_cache.is_all_special_agents_host(self.host_name):
-            for elem in self._get_special_agents():
+            for elem in special_agents:
                 self._add(elem)
 
         elif self.config_cache.is_tcp_host(self.host_name):
-            special_agents = tuple(self._get_special_agents())
             if special_agents:
                 self._add(special_agents[0])
             else:
-                self._get_agent()
+                self._add_agent()
 
         if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
             self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
@@ -222,7 +234,7 @@ class _Builder:
     def _add(self, source: Source) -> None:
         self._elems[source.source_info().ident] = source
 
-    def _get_agent(self) -> None:
+    def _add_agent(self) -> None:
         with suppress(LookupError):
             self._add(
                 ProgramSource(
@@ -262,17 +274,6 @@ class _Builder:
                 )
             case _:
                 assert_never(connection_mode)
-
-    def _get_special_agents(self) -> Iterable[Source]:
-        for agentname, params in self.config_cache.special_agents(self.host_name):
-            with suppress(KeyError):
-                yield SpecialAgentSource(
-                    self.host_name,
-                    self.ipaddress,
-                    max_age=self.max_age_agent,
-                    agent_name=agentname,
-                    params=params,
-                )
 
 
 def make_sources(

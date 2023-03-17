@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import time
 from collections.abc import Iterator
 
 import pytest
@@ -23,9 +22,8 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.delete_file("local/bin/sendmail")
 
 
-@pytest.mark.usefixtures("fake_sendmail")
-@pytest.fixture(name="test_log")
-def test_log_fixture(site: Site) -> Iterator[WatchLog]:
+@pytest.fixture(name="test_user")
+def fixture_test_user(site: Site) -> Iterator[None]:
     users = {
         "hh": {
             "fullname": "Harry Hirsch",
@@ -43,9 +41,21 @@ def test_log_fixture(site: Site) -> Iterator[WatchLog]:
     all_users = site.openapi.get_all_users()
     assert len(all_users) == len(initial_users) + len(users)
 
-    site.live.command("[%d] STOP_EXECUTING_HOST_CHECKS" % time.time())
-    site.live.command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
+    try:
+        yield
+    finally:
+        for username in users:
+            site.openapi.delete_user(username)
 
+
+@pytest.fixture(name="test_log")
+def fixture_test_log(
+    site: Site,
+    fake_sendmail: None,
+    test_user: None,
+    disable_checks: None,
+    disable_flap_detection: None,
+) -> Iterator[WatchLog]:
     site.openapi.create_host(
         "notify-test",
         attributes={
@@ -54,16 +64,12 @@ def test_log_fixture(site: Site) -> Iterator[WatchLog]:
     )
     site.activate_changes_and_wait_for_core_reload()
 
-    with WatchLog(site, default_timeout=20) as l:
-        yield l
-
-    site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
-    site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
-
-    site.openapi.delete_host("notify-test")
-    for username in users:
-        site.openapi.delete_user(username)
-    site.activate_changes_and_wait_for_core_reload()
+    try:
+        with WatchLog(site, default_timeout=20) as l:
+            yield l
+    finally:
+        site.openapi.delete_host("notify-test")
+        site.activate_changes_and_wait_for_core_reload()
 
 
 def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:

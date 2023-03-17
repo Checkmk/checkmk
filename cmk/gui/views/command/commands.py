@@ -1501,11 +1501,19 @@ class CommandRemoveComments(Command):
     ) -> CommandActionResult:
         if not request.has_var("_remove_comments"):
             return None
-        if row.get("comment_entry_type") == 4:  # acknowledgement
-            spec = (
-                row["host_name"]
-                if cmdtag == "HOST"
-                else ("{};{}".format(row["host_name"], row["service_description"]))
-            )
-            return (f"REMOVE_{cmdtag}_ACKNOWLEDGEMENT;{spec}"), ""
-        return (f"DEL_{cmdtag}_COMMENT;{spec}"), ""
+        # NOTE: To remove an acknowledgement, we have to use the specialized command, not only the
+        # general one. The latter one only removes the comment itself, not the "acknowledged" state.
+        # NOTE: We get the commend ID (an int) as a str via the spec parameter (why???), but we need
+        # the specification of the host or service for REMOVE_FOO_ACKNOWLEDGEMENT.
+        if row.get("comment_entry_type") != 4:  # not an acknowledgement
+            rm_ack = []
+        elif cmdtag == "HOST":
+            rm_ack = [f"REMOVE_HOST_ACKNOWLEDGEMENT;{row['host_name']}"]
+        else:
+            rm_ack = [f"REMOVE_SVC_ACKNOWLEDGEMENT;{row['host_name']};{row['service_description']}"]
+        # Nevertheless, we need the general command, too, even for acknowledgements: The
+        # acknowledgement might be persistent, so REMOVE_FOO_ACKNOWLEDGEMENT leaves the comment
+        # itself, that's the whole point of being persistent. The only way to get rid of such a
+        # comment is via DEL_FOO_COMMENT.
+        del_cmt = [f"DEL_HOST_COMMENT;{spec}" if cmdtag == "HOST" else f"DEL_SVC_COMMENT;{spec}"]
+        return (rm_ack + del_cmt), ""

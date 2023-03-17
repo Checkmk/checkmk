@@ -549,6 +549,8 @@ class Site:
             self._tune_nagios()
 
         if self.install_test_python_modules:
+            # Once this is removed, we can remove the special case from
+            # tests.integration.omd.test_permissions.test_site_file_permissions
             self._install_test_python_modules()
 
         if self.update_from_git:

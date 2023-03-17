@@ -64,6 +64,12 @@ def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]
         if rel_path(p) in known_files_set:
             continue
 
+        # As long as we .f12 into the site under test during the post-merge jobs,
+        # we need to ignore the files here. They are patched into the site by
+        # tests.testlib.Site._install_test_python_modules.
+        if rel_path(p).startswith("local/lib/python3"):
+            continue
+
         offenders.add(p)
 
     assert not offenders

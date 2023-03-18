@@ -1993,7 +1993,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "redis_info",
         "redis_info.persistence",
         "redis_info.clients",
-        "rmon_stats",
         "rms200_temp",
         "rstcli",
         "rstcli.pdisks",

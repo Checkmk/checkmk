@@ -29,10 +29,12 @@ See Also:
 
 from ._api import (
     FetcherFunction,
+    HostLabel,
     parse_raw_data,
     ParserFunction,
     PInventoryPlugin,
     PInventoryResult,
+    PluginSuppliedLabel,
     Source,
     SummarizerFunction,
 )
@@ -47,12 +49,14 @@ __all__ = [
     "AgentParser",
     "FetcherFunction",
     "HostKey",
+    "HostLabel",
     "parse_raw_data",
     "Parser",
     "ParserFunction",
     "PiggybackMarker",
     "PInventoryPlugin",
     "PInventoryResult",
+    "PluginSuppliedLabel",
     "SectionMarker",
     "SNMPParser",
     "SourceInfo",

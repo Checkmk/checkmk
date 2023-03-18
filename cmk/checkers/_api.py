@@ -6,7 +6,7 @@
 import abc
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
-from typing import Generic, Protocol
+from typing import Generic, NamedTuple, Protocol
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import (
@@ -30,10 +30,12 @@ from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
 __all__ = [
+    "HostLabel",
     "parse_raw_data",
     "ParserFunction",
     "PInventoryPlugin",
     "PInventoryResult",
+    "PluginSuppliedLabel",
     "Source",
     "SummarizerFunction",
 ]
@@ -89,6 +91,39 @@ class SummarizerFunction(Protocol):
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     ) -> Iterable[ActiveCheckResult]:
         ...
+
+
+class PluginSuppliedLabel(
+    NamedTuple(  # pylint: disable=typing-namedtuple-call
+        "_LabelTuple", [("name", str), ("value", str)]
+    )
+):
+    """A user friendly variant of our internally used labels
+
+    This is a tiny bit redundant, but it helps decoupling API
+    code from internal representations.
+    """
+
+    def __init__(self, name: str, value: str) -> None:
+        super().__init__()
+        if not isinstance(name, str):
+            raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
+        if not isinstance(value, str):
+            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+
+    def __repr__(self) -> str:
+        return "%s(%r, %r)" % (self.__class__.__name__, self.name, self.value)
+
+
+class HostLabel(PluginSuppliedLabel):
+    """Representing a host label in Checkmk
+
+    This class creates a host label that can be yielded by a host_label_function as regisitered
+    with the section.
+
+        >>> my_label = HostLabel("my_key", "my_value")
+
+    """
 
 
 class PInventoryResult(Protocol):

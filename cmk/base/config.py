@@ -123,7 +123,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers import AgentParser, PInventoryPlugin, PSectionPlugin, SourceType
+from cmk.checkers import AgentParser, PHostLabelDiscoveryPlugin, PInventoryPlugin, SourceType
 from cmk.checkers.check_table import (
     ConfiguredService,
     FilterMode,
@@ -2309,13 +2309,13 @@ def get_discovery_parameters(
 
 def get_host_label_parameters(
     host_name: HostName,
-    section_plugin: PSectionPlugin,
+    host_label_plugin: PHostLabelDiscoveryPlugin,
 ) -> None | Parameters | list[Parameters]:
     return _get_plugin_parameters(
         host_name=host_name,
-        default_parameters=section_plugin.host_label_default_parameters,
-        ruleset_name=section_plugin.host_label_ruleset_name,
-        ruleset_type=section_plugin.host_label_ruleset_type,
+        default_parameters=host_label_plugin.host_label_default_parameters,
+        ruleset_name=host_label_plugin.host_label_ruleset_name,
+        ruleset_type=host_label_plugin.host_label_ruleset_type,
         rules_getter_function=agent_based_register.get_host_label_ruleset,
     )
 

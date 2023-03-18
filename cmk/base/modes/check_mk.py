@@ -76,6 +76,7 @@ from cmk.base.agent_based.confcheckers import (
     ConfiguredFetcher,
     ConfiguredParser,
     ConfiguredSummarizer,
+    HostLabelPluginMapper,
     InventoryPluginMapper,
     SectionPluginMapper,
 )
@@ -1527,6 +1528,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
+        host_label_plugins=HostLabelPluginMapper(),
         check_plugins=CheckPluginMapper(),
         find_service_description=config.service_description,
         on_error=OnError.IGNORE,
@@ -1611,6 +1613,7 @@ def mode_check_discovery(
             parser=parser,
             summarizer=summarizer,
             section_plugins=SectionPluginMapper(),
+            host_label_plugins=HostLabelPluginMapper(),
             check_plugins=CheckPluginMapper(),
             find_service_description=config.service_description,
         )
@@ -1841,6 +1844,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
+        host_label_plugins=HostLabelPluginMapper(),
         check_plugins=CheckPluginMapper(),
         run_plugin_names=run_plugin_names,
         arg_only_new=options["discover"] == 1,

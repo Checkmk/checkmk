@@ -23,6 +23,7 @@ from cmk.checkers import (
     FetcherFunction,
     HostKey,
     ParserFunction,
+    PHostLabelDiscoveryPlugin,
     PSectionPlugin,
     SummarizerFunction,
 )
@@ -63,6 +64,7 @@ def get_check_preview(
     fetcher: FetcherFunction,
     failure_summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     ignored_services: Container[ServiceName],
@@ -93,6 +95,7 @@ def get_check_preview(
         host_name,
         discovered_host_labels=discover_host_labels(
             host_name,
+            host_label_plugins,
             providers=providers,
             on_error=on_error,
         ),

@@ -18,7 +18,13 @@ from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import CheckPluginName, HostName, SectionName
 
-from cmk.checkers import FetcherFunction, HostKey, ParserFunction, PSectionPlugin
+from cmk.checkers import (
+    FetcherFunction,
+    HostKey,
+    ParserFunction,
+    PHostLabelDiscoveryPlugin,
+    PSectionPlugin,
+)
 from cmk.checkers.discovery import AutochecksStore
 
 import cmk.base.core
@@ -51,6 +57,7 @@ def commandline_discovery(
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
     section_plugins: Mapping[SectionName, PSectionPlugin],
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
@@ -75,6 +82,7 @@ def commandline_discovery(
             providers = make_providers(host_sections, section_plugins)
             _commandline_discovery_on_host(
                 host_name=host_name,
+                host_label_plugins=host_label_plugins,
                 config_cache=config_cache,
                 providers=providers,
                 check_plugins=check_plugins,
@@ -130,6 +138,7 @@ def _preprocess_hostnames(
 
 def _analyse_node_labels(
     host_name: HostName,
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     *,
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
@@ -146,6 +155,7 @@ def _analyse_node_labels(
 
         discovered_host_labels = discover_cluster_labels(
             nodes,
+            host_label_plugins,
             providers=providers,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -153,7 +163,7 @@ def _analyse_node_labels(
         )
     else:
         discovered_host_labels = discover_host_labels(
-            host_name, providers=providers, on_error=on_error
+            host_name, host_label_plugins, providers=providers, on_error=on_error
         )
     return analyse_host_labels(
         host_name,
@@ -167,6 +177,7 @@ def _analyse_node_labels(
 def _commandline_discovery_on_host(
     *,
     host_name: HostName,
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -180,7 +191,8 @@ def _commandline_discovery_on_host(
     section.section_step("Analyse discovered host labels")
 
     host_labels = _analyse_node_labels(
-        host_name=host_name,
+        host_name,
+        host_label_plugins,
         config_cache=config_cache,
         providers=providers,
         ruleset_matcher=config_cache.ruleset_matcher,

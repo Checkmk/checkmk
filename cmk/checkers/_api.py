@@ -35,6 +35,7 @@ __all__ = [
     "HostLabel",
     "parse_raw_data",
     "ParserFunction",
+    "PHostLabelDiscoveryPlugin",
     "PInventoryPlugin",
     "PInventoryResult",
     "PluginSuppliedLabel",
@@ -166,8 +167,8 @@ class PSectionPlugin(Protocol):
     def parsed_section_name(self) -> ParsedSectionName:
         ...
 
-    # The host_label_* attributes belong elsewhere.
 
+class PHostLabelDiscoveryPlugin(Protocol):
     @property
     def host_label_function(self) -> Callable[..., Generator[HostLabel, None, None]]:
         ...

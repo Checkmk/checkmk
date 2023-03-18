@@ -9,9 +9,9 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.checkers import HostKey, SourceType
+from cmk.checkers import HostKey, PHostLabelDiscoveryPlugin, SourceType
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import Provider, ResolvedResult
@@ -29,6 +29,7 @@ __all__ = [
 
 def discover_cluster_labels(
     nodes: Sequence[HostName],
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     load_labels: bool,
@@ -39,7 +40,9 @@ def discover_cluster_labels(
     for node in nodes:
         node_labels = QualifiedDiscovery[HostLabel](
             preexisting=do_load_labels(node) if load_labels else (),
-            current=discover_host_labels(node, providers=providers, on_error=on_error),
+            current=discover_host_labels(
+                node, host_label_plugins, providers=providers, on_error=on_error
+            ),
             key=lambda hl: hl.label,
         )
         if save_labels:
@@ -120,6 +123,7 @@ def do_save_labels(host_name: HostName, host_labels: QualifiedDiscovery[HostLabe
 
 def discover_host_labels(
     host_name: HostName,
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -128,9 +132,13 @@ def discover_host_labels(
     # make names unique
     labels_by_name = {
         **_discover_host_labels_for_source_type(
-            host_key=HostKey(host_name, SourceType.HOST), providers=providers, on_error=on_error
+            host_label_plugins,
+            host_key=HostKey(host_name, SourceType.HOST),
+            providers=providers,
+            on_error=on_error,
         ),
         **_discover_host_labels_for_source_type(
+            host_label_plugins,
             host_key=HostKey(host_name, SourceType.MANAGEMENT),
             providers=providers,
             on_error=on_error,
@@ -161,6 +169,7 @@ def _all_parsing_results(
 
 
 def _discover_host_labels_for_source_type(
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     *,
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
@@ -175,16 +184,20 @@ def _discover_host_labels_for_source_type(
             "Trying host label discovery with: %s\n"
             % ", ".join(str(r.section_name) for r in parsed_results)
         )
-        for section_name, section_plugin, section_data, _cache_info in parsed_results:
+        for section_name, _section_plugin, section_data, _cache_info in parsed_results:
 
             kwargs = {"section": section_data}
 
-            host_label_params = config.get_host_label_parameters(host_key.hostname, section_plugin)
+            host_label_plugin = host_label_plugins[section_name]
+            host_label_params = config.get_host_label_parameters(
+                host_key.hostname,
+                host_label_plugin,
+            )
             if host_label_params is not None:
                 kwargs["params"] = host_label_params
 
             try:
-                for label in section_plugin.host_label_function(**kwargs):
+                for label in host_label_plugin.host_label_function(**kwargs):
                     console.vverbose(f"  {label.name}: {label.value} ({section_name})\n")
                     host_labels[label.name] = HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):

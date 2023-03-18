@@ -78,7 +78,8 @@ setversion:
 	sed -i 's/__version__ = \"[0-9.a-z-]*\"/__version__ = \"$(NEW_VERSION)\"/g' \
 		$(SPECIAL_AGENTS_DIR)/agent_splunk.py \
 		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
-		$(SPECIAL_AGENTS_DIR)/agent_netapp.py
+		$(SPECIAL_AGENTS_DIR)/agent_netapp.py \
+		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 	sed -i 's/define ProductName = "Check MK Agent [^"]*"/define ProductName = "Check MK Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
 	sed -i 's/define ServiceDescription = "Checkmk monitoring agent service - [^"]*"/define ServiceDescription = "Checkmk monitoring agent service - $(NEW_VERSION_MAJOR)"/' wnx/install/Product.wxs

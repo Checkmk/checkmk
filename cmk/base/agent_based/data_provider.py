@@ -49,7 +49,6 @@ class _ParsingResult(NamedTuple):
 
 class ResolvedResult(NamedTuple):
     section_name: SectionName
-    section_plugin: PSectionPlugin
     parsed_data: ParsedSectionContent
     cache_info: _CacheInfo | None
 
@@ -186,7 +185,6 @@ class ParsedSectionsResolver:
                     parsed_section_name,
                     ResolvedResult(
                         section_name=producer_name,
-                        section_plugin=producer,
                         parsed_data=parsing_result.data,
                         cache_info=parsing_result.cache_info,
                     ),

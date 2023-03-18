@@ -23,7 +23,13 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.checkers import ParserFunction, PSectionPlugin, SourceInfo, SummarizerFunction
+from cmk.checkers import (
+    ParserFunction,
+    PHostLabelDiscoveryPlugin,
+    PSectionPlugin,
+    SourceInfo,
+    SummarizerFunction,
+)
 from cmk.checkers.checkresults import ActiveCheckResult
 
 from cmk.base.agent_based.data_provider import (
@@ -51,6 +57,7 @@ def execute_check_discovery(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
+    host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
@@ -72,6 +79,7 @@ def execute_check_discovery(
         host_name,
         discovered_host_labels=discover_host_labels(
             host_name,
+            host_label_plugins,
             providers=providers,
             on_error=OnError.RAISE,
         ),

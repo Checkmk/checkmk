@@ -32,6 +32,7 @@ from ._api import (
     HostLabel,
     parse_raw_data,
     ParserFunction,
+    PHostLabelDiscoveryPlugin,
     PInventoryPlugin,
     PInventoryResult,
     PluginSuppliedLabel,

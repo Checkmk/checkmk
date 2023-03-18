@@ -112,6 +112,7 @@ from cmk.base.agent_based.confcheckers import (
     ConfiguredFetcher,
     ConfiguredParser,
     ConfiguredSummarizer,
+    HostLabelPluginMapper,
     SectionPluginMapper,
 )
 from cmk.base.automations import Automation, automations, MKAutomationError
@@ -213,6 +214,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                     override_non_ok_state=None,
                 ),
                 section_plugins=SectionPluginMapper(),
+                host_label_plugins=HostLabelPluginMapper(),
                 check_plugins=CheckPluginMapper(),
                 get_service_description=config.service_description,
                 mode=mode,
@@ -361,6 +363,7 @@ def _execute_discovery(
             override_non_ok_state=None,
         ),
         section_plugins=SectionPluginMapper(),
+        host_label_plugins=HostLabelPluginMapper(),
         check_plugins=CheckPluginMapper(),
         find_service_description=config.service_description,
         ignored_services=IgnoredServices(config_cache, host_name),

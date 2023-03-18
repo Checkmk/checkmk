@@ -34,7 +34,13 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkers import parse_raw_data, PInventoryPlugin, Source, SourceInfo
+from cmk.checkers import (
+    parse_raw_data,
+    PHostLabelDiscoveryPlugin,
+    PInventoryPlugin,
+    Source,
+    SourceInfo,
+)
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.summarize import summarize
@@ -52,6 +58,7 @@ __all__ = [
     "ConfiguredFetcher",
     "ConfiguredParser",
     "ConfiguredSummarizer",
+    "HostLabelPluginMapper",
     "InventoryPluginMapper",
     "SectionPluginMapper",
 ]
@@ -270,6 +277,21 @@ class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
     # an *immutable* Mapping so we are actually on the safe side.
 
     def __getitem__(self, __key: SectionName) -> SectionPlugin:
+        return _api.get_section_plugin(__key)
+
+    def __iter__(self) -> Iterator[SectionName]:
+        return iter(
+            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
+        )
+
+    def __len__(self) -> int:
+        return len(
+            frozenset(_api.registered_agent_sections) | frozenset(_api.registered_snmp_sections)
+        )
+
+
+class HostLabelPluginMapper(Mapping[SectionName, PHostLabelDiscoveryPlugin]):
+    def __getitem__(self, __key: SectionName) -> PHostLabelDiscoveryPlugin:
         return _api.get_section_plugin(__key)
 
     def __iter__(self) -> Iterator[SectionName]:

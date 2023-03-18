@@ -45,6 +45,7 @@ from cmk.base.agent_based.confcheckers import (
     CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
+    HostLabelPluginMapper,
     SectionPluginMapper,
 )
 from cmk.base.agent_based.data_provider import (
@@ -921,6 +922,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
+        host_label_plugins=HostLabelPluginMapper(),
         check_plugins=CheckPluginMapper(),
         run_plugin_names=EVERYTHING,
         arg_only_new=False,
@@ -1537,6 +1539,7 @@ def test__discover_host_labels_and_services_on_realhost(
             host_name=scenario.hostname,
             discovered_host_labels=discover_host_labels(
                 scenario.hostname,
+                HostLabelPluginMapper(),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,
             ),
@@ -1571,7 +1574,10 @@ def test__perform_host_label_discovery_on_realhost(
     host_label_result = analyse_host_labels(
         host_name=scenario.hostname,
         discovered_host_labels=discover_host_labels(
-            scenario.hostname, providers=scenario.providers, on_error=OnError.RAISE
+            scenario.hostname,
+            HostLabelPluginMapper(),
+            providers=scenario.providers,
+            on_error=OnError.RAISE,
         ),
         ruleset_matcher=scenario.config_cache.ruleset_matcher,
         existing_host_labels=(
@@ -1612,6 +1618,7 @@ def test__discover_services_on_cluster(
             scenario.parent,
             discovered_host_labels=discover_cluster_labels(
                 nodes,
+                HostLabelPluginMapper(),
                 providers=scenario.providers,
                 load_labels=discovery_test_case.load_labels,
                 save_labels=discovery_test_case.save_labels,
@@ -1651,6 +1658,7 @@ def test__perform_host_label_discovery_on_cluster(
         scenario.parent,
         discovered_host_labels=discover_cluster_labels(
             nodes,
+            HostLabelPluginMapper(),
             providers=scenario.providers,
             load_labels=discovery_test_case.load_labels,
             save_labels=discovery_test_case.save_labels,

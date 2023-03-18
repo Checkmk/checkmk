@@ -17,13 +17,10 @@ from cmk.utils.type_defs import (
     RuleSetName,
 )
 
+from cmk.checkers import PluginSuppliedLabel
 from cmk.checkers.discovery import AutocheckEntry
 
-from cmk.base.api.agent_based.type_defs import (
-    ParametersTypeAlias,
-    PluginSuppliedLabel,
-    RuleSetTypeName,
-)
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]

@@ -306,7 +306,6 @@ class BaseCheck(abc.ABC):
 
     def __init__(self, name: str) -> None:
         self.name = name
-        self.info: dict[str, Any] = {}
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
         import cmk.checkers.plugin_contexts  # pylint: disable=import-outside-toplevel

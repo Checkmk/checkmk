@@ -25,6 +25,8 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias
 
+from .utils_legacy import CheckInfoElement
+
 # There are so many check_info keys, make sure we didn't miss one.
 CONSIDERED_KEYS = {
     "check_function",
@@ -46,7 +48,7 @@ CONSIDERED_KEYS = {
 
 
 def _get_default_parameters(
-    check_info_element: Dict[str, Any],
+    check_info_element: CheckInfoElement,
     factory_settings: Dict[str, Dict[str, Any]],
     check_context: Dict[str, Any],
 ) -> Optional[ParametersTypeAlias]:
@@ -73,7 +75,7 @@ def _get_default_parameters(
 
 def _create_discovery_function(
     check_name: str,
-    check_info_dict: Dict[str, Any],
+    check_info_element: CheckInfoElement,
     get_check_context: Callable,
 ) -> Callable:
     """Create an API compliant discovery function"""
@@ -81,7 +83,7 @@ def _create_discovery_function(
     # 1) ensure we have the correct signature
     # 2) ensure it is a generator of Service instances
     def discovery_migration_wrapper(section: object) -> object:
-        disco_func = check_info_dict.get("inventory_function")
+        disco_func = check_info_element.get("inventory_function")
         if not callable(disco_func):  # never discover:
             return
 
@@ -161,9 +163,9 @@ def _normalize_check_function_return_value(subresults: object) -> list:
     raise TypeError(f"expected None, Tuple or Iterable, got {subresults=}")
 
 
-def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callable:
+def _create_check_function(name: str, check_info_element: CheckInfoElement) -> Callable:
     """Create an API compliant check function"""
-    service_descr = check_info_dict["service_description"]
+    service_descr = check_info_element["service_description"]
     if not isinstance(service_descr, str):
         raise ValueError("[%s]: invalid service description: %r" % (name, service_descr))
 
@@ -171,7 +173,7 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
     requires_item = "%s" in service_descr
     sig_function = _create_signature_check_function(
         requires_item=requires_item,
-        original_function=check_info_dict["check_function"],
+        original_function=check_info_element["check_function"],
     )
 
     # 2) unwrap parameters and ensure it is a generator of valid instances
@@ -320,13 +322,13 @@ def _create_signature_check_function(
 
 def _create_wrapped_parameters(
     check_plugin_name: str,
-    check_info_dict: Dict[str, Any],
+    check_info_element: CheckInfoElement,
     factory_settings: Dict[str, Dict],
     get_check_context: Callable,
 ) -> ParametersTypeAlias:
     """compute default parameters and wrap them in a dictionary"""
     default_parameters = _get_default_parameters(
-        check_info_dict,
+        check_info_element,
         factory_settings,
         get_check_context(check_plugin_name),
     )
@@ -340,7 +342,7 @@ def _create_wrapped_parameters(
 
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_dict: Dict[str, Any],
+    check_info_element: CheckInfoElement,
     extra_sections: List[str],
     factory_settings: Dict[str, Dict],
     get_check_context: Callable,
@@ -353,7 +355,7 @@ def create_check_plugin_from_legacy(
             "[%s]: cannot auto-migrate plugins with extra sections" % check_plugin_name
         )
 
-    if check_info_dict.get("node_info"):
+    if check_info_element.get("node_info"):
         # We refuse to tranform these. The requirement of adding the node info
         # makes rewriting of the base code too difficult.
         # Affected Plugins must be migrated manually after CMK-4240 is done.
@@ -362,7 +364,7 @@ def create_check_plugin_from_legacy(
         )
 
     # make sure we haven't missed something important:
-    unconsidered_keys = set(check_info_dict) - CONSIDERED_KEYS
+    unconsidered_keys = set(check_info_element) - CONSIDERED_KEYS
     assert not unconsidered_keys, "Unconsidered key(s) in check_info[%r]: %r" % (
         check_plugin_name,
         unconsidered_keys,
@@ -372,32 +374,32 @@ def create_check_plugin_from_legacy(
 
     check_default_parameters = _create_wrapped_parameters(
         check_plugin_name,
-        check_info_dict,
+        check_info_element,
         factory_settings,
         get_check_context,
     )
 
     discovery_function = _create_discovery_function(
         check_plugin_name,
-        check_info_dict,
+        check_info_element,
         get_check_context,
     )
 
     check_function = _create_check_function(
         check_plugin_name,
-        check_info_dict,
+        check_info_element,
     )
 
     return create_check_plugin(
         name=new_check_name,
         sections=[check_plugin_name.split(".", 1)[0]],
-        service_name=check_info_dict["service_description"],
+        service_name=check_info_element["service_description"],
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!
         discovery_ruleset_name=None,
         check_function=check_function,
         check_default_parameters=check_default_parameters,
-        check_ruleset_name=check_info_dict.get("group"),
+        check_ruleset_name=check_info_element.get("group"),
         # Legacy check plugins may return an item even if the service description
         # does not contain a '%s'. In this case the old check API assumes an implicit,
         # trailing '%s'. Therefore, we disable this validation for legacy check plugins.

@@ -33,18 +33,7 @@ from collections.abc import (
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import (
-    Any,
-    AnyStr,
-    Final,
-    Literal,
-    NamedTuple,
-    NotRequired,
-    overload,
-    Protocol,
-    TypedDict,
-    Union,
-)
+from typing import Any, AnyStr, Final, Literal, NamedTuple, overload, Protocol, TypedDict, Union
 
 from typing_extensions import assert_never
 
@@ -154,6 +143,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
     create_snmp_section_plugin_from_legacy,
 )
+from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
 from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
@@ -405,7 +395,6 @@ ObjectAttributes = dict[str, Any]
 
 GroupDefinitions = dict[str, str]
 RecurringDowntime = dict[str, int | str]  # TODO(sk): TypedDict here
-CheckInfo = dict  # TODO: improve this type
 
 
 class _NestedExitSpec(ExitSpec, total=False):
@@ -1475,7 +1464,7 @@ _check_contexts: dict[str, Any] = {}
 
 # The following data structures will be filled by the checks
 # all known checks
-check_info: dict[str, dict[str, Any]] = {}
+check_info: dict[str, CheckInfoElement] = {}
 # Lookup for legacy names
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 # library files needed by checks
@@ -1989,24 +1978,7 @@ def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
     return _check_contexts[check_plugin_name]
 
 
-_DiscoveredParameters = dict | tuple | str | None
-
-
-class CheckInfoElement(TypedDict, total=True):
-    check_function: NotRequired[Callable]
-    inventory_function: NotRequired[
-        Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]
-    ]
-    parse_function: NotRequired[Callable[[list], object]]
-    group: NotRequired[str]
-    snmp_info: NotRequired[tuple | list]
-    snmp_scan_function: NotRequired[Callable[[Callable], bool]]
-    default_levels_variable: NotRequired[str]
-    service_description: NotRequired[str]
-    has_perfdata: NotRequired[bool]
-    management_board: NotRequired[str]
-
-
+# TODO: This is dead and will be dropped soon
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.
 def convert_check_info() -> None:  # pylint: disable=too-many-branches

@@ -19,6 +19,7 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 
+from ..utils_legacy import CheckInfoElement
 from .convert_scan_functions import create_detect_spec
 
 LayoutRecoverSuboids = List[Tuple[str]]
@@ -200,7 +201,7 @@ def _create_snmp_parse_function(
 
 def create_agent_section_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_element: Dict[str, Any],
+    check_info_element: CheckInfoElement,
     *,
     validate_creation_kwargs: bool,
 ) -> AgentSectionPlugin:
@@ -223,7 +224,7 @@ def create_agent_section_plugin_from_legacy(
 
 def create_snmp_section_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_element: Dict[str, Any],
+    check_info_element: CheckInfoElement,
     snmp_scan_function: Callable,
     snmp_info: Any,
     scan_function_fallback_files: Optional[List[str]] = None,

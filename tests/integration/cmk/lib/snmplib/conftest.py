@@ -13,6 +13,15 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+from pysnmp.hlapi import (  # type: ignore[import]
+    CommunityData,
+    ContextData,
+    getCmd,
+    ObjectIdentity,
+    ObjectType,
+    SnmpEngine,
+    UdpTransportTarget,
+)
 from typing_extensions import assert_never
 
 from tests.testlib import wait_until
@@ -85,12 +94,15 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
                 # Each snmpsim instance needs an own cache directory otherwise
                 # some instances occasionally crash
                 str(tmp_path / "snmpsim%s") % index,
-                "--data-dir",
-                str(snmp_data_dir),
+                # Explicitly set engine ID to make data-dir override builtin dirs
+                # See https://snmplabs.thola.io/snmpsim/documentation/simulating-agents.html
+                "--v3-engine-id=010203040505060809",
                 # TODO: Fix port allocation to prevent problems with parallel tests
                 # "--agent-unix-endpoint="
                 "--agent-udpv4-endpoint=127.0.0.1:%s" % port,
                 "--agent-udpv6-endpoint=[::1]:%s" % port,
+                "--data-dir",
+                snmp_data_dir,
             ]
             + auth,
             close_fds=True,
@@ -166,8 +178,8 @@ def _is_listening(process_def: ProcessDef) -> bool:
             snmpsimd_died = True
     if snmpsimd_died:
         assert p.stdout is not None and exitcode is not None
-        error_msg = p.stdout.read().split("\n", 1)[0]
-        raise Exception("snmpsimd died. Exit code: %d; error message: %s" % (exitcode, error_msg))
+        output = p.stdout.read()
+        raise Exception("snmpsimd died. Exit code: %d; output: %s" % (exitcode, output))
 
     if num_sockets < 2:
         return False
@@ -175,13 +187,14 @@ def _is_listening(process_def: ProcessDef) -> bool:
     # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
     # whether or not snmpsimd is already answering.
 
-    # Correct module is only available in the site
-    import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    var = netsnmp.Varbind("SNMPv2-MIB::sysDescr.0")
-    result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:%s" % port, Community="public")
-    if result is None or result[0] is None:
-        return False
+    g = getCmd(
+        SnmpEngine(),
+        CommunityData("public"),
+        UdpTransportTarget(("127.0.0.1", port)),
+        ContextData(),
+        ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
+    )
+    assert len(list(g)) == 1
     return True
 
 

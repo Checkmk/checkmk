@@ -270,9 +270,7 @@ class FixPluginLegacy:
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
         self._check_info = copy.deepcopy(config.check_info)
-        self._snmp_info = copy.deepcopy(config.snmp_info)
         self._active_check_info = copy.deepcopy(config.active_check_info)
-        self._snmp_scan_functions = copy.deepcopy(config.snmp_scan_functions)
         self._check_variables = copy.deepcopy(config.get_check_variables())
 
     @property
@@ -280,16 +278,8 @@ class FixPluginLegacy:
         return self._check_info
 
     @property
-    def snmp_info(self):
-        return self._snmp_info
-
-    @property
     def active_check_info(self):
         return self._active_check_info
-
-    @property
-    def snmp_scan_functions(self):
-        return self._snmp_scan_functions
 
     @property
     def check_variables(self):

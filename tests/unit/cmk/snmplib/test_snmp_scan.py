@@ -55,12 +55,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
         ),
         # make sure casing is ignored
         (
-            "hwg_temp",
-            {".1.3.6.1.2.1.1.1.0": "contains lower HWG"},
-            True,
-        ),
-        # make sure casing is ignored
-        (
             "hwg_humidity",
             {".1.3.6.1.2.1.1.1.0": "contains lower HWG"},
             True,
@@ -136,7 +130,7 @@ def test_evaluate_snmp_detection(
     ) -> SNMPDecodedString | None:
         return oids_data.get(oid)
 
-    scan_function = fix_plugin_legacy.snmp_scan_functions[name]
+    scan_function = fix_plugin_legacy.check_info[name]["snmp_scan_function"]
     assert bool(scan_function(oid_function)) is expected_result
 
     converted_detect_spec = create_detect_spec(name, scan_function, [])

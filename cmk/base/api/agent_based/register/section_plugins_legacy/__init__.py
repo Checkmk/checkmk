@@ -199,18 +199,18 @@ def _create_snmp_parse_function(
 
 def create_agent_section_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_dict: Dict[str, Any],
+    check_info_element: Dict[str, Any],
     *,
     validate_creation_kwargs: bool,
 ) -> AgentSectionPlugin:
-    if check_info_dict.get("node_info"):
+    if check_info_element.get("node_info"):
         # We refuse to tranform these. The requirement of adding the node info
         # makes rewriting of the base code too difficult.
         # Affected Plugins must be migrated manually after CMK-4240 is done.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
     parse_function = _create_agent_parse_function(
-        check_info_dict.get("parse_function"),
+        check_info_element.get("parse_function"),
     )
 
     return create_agent_section_plugin(
@@ -222,14 +222,14 @@ def create_agent_section_plugin_from_legacy(
 
 def create_snmp_section_plugin_from_legacy(
     check_plugin_name: str,
-    check_info_dict: Dict[str, Any],
+    check_info_element: Dict[str, Any],
     snmp_scan_function: Callable,
     snmp_info: Any,
     scan_function_fallback_files: Optional[List[str]] = None,
     *,
     validate_creation_kwargs: bool,
 ) -> SNMPSectionPlugin:
-    if check_info_dict.get("node_info"):
+    if check_info_element.get("node_info"):
         # We refuse to tranform these. There's no way we get the data layout recovery right.
         # This would add 19 plugins to list of failures, but some are on the list anyway.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
@@ -237,9 +237,9 @@ def create_snmp_section_plugin_from_legacy(
     trees, recover_layout_function = _create_snmp_trees(snmp_info)
 
     parse_function = _create_snmp_parse_function(
-        check_info_dict.get("parse_function"),
+        check_info_element.get("parse_function"),
         recover_layout_function,
-        handle_empty_info=bool(check_info_dict.get("handle_empty_info")),
+        handle_empty_info=bool(check_info_element.get("handle_empty_info")),
     )
 
     detect_spec = create_detect_spec(

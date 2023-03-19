@@ -46,12 +46,12 @@ CONSIDERED_KEYS = {
 
 
 def _get_default_parameters(
-    check_legacy_info: Dict[str, Any],
+    check_info_element: Dict[str, Any],
     factory_settings: Dict[str, Dict[str, Any]],
     check_context: Dict[str, Any],
 ) -> Optional[ParametersTypeAlias]:
     """compute default parameters"""
-    params_variable_name = check_legacy_info.get("default_levels_variable")
+    params_variable_name = check_info_element.get("default_levels_variable")
     if not params_variable_name:
         return None
 

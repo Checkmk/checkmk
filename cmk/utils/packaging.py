@@ -1296,11 +1296,12 @@ def _package_contains_gui_files(package: PackageInfo) -> bool:
 
 def _reload_apache() -> None:
     try:
-        subprocess.run(
-            ["omd", "reload", "apache"],
-            capture_output=True,
-            check=True,
-        )
+        subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)
+    except subprocess.CalledProcessError:
+        return
+
+    try:
+        subprocess.run(["omd", "reload", "apache"], capture_output=True, check=True)
     except subprocess.CalledProcessError:
         logger.error("Error reloading apache", exc_info=True)
 

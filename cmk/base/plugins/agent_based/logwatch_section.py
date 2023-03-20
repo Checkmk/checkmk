@@ -96,7 +96,6 @@ def parse_logwatch(string_table: StringTable) -> Section:
     logfiles: Dict[str, ItemData] = {}
 
     item_data: Optional[ItemData] = None
-    batch = _random_string()  # needed for legacy
 
     for raw_line in string_table:
         line = " ".join(raw_line)
@@ -109,6 +108,9 @@ def parse_logwatch(string_table: StringTable) -> Section:
         item, attribute = _extract_item_attribute(line)
         if item is not None:
             item_data = logfiles.setdefault(item, {"attr": attribute, "lines": {}})
+            # needed for legacy, also correctly handles identical items from cluster nodes
+            # these are placed in separate batches
+            batch = _random_string()
             continue
 
         if (detected_batch := _extract_batch(line)) is not None:

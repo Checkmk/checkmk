@@ -1,0 +1,11 @@
+Title: Logwatch Monitoring: Fixed disappearing log lines when fetching data from an older 2.0 agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679295919
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p25
+
+

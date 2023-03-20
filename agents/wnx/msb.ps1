@@ -12,7 +12,6 @@ if( "$make_exe" -eq "" ){
         return 1
 }
 
-$cargo_build = (Get-Item -Path ".\").FullName + "\scripts\call_cargo_build.cmd"
 $sln = (Get-Item -Path ".\").FullName + "\wamain_build.sln"  # 'repo\check_mk\agents\wnx\wamain.sln'
 $makefile = (Get-Item -Path ".\").FullName + "\Makefile" 
 $host_dir = (Get-Item -Path ".\").FullName
@@ -83,7 +82,7 @@ else {
 }
 
 $cargo_b = {
-& Set-Location $using:cmk_agent_ctl_dir; .\cargo_build.cmd
+& Set-Location $using:cmk_agent_ctl_dir; .\run.cmd
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error in cargo build: " $LASTEXITCODE -foreground Red
     throw "Failed cargo build..."

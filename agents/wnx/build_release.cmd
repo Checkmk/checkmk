@@ -88,7 +88,7 @@ powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
 
 pushd ..\..\packages\cmk-agent-ctl
-call cargo_build.cmd
+call run.cmd --all
 if not %errorlevel% == 0 powershell Write-Host "Failed Cargo Build" -Foreground Red && popd && exit /b 72
 popd
 

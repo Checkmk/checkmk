@@ -136,7 +136,10 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
 
     def _source_of_item(table: HostCheckTable, item: str) -> str:
         timespecific_params = table[ServiceID(smart, item)].parameters
-        return timespecific_params.evaluate(lambda _: True)["source"]  # type: ignore
+        p = timespecific_params.evaluate(lambda _: True)
+        assert p is not None
+        assert not isinstance(p, (tuple, list, str, int))
+        return p["source"]
 
     assert _source_of_item(node_services, "node-item") == "enforced-on-node"
     assert _source_of_item(cluster_services, "cluster-item") == "enforced-on-node"

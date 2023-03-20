@@ -26,9 +26,9 @@ class TestListOfStrings:
         expect_validate_failure(
             vs.ListOfStrings(max_entries=1), ["1", "2"], match="You can specify at most 1 entries"
         )
-        expect_validate_failure(
+        expect_validate_failure(  # type: ignore[misc]
             vs.ListOfStrings(), 123, match="Expected data type is list, but your type is int."
-        )  # type: ignore
+        )
 
     def test_value_to_html(self) -> None:
         assert vs.ListOfStrings().value_to_html(["1", "2"]) == HTML(

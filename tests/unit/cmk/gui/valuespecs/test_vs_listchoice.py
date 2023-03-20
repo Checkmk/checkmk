@@ -45,7 +45,7 @@ class TestListChoice:
         ]
 
         with pytest.raises(ValueError, match="illegal type for choices"):
-            _load_elements(vs.ListChoice(choices=123))  # type: ignore
+            _load_elements(vs.ListChoice(choices=123))  # type: ignore[arg-type]
 
     def test_validate(self):
         expect_validate_success(_get_list_choice(), [1, 2])

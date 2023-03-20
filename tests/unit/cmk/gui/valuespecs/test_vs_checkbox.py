@@ -13,8 +13,8 @@ class TestCheckbox:
     def test_validate(self) -> None:
         expect_validate_success(vs.Checkbox(), True)
         expect_validate_success(vs.Checkbox(), False)
-        expect_validate_failure(vs.Checkbox(), "abc")  # type: ignore
-        expect_validate_failure(vs.Checkbox(), 123)  # type: ignore
+        expect_validate_failure(vs.Checkbox(), "abc")  # type: ignore[misc]
+        expect_validate_failure(vs.Checkbox(), 123)  # type: ignore[misc]
 
     def test_canonical_value(self) -> None:
         assert vs.Checkbox().canonical_value() is False

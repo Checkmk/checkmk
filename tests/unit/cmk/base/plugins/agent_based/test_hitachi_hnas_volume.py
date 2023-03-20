@@ -89,7 +89,7 @@ def value_store_fixture(monkeypatch):
         (
             "1071 mount_id2",
             {
-                **FILESYSTEM_DEFAULT_PARAMS,  # type: ignore
+                **FILESYSTEM_DEFAULT_PARAMS,
                 "patterns": (["1024 mount_id1", "1071 mount_id2"], []),
             },
             common_section,
@@ -133,7 +133,7 @@ def value_store_fixture(monkeypatch):
     ],
     ids=["mounted", "unformated", "patterns", "with sizes"],
 )
-def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, expected) -> None:
+def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, expected) -> None:  # type: ignore[no-untyped-def]
     """Hitachi volume check function returns expected results for different volume params"""
 
     with on_time("2021-07-22 12:00", "CET"):

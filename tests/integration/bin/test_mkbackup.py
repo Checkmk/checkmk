@@ -7,7 +7,6 @@
 
 import fcntl
 import fnmatch
-import functools
 import os
 import re
 import subprocess
@@ -330,10 +329,9 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
 def test_mkbackup_locking(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
     with simulate_backup_lock(site.id):
-        for what in (
-            _execute_backup,
-            functools.partial(_execute_restore, backup_id=backup_id),
-        ):
-            with pytest.raises(AssertionError) as locking_issue:
-                what(site)  # type: ignore
-            assert "Failed to get the exclusive backup lock" in str(locking_issue)
+        with pytest.raises(AssertionError) as locking_issue:
+            _execute_backup(site)
+        assert "Failed to get the exclusive backup lock" in str(locking_issue)
+        with pytest.raises(AssertionError) as locking_issue:
+            _execute_restore(site, backup_id=backup_id)
+        assert "Failed to get the exclusive backup lock" in str(locking_issue)

@@ -5,7 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 import pytest
@@ -36,13 +36,13 @@ from .agent_aws_fake_clients import (
 
 
 class PaginatorListFunctions:
-    def paginate(self) -> Generator[Mapping[str, Any], None, None]:
+    def paginate(self) -> Iterator[Mapping[str, Any]]:
         yield {"Functions": LambdaListFunctionsIB.create_instances(2)}
 
 
 class PaginatorProvisionedConcurrencyConfigs:
     # "FunctionName" must occur in the function signature, but is not used in the current implementation => disable warning
-    def paginate(self, FunctionName: str) -> Mapping[str, Any]:  # type: ignore
+    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:
         yield {
             "ProvisionedConcurrencyConfigs": LambdaListProvisionedConcurrencyConfigsIB.create_instances(
                 2
@@ -273,7 +273,7 @@ def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPat
     client = FakeCloudwatchClientLogsClient()
     # disable warning: "Argument 1 to "setitem" of "MonkeyPatch" has incompatible type "QueryResults"; expected "MutableMapping[str, str]"mypy(error)"
     monkeypatch.setitem(
-        FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,  # type: ignore
+        FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,  # type: ignore[arg-type]
         "status",
         "Running",
     )

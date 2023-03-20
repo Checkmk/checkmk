@@ -21,11 +21,11 @@ class TestAbsoluteDate:
         expect_validate_success(vs.AbsoluteDate(), 1662989393)
         expect_validate_failure(vs.AbsoluteDate(), None)
         expect_validate_success(vs.AbsoluteDate(allow_empty=True), None)
-        expect_validate_failure(
+        expect_validate_failure(  # type: ignore[misc]
             vs.AbsoluteDate(),
             "smth",
             match="The type of the timestamp must be int or float, but is",
-        )  # type: ignore
+        )
 
     def test_json(self) -> None:
         assert vs.AbsoluteDate().value_from_json(11) == 11

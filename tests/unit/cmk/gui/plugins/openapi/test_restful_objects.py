@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import get_args
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -87,7 +88,7 @@ def test_domain_object() -> None:
 
 
 def test_status_codes_match() -> None:
-    assert StatusCodeInt.__args__ == tuple(int(sc) for sc in StatusCode.__args__)  # type: ignore
+    assert get_args(StatusCodeInt) == tuple(int(sc) for sc in get_args(StatusCode))
 
 
 def test_no_config_generation_on_get(

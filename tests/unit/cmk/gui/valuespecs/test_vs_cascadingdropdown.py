@@ -59,12 +59,12 @@ class TestCascadingDropDown:
 
     def test_validate(self) -> None:
         expect_validate_success(get_cascading_dropdown(), "none2")
-        expect_validate_failure(  # type: ignore
+        expect_validate_failure(  # type: ignore[misc]
             get_cascading_dropdown(),
             ("long", "2", None),
             match="If value is a tuple it has to have length of two.",
         )
-        expect_validate_failure(  # type: ignore
+        expect_validate_failure(  # type: ignore[misc]
             get_cascading_dropdown(),
             ("none1", "2", None),
             match="If value is a tuple it has to have length of two.",

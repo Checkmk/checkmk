@@ -43,7 +43,7 @@ class TestAPINode:
             "labels": labels,
             "annotations": annotations,
         }
-        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore[arg-type]
         assert metadata.name == "k8"
         assert metadata.labels
         assert metadata.annotations == {
@@ -57,7 +57,7 @@ class TestAPINode:
             "creationTimestamp": "2021-05-04T09:01:13Z",
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
         }
-        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore[arg-type]
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
@@ -68,7 +68,7 @@ class TestAPINode:
             "creationTimestamp": now,
             "uid": "f57f3e64-2a89-11ec-bb97-3f4358ab72b2",
         }
-        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore[arg-type]
         assert metadata.creation_timestamp == now.timestamp()
 
     def test_parse_node_info(self, dummy_host: str, core_client: client.CoreV1Api) -> None:
@@ -153,7 +153,7 @@ class TestAPINode:
     def test_parse_conditions_no_status(
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
-        node_with_conditions = {"status": {}}  # type: ignore
+        node_with_conditions: dict = {"status": {}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
         conditions = NodeConditions.from_orm(node.status.conditions).__root__
         assert conditions is None
@@ -161,7 +161,7 @@ class TestAPINode:
     def test_parse_conditions_no_conditions(
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
-        node_with_conditions = {"status": {"conditions": []}}  # type: ignore
+        node_with_conditions: dict = {"status": {"conditions": []}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
         conditions = NodeConditions.from_orm(node.status.conditions).__root__
         assert conditions == []

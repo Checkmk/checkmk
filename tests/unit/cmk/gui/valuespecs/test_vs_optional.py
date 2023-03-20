@@ -11,7 +11,7 @@ from .utils import expect_validate_failure, expect_validate_success, request_var
 
 class TestOptional:
     def test_validate(self) -> None:
-        expect_validate_failure(vs.Optional(vs.Integer(minvalue=20)), "asd")  # type: ignore
+        expect_validate_failure(vs.Optional(vs.Integer(minvalue=20)), "asd")  # type: ignore[misc]
         expect_validate_failure(vs.Optional(vs.Integer(minvalue=20)), 10)
         expect_validate_success(vs.Optional(vs.Integer(minvalue=20)), None)
 

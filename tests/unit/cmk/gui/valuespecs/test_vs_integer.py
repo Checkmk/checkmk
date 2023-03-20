@@ -16,7 +16,7 @@ from .utils import expect_validate_failure, expect_validate_success, request_var
 
 class TestValueSpecInteger:
     def test_validate(self) -> None:
-        expect_validate_failure(vs.Integer(), "asd")  # type: ignore
+        expect_validate_failure(vs.Integer(), "asd")  # type: ignore[misc]
         expect_validate_success(vs.Integer(), 128)
         expect_validate_success(vs.Integer(minvalue=10, maxvalue=300), 128)
         expect_validate_failure(vs.Integer(minvalue=10, maxvalue=300), 333)

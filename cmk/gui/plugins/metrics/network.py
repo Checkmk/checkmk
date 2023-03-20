@@ -1358,7 +1358,7 @@ metric_info["time_to_resolve_dns"] = {
 metric_info["time_consumed_by_rule_engine"] = {
     "title": _("Time consumed by rule engine"),
     "unit": "s",
-    "color": "37/a",
+    "color": "35/a",
 }
 
 metric_info["inside_macs"] = {

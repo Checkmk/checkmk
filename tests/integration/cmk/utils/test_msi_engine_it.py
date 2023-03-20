@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
-from collections.abc import Generator
 from pathlib import Path
 from typing import Final
 
@@ -34,26 +33,16 @@ def _get_msi_file_path_standard(site: Site) -> Path:
     return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_STANDARD_MSI_FILE
 
 
-@pytest.fixture(name="out_dir")
-def fixture_out_dir(tmp_path: Path) -> Generator[Path, None, None]:
-    out_dir = tmp_path / "idts"
-    out_dir.mkdir()
-    yield out_dir
-    if out_dir.exists():
-        shutil.rmtree(str(out_dir))
-
-
 # check the export with site/bin tools
-def test_export_msi_file_table(site: Site, out_dir: Path) -> None:
+def test_export_msi_file_table(site: Site) -> None:
+    msi_in = _get_msi_file_path_standard(site)
     for name in ["File", "Property", "Component"]:
-        msi_engine._export_msi_file_table(
-            Path(site.path("bin/")),
-            name=name,
-            msi_in=_get_msi_file_path_standard(site),
-            out_dir=out_dir,
+        size = int(
+            site.python_helper("helper_test_export_msi_file_table.py")
+            .check_output(input=repr((name, str(msi_in))))
+            .rstrip()
         )
-        f = out_dir / (name + ".idt")
-        assert f.stat().st_size > 0, f"Ups for [{name}] in {f}"
+        assert size > 0, f"Ups for [{name}]"
 
 
 @pytest.fixture(name="pos_initial", scope="module")

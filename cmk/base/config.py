@@ -2557,6 +2557,9 @@ class ConfigCache:
     def is_cluster(self, host_name: HostName) -> bool:
         return host_name in self.all_configured_clusters()
 
+    def simulation_mode(self, host_name: HostName) -> bool:
+        return simulation_mode or (self.is_snmp_host(host_name) and self.stored_walk(host_name))
+
     def initialize(self) -> ConfigCache:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
@@ -3678,8 +3681,11 @@ class ConfigCache:
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
 
+    def stored_walk(self, host_name: HostName) -> bool:
+        return self.in_binary_hostlist(host_name, usewalk_hosts)
+
     def get_snmp_backend(self, host_name: HostName) -> SNMPBackendEnum:
-        if self.in_binary_hostlist(host_name, usewalk_hosts):
+        if self.stored_walk(host_name):
             return SNMPBackendEnum.STORED_WALK
 
         with_inline_snmp = ConfigCache._is_inline_backend_supported()

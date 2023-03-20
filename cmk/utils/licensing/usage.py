@@ -87,6 +87,32 @@ def try_update_license_usage(logger: logging.Logger) -> None:
 
 
 def _create_sample() -> LicenseUsageSample:
+    """Calculation of hosts and services:
+    num_hosts: Hosts
+        - that are not shadow hosts
+        - without the "cmk/licensing:excluded" label
+    num_hosts_cloud: Hosts
+        - that are not shadow hosts
+        - without the "cmk/licensing:excluded" label
+        - that monitor AWS, Azure or GCP services
+    num_hosts_shadow: Hosts
+        - that are shadow hosts
+    num_hosts_excluded: Hosts
+        - with the "cmk/licensing:excluded" label
+    num_services: Services
+        - that are not shadow services
+        - without the "cmk/licensing:excluded" label
+    num_services_cloud: Services
+        - that are not shadow services
+        - without the "cmk/licensing:excluded" label
+        - that belong to hosts that monitor AWS, Azure or GCP services
+    num_services_shadow: Services
+        - that are shadow services
+    num_services_excluded: Services
+        - with the "cmk/licensing:excluded" label
+
+    Shadow objects: 0: active, 1: passive, 2: shadow
+    """
     if not (instance_id := load_instance_id()):
         raise ValueError()
 
@@ -102,7 +128,6 @@ def _create_sample() -> LicenseUsageSample:
     )
 
     hosts_counter = _get_hosts_counter()
-    shadow_hosts_counter = _get_shadow_hosts_counter()
     services_counter = _get_services_counter()
     cloud_counter = _get_cloud_counter()
 
@@ -116,35 +141,34 @@ def _create_sample() -> LicenseUsageSample:
         edition=general_infos["edition"],
         platform=general_infos["os"],
         is_cma=cmk_version.is_cma(),
-        num_hosts=hosts_counter.included,
+        num_hosts=hosts_counter.num,
         num_hosts_cloud=cloud_counter.hosts,
-        num_hosts_excluded=hosts_counter.excluded,
-        num_hosts_shadow=shadow_hosts_counter,
-        num_services=services_counter.included,
+        num_hosts_shadow=hosts_counter.num_shadow,
+        num_hosts_excluded=hosts_counter.num_excluded,
+        num_services=services_counter.num,
         num_services_cloud=cloud_counter.services,
-        num_services_excluded=services_counter.excluded,
+        num_services_shadow=services_counter.num_shadow,
+        num_services_excluded=services_counter.num_excluded,
         sample_time=sample_time,
         timezone=time.localtime().tm_zone,
         extension_ntop=extensions.ntop,
     )
 
 
-class EntityCounter(NamedTuple):
-    included: int
-    excluded: int
+class HostsOrServicesCounter(NamedTuple):
+    num: int
+    num_shadow: int
+    num_excluded: int
 
 
-@dataclass
-class CCECounter:
-    hosts: int
-    services: int
-
-
-def _get_hosts_counter() -> EntityCounter:
-    included_num_hosts, excluded_num_hosts = _get_stats_from_livestatus(
+def _get_hosts_counter() -> HostsOrServicesCounter:
+    num_hosts, num_hosts_shadow, num_hosts_excluded = _get_stats_from_livestatus(
         (
             "GET hosts\n"
+            "Stats: host_check_type != 2\n"
             "Stats: host_labels != '{label_name}' '{label_value}'\n"
+            "StatsAnd: 2\n"
+            "Stats: check_type = 2\n"
             "Stats: host_labels = '{label_name}' '{label_value}'\n"
         ).format(
             label_name=_LICENSE_LABEL_NAME,
@@ -152,23 +176,24 @@ def _get_hosts_counter() -> EntityCounter:
         )
     )
 
-    return EntityCounter(
-        included=included_num_hosts,
-        excluded=excluded_num_hosts,
+    return HostsOrServicesCounter(
+        num=num_hosts,
+        num_shadow=num_hosts_shadow,
+        num_excluded=num_hosts_excluded,
     )
 
 
-def _get_shadow_hosts_counter() -> int:
-    "Shadow objects: 0: active, 1: passive, 2: shadow"
-    return int(livestatus.LocalConnection().query("GET hosts\nStats: check_type = 2")[0][0])
-
-
-def _get_services_counter() -> EntityCounter:
-    included_num_services, excluded_num_services = _get_stats_from_livestatus(
+def _get_services_counter() -> HostsOrServicesCounter:
+    num_services, num_services_shadow, num_services_excluded = _get_stats_from_livestatus(
         (
             "GET services\n"
+            "Stats: host_check_type != 2\n"
+            "Stats: check_type != 2\n"
             "Stats: host_labels != '{label_name}' '{label_value}'\n"
             "Stats: service_labels != '{label_name}' '{label_value}'\n"
+            "StatsAnd: 4\n"
+            "Stats: host_check_type = 2\n"
+            "Stats: check_type = 2\n"
             "StatsAnd: 2\n"
             "Stats: host_labels = '{label_name}' '{label_value}'\n"
             "Stats: service_labels = '{label_name}' '{label_value}'\n"
@@ -179,9 +204,10 @@ def _get_services_counter() -> EntityCounter:
         )
     )
 
-    return EntityCounter(
-        included=included_num_services,
-        excluded=excluded_num_services,
+    return HostsOrServicesCounter(
+        num=num_services,
+        num_shadow=num_services_shadow,
+        num_excluded=num_services_excluded,
     )
 
 
@@ -189,21 +215,26 @@ def _get_from_livestatus(query: str) -> Sequence[Sequence[Any]]:
     return livestatus.LocalConnection().query(query)
 
 
-def _get_stats_from_livestatus(query: str) -> tuple[int, int]:
+def _get_stats_from_livestatus(query: str) -> tuple[int, int, int]:
     stats = _get_from_livestatus(query)[0]
-    return int(stats[0]), int(stats[1])
+    return int(stats[0]), int(stats[1]), int(stats[2])
 
 
 def _get_services_from_livestatus() -> Sequence[Sequence[Any]]:
-    query_table = "services"
-    query_columns = "host_name service_check_command"
-    query = (
-        f"GET {query_table}"
-        f"\nColumns: {query_columns}"
+    return _get_from_livestatus(
+        "GET services"
+        "\nColumns: host_name service_check_command"
+        "\nFilter: host_check_type != 2"
+        "\nFilter: check_type != 2"
         f"\nFilter: host_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
         f"\nFilter: service_labels != '{_LICENSE_LABEL_NAME}' '{_LICENSE_LABEL_EXCLUDE}'"
     )
-    return _get_from_livestatus(query)
+
+
+@dataclass
+class CCECounter:
+    hosts: int
+    services: int
 
 
 def _parse_services_livestatus_response(response: Sequence[Sequence[Any]]) -> CCECounter:

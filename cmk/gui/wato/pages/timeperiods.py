@@ -9,15 +9,10 @@ from collections.abc import Collection
 from typing import Any
 
 import cmk.utils.defines as defines
-import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import EventRule, timeperiod_spec_alias, UserId
-
-# It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.type_defs import timeperiod_spec_alias
 
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
-import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
@@ -65,15 +60,9 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.notifications import load_notification_rules
-from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.timeperiods import find_usages_of_timeperiod
 
 TimeperiodUsage = tuple[str, str]
-
-try:
-    import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
-except ImportError:
-    alert_handling = None  # type: ignore[assignment]
 
 
 @mode_registry.register
@@ -143,7 +132,7 @@ class ModeTimeperiods(WatoMode):
         if delname in watolib.timeperiods.builtin_timeperiods():
             raise MKUserError("_delete", _("Builtin time periods can not be modified"))
 
-        usages = self._find_usages_of_timeperiod(delname)
+        usages = find_usages_of_timeperiod(delname)
         if usages:
             message = "<b>{}</b><br>{}:<ul>".format(
                 _("You cannot delete this time period."),
@@ -158,171 +147,6 @@ class ModeTimeperiods(WatoMode):
         watolib.timeperiods.save_timeperiods(self._timeperiods)
         _changes.add_change("edit-timeperiods", _("Deleted time period %s") % delname)
         return redirect(mode_url("timeperiods"))
-
-    # Check if a time period is currently in use and cannot be deleted
-    # Returns a list of two element tuples (title, url) that refer to the single occurrances.
-    #
-    # Possible usages:
-    # - 1. rules: service/host-notification/check-period
-    # - 2. user accounts (notification period)
-    # - 3. excluded by other time periods
-    # - 4. time period condition in notification and alerting rules
-    # - 5. bulk operation in notification rules
-    # - 6. time period condition in EC rules
-    # - 7. rules: time specific parameters
-    def _find_usages_of_timeperiod(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        used_in += self._find_usages_in_host_and_service_rules(tpname)
-        used_in += self._find_usages_in_users(tpname)
-        used_in += self._find_usages_in_other_timeperiods(tpname)
-        used_in += self._find_usages_in_notification_rules(tpname)
-        used_in += self._find_usages_in_alert_handler_rules(tpname)
-        used_in += self._find_usages_in_ec_rules(tpname)
-        used_in += self._find_usages_in_time_specific_parameters(tpname)
-        return used_in
-
-    def _find_usages_in_host_and_service_rules(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        rulesets = AllRulesets.load_all_rulesets()
-        for varname, ruleset in rulesets.get_rulesets().items():
-            if not isinstance(ruleset.valuespec(), watolib.timeperiods.TimeperiodSelection):
-                continue
-
-            for _folder, _rulenr, rule in ruleset.get_rules():
-                if rule.value == tpname:
-                    used_in.append(
-                        (
-                            "{}: {}".format(_("Ruleset"), ruleset.title()),
-                            folder_preserving_link(
-                                [("mode", "edit_ruleset"), ("varname", varname)]
-                            ),
-                        )
-                    )
-                    break
-        return used_in
-
-    def _find_usages_in_users(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        for userid, user in userdb.load_users().items():
-            tp = user.get("notification_period")
-            if tp == tpname:
-                used_in.append(
-                    (
-                        "{}: {}".format(_("User"), userid),
-                        folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
-                    )
-                )
-
-            for index, rule in enumerate(user.get("notification_rules", [])):
-                used_in += self._find_usages_in_notification_rule(
-                    tpname, index, rule, user_id=userid
-                )
-        return used_in
-
-    def _find_usages_in_other_timeperiods(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        for tpn, tp in watolib.timeperiods.load_timeperiods().items():
-            if tpname in tp.get("exclude", []):
-                used_in.append(
-                    (
-                        "%s: %s (%s)"
-                        % (_("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")),
-                        folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
-                    )
-                )
-        return used_in
-
-    def _find_usages_in_notification_rules(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        for index, rule in enumerate(load_notification_rules()):
-            used_in += self._find_usages_in_notification_rule(tpname, index, rule)
-        return used_in
-
-    def _find_usages_in_notification_rule(
-        self, tpname: str, index: int, rule: EventRule, user_id: UserId | None = None
-    ) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        if self._used_in_tp_condition(rule, tpname) or self._used_in_bulking(rule, tpname):
-            url = folder_preserving_link(
-                [
-                    ("mode", "notification_rule"),
-                    ("edit", index),
-                    ("user", user_id),
-                ]
-            )
-            if user_id:
-                title = _("Notification rule of user '%s'") % user_id
-            else:
-                title = _("Notification rule")
-
-            used_in.append((title, url))
-        return used_in
-
-    def _used_in_tp_condition(self, rule, tpname):
-        return rule.get("match_timeperiod") == tpname
-
-    def _used_in_bulking(self, rule, tpname):
-        bulk = rule.get("bulk")
-        if isinstance(bulk, tuple):
-            method, params = bulk
-            return method == "timeperiod" and params["timeperiod"] == tpname
-        return False
-
-    def _find_usages_in_alert_handler_rules(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        if cmk_version.is_raw_edition():
-            return used_in
-        for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
-            if rule.get("match_timeperiod") == tpname:
-                url = folder_preserving_link(
-                    [
-                        ("mode", "alert_handler_rule"),
-                        ("edit", index),
-                    ]
-                )
-                used_in.append((_("Alert handler rule"), url))
-        return used_in
-
-    def _find_usages_in_ec_rules(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        rule_packs = ec.load_rule_packs()
-        for rule_pack in rule_packs:
-            for rule_index, rule in enumerate(rule_pack["rules"]):
-                if rule.get("match_timeperiod") == tpname:
-                    url = folder_preserving_link(
-                        [
-                            ("mode", "mkeventd_edit_rule"),
-                            ("edit", rule_index),
-                            ("rule_pack", rule_pack["id"]),
-                        ]
-                    )
-                    used_in.append((_("Event console rule"), url))
-        return used_in
-
-    def _find_usages_in_time_specific_parameters(self, tpname: str) -> list[TimeperiodUsage]:
-        used_in: list[TimeperiodUsage] = []
-        rulesets = AllRulesets.load_all_rulesets()
-        for ruleset in rulesets.get_rulesets().values():
-            vs = ruleset.valuespec()
-            if not isinstance(vs, cmk.gui.plugins.wato.utils.TimeperiodValuespec):
-                continue
-            for rule_folder, rule_index, rule in ruleset.get_rules():
-                if not vs.is_active(rule.value):
-                    continue
-                for index, (rule_tp_name, _value) in enumerate(rule.value["tp_values"]):
-                    if rule_tp_name != tpname:
-                        continue
-                    edit_url = folder_preserving_link(
-                        [
-                            ("mode", "edit_rule"),
-                            ("back_mode", "timeperiods"),
-                            ("varname", ruleset.name),
-                            ("rulenr", rule_index),
-                            ("rule_folder", rule_folder.path()),
-                        ]
-                    )
-                    used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))
-        return used_in
 
     def page(self) -> None:
         with table_element(

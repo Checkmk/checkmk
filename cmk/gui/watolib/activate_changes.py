@@ -67,6 +67,7 @@ import cmk.gui.watolib.utils
 from cmk.gui import userdb
 from cmk.gui.background_job import (
     BackgroundJob,
+    BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
@@ -1352,7 +1353,10 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
         logger.debug("Another activation cleanup job is already running: Skipping this time")
         return
 
-    job.start(job.do_execute)
+    try:
+        job.start(job.do_execute)
+    except BackgroundJobAlreadyRunning:
+        logger.debug("Another activation cleanup job is already running: Skipping this time")
 
 
 @job_registry.register

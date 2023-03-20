@@ -147,6 +147,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
+from cmk.base.legacy_mk_file_check_configuration import warn_about_deprecated_check_configuration
 
 TagIDs = set[TagID]
 
@@ -516,11 +517,18 @@ def set_check_variables_for_checks() -> None:
 
 
 def load(
-    with_conf_d: bool = True, validate_hosts: bool = True, exclude_parents_mk: bool = False
+    with_conf_d: bool = True,
+    validate_hosts: bool = True,
+    exclude_parents_mk: bool = False,
+    *,
+    warn_about_deprecated_check_config: bool = False,
 ) -> None:
     _initialize_config()
 
-    _load_config(with_conf_d, exclude_parents_mk)
+    changed_var_names = _load_config(with_conf_d, exclude_parents_mk)
+    if warn_about_deprecated_check_config:
+        warn_about_deprecated_check_configuration(changed_var_names)
+
     _transform_mgmt_config_vars_from_140_to_150()
     _initialize_derived_config_variables()
 
@@ -636,7 +644,7 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
     exec(file_to_load.read_text(), into_dict, into_dict)
 
 
-def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
+def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -648,6 +656,8 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     clusters = SetFolderPathDict(clusters)
 
     global_dict = globals()
+    pre_load_vars = {**global_dict}
+
     global_dict.update(helper_vars)
 
     # Load assorted experimental parameters if any
@@ -717,6 +727,8 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     # the lookup performance and the helper_vars are no longer available anyway..
     all_hosts = list(all_hosts)
     clusters = dict(clusters)
+
+    return {k for k, v in global_dict.items() if k not in pre_load_vars or v != pre_load_vars[k]}
 
 
 def _transform_mgmt_config_vars_from_140_to_150() -> None:

@@ -65,10 +65,10 @@ class Base(t.Generic[T], abc.ABC):
         return human readable unique identifier for this element
         """
 
-    def __lt__(self, other: object) -> bool:
+    def __gt__(self, other: object) -> bool:
         if other is None or not isinstance(other, Base):
             raise ValueError()
-        return self.get_merge_key() < other.get_merge_key()
+        return self.get_merge_key() > other.get_merge_key()
 
     def __eq__(self, other: object) -> bool:
         if other is None or not isinstance(other, Base):
@@ -94,7 +94,7 @@ class BaseProtocol(t.Protocol):
     def __eq__(self, other: object) -> bool:
         ...
 
-    def __lt__(self, other: object) -> bool:
+    def __gt__(self, other: object) -> bool:
         ...
 
 
@@ -630,18 +630,17 @@ class ErrorReporter:
 # implementation details
 ################################################################################
 
-A = t.TypeVar("A", bound="ComparableA")
-B = t.TypeVar("B", bound="ComparableB")
+
+T_contra = t.TypeVar("T_contra", contravariant=True)
 
 
-class ComparableA(t.Protocol):
-    def __lt__(self, other: "ComparableB") -> bool:
+class SupportsGreaterThan(t.Protocol, t.Generic[T_contra]):
+    def __gt__(self, other: T_contra) -> bool:
         ...
 
 
-class ComparableB(t.Protocol):
-    def __lt__(self, other: ComparableA) -> bool:
-        ...
+A = t.TypeVar("A", bound=SupportsGreaterThan)
+B = t.TypeVar("B")
 
 
 def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[t.Tuple[t.Optional[A], t.Optional[B]]]:
@@ -700,15 +699,15 @@ def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[t.Tuple[t.Optional[A
 
 
 def test_merge() -> None:
-    result = merge([1, 3, 5], [2, 3, 4])  # type: ignore  # TODO: XXX: how to type?!
+    result = merge([1, 3, 5], [2, 3, 4])
     assert list(result) == [(1, None), (None, 2), (3, 3), (None, 4), (5, None)]
-    result = merge([1, 1, 5], [2, 3, 4])  # type: ignore
+    result = merge([1, 1, 5], [2, 3, 4])
     assert list(result) == [(1, None), (1, None), (None, 2), (None, 3), (None, 4), (5, None)]
-    result = merge([1], [2, 3, 4])  # type: ignore
+    result = merge([1], [2, 3, 4])
     assert list(result) == [(1, None), (None, 2), (None, 3), (None, 4)]
-    result = merge([1, 1, 1, 4], [1, 2, 3, 4])  # type: ignore
+    result = merge([1, 1, 1, 4], [1, 2, 3, 4])
     assert list(result) == [(1, 1), (1, 1), (1, 1), (None, 2), (None, 3), (4, 4)]
-    result = merge([1, 1, 1], [1, 1, 1])  # type: ignore
+    result = merge([1, 1, 1], [1, 1, 1])
     assert list(result) == [(1, 1), (1, 1), (1, 1)]
 
 

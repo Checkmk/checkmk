@@ -8,7 +8,7 @@ import subprocess
 import time
 
 import pytest
-import telnetlib3  # type: ignore
+import telnetlib3  # type: ignore[import]
 import yaml
 
 from .local import DEFAULT_CONFIG, host, main_exe, port, run_agent, user_yaml_config

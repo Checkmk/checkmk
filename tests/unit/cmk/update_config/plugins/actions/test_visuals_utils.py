@@ -27,7 +27,7 @@ def test_set_packaged_key() -> None:
         hidebutton=False,
         public=False,
         link_from={},
-    )  # type: ignore [typeddict-item]
+    )  # type: ignore[typeddict-item]
 
     _set_packaged_key({(UserId("dummy_user"), "visual_name"): view_spec})
 

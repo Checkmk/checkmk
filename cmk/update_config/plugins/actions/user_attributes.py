@@ -57,17 +57,11 @@ def _add_user_scheme_serial(user: UserSpec) -> None:
 
 def _remove_flexible_notifications(user: UserSpec) -> None:
     """Remove flexible notification configuration from users (version 2.2)"""
-    for key in [
-        "notifications_enabled",
-        "notification_period",
-        "host_notification_options",
-        "service_notification_options",
-        "notification_method",
-    ]:
-        if not key in user:
-            continue
-
-        del user[key]  # type: ignore
+    user.pop("notifications_enabled", None)
+    user.pop("notification_period", None)
+    user.pop("host_notification_options", None)
+    user.pop("service_notification_options", None)
+    user.pop("notification_method", None)
 
 
 class UpdateUserAttributes(UpdateAction):

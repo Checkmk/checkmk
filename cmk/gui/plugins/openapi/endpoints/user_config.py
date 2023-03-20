@@ -251,26 +251,26 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
     return internal_attrs
 
 
-def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
+def _internal_to_api_format(  # pylint: disable=too-many-branches
+    internal_attrs: UserSpec,
+) -> dict[str, Any]:
     api_attrs: dict[str, Any] = {}
     api_attrs.update(_idle_options_to_api_format(internal_attrs))
     api_attrs.update(_auth_options_to_api_format(internal_attrs))
     api_attrs.update(_notification_options_to_api_format(internal_attrs))
-    interface_options = _interface_options_to_api_format(
-        {  # type: ignore
-            k: v
-            for k, v in internal_attrs.items()
-            if k
-            in [
-                "ui_theme",
-                "ui_sidebar_position",
-                "nav_hide_icons_title",
-                "icons_per_item",
-                "show_mode",
-            ]
-        }
-    )
-    if interface_options:
+
+    iia = InternalInterfaceAttributes()
+    if "ui_theme" in internal_attrs:
+        iia["ui_theme"] = internal_attrs["ui_theme"]
+    if "ui_sidebar_position" in internal_attrs:
+        iia["ui_sidebar_position"] = internal_attrs["ui_sidebar_position"]
+    if "nav_hide_icons_title" in internal_attrs:
+        iia["nav_hide_icons_title"] = internal_attrs["nav_hide_icons_title"]
+    if "icons_per_item" in internal_attrs:
+        iia["icons_per_item"] = internal_attrs["icons_per_item"]
+    if "show_mode" in internal_attrs:
+        iia["show_mode"] = internal_attrs["show_mode"]  # type: ignore[typeddict-item]
+    if interface_options := _interface_options_to_api_format(iia):
         api_attrs["interface_options"] = interface_options
 
     if "email" in internal_attrs:
@@ -308,7 +308,7 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
     for attr in custom_attrs:
         if (name := attr["name"]) in internal_attrs:
             # monkeypatch a typed dict, what can go wrong
-            api_attrs[name] = internal_attrs[name]  # type:ignore[literal-required]
+            api_attrs[name] = internal_attrs[name]  # type: ignore[literal-required]
     return api_attrs
 
 
@@ -369,7 +369,7 @@ class ContactOptions(TypedDict, total=False):
     fallback_contact: bool
 
 
-def _contact_options_to_internal_format(  # type:ignore[no-untyped-def]
+def _contact_options_to_internal_format(  # type: ignore[no-untyped-def]
     contact_options: ContactOptions, current_email: str | None = None
 ):
     updated_details: dict[str, str | bool] = {}
@@ -404,7 +404,7 @@ class AuthOptions(TypedDict, total=False):
     enforce_password_change: bool
 
 
-def _update_auth_options(  # type:ignore[no-untyped-def]
+def _update_auth_options(  # type: ignore[no-untyped-def]
     internal_attrs, auth_options: AuthOptions, new_user=False
 ):
     if not auth_options:
@@ -480,7 +480,7 @@ class IdleDetails(TypedDict, total=False):
     duration: int
 
 
-def _update_idle_options(internal_attrs, idle_details: IdleDetails):  # type:ignore[no-untyped-def]
+def _update_idle_options(internal_attrs, idle_details: IdleDetails):  # type: ignore[no-untyped-def]
     if not idle_details:
         return internal_attrs
 
@@ -554,10 +554,14 @@ def _interface_options_to_api_format(
 
     if "ui_theme" not in internal_interface_options:
         attributes["interface_theme"] = "default"
+    elif internal_interface_options["ui_theme"] == "modern-dark":
+        attributes["interface_theme"] = "dark"
+    elif internal_interface_options["ui_theme"] == "facelift":
+        attributes["interface_theme"] = "light"
     else:
-        attributes["interface_theme"] = {"modern-dark": "dark", "facelift": "light"}[
-            internal_interface_options["ui_theme"]  # type: ignore
-        ]
+        # TODO: What should *really* be done in case of None?
+        pass
+
     return attributes
 
 
@@ -580,7 +584,7 @@ class NotificationDetails(TypedDict, total=False):
     disable: bool
 
 
-def _update_notification_options(  # type:ignore[no-untyped-def]
+def _update_notification_options(  # type: ignore[no-untyped-def]
     internal_attrs, notification_options: NotificationDetails
 ):
     internal_attrs["disable_notifications"] = _notification_options_to_internal_format(

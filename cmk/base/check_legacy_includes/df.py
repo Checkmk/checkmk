@@ -9,8 +9,7 @@ from typing import Any
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
-from cmk.base.config import RuleSpec
-from cmk.base.plugins.agent_based.utils.df import (  # noqa: 401
+from cmk.base.plugins.agent_based.utils.df import (  # noqa: F401
     check_filesystem_levels,
     check_inodes,
     FILESYSTEM_DEFAULT_LEVELS,
@@ -153,7 +152,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
 
     state = State.OK
     infotext = []
-    perfdata = []
+    perfdata: list[tuple[str, float, float | None, float | None, float | None, float | None]] = []
     for result in check_filesystem_levels(
         size_mb, used_max, avail_mb, used_mb, params, show_levels
     ):
@@ -173,7 +172,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
                 perfboundaries = None, None
             perfdata.append((name, value, *perflevels, *perfboundaries))
 
-    perfdata.append(("fs_size", size_mb, None, None, 0, None))  # type: ignore
+    perfdata.append(("fs_size", size_mb, None, None, 0, None))
 
     if show_reserved:
         reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
@@ -185,7 +184,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
         )
 
     if subtract_reserved or show_reserved:
-        perfdata.append(("reserved", reserved_mb))  # type: ignore
+        perfdata.append(("reserved", reserved_mb, None, None, None, None))
 
     yield int(state), ", ".join(infotext), perfdata
 

@@ -14,7 +14,7 @@ import time
 try:
     import configparser
 except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore
+    import ConfigParser as configparser  # type: ignore[import,no-redef]
 
 try:
     from typing import Any, Dict, List, Set  # noqa: F401 # pylint: disable=unused-import

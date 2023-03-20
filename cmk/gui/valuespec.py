@@ -7012,7 +7012,7 @@ class AndOrNotDropdown(DropdownChoice):
 
     def from_html_vars(self, varprefix: str) -> AndOrNotDropdownValue | None:
         varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
-        bool_val: AndOrNotLiteral = super().from_html_vars(varprefix_bool)  # type: ignore
+        bool_val: AndOrNotLiteral = super().from_html_vars(varprefix_bool)  # type: ignore[assignment]
         vs_val = self._valuespec.from_html_vars(varprefix_vs)
         return (bool_val, vs_val)
 

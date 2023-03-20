@@ -861,7 +861,7 @@ def _unpack_value(
         >>> _unpack_value(None)
 
 
-        >>> _unpack_value({'foo': 'bar'})  # type: ignore
+        >>> _unpack_value({'foo': 'bar'})  # type: ignore[arg-type]
         Traceback (most recent call last):
         ...
         ValueError: Unknown operator: {'foo': 'bar'}
@@ -995,7 +995,7 @@ def _unpack_operator(v) -> ApiOperator:  # type:ignore[no-untyped-def]
         >>> _unpack_operator(None)
         'is'
 
-        >>> _unpack_operator({"foo": "bar"})  # type: ignore
+        >>> _unpack_operator({"foo": "bar"})
         Traceback (most recent call last):
         ...
         marshmallow.exceptions.ValidationError: Unknown operator: 'foo'

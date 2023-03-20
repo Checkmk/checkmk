@@ -35,10 +35,11 @@ def _create_agent_parse_function(
 
     if original_parse_function is None:
         return lambda string_table: string_table
+    original_parse_function_not_none = original_parse_function
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table: StringTable) -> Any:
-        return original_parse_function(string_table)  # type: ignore
+        return original_parse_function_not_none(string_table)
 
     parse_function.__name__ = original_parse_function.__name__
     return parse_function

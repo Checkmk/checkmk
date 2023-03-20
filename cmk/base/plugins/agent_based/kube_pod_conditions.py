@@ -72,7 +72,7 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
     for name, cond in condition_list:
         if cond is not None:
             # keep the last-seen one
-            time_diff = now - cond.last_transition_time  # type: ignore  # SUP-12170
+            time_diff = now - cond.last_transition_time  # type: ignore[operator]  # SUP-12170
             if cond.status:
                 # TODO: CMK-11697
                 yield Result(state=State.OK, summary=condition_short_description(name, cond.status))

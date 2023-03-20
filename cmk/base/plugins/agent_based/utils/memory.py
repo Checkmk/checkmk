@@ -169,7 +169,7 @@ def check_element(
     )
 
     try:
-        mode, (warn, crit) = levels  # type: ignore
+        mode, (warn, crit) = levels  # type: ignore[misc]
     except (ValueError, TypeError):  # handle None, "ignore"
         warn, crit, levels_text = None, None, ""
     else:

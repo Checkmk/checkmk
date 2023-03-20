@@ -185,4 +185,4 @@ def request_local_attr(name: str, type_class: type[T]) -> T:
 
         return rv
 
-    return LocalProxy(partial(maybe_str_lookup, name))  # type: ignore
+    return LocalProxy(partial(maybe_str_lookup, name))  # type: ignore[return-value]

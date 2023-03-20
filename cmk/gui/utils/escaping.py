@@ -223,7 +223,7 @@ def strip_tags(ht: EscapableEntity) -> str:
 
         Everything we don't know about won't get stripped.
 
-        >>> strip_tags(object())  # type: ignore  # doctest: +ELLIPSIS
+        >>> strip_tags(object())  # type: ignore[arg-type]  # doctest: +ELLIPSIS
         '<object object at ...>'
 
     Returns:

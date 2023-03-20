@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
-import telnetlib3  # type: ignore
+import telnetlib3  # type: ignore[import]
 import yaml
 
 YamlDict = dict[str, dict[str, Any]]

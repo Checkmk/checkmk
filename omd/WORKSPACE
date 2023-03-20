@@ -15,21 +15,44 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 # https://bazelbuild.github.io/rules_foreign_cc/0.9.0/flatten.html#rules_foreign_cc_dependencies
 rules_foreign_cc_dependencies()
 
+#   .--PACKAGES------------------------------------------------------------.
+#   |           ____   _    ____ _  __    _    ____ _____ ____             |
+#   |          |  _ \ / \  / ___| |/ /   / \  / ___| ____/ ___|            |
+#   |          | |_) / _ \| |   | ' /   / _ \| |  _|  _| \___ \            |
+#   |          |  __/ ___ \ |___| . \  / ___ \ |_| | |___ ___) |           |
+#   |          |_| /_/   \_\____|_|\_\/_/   \_\____|_____|____/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 load("//packages/patch:patch_http.bzl", "patch")
-patch()
+patch(
+    version_str="2.7.6",
+    sha256="8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+)
 
 load("//packages/redis:redis_http.bzl", "redis")
-redis()
+redis(
+    version_str="6.2.6",
+    sha256="5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
+)
 
 load("//packages/openssl:openssl_http.bzl", "openssl")
-openssl()
+openssl(
+    version_str="1.1.1q",
+    sha256="d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
+)
 
 load("//packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
-xmlsec1()
+xmlsec1(
+    version_str="1.2.37",
+    sha256="5f8dfbcb6d1e56bddd0b5ec2e00a3d0ca5342a9f57c24dffde5c796b2be2871c",
+)
 
 load("//packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
-heirloommailx()
+heirloommailx(
+    version_str="12.5",
+    sha256="015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
+)
 
 load("//packages/monitoring-plugins:monitoring-plugins.bzl", "monitoring_plugins")
 monitoring_plugins(

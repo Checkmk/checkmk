@@ -32,7 +32,7 @@ UNAVAIL = 4
 
 
 class ABCFoldableTreeRenderer(abc.ABC):
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         row,
         omit_root,
@@ -119,13 +119,13 @@ class ABCFoldableTreeRenderer(abc.ABC):
 
         return state, assumed_state, node, new_subtrees
 
-    def _is_leaf(self, tree) -> bool:  # type:ignore[no-untyped-def]
+    def _is_leaf(self, tree) -> bool:  # type: ignore[no-untyped-def]
         return len(tree) == 3
 
     def _path_id(self, path):
         return "/".join(path)
 
-    def _is_open(self, path) -> bool:  # type:ignore[no-untyped-def]
+    def _is_open(self, path) -> bool:  # type: ignore[no-untyped-def]
         is_open = self._treestate.get(self._path_id(path))
         if is_open is None:
             is_open = len(path) <= self._expansion_level

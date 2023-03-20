@@ -89,7 +89,7 @@ def vs_graph_render_options(default_values=None, exclude=None):
     )
 
 
-def vs_title_infos(with_metric: bool = False):  # type:ignore[no-untyped-def]
+def vs_title_infos(with_metric: bool = False):  # type: ignore[no-untyped-def]
     choices = [
         ("plain", _("Graph title")),
         ("add_host_name", _("Host name")),
@@ -272,7 +272,7 @@ class ValuesWithUnits(CascadingDropdown):
         ]
 
     @staticmethod
-    def resolve_units(request) -> PageResult:  # type:ignore[no-untyped-def]
+    def resolve_units(request) -> PageResult:  # type: ignore[no-untyped-def]
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys

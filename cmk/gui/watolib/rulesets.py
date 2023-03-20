@@ -329,7 +329,7 @@ class RulesetCollection:
             for name in rulespec_registry.keys()
         )
 
-    def replace_folder_config(  # type:ignore[no-untyped-def]
+    def replace_folder_config(  # type: ignore[no-untyped-def]
         self, folder: CREFolder, loaded_file_config, only_varname: RulesetName | None = None
     ) -> None:
         if only_varname:
@@ -661,7 +661,7 @@ class Ruleset:
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def replace_folder_config(  # type:ignore[no-untyped-def]
+    def replace_folder_config(  # type: ignore[no-untyped-def]
         self,
         folder: CREFolder,
         rules_config,
@@ -896,7 +896,7 @@ class Ruleset:
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
-    def analyse_ruleset(  # type:ignore[no-untyped-def]
+    def analyse_ruleset(  # type: ignore[no-untyped-def]
         self,
         hostname,
         svc_desc_or_item,
@@ -1156,7 +1156,7 @@ class Rule:
             )
         )
 
-    def matches_host_and_item(  # type:ignore[no-untyped-def]
+    def matches_host_and_item(  # type: ignore[no-untyped-def]
         self,
         host_folder,
         hostname,
@@ -1177,7 +1177,7 @@ class Rule:
             )
         )
 
-    def get_mismatch_reasons(  # type:ignore[no-untyped-def]
+    def get_mismatch_reasons(  # type: ignore[no-untyped-def]
         self,
         host_folder,
         hostname,

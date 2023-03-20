@@ -392,7 +392,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             description="A list of parents of this host.",
         )
 
-    def is_visible(self, for_what, new) -> bool:  # type:ignore[no-untyped-def]
+    def is_visible(self, for_what, new) -> bool:  # type: ignore[no-untyped-def]
         return for_what != "cluster"
 
     def to_nagios(self, value):

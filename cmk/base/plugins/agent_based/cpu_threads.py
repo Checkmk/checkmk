@@ -17,7 +17,7 @@ def discover_cpu_threads(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def _get_levels(  # type:ignore[no-untyped-def]
+def _get_levels(  # type: ignore[no-untyped-def]
     params: Params, level_name
 ) -> Optional[Tuple[float, float]]:
     """

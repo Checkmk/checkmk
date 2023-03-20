@@ -101,7 +101,7 @@ def expected_output_engine():
     )
 
 
-def test_section_wmi_webservices(  # type:ignore[no-untyped-def]
+def test_section_wmi_webservices(  # type: ignore[no-untyped-def]
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # special case wmi may timeout

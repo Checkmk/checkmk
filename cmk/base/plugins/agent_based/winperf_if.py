@@ -390,7 +390,7 @@ def _normalize_name(
     return mod_name
 
 
-def _match_add_data_to_interfaces(  # type:ignore[no-untyped-def]
+def _match_add_data_to_interfaces(  # type: ignore[no-untyped-def]
     interface_names: Collection[str],
     section_teaming: SectionTeaming,
     section_extended: SectionExtended,

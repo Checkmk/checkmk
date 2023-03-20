@@ -19,7 +19,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
 )
 
 
-def result_simple(  # type:ignore[no-untyped-def]
+def result_simple(  # type: ignore[no-untyped-def]
     display_name: str, notice_only=False
 ) -> Callable[[object], Result]:
     key = "notice" if notice_only else "summary"

@@ -292,7 +292,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 % (self.trusted_cas_file, traceback.format_exc())
             ]
 
-    def _update_trusted_cas(  # type:ignore[no-untyped-def]
+    def _update_trusted_cas(  # type: ignore[no-untyped-def]
         self, current_config
     ) -> ConfigurationWarnings:
         trusted_cas: list[str] = []

@@ -715,7 +715,7 @@ class _WATOInfoStorageManager:
 class WithUniqueIdentifier(abc.ABC):
     """Provides methods for giving Hosts and Folders unique identifiers."""
 
-    def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
         self._id: None | str = None
         super().__init__(*args, **kw)
 
@@ -817,7 +817,7 @@ class WithAttributes:
 
     Used in the Host and Folder classes."""
 
-    def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kw)
         self._attributes: dict[str, Any] = {"meta_data": {}}
         self._effective_attributes = None
@@ -835,7 +835,7 @@ class WithAttributes:
     def set_attribute(self, attrname: str, value: Any) -> None:
         self._attributes[attrname] = value
 
-    def has_explicit_attribute(self, attrname) -> bool:  # type:ignore[no-untyped-def]
+    def has_explicit_attribute(self, attrname) -> bool:  # type: ignore[no-untyped-def]
         return attrname in self.attributes()
 
     def effective_attributes(self):
@@ -902,7 +902,7 @@ class BaseFolder:
     def host(self, host_name: str) -> CREHost | None:
         return self.hosts().get(host_name)
 
-    def has_host(self, host_name) -> bool:  # type:ignore[no-untyped-def]
+    def has_host(self, host_name) -> bool:  # type: ignore[no-untyped-def]
         return host_name in self.hosts()
 
     def has_hosts(self) -> bool:
@@ -923,7 +923,7 @@ class BaseFolder:
     def parent(self):
         raise NotImplementedError()
 
-    def is_same_as(self, folder) -> bool:  # type:ignore[no-untyped-def]
+    def is_same_as(self, folder) -> bool:  # type: ignore[no-untyped-def]
         return self == folder or self.path() == folder.path()
 
     def path(self):
@@ -938,10 +938,10 @@ class BaseFolder:
     def is_current_folder(self) -> bool:
         return self.is_same_as(Folder.current())
 
-    def is_parent_of(self, maybe_child) -> bool:  # type:ignore[no-untyped-def]
+    def is_parent_of(self, maybe_child) -> bool:  # type: ignore[no-untyped-def]
         return maybe_child.parent() == self
 
-    def is_transitive_parent_of(self, maybe_child) -> bool:  # type:ignore[no-untyped-def]
+    def is_transitive_parent_of(self, maybe_child) -> bool:  # type: ignore[no-untyped-def]
         return self.is_same_as(maybe_child) or (
             maybe_child.has_parent() and self.is_transitive_parent_of(maybe_child.parent())
         )
@@ -1763,7 +1763,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         title_prefix = ("\u00a0" * 6 * current_depth) + "\u2514\u2500 " if current_depth else ""
         return HTML(title_prefix + escaping.escape_attribute(self.title()))
 
-    def _walk_tree(  # type:ignore[no-untyped-def]
+    def _walk_tree(  # type: ignore[no-untyped-def]
         self, results: list[tuple[str, HTML]], current_depth, pretty
     ):
         visible_subfolders = False
@@ -1970,7 +1970,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
 
     @staticmethod
-    def find_host_by_lookup_cache(host_name) -> CREHost | None:  # type:ignore[no-untyped-def]
+    def find_host_by_lookup_cache(host_name) -> CREHost | None:  # type: ignore[no-untyped-def]
         """This function tries to create a host object using its name from a lookup cache.
         If this does not work (cache miss), the regular search for the host is started.
         If the host was found by the regular search, the lookup cache is updated accordingly."""
@@ -2600,7 +2600,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
         return hosts_by_site
 
-    def move_hosts(self, host_names, target_folder: CREFolder):  # type:ignore[no-untyped-def]
+    def move_hosts(self, host_names, target_folder: CREFolder):  # type: ignore[no-untyped-def]
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
@@ -2860,7 +2860,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # | CONSTRUCTION                                                       |
     # '--------------------------------------------------------------------'
 
-    def __init__(self, base_folder, criteria) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, base_folder, criteria) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self._criteria = criteria
         self._base_folder = base_folder
@@ -2903,7 +2903,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     def show_locking_information(self):
         pass
 
-    def has_subfolder(self, name) -> bool:  # type:ignore[no-untyped-def]
+    def has_subfolder(self, name) -> bool:  # type: ignore[no-untyped-def]
         return False
 
     def has_subfolders(self) -> bool:
@@ -3038,7 +3038,7 @@ class CREHost(WithPermissions, WithAttributes):
         return host
 
     @staticmethod
-    def host(host_name) -> CREHost | None:  # type:ignore[no-untyped-def]
+    def host(host_name) -> CREHost | None:  # type: ignore[no-untyped-def]
         return Folder.find_host_by_lookup_cache(host_name)
 
     @staticmethod
@@ -3046,14 +3046,14 @@ class CREHost(WithPermissions, WithAttributes):
         return Folder.root_folder().all_hosts_recursively()
 
     @staticmethod
-    def host_exists(host_name) -> bool:  # type:ignore[no-untyped-def]
+    def host_exists(host_name) -> bool:  # type: ignore[no-untyped-def]
         return Host.host(host_name) is not None
 
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                     |
     # '--------------------------------------------------------------------'
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, folder, host_name, attributes, cluster_nodes
     ) -> None:
         super().__init__()
@@ -3771,7 +3771,7 @@ def call_hook_hosts_changed(folder: CREFolder) -> None:
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
-def validate_all_hosts(  # type:ignore[no-untyped-def]
+def validate_all_hosts(  # type: ignore[no-untyped-def]
     hostnames: Sequence[str], force_all=False
 ) -> dict[str, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):

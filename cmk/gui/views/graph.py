@@ -136,7 +136,7 @@ multisite_builtin_views.update(
 )
 
 
-def paint_time_graph_cmk(  # type:ignore[no-untyped-def]
+def paint_time_graph_cmk(  # type: ignore[no-untyped-def]
     row,
     cell,
     resolve_combined_single_metric_spec: Callable[
@@ -222,7 +222,7 @@ def paint_time_graph_cmk(  # type:ignore[no-untyped-def]
     )
 
 
-def paint_cmk_graphs_with_timeranges(  # type:ignore[no-untyped-def]
+def paint_cmk_graphs_with_timeranges(  # type: ignore[no-untyped-def]
     row,
     cell,
     resolve_combined_single_metric_spec: Callable[

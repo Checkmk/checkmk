@@ -57,7 +57,7 @@ class HostAttributeTopic(abc.ABC):
 
 
 class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[type[HostAttributeTopic]]):
-    def plugin_name(self, instance: type[HostAttributeTopic]):  # type:ignore[no-untyped-def]
+    def plugin_name(self, instance: type[HostAttributeTopic]):  # type: ignore[no-untyped-def]
         return instance().ident
 
     def get_choices(self):
@@ -449,7 +449,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     ]
 
 
-def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
+def get_sorted_host_attributes_by_topic(  # type: ignore[no-untyped-def]
     topic_id,
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
@@ -471,7 +471,7 @@ def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
 
 # Is used for dynamic host attribute declaration (based on host tags)
 # + Kept for comatibility with pre 1.6 plugins
-def declare_host_attribute(  # type:ignore[no-untyped-def]
+def declare_host_attribute(  # type: ignore[no-untyped-def]
     a: type[ABCHostAttribute],
     show_in_table: bool = True,
     show_in_folder: bool = True,
@@ -1030,7 +1030,7 @@ def TextAttribute(
 
 
 # TODO: Kept for pre 1.6 plugin compatibility
-def NagiosTextAttribute(  # type:ignore[no-untyped-def]
+def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     name: str,
     nag_name: str,
     title: str,

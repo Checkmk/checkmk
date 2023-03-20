@@ -72,7 +72,7 @@ class VisualTypeViews(VisualType):
     def permitted_visuals(self) -> PermittedViewSpecs:
         return get_permitted_views()
 
-    def link_from(  # type:ignore[no-untyped-def]
+    def link_from(  # type: ignore[no-untyped-def]
         self, linking_view, linking_view_rows, visual, context_vars: HTTPVariables
     ) -> bool:
         """This has been implemented for HW/SW inventory views which are often useless when a host

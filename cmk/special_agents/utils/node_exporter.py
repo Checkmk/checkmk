@@ -107,7 +107,7 @@ class Uptime(pydantic.BaseModel):
 
 
 class FilesystemInfo:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, name, fstype, mountpoint, size=None, available=None, used=None
     ) -> None:
         self.name = name

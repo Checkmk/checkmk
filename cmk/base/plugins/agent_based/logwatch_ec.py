@@ -184,7 +184,7 @@ def logwatch_to_prio(level: str) -> int:
     return 4
 
 
-def _logwatch_inventory_mode_rules(  # type:ignore[no-untyped-def]
+def _logwatch_inventory_mode_rules(  # type: ignore[no-untyped-def]
     forward_settings,
 ) -> Tuple[str, Dict[str, Any]]:
     merged_rules = {}
@@ -406,7 +406,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
 
 
 class LogwatchFordwardResult:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, num_forwarded=0, num_spooled=0, num_dropped=0, exception=None
     ) -> None:
         self.num_forwarded = num_forwarded
@@ -554,7 +554,7 @@ def logwatch_shall_spool_messages(method):
     )
 
 
-def logwatch_forward_send_tcp(  # type:ignore[no-untyped-def]
+def logwatch_forward_send_tcp(  # type: ignore[no-untyped-def]
     method,
     message_chunks: Iterable[Tuple[float, int, List[str]]],
     result,
@@ -583,7 +583,7 @@ def logwatch_forward_send_tcp(  # type:ignore[no-untyped-def]
 
 # a) Rewrite chunks that have been processed partially
 # b) Write files for new chunk
-def logwatch_spool_messages(  # type:ignore[no-untyped-def]
+def logwatch_spool_messages(  # type: ignore[no-untyped-def]
     message_chunks: Iterable[Tuple[float, int, List[str]]],
     result,
     spool_path: Path,
@@ -611,7 +611,7 @@ def logwatch_spool_messages(  # type:ignore[no-untyped-def]
                 result.num_dropped += len(message_chunk)
 
 
-def logwatch_load_spooled_messages(  # type:ignore[no-untyped-def]
+def logwatch_load_spooled_messages(  # type: ignore[no-untyped-def]
     method: Tuple,
     result,
     spool_path: Path,
@@ -672,7 +672,7 @@ def logwatch_load_spooled_messages(  # type:ignore[no-untyped-def]
     return message_chunks
 
 
-def logwatch_spool_drop_messages(path: Path, result) -> int:  # type:ignore[no-untyped-def]
+def logwatch_spool_drop_messages(path: Path, result) -> int:  # type: ignore[no-untyped-def]
     messages = ast.literal_eval(path.read_text())
     result.num_dropped += len(messages)
 

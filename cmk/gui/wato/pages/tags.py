@@ -220,7 +220,7 @@ class ModeTags(ABCTagMode):
                 flash(message)
         return redirect(mode_url("tags"))
 
-    def _is_cleaning_up_user_tag_group_to_builtin(  # type:ignore[no-untyped-def]
+    def _is_cleaning_up_user_tag_group_to_builtin(  # type: ignore[no-untyped-def]
         self, del_id
     ) -> bool:
         """The "Agent type" tag group was user defined in previous versions

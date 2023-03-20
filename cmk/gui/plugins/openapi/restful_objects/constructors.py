@@ -340,11 +340,11 @@ def action_result(
 
 
 class DomainObjectMembers:
-    def __init__(self, base) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, base) -> None:  # type: ignore[no-untyped-def]
         self.base = base
         self.members: dict[str, dict[str, Any]] = {}
 
-    def object_property(  # type:ignore[no-untyped-def]
+    def object_property(  # type: ignore[no-untyped-def]
         self,
         name: str,
         value: Any,
@@ -362,7 +362,7 @@ class DomainObjectMembers:
         return self.members
 
 
-def object_property_href(  # type:ignore[no-untyped-def]
+def object_property_href(  # type: ignore[no-untyped-def]
     domain_type: DomainType,
     identifier: str,
     property_name: str,
@@ -399,7 +399,7 @@ def object_sub_property(
     return ret
 
 
-def collection_property(  # type:ignore[no-untyped-def]
+def collection_property(  # type: ignore[no-untyped-def]
     name: str,
     value: list[Any],
     base: str,

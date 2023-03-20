@@ -498,7 +498,7 @@ def _compute_curve_values_at_timestamp(
     return curve_values
 
 
-def _render_scalar_value(value, unit) -> tuple[TimeSeriesValue, str]:  # type:ignore[no-untyped-def]
+def _render_scalar_value(value, unit) -> tuple[TimeSeriesValue, str]:  # type: ignore[no-untyped-def]
     if value is None:
         return None, _("n/a")
     return value, unit["render"](value)

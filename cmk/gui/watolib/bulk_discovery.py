@@ -172,7 +172,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
-    def _initialize_statistics(self, *, num_hosts_total: int):  # type:ignore[no-untyped-def]
+    def _initialize_statistics(self, *, num_hosts_total: int):  # type: ignore[no-untyped-def]
         self._num_hosts_total = num_hosts_total
         self._num_hosts_processed = 0
         self._num_hosts_succeeded = 0
@@ -185,7 +185,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
-    def _bulk_discover_item(  # type:ignore[no-untyped-def]
+    def _bulk_discover_item(  # type: ignore[no-untyped-def]
         self,
         task: DiscoveryTask,
         mode: DiscoveryMode,
@@ -218,7 +218,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _process_discovery_results(  # type:ignore[no-untyped-def]
+    def _process_discovery_results(  # type: ignore[no-untyped-def]
         self,
         task: DiscoveryTask,
         job_interface,
@@ -246,7 +246,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels_added += result.self_new_host_labels
         self._num_host_labels_total += result.self_total_host_labels
 
-    def _process_discovery_result_for_host(  # type:ignore[no-untyped-def]
+    def _process_discovery_result_for_host(  # type: ignore[no-untyped-def]
         self, host, result: DiscoveryResult
     ) -> str:
         if result.error_text == "":

@@ -118,14 +118,14 @@ def assert_subprocess(cmd):
 class DuplicateSectionError(Exception):
     """Raised when a section is multiply-created."""
 
-    def __init__(self, section) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, section) -> None:  # type: ignore[no-untyped-def]
         super().__init__(self, "Section %r already exists" % section)
 
 
 class NoSectionError(Exception):
     """Raised when no section matches a requested option."""
 
-    def __init__(self, section) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, section) -> None:  # type: ignore[no-untyped-def]
         super().__init__(self, "No section: %r" % section)
 
 

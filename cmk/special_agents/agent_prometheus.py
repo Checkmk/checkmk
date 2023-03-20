@@ -69,7 +69,7 @@ def parse_pod_name(labels: dict[str, str], prepend_namespace: bool = False) -> s
 
 
 class CAdvisorExporter:
-    def __init__(self, api_client, options) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, api_client, options) -> None:  # type: ignore[no-untyped-def]
         self.api_client = api_client
         self.container_name_option = options.get("container_id", "short")
         self.pod_containers: dict = {}
@@ -355,13 +355,13 @@ class CAdvisorExporter:
 
 
 class KubeStateExporter:
-    def __init__(self, api_client, options: dict[str, Any]) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, api_client, options: dict[str, Any]) -> None:  # type: ignore[no-untyped-def]
         self.api_client = api_client
         self.cluster_name = options["cluster_name"]
         self.prepend_namespaces = options.get("prepend_namespaces", True)
         self.namespace_include_patterns = options.get("namespace_include_patterns", [])
 
-    def _pod_name(self, labels: dict[str, str]):  # type:ignore[no-untyped-def]
+    def _pod_name(self, labels: dict[str, str]):  # type: ignore[no-untyped-def]
         return parse_pod_name(labels, self.prepend_namespaces)
 
     # CLUSTER SECTION
@@ -829,7 +829,7 @@ class PromQLResult:
         self.labels = raw_response["metric"]
         self.internal_values = raw_response["value"]
 
-    def label_value(self, key: str, default=None) -> str:  # type:ignore[no-untyped-def]
+    def label_value(self, key: str, default=None) -> str:  # type: ignore[no-untyped-def]
         return self.labels.get(key, default)
 
     def has_labels(self, keys: list[str]) -> bool:
@@ -1205,7 +1205,7 @@ class PrometheusAPI:
     Realizes communication with the Prometheus API
     """
 
-    def __init__(self, session) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, session) -> None:  # type: ignore[no-untyped-def]
         self.session = session
 
     @property
@@ -1437,7 +1437,7 @@ class ApiData:
     Server & the Prometheus Exporters
     """
 
-    def __init__(self, api_client, exporter_options) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, api_client, exporter_options) -> None:  # type: ignore[no-untyped-def]
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:

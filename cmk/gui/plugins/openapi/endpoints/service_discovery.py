@@ -102,7 +102,7 @@ class APIDiscoveryAction(enum.Enum):
     tabula_rasa = "tabula_rasa"
 
 
-def _discovery_mode(default_mode: str):  # type:ignore[no-untyped-def]
+def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
     return fields.String(
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
         discovery which will contact the host and identify undecided and vanished services and host
@@ -511,7 +511,7 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
     raise ValueError(f"Key {internal_phase_name} not found in dict.")
 
 
-def serialize_discovery_result(  # type:ignore[no-untyped-def]
+def serialize_discovery_result(  # type: ignore[no-untyped-def]
     host: CREHost,
     discovery_result: DiscoveryResult,
 ):

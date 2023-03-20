@@ -21,7 +21,7 @@ from cmk.utils.livestatus_helpers import tables
 
 
 class Node:
-    def __init__(self, value) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, value) -> None:  # type: ignore[no-untyped-def]
         self.value = value
         self.parsed = self.parse(value)
 

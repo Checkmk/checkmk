@@ -588,7 +588,7 @@ class ModeDistributedMonitoring(WatoMode):
         return None
 
     # Mypy wants the explicit return, pylint does not like it.
-    def _action_delete(  # type:ignore[no-untyped-def] # pylint: disable=useless-return
+    def _action_delete(  # type: ignore[no-untyped-def] # pylint: disable=useless-return
         self, delete_id
     ) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available

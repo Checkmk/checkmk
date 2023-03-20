@@ -523,7 +523,7 @@ class DiscoveryPageRenderer:
                 discovery_result,
             )
 
-    def _render_host_labels(  # type:ignore[no-untyped-def]
+    def _render_host_labels(  # type: ignore[no-untyped-def]
         self,
         table,
         discovery_result: DiscoveryResult,
@@ -571,7 +571,7 @@ class DiscoveryPageRenderer:
             _("Active"),
         )
 
-    def _create_host_label_row(  # type:ignore[no-untyped-def]
+    def _create_host_label_row(  # type: ignore[no-untyped-def]
         self, table, host_labels, text
     ) -> None:
         if not host_labels:
@@ -1182,7 +1182,7 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _check_parameters_button(self, entry: CheckPreviewEntry):  # type:ignore[no-untyped-def]
+    def _check_parameters_button(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
         if not entry.ruleset_name:
             return 0
 
@@ -1442,7 +1442,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         }
 
 
-def service_page_menu(  # type:ignore[no-untyped-def]
+def service_page_menu(  # type: ignore[no-untyped-def]
     breadcrumb, host: CREHost, options: DiscoveryOptions
 ):
     menu = PageMenu(

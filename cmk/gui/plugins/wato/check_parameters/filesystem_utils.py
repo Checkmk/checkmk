@@ -61,7 +61,7 @@ def match_dual_level_type(value):
     return 0
 
 
-def _get_free_used_dynamic_valuespec(  # type:ignore[no-untyped-def]
+def _get_free_used_dynamic_valuespec(  # type: ignore[no-untyped-def]
     level_perspective: Literal["used", "free"],
     default_value=(80.0, 90.0),
     *,

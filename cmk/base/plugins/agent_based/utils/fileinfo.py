@@ -128,7 +128,7 @@ def _parse_single_row(row: List[str], header: Iterable[str]) -> Optional[FileSta
     )
 
 
-def _construct_fileinfo_item(file_stats: FileStats):  # type:ignore[no-untyped-def]
+def _construct_fileinfo_item(file_stats: FileStats):  # type: ignore[no-untyped-def]
     return FileinfoItem(
         file_stats.name,
         "missing" in file_stats.status,

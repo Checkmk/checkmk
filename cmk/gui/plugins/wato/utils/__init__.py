@@ -469,7 +469,7 @@ def MigrateNotUpdatedToIndividualOrStoredPassword(  # pylint: disable=redefined-
 _allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
 
 
-def HTTPProxyReference(  # type:ignore[no-untyped-def]
+def HTTPProxyReference(  # type: ignore[no-untyped-def]
     allowed_schemes=_allowed_schemes,
 ) -> ValueSpec:
     """Use this valuespec in case you want the user to configure a HTTP proxy
@@ -1033,7 +1033,7 @@ def valuespec_check_plugin_selection(
 
 
 class _CheckTypeHostSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -1047,7 +1047,7 @@ class _CheckTypeHostSelection(DualListChoice):
 
 
 class _CheckTypeMgmtSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -1332,7 +1332,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
     def _add_change(self, log_what, log_text):
         raise NotImplementedError()
 
-    def _generic_rule_list_actions(  # type:ignore[no-untyped-def]
+    def _generic_rule_list_actions(  # type: ignore[no-untyped-def]
         self, rules, what, what_title, save_rules
     ) -> None:
         if request.has_var("_delete"):
@@ -1833,7 +1833,7 @@ def register_notification_parameters(scriptname, valuespec):
 
 
 class DictHostTagCondition(Transform):
-    def __init__(self, title, help_txt) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, title, help_txt) -> None:  # type: ignore[no-untyped-def]
         super().__init__(
             valuespec=ListOfMultiple(
                 title=title,
@@ -2007,7 +2007,7 @@ class DictHostTagCondition(Transform):
             orientation="horizontal",
         )
 
-    def _is_or_is_not(self, **kwargs) -> DropdownChoice:  # type:ignore[no-untyped-def]
+    def _is_or_is_not(self, **kwargs) -> DropdownChoice:  # type: ignore[no-untyped-def]
         return DropdownChoice(
             choices=[
                 ("is", _("is")),
@@ -2199,7 +2199,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
 
 
 class LabelCondition(Transform):
-    def __init__(self, title, help_txt) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, title, help_txt) -> None:  # type: ignore[no-untyped-def]
         super().__init__(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -2425,14 +2425,14 @@ def get_hosts_from_checkboxes(filterfunc=None):
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         kwargs["choices"] = _hosts_and_folders.Folder.folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 
 class FolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         kwargs["choices"] = _hosts_and_folders.Folder.folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)

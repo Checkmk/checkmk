@@ -822,7 +822,7 @@ class AWSSection(DataCache):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         pass
 
-    def _get_response_content(self, response, key: str, dflt=None):  # type:ignore[no-untyped-def]
+    def _get_response_content(self, response, key: str, dflt=None):  # type: ignore[no-untyped-def]
         if dflt is None:
             dflt = []
         try:
@@ -1280,7 +1280,7 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_security_group_limits(self, security_groups) -> None:  # type:ignore[no-untyped-def]
+    def _add_security_group_limits(self, security_groups) -> None:  # type: ignore[no-untyped-def]
 
         self._add_limit(
             "",
@@ -1306,7 +1306,7 @@ class EC2Limits(AWSSectionLimits):
                 ),
             )
 
-    def _add_interface_limits(self, interfaces) -> None:  # type:ignore[no-untyped-def]
+    def _add_interface_limits(self, interfaces) -> None:  # type: ignore[no-untyped-def]
         # since there can also be interfaces which are not attached to an instance, we add these
         # limits to the host running the agent instead of to individual instances
         for iface in interfaces:
@@ -1336,7 +1336,7 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_spot_fleet_limits(self, spot_fleet_requests) -> None:  # type:ignore[no-untyped-def]
+    def _add_spot_fleet_limits(self, spot_fleet_requests) -> None:  # type: ignore[no-untyped-def]
         active_spot_fleet_requests = 0
         total_target_cap = 0
         for spot_fleet_req in spot_fleet_requests:
@@ -1405,7 +1405,7 @@ class EC2Summary(AWSSection):
 
         return self._fetch_instances_without_filter()
 
-    def _fetch_instances_filtered_by_names(  # type:ignore[no-untyped-def]
+    def _fetch_instances_filtered_by_names(  # type: ignore[no-untyped-def]
         self, col_reservations
     ) -> Sequence[Mapping[str, object]]:
         if col_reservations:
@@ -3925,7 +3925,7 @@ class CloudFront(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
-    def _get_piggyback_host_by_distribution(  # type:ignore[no-untyped-def]
+    def _get_piggyback_host_by_distribution(  # type: ignore[no-untyped-def]
         self, cloudfront_summary
     ) -> Mapping[str, str]:
         if not cloudfront_summary:
@@ -4239,7 +4239,7 @@ class DynamoDBSummary(AWSSection):
             tags.extend(self._get_response_content(page, "Tags"))
         return tags
 
-    def _describe_tables(  # type:ignore[no-untyped-def]
+    def _describe_tables(  # type: ignore[no-untyped-def]
         self, colleague_contents: AWSColleagueContents
     ):
 

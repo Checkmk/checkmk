@@ -283,40 +283,40 @@ def create_graph(name, size, bounds, v_range, legend):
     )
 
 
-def render_coordinates(v_scala, t_scala) -> None:  # type:ignore[no-untyped-def]
+def render_coordinates(v_scala, t_scala) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_coordinates({json.dumps(v_scala)}, {json.dumps(t_scala)});"
     )
 
 
-def render_curve(points, color, width=1, square=False) -> None:  # type:ignore[no-untyped-def]
+def render_curve(points, color, width=1, square=False) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def render_point(t, v, color) -> None:  # type:ignore[no-untyped-def]
+def render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         "cmk.prediction.render_point(%s, %s, %s);"
         % (json.dumps(t), json.dumps(v), json.dumps(color))
     )
 
 
-def render_area(points, color, alpha=1.0) -> None:  # type:ignore[no-untyped-def]
+def render_area(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_area({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def render_area_reverse(points, color, alpha=1.0) -> None:  # type:ignore[no-untyped-def]
+def render_area_reverse(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         "cmk.prediction.render_area_reverse(%s, %s, %f);"
         % (json.dumps(points), json.dumps(color), alpha)
     )
 
 
-def render_dual_area(  # type:ignore[no-untyped-def]
+def render_dual_area(  # type: ignore[no-untyped-def]
     lower_points, upper_points, color, alpha=1.0
 ) -> None:
     html.javascript(

@@ -84,7 +84,7 @@ class DiscoveryState:
     CUSTOM_IGNORED = "custom_ignored"
 
     @classmethod
-    def is_discovered(cls, table_source) -> bool:  # type:ignore[no-untyped-def]
+    def is_discovered(cls, table_source) -> bool:  # type: ignore[no-untyped-def]
         return table_source in [
             cls.UNDECIDED,
             cls.VANISHED,
@@ -180,7 +180,7 @@ class DiscoveryInfo(TypedDict):
 
 
 class Discovery:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         host,
         discovery_options,
@@ -203,7 +203,7 @@ class Discovery:
             )
         self.do_discovery(discovery_result)
 
-    def do_discovery(self, discovery_result: DiscoveryResult):  # type:ignore[no-untyped-def]
+    def do_discovery(self, discovery_result: DiscoveryResult):  # type: ignore[no-untyped-def]
         old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
         remove_disabled_rule: set[str] = set()
@@ -410,7 +410,7 @@ class Discovery:
                 return rule
         return None
 
-    def _get_table_target(self, entry: CheckPreviewEntry):  # type:ignore[no-untyped-def]
+    def _get_table_target(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
         if self._options.action == DiscoveryAction.FIX_ALL or (
             self._options.action == DiscoveryAction.UPDATE_SERVICES
             and self._service_is_checked(entry.check_plugin_name, entry.item)
@@ -453,7 +453,7 @@ class Discovery:
         )
 
 
-def service_discovery_call(  # type:ignore[no-untyped-def]
+def service_discovery_call(  # type: ignore[no-untyped-def]
     perform_action_call: Callable[
         [DiscoveryOptions, DiscoveryResult, NamedArg(CREHost, "host")],
         DiscoveryResult,
@@ -470,7 +470,7 @@ def service_discovery_call(  # type:ignore[no-untyped-def]
         DiscoveryResult,
     ]
 ):
-    def decorate(*args, **kwargs) -> DiscoveryResult:  # type:ignore[no-untyped-def]
+    def decorate(*args, **kwargs) -> DiscoveryResult:  # type: ignore[no-untyped-def]
         user.need_permission("wato.services")
         result = perform_action_call(*args, **kwargs)
         host: CREHost = kwargs["host"]
@@ -646,7 +646,7 @@ def _perform_update_host_labels(host, host_labels):
     )
 
 
-def _apply_state_change(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def _apply_state_change(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
     key: tuple[Any, Any],

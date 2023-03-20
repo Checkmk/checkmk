@@ -101,7 +101,7 @@ def config_no_wmi_fixture(default_yaml_config: YamlDict) -> YamlDict:
 
 
 @pytest.mark.skip
-def test_check_mk_no_wmi(  # type:ignore[no-untyped-def]
+def test_check_mk_no_wmi(  # type: ignore[no-untyped-def]
     main_exe: Path,
     config_no_wmi: YamlDict,
     data_dir: Path,

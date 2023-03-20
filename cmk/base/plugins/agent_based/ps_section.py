@@ -48,7 +48,7 @@ Section = Tuple[int, List]  # don't ask what kind of list.
 # This function is only concerned with deprecated output from psperf.bat,
 # in case of all other output it just returns info unmodified. But if it is
 # a windows output it will extract the number of cpu cores
-def _merge_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
+def _merge_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def]
     # Agent output version cmk>1.2.5
     # Assumes line = [CLUSTER, PS_INFO, COMMAND]
     has_wmic = False
@@ -67,7 +67,7 @@ def _merge_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
     return _extract_wmic_info(info)
 
 
-def _extract_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
+def _extract_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def]
     ps_result = []
     lines = iter(info)
     wmic_info: Dict[str, List] = {}
@@ -102,7 +102,7 @@ def _extract_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
     return _merge_wmic(ps_result, wmic_info, wmic_headers)
 
 
-def _merge_wmic(  # type:ignore[no-untyped-def]
+def _merge_wmic(  # type: ignore[no-untyped-def]
     ps_result, wmic_info, wmic_headers
 ) -> Tuple[int, List]:
     info = []
@@ -135,7 +135,7 @@ def _merge_wmic(  # type:ignore[no-untyped-def]
 
 
 # This mainly formats the line[1] element which contains the process info (user,...)
-def parse_process_entries(  # type:ignore[no-untyped-def]
+def parse_process_entries(  # type: ignore[no-untyped-def]
     pre_parsed,
 ) -> List[Tuple[ps.PsInfo, List[str]]]:
     parsed = []

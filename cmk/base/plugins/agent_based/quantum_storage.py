@@ -51,7 +51,7 @@ def discover_quantum_storage_status(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_quantum_storage_status(  # type:ignore[no-untyped-def]
+def check_quantum_storage_status(  # type: ignore[no-untyped-def]
     params, section: Section
 ) -> CheckResult:
     state_txt = _QUANTUM_DEVICE_STATE.get(section.state, f"Unknown [{section.state}]")

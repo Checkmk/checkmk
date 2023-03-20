@@ -53,7 +53,7 @@ class AlertmanagerAPI:
     Realizes communication with the Alertmanager API
     """
 
-    def __init__(self, session) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, session) -> None:  # type: ignore[no-untyped-def]
         self.session = session
 
     def query_static_endpoint(self, endpoint: str) -> requests.models.Response:

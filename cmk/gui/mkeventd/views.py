@@ -196,7 +196,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
 
     user_groups = set(user.contact_groups)
 
-    def is_contact(row) -> bool:  # type:ignore[no-untyped-def]
+    def is_contact(row) -> bool:  # type: ignore[no-untyped-def]
         return bool(user_groups.intersection(row["host_contact_groups"]))
 
     if rows:
@@ -1178,7 +1178,7 @@ class CommandECUpdateEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
             html.open_tr()
@@ -1269,7 +1269,7 @@ class CommandECChangeState(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_mkeventd_changestate", _("Change Event state to:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
@@ -1319,7 +1319,7 @@ class CommandECCustomAction(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         for action_id, title in action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title)
             html.br()
@@ -1366,7 +1366,7 @@ class CommandECArchiveEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_delete_event", _("Archive Event"))
 
     def _action(
@@ -1408,7 +1408,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def tables(self):
         return ["service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.help(
             _(
                 "Note: With this command you can archive all events of one host. "

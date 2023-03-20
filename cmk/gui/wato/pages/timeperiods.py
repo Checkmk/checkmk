@@ -488,7 +488,7 @@ class ModeTimeperiodImportICal(WatoMode):
     #   http://tools.ietf.org/html/rfc5545
     # TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
     # times instead of only full day events.
-    def _parse_ical(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def _parse_ical(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
         self, ical_blob: str, horizon=10
     ):
         ical: dict[str, Any] = {"raw_events": []}
@@ -547,7 +547,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 elif key == "SUMMARY":
                     event["name"] = val
 
-        def next_occurrence(start, now, freq) -> time.struct_time:  # type:ignore[no-untyped-def]
+        def next_occurrence(start, now, freq) -> time.struct_time:  # type: ignore[no-untyped-def]
             # convert struct_time to list to be able to modify it,
             # then set it to the next occurence
             t = start[:]
@@ -565,7 +565,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 raise Exception('The frequency "%s" is currently not supported' % freq)
             return time.struct_time(t)
 
-        def resolve_multiple_days(  # type:ignore[no-untyped-def]
+        def resolve_multiple_days(  # type: ignore[no-untyped-def]
             event, cur_start_time: time.struct_time
         ):
             end = time.struct_time(event["end"])
@@ -993,7 +993,7 @@ class ModeEditTimeperiod(WatoMode):
             },
         )
 
-    def _has_same_time_specs_during_whole_week(  # type:ignore[no-untyped-def]
+    def _has_same_time_specs_during_whole_week(  # type: ignore[no-untyped-def]
         self, tp_spec
     ) -> bool:
         """Put the time ranges of all weekdays into a set to reduce the duplicates to see whether

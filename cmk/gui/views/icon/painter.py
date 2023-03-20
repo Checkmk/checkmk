@@ -53,7 +53,7 @@ class PainterServiceIcons(Painter):
     def ident(self) -> str:
         return "service_icons"
 
-    def title(self, cell) -> str:  # type:ignore[no-untyped-def]
+    def title(self, cell) -> str:  # type: ignore[no-untyped-def]
         return _("Service icons")
 
     def short_title(self, cell: Cell) -> str:

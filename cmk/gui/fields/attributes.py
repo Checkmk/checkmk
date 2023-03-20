@@ -647,7 +647,7 @@ class MappingConverter(Converter):
 
     """
 
-    def __init__(self, mapping) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, mapping) -> None:  # type: ignore[no-untyped-def]
         self.mapping = mapping
 
     def to_checkmk(self, data):
@@ -904,7 +904,7 @@ class HostAttributeManagementBoardField(String):
             enum=["none", "snmp", "ipmi"],
         )
 
-    def _deserialize(  # type:ignore[no-untyped-def]
+    def _deserialize(  # type: ignore[no-untyped-def]
         self, value, attr, data, **kwargs
     ) -> typing.Any:
         # get value from api, convert it to cmk/python
@@ -913,9 +913,7 @@ class HostAttributeManagementBoardField(String):
             return None
         return deserialized
 
-    def _serialize(  # type:ignore[no-untyped-def]
-        self, value, attr, obj, **kwargs
-    ) -> str | None:
+    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
         # get value from cmk/python, convert it to api side
         serialized = super()._serialize(value, attr, obj, **kwargs)
         if serialized is None:

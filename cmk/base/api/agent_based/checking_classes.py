@@ -370,7 +370,7 @@ class Result(ResultTuple):
     ) -> "Result":
         pass
 
-    def __new__(  # type:ignore[no-untyped-def]
+    def __new__(  # type: ignore[no-untyped-def]
         cls,
         **kwargs,
     ) -> "Result":

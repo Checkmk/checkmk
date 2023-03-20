@@ -121,7 +121,7 @@ def _show_availability_options(
 
     for name, height, _show_in_reporting, vs in valuespecs:
 
-        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type:ignore[no-untyped-def]
+        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type: ignore[no-untyped-def]
             vs.render_input("avo_" + name, avoptions.get(name))
 
         html.render_floating_option(name, height, vs.title(), renderer)
@@ -343,7 +343,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
         html.body_end()
 
 
-def _page_menu_availability(  # type:ignore[no-untyped-def]
+def _page_menu_availability(  # type: ignore[no-untyped-def]
     breadcrumb: Breadcrumb,
     view,
     what: AVObjectType,
@@ -509,7 +509,7 @@ def do_render_availability(
     show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
 
 
-def render_availability_tables(  # type:ignore[no-untyped-def]
+def render_availability_tables(  # type: ignore[no-untyped-def]
     availability_tables, what, avoptions
 ) -> None:
     if not availability_tables:
@@ -657,7 +657,7 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.close_div()
 
 
-def render_availability_table(  # type:ignore[no-untyped-def]
+def render_availability_table(  # type: ignore[no-untyped-def]
     group_title, availability_table, what, avoptions
 ) -> None:
     av_table = availability.layout_availability_table(
@@ -721,7 +721,7 @@ def render_availability_table(  # type:ignore[no-untyped-def]
                 )
 
 
-def render_timeline_bar(  # type:ignore[no-untyped-def]
+def render_timeline_bar(  # type: ignore[no-untyped-def]
     timeline_layout, style, timeline_nr=0
 ) -> None:
     render_date = timeline_layout["render_date"]

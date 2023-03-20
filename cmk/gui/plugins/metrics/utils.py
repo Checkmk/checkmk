@@ -459,7 +459,7 @@ def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInf
     }
 
 
-def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type:ignore[no-untyped-def]
+def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type: ignore[no-untyped-def]
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
@@ -472,7 +472,7 @@ def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type:ignore[no-
     return scalars
 
 
-def normalize_perf_data(  # type:ignore[no-untyped-def]
+def normalize_perf_data(  # type: ignore[no-untyped-def]
     perf_data, check_command
 ) -> tuple[str, NormalizedPerfData]:
     translation_entry = perfvar_translation(perf_data[0], check_command)
@@ -929,7 +929,7 @@ def get_graph_range(
 def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
-    def eval_to_string(match) -> str:  # type:ignore[no-untyped-def]
+    def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
         expression = match.group()[2:-1]
         value, unit, _color = evaluate(expression, translated_metrics)
         if value is not None:
@@ -1241,7 +1241,7 @@ scalar_colors = {
 }
 
 
-def get_palette_color_by_index(i: int, shading="a") -> str:  # type:ignore[no-untyped-def]
+def get_palette_color_by_index(i: int, shading="a") -> str:  # type: ignore[no-untyped-def]
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return f"{color_key}/{shading}"
 

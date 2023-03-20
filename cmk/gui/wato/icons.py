@@ -25,7 +25,7 @@ class WatoIcon(Icon):
     def host_columns(self):
         return ["filename"]
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
         def may_see_hosts():
             return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
@@ -78,7 +78,7 @@ class DownloadAgentOutputIcon(Icon):
     def host_columns(self):
         return ["filename", "check_type"]
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
         return _paint_download_host_info(
             what, row, tags, custom_vars, ty="agent"
         )  # pylint: disable=no-value-for-parameter
@@ -101,7 +101,7 @@ class DownloadSnmpWalkIcon(Icon):
     def default_sort_index(self):
         return 50
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
         return _paint_download_host_info(
             what, row, tags, custom_vars, ty="walk"
         )  # pylint: disable=no-value-for-parameter

@@ -79,7 +79,7 @@ def expected_output_engine():
     return chain([re.escape(r"<<<ps:sep(9)>>>")], repeat(re_str))
 
 
-def test_section_ps(  # type:ignore[no-untyped-def]
+def test_section_ps(  # type: ignore[no-untyped-def]
     request, full_path_config, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

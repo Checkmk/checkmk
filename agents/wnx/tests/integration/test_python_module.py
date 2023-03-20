@@ -34,7 +34,7 @@ def copy_cmk_updater(source_dir: Path, target_dir: Path) -> None:
 
 
 @pytest.mark.skip
-def test_python_module(  # type:ignore[no-untyped-def]
+def test_python_module(  # type: ignore[no-untyped-def]
     main_exe: Path,
     default_yaml_config: YamlDict,
     unpack,

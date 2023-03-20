@@ -75,7 +75,7 @@ def run_proc(command: list[str], *, cwd: Path | None = None) -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def python_to_test(python_subdir, regression_data) -> Path:  # type:ignore[no-untyped-def]
+def python_to_test(python_subdir, regression_data) -> Path:  # type: ignore[no-untyped-def]
     """This is quite complicated simulator to verify python module and prepare the module for
     testing. During deployment every step will be validated, not because it is required(this method
     also contradicts a bit to the TDD philosophy), but to prevent extremely strange errors during

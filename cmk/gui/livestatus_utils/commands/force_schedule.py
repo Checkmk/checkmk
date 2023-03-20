@@ -11,7 +11,7 @@ from cmk.gui.livestatus_utils.commands.utils import to_timestamp
 from cmk.gui.logged_in import user as _user
 
 
-def force_schedule_host_check(  # type:ignore[no-untyped-def]
+def force_schedule_host_check(  # type: ignore[no-untyped-def]
     connection, host_name: str, check_time: dt.datetime
 ):
     """Schedule a forced active check of a particular host
@@ -49,7 +49,7 @@ def force_schedule_host_check(  # type:ignore[no-untyped-def]
     )
 
 
-def force_schedule_service_check(  # type:ignore[no-untyped-def]
+def force_schedule_service_check(  # type: ignore[no-untyped-def]
     connection, host_name: str, service_description: str, check_time: dt.datetime
 ):
     """Schedule a forced active check of a particular service

@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-def is_part_of_aggregation(host, service) -> bool:  # type:ignore[no-untyped-def]
+def is_part_of_aggregation(host, service) -> bool:  # type: ignore[no-untyped-def]
     if BIAggregationPacks.get_num_enabled_aggregations() == 0:
         return False
     return _get_cached_bi_compiler().is_part_of_aggregation(host, service)

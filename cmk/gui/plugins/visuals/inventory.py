@@ -219,7 +219,7 @@ class FilterInvtableAvailable(FilterOption):
         )
 
 
-def port_types(info: str):  # type:ignore[no-untyped-def]
+def port_types(info: str):  # type: ignore[no-untyped-def]
     return [
         (str(k), str(v))
         for k, v in sorted(defines.interface_port_types().items(), key=lambda t: t[0])

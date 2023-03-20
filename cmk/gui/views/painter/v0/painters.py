@@ -5186,7 +5186,7 @@ class AbstractColumnSpecificMetric(Painter):
             key=lambda x: x[1],
         )
 
-    def _render(  # type:ignore[no-untyped-def]
+    def _render(  # type: ignore[no-untyped-def]
         self, row, cell, perf_data_entries, check_command
     ) -> tuple[str, str]:
         show_metric = cell.painter_parameters()["metric"]

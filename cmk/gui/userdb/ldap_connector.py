@@ -259,7 +259,7 @@ class LDAPUserConnector(UserConnector):
 
         return cfg
 
-    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
         super().__init__(self.migrate_config(cfg))
 
         self._ldap_obj: ldap.ldapobject.ReconnectLDAPObject | None = None
@@ -495,7 +495,7 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(  # type:ignore[no-untyped-def]
+    def _bind(  # type: ignore[no-untyped-def]
         self, user_dn, password_id: password_store.PasswordId, catch=True, conn=None
     ):
         if conn is None:
@@ -1718,7 +1718,7 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
     return connection.ldap_filter(*args, **kwargs)
 
 
-def ldap_sync_simple(  # type:ignore[no-untyped-def]
+def ldap_sync_simple(  # type: ignore[no-untyped-def]
     user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str
 ):
     if attr in ldap_user:

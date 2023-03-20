@@ -226,7 +226,7 @@ class PainterInventoryTree(Painter):
 
 
 class ABCRowTable(RowTable):
-    def __init__(self, info_names, add_host_columns) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, info_names, add_host_columns) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self._info_names = info_names
         self._add_host_columns = add_host_columns
@@ -2067,7 +2067,7 @@ class PainterInvhistChanged(Painter):
     def ident(self) -> str:
         return "invhist_changed"
 
-    def title(self, cell: Cell):  # type:ignore[no-untyped-def]
+    def title(self, cell: Cell):  # type: ignore[no-untyped-def]
         return _("Changed entries")
 
     def short_title(self, cell: Cell) -> str:

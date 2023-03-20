@@ -132,7 +132,7 @@ def discover_hp_proliant_da_phydrv(section: Section) -> DiscoveryResult:
         yield Service(item=physical_drive_name)
 
 
-def check_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
+def check_hp_proliant_da_phydrv(  # type: ignore[no-untyped-def]
     item, section: Section
 ) -> CheckResult:
     if (physical_drive := section.get(item)) is None:

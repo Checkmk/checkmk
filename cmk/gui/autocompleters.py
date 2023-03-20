@@ -264,7 +264,7 @@ def label_autocompleter(value: str, params: dict) -> Choices:
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
-def _graph_choices_from_livestatus_row(  # type:ignore[no-untyped-def]
+def _graph_choices_from_livestatus_row(  # type: ignore[no-untyped-def]
     row,
 ) -> Iterable[tuple[str, str]]:
     def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:

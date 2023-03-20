@@ -1115,7 +1115,7 @@ class MultiSiteConnection(Helpers):
                 return True
         return False
 
-    def set_output_format(  # type:ignore[no-untyped-def]
+    def set_output_format(  # type: ignore[no-untyped-def]
         self, output_format: LivestatusOutputFormat
     ):
         for connected_site in self.connections:

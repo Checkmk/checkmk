@@ -149,7 +149,7 @@ def post_test():
     yield
 
 
-def test_agent_start_parameters(  # type:ignore[no-untyped-def]
+def test_agent_start_parameters(  # type: ignore[no-untyped-def]
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

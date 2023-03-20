@@ -794,7 +794,7 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-def ID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -843,7 +843,7 @@ def ID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     )
 
 
-def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1010,9 +1010,7 @@ class RegExp(TextInput):
 
         return " ".join("%s" % h for h in help_text)
 
-    def _css_classes(  # type:ignore[no-untyped-def]
-        self, case_sensitive: bool, mode: str | None
-    ):
+    def _css_classes(self, case_sensitive: bool, mode: str | None):  # type: ignore[no-untyped-def]
         classes = ["text", "regexp"]
 
         if case_sensitive is True:
@@ -1166,7 +1164,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
             raise MKUserError(varprefix, _("Invalid %s address: %s") % (ip_class_text, exc))
 
-    def _validate_value_for_both_classes(value: str, varprefix: str):  # type:ignore[no-untyped-def]
+    def _validate_value_for_both_classes(value: str, varprefix: str):  # type: ignore[no-untyped-def]
         errors = {}
         for ipc in (ipaddress.IPv4Network, ipaddress.IPv6Network):
             try:
@@ -1211,7 +1209,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
 ) -> TextInput:
-    def _validate_value(value: str, varprefix: str):  # type:ignore[no-untyped-def]
+    def _validate_value(value: str, varprefix: str):  # type: ignore[no-untyped-def]
         try:
             ipaddress.IPv4Address(value)
         except ValueError as exc:
@@ -1227,7 +1225,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     )
 
 
-def Hostname(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Hostname(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # TextInput
     allow_empty=False,
     # ValueSpec
@@ -1560,7 +1558,7 @@ def HTTPSUrl(  # pylint: disable=redefined-builtin
     )
 
 
-def CheckMKVersion(  # type:ignore[no-untyped-def]
+def CheckMKVersion(  # type: ignore[no-untyped-def]
     # ValueSpec
     title: str | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
@@ -2869,7 +2867,7 @@ class DropdownChoice(ValueSpec[T | None]):
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
-    def option_id(val) -> str:  # type:ignore[no-untyped-def]
+    def option_id(val) -> str:  # type: ignore[no-untyped-def]
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: T | None, varprefix: str) -> None:
@@ -3151,7 +3149,7 @@ MonitoringStateValue = Literal[0, 1, 2, 3]
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -3205,7 +3203,7 @@ def MonitoringState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-
 HostStateValue = Literal[0, 1, 2]
 
 
-def HostState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def HostState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -4141,7 +4139,7 @@ def _today() -> int:
 _sorted = sorted
 
 
-def Weekday(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -5488,10 +5486,10 @@ class Tuple(ValueSpec[TT]):
         return all(vs.allow_empty() for vs in self._elements)
 
     def canonical_value(self) -> TT:
-        return tuple(x.canonical_value() for x in self._elements)  # type:ignore[return-value]
+        return tuple(x.canonical_value() for x in self._elements)  # type: ignore[return-value]
 
     def default_value(self) -> TT:
-        return tuple(x.default_value() for x in self._elements)  # type:ignore[return-value]
+        return tuple(x.default_value() for x in self._elements)  # type: ignore[return-value]
 
     def render_input(self, varprefix: str, value: Any) -> None:  # pylint: disable=too-many-branches
         if self._orientation != "float":
@@ -5562,7 +5560,7 @@ class Tuple(ValueSpec[TT]):
     def mask(self, value: TT) -> TT:
         return tuple(
             el.mask(val) for _, el, val in self._iter_value(value)
-        )  # type:ignore[return-value]
+        )  # type: ignore[return-value]
 
     def value_to_html(self, value: TT) -> ValueSpecText:
         return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
@@ -5573,12 +5571,12 @@ class Tuple(ValueSpec[TT]):
     def value_from_json(self, json_value: JSONValue) -> TT:
         return tuple(
             el.value_from_json(val) for _, el, val in self._iter_value(json_value)
-        )  # type:ignore[return-value]
+        )  # type: ignore[return-value]
 
     def from_html_vars(self, varprefix: str) -> TT:
         return tuple(
             e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements)
-        )  # type:ignore[return-value]
+        )  # type: ignore[return-value]
 
     def _validate_value(self, value: TT, varprefix: str) -> None:
         for idx, el, val in self._iter_value(value):
@@ -5602,7 +5600,7 @@ class Tuple(ValueSpec[TT]):
         assert isinstance(value, tuple), f"Tuple.transform_value() got a non-tuple: {value!r}"
         return tuple(
             vs.transform_value(value[index]) for index, vs in enumerate(self._elements)
-        )  # type:ignore[return-value]
+        )  # type: ignore[return-value]
 
 
 DictionaryEntry = tuple[str, ValueSpec]
@@ -5815,7 +5813,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in section_elements
         )
 
-    def render_input_form_header(  # type:ignore[no-untyped-def]
+    def render_input_form_header(  # type: ignore[no-untyped-def]
         self, varprefix, value, title, section_elements, css
     ) -> None:
         for param, vs in self._get_elements():
@@ -7760,7 +7758,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-def SchedulePeriod(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     from_end=True,
     # CascadingDropdown
     label: str | None = None,

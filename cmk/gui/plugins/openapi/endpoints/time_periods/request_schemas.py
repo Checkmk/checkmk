@@ -22,7 +22,7 @@ class TimePeriodName(fields.String):
         "should_not_exist": "Name {name!r} already exists.",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         example,
         required=True,
@@ -57,7 +57,7 @@ class TimePeriodAlias(fields.String):
         "should_not_be_builtin": "Time period alias {name!r} can't be a builtin",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         example,
         required=True,

@@ -281,7 +281,7 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type:ignore[no-untyped-def]
+def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type: ignore[no-untyped-def]
     dict_ = schema_dict.copy()
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
@@ -343,7 +343,7 @@ def attr_openapi_schema(
     return _schema_from_dict(class_name, schema)
 
 
-def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ignore[no-untyped-def]
+def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type: ignore[no-untyped-def]
     """Turn a filter-dict into a QueryExpression.
 
     Examples:

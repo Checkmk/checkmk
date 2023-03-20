@@ -165,7 +165,7 @@ _METRIC_SPECS: Mapping[str, Tuple[str, Callable]] = {
 }
 
 
-def _check_job_levels(  # type:ignore[no-untyped-def]
+def _check_job_levels(  # type: ignore[no-untyped-def]
     job: Job, metric: str, notice_only: bool = True
 ):
     label, render_func = _METRIC_SPECS[metric]

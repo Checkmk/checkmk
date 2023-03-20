@@ -45,7 +45,7 @@ def macro_mapping_from_context(
     return macro_mapping
 
 
-def render_title_with_macros_string(  # type:ignore[no-untyped-def]
+def render_title_with_macros_string(  # type: ignore[no-untyped-def]
     context: VisualContext,
     single_infos: SingleInfos,
     title: str,

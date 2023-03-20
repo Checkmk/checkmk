@@ -147,7 +147,7 @@ def use_testfiles():
 
 
 @pytest.mark.usefixtures("use_testfiles")
-def test_section_fileinfo(  # type:ignore[no-untyped-def]
+def test_section_fileinfo(  # type: ignore[no-untyped-def]
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

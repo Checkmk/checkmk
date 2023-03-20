@@ -191,7 +191,7 @@ def _get_ntop_page_menu_topics(view, host_address):
     return topics
 
 
-def _get_ntop_entry_item_link(  # type:ignore[no-untyped-def]
+def _get_ntop_entry_item_link(  # type: ignore[no-untyped-def]
     host_name: str, host_address: str, tab: str
 ):
     return make_simple_link(

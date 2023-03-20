@@ -16,7 +16,7 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 
 
 class InnovaphoneConnection:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, *, host, protocol, user, password, verify_ssl
     ) -> None:
         self._base_url = f"{protocol}://{host}"
@@ -47,7 +47,7 @@ class InnovaphoneConnection:
         return response.text
 
 
-def get_informations(  # type:ignore[no-untyped-def]
+def get_informations(  # type: ignore[no-untyped-def]
     connection: InnovaphoneConnection, name, xml_id, org_name
 ):
     url = "LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=%s" % (xml_id)

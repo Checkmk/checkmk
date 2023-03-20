@@ -141,7 +141,7 @@ class ModePredefinedConditions(SimpleListMode):
         )
         super().page()
 
-    def _show_action_cell(  # type:ignore[no-untyped-def]
+    def _show_action_cell(  # type: ignore[no-untyped-def]
         self,
         nr: int,
         table: Table,

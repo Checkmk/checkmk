@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import CascadingDropdown, DEF_VALUE, Dictionary, Sentinel
 
 
-def UpperMemoryLevels(  # type:ignore[no-untyped-def]
+def UpperMemoryLevels(  # type: ignore[no-untyped-def]
     what,
     default_percents=None,
     of_what=None,

@@ -33,7 +33,7 @@ define textbox {
     )
 
 
-def render_hostgroup(name, alias) -> None:  # type:ignore[no-untyped-def]
+def render_hostgroup(name, alias) -> None:  # type: ignore[no-untyped-def]
     global g_y
     g_y += lineheight
 

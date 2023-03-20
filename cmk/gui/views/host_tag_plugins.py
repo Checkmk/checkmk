@@ -92,7 +92,7 @@ def _cmp_host_tag(r1, r2, tgid):
     return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 
-def _get_tag_group_value(row, what, tag_group_id) -> str:  # type:ignore[no-untyped-def]
+def _get_tag_group_value(row, what, tag_group_id) -> str:  # type: ignore[no-untyped-def]
     tag_id = get_tag_groups(row, "host").get(tag_group_id)
 
     tag_group = active_config.tags.get_tag_group(tag_group_id)

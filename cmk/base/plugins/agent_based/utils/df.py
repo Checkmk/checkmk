@@ -553,7 +553,7 @@ def check_filesystem_levels(
     yield Result(state=status, summary=summary)
 
 
-def df_check_filesystem_single(  # type:ignore[no-untyped-def]
+def df_check_filesystem_single(  # type: ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     mountpoint: str,
     filesystem_size: float | None,
@@ -620,7 +620,7 @@ def df_check_filesystem_single(  # type:ignore[no-untyped-def]
         yield from check_inodes(params, inodes_total, inodes_avail)
 
 
-def df_check_filesystem_list(  # type:ignore[no-untyped-def]
+def df_check_filesystem_list(  # type: ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],

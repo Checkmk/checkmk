@@ -525,7 +525,7 @@ def _wipe_directory(path: str) -> None:
                 pass
 
 
-def _get_local_users(tar_file) -> dict[str, str | None]:  # type:ignore[no-untyped-def]
+def _get_local_users(tar_file) -> dict[str, str | None]:  # type: ignore[no-untyped-def]
     """The tar_file should contain var/check_mk/web/
 
     From there on inspect every user's cached_profile.mk to recognize if they are a users
@@ -595,7 +595,7 @@ def _update_settings_of_user(
     tar_file.extractall(d, members=user_tars)  # nosec B202
 
 
-def _cleanup_user_dir(path, is_customer_user) -> None:  # type:ignore[no-untyped-def]
+def _cleanup_user_dir(path, is_customer_user) -> None:  # type: ignore[no-untyped-def]
     for entry in os.listdir(path):
         p = path + "/" + entry
         if os.path.isdir(p):
@@ -606,7 +606,7 @@ def _cleanup_user_dir(path, is_customer_user) -> None:  # type:ignore[no-untyped
             os.remove(p)
 
 
-def is_user_file(filepath) -> bool:  # type:ignore[no-untyped-def]
+def is_user_file(filepath) -> bool:  # type: ignore[no-untyped-def]
     entry = os.path.basename(filepath)
     return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
 

@@ -1590,7 +1590,7 @@ filter_registry.register(
 )
 
 
-def filter_kubernetes_register(  # type:ignore[no-untyped-def]
+def filter_kubernetes_register(  # type: ignore[no-untyped-def]
     title: str,
     object_name: Literal["cluster", "node", "deployment", "namespace", "daemonset", "statefulset"],
 ):

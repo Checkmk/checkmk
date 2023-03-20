@@ -734,7 +734,7 @@ class Document:
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
 
-    def text_width(self, text) -> SizeMM:  # type:ignore[no-untyped-def]
+    def text_width(self, text) -> SizeMM:  # type: ignore[no-untyped-def]
         return self._canvas.stringWidth(text) / mm  # fixed: true-division
 
     # TODO: unify with render_text()
@@ -841,7 +841,7 @@ class Document:
     def close_path(self) -> None:
         self._path.close()
 
-    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type:ignore[no-untyped-def]
+    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type: ignore[no-untyped-def]
         self.save_state()
 
         # The gradient is dramatically increasing the size of the PDFs. For example a PDF with
@@ -1231,7 +1231,7 @@ class TableRenderer:
 
         self.pdf.restore_state()
 
-    def _paint_headers(  # type:ignore[no-untyped-def]
+    def _paint_headers(  # type: ignore[no-untyped-def]
         self,
         headers: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1263,7 +1263,7 @@ class TableRenderer:
                 row_oddeven="heading",
             )
 
-    def _paint_row(  # type:ignore[no-untyped-def]
+    def _paint_row(  # type: ignore[no-untyped-def]
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],

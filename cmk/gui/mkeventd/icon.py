@@ -37,7 +37,7 @@ class MkeventdIcon(Icon):
     def host_columns(self):
         return ["address", "name"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | tuple[str, str, str]:
         if not active_config.mkeventd_enabled:
@@ -106,7 +106,7 @@ class MkeventdIcon(Icon):
         return "mkeventd", title, url_prefix + url
 
 
-def _get_hostname(args, row) -> str:  # type:ignore[no-untyped-def]
+def _get_hostname(args, row) -> str:  # type: ignore[no-untyped-def]
     args_splitted = args[0].split("/")
     if args_splitted[0] == "$HOSTNAME$":
         return row["host_name"]

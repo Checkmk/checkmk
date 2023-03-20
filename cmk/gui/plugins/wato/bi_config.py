@@ -216,7 +216,7 @@ class ABCBIMode(WatoMode):
             if html.get_checkbox(varname)
         ]
 
-    def render_rule_tree(  # type:ignore[no-untyped-def]
+    def render_rule_tree(  # type: ignore[no-untyped-def]
         self, rule_id, tree_path, tree_prefix=""
     ) -> None:
         bi_pack = self._bi_packs.get_pack_of_rule(rule_id)
@@ -566,7 +566,7 @@ class ModeBIPacks(ABCBIMode):
                     HTML(", ").join(map(self._render_contact_group, pack.contact_groups)),
                 )
 
-    def _render_contact_group(self, c) -> HTML:  # type:ignore[no-untyped-def]
+    def _render_contact_group(self, c) -> HTML:  # type: ignore[no-untyped-def]
         display_name = self._contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
@@ -788,7 +788,7 @@ class ModeBIRules(ABCBIMode):
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
         self._bi_packs.save_config()
 
-    def _check_delete_rule_id_permission(self, rule_id) -> None:  # type:ignore[no-untyped-def]
+    def _check_delete_rule_id_permission(self, rule_id) -> None:  # type: ignore[no-untyped-def]
         aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(
@@ -895,7 +895,7 @@ class ModeBIRules(ABCBIMode):
             if pack_id is not self.bi_pack.id and bi_valuespecs.is_contact_for_pack(bi_pack)
         ]
 
-    def render_rules(self, title, only_unused) -> None:  # type:ignore[no-untyped-def]
+    def render_rules(self, title, only_unused) -> None:  # type: ignore[no-untyped-def]
         aggregations_that_use_rule = self._find_aggregation_rule_usages()
 
         rules = self.bi_pack.get_rules().items()
@@ -1239,7 +1239,7 @@ class ModeBIEditRule(ABCBIMode):
         return None
 
     @classmethod
-    def valuespec(cls, rule_id: str | None):  # type:ignore[no-untyped-def]
+    def valuespec(cls, rule_id: str | None):  # type: ignore[no-untyped-def]
         if rule_id:
             id_valuespec: ValueSpec = FixedValue(
                 value=rule_id,
@@ -1721,7 +1721,7 @@ class BIModeEditAggregation(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     @classmethod
-    def get_vs_aggregation(cls, aggregation_id: str | None):  # type:ignore[no-untyped-def]
+    def get_vs_aggregation(cls, aggregation_id: str | None):  # type: ignore[no-untyped-def]
         if cmk_version.is_managed_edition():
             cme_elements = managed.customer_choice_element()
         else:
@@ -2233,7 +2233,7 @@ class BIModeAggregations(ABCBIMode):
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_aggregation_rule_tree(bi_aggregation)
 
-    def render_aggregation_rule_tree(self, bi_aggregation) -> None:  # type:ignore[no-untyped-def]
+    def render_aggregation_rule_tree(self, bi_aggregation) -> None:  # type: ignore[no-untyped-def]
         toplevel_rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
         if not toplevel_rule:
             html.show_error(_("The top level rule does not exist."))

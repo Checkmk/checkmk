@@ -100,7 +100,7 @@ class EndpointAdapter(AbstractWSGIApp):
 
 
 @functools.lru_cache
-def serve_file(  # type:ignore[no-untyped-def]
+def serve_file(  # type: ignore[no-untyped-def]
     file_name: str,
     content: bytes,
     default_content_type="text/plain; charset=utf-8",

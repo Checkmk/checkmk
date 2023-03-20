@@ -150,7 +150,7 @@ def test_options_defaults() -> None:
     ("skipconsecutiveduplicated=False", 'skipconsecutiveduplicated', False),
     ("skipconsecutiveduplicated=True", 'skipconsecutiveduplicated', True),
 ])
-def test_options_setter(option_string, key, expected_value) -> None:  # type:ignore[no-untyped-def]
+def test_options_setter(option_string, key, expected_value) -> None:  # type: ignore[no-untyped-def]
     opt = lw.Options()
     opt.set_opt(option_string)
     actual_value = getattr(opt, key)
@@ -170,7 +170,7 @@ def test_options_setter_regex(option_string: str, expected_pattern: str,
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(tmpdir) -> None:  # type:ignore[no-untyped-def]
+def test_get_config_files(tmpdir) -> None:  # type: ignore[no-untyped-def]
     fake_config_dir = os.path.join(str(tmpdir), "test")
     os.mkdir(fake_config_dir)
 
@@ -277,7 +277,7 @@ def test_read_config_logfiles(parsed_config: tuple[lw.GlobalOptions, Sequence[lw
         ("local", os.path.join("/path/to/config", "logwatch.state.local")),
         ("::ffff:192.168.1.2", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
     ])
-def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(lw, "MK_VARDIR", '/path/to/config')
     fake_config = [
         lw.ClusterConfigBlock(
@@ -347,7 +347,7 @@ def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> 
         },
     }),
 ])
-def test_state_load(tmpdir, state_data, state_dict) -> None:  # type:ignore[no-untyped-def]
+def test_state_load(tmpdir, state_data, state_dict) -> None:  # type: ignore[no-untyped-def]
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
 
@@ -385,7 +385,7 @@ def test_state_load(tmpdir, state_data, state_dict) -> None:  # type:ignore[no-u
         }
     },
 ])
-def test_state_write(tmpdir, state_dict) -> None:  # type:ignore[no-untyped-def]
+def test_state_write(tmpdir, state_dict) -> None:  # type: ignore[no-untyped-def]
     # setup for writing
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
     state = lw.State(file_path)
@@ -426,7 +426,7 @@ def _cvt(path):
 
 
 # NOTE: helper for mypy
-def _end_with(actual, *, expected) -> bool:  # type:ignore[no-untyped-def]
+def _end_with(actual, *, expected) -> bool:  # type: ignore[no-untyped-def]
     if isinstance(actual, str):
         assert isinstance(expected, str)
         return actual.endswith(expected)
@@ -442,7 +442,7 @@ def _end_with(actual, *, expected) -> bool:  # type:ignore[no-untyped-def]
         (b"/symlink_to_dir/yet_another_file.log", "/symlink_to_dir/yet_another_file.log")
     ]),
 ])
-def test_find_matching_logfiles(fake_filesystem, pattern_suffix, file_suffixes) -> None:  # type:ignore[no-untyped-def]
+def test_find_matching_logfiles(fake_filesystem, pattern_suffix, file_suffixes) -> None:  # type: ignore[no-untyped-def]
     fake_fs_path_u = ensure_text(fake_filesystem)
     fake_fs_path_b = bytes(fake_filesystem, "utf-8")
     files = lw.find_matching_logfiles(fake_fs_path_u + pattern_suffix)
@@ -472,7 +472,7 @@ def test_ip_in_subnetwork() -> None:
     (b'\xFF\xFE', 'utf_16', 2),
     (b'no encoding in this file!', locale.getpreferredencoding(), 0),
 ])
-def test_log_lines_iter_encoding(monkeypatch, buff, encoding, position) -> None:  # type:ignore[no-untyped-def]
+def test_log_lines_iter_encoding(monkeypatch, buff, encoding, position) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(os, 'open', lambda *_args: None)
     monkeypatch.setattr(os, 'close', lambda *_args: None)
     monkeypatch.setattr(os, 'read', lambda *_args: buff)
@@ -730,7 +730,7 @@ def test_filter_maxcontextlines(input_lines: list[str], before: int, after: int,
                           ((str(i) for i in range(3)),
                            False,
                            ["0", "1", "2"])])
-def test_filter_consecutive_duplicates(input_lines, nocontext, expected_output) -> None:  # type:ignore[no-untyped-def]
+def test_filter_consecutive_duplicates(input_lines, nocontext, expected_output) -> None:  # type: ignore[no-untyped-def]
     assert expected_output == list(
         lw._filter_consecutive_duplicates(input_lines, nocontext)
     )

@@ -873,7 +873,7 @@ class SoapTemplates:
     )
     # fmt: on
 
-    def __init__(self, system_fields) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, system_fields) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self.login = SoapTemplates.LOGIN % system_fields
         self.systemtime = SoapTemplates.SYSTEMTIME % system_fields
@@ -1114,7 +1114,7 @@ class ESXConnection:
         if "NotAuthenticatedFault" in text:
             raise ESXCookieInvalid("No longer authenticated")
 
-    def __init__(self, address, port, opt) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, address, port, opt) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
 
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
@@ -1246,7 +1246,7 @@ class ESXConnection:
 #   '----------------------------------------------------------------------'
 
 
-def fetch_available_counters(  # type:ignore[no-untyped-def]
+def fetch_available_counters(  # type: ignore[no-untyped-def]
     connection, hostsystems
 ) -> dict[str, dict[str, list[str]]]:
     counters_available_by_host: dict[str, dict[str, list[str]]] = {}
@@ -1686,7 +1686,7 @@ def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[s
     return ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
 
-def is_placeholder_vm(devices) -> bool:  # type:ignore[no-untyped-def]
+def is_placeholder_vm(devices) -> bool:  # type: ignore[no-untyped-def]
     elements = get_pattern('<VirtualDevice xsi:type="([^"]+)', devices)
     if "VirtualDisk" not in elements:
         return True

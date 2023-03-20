@@ -134,7 +134,7 @@ def _unlocalize() -> None:
 
 
 def localize(lang: str) -> None:
-    _.cache_clear()  # type:ignore[attr-defined]
+    _.cache_clear()  # type: ignore[attr-defined]
     if lang == "en":
         _unlocalize()
         return None

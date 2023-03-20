@@ -83,7 +83,7 @@ class RenameHostsBackgroundJob(BackgroundJob):
 
 @job_registry.register
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
-    def __init__(self, host, title=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, host, title=None) -> None:  # type: ignore[no-untyped-def]
         super().__init__(title)
         self._host = host
 

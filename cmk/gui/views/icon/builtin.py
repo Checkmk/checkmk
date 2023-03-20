@@ -93,7 +93,7 @@ class ActionMenuIcon(Icon):
     def default_sort_index(self):
         return 10
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         url_vars = [
@@ -150,7 +150,7 @@ class IconImageIcon(Icon):
     def default_sort_index(self):
         return 25
 
-    def render(self, what, row, tags, custom_vars) -> None | HTML:  # type:ignore[no-untyped-def]
+    def render(self, what, row, tags, custom_vars) -> None | HTML:  # type: ignore[no-untyped-def]
         img = row[what + "_icon_image"]
         if not img:
             return None
@@ -260,7 +260,7 @@ class RuleEditorIcon(Icon):
     def service_columns(self):
         return ["description"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_check_type"] == 2:
@@ -311,7 +311,7 @@ class ManpageIcon(Icon):
     def service_columns(self):
         return ["check_command"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what == "service" and active_config.wato_enabled and user.may("wato.use"):
@@ -369,7 +369,7 @@ class AcknowledgeIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_acknowledged"]:
@@ -408,7 +408,7 @@ class PerfgraphIcon(Icon):
     def default_sort_index(self):
         return 20
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_pnpgraph_present"] == 1:
@@ -472,7 +472,7 @@ class PredictionIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # TODO: At least for interfaces we have 2 predictive values. But this icon
@@ -523,7 +523,7 @@ class CustomActionIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["action_url_expanded", "pnpgraph_present"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if display_options.enabled(display_options.X):
@@ -560,7 +560,7 @@ class LogwatchIcon(Icon):
     def service_columns(self):
         return ["host_name", "service_description", "check_command"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what != "service" or row[what + "_check_command"] not in [
@@ -782,7 +782,7 @@ class NotificationsIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Notifications disabled
@@ -823,7 +823,7 @@ class FlappingIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | tuple[str, str]:
         if row[what + "_is_flapping"]:
@@ -861,7 +861,7 @@ class StalenessIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if is_stale(row):
@@ -905,7 +905,7 @@ class ActiveChecksIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Setting of active checks modified by user
@@ -947,7 +947,7 @@ class PassiveChecksIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Passive checks disabled manually?
@@ -986,7 +986,7 @@ class NotificationPeriodIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_notification_period"]:
@@ -1020,7 +1020,7 @@ class ServicePeriodIcon(Icon):
     def default_toplevel(self):
         return True
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_service_period"]:
@@ -1050,7 +1050,7 @@ class AggregationsIcon(Icon):
     def title(cls) -> str:
         return _("Aggregations")
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Link to aggregations of the host/service
@@ -1099,7 +1099,7 @@ class StarsIcon(Icon):
     def title(cls) -> str:
         return _("Stars")
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         stars = self._get_stars()
@@ -1146,7 +1146,7 @@ class AggregationIcon(Icon):
     def host_columns(self):
         return ["check_command", "name", "address"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | tuple[str, str, str]:
         # service_check_command looks like:
@@ -1204,7 +1204,7 @@ class CrashdumpsIcon(Icon):
     def service_columns(self):
         return ["plugin_output", "state", "host_name"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | tuple[str, str] | tuple[str, str, str]:
         if (
@@ -1278,7 +1278,7 @@ class CheckPeriodIcon(Icon):
     def service_columns(self):
         return ["in_passive_check_period"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | tuple[str, str]:
         if what == "service":

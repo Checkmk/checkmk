@@ -11,7 +11,7 @@ import itertools
 import time
 import typing
 
-import feedparser  # type:ignore[import]
+import feedparser  # type: ignore[import]
 import pydantic
 
 from cmk.utils import aws_constants  # pylint: disable=[cmk-module-layer-violation]

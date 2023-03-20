@@ -301,7 +301,7 @@ def fix_if_64_highspeed(highspeed: str) -> str:
     return str(interfaces.saveint(highspeed) * 1000000)
 
 
-def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type:ignore[no-untyped-def]
+def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type: ignore[no-untyped-def]
     return (
         f"maps to {port_map.get(name, '')}"
         if name in port_map

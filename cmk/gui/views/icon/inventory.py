@@ -24,7 +24,7 @@ class InventoryIcon(Icon):
     def host_columns(self):
         return ["name"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | tuple[str, str, str]:
         if (

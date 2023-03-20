@@ -23,7 +23,7 @@ from cmk.gui.plugins.metrics.utils import (
 from cmk.gui.type_defs import SizeMM
 
 
-def render_graph_pdf(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     instance,
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,

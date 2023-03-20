@@ -228,7 +228,7 @@ def api_request_authentication() -> DictionaryEntry:
     )
 
 
-def api_request_connection_elements(  # type:ignore[no-untyped-def]
+def api_request_connection_elements(  # type: ignore[no-untyped-def]
     help_text: str, default_port: int
 ):
     return [

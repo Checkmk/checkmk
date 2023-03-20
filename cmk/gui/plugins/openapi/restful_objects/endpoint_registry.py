@@ -118,7 +118,7 @@ class EndpointRegistry:
         entry["href"] = fill_out_path_template(entry["href"], examples)
         return entry
 
-    def add_endpoint(  # type:ignore[no-untyped-def]
+    def add_endpoint(  # type: ignore[no-untyped-def]
         self,
         endpoint,  # not typed due to cyclical imports. need to refactor modules first.
         parameters: Sequence[OpenAPIParameter],
@@ -167,7 +167,7 @@ class EndpointRegistry:
             "parameters": parameters,
         }
 
-    def remove_endpoint(  # type:ignore[no-untyped-def]
+    def remove_endpoint(  # type: ignore[no-untyped-def]
         self,
         endpoint,  # not typed due to cyclical imports. need to refactor modules first.
     ) -> None:

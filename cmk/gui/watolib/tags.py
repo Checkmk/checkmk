@@ -82,7 +82,7 @@ def load_all_tag_config_read_only() -> TagConfig:
     return tag_config
 
 
-def update_tag_config(tag_config: TagConfig):  # type:ignore[no-untyped-def]
+def update_tag_config(tag_config: TagConfig):  # type: ignore[no-untyped-def]
     """Persist the tag config saving the information to the mk file
     and update the current environment
 
@@ -110,7 +110,7 @@ def load_tag_group(ident: str) -> TagGroup | None:
     return tag_config.get_tag_group(ident)
 
 
-def save_tag_group(tag_group: TagGroup):  # type:ignore[no-untyped-def]
+def save_tag_group(tag_group: TagGroup):  # type: ignore[no-untyped-def]
     """Save a new tag group
 
     Args:
@@ -132,7 +132,7 @@ def is_builtin(ident: str) -> bool:
     return tag_config.tag_group_exists(ident)
 
 
-def tag_group_exists(ident: str, builtin_included=False) -> bool:  # type:ignore[no-untyped-def]
+def tag_group_exists(ident: str, builtin_included=False) -> bool:  # type: ignore[no-untyped-def]
     """Verify if a tag group exists"""
     tag_config = load_tag_config()
     if builtin_included:
@@ -150,7 +150,7 @@ class RepairError(MKGeneralException):
     pass
 
 
-def edit_tag_group(  # type:ignore[no-untyped-def]
+def edit_tag_group(  # type: ignore[no-untyped-def]
     ident: str, edited_group: TagGroup, allow_repair=False
 ):
     """Update attributes of a tag group & update the relevant positions which used the relevant tag group
@@ -188,7 +188,7 @@ def edit_tag_group(  # type:ignore[no-untyped-def]
     update_tag_config(tag_config)
 
 
-def identify_modified_tags(  # type:ignore[no-untyped-def]
+def identify_modified_tags(  # type: ignore[no-untyped-def]
     updated_group: TagGroup, old_group: TagGroup
 ):
     """Identify which ids were changed and which ids are to be deleted

@@ -404,7 +404,7 @@ OPTIONS: ReDocSpec = {
 __version__ = "1.0"
 
 
-def make_spec(options: ReDocSpec):  # type:ignore[no-untyped-def]
+def make_spec(options: ReDocSpec):  # type: ignore[no-untyped-def]
     return apispec.APISpec(
         "Checkmk REST-API",
         __version__,

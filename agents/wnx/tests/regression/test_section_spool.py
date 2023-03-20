@@ -68,7 +68,7 @@ def manage_spoolfile(request):
         os.unlink(filename)
 
 
-def test_section_spool(  # type:ignore[no-untyped-def]
+def test_section_spool(  # type: ignore[no-untyped-def]
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

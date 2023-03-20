@@ -71,7 +71,7 @@ class HtpasswdUserConnector(UserConnector):
     def short_title(cls) -> str:
         return _("htpasswd")
 
-    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
         super().__init__(cfg)
         self._htpasswd = Htpasswd(Path(cmk.utils.paths.htpasswd_file))
 

@@ -78,7 +78,7 @@ class ServiceStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(  # type:ignore[no-untyped-def]
+    def get_parts_data(  # type: ignore[no-untyped-def]
         self, general_url_vars
     ) -> list[tuple[str, str, int, str]]:
         return [
@@ -138,7 +138,7 @@ class EventStats(NamedTuple):
     unknown: int
     critical: int
 
-    def get_parts_data(  # type:ignore[no-untyped-def]
+    def get_parts_data(  # type: ignore[no-untyped-def]
         self, general_url_vars
     ) -> list[tuple[str, str, int, str]]:
         return [

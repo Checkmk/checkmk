@@ -78,7 +78,7 @@ min_resize_width = 50
 min_resize_height = 6
 
 
-def host_service_graph_popup_cmk(  # type:ignore[no-untyped-def]
+def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
     site,
     host_name,
     service_description,
@@ -545,7 +545,7 @@ def _graph_padding_styles(graph_render_options: GraphRenderOptions) -> str:
     return "padding: %0.2fex %0.2fex %0.2fex %0.2fex;" % _graph_margin_ex(graph_render_options)
 
 
-def _graph_margin_ex(  # type:ignore[no-untyped-def]
+def _graph_margin_ex(  # type: ignore[no-untyped-def]
     graph_render_options: GraphRenderOptions, defaults=(8, 16, 4, 8)
 ) -> Bounds:
     """Return 4-Tuple for top, right, bottom, left spacing"""

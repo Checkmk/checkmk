@@ -328,7 +328,7 @@ def _get_builtin_roles() -> Roles:
 
 
 class UserConnector(abc.ABC):
-    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
         self._config = cfg
 
     @classmethod
@@ -377,7 +377,7 @@ class UserConnector(abc.ABC):
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(  # type:ignore[no-untyped-def]
+    def do_sync(  # type: ignore[no-untyped-def]
         self,
         *,
         add_to_changelog: bool,

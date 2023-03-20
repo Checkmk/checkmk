@@ -127,7 +127,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
 
 # ALREADY MIGRATED
-def check_cpu_util_unix(  # type:ignore[no-untyped-def]
+def check_cpu_util_unix(  # type: ignore[no-untyped-def]
     values: CPUInfo, params, cores=None, values_counter=True
 ):
     this_time = time.time()

@@ -302,7 +302,7 @@ TEMPLATES = {
 }
 
 
-def _to_env(value) -> str:  # type:ignore[no-untyped-def]
+def _to_env(value) -> str:  # type: ignore[no-untyped-def]
     if isinstance(value, (list, dict)):
         return json.dumps(value)
 
@@ -401,7 +401,7 @@ def _transform_params(param_list):
     }
 
 
-def code_samples(  # type:ignore[no-untyped-def]
+def code_samples(  # type: ignore[no-untyped-def]
     endpoint,
     header_params,
     path_params,
@@ -592,7 +592,7 @@ def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type:ignore[no-untyped-def]
+def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type: ignore[no-untyped-def]
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

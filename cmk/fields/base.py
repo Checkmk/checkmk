@@ -251,7 +251,7 @@ class UniqueFields:
         ),
     }
 
-    def _verify_unique_schema_entries(  # type:ignore[no-untyped-def]
+    def _verify_unique_schema_entries(  # type: ignore[no-untyped-def]
         self: HasMakeError, value, _fields
     ) -> None:
         required_fields = tuple(name for name, field in _fields.items() if field.required)

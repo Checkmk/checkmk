@@ -182,7 +182,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type:ignore[no-untyped-def]
+def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: ignore[no-untyped-def]
     from cmk.utils.livestatus_helpers.queries import Query
 
     from cmk.gui.plugins.openapi.utils import create_url

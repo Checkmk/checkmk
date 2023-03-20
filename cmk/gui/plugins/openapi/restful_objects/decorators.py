@@ -1015,7 +1015,7 @@ class Endpoint:
             )
         return path
 
-    def make_url(self, parameter_values: dict[str, Any]):  # type:ignore[no-untyped-def]
+    def make_url(self, parameter_values: dict[str, Any]):  # type: ignore[no-untyped-def]
         return self.path.format(**parameter_values)
 
     def _path_item(
@@ -1312,7 +1312,7 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
     return description
 
 
-def _verify_parameters(  # type:ignore[no-untyped-def]
+def _verify_parameters(  # type: ignore[no-untyped-def]
     path: str,
     path_schema: type[Schema] | None,
 ):
@@ -1400,7 +1400,7 @@ def _add_tag(tag: OpenAPITag, tag_group: str | None = None) -> None:
         _assign_to_tag_group(tag_group, name)
 
 
-def _schema_name(schema_name: str):  # type:ignore[no-untyped-def]
+def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]
     """Remove the suffix 'Schema' from a schema-name.
 
     Examples:
@@ -1422,7 +1422,7 @@ def _schema_name(schema_name: str):  # type:ignore[no-untyped-def]
     return schema_name[:-6] if schema_name.endswith("Schema") else schema_name
 
 
-def _schema_definition(schema_name: str):  # type:ignore[no-untyped-def]
+def _schema_definition(schema_name: str):  # type: ignore[no-untyped-def]
     ref = f"#/components/schemas/{_schema_name(schema_name)}"
     return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
 

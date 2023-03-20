@@ -150,7 +150,7 @@ class ABCConfigDomain(abc.ABC):
         ]
 
     @classmethod
-    def get_domain_settings(cls, change) -> SerializedSettings:  # type:ignore[no-untyped-def]
+    def get_domain_settings(cls, change) -> SerializedSettings:  # type: ignore[no-untyped-def]
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod

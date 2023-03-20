@@ -105,7 +105,7 @@ class GUIViewRenderer(ABCViewRenderer):
         super().__init__(view)
         self._show_buttons = show_buttons
 
-    def render(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def render(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,
@@ -427,7 +427,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_dropdowns_context(self, rows: Rows) -> list[PageMenuDropdown]:
         return get_context_page_menu_dropdowns(self.view, rows, mobile=False)
 
-    def _page_menu_dropdowns_ntop(  # type:ignore[no-untyped-def]
+    def _page_menu_dropdowns_ntop(  # type: ignore[no-untyped-def]
         self, host_address
     ) -> PageMenuDropdown:
         return get_ntop_page_menu_dropdown(self.view, host_address)

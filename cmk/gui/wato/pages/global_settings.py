@@ -555,7 +555,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
 
-def is_a_checkbox(vs) -> bool:  # type:ignore[no-untyped-def]
+def is_a_checkbox(vs) -> bool:  # type: ignore[no-untyped-def]
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True

@@ -83,7 +83,7 @@ def manage_ohm_binaries():
         it_utils.remove_files(target_dir, binaries)
 
 
-def test_section_openhardwaremonitor(  # type:ignore[no-untyped-def]
+def test_section_openhardwaremonitor(  # type: ignore[no-untyped-def]
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     required_lines = 2

@@ -932,8 +932,8 @@ def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledR
             continue
         prefix = common_prefix(new_id, set(ref_ids))
 
-        insert_location = ref_ids[prefix]  # type:ignore[index]
-        nodes_to_insert = other_ids[new_id[: len(prefix) + 1]]  # type:ignore[index, arg-type]
+        insert_location = ref_ids[prefix]  # type: ignore[index]
+        nodes_to_insert = other_ids[new_id[: len(prefix) + 1]]  # type: ignore[index, arg-type]
         assert isinstance(insert_location, BICompiledRule)
         insert_location.nodes.append(nodes_to_insert)
         mod_idents = reference_branch.get_identifiers((), set())
@@ -967,7 +967,7 @@ class PainterAggrTreestateBoxed(Painter):
         return render_tree_json(row)
 
 
-def render_tree_json(row) -> dict[str, Any]:  # type:ignore[no-untyped-def]
+def render_tree_json(row) -> dict[str, Any]:  # type: ignore[no-untyped-def]
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     if expansion_level != user.bi_expansion_level:
@@ -975,7 +975,7 @@ def render_tree_json(row) -> dict[str, Any]:  # type:ignore[no-untyped-def]
         user.set_tree_states("bi", treestate)
         user.save_tree_states()
 
-    def render_node_json(tree, show_host) -> dict[str, Any]:  # type:ignore[no-untyped-def]
+    def render_node_json(tree, show_host) -> dict[str, Any]:  # type: ignore[no-untyped-def]
         is_leaf = len(tree) == 3
         if is_leaf:
             service = tree[2].get("service")
@@ -1012,7 +1012,7 @@ def render_tree_json(row) -> dict[str, Any]:  # type:ignore[no-untyped-def]
         json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
 
-    def render_subtree_json(node, path, show_host) -> dict[str, Any]:  # type:ignore[no-untyped-def]
+    def render_subtree_json(node, path, show_host) -> dict[str, Any]:  # type: ignore[no-untyped-def]
         json_node = render_node_json(node, show_host)
 
         is_leaf = len(node) == 3
@@ -1107,7 +1107,7 @@ class CommandFreezeAggregation(Command):
         """View name to show a view exclusive command for"""
         return "aggr_frozen_diff"
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.div(
             html.render_button(self._button_name, _("Freeze selected"), cssclass="hot"),
             class_="group",

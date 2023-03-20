@@ -899,7 +899,7 @@ class Username(fields.String):
         "invalid_name": "Username {username!r} is not a valid checkmk username",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         example,
         required=True,
@@ -940,7 +940,7 @@ class UserRoleID(fields.String):
         "should_be_builtin": "The role should be a builtin role but it's not: {role!r}",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
         userrole_type: Literal["should_be_custom", "should_be_builtin", "ignore"] = "ignore",
@@ -951,7 +951,7 @@ class UserRoleID(fields.String):
         self.presence = presence
         self.userrole_type = userrole_type
 
-    def _validate(self, value) -> None:  # type:ignore[no-untyped-def]
+    def _validate(self, value) -> None:  # type: ignore[no-untyped-def]
         super()._validate(value)
 
         if self.presence == "should_not_exist":
@@ -2041,7 +2041,7 @@ class PermissionField(fields.String):
         "invalid_permission": "The specified permission name doesn't exist: {value!r}",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, required=True, validate=None, **kwargs
     ) -> None:
         super().__init__(
@@ -2052,7 +2052,7 @@ class PermissionField(fields.String):
             **kwargs,
         )
 
-    def _validate(self, value) -> None:  # type:ignore[no-untyped-def]
+    def _validate(self, value) -> None:  # type: ignore[no-untyped-def]
         super()._validate(value)
         if value not in permission_registry:
             raise self.make_error("invalid_permission", value=value)

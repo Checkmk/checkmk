@@ -144,7 +144,7 @@ def _get_relevant_part_of_speed_info(speed_info: StringTable, offset: int) -> St
     return speed_info
 
 
-def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-untyped-def]
+def parse_brocade_fcport(string_table) -> Section | None:  # type: ignore[no-untyped-def]
     if_info: StringTable = string_table[0]
     link_info: StringTable = string_table[1]
     speed_info: StringTable = string_table[2]

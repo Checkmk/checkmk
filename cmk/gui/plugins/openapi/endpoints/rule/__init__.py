@@ -269,7 +269,7 @@ def show_rule(param):
     return serve_json(_serialize_rule(rule_entry))
 
 
-def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type:ignore[no-untyped-def]
+def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type: ignore[no-untyped-def]
     if all_rulesets is None:
         all_rulesets = AllRulesets.load_all_rulesets()
 

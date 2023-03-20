@@ -65,7 +65,7 @@ def discover_aws_ebs_limits(section: AWSLimitsByRegion) -> DiscoveryResult:
     yield from (Service(item=region) for region in section)
 
 
-def check_aws_ebs_limits(  # type:ignore[no-untyped-def]
+def check_aws_ebs_limits(  # type: ignore[no-untyped-def]
     item: str, params: Mapping[str, Any], section: AWSLimitsByRegion
 ):
     if (region_limits := section.get(item)) is not None:

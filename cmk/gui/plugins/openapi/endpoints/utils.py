@@ -90,7 +90,7 @@ def serialize_group(name: GroupName) -> Any:
     return _serializer
 
 
-def update_groups(  # type:ignore[no-untyped-def]
+def update_groups(  # type: ignore[no-untyped-def]
     group_type: GroupType, entries: list[dict[str, Any]]
 ):
     groups = []
@@ -171,7 +171,7 @@ def _retrieve_group(
 
 
 @contextlib.contextmanager
-def may_fail(  # type:ignore[no-untyped-def]
+def may_fail(  # type: ignore[no-untyped-def]
     exc_type: type[Exception] | tuple[type[Exception], ...],
     status: int | None = None,
 ):
@@ -248,7 +248,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
     return attributes
 
 
-def group_edit_details(body) -> GroupSpec:  # type:ignore[no-untyped-def]
+def group_edit_details(body) -> GroupSpec:  # type: ignore[no-untyped-def]
     group_details = {k: v for k, v in body.items() if k != "customer"}
 
     if version.is_managed_edition() and "customer" in body:
@@ -256,7 +256,7 @@ def group_edit_details(body) -> GroupSpec:  # type:ignore[no-untyped-def]
     return group_details
 
 
-def updated_group_details(  # type:ignore[no-untyped-def]
+def updated_group_details(  # type: ignore[no-untyped-def]
     name: GroupName, group_type: GroupType, changed_details
 ) -> GroupSpec:
     """Updates the group details without saving

@@ -88,7 +88,7 @@ if cmk_version.is_managed_edition():
 
 
 class LDAPConnectionValuespec(MigrateNotUpdated):
-    def __init__(self, new, connection_id) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, new, connection_id) -> None:  # type: ignore[no-untyped-def]
         self._new = new
         self._connection_id = connection_id
         self._connection = get_connection(self._connection_id)

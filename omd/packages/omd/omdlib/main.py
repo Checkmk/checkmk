@@ -2918,7 +2918,7 @@ def main_update(  # pylint: disable=too-many-branches
     stop_logging()
 
 
-def _update_cmk_core_config(site: SiteContext):  # type:ignore[no-untyped-def]
+def _update_cmk_core_config(site: SiteContext):  # type: ignore[no-untyped-def]
     if site.conf["CORE"] == "none":
         return  # No core config is needed in this case
 
@@ -3259,7 +3259,7 @@ def main_su(
         bail_out("Cannot open a shell for user %s" % site.name)
 
 
-def _try_backup_site_to_tarfile(  # type:ignore[no-untyped-def]
+def _try_backup_site_to_tarfile(  # type: ignore[no-untyped-def]
     fh: io.BufferedWriter | BinaryIO,
     tar_mode: str,
     options: CommandOptions,

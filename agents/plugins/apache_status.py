@@ -118,6 +118,7 @@ def try_detect_servers(ssl_ports):
         "httpd-prefork",
         "httpd2-prefork",
         "httpd2-worker",
+        "httpd-worker",
         "httpd.worker",
         "httpd-event",
         "fcgi-pm",

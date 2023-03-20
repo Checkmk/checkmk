@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "netapp_api_vs_traffic"
 
 freeze_time = "2001-09-09T01:46:40"

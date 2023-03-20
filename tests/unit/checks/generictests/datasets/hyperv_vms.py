@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
-_defaults = {
+from typing import Any
+
+_defaults: dict[str, Any] = {
     "FastSaved": 0,
     "FastSavedCritical": 2,
     "FastSaving": 0,

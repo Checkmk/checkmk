@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "f5_bigip_chassis_temp"
 
 info = [["1", "30"], ["2", "32"], ["3", "36"], ["4", "41"], ["5", "41"]]

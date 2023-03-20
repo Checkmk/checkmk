@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "checkpoint_packets"
 
 info = [[["1", "2", "3", "4"]], ["5", "6"]]

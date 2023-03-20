@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "hp_proliant_cpu"
 
 info = [["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]]

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "hwg_temp"
 
 info = [["1", "Netzwerk-Rack", "1", "23.8", "1"], ["2", "Library-Rack", "1", "23.0", "1"]]

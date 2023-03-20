@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "cisco_prime_wifi_connections"
 
 # Create JSON string with this command in cisco_prime.include:

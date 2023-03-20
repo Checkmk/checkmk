@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "hwg_humidity"
 
 info = [["1", "Sensor 215", "1", "23.8", "1"], ["2", "Sensor 216", "1", "34.6", "4"]]

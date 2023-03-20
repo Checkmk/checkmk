@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "hp_proliant"
 
 info = [["2", "2.60 May 23 2018", "CXX43801XX"]]

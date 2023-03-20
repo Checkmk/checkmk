@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 from cmk.base.plugins.agent_based.ucd_mem import parse_ucd_mem
 
 checkname = "ucd_mem"

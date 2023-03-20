@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "mbg_lantime_ng_fan"
 
 info = [["1", "2", "1"], ["2", "2", "1"], ["3", "0", "1"], ["4", "2", "1"], ["5", "2", ""]]

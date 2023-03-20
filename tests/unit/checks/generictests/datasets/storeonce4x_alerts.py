@@ -5,7 +5,7 @@
 
 # pylint: skip-file
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 checkname = "storeonce4x_alerts"
 
 info = [

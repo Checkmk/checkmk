@@ -314,12 +314,13 @@ cfg::Plugins::ExeUnit *GetEntrySafe(UnitMap &unit_map, const std::string &key) {
     }
 }
 
-void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um, bool local) {
+void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um,
+                                ExecType exec_type) {
     for (const auto &[name, unit] : um) {
         auto *ptr = GetEntrySafe(out, name);
         if (ptr != nullptr) {
             if (unit.run()) {
-                ptr->applyConfigUnit(unit, local);
+                ptr->applyConfigUnit(unit, exec_type);
             } else {
                 ptr->removeFromExecution();
             }
@@ -328,7 +329,7 @@ void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um, bool local) {
                 out.try_emplace(name, name);
                 ptr = GetEntrySafe(out, name);
                 if (ptr != nullptr) {
-                    ptr->applyConfigUnit(unit, local);
+                    ptr->applyConfigUnit(unit, exec_type);
                 }
             }
         }
@@ -349,7 +350,7 @@ void UpdatePluginMapWithUnitMap(PluginMap &out, UnitMap &um, bool local) {
             continue;
         }
         XLOG::d.i("{} '{}'  is  {} with age:{} timeout:{} retry:{}",
-                  local ? "Local" : "Plugin", name,
+                  ptr->local() ? "Local" : "Plugin", name,
                   ptr->async() ? "async" : "sync", ptr->cacheAge(),
                   ptr->timeout(), ptr->retry());
     }
@@ -379,29 +380,30 @@ bool AddUniqStringToSetIgnoreCase(StringSet &cache,
 
 namespace {
 void ApplyEverythingLogResult(const std::string &format, std::string_view file,
-                              bool local) noexcept {
-    XLOG::t(format, file, local ? "[local]" : "[plugins]");
+                              ExecType exec_type) noexcept {
+    XLOG::t(format, file,
+            exec_type == ExecType::local ? "[local]" : "[plugins]");
 }
 }  // namespace
 
 std::vector<fs::path> RemoveDuplicatedFilesByName(
-    const std::vector<fs::path> &found_files, bool local) {
+    const std::vector<fs::path> &found_files, ExecType exec_type) {
     tools::StringSet cache;
     std::vector files{found_files};
-    std::erase_if(files, [&cache, local](const fs::path &candidate) {
+    std::erase_if(files, [&cache, exec_type](const fs::path &candidate) {
         const auto fname = wtools::ToUtf8(candidate.filename().wstring());
         const auto new_file = tools::AddUniqStringToSetIgnoreCase(cache, fname);
         if (!new_file) {
             ApplyEverythingLogResult("Skipped duplicated file '{}'",
                                      wtools::ToUtf8(candidate.wstring()),
-                                     local);
+                                     exec_type);
         }
         return !new_file;
     });
     return files;
 }
 
-void RemoveDuplicatedEntriesByName(UnitMap &um, bool local) {
+void RemoveDuplicatedEntriesByName(UnitMap &um, ExecType exec_type) {
     std::set<std::string, std::less<>> cache;
     std::vector<std::string> to_remove;
     for (const auto &[name, unit] : um) {
@@ -410,7 +412,7 @@ void RemoveDuplicatedEntriesByName(UnitMap &um, bool local) {
             cache, wtools::ToUtf8(p.filename().wstring()));
         if (!new_file) {
             ApplyEverythingLogResult("Skipped duplicated file '{}'",
-                                     wtools::ToUtf8(p.wstring()), local);
+                                     wtools::ToStr(p), exec_type);
             to_remove.emplace_back(name);
         }
     }
@@ -435,7 +437,6 @@ void AllowAccess(const fs::path &f, std::wstring_view name) {
         f.wstring().c_str(), SE_FILE_OBJECT, name.data(), TRUSTEE_IS_NAME,
         STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS, OBJECT_INHERIT_ACE);
 }
-
 void ConditionallyAllowAccess(const fs::path &f,
                               const cfg::Plugins::ExeUnit &unit) {
     if (const auto trustee = GetTrustee(unit)) {
@@ -447,7 +448,7 @@ void ConditionallyAllowAccess(const fs::path &f,
 void ApplyEverythingToPluginMap(PluginMap &plugin_map,
                                 const std::vector<cfg::Plugins::ExeUnit> &units,
                                 const std::vector<fs::path> &found_files,
-                                bool local) {
+                                ExecType exec_type) {
     UnitMap um;
 
     for (const auto &f : found_files) {
@@ -475,7 +476,7 @@ void ApplyEverythingToPluginMap(PluginMap &plugin_map,
                 ConditionallyAllowAccess(f, *exe);
             }
 
-            ApplyEverythingLogResult(fmt_string, entry_full_name, local);
+            ApplyEverythingLogResult(fmt_string, entry_full_name, exec_type);
         }
     }
 
@@ -494,16 +495,15 @@ void ApplyEverythingToPluginMap(PluginMap &plugin_map,
             um.erase(entry_full_name);
             const auto *fmt_string =
                 "Skipped duplicated file by name '{}' in {}";
-            ApplyEverythingLogResult(fmt_string, entry_full_name, local);
+            ApplyEverythingLogResult(fmt_string, entry_full_name, exec_type);
         }
     }
     // apply config for presented
-    UpdatePluginMapWithUnitMap(plugin_map, um, local);
+    UpdatePluginMapWithUnitMap(plugin_map, um, exec_type);
 }
 
 // Main API
-void UpdatePluginMap(PluginMap &plugin_map,  // output is here
-                     bool local,             // type of plugin
+void UpdatePluginMap(PluginMap &plugin_map, ExecType exec_type,
                      const PathVector &found_files,
                      const std::vector<cfg::Plugins::ExeUnit> &units,
                      bool check_exists) {
@@ -515,7 +515,7 @@ void UpdatePluginMap(PluginMap &plugin_map,  // output is here
     const auto really_found =
         FilterPathVector(found_files, units, check_exists);
     FilterPluginMap(plugin_map, really_found);
-    ApplyEverythingToPluginMap(plugin_map, units, really_found, local);
+    ApplyEverythingToPluginMap(plugin_map, units, really_found, exec_type);
     RemoveDuplicatedPlugins(plugin_map, check_exists);
 }
 
@@ -1271,7 +1271,8 @@ void PluginEntry::storeData(uint32_t proc_id, const std::vector<char> &data) {
 
     if (cacheAge() > 0) {
         data_.clear();
-        const auto mode = local_ ? HackDataMode::line : HackDataMode::header;
+        const auto mode = exec_type_ == ExecType::local ? HackDataMode::line
+                                                        : HackDataMode::header;
         auto patch_string = ConstructPatchString(legacy_time, cacheAge(), mode);
         HackDataWithCacheInfo(data_, data, patch_string, mode);
     } else {

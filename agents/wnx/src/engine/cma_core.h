@@ -78,6 +78,7 @@ PathVector FilterPathVector(const PathVector &found_files,
 }  // namespace cma
 
 namespace cma {
+enum class ExecType { plugin, local };
 bool IsValidFile(const std::filesystem::path &file_to_exec);
 bool IsExecutable(const std::filesystem::path &file_to_exec);
 std::wstring FindPowershellExe() noexcept;
@@ -416,7 +417,7 @@ public:
 
     bool local() const {
         std::lock_guard lk(lock_);
-        return local_;
+        return exec_type_ == ExecType::local;
     }
 
     int failures() const {
@@ -467,7 +468,7 @@ public:
     }
 
     template <typename T>
-    void applyConfigUnit(const T &unit, bool local) {
+    void applyConfigUnit(const T &unit, ExecType exec_type) {
         if (retry() != unit.retry() || timeout() != unit.timeout()) {
             XLOG::t("Important params changed, reset retry '{}'", path_);
             failures_ = 0;
@@ -506,7 +507,7 @@ public:
 
         fillInternalUser();
 
-        local_ = local;
+        exec_type_ = exec_type;
         defined_ = true;
     }
 
@@ -580,7 +581,7 @@ private:
     /// counter of fails, used by async, ignored by sync
     int failures_{0};
 
-    bool local_{false};  // if set then we have deal with local groups
+    ExecType exec_type_{ExecType::plugin};
 
     // async part
     mutable std::mutex data_lock_;  // cache() and time to control
@@ -630,27 +631,27 @@ void InsertInPluginMap(PluginMap &plugin_map, const PathVector &found_files);
 
 using UnitMap = std::unordered_map<std::string, cfg::Plugins::ExeUnit>;
 
-void RemoveDuplicatedEntriesByName(UnitMap &um, bool local);
+void RemoveDuplicatedEntriesByName(UnitMap &um, ExecType exec_type);
 std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
-    const std::vector<std::filesystem::path> &found_files, bool local);
+    const std::vector<std::filesystem::path> &found_files, ExecType exec_type);
 
 void ApplyEverythingToPluginMap(
     PluginMap &plugin_map, const std::vector<cfg::Plugins::ExeUnit> &units,
-    const std::vector<std::filesystem::path> &found_files, bool local);
+    const std::vector<std::filesystem::path> &found_files, ExecType exec_type);
 
 void FilterPluginMap(PluginMap &out_map, const PathVector &found_files);
 
 void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists);
 
-void UpdatePluginMap(PluginMap &plugin_map, bool local,
+void UpdatePluginMap(PluginMap &plugin_map, ExecType exec_type,
                      const PathVector &found_files,
                      const std::vector<cfg::Plugins::ExeUnit> &units,
                      bool check_exists);
 
-inline void UpdatePluginMap(PluginMap &plugin_map, bool local,
+inline void UpdatePluginMap(PluginMap &plugin_map, ExecType exec_type,
                             const PathVector &found_files,
                             const std::vector<cfg::Plugins::ExeUnit> &units) {
-    return UpdatePluginMap(plugin_map, local, found_files, units, true);
+    return UpdatePluginMap(plugin_map, exec_type, found_files, units, true);
 }
 
 void UpdatePluginMapCmdLine(PluginMap &plugin_map, srv::ServiceProcessor *sp);

@@ -80,7 +80,7 @@ static void LogExecuteExtensions(std::string_view title,
 
 void PluginsProvider::updateCommandLine() {
     try {
-        if (getHostSp() == nullptr && !local_) {
+        if (getHostSp() == nullptr && exec_type_ == ExecType::plugin) {
             XLOG::l("Plugins must have correctly set owner to use modules");
         }
 
@@ -154,8 +154,9 @@ std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
 }
 
 void PluginsProvider::loadConfig() {
-    auto folder_vector = local_ ? cfg::groups::localGroup.folders()
-                                : cfg::groups::plugins.folders();
+    auto folder_vector = exec_type_ == ExecType::local
+                             ? cfg::groups::localGroup.folders()
+                             : cfg::groups::plugins.folders();
 
     PathVector pv;
     for (auto &folder : folder_vector) {
@@ -183,7 +184,7 @@ void PluginsProvider::loadConfig() {
     // linking exe units with all plugins in map
     std::vector<cfg::Plugins::ExeUnit> exe_units;
     cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-    UpdatePluginMap(pm_, local_, files, exe_units, true);
+    UpdatePluginMap(pm_, exec_type_, files, exe_units, true);
     XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
 
     updateCommandLine();

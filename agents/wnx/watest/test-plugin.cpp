@@ -81,7 +81,7 @@ void CreateComplicatedPluginInTemp(const std::filesystem::path &path,
 
 void CreatePluginInTemp(const std::filesystem::path &path, int timeout,
                         const std::string &name, std::string_view code,
-                        cma::provider::PluginType type) {
+                        ExecType type) {
     std::ofstream ofs(wtools::ToStr(path));
 
     if (!ofs) {
@@ -91,7 +91,7 @@ void CreatePluginInTemp(const std::filesystem::path &path, int timeout,
 
     ofs << "@echo off\n"
         << "powershell Start-Sleep " << timeout << " \n";
-    if (type == cma::provider::PluginType::normal) {
+    if (type == ExecType::plugin) {
         ofs << "@echo ^<^<^<" << name << "^>^>^>\n";
     }
     ofs << code << "\n";
@@ -124,7 +124,7 @@ void InsertEntry(PluginMap &pm, const std::string &name, int timeout,
     auto it = pm.find(name);
     cma::cfg::PluginInfo e{
         timeout, async || cache_age ? cache_age : std::optional<int>{}, 1};
-    it->second.applyConfigUnit(e, false);
+    it->second.applyConfigUnit(e, ExecType::plugin);
 }
 }  // namespace
 
@@ -347,7 +347,7 @@ void AssignGroupUser(PluginEntry &pe, std::string_view group,
                      std::string_view user) {
     cfg::PluginInfo e;
     e.extend(group, user);
-    pe.applyConfigUnit(e, false);
+    pe.applyConfigUnit(e, ExecType::plugin);
 }
 }  // namespace
 
@@ -392,7 +392,7 @@ TEST(PluginTest, ApplyConfig) {
 
     {
         cma::cfg::PluginInfo e = {10, 1, 1};
-        pe.applyConfigUnit(e, false);
+        pe.applyConfigUnit(e, ExecType::plugin);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), true);
         EXPECT_EQ(pe.local(), false);
@@ -406,7 +406,7 @@ TEST(PluginTest, ApplyConfig) {
         EXPECT_EQ(pe.failures(), 2);
         EXPECT_EQ(pe.isTooManyRetries(), true);
         e.extend("g", "u");
-        pe.applyConfigUnit(e, false);
+        pe.applyConfigUnit(e, ExecType::plugin);
         EXPECT_EQ(pe.user(), "u");
         EXPECT_EQ(pe.group(), "g");
     }
@@ -417,7 +417,7 @@ TEST(PluginTest, ApplyConfig) {
         pe.failures_ = 5;
         EXPECT_EQ(pe.data().size(), 10);
         cma::cfg::PluginInfo e{10, {}, 11};
-        pe.applyConfigUnit(e, true);
+        pe.applyConfigUnit(e, ExecType::local);
         EXPECT_EQ(pe.failures(), 0);
         EXPECT_EQ(pe.async(), false);
         EXPECT_EQ(pe.local(), true);
@@ -700,7 +700,7 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
         cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
         // no local files
         PluginMap pm;
-        UpdatePluginMap(pm, true, files, exe_units, true);
+        UpdatePluginMap(pm, ExecType::local, files, exe_units, true);
         EXPECT_TRUE(pm.empty());
     }
 
@@ -854,7 +854,8 @@ TEST(PluginTest, GeneratePluginEntry) {
 
         InsertInPluginMap(pm, pv_main);
         EXPECT_EQ(pm.size(), pv_main.size());
-        ApplyEverythingToPluginMap(pm, exe_units_base, pv_main, true);
+        ApplyEverythingToPluginMap(pm, exe_units_base, pv_main,
+                                   ExecType::local);
         {
             const std::array indexes{0, 3, 5};
             for (auto i : indexes) {
@@ -879,12 +880,12 @@ TEST(PluginTest, GeneratePluginEntry) {
     }
 
     PluginMap pm;
-    UpdatePluginMap(pm, false, pv_main, exe_units_base);
+    UpdatePluginMap(pm, ExecType::plugin, pv_main, exe_units_base);
     EXPECT_EQ(pm.size(), 0);
 
-    UpdatePluginMap(pm, false, pv_main, exe_units_base, true);
+    UpdatePluginMap(pm, ExecType::plugin, pv_main, exe_units_base, true);
     EXPECT_EQ(pm.size(), 0);
-    UpdatePluginMap(pm, false, pv_main, exe_units_base, false);
+    UpdatePluginMap(pm, ExecType::plugin, pv_main, exe_units_base, false);
     EXPECT_EQ(pm.size(), 3);  // 1 ps1 and 2 cmd
 
     auto e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1"s);
@@ -912,7 +913,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->retry(), 3);
 
     // Update
-    UpdatePluginMap(pm, false, pv_main, x2_sync, false);
+    UpdatePluginMap(pm, ExecType::plugin, pv_main, x2_sync, false);
     EXPECT_EQ(pm.size(), 1);
     e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1"s);
     ASSERT_NE(nullptr, e);
@@ -923,7 +924,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->retry(), 9);  // not async retry_count kept
 
     // Update, async+0
-    UpdatePluginMap(pm, false, pv_main, x2_async_0_cache_age, false);
+    UpdatePluginMap(pm, ExecType::plugin, pv_main, x2_async_0_cache_age, false);
     EXPECT_EQ(pm.size(), 1);
     e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1"s);
     ASSERT_NE(nullptr, e);
@@ -934,7 +935,8 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->retry(), 0);
 
     // Update, async+119
-    UpdatePluginMap(pm, false, pv_main, x2_async_low_cache_age, false);
+    UpdatePluginMap(pm, ExecType::plugin, pv_main, x2_async_low_cache_age,
+                    false);
     EXPECT_EQ(pm.size(), 1);
     e = GetEntrySafe(pm, "c:\\z\\x\\asd.d.ps1"s);
     ASSERT_NE(nullptr, e);
@@ -945,7 +947,8 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->retry(), kMinimumCacheAge / (e->timeout() + 1));
 
     // Update
-    UpdatePluginMap(pm, false, pv_short, x3_cmd_with_group_user, false);
+    UpdatePluginMap(pm, ExecType::plugin, pv_short, x3_cmd_with_group_user,
+                    false);
     EXPECT_EQ(pm.size(), 1);
     e = GetEntrySafe(pm, "c:\\z\\x\\asd-d.cmd"s);
     ASSERT_NE(nullptr, e);
@@ -957,7 +960,7 @@ TEST(PluginTest, GeneratePluginEntry) {
     EXPECT_EQ(e->user(), "u");
     EXPECT_EQ(e->group(), "g");
 
-    UpdatePluginMap(pm, false, pv_main, x4_all, false);
+    UpdatePluginMap(pm, ExecType::plugin, pv_main, x4_all, false);
     EXPECT_EQ(pm.size(), 4);
 
     // two files are dropped
@@ -1075,13 +1078,14 @@ TEST(PluginTest, CtorWithSource) {
 TEST(PluginTest, ApplyEverything) {
     {
         PluginMap pm;
-        ApplyEverythingToPluginMap(pm, {}, {}, false);
+        ApplyEverythingToPluginMap(pm, {}, {}, ExecType::plugin);
         EXPECT_EQ(pm.size(), 0);
 
-        ApplyEverythingToPluginMap(pm, {}, typical_files, false);
+        ApplyEverythingToPluginMap(pm, {}, typical_files, ExecType::plugin);
         EXPECT_EQ(pm.size(), 0);
 
-        ApplyEverythingToPluginMap(pm, typical_units, typical_files, false);
+        ApplyEverythingToPluginMap(pm, typical_units, typical_files,
+                                   ExecType::plugin);
         EXPECT_EQ(pm.size(), 3);
         RemoveDuplicatedPlugins(pm, false);
         EXPECT_EQ(pm.size(), 3);
@@ -1095,7 +1099,8 @@ TEST(PluginTest, ApplyEverything) {
             }
         }
 
-        ApplyEverythingToPluginMap(pm, exe_units, typical_files, false);
+        ApplyEverythingToPluginMap(pm, exe_units, typical_files,
+                                   ExecType::plugin);
         ASSERT_EQ(pm.size(), 5);
         RemoveDuplicatedPlugins(pm, false);
         ASSERT_EQ(pm.size(), 2);
@@ -1114,7 +1119,8 @@ TEST(PluginTest, ApplyEverything) {
             }
         }
 
-        ApplyEverythingToPluginMap(pm, all_units, typical_files, false);
+        ApplyEverythingToPluginMap(pm, all_units, typical_files,
+                                   ExecType::plugin);
         EXPECT_EQ(pm.size(), 5);
         RemoveDuplicatedPlugins(pm, false);
         {
@@ -1131,14 +1137,16 @@ TEST(PluginTest, ApplyEverything) {
             }
         }
 
-        ApplyEverythingToPluginMap(pm, none_units, typical_files, false);
+        ApplyEverythingToPluginMap(pm, none_units, typical_files,
+                                   ExecType::plugin);
         EXPECT_EQ(pm.size(), 5);
         RemoveDuplicatedPlugins(pm, false);
         EXPECT_EQ(pm.size(), 0);
 
         {
             PluginMap pm;
-            ApplyEverythingToPluginMap(pm, many_exe_units, many_files, false);
+            ApplyEverythingToPluginMap(pm, many_exe_units, many_files,
+                                       ExecType::plugin);
             EXPECT_EQ(pm.size(), 4);
             RemoveDuplicatedPlugins(pm, false);
             {
@@ -1166,7 +1174,7 @@ TEST(PluginTest, DuplicatedFileRemove) {
             "c:\\t\\b.exe", "c:\\r\\a.exe", "c:\\v\\x\\a.exe",
             "c:\\t\\a.exe", "c:\\r\\a.exe", "c:\\v\\x\\c.cmd",
         };
-        auto files = RemoveDuplicatedFilesByName(found_files, true);
+        auto files = RemoveDuplicatedFilesByName(found_files, ExecType::local);
         EXPECT_TRUE(files.size() == 3);
     }
     {
@@ -1174,7 +1182,7 @@ TEST(PluginTest, DuplicatedFileRemove) {
             "c:\\t\\a.exe", "c:\\r\\a.exe",    "c:\\t\\a.exe",
             "c:\\r\\a.exe", "c:\\v\\x\\c.cmd",
         };
-        auto files = RemoveDuplicatedFilesByName(found_files, true);
+        auto files = RemoveDuplicatedFilesByName(found_files, ExecType::local);
         EXPECT_TRUE(files.size() == 2);
     }
 }
@@ -1187,7 +1195,7 @@ TEST(PluginTest, DuplicatedUnitsRemove) {
 
     for (auto name : paths) um[name] = cma::cfg::Plugins::ExeUnit(name, "");
     EXPECT_TRUE(um.size() == 8);
-    RemoveDuplicatedEntriesByName(um, true);
+    RemoveDuplicatedEntriesByName(um, ExecType::local);
     EXPECT_EQ(um.size(), 3);
     EXPECT_FALSE(um[paths[0]].pattern().empty());
     EXPECT_FALSE(um[paths[1]].pattern().empty());
@@ -1227,7 +1235,7 @@ TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     ON_OUT_OF_SCOPE(for (auto &f : vp) fs::remove(f););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, vp, units, false);
+    UpdatePluginMap(pm, ExecType::plugin, vp, units, false);
 
     using namespace std;
     using DataBlock = vector<char>;
@@ -1379,8 +1387,8 @@ PluginDescVector async0_files = {{2, "async2.cmd", "async0"}};
 
 [[nodiscard]] PathVector PrepareFilesAndStructures(
     const PluginDescVector &plugin_desc_arr, std::string_view code,
-    cma::provider::PluginType type) {
-    std::filesystem::path temp_folder = cma::cfg::GetTempDir();
+    ExecType type) {
+    const fs::path temp_folder{cfg::GetTempDir()};
     PathVector pv;
     for (auto &pd : plugin_desc_arr) {
         pv.emplace_back(temp_folder / pd.file_name_);
@@ -1427,24 +1435,26 @@ TEST(PluginTest, AsyncStartSimulation_Integration) {
         auto as_vp_0 = wtools::ToUtf8(as_vp[0].wstring());
         auto as_vp_1 = wtools::ToUtf8(as_vp[1].wstring());
         PluginMap pm;  // load from the groups::plugin
-        UpdatePluginMap(pm, false, as_vp, exe_units_async_0, false);
+        UpdatePluginMap(pm, ExecType::plugin, as_vp, exe_units_async_0, false);
         // async_0 means sync
         EXPECT_EQ(provider::config::g_async_plugin_without_cache_age_run_async,
                   provider::config::IsRunAsync(pm.at(as_vp_0)));
         EXPECT_EQ(provider::config::g_async_plugin_without_cache_age_run_async,
                   provider::config::IsRunAsync(pm.at(as_vp_1)));
 
-        UpdatePluginMap(pm, false, as_vp, exe_units_valid_SYNC, false);
+        UpdatePluginMap(pm, ExecType::plugin, as_vp, exe_units_valid_SYNC,
+                        false);
         EXPECT_FALSE(provider::config::IsRunAsync(pm.at(as_vp_0)));
         EXPECT_FALSE(provider::config::IsRunAsync(pm.at(as_vp_1)));
 
-        UpdatePluginMap(pm, false, as_vp, exe_units_async_121, false);
+        UpdatePluginMap(pm, ExecType::plugin, as_vp, exe_units_async_121,
+                        false);
         EXPECT_TRUE(provider::config::IsRunAsync(pm.at(as_vp_0)));
         EXPECT_TRUE(provider::config::IsRunAsync(pm.at(as_vp_1)));
     }
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, as_vp, exe_units_async_0, false);
+    UpdatePluginMap(pm, ExecType::plugin, as_vp, exe_units_async_0, false);
 
     // async to sync part
     for (auto &[entry_name, entry] : pm) {
@@ -1463,7 +1473,7 @@ class PluginExecuteFixture : public ::testing::Test {
 public:
     void SetUp() override {
         files_ = prepareFilesAndStructures(plugins_, R"(@echo xxx&& exit 0)");
-        UpdatePluginMap(pm_, false, files_, exes_, true);
+        UpdatePluginMap(pm_, ExecType::plugin, files_, exes_, true);
         for (const auto &f : files_) {
             auto ready = GetEntrySafe(pm_, f);
             ready->getResultsAsync(true);
@@ -1540,7 +1550,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
     ON_OUT_OF_SCOPE(for (auto &f : as_vp) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, as_vp, exe_units_async_121, false);
+    UpdatePluginMap(pm, ExecType::plugin, as_vp, exe_units_async_121, false);
 
     // async part
     for (auto &[entry_name, entry] : pm) {
@@ -1684,7 +1694,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
         auto ready = GetEntrySafe(pm, as_files[0]);
         auto still = GetEntrySafe(pm, as_files[1]);
 
-        UpdatePluginMap(pm, true, as_vp, exe_units_async_121, true);
+        UpdatePluginMap(pm, ExecType::local, as_vp, exe_units_async_121, true);
         EXPECT_EQ(pm.size(), 2);
         EXPECT_TRUE(ready->local());
         EXPECT_TRUE(still->local());
@@ -1699,7 +1709,8 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
         EXPECT_FALSE(ready->running()) << "timeout 10 secs expired";
         still->restartAsyncThreadIfFinished(L"Id");
 
-        UpdatePluginMap(pm, false, as_vp, exe_units_valid_SYNC, true);
+        UpdatePluginMap(pm, ExecType::plugin, as_vp, exe_units_valid_SYNC,
+                        true);
         EXPECT_EQ(pm.size(), 2);
         EXPECT_FALSE(ready->running());
         EXPECT_TRUE(ready->data().empty());
@@ -1715,7 +1726,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
         auto ready = GetEntrySafe(pm, as_files[0]);
         auto still = GetEntrySafe(pm, as_files[1]);
 
-        UpdatePluginMap(pm, true, as_vp, exe_units_async_121, true);
+        UpdatePluginMap(pm, ExecType::local, as_vp, exe_units_async_121, true);
         EXPECT_EQ(pm.size(), 2);
         EXPECT_TRUE(ready->local());
         EXPECT_TRUE(still->local());
@@ -1808,13 +1819,13 @@ TEST(PluginTest, AsyncDataPickup_Integration) {
     using namespace wtools;
     cma::OnStart(cma::AppType::test);
     auto files = PrepareFilesAndStructures(async0_files, R"(echo %time%)",
-                                           provider::PluginType::normal);
+                                           ExecType::plugin);
 
     std::error_code ec;
     ON_OUT_OF_SCOPE(for (auto &f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, files, exe_units_async_0, false);
+    UpdatePluginMap(pm, ExecType::plugin, files, exe_units_async_0, false);
 
     // async part should provide nothing
     for (auto &[name, entry] : pm) {
@@ -1927,13 +1938,13 @@ TEST(PluginTest, AsyncLocal_Integration) {
                                            R"(echo 1 name %time%)"
                                            "\n"
                                            R"(echo 2 name %time%)",
-                                           provider::PluginType::local);
+                                           ExecType::local);
 
     std::error_code ec;
     ON_OUT_OF_SCOPE(for (auto &f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, true, files, local_units_async, false);
+    UpdatePluginMap(pm, ExecType::local, files, local_units_async, false);
 
     // async part should provide nothing
     for (auto &[name, entry] : pm) {
@@ -2031,13 +2042,13 @@ TEST(PluginTest, SyncLocal_Integration) {
                                            R"(echo 1 name %time%)"
                                            "\n"
                                            R"(echo 2 name %time%)",
-                                           provider::PluginType::local);
+                                           ExecType::local);
 
     std::error_code ec;
     ON_OUT_OF_SCOPE(for (auto &f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, true, files, local_units_sync, false);
+    UpdatePluginMap(pm, ExecType::local, files, local_units_sync, false);
 
     // async part should provide nothing
     cma::TestDateTime tdt[2];
@@ -2126,12 +2137,12 @@ TEST(PluginTest, SyncPluginsGroupIntegrationExt) {
     ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     auto test_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(test_fs->loadFactoryConfig());
-    auto files = PrepareFilesAndStructures(plugins_file_group,
-                                           R"(@echo 2 name %username%)",
-                                           provider::PluginType::normal);
+    auto files = PrepareFilesAndStructures(
+        plugins_file_group, R"(@echo 2 name %username%)", ExecType::plugin);
 
     PluginMap pm;
-    UpdatePluginMap(pm, true, files, plugins_file_group_param, false);
+    UpdatePluginMap(pm, ExecType::local, files, plugins_file_group_param,
+                    false);
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
 
@@ -2287,14 +2298,14 @@ TEST(PluginTest, SyncStartSimulation_Long) {
     ON_OUT_OF_SCOPE(for (auto &f : vp) fs::remove(f););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, vp, units, false);
+    UpdatePluginMap(pm, ExecType::plugin, vp, units, false);
 
     // retry count test
     {
         PluginMap pm_1;  // load from the groups::plugin
         PathVector vp_1 = {vp[3]};
 
-        UpdatePluginMap(pm_1, false, vp_1, units, false);
+        UpdatePluginMap(pm_1, ExecType::plugin, vp_1, units, false);
         auto f = pm_1.begin();
         auto &entry = f->second;
 
@@ -2581,7 +2592,7 @@ TEST(PluginTest, ModulesCmdLine) {
     CreatePluginInTemp(vp[1], 0, "b");
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, vp, exe_units, false);
+    UpdatePluginMap(pm, ExecType::plugin, vp, exe_units, false);
     ASSERT_EQ(pm.size(), 2);
     for (auto &[name, entry] : pm) {
         EXPECT_TRUE(entry.cmdLine().empty());

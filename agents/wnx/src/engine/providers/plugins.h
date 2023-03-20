@@ -22,13 +22,11 @@ extern bool g_local_no_send_if_empty_body;
 extern bool g_local_send_empty_at_end;
 }  // namespace config
 
-enum class PluginType { normal, local };
-
 class PluginsProvider : public Asynchronous {
 public:
     PluginsProvider() : Asynchronous(section::kPlugins) {
         setHeaderless();
-        local_ = false;
+        exec_type_ = ExecType::plugin;
         cfg_name_ = cfg::groups::kPlugins;
         last_count_ = 0;
     }
@@ -36,7 +34,7 @@ public:
     PluginsProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {
         setHeaderless();
-        local_ = false;
+        exec_type_ = ExecType::plugin;
         cfg_name_ = cfg::groups::kPlugins;
     }
 
@@ -54,7 +52,7 @@ protected:
                                        srv::ServiceProcessor *sp);
     void gatherAllData(std::string &out);
     std::string cfg_name_;
-    bool local_;
+    ExecType exec_type_;
     PluginMap pm_;
     std::string section_last_output_;
     int last_count_;
@@ -69,7 +67,7 @@ protected:
 class LocalProvider final : public PluginsProvider {
 public:
     LocalProvider() : PluginsProvider(section::kLocal, '\0') {
-        local_ = true;
+        exec_type_ = ExecType::local;
         cfg_name_ = cfg::groups::kLocal;
     }
     void updateSectionStatus() override;

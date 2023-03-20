@@ -42,9 +42,9 @@ static std::string ReadFromHandle(HANDLE h) {
 }
 
 TEST(WtoolsRunAs, NoUser_Integration) {
-    cma::OnStartTest();
-    auto [in, out] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    auto in = temp_fs->data();
     tst::CreateWorkFile(in / "runc.cmd",
                         "@powershell  Start-Sleep -Milliseconds 150\n"
                         "@echo %USERNAME%\n"
@@ -72,9 +72,9 @@ TEST(WtoolsRunAs, TestUser_IntegrationExt) {
         GTEST_SKIP() << "failed to set password, maybe not admin?";
     }
 
-    cma::OnStartTest();
-    auto [in, out] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    auto in = temp_fs->data();
     tst::CreateWorkFile(in / "runc.cmd",
                         "@powershell  Start-Sleep -Milliseconds 150\n"
                         "@echo %USERNAME%\n"

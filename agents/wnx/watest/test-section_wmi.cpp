@@ -172,8 +172,6 @@ TEST_F(WmiWrapperFixture, Table) {
 namespace cma::provider {
 
 TEST(WmiProviderTest, WmiBadName) {  //
-    cma::OnStart(cma::AppType::test);
-
     Wmi badname("badname", wmi::kSepChar);
     EXPECT_EQ(badname.object(), L"");
     EXPECT_EQ(badname.nameSpace(), L"");
@@ -204,19 +202,16 @@ TEST(WmiProviderTest, OhmIntegration) {
 }
 
 TEST(WmiProviderTest, WmiConfiguration) {
-    {
-        EXPECT_TRUE(IsHeaderless(kMsExch));
-        EXPECT_FALSE(IsHeaderless(kWmiCpuLoad));
-        EXPECT_FALSE(IsHeaderless("xdf"));
-    }
-    {
-        auto type = GetSubSectionType(kMsExch);
-        EXPECT_TRUE(type == SubSection::Type::full);
-        type = GetSubSectionType(kWmiCpuLoad);
-        EXPECT_TRUE(type == SubSection::Type::sub);
-        type = GetSubSectionType("xdf");
-        EXPECT_TRUE(type == SubSection::Type::sub);
-    }
+    EXPECT_TRUE(IsHeaderless(kMsExch));
+    EXPECT_FALSE(IsHeaderless(kWmiCpuLoad));
+    EXPECT_FALSE(IsHeaderless("xdf"));
+
+    auto type = GetSubSectionType(kMsExch);
+    EXPECT_TRUE(type == SubSection::Type::full);
+    type = GetSubSectionType(kWmiCpuLoad);
+    EXPECT_TRUE(type == SubSection::Type::sub);
+    type = GetSubSectionType("xdf");
+    EXPECT_TRUE(type == SubSection::Type::sub);
 }
 
 constexpr std::array exch_names = {kMsExchActiveSync,     //

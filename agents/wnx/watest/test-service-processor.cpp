@@ -16,7 +16,7 @@ using namespace std::chrono_literals;
 namespace rs = std::ranges;
 
 namespace cma::provider {
-class Empty final: public Synchronous {
+class Empty final : public Synchronous {
 public:
     Empty() : Synchronous("empty") {}
     std::string makeBody() override { return "****"; }
@@ -306,11 +306,8 @@ TEST_F(ServiceProcessorTestFixture, YamlOverMailSlot) {
 TEST(ServiceProcessorTest, DirectCall) {
     using namespace cma::section;
     using namespace cma::provider;
-    OnStartTest();
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-
-    std::filesystem::path tmp = cma::cfg::GetTempDir();
+    const tst::TempFolder folder{test_info_->name()};
+    auto tmp = folder.path();
     tmp /= "out.txt";
     {
         SectionProvider<provider::UptimeSync> uptime_provider;

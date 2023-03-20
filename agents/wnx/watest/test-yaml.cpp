@@ -432,9 +432,8 @@ TEST(AgentConfig, Aggregate) {
 }
 
 TEST(AgentConfig, ReloadWithTimestamp) {
-    cma::OnStartTest();
-
-    ON_OUT_OF_SCOPE(cma::OnStartTest());
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     {
         // prepare file
         auto path = CreateYamlnInTemp("test.yml", "global:\n    ena: yes\n");
@@ -1197,24 +1196,19 @@ static YAML::Node generateTestNode(const std::string &node_text) {
 }
 
 TEST(AgentConfig, NodeCleanup) {
-    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    {
-        const auto node_base = generateTestNode(node_text);
-        YAML::Node node = YAML::Clone(node_base);
-        ASSERT_TRUE(node.IsMap());
-        auto expected_count = RemoveInvalidNodes(node);
-        EXPECT_EQ(expected_count, 3);
-        YAML::Emitter emit;
-        emit << node;
-        std::string value = emit.c_str();
-        EXPECT_TRUE(!value.empty());
-
-        EXPECT_EQ(value, node_ok);
-
-        expected_count = RemoveInvalidNodes(node);
-        EXPECT_EQ(expected_count, 0);
-    }
+    const auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    const auto node_base = generateTestNode(node_text);
+    const YAML::Node node = YAML::Clone(node_base);
+    ASSERT_TRUE(node.IsMap());
+    auto expected_count = RemoveInvalidNodes(node);
+    EXPECT_EQ(expected_count, 3);
+    YAML::Emitter emit;
+    emit << node;
+    const std::string value = emit.c_str();
+    EXPECT_EQ(value, node_ok);
+    expected_count = RemoveInvalidNodes(node);
+    EXPECT_EQ(expected_count, 0);
 }
 
 static std::string node_plugins_execution =

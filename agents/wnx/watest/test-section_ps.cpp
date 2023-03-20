@@ -9,6 +9,7 @@
 #include "common/wtools.h"
 #include "providers/ps.h"
 #include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
@@ -43,7 +44,8 @@ const std::vector<std::string_view> g_special_processes{
 }  // namespace
 
 TEST(PsTest, Integration) {
-    OnStart(AppType::test);
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     for (auto use_full_path : {false, true}) {
         SCOPED_TRACE(
             fmt::format("'{}'", use_full_path ? "Full path" : "Short path"));

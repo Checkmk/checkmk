@@ -57,7 +57,7 @@ def main(args: Sequence[str]) -> int:
         ConfigChecker(arguments.conflict)()
     except MKUserError as e:
         sys.stderr.write(
-            f"\nUpdate aborted due {e}.\n"
+            f"\nUpdate aborted: {e}.\n"
             "The Checkmk configuration has not been modified.\n\n"
             "You can downgrade to your previous version again using "
             "'omd update' and start the site again.\n"

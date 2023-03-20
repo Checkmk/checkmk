@@ -1,0 +1,31 @@
+Title: Deprecate configuration of check plugin default levels via .mk file
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1679351962
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This werk affects users who override the factory default levels of check plugins or other global variables using .mk files when upgrading to Checkmk 2.3.
+This way of configuring plugins has not been documented for a long time and will not be supported in Checkmk 2.3.
+A warning will be issued when upgrading to any 2.2 version.
+
+These days, we expect all plugins to be configured using the appropriate rules in the GUI setup menu.
+
+You will have to change your configuration before updating to 2.3. These are the required steps:
+
+LI: Remove the definition from your configuration.
+LI: Open the UI and navigate to the related check parameter ruleset.
+LI: Configure the parameters there.
+
+We understand that enforcing this is an inconvenience for users still using the old way of overriding the default parameters of a specific check plugin.
+
+In the past, we have changed the structure of the data stored in these variables (because it is considered an implementation detail), which would break such configurations.
+In addition, the old way of using .mk files will not work for any plugin migrated to the new API anyway.
+
+Rather than accidentally breaking configurations, or removing configuration options ad hoc as plugins are migrated, we are now deprecating this mechanism and removing it with version 2.3.
+Not only does this make the code easier to maintain (freeing up resources for more valuable features), but it is also more honest.
+

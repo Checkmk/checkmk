@@ -173,7 +173,7 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
         found_mk_dhcp_enabled,
     ) = _filter_out_deprecated_plugin_lines(string_table)
 
-    for line in (lines := iter(string_table_filtered)):  # pylint:disable=superfluous-parens
+    for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
         if len(line) in (2, 3) and not line[-1].endswith("count"):
             # Do not consider lines containing counters:
             # ['-122', '38840302775', 'bulk_count']

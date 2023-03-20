@@ -10,7 +10,7 @@ It defines active_check_info["mailboxes"]
 
 # Technically this doesn't have to be imported for 'reasons' but I prefer
 # ignoring this warning
-# pylint:disable=cmk-module-layer-violation
+# pylint: disable=cmk-module-layer-violation
 from cmk.base.check_api import passwordstore_get_cmdline
 
 
@@ -41,7 +41,7 @@ def check_mailboxes_arguments(params):
     --mailbox=abc
     --mailbox=def
     """
-    # pylint:disable=too-many-branches
+    # pylint: disable=too-many-branches
     try:
         fetch_protocol, fetch_params = params["fetch"]
         connection_params = fetch_params["connection"]
@@ -109,7 +109,7 @@ def check_mailboxes_arguments(params):
     return args
 
 
-active_check_info["mailboxes"] = {  # pylint:disable=undefined-variable
+active_check_info["mailboxes"] = {  # pylint: disable=undefined-variable
     "command_line": "check_mailboxes $ARG1$",
     "argument_function": check_mailboxes_arguments,
     "service_description": lambda params: params["service_description"],

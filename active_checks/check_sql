@@ -288,7 +288,7 @@ def oracle_execute(cursor, cmd, inpt, procedure):
         # In an earlier version, this code-branch
         # had been executed regardles of the dbms.
         # clearly this is oracle specific.
-        outvar = cursor.var(cx_Oracle.STRING)  # pylint:disable=undefined-variable
+        outvar = cursor.var(cx_Oracle.STRING)  # pylint: disable=undefined-variable
         # However, I have not been able to test it.
         inpt.append(outvar)
 

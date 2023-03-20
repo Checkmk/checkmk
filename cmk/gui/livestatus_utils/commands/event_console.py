@@ -15,7 +15,7 @@ from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 
-from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogFacility,
     SyslogPriority,
 )

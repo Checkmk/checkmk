@@ -159,7 +159,7 @@ def test_output_aggregator_single_file_servicename(  # type: ignore[no-untyped-d
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):  # pylint:disable=arguments-differ
+    def read(self, cfg_file):  # pylint: disable=arguments-differ
         pass
 
 

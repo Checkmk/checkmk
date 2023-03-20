@@ -192,7 +192,7 @@ class PipeSubmitter(Submitter):
 
         try:
             with Timeout(3, message="Timeout after 3 seconds"):
-                cls._nagios_command_pipe = open(  # pylint:disable=consider-using-with
+                cls._nagios_command_pipe = open(  # pylint: disable=consider-using-with
                     cmk.utils.paths.nagios_command_pipe_path, "wb"
                 )
         except Exception as exc:

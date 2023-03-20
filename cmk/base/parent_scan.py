@@ -163,7 +163,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
                 (
                     host,
                     ip,
-                    subprocess.Popen(  # pylint:disable=consider-using-with
+                    subprocess.Popen(  # pylint: disable=consider-using-with
                         command,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT,

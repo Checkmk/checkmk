@@ -5,7 +5,7 @@
 
 from typing import get_args
 
-from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogFacility,
     SyslogPriority,
 )

@@ -378,7 +378,7 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     with open(reportfile, "a+") as report:
         report.write(str(int(time.time())) + "\n")
         report.flush()
-        process = subprocess.Popen(  # pylint:disable=consider-using-with
+        process = subprocess.Popen(  # pylint: disable=consider-using-with
             options, stdout=report, stderr=report
         )
     # Write pid to report.pid

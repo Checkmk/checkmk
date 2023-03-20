@@ -148,7 +148,7 @@ def bail_out(message: str) -> NoReturn:
 class Log(io.StringIO):
     def __init__(self, fd: int, logfile: str) -> None:
         super().__init__()
-        self.log = open(logfile, "a", encoding="utf-8")  # pylint:disable=consider-using-with
+        self.log = open(logfile, "a", encoding="utf-8")  # pylint: disable=consider-using-with
         self.fd = fd
 
         if self.fd == 1:
@@ -3125,7 +3125,7 @@ def main_init_action(  # pylint: disable=too-many-branches
         stdout: int | IO[str] = sys.stdout if not parallel else subprocess.PIPE
         stderr: int | IO[str] = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = ["--bare"] if bare else []
-        p = subprocess.Popen(  # pylint:disable=consider-using-with
+        p = subprocess.Popen(  # pylint: disable=consider-using-with
             [sys.argv[0], command] + bare_arg + [site.name] + args,
             stdin=subprocess.DEVNULL,
             stdout=stdout,

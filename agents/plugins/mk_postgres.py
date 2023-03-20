@@ -445,7 +445,7 @@ class PostgresWin(PostgresBase):
                 self.db_user,
                 sql_cmd,
             )
-        proc = subprocess.Popen(  # pylint:disable=consider-using-with
+        proc = subprocess.Popen(  # pylint: disable=consider-using-with
             cmd_str,
             env=self.my_env,
             stdout=subprocess.PIPE,
@@ -758,7 +758,7 @@ class PostgresLinux(PostgresBase):
         # the full cmd string into psql executable
         # see https://www.postgresql.org/docs/9.2/app-psql.html
         if mixed_cmd:
-            cmd_to_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
+            cmd_to_pipe = subprocess.Popen(  # pylint: disable=consider-using-with
                 ["echo", sql_cmd], stdout=subprocess.PIPE
             )
             base_cmd_list[-1] = base_cmd_list[-1] % (
@@ -769,7 +769,7 @@ class PostgresLinux(PostgresBase):
                 "",
             )
 
-            receiving_pipe = subprocess.Popen(  # pylint:disable=consider-using-with
+            receiving_pipe = subprocess.Popen(  # pylint: disable=consider-using-with
                 base_cmd_list, stdin=cmd_to_pipe.stdout, stdout=subprocess.PIPE, env=self.my_env
             )
             out = receiving_pipe.communicate()[0]
@@ -782,7 +782,7 @@ class PostgresLinux(PostgresBase):
                 field_sep,
                 ' -c "%s" ' % sql_cmd,
             )
-            proc = subprocess.Popen(  # pylint:disable=consider-using-with
+            proc = subprocess.Popen(  # pylint: disable=consider-using-with
                 base_cmd_list, env=self.my_env, stdout=subprocess.PIPE
             )
             out = proc.communicate()[0]
@@ -1141,7 +1141,7 @@ class LinuxHelpers(Helpers):
     def get_default_postgres_user():
         for user_id in ("pgsql", "postgres"):
             try:
-                proc = subprocess.Popen(  # pylint:disable=consider-using-with
+                proc = subprocess.Popen(  # pylint: disable=consider-using-with
                     ["id", user_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
                 proc.communicate()

@@ -542,7 +542,6 @@ class Site:
             if not self.version.is_raw_edition():
                 self._enable_cmc_core_dumps()
                 self._enable_cmc_debug_logging()
-                self._enable_cmc_tooling("helgrind")
                 self._disable_cmc_log_rotation()
                 self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
@@ -680,15 +679,6 @@ class Site:
                 "cmk.mkeventd.StatusServer": 10,
                 "cmk.mkeventd.lock": 20,
             },
-        )
-
-    def _enable_cmc_tooling(self, tool: Literal["helgrind", "memcheck"] | None) -> None:
-        if not tool:
-            return
-
-        self.write_text_file(
-            "etc/default/cmc",
-            f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet --log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',
         )
 
     def _enable_cmc_core_dumps(self) -> None:

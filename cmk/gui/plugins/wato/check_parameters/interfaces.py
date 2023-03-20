@@ -575,6 +575,7 @@ def _item_spec_if():
 
 
 PERC_ERROR_LEVELS = (0.01, 0.1)
+PERC_DISCARD_LEVELS = (10.0, 20.0)
 PERC_PKG_LEVELS = (10.0, 20.0)
 
 
@@ -1045,7 +1046,7 @@ def _parameter_valuespec_if() -> Dictionary:
                             "the given bounds. The percentual discards rate is computed by "
                             "the formula <b>(discards / (unicast + non-unicast + discards))*100</b> "
                         ),
-                        percent_levels=PERC_ERROR_LEVELS,
+                        percent_levels=PERC_DISCARD_LEVELS,
                         percent_detail=_(" (in relation to all packets (successful + discard))"),
                         abs_detail=_(" (in discards per second)"),
                     ),

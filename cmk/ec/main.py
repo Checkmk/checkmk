@@ -103,6 +103,8 @@ FileDescriptorLike = FileDescr | HasFileno
 
 Response = Iterable[list[Any]] | dict[str, Any] | None
 
+LimitKind = Literal["overall", "by_rule", "by_host"]
+
 
 class SyslogPriority:
     NAMES: Mapping[int, str] = {
@@ -1642,9 +1644,10 @@ class EventServer(ECServerThread):
     # delete_oldest        Delete oldest event, create new event
     # protected by self._event_status.lock
 
-    def _handle_event_limit(self, ty: str, event: Event, host_config: HostInfo | None) -> bool:
+    def _handle_event_limit(
+        self, ty: LimitKind, event: Event, host_config: HostInfo | None
+    ) -> bool:
         """Returns False if the event has been created and actions should be performed on that event."""
-        assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
 
@@ -1696,7 +1699,7 @@ class EventServer(ECServerThread):
 
     # protected by self._event_status.lock
     def _get_event_limit(
-        self, ty: str, event: Event, host_config: HostInfo | None
+        self, ty: LimitKind, event: Event, host_config: HostInfo | None
     ) -> tuple[int, str]:
         if ty == "overall":
             return self._get_overall_event_limit()
@@ -1736,7 +1739,7 @@ class EventServer(ECServerThread):
             self._config["event_limit"]["by_host"]["action"],
         )
 
-    def _create_overflow_event(self, ty: str, event: Event, limit: int) -> Event:
+    def _create_overflow_event(self, ty: LimitKind, event: Event, limit: int) -> Event:
         now = time.time()
         new_event: Event = {
             "rule_id": None,
@@ -2838,7 +2841,7 @@ class EventStatus:
             self._logger.exception("Cannot remove event %d: not present", event["id"])
 
     # protected by self.lock
-    def remove_oldest_event(self, ty: str, event: Event) -> None:
+    def remove_oldest_event(self, ty: LimitKind, event: Event) -> None:
         if ty == "overall":
             self._logger.log(VERBOSE, "  Removing oldest event")
             oldest_event = self._events[0]
@@ -2865,7 +2868,7 @@ class EventStatus:
                 return
 
     # protected by self.lock
-    def get_num_existing_events_by(self, ty: str, event: Event) -> int:
+    def get_num_existing_events_by(self, ty: LimitKind, event: Event) -> int:
         if ty == "overall":
             return self.num_existing_events
         if ty == "by_rule":

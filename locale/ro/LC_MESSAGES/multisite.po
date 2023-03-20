@@ -30,6 +30,9 @@ msgstr ""
 msgid " (Copy)"
 msgstr " (Copiază)"
 
+msgid " (Data incomplete, maximum number of nodes reached)"
+msgstr ""
+
 #, python-format
 msgid " (Duration: %s)"
 msgstr ""
@@ -66,6 +69,10 @@ msgstr ""
 
 msgid " (in relation to all successful packets)"
 msgstr ""
+
+#, fuzzy
+msgid " (packaged)"
+msgstr "Acces la Agenți"
 
 #, fuzzy, python-format
 msgid " (worst state: %s)"
@@ -25051,6 +25058,10 @@ msgid "Is mountpoint"
 msgstr ""
 
 #, python-format
+msgid "Is needed for seeing %s that are provided via extension packages."
+msgstr ""
+
+#, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr ""
 
@@ -31377,10 +31388,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Network statistics and flows of %s"
 msgstr " Se potriveste grupurilor: %s"
-
-#, fuzzy
-msgid "Network topology"
-msgstr "Adresă"
 
 msgid "Networking"
 msgstr ""
@@ -40477,6 +40484,10 @@ msgstr ""
 
 msgid "See hints how to improve your Checkmk installation"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "See packaged %s"
+msgstr "Conexiune Noua"
 
 #, python-format
 msgid "See user %s"
@@ -62099,6 +62110,10 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Network topology"
+#~ msgstr "Adresă"
 
 #, fuzzy
 #~ msgid "A description or title of this rule"

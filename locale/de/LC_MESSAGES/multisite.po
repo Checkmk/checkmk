@@ -29,6 +29,10 @@ msgstr " (%d mal)"
 msgid " (Copy)"
 msgstr " (Kopie)"
 
+#, fuzzy
+msgid " (Data incomplete, maximum number of nodes reached)"
+msgstr "Maximale Anzahl von Knoten überschritten %d/%d"
+
 #, python-format
 msgid " (Duration: %s)"
 msgstr " (Dauer: %s)"
@@ -63,6 +67,10 @@ msgstr " (in Bezug auf alle Pakete (erfolgreich + fehlgeschlagene))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (im Bezug auf alle erfolgreichen Pakete)"
+
+#, fuzzy
+msgid " (packaged)"
+msgstr "Pakete"
 
 #, python-format
 msgid " (worst state: %s)"
@@ -26573,6 +26581,10 @@ msgstr "Ist deaktiviert"
 msgid "Is mountpoint"
 msgstr "Ist ein Mount-Point"
 
+#, fuzzy, python-format
+msgid "Is needed for seeing %s that are provided via extension packages."
+msgstr "Wird benötigt, um %s zu sehen, die andere Benutzer erstellt haben."
+
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "Wird benötigt, um %s zu sehen, die andere Benutzer erstellt haben."
@@ -32602,9 +32614,6 @@ msgstr "Netzwerk Statistik"
 #, python-format
 msgid "Network statistics and flows of %s"
 msgstr "Netzwerk Statistik und Flows von %s"
-
-msgid "Network topology"
-msgstr "Netzwerktopologie"
 
 msgid "Networking"
 msgstr "Netzwerk"
@@ -41757,6 +41766,10 @@ msgstr "Ereignisse sehen, die nicht einem bekannten Host zugeordnet sind"
 
 msgid "See hints how to improve your Checkmk installation"
 msgstr "Hinweise zur Verbesserung der Checkmk-Installation sehen"
+
+#, fuzzy, python-format
+msgid "See packaged %s"
+msgstr "Pakete auswählen"
 
 #, python-format
 msgid "See user %s"
@@ -66832,6 +66845,9 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Network topology"
+#~ msgstr "Netzwerktopologie"
 
 #~ msgid "A description or title of this rule"
 #~ msgstr "Eine Beschreibung oder ein Titel dieser Regel"

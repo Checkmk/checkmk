@@ -29,6 +29,10 @@ msgstr " ( %d 回 )"
 msgid " (Copy)"
 msgstr " (コピー)"
 
+#, fuzzy
+msgid " (Data incomplete, maximum number of nodes reached)"
+msgstr "ノードの最大数が %d/%dを超えました"
+
 #, python-format
 msgid " (Duration: %s)"
 msgstr " (継続期間: %s)"
@@ -63,6 +67,10 @@ msgstr " (すべてのパケットに関して(成功 + エラー))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (成功したすべてのパケットに関して)"
+
+#, fuzzy
+msgid " (packaged)"
+msgstr "パッケージ"
 
 #, python-format
 msgid " (worst state: %s)"
@@ -25396,6 +25404,10 @@ msgstr "無効になっています"
 msgid "Is mountpoint"
 msgstr "マウントポイントです"
 
+#, fuzzy, python-format
+msgid "Is needed for seeing %s that are provided via extension packages."
+msgstr "他のユーザーが作成した %s を表示するために必要です。"
+
 #, python-format
 msgid "Is needed for seeing %s that other users have created."
 msgstr "他のユーザーが作成した %s を表示するために必要です。"
@@ -31298,9 +31310,6 @@ msgstr "ネットワーク統計"
 #, python-format
 msgid "Network statistics and flows of %s"
 msgstr "ネットワーク統計と %s のフロー"
-
-msgid "Network topology"
-msgstr "ネットワークトポロジー"
 
 msgid "Networking"
 msgstr "ネットワーキング"
@@ -40142,6 +40151,10 @@ msgstr "既知のホストに関連しないイベントを表示する"
 
 msgid "See hints how to improve your Checkmk installation"
 msgstr "Checkmkのインストールを改善するためのヒントを参照してください"
+
+#, fuzzy, python-format
+msgid "See packaged %s"
+msgstr "ルールパッケージ%s"
 
 #, python-format
 msgid "See user %s"
@@ -63405,6 +63418,9 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Network topology"
+#~ msgstr "ネットワークトポロジー"
 
 #~ msgid "A description or title of this rule"
 #~ msgstr "このルールの説明またはタイトル"

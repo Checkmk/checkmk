@@ -38,6 +38,7 @@ from cmk.checkers import (
     parse_raw_data,
     PHostLabelDiscoveryPlugin,
     PInventoryPlugin,
+    PSectionPlugin,
     Source,
     SourceInfo,
 )
@@ -49,7 +50,6 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.sources import make_parser, make_sources
 
@@ -271,12 +271,12 @@ class ConfiguredFetcher:
         )
 
 
-class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
+class SectionPluginMapper(Mapping[SectionName, PSectionPlugin]):
     # We should probably not tap into the private `register._config` module but
     # the data we need doesn't seem to be available elsewhere.  Anyway, this is
     # an *immutable* Mapping so we are actually on the safe side.
 
-    def __getitem__(self, __key: SectionName) -> SectionPlugin:
+    def __getitem__(self, __key: SectionName) -> PSectionPlugin:
         return _api.get_section_plugin(__key)
 
     def __iter__(self) -> Iterator[SectionName]:

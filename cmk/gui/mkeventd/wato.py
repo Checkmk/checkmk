@@ -294,10 +294,10 @@ def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -
 
 MACROS_AND_VARS = [
     ("ID", _l("Event ID")),
-    ("COUNT", _l("Number of occurrances")),
+    ("COUNT", _l("Number of occurrences")),
     ("TEXT", _l("Message text")),
     ("FIRST", _l("Time of the first occurrence (time stamp)")),
-    ("LAST", _l("Time of the most recent occurrance")),
+    ("LAST", _l("Time of the most recent occurrence")),
     ("COMMENT", _l("Event comment")),
     ("SL", _l("Service Level")),
     ("HOST", _l("Host name (as sent by syslog)")),
@@ -789,7 +789,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                             title=_("Algorithm"),
                             help=_(
                                 "Select how the count is computed. The algorithm <i>Interval</i> will count the "
-                                "number of messages from the first occurrance and reset this counter as soon as "
+                                "number of messages from the first occurrence and reset this counter as soon as "
                                 "the interval is elapsed or the maximum count has reached. The token bucket algorithm "
                                 "does not work with intervals but simply decreases the current count by one for "
                                 "each partial time interval. Please refer to the online documentation for more details."
@@ -974,7 +974,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                                 help=_(
                                     "If there already exists an open event because of absent "
                                     "messages according to this rule, you can optionally merge "
-                                    "the new incident with the exising event or create a new "
+                                    "the new incident with the existing event or create a new "
                                     "event for each interval with absent messages."
                                 ),
                                 choices=[
@@ -1100,7 +1100,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             "match_application",
             RegExp(
                 title=_("Match syslog application (tag)"),
-                help=_("Regular expression for matching the syslog tag (case insenstive)"),
+                help=_("Regular expression for matching the syslog tag (case insensitive)"),
                 size=64,
                 mode=RegExp.infix,
                 case_sensitive=False,
@@ -1197,7 +1197,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             Tuple(
                 title=_("Syslog priority to cancel event"),
                 help=_(
-                    "If the priority of the event lies withing this range and either no text to cancel "
+                    "If the priority of the event lies within this range and either no text to cancel "
                     "is specified or that text also matched, then events created with this rule will "
                     "automatically be cancelled (if host, application, facility and match groups match)."
                 ),
@@ -1731,11 +1731,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             del self._rule_packs[nr]
             save_mkeventd_rules(self._rule_packs)
 
-        # Reset all rule hit counteres
+        # Reset all rule hit counters
         elif request.has_var("_reset_counters"):
             for site in _get_event_console_sync_sites():
                 execute_command("RESETCOUNTERS", site=site)
-            self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
+            self._add_change("counter-reset", _("Reset all rule hit counters to zero"))
 
         # Copy rules from master
         elif request.has_var("_copy_rules"):
@@ -1799,7 +1799,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             save_mkeventd_rules(self._rule_packs)
             self._add_change(
                 "reset-rule-pack",
-                _("Resetted the rules of rule pack %s to the ones provided via MKP")
+                _("Reset the rules of rule pack %s to the ones provided via MKP")
                 % self._rule_packs[nr].id_,
             )
 
@@ -2708,7 +2708,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             raise MKUserError(
                 "rule_p_match",
                 _(
-                    "You matching text has too many regular expresssion subgroups. "
+                    "You matching text has too many regular expression subgroups. "
                     "Only nine are allowed."
                 ),
             )
@@ -2739,7 +2739,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                         raise MKUserError(
                             "rule_p_" + name,
                             _(
-                                "You are using the replacment reference <tt>\\%d</tt>, "
+                                "You are using the replacement reference <tt>\\%d</tt>, "
                                 "but your match text has only %d subgroups."
                             )
                             % (num_repl, num_groups),
@@ -3792,7 +3792,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                             help=_(
                                 "If you enable this option then the slave will automatically "
                                 "fallback from takeover mode to slavemode if the master is "
-                                "rechable again within the selected number of seconds since "
+                                "reachable again within the selected number of seconds since "
                                 "the previous unreachability (not since the takeover)"
                             ),
                             label=_("Fallback if master comes back within"),
@@ -3808,7 +3808,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                             totext=_("Replication is disabled"),
                             title=_("Currently disable replication"),
                             help=_(
-                                "This allows you to disable the replication without loosing "
+                                "This allows you to disable the replication without losing "
                                 "your settings. If you check this box, then no replication "
                                 "will be done and the Event Console will act as its own master."
                             ),
@@ -4096,7 +4096,7 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
                 "When this option is enabled then messages that do not match "
                 "a rule will be archived into the event history anyway (Messages "
                 "that do match a rule will be archived always, as long as they are not "
-                "explicitely dropped are being aggregated by counting.)"
+                "explicitly dropped are being aggregated by counting.)"
             ),
         )
 
@@ -4215,7 +4215,7 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
         return Dictionary(
             title=_("Limit amount of current events"),
             help=_(
-                "This option helps you to protect the Event Console from resoure "
+                "This option helps you to protect the Event Console from resource "
                 "problems which may occur in case of too many current events at the "
                 "same time."
             ),
@@ -4227,7 +4227,7 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
                     Dictionary(
                         title=_("Overall current events"),
                         help=_(
-                            "To protect you against a continously growing list of current "
+                            "To protect you against a continuously growing list of current "
                             "events created by different hosts or rules, you can configure "
                             "this overall limit of current events. All currently current events "
                             "are counted and once the limit is reached, no further events "
@@ -4924,7 +4924,7 @@ def _sl_help() -> str:
             "is assumed to be more business critical. This ruleset allows to assign service "
             "levels to hosts and/or services. Note: if you assign a service level to "
             "a host with the ruleset <i>Service Level of hosts</i>, then this level is "
-            "inherited to all services that do <b>not</b> have explicitely assigned a service "
+            "inherited to all services that do <b>not</b> have explicitly assigned a service "
             "with the ruleset <i>Service Level of services</i>. Assigning no service level "
             "is equal to defining a level of 0.<br><br>The list of available service "
             "levels is configured via a <a href='%s'>global option.</a>"

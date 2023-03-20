@@ -184,7 +184,7 @@ class RowTableEC(RowTableLivestatus):
 # is not permitted for). In this case the user should be allowed to see the event
 # information, but not the host related information.
 #
-# To realize this, whe filter all data from the host_* columns from the response.
+# To realize this, we filter all data from the host_* columns from the response.
 # See Gitbug #2462 for some more information.
 #
 # This should be handled in the core, but the core does not know anything about
@@ -246,7 +246,7 @@ permission_registry.register(
         title=_("See events not related to a known host"),
         description=_(
             "If that user does not have the permission <i>See all events</i> then this permission "
-            "controls wether he/she can see events that are not related to a host in the monitoring "
+            "controls whether he/she can see events that are not related to a host in the monitoring "
             "and that do not have been assigned specific contact groups to via the event rule."
         ),
         defaults=default_authorized_builtin_role_ids,
@@ -371,7 +371,7 @@ class PainterEventCount(Painter):
         return "event_count"
 
     def title(self, cell):
-        return _("Count (number of recent occurrances)")
+        return _("Count (number of recent occurrences)")
 
     def short_title(self, cell):
         return _("Cnt.")
@@ -457,7 +457,7 @@ class PainterEventLast(Painter):
         return "event_last"
 
     def title(self, cell):
-        return _("Time of last occurrance")
+        return _("Time of last occurrence")
 
     def short_title(self, cell):
         return _("Last")

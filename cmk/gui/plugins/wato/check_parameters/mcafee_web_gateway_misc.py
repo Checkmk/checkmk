@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, Integer
+from cmk.gui.valuespec import Dictionary, Integer
 
 
 def _parameter_valuespec_mcafee_web_gateway_misc():
@@ -37,19 +37,21 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             (
                 "time_to_resolve_dns",
                 SimpleLevels(
-                    Age,
+                    Integer,
                     title=_("Upper levels for time to resolve DNS"),
                     default_levels=(1500, 2000),
                     default_value=(1500, 2000),
+                    unit=_("ms"),
                 ),
             ),
             (
                 "time_consumed_by_rule_engine",
                 SimpleLevels(
-                    Age,
+                    Integer,
                     title=_("Upper levels for time consumed by rule engine"),
                     default_levels=(1500, 2000),
                     default_value=(1500, 2000),
+                    unit=_("ms"),
                 ),
             ),
         ],

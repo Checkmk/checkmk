@@ -19,7 +19,9 @@ def check(
         yield from v1.check_levels(
             value=section.time_consumed_by_rule_engine.total_seconds(),
             metric_name="time_consumed_by_rule_engine",
-            levels_upper=params["time_consumed_by_rule_engine"],
+            levels_upper=mcafee_gateway._get_param_in_seconds(
+                params["time_consumed_by_rule_engine"]
+            ),
             render_func=v1.render.timespan,
         )
 

@@ -36,3 +36,14 @@ class Section:
     socket_count: typing.Optional[int]
     time_to_resolve_dns: typing.Optional[datetime.timedelta]
     time_consumed_by_rule_engine: typing.Optional[datetime.timedelta]
+
+
+def _get_param_in_seconds(param: tuple[int, int] | None) -> tuple[float, float] | None:
+    """Time is specified in milliseconds.
+
+    >>> _get_param_in_seconds((100, 200))
+    (0.1, 0.2)
+    """
+    if param is None:
+        return None
+    return param[0] / 1000, param[1] / 1000

@@ -69,14 +69,14 @@ def test_discovery(fix_register: FixRegister) -> None:
             id="No levels",
         ),
         pytest.param(
-            {"time_consumed_by_rule_engine": (3, 3)},
+            {"time_consumed_by_rule_engine": (3000, 3000)},
             [
                 v1.Result(state=v1.State.OK, summary="2 seconds"),
             ],
             id="Levels, but OK",
         ),
         pytest.param(
-            {"time_consumed_by_rule_engine": (2, 3)},
+            {"time_consumed_by_rule_engine": (2000, 3000)},
             [
                 v1.Result(
                     state=v1.State.WARN, summary="2 seconds (warn/crit at 2 seconds/3 seconds)"
@@ -85,7 +85,7 @@ def test_discovery(fix_register: FixRegister) -> None:
             id="Critical",
         ),
         pytest.param(
-            {"time_consumed_by_rule_engine": (1, 2)},
+            {"time_consumed_by_rule_engine": (1000, 2000)},
             [
                 v1.Result(
                     state=v1.State.CRIT, summary="2 seconds (warn/crit at 1 second/2 seconds)"
@@ -131,4 +131,4 @@ def test_check_metrics(fix_register: FixRegister) -> None:
         if isinstance(r, v1.Metric)
     ]
     # Assert
-    assert metrics == [v1.Metric("time_consumed_by_rule_engine", 2.0, levels=(1500.0, 2000.0))]
+    assert metrics == [v1.Metric("time_consumed_by_rule_engine", 2.0, levels=(1.5, 2.0))]

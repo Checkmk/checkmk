@@ -19,7 +19,7 @@ def check(
         yield from v1.check_levels(
             value=section.time_to_resolve_dns.total_seconds(),
             metric_name="time_to_resolve_dns",
-            levels_upper=params["time_to_resolve_dns"],
+            levels_upper=mcafee_gateway._get_param_in_seconds(params["time_to_resolve_dns"]),
             render_func=v1.render.timespan,
         )
 

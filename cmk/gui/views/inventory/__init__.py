@@ -214,6 +214,13 @@ class PainterInventoryTree(Painter):
 
         return "invtree", code
 
+    def export_for_python(self, row: Row, cell: Cell) -> dict | None:
+        return (
+            tree.serialize()
+            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
+            else None
+        )
+
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
@@ -1249,8 +1256,13 @@ def _register_node_painter(
             "load_inv": True,
             "sorter": name,
             "paint": lambda row: _paint_host_inventory_tree(row, inventory_path, hints),
+            "export_for_python": lambda row, cell: _export_node_as_python_or_json(
+                row, inventory_path
+            ),
             "export_for_csv": lambda row, cell: _export_node_for_csv(),
-            "export_for_json": lambda row, cell: _export_node_as_json(row, inventory_path),
+            "export_for_json": lambda row, cell: _export_node_as_python_or_json(
+                row, inventory_path
+            ),
         },
     )
 
@@ -1289,11 +1301,15 @@ def _paint_host_inventory_tree(
     return "invtree", code
 
 
+def _export_node_as_python(row: Row, inventory_path: inventory.InventoryPath) -> dict:
+    return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
+
+
 def _export_node_for_csv() -> str | HTML:
     raise CSVExportError()
 
 
-def _export_node_as_json(row: Row, inventory_path: inventory.InventoryPath) -> dict:
+def _export_node_as_python_or_json(row: Row, inventory_path: inventory.InventoryPath) -> dict:
     return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
 
 
@@ -1335,8 +1351,13 @@ def _register_attribute_column(
             "load_inv": True,
             "sorter": name,
             "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
+            "export_for_python": lambda row, cell: _export_attribute_as_python_or_json(
+                row, inventory_path
+            ),
             "export_for_csv": lambda row, cell: _export_attribute_for_csv(row, inventory_path),
-            "export_for_json": lambda row, cell: _export_attribute_as_json(row, inventory_path),
+            "export_for_json": lambda row, cell: _export_attribute_as_python_or_json(
+                row, inventory_path
+            ),
         },
     )
 
@@ -1394,13 +1415,19 @@ def _paint_host_inventory_attribute(
     return "", code
 
 
+def _export_attribute_as_python(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> None | str | int | float:
+    return _compute_attribute_painter_data(row, inventory_path)
+
+
 def _export_attribute_for_csv(row: Row, inventory_path: inventory.InventoryPath) -> str | HTML:
     return (
         "" if (data := _compute_attribute_painter_data(row, inventory_path)) is None else str(data)
     )
 
 
-def _export_attribute_as_json(
+def _export_attribute_as_python_or_json(
     row: Row, inventory_path: inventory.InventoryPath
 ) -> None | str | int | float:
     return _compute_attribute_painter_data(row, inventory_path)
@@ -2002,6 +2029,13 @@ class PainterInvhistDelta(Painter):
             code = HTML(output_funnel.drain())
 
         return "invtree", code
+
+    def export_for_python(self, row: Row, cell: Cell) -> SDRawDeltaTree | None:
+        return (
+            tree.serialize()
+            if isinstance(tree := self._compute_data(row, cell), DeltaStructuredDataNode)
+            else None
+        )
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()

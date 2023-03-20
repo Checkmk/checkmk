@@ -47,7 +47,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
+from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
 from ..v1.painter_lib import experimental_painter_registry
 from ..v1.painter_lib import Painter as V1Painter
@@ -195,7 +195,7 @@ class Painter(abc.ABC):
 
     # See first implementations: PainterInventoryTree, PainterHostLabels, ...
 
-    # TODO For PDF or Python output format we implement additional methods.
+    # TODO For PDF we implement an additional method.
 
     def _compute_data(self, row: Row, cell: Cell) -> object:
         return self.render(row, cell)[1]
@@ -216,6 +216,14 @@ class Painter(abc.ABC):
         styles are not modular and all defined in check_mk.css. This will
         change in future."""
         raise NotImplementedError()
+
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        """Render the content of the painter for Pyton export based on the given row.
+
+        If the data of a painter can not be exported as Python, then this method
+        raises a 'PythonExportError'.
+        """
+        return self._compute_data(row, cell)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         """Render the content of the painter for CSV export based on the given row.
@@ -266,6 +274,11 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
             "short_title": lambda s, cell: s._spec.get("short", s.title),
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: paint_function(row),
+            "export_for_python": (
+                lambda self, row, cell: spec["export_for_python"](row, cell)
+                if "export_for_python" in spec
+                else paint_function(row)[1]
+            ),
             "export_for_csv": (
                 lambda self, row, cell: spec["export_for_csv"](row, cell)
                 if "export_for_csv" in spec
@@ -547,7 +560,25 @@ class Cell:
                 f'Failed to paint "{self.painter_name()}": {traceback.format_exc()}'
             )
 
-    # TODO render_for_python_export/as PDF
+    def render_for_python_export(self, row: Row) -> object:
+        if request.var("output_format") not in ["python", "python_export"]:
+            return "NOT_PYTHON_EXPORTABLE"
+
+        if not row:
+            return ""
+
+        try:
+            content = self.painter().export_for_python(row, self)
+        except PythonExportError:
+            return "NOT_PYTHON_EXPORTABLE"
+
+        if isinstance(content, (str, HTML)):
+            # TODO At the moment we have to keep this str/HTML handling because export_for_python
+            # falls back to render. As soon as all painters have explicit export_for_* methods,
+            # we can remove this...
+            return self._render_html_content(content)
+
+        return content
 
     def render_for_csv_export(self, row: Row) -> str | HTML:
         if request.var("output_format") not in ["csv", "csv_export"]:

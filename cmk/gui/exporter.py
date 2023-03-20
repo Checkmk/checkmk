@@ -52,8 +52,7 @@ def _export_python(view: "View", rows: Rows) -> None:
     for row in rows:
         resp.append("[")
         for cell in view.row_cells:
-            # TODO render_for_python_export
-            content = cell.render_for_json_export(join_row(row, cell))
+            content = cell.render_for_python_export(join_row(row, cell))
 
             # The aggr_treestate painters are returning a dictionary data structure (see
             # paint_aggregated_tree_state()) in case the output_format is not HTML. Only

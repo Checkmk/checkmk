@@ -5033,6 +5033,9 @@ class PainterHostLabels(Painter):
             label_sources=get_label_sources(row, "host"),
         )
 
+    def export_for_python(self, row: Row, cell: Cell) -> Labels:
+        return self._compute_data(row, cell)
+
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
@@ -5069,6 +5072,9 @@ class PainterServiceLabels(Painter):
             with_links=True,
             label_sources=get_label_sources(row, "service"),
         )
+
+    def export_for_python(self, row: Row, cell: Cell) -> Labels:
+        return self._compute_data(row, cell)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()

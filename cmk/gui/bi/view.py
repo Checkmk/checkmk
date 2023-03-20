@@ -820,6 +820,9 @@ class PainterAggrTreestate(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row)
 
+    def export_for_python(self, row: Row, cell: Cell) -> dict:
+        return render_tree_json(row)
+
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
@@ -852,6 +855,9 @@ class PainterAggrTreestateFrozenDiff(Painter):
             return "", _("Aggregation not configured to be frozen")
 
         return paint_aggregated_tree_state(row, show_frozen_difference=True)
+
+    def export_for_python(self, row: Row, cell: Cell) -> dict:
+        return render_tree_json(row)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
@@ -959,6 +965,9 @@ class PainterAggrTreestateBoxed(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row, force_renderer_cls=FoldableTreeRendererBoxes)
+
+    def export_for_python(self, row: Row, cell: Cell) -> dict:
+        return render_tree_json(row)
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()

@@ -35,7 +35,7 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
-from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
+from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
 from .painter.v0.base import Cell, Painter2
 from .painter_options import (
@@ -314,6 +314,9 @@ class PainterServiceGraphs(Painter2):
             resolve_combined_single_metric_spec,
         )
 
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
+
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
@@ -353,6 +356,9 @@ class PainterHostGraphs(Painter2):
             cell,
             resolve_combined_single_metric_spec,
         )
+
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
@@ -422,6 +428,9 @@ class PainterSvcPnpgraph(Painter2):
         assert resolve_combined_single_metric_spec is not None
         return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
 
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
+
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
@@ -460,6 +469,9 @@ class PainterHostPnpgraph(Painter2):
         resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
         assert resolve_combined_single_metric_spec is not None
         return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()

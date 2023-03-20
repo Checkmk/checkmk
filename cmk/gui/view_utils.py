@@ -27,6 +27,10 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 
+class PythonExportError(Exception):
+    pass
+
+
 class CSVExportError(Exception):
     pass
 

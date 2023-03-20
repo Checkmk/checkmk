@@ -165,9 +165,9 @@ def main():  # pylint: disable=too-many-branches
                     # HACK: workaround misconfigurations where port 443 is used for
                     # serving non ssl secured http
                     url = "http://%s:%s/%s" % (address, port, page)
-                    fd = urlopen(  # pylint: disable=consider-using-with
+                    fd = urlopen(  # pylint: disable=consider-using-with  # nosec B310 # BNS:6b61d9
                         url
-                    )  # nosec B310 # BNS:6b61d9
+                    )
                 else:
                     raise
 

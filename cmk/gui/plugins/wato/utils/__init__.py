@@ -1305,12 +1305,12 @@ class ABCEventsMode(WatoMode, abc.ABC):
                     elements=[
                         DropdownChoice(
                             label=_("from:"),
-                            choices=[],  # Will be removed soon
+                            choices=active_config.mkeventd_service_levels,
                             prefix_values=True,
                         ),
                         DropdownChoice(
                             label=_(" to:"),
-                            choices=[],  # Will be removed soon
+                            choices=active_config.mkeventd_service_levels,
                             prefix_values=True,
                         ),
                     ],

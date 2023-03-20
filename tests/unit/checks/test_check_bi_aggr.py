@@ -25,7 +25,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_bi_aggr_argument_parsing(  # type:ignore[no-untyped-def]
+def test_check_bi_aggr_argument_parsing(  # type: ignore[no-untyped-def]
     params, expected_args
 ) -> None:
     """Tests if all required arguments are present."""

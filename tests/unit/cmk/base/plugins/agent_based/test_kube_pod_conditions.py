@@ -424,7 +424,7 @@ def test_register_agent_section_calls(agent_section: AgentSectionPlugin) -> None
     assert agent_section.parse_function == kube_pod_conditions.parse
 
 
-def test_register_check_plugin_calls(check_plugin) -> None:  # type:ignore[no-untyped-def]
+def test_register_check_plugin_calls(check_plugin) -> None:  # type: ignore[no-untyped-def]
     assert str(check_plugin.name) == "kube_pod_conditions"
     assert check_plugin.service_name == "Condition"
     assert check_plugin.discovery_function.__wrapped__ == kube_pod_conditions.discovery

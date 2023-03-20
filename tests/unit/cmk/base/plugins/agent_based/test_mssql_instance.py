@@ -135,7 +135,7 @@ _AGENT_OUTPUT_2 = [
         ),
     ],
 )
-def test_discover_mssql_instance(  # type:ignore[no-untyped-def]
+def test_discover_mssql_instance(  # type: ignore[no-untyped-def]
     fix_register, string_table, expected_result
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
@@ -269,7 +269,7 @@ def test_discover_mssql_instance(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_mssql_instance(  # type:ignore[no-untyped-def]
+def test_check_mssql_instance(  # type: ignore[no-untyped-def]
     fix_register, string_table, item, expected_result
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
@@ -349,7 +349,7 @@ def test_check_mssql_instance(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_mssql_instance(  # type:ignore[no-untyped-def]
+def test_inventory_mssql_instance(  # type: ignore[no-untyped-def]
     string_table, expected_result
 ) -> None:
     assert sort_inventory_result(

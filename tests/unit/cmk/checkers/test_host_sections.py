@@ -31,7 +31,7 @@ class TestHostSections:
             },
         )
 
-    def test_add_self_extends_sections(self, host_sections) -> None:  # type:ignore[no-untyped-def]
+    def test_add_self_extends_sections(self, host_sections) -> None:  # type: ignore[no-untyped-def]
         result = host_sections + host_sections
 
         assert result.sections.keys() == host_sections.sections.keys()

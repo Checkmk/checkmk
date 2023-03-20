@@ -205,7 +205,7 @@ def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
         ),
     ],
 )
-def test_walk_for_export(  # type:ignore[no-untyped-def]
+def test_walk_for_export(  # type: ignore[no-untyped-def]
     backend: SNMPBackend, oid, expected_table
 ) -> None:
     if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:

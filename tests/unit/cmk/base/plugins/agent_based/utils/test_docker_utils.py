@@ -40,7 +40,7 @@ def test_parse_strict() -> None:
         ([["@docker_version_info", "{}"], ["1"], ["2"]], 1),  # 2 should not be there
     ],
 )
-def test_parse_strict_violation(data, expected) -> None:  # type:ignore[no-untyped-def]
+def test_parse_strict_violation(data, expected) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(ValueError):
         parse(data)
     assert parse(data, strict=False).data == expected
@@ -98,7 +98,7 @@ def test_parse_multiline() -> None:
         ),
     ],
 )
-def test_parse_remove_error_message(data_in, data_out) -> None:  # type:ignore[no-untyped-def]
+def test_parse_remove_error_message(data_in, data_out) -> None:  # type: ignore[no-untyped-def]
     cleaned_up = cleanup_oci_error_message(data_in)
     assert cleaned_up == data_out
 

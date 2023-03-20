@@ -27,7 +27,7 @@ STATIC_ARGS = ["--inventory-as-check", "$HOSTNAME$"]
         ),
     ],
 )
-def test_check_cmk_inv_argument_parsing(  # type:ignore[no-untyped-def]
+def test_check_cmk_inv_argument_parsing(  # type: ignore[no-untyped-def]
     params, expected_args
 ) -> None:
     """Tests if all required arguments are present."""

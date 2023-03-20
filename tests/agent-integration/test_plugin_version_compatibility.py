@@ -51,7 +51,7 @@ def is_python_file(path: Path, shebang_name: str) -> bool:
 
 @pytest.mark.parametrize("plugin_path", _get_python_plugins())
 @pytest.mark.parametrize("python_version", ["2.5", "2.6", "2.7", "3.7"])
-def test_agent_plugin_syntax_compatibility(  # type:ignore[no-untyped-def]
+def test_agent_plugin_syntax_compatibility(  # type: ignore[no-untyped-def]
     python_container, plugin_path, python_version
 ) -> None:
     if plugin_path.endswith(".py2") and not python_version.startswith("2"):

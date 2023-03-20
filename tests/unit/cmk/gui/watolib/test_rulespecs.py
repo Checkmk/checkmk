@@ -69,7 +69,7 @@ def test_rulespec_sub_group() -> None:
     assert test_sub_group.title == "Sub"
 
 
-def test_legacy_register_rulegroup(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_rulegroup(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -82,7 +82,7 @@ def test_legacy_register_rulegroup(monkeypatch) -> None:  # type:ignore[no-untyp
     assert group.help == "abc 123"
 
 
-def test_legacy_get_not_existing_rulegroup(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_get_not_existing_rulegroup(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -94,7 +94,7 @@ def test_legacy_get_not_existing_rulegroup(monkeypatch) -> None:  # type:ignore[
     assert group.help is None
 
 
-def test_legacy_get_not_existing_rule_sub_group(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_get_not_existing_rule_sub_group(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -1322,7 +1322,7 @@ def _expected_rulespec_group_choices():
         ("rulesets", _expected_rulespec_group_choices()),
     ],
 )
-def test_rulespec_group_choices(mode, result) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_group_choices(mode, result) -> None:  # type: ignore[no-untyped-def]
     assert sorted(rulespec_group_registry.get_group_choices()) == sorted(result)
 
 
@@ -1366,7 +1366,7 @@ def test_rulespec_group_choices(mode, result) -> None:  # type:ignore[no-untyped
         ),
     ],
 )
-def test_rulespec_get_matching_group_names(term, result) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_get_matching_group_names(term, result) -> None:  # type: ignore[no-untyped-def]
     assert sorted(rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
 
 
@@ -1484,7 +1484,7 @@ def test_rulespec_get_host_groups() -> None:
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 
-def test_legacy_register_rule(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_rule(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
@@ -1530,7 +1530,7 @@ def test_legacy_register_rule(monkeypatch) -> None:  # type:ignore[no-untyped-de
     assert spec.factory_default == Rulespec.NO_FACTORY_DEFAULT
 
 
-def test_legacy_register_rule_attributes(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_rule_attributes(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
@@ -1582,7 +1582,7 @@ def fixture_patch_rulespec_registries(monkeypatch):
     monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", test_rulespec_registry)
 
 
-def test_register_check_parameters(  # type:ignore[no-untyped-def]
+def test_register_check_parameters(  # type: ignore[no-untyped-def]
     patch_rulespec_registries,
 ) -> None:
     register_check_parameters(
@@ -1660,7 +1660,7 @@ def test_register_check_parameters(  # type:ignore[no-untyped-def]
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_host_check_parameters(  # type:ignore[no-untyped-def]
+def test_register_host_check_parameters(  # type: ignore[no-untyped-def]
     patch_rulespec_registries,
 ) -> None:
     register_check_parameters(
@@ -1687,7 +1687,7 @@ def test_register_host_check_parameters(  # type:ignore[no-untyped-def]
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_without_discovery(  # type:ignore[no-untyped-def]
+def test_register_without_discovery(  # type: ignore[no-untyped-def]
     patch_rulespec_registries,
 ) -> None:
     with pytest.raises(MKGeneralException, match="registering manual check"):
@@ -1704,7 +1704,7 @@ def test_register_without_discovery(  # type:ignore[no-untyped-def]
         )
 
 
-def test_register_without_static(patch_rulespec_registries) -> None:  # type:ignore[no-untyped-def]
+def test_register_without_static(patch_rulespec_registries) -> None:  # type: ignore[no-untyped-def]
     register_check_parameters(
         "netblabla",
         "bla_params",

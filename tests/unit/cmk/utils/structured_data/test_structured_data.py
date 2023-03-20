@@ -1256,7 +1256,7 @@ class ExpectedFilterResults(NamedTuple):
         ),
     ],
 )
-def test_make_filter(  # type:ignore[no-untyped-def]
+def test_make_filter(  # type: ignore[no-untyped-def]
     entry, expected_path, expected_filter_results
 ) -> None:
     f = make_filter(entry)
@@ -1283,7 +1283,7 @@ def test_make_filter(  # type:ignore[no-untyped-def]
         ("path.to.node_1", ("path", "to", "node_1")),
     ],
 )
-def test_parse_visible_tree_path(raw_path, expected_path) -> None:  # type:ignore[no-untyped-def]
+def test_parse_visible_tree_path(raw_path, expected_path) -> None:  # type: ignore[no-untyped-def]
     assert parse_visible_raw_path(raw_path) == expected_path
 
 

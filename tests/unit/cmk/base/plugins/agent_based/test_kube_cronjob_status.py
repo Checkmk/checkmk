@@ -48,7 +48,7 @@ class CronJobStatusFactory(ModelFactory):
     last_schedule_time = Timestamp(1.0)
 
 
-def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
+def _mocked_container_info_from_state(  # type: ignore[no-untyped-def]
     state: ContainerRunningState | ContainerTerminatedState | ContainerWaitingState,
 ):
     # The check only requires the state field to be populated, therefore all the other fields are

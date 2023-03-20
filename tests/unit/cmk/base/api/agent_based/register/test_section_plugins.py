@@ -39,7 +39,7 @@ def parse_dummy(string_table):  # pylint: disable=unused-argument
         42,
     ],
 )
-def test_validate_parse_function_type(parse_function) -> None:  # type:ignore[no-untyped-def]
+def test_validate_parse_function_type(parse_function) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(TypeError):
         section_plugins._validate_parse_function(
             parse_function,
@@ -56,7 +56,7 @@ def test_validate_parse_function_type(parse_function) -> None:  # type:ignore[no
         lambda foo, string_table: None,
     ],
 )
-def test_validate_parse_function_value(parse_function) -> None:  # type:ignore[no-untyped-def]
+def test_validate_parse_function_value(parse_function) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(ValueError):
         section_plugins._validate_parse_function(
             parse_function,
@@ -65,7 +65,7 @@ def test_validate_parse_function_value(parse_function) -> None:  # type:ignore[n
 
 
 def test_validate_parse_function_annotation_string_table() -> None:
-    def _parse_function(string_table: list[StringTable]):  # type:ignore[no-untyped-def]
+    def _parse_function(string_table: list[StringTable]):  # type: ignore[no-untyped-def]
         return string_table
 
     with pytest.raises(TypeError):

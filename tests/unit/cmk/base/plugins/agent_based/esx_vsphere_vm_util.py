@@ -12,5 +12,5 @@ class ESXVMFactory(ModelFactory):
     __model__ = esx_vsphere.ESXVm
 
 
-def esx_vm_section(**kwargs) -> esx_vsphere.ESXVm:  # type:ignore[no-untyped-def]
+def esx_vm_section(**kwargs) -> esx_vsphere.ESXVm:  # type: ignore[no-untyped-def]
     return ESXVMFactory.build(**kwargs)

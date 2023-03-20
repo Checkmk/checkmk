@@ -25,7 +25,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_mysql_parse_per_item(info, expected_items) -> None:  # type:ignore[no-untyped-def]
+def test_mysql_parse_per_item(info, expected_items) -> None:  # type: ignore[no-untyped-def]
     @mysql_parse_per_item
     def dummy_parse(info):
         return "Whoop"

@@ -10,7 +10,7 @@ import cmk.gui.valuespec as vs
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
 
-def get_tuple_vs(**kwargs) -> vs.Tuple[tuple[str, int, str, int]]:  # type:ignore[no-untyped-def]
+def get_tuple_vs(**kwargs) -> vs.Tuple[tuple[str, int, str, int]]:  # type: ignore[no-untyped-def]
     return vs.Tuple(
         elements=[
             vs.TextInput(),
@@ -30,10 +30,10 @@ class TestValueSpecTuple:
 
     def test_validate(self) -> None:
         expect_validate_success(get_tuple_vs(), ("", 0, "", 1))
-        expect_validate_failure(get_tuple_vs(), ("", 0))  # type:ignore[misc]
-        expect_validate_failure(get_tuple_vs(), ())  # type:ignore[misc]
-        expect_validate_failure(get_tuple_vs(), (0, "", 0, ""))  # type:ignore[misc]
-        expect_validate_failure(get_tuple_vs(), ["", 0, "", 1])  # type:ignore[misc]
+        expect_validate_failure(get_tuple_vs(), ("", 0))  # type: ignore[misc]
+        expect_validate_failure(get_tuple_vs(), ())  # type: ignore[misc]
+        expect_validate_failure(get_tuple_vs(), (0, "", 0, ""))  # type: ignore[misc]
+        expect_validate_failure(get_tuple_vs(), ["", 0, "", 1])  # type: ignore[misc]
 
     def test_from_html_vars(self) -> None:
         with request_var(v_0="a", v_1="2", v_2="c", v_3="4"):

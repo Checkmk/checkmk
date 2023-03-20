@@ -80,7 +80,7 @@ def test_user_config_get_not_existing_snapin() -> None:
         ),
     ],
 )
-def test_user_config_move_snapin_before(  # type:ignore[no-untyped-def]
+def test_user_config_move_snapin_before(  # type: ignore[no-untyped-def]
     mocker, move_id, before_id, result
 ) -> None:
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
@@ -112,7 +112,7 @@ def test_user_config_move_snapin_before(  # type:ignore[no-untyped-def]
     ]
 
 
-def test_load_default_config(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_load_default_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
     assert user_config.folded is False
     assert user_config.snapins == [
@@ -124,7 +124,7 @@ def test_load_default_config(monkeypatch) -> None:  # type:ignore[no-untyped-def
     ]
 
 
-def test_load_legacy_list_user_config(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_load_legacy_list_user_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -139,7 +139,7 @@ def test_load_legacy_list_user_config(monkeypatch) -> None:  # type:ignore[no-un
     ]
 
 
-def test_load_legacy_off_user_config(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_load_legacy_off_user_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -153,7 +153,7 @@ def test_load_legacy_off_user_config(monkeypatch) -> None:  # type:ignore[no-unt
     ]
 
 
-def test_load_skip_not_existing(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_load_skip_not_existing(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -167,7 +167,7 @@ def test_load_skip_not_existing(monkeypatch) -> None:  # type:ignore[no-untyped-
     ]
 
 
-def test_load_skip_not_permitted(  # type:ignore[no-untyped-def]
+def test_load_skip_not_permitted(  # type: ignore[no-untyped-def]
     monkeypatch, request_context
 ) -> None:
     monkeypatch.setattr(
@@ -187,7 +187,7 @@ def test_load_skip_not_permitted(  # type:ignore[no-untyped-def]
     ]
 
 
-def test_load_user_config(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_load_user_config(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         sidebar.UserSidebarConfig,
         "_user_config",
@@ -208,7 +208,7 @@ def test_load_user_config(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ]
 
 
-def test_save_user_config_denied(mocker, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_save_user_config_denied(mocker, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(user, "save_file")
     user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
@@ -216,7 +216,7 @@ def test_save_user_config_denied(mocker, monkeypatch) -> None:  # type:ignore[no
     save_user_file_mock.assert_not_called()
 
 
-def test_save_user_config_allowed(  # type:ignore[no-untyped-def]
+def test_save_user_config_allowed(  # type: ignore[no-untyped-def]
     request_context, mocker, monkeypatch
 ) -> None:
     monkeypatch.setattr(user, "may", lambda x: x == "general.configure_sidebar")
@@ -234,7 +234,7 @@ def test_save_user_config_allowed(  # type:ignore[no-untyped-def]
         (True, "", False),
     ],
 )
-def test_ajax_fold(  # type:ignore[no-untyped-def]
+def test_ajax_fold(  # type: ignore[no-untyped-def]
     request_context, mocker, origin_state, fold_var, set_state
 ) -> None:
     m_config = mocker.patch.object(
@@ -276,7 +276,7 @@ def test_ajax_fold(  # type:ignore[no-untyped-def]
         ("closed", "off"),
     ],
 )
-def test_ajax_openclose_close(  # type:ignore[no-untyped-def]
+def test_ajax_openclose_close(  # type: ignore[no-untyped-def]
     request_context, mocker, origin_state, set_state
 ) -> None:
     request.set_var("name", "tactical_overview")
@@ -318,7 +318,7 @@ def test_ajax_openclose_close(  # type:ignore[no-untyped-def]
     )
 
 
-def test_move_snapin_not_permitted(  # type:ignore[no-untyped-def]
+def test_move_snapin_not_permitted(  # type: ignore[no-untyped-def]
     monkeypatch, mocker, request_context
 ) -> None:
     monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
@@ -334,7 +334,7 @@ def test_move_snapin_not_permitted(  # type:ignore[no-untyped-def]
         ("not_existing", "performance", None),
     ],
 )
-def test_move_snapin(  # type:ignore[no-untyped-def]
+def test_move_snapin(  # type: ignore[no-untyped-def]
     request_context, mocker, move, before, do_save
 ) -> None:
     request.set_var("name", move)

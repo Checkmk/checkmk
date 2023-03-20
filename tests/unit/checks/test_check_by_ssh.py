@@ -17,7 +17,7 @@ pytestmark = pytest.mark.checks
         (["foo", {"port": 22}], ["-H", "$HOSTADDRESS$", "-C", "foo", "-p", 22]),
     ],
 )
-def test_check_by_ssh_argument_parsing(  # type:ignore[no-untyped-def]
+def test_check_by_ssh_argument_parsing(  # type: ignore[no-untyped-def]
     params, expected_args
 ) -> None:
     """Tests if all required arguments are present."""

@@ -47,7 +47,7 @@ class TestModeAutomation:
         )
 
     @staticmethod
-    def _check_mk_local_automation_serialized(  # type:ignore[no-untyped-def]
+    def _check_mk_local_automation_serialized(  # type: ignore[no-untyped-def]
         **_kwargs,
     ) -> tuple[Sequence[str], str]:
         return (

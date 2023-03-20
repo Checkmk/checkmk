@@ -21,7 +21,7 @@ logger = logging.getLogger()
 
 
 class CMKWebSession:
-    def __init__(self, site) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, site) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self.transids: list = []
         # Resources are only fetched and verified once per session
@@ -39,13 +39,13 @@ class CMKWebSession:
                 )
             assert response.headers["Location"] == expected_target
 
-    def get(self, *args, **kwargs) -> requests.Response:  # type:ignore[no-untyped-def]
+    def get(self, *args, **kwargs) -> requests.Response:  # type: ignore[no-untyped-def]
         return self.request("get", *args, **kwargs)
 
-    def post(self, *args, **kwargs) -> requests.Response:  # type:ignore[no-untyped-def]
+    def post(self, *args, **kwargs) -> requests.Response:  # type: ignore[no-untyped-def]
         return self.request("post", *args, **kwargs)
 
-    def request(  # type:ignore[no-untyped-def]
+    def request(  # type: ignore[no-untyped-def]
         self,
         method: str | bytes,
         path: str,
@@ -172,7 +172,7 @@ class CMKWebSession:
             mime_type = self._get_mime_type(req)
             assert mime_type in allowed_mime_types
 
-    def _find_resource_urls(  # type:ignore[no-untyped-def]
+    def _find_resource_urls(  # type: ignore[no-untyped-def]
         self, tag: str, attribute, soup: BeautifulSoup, filters: Collection | None = None
     ) -> list:
         urls = []

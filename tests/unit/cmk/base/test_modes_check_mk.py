@@ -47,6 +47,6 @@ class TestModeDumpAgent:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
-    def test_success(self, hostname, raw_data, capsys) -> None:  # type:ignore[no-untyped-def]
+    def test_success(self, hostname, raw_data, capsys) -> None:  # type: ignore[no-untyped-def]
         check_mk.mode_dump_agent({}, hostname)
         assert capsys.readouterr().out == raw_data.decode()

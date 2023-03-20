@@ -96,7 +96,7 @@ class CMKOpenApiSession(requests.Session):
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
-    def request(  # type:ignore[no-untyped-def]
+    def request(  # type: ignore[no-untyped-def]
         self, method: str | bytes, url: str | bytes, *args, **kwargs
     ) -> requests.Response:
         """

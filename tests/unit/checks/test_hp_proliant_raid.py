@@ -46,7 +46,7 @@ def test_discover_hp_proliant_raid_no_snmp_data(
     assert list(check_plugin.discovery_function({})) == []
 
 
-def test_discover_hp_proliant_raid_aa(  # type:ignore[no-untyped-def]
+def test_discover_hp_proliant_raid_aa(  # type: ignore[no-untyped-def]
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,
@@ -64,7 +64,7 @@ def test_discover_hp_proliant_raid_aa(  # type:ignore[no-untyped-def]
     ]
 
 
-def test_check_hp_proliant_raid_item_not_found(  # type:ignore[no-untyped-def]
+def test_check_hp_proliant_raid_item_not_found(  # type: ignore[no-untyped-def]
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,
@@ -81,7 +81,7 @@ def test_check_hp_proliant_raid_item_not_found(  # type:ignore[no-untyped-def]
     )
 
 
-def test_check_hp_proliant_raid(  # type:ignore[no-untyped-def]
+def test_check_hp_proliant_raid(  # type: ignore[no-untyped-def]
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,

@@ -26,7 +26,7 @@ from cmk.bi.aggregation_functions import (
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_default(  # type:ignore[no-untyped-def]
+def test_aggr_default(  # type: ignore[no-untyped-def]
     states, expected_best_state, expected_worst_state
 ) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({})
@@ -50,7 +50,7 @@ def test_aggr_default(  # type:ignore[no-untyped-def]
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_exceed_count(  # type:ignore[no-untyped-def]
+def test_aggr_exceed_count(  # type: ignore[no-untyped-def]
     states, expected_best_state, expected_worst_state
 ) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({"count": 5})
@@ -75,7 +75,7 @@ def test_aggr_exceed_count(  # type:ignore[no-untyped-def]
         ([-1, -1], -1, -1),
     ],
 )
-def test_aggr_restrict_state_warn(  # type:ignore[no-untyped-def]
+def test_aggr_restrict_state_warn(  # type: ignore[no-untyped-def]
     states, expected_best_state, expected_worst_state
 ) -> None:
     best_aggr_config = BIAggregationFunctionBest.schema()().dump({"restrict_state": 1})
@@ -103,7 +103,7 @@ def test_aggr_restrict_state_warn(  # type:ignore[no-untyped-def]
         ([1, 1, 1, 1], "percentage", 50, "percentage", 1, 2),
     ],
 )
-def test_aggr_count_ok(  # type:ignore[no-untyped-def]
+def test_aggr_count_ok(  # type: ignore[no-untyped-def]
     states, ok_type, ok_value, warn_type, warn_value, expected_state
 ) -> None:
     schema_config = {

@@ -200,7 +200,7 @@ def test_try_calculation_age_raises() -> None:
         ),
     ],
 )
-def test_check_mobileiron_versions(  # type:ignore[no-untyped-def]
+def test_check_mobileiron_versions(  # type: ignore[no-untyped-def]
     params, section, expected_results
 ) -> None:
     with on_time(1643360266, "UTC"):

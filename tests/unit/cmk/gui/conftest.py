@@ -295,7 +295,7 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
-    def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kw)
         self.username: UserId | None = None
         self.password: str | None = None
@@ -304,7 +304,7 @@ class WebTestAppForCMK(webtest.TestApp):
         self.username = username
         self.password = password
 
-    def call_method(  # type:ignore[no-untyped-def]
+    def call_method(  # type: ignore[no-untyped-def]
         self, method: HTTPMethod, url, *args, **kw
     ) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)

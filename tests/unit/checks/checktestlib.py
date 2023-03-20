@@ -39,7 +39,7 @@ class Tuploid:
 class PerfValue(Tuploid):
     """Represents a single perf value"""
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, key, value, warn=None, crit=None, minimum=None, maximum=None
     ) -> None:
         # assign first, so __repr__ won't crash
@@ -126,7 +126,7 @@ class BasicCheckResult(Tuploid):
     'Infotext contains...'
     """
 
-    def __init__(self, status, infotext, perfdata=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, status, infotext, perfdata=None) -> None:  # type: ignore[no-untyped-def]
         """We perform some basic consistency checks during initialization"""
         # assign first, so __repr__ won't crash
         self.status = status
@@ -215,7 +215,7 @@ class CheckResult:
      generator-induced laziness.
     """
 
-    def __init__(self, result) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, result) -> None:  # type: ignore[no-untyped-def]
         """
         Initializes a list of subresults using BasicCheckResult.
 
@@ -297,7 +297,7 @@ def assertCheckResultsEqual(actual, expected):
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery function."""
 
-    def __init__(self, entry) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, entry) -> None:  # type: ignore[no-untyped-def]
         self.item, self.default_params = (
             (entry.item, entry.parameters) if isinstance(entry, Service) else entry
         )
@@ -320,7 +320,7 @@ class DiscoveryResult:
     get lost in the laziness.
     """
 
-    def __init__(self, result=()) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, result=()) -> None:  # type: ignore[no-untyped-def]
         self.entries = sorted((DiscoveryEntry(e) for e in (result or ())), key=repr)
 
     def __eq__(self, other):
@@ -371,7 +371,7 @@ class BasicItemState:
     where the first one is either float or int.
     """
 
-    def __init__(self, *args) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args) -> None:  # type: ignore[no-untyped-def]
         if len(args) == 1:
             args = args[0]
         msg = "BasicItemState: expected 2-tuple (time_diff, value) - not %r"
@@ -466,7 +466,7 @@ class MockHostExtraConf:
     See for example 'test_df_check.py'.
     """
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, check, mock_config, target="host_extra_conf"
     ) -> None:
         self.target = target

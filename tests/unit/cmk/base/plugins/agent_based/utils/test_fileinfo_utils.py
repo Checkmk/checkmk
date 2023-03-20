@@ -555,7 +555,7 @@ def test_check_fileinfo_groups_data(
         ),
     ],
 )
-def test__fileinfo_check_function(  # type:ignore[no-untyped-def]
+def test__fileinfo_check_function(  # type: ignore[no-untyped-def]
     check_definition, params, expected_result
 ) -> None:
     result = list(_fileinfo_check_function(check_definition, params))
@@ -580,7 +580,7 @@ def test__fileinfo_check_function(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test__fileinfo_check_conjunctions(  # type:ignore[no-untyped-def]
+def test__fileinfo_check_conjunctions(  # type: ignore[no-untyped-def]
     check_definition, params, expected_result
 ) -> None:
     result = list(_fileinfo_check_conjunctions(check_definition, params))

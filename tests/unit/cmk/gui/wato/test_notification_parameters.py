@@ -35,7 +35,7 @@ def test_registered_notification_parameters() -> None:
     assert registered_plugins == sorted(expected_plugins)
 
 
-def test_register_legacy_notification_parameters(  # type:ignore[no-untyped-def]
+def test_register_legacy_notification_parameters(  # type: ignore[no-untyped-def]
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(

@@ -176,7 +176,7 @@ def test_discover_single(
         ),
     ],
 )
-def test_discover_inputs_and_filters(  # type:ignore[no-untyped-def]
+def test_discover_inputs_and_filters(  # type: ignore[no-untyped-def]
     parsed, selector, result
 ) -> None:
     items = list(check_api.discover(selector)(parsed))
@@ -264,7 +264,7 @@ def test_discover_decorator_with_nested_entries() -> None:
         (list(range(5)), lambda k, v: v == k, (TypeError, r"missing 1 required positional")),
     ],
 )
-def test_discover_exceptions(parsed, selector, error) -> None:  # type:ignore[no-untyped-def]
+def test_discover_exceptions(parsed, selector, error) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(error[0], match=error[1]):
         next(check_api.discover(selector)(parsed))
 
@@ -281,7 +281,7 @@ def test_discover_exceptions(parsed, selector, error) -> None:  # type:ignore[no
         (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
     ],
 )
-def test_boundaries(  # type:ignore[no-untyped-def]
+def test_boundaries(  # type: ignore[no-untyped-def]
     value, levels, representation, unit, result
 ) -> None:
     assert check_api._do_check_levels(value, levels, representation, unit) == result
@@ -335,17 +335,17 @@ def test_boundaries(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_levels(value, dsname, params, kwargs, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_levels(value, dsname, params, kwargs, result) -> None:  # type: ignore[no-untyped-def]
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
 
 
-def test_http_proxy(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_http_proxy(mocker) -> None:  # type: ignore[no-untyped-def]
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))
     assert proxy_patch.called_once()
 
 
-def test_get_effective_service_level(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_effective_service_level(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     ts = Scenario()
     ts.add_host("testhost1")
     ts.add_host("testhost2")

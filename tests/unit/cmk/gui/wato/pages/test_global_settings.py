@@ -15,7 +15,7 @@ from cmk.gui.wato.pages.global_settings import (
 from cmk.gui.watolib.search import MatchItem
 
 
-def test_match_item_generator_settings(  # type:ignore[no-untyped-def]
+def test_match_item_generator_settings(  # type: ignore[no-untyped-def]
     monkeypatch, request_context
 ) -> None:
     class SomeConfigVariable(ConfigVariable):

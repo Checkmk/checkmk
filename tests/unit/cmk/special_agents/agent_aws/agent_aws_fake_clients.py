@@ -29,7 +29,7 @@ class Entity(abc.ABC):
         self.key = key
 
     @abc.abstractmethod
-    def create(self, idx, amount: int) -> "Entity":  # type:ignore[no-untyped-def]
+    def create(self, idx, amount: int) -> "Entity":  # type: ignore[no-untyped-def]
         ...
 
 

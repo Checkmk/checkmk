@@ -52,7 +52,7 @@ class TestAgentParser:
         return SectionStore[AgentRawDataSection](store_path, logger=logger)
 
     @pytest.fixture
-    def parser(self, hostname: HostName, store, logger):  # type:ignore[no-untyped-def]
+    def parser(self, hostname: HostName, store, logger):  # type: ignore[no-untyped-def]
         return AgentParser(
             hostname,
             store,
@@ -69,7 +69,7 @@ class TestAgentParser:
             logger=logger,
         )
 
-    def test_missing_host_header(self, parser, store) -> None:  # type:ignore[no-untyped-def]
+    def test_missing_host_header(self, parser, store) -> None:  # type: ignore[no-untyped-def]
         raw_data = AgentRawData(
             b"\n".join(
                 (
@@ -86,7 +86,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    def test_piggy_name_as_hostname_is_not_piggybacked(  # type:ignore[no-untyped-def]
+    def test_piggy_name_as_hostname_is_not_piggybacked(  # type: ignore[no-untyped-def]
         self, parser, store, hostname: HostName
     ) -> None:
         host_name_bytes = str(hostname).encode("ascii")
@@ -107,7 +107,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    def test_no_section_header_after_piggyback(  # type:ignore[no-untyped-def]
+    def test_no_section_header_after_piggyback(  # type: ignore[no-untyped-def]
         self, parser, store
     ) -> None:
         raw_data = AgentRawData(
@@ -127,7 +127,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {HostName("piggy"): []}
         assert store.load() == {}
 
-    def test_raw_section_populates_sections(  # type:ignore[no-untyped-def]
+    def test_raw_section_populates_sections(  # type: ignore[no-untyped-def]
         self, parser, store
     ) -> None:
         raw_data = AgentRawData(
@@ -154,7 +154,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    def test_merge_split_raw_sections(self, parser, store) -> None:  # type:ignore[no-untyped-def]
+    def test_merge_split_raw_sections(self, parser, store) -> None:  # type: ignore[no-untyped-def]
         raw_data = AgentRawData(
             b"\n".join(
                 (
@@ -198,7 +198,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    def test_nameless_sections_are_skipped(  # type:ignore[no-untyped-def]
+    def test_nameless_sections_are_skipped(  # type: ignore[no-untyped-def]
         self, parser, store
     ) -> None:
         raw_data = AgentRawData(
@@ -233,7 +233,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    def test_nameless_piggybacked_sections_are_skipped(  # type:ignore[no-untyped-def]
+    def test_nameless_piggybacked_sections_are_skipped(  # type: ignore[no-untyped-def]
         self, parser, store, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -276,7 +276,7 @@ class TestAgentParser:
         }
         assert store.load() == {}
 
-    def test_closing_piggyback_out_of_piggyback_section_closes_section(  # type:ignore[no-untyped-def]
+    def test_closing_piggyback_out_of_piggyback_section_closes_section(  # type: ignore[no-untyped-def]
         self, parser, store
     ) -> None:
         raw_data = AgentRawData(
@@ -309,7 +309,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    def test_piggyback_populates_piggyback_raw_data(  # type:ignore[no-untyped-def]
+    def test_piggyback_populates_piggyback_raw_data(  # type: ignore[no-untyped-def]
         self, parser, store, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -370,7 +370,7 @@ class TestAgentParser:
         }
         assert store.load() == {}
 
-    def test_merge_split_piggyback_sections(  # type:ignore[no-untyped-def]
+    def test_merge_split_piggyback_sections(  # type: ignore[no-untyped-def]
         self, parser, store, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -420,7 +420,7 @@ class TestAgentParser:
         }
         assert store.load() == {}
 
-    def test_persist_option_populates_cache_info(  # type:ignore[no-untyped-def]
+    def test_persist_option_populates_cache_info(  # type: ignore[no-untyped-def]
         self, parser, store, mocker, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -446,7 +446,7 @@ class TestAgentParser:
             }
         )
 
-    def test_persist_option_and_persisted_sections(  # type:ignore[no-untyped-def]
+    def test_persist_option_and_persisted_sections(  # type: ignore[no-untyped-def]
         self, parser, store, mocker, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -489,7 +489,7 @@ class TestAgentParser:
             }
         )
 
-    def test_section_filtering_and_merging_host(  # type:ignore[no-untyped-def]
+    def test_section_filtering_and_merging_host(  # type: ignore[no-untyped-def]
         self, parser, store, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -539,7 +539,7 @@ class TestAgentParser:
             }
         )
 
-    def test_section_filtering_and_merging_piggyback(  # type:ignore[no-untyped-def]
+    def test_section_filtering_and_merging_piggyback(  # type: ignore[no-untyped-def]
         self, parser, store, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -579,7 +579,7 @@ class TestAgentParser:
         }
         assert store.load() == {}
 
-    def test_section_lines_are_correctly_ordered_with_different_separators(  # type:ignore[no-untyped-def]
+    def test_section_lines_are_correctly_ordered_with_different_separators(  # type: ignore[no-untyped-def]
         self, parser, store
     ) -> None:
         raw_data = AgentRawData(
@@ -681,7 +681,7 @@ class TestSectionMarker:
             ("", None, {}),  # invalid section name
         ],
     )  # fmt: off
-    def test_options_from_headerline(  # type:ignore[no-untyped-def]
+    def test_options_from_headerline(  # type: ignore[no-untyped-def]
         self, headerline, section_name, section_options
     ) -> None:
         try:
@@ -744,7 +744,7 @@ class TestSNMPParser:
             logger=logging.Logger("test"),
         )
 
-    def test_empty_raw_data(self, parser) -> None:  # type:ignore[no-untyped-def]
+    def test_empty_raw_data(self, parser) -> None:  # type: ignore[no-untyped-def]
         raw_data: SNMPRawData = {}
 
         host_sections = parser.parse(raw_data, selection=NO_SELECTION)
@@ -761,13 +761,13 @@ class TestSNMPParser:
         content_b = [["third", "line"], ["forth", "line"]]
         return {section_a: content_a, section_b: content_b}
 
-    def test_no_cache(self, parser, sections) -> None:  # type:ignore[no-untyped-def]
+    def test_no_cache(self, parser, sections) -> None:  # type: ignore[no-untyped-def]
         host_sections = parser.parse(sections, selection=NO_SELECTION)
         assert host_sections.sections == sections
         assert host_sections.cache_info == {}
         assert not host_sections.piggybacked_raw_data
 
-    def test_with_persisted_sections(  # type:ignore[no-untyped-def]
+    def test_with_persisted_sections(  # type: ignore[no-untyped-def]
         self, parser, sections, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -795,7 +795,7 @@ class TestSNMPParser:
 
 
 class MockStore(SectionStore):
-    def __init__(self, path, sections, *, logger) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, path, sections, *, logger) -> None:  # type: ignore[no-untyped-def]
         super().__init__(path, logger=logger)
         assert isinstance(sections, PersistedSections)
         self._sections = sections
@@ -812,7 +812,7 @@ class TestAgentPersistentSectionHandling:
     def logger(self):
         return logging.getLogger("test")
 
-    def test_update_with_empty_store_and_empty_raw_data(  # type:ignore[no-untyped-def]
+    def test_update_with_empty_store_and_empty_raw_data(  # type: ignore[no-untyped-def]
         self, logger
     ) -> None:
         section_store = MockStore(
@@ -843,7 +843,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_store_and_empty_raw_data(  # type:ignore[no-untyped-def]
+    def test_update_with_store_and_empty_raw_data(  # type: ignore[no-untyped-def]
         self, logger
     ) -> None:
         section_store = MockStore(
@@ -882,7 +882,7 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_update_with_empty_store_and_raw_data(  # type:ignore[no-untyped-def]
+    def test_update_with_empty_store_and_raw_data(  # type: ignore[no-untyped-def]
         self, logger
     ) -> None:
         raw_data = AgentRawData(b"<<<fresh>>>")
@@ -913,7 +913,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_store_and_non_persisting_raw_data(  # type:ignore[no-untyped-def]
+    def test_update_with_store_and_non_persisting_raw_data(  # type: ignore[no-untyped-def]
         self, logger
     ) -> None:
         section_store = MockStore(
@@ -955,7 +955,7 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_update_with_store_and_persisting_raw_data(  # type:ignore[no-untyped-def]
+    def test_update_with_store_and_persisting_raw_data(  # type: ignore[no-untyped-def]
         self, logger, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -1002,7 +1002,7 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_update_store_with_newest(self, logger) -> None:  # type:ignore[no-untyped-def]
+    def test_update_store_with_newest(self, logger) -> None:  # type: ignore[no-untyped-def]
         section_store = MockStore(
             "/dev/null",
             PersistedSections[AgentRawDataSection](
@@ -1039,7 +1039,7 @@ class TestAgentPersistentSectionHandling:
             }
         )
 
-    def test_keep_outdated_false(self, logger, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    def test_keep_outdated_false(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         raw_data = AgentRawData(b"<<<another_section>>>")
@@ -1074,7 +1074,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_keep_outdated_true(self, logger, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    def test_keep_outdated_true(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         raw_data = AgentRawData(b"<<<another_section>>>")
@@ -1122,7 +1122,7 @@ class TestSNMPPersistedSectionHandling:
     def logger(self):
         return logging.getLogger("test")
 
-    def test_update_with_empty_store_and_persisted(  # type:ignore[no-untyped-def]
+    def test_update_with_empty_store_and_persisted(  # type: ignore[no-untyped-def]
         self, logger
     ) -> None:
         section_store = MockStore(
@@ -1145,7 +1145,7 @@ class TestSNMPPersistedSectionHandling:
         assert shs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_empty_persisted(self, logger) -> None:  # type:ignore[no-untyped-def]
+    def test_update_with_empty_persisted(self, logger) -> None:  # type: ignore[no-untyped-def]
         section_store = MockStore(
             "/dev/null",
             PersistedSections[SNMPRawDataSection](
@@ -1172,7 +1172,7 @@ class TestSNMPPersistedSectionHandling:
             SectionName("stored"): (0, 0, [["old"]]),
         }
 
-    def test_update_with_empty_store(self, logger) -> None:  # type:ignore[no-untyped-def]
+    def test_update_with_empty_store(self, logger) -> None:  # type: ignore[no-untyped-def]
         section_store = MockStore(
             "/dev/null",
             PersistedSections[SNMPRawDataSection]({}),
@@ -1194,7 +1194,7 @@ class TestSNMPPersistedSectionHandling:
         assert shs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_update_with_persisted_and_store(self, logger) -> None:  # type:ignore[no-untyped-def]
+    def test_update_with_persisted_and_store(self, logger) -> None:  # type: ignore[no-untyped-def]
         section_store = MockStore(
             "/dev/null",
             PersistedSections[SNMPRawDataSection](
@@ -1225,7 +1225,7 @@ class TestSNMPPersistedSectionHandling:
             SectionName("stored"): (0, 0, [["old"]]),
         }
 
-    def test_check_intervals_updates_persisted(  # type:ignore[no-untyped-def]
+    def test_check_intervals_updates_persisted(  # type: ignore[no-untyped-def]
         self, logger, monkeypatch
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -1258,7 +1258,7 @@ class TestSNMPPersistedSectionHandling:
             }
         )
 
-    def test_keep_outdated_false(self, logger, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    def test_keep_outdated_false(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         section_store = MockStore(
@@ -1283,7 +1283,7 @@ class TestSNMPPersistedSectionHandling:
         assert shs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_keep_outdated_true(self, logger, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    def test_keep_outdated_true(self, logger, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         section_store = MockStore(
@@ -1317,14 +1317,14 @@ class TestSNMPPersistedSectionHandling:
 
 class TestMarkers:
     @pytest.mark.parametrize("line", [b"<<<x>>>", b"<<<x:cached(10, 5)>>>"])
-    def test_section_header(self, line) -> None:  # type:ignore[no-untyped-def]
+    def test_section_header(self, line) -> None:  # type: ignore[no-untyped-def]
         assert SectionMarker.is_header(line) is True
         assert SectionMarker.is_footer(line) is False
         assert PiggybackMarker.is_header(line) is False
         assert PiggybackMarker.is_footer(line) is False
 
     @pytest.mark.parametrize("line", [b"<<<>>>", b"<<<:cached(10, 5)>>>"])
-    def test_section_footer(self, line) -> None:  # type:ignore[no-untyped-def]
+    def test_section_footer(self, line) -> None:  # type: ignore[no-untyped-def]
         assert SectionMarker.is_header(line) is False
         assert SectionMarker.is_footer(line) is True
         assert PiggybackMarker.is_header(line) is False

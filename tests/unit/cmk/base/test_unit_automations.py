@@ -54,7 +54,7 @@ def test_registered_automations() -> None:
     )
 
 
-def test_analyse_host(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_analyse_host(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     automation = automations.AutomationAnalyseHost()
 
     ts = Scenario()

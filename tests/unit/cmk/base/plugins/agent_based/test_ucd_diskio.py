@@ -19,7 +19,7 @@ from cmk.base.plugins.agent_based.ucd_diskio import (
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def value_store_fixture(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     value_store_patched = {
         "ram0": (1662713424.1758733, 0.0),
     }

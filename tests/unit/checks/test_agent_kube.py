@@ -157,7 +157,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_parse_arguments(params, expected_args) -> None:  # type:ignore[no-untyped-def]
+def test_parse_arguments(params, expected_args) -> None:  # type: ignore[no-untyped-def]
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(params, "host", "11.211.3.32")
@@ -515,7 +515,7 @@ def test_parse_namespace_patterns() -> None:
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_client_configuration_host(  # type:ignore[no-untyped-def]
+def test_client_configuration_host(  # type: ignore[no-untyped-def]
     params: Mapping[str, Any], host
 ) -> None:
     agent = SpecialAgent("agent_kube")
@@ -588,7 +588,7 @@ def test_client_configuration_host(  # type:ignore[no-untyped-def]
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_proxy_arguments(params, expected_proxy_arg) -> None:  # type:ignore[no-untyped-def]
+def test_proxy_arguments(params, expected_proxy_arg) -> None:  # type: ignore[no-untyped-def]
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(params, "host", "11.211.3.32")
     assert isinstance(arguments, list)

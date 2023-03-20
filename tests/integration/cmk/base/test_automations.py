@@ -120,7 +120,7 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
 #   '----------------------------------------------------------------------'
 
 
-def _execute_automation(  # type:ignore[no-untyped-def]
+def _execute_automation(  # type: ignore[no-untyped-def]
     site: Site,
     cmd,
     args=None,
@@ -156,7 +156,7 @@ def _execute_automation(  # type:ignore[no-untyped-def]
 
 
 # old alias, drop after 2.2 release
-def test_automation_inventory_no_host(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_inventory_no_host(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
     p = site.execute(
         ["cmk", "--automation", "inventory", "@scan", "new"],
@@ -170,7 +170,7 @@ def test_automation_inventory_no_host(test_cfg, site: Site) -> None:  # type:ign
     assert p.wait() == 1
 
 
-def test_automation_discovery_no_host(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_discovery_no_host(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
     # NOTE: We can't use @raiseerrors here, because this would redirect stderr to /dev/null!
     p = site.execute(
         ["cmk", "--automation", "service-discovery", "@scan", "new"],
@@ -185,7 +185,7 @@ def test_automation_discovery_no_host(test_cfg, site: Site) -> None:  # type:ign
 
 
 # old alias, drop after 2.2 release
-def test_automation_inventory_single_host(  # type:ignore[no-untyped-def]
+def test_automation_inventory_single_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -199,7 +199,7 @@ def test_automation_inventory_single_host(  # type:ignore[no-untyped-def]
     assert result.hosts["modes-test-host"].error_text is None
 
 
-def test_automation_discovery_single_host(  # type:ignore[no-untyped-def]
+def test_automation_discovery_single_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -214,7 +214,7 @@ def test_automation_discovery_single_host(  # type:ignore[no-untyped-def]
 
 
 # old alias, drop after 2.2 release
-def test_automation_inventory_multiple_hosts(  # type:ignore[no-untyped-def]
+def test_automation_inventory_multiple_hosts(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -230,7 +230,7 @@ def test_automation_inventory_multiple_hosts(  # type:ignore[no-untyped-def]
     assert result.hosts["modes-test-host2"].error_text is None
 
 
-def test_automation_discovery_multiple_hosts(  # type:ignore[no-untyped-def]
+def test_automation_discovery_multiple_hosts(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -247,7 +247,7 @@ def test_automation_discovery_multiple_hosts(  # type:ignore[no-untyped-def]
 
 
 # old alias, drop after 2.2 release
-def test_automation_inventory_not_existing_host(  # type:ignore[no-untyped-def]
+def test_automation_inventory_not_existing_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -274,7 +274,7 @@ def test_automation_inventory_not_existing_host(  # type:ignore[no-untyped-def]
     }
 
 
-def test_automation_discovery_not_existing_host(  # type:ignore[no-untyped-def]
+def test_automation_discovery_not_existing_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -302,7 +302,7 @@ def test_automation_discovery_not_existing_host(  # type:ignore[no-untyped-def]
 
 
 # old alias, drop after 2.2 release
-def test_automation_inventory_with_cache_option(  # type:ignore[no-untyped-def]
+def test_automation_inventory_with_cache_option(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -316,7 +316,7 @@ def test_automation_inventory_with_cache_option(  # type:ignore[no-untyped-def]
     assert result.hosts["modes-test-host"].error_text is None
 
 
-def test_automation_discovery_with_cache_option(  # type:ignore[no-untyped-def]
+def test_automation_discovery_with_cache_option(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -330,7 +330,7 @@ def test_automation_discovery_with_cache_option(  # type:ignore[no-untyped-def]
     assert result.hosts["modes-test-host"].error_text is None
 
 
-def test_automation_analyse_service_autocheck(  # type:ignore[no-untyped-def]
+def test_automation_analyse_service_autocheck(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     automation_result = _execute_automation(
@@ -345,7 +345,7 @@ def test_automation_analyse_service_autocheck(  # type:ignore[no-untyped-def]
     assert automation_result.service_info["checkgroup"] == "apache_status"
 
 
-def test_automation_analyse_service_no_check(  # type:ignore[no-untyped-def]
+def test_automation_analyse_service_no_check(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     automation_result = _execute_automation(
@@ -360,7 +360,7 @@ def test_automation_analyse_service_no_check(  # type:ignore[no-untyped-def]
 
 
 # old alias, drop after 2.2 release
-def test_automation_try_inventory_not_existing_host(  # type:ignore[no-untyped-def]
+def test_automation_try_inventory_not_existing_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     _execute_automation(
@@ -379,7 +379,7 @@ def test_automation_try_inventory_not_existing_host(  # type:ignore[no-untyped-d
     )
 
 
-def test_automation_discovery_preview_not_existing_host(  # type:ignore[no-untyped-def]
+def test_automation_discovery_preview_not_existing_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     _execute_automation(
@@ -399,7 +399,7 @@ def test_automation_discovery_preview_not_existing_host(  # type:ignore[no-untyp
 
 
 # old alias, drop after 2.2 release
-def test_automation_try_inventory_host(  # type:ignore[no-untyped-def]
+def test_automation_try_inventory_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -412,7 +412,7 @@ def test_automation_try_inventory_host(  # type:ignore[no-untyped-def]
     assert isinstance(result.check_table, list)
 
 
-def test_automation_discovery_preview_host(  # type:ignore[no-untyped-def]
+def test_automation_discovery_preview_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -425,7 +425,7 @@ def test_automation_discovery_preview_host(  # type:ignore[no-untyped-def]
     assert isinstance(result.check_table, list)
 
 
-def test_automation_set_autochecks(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_set_autochecks(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
     hostname = HostName("blablahost")
     new_items: SetAutochecksTable = {
         ("df", "xxx"): ("Filesystem xxx", {}, {"xyz": "123"}, [hostname]),
@@ -476,7 +476,7 @@ def test_automation_set_autochecks(test_cfg, site: Site) -> None:  # type:ignore
 
 def test_automation_update_dns_cache(
     test_cfg: TagConfig, site: Site, rest_api_client: RestApiClient
-) -> None:  # type:ignore[no-untyped-def]
+) -> None:  # type: ignore[no-untyped-def]
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
@@ -507,20 +507,20 @@ def test_automation_update_dns_cache(
 
 
 # TODO: Test with the different cores
-def test_automation_reload(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_reload(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
     result = _execute_automation(site, "reload")
     assert isinstance(result, results.ReloadResult)
     assert not result.config_warnings
 
 
 # TODO: Test with the different cores
-def test_automation_restart(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_restart(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
     result = _execute_automation(site, "restart")
     assert isinstance(result, results.RestartResult)
     assert not result.config_warnings
 
 
-def test_automation_get_check_information(  # type:ignore[no-untyped-def]
+def test_automation_get_check_information(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(site, "get-check-information")
@@ -532,7 +532,7 @@ def test_automation_get_check_information(  # type:ignore[no-untyped-def]
         assert "service_description" in info
 
 
-def test_automation_get_section_information(  # type:ignore[no-untyped-def]
+def test_automation_get_section_information(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(site, "get-section-information")
@@ -545,7 +545,7 @@ def test_automation_get_section_information(  # type:ignore[no-untyped-def]
         assert info["type"] in ("snmp", "agent")
 
 
-def test_automation_notification_replay(  # type:ignore[no-untyped-def]
+def test_automation_notification_replay(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     site.write_text_file(
@@ -558,7 +558,7 @@ def test_automation_notification_replay(  # type:ignore[no-untyped-def]
     )
 
 
-def test_automation_notification_analyse(  # type:ignore[no-untyped-def]
+def test_automation_notification_analyse(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     site.write_text_file(
@@ -571,7 +571,7 @@ def test_automation_notification_analyse(  # type:ignore[no-untyped-def]
     )
 
 
-def test_automation_notification_get_bulks(  # type:ignore[no-untyped-def]
+def test_automation_notification_get_bulks(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(site, "notification-get-bulks", args=["0"])
@@ -579,7 +579,7 @@ def test_automation_notification_get_bulks(  # type:ignore[no-untyped-def]
     assert not result.result
 
 
-def test_automation_get_agent_output(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_get_agent_output(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
     result = _execute_automation(
         site,
         "get-agent-output",
@@ -593,7 +593,7 @@ def test_automation_get_agent_output(test_cfg, site: Site) -> None:  # type:igno
     assert result.success is True
 
 
-def test_automation_get_agent_output_unknown_host(  # type:ignore[no-untyped-def]
+def test_automation_get_agent_output_unknown_host(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -609,7 +609,7 @@ def test_automation_get_agent_output_unknown_host(  # type:ignore[no-untyped-def
 
 
 # TODO: active-check: Add test for real custom_checks check
-def test_automation_active_check_unknown(  # type:ignore[no-untyped-def]
+def test_automation_active_check_unknown(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -622,7 +622,7 @@ def test_automation_active_check_unknown(  # type:ignore[no-untyped-def]
     assert result.output == "Failed to compute check result"
 
 
-def test_automation_active_check_icmp_all_ipv4(  # type:ignore[no-untyped-def]
+def test_automation_active_check_icmp_all_ipv4(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     for host in ("modes-test-host", "host_with_secondary_ip"):
@@ -636,7 +636,7 @@ def test_automation_active_check_icmp_all_ipv4(  # type:ignore[no-untyped-def]
         assert result.output.startswith("OK - 127.0.0.1: rta")
 
 
-def test_automation_active_check_unknown_custom(  # type:ignore[no-untyped-def]
+def test_automation_active_check_unknown_custom(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(
@@ -649,7 +649,7 @@ def test_automation_active_check_unknown_custom(  # type:ignore[no-untyped-def]
     assert result.output == "Failed to compute check result"
 
 
-def test_automation_get_configuration(test_cfg, site: Site) -> None:  # type:ignore[no-untyped-def]
+def test_automation_get_configuration(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
     variable_names = [
         "agent_port",
     ]
@@ -689,7 +689,7 @@ def test_automation_get_configuration(test_cfg, site: Site) -> None:  # type:ign
         site.write_text_file("etc/check_mk/main.mk", "")
 
 
-def test_automation_create_diagnostics_dump(  # type:ignore[no-untyped-def]
+def test_automation_create_diagnostics_dump(  # type: ignore[no-untyped-def]
     test_cfg, site: Site
 ) -> None:
     result = _execute_automation(site, "create-diagnostics-dump")

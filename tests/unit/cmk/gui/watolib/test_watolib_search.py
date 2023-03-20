@@ -487,7 +487,7 @@ class TestRealisticSearch:
         "fake_rrdcached_default_globals",
         "suppress_get_configuration_automation_call",
     )
-    def test_index_is_built_as_super_user(  # type:ignore[no-untyped-def]
+    def test_index_is_built_as_super_user(  # type: ignore[no-untyped-def]
         self,
         mock_livestatus: MockLiveStatusConnection,
     ):
@@ -515,7 +515,7 @@ class TestRealisticSearch:
         "fake_rrdcached_default_globals",
         "suppress_get_configuration_automation_call",
     )
-    def test_dcd_not_found_if_not_super_user(  # type:ignore[no-untyped-def]
+    def test_dcd_not_found_if_not_super_user(  # type: ignore[no-untyped-def]
         self,
         monkeypatch: MonkeyPatch,
     ):

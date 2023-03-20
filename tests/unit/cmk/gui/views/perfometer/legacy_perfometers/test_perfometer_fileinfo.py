@@ -43,7 +43,7 @@ from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_file
         ),
     ],
 )
-def test_perfometer_fileinfo_groups(  # type:ignore[no-untyped-def]
+def test_perfometer_fileinfo_groups(  # type: ignore[no-untyped-def]
     perf_data, expected_result, request_context
 ) -> None:
     assert perfometer_fileinfo_groups({}, "", perf_data) == expected_result

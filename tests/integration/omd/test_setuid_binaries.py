@@ -30,7 +30,7 @@ from cmk.utils import version as cmk_version
         ),
     ],
 )
-def test_binary_capability(  # type:ignore[no-untyped-def]
+def test_binary_capability(  # type: ignore[no-untyped-def]
     site, rel_path, expected_capability
 ) -> None:
     path = site.path(rel_path)

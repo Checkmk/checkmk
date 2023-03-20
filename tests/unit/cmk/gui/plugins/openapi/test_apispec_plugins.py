@@ -16,7 +16,7 @@ from cmk import fields
 
 
 class Movie:
-    def __init__(self, **kw) -> None: # type:ignore[no-untyped-def]
+    def __init__(self, **kw) -> None: # type: ignore[no-untyped-def]
         for key, value in kw.items():
             setattr(self, key, value)
         self.kw = kw
@@ -107,7 +107,7 @@ def spec_fixture():
                    ])
 
 
-def test_apispec_plugin_string_to_schema_dict(spec) -> None: # type:ignore[no-untyped-def]
+def test_apispec_plugin_string_to_schema_dict(spec) -> None: # type: ignore[no-untyped-def]
     # Schema suffix of schemas gets stripped by library
     spec.components.schema('MovieDict', schema=MovieDictSchema)
 
@@ -120,7 +120,7 @@ def test_apispec_plugin_string_to_schema_dict(spec) -> None: # type:ignore[no-un
     }
 
 
-def test_apispec_plugin_string_to_string_dict(spec) -> None: # type:ignore[no-untyped-def]
+def test_apispec_plugin_string_to_string_dict(spec) -> None: # type: ignore[no-untyped-def]
     # Schema suffix of schemas gets stripped by library
     spec.components.schema('CustomTagDict', schema=CustomTagDictSchema)
     schemas = spec.to_dict()['components']['schemas']
@@ -135,7 +135,7 @@ def test_apispec_plugin_string_to_string_dict(spec) -> None: # type:ignore[no-un
     }
 
 
-def test_apispec_plugin_parameters(spec) -> None: # type:ignore[no-untyped-def]
+def test_apispec_plugin_parameters(spec) -> None: # type: ignore[no-untyped-def]
     # Different code paths are executed here. We need to make sure our plugin handles this.
     spec.components.parameter('var', 'path', {'description': "Some path variable"})
 
@@ -148,7 +148,7 @@ def test_apispec_plugin_parameters(spec) -> None: # type:ignore[no-untyped-def]
         (EmailSchema, {'bob': 'bob@example.com'}, {'bob': 'bob@example.com'}),
     ],
 )
-def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data, expected_result) -> None: # type:ignore[no-untyped-def]
+def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data, expected_result) -> None: # type: ignore[no-untyped-def]
     schema = schema_class()
     result = schema.load(in_data)
     assert result == expected_result
@@ -160,7 +160,7 @@ def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data, expect
     (IntegerDictSchema, {'bar': 'eins'}),
     (EmailSchema, {'hans': 'foo'}),
 ])
-def test_typed_dictionary_failed_validation(schema_class, in_data) -> None: # type:ignore[no-untyped-def]
+def test_typed_dictionary_failed_validation(schema_class, in_data) -> None: # type: ignore[no-untyped-def]
     schema = schema_class()
     with pytest.raises(ValidationError):
         schema.load(in_data)

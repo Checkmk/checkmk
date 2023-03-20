@@ -11,7 +11,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_metadata
 
 
 class TestAPIStatefulSets:
-    def test_parse_metadata(self, apps_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
+    def test_parse_metadata(self, apps_client, dummy_host) -> None:  # type: ignore[no-untyped-def]
         statefulsets_metadata = {
             "metadata": {
                 "name": "web",
@@ -35,7 +35,7 @@ class TestAPIStatefulSets:
         assert metadata.labels
         assert metadata.annotations == {"foo": "bar"}
 
-    def test_parse_metadata_missing_annotations_and_labels(  # type:ignore[no-untyped-def]
+    def test_parse_metadata_missing_annotations_and_labels(  # type: ignore[no-untyped-def]
         self, apps_client, dummy_host
     ) -> None:
         statefulsets_metadata = {

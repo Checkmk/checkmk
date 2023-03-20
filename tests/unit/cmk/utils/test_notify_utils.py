@@ -22,7 +22,7 @@ class FakeLocalConnection:
         self.__class__.timeout = timeout
 
 
-def test_log_to_history(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_log_to_history(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(livestatus, "LocalConnection", FakeLocalConnection)
     with on_time("2018-04-15 16:50", "CET"):
         notify.log_to_history("ä")

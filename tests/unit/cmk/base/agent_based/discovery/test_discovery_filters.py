@@ -38,7 +38,7 @@ from cmk.base.agent_based.discovery import _filters
         },
     ],
 )
-def test__get_service_filter_func_no_lists(  # type:ignore[no-untyped-def]
+def test__get_service_filter_func_no_lists(  # type: ignore[no-untyped-def]
     parameters_rediscovery,
 ) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)

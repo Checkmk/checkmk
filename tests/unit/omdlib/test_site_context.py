@@ -24,7 +24,7 @@ def test_root_context() -> None:
     assert not site.is_site_context()
 
 
-def test_site_context(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     site = omdlib.main.SiteContext("dingeling")
     assert site.name == "dingeling"
     assert site.dir == "/omd/sites/dingeling"
@@ -34,20 +34,20 @@ def test_site_context(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert site.is_site_context()
 
 
-def test_site_context_version(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_version(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     site = omdlib.main.SiteContext("dingeling")
     monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
     assert site.version == "2018.08.11.cee"
 
 
-def test_site_context_replacements(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_replacements(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     site = omdlib.main.SiteContext("dingeling")
     assert site.replacements["###SITE###"] == "dingeling"
     assert site.replacements["###ROOT###"] == "/omd/sites/dingeling"
     assert len(site.replacements) == 2
 
 
-def test_site_context_exists(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_exists(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/sites/dingeling")
 
     site = omdlib.main.SiteContext("dingeling")
@@ -57,7 +57,7 @@ def test_site_context_exists(monkeypatch) -> None:  # type:ignore[no-untyped-def
     assert not site.exists()
 
 
-def test_site_context_is_empty(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_is_empty(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]
     )
@@ -69,7 +69,7 @@ def test_site_context_is_empty(monkeypatch) -> None:  # type:ignore[no-untyped-d
     assert not site.is_empty()
 
 
-def test_site_context_is_autostart(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_is_autostart(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     site = omdlib.main.SiteContext("dingeling")
 
     with pytest.raises(Exception) as e:
@@ -87,7 +87,7 @@ def test_site_context_is_autostart(monkeypatch) -> None:  # type:ignore[no-untyp
     assert not site.is_autostart()
 
 
-def test_site_context_is_disabled(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_is_disabled(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/apache/dingeling.conf")
     site = omdlib.main.SiteContext("dingeling")
     assert not site.is_disabled()

@@ -60,7 +60,7 @@ def rough_livestatus_mock(mock_livestatus: MockLiveStatusConnection) -> MockLive
     return live
 
 
-def test_ParentChildNetworkTopology_fetch_data_for_hosts(  # type:ignore[no-untyped-def]
+def test_ParentChildNetworkTopology_fetch_data_for_hosts(  # type: ignore[no-untyped-def]
     rough_livestatus: MockLiveStatusConnection, with_admin_login
 ) -> None:
     with rough_livestatus(expect_status_query=True):
@@ -78,7 +78,7 @@ def test_ParentChildNetworkTopology_fetch_data_for_hosts(  # type:ignore[no-unty
     assert host_info[0]["name"] == "foo<(/"
 
 
-def test_ParentChildTopologyPage_get_hostnames_from_filters(  # type:ignore[no-untyped-def]
+def test_ParentChildTopologyPage_get_hostnames_from_filters(  # type: ignore[no-untyped-def]
     rough_livestatus: MockLiveStatusConnection, mocker
 ) -> None:
     class MockView:

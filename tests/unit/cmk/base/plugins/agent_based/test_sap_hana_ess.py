@@ -45,7 +45,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
         ),
     ],
 )
-def test_parse_sap_hana_ess(  # type:ignore[no-untyped-def]
+def test_parse_sap_hana_ess(  # type: ignore[no-untyped-def]
     fix_register, info, expected_result
 ) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_ess")]
@@ -66,7 +66,7 @@ def test_parse_sap_hana_ess(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_sap_hana_ess(  # type:ignore[no-untyped-def]
+def test_inventory_sap_hana_ess(  # type: ignore[no-untyped-def]
     fix_register, info, expected_result
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
@@ -118,7 +118,7 @@ def test_inventory_sap_hana_ess(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_sap_hana_ess(  # type:ignore[no-untyped-def]
+def test_check_sap_hana_ess(  # type: ignore[no-untyped-def]
     fix_register, item, info, expected_result
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
@@ -137,7 +137,7 @@ def test_check_sap_hana_ess(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_sap_hana_ess_stale(fix_register, item, info) -> None:  # type:ignore[no-untyped-def]
+def test_check_sap_hana_ess_stale(fix_register, item, info) -> None:  # type: ignore[no-untyped-def]
     section = fix_register.agent_sections[SectionName("sap_hana_ess")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_ess")]
     with pytest.raises(IgnoreResultsError):

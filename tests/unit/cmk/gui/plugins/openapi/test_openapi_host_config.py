@@ -1147,7 +1147,7 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
 
 
 @managedtest
-def test_openapi_host_with_custom_attributes(  # type:ignore[no-untyped-def]
+def test_openapi_host_with_custom_attributes(  # type: ignore[no-untyped-def]
     api_client: RestApiClient,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     custom_host_attribute_basic_topic,

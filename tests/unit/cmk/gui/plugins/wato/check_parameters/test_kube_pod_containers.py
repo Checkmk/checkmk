@@ -46,7 +46,7 @@ def test_rulespec_registry_match_type(rulespec: Rulespec) -> None:
     assert rulespec.match_type == "dict"
 
 
-def test_rulespec_registry_parameter_valuespec(rulespec) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_registry_parameter_valuespec(rulespec) -> None:  # type: ignore[no-untyped-def]
     assert rulespec._parameter_valuespec == kube_pod_containers._parameter_valuespec
 
 

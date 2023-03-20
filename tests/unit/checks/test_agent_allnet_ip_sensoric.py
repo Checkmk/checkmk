@@ -17,7 +17,7 @@ pytestmark = pytest.mark.checks
         ({"timeout": 20}, ["--timeout", "20", "address"]),
     ],
 )
-def test_allnet_ip_sensoric_argument_parsing(  # type:ignore[no-untyped-def]
+def test_allnet_ip_sensoric_argument_parsing(  # type: ignore[no-untyped-def]
     params, expected_args
 ) -> None:
     """Tests if all required arguments are present."""

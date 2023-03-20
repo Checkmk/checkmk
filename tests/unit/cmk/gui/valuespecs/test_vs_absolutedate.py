@@ -25,7 +25,7 @@ class TestAbsoluteDate:
             vs.AbsoluteDate(),
             "smth",
             match="The type of the timestamp must be int or float, but is",
-        )  # type:ignore
+        )  # type: ignore
 
     def test_json(self) -> None:
         assert vs.AbsoluteDate().value_from_json(11) == 11

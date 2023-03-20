@@ -147,7 +147,7 @@ def test_agent_aws_wafv2_regional_cloudfront() -> None:
 
     with pytest.raises(AssertionError):
         WAFV2Limits(None, "region", config, "CLOUDFRONT")
-        WAFV2Limits(None, "region", config, "WRONG")  # type:ignore[arg-type]
+        WAFV2Limits(None, "region", config, "WRONG")  # type: ignore[arg-type]
         WAFV2WebACL(None, "region", config, False)
 
     assert len(WAFV2WebACL(None, "region", config, True)._metric_dimensions) == 3
@@ -171,7 +171,7 @@ def _test_limits(wafv2_sections):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_limits(  # type:ignore[no-untyped-def]
+def test_agent_aws_wafv2_limits(  # type: ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
@@ -197,7 +197,7 @@ def _test_summary(wafv2_summary, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_w_limits(  # type:ignore[no-untyped-def]
+def test_agent_aws_wafv2_summary_w_limits(  # type: ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
@@ -206,7 +206,7 @@ def test_agent_aws_wafv2_summary_w_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_summary_wo_limits(  # type:ignore[no-untyped-def]
+def test_agent_aws_wafv2_summary_wo_limits(  # type: ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
@@ -230,7 +230,7 @@ def _test_web_acl(wafv2_sections, found_instances):
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_w_limits(  # type:ignore[no-untyped-def]
+def test_agent_aws_wafv2_web_acls_w_limits(  # type: ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):
@@ -239,7 +239,7 @@ def test_agent_aws_wafv2_web_acls_w_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", wafv2_params)
-def test_agent_aws_wafv2_web_acls_wo_limits(  # type:ignore[no-untyped-def]
+def test_agent_aws_wafv2_web_acls_wo_limits(  # type: ignore[no-untyped-def]
     get_wafv2_sections, names, tags, found_instances
 ) -> None:
     for wafv2_sections in get_wafv2_sections(names, tags):

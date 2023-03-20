@@ -17,7 +17,7 @@ from tests.testlib.site import Site
         ["-a"],
     ],
 )
-def test_simple_check_mkevents_call(site: Site, args) -> None:  # type:ignore[no-untyped-def]
+def test_simple_check_mkevents_call(site: Site, args) -> None:  # type: ignore[no-untyped-def]
     p = site.execute(
         ["./check_mkevents"] + args + ["somehost"],
         stdout=subprocess.PIPE,

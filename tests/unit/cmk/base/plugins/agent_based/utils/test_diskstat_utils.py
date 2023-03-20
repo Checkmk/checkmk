@@ -70,7 +70,7 @@ from cmk.base.plugins.agent_based.utils import diskstat
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, exp_res) -> None:  # type:ignore[no-untyped-def]
+def test_discovery_diskstat_generic(params, exp_res) -> None:  # type: ignore[no-untyped-def]
     assert (
         list(
             diskstat.discovery_diskstat_generic(

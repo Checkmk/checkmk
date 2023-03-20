@@ -98,7 +98,7 @@ def _format_expected(lines):
         ),
     ],
 )
-def test_mk_errpt_aix(  # type:ignore[no-untyped-def]
+def test_mk_errpt_aix(  # type: ignore[no-untyped-def]
     tmpdir, state_file_name, errpt_output, last_reported, expectations
 ) -> None:
     tmp_dir = str(tmpdir)

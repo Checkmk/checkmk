@@ -11,7 +11,7 @@ from tests.testlib.site import Site
 
 
 @pytest.mark.skip("needs to be analyzed later...")
-def test_command_reload(site: Site, ec) -> None:  # type:ignore[no-untyped-def]
+def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
@@ -29,7 +29,7 @@ def test_command_reload(site: Site, ec) -> None:  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(  # type:ignore[no-untyped-def]
+def test_status_table_via_core(  # type: ignore[no-untyped-def]
     site: Site, ec, via_core: bool
 ) -> None:
     live = site.live if via_core else ec.status
@@ -79,7 +79,7 @@ def test_status_table_via_core(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(  # type:ignore[no-untyped-def]
+def test_rules_table_via_core(  # type: ignore[no-untyped-def]
     site: Site, ec, via_core: bool
 ) -> None:
     live = site.live if via_core else ec.status

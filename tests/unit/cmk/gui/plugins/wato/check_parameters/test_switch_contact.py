@@ -23,5 +23,5 @@ from cmk.gui.plugins.wato.check_parameters.switch_contact import _migrate
         ),
     ],
 )
-def test_transform(entry, result) -> None:  # type:ignore[no-untyped-def]
+def test_transform(entry, result) -> None:  # type: ignore[no-untyped-def]
     assert _migrate(entry) == result

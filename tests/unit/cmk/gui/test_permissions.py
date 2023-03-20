@@ -659,7 +659,7 @@ def test_registered_permissions() -> None:
         assert isinstance(perm.defaults, list)
 
 
-def test_declare_permission_section(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_declare_permission_section(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -673,7 +673,7 @@ def test_declare_permission_section(monkeypatch) -> None:  # type:ignore[no-unty
     assert section.do_sort is False
 
 
-def test_declare_permission(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_declare_permission(monkeypatch) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -701,7 +701,7 @@ def test_declare_permission(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         (False, ["sec1.Z", "sec1.z", "sec1.A", "sec1.b", "sec1.a", "sec1.1", "sec1.g"]),
     ],
 )
-def test_permission_sorting(do_sort, result) -> None:  # type:ignore[no-untyped-def]
+def test_permission_sorting(do_sort, result) -> None:  # type: ignore[no-untyped-def]
     sections = permissions.PermissionSectionRegistry()
     perms = permissions.PermissionRegistry()
 

@@ -234,7 +234,7 @@ def test_inventory_oracle_performance(
         )
     ],
 )
-def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_dbtime(  # type: ignore[no-untyped-def]
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
@@ -274,7 +274,7 @@ def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_memory(  # type: ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
@@ -319,7 +319,7 @@ def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_iostat_ios(  # type: ignore[no-untyped-def]
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
@@ -357,7 +357,7 @@ def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_waitclasses(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_waitclasses(  # type: ignore[no-untyped-def]
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],

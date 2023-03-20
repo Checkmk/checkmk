@@ -18,7 +18,7 @@ from cmk.checkers.type_defs import AgentRawDataSection
 
 
 class MockStore:
-    def __init__(self, data) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, data) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self._data = data
 

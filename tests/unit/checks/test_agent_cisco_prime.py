@@ -67,7 +67,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_cisco_prime_argument_parsing(  # type:ignore[no-untyped-def]
+def test_cisco_prime_argument_parsing(  # type: ignore[no-untyped-def]
     params, hostname, ipaddress, args
 ) -> None:
     agent = SpecialAgent("agent_cisco_prime")

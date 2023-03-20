@@ -683,6 +683,8 @@ class ActivateChangesManager(ActivateChanges):
             The activation-id under which to track the progress of this particular run.
 
         """
+        _raise_for_license_block(self._changes)
+
         self._activate_foreign = activate_foreign
 
         self._sites = self._get_sites(sites)
@@ -2692,7 +2694,7 @@ def get_restapi_response_for_activation_id(
     )
 
 
-def _licensing_allows_activation(changes: Sequence[tuple[str, Mapping[str, Any]]]) -> None:
+def _raise_for_license_block(changes: Sequence[tuple[str, Mapping[str, Any]]]) -> None:
     if block_effect := get_licensing_user_effect(changes=changes).block:
         raise MKLicensingError(block_effect.message)
 
@@ -2725,7 +2727,7 @@ def activate_changes_start(
     changes = ActivateChanges()
     changes.load()
 
-    _licensing_allows_activation(changes._changes)
+    _raise_for_license_block(changes._changes)
 
     if changes.has_foreign_changes():
         if not user.may("wato.activateforeign"):

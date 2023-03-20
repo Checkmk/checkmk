@@ -267,7 +267,7 @@ class RawLicenseUsageSample(TypedDict):
     num_hosts: int
     num_hosts_cloud: int
     num_hosts_excluded: int
-    num_shadow_hosts: int
+    num_hosts_shadow: int
     num_services: int
     num_services_cloud: int
     num_services_excluded: int
@@ -298,7 +298,7 @@ class LicenseUsageSample:
     num_hosts: int
     num_hosts_cloud: int
     num_hosts_excluded: int
-    num_shadow_hosts: int
+    num_hosts_shadow: int
     num_services: int
     num_services_cloud: int
     num_services_excluded: int
@@ -317,7 +317,7 @@ class LicenseUsageSample:
             "num_hosts": self.num_hosts,
             "num_hosts_cloud": self.num_hosts_cloud,
             "num_hosts_excluded": self.num_hosts_excluded,
-            "num_shadow_hosts": self.num_shadow_hosts,
+            "num_hosts_shadow": self.num_hosts_shadow,
             "num_services": self.num_services,
             "num_services_cloud": self.num_services_cloud,
             "num_services_excluded": self.num_services_excluded,
@@ -380,7 +380,7 @@ class LicenseUsageSample:
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=0,
             num_hosts_excluded=0,
-            num_shadow_hosts=0,
+            num_hosts_shadow=0,
             num_services=raw_sample["num_services"],
             num_services_cloud=0,
             num_services_excluded=0,
@@ -417,7 +417,7 @@ class LicenseUsageSample:
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=0,
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
-            num_shadow_hosts=0,
+            num_hosts_shadow=0,
             num_services=raw_sample["num_services"],
             num_services_cloud=0,
             num_services_excluded=raw_sample["num_services_excluded"],
@@ -457,7 +457,7 @@ class LicenseUsageSample:
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=raw_sample["num_hosts_cloud"],
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
-            num_shadow_hosts=raw_sample["num_shadow_hosts"],
+            num_hosts_shadow=raw_sample["num_hosts_shadow"],
             num_services=raw_sample["num_services"],
             num_services_cloud=raw_sample["num_services_cloud"],
             num_services_excluded=raw_sample["num_services_excluded"],

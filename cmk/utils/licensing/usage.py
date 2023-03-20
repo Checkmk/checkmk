@@ -119,7 +119,7 @@ def _create_sample() -> LicenseUsageSample:
         num_hosts=hosts_counter.included,
         num_hosts_cloud=cloud_counter.hosts,
         num_hosts_excluded=hosts_counter.excluded,
-        num_shadow_hosts=shadow_hosts_counter,
+        num_hosts_shadow=shadow_hosts_counter,
         num_services=services_counter.included,
         num_services_cloud=cloud_counter.services,
         num_services_excluded=services_counter.excluded,

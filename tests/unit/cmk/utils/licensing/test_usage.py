@@ -197,7 +197,7 @@ def test_serialize_license_usage_report() -> None:
                 history=history.for_report(),
             )
         )
-        == b"LQ't#$x~}Qi Qa]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D925@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
+        == b"LQ't#$x~}Qi Qa]_Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi ?F==[ QD:E6092D9Qi QD:E6\\92D9Q[ QG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED06I4=F565Qi b[ Q?F>09@DED0D925@HQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
     )
 
 
@@ -242,7 +242,7 @@ def test_serialize_license_usage_report() -> None:
                         sample_time=1,
                         timezone="",
                         num_hosts=2,
-                        num_shadow_hosts=0,
+                        num_hosts_shadow=0,
                         num_services=4,
                         num_hosts_excluded=0,
                         num_services_excluded=0,
@@ -286,7 +286,7 @@ def test_serialize_license_usage_report() -> None:
                         sample_time=1,
                         timezone="",
                         num_hosts=2,
-                        num_shadow_hosts=0,
+                        num_hosts_shadow=0,
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
@@ -333,7 +333,7 @@ def test_serialize_license_usage_report() -> None:
                         sample_time=1,
                         timezone="",
                         num_hosts=2,
-                        num_shadow_hosts=0,
+                        num_hosts_shadow=0,
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
@@ -360,7 +360,7 @@ def test_serialize_license_usage_report() -> None:
                         "sample_time": 1,
                         "timezone": "",
                         "num_hosts": 2,
-                        "num_shadow_hosts": 6,
+                        "num_hosts_shadow": 6,
                         "num_hosts_excluded": 3,
                         "num_services": 4,
                         "num_services_excluded": 5,
@@ -382,7 +382,7 @@ def test_serialize_license_usage_report() -> None:
                         sample_time=1,
                         timezone="",
                         num_hosts=2,
-                        num_shadow_hosts=6,
+                        num_hosts_shadow=6,
                         num_hosts_excluded=3,
                         num_services=4,
                         num_services_excluded=5,
@@ -438,7 +438,7 @@ def test_history_add_sample() -> None:
                 sample_time=idx,
                 timezone="timezone",
                 num_hosts=2,
-                num_shadow_hosts=0,
+                num_hosts_shadow=0,
                 num_services=3,
                 num_hosts_excluded=4,
                 num_services_excluded=5,
@@ -458,7 +458,7 @@ def test_history_add_sample() -> None:
         sample_time=449,
         timezone="timezone",
         num_hosts=2,
-        num_shadow_hosts=0,
+        num_hosts_shadow=0,
         num_services=3,
         num_hosts_excluded=4,
         num_services_excluded=5,

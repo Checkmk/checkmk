@@ -400,7 +400,7 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
     return affected
 
 
-def _change_host_tags_in_rule(operation, mode, ruleset, rule):
+def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disable=too-many-branches
     affected_rulesets: set[FolderRulesets] = set()
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
@@ -413,9 +413,17 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             pass
 
         elif mode == TagCleanupMode.DELETE:
-            ruleset.delete_rule(rule)
-        else:
+            # Just remove if negated
+            if (
+                condition := rule.conditions.host_tags[operation.tag_group_id]
+            ) is not None and list(condition)[0] in ["$ne", "$nor"]:
+                del rule.conditions.host_tags[operation.tag_group_id]
+            else:
+                ruleset.delete_rule(rule)
+        elif mode == TagCleanupMode.REMOVE:
             del rule.conditions.host_tags[operation.tag_group_id]
+        else:
+            raise NotImplementedError()
 
         return affected_rulesets
 

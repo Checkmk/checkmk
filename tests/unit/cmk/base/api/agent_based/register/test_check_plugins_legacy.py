@@ -15,7 +15,6 @@ import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import Metric, Result
-from cmk.base.check_api import Service as OldService
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
@@ -42,7 +41,6 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
             ("foo", {}),
             ("foo", "params_string"),
             "some string",
-            OldService("bar", {"P": "O"}),
         ]
 
     monkeypatch.setattr(
@@ -63,7 +61,6 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
         checking_classes.Service(item="foo"),
         checking_classes.Service(item="foo", parameters={"levels": "default"}),
         "some string",  # bogus value let through intentionally
-        checking_classes.Service(item="bar", parameters={"P": "O"}),
     ]
     assert result == expected
 

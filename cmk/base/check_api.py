@@ -827,24 +827,6 @@ def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]
         return iter(())
 
 
-# Obsolete! Do not confuse with the Service object exposed by the new API.
-class Service:
-    """Can be used to by the discovery function to tell Checkmk about a new service"""
-
-    def __init__(
-        self,
-        item: Optional[str],
-        parameters: Any = None,
-        # ignored, but ServiceLabels are deprecated anyway.
-        # see Werk 13229
-        service_labels: Optional[Any] = None,
-    ) -> None:
-        self.item = item
-        self.parameters = parameters
-        if service_labels:
-            _ = ServiceLabels()  # raise
-
-
 # NOTE: Currently this is not really needed, it is just here to keep any start
 # import in sync with our intended API.
 __all__ = list(get_check_api_context())

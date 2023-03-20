@@ -13,7 +13,6 @@ import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import Service
 
 
 def old_school_scan_function(oid):
@@ -27,10 +26,6 @@ def old_school_parse_function(_info):
 def old_school_discover_function(parsed_extra):
     _parsed, _extra_section = parsed_extra
     yield "item1", {"discoverd_param": 42}
-    yield Service(
-        "item2",
-        {},
-    )
     yield "item3", "{'how_bad_is_this': 100}"
 
 

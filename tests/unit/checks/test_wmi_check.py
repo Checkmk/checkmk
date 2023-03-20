@@ -12,7 +12,7 @@ from tests.testlib import Check
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import MKCounterWrapped
 
-from .checktestlib import assertDiscoveryResultsEqual, CheckResult, DiscoveryResult
+from .checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
 
@@ -108,17 +108,15 @@ info_msx_info_store_1 = [
 
 
 @pytest.mark.parametrize(
-    "check_name,info,expected",
+    "check_name,info",
     [
-        ("wmi_webservices", info_wmi_timeout, []),
-        ("dotnet_clrmemory", [["WMItimeout"]], []),
+        ("wmi_webservices", info_wmi_timeout),
+        ("dotnet_clrmemory", [["WMItimeout"]]),
     ],
 )
-def test_wmi_cpu_load_discovery(check_name: str, info: StringTable, expected: object) -> None:
+def test_wmi_cpu_load_no_discovery(check_name: str, info: StringTable) -> None:
     check = Check(check_name)
-    discovery_result = DiscoveryResult(check.run_discovery(check.run_parse(info)))
-    discovery_expected = DiscoveryResult(expected)
-    assertDiscoveryResultsEqual(check, discovery_result, discovery_expected)
+    assert not list(check.run_discovery(check.run_parse(info)))
 
 
 @pytest.mark.parametrize(

@@ -7,12 +7,10 @@ import copy
 import os
 import types
 from collections.abc import Callable
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Sequence
 from unittest import mock
 
 import pytest
-
-from cmk.base.check_api import Service
 
 
 class Tuploid:
@@ -297,10 +295,8 @@ def assertCheckResultsEqual(actual, expected):
 class DiscoveryEntry(Tuploid):
     """A single entry as returned by the discovery function."""
 
-    def __init__(self, entry) -> None:  # type: ignore[no-untyped-def]
-        self.item, self.default_params = (
-            (entry.item, entry.parameters) if isinstance(entry, Service) else entry
-        )
+    def __init__(self, entry: tuple[str | None, dict | str | tuple | None]) -> None:
+        self.item, self.default_params = entry
         assert self.item is None or isinstance(self.item, str)
 
     @property
@@ -320,7 +316,7 @@ class DiscoveryResult:
     get lost in the laziness.
     """
 
-    def __init__(self, result=()) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, result: Sequence[tuple[str | None, dict | str | tuple | None]] = ()) -> None:
         self.entries = sorted((DiscoveryEntry(e) for e in (result or ())), key=repr)
 
     def __eq__(self, other):

@@ -110,14 +110,6 @@ def _create_discovery_function(
                 yield service
                 continue
 
-            with suppress(AttributeError):
-                yield Service(
-                    item=element.item,
-                    parameters=wrap_parameters(element.parameters or {}),
-                    # there used to be labels, but they are no longer supported
-                )
-                continue
-
             # just let it through. Base must deal with bogus return types anyway.
             yield element
 

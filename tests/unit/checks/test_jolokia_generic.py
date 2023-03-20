@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult
 
@@ -29,7 +29,7 @@ info = [
     ],
 )
 def test_jolokia_generic_discovery(
-    check: str, lines: StringTable, expected_result: Sequence[object]
+    check: str, lines: StringTable, expected_result: Sequence[tuple[str, dict[str, object]]]
 ) -> None:
     parsed = Check("jolokia_generic").run_parse(lines)
 

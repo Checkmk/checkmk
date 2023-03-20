@@ -31,10 +31,17 @@ except ImportError:
     cee_wato = None  # type: ignore[assignment]
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]*$"
+TimeperiodUsage = tuple[str, str]
 
 
 class TimePeriodNotFoundError(KeyError):
     pass
+
+
+class TimePeriodInUseError(Exception):
+    def __init__(self, usages: list[TimeperiodUsage]) -> None:
+        super().__init__()
+        self.usages = usages
 
 
 def builtin_timeperiods() -> TimeperiodSpecs:
@@ -68,11 +75,17 @@ def load_timeperiod(name: str) -> TimeperiodSpec:
 
 
 def delete_timeperiod(name: str) -> None:
-    timeperiods = load_timeperiods()
-    if name not in timeperiods:
+    time_periods = load_timeperiods()
+    if name not in time_periods:
         raise TimePeriodNotFoundError
-    del timeperiods[name]
-    save_timeperiods(timeperiods)
+    time_period_details = time_periods[name]
+    time_period_alias = time_period_details["alias"]
+    # TODO: introduce at least TypedDict for TimeperiodSpecs to remove assertion
+    assert isinstance(time_period_alias, str)
+    if usages := find_usages_of_timeperiod(time_period_alias):
+        raise TimePeriodInUseError(usages=usages)
+    del time_periods[name]
+    save_timeperiods(time_periods)
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
@@ -118,9 +131,6 @@ class TimeperiodSelection(DropdownChoice[str]):
             elements.insert(0, always)
 
         return sorted(elements, key=lambda x: x[1].lower())
-
-
-TimeperiodUsage = tuple[str, str]
 
 
 def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:

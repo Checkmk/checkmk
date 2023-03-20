@@ -40,6 +40,7 @@ from cmk.gui.watolib.timeperiods import (
     load_timeperiod,
     load_timeperiods,
     save_timeperiod,
+    TimePeriodInUseError,
     TimePeriodNotFoundError,
 )
 
@@ -149,6 +150,7 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     etag="input",
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a time period"""
@@ -159,6 +161,12 @@ def delete(params: Mapping[str, Any]) -> Response:
         delete_timeperiod(name)
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
+    except TimePeriodInUseError as e:
+        return problem(
+            status=409,
+            title="The time period is still in use",
+            detail=f"The time period is still in use ({', '.join(u[0] for u in e.usages)}).",
+        )
 
     return Response(status=204)
 

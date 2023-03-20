@@ -465,3 +465,38 @@ def test_openapi_timeperiod_exclude_builtin(timeperiod_client: TimePeriodTestCli
             "exclude": ["Always"],
         },
     ).assert_status_code(400)
+
+
+def test_openapi_delete_dependent_downtime(timeperiod_client: TimePeriodTestClient) -> None:
+    timeperiod_client.create(
+        time_period_data={
+            "name": "time_period_1",
+            "alias": "Time Period 1",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [{"start": "14:00", "end": "18:00"}],
+                },
+            ],
+            "exceptions": [],
+            "exclude": [],
+        },
+    )
+
+    timeperiod_client.create(
+        time_period_data={
+            "name": "time_period_2",
+            "alias": "Time Period 2",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [{"start": "12:00", "end": "14:00"}],
+                },
+            ],
+            "exceptions": [],
+            "exclude": ["Time Period 1"],
+        },
+    )
+
+    resp = timeperiod_client.delete("time_period_1", expect_ok=False).assert_status_code(409)
+    assert resp.json["detail"].endswith("Time Period 2 (excluded)).")

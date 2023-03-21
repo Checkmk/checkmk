@@ -44,8 +44,9 @@ class NoFetcher(Fetcher[AgentRawData]):
 
     def _fetch_from_io(self, mode: Mode) -> NoReturn:
         match self._canned:
+            # The messages are visible in the UI and should be user friendly.
             case NoFetcherError.NO_FETCHER:
-                raise MKFetcherError("no fetcher configured")
+                raise MKFetcherError("no valid datasource configured")
             case NoFetcherError.MISSING_IP:
                 raise MKFetcherError(
                     "Failed to lookup IP address and no explicit IP address configured"

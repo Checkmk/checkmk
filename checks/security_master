@@ -151,7 +151,6 @@ check_info["security_master"] = {
         (".1.3.6.1.4.1.35491.30", [OID_END, "3"]),
     ],
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith("1.3.6.1.4.1.35491"),
-    "has_perfdata": False,
 }
 
 #   .--humidity------------------------------------------------------------.
@@ -183,7 +182,6 @@ check_info["security_master.humidity"] = {
     "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
     "check_function": check_security_master_humidity,
     "service_description": "Sensor %s",
-    "has_perfdata": True,
     "group": "humidity",
 }
 
@@ -226,7 +224,6 @@ check_info["security_master.temp"] = {
     "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "temp"),
     "check_function": check_security_master_temperature,
     "service_description": "Sensor %s",
-    "has_perfdata": True,
     "group": "temperature",
     "default_levels_variable": "security_master_temp_default_levels",
 }

@@ -22,5 +22,4 @@ check_info["symantec_av_quarantine"] = {
     "check_function": check_symantec_av_quarantine,
     "inventory_function": inventory_symantec_av_quarantine,
     "service_description": "AV Quarantine",
-    "has_perfdata": True,
 }

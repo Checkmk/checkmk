@@ -94,7 +94,6 @@ check_info["citrix_controller.registered"] = {
     "inventory_function": inventory_citrix_controller_registered,
     "check_function": check_citrix_controller_registered,
     "service_description": "Citrix Desktops Registered",
-    "has_perfdata": True,
     "group": "citrix_desktops_registered",
 }
 
@@ -157,7 +156,6 @@ check_info["citrix_controller.sessions"] = {
     "inventory_function": inventory_citrix_controller_sessions,
     "check_function": check_citrix_controller_sessions,
     "service_description": "Citrix Total Sessions",
-    "has_perfdata": True,
     "group": "citrix_sessions",
 }
 

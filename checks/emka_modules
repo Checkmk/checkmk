@@ -348,7 +348,6 @@ check_info["emka_modules.sensor_volt"] = {
     "check_function": check_emka_modules_sensor_volt,
     "service_description": "Phase %s",
     "group": "el_inphase",
-    "has_perfdata": True,
 }
 
 # .
@@ -386,7 +385,6 @@ check_info["emka_modules.sensor_temp"] = {
     "check_function": check_emka_modules_sensor_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
-    "has_perfdata": True,
 }
 
 # .
@@ -418,7 +416,6 @@ check_info["emka_modules.sensor_humid"] = {
     "check_function": check_emka_modules_sensor_humid,
     "service_description": "Humidity %s",
     "group": "humidity",
-    "has_perfdata": True,
 }
 
 # .

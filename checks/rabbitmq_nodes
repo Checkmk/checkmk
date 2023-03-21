@@ -162,7 +162,6 @@ check_info["rabbitmq_nodes"] = {
     "check_function": check_rabbitmq_nodes,
     "inventory_function": discover(),
     "service_description": "RabbitMQ Node %s",
-    "has_perfdata": True,
     "group": "rabbitmq_nodes",
     "default_levels_variable": "rabbitmq_nodes_default_levels",
 }
@@ -216,7 +215,6 @@ check_info["rabbitmq_nodes.filedesc"] = {
     "check_function": check_rabbitmq_nodes_filedesc,
     "inventory_function": discover(lambda k, values: "fd" in values),
     "service_description": "RabbitMQ Node %s Filedesc",
-    "has_perfdata": True,
     "group": "rabbitmq_nodes_filedesc",
 }
 
@@ -241,7 +239,6 @@ check_info["rabbitmq_nodes.sockets"] = {
     "check_function": check_rabbitmq_nodes_sockets,
     "inventory_function": discover(lambda k, values: "sockets" in values),
     "service_description": "RabbitMQ Node %s Sockets",
-    "has_perfdata": True,
     "group": "rabbitmq_nodes_sockets",
 }
 
@@ -266,7 +263,6 @@ check_info["rabbitmq_nodes.proc"] = {
     "check_function": check_rabbitmq_nodes_proc,
     "inventory_function": discover(lambda k, values: "proc" in values),
     "service_description": "RabbitMQ Node %s Processes",
-    "has_perfdata": True,
     "group": "rabbitmq_nodes_proc",
 }
 
@@ -301,7 +297,6 @@ check_info["rabbitmq_nodes.mem"] = {
     "check_function": check_rabbitmq_nodes_mem,
     "inventory_function": discover(lambda k, values: "mem" in values),
     "service_description": "RabbitMQ Node %s Memory",
-    "has_perfdata": True,
     "group": "memory_multiitem",
 }
 
@@ -354,7 +349,6 @@ check_info["rabbitmq_nodes.uptime"] = {
     "check_function": check_rabbitmq_nodes_uptime,
     "inventory_function": discover(lambda k, values: "uptime" in values),
     "service_description": "RabbitMQ Node %s Uptime",
-    "has_perfdata": True,
     "group": "rabbitmq_nodes_uptime",
 }
 
@@ -406,6 +400,5 @@ check_info["rabbitmq_nodes.gc"] = {
     "check_function": check_rabbitmq_nodes_gc,
     "inventory_function": discover(lambda k, values: "gc" in values),
     "service_description": "RabbitMQ Node %s GC",
-    "has_perfdata": True,
     "group": "rabbitmq_nodes_gc",
 }

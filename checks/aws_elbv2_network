@@ -66,7 +66,6 @@ check_info["aws_elbv2_network"] = {
     "check_function": check_aws_elbv2_network_lcu,
     "service_description": "AWS/NetworkELB LCUs",
     "group": "aws_elbv2_lcu",
-    "has_perfdata": True,
 }
 
 # .
@@ -116,7 +115,6 @@ check_info["aws_elbv2_network.connections"] = {
     ),
     "check_function": check_aws_elbv2_network_connections,
     "service_description": "AWS/NetworkELB Connections",
-    "has_perfdata": True,
 }
 
 # .
@@ -173,7 +171,6 @@ check_info["aws_elbv2_network.connections"] = {
 #     'check_function': check_aws_elbv2_network_healthy_hosts,
 #     'service_description': 'AWS/NetworkELB Healthy Hosts',
 #     'group': 'aws_elb_healthy_hosts',
-#     'has_perfdata': True,
 # }
 
 # .
@@ -218,7 +215,6 @@ check_info["aws_elbv2_network.tls_handshakes"] = {
     ),
     "check_function": check_aws_elbv2_network_tls_handshakes,
     "service_description": "AWS/NetworkELB TLS Handshakes",
-    "has_perfdata": True,
 }
 
 # .
@@ -265,7 +261,6 @@ check_info["aws_elbv2_network.rst_packets"] = {
     ),
     "check_function": check_aws_elbv2_network_rst_packets,
     "service_description": "AWS/NetworkELB Reset Packets",
-    "has_perfdata": True,
 }
 
 # .
@@ -310,5 +305,4 @@ check_info["aws_elbv2_network.statistics"] = {
     ),
     "check_function": check_aws_elbv2_network_statistics,
     "service_description": "AWS/NetworkELB Statistics",
-    "has_perfdata": True,
 }

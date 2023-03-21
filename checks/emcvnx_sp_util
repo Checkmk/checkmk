@@ -61,5 +61,4 @@ check_info["emcvnx_sp_util"] = {
     "check_function": check_emcvnx_sp_util,
     "service_description": "Storage Processor Utilization",
     "group": "sp_util",
-    "has_perfdata": True,
 }

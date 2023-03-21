@@ -68,7 +68,6 @@ check_info["avaya_88xx"] = {
     "inventory_function": inventory_avaya_88xx,
     "service_description": "Temperature Fan %s",
     "default_levels_variable": "avaya_88xx_default_levels",
-    "has_perfdata": True,
     "group": "temperature",
     # RAPID-CITY MIB
     "snmp_info": (

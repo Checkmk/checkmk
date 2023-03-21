@@ -55,6 +55,5 @@ check_info["docker_node_info.containers"] = {
     "inventory_function": discover_single,
     "check_function": check_docker_node_containers,
     "service_description": "Docker containers",
-    "has_perfdata": True,
     "group": "docker_node_containers",
 }

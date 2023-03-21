@@ -70,5 +70,4 @@ check_info["splunk_jobs"] = {
     "inventory_function": inventory_splunk_jobs,
     "service_description": "Splunk Jobs",
     "group": "splunk_jobs",
-    "has_perfdata": True,
 }

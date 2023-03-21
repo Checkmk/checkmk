@@ -166,7 +166,6 @@ check_info["huawei_wlc_aps.status"] = {
     "check_function": check_huawei_wlc_aps_status,
     "service_description": "AP %s Status",
     "default_levels_variable": "huawei_channel_default",
-    "has_perfdata": True,
 }
 
 
@@ -193,7 +192,6 @@ check_info["huawei_wlc_aps.cpu"] = {
     "inventory_function": discovery_huawei_wlc_aps_cpu,
     "service_description": "AP %s CPU",
     "default_levels_variable": "huawei_cpu_default",
-    "has_perfdata": True,
 }
 
 
@@ -224,7 +222,6 @@ check_info["huawei_wlc_aps.mem"] = {
     "inventory_function": discovery_huawei_wlc_aps_mem,
     "service_description": "AP %s Memory",
     "default_levels_variable": "huawei_mem_default",
-    "has_perfdata": True,
 }
 
 
@@ -252,5 +249,4 @@ check_info["huawei_wlc_aps.temp"] = {
     "check_function": check_huawei_wlc_aps_temp,
     "inventory_function": discovery_huawei_wlc_aps_temp,
     "service_description": "AP %s Temperature",
-    "has_perfdata": True,
 }

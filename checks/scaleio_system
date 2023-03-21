@@ -47,6 +47,5 @@ check_info["scaleio_system"] = {
     "check_function": check_scaleio_system,
     "service_description": "ScaleIO System %s",
     "group": "filesystem",
-    "has_perfdata": True,
     "default_levels_variable": "filesystem_default_levels",
 }

@@ -48,5 +48,4 @@ active_check_info["dns"] = {
     "command_line": "check_dns $ARG1$",
     "argument_function": check_dns_arguments,
     "service_description": check_dns_desc,
-    "has_perfdata": True,
 }

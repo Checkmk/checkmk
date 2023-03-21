@@ -115,6 +115,5 @@ check_info["jira_custom_svc"] = {
     "check_function": check_jira_custom_svc,
     "inventory_function": discover(),
     "service_description": "Jira %s",
-    "has_perfdata": True,
     "group": "jira_custom_svc",
 }

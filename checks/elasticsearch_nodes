@@ -71,6 +71,5 @@ check_info["elasticsearch_nodes"] = {
     "inventory_function": discover(),
     "default_levels_variable": "elasticsearch_nodes",
     "service_description": "Elasticsearch Node %s",
-    "has_perfdata": True,
     "group": "elasticsearch_nodes",
 }

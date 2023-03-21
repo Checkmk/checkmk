@@ -199,7 +199,6 @@ check_info["watchdog_sensors.temp"] = {
     "inventory_function": inventory_watchdog_sensors_temp,
     "check_function": check_watchdog_sensors_temp,
     "service_description": "%s ",
-    "has_perfdata": True,
     "group": "temperature",
 }
 
@@ -253,7 +252,6 @@ check_info["watchdog_sensors.humidity"] = {
     "inventory_function": inventory_watchdog_sensors_humidity,
     "check_function": check_watchdog_sensors_humidity,
     "service_description": "%s",
-    "has_perfdata": True,
     "group": "humidity",
     "default_levels_variable": "watchdog_sensors_humidity_default_levels",
 }
@@ -294,6 +292,5 @@ check_info["watchdog_sensors.dew"] = {
     "inventory_function": inventory_watchdog_sensors_dew,
     "check_function": check_watchdog_sensors_dew,
     "service_description": "%s",
-    "has_perfdata": True,
     "group": "temperature",
 }

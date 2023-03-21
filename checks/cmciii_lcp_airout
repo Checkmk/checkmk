@@ -16,7 +16,6 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 check_info["cmciii_lcp_airout"] = {
     "check_function": check_cmciii_lcp_fanunit,
     "inventory_function": lambda info: inventory_cmciii_lcp_fanunit("Air", "Out", info),
-    "has_perfdata": True,
     "service_description": "Temperature %s",
     "group": "temperature",
     "snmp_scan_function": snmp_scan_cmciii_lcp_fanunit,

@@ -85,7 +85,6 @@ check_info["aws_s3_requests"] = {
     "inventory_function": lambda p: inventory_aws_generic(p, ["AllRequests"]),
     "check_function": check_aws_s3_requests,
     "service_description": "AWS/S3 Requests %s",
-    "has_perfdata": True,
     "group": "aws_s3_requests",
 }
 
@@ -117,7 +116,6 @@ check_info["aws_s3_requests.http_errors"] = {
     ),
     "check_function": check_aws_s3_http_errors,
     "service_description": "AWS/S3 HTTP Errors %s",
-    "has_perfdata": True,
     "group": "aws_s3_http_errors",
 }
 
@@ -167,7 +165,6 @@ check_info["aws_s3_requests.latency"] = {
     "inventory_function": lambda p: inventory_aws_generic(p, ["TotalRequestLatency"]),
     "check_function": check_aws_s3_latency,
     "service_description": "AWS/S3 Latency %s",
-    "has_perfdata": True,
     "group": "aws_s3_latency",
 }
 
@@ -204,7 +201,6 @@ check_info["aws_s3_requests.traffic_stats"] = {
     "inventory_function": lambda p: inventory_aws_generic(p, ["BytesDownloaded", "BytesUploaded"]),
     "check_function": check_aws_s3_traffic_stats,
     "service_description": "AWS/S3 Traffic Stats %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -242,5 +238,4 @@ check_info["aws_s3_requests.select_object"] = {
     ),
     "check_function": check_aws_s3_select_object,
     "service_description": "AWS/S3 SELECT Object %s",
-    "has_perfdata": True,
 }

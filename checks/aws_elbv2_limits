@@ -32,5 +32,4 @@ check_info["aws_elbv2_limits"] = {
     "service_description": "AWS/ELBv2 Limits %s",
     "group": "aws_elbv2_limits",
     "default_levels_variable": "aws_elbv2_limits_default_levels",
-    "has_perfdata": True,
 }

@@ -79,7 +79,6 @@ check_info["brocade.fan"] = {
     "group": "hw_fans",
     "snmp_info": brocade_info,
     "snmp_scan_function": brocade_scan,
-    "has_perfdata": True,
 }
 
 
@@ -128,7 +127,6 @@ check_info["brocade.temp"] = {
     "check_function": check_brocade_temp,
     "inventory_function": inventory_brocade_temp,
     "service_description": "Temperature Ambient %s",
-    "has_perfdata": True,
     "group": "temperature",
     "snmp_info": brocade_info,
     "snmp_scan_function": brocade_scan,

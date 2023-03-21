@@ -72,5 +72,4 @@ check_info["aws_wafv2_web_acl"] = {
     "check_function": check_aws_wafv2_web_acl,
     "service_description": "AWS/WAFV2 Web ACL Requests",
     "group": "aws_wafv2_web_acl",
-    "has_perfdata": True,
 }

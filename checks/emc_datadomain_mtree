@@ -48,7 +48,6 @@ check_info["emc_datadomain_mtree"] = {
     "check_function": check_emc_datadomain_mtree,
     "inventory_function": discover(),
     "service_description": "MTree %s",
-    "has_perfdata": True,
     "snmp_info": (
         ".1.3.6.1.4.1.19746.1.15.2.1.1",
         [

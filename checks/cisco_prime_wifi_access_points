@@ -41,5 +41,4 @@ check_info["cisco_prime_wifi_access_points"] = {
     "default_levels_variable": "cisco_prime_wifi_access_points",
     "service_description": "Cisco Prime WiFi Access Points",
     "group": "cisco_prime_wifi_access_points",
-    "has_perfdata": True,
 }

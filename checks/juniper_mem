@@ -53,5 +53,4 @@ check_info["juniper_mem"] = {
         ],
     ),
     "group": "juniper_mem_modules",
-    "has_perfdata": True,
 }

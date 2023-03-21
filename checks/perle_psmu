@@ -31,7 +31,6 @@ check_info["perle_psmu"] = {
     "inventory_function": lambda info: inventory_perle_psmu(info, "psustate", {}),
     "check_function": check_perle_psmu_powersupplies,
     "service_description": "Power supply %s",
-    "has_perfdata": True,
     "group": "el_inphase",
 }
 

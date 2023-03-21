@@ -163,5 +163,4 @@ def generate_icmp_services(
 active_check_info["icmp"] = {
     "command_line": "check_icmp $ARG1$",
     "service_generator": generate_icmp_services,
-    "has_perfdata": True,
 }

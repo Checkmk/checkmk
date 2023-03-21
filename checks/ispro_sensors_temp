@@ -57,6 +57,5 @@ check_info["ispro_sensors_temp"] = {
         ],
     ),
     "snmp_scan_function": ispro_scan_function,
-    "has_perfdata": True,
     "group": "temperature",
 }

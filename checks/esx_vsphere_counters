@@ -62,7 +62,6 @@ check_info["esx_vsphere_counters.uptime"] = {
     "inventory_function": inventory_esx_vsphere_counters_uptime,
     "check_function": check_esx_vsphere_counters_uptime,
     "service_description": "Uptime",
-    "has_perfdata": True,
     "group": "uptime",
 }
 
@@ -114,5 +113,4 @@ check_info["esx_vsphere_counters.swap"] = {
     "inventory_function": inventory_esx_vsphere_counters_swap,
     "check_function": check_esx_vsphere_counters_swap,
     "service_description": "VMKernel Swap",
-    "has_perfdata": False,
 }

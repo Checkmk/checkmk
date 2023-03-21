@@ -75,5 +75,4 @@ check_info["winperf_mem"] = {
     "inventory_function": inventory_winperf_mem,
     "service_description": "Memory Pages",
     "group": "mem_pages",
-    "has_perfdata": True,
 }

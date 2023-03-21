@@ -167,7 +167,6 @@ check_info["docsis_channels_upstream"] = {
     "inventory_function": inventory_docsis_channels_upstream,
     "check_function": check_docsis_channels_upstream,
     "service_description": "Upstream Channel %s",
-    "has_perfdata": True,
     "snmp_scan_function": docsis_scan_function,
     "snmp_info": [
         (

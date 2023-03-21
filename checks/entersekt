@@ -47,7 +47,6 @@ check_info["entersekt"] = {
             "17.1.0",  # sgConsoleDaysToNextCertExpiry
         ],
     ),
-    "has_perfdata": False,
     "snmp_scan_function": lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower()
     and oid(".1.3.6.1.4.1.38235.2.3.1.0") is not None,
 }
@@ -99,7 +98,6 @@ check_info["entersekt.emrerrors"] = {
     "inventory_function": inventory_entersekt_emrerrors,
     "check_function": check_entersekt_emrerrors,
     "service_description": "Entersekt http EMR Errors",
-    "has_perfdata": True,
     "group": "entersekt_emrerrors",
 }
 
@@ -151,7 +149,6 @@ check_info["entersekt.ecerterrors"] = {
     "inventory_function": inventory_entersekt_ecerterrors,
     "check_function": check_entersekt_ecerterrors,
     "service_description": "Entersekt http Ecert Errors",
-    "has_perfdata": True,
     "group": "entersekt_ecerterrors",
 }
 
@@ -202,7 +199,6 @@ check_info["entersekt.soaperrors"] = {
     "inventory_function": inventory_entersekt_soaperrors,
     "check_function": check_entersekt_soaperrors,
     "service_description": "Entersekt Soap Service Errors",
-    "has_perfdata": True,
     "group": "entersekt_soaperrors",
 }
 
@@ -266,6 +262,5 @@ check_info["entersekt.certexpiry"] = {
     "inventory_function": inventory_entersekt_certexpiry,
     "check_function": check_entersekt_certexpiry,
     "service_description": "Entersekt Certificate Expiration",
-    "has_perfdata": True,
     "group": "entersekt_certexpiry",
 }

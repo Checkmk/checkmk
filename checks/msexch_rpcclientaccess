@@ -52,7 +52,6 @@ check_info["msexch_rpcclientaccess"] = {
     "inventory_function": discover_msexch_rpcclientaccess,
     "check_function": check_msexch_rpcclientaccess,
     "parse_function": parse_wmi_table,
-    "has_perfdata": True,
     "service_description": "Exchange RPC Client Access",
     "group": "msx_rpcclientaccess",
     "default_levels_variable": "msexch_rpcclientaccess_defaultlevels",

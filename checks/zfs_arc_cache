@@ -305,7 +305,6 @@ check_info["zfs_arc_cache"] = {
     "check_function": check_zfs_arc_cache,
     "inventory_function": inventory_zfs_arc_cache,
     "service_description": "ZFS arc cache",
-    "has_perfdata": True,
 }
 
 # .
@@ -358,5 +357,4 @@ check_info["zfs_arc_cache.l2"] = {
     "check_function": check_zfs_arc_cache_l2,
     "inventory_function": inventory_zfs_arc_cache_l2,
     "service_description": "ZFS arc cache L2",
-    "has_perfdata": True,
 }

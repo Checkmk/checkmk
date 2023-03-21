@@ -217,5 +217,4 @@ check_info["mongodb_collections"] = {
     "check_function": check_mongodb_collections,
     "service_description": "MongoDB Collection: %s",
     "group": "mongodb_collections",
-    "has_perfdata": True,
 }

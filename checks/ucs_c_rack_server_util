@@ -87,7 +87,6 @@ check_info["ucs_c_rack_server_util"] = {
     "group": "overall_utilization_multiitem",
     "service_description": "Overall Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_overall_default_levels",
-    "has_perfdata": True,
 }
 
 ##############################
@@ -111,7 +110,6 @@ check_info["ucs_c_rack_server_util.cpu"] = {
     "group": "cpu_utilization_multiitem",
     "service_description": "CPU Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_cpu_default_levels",
-    "has_perfdata": True,
 }
 
 #################################
@@ -139,7 +137,6 @@ check_info["ucs_c_rack_server_util.pci_io"] = {
     "group": "pci_io_utilization_multiitem",
     "service_description": "PCI IO Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_pci_io_default_levels",
-    "has_perfdata": True,
 }
 
 ##############################
@@ -167,5 +164,4 @@ check_info["ucs_c_rack_server_util.mem"] = {
     "group": "memory_utilization_multiitem",
     "service_description": "Memory Utilization %s",
     "default_levels_variable": "ucs_c_rack_server_util_mem_default_levels",
-    "has_perfdata": True,
 }

@@ -24,5 +24,4 @@ check_info["aws_cloudwatch_alarms_limits"] = {
     "service_description": "AWS/CloudWatch Alarms Limits %s",
     "group": "aws_cloudwatch_alarms_limits",
     "default_levels_variable": "aws_cloudwatch_alarms_limits_default_levels",
-    "has_perfdata": True,
 }

@@ -32,7 +32,6 @@ check_info["vms_system.ios"] = {
     "check_function": check_vms_system_ios,
     "inventory_function": inventory_vms_system,
     "service_description": "IOs",
-    "has_perfdata": True,
 }
 
 
@@ -55,6 +54,5 @@ check_info["vms_system.procs"] = {
     "check_function": check_vms_system_procs,
     "inventory_function": inventory_vms_system,
     "service_description": "Number of processes",
-    "has_perfdata": True,
     "group": "vms_procs",
 }

@@ -53,7 +53,6 @@ check_info["msexch_isclienttype"] = {
     "inventory_function": discover_msexch_isclienttype,
     "check_function": check_msexch_isclienttype,
     "parse_function": parse_wmi_table,
-    "has_perfdata": True,
     "service_description": "Exchange IS Client Type %s",
     "group": "msx_info_store",
     "default_levels_variable": "msexch_isclienttype_defaultlevels",

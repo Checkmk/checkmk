@@ -306,7 +306,6 @@ check_info["cisco_qos"] = {
     "service_description": "QoS %s",
     "check_function": check_cisco_qos,
     "inventory_function": inventory_cisco_qos,
-    "has_perfdata": True,
     "group": "cisco_qos",
     "default_levels_variable": "cisco_qos_default_levels",
     "snmp_info": [

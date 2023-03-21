@@ -80,7 +80,6 @@ check_info["aws_s3"] = {
     ),
     "check_function": check_aws_s3_objects,
     "service_description": "AWS/S3 Objects %s",
-    "has_perfdata": True,
     "group": "aws_s3_buckets_objects",
 }
 
@@ -124,6 +123,5 @@ check_info["aws_s3.summary"] = {
     "inventory_function": discover_single,
     "check_function": check_aws_s3_summary,
     "service_description": "AWS/S3 Summary",
-    "has_perfdata": True,
     "group": "aws_s3_buckets",
 }

@@ -46,6 +46,5 @@ check_info["esx_vsphere_licenses"] = {
     "inventory_function": inventory_esx_vsphere_licenses,
     "check_function": check_esx_vsphere_licenses,
     "service_description": "License %s",
-    "has_perfdata": True,
     "group": "esx_licenses",
 }

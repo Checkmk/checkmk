@@ -96,7 +96,6 @@ check_info["esx_vsphere_datastores"] = {
     "inventory_function": discover(),
     "check_function": check_esx_vsphere_datastores,
     "service_description": "Filesystem %s",
-    "has_perfdata": True,
     "group": "esx_vsphere_datastores",
     "default_levels_variable": "filesystem_default_levels",
 }

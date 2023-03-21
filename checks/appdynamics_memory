@@ -98,6 +98,5 @@ check_info["appdynamics_memory"] = {
     "inventory_function": inventory_appdynamics_memory,
     "check_function": check_appdynamics_memory,
     "service_description": "AppDynamics Memory %s",
-    "has_perfdata": True,
     "group": "jvm_memory",
 }

@@ -312,7 +312,6 @@ check_info["apc_symmetra"] = {
         ),
     ],
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
-    "has_perfdata": True,
     "group": "apc_symentra",
     "default_levels_variable": "apc_default_levels",
 }
@@ -358,7 +357,6 @@ check_info["apc_symmetra.temp"] = {
     "check_function": check_apc_symmetra_temp,
     "service_description": "Temperature %s",
     "default_levels_variable": "apc_symmetra_temp_default_levels",
-    "has_perfdata": True,
     "group": "temperature",
 }
 
@@ -386,7 +384,6 @@ check_info["apc_symmetra.elphase"] = {
     "inventory_function": inventory_apc_symmetra_elphase,
     "check_function": check_apc_symmetra_elphase,
     "service_description": "Phase %s",
-    "has_perfdata": True,
     "default_levels_variable": "apc_symmetra_elphase_default_levels",
     "group": "ups_outphase",
 }

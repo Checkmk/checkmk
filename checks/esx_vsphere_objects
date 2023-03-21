@@ -136,6 +136,5 @@ check_info["esx_vsphere_objects.count"] = {
     "inventory_function": inventory_esx_vsphere_objects_count,
     "check_function": check_esx_vsphere_objects_count,
     "service_description": "Object count",
-    "has_perfdata": True,
     "group": "esx_vsphere_objects_count",
 }

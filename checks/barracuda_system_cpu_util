@@ -25,7 +25,6 @@ check_info["barracuda_system_cpu_util"] = {
     "inventory_function": inventory_barracuda_system_cpu_util,
     "check_function": check_barracuda_system_cpu_util,
     "service_description": "CPU utilization",
-    "has_perfdata": True,
     # The barracuda spam firewall does not response or returns a timeout error
     # executing 'snmpwalk' on whole tables. But we can workaround here specifying
     # all needed OIDs. Then we can use 'snmpget' and 'snmpwalk' on these single OIDs.

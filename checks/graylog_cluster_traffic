@@ -58,6 +58,5 @@ check_info["graylog_cluster_traffic"] = {
     "check_function": check_graylog_cluster_traffic,
     "inventory_function": discover_single,
     "service_description": "Graylog Cluster Traffic",
-    "has_perfdata": True,
     "group": "graylog_cluster_traffic",
 }

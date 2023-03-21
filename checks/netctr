@@ -106,5 +106,4 @@ check_info["netctr.combined"] = {
     "check_function": check_netctr_combined,
     "inventory_function": inventory_netctr_combined,
     "service_description": "NIC %s counters",
-    "has_perfdata": True,
 }

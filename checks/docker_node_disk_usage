@@ -35,6 +35,5 @@ check_info["docker_node_disk_usage"] = {
     "inventory_function": discover(),
     "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",
-    "has_perfdata": True,
     "group": "docker_node_disk_usage",
 }

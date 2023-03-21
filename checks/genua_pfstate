@@ -83,7 +83,6 @@ check_info["genua_pfstate"] = {
     "inventory_function": inventory_genua_pfstate,
     "check_function": check_genua_pfstate,
     "service_description": "Paketfilter Status",
-    "has_perfdata": True,
     "group": "pf_used_states",
     "snmp_info": [
         (

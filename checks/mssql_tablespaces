@@ -122,6 +122,5 @@ check_info["mssql_tablespaces"] = {
     "check_function": check_mssql_tablespaces,
     "service_description": "MSSQL %s Sizes",
     "group": "mssql_tablespaces",
-    "has_perfdata": True,
     "default_levels_variable": "mssql_tablespace_default_levels",
 }

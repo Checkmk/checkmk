@@ -167,7 +167,6 @@ def check_oracle_diva_csm_objects(item, params, info):
 check_info["oracle_diva_csm.objects"] = {
     "check_function": check_oracle_diva_csm_objects,
     "inventory_function": inventory_oracle_diva_csm_objects,
-    "has_perfdata": True,
     "service_description": "DIVA Managed Objects",
 }
 
@@ -207,6 +206,5 @@ check_info["oracle_diva_csm.tapes"] = {
     "check_function": check_oracle_diva_csm_tapes,
     "inventory_function": inventory_oracle_diva_csm_tapes,
     "group": "blank_tapes",
-    "has_perfdata": True,
     "service_description": "DIVA Blank Tapes",
 }

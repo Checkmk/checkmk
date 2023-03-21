@@ -58,7 +58,6 @@ check_info["brocade_sys.mem"] = {
     "check_function": check_brocade_sys_mem,
     "service_description": "Memory",
     "group": "memory_relative",
-    "has_perfdata": True,
 }
 
 # .
@@ -103,5 +102,4 @@ check_info["brocade_sys"] = {
     ),
     "snmp_scan_function": scan_brocade_sys,
     "group": "cpu_utilization",
-    "has_perfdata": True,
 }

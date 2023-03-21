@@ -110,7 +110,6 @@ check_info["eltek_battery.temp"] = {
     "inventory_function": inventory_eltek_battery_temp,
     "check_function": check_eltek_battery_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
     "default_levels_variable": "eltek_battery_temp_default_variables",
 }
@@ -135,7 +134,6 @@ check_info["eltek_battery.supply"] = {
     "inventory_function": lambda parsed: discover()(parsed["supply"]),
     "check_function": lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
     "service_description": "Battery %s",
-    "has_perfdata": True,
     "group": "el_inphase",
     "default_levels_variable": "eltek_battery_phase_default_variables",
 }

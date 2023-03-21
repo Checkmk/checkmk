@@ -52,5 +52,4 @@ check_info["fsc_ipmi_mem_status"] = {
     "check_function": check_fsc_ipmi_mem_status,
     "inventory_function": inventory_fsc_ipmi_mem_status,
     "service_description": "IPMI Memory status %s",
-    "has_perfdata": True,
 }

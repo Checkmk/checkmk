@@ -87,7 +87,6 @@ check_info["qlogic_sanbox.temp"] = {
     "check_function": check_qlogic_sanbox_temp,
     "inventory_function": inventory_qlogic_sanbox_temp,
     "service_description": "Temperature Sensor %s",
-    "has_perfdata": True,
     "snmp_info": (
         ".1.3.6.1.3.94.1.8.1",
         [

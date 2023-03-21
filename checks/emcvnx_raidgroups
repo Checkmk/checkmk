@@ -231,7 +231,6 @@ check_info["emcvnx_raidgroups.capacity"] = {
     "inventory_function": inventory_emcvnx_raidgroups_capacity,
     "check_function": check_emcvnx_raidgroups_capacity,
     "service_description": "RAID Group %s Capacity",
-    "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
@@ -286,7 +285,6 @@ check_info["emcvnx_raidgroups.capacity_contiguous"] = {
     "inventory_function": inventory_emcvnx_raidgroups_capacity_contiguous,
     "check_function": check_emcvnx_raidgroups_capacity_contiguous,
     "service_description": "RAID Group %s Capacity Contiguous",
-    "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

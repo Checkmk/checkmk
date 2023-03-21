@@ -65,7 +65,6 @@ check_info["ddn_s2a_stats.readhits"] = {
     "inventory_function": inventory_ddn_s2a_stats_readhits,
     "check_function": check_ddn_s2a_stats_readhits,
     "service_description": "DDN S2A Read Hits %s",
-    "has_perfdata": True,
     "group": "read_hits",
 }
 
@@ -138,7 +137,6 @@ check_info["ddn_s2a_stats.io"] = {
     "inventory_function": inventory_ddn_s2a_stats_io,
     "check_function": check_ddn_s2a_stats_io,
     "service_description": "DDN S2A IO %s",
-    "has_perfdata": True,
     "group": "storage_iops",
 }
 
@@ -215,5 +213,4 @@ check_info["ddn_s2a_stats"] = {
     "check_function": check_ddn_s2a_stats,
     "service_description": "DDN S2A Data Rate %s",
     "group": "storage_throughput",
-    "has_perfdata": True,
 }

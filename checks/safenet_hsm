@@ -87,7 +87,6 @@ check_info["safenet_hsm.events"] = {
     "inventory_function": inventory_safenet_hsm_events,
     "check_function": check_safenet_hsm_events,
     "service_description": "HSM Safenet Event Stats",
-    "has_perfdata": True,
     "group": "safenet_hsm_eventstats",
 }
 
@@ -191,6 +190,5 @@ check_info["safenet_hsm"] = {
             "4",  # hsmNonCriticalEvents
         ],
     ),
-    "has_perfdata": True,
     "group": "safenet_hsm_operstats",
 }

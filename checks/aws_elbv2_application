@@ -72,7 +72,6 @@ check_info["aws_elbv2_application"] = {
     "check_function": check_aws_elbv2_application_lcu,
     "service_description": "AWS/ApplicationELB LCUs",
     "group": "aws_elbv2_lcu",
-    "has_perfdata": True,
 }
 
 # .
@@ -130,7 +129,6 @@ check_info["aws_elbv2_application.connections"] = {
     ),
     "check_function": check_aws_elbv2_application_connections,
     "service_description": "AWS/ApplicationELB Connections",
-    "has_perfdata": True,
 }
 
 # .
@@ -158,7 +156,6 @@ check_info["aws_elbv2_application.http_elb"] = {
     "check_function": check_aws_elbv2_application_http_elb,
     "service_description": "AWS/ApplicationELB HTTP ELB",
     "group": "aws_elb_http",
-    "has_perfdata": True,
 }
 
 # .
@@ -205,7 +202,6 @@ check_info["aws_elbv2_application.http_redirects"] = {
     ),
     "check_function": check_aws_elbv2_application_http_redirects,
     "service_description": "AWS/ApplicationELB HTTP Redirects",
-    "has_perfdata": True,
 }
 
 # .
@@ -263,5 +259,4 @@ check_info["aws_elbv2_application.statistics"] = {
     ),
     "check_function": check_aws_elbv2_application_statistics,
     "service_description": "AWS/ApplicationELB Statistics",
-    "has_perfdata": True,
 }

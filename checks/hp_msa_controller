@@ -76,6 +76,5 @@ check_info["hp_msa_controller"] = {
     "inventory_function": inventory_hp_msa_controller_cpu,
     "check_function": check_hp_msa_controller_cpu,
     "service_description": "CPU Utilization %s",
-    "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
 }

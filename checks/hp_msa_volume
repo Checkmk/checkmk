@@ -214,7 +214,6 @@ check_info["hp_msa_volume.df"] = {
     "inventory_function": inventory_hp_msa_volume_df,
     "check_function": check_hp_msa_volume_df,
     "service_description": "Filesystem %s",
-    "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

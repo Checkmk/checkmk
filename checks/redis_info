@@ -117,7 +117,6 @@ check_info["redis_info"] = {
     "check_function": check_redis_info,
     "inventory_function": discover(),
     "service_description": "Redis %s Server Info",
-    "has_perfdata": True,
     "group": "redis_info",
 }
 # .
@@ -218,7 +217,6 @@ check_info["redis_info.persistence"] = {
     "check_function": check_redis_info_persistence,
     "inventory_function": discover(lambda k, values: "Persistence" in values),
     "service_description": "Redis %s Persistence",
-    "has_perfdata": True,
     "group": "redis_info_persistence",
     "default_levels_variable": "redis_info_persistence_default_levels",
 }
@@ -280,7 +278,6 @@ check_info["redis_info.clients"] = {
     "check_function": check_redis_info_clients,
     "inventory_function": discover(lambda k, values: "Clients" in values),
     "service_description": "Redis %s Clients",
-    "has_perfdata": True,
     "group": "redis_info_clients",
 }
 # .

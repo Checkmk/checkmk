@@ -58,5 +58,4 @@ check_info["fireeye_mailq"] = {
         ],
     ),
     "snmp_scan_function": scan_fireeye,
-    "has_perfdata": True,
 }

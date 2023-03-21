@@ -347,7 +347,6 @@ check_info["drbd"] = {
     "inventory_function": lambda info: inventory_drbd(info, "drbd"),
     "check_function": check_drbd_general,
     "group": "drbd",
-    "has_perfdata": True,
     "service_description": "DRBD %s status",
 }
 
@@ -384,7 +383,6 @@ check_info["drbd.net"] = {
     "inventory_function": lambda info: inventory_drbd(info, "drbd.net"),
     "check_function": check_drbd_net,
     "group": "drbd.net",
-    "has_perfdata": True,
     "service_description": "DRBD %s net",
 }
 
@@ -410,7 +408,6 @@ check_info["drbd.disk"] = {
     "inventory_function": lambda info: inventory_drbd(info, "drbd.disk"),
     "check_function": check_drbd_disk,
     "group": "drbd.disk",
-    "has_perfdata": True,
     "service_description": "DRBD %s disk",
 }
 
@@ -448,6 +445,5 @@ check_info["drbd.stats"] = {
     "inventory_function": lambda info: inventory_drbd(info, "drbd.stats"),
     "check_function": check_drbd_stats,
     "group": "drbd.stats",
-    "has_perfdata": True,
     "service_description": "DRBD %s stats",
 }

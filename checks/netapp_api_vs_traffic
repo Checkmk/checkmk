@@ -220,5 +220,4 @@ check_info["netapp_api_vs_traffic"] = {
     "inventory_function": inventory_netapp_api_vs_traffic,
     "check_function": check_netapp_api_vs_traffic,
     "service_description": "Traffic vServer %s",
-    "has_perfdata": True,
 }

@@ -130,7 +130,6 @@ check_info["mkbackup"] = {
     "inventory_function": inventory_mkbackup_system,
     "check_function": check_mkbackup_system,
     "service_description": "Backup %s",
-    "has_perfdata": True,
 }
 
 
@@ -153,5 +152,4 @@ check_info["mkbackup.site"] = {
     "inventory_function": inventory_mkbackup_site,
     "check_function": check_mkbackup_site,
     "service_description": "OMD %s",
-    "has_perfdata": True,
 }

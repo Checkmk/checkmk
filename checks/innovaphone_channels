@@ -34,6 +34,5 @@ check_info["innovaphone_channels"] = {
     "check_function": check_innovaphone_channels,
     "inventory_function": inventory_innovaphone_channels,
     "service_description": "Channel %s",
-    "has_perfdata": True,
     "group": "hw_single_channelserature",
 }

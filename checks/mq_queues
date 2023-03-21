@@ -72,7 +72,6 @@ check_info["mq_queues"] = {
     "check_function": check_mq_queues,
     "inventory_function": inventory_mq_queues,
     "service_description": "Queue %s",
-    "has_perfdata": True,
     "group": "mq_queues",
     "default_levels_variable": "mq_queues_default_levels",
 }

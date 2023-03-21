@@ -44,7 +44,6 @@ check_info["raritan_pdu_inlet"] = {
     "inventory_function": discover(),
     "check_function": check_raritan_pdu_inlet,
     "service_description": "Input %s",
-    "has_perfdata": True,
     "group": "el_inphase",
     "snmp_info": [
         (

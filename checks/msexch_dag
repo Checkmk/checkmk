@@ -232,6 +232,5 @@ check_info["msexch_dag.copyqueue"] = {
     "inventory_function": inventory_msexch_dag_copyqueue,
     "check_function": check_msexch_dag_copyqueue,
     "service_description": "Exchange DAG CopyQueue of %s",
-    "has_perfdata": True,
     "group": "msexch_copyqueue",
 }

@@ -73,7 +73,6 @@ check_info["aws_costs_and_usage"] = {
     "check_function": check_aws_costs_and_usage_summary,
     "service_description": "AWS/CE %s",
     "group": "aws_costs_and_usage",
-    "has_perfdata": True,
 }
 
 # .
@@ -117,5 +116,4 @@ check_info["aws_costs_and_usage.per_service"] = {
     "check_function": check_aws_costs_and_usage_per_service,
     "service_description": "AWS/CE %s",
     "group": "aws_costs_and_usage",
-    "has_perfdata": True,
 }

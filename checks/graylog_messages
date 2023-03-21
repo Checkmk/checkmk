@@ -31,6 +31,5 @@ check_info["graylog_messages"] = {
     "check_function": check_graylog_messages,
     "inventory_function": inventory_graylog_messages,
     "service_description": "Graylog Messages",
-    "has_perfdata": True,
     "group": "graylog_messages",
 }

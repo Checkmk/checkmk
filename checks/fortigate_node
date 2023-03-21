@@ -148,7 +148,6 @@ check_info["fortigate_node.cpu"] = {
     "inventory_function": inventory_fortigate_node_cpu,
     "check_function": check_fortigate_node_cpu,
     "service_description": "CPU utilization %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -181,6 +180,5 @@ check_info["fortigate_node.sessions"] = {
     "inventory_function": inventory_fortigate_node_ses,
     "check_function": check_fortigate_node_ses,
     "service_description": "Sessions %s",
-    "has_perfdata": True,
     "group": "fortigate_node_sessions",
 }

@@ -79,5 +79,4 @@ check_info["nullmailer_mailq"] = {
     "service_description": "Nullmailer Queue %s",
     "default_levels_variable": "nullmailer_mailq_default_levels",
     "group": "mail_queue_length",
-    "has_perfdata": True,
 }

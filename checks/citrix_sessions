@@ -54,5 +54,4 @@ check_info["citrix_sessions"] = {
     "check_function": check_citrix_sessions,
     "inventory_function": inventory_citrix_sessions,
     "service_description": "Citrix Sessions",
-    "has_perfdata": True,
 }

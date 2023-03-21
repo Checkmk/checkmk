@@ -105,6 +105,5 @@ check_info["ibm_svc_host"] = {
     "check_function": check_ibm_svc_host,
     "inventory_function": discover_single,
     "service_description": "Hosts",
-    "has_perfdata": True,
     "group": "ibm_svc_host",
 }

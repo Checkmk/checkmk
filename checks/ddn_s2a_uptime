@@ -39,6 +39,5 @@ check_info["ddn_s2a_uptime"] = {
     "service_description": "DDN S2A Power-On Time",  # We don't use "Uptime" as a service description here,
     # because this value is different from the uptime value
     # supplied via SNMP.
-    "has_perfdata": True,
     "group": "uptime",
 }

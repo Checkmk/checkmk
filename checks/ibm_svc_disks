@@ -103,5 +103,4 @@ check_info["ibm_svc_disks"] = {
     "service_description": "Disk Summary",
     "group": "netapp_disks",
     "default_levels_variable": "filer_disks_default_levels",
-    "has_perfdata": True,
 }

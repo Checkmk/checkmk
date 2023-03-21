@@ -93,6 +93,5 @@ check_info["cisco_ace_rserver"] = {
             "19",  # cesRserverCurrConns
         ],
     ),
-    "has_perfdata": True,
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.9.1.824",
 }

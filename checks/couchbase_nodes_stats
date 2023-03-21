@@ -30,7 +30,6 @@ check_info["couchbase_nodes_stats.cpu_util"] = {
     "check_function": check_couchbase_nodes_cpu_util,
     "service_description": "Couchbase %s CPU utilization",
     "group": "cpu_utilization_multiitem",
-    "has_perfdata": True,
 }
 
 factory_settings["memory_default_levels"] = MEMORY_DEFAULT_LEVELS
@@ -73,6 +72,5 @@ check_info["couchbase_nodes_stats.mem"] = {
     "check_function": check_couchbase_nodes_mem,
     "service_description": "Couchbase %s Memory",
     "group": "memory_multiitem",
-    "has_perfdata": True,
     "default_levels_variable": "memory_default_levels",
 }

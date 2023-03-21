@@ -104,5 +104,4 @@ check_info["isc_dhcpd"] = {
     "check_function": check_isc_dhcpd,
     "service_description": "DHCP Pool %s",
     "group": "win_dhcp_pools",
-    "has_perfdata": True,
 }

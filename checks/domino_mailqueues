@@ -44,7 +44,6 @@ check_info["domino_mailqueues"] = {
     "inventory_function": discover(),
     "check_function": check_domino_mailqueues,
     "service_description": "Domino Queue %s",
-    "has_perfdata": True,
     "default_levels_variable": "domino_mailqueues_defaults",
     "snmp_scan_function": scan_domino,
     "snmp_info": (

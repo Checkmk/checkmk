@@ -47,7 +47,6 @@ check_info["carel_uniflair_cooling"] = {
     "check_function": check_carel_uniflair_cooling,
     "inventory_function": inventory_carel_uniflair_cooling,
     "service_description": "Carel uniflair cooling",
-    "has_perfdata": True,
     # All the OIDs of this checks seems to be wrong for the current version
     # of this device, so the scan function is disbaled until we have better information
     "snmp_scan_function": lambda oid: False,

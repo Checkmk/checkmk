@@ -44,7 +44,6 @@ check_info["couchbase_nodes_size.docs"] = {
     ),
     "service_description": "Couchbase %s Documents",
     "group": "couchbase_size_docs",
-    "has_perfdata": True,
 }
 
 check_info["couchbase_nodes_size.spacial_views"] = {
@@ -55,7 +54,6 @@ check_info["couchbase_nodes_size.spacial_views"] = {
     ),
     "service_description": "Couchbase %s Spacial Views",
     "group": "couchbase_size_spacial",
-    "has_perfdata": True,
 }
 
 check_info["couchbase_nodes_size.couch_views"] = {
@@ -66,5 +64,4 @@ check_info["couchbase_nodes_size.couch_views"] = {
     ),
     "service_description": "Couchbase %s Couch Views",
     "group": "couchbase_size_couch",
-    "has_perfdata": True,
 }

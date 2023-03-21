@@ -59,5 +59,4 @@ check_info["tsm_storagepools"] = {
     "inventory_function": inventory_tsm_storagepools,
     "check_function": check_tsm_storagepools,
     "service_description": "TSM Storagepool %s",
-    "has_perfdata": True,
 }

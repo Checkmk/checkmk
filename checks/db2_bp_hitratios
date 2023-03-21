@@ -89,5 +89,4 @@ check_info["db2_bp_hitratios"] = {
     "service_description": "DB2 BP-Hitratios %s",
     "check_function": check_db2_bp_hitratios,
     "inventory_function": inventory_db2_bp_hitratios,
-    "has_perfdata": True,
 }

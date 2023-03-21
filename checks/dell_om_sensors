@@ -70,7 +70,6 @@ check_info["dell_om_sensors"] = {
     "check_function": check_dell_om_sensors,
     "inventory_function": inventory_dell_om_sensors,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
     # There is no other way to find out that openmanage is present.
     "snmp_scan_function": scan_dell_om,

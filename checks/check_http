@@ -289,5 +289,4 @@ active_check_info["http"] = {
     "command_line": "check_http $ARG1$",
     "argument_function": check_http_arguments,
     "service_description": check_http_description,
-    "has_perfdata": True,
 }

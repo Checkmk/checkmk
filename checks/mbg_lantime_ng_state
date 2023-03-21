@@ -33,7 +33,6 @@ check_info["mbg_lantime_ng_state"] = {
     "check_function": check_mbg_lantime_ng_state,
     "inventory_function": inventory_mbg_lantime_ng_state,
     "service_description": "LANTIME State",
-    "has_perfdata": True,
     "default_levels_variable": "mbg_lantime_state_default_levels",
     "group": "mbg_lantime_state",
     "snmp_info": (

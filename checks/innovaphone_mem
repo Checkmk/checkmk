@@ -22,6 +22,5 @@ check_info["innovaphone_mem"] = {
     "check_function": check_innovaphone_mem,
     "inventory_function": inventory_innovaphone_mem,
     "service_description": "Memory",
-    "has_perfdata": True,
     "group": "innovaphone_mem",
 }

@@ -100,5 +100,4 @@ check_info["sylo"] = {
     "check_function": check_sylo,
     "inventory_function": inventory_sylo,
     "service_description": "Sylo",
-    "has_perfdata": True,
 }

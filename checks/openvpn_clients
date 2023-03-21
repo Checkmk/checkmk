@@ -47,5 +47,4 @@ check_info["openvpn_clients"] = {
     "check_function": check_openvpn_clients,
     "inventory_function": inventory_openvpn_clients,
     "service_description": "OpenVPN Client %s",
-    "has_perfdata": True,
 }

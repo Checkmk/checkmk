@@ -152,5 +152,4 @@ check_info["veeam_client"] = {
     "service_description": "VEEAM Client %s",
     "group": "veeam_backup",
     "default_levels_variable": "veeam_client",
-    "has_perfdata": True,
 }

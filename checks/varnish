@@ -397,7 +397,6 @@ check_info["varnish"] = {
     "inventory_function": inventory_varnish_uptime,
     "check_function": check_varnish_uptime,
     "service_description": "Varnish Uptime",
-    "has_perfdata": True,
 }
 # .
 #   .--cache---------------------------------------------------------------.
@@ -422,7 +421,6 @@ check_info["varnish.cache"] = {
     ),
     "service_description": "Varnish Cache",
     "group": "varnish_cache",
-    "has_perfdata": True,
 }
 # .
 #   .--client--------------------------------------------------------------.
@@ -448,7 +446,6 @@ check_info["varnish.client"] = {
     ),
     "service_description": "Varnish Client",
     "group": "varnish_client",
-    "has_perfdata": True,
 }
 # .
 #   .--backend-------------------------------------------------------------.
@@ -481,7 +478,6 @@ check_info["varnish.backend"] = {
     ),
     "service_description": "Varnish Backend",
     "group": "varnish_backend",
-    "has_perfdata": True,
 }
 # .
 #   .--fetch---------------------------------------------------------------.
@@ -526,7 +522,6 @@ check_info["varnish.fetch"] = {
     ),
     "service_description": "Varnish Fetch",
     "group": "varnish_fetch",
-    "has_perfdata": True,
 }
 # .
 #   .--ESI-----------------------------------------------------------------.
@@ -552,7 +547,6 @@ check_info["varnish.esi"] = {
     "service_description": "Varnish ESI",
     "default_levels_variable": "varnish_esi_default_levels",
     "group": "varnish_esi",
-    "has_perfdata": True,
 }
 # .
 #   .--objects-------------------------------------------------------------.
@@ -577,7 +571,6 @@ check_info["varnish.objects"] = {
     ),
     "service_description": "Varnish Objects",
     "group": "varnish_objects",
-    "has_perfdata": True,
 }
 # .
 #   .--worker--------------------------------------------------------------.
@@ -608,7 +601,6 @@ check_info["varnish.worker"] = {
     ),
     "service_description": "Varnish Worker",
     "group": "varnish_worker",
-    "has_perfdata": True,
 }
 # .
 #   .--cache hit ratio-----------------------------------------------------.
@@ -628,7 +620,6 @@ check_info["varnish.cache_hit_ratio"] = {
     "default_levels_variable": "varnish_cache_hit_ratio_default_levels",
     "service_description": "Varnish Cache Hit Ratio",
     "group": "varnish_cache_hit_ratio",
-    "has_perfdata": True,
 }
 # .
 #   .--backend success ratio-----------------------------------------------.
@@ -656,7 +647,6 @@ check_info["varnish.backend_success_ratio"] = {
     "default_levels_variable": "varnish_backend_success_ratio_default_levels",
     "service_description": "Varnish Backend Success Ratio",
     "group": "varnish_backend_success_ratio",
-    "has_perfdata": True,
 }
 # .
 #   .--worker thread ratio-------------------------------------------------.
@@ -696,5 +686,4 @@ check_info["varnish.worker_thread_ratio"] = {
     "service_description": "Varnish Worker Thread Ratio",
     "default_levels_variable": "varnish_worker_thread_ratio_default_levels",
     "group": "varnish_worker_thread_ratio",
-    "has_perfdata": True,
 }

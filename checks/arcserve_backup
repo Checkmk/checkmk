@@ -152,5 +152,4 @@ check_info["arcserve_backup"] = {
     "check_function": check_arcserve_backup,
     "inventory_function": inventory_arcserve_backup,
     "service_description": "Arcserve Backup %s",
-    "has_perfdata": True,
 }

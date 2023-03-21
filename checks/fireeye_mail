@@ -84,7 +84,6 @@ check_info["fireeye_mail"] = {
         ],
     ),
     "snmp_scan_function": scan_fireeye,
-    "has_perfdata": True,
 }
 
 #   .--attachment----------------------------------------------------------.
@@ -123,7 +122,6 @@ check_info["fireeye_mail.attachment"] = {
     "check_function": check_fireeye_attachment,
     "service_description": "Mails Containing Attachment",
     "group": "fireeye_mail",
-    "has_perfdata": True,
 }
 
 #   .--url-----------------------------------------------------------------.
@@ -159,7 +157,6 @@ check_info["fireeye_mail.url"] = {
     "check_function": check_fireeye_url,
     "service_description": "Mails Containing URL",
     "group": "fireeye_mail",
-    "has_perfdata": True,
 }
 
 #   .--statistics----------------------------------------------------------.
@@ -217,7 +214,6 @@ check_info["fireeye_mail.statistics"] = {
     "check_function": check_fireeye_mail_statistics,
     "service_description": "Mail Processing Statistics",
     "group": "fireeye_mail",
-    "has_perfdata": True,
 }
 
 #   .--received------------------------------------------------------------.
@@ -251,5 +247,4 @@ check_info["fireeye_mail.received"] = {
     "check_function": check_fireeye_mail_received,
     "service_description": "Mails Received",
     "default_levels_variable": "received_levels",
-    "has_perfdata": True,
 }

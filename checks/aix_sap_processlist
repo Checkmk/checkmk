@@ -100,5 +100,4 @@ check_info["aix_sap_processlist"] = {
     "inventory_function": inventory_aix_sap_processlist,
     "check_function": check_aix_sap_processlist,
     "service_description": "SAP Process %s",
-    "has_perfdata": True,
 }

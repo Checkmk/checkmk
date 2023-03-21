@@ -71,6 +71,5 @@ check_info["postgres_locks"] = {
     "check_function": check_postgres_locks,
     "inventory_function": inventory_postgres_locks,
     "service_description": "PostgreSQL Locks %s",
-    "has_perfdata": True,
     "group": "postgres_locks",
 }

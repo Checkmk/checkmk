@@ -111,7 +111,6 @@ check_info["mysql.sessions"] = {
     "inventory_function": discover(lambda k, values: len(values) > 200),
     "check_function": check_mysql_sessions,
     "service_description": "MySQL Sessions %s",
-    "has_perfdata": True,
     "group": "mysql_sessions",
 }
 
@@ -139,7 +138,6 @@ check_info["mysql.innodb_io"] = {
     "inventory_function": discover(lambda k, values: "Innodb_data_read" in values),
     "check_function": check_mysql_iostat,
     "service_description": "MySQL InnoDB IO %s",
-    "has_perfdata": True,
     "group": "mysql_innodb_io",
 }
 
@@ -225,7 +223,6 @@ check_info["mysql.connections"] = {
     "check_function": check_mysql_connections,
     "service_description": "MySQL Connections %s",
     "group": "mysql_connections",
-    "has_perfdata": True,
 }
 
 # .

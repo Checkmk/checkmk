@@ -145,7 +145,6 @@ check_info["tinkerforge"] = {
 check_info["tinkerforge.temperature"] = {
     "inventory_function": lambda parsed: inventory_tinkerforge("temperature", parsed),
     "check_function": check_tinkerforge_temperature,
-    "has_perfdata": True,
     "service_description": "Temperature %s",
     "group": "temperature",
 }
@@ -153,7 +152,6 @@ check_info["tinkerforge.temperature"] = {
 check_info["tinkerforge.ambient"] = {
     "inventory_function": lambda parsed: inventory_tinkerforge("ambient", parsed),
     "check_function": check_tinkerforge_ambient,
-    "has_perfdata": True,
     "group": "brightness",
     "service_description": "Ambient Light %s",
 }
@@ -161,7 +159,6 @@ check_info["tinkerforge.ambient"] = {
 check_info["tinkerforge.humidity"] = {
     "inventory_function": lambda parsed: inventory_tinkerforge("humidity", parsed),
     "check_function": check_tinkerforge_humidity,
-    "has_perfdata": True,
     "group": "humidity",
     "service_description": "Humidity %s",
 }
@@ -169,7 +166,6 @@ check_info["tinkerforge.humidity"] = {
 check_info["tinkerforge.motion"] = {
     "inventory_function": lambda parsed: inventory_tinkerforge("motion", parsed),
     "check_function": check_tinkerforge_motion,
-    "has_perfdata": True,
     "group": "motion",
     "service_description": "Motion Detector %s",
 }

@@ -44,5 +44,4 @@ check_info["postgres_conn_time"] = {
     "inventory_function": inventory_postgres_conn_time,
     "check_function": check_postgres_conn_time,
     "service_description": "PostgreSQL Connection Time %s",
-    "has_perfdata": True,
 }

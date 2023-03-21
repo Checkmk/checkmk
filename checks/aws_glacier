@@ -65,7 +65,6 @@ check_info["aws_glacier"] = {
     "inventory_function": inventory_aws_glacier,
     "check_function": check_aws_glacier_archives,
     "service_description": "AWS/Glacier Vault: %s",
-    "has_perfdata": True,
     "group": "aws_glacier_vault_archives",
 }
 
@@ -113,6 +112,5 @@ check_info["aws_glacier.summary"] = {
     "inventory_function": discover_single,
     "check_function": check_aws_glacier_summary,
     "service_description": "AWS/Glacier Summary",
-    "has_perfdata": True,
     "group": "aws_glacier_vaults",
 }

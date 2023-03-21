@@ -64,7 +64,6 @@ check_info["strem1_sensors"] = {
     "check_function": check_strem1_sensors,
     "inventory_function": inventory_strem1_sensors,
     "service_description": "Sensor - %s",
-    "has_perfdata": True,
     # 1,  # SENSATRONICS-EM1::group1Name
     # 2,  # SENSATRONICS-EM1::group1TempName
     # 3,  # SENSATRONICS-EM1::group1TempDataStr

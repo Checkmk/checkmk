@@ -31,6 +31,5 @@ check_info["sansymphony_alerts"] = {
     "check_function": check_sansymphony_alerts,
     "inventory_function": inventory_sansymphony_alerts,
     "service_description": "sansymphony Alerts",
-    "has_perfdata": True,
     "group": "sansymphony_alerts",
 }

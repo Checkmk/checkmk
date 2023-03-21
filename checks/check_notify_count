@@ -20,5 +20,4 @@ active_check_info["notify_count"] = {
     "command_line": "check_notify_count $ARG1$",
     "argument_function": check_notify_count_arguments,
     "service_description": lambda params: "Notify %s" % params[0],
-    "has_perfdata": True,
 }

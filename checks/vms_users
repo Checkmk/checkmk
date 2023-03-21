@@ -39,5 +39,4 @@ check_info["vms_users"] = {
     "check_function": check_vms_users,
     "inventory_function": inventory_vms_users,
     "service_description": "VMS Users",
-    "has_perfdata": True,
 }

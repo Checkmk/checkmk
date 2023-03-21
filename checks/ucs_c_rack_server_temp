@@ -82,5 +82,4 @@ check_info["ucs_c_rack_server_temp"] = {
     "check_function": check_ucs_c_rack_server_temp,
     "group": "temperature",
     "service_description": "Temperature %s",
-    "has_perfdata": True,
 }

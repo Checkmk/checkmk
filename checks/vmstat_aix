@@ -54,5 +54,4 @@ check_info["vmstat_aix"] = {
     "parse_function": parse_vmstat_aix,
     "check_function": check_vmstat_aix,
     "service_description": "vmstat %s",
-    "has_perfdata": True,
 }

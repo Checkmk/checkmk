@@ -38,7 +38,6 @@ check_info["arbor_pravail"] = {
     "inventory_function": inventory_arbor_memory,
     "parse_function": parse_pravail,
     "service_description": "Memory",
-    "has_perfdata": True,
     "group": "memory_arbor",
     "default_levels_variable": "arbor_memory_default_levels",
     "snmp_info": (
@@ -58,7 +57,6 @@ check_info["arbor_pravail.disk_usage"] = {
     "check_function": check_arbor_disk_usage,
     "inventory_function": inventory_arbor_disk_usage,
     "service_description": "Disk Usage %s",
-    "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
@@ -73,6 +71,5 @@ check_info["arbor_pravail.drop_rate"] = {
     "check_function": check_arbor_drop_rate,
     "inventory_function": inventory_arbor_drop_rate,
     "service_description": "%s drop rate",
-    "has_perfdata": True,
     "group": "generic_rate",
 }

@@ -113,7 +113,6 @@ check_info["elasticsearch_cluster_health"] = {
     "inventory_function": inventory_elasticsearch_cluster_health,
     "service_description": "Elasticsearch Cluster Health",
     "group": "elasticsearch_cluster_health",
-    "has_perfdata": True,
 }
 
 factory_settings["elasticsearch_cluster_shards"] = {
@@ -163,7 +162,6 @@ check_info["elasticsearch_cluster_health.shards"] = {
     "default_levels_variable": "elasticsearch_cluster_shards",
     "service_description": "Elasticsearch Cluster Shards",
     "group": "elasticsearch_cluster_shards",
-    "has_perfdata": True,
 }
 
 
@@ -192,5 +190,4 @@ check_info["elasticsearch_cluster_health.tasks"] = {
     "inventory_function": inventory_elasticsearch_cluster_health,
     "service_description": "Elasticsearch Cluster Tasks",
     "group": "elasticsearch_cluster_tasks",
-    "has_perfdata": True,
 }

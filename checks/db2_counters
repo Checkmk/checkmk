@@ -120,7 +120,6 @@ check_info["db2_counters"] = {
     "service_description": "DB2 Counters %s",
     "check_function": check_db2_counters,
     "inventory_function": inventory_db2_counters,
-    "has_perfdata": True,
     "group": "db2_counters",
     "default_levels_variable": "db2_counters_default_levels",
 }

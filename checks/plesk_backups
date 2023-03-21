@@ -96,6 +96,5 @@ check_info["plesk_backups"] = {
     "check_function": check_plesk_backups,
     "inventory_function": inventory_plesk_backups,
     "service_description": "Plesk Backup %s",
-    "has_perfdata": True,
     "group": "plesk_backups",
 }

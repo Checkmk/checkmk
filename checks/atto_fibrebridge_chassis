@@ -52,7 +52,6 @@ check_info["atto_fibrebridge_chassis.temp"] = {
     "check_function": check_atto_fibrebridge_chassis_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
-    "has_perfdata": True,
 }
 
 # .

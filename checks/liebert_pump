@@ -52,5 +52,4 @@ check_info["liebert_pump"] = {
         ],
     ),
     "snmp_scan_function": scan_liebert,
-    "has_perfdata": True,
 }

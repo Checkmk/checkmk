@@ -129,6 +129,5 @@ check_info["postgres_connections"] = {
     "inventory_function": inventory_postgres_connections,
     "service_description": "PostgreSQL Connections %s",
     "group": "db_connections",
-    "has_perfdata": True,
     "default_levels_variable": "postgres_connections_default_levels",
 }

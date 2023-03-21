@@ -168,7 +168,6 @@ check_info["netapp_api_environment.temperature"] = {
     "inventory_function": discover_api_environment(lambda v: v.get("sensor-type") == "thermal"),
     "parse_function": _parse_netapp_api_environment,
     "service_description": "System Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
 }
 
@@ -177,7 +176,6 @@ check_info["netapp_api_environment.fans"] = {
     "inventory_function": discover_api_environment(lambda v: v.get("sensor-type") == "fan"),
     "parse_function": _parse_netapp_api_environment,
     "service_description": "System Fans %s",
-    "has_perfdata": True,
     "group": "hw_fans",
 }
 
@@ -188,7 +186,6 @@ check_info["netapp_api_environment.voltage"] = {
     ),
     "parse_function": _parse_netapp_api_environment,
     "service_description": "System Voltage %s",
-    "has_perfdata": True,
     "group": "voltage",
 }
 
@@ -199,5 +196,4 @@ check_info["netapp_api_environment.current"] = {
     ),
     "parse_function": _parse_netapp_api_environment,
     "service_description": "System Currents %s",
-    "has_perfdata": True,
 }

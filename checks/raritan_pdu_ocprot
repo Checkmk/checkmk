@@ -70,7 +70,6 @@ check_info["raritan_pdu_ocprot"] = {
         lambda key, value: True, default_params="raritan_pdu_ocprot_current_default_levels"
     ),
     "check_function": check_raritan_pdu_ocprot,
-    "has_perfdata": True,
     "service_description": "Overcurrent Protector %s",
     "group": "ocprot_current",
     "snmp_info": [

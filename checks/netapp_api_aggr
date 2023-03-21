@@ -43,6 +43,5 @@ check_info["netapp_api_aggr"] = {
     "inventory_function": inventory_netapp_api_aggr,
     "service_description": "Aggregation %s",
     "group": "filesystem",
-    "has_perfdata": True,
     "default_levels_variable": "filesystem_default_levels",
 }

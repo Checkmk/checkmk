@@ -49,7 +49,6 @@ check_info["safenet_ntls.connrate"] = {
     "inventory_function": inventory_safenet_ntls_connrate,
     "check_function": check_safenet_ntls_connrate,
     "service_description": "NTLS Connection Rate: %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -112,7 +111,6 @@ check_info["safenet_ntls.links"] = {
     "inventory_function": inventory_safenet_ntls_links,
     "check_function": check_safenet_ntls_links,
     "service_description": "NTLS Links",
-    "has_perfdata": True,
     "group": "safenet_ntls_links",
 }
 
@@ -153,7 +151,6 @@ check_info["safenet_ntls.clients"] = {
     "inventory_function": inventory_safenet_ntls_clients,
     "check_function": check_safenet_ntls_clients,
     "service_description": "NTLS Clients",
-    "has_perfdata": True,
     "group": "safenet_ntls_clients",
 }
 

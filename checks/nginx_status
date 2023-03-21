@@ -84,6 +84,5 @@ check_info["nginx_status"] = {
     "check_function": check_nginx_status,
     "inventory_function": discover(),
     "service_description": "Nginx %s Status",
-    "has_perfdata": True,
     "group": "nginx_status",
 }

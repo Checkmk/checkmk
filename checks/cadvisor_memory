@@ -67,5 +67,4 @@ check_info["cadvisor_memory"] = {
     "inventory_function": discover_single,
     "check_function": check_cadvisor_memory,
     "service_description": "Memory",
-    "has_perfdata": True,
 }

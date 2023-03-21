@@ -126,5 +126,4 @@ active_check_info["mail_loop"] = {
     "command_line": "check_mail_loop $ARG1$",
     "argument_function": check_mail_loop_arguments,
     "service_description": lambda params: f"Mail Loop {params['item']}",
-    "has_perfdata": True,
 }

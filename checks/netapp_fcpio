@@ -50,7 +50,6 @@ check_info["netapp_fcpio"] = {
     "check_function": check_netapp_fcpio,
     "inventory_function": lambda info: [(None, "netapp_fcpio_default_levels")],
     "service_description": "FCP I/O",
-    "has_perfdata": True,
     "group": "netapp_fcportio",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("NetApp Release")
     and oid(".1.3.6.1.4.1.789.1.17.20.0"),

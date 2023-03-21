@@ -66,7 +66,6 @@ check_info["oracle_undostat"] = {
     "check_function": check_oracle_undostat,
     "inventory_function": discover_oracle_undostat,
     "service_description": "ORA %s Undo Retention",
-    "has_perfdata": True,
     "default_levels_variable": "oracle_undostat_defaults",
     "group": "oracle_undostat",
 }

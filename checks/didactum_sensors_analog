@@ -83,7 +83,6 @@ check_info["didactum_sensors_analog"] = {
         ],
     ),
     "snmp_scan_function": scan_didactum,
-    "has_perfdata": True,
     "group": "temperature",
 }
 
@@ -106,7 +105,6 @@ check_info["didactum_sensors_analog.humidity"] = {
     "inventory_function": inventory_didactum_sensors_analog_humid,
     "check_function": check_didactum_sensors_humidity,
     "service_description": "Humidity %s",
-    "has_perfdata": True,
     "group": "humidity",
 }
 
@@ -129,6 +127,5 @@ check_info["didactum_sensors_analog.voltage"] = {
     "inventory_function": inventory_didactum_sensors_analog_volt,
     "check_function": check_didactum_sensors_voltage,
     "service_description": "Phase %s",
-    "has_perfdata": True,
     "group": "el_inphase",
 }

@@ -99,5 +99,4 @@ check_info["omd_apache"] = {
     "inventory_function": inventory_omd_apache,
     "check_function": check_omd_apache,
     "service_description": "OMD %s apache",
-    "has_perfdata": True,
 }

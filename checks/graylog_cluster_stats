@@ -75,7 +75,6 @@ check_info["graylog_cluster_stats"] = {
     "check_function": check_graylog_cluster_stats,
     "inventory_function": discover_single,
     "service_description": "Graylog Cluster Stats",
-    "has_perfdata": True,
     "group": "graylog_cluster_stats",
 }
 
@@ -189,7 +188,6 @@ check_info["graylog_cluster_stats.elastic"] = {
     "inventory_function": inventory_graylog_cluster_stats_elastic,
     "default_levels_variable": "graylog_cluster_stats_elastic_defaultlevels",
     "service_description": "Graylog Cluster Elasticsearch Stats",
-    "has_perfdata": True,
     "group": "graylog_cluster_stats_elastic",
 }
 
@@ -259,6 +257,5 @@ check_info["graylog_cluster_stats.mongodb"] = {
     "check_function": check_graylog_cluster_stats_mongodb,
     "inventory_function": inventory_graylog_cluster_stats_mongodb,
     "service_description": "Graylog Cluster MongoDB Stats",
-    "has_perfdata": True,
     "group": "graylog_cluster_stats_mongodb",
 }

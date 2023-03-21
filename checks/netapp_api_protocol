@@ -41,5 +41,4 @@ check_info["netapp_api_protocol"] = {
     "check_function": check_netapp_api_protocol,
     "inventory_function": inventory_netapp_api_protocol,
     "service_description": "Protocol %s",
-    "has_perfdata": True,
 }

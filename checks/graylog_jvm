@@ -44,6 +44,5 @@ check_info["graylog_jvm"] = {
     "check_function": check_graylog_jvm,
     "inventory_function": discover_single,
     "service_description": "Graylog JVM",
-    "has_perfdata": True,
     "group": "graylog_jvm",
 }

@@ -29,5 +29,4 @@ check_info["splunk_alerts"] = {
     "inventory_function": inventory_splunk_alerts,
     "service_description": "Splunk Alerts",
     "group": "splunk_alerts",
-    "has_perfdata": True,
 }

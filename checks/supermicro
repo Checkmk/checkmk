@@ -175,7 +175,6 @@ check_info["supermicro.sensors"] = {
     "check_function": check_supermicro_sensors,
     "inventory_function": inventory_supermicro_sensors,
     "service_description": "Sensor %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -214,5 +213,4 @@ check_info["supermicro.smart"] = {
     "check_function": check_supermicro_smart,
     "inventory_function": inventory_supermicro_smart,
     "service_description": "SMART Health %s",
-    "has_perfdata": True,
 }

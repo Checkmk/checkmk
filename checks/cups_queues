@@ -120,7 +120,6 @@ check_info["cups_queues"] = {
     "inventory_function": inventory_cups_queues,
     "check_function": check_cups_queues,
     "service_description": "CUPS Queue %s",
-    "has_perfdata": True,
     "default_levels_variable": "cups_queues_default_levels",
     "group": "cups_queues",
 }

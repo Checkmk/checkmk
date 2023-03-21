@@ -115,7 +115,6 @@ check_info["msexch_database"] = {
     "inventory_function": inventory_msexch_database,
     "check_function": check_msexch_database,
     "parse_function": parse_msexch_database,
-    "has_perfdata": True,
     "service_description": "Exchange Database %s",
     "group": "msx_database",
     "default_levels_variable": "msexch_database_defaultlevels",

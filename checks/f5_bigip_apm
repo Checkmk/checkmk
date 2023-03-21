@@ -32,5 +32,4 @@ check_info["f5_bigip_apm"] = {
         ],
     ),
     "snmp_scan_function": scan_f5_bigip,
-    "has_perfdata": True,
 }

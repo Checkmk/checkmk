@@ -28,5 +28,4 @@ check_info["aws_wafv2_limits"] = {
     "service_description": "AWS/WAFV2 Limits %s",
     "group": "aws_wafv2_limits",
     "default_levels_variable": "aws_wafv2_limits_default_levels",
-    "has_perfdata": True,
 }

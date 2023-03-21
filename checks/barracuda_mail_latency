@@ -36,7 +36,6 @@ check_info["barracuda_mail_latency"] = {
     "inventory_function": inventory_barracuda_mail_latency,
     "check_function": check_barracuda_mail_latency,
     "service_description": "Mail Latency",
-    "has_perfdata": True,
     # The barracuda spam firewall does not response or returns a timeout error
     # executing 'snmpwalk' on whole tables. But we can workaround here specifying
     # all needed OIDs. Then we can use 'snmpget' and 'snmpwalk' on these single OIDs.

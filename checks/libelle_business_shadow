@@ -400,7 +400,6 @@ check_info["libelle_business_shadow.archive_dir"] = {
     "check_function": check_libelle_business_shadow_archive_dir,
     "inventory_function": inventory_libelle_business_shadow_archive_dir,
     "service_description": "Libelle Business Shadow %s",
-    "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

@@ -93,6 +93,5 @@ check_info["graylog_sources"] = {
     "inventory_function": discover(),
     "default_levels_variable": "graylog_sources_default_levels",
     "service_description": "Graylog Source %s",
-    "has_perfdata": True,
     "group": "graylog_sources",
 }

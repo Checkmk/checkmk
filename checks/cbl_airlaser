@@ -192,5 +192,4 @@ check_info["cbl_airlaser.hardware"] = {
     "check_function": check_cbl_airlaser_hw,
     "inventory_function": inventory_cbl_airlaser,
     "service_description": "CBL Airlaser Hardware",
-    "has_perfdata": True,
 }

@@ -47,7 +47,6 @@ check_info["netscaler_tcp_conns"] = {
     "inventory_function": inventory_netscaler_tcp_conns,
     "default_levels_variable": "netscaler_tcp_conns_default_levels",
     "service_description": "TCP Connections",
-    "has_perfdata": True,
     "group": "netscaler_tcp_conns",
     "snmp_info": (
         ".1.3.6.1.4.1.5951.4.1.1.46",

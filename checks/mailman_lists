@@ -20,5 +20,4 @@ check_info["mailman_lists"] = {
     "check_function": check_mailman_lists,
     "inventory_function": inventory_mailman_lists,
     "service_description": "Mailinglist %s",
-    "has_perfdata": True,
 }

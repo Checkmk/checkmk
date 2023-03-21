@@ -97,7 +97,6 @@ check_info["msoffice_licenses"] = {
     "inventory_function": discover(),
     "check_function": check_msoffice_licenses,
     "service_description": "MS Office Licenses %s",
-    "has_perfdata": True,
     "group": "msoffice_licenses",
     "default_levels_variable": "msoffice_licenses_levels",
 }

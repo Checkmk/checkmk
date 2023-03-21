@@ -39,7 +39,6 @@ check_info["qmail_stats"] = {
     "inventory_function": inventory_qmail_stats,
     "check_function": check_qmail_stats,
     "service_description": "Qmail Queue %s",
-    "has_perfdata": True,
     "default_levels_variable": "qmail_stats_default_levels",
     "group": "mail_queue_length",
 }

@@ -110,5 +110,4 @@ else:
         "command_line": "check_mail $ARG1$",
         "argument_function": check_mail_arguments,
         "service_description": lambda params: params["service_description"],
-        "has_perfdata": True,
     }

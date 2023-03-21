@@ -28,7 +28,6 @@ check_info["fsc_sc2_power_consumption"] = {
         ],
     ),
     "snmp_scan_function": is_fsc_sc2,
-    "has_perfdata": True,
     "group": "el_inphase",
     "management_board": HOST_ONLY,
 }

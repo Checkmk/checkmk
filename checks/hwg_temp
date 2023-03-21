@@ -16,7 +16,6 @@ check_info["hwg_temp"] = {
     "check_function": check_hwg_temp,
     "inventory_function": inventory_hwg_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "snmp_info": (
         # STE-MIB.txt
         ".1.3.6.1.4.1.21796.4.1.3.1",

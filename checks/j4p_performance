@@ -124,7 +124,6 @@ def check_j4p_performance_mem(item, params, info):
 check_info["j4p_performance.mem"] = {
     "check_function": check_j4p_performance_mem,
     "group": "j4p_performance.mem",
-    "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance(i, "mem"),
     "service_description": "JMX %s Memory",
 }
@@ -164,7 +163,6 @@ def check_j4p_performance_threads(item, params, info):
 check_info["j4p_performance.threads"] = {
     "check_function": check_j4p_performance_threads,
     "group": "j4p_performance.threads",
-    "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance(i, "threads"),
     "service_description": "JMX %s Threads",
 }
@@ -193,7 +191,6 @@ def check_j4p_performance_uptime(item, _unused, info):
 check_info["j4p_performance.uptime"] = {
     "check_function": check_j4p_performance_uptime,
     "group": "j4p_performance.uptime",
-    "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance(i, "uptime"),
     "service_description": "JMX %s Uptime",
 }
@@ -249,7 +246,6 @@ def check_j4p_performance_app_sess(item, params, info):
 check_info["j4p_performance.app_sess"] = {
     "check_function": check_j4p_performance_app_sess,
     "group": "j4p_performance.app_sess",
-    "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance_apps(i, "app_sess"),
     "service_description": "JMX %s Sessions",
 }
@@ -289,7 +285,6 @@ def check_j4p_performance_serv_req(item, params, info):
 check_info["j4p_performance.serv_req"] = {
     "check_function": check_j4p_performance_serv_req,
     "group": "j4p_performance.serv_req",
-    "has_perfdata": True,
     "inventory_function": lambda i: inventory_j4p_performance_serv(i, "serv_req"),
     "service_description": "JMX %s Requests",
 }

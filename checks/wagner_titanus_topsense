@@ -263,7 +263,6 @@ check_info["wagner_titanus_topsense.smoke"] = {
     "check_function": check_wagner_titanus_topsense_smoke,
     "inventory_function": inventory_wagner_titanus_topsense_smoke,
     "service_description": "Smoke Detector %s",
-    "has_perfdata": True,
     "snmp_info": wagner_titanus_topsense_info,
     "snmp_scan_function": wagner_titanus_topsense_scan,
 }
@@ -301,7 +300,6 @@ check_info["wagner_titanus_topsense.chamber_deviation"] = {
     "check_function": check_wagner_titanus_topsense_chamber_deviation,
     "inventory_function": inventory_wagner_titanus_topsense_chamber_deviation,
     "service_description": "Chamber Deviation Detector %s",
-    "has_perfdata": True,
     "snmp_info": wagner_titanus_topsense_info,
     "snmp_scan_function": wagner_titanus_topsense_scan,
 }
@@ -351,7 +349,6 @@ check_info["wagner_titanus_topsense.airflow_deviation"] = {
     "check_function": check_wagner_titanus_topsense_airflow_deviation,
     "inventory_function": inventory_wagner_titanus_topsense_airflow_deviation,
     "service_description": "Airflow Deviation Detector %s",
-    "has_perfdata": True,
     "group": "airflow_deviation",
     "snmp_info": wagner_titanus_topsense_info,
     "snmp_scan_function": wagner_titanus_topsense_scan,
@@ -396,7 +393,6 @@ check_info["wagner_titanus_topsense.temp"] = {
     "default_levels_variable": "wagner_titanus_topsense_temperature_default_values",
     "inventory_function": inventory_wagner_titanus_topsense_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
     "snmp_info": wagner_titanus_topsense_info,
     "snmp_scan_function": wagner_titanus_topsense_scan,

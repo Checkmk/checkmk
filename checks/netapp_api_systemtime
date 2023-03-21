@@ -56,5 +56,4 @@ check_info["netapp_api_systemtime"] = {
     "check_function": check_netapp_api_systemtime,
     "service_description": "Systemtime %s",
     "group": "netapp_systemtime",
-    "has_perfdata": True,
 }

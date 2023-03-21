@@ -106,12 +106,10 @@ check_info["winperf.cpuusage"] = {
     "check_function": check_win_cpuusage,
     "inventory_function": inventory_win_cpuusage,
     "service_description": "CPU Usage",
-    "has_perfdata": True,
 }
 
 check_info["winperf.diskstat"] = {
     "check_function": check_win_diskstat,
     "inventory_function": inventory_win_diskstat,
     "service_description": "Disk IO",
-    "has_perfdata": True,
 }

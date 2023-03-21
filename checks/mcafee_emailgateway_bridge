@@ -67,5 +67,4 @@ check_info["mcafee_emailgateway_bridge"] = {
     ),
     "snmp_scan_function": scan_mcafee_emailgateway,
     "group": "mcafee_emailgateway_bridge",
-    "has_perfdata": True,
 }

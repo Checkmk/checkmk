@@ -20,5 +20,4 @@ class CheckInfoElement(TypedDict):
     snmp_scan_function: NotRequired[Callable[[Callable], bool]]
     default_levels_variable: NotRequired[str]
     service_description: NotRequired[str]
-    has_perfdata: NotRequired[bool]
     management_board: NotRequired[str]

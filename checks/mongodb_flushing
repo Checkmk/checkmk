@@ -74,5 +74,4 @@ check_info["mongodb_flushing"] = {
     "check_function": check_mongodb_flushing,
     "service_description": "MongoDB Flushing",
     "group": "mongodb_flushing",
-    "has_perfdata": True,
 }

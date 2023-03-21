@@ -216,7 +216,6 @@ check_info["checkpoint_vsx.connections"] = {
     "service_description": "VS %s Connections",
     "default_levels_variable": "checkpoint_vsx_default_levels",
     "group": "checkpoint_vsx_connections",
-    "has_perfdata": True,
 }
 # .
 #   .--packets-------------------------------------------------------------.
@@ -266,7 +265,6 @@ check_info["checkpoint_vsx.packets"] = {
     "check_function": check_checkpoint_vsx_packets,
     "service_description": "VS %s Packets",
     "group": "checkpoint_vsx_packets",
-    "has_perfdata": True,
 }
 # .
 #   .--traffic-------------------------------------------------------------.
@@ -313,7 +311,6 @@ check_info["checkpoint_vsx.traffic"] = {
     "check_function": check_checkpoint_vsx_traffic,
     "service_description": "VS %s Traffic",
     "group": "checkpoint_vsx_traffic",
-    "has_perfdata": True,
 }
 # .
 #   .--status--------------------------------------------------------------.

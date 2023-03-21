@@ -131,7 +131,6 @@ check_info["emcvnx_storage_pools"] = {
     "check_function": check_emcvnx_storage_pools,
     "service_description": "Pool %s General",
     "group": "emcvnx_storage_pools",
-    "has_perfdata": True,
     "default_levels_variable": "emcvnx_storage_pools_default_levels",
 }
 
@@ -225,7 +224,6 @@ check_info["emcvnx_storage_pools.tiering"] = {
     "inventory_function": inventory_emcvnx_storage_pools_tiering,
     "check_function": check_emcvnx_storage_pools_tiering,
     "service_description": "Pool %s Tiering Status",
-    "has_perfdata": True,
     "group": "emcvnx_storage_pools_tiering",
     "default_levels_variable": "emcvnx_storage_pools_tiering_default_levels",
 }
@@ -312,7 +310,6 @@ check_info["emcvnx_storage_pools.tieringtypes"] = {
     "inventory_function": inventory_emcvnx_storage_pools_tieringtypes,
     "check_function": check_emcvnx_storage_pools_tieringtypes,
     "service_description": "Pool %s tiering",
-    "has_perfdata": True,
 }
 
 # .
@@ -373,5 +370,4 @@ check_info["emcvnx_storage_pools.deduplication"] = {
     "inventory_function": inventory_emcvnx_storage_pools,
     "check_function": check_emcvnx_storage_pools_deduplication,
     "service_description": "Pool %s Deduplication",
-    "has_perfdata": True,
 }

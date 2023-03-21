@@ -90,7 +90,6 @@ check_info["aws_elb"] = {
     "inventory_function": lambda p: inventory_aws_generic_single(p, _aws_elb_statistics_metrics),
     "check_function": check_aws_elb_statistics,
     "service_description": "AWS/ELB Statistics",
-    "has_perfdata": True,
     "default_levels_variable": "aws_elb_statistics",
     "group": "aws_elb_statistics",
 }
@@ -123,7 +122,6 @@ check_info["aws_elb.latency"] = {
     "inventory_function": lambda p: inventory_aws_generic_single(p, ["Latency"]),
     "check_function": check_aws_elb_latency,
     "service_description": "AWS/ELB Latency",
-    "has_perfdata": True,
     "group": "aws_elb_latency",
 }
 
@@ -151,7 +149,6 @@ check_info["aws_elb.http_elb"] = {
     "inventory_function": lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
     "check_function": check_aws_elb_http_elb,
     "service_description": "AWS/ELB HTTP ELB",
-    "has_perfdata": True,
     "group": "aws_elb_http",
 }
 
@@ -179,7 +176,6 @@ check_info["aws_elb.http_backend"] = {
     "inventory_function": lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
     "check_function": check_aws_elb_http_backend,
     "service_description": "AWS/ELB HTTP Backend",
-    "has_perfdata": True,
     "group": "aws_elb_http",
 }
 
@@ -282,6 +278,5 @@ check_info["aws_elb.backend_connection_errors"] = {
     "inventory_function": lambda p: inventory_aws_generic_single(p, ["BackendConnectionErrors"]),
     "check_function": check_aws_elb_backend_connection_errors,
     "service_description": "AWS/ELB Backend Connection Errors",
-    "has_perfdata": True,
     "group": "aws_elb_backend_connection_errors",
 }

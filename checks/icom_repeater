@@ -125,7 +125,6 @@ check_info["icom_repeater.ps_volt"] = {
     "inventory_function": inventory_icom_repeater_ps_volt,
     "check_function": check_icom_repeater_ps_volt,
     "service_description": "Power Supply Voltage",
-    "has_perfdata": True,
     "group": "ps_voltage",
 }
 
@@ -188,7 +187,6 @@ check_info["icom_repeater.pll_volt"] = {
     "inventory_function": inventory_icom_repeater_pll_volt,
     "check_function": check_icom_repeater_pll_volt,
     "service_description": "%s PLL Lock Voltage",
-    "has_perfdata": True,
     "group": "pll_lock_voltage",
 }
 
@@ -231,7 +229,6 @@ check_info["icom_repeater.temp"] = {
     "default_levels_variable": "icom_repeater_temp_default_levels",
     "check_function": check_icom_repeater_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
 }
 

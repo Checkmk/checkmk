@@ -37,7 +37,6 @@ check_info["cisco_ucs_temp_mem"] = {
     "inventory_function": inventory_cisco_ucs_temp_mem,
     "check_function": check_cisco_ucs_temp_mem,
     "service_description": "Temperature Mem %s",
-    "has_perfdata": True,
     "snmp_scan_function": scan_cisco_ucs,
     "snmp_info": (
         ".1.3.6.1.4.1.9.9.719.1.30.12.1",

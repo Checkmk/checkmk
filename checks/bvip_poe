@@ -36,6 +36,5 @@ check_info["bvip_poe"] = {
     "service_description": "POE Power",
     "snmp_scan_function": bvip_scan_function,
     "snmp_info": (".1.3.6.1.4.1.3967.1.1", [10]),
-    "has_perfdata": True,
     "group": "epower_single",
 }

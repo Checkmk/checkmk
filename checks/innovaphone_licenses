@@ -32,5 +32,4 @@ check_info["innovaphone_licenses"] = {
     "check_function": check_innovaphone_licenses,
     "inventory_function": inventory_innovaphone_licenses,
     "service_description": "Licenses",
-    "has_perfdata": True,
 }

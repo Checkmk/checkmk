@@ -63,5 +63,4 @@ active_check_info["sql"] = {
     "command_line": "check_sql $ARG1$",
     "argument_function": check_sql_arguments,
     "service_description": lambda args: args["description"],
-    "has_perfdata": True,
 }

@@ -30,6 +30,5 @@ check_info["logins"] = {
     "check_function": check_logins,
     "inventory_function": inventory_logins,
     "service_description": "Logins",
-    "has_perfdata": True,
     "group": "logins",
 }

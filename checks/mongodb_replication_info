@@ -132,5 +132,4 @@ check_info["mongodb_replication_info"] = {
     "check_function": check_mongodb_replication_info,
     "service_description": "MongoDB Replication Info",
     "group": "mongodb_replication_info",
-    "has_perfdata": True,
 }

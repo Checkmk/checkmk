@@ -53,5 +53,4 @@ check_info["hyperv_checkpoints"] = {
     "inventory_function": inventory_hyperv_checkpoints,
     "service_description": "HyperV Checkpoints",
     "group": "vm_snapshots",
-    "has_perfdata": True,
 }

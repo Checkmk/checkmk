@@ -131,6 +131,5 @@ check_info["rabbitmq_queues"] = {
     "check_function": check_rabbitmq_queues,
     "inventory_function": discover(),
     "service_description": "RabbitMQ Queue %s",
-    "has_perfdata": True,
     "group": "rabbitmq_queues",
 }

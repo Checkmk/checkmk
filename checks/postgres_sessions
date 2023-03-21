@@ -75,6 +75,5 @@ check_info["postgres_sessions"] = {
     "inventory_function": inventory_postgres_sessions,
     "check_function": check_postgres_sessions,
     "service_description": "PostgreSQL Daemon Sessions %s",
-    "has_perfdata": True,
     "group": "postgres_instance_sessions",
 }

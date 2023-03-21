@@ -40,6 +40,5 @@ check_info["zerto_vpg_rpo"] = {
     "inventory_function": discover(),
     "check_function": check_zerto_vpg_rpo,
     "service_description": "Zerto VPG RPO %s",
-    "has_perfdata": False,
     "group": "zerto_vpg_rpo",
 }

@@ -70,7 +70,6 @@ check_info["couchbase_buckets_vbuckets"] = {
     "check_function": check_couchbase_buckets_vbuckets,
     "service_description": "Couchbase Bucket %s active vBuckets",
     "group": "couchbase_vbuckets",
-    "has_perfdata": True,
 }
 
 check_info["couchbase_buckets_vbuckets.replica"] = {
@@ -79,5 +78,4 @@ check_info["couchbase_buckets_vbuckets.replica"] = {
     "check_function": check_couchbase_buckets_vbuckets_replica,
     "service_description": "Couchbase Bucket %s replica vBuckets",
     "group": "couchbase_vbuckets",
-    "has_perfdata": True,
 }

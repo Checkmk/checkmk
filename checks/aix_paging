@@ -61,7 +61,6 @@ check_info["aix_paging"] = {
     "inventory_function": discover(),
     "check_function": check_aix_paging,
     "service_description": "Page Space %s",
-    "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }

@@ -22,6 +22,5 @@ check_info["msexch_activesync"] = {
     "inventory_function": discover_msexch_activesync,
     "check_function": check_msexch_activesync,
     "parse_function": parse_wmi_table,
-    "has_perfdata": True,
     "service_description": "Exchange ActiveSync",
 }

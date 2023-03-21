@@ -60,5 +60,4 @@ check_info["ibm_svc_license"] = {
     "parse_function": parse_ibm_svc_license,
     "service_description": "License %s",
     "group": "ibmsvc_licenses",
-    "has_perfdata": True,
 }

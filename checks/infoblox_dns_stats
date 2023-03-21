@@ -45,5 +45,4 @@ check_info["infoblox_dns_stats"] = {
         ],
     ),
     "snmp_scan_function": scan_infoblox,
-    "has_perfdata": True,
 }

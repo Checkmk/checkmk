@@ -51,7 +51,6 @@ check_info["hp_psu.temp"] = {
     "check_function": check_hp_psu_temp,
     "service_description": "Temperature Power Supply %s",
     "group": "temperature",
-    "has_perfdata": True,
 }
 
 #   .--Status--------------------------------------------------------------.

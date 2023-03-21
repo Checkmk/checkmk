@@ -43,6 +43,5 @@ check_info["liebert_reheating"] = {
         ],
     ),
     "snmp_scan_function": scan_liebert,
-    "has_perfdata": True,
     "default_levels_variable": "liebert_reheating_default_levels",
 }

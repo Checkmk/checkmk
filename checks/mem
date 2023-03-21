@@ -144,7 +144,6 @@ check_info["mem.linux"] = {
     "check_function": check_mem_linux,
     "service_description": "Memory",
     "default_levels_variable": "mem_linux_default_levels",
-    "has_perfdata": True,
     "group": "memory_linux",
 }
 
@@ -353,7 +352,6 @@ check_info["mem.win"] = {
     "check_function": check_mem_windows,
     "inventory_function": inventory_mem_win,
     "service_description": "Memory",
-    "has_perfdata": True,
     "group": "memory_pagefile_win",
     "default_levels_variable": "memory_win_default_levels",
 }
@@ -435,5 +433,4 @@ check_info["mem.vmalloc"] = {
     "inventory_function": inventory_mem_vmalloc,
     "check_function": check_mem_vmalloc,
     "service_description": "Vmalloc address space",
-    "has_perfdata": True,
 }

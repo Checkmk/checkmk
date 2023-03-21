@@ -23,6 +23,5 @@ check_info["innovaphone_cpu"] = {
     "check_function": check_innovaphone_cpu,
     "inventory_function": inventory_innovaphone_cpu,
     "service_description": "CPU utilization",
-    "has_perfdata": True,
     "group": "cpu_utilization",
 }

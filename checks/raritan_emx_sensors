@@ -61,7 +61,6 @@ check_info["raritan_emx_sensors.temp"] = {
     "inventory_function": lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
     "check_function": check_raritan_sensors_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
 }
 
@@ -79,7 +78,6 @@ check_info["raritan_emx_sensors.airflow"] = {
     "inventory_function": lambda parsed: inventory_raritan_sensors(parsed, "airflow"),
     "check_function": check_raritan_sensors,
     "service_description": "Air flow %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -96,7 +94,6 @@ check_info["raritan_emx_sensors.humidity"] = {
     "inventory_function": lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
     "check_function": check_raritan_sensors,
     "service_description": "Humidity %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -113,5 +110,4 @@ check_info["raritan_emx_sensors.pressure"] = {
     "inventory_function": lambda parsed: inventory_raritan_sensors(parsed, "pressure"),
     "check_function": check_raritan_sensors,
     "service_description": "Pressure %s",
-    "has_perfdata": True,
 }

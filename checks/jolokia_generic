@@ -75,7 +75,6 @@ check_info["jolokia_generic.rate"] = {
     "inventory_function": discover(lambda key, data: data.get("type") == "rate"),
     "check_function": check_jolokia_generic_rate,
     "service_description": "JVM %s",
-    "has_perfdata": True,
     "group": "generic_rate",
 }
 
@@ -101,6 +100,5 @@ check_info["jolokia_generic"] = {
     "check_function": check_jolokia_generic,
     "parse_function": parse_jolokia_generic,
     "service_description": "JVM %s",
-    "has_perfdata": True,
     "group": "generic_number",
 }

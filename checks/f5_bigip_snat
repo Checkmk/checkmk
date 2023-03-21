@@ -108,7 +108,6 @@ check_info["f5_bigip_snat"] = {
     "inventory_function": inventory_f5_bigip_snat,
     "group": "f5_bigip_snat",
     "service_description": "Source NAT %s",
-    "has_perfdata": True,
     "snmp_info": (
         ".1.3.6.1.4.1.3375.2.2.9.2.3.1",
         [

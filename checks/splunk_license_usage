@@ -65,5 +65,4 @@ check_info["splunk_license_usage"] = {
     "service_description": "Splunk License Usage",
     "group": "splunk_license_usage",
     "default_levels_variable": "splunk_license_usage_default_levels",
-    "has_perfdata": True,
 }

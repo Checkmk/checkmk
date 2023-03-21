@@ -154,7 +154,6 @@ check_info["oracle_instance"] = {
     "service_description": "ORA %s Instance",
     "default_levels_variable": "oracle_instance_defaults",
     "group": "oracle_instance",
-    "has_perfdata": True,
 }
 
 
@@ -199,5 +198,4 @@ check_info["oracle_instance.uptime"] = {
     "inventory_function": discover_oracle_instance_uptime,
     "service_description": "ORA %s Uptime",
     "group": "uptime_multiitem",
-    "has_perfdata": True,
 }

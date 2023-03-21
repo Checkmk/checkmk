@@ -175,6 +175,5 @@ check_info["azure_agent_info"] = {
     "check_function": check_azure_agent_info,
     "service_description": "Azure Agent Info",
     "default_levels_variable": "azure_agent_info_levels",
-    "has_perfdata": True,
     "group": "azure_agent_info",
 }

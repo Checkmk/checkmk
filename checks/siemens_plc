@@ -61,7 +61,6 @@ check_info["siemens_plc.temp"] = {
     "inventory_function": inventory_siemens_plc_temp,
     "check_function": check_siemens_plc_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
     "default_levels_variable": "siemens_plc_temp_default_levels",
 }
@@ -164,7 +163,6 @@ check_info["siemens_plc.duration"] = {
     "inventory_function": inventory_siemens_plc_duration,
     "check_function": check_siemens_plc_duration,
     "service_description": "Duration %s",
-    "has_perfdata": True,
     "group": "siemens_plc_duration",
 }
 
@@ -212,7 +210,6 @@ check_info["siemens_plc.counter"] = {
     "inventory_function": inventory_siemens_plc_counter,
     "check_function": check_siemens_plc_counter,
     "service_description": "Counter %s",
-    "has_perfdata": True,
     "group": "siemens_plc_counter",
 }
 

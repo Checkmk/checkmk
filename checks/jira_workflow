@@ -64,6 +64,5 @@ check_info["jira_workflow"] = {
     "check_function": check_jira_workflow,
     "inventory_function": discover(),
     "service_description": "Jira Workflow %s",
-    "has_perfdata": True,
     "group": "jira_workflow",
 }

@@ -114,7 +114,6 @@ check_info["janitza_umg"] = {
     "inventory_function": inventory_janitza_umg_inphase,
     "check_function": check_elphase,
     "service_description": "Input %s",
-    "has_perfdata": True,
     "default_levels_variable": "janitza_umg_inphase_default_levels",
     "group": "el_inphase",
     "snmp_info": [
@@ -158,7 +157,6 @@ check_info["janitza_umg.freq"] = {
     "inventory_function": inventory_janitza_umg_freq,
     "check_function": check_janitza_umg_freq,
     "service_description": "Frequency %s",
-    "has_perfdata": True,
     "default_levels_variable": "janitza_umg_freq_default_levels",
     "group": "efreq",
 }
@@ -185,7 +183,6 @@ check_info["janitza_umg.temp"] = {
     "inventory_function": inventory_janitza_umg_temp,
     "check_function": check_janitza_umg_temp,
     "service_description": "Temperature External %s",
-    "has_perfdata": True,
     "default_levels_variable": "janitza_umg_temp_default_levels",
     "group": "temperature",
 }

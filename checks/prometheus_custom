@@ -141,6 +141,5 @@ check_info["prometheus_custom"] = {
     "check_function": check_prometheus_custom,
     "inventory_function": discover(),
     "service_description": "%s",
-    "has_perfdata": True,
     "group": "prometheus_custom",
 }

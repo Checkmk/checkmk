@@ -157,7 +157,6 @@ check_info["ibm_svc_nodestats.diskio"] = {
     "check_function": check_ibm_svc_nodestats_diskio,
     "inventory_function": inventory_ibm_svc_nodestats_diskio,
     "service_description": "Disk IO %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -195,7 +194,6 @@ check_info["ibm_svc_nodestats.iops"] = {
     "check_function": check_ibm_svc_nodestats_iops,
     "inventory_function": inventory_ibm_svc_nodestats_iops,
     "service_description": "Disk IOPS %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -233,7 +231,6 @@ check_info["ibm_svc_nodestats.disk_latency"] = {
     "check_function": check_ibm_svc_nodestats_disk_latency,
     "inventory_function": inventory_ibm_svc_nodestats_disk_latency,
     "service_description": "Disk Latency %s",
-    "has_perfdata": True,
 }
 
 # .
@@ -269,7 +266,6 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
     "check_function": check_ibm_svc_nodestats_cpu,
     "inventory_function": inventory_ibm_svc_nodestats_cpu,
     "service_description": "CPU utilization %s",
-    "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
 }
 
@@ -315,5 +311,4 @@ check_info["ibm_svc_nodestats.cache"] = {
     "check_function": check_ibm_svc_nodestats_cache,
     "inventory_function": inventory_ibm_svc_nodestats_cache,
     "service_description": "Cache %s",
-    "has_perfdata": True,
 }

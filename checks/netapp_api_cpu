@@ -80,7 +80,6 @@ check_info["netapp_api_cpu"] = {
         item, params, parsed, "clustermode"
     ),
     "service_description": "CPU utilization Node %s",
-    "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
 }
 
@@ -92,7 +91,6 @@ check_info["netapp_api_cpu.utilization"] = {
     ),
     "service_description": "CPU utilization",
     "default_levels_variable": "netapp_api_cpu_cm_default_levels",
-    "has_perfdata": True,
     "group": "cpu_utilization",
 }
 
@@ -130,5 +128,4 @@ check_info["netapp_api_cpu.nvram_bat"] = {
     "inventory_function": inventory_netapp_api_nvram_bat,
     "check_function": check_netapp_api_nvram_bat,
     "service_description": "NVRAM Battery %s",
-    "has_perfdata": True,
 }

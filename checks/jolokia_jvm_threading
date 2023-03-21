@@ -69,7 +69,6 @@ check_info["jolokia_jvm_threading"] = {
     "check_function": check_jolokia_jvm_threading,
     "service_description": "JVM %s Threading",
     "group": "jvm_threading",
-    "has_perfdata": True,
 }
 
 
@@ -118,5 +117,4 @@ check_info["jolokia_jvm_threading.pool"] = {
     "default_levels_variable": "jolokia_jvm_threading.pool",
     "service_description": "JVM %s",
     "group": "jvm_tp",
-    "has_perfdata": True,
 }

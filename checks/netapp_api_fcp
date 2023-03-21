@@ -238,5 +238,4 @@ check_info["netapp_api_fcp"] = {
     "check_function": check_netapp_api_fcp,
     "service_description": "Interface FCP %s",
     "group": "fcp",
-    "has_perfdata": True,
 }

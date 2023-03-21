@@ -144,7 +144,6 @@ check_info["jolokia_metrics.serv_req"] = {
     "check_function": check_jolokia_metrics_serv_req,
     "inventory_function": inventory_jolokia_metrics_serv,
     "group": "jvm_requests",
-    "has_perfdata": True,
 }
 
 # .
@@ -188,7 +187,6 @@ check_info["jolokia_metrics.app_state"] = {
     "service_description": "JVM %s State",
     "check_function": check_jolokia_metrics_app_state,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
-    "has_perfdata": False,
 }
 
 # .
@@ -298,7 +296,6 @@ check_info["jolokia_metrics.app_sess"] = {
     "check_function": check_jolokia_metrics_app_sess,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
     "group": "jvm_sessions",
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.requests"] = {
@@ -306,7 +303,6 @@ check_info["jolokia_metrics.requests"] = {
     "check_function": check_jolokia_metrics_bea_requests,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "requests"),
     "group": "jvm_requests",
-    "has_perfdata": True,
 }
 
 # Stuff found on BEA Weblogic
@@ -315,7 +311,6 @@ check_info["jolokia_metrics.bea_queue"] = {
     "check_function": check_jolokia_metrics_bea_queue,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "queue"),
     "group": "jvm_queue",
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.bea_requests"] = {
@@ -323,7 +318,6 @@ check_info["jolokia_metrics.bea_requests"] = {
     "check_function": check_jolokia_metrics_bea_requests,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
     "group": "jvm_requests",
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.bea_threads"] = {
@@ -331,7 +325,6 @@ check_info["jolokia_metrics.bea_threads"] = {
     "check_function": check_jolokia_metrics_bea_threads,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "threads"),
     "group": "jvm_threads",
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.bea_sess"] = {
@@ -339,7 +332,6 @@ check_info["jolokia_metrics.bea_sess"] = {
     "check_function": check_jolokia_metrics_app_sess,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
     "group": "jvm_sessions",
-    "has_perfdata": True,
 }
 
 jolokia_metrics_cache_hits_default_levels = {}
@@ -404,7 +396,6 @@ check_info["jolokia_metrics.cache_hits"] = {
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
         "cache_hits", ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
     ),
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.in_memory"] = {
@@ -421,7 +412,6 @@ check_info["jolokia_metrics.in_memory"] = {
         ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
         info,
     ),
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.on_disk"] = {
@@ -438,7 +428,6 @@ check_info["jolokia_metrics.on_disk"] = {
         ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
         info,
     ),
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.off_heap"] = {
@@ -455,7 +444,6 @@ check_info["jolokia_metrics.off_heap"] = {
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
         info,
     ),
-    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.writer"] = {
@@ -466,7 +454,6 @@ check_info["jolokia_metrics.writer"] = {
     "inventory_function": lambda info: inventory_jolokia_metrics_cache(
         "cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info
     ),
-    "has_perfdata": True,
 }
 
 # .
@@ -581,5 +568,4 @@ check_info["jolokia_metrics.gc"] = {
     "check_function": check_jolokia_metrics_gc,
     "inventory_function": inventory_jolokia_metrics_gc,
     "group": "jvm_gc",
-    "has_perfdata": True,
 }

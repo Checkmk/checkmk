@@ -26,5 +26,4 @@ check_info["sap_state"] = {
     "check_function": check_sap_state,
     "inventory_function": inventory_sap_state,
     "service_description": "SAP State %s",
-    "has_perfdata": True,
 }

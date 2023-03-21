@@ -39,5 +39,4 @@ check_info["mongodb_locks"] = {
     "check_function": check_mongodb_locks,
     "service_description": "MongoDB Locks",
     "group": "mongodb_locks",
-    "has_perfdata": True,
 }

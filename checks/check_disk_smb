@@ -35,5 +35,4 @@ active_check_info["disk_smb"] = {
     "command_line": "check_disk_smb $ARG1$",
     "argument_function": check_disk_smb_arguments,
     "service_description": lambda params: "SMB Share " + params["share"].replace("$", ""),
-    "has_perfdata": True,
 }

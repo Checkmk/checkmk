@@ -45,7 +45,6 @@ check_info["ups_modulys_outphase"] = {
     "inventory_function": discover(),
     "check_function": check_elphase,
     "service_description": "Output %s",
-    "has_perfdata": True,
     "default_levels_variable": "ups_modulys_outphase_default_levels",
     "group": "ups_outphase",
     "snmp_info": (

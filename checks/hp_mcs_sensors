@@ -64,7 +64,6 @@ check_info["hp_mcs_sensors"] = {
     "inventory_function": inventory_hp_mcs_sensors,
     "check_function": check_hp_mcs_sensors,
     "service_description": "Sensor %s",
-    "has_perfdata": True,
     "snmp_info": (
         ".1.3.6.1.4.1.232.167.2.4.5.2.1",
         [
@@ -103,7 +102,6 @@ check_info["hp_mcs_sensors.fan"] = {
     "inventory_function": inventory_hp_mcs_sensors_fan,
     "check_function": check_hp_mcs_sensors_fan,
     "service_description": "Sensor %s",
-    "has_perfdata": True,
     "group": "hw_fans",
     "default_levels_variable": "hp_mcs_sensors_fan_default_levels",
 }

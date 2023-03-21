@@ -27,5 +27,4 @@ check_info["mongodb_counters"] = {
     "inventory_function": inventory_mongodb_counters,
     "check_function": check_mongodb_counters,
     "service_description": "MongoDB Counters %s",
-    "has_perfdata": True,
 }

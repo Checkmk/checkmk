@@ -55,5 +55,4 @@ check_info["mongodb_mem"] = {
     "check_function": check_mongodb_mem,
     "service_description": "Memory used MongoDB",
     "group": "mongodb_mem",
-    "has_perfdata": True,
 }

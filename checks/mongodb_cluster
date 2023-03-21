@@ -478,7 +478,6 @@ check_info["mongodb_cluster.collections"] = {
     "check_function": check_mongodb_cluster_shards,
     "service_description": "MongoDB Cluster: %s",
     "group": "mongodb_cluster",
-    "has_perfdata": True,
 }
 
 #   .--balancer------------------------------------------------------------.

@@ -63,6 +63,5 @@ check_info["appdynamics_sessions"] = {
     "inventory_function": inventory_appdynamics_sessions,
     "check_function": check_appdynamics_sessions,
     "service_description": "AppDynamics Sessions %s",
-    "has_perfdata": True,
     "group": "jvm_sessions",
 }

@@ -72,5 +72,4 @@ active_check_info["tcp"] = {
     "command_line": "check_tcp $ARG1$",
     "argument_function": check_tcp_arguments,
     "service_description": lambda args: args[1].get("svc_description", "TCP Port %d" % args[0]),
-    "has_perfdata": True,
 }

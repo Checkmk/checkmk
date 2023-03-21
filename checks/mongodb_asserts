@@ -41,5 +41,4 @@ check_info["mongodb_asserts"] = {
     "check_function": check_mongodb_asserts,
     "inventory_function": inventory_mongodb_asserts,
     "group": "mongodb_asserts",
-    "has_perfdata": True,
 }

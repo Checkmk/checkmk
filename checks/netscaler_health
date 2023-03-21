@@ -79,7 +79,6 @@ check_info["netscaler_health.fan"] = {
     "service_description": "FAN %s",
     "snmp_info": netscaler_health_info,
     "snmp_scan_function": netscaler_health_scan,
-    "has_perfdata": True,
     "default_levels_variable": "netscaler_health_fan_default_levels",
     "group": "hw_fans",
 }
@@ -117,7 +116,6 @@ check_info["netscaler_health.temp"] = {
     "inventory_function": inventory_netscaler_health_temp,
     "service_description": "Temperature %s",
     "group": "temperature",
-    "has_perfdata": True,
     "snmp_info": netscaler_health_info,
     "snmp_scan_function": netscaler_health_scan,
     "default_levels_variable": "netscaler_health_temp_default_levels",

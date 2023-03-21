@@ -45,6 +45,5 @@ check_info["statgrab_cpu"] = {
     "check_function": check_statgrab_cpu,
     "inventory_function": inventory_statgrab_cpu,
     "service_description": "CPU utilization",
-    "has_perfdata": True,
     "group": "cpu_iowait",
 }

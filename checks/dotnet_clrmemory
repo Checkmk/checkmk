@@ -26,7 +26,6 @@ check_info["dotnet_clrmemory"] = {
         parsed, filt=wmi_filter_global_only, levels="dotnet_clrmemory_defaultlevels"
     ),
     "check_function": check_dotnet_clrmemory,
-    "has_perfdata": True,
     "service_description": "DotNet Memory Management %s",
     "group": "clr_memory",
 }

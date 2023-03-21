@@ -44,5 +44,4 @@ check_info["aws_elbv2_application_target_groups_lambda"] = {
     "check_function": check_aws_application_elb_target_groups_lambda,
     "service_description": "AWS/ApplicationELB Lambda %s",
     "group": "aws_elbv2_target_errors",
-    "has_perfdata": True,
 }

@@ -111,5 +111,4 @@ check_info["emcvnx_hba"] = {
     "inventory_function": inventory_emcvnx_hba,
     "check_function": check_emcvnx_hba,
     "service_description": "HBA %s",
-    "has_perfdata": True,
 }

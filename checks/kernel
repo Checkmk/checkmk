@@ -62,7 +62,6 @@ check_info["kernel"] = {
     # section is already migrated!
     "check_function": check_kernel,
     "service_description": "Kernel %s",
-    "has_perfdata": True,
     "group": "vm_counter",
 }
 
@@ -125,6 +124,5 @@ check_info["kernel.performance"] = {
     "inventory_function": inventory_kernel_performance,
     "check_function": check_kernel_performance,
     "service_description": "Kernel Performance",
-    "has_perfdata": True,
     "group": "kernel_performance",
 }

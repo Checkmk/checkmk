@@ -167,7 +167,6 @@ check_info["openhardwaremonitor"] = {
         "Clock", item, params, parsed
     ),
     "parse_function": parse_openhardwaremonitor,
-    "has_perfdata": True,
     "service_description": "Clock %s",
 }
 
@@ -203,7 +202,6 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
 check_info["openhardwaremonitor.temperature"] = {
     "inventory_function": lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
     "check_function": check_openhardwaremonitor_temperature,
-    "has_perfdata": True,
     "service_description": "Temperature %s",
     "group": "temperature",
     "default_levels_variable": "openhardwaremonitor_temperature_default_levels",
@@ -224,7 +222,6 @@ check_info["openhardwaremonitor.power"] = {
     "check_function": lambda item, params, parsed: check_openhardwaremonitor(
         "Power", item, params, parsed
     ),
-    "has_perfdata": True,
     "service_description": "Power %s",
 }
 
@@ -255,7 +252,6 @@ def check_openhardwaremonitor_fan(item, params, parsed):
 check_info["openhardwaremonitor.fan"] = {
     "inventory_function": lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
     "check_function": check_openhardwaremonitor_fan,
-    "has_perfdata": True,
     "service_description": "Fan %s",
     "default_levels_variable": "openhardwaremonitor_fan_default_levels",
     "group": "hw_fans",
@@ -321,7 +317,6 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 check_info["openhardwaremonitor.smart"] = {
     "inventory_function": inventory_openhardwaremonitor_smart,
     "check_function": check_openhardwaremonitor_smart,
-    "has_perfdata": True,
     "service_description": "SMART %s Stats",
     "default_levels_variable": "openhardwaremonitor_smart_default_levels",
     "group": "openhardwaremonitor_smart",

@@ -159,6 +159,5 @@ check_info["graylog_nodes"] = {
     "inventory_function": inventory_graylog_nodes,
     "default_levels_variable": "graylog_nodes_default_levels",
     "service_description": "Graylog Node %s",
-    "has_perfdata": True,
     "group": "graylog_nodes",
 }

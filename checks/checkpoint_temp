@@ -44,7 +44,6 @@ check_info["checkpoint_temp"] = {
     "check_function": check_checkpoint_temp,
     "inventory_function": inventory_checkpoint_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
     "snmp_scan_function": scan_checkpoint,
     "snmp_info": (

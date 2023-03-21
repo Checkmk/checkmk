@@ -86,6 +86,5 @@ check_info["dell_om_fans"] = {
             "13",  # MIB-Dell-10892::coolingDeviceLowerCriticalThreshold
         ],
     ),
-    "has_perfdata": True,
     "group": "hw_fans",
 }

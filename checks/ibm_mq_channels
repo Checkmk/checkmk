@@ -79,6 +79,5 @@ check_info["ibm_mq_channels"] = {
     "check_function": check_ibm_mq_channels,
     "inventory_function": inventory_ibm_mq_channels,
     "service_description": "IBM MQ Channel %s",
-    "has_perfdata": False,
     "group": "ibm_mq_channels",
 }

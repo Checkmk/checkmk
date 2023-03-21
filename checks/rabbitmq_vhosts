@@ -119,6 +119,5 @@ check_info["rabbitmq_vhosts"] = {
     "check_function": check_rabbitmq_vhosts,
     "inventory_function": discover(),
     "service_description": "RabbitMQ Vhost %s",
-    "has_perfdata": True,
     "group": "rabbitmq_vhosts",
 }

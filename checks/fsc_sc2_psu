@@ -66,5 +66,4 @@ check_info["fsc_sc2_psu"] = {
         ],
     ),
     "snmp_scan_function": is_fsc_sc2,
-    "has_perfdata": True,
 }

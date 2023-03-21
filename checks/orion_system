@@ -96,7 +96,6 @@ check_info["orion_system"] = {
         ],
     ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20246"),
-    "has_perfdata": True,
     "group": "temperature",
 }
 
@@ -128,6 +127,5 @@ check_info["orion_system.dc"] = {
     "inventory_function": lambda parsed: discover()(parsed["electrical"]),
     "check_function": check_orion_system_electrical,
     "service_description": "Direct Current %s",
-    "has_perfdata": True,
     "group": "ups_outphase",
 }

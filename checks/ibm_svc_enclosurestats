@@ -73,7 +73,6 @@ check_info["ibm_svc_enclosurestats.temp"] = {
     "check_function": check_ibm_svc_enclosurestats_temp,
     "inventory_function": inventory_ibm_svc_enclosurestats_temp,
     "service_description": "Temperature Enclosure %s",
-    "has_perfdata": True,
     "group": "temperature",
     "default_levels_variable": "ibm_svc_enclosurestats_temperature_default_levels",
 }
@@ -108,5 +107,4 @@ check_info["ibm_svc_enclosurestats.power"] = {
     "check_function": check_ibm_svc_enclosurestats_power,
     "inventory_function": inventory_ibm_svc_enclosurestats_power,
     "service_description": "Power Enclosure %s",
-    "has_perfdata": True,
 }

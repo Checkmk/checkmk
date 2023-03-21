@@ -35,7 +35,6 @@ def check_cmc_temp(item, params, info):
 check_info["cmc_temp"] = {
     "inventory_function": inventory_cmc_temp,
     "check_function": check_cmc_temp,
-    "has_perfdata": True,
     "group": "temperature",
     "default_levels_variable": "cmc_temp_default_levels",
     "service_description": "Temperature Sensor %s",

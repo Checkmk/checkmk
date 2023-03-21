@@ -126,6 +126,5 @@ check_info["oracle_sql"] = {
     "inventory_function": inventory_oracle_sql,
     "check_function": check_oracle_sql,
     "service_description": "ORA %s",
-    "has_perfdata": True,
     "group": "oracle_sql",
 }

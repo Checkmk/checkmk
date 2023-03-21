@@ -28,7 +28,6 @@ check_info["lvm_vgs"] = {
     "check_function": check_lvm_vgs,
     "inventory_function": inventory_lvm_vgs,
     "service_description": "LVM VG %s",
-    "has_perfdata": True,
     "group": "volume_groups",
     "default_levels_variable": "filesystem_default_levels",
 }

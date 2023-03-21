@@ -41,6 +41,5 @@ check_info["ispro_sensors_humid"] = {
         ],
     ),
     "snmp_scan_function": ispro_scan_function,
-    "has_perfdata": True,
     "group": "humidity",
 }

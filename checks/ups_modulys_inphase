@@ -39,7 +39,6 @@ check_info["ups_modulys_inphase"] = {
     "inventory_function": discover(),
     "check_function": check_elphase,
     "service_description": "Input %s",
-    "has_perfdata": True,
     "default_levels_variable": "ups_modulys_inphase_default_levels",
     "group": "el_inphase",
     "snmp_info": (

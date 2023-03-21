@@ -147,6 +147,5 @@ check_info["websphere_mq_queues"] = {
     "inventory_function": inventory_websphere_mq_queues,
     "check_function": check_websphere_mq_queues,
     "service_description": "MQ Queue %s",
-    "has_perfdata": True,
     "group": "websphere_mq",
 }

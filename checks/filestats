@@ -282,7 +282,6 @@ check_info["filestats.single"] = {
     "inventory_function": discover_filestats_single,
     "check_function": check_filestats_single,
     "service_description": "File %s",
-    "has_perfdata": True,
     "group": "filestats_single",
 }
 
@@ -291,6 +290,5 @@ check_info["filestats"] = {
     "inventory_function": discover_filestats,
     "check_function": check_filestats,
     "service_description": "File group %s",
-    "has_perfdata": True,
     "group": "filestats",
 }

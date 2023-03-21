@@ -26,6 +26,5 @@ check_info["msexch_owa"] = {
     "inventory_function": discover_msexch_owa,
     "check_function": check_msexch_owa,
     "parse_function": parse_wmi_table,
-    "has_perfdata": True,
     "service_description": "Exchange OWA",
 }

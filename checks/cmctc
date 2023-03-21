@@ -49,7 +49,6 @@ def check_cmctc_temp(item, params, info):
 check_info["cmctc.temp"] = {
     "check_function": check_cmctc_temp,
     "inventory_function": inventory_cmctc_temp,
-    "has_perfdata": True,
     "service_description": "Temperature %s",
     "group": "temperature",
     "snmp_scan_function": cmctc_snmp_scan_function,

@@ -55,6 +55,5 @@ check_info["perle_chassis.temp"] = {
     "inventory_function": inventory_perle_chassis_temp,
     "check_function": check_perle_chassis_temp,
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "group": "temperature",
 }

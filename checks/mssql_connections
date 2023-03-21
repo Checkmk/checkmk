@@ -49,5 +49,4 @@ check_info["mssql_connections"] = {
     "service_description": "MSSQL Connections %s",
     "group": "mssql_connections",
     "default_levels_variable": "mssql_connections_default_levels",
-    "has_perfdata": True,
 }

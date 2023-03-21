@@ -84,5 +84,4 @@ active_check_info["smtp"] = {
     "command_line": "check_smtp $ARG1$",
     "argument_function": check_smtp_arguments,
     "service_description": check_smtp_desc,
-    "has_perfdata": True,
 }

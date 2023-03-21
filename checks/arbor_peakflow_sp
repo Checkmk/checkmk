@@ -42,7 +42,6 @@ check_info["arbor_peakflow_sp"] = {
     "inventory_function": inventory_arbor_memory,
     "parse_function": parse_peakflow_sp,
     "service_description": "Memory",
-    "has_perfdata": True,
     "group": "memory_arbor",
     "default_levels_variable": "arbor_memory_default_levels",
     "snmp_info": (
@@ -61,7 +60,6 @@ check_info["arbor_peakflow_sp.disk_usage"] = {
     "check_function": check_arbor_disk_usage,
     "inventory_function": inventory_arbor_disk_usage,
     "service_description": "Disk Usage %s",
-    "has_perfdata": True,
     "group": "filesystem",
     "default_levels_variable": "filesystem_default_levels",
 }
@@ -82,5 +80,4 @@ check_info["arbor_peakflow_sp.flows"] = {
     "check_function": check_arbor_peakflow_sp_flows,
     "inventory_function": inventory_arbor_peakflow_sp_flows,
     "service_description": "Flow Count",
-    "has_perfdata": True,
 }

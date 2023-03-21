@@ -37,5 +37,4 @@ check_info["citrix_serverload"] = {
     "check_function": check_citrix_serverload,
     "inventory_function": inventory_citrix_serverload,
     "service_description": "Citrix Serverload",
-    "has_perfdata": True,
 }

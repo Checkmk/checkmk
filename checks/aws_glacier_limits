@@ -34,5 +34,4 @@ check_info["aws_glacier_limits"] = {
     "service_description": "AWS/Glacier Limits %s",
     "group": "aws_glacier_limits",
     "default_levels_variable": "aws_glacier_limits_default_levels",
-    "has_perfdata": True,
 }

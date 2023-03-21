@@ -62,6 +62,5 @@ check_info["smart.temp"] = {
     "inventory_function": inventory_smart_temp,
     "service_description": "Temperature SMART %s",
     "group": "temperature",
-    "has_perfdata": True,
     "default_levels_variable": "smart_temp_default_levels",
 }

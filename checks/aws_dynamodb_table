@@ -182,7 +182,6 @@ check_info["aws_dynamodb_table.read_capacity"] = {
     "check_function": check_aws_dynamodb_read_capacity,
     "service_description": "AWS/DynamoDB Read Capacity",
     "group": "aws_dynamodb_capacity",
-    "has_perfdata": True,
     "default_levels_variable": "aws_dynamodb_capacity_defaults",
 }
 
@@ -193,7 +192,6 @@ check_info["aws_dynamodb_table.write_capacity"] = {
     "check_function": check_aws_dynamodb_write_capacity,
     "service_description": "AWS/DynamoDB Write Capacity",
     "group": "aws_dynamodb_capacity",
-    "has_perfdata": True,
     "default_levels_variable": "aws_dynamodb_capacity_defaults",
 }
 
@@ -202,5 +200,4 @@ check_info["aws_dynamodb_table.latency"] = {
     "check_function": check_aws_dynamodb_latency,
     "service_description": "AWS/DynamoDB Latency",
     "group": "aws_dynamodb_latency",
-    "has_perfdata": True,
 }

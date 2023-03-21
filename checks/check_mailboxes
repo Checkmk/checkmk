@@ -113,5 +113,4 @@ active_check_info["mailboxes"] = {  # pylint: disable=undefined-variable
     "command_line": "check_mailboxes $ARG1$",
     "argument_function": check_mailboxes_arguments,
     "service_description": lambda params: params["service_description"],
-    "has_perfdata": True,
 }

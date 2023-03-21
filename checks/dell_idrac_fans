@@ -65,6 +65,5 @@ check_info["dell_idrac_fans"] = {
             "13",  # IDRAC-MIB::coolingDeviceLowerCriticalThreshold
         ],
     ),
-    "has_perfdata": True,
     "group": "hw_fans",
 }

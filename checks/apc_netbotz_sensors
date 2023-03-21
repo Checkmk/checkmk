@@ -140,7 +140,6 @@ check_info["apc_netbotz_sensors"] = {
         item, params, parsed, "temp"
     ),
     "service_description": "Temperature %s",
-    "has_perfdata": True,
     "snmp_info": (
         ".1.3.6.1.4.1.5528.100.4.1",
         [
@@ -185,7 +184,6 @@ check_info["apc_netbotz_sensors.dewpoint"] = {
         item, params, info, "dewpoint"
     ),
     "service_description": "Dew point %s",
-    "has_perfdata": True,
     "default_levels_variable": "apc_netbotz_sensors_dewpoint_default_levels",
     "group": "temperature",
 }
@@ -222,6 +220,5 @@ check_info["apc_netbotz_sensors.humidity"] = {
     "inventory_function": inventory_apc_netbotz_sensors_humidity,
     "check_function": check_apc_netbotz_sensors_humidity,
     "service_description": "Humidity %s",
-    "has_perfdata": True,
     "group": "humidity",
 }

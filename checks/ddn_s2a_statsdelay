@@ -158,5 +158,4 @@ check_info["ddn_s2a_statsdelay"] = {
     "check_function": check_ddn_s2a_statsdelay,
     "service_description": "DDN S2A Delay %s",
     "group": "ddn_s2a_wait",
-    "has_perfdata": True,
 }

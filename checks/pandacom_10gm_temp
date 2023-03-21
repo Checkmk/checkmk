@@ -26,7 +26,6 @@ check_info["pandacom_10gm_temp"] = {
     "inventory_function": inventory_pandacom_module_temp,
     "check_function": check_pandacom_module_temp,
     "service_description": "Temperature 10GM Module %s",
-    "has_perfdata": True,
     "snmp_info": (
         ".1.3.6.1.4.1.3652.3.3.4",
         [

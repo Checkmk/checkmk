@@ -30,7 +30,6 @@ check_info["fsc_sc2_fans"] = {
         ],
     ),
     "snmp_scan_function": is_fsc_sc2,
-    "has_perfdata": True,
     "default_levels_variable": "fan_fsc_sc2_levels",
     "group": "hw_fans",
     "management_board": HOST_ONLY,

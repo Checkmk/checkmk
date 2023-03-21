@@ -72,7 +72,6 @@ check_info["netapp_api_temp"] = {
     "parse_function": lambda info: netapp_api_parse_lines(
         info, custom_keys=["temp-sensor-list", "temp-sensor-element-no"]
     ),
-    "has_perfdata": True,
     "group": "temperature",
     "service_description": "Temperature %s",
 }

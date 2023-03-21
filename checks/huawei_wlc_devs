@@ -63,7 +63,6 @@ check_info["huawei_wlc_devs.mem"] = {
     "check_function": check_huawei_wlc_devs_mem,
     "service_description": "Device %s Memory",
     "default_levels_variable": "huawei_mem_default",
-    "has_perfdata": True,
 }
 
 
@@ -90,5 +89,4 @@ check_info["huawei_wlc_devs.cpu"] = {
     "check_function": check_huawei_wlc_devs_cpu,
     "service_description": "Device %s CPU",
     "default_levels_variable": "huawei_cpu_default",
-    "has_perfdata": True,
 }

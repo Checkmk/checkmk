@@ -73,7 +73,6 @@ check_info["azure_ad"] = {
     "inventory_function": discover_ad_users,
     "check_function": check_azure_users,
     "service_description": "AD Users",
-    "has_perfdata": True,
 }
 
 # .

@@ -27,25 +27,6 @@ from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias
 
 from .utils_legacy import CheckInfoElement
 
-# There are so many check_info keys, make sure we didn't miss one.
-CONSIDERED_KEYS = {
-    "check_function",
-    "default_levels_variable",
-    "extra_sections",
-    "group",
-    "handle_empty_info",  # obsolete, and ineffective anyway due to new snmp data layout
-    "handle_real_time_checks",  # obsolete
-    "has_perfdata",  # obsolete
-    "includes",
-    "inventory_function",
-    "management_board",  # obsolete
-    "node_info",  # handled in section
-    "parse_function",
-    "service_description",
-    "snmp_info",  # handled in section
-    "snmp_scan_function",  # handled in section
-}
-
 
 def _get_default_parameters(
     check_info_element: CheckInfoElement,
@@ -355,20 +336,16 @@ def create_check_plugin_from_legacy(
             "[%s]: cannot auto-migrate plugins with extra sections" % check_plugin_name
         )
 
-    if check_info_element.get("node_info"):
-        # We refuse to tranform these. The requirement of adding the node info
-        # makes rewriting of the base code too difficult.
-        # Affected Plugins must be migrated manually after CMK-4240 is done.
-        raise NotImplementedError(
-            "[%s]: cannot auto-migrate plugins with node info" % check_plugin_name
+    # We only intend to deal with checks from our repo.
+    # We know what we can and have to deal with.
+    if (
+        unexpected_keys := set(check_info_element)
+        - CheckInfoElement.__optional_keys__
+        - CheckInfoElement.__required_keys__
+    ):
+        raise ValueError(
+            f"Unexpected key(s) in check_info[{check_plugin_name!r}]: {unexpected_keys!r}"
         )
-
-    # make sure we haven't missed something important:
-    unconsidered_keys = set(check_info_element) - CONSIDERED_KEYS
-    assert not unconsidered_keys, "Unconsidered key(s) in check_info[%r]: %r" % (
-        check_plugin_name,
-        unconsidered_keys,
-    )
 
     new_check_name = maincheckify(check_plugin_name)
 

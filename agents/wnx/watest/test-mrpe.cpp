@@ -42,7 +42,7 @@ class SectionProviderMrpeFixture : public ::testing::Test {
 public:
     void SetUp() override {
         temp_fs_ = tst::TempCfgFs::Create();
-        assert(
+        ASSERT_TRUE(
             temp_fs_->loadContent("global:\n"
                                   "  enabled: yes\n"
                                   "  sections:\n"
@@ -199,7 +199,7 @@ class SectionProviderMrpeConfigFixture : public ::testing::Test {
 public:
     void SetUp() override {
         temp_fs_ = tst::TempCfgFs::Create();
-        assert(temp_fs_->loadFactoryConfig());
+        ASSERT_TRUE(temp_fs_->loadFactoryConfig());
         tst::CreateWorkFile(
             std::filesystem::path{cfg::GetUserDir()} / "mrpe_checks.cfg",
             R"(check = Type 'c:\windows\system32\chcp.com')");
@@ -347,7 +347,7 @@ TEST(SectionProviderMrpe, FixCrCnForMrpe) {
 
 TEST(SectionProviderMrpe, ParseIncludeEntry) {
     const auto temp_fs = tst::TempCfgFs::CreateNoIo();
-    assert(temp_fs->loadFactoryConfig());
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto [u, p] =
         ParseIncludeEntry("sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
     EXPECT_EQ(u, "sk");

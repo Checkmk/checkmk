@@ -68,6 +68,7 @@ from cmk.gui.plugins.userdb.utils import (
     add_internal_attributes,
     CheckCredentialsResult,
     connections_by_type,
+    ConnectorType,
     get_connection,
     get_user_attributes,
     load_cached_profile,
@@ -280,7 +281,7 @@ class LDAPUserConnector(UserConnector):
 
     @classmethod
     def type(cls) -> str:
-        return "ldap"
+        return ConnectorType.LDAP
 
     @classmethod
     def title(cls):

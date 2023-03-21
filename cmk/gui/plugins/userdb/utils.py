@@ -36,7 +36,7 @@ USER_SCHEME_SERIAL = 1
 
 RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
-UserConnectionSpec = dict[str, Any]  # TODO: Improve this type
+UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
 UserSyncConfig = Union[Literal["all", "master"], tuple[Literal["list"], list[str]], None]
 CheckCredentialsResult = UserId | None | Literal[False]
 
@@ -196,7 +196,7 @@ def connection_choices() -> list[tuple[str, str]]:
         [
             (connection_id, f"{connection_id} ({connection.type()})")
             for connection_id, connection in _all_connections()
-            if connection.type() == "ldap"
+            if connection.type() == ConnectorType.LDAP
         ],
         key=lambda id_and_description: id_and_description[1],
     )
@@ -325,6 +325,13 @@ def _get_builtin_roles() -> Roles:
 #   | basic mechanisms and default methods which might/should be           |
 #   | overridden by the specific connector classes.                        |
 #   '----------------------------------------------------------------------'
+
+
+class ConnectorType:
+    # TODO: should be improved to be an enum
+    SAML2 = "saml2"
+    LDAP = "ldap"
+    HTPASSWD = "htpasswd"
 
 
 class UserConnector(abc.ABC):

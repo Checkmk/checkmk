@@ -41,6 +41,7 @@ from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
+    ConnectorType,
     get_connection,
     get_user_attributes,
     new_user_template,
@@ -128,7 +129,10 @@ def _fix_user_connections() -> None:
 
 # When at least one LDAP connection is defined and active a sync is possible
 def sync_possible() -> bool:
-    return any(connection.type() == "ldap" for _connection_id, connection in active_connections())
+    return any(
+        connection.type() == ConnectorType.LDAP
+        for _connection_id, connection in active_connections()
+    )
 
 
 def locked_attributes(connection_id: str | None) -> Sequence[str]:

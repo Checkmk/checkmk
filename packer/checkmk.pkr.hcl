@@ -102,6 +102,12 @@ build {
     "source.amazon-ebs.builder",
     "source.azure-arm.builder"
   ]
+  # wait a minute for backround update processes. Might help with flakyness
+  provisioner "shell" {
+    inline = [
+      "time 60",
+    ]
+  }
   # setup apt-get
   provisioner "shell" {
     inline = [

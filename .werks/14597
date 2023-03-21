@@ -1,0 +1,19 @@
+Title: KUBE: Handle Pod with a non-existing Node
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679406757
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p25
+
+Previously, the Kubernetes special agent could raise the following error.
+C+:
+ValueError: Pod's (0a5bef2e... ) node is not present in the cluster
+C-:
+Typically, if a Pod is scheduled on a Node and the Node is deleted, then the Pod will no longer
+be assigned to that Node. However, f this fails it then results in the error of the agent.
+
+With this Werk, the Pod will show the NodeName of the non-existing Node. Since the Node does not
+exist, the Pod will not participate in any Node-specific aggregation.

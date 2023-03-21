@@ -1009,11 +1009,8 @@ class Cluster:
             )
             cluster.add_pod(pod)
             if pod.node is not None:
-                if pod.node not in _nodes:
-                    raise ValueError(
-                        f"Pod's ({api_pod.uid} {_nodes} {pod.node}) node is not present in the cluster"
-                    )
-                _nodes[pod.node].add_pod(pod)
+                if pod.node in _nodes:
+                    _nodes[pod.node].add_pod(pod)
             for pod_owner in _pod_owners_mapping.get(pod.uid, []):
                 pod_owner.add_pod(pod)
 

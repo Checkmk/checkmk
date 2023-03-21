@@ -53,7 +53,7 @@ def notify_error(error) {
                 "timotheus.bachinger@tribe29.com",
                 "frans.fuerst@tribe29.com",
             ];
-            currentBuild.changeSets.each { changeSet -> 
+            currentBuild.changeSets.each { changeSet ->
                 print("|| error-reporting:   changeSet=${changeSet}");
                 print("|| error-reporting:   changeSet.items=${changeSet.items}");
 
@@ -70,6 +70,11 @@ def notify_error(error) {
             notify_emails = notify_emails.unique(false).findAll({
                 it != "weblate@checkmk.com" && it.endsWith("@tribe29.com")
             });
+
+            /// Inform cloud devs if cloud burns
+            if (currentBuild.fullProjectName.contains("build-cmk-cloud-images")) {
+                notify_emails += "max.linke@tribe29.com"
+            }
 
             /// fallback - for investigation
             notify_emails = notify_emails ?: [

@@ -329,7 +329,6 @@ class NumberRangeQuery(Query):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
-        assert not isinstance(values, str)
         from_value, to_value = self.extractor(values)
 
         if (self.filter_row is None) or (from_value is None and to_value is None):
@@ -367,7 +366,6 @@ def version_in_range(
     ident: str, request_vars: list[str], context: VisualContext, rows: Rows
 ) -> Rows:
     values = context.get(ident, {})
-    assert not isinstance(values, str)
     from_version, to_version = (values.get(v) for v in request_vars)
 
     new_rows = []
@@ -499,7 +497,6 @@ class TableTextQuery(TextQuery):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        assert not isinstance(value, str)
         column = self.column
         filtertext = value.get(column, "").strip().lower()
         if not filtertext:

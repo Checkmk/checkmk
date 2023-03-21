@@ -527,9 +527,6 @@ def format_config(  # pylint: disable=too-many-branches
         if node.element["content"]:
             values["{}{}".format(namespace, node.element["name"])] = node.element["content"]
 
-    if instances is None:
-        return ""
-
     for instance in instances.children_get():
         values = {}
         for node in instance.children_get():
@@ -649,13 +646,10 @@ def query(
     what: str,
     return_toplevel_node: bool = False,
 ) -> NetAppNode | None:
-    if isinstance(what, str):
-        if what.endswith("iter"):
-            response = server.get_response((what, [("max-records", str(QUERY_MAX_RECORDS))]))
-        else:
-            response = server.get_response((what, []))
+    if what.endswith("iter"):
+        response = server.get_response((what, [("max-records", str(QUERY_MAX_RECORDS))]))
     else:
-        response = server.get_response(what)
+        response = server.get_response((what, []))
 
     if response.results_status() != "passed":
         return None
@@ -811,7 +805,7 @@ def process_interfaces(
     # )
     broadcast_domains: MutableMapping[str, set[str]] = {}
     for port in port_dict.values():
-        if not "broadcast-domain" in port:
+        if "broadcast-domain" not in port:
             continue
         broadcast_domains.setdefault(port["broadcast-domain"], set()).add(
             f"{port['node']}|{port['port']}|{port['link-status']}"
@@ -906,7 +900,7 @@ def process_clustermode(  # pylint: disable=too-many-branches
 
     # Cluster info
     # TODO: check is missing
-    ha_partners = {}  # Used later on by environmental sensors
+    ha_partners: dict[str, str] = {}  # Used later on by environmental sensors
     if "cf" not in licenses["v1_disabled"]:
         cluster_status = query_nodes(server, nodes, "cf-status", node_attribute="node")
         if cluster_status:
@@ -1127,9 +1121,9 @@ def process_clustermode(  # pylint: disable=too-many-branches
                         ("temp-sensor-list", "netapp_api_temp"),
                     ]:
                         print("<<<%s:sep(9)>>>" % section)
-                        node = shelf.child_get(what)
-                        assert isinstance(node, NetAppNode)
-                        print(format_config(node, what, shelf_id))
+                        child_node = shelf.child_get(what)
+                        assert isinstance(child_node, NetAppNode)
+                        print(format_config(child_node, what, shelf_id))
 
     # Controller Status
     environment = query(server, "environment-sensors-get-iter")

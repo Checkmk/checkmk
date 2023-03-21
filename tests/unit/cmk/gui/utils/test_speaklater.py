@@ -9,10 +9,7 @@ from cmk.gui.utils.speaklater import LazyString
 
 def test_lazystring() -> None:
     s = LazyString(lambda a: "xxx" + a, "yyy")
-
     assert isinstance(s, LazyString)
-    assert not isinstance(s, str)
-
     assert isinstance("" + s, str)
     assert ("" + s) == "xxxyyy"
 

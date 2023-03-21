@@ -241,7 +241,6 @@ class FilterInvtableInterfaceType(DualListFilter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.query_filter.ident, {})
-        assert not isinstance(value, str)
         selection = self.query_filter.selection(value)
 
         if not selection:
@@ -354,7 +353,6 @@ class _FilterInvHasSoftwarePackage(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        assert not isinstance(value, str)
         name: str | re.Pattern = value.get(self._varprefix + "name", "")
         if not name:
             return rows

@@ -55,8 +55,6 @@ def test_class_HTML() -> None:
     assert "".join(map(str, [A, B])) == A + B
 
     assert isinstance(A, HTML), type(A)
-    #    assert isinstance(A, str), type(A)
-    assert not isinstance(A, str), type(A)
     assert isinstance("%s" % A, str), "%s" % A
     # One day we will fix this!
     assert isinstance("%s" % A, str), "%s" % A

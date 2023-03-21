@@ -384,13 +384,14 @@ def get_elasticache_sections() -> GetSectionsCallable:
 
         distributor = ResultDistributor()
 
+        # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient, etc.
         elasticache_limits = ElastiCacheLimits(
-            fake_elasticache_client1, region, config, distributor, fake_quota_client
+            fake_elasticache_client1, region, config, distributor, fake_quota_client  # type: ignore[arg-type]
         )
         elasticache_summary = ElastiCacheSummary(
-            fake_elasticache_client2, fake_tagging_client, region, config, distributor
+            fake_elasticache_client2, fake_tagging_client, region, config, distributor  # type: ignore[arg-type]
         )
-        elasticache = ElastiCache(fake_cloudwatch_client, region, config)
+        elasticache = ElastiCache(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(elasticache_limits.name, elasticache_summary)
         distributor.add(elasticache_summary.name, elasticache)
@@ -441,7 +442,8 @@ def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
-    elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)
+    # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient.
+    elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)  # type: ignore[arg-type]
 
     assert elasticache_limits.cache_interval == 300
     assert elasticache_limits.period == 600

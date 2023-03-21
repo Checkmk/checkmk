@@ -71,10 +71,11 @@ def get_s3_sections(monkeypatch):
 
         distributor = ResultDistributor()
 
-        s3_limits = S3Limits(fake_s3_client, region, config, distributor)
-        s3_summary = S3Summary(fake_s3_client, region, config, distributor)
-        s3 = S3(fake_cloudwatch_client, region, config)
-        s3_requests = S3Requests(fake_cloudwatch_client, region, config)
+        # TODO: FakeS3Client shoud actually subclass S3Client, etc.
+        s3_limits = S3Limits(fake_s3_client, region, config, distributor)  # type: ignore[arg-type]
+        s3_summary = S3Summary(fake_s3_client, region, config, distributor)  # type: ignore[arg-type]
+        s3 = S3(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
+        s3_requests = S3Requests(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(s3_limits.name, s3_summary)
         distributor.add(s3_summary.name, s3)

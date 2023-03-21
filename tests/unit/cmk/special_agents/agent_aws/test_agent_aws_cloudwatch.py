@@ -37,10 +37,11 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
 
         distributor = ResultDistributor()
 
+        # TODO: FakeCloudwatchClient shoud actually subclass CloudWatchClient, etc.
         cloudwatch_alarms_limits = CloudwatchAlarmsLimits(
-            fake_cloudwatch_client, region, config, distributor
+            fake_cloudwatch_client, region, config, distributor  # type: ignore[arg-type]
         )
-        cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)
+        cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(cloudwatch_alarms_limits.name, cloudwatch_alarms)
         return cloudwatch_alarms_limits, cloudwatch_alarms

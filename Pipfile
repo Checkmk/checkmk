@@ -58,8 +58,6 @@ schemathesis = "*"  # used for openapi tests
 httpx = "*"  # used by agent receiver tests
 ruff = "==0.0.240"  # newer versions have problems with the match statement
 types-beautifulsoup4 = "*"  # used for type checking
-# types-boto3 = "*"  # used for type checking, 1 error
-# types-botocore = "*"  # used for type checking, 135 errors
 types-cachetools = "*"  # used for type checking
 types-cffi = "*"  # used for type checking
 types-cryptography = "*"  # used for type checking
@@ -93,6 +91,8 @@ types-simplejson = "*"  # used for type checking
 types-six = "*"  # used for type checking
 types-typing-extensions = "*"  # used for type checking
 types-urllib3 = "*"  # used for type checking
+botocore-stubs = "==1.29.95"  # used for type checking, keep version in sync with botocore
+boto3-stubs = "==1.26.95"  # used for type checking, keep version in sync with boto3
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py
@@ -162,9 +162,9 @@ google-auth = "==2.3.3"  # needed by kubernetes
 websocket-client = "==1.4.2"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
 jmespath = "==1.0.1"  # needed by boto3 (aws)
-botocore = "==1.29.95"  # needed by boto3 (aws)
+botocore = "==1.29.95"  # needed by boto3 (aws), keep version in sync with botocore-stubs
 s3transfer = "==0.6.0"  # needed by boto3 (aws)
-boto3 = "==1.26.95"  # needed by boto3 (aws)
+boto3 = "==1.26.95"  # needed by boto3 (aws), keep version in sync with boto3-stubs
 python-snap7 = "==1.2"  # needed by Siemens PLC special agent
 pymssql = "==2.2.7"  # needed by check_sql active check
 pymysql = "==0.9.3"  # needed by check_sql active check

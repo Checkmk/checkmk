@@ -237,9 +237,10 @@ def get_cloudfront_sections() -> Callable[
 
         distributor = ResultDistributor()
 
+        # TODO: FakeCloudFrontClient shoud actually subclass CloudFrontClient, etc.
         cloudfront_summary = CloudFrontSummary(
-            fake_cloudfront_client,
-            fake_tagging_client,
+            fake_cloudfront_client,  # type: ignore[arg-type]
+            fake_tagging_client,  # type: ignore[arg-type]
             region,
             config,
             distributor,
@@ -247,7 +248,7 @@ def get_cloudfront_sections() -> Callable[
         host_assignment: Literal["domain_host", "aws_host"] = (
             "domain_host" if assign_to_domain_host else "aws_host"
         )
-        cloudfront = CloudFront(fake_cloudwatch_client, region, config, host_assignment)
+        cloudfront = CloudFront(fake_cloudwatch_client, region, config, host_assignment)  # type: ignore[arg-type]
         distributor.add(cloudfront_summary.name, cloudfront)
 
         return cloudfront_summary, cloudfront

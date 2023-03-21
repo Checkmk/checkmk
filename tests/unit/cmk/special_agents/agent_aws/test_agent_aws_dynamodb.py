@@ -100,9 +100,10 @@ def get_dynamodb_sections() -> DynamobSections:
 
         distributor = ResultDistributor()
 
-        dynamodb_limits = DynamoDBLimits(fake_dynamodb_client, region, config, distributor)
-        dynamodb_summary = DynamoDBSummary(fake_dynamodb_client, region, config, distributor)
-        dynamodb_table = DynamoDBTable(fake_cloudwatch_client, region, config)
+        # TODO: FakeDynamoDBClient shoud actually subclass DynamoDBClient, etc.
+        dynamodb_limits = DynamoDBLimits(fake_dynamodb_client, region, config, distributor)  # type: ignore[arg-type]
+        dynamodb_summary = DynamoDBSummary(fake_dynamodb_client, region, config, distributor)  # type: ignore[arg-type]
+        dynamodb_table = DynamoDBTable(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(dynamodb_limits.name, dynamodb_summary)
         distributor.add(dynamodb_summary.name, dynamodb_table)

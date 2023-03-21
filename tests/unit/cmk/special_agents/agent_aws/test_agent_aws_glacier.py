@@ -62,9 +62,10 @@ def get_glacier_sections() -> GlacierSections:
 
         distributor = ResultDistributor()
 
-        glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)
-        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)
-        glacier = Glacier(fake_cloudwatch_client, region, config)
+        # TODO: FakeGlacierClient shoud actually subclass GlacierClient, etc.
+        glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)  # type: ignore[arg-type]
+        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)  # type: ignore[arg-type]
+        glacier = Glacier(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(glacier_limits.name, glacier_summary)
         distributor.add(glacier_summary.name, glacier)

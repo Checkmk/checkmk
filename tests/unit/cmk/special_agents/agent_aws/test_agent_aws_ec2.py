@@ -133,13 +133,14 @@ def get_ec2_sections() -> EC2Sections:
 
         distributor = ResultDistributor()
 
+        # TODO: FakeEC2Client shoud actually subclass EC2Client, etc.
         ec2_limits = EC2Limits(
-            fake_ec2_client, region, config, distributor, fake_service_quotas_client
+            fake_ec2_client, region, config, distributor, fake_service_quotas_client  # type: ignore[arg-type]
         )
-        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)
-        ec2_labels = EC2Labels(fake_ec2_client, region, config)
-        ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)
-        ec2 = EC2(fake_cloudwatch_client, region, config)
+        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)  # type: ignore[arg-type]
+        ec2_labels = EC2Labels(fake_ec2_client, region, config)  # type: ignore[arg-type]
+        ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)  # type: ignore[arg-type]
+        ec2 = EC2(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(ec2_limits.name, ec2_summary)
         distributor.add(ec2_summary.name, ec2_labels)

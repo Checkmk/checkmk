@@ -93,9 +93,10 @@ def get_rds_sections() -> RDSSections:
 
         distributor = ResultDistributor()
 
-        rds_limits = RDSLimits(FakeRDSClient(), region, config)
-        rds_summary = RDSSummary(fake_rds_client, region, config, distributor)
-        rds = RDS(fake_cloudwatch_client, region, config)
+        # TODO: FakeRDSClient shoud actually subclass RDSClient, etc.
+        rds_limits = RDSLimits(FakeRDSClient(), region, config)  # type: ignore[arg-type]
+        rds_summary = RDSSummary(fake_rds_client, region, config, distributor)  # type: ignore[arg-type]
+        rds = RDS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(rds_summary.name, rds)
         return rds_limits, rds_summary, rds

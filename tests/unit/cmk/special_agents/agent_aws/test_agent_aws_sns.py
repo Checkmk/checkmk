@@ -108,9 +108,10 @@ def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SN
     config.add_single_service_config("sns_names", [])
     config.add_single_service_config("sns_tags", [])
     fake_sns_client = FakeSNSClient(n_std_topics, n_fifo_topics, n_subs)
-    topics_fetcher = SNSTopicsFetcher(fake_sns_client, MagicMock(), "region", config)
+    # TODO: FakeSNSClient shoud actually subclass SNSClient.
+    topics_fetcher = SNSTopicsFetcher(fake_sns_client, MagicMock(), "region", config)  # type: ignore[arg-type]
     return SNSLimits(
-        client=fake_sns_client,
+        client=fake_sns_client,  # type: ignore[arg-type]
         region="region",
         config=config,
         sns_topics_fetcher=topics_fetcher,
@@ -146,9 +147,10 @@ def get_sns_sections() -> SNSSectionsGetter:
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_tagging_client = FakeTaggingClient()
 
-        sns_topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, region, config)
-        sns_sms = SNSSMS(fake_cloudwatch_client, region, config)
-        sns = SNS(fake_cloudwatch_client, region, config, sns_topics_fetcher)
+        # TODO: FakeSNSClient shoud actually subclass SNSClient, FakeCloudwatchClient should subclass CloudWatchClient, etc.
+        sns_topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, region, config)  # type: ignore[arg-type]
+        sns_sms = SNSSMS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
+        sns = SNS(fake_cloudwatch_client, region, config, sns_topics_fetcher)  # type: ignore[arg-type]
         return sns_sms, sns
 
     return _create_sns_sections

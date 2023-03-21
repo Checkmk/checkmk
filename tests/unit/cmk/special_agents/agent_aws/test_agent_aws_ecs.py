@@ -187,9 +187,10 @@ def get_ecs_sections() -> GetSectionsCallable:
 
         distributor = ResultDistributor()
 
-        ecs_limits = ECSLimits(fake_ecs_client2, region, config, distributor, fake_quota_client)
-        ecs_summary = ECSSummary(fake_ecs_client1, region, config, distributor)
-        ecs = ECS(fake_cloudwatch_client, region, config)
+        # TODO: FakeECSClient shoud actually subclass ECSClient, etc.
+        ecs_limits = ECSLimits(fake_ecs_client2, region, config, distributor, fake_quota_client)  # type: ignore[arg-type]
+        ecs_summary = ECSSummary(fake_ecs_client1, region, config, distributor)  # type: ignore[arg-type]
+        ecs = ECS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(ecs_limits.name, ecs_summary)
         distributor.add(ecs_summary.name, ecs)
@@ -314,7 +315,8 @@ def test_agent_aws_ecs_limits_without_quota_client(
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)
 
-    ecs_limits = ECSLimits(fake_ecs_client, region, config)
+    # TODO: FakeECSClient shoud actually subclass ECSClient, etc.
+    ecs_limits = ECSLimits(fake_ecs_client, region, config)  # type: ignore[arg-type]
 
     assert ecs_limits.cache_interval == 300
     assert ecs_limits.period == 600

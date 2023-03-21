@@ -68,9 +68,10 @@ def create_sections(names, tags, is_regional):
 
     distributor = ResultDistributor()
 
-    wafv2_limits = WAFV2Limits(fake_wafv2_client, region, config, scope, distributor=distributor)
-    wafv2_summary = WAFV2Summary(fake_wafv2_client, region, config, scope, distributor=distributor)
-    wafv2_web_acl = WAFV2WebACL(fake_cloudwatch_client, region, config, is_regional)
+    # TODO: FakeWAFV2Client shoud actually subclass WAFV2Client.
+    wafv2_limits = WAFV2Limits(fake_wafv2_client, region, config, scope, distributor=distributor)  # type: ignore[arg-type]
+    wafv2_summary = WAFV2Summary(fake_wafv2_client, region, config, scope, distributor=distributor)  # type: ignore[arg-type]
+    wafv2_web_acl = WAFV2WebACL(fake_cloudwatch_client, region, config, is_regional)  # type: ignore[arg-type]
 
     distributor.add(wafv2_limits.name, wafv2_summary)
     distributor.add(wafv2_summary.name, wafv2_web_acl)
@@ -139,19 +140,20 @@ def test_agent_aws_wafv2_regional_cloudfront() -> None:
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
-    wafv2_limits_regional = WAFV2Limits(None, region, config, "REGIONAL")
+    # TODO: This is plainly wrong, the client can't be None.
+    wafv2_limits_regional = WAFV2Limits(None, region, config, "REGIONAL")  # type: ignore[arg-type]
     assert wafv2_limits_regional._region_report == region
 
-    wafv2_limits_regional = WAFV2Limits(None, "us-east-1", config, "CLOUDFRONT")
+    wafv2_limits_regional = WAFV2Limits(None, "us-east-1", config, "CLOUDFRONT")  # type: ignore[arg-type]
     assert wafv2_limits_regional._region_report == "CloudFront"
 
     with pytest.raises(AssertionError):
-        WAFV2Limits(None, "region", config, "CLOUDFRONT")
+        WAFV2Limits(None, "region", config, "CLOUDFRONT")  # type: ignore[arg-type]
         WAFV2Limits(None, "region", config, "WRONG")  # type: ignore[arg-type]
-        WAFV2WebACL(None, "region", config, False)
+        WAFV2WebACL(None, "region", config, False)  # type: ignore[arg-type]
 
-    assert len(WAFV2WebACL(None, "region", config, True)._metric_dimensions) == 3
-    assert len(WAFV2WebACL(None, "us-east-1", config, False)._metric_dimensions) == 2
+    assert len(WAFV2WebACL(None, "region", config, True)._metric_dimensions) == 3  # type: ignore[arg-type]
+    assert len(WAFV2WebACL(None, "us-east-1", config, False)._metric_dimensions) == 2  # type: ignore[arg-type]
 
 
 def _test_limits(wafv2_sections):

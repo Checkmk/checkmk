@@ -98,10 +98,11 @@ def get_lambda_sections(
 ]:
     distributor = ResultDistributor()
 
+    # TODO: FakeLambdaClient shoud actually subclass LambdaClient, etc.
     return _create_lamdba_sections(
-        FakeLambdaClient(False),
-        FakeCloudwatchClient(),
-        FakeCloudwatchClientLogsClient(),
+        FakeLambdaClient(False),  # type: ignore[arg-type]
+        FakeCloudwatchClient(),  # type: ignore[arg-type]
+        FakeCloudwatchClientLogsClient(),  # type: ignore[arg-type]
         "region",
         create_config(names, tags),
         distributor,
@@ -277,9 +278,10 @@ def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPat
         "status",
         "Running",
     )
+    # TODO: FakeCloudwatchClient shoud actually subclass CloudWatchClient.
     assert (
         LambdaCloudwatchInsights.query_results(
-            client=client,
+            client=client,  # type: ignore[arg-type]
             query_id="FakeQueryId",
             timeout_seconds=0.001,
             sleep_duration=0.001,

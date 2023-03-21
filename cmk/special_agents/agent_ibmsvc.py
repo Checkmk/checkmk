@@ -216,24 +216,13 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
             )
             remote_command += "%s || true;" % command_options[module]["command"]
 
-    cmd = "ssh -o ConnectTimeout={} {} {}@{} '{}'".format(
-        opt_timeout,
-        opt_any_hostkey,
-        shlex.quote(user),
-        shlex.quote(host_address),
-        remote_command,
-    )
-
-    if opt_debug:
-        sys.stderr.write("executing external command: %s\n" % cmd)
-
-    result = subprocess.run(  # nosec B602 # BNS:67522a
-        cmd,
-        shell=True,
-        capture_output=True,
-        stdin=None,
-        encoding="utf-8",
-        check=False,
+    result = _execute_ssh_command(
+        remote_command=remote_command,
+        opt_timeout=opt_timeout,
+        opt_any_hostkey=opt_any_hostkey,
+        user=user,
+        host_address=host_address,
+        opt_debug=opt_debug,
     )
 
     if result.returncode not in [0, 1]:
@@ -265,3 +254,33 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
         sys.stderr.write(f"Profile '{g_profile_path}' written. Please run {show_profile}.\n")
     return None
+
+
+def _execute_ssh_command(
+    remote_command: str,
+    opt_timeout: int,
+    opt_any_hostkey: str,
+    user: str,
+    host_address: str,
+    opt_debug: bool,
+) -> subprocess.CompletedProcess:
+
+    cmd = "ssh -o ConnectTimeout={} {} {}@{} '{}'".format(
+        opt_timeout,
+        opt_any_hostkey,
+        shlex.quote(user),
+        shlex.quote(host_address),
+        remote_command,
+    )
+
+    if opt_debug:
+        sys.stderr.write(f"executing external command: {cmd}\n")
+
+    return subprocess.run(  # nosec B602 # BNS:67522a
+        cmd,
+        shell=True,
+        capture_output=True,
+        stdin=None,
+        encoding="utf-8",
+        check=False,
+    )

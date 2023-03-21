@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from types import ModuleType
 
 # pylint: disable=protected-access
@@ -31,8 +32,8 @@ def fixture_check_uniserv() -> ModuleType:
         ["host", "port", "service", "ADDRESS", "street", "street_nr", "city", "regex"],
     ],
 )
-def test_ac_check_uniserv_broken_arguments(  # type: ignore[no-untyped-def]
-    capsys, check_uniserv: ModuleType, args
+def test_ac_check_uniserv_broken_arguments(
+    capsys: pytest.CaptureFixture[str], check_uniserv: ModuleType, args: Sequence[str]
 ) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_arguments(args)
@@ -56,8 +57,8 @@ def test_ac_check_uniserv_broken_arguments(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_ac_check_uniserv_parse_arguments(  # type: ignore[no-untyped-def]
-    check_uniserv: ModuleType, args, expected_args
+def test_ac_check_uniserv_parse_arguments(
+    check_uniserv: ModuleType, args: Sequence[str], expected_args: object
 ) -> None:
     assert check_uniserv.parse_arguments(args) == expected_args
 
@@ -76,8 +77,8 @@ def test_ac_check_uniserv_parse_arguments(  # type: ignore[no-untyped-def]
         "foo=bar;type=TIPTOP",
     ],
 )
-def test_ac_check_uniserv_broken_data(  # type: ignore[no-untyped-def]
-    capsys, check_uniserv: ModuleType, data
+def test_ac_check_uniserv_broken_data(
+    capsys: pytest.CaptureFixture[str], check_uniserv: ModuleType, data: str
 ) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
@@ -92,8 +93,8 @@ def test_ac_check_uniserv_broken_data(  # type: ignore[no-untyped-def]
         "type=1;foo=bar",
     ],
 )
-def test_ac_check_uniserv_broken_response(  # type: ignore[no-untyped-def]
-    capsys, check_uniserv: ModuleType, data
+def test_ac_check_uniserv_broken_response(
+    capsys: pytest.CaptureFixture[str], check_uniserv: ModuleType, data: str
 ) -> None:
     with pytest.raises(SystemExit):
         check_uniserv.parse_response(data)
@@ -108,8 +109,8 @@ def test_ac_check_uniserv_broken_response(  # type: ignore[no-untyped-def]
         ("type=TIPTOP;key=value;foo=bar", {"type": "TIPTOP", "key": "value"}),
     ],
 )
-def test_ac_check_uniserv_parse_response(  # type: ignore[no-untyped-def]
-    check_uniserv: ModuleType, data, expected_result
+def test_ac_check_uniserv_parse_response(
+    check_uniserv: ModuleType, data: str, expected_result: Mapping[str, str]
 ) -> None:
     assert sorted(check_uniserv.parse_response(data).items()) == sorted(expected_result.items())
 
@@ -151,8 +152,12 @@ def test_ac_check_uniserv_parse_response(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_ac_check_uniserv_check_job(  # type: ignore[no-untyped-def]
-    monkeypatch, check_uniserv: ModuleType, args, parsed, expected_result
+def test_ac_check_uniserv_check_job(
+    monkeypatch: pytest.MonkeyPatch,
+    check_uniserv: ModuleType,
+    args: tuple[str | None, str | None, str, str | None, str | None, str | None, str | None],
+    parsed: Mapping[str, str],
+    expected_result: tuple[int, str],
 ) -> None:
     job, s, sid, street, street_nr, city, regex = args
     monkeypatch.setattr("check_uniserv.send_and_receive", lambda x, y: parsed)

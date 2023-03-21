@@ -6,6 +6,7 @@
 # pylint: disable=protected-access
 
 from argparse import Namespace as Args
+from collections.abc import Mapping, Sequence
 from email import message_from_string
 from email.message import Message
 from types import ModuleType
@@ -81,11 +82,11 @@ def test_ac_check_mail_main_failed_connect(check_mail: ModuleType) -> None:
         ),
     ],
 )
-def test_ac_check_mail_prepare_messages_for_ec(  # type: ignore[no-untyped-def]
+def test_ac_check_mail_prepare_messages_for_ec(
     check_mail: ModuleType,
-    mails,
-    expected_messages,
-    expected_forwarded,
+    mails: Mapping[str, Message],
+    expected_messages: Sequence[tuple[str, str]],
+    expected_forwarded: Sequence[str],
 ) -> None:
     args = Args(
         body_limit=1000,

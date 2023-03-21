@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -18,7 +19,7 @@ def cleanup_locks():
     store.release_all_locks()
 
 
-def test_lock_with_pid_file(tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_lock_with_pid_file(tmp_path: Path) -> None:
     pid_file = tmp_path / "test.pid"
 
     daemon.lock_with_pid_file(pid_file)
@@ -29,7 +30,7 @@ def test_lock_with_pid_file(tmp_path) -> None:  # type: ignore[no-untyped-def]
         assert int(f.read()) == os.getpid()
 
 
-def test_cleanup_locked_pid_file(tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_cleanup_locked_pid_file(tmp_path: Path) -> None:
     pid_file = tmp_path / "test.pid"
 
     assert not store.have_lock("%s" % pid_file)
@@ -41,7 +42,7 @@ def test_cleanup_locked_pid_file(tmp_path) -> None:  # type: ignore[no-untyped-d
     assert not store.have_lock("%s" % pid_file)
 
 
-def test_pid_file_lock_context_manager(tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_pid_file_lock_context_manager(tmp_path: Path) -> None:
     pid_file = tmp_path / "test.pid"
 
     assert not store.have_lock("%s" % pid_file)
@@ -50,7 +51,7 @@ def test_pid_file_lock_context_manager(tmp_path) -> None:  # type: ignore[no-unt
         assert store.have_lock("%s" % pid_file)
 
 
-def test_pid_file_lock_context_manager_exception(tmp_path) -> None:  # type: ignore[no-untyped-def]
+def test_pid_file_lock_context_manager_exception(tmp_path: Path) -> None:
     pid_file = tmp_path / "test.pid"
 
     assert not store.have_lock("%s" % pid_file)

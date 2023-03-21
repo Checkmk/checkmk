@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 # pylint: disable=protected-access
 from types import ModuleType
 
@@ -104,8 +106,11 @@ def fixture_check_traceroute() -> ModuleType:
         ),
     ],
 )
-def test_ac_check_traceroute_no_routes(  # type: ignore[no-untyped-def]
-    check_traceroute: ModuleType, lines, hops_info, expected_perf
+def test_ac_check_traceroute_no_routes(
+    check_traceroute: ModuleType,
+    lines: Sequence[str],
+    hops_info: str,
+    expected_perf: Sequence[tuple[str, int]],
 ) -> None:
     status, info, perf = check_traceroute.check_traceroute(lines, [])
     assert status == 0
@@ -420,13 +425,13 @@ def test_ac_check_traceroute_no_routes(  # type: ignore[no-untyped-def]
         ),
     ],
 )
-def test_ac_check_traceroute_routes(  # type: ignore[no-untyped-def]
+def test_ac_check_traceroute_routes(
     check_traceroute: ModuleType,
-    lines,
-    routes,
-    missing_or_bad_info,
-    expected_status,
-    expected_hops,
+    lines: Sequence[str],
+    routes: Sequence[tuple[str, str]],
+    missing_or_bad_info: str,
+    expected_status: int,
+    expected_hops: Sequence[tuple[str, int]],
 ) -> None:
     status, info, perf = check_traceroute.check_traceroute(lines, routes)
     assert status == expected_status

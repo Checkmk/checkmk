@@ -10,6 +10,7 @@ import shutil
 import struct
 import uuid
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -33,23 +34,23 @@ def crash():
         return UnitTestCrashReport.from_exception()
 
 
-def test_crash_report_type(crash) -> None:  # type: ignore[no-untyped-def]
+def test_crash_report_type(crash: ABCCrashReport) -> None:
     assert crash.type() == "test"
 
 
-def test_crash_report_ident(crash) -> None:  # type: ignore[no-untyped-def]
+def test_crash_report_ident(crash: ABCCrashReport) -> None:
     assert crash.ident() == (crash.crash_info["id"],)
 
 
-def test_crash_report_ident_to_text(crash) -> None:  # type: ignore[no-untyped-def]
+def test_crash_report_ident_to_text(crash: ABCCrashReport) -> None:
     assert crash.ident_to_text() == crash.crash_info["id"]
 
 
-def test_crash_report_crash_dir(crash) -> None:  # type: ignore[no-untyped-def]
+def test_crash_report_crash_dir(crash: ABCCrashReport) -> None:
     assert crash.crash_dir() == (cmk.utils.paths.crash_dir / crash.type() / crash.ident_to_text())
 
 
-def test_crash_report_local_crash_report_url(crash) -> None:  # type: ignore[no-untyped-def]
+def test_crash_report_local_crash_report_url(crash: ABCCrashReport) -> None:
     url = "crash.py?component=test&ident=%s" % crash.ident_to_text()
     assert crash.local_crash_report_url() == url
 
@@ -141,7 +142,7 @@ def cache_general_version_infos(monkeypatch):
 
 @pytest.mark.usefixtures("patch_uuid1", "cache_general_version_infos")
 @pytest.mark.parametrize("n_crashes", [15, 45])
-def test_crash_report_store_cleanup(crash_dir, n_crashes) -> None:  # type: ignore[no-untyped-def]
+def test_crash_report_store_cleanup(crash_dir: Path, n_crashes: int) -> None:
     store = CrashReportStore()
     assert not set(crash_dir.glob("*"))
 

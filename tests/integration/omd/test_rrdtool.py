@@ -30,6 +30,8 @@ v returned data rows, includes end y
       x---v---v---v---v---y
 """
 import subprocess
+from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 
@@ -123,7 +125,7 @@ def fixture_rrd_database(tmp_path_factory):
         ),
     ],
 )
-def test_xport(rrd_database, bounds, result) -> None:  # type: ignore[no-untyped-def]
+def test_xport(rrd_database: Path, bounds: tuple[int, int], result: Mapping[str, object]) -> None:
     "Test python binding and that direct memory access behaves correctly"
     qstart, qend = bounds
     assert (
@@ -190,7 +192,9 @@ def test_xport(rrd_database, bounds, result) -> None:  # type: ignore[no-untyped
         ),
     ],
 )
-def test_cli_xport(rrd_database, bounds, out_fmt, result) -> None:  # type: ignore[no-untyped-def]
+def test_cli_xport(
+    rrd_database: Path, bounds: tuple[int, int], out_fmt: list[str], result: str
+) -> None:
     """Test CLI so that when debugging output from tool it matches state in memory
 
     RRDTool composes the XML/JSON outputs explicitly and one may rely for

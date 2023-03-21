@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access
 from types import ModuleType
+from typing import Sequence
 
 import pytest
 
@@ -163,8 +164,13 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType
         ),
     ],
 )
-def test_ac_check_mail_loop(  # type: ignore[no-untyped-def]
-    check_mail_loop: ModuleType, warning, critical, expected_mails, fetched_mails, expected_result
+def test_ac_check_mail_loop(
+    check_mail_loop: ModuleType,
+    warning: object,
+    critical: int,
+    expected_mails: dict[str, object],
+    fetched_mails: dict[str, object],
+    expected_result: tuple[int, str, Sequence[object]],
 ) -> None:
     state, info, perf = check_mail_loop.check_mails(
         warning, critical, expected_mails.copy(), fetched_mails.copy()

@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pytest import CaptureFixture, LogCaptureFixture
+
 from cmk.utils.log import console, section
 
 
-def test_section_begin(caplog, capsys) -> None:  # type: ignore[no-untyped-def]
+def test_section_begin(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     section.section_begin("hello")
@@ -17,7 +19,7 @@ def test_section_begin(caplog, capsys) -> None:  # type: ignore[no-untyped-def]
     assert not captured.err
 
 
-def test_section_success(caplog, capsys) -> None:  # type: ignore[no-untyped-def]
+def test_section_success(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     section.section_success("hello")
@@ -29,7 +31,7 @@ def test_section_success(caplog, capsys) -> None:  # type: ignore[no-untyped-def
     assert not captured.err
 
 
-def test_section_error(caplog, capsys) -> None:  # type: ignore[no-untyped-def]
+def test_section_error(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     section.section_error("hello")
@@ -41,7 +43,7 @@ def test_section_error(caplog, capsys) -> None:  # type: ignore[no-untyped-def]
     assert not captured.err  # Error on stdout (and not stderr) is not a typo.
 
 
-def test_section_step(caplog, capsys) -> None:  # type: ignore[no-untyped-def]
+def test_section_step(caplog: LogCaptureFixture, capsys: CaptureFixture[str]) -> None:
     caplog.set_level(console.VERBOSE, logger="cmk.base")
 
     section.section_step("hello")

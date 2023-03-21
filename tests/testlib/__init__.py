@@ -11,7 +11,7 @@ import os
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Collection, Mapping
+from collections.abc import Callable, Collection, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
@@ -49,7 +49,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def skip_unwanted_test_types(item) -> None:  # type: ignore[no-untyped-def]
+def skip_unwanted_test_types(item: pytest.Item) -> None:
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -386,7 +386,7 @@ class SpecialAgent:
 
 
 @contextmanager
-def set_timezone(timezone: str):  # type: ignore[no-untyped-def]
+def set_timezone(timezone: str) -> Iterator[None]:
     if "TZ" not in os.environ:
         tz_set = False
         old_tz = ""
@@ -408,7 +408,7 @@ def set_timezone(timezone: str):  # type: ignore[no-untyped-def]
 
 
 @contextmanager
-def on_time(utctime, timezone: str):  # type: ignore[no-untyped-def]
+def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
         utctime = datetime.datetime.utcfromtimestamp(utctime)

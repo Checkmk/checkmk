@@ -9,6 +9,8 @@ import subprocess
 
 import pytest
 
+from tests.testlib.site import Site
+
 from cmk.utils import version as cmk_version
 
 
@@ -30,9 +32,7 @@ from cmk.utils import version as cmk_version
         ),
     ],
 )
-def test_binary_capability(  # type: ignore[no-untyped-def]
-    site, rel_path, expected_capability
-) -> None:
+def test_binary_capability(site: Site, rel_path: str, expected_capability: str) -> None:
     path = site.path(rel_path)
     assert os.path.exists(path)
 

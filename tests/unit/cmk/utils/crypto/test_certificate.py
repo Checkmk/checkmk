@@ -130,6 +130,12 @@ def test_serialize_rsa_key(tmp_path: Path) -> None:
     assert pem_enc.bytes.startswith(b"-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
     with pytest.raises(WrongPasswordError):
+        # Note: we suspect this test might be flaky; as of 2023-03-21 we once saw an InvalidPEMError
+        # instead of the WrongPasswordError here. It seems cryptography gets a wrong error reason
+        # from openssl in backends.openssl.backend.py:_handle_key_loading_error().
+        # It uses openssl ERR_get_error (see `man 3 ERR_get_error`) for this -- maybe it gets the
+        # error from another test running in parallel instead? Spend more time investigating if this
+        # happens more often.
         RsaPrivateKey.load_pem(pem_enc, Password("wrong"))
 
     loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))

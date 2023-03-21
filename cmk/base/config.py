@@ -1929,7 +1929,6 @@ def _extract_check_plugins(
                 create_check_plugin_from_legacy(
                     check_plugin_name,
                     check_info_dict,
-                    check_info.get(check_plugin_name.split(".")[0], {}).get("extra_sections", []),
                     factory_settings,
                     get_check_context,
                     validate_creation_kwargs=validate_creation_kwargs,

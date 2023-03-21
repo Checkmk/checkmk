@@ -324,17 +324,11 @@ def _create_wrapped_parameters(
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: CheckInfoElement,
-    extra_sections: List[str],
     factory_settings: Dict[str, Dict],
     get_check_context: Callable,
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
-
-    if extra_sections:
-        raise NotImplementedError(
-            "[%s]: cannot auto-migrate plugins with extra sections" % check_plugin_name
-        )
 
     # We only intend to deal with checks from our repo.
     # We know what we can and have to deal with.

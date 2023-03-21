@@ -211,7 +211,6 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         MINIMAL_CHECK_INFO,
-        [],
         {},  # factory_settings
         lambda _x: {},  # get_check_context
     )
@@ -237,7 +236,6 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
     plugin = check_plugins_legacy.create_check_plugin_from_legacy(
         "norris",
         check_info_element,
-        [],
         {"norris_default_levels": {"levels": (23, 42)}},
         lambda _x: {"norris_default_levels": {"levels_lower": (1, 2)}},
     )

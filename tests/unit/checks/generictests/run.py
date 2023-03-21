@@ -35,30 +35,22 @@ class DiscoveryParameterTypeError(AssertionError):
 def get_info_argument(dataset, subcheck, fallback_parsed=None):
     """Get the argument to the discovery/check function
 
-    This may be the info variable, the parsed variable,
-    and/or including extra sections.
+    This may be the info variable or the parsed variable.
     """
     # see if we have a parsed result defined
     tmp = getattr(dataset, "parsed", None)
     if tmp is not None:
-        arg = [tmp]
+        return tmp
+
     # see if we produced one earlier
-    elif fallback_parsed is not None:
-        arg = [fallback_parsed]
+    if fallback_parsed is not None:
+        return fallback_parsed
+
     # fall back to use info.
-    else:
-        try:
-            arg = [dataset.info]
-        except AttributeError:
-            raise AttributeError("dataset has neither of the attributes 'info' or 'parsed'")
-
-    es_dict = getattr(dataset, "extra_sections", {})
-    for es in es_dict.get(subcheck, []):
-        arg.append(es)
-
-    if len(arg) == 1:
-        return arg[0]
-    return arg
+    try:
+        return dataset.info
+    except AttributeError:
+        raise AttributeError("dataset has neither of the attributes 'info' or 'parsed'")
 
 
 def get_merged_parameters(check, provided_p):

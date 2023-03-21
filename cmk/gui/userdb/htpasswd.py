@@ -16,6 +16,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import (
     CheckCredentialsResult,
+    ConnectorType,
     user_connector_registry,
     UserConnector,
 )
@@ -57,7 +58,7 @@ def hash_password(password: Password) -> PasswordHash:
 class HtpasswdUserConnector(UserConnector):
     @classmethod
     def type(cls) -> str:
-        return "htpasswd"
+        return ConnectorType.HTPASSWD
 
     @property
     def id(self) -> str:

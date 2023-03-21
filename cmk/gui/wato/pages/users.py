@@ -441,7 +441,7 @@ class ModeUsers(WatoMode):
                     auth_method = _("Password")
                     if _is_two_factor_enabled(user_spec):
                         auth_method += " (+2FA)"
-                    elif connection and connection.type() == "saml2":
+                    elif connection and connection.type() == userdb_utils.ConnectorType.SAML2:
                         auth_method = connection.short_title()
                 else:
                     auth_method = HTMLWriter.render_i(_("none"))

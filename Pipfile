@@ -57,7 +57,7 @@ telnetlib3 = "*"  # used by Windows Agent tests
 schemathesis = "*"  # used for openapi tests
 httpx = "*"  # used by agent receiver tests
 ruff = "==0.0.240"  # newer versions have problems with the match statement
-# types-beautifulsoup4 = "*"  # used for type checking, 4 errors
+types-beautifulsoup4 = "*"  # used for type checking
 # types-boto3 = "*"  # used for type checking, 1 error
 # types-botocore = "*"  # used for type checking, 135 errors
 types-cachetools = "*"  # used for type checking

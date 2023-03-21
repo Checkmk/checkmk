@@ -94,7 +94,7 @@ def page(site: str, path: str) -> WSGIApplication:
 @functools.lru_cache
 def app_instance(debug: bool) -> WSGIApplication:
     app = CheckmkApp(debug=debug)
-    app.wsgi_app = PatchJsonMiddleware(app.wsgi_app).wsgi_app  # type: ignore[assignment]
+    app.wsgi_app = PatchJsonMiddleware(app.wsgi_app).wsgi_app  # type: ignore[method-assign]
     return app
 
 

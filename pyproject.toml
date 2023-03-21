@@ -109,7 +109,7 @@ strict_equality = true
 warn_redundant_casts = true
 warn_return_any = false  # 821 errors in 304 files
 warn_unused_configs = true
-warn_unused_ignores = false  # 1324 errors in 1281 files
+warn_unused_ignores = false  # 55 errors in 31 files
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
 disallow_any_explicit = false  # 2854 errors in 836 files

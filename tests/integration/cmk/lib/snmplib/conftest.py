@@ -30,7 +30,7 @@ from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 try:
     from cmk.checkers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc]
+    InlineSNMPBackend = None
 
 logger = logging.getLogger(__name__)
 

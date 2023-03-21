@@ -8,13 +8,7 @@ from re import match
 from typing import Any, Optional
 
 import schemathesis
-
-# since we still have schemathesis 3.14.2 in the CI,
-# we need to import "auth" instead of "auths"
-try:
-    from schemathesis import auths as schemathesis_auth  # type: ignore[attr-defined]
-except ImportError:
-    from schemathesis import auth as schemathesis_auth  # type: ignore[attr-defined,no-redef]
+from schemathesis import auth as schemathesis_auth
 
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import current_base_branch_name

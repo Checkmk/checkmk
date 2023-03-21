@@ -933,7 +933,7 @@ def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledR
         prefix = common_prefix(new_id, set(ref_ids))
 
         insert_location = ref_ids[prefix]  # type: ignore[index]
-        nodes_to_insert = other_ids[new_id[: len(prefix) + 1]]  # type: ignore[index, arg-type]
+        nodes_to_insert = other_ids[new_id[: len(prefix) + 1]]  # type: ignore[arg-type]
         assert isinstance(insert_location, BICompiledRule)
         insert_location.nodes.append(nodes_to_insert)
         mod_idents = reference_branch.get_identifiers((), set())

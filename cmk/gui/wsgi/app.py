@@ -65,14 +65,14 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     app.register_blueprint(checkmk)
 
     # Some middlewares we want to have available in all environments
-    app.wsgi_app = ProxyFix(app.wsgi_app)  # type: ignore[assignment]
-    app.wsgi_app = ProfileSwitcher(  # type: ignore[assignment]
+    app.wsgi_app = ProxyFix(app.wsgi_app)  # type: ignore[method-assign]
+    app.wsgi_app = ProfileSwitcher(  # type: ignore[method-assign]
         app.wsgi_app,
         profile_file=pathlib.Path(paths.var_dir) / "multisite.profile",
     ).wsgi_app
 
     if debug:
-        app.wsgi_app = DebuggedApplication(  # type: ignore[assignment]
+        app.wsgi_app = DebuggedApplication(  # type: ignore[method-assign]
             app.wsgi_app,
             evalex=True,
             pin_logging=False,

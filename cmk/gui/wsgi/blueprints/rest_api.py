@@ -34,7 +34,7 @@ rest_api.before_app_request(set_global_vars)
 @functools.lru_cache
 def app_instance(debug: bool) -> CheckmkRESTAPI:
     app = CheckmkRESTAPI(debug=debug)
-    app.wsgi_app = OverrideRequestMethod(app.wsgi_app)  # type: ignore[assignment]
+    app.wsgi_app = OverrideRequestMethod(app.wsgi_app)  # type: ignore[method-assign]
     return app
 
 

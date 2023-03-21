@@ -393,6 +393,31 @@ void RemoveDuplicatedEntriesByName(UnitMap &um, bool local) {
     for (auto &str : to_remove) um.erase(str);
 }
 
+namespace {
+std::optional<std::wstring> GetTrustee(const cfg::Plugins::ExeUnit &unit) {
+    if (!unit.group().empty()) {
+        return ObtainInternalUser(wtools::ConvertToUTF16(unit.group())).first;
+    }
+    if (unit.user().empty()) {
+        return {};
+    }
+    return PluginsExecutionUser2Iu(unit.user()).first;
+}
+
+void AllowAccess(const fs::path &f, std::wstring_view name) {
+    wtools::ChangeAccessRights(
+        f.wstring().c_str(), SE_FILE_OBJECT, name.data(), TRUSTEE_IS_NAME,
+        STANDARD_RIGHTS_ALL | GENERIC_ALL, GRANT_ACCESS, OBJECT_INHERIT_ACE);
+}
+
+void ConditionallyAllowAccess(const fs::path &f,
+                              const cfg::Plugins::ExeUnit &unit) {
+    if (const auto trustee = GetTrustee(unit)) {
+        AllowAccess(f, *trustee);
+    }
+}
+}  // namespace
+
 void ApplyEverythingToPluginMap(
     PluginMap &plugin_map, const std::vector<cma::cfg::Plugins::ExeUnit> &units,
     const std::vector<fs::path> &found_files, bool local) {
@@ -423,6 +448,7 @@ void ApplyEverythingToPluginMap(
                 XLOG::t("To plugin '{}' to be applied rule '{}'", f,
                         it->sourceText());
                 exe->apply(f.u8string(), it->source());
+                ConditionallyAllowAccess(f, *exe);
             }
 
             ApplyEverythingLogResult(fmt_string, entry_full_name, local);

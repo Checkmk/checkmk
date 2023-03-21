@@ -81,7 +81,7 @@ def _valuespec_special_agents_smb_share():
                 ),
             ),
         ],
-        optional_keys=["hostname", "ip_address", "authentication"],
+        optional_keys=["hostname", "ip_address", "authentication", "recursive"],
         title=_("SMB Share fileinfo"),
     )
 

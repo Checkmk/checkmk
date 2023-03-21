@@ -88,78 +88,64 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
     host_address = None
     user = None
-    mortypes = ["all"]
 
     command_options = {
-        "lshost": {"section_header": "ibm_svc_host", "active": False, "command": "lshost -delim :"},
+        "lshost": {"section_header": "ibm_svc_host", "command": "lshost -delim :"},
         "lslicense": {
             "section_header": "ibm_svc_license",
-            "active": False,
             "command": "lslicense -delim :",
         },
         "lsmdisk": {
             "section_header": "ibm_svc_mdisk",
-            "active": False,
             "command": "lsmdisk -delim :",
         },
         "lsmdiskgrp": {
             "section_header": "ibm_svc_mdiskgrp",
-            "active": False,
             "command": "lsmdiskgrp -delim :",
         },
-        "lsnode": {"section_header": "ibm_svc_node", "active": False, "command": "lsnode -delim :"},
+        "lsnode": {"section_header": "ibm_svc_node", "command": "lsnode -delim :"},
         "lsnodestats": {
             "section_header": "ibm_svc_nodestats",
-            "active": False,
             "command": "lsnodestats -delim :",
         },
         "lssystem": {
             "section_header": "ibm_svc_system",
-            "active": False,
             "command": "lssystem -delim :",
         },
         "lssystemstats": {
             "section_header": "ibm_svc_systemstats",
-            "active": False,
             "command": "lssystemstats -delim :",
         },
         "lseventlog": {
             "section_header": "ibm_svc_eventlog",
-            "active": False,
             "command": "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr",
         },
         "lsportfc": {
             "section_header": "ibm_svc_portfc",
-            "active": False,
             "command": "lsportfc -delim :",
         },
         "lsenclosure": {
             "section_header": "ibm_svc_enclosure",
-            "active": False,
             "command": "lsenclosure -delim :",
         },
         "lsenclosurestats": {
             "section_header": "ibm_svc_enclosurestats",
-            "active": False,
             "command": "lsenclosurestats -delim :",
         },
         "lsarray": {
             "section_header": "ibm_svc_array",
-            "active": False,
             "command": "lsarray -delim :",
         },
         "lsportsas": {
             "section_header": "ibm_svc_portsas",
-            "active": False,
             "command": "lsportsas -delim :",
         },
         "disks": {
             "section_header": "ibm_svc_disks",
-            "active": False,
             "command": "svcinfo lsdrive -delim :",
         },
     }
-
+    mortypes = set(command_options)
     for o, a in opts:
         if o in ["--debug"]:
             opt_debug = True
@@ -169,7 +155,10 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         elif o in ["-u", "--user"]:
             user = a
         elif o in ["-i", "--modules"]:
-            mortypes = a.split(",")
+            provided_modules = set(a.split(","))
+            mortypes = (
+                mortypes if provided_modules == {"all"} else provided_modules.intersection(mortypes)
+            )
         elif o in ["-t", "--timeout"]:
             opt_timeout = int(a)
         elif o in ["-k", "--accept-any-hostkey"]:
@@ -191,30 +180,16 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         sys.stderr.write("ERROR: No user name given.\n")
         return 1
 
-    for module in command_options:
-        try:
-            if mortypes.index("all") >= 0:
-                command_options[module]["active"] = True
-        except ValueError:
-            pass
-
-        try:
-            if mortypes.index(module) >= 0:
-                command_options[module]["active"] = True
-        except ValueError:
-            pass
-
     #############################################################################
     # fetch information by ssh
     #############################################################################
 
     remote_command = ""
-    for module in command_options:
-        if command_options[module]["active"]:
-            remote_command += (
-                r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
-            )
-            remote_command += "%s || true;" % command_options[module]["command"]
+    for module in mortypes:
+        remote_command += (
+            r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
+        )
+        remote_command += "%s || true;" % command_options[module]["command"]
 
     result = _execute_ssh_command(
         remote_command=remote_command,

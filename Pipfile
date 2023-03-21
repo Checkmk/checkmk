@@ -119,7 +119,7 @@ pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
 certifi = "==2022.12.7"  # needed by requests
 chardet = "==5.1.0"  # needed by requests
-urllib3 = "==1.26.13"  # needed by requests
+urllib3 = "==1.26.15"  # needed by requests
 pyopenssl = "==19.1.0"  # needed by requests with extras = ["security"]
 pbr = "==5.11.0"  # needed by jira
 pyghmi = "==1.5.13"  # needed by base for IPMI
@@ -161,10 +161,10 @@ cachetools = "==4.2.4"  # needed by kubernetes
 google-auth = "==2.3.3"  # needed by kubernetes
 websocket-client = "==1.4.2"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
-jmespath = "==0.10.0"  # needed by boto3 (aws)
-botocore = "==1.20.102"  # needed by boto3 (aws)
-s3transfer = "==0.4.2"  # needed by boto3 (aws)
-boto3 = "==1.17.102"  # needed by boto3 (aws)
+jmespath = "==1.0.1"  # needed by boto3 (aws)
+botocore = "==1.29.95"  # needed by boto3 (aws)
+s3transfer = "==0.6.0"  # needed by boto3 (aws)
+boto3 = "==1.26.95"  # needed by boto3 (aws)
 python-snap7 = "==1.2"  # needed by Siemens PLC special agent
 pymssql = "==2.2.7"  # needed by check_sql active check
 pymysql = "==0.9.3"  # needed by check_sql active check

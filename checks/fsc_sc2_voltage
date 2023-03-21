@@ -32,5 +32,4 @@ check_info["fsc_sc2_voltage"] = {
     ),
     "snmp_scan_function": is_fsc_sc2,
     "group": "el_inphase",
-    "management_board": HOST_ONLY,
 }

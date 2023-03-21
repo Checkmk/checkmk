@@ -25,5 +25,4 @@ check_info["fsc_sc2_temp"] = {
     ),
     "snmp_scan_function": is_fsc_sc2,
     "group": "temperature",
-    "management_board": HOST_ONLY,
 }

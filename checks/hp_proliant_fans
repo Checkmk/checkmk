@@ -23,5 +23,4 @@ check_info["hp_proliant_fans"] = {
         ],
     ),
     "snmp_scan_function": hp_proliant_scan_function,
-    "management_board": HOST_ONLY,
 }

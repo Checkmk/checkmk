@@ -27,5 +27,4 @@ check_info["hp_proliant_temp"] = {
     ),
     "snmp_scan_function": hp_proliant_scan_function,
     "group": "temperature",
-    "management_board": HOST_ONLY,
 }

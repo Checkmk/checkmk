@@ -24,5 +24,4 @@ check_info["fsc_sc2_mem_status"] = {
         ],
     ),
     "snmp_scan_function": is_fsc_sc2,
-    "management_board": HOST_ONLY,
 }

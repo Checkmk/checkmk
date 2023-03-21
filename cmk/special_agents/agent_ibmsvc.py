@@ -225,19 +225,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         opt_debug=opt_debug,
     )
 
-    if result.returncode not in [0, 1]:
-        sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
-        sys.exit(2)
-
-    lines = result.stdout.split("\n")
-
-    if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
-        sys.stderr.write(result.stdout)
-        sys.exit(2)
-
-    # Quite strange.. Why not simply print stdout?
-    for line in lines:
-        print(line)
+    _check_ssh_result(result)
 
     if g_profile:
         g_profile_path = Path("ibmsvc_profile.out")
@@ -284,3 +272,19 @@ def _execute_ssh_command(
         encoding="utf-8",
         check=False,
     )
+
+
+def _check_ssh_result(result: subprocess.CompletedProcess) -> None:
+    if result.returncode not in [0, 1]:
+        sys.stderr.write("Error connecting via ssh: %s\n" % result.stderr)
+        sys.exit(2)
+
+    lines = result.stdout.split("\n")
+
+    if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
+        sys.stderr.write(result.stdout)
+        sys.exit(2)
+
+    # Quite strange.. Why not simply print stdout?
+    for line in lines:
+        print(line)

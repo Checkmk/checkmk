@@ -14,7 +14,7 @@ from unittest import mock
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from fakeredis import FakeRedis  # type: ignore[import]
+from fakeredis import FakeRedis
 
 from tests.testlib import is_cloud_repo, is_enterprise_repo, is_managed_repo
 

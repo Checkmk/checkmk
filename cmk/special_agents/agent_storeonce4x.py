@@ -14,7 +14,7 @@ from collections.abc import Callable, Generator, Sequence
 from typing import Any
 
 import urllib3
-from oauthlib.oauth2 import LegacyApplicationClient  # type: ignore[import]
+from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session  # type: ignore[import]
 
 import cmk.utils.paths

@@ -9,7 +9,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Any
 
-import pyasn1.error  # type: ignore[import]
+import pyasn1.error
 import pysnmp.debug  # type: ignore[import]
 import pysnmp.entity.config  # type: ignore[import]
 import pysnmp.entity.engine  # type: ignore[import]
@@ -22,7 +22,7 @@ import pysnmp.smi.builder  # type: ignore[import]
 import pysnmp.smi.error  # type: ignore[import]
 import pysnmp.smi.rfc1902  # type: ignore[import]
 import pysnmp.smi.view  # type: ignore[import]
-from pyasn1.type.base import SimpleAsn1Type  # type: ignore[import]
+from pyasn1.type.base import SimpleAsn1Type
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import Age

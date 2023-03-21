@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Mapping, NamedTuple, Optional, Sequence
 
-from pyasn1.type.useful import GeneralizedTime  # type: ignore[import]
+from pyasn1.type.useful import GeneralizedTime
 from pydantic import BaseModel, validator
 
 CheckmkSection = Mapping[str, Optional[str]]

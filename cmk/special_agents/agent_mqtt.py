@@ -27,7 +27,7 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 
-import paho.mqtt.client as mqtt  # type: ignore[import]
+import paho.mqtt.client as mqtt
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser

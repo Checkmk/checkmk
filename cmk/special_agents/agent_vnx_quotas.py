@@ -24,7 +24,7 @@ def parse_arguments(argv):
 
 def get_client_connection(args):
     try:
-        import paramiko  # type: ignore[import] # pylint: disable=import-outside-toplevel
+        import paramiko  # pylint: disable=import-outside-toplevel
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

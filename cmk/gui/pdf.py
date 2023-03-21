@@ -25,7 +25,8 @@ from dataclasses import dataclass
 from textwrap import wrap
 from typing import Literal, overload, Protocol, TypedDict, Union
 
-from PIL import Image, PngImagePlugin  # type: ignore[import]
+from PIL import PngImagePlugin
+from PIL.Image import Image
 from reportlab.lib.units import mm  # type: ignore[import]
 from reportlab.lib.utils import ImageReader  # type: ignore[import]
 
@@ -955,6 +956,7 @@ class Document:
     ) -> tuple[SizeInternal, SizeInternal]:
         # Get bounding box of image in order to get aspect (width / height)
         bbox = pil.getbbox()
+        assert bbox is not None  # TODO: Why is this the case here?
         pix_width, pix_height = bbox[2], bbox[3]
         if resolution_dpi is not None:
             resolution_mm = resolution_dpi / 2.45

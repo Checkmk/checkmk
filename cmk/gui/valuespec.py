@@ -59,7 +59,7 @@ from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 from OpenSSL import crypto
-from PIL import Image  # type: ignore[import]
+from PIL import Image
 from six import ensure_binary, ensure_str
 
 from livestatus import SiteId

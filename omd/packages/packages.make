@@ -18,6 +18,9 @@ TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
 BAZEL_BUILD := "../scripts/run-bazel-build.sh"
 
+# Bazel paths
+BAZEL_BIN := "bazel-bin/external"
+
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
 HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
 

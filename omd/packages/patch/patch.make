@@ -9,6 +9,6 @@ $(PATCH_BUILD):
 	$(BAZEL_BUILD) @patch//:build
 
 $(PATCH_INSTALL): $(PATCH_BUILD)
-	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rx,Fo=rx bazel-bin/external/patch/bin $(DESTDIR)$(OMD_ROOT)/
-	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rw,Fg=r,Fo=r bazel-bin/external/patch/share $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rx,Fo=rx $(BAZEL_BIN)/patch/bin $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rw,Fg=r,Fo=r $(BAZEL_BIN)/patch/share $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@

@@ -24,11 +24,11 @@ $(MONITORING_PLUGINS_INSTALL):
 	# copy over all the plugins we built
 	mkdir -p "$(TMP_DIR)/lib/nagios"
 	$(RSYNC) -r --chmod=u+w \
-	    "bazel-bin/external/monitoring-plugins/monitoring-plugins/libexec/" \
+	    "$(BAZEL_BIN)/monitoring-plugins/monitoring-plugins/libexec/" \
 	    "$(TMP_DIR)/lib/nagios/plugins/"
 	# copy locales and 'documentation'
 	$(RSYNC) -r --chmod=u+w \
-	    "bazel-bin/external/monitoring-plugins/monitoring-plugins/share/" \
+	    "$(BAZEL_BIN)/monitoring-plugins/monitoring-plugins/share/" \
 	    "$(TMP_DIR)/share/"
 	# set RPATH for all ELF binaries we find
 	find "$(TMP_DIR)/lib/nagios/plugins/" -exec file {} \; \
@@ -38,4 +38,3 @@ $(MONITORING_PLUGINS_INSTALL):
 	$(RSYNC) "$(TMP_DIR)/" "$(DESTDIR)$(OMD_ROOT)/"
 
 	rm -rf $(TMP_DIR)
-

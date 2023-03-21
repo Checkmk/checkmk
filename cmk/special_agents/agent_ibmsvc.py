@@ -208,18 +208,21 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     # fetch information by ssh
     #############################################################################
 
-    cmd = "ssh -o ConnectTimeout={} {} {}@{} '".format(
+    remote_command = ""
+    for module in command_options:
+        if command_options[module]["active"]:
+            remote_command += (
+                r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
+            )
+            remote_command += "%s || true;" % command_options[module]["command"]
+
+    cmd = "ssh -o ConnectTimeout={} {} {}@{} '{}'".format(
         opt_timeout,
         opt_any_hostkey,
         shlex.quote(user),
         shlex.quote(host_address),
+        remote_command,
     )
-
-    for module in command_options:
-        if command_options[module]["active"]:
-            cmd += r"echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
-            cmd += "%s || true;" % command_options[module]["command"]
-    cmd += "'"
 
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)

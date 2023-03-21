@@ -13,7 +13,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, ServiceID
 
-from cmk.checkers import HostKey, PCheckPlugin, plugin_contexts, SourceType
+from cmk.checkers import HostKey, PDiscoveryPlugin, plugin_contexts, SourceType
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
 
 import cmk.base.config as config
@@ -29,7 +29,7 @@ def analyse_discovered_services(
     host_name: HostName,
     *,
     providers: Mapping[HostKey, Provider],
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
@@ -42,7 +42,7 @@ def analyse_discovered_services(
             config_cache,
             host_name,
             providers=providers,
-            check_plugins=check_plugins,
+            plugins=plugins,
             run_plugin_names=run_plugin_names,
             on_error=on_error,
         ),
@@ -123,7 +123,7 @@ def _discover_services(
     *,
     providers: Mapping[HostKey, Provider],
     run_plugin_names: Container[CheckPluginName],
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     on_error: OnError,
 ) -> list[AutocheckEntry]:
     # find out which plugins we need to discover
@@ -131,7 +131,7 @@ def _discover_services(
         providers,
         [
             (plugin_name, plugin.sections)
-            for plugin_name, plugin in check_plugins.items()
+            for plugin_name, plugin in plugins.items()
             if plugin_name in run_plugin_names
         ],
     )
@@ -151,7 +151,7 @@ def _discover_services(
                             for entry in _discover_plugins_services(
                                 config_cache,
                                 check_plugin_name=check_plugin_name,
-                                check_plugins=check_plugins,
+                                plugins=plugins,
                                 host_key=HostKey(
                                     host_name,
                                     (
@@ -266,7 +266,7 @@ def _discover_plugins_services(
     config_cache: ConfigCache,
     *,
     check_plugin_name: CheckPluginName,
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -277,13 +277,13 @@ def _discover_plugins_services(
         return
 
     try:
-        check_plugin = check_plugins[check_plugin_name]
+        plugin = plugins[check_plugin_name]
     except KeyError:
         console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
         return
 
     try:
-        kwargs = get_section_kwargs(providers, host_key, check_plugin.sections)
+        kwargs = get_section_kwargs(providers, host_key, plugin.sections)
     except Exception as exc:
         if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise
@@ -294,14 +294,14 @@ def _discover_plugins_services(
     if not kwargs:
         return
 
-    disco_params = config.get_discovery_parameters(host_key.hostname, check_plugin)
+    disco_params = config.get_discovery_parameters(host_key.hostname, plugin)
     if disco_params is not None:
         kwargs = {**kwargs, "params": disco_params}
 
     try:
         yield from (
             service.as_autocheck_entry(check_plugin_name)
-            for service in check_plugin.discovery_function(**kwargs)
+            for service in plugin.discovery_function(**kwargs)
         )
     except Exception as e:
         if on_error is OnError.RAISE:

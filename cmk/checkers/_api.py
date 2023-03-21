@@ -35,9 +35,10 @@ from .type_defs import AgentRawDataSection, SectionNameCollection
 
 __all__ = [
     "HostLabel",
-    "PCheckPlugin",
     "parse_raw_data",
     "ParserFunction",
+    "PCheckPlugin",
+    "PDiscoveryPlugin",
     "PHostLabelDiscoveryPlugin",
     "PInventoryPlugin",
     "PInventoryResult",
@@ -140,12 +141,6 @@ class PService(Protocol):
 
 class PCheckPlugin(Protocol):
     @property
-    def service_name(self) -> str:
-        # There is a single caller for this attribute.  Is it *really* needed?
-        # Does it *really* belong to the check plugin?  This doesn't feel right.
-        ...
-
-    @property
     def sections(self) -> Sequence[ParsedSectionName]:
         ...
 
@@ -165,7 +160,17 @@ class PCheckPlugin(Protocol):
     def check_ruleset_name(self) -> RuleSetName | None:
         ...
 
-    # The discovery_* attributes belong elsewhere.
+
+class PDiscoveryPlugin(Protocol):
+    @property
+    def sections(self) -> Sequence[ParsedSectionName]:
+        ...
+
+    @property
+    def service_name(self) -> str:
+        # There is a single caller for this attribute.  Is it *really* needed?
+        # Does it *really* belong to the check plugin?  This doesn't feel right.
+        ...
 
     @property
     def discovery_default_parameters(self) -> ParametersTypeAlias | None:

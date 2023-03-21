@@ -25,7 +25,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.checkers import (
     ParserFunction,
-    PCheckPlugin,
+    PDiscoveryPlugin,
     PHostLabelDiscoveryPlugin,
     PSectionPlugin,
     SourceInfo,
@@ -58,7 +58,7 @@ def execute_check_discovery(
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, PSectionPlugin],
     host_label_plugins: Mapping[SectionName, PHostLabelDiscoveryPlugin],
-    check_plugins: Mapping[CheckPluginName, PCheckPlugin],
+    plugins: Mapping[CheckPluginName, PDiscoveryPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -91,7 +91,7 @@ def execute_check_discovery(
         host_name,
         config_cache=config_cache,
         providers=providers,
-        check_plugins=check_plugins,
+        plugins=plugins,
         get_service_description=find_service_description,
         on_error=OnError.RAISE,
     )

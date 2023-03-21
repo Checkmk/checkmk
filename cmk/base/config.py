@@ -125,6 +125,7 @@ from cmk.fetchers.filecache import MaxAge
 from cmk.checkers import (
     AgentParser,
     PCheckPlugin,
+    PDiscoveryPlugin,
     PHostLabelDiscoveryPlugin,
     PInventoryPlugin,
     SourceType,
@@ -1220,7 +1221,7 @@ def service_description(
 
 
 def _get_service_description_template_and_item(
-    plugin_name: CheckPluginName, plugin: PCheckPlugin, item: Item
+    plugin_name: CheckPluginName, plugin: PDiscoveryPlugin, item: Item
 ) -> tuple[ServiceName, Item]:
     plugin_name_str = str(plugin_name)
 
@@ -2171,13 +2172,13 @@ def _get_plugin_parameters(
 
 def get_discovery_parameters(
     host_name: HostName,
-    check_plugin: PCheckPlugin,
+    plugin: PDiscoveryPlugin,
 ) -> None | Parameters | list[Parameters]:
     return _get_plugin_parameters(
         host_name=host_name,
-        default_parameters=check_plugin.discovery_default_parameters,
-        ruleset_name=check_plugin.discovery_ruleset_name,
-        ruleset_type=check_plugin.discovery_ruleset_type,
+        default_parameters=plugin.discovery_default_parameters,
+        ruleset_name=plugin.discovery_ruleset_name,
+        ruleset_type=plugin.discovery_ruleset_type,
         rules_getter_function=agent_based_register.get_discovery_ruleset,
     )
 

@@ -42,9 +42,9 @@ import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.agent_based.confcheckers import (
-    CheckPluginMapper,
     ConfiguredFetcher,
     ConfiguredParser,
+    DiscoveryPluginMapper,
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
@@ -806,7 +806,7 @@ def test__find_candidates() -> None:
     }
 
     assert discovery._discovered_services._find_candidates(
-        providers, [(name, p.sections) for name, p in CheckPluginMapper().items()]
+        providers, [(name, p.sections) for name, p in DiscoveryPluginMapper().items()]
     ) == {
         CheckPluginName("docker_container_status_uptime"),
         CheckPluginName("kernel"),
@@ -923,7 +923,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
         host_label_plugins=HostLabelPluginMapper(),
-        check_plugins=CheckPluginMapper(),
+        plugins=DiscoveryPluginMapper(),
         run_plugin_names=EVERYTHING,
         arg_only_new=False,
         on_error=OnError.RAISE,
@@ -1554,7 +1554,7 @@ def test__discover_host_labels_and_services_on_realhost(
         scenario.config_cache,
         scenario.hostname,
         providers=scenario.providers,
-        check_plugins=CheckPluginMapper(),
+        plugins=DiscoveryPluginMapper(),
         on_error=OnError.RAISE,
         run_plugin_names=EVERYTHING,
     )
@@ -1635,7 +1635,7 @@ def test__discover_services_on_cluster(
         scenario.parent,
         config_cache=scenario.config_cache,
         providers=scenario.providers,
-        check_plugins=CheckPluginMapper(),
+        plugins=DiscoveryPluginMapper(),
         get_service_description=config.service_description,
         on_error=OnError.RAISE,
     )
@@ -1732,7 +1732,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         config_cache,
         HostName("horst"),
         providers={},
-        check_plugins={},
+        plugins={},
         get_service_description=lambda *_args: "desc",
         get_effective_host=lambda hn, _svcdescr: hn,
         on_error=OnError.RAISE,

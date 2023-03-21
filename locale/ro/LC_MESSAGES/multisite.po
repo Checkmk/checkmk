@@ -5058,6 +5058,10 @@ msgstr "Adresă"
 msgid "Append descriptions of OIDs to message texts"
 msgstr ""
 
+#, fuzzy
+msgid "Appliance"
+msgstr "Numele Aplicatiei"
+
 msgid "Appliances, other dedicated hardware"
 msgstr ""
 
@@ -7440,9 +7444,6 @@ msgstr ""
 msgid "CLOSING"
 msgstr ""
 
-msgid "CMA"
-msgstr ""
-
 msgid "CMC (Checkmk Microcore)"
 msgstr ""
 
@@ -8064,6 +8065,10 @@ msgstr ""
 
 msgid "Certificate Checking"
 msgstr ""
+
+#, fuzzy
+msgid "Certificate Key File"
+msgstr "Notificari"
 
 #, fuzzy
 msgid "Certificate chain"
@@ -9414,6 +9419,15 @@ msgstr ""
 
 msgid "Cloud based environments"
 msgstr ""
+
+#, fuzzy
+msgid "Cloud hosts"
+msgstr "Adaugă instanță NGINX"
+
+# georgem ##############
+#, fuzzy
+msgid "Cloud services"
+msgstr "Grup nou"
 
 #, fuzzy
 msgid "CloudFront"
@@ -14395,6 +14409,10 @@ msgstr ""
 msgid "Discover"
 msgstr "Inventariere in masa"
 
+#, fuzzy
+msgid "Discover RMON statistics services"
+msgstr "servicii"
+
 msgid "Discover a service checking the average of all CPUs"
 msgstr ""
 
@@ -17459,6 +17477,10 @@ msgstr ""
 msgid "Exceptions for piggybacked hosts (VMs, ...)"
 msgstr ""
 
+#, fuzzy
+msgid "Excl. shadow hosts"
+msgstr "Adaugă instanță NGINX"
+
 msgid "Exclude"
 msgstr ""
 
@@ -17538,6 +17560,15 @@ msgstr ""
 #, fuzzy
 msgid "Exclude volume from service name"
 msgstr "spatiu utilizat"
+
+#, fuzzy
+msgid "Excluded hosts"
+msgstr "Adaugă instanță NGINX"
+
+# georgem ##############
+#, fuzzy
+msgid "Excluded services"
+msgstr "Grup nou"
 
 #, fuzzy
 msgid "Exclusion patterns"
@@ -20559,6 +20590,9 @@ msgstr ""
 msgid ""
 "Has to contain a single or a bundle of 'certification authority' "
 "certificates."
+msgstr ""
+
+msgid "Has to contain the path to the Cert Key File."
 msgstr ""
 
 msgid "Hash"
@@ -26767,6 +26801,14 @@ msgstr "Stare adiministrativă"
 msgid "Licence usage"
 msgstr "% utilizare"
 
+#, fuzzy
+msgid "Licensable hosts"
+msgstr "Stare adiministrativă"
+
+#, fuzzy
+msgid "Licensable services"
+msgstr "servicii"
+
 msgid "License Feature"
 msgstr ""
 
@@ -30256,6 +30298,9 @@ msgstr ""
 msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
 msgstr ""
 
+msgid "Mongodb >= 5.0 (MONGODB-X509)"
+msgstr ""
+
 #, fuzzy
 msgid "Monitor"
 msgstr " pe siteul de monitorizare: "
@@ -32697,14 +32742,6 @@ msgid "Number of clients connected to a Device."
 msgstr ""
 
 #, fuzzy
-msgid "Number of cloud hosts"
-msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-msgid "Number of cloud services"
-msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
 msgid "Number of columns"
 msgstr "Numarul maxim de conexiuni"
 
@@ -32785,13 +32822,6 @@ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of evicted keys"
-msgstr "Numarul maxim de mesaje"
-
-msgid "Number of excluded hosts"
-msgstr ""
-
-#, fuzzy
-msgid "Number of excluded services"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
@@ -33109,10 +33139,6 @@ msgstr "Grup nou"
 #, fuzzy
 msgid "Number of services in state WARN (service group)"
 msgstr "Grup nou"
-
-#, fuzzy
-msgid "Number of shadow hosts"
-msgstr "Numele elementului pentru eveniment"
 
 msgid "Number of shared and exclusive locks"
 msgstr ""
@@ -34483,6 +34509,9 @@ msgstr ""
 msgid "PDisk EID:Slot-Device"
 msgstr ""
 
+msgid "PEM File"
+msgstr ""
+
 msgid "PEND"
 msgstr ""
 
@@ -34966,6 +34995,14 @@ msgstr ""
 
 #, fuzzy
 msgid "Path to CA File"
+msgstr "Adaugă notificare"
+
+#, fuzzy
+msgid "Path to Cert Key file"
+msgstr "Adaugă notificare"
+
+#, fuzzy
+msgid "Path to Certificate key file"
 msgstr "Adaugă notificare"
 
 #, fuzzy
@@ -35661,9 +35698,6 @@ msgid "Plain text communication is enabled for %s"
 msgstr ""
 
 msgid "Plaintext"
-msgstr ""
-
-msgid "Platform"
 msgstr ""
 
 msgid "Play alarm sounds"
@@ -40818,6 +40852,10 @@ msgid "Server Name"
 msgstr ""
 
 #, fuzzy
+msgid "Server OS"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Server Time"
 msgstr "Numele Elementului"
 
@@ -40838,10 +40876,6 @@ msgstr ""
 
 msgid "Server side handling of unencrypted data"
 msgstr ""
-
-#, fuzzy
-msgid "Server timezone"
-msgstr "Numele Elementului"
 
 msgid "Service"
 msgstr ""
@@ -42585,10 +42619,6 @@ msgstr ""
 
 msgid "Site:"
 msgstr ""
-
-#, fuzzy
-msgid "Sitename"
-msgstr "Nume nou"
 
 msgid "Sites"
 msgstr ""
@@ -50197,6 +50227,9 @@ msgid ""
 "This is relevant for aggregations that are much larger than one minute."
 msgstr ""
 
+msgid "This is required only if the authentication method is MONGODB-X509"
+msgstr ""
+
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
@@ -52285,6 +52318,9 @@ msgid ""
 "Time between the last operation on primary's oplog and on secondary above"
 msgstr ""
 
+msgid "Time consumed by rule engine"
+msgstr ""
+
 msgid "Time difference"
 msgstr ""
 
@@ -52491,6 +52527,10 @@ msgid "Time to receive start of response"
 msgstr ""
 
 #, fuzzy
+msgid "Time to resolve DNS"
+msgstr "Portul TCP pentru conexiune"
+
+#, fuzzy
 msgid "Time to send request"
 msgstr "Portul TCP pentru conexiune"
 
@@ -52542,6 +52582,10 @@ msgstr ""
 
 msgid "Time warp - show BI aggregate during this time period"
 msgstr ""
+
+#, fuzzy
+msgid "Time zone"
+msgstr "Portul TCP pentru conexiune"
 
 #, fuzzy, python-format
 msgid "Time: %s"
@@ -54206,6 +54250,10 @@ msgstr ""
 msgid "Unknown/Unreach"
 msgstr ""
 
+#, fuzzy
+msgid "Unlicensed"
+msgstr "licente nefolosite"
+
 msgid "Unlocked"
 msgstr ""
 
@@ -54385,6 +54433,10 @@ msgstr ""
 
 msgid "Upload CRT/PEM File"
 msgstr ""
+
+#, fuzzy
+msgid "Upload Certificate key file"
+msgstr "Notificari"
 
 msgid "Upload MIB file"
 msgstr ""
@@ -54998,7 +55050,15 @@ msgid "Upper levels for throttles"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels for time consumed by rule engine"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels for time to first byte"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for time to resolve DNS"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
@@ -62112,6 +62172,30 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Number of cloud hosts"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "Number of cloud services"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Number of excluded services"
+#~ msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+#~ msgid "Number of shadow hosts"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "Server timezone"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Sitename"
+#~ msgstr "Nume nou"
+
+#, fuzzy
 #~ msgid "Network topology"
 #~ msgstr "Adresă"
 
@@ -62406,10 +62490,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Status view"
 #~ msgstr "Întreruperi adhoc"
-
-#, fuzzy
-#~ msgid "Discover services"
-#~ msgstr "servicii"
 
 #, fuzzy
 #~ msgid "Save & go to service configuration"
@@ -64540,10 +64620,6 @@ msgstr ""
 #~ msgstr "Grup nou"
 
 #, fuzzy
-#~ msgid "Timezone"
-#~ msgstr "Portul TCP pentru conexiune"
-
-#, fuzzy
 #~ msgid "Total service history"
 #~ msgstr "(fără Nivel de serviciu)"
 
@@ -65418,10 +65494,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Manage customers"
 #~ msgstr "Adaugă Contoar"
-
-#, fuzzy
-#~ msgid "Manage services"
-#~ msgstr "servicii"
 
 #, fuzzy
 #~ msgid "Manage snapshots"

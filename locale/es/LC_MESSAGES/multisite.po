@@ -5374,6 +5374,10 @@ msgstr "Aspecto de la interfaz de red"
 msgid "Append descriptions of OIDs to message texts"
 msgstr "Añadir descripciones de OID a los textos de los mensajes"
 
+#, fuzzy
+msgid "Appliance"
+msgstr "Aplicación"
+
 msgid "Appliances, other dedicated hardware"
 msgstr "Electrodomésticos, otros equipos dedicados"
 
@@ -7970,9 +7974,6 @@ msgstr "CERRAR_ESPERAR"
 msgid "CLOSING"
 msgstr "CIERRE"
 
-msgid "CMA"
-msgstr "CMA"
-
 #, fuzzy
 msgid "CMC (Checkmk Microcore)"
 msgstr "Checkmk Micro Core"
@@ -8632,6 +8633,10 @@ msgstr "Cadena de certificados (certificado raíz/intermedio)"
 
 msgid "Certificate Checking"
 msgstr "Comprobación de certificados"
+
+#, fuzzy
+msgid "Certificate Key File"
+msgstr "Detalles del certificado"
 
 msgid "Certificate chain"
 msgstr "Cadena de certificados"
@@ -10065,6 +10070,14 @@ msgstr "Entornos basados en la nube"
 
 msgid "Cloud based environments"
 msgstr "Entornos basados en la nube"
+
+#, fuzzy
+msgid "Cloud hosts"
+msgstr "Excluir anfitriones"
+
+#, fuzzy
+msgid "Cloud services"
+msgstr "Servicios agrupados"
 
 msgid "CloudFront"
 msgstr "CloudFront"
@@ -15049,6 +15062,10 @@ msgstr "Interrumpir el recuento una vez transcurrido el tiempo"
 msgid "Discover"
 msgstr "Descubrimiento"
 
+#, fuzzy
+msgid "Discover RMON statistics services"
+msgstr "Descubrir los servicios"
+
 msgid "Discover a service checking the average of all CPUs"
 msgstr "Descubre un servicio que comprueba la media de todas las CPUs"
 
@@ -18096,6 +18113,10 @@ msgstr "Excepciones (de días laborables)"
 msgid "Exceptions for piggybacked hosts (VMs, ...)"
 msgstr "Excepciones para los hosts a cuestas (VMs, ...)"
 
+#, fuzzy
+msgid "Excl. shadow hosts"
+msgstr "Excluir anfitriones"
+
 msgid "Exclude"
 msgstr "Excluye"
 
@@ -18163,6 +18184,14 @@ msgstr "Excluir servicios que coincidan con los patrones regex proporcionados"
 
 msgid "Exclude volume from service name"
 msgstr "Excluir el volumen del nombre del servicio"
+
+#, fuzzy
+msgid "Excluded hosts"
+msgstr "Excluir anfitriones"
+
+#, fuzzy
+msgid "Excluded services"
+msgstr "Excluir los servicios"
 
 msgid "Exclusion patterns"
 msgstr "Patrones de exclusión"
@@ -21241,6 +21270,9 @@ msgid ""
 msgstr ""
 "Debe contener un único certificado o un conjunto de certificados de "
 "\"autoridad de certificación\"."
+
+msgid "Has to contain the path to the Cert Key File."
+msgstr ""
 
 msgid "Hash"
 msgstr "Hash"
@@ -28364,6 +28396,14 @@ msgstr "Estado de la licencia"
 msgid "Licence usage"
 msgstr "Uso de la licencia"
 
+#, fuzzy
+msgid "Licensable hosts"
+msgstr "Estado de la licencia"
+
+#, fuzzy
+msgid "Licensable services"
+msgstr "Servicios para discapacitados"
+
 msgid "License Feature"
 msgstr "Característica de la licencia"
 
@@ -31730,6 +31770,10 @@ msgstr "Mongodb >= 3.0 (SCRAM-SHA-1)"
 msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
 msgstr "Mongodb >= 4.0 (SCRAM-SHA-256)"
 
+#, fuzzy
+msgid "Mongodb >= 5.0 (MONGODB-X509)"
+msgstr "Mongodb < 3.0 (MONGODB-CR)"
+
 msgid "Monitor"
 msgstr "Monitor"
 
@@ -34142,14 +34186,6 @@ msgstr "Número de clientes"
 msgid "Number of clients connected to a Device."
 msgstr "Número de clientes conectados a un dispositivo."
 
-#, fuzzy
-msgid "Number of cloud hosts"
-msgstr "Número de hosts excluidos"
-
-#, fuzzy
-msgid "Number of cloud services"
-msgstr "Número de servicios excluidos"
-
 msgid "Number of columns"
 msgstr "Número de columnas"
 
@@ -34224,12 +34260,6 @@ msgstr "Número de mensajes en el tiempo definido nivel superior"
 #, fuzzy
 msgid "Number of evicted keys"
 msgstr "Número de servicios"
-
-msgid "Number of excluded hosts"
-msgstr "Número de hosts excluidos"
-
-msgid "Number of excluded services"
-msgstr "Número de servicios excluidos"
 
 msgid "Number of expected messages"
 msgstr "Número de mensajes esperados"
@@ -34526,10 +34556,6 @@ msgstr "Número de servicios en el estado WARN (grupo de acogida)"
 
 msgid "Number of services in state WARN (service group)"
 msgstr "Número de servicios en el estado WARN (grupo de servicios)"
-
-#, fuzzy
-msgid "Number of shadow hosts"
-msgstr "Número de anfitriones"
 
 msgid "Number of shared and exclusive locks"
 msgstr "Número de bloqueos compartidos y exclusivos"
@@ -35933,6 +35959,10 @@ msgstr "Estado del enchufe PDU"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:Ranura-Dispositivo"
 
+#, fuzzy
+msgid "PEM File"
+msgstr "Archivo CRT/PEM"
+
 msgid "PEND"
 msgstr "PEND"
 
@@ -36428,6 +36458,14 @@ msgstr "Ruta de acceso a <tt>MegaCLI.exe</tt>"
 
 msgid "Path to CA File"
 msgstr "Ruta de acceso al archivo CA"
+
+#, fuzzy
+msgid "Path to Cert Key file"
+msgstr "Ruta de acceso al archivo .env"
+
+#, fuzzy
+msgid "Path to Certificate key file"
+msgstr "Ruta de acceso a un certificado CA"
 
 msgid "Path to a CA certificate"
 msgstr "Ruta de acceso a un certificado CA"
@@ -37134,9 +37172,6 @@ msgstr "La comunicación en texto plano está habilitada para %s"
 
 msgid "Plaintext"
 msgstr "Texto sin formato"
-
-msgid "Platform"
-msgstr "Plataforma"
 
 msgid "Play alarm sounds"
 msgstr "Reproducir sonidos de alarma"
@@ -42366,6 +42401,10 @@ msgstr "Dirección del servidor"
 msgid "Server Name"
 msgstr "Nombre del servidor"
 
+#, fuzzy
+msgid "Server OS"
+msgstr "Servidor"
+
 msgid "Server Time"
 msgstr "Tiempo del servidor"
 
@@ -42386,9 +42425,6 @@ msgstr "Rendimiento de los servidores"
 #, fuzzy
 msgid "Server side handling of unencrypted data"
 msgstr "Hacer cumplir (dejar caer los datos no codificados)"
-
-msgid "Server timezone"
-msgstr "Zona horaria del servidor"
 
 msgid "Service"
 msgstr "Servicio"
@@ -44137,9 +44173,6 @@ msgstr "Ancho de banda de sitio a sitio"
 
 msgid "Site:"
 msgstr "Sitio:"
-
-msgid "Sitename"
-msgstr "Nombre del sitio"
 
 msgid "Sites"
 msgstr "Sitios"
@@ -53417,6 +53450,9 @@ msgstr ""
 "disponibles para no hacer el período desconocido. Esto es relevante para "
 "agregaciones que son mucho más grandes que un minuto."
 
+msgid "This is required only if the authentication method is MONGODB-X509"
+msgstr ""
+
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
@@ -56464,6 +56500,9 @@ msgstr ""
 "Tiempo entre la última operación en el oplog del primario y en el secundario "
 "anterior"
 
+msgid "Time consumed by rule engine"
+msgstr ""
+
 msgid "Time difference"
 msgstr "Diferencia horaria"
 
@@ -56679,6 +56718,10 @@ msgstr "Tiempo para recibir una respuesta completa"
 msgid "Time to receive start of response"
 msgstr "Tiempo para recibir el inicio de la respuesta"
 
+#, fuzzy
+msgid "Time to resolve DNS"
+msgstr "Nombres de host para resolver"
+
 msgid "Time to send request"
 msgstr "Hora de enviar la solicitud"
 
@@ -56742,6 +56785,10 @@ msgstr "Tiempo hasta la expiración de la licencia"
 
 msgid "Time warp - show BI aggregate during this time period"
 msgstr "Time warp - muestra el agregado de BI durante este periodo de tiempo"
+
+#, fuzzy
+msgid "Time zone"
+msgstr "Horizonte temporal"
 
 #, fuzzy, python-format
 msgid "Time: %s"
@@ -58429,6 +58476,10 @@ msgstr "Usuario desconocido: %s"
 msgid "Unknown/Unreach"
 msgstr "Desconocido/desconocido"
 
+#, fuzzy
+msgid "Unlicensed"
+msgstr "No tiene licencia"
+
 msgid "Unlocked"
 msgstr "Desbloqueado"
 
@@ -58594,6 +58645,10 @@ msgstr "Cargar %s"
 
 msgid "Upload CRT/PEM File"
 msgstr "Cargar archivo CRT/PEM"
+
+#, fuzzy
+msgid "Upload Certificate key file"
+msgstr "Archivo de certificado inválido: %s"
 
 msgid "Upload MIB file"
 msgstr "Cargar el archivo MIB"
@@ -59141,7 +59196,15 @@ msgid "Upper levels for throttles"
 msgstr "Niveles superiores para la edad"
 
 #, fuzzy
+msgid "Upper levels for time consumed by rule engine"
+msgstr "Niveles superiores para el uso de la licencia"
+
+#, fuzzy
 msgid "Upper levels for time to first byte"
+msgstr "Niveles superiores para la edad"
+
+#, fuzzy
+msgid "Upper levels for time to resolve DNS"
 msgstr "Niveles superiores para la edad"
 
 #, fuzzy
@@ -67291,6 +67354,39 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
+#~ msgid "CMA"
+#~ msgstr "CMA"
+
+#, fuzzy
+#~| msgid "Number of excluded hosts"
+#~ msgid "Number of cloud hosts"
+#~ msgstr "Número de hosts excluidos"
+
+#, fuzzy
+#~| msgid "Number of excluded services"
+#~ msgid "Number of cloud services"
+#~ msgstr "Número de servicios excluidos"
+
+#~ msgid "Number of excluded hosts"
+#~ msgstr "Número de hosts excluidos"
+
+#~ msgid "Number of excluded services"
+#~ msgstr "Número de servicios excluidos"
+
+#, fuzzy
+#~| msgid "Number of hosts"
+#~ msgid "Number of shadow hosts"
+#~ msgstr "Número de anfitriones"
+
+#~ msgid "Platform"
+#~ msgstr "Plataforma"
+
+#~ msgid "Server timezone"
+#~ msgstr "Zona horaria del servidor"
+
+#~ msgid "Sitename"
+#~ msgstr "Nombre del sitio"
+
 #~ msgid "Network topology"
 #~ msgstr "Topología de la red"
 
@@ -68189,9 +68285,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 #~ "entrada de los procedimientos pueden darse como una lista separada por "
 #~ "comas. Esta comprobación utiliza la comprobación activa <tt>check_sql</"
 #~ "tt>."
-
-#~ msgid "Discover services"
-#~ msgstr "Descubrir los servicios"
 
 #~ msgid "Edit services"
 #~ msgstr "Editar servicios"

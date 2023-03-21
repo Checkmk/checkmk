@@ -5145,6 +5145,10 @@ msgstr ""
 msgid "Append descriptions of OIDs to message texts"
 msgstr "OIDの説明をメッセージテキストに追加します"
 
+#, fuzzy
+msgid "Appliance"
+msgstr "アプリケーション"
+
 msgid "Appliances, other dedicated hardware"
 msgstr "アプライアンス、その他の専用ハードウェア"
 
@@ -7586,9 +7590,6 @@ msgstr "CLOSE_WAIT"
 msgid "CLOSING"
 msgstr "クロージング"
 
-msgid "CMA"
-msgstr "CMA"
-
 #, fuzzy
 msgid "CMC (Checkmk Microcore)"
 msgstr "Checkmkマイクロコア"
@@ -8219,6 +8220,10 @@ msgstr "証明書チェーン(ルート/中間証明書)"
 
 msgid "Certificate Checking"
 msgstr "証明書の確認"
+
+#, fuzzy
+msgid "Certificate Key File"
+msgstr "証明書の詳細"
 
 msgid "Certificate chain"
 msgstr "証明書チェーン"
@@ -9580,6 +9585,14 @@ msgstr "クラウドベースの環境"
 
 msgid "Cloud based environments"
 msgstr "クラウドベースの環境"
+
+#, fuzzy
+msgid "Cloud hosts"
+msgstr "ホストを除外する"
+
+#, fuzzy
+msgid "Cloud services"
+msgstr "クラスター化されたサービス"
 
 msgid "CloudFront"
 msgstr "CloudFront"
@@ -14366,6 +14379,10 @@ msgstr "時間が経過したらカウントを中止する"
 msgid "Discover"
 msgstr "発見"
 
+#, fuzzy
+msgid "Discover RMON statistics services"
+msgstr "サービスを発見する"
+
 msgid "Discover a service checking the average of all CPUs"
 msgstr ""
 
@@ -17331,6 +17348,10 @@ msgstr "例外(平日から)"
 msgid "Exceptions for piggybacked hosts (VMs, ...)"
 msgstr "ピギーバックホスト(VM、...)の例外"
 
+#, fuzzy
+msgid "Excl. shadow hosts"
+msgstr "ホストを除外する"
+
 msgid "Exclude"
 msgstr "除外する"
 
@@ -17398,6 +17419,14 @@ msgstr "状態一致の正規表現パターンを再分類します"
 
 msgid "Exclude volume from service name"
 msgstr "サービス名からボリュームを除外する"
+
+#, fuzzy
+msgid "Excluded hosts"
+msgstr "ホストを除外する"
+
+#, fuzzy
+msgid "Excluded services"
+msgstr "サービスを除外する"
 
 msgid "Exclusion patterns"
 msgstr "除外パターン"
@@ -20365,6 +20394,9 @@ msgstr "タイトル行あり"
 msgid ""
 "Has to contain a single or a bundle of 'certification authority' "
 "certificates."
+msgstr ""
+
+msgid "Has to contain the path to the Cert Key File."
 msgstr ""
 
 msgid "Hash"
@@ -26997,6 +27029,14 @@ msgstr "ライセンスの状態"
 msgid "Licence usage"
 msgstr "ライセンスの使用法"
 
+#, fuzzy
+msgid "Licensable hosts"
+msgstr "ライセンスの状態"
+
+#, fuzzy
+msgid "Licensable services"
+msgstr "無効なサービス"
+
 msgid "License Feature"
 msgstr "ライセンス機能"
 
@@ -30256,6 +30296,9 @@ msgstr ""
 msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
 msgstr ""
 
+msgid "Mongodb >= 5.0 (MONGODB-X509)"
+msgstr ""
+
 msgid "Monitor"
 msgstr "モニター"
 
@@ -32583,14 +32626,6 @@ msgstr "クライアント数"
 msgid "Number of clients connected to a Device."
 msgstr "デバイスに接続されているクライアントの数。"
 
-#, fuzzy
-msgid "Number of cloud hosts"
-msgstr "除外されたホストの数"
-
-#, fuzzy
-msgid "Number of cloud services"
-msgstr "除外されたサービスの数"
-
 msgid "Number of columns"
 msgstr "列の数"
 
@@ -32665,12 +32700,6 @@ msgstr "定義された期間の上位レベルのメッセージの数"
 #, fuzzy
 msgid "Number of evicted keys"
 msgstr "サービスの数"
-
-msgid "Number of excluded hosts"
-msgstr "除外されたホストの数"
-
-msgid "Number of excluded services"
-msgstr "除外されたサービスの数"
 
 msgid "Number of expected messages"
 msgstr "予想されるメッセージの数"
@@ -32951,10 +32980,6 @@ msgstr "WARN状態のサービス数(ホストグループ)"
 
 msgid "Number of services in state WARN (service group)"
 msgstr "WARN状態のサービス数(サービスグループ)"
-
-#, fuzzy
-msgid "Number of shadow hosts"
-msgstr "ホストの数"
 
 msgid "Number of shared and exclusive locks"
 msgstr "共有ロックと排他ロックの数"
@@ -34308,6 +34333,10 @@ msgstr "PDUプラグの状態"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:スロットデバイス"
 
+#, fuzzy
+msgid "PEM File"
+msgstr "CRT/PEMファイル"
+
 msgid "PEND"
 msgstr "保留"
 
@@ -34793,6 +34822,14 @@ msgstr "<tt>MegaCLI.exe</tt>へのパス"
 
 msgid "Path to CA File"
 msgstr "CAファイルのパス"
+
+#, fuzzy
+msgid "Path to Cert Key file"
+msgstr ".envファイルへのパス"
+
+#, fuzzy
+msgid "Path to Certificate key file"
+msgstr "CA証明書へのパス"
 
 msgid "Path to a CA certificate"
 msgstr "CA証明書へのパス"
@@ -35464,9 +35501,6 @@ msgstr ""
 
 msgid "Plaintext"
 msgstr "プレーンテキスト"
-
-msgid "Platform"
-msgstr "プラットホーム"
 
 msgid "Play alarm sounds"
 msgstr "アラーム音を鳴らす"
@@ -40475,6 +40509,10 @@ msgstr "サーバーアドレス"
 msgid "Server Name"
 msgstr "サーバーネーム"
 
+#, fuzzy
+msgid "Server OS"
+msgstr "サーバー"
+
 msgid "Server Time"
 msgstr "サーバー時間"
 
@@ -40495,9 +40533,6 @@ msgstr "サーバーのパフォーマンス"
 #, fuzzy
 msgid "Server side handling of unencrypted data"
 msgstr "強制(暗号化されていないデータを削除)"
-
-msgid "Server timezone"
-msgstr "サーバーのタイムゾーン"
 
 msgid "Service"
 msgstr "サービス"
@@ -42150,9 +42185,6 @@ msgstr "サイト間の帯域幅"
 
 msgid "Site:"
 msgstr "サイト:"
-
-msgid "Sitename"
-msgstr "サイト名"
 
 msgid "Sites"
 msgstr "サイト"
@@ -50613,6 +50645,9 @@ msgstr ""
 "にする必要があるかを定義します。これは、1分よりはるかに大きい集計に関連してい"
 "ます。"
 
+msgid "This is required only if the authentication method is MONGODB-X509"
+msgstr ""
+
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
@@ -53289,6 +53324,9 @@ msgid ""
 "Time between the last operation on primary's oplog and on secondary above"
 msgstr "プライマリのoplogと上記のセカンダリの最後の操作の間の時間"
 
+msgid "Time consumed by rule engine"
+msgstr ""
+
 msgid "Time difference"
 msgstr "時差"
 
@@ -53495,6 +53533,10 @@ msgstr "完全な応答を受け取る時間"
 msgid "Time to receive start of response"
 msgstr "応答の開始を受け取る時間"
 
+#, fuzzy
+msgid "Time to resolve DNS"
+msgstr "解決するホスト名"
+
 msgid "Time to send request"
 msgstr "リクエストを送信する時間"
 
@@ -53550,6 +53592,10 @@ msgstr "ライセンスの有効期限が切れるまでの時間"
 
 msgid "Time warp - show BI aggregate during this time period"
 msgstr "タイムワープ - この期間中のBI集計を表示します"
+
+#, fuzzy
+msgid "Time zone"
+msgstr "期間"
 
 #, fuzzy, python-format
 msgid "Time: %s"
@@ -55172,6 +55218,10 @@ msgstr "不明なユーザー: %s"
 msgid "Unknown/Unreach"
 msgstr "不明/未到達"
 
+#, fuzzy
+msgid "Unlicensed"
+msgstr "ライセンスがありません"
+
 msgid "Unlocked"
 msgstr "ロック解除"
 
@@ -55333,6 +55383,10 @@ msgstr "%s をアップロード"
 
 msgid "Upload CRT/PEM File"
 msgstr "CRT/PEMファイルをアップロードする"
+
+#, fuzzy
+msgid "Upload Certificate key file"
+msgstr "無効な証明書ファイル: %s"
 
 msgid "Upload MIB file"
 msgstr "MIBファイルをアップロードする"
@@ -55870,7 +55924,15 @@ msgid "Upper levels for throttles"
 msgstr "%s の上位レベル"
 
 #, fuzzy
+msgid "Upper levels for time consumed by rule engine"
+msgstr "ライセンス使用の上位レベル"
+
+#, fuzzy
 msgid "Upper levels for time to first byte"
+msgstr "バックアップ経過日数の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for time to resolve DNS"
 msgstr "バックアップ経過日数の上位レベル"
 
 #, fuzzy
@@ -63419,6 +63481,39 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "CMA"
+#~ msgstr "CMA"
+
+#, fuzzy
+#~| msgid "Number of excluded hosts"
+#~ msgid "Number of cloud hosts"
+#~ msgstr "除外されたホストの数"
+
+#, fuzzy
+#~| msgid "Number of excluded services"
+#~ msgid "Number of cloud services"
+#~ msgstr "除外されたサービスの数"
+
+#~ msgid "Number of excluded hosts"
+#~ msgstr "除外されたホストの数"
+
+#~ msgid "Number of excluded services"
+#~ msgstr "除外されたサービスの数"
+
+#, fuzzy
+#~| msgid "Number of hosts"
+#~ msgid "Number of shadow hosts"
+#~ msgstr "ホストの数"
+
+#~ msgid "Platform"
+#~ msgstr "プラットホーム"
+
+#~ msgid "Server timezone"
+#~ msgstr "サーバーのタイムゾーン"
+
+#~ msgid "Sitename"
+#~ msgstr "サイト名"
+
 #~ msgid "Network topology"
 #~ msgstr "ネットワークトポロジー"
 
@@ -64177,9 +64272,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ "使用する場合、プロシージャの入力パラメータをカンマ区切りのリストで指定でき"
 #~ "ます。このチェックは、アクティブなチェック <tt>check_sql</tt> を使用しま"
 #~ "す。"
-
-#~ msgid "Discover services"
-#~ msgstr "サービスを発見する"
 
 #~ msgid "Edit services"
 #~ msgstr "サービスの編集"

@@ -5350,6 +5350,10 @@ msgstr "Verschijning van netwerkinterface"
 msgid "Append descriptions of OIDs to message texts"
 msgstr "Beschrijvingen van OID's toevoegen aan berichtteksten"
 
+#, fuzzy
+msgid "Appliance"
+msgstr "Toepassing"
+
 msgid "Appliances, other dedicated hardware"
 msgstr "Apparaten, andere specifieke hardware"
 
@@ -7928,9 +7932,6 @@ msgstr "CLOSE_WAIT"
 msgid "CLOSING"
 msgstr "SLUITING"
 
-msgid "CMA"
-msgstr "CMA"
-
 #, fuzzy
 msgid "CMC (Checkmk Microcore)"
 msgstr "Checkmk Micro Kern"
@@ -8579,6 +8580,10 @@ msgstr "Certificaatketen (root-/tussencertificaat)"
 
 msgid "Certificate Checking"
 msgstr "Certificaatcontrole"
+
+#, fuzzy
+msgid "Certificate Key File"
+msgstr "Details certificaat"
 
 msgid "Certificate chain"
 msgstr "Certificaatketen"
@@ -10001,6 +10006,14 @@ msgstr "Cloud-gebaseerde omgevingen"
 
 msgid "Cloud based environments"
 msgstr "Cloud-gebaseerde omgevingen"
+
+#, fuzzy
+msgid "Cloud hosts"
+msgstr "Hosts uitsluiten"
+
+#, fuzzy
+msgid "Cloud services"
+msgstr "Geclusterde diensten"
 
 msgid "CloudFront"
 msgstr "CloudFront"
@@ -14944,6 +14957,10 @@ msgstr "Stop met tellen nadat de tijd is verstreken"
 msgid "Discover"
 msgstr "Ontdek"
 
+#, fuzzy
+msgid "Discover RMON statistics services"
+msgstr "Diensten ontdekken"
+
 msgid "Discover a service checking the average of all CPUs"
 msgstr "Ontdek een dienst die het gemiddelde van alle CPU's controleert"
 
@@ -17965,6 +17982,10 @@ msgstr "Uitzonderingen (van weekdagen)"
 msgid "Exceptions for piggybacked hosts (VMs, ...)"
 msgstr "Uitzonderingen voor piggybacked hosts (VM's, ...)"
 
+#, fuzzy
+msgid "Excl. shadow hosts"
+msgstr "Hosts uitsluiten"
+
 msgid "Exclude"
 msgstr "Exclusief"
 
@@ -18032,6 +18053,14 @@ msgstr "Uitsluiten van diensten die overeenkomen met opgegeven regexpatronen"
 
 msgid "Exclude volume from service name"
 msgstr "Volume uitsluiten van dienstnaam"
+
+#, fuzzy
+msgid "Excluded hosts"
+msgstr "Hosts uitsluiten"
+
+#, fuzzy
+msgid "Excluded services"
+msgstr "Diensten uitsluiten"
 
 msgid "Exclusion patterns"
 msgstr "Uitsluitingspatronen"
@@ -21090,6 +21119,9 @@ msgid ""
 "certificates."
 msgstr ""
 "Moet een enkel of een bundel 'certification authority' certificaten bevatten."
+
+msgid "Has to contain the path to the Cert Key File."
+msgstr ""
 
 msgid "Hash"
 msgstr "Hash"
@@ -28159,6 +28191,14 @@ msgstr "Staat van de vergunning"
 msgid "Licence usage"
 msgstr "Licentiegebruik"
 
+#, fuzzy
+msgid "Licensable hosts"
+msgstr "Licentie staat"
+
+#, fuzzy
+msgid "Licensable services"
+msgstr "Diensten voor gehandicapten"
+
 msgid "License Feature"
 msgstr "Licentie Eigenschap"
 
@@ -31490,6 +31530,10 @@ msgstr "Mongodb >= 3.0 (SCRAM-SHA-1)"
 msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
 msgstr "Mongodb >= 4.0 (SCRAM-SHA-256)"
 
+#, fuzzy
+msgid "Mongodb >= 5.0 (MONGODB-X509)"
+msgstr "Mongodb < 3.0 (MONGODB-CR)"
+
 msgid "Monitor"
 msgstr "Monitor"
 
@@ -33883,14 +33927,6 @@ msgstr "Aantal cliënten"
 msgid "Number of clients connected to a Device."
 msgstr "Aantal cliënten verbonden met een Apparaat."
 
-#, fuzzy
-msgid "Number of cloud hosts"
-msgstr "Aantal uitgesloten hosts"
-
-#, fuzzy
-msgid "Number of cloud services"
-msgstr "Aantal uitgesloten diensten"
-
 msgid "Number of columns"
 msgstr "Aantal kolommen"
 
@@ -33965,12 +34001,6 @@ msgstr "Aantal berichten in gedefinieerde tijdspanne Bovenste niveau"
 #, fuzzy
 msgid "Number of evicted keys"
 msgstr "Aantal diensten"
-
-msgid "Number of excluded hosts"
-msgstr "Aantal uitgesloten hosts"
-
-msgid "Number of excluded services"
-msgstr "Aantal uitgesloten diensten"
 
 msgid "Number of expected messages"
 msgstr "Aantal verwachte berichten"
@@ -34261,10 +34291,6 @@ msgstr "Aantal diensten in toestand WARN (hostgroep)"
 
 msgid "Number of services in state WARN (service group)"
 msgstr "Aantal diensten in staat WARN (dienstengroep)"
-
-#, fuzzy
-msgid "Number of shadow hosts"
-msgstr "Aantal hosts"
 
 msgid "Number of shared and exclusive locks"
 msgstr "Aantal gedeelde en exclusieve vergrendelingen"
@@ -35659,6 +35685,10 @@ msgstr "PDU Stekkertoestand"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:Slot-Device"
 
+#, fuzzy
+msgid "PEM File"
+msgstr "CRT/PEM Bestand"
+
 msgid "PEND"
 msgstr "PEND"
 
@@ -36149,6 +36179,14 @@ msgstr "Pad naar <tt>MegaCLI.exe</tt>"
 
 msgid "Path to CA File"
 msgstr "Pad naar CA-bestand"
+
+#, fuzzy
+msgid "Path to Cert Key file"
+msgstr "Pad naar .env bestand"
+
+#, fuzzy
+msgid "Path to Certificate key file"
+msgstr "Pad naar een CA-certificaat"
 
 msgid "Path to a CA certificate"
 msgstr "Pad naar een CA-certificaat"
@@ -36852,9 +36890,6 @@ msgstr "Communicatie via platte tekst is ingeschakeld voor %s"
 
 msgid "Plaintext"
 msgstr "Onduidelijke tekst"
-
-msgid "Platform"
-msgstr "Platform"
 
 msgid "Play alarm sounds"
 msgstr "Alarmgeluiden afspelen"
@@ -42020,6 +42055,10 @@ msgstr "Server Adres"
 msgid "Server Name"
 msgstr "Naam server"
 
+#, fuzzy
+msgid "Server OS"
+msgstr "Server"
+
 msgid "Server Time"
 msgstr "Server tijd"
 
@@ -42040,9 +42079,6 @@ msgstr "Serverprestaties"
 #, fuzzy
 msgid "Server side handling of unencrypted data"
 msgstr "Afdwingen (onversleutelde gegevens laten vallen)"
-
-msgid "Server timezone"
-msgstr "Tijdzone server"
 
 msgid "Service"
 msgstr "Dienst"
@@ -43764,9 +43800,6 @@ msgstr "Site-to-site bandbreedte"
 
 msgid "Site:"
 msgstr "Plaats:"
-
-msgid "Sitename"
-msgstr "Sitenaam"
 
 msgid "Sites"
 msgstr "Sites"
@@ -52984,6 +53017,9 @@ msgstr ""
 "markeren. Dit is relevant voor aggregaties die veel groter zijn dan één "
 "minuut."
 
+msgid "This is required only if the authentication method is MONGODB-X509"
+msgstr ""
+
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
@@ -55999,6 +56035,9 @@ msgstr ""
 "Tijd tussen de laatste operatie op de primaire oplog en op de secundaire "
 "hierboven"
 
+msgid "Time consumed by rule engine"
+msgstr ""
+
 msgid "Time difference"
 msgstr "Tijdsverschil"
 
@@ -56212,6 +56251,10 @@ msgstr "Tijd om een volledig antwoord te ontvangen"
 msgid "Time to receive start of response"
 msgstr "Tijd tot het begin van de reactie"
 
+#, fuzzy
+msgid "Time to resolve DNS"
+msgstr "Hostnamen om op te lossen"
+
 msgid "Time to send request"
 msgstr "Tijd om verzoek te verzenden"
 
@@ -56271,6 +56314,10 @@ msgstr "Tijd tot licentievervaldatum"
 
 msgid "Time warp - show BI aggregate during this time period"
 msgstr "Time warp - toon BI aggregate gedurende deze tijdsperiode"
+
+#, fuzzy
+msgid "Time zone"
+msgstr "Tijdshorizon"
 
 #, fuzzy, python-format
 msgid "Time: %s"
@@ -57950,6 +57997,10 @@ msgstr "Onbekende gebruiker: %s"
 msgid "Unknown/Unreach"
 msgstr "Onbekend/Onbereikbaar"
 
+#, fuzzy
+msgid "Unlicensed"
+msgstr "Heeft geen vergunning."
+
 msgid "Unlocked"
 msgstr "Unlocked"
 
@@ -58112,6 +58163,10 @@ msgstr "Uploaden %s"
 
 msgid "Upload CRT/PEM File"
 msgstr "Upload CRT/PEM-bestand"
+
+#, fuzzy
+msgid "Upload Certificate key file"
+msgstr "Ongeldig certificaatbestand: %s"
 
 msgid "Upload MIB file"
 msgstr "Upload MIB-bestand"
@@ -58654,7 +58709,15 @@ msgid "Upper levels for throttles"
 msgstr "Bovenste niveaus voor de leeftijd"
 
 #, fuzzy
+msgid "Upper levels for time consumed by rule engine"
+msgstr "Bovenste niveaus voor het gebruik van de licentie"
+
+#, fuzzy
 msgid "Upper levels for time to first byte"
+msgstr "Bovenste niveaus voor de leeftijd"
+
+#, fuzzy
+msgid "Upper levels for time to resolve DNS"
 msgstr "Bovenste niveaus voor de leeftijd"
 
 #, fuzzy
@@ -66755,6 +66818,39 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
+#~ msgid "CMA"
+#~ msgstr "CMA"
+
+#, fuzzy
+#~| msgid "Number of excluded hosts"
+#~ msgid "Number of cloud hosts"
+#~ msgstr "Aantal uitgesloten hosts"
+
+#, fuzzy
+#~| msgid "Number of excluded services"
+#~ msgid "Number of cloud services"
+#~ msgstr "Aantal uitgesloten diensten"
+
+#~ msgid "Number of excluded hosts"
+#~ msgstr "Aantal uitgesloten hosts"
+
+#~ msgid "Number of excluded services"
+#~ msgstr "Aantal uitgesloten diensten"
+
+#, fuzzy
+#~| msgid "Number of hosts"
+#~ msgid "Number of shadow hosts"
+#~ msgstr "Aantal hosts"
+
+#~ msgid "Platform"
+#~ msgstr "Platform"
+
+#~ msgid "Server timezone"
+#~ msgstr "Tijdzone server"
+
+#~ msgid "Sitename"
+#~ msgstr "Sitenaam"
+
 #~ msgid "Network topology"
 #~ msgstr "Netwerktopologie"
 
@@ -67651,9 +67747,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ "gebruikt, kunnen de invoerparameters van de procedures worden gegeven als "
 #~ "een door komma's gescheiden lijst. Deze controle gebruikt de actieve "
 #~ "controle <tt>check_sql</tt>."
-
-#~ msgid "Discover services"
-#~ msgstr "Diensten ontdekken"
 
 #~ msgid "Edit services"
 #~ msgstr "Diensten bewerken"

@@ -16,10 +16,9 @@ given password (see `verify`).
 import logging
 import sys
 
-# Import errors from passlib are suppressed since stub files for mypy are not available.
 # pylint errors are suppressed since this is the only module that should import passlib.
-import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module-import
-import passlib.exc  # type: ignore[import]  # pylint: disable=passlib-module-import
+import passlib.context  # pylint: disable=passlib-module-import
+import passlib.exc  # pylint: disable=passlib-module-import
 from passlib import hash as passlib_hash  # pylint: disable=passlib-module-import
 
 from cmk.utils.crypto.password import Password, PasswordHash
@@ -64,7 +63,8 @@ def hash_password(password: Password, *, allow_truncation: bool = False) -> Pass
     """
     try:
         return PasswordHash(
-            passlib_hash.bcrypt.using(
+            # The typing stubs for passlib are buggy (incorrect use of multiple inheritance).
+            passlib_hash.bcrypt.using(  # type: ignore[call-arg]
                 rounds=BCRYPT_ROUNDS, truncate_error=not allow_truncation, ident=BCRYPT_IDENT
             ).hash(password.raw)
         )

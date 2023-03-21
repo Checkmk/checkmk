@@ -123,16 +123,15 @@ def main():  # pylint: disable=too-many-branches
     config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
     config_file = config_dir + "/nginx_status.cfg"
 
-    # None or list of (proto, ipaddress, port) tuples.
-    # proto is 'http' or 'https'
-    servers = None
-    ssl_ports = [
-        443,
-    ]
-
+    config: dict = {}
     if os.path.exists(config_file):
         with open(config_file) as open_config_file:
-            exec(open_config_file.read())
+            config_src = open_config_file.read()
+            exec(config_src, globals(), config)
+    # None or list of (proto, ipaddress, port) tuples.
+    # proto is 'http' or 'https'
+    servers = config.get("servers")
+    ssl_ports = config.get("ssl_ports", [443])
 
     if servers is None:
         servers = try_detect_servers(ssl_ports)

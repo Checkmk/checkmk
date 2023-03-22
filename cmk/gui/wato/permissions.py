@@ -436,6 +436,16 @@ permission_registry.register(
 permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
+        name="user_migrate",
+        title=_l("Migrate users to another connection"),
+        description=_l("This permission allows users to migrate other users to another connection"),
+        defaults=["admin"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
         name="show_last_user_activity",
         title=_l("Show last user activity"),
         description=_l("Show the online state and last user activity on the users page"),

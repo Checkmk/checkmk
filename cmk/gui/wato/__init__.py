@@ -184,6 +184,7 @@ from cmk.gui.wato.pages.timeperiods import (
     ModeTimeperiodImportICal,
     ModeTimeperiods,
 )
+from cmk.gui.wato.pages.user_migrate import ModeUserMigrate
 from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
 from cmk.gui.watolib.activate_changes import update_config_generation
 

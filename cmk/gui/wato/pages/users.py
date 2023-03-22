@@ -122,20 +122,7 @@ class ModeUsers(WatoMode):
                         ),
                         PageMenuTopic(
                             title=_("On selected users"),
-                            entries=[
-                                PageMenuEntry(
-                                    title=_("Delete users"),
-                                    shortcut_title=_("Delete selected users"),
-                                    icon_name="delete",
-                                    item=make_confirmed_form_submit_link(
-                                        form_name="bulk_delete_form",
-                                        button_name="_bulk_delete_users",
-                                        title=_("Delete selected users"),
-                                    ),
-                                    is_shortcut=True,
-                                    is_suggested=True,
-                                ),
-                            ],
+                            entries=list(self._page_menu_entries_on_selected_users()),
                         ),
                         PageMenuTopic(
                             title=_("Synchronized users"),
@@ -164,6 +151,38 @@ class ModeUsers(WatoMode):
         )
         menu.add_doc_reference(_("Users, roles and permissions"), DocReference.WATO_USER)
         return menu
+
+    def _page_menu_entries_on_selected_users(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Delete users"),
+            shortcut_title=_("Delete selected users"),
+            icon_name="delete",
+            item=make_confirmed_form_submit_link(
+                form_name="bulk_delete_form",
+                button_name="_bulk_delete_users",
+                title=_("Delete selected users"),
+            ),
+            is_shortcut=True,
+            is_suggested=True,
+        )
+
+        if user.may("wato.user_migrate"):
+            yield PageMenuEntry(
+                title=_("Migrate users"),
+                shortcut_title=_("Migrate selected users"),
+                icon_name="migrate",
+                item=make_simple_link(
+                    makeuri_contextless(
+                        request,
+                        [
+                            ("selection_id", weblib.selection_id()),
+                            ("mode", "user_migrate"),
+                        ],
+                    )
+                ),
+                is_shortcut=True,
+                is_suggested=True,
+            )
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
         if userdb.sync_possible():

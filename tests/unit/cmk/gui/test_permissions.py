@@ -504,6 +504,7 @@ def test_registered_permissions() -> None:
         "wato.update_dns_cache",
         "wato.use",
         "wato.users",
+        "wato.user_migrate",
         "wato.show_last_user_activity",
         "view.cmk_servers",
         "view.cmk_sites",

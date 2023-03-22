@@ -1233,7 +1233,7 @@ class TableRenderer:
 
         self.pdf.restore_state()
 
-    def _paint_headers(  # type: ignore[no-untyped-def]
+    def _paint_headers(
         self,
         headers: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1245,7 +1245,7 @@ class TableRenderer:
         vrules: bool,
         rule_width: SizeMM,
         row_shading: RowShading,
-    ):
+    ) -> None:
         self._paint_hrule(hrules, rule_width)
         if headers:
             self._paint_row(
@@ -1265,7 +1265,7 @@ class TableRenderer:
                 row_oddeven="heading",
             )
 
-    def _paint_row(  # type: ignore[no-untyped-def]
+    def _paint_row(
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1281,7 +1281,7 @@ class TableRenderer:
         paint_header: bool,
         is_header: bool,
         row_oddeven: OddEven,
-    ):
+    ) -> None:
         # Give each cell information about its final width so it can reorganize internally.
         # This is used for text cells that do the wrapping.
         for column_width, render_object in zip(column_widths, row):

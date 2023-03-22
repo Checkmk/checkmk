@@ -495,3 +495,49 @@ def test_cloud_service_prefixes_up_to_date():
     ]
     for manpage in cloud_man_pages:
         assert manpage.name.startswith(tuple(CLOUD_SERVICE_PREFIXES))
+
+
+def test_history_try_add_sample_from_same_day() -> None:
+    first_sample = LicenseUsageSample(
+        instance_id=None,
+        site_hash="foo-bar",
+        version="version",
+        edition="edition",
+        platform="platform",
+        is_cma=False,
+        sample_time=1,
+        timezone="timezone",
+        num_hosts=2,
+        num_hosts_cloud=0,
+        num_hosts_shadow=0,
+        num_hosts_excluded=4,
+        num_services=3,
+        num_services_cloud=0,
+        num_services_shadow=0,
+        num_services_excluded=5,
+        extension_ntop=False,
+    )
+    history = LocalLicenseUsageHistory([first_sample])
+    history.add_sample(
+        LicenseUsageSample(
+            instance_id=None,
+            site_hash="foo-bar",
+            version="version2",
+            edition="edition2",
+            platform="platform2",
+            is_cma=True,
+            sample_time=1,
+            timezone="timezone2",
+            num_hosts=3,
+            num_hosts_cloud=0,
+            num_hosts_shadow=0,
+            num_hosts_excluded=5,
+            num_services=4,
+            num_services_cloud=0,
+            num_services_shadow=0,
+            num_services_excluded=6,
+            extension_ntop=True,
+        )
+    )
+    assert len(history) == 1
+    assert history.last == first_sample

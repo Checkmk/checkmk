@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import freezegun
 import pytest
 
-import cmk.base.plugins.agent_based.ucd_diskio as ucd_diskio
 from cmk.base import item_state
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.api.agent_based.utils import GetRateError
@@ -18,20 +18,12 @@ from cmk.base.plugins.agent_based.ucd_diskio import (
 )
 
 
-@pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    value_store_patched = {
-        "ram0": (1662713424.1758733, 0.0),
-    }
-    monkeypatch.setattr(ucd_diskio, "get_value_store", lambda: value_store_patched)
-
-
 @pytest.fixture(name="string_table")
 def snmp_section():
     return [
         [
             ["1", "ram0", "0", "0", "0", "0"],
-            ["2", "ram1", "0", "0", "0", "0"],
+            ["2", "ram1", "60.0", "120.0", "180.0", "240.0"],
         ]
     ]
 
@@ -78,12 +70,11 @@ def test_check_ucd_diskio_raise_get_rate_error(
         )
 
 
-def test_check_ucd_diskio(
+def test_check_ucd_diskio_static(
     string_table: list[StringTable],
-    value_store_patch: None,
 ) -> None:
+    # Setting the previous states
     for field in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:
-        # Setting the previous states, so that the get_rate function doesn't return a GetRateError
         item_state.set_item_state(f"ucd_disk_io_{field}.ram0", (0, 0))
 
     check_result = list(
@@ -94,9 +85,8 @@ def test_check_ucd_diskio(
         )
     )
 
-    assert len(check_result) == 9  # The first result plus a Result and Metric for every field
-    assert check_result[0] == Result(state=State.OK, summary="[1]")
-    assert check_result[1:] == [
+    assert check_result == [
+        Result(state=State.OK, summary="[1]"),
         Result(state=State.OK, summary="Read: 0.00 B/s"),
         Metric("disk_read_throughput", 0.0),
         Result(state=State.OK, summary="Write: 0.00 B/s"),
@@ -106,3 +96,32 @@ def test_check_ucd_diskio(
         Result(state=State.OK, notice="Write operations: 0.00/s"),
         Metric("disk_write_ios", 0.0),
     ]
+
+
+def test_check_ucd_diskio_dynamic(
+    string_table: list[StringTable],
+) -> None:
+    # Setting the previous states
+    for field in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:
+        item_state.set_item_state(f"ucd_disk_io_{field}.ram1", (0, 60.0))
+
+    with freezegun.freeze_time("1970-01-01 00:01:00"):
+        check_result = list(
+            check_ucd_diskio(
+                item="ram1",
+                params={},
+                section=parse_ucd_diskio(string_table),
+            )
+        )
+
+        assert check_result == [
+            Result(state=State.OK, summary="[2]"),
+            Result(state=State.OK, summary="Read: 0.00 B/s"),
+            Metric("disk_read_throughput", 0.0),
+            Result(state=State.OK, summary="Write: 1.00 B/s"),
+            Metric("disk_write_throughput", 1.0),
+            Result(state=State.OK, notice="Read operations: 2.00/s"),
+            Metric("disk_read_ios", 2.0),
+            Result(state=State.OK, notice="Write operations: 3.00/s"),
+            Metric("disk_write_ios", 3.0),
+        ]

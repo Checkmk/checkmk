@@ -81,7 +81,6 @@ from cmk.utils.type_defs import (
     AgentTargetVersion,
     CheckPluginName,
     CheckPluginNameStr,
-    CheckVariables,
     ClusterMode,
     ContactgroupName,
     ExitSpec,
@@ -852,16 +851,6 @@ class PackedConfigGenerator:
                 continue
 
             helper_config[str(ruleset_name)] = value
-
-        #
-        # Add modified check specific Checkmk base settings
-        #
-
-        for varname, val in _get_check_variables().items():
-            if val == _check_variable_defaults[varname]:
-                continue
-
-            helper_config[varname] = val
 
         return helper_config
 
@@ -1773,19 +1762,6 @@ def _set_check_variable_defaults(
 
         # Keep track of which variable needs to be set to which context
         _check_variables.setdefault(varname, []).extend(context_idents)
-
-
-def _get_check_variables() -> CheckVariables:
-    """Returns the currently effective check variable settings
-
-    Since the variables are only stored in the individual check contexts and not stored
-    in a central place, this function needs to collect the values from the check contexts.
-    We assume a single variable has the same value in all relevant contexts, which means
-    that it is enough to get the variable from the first context."""
-    check_config = {}
-    for varname, context_ident_list in _check_variables.items():
-        check_config[varname] = _check_contexts[context_ident_list[0]][varname]
-    return check_config
 
 
 def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:

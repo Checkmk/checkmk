@@ -24,7 +24,6 @@ __all__ = [
     "CheckPluginNameStr",
     "ActiveCheckPluginName",
     "Item",
-    "CheckVariables",
     "Seconds",
     "Timestamp",
     "TimeRange",
@@ -80,7 +79,6 @@ ActiveCheckPluginName = str
 Item = str | None
 
 
-CheckVariables = dict[str, Any]
 Seconds = int
 Timestamp = int
 TimeRange = tuple[int, int]

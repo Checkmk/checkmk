@@ -13,7 +13,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.utils.labels import ServiceLabel
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
+from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceName
 
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
@@ -22,7 +22,6 @@ ComputeCheckParameters = Callable[
     [HostName, CheckPluginName, Item, LegacyCheckParameters],
     TimespecificParameters,
 ]
-GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 GetEffectviveHost = Callable[[HostName, str], str]
 

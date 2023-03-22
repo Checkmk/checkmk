@@ -271,7 +271,6 @@ class FixPluginLegacy:
 
         self._check_info = copy.deepcopy(config.check_info)
         self._active_check_info = copy.deepcopy(config.active_check_info)
-        self._check_variables = copy.deepcopy(config.get_check_variables())
 
     @property
     def check_info(self):
@@ -280,10 +279,6 @@ class FixPluginLegacy:
     @property
     def active_check_info(self):
         return self._active_check_info
-
-    @property
-    def check_variables(self):
-        return self._check_variables
 
 
 @pytest.fixture(scope="session", name="fix_register")

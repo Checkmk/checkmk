@@ -899,7 +899,7 @@ class PackedConfigGenerator:
         # Add modified check specific Checkmk base settings
         #
 
-        for varname, val in get_check_variables().items():
+        for varname, val in _get_check_variables().items():
             if val == _check_variable_defaults[varname]:
                 continue
 
@@ -1839,7 +1839,7 @@ def set_check_variables(check_variables: CheckVariables) -> None:
                 _check_contexts[context_ident][varname] = value
 
 
-def get_check_variables() -> CheckVariables:
+def _get_check_variables() -> CheckVariables:
     """Returns the currently effective check variable settings
 
     Since the variables are only stored in the individual check contexts and not stored

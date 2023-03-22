@@ -461,34 +461,6 @@ def _add_check_variables_to_default_config() -> None:
     default_config.__dict__.update(_check_variable_defaults)
 
 
-def _clear_check_variables_from_default_config(variable_names: list[str]) -> None:
-    """Remove previously registered check variables from the config module"""
-    for varname in variable_names:
-        try:
-            delattr(default_config, varname)
-        except AttributeError:
-            pass
-
-
-# Load user configured values of check related configuration variables
-# into the check module to make it available during checking.
-#
-# In the same step we remove the check related configuration settings from the
-# config module because they are not needed there anymore.
-#
-# And also remove it from the default config (in case it was present)
-def set_check_variables_for_checks() -> None:
-    global_dict = globals()
-    check_variable_names = list(_check_variables)
-
-    check_variables = {}
-    for varname in check_variable_names:
-        check_variables[varname] = global_dict.pop(varname)
-
-    set_check_variables(check_variables)
-    _clear_check_variables_from_default_config(check_variable_names)
-
-
 # .
 #   .--Read Config---------------------------------------------------------.
 #   |        ____                _    ____             __ _                |
@@ -557,12 +529,6 @@ def _perform_post_config_loading_actions() -> None:
     _transform_plugin_names_from_160_to_170(global_dict)
 
     get_config_cache().initialize()
-
-    # In case the checks are not loaded yet it seems the current mode
-    # is not working with the checks. In this case also don't load the
-    # static checks into the configuration.
-    if any_check_loaded():
-        set_check_variables_for_checks()
 
 
 class SetFolderPathAbstract:
@@ -1578,11 +1544,6 @@ def get_plugin_paths(*dirs: str) -> list[str]:
     return filelist
 
 
-# Now read in all checks. Note: this is done *before* reading the
-# configuration, because checks define variables with default
-# values user can override those variables in his configuration.
-# If a check or check.include is both found in local/ and in the
-# normal structure, then only the file in local/ must be read!
 # NOTE: The given file names should better be absolute, otherwise
 # we depend on the current working directory, which is a bad idea,
 # especially in tests.
@@ -1812,19 +1773,6 @@ def _set_check_variable_defaults(
 
         # Keep track of which variable needs to be set to which context
         _check_variables.setdefault(varname, []).extend(context_idents)
-
-
-def set_check_variables(check_variables: CheckVariables) -> None:
-    """Update the check related config variables in the relevant check contexts"""
-    for varname, value in check_variables.items():
-        for context_ident in _check_variables[varname]:
-            # This case is important for discovery rulesets which are accessed in legacy-includes.
-            # Without the "[:]", we would write the value to a variable in the check plugin.
-            # However, we want to write it to the variable in the legacy-include.
-            if isinstance(_check_contexts[context_ident][varname], list):
-                _check_contexts[context_ident][varname][:] = value
-            else:
-                _check_contexts[context_ident][varname] = value
 
 
 def _get_check_variables() -> CheckVariables:

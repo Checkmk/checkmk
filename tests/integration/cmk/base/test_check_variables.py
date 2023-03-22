@@ -54,10 +54,6 @@ check_info["test_check_1"] = {
 """,
     )
 
-    # Should better be tested separately in a unit test
-    with site.python_helper("helper_verify_check_1.py").execute() as p:
-        assert p.wait() == 0
-
     site.activate_changes_and_wait_for_core_reload()
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
@@ -76,26 +72,6 @@ check_info["test_check_1"] = {
     assert "OK - (10.0, 20.0)" in stdout
     assert stderr == ""
     assert p.returncode == 0
-
-    # And now overwrite the setting in the config
-    site.write_text_file(
-        "etc/check_mk/conf.d/test_check_1.mk", "test_check_1_default_levels = 5.0, 30.1\n"
-    )
-
-    p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert "OK - (10.0, 20.0)" not in stdout
-    assert "OK - (5.0, 30.1)" in stdout
-    assert stderr == ""
-    assert p.returncode == 0
-
-    # rediscover with the setting in the config
-    site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
-    site.openapi.discover_services_and_wait_for_completion(host_name)
-    entries = _AutochecksSerializer().deserialize(
-        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
-    )
-    assert entries[0].parameters == (5.0, 30.1)
 
 
 # Test whether or not registration of discovery variables work
@@ -137,10 +113,6 @@ check_info["test_check_2"] = {
 """,
     )
 
-    # Should better be tested separately in a unit test
-    with site.python_helper("helper_verify_check_2.py").execute() as p:
-        assert p.wait() == 0
-
     site.activate_changes_and_wait_for_core_reload()
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
@@ -151,20 +123,6 @@ check_info["test_check_2"] = {
     assert entries == []
 
     site.openapi.discover_services_and_wait_for_completion(host_name)
-
-    # And now overwrite the setting in the config
-    site.write_text_file("etc/check_mk/conf.d/test_check_2.mk", "discover_service = True\n")
-
-    site.openapi.discover_services_and_wait_for_completion(host_name)
-
-    # Verify that the discovery worked as expected
-    entries = _AutochecksSerializer().deserialize(
-        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
-    )
-    assert str(entries[0].check_plugin_name) == "test_check_2"
-    assert entries[0].item is None
-    assert entries[0].parameters == {}
-    assert entries[0].service_labels == {}
 
 
 # Test whether or not factory settings and checkgroup parameters work
@@ -208,10 +166,6 @@ check_info["test_check_3"] = {
 }
 """,
     )
-
-    # Should better be tested separately in a unit test
-    with site.python_helper("helper_verify_factory_settings.py").execute() as p:
-        assert p.wait() == 0
 
     site.activate_changes_and_wait_for_core_reload()
     site.openapi.discover_services_and_wait_for_completion(host_name)

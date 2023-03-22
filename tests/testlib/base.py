@@ -177,7 +177,6 @@ class Scenario:
 
         self.config_cache = self._get_config_cache()
         self.config_cache.initialize()
-        config.set_check_variables(check_vars)
 
         if self._autochecks_mocker.raw_autochecks:
             monkeypatch.setattr(

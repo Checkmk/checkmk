@@ -106,6 +106,7 @@ from cmk.gui.watolib.config_domains import (
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
+from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 
 #   .--Global Settings-----------------------------------------------------.
@@ -2396,12 +2397,7 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Optional(
-            valuespec=Age(
-                title=None,
-                display=["minutes", "hours", "days"],
-                minvalue=5400,
-                default_value=5400,
-            ),
+            valuespec=vs_idle_timeout_duration(),
             title=_("Login session idle timeout"),
             label=_("Enable a login session idle timeout"),
             help=_(

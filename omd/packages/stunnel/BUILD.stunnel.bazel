@@ -1,0 +1,63 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name="all_srcs",
+    srcs=glob(["**/*"], exclude=["bazel-*"]),
+)
+
+#
+# This should be put somewhere toplevel, also avoiding the deprecated
+# --define syntax, see
+# https://bazel.build/docs/configurable-attributes
+#
+config_setting(
+    name="no_own_openssl",
+    values={"define": "no-own-openssl=true"},
+)
+
+configure_make(
+    name="stunnel",
+    args=["-j4"],
+    lib_source=":all_srcs",
+    out_binaries=[
+        "stunnel",
+        "stunnel3",
+    ],
+    out_shared_libs=[
+        "libstunnel.so",
+    ],
+    out_lib_dir="lib/stunnel",
+    out_data_dirs = ["share"],  # For bash completion file
+    configure_options=select({
+            ":no_own_openssl": [],
+            "//conditions:default": ["--with-ssl=$EXT_BUILD_DEPS/openssl"],
+    }) + ["--with-bashcompdir=$INSTALLDIR/share"],
+    env={
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+    },
+    copts=[
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
+    deps=select(
+        {
+            ":no_own_openssl": [],
+            "//conditions:default": ["@openssl"],
+        }
+    ),
+)
+
+genrule(
+    name = "skel",
+    srcs = ["@omd_packages//packages/stunnel/skel:skel", "@omd_packages//packages/stunnel/skel:skel_root"],
+    outs = [
+        "skel/etc/init.d/stunnel",
+        "skel/etc/logrotate.d/stunnel",
+        "skel/etc/rc.d/85-stunnel",
+        "skel/etc/stunnel/server.conf",
+        "skel/etc/stunnel/conf.d",
+        ],
+    cmd =
+    """
+        cp -r --dereference $$(dirname $(execpath @omd_packages//packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
+    """,
+)

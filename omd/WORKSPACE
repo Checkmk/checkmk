@@ -59,3 +59,9 @@ monitoring_plugins(
     version_str="2.3.2",  # version also listed in monitoring-plugins.make
     sha256="8d9405baf113a9f25e4fb961d56f9f231da02e3ada0f41dbb0fa4654534f717b",
 )
+
+load("//packages/stunnel:stunnel_http.bzl", "stunnel")
+stunnel(
+    version_str="5.63",
+    sha256="c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
+)

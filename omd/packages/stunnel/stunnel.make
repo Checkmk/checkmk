@@ -1,31 +1,17 @@
 STUNNEL := stunnel
-STUNNEL_VERS := 5.63
-STUNNEL_DIR := $(STUNNEL)-$(STUNNEL_VERS)
 
-STUNNEL_UNPACK := $(BUILD_HELPER_DIR)/$(STUNNEL_DIR)-unpack
-STUNNEL_BUILD := $(BUILD_HELPER_DIR)/$(STUNNEL_DIR)-build
-STUNNEL_INSTALL := $(BUILD_HELPER_DIR)/$(STUNNEL_DIR)-install
-STUNNEL_SKEL := $(BUILD_HELPER_DIR)/$(STUNNEL_DIR)-skel
+STUNNEL_BUILD := $(BUILD_HELPER_DIR)/$(STUNNEL)-build
+STUNNEL_INSTALL := $(BUILD_HELPER_DIR)/$(STUNNEL)-install
 
-#STUNNEL_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(STUNNEL_DIR)
-STUNNEL_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(STUNNEL_DIR)
-#STUNNEL_WORK_DIR := $(PACKAGE_WORK_DIR)/$(STUNNEL_DIR)
-
-$(STUNNEL_BUILD): $(OPENSSL_CACHE_PKG_PROCESS) $(STUNNEL_UNPACK)
-	cd $(STUNNEL_BUILD_DIR) && \
-	    ./configure \
-		--prefix=$(OMD_ROOT) \
-		--with-bashcompdir=$(OMD_ROOT)/skel/etc/bash_completion.d \
-		--with-ssl=$(PACKAGE_OPENSSL_DESTDIR)
-	$(MAKE) -C $(STUNNEL_BUILD_DIR) -j4
-	$(TOUCH) $@
+$(STUNNEL_BUILD):
+	$(BAZEL_BUILD) @$(STUNNEL)//:$(STUNNEL)
+	$(BAZEL_BUILD) @$(STUNNEL)//:skel
 
 $(STUNNEL_INSTALL): $(STUNNEL_BUILD)
-	$(MAKE) -C $(STUNNEL_BUILD_DIR) DESTDIR=$(DESTDIR) install
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/stunnel/stunnel.conf-sample
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc/stunnel
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc || true
-	rmdir $(DESTDIR)$(OMD_ROOT)/var/lib/stunnel
-	rmdir $(DESTDIR)$(OMD_ROOT)/var/lib || true
-	rmdir $(DESTDIR)$(OMD_ROOT)/var || true
-	$(TOUCH) $@
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(STUNNEL)/$(STUNNEL)/bin $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(STUNNEL)/$(STUNNEL)/lib $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(STUNNEL)/$(STUNNEL)/share/$(STUNNEL).bash $(DESTDIR)$(OMD_ROOT)/skel/etc/bash_completion.d/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(STUNNEL)/skel/ $(DESTDIR)$(OMD_ROOT)/skel
+	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && $(LN) -sf ../init.d/$(STUNNEL) 85-$(STUNNEL)
+	chmod 664 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/$(STUNNEL)
+	chmod 664 $(DESTDIR)$(OMD_ROOT)/skel/etc/$(STUNNEL)/server.conf

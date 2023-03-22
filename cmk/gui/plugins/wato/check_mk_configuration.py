@@ -92,6 +92,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.users import vs_idle_timeout_duration
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -2370,12 +2371,7 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            Age(
-                title=None,
-                display=["minutes", "hours", "days"],
-                minvalue=5400,
-                default_value=5400,
-            ),
+            valuespec=vs_idle_timeout_duration(),
             title=_("Login session idle timeout"),
             label=_("Enable a login session idle timeout"),
             help=_(

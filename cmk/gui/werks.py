@@ -11,6 +11,7 @@ import os
 import re
 import time
 from collections.abc import Iterable, Iterator, Sequence
+from functools import cache
 from typing import Any, Callable, cast, Literal, NamedTuple, TypedDict
 
 import cmk.utils.paths
@@ -29,6 +30,7 @@ from cmk.gui.breadcrumb import (
     make_simple_page_breadcrumb,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html, HTMLContent
@@ -76,12 +78,15 @@ class GuiWerk(NamedTuple):
     """
 
     werk: Werk
-    acknowledged: bool
 
     def sort_by_version_and_component(self, translator: WerkTranslator) -> tuple[str | int, ...]:
         werk_result = self.werk.sort_by_version_and_component(translator)
         result = (*werk_result[:4], int(self.acknowledged), *werk_result[4:])
         return result
+
+    @property
+    def acknowledged(self) -> bool:
+        return self.werk.id in load_acknowledgements() or version_is_pre_127(self.werk.version)
 
     # @property
     # @cache
@@ -445,15 +450,14 @@ def _page_menu_entries_ack_werk(werk: GuiWerk) -> Iterator[PageMenuEntry]:
     )
 
 
+@cache
 def load_werk_entries() -> Sequence[GuiWerk]:
     werks_raw = utils_werks.load()
-    ack_ids = load_acknowledgements()
     werks = []
-    for werk_id, werk in werks_raw.items():
+    for werk in werks_raw.values():
         werks.append(
             GuiWerk(
                 werk=werk,
-                acknowledged=werk_id in ack_ids or version_is_pre_127(werk.version),
             )
         )
     return werks
@@ -473,11 +477,12 @@ def acknowledge_werks(werks: Iterable[GuiWerk], check_permission: bool = True) -
 
     ack_ids = load_acknowledgements()
     for werk in werks:
-        ack_ids.append(werk.werk.id)
-    save_acknowledgements(ack_ids)
+        ack_ids.add(werk.werk.id)
+    save_acknowledgements(list(ack_ids))
 
 
 def save_acknowledgements(acknowledged_werks: list[int]) -> None:
+    load_acknowledgements.cache_clear()  # type: ignore[attr-defined]
     store.save_object_to_file(acknowledgement_path, acknowledged_werks)
 
 
@@ -489,8 +494,9 @@ def version_is_pre_127(version: str) -> bool:
     return version.startswith("1.2.5") or version.startswith("1.2.6")
 
 
-def load_acknowledgements() -> list[int]:
-    return store.load_object_from_file(acknowledgement_path, default=[])
+@request_memoize()
+def load_acknowledgements() -> set[int]:
+    return set(store.load_object_from_file(acknowledgement_path, default=[]))
 
 
 def unacknowledged_incompatible_werks() -> list[GuiWerk]:

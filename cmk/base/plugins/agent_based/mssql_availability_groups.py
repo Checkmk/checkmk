@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Final, Mapping
 
-from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1 import regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # Sample output:
@@ -32,6 +32,12 @@ class AGAttributes:
     sync_state: SyncState
 
 
+@dataclass(frozen=True)
+class ErrorMessage:
+    instance: str
+    message: str
+
+
 Section = Mapping[str, AGAttributes]
 
 
@@ -40,8 +46,20 @@ _SYNC_STATE_MAPPING: Final[Mapping] = {
     SyncState.NOT_HEALTHY: State.CRIT,
 }
 
+_ERROR_REGEX = regex(r"(.*) ERROR: (.*)")
 
-def parse_mssql_availability_groups(string_table: StringTable) -> Section:
+
+def _match_error_message(string_table: StringTable) -> ErrorMessage | None:
+    try:
+        if (error_match := _ERROR_REGEX.match(string_table[0][0])) is None:
+            return None
+    except IndexError:
+        return None
+
+    return ErrorMessage(instance=error_match.group(1), message=error_match.group(2))
+
+
+def parse_mssql_availability_groups(string_table: StringTable) -> Section | ErrorMessage:
     """
     >>> parse_mssql_availability_groups(
     ...   [["AGTEST_1", "SQL01\\\\TESTINSTANCE1", "2", "HEALTHY", "ONLINE"],
@@ -54,15 +72,21 @@ def parse_mssql_availability_groups(string_table: StringTable) -> Section:
     ... }
     True
     """
+    if (error_msg := _match_error_message(string_table)) is not None:
+        return error_msg
+
     return {line[0]: AGAttributes(line[1], SyncState(line[3])) for line in string_table}
 
 
-def discover_mssql_availability_groups(section: Section) -> DiscoveryResult:
+def discover_mssql_availability_groups(section: Section | ErrorMessage) -> DiscoveryResult:
+    if isinstance(section, ErrorMessage):
+        return
+
     for availability_group in section:
         yield Service(item=availability_group)
 
 
-def check_mssql_availability_groups(item: str, section: Section) -> CheckResult:
+def check_mssql_availability_groups(item: str, section: Section | ErrorMessage) -> CheckResult:
     """
     >>> section = {
     ...   "AGTEST_1": AGAttributes("SQL01\\\\TESTINSTANCE1", SyncState.HEALTHY),
@@ -80,6 +104,13 @@ def check_mssql_availability_groups(item: str, section: Section) -> CheckResult:
     ... ]
     True
     """
+    if isinstance(section, ErrorMessage):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Error message from instance {section.instance}: {section.message}",
+        )
+        return
+
     if (attributes := section.get(item)) is None:
         return
 

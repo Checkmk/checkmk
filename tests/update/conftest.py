@@ -53,8 +53,7 @@ def get_host_data(site: Site, hostname: str) -> dict:
     web.login()
     raw_data = json.loads(
         web.get(
-            f"view.py?host={hostname}&output_format="
-            f"json_export&site=update_central&view_name=host"
+            f"view.py?host={hostname}&output_format=json_export&site={site.id}&view_name=host"
         ).content
     )
     data = {}

@@ -245,14 +245,18 @@ def get_vs_user_idle_timeout():
                 title=_("Disable the login timeout"),
                 totext="",
             ),
-            Age(
-                title=_("Set an individual idle timeout"),
-                display=["minutes", "hours", "days"],
-                minvalue=60,
-                default_value=3600,
-            ),
+            vs_idle_timeout_duration(),
         ],
         orientation="horizontal",
+    )
+
+
+def vs_idle_timeout_duration() -> Age:
+    return Age(
+        title=_("Set an individual idle timeout"),
+        display=["minutes", "hours", "days"],
+        minvalue=60,
+        default_value=5400,
     )
 
 

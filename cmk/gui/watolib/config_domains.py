@@ -343,11 +343,11 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 continue
 
             for entry in cert_path.iterdir():
+                if entry.suffix not in [".pem", ".crt"]:
+                    continue
+
                 cert_file_path = entry.absolute()
                 try:
-                    if entry.suffix not in [".pem", ".crt"]:
-                        continue
-
                     trusted_cas.update(raw_certificates_from_file(cert_file_path))
                 except (OSError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
@@ -358,15 +358,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     # We know a permission problem with some files that are created by default on
                     # some distros. We simply ignore these files because we assume that they are
                     # not needed.
-                    if cert_file_path == Path("/etc/ssl/certs/localhost.crt"):
-                        continue
-
-                    logger.exception("Error reading certificates from %s", cert_file_path)
-
-                    errors.append(
-                        "Failed to add certificate '%s' to trusted CA certificates. "
-                        "See web.log for details." % cert_file_path
-                    )
+                    if cert_file_path != Path("/etc/ssl/certs/localhost.crt"):
+                        logger.exception("Error reading certificates from %s", cert_file_path)
+                        errors.append(
+                            f"Failed to add certificate '{cert_file_path}' to trusted CA certificates. "
+                            "See web.log for details."
+                        )
+                    continue
 
             break
 

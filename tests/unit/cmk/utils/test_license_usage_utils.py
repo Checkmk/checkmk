@@ -138,3 +138,37 @@ import cmk.utils.license_usage.samples as license_usage_samples
 )
 def test__migrate_sample(prev_dump_version, sample, result):
     assert license_usage_samples._migrate_sample(prev_dump_version, sample.copy()) == result
+
+
+def test_history_try_add_sample_from_same_day() -> None:
+    first_sample = license_usage_samples.LicenseUsageSample(
+        version="version",
+        edition="edition",
+        platform="platform",
+        is_cma=False,
+        sample_time=1,
+        timezone="timezone",
+        num_hosts=2,
+        num_hosts_excluded=4,
+        num_services=3,
+        num_services_excluded=5,
+        extensions=license_usage_samples.LicenseUsageExtensions(ntop=False),
+    )
+    history = license_usage_samples.LicenseUsageHistoryDump("1.1", [first_sample])
+    history.add_sample(
+        license_usage_samples.LicenseUsageSample(
+            version="version2",
+            edition="edition2",
+            platform="platform2",
+            is_cma=True,
+            sample_time=1,
+            timezone="timezone2",
+            num_hosts=3,
+            num_hosts_excluded=5,
+            num_services=4,
+            num_services_excluded=6,
+            extensions=license_usage_samples.LicenseUsageExtensions(ntop=True),
+        )
+    )
+    assert len(history.history) == 1
+    assert history.history[-1] == first_sample

@@ -53,6 +53,8 @@ class LicenseUsageHistoryDump:
     history: List[LicenseUsageSample]
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
+        if sample.sample_time in set(s.sample_time for s in self.history):
+            return
         self.history = ([sample] + self.history)[:400]
 
     def serialize(self) -> bytes:

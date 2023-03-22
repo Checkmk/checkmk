@@ -1279,9 +1279,10 @@ class CreateUser(BaseSchema):
     )
     authorized_sites = fields.List(
         gui_fields.SiteField(),
-        description="The names of the sites the user is authorized to handle",
+        description="The names of the sites the user is authorized to handle.",
         example=["heute"],
         required=False,
+        load_default=["all"],
     )
     contactgroups = fields.List(
         fields.String(
@@ -1407,7 +1408,8 @@ class UpdateUser(BaseSchema):
     )
     authorized_sites = fields.List(
         gui_fields.SiteField(),
-        description="The names of the sites the user is authorized to handle",
+        description="The names of the sites the user is authorized to handle. Specifying 'all' "
+        "will grant the user access to all sites.",
         example=["heute"],
         required=False,
     )

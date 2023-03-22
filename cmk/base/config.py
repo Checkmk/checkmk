@@ -1437,8 +1437,6 @@ factory_settings: dict[str, dict[str, Any]] = {}
 active_check_info: dict[str, dict[str, Any]] = {}
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
-_all_checks_loaded = False
-
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
 service_rule_groups = {"temperature"}
@@ -1475,8 +1473,6 @@ def max_cachefile_age(
 def load_all_agent_based_plugins(
     get_check_api_context: GetCheckApiContext,
 ) -> list[str]:
-    global _all_checks_loaded
-
     _initialize_data_structures()
 
     errors = agent_based_register.load_all_plugins()
@@ -1489,16 +1485,11 @@ def load_all_agent_based_plugins(
 
     errors.extend(load_checks(get_check_api_context, filelist))
 
-    _all_checks_loaded = True
-
     return errors
 
 
 def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
-    global _all_checks_loaded
-    _all_checks_loaded = False
-
     _check_contexts.clear()
     check_info.clear()
     legacy_check_plugin_names.clear()
@@ -1592,16 +1583,6 @@ def load_checks(  # pylint: disable=too-many-branches
     return _extract_agent_and_snmp_sections(
         validate_creation_kwargs=did_compile
     ) + _extract_check_plugins(validate_creation_kwargs=did_compile)
-
-
-def all_checks_loaded() -> bool:
-    """Whether or not all(!) checks have been loaded into the current process"""
-    return _all_checks_loaded
-
-
-def any_check_loaded() -> bool:
-    """Whether or not some checks have been loaded into the current process"""
-    return bool(_check_contexts)
 
 
 # Constructs a new check context dictionary. It contains the whole check API.

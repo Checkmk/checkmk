@@ -5,7 +5,7 @@
 
 import json
 from datetime import datetime
-from typing import Any, Callable, Iterable, Mapping, NamedTuple, Sequence
+from typing import Any, Callable, Generator, Iterable, Mapping, NamedTuple, Sequence
 
 from pydantic import BaseModel
 
@@ -219,7 +219,7 @@ def create_discover_by_metrics_function_single(
 
 def iter_resource_attributes(
     resource: Resource, include_keys: tuple[str] = ("location",)
-) -> Iterable[tuple[str, str | None]]:
+) -> Generator[tuple[str, str | None], None, None]:
     def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]
 

@@ -191,9 +191,9 @@ def check_redis_info_persistence(item, params, item_data):
             else:
                 infotext += "successful"
 
-            duration = persistence_data.get("%s_time_sec" % duration)
-            if duration is not None and duration != -1:
-                infotext += " (Duration: %s)" % get_age_human_readable(duration)
+            duration_val = persistence_data.get("%s_time_sec" % duration)
+            if duration_val is not None and duration_val != -1:
+                infotext += " (Duration: %s)" % get_age_human_readable(duration_val)
             yield state, infotext
 
     rdb_save_time = persistence_data.get("rdb_last_save_time")

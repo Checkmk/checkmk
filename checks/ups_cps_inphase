@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
-def parse_ups_cps_inphase(info):
+def parse_ups_cps_inphase(info) -> dict[Literal["1"], dict[str, float]]:
     parsed = {}
     for index, stat_name in enumerate(("voltage", "frequency")):
         try:
@@ -16,7 +18,7 @@ def parse_ups_cps_inphase(info):
         except ValueError:
             continue
 
-    return parsed and {"1": parsed}
+    return {"1": parsed} if parsed else {}
 
 
 def inventory_ups_cps_inphase(parsed):

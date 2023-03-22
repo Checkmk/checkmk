@@ -46,7 +46,7 @@ def check_netapp_api_cluster(item, params, info):
     data = {line[0]: line[1] for line in info if len(line) == 2}
 
     had_errors = False
-    state = data.get("state").lower()
+    state = data["state"].lower()
     if state == "error":
         had_errors = True
         yield 2, "Cluster state error"

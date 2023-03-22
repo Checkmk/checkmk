@@ -131,7 +131,7 @@ def parse_openbsd_sensors(info):
 
         try:
             value_converted = float(value)
-        except ValueError as error:
+        except ValueError:
             value_converted = value
 
         item_name = get_item_name(descr)

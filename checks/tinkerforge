@@ -112,8 +112,8 @@ def check_tinkerforge_humidity(item, params, parsed):
 
 
 def check_tinkerforge_motion(item, params, parsed):
-    def test_in_period(time, periods) -> bool:
-        time_mins = time[0] * 60 + time[1]
+    def test_in_period(time_tuple, periods) -> bool:
+        time_mins = time_tuple[0] * 60 + time_tuple[1]
         for per in periods:
             per_mins_low = per[0][0] * 60 + per[0][1]
             per_mins_high = per[1][0] * 60 + per[1][1]

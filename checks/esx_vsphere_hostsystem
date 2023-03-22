@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
+
 # .
 #   .--State---------------------------------------------------------------.
 #   |                       ____  _        _                               |
@@ -124,18 +126,24 @@ def inventory_esx_vsphere_hostsystem_multipath(parsed):
     return [(x, None) for x in esx_vsphere_multipath_convert(parsed)]
 
 
+@dataclass
+class StateInfo:
+    alert_state: int
+    count: int
+    info: str
+
+
 def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
     item,
     params,
     parsed,
 ):
     state_infos = {
-        # alert_state, count, info
-        "active": [0, 0, ""],
-        "dead": [2, 0, ""],
-        "disabled": [1, 0, ""],
-        "standby": [0, 0, ""],
-        "unknown": [2, 0, ""],
+        "active": StateInfo(0, 0, ""),
+        "dead": StateInfo(2, 0, ""),
+        "disabled": StateInfo(1, 0, ""),
+        "standby": StateInfo(0, 0, ""),
+        "unknown": StateInfo(2, 0, ""),
     }
 
     state = 0
@@ -151,15 +159,18 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
         state_item = state_infos.get(path_state)
         path_info = path_name
         if state_item:
-            state_item[1] += 1
-            state = max(state_item[0], state)
-            path_info += state_markers[state_item[0]]
+            state_item.count += 1
+            state = max(state_item.alert_state, state)
+            path_info += state_markers[state_item.alert_state]
         path_names.append(path_info)
 
     # Check warn, critical
     if not params or isinstance(params, list):
-        if state_infos["standby"][1] > 0 and state_infos["standby"][1] != state_infos["active"][1]:
-            state = max(state_infos["standby"][0], state)
+        if (
+            state_infos["standby"].count > 0
+            and state_infos["standby"].count != state_infos["active"].count
+        ):
+            state = max(state_infos["standby"].alert_state, state)
     else:
         state = 0
         for state_name, state_values in state_infos.items():
@@ -171,26 +182,27 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
                 else:
                     crit_min, warn_min, warn_max, crit_max = limits
 
-                count = state_values[1]
-                if count < crit_min:
+                if state_values.count < crit_min:
                     state = max(state, 2)
-                    state_values[2] = "(!!)(less than %d)" % crit_min
-                elif count > crit_max:
+                    state_values.info = "(!!)(less than %d)" % crit_min
+                elif state_values.count > crit_max:
                     state = max(state, 2)
-                    state_values[2] = "(!!)(more than %d)" % crit_max
-                elif count < warn_min:
+                    state_values.info = "(!!)(more than %d)" % crit_max
+                elif state_values.count < warn_min:
                     state = max(state, 1)
-                    state_values[2] = "(!)(less than %d)" % warn_min
-                elif count > warn_max:
+                    state_values.info = "(!)(less than %d)" % warn_min
+                elif state_values.count > warn_max:
                     state = max(state, 1)
-                    state_values[2] = "(!)(more than %d)" % warn_max
+                    state_values.info = "(!)(more than %d)" % warn_max
 
     # Output message
     message = ""
 
     element_text = []
     for element in "active", "dead", "disabled", "standby", "unknown":
-        element_text.append("%d %s%s" % (state_infos[element][1], element, state_infos[element][2]))
+        element_text.append(
+            "%d %s%s" % (state_infos[element].count, element, state_infos[element].info)
+        )
     message += ", ".join(element_text)
     message += "\nIncluded Paths:\n" + "\n".join(path_names)
 

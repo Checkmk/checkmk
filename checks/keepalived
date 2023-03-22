@@ -19,8 +19,8 @@ def hex2ip(hexstr):
     """
     hexstr = hexstr.replace(" ", "")
     blocks = ("".join(block) for block in zip(*[iter(hexstr)] * 2))
-    blocks = (int(block, 16) for block in blocks)
-    return ".".join(str(block) for block in blocks)
+    int_blocks = (int(block, 16) for block in blocks)
+    return ".".join(str(block) for block in int_blocks)
 
 
 def inventory_keepalived(info):

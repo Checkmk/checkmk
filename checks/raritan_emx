@@ -13,7 +13,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 
 def parse_raritan_emx(info):
-    raritan_map_type = {
+    raritan_type_map = {
         "0": ("temp", "Air"),
         "1": ("temp", "Water"),
         "2": ("fanspeed", ""),
@@ -22,7 +22,7 @@ def parse_raritan_emx(info):
     }
     parsed = {}
     for rack_id, rack_name, sensor_number, value_text, unit, sensor_state in info:
-        rack_type, rack_type_readable = raritan_map_type[sensor_number]
+        rack_type, rack_type_readable = raritan_type_map[sensor_number]
 
         extra_name = ""
         if rack_type_readable != "":

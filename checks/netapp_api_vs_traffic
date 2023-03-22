@@ -209,7 +209,7 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
                     f"{protoname} {perftext}: {format_func(rate)}",  # pylint: disable=not-callable
                     [(perfname, rate)],
                 )
-            except MKCounterWrapped as exc:
+            except MKCounterWrapped:
                 yield (0, f"{protoname} {perftext}: -")
 
 

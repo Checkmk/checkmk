@@ -25,10 +25,10 @@ def parse_aruba_cpu_util(info):
 # no get_parsed_item_data because the cpu utilization can be exactly 0 for some devices, which would
 # result in "UNKN - Item not found in monitoring data", because parsed[item] evaluates to False
 def check_aruba_cpu_util(item, params, parsed):
-    cpu_util = parsed.get(item)
-    if cpu_util is None:
+    measured_cpu_util = parsed.get(item)
+    if measured_cpu_util is None:
         return None
-    return check_cpu_util(cpu_util, params)
+    return check_cpu_util(measured_cpu_util, params)
 
 
 check_info["aruba_cpu_util"] = {

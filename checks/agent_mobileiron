@@ -29,8 +29,8 @@ def agent_mobileiron_arguments(
 
     for regex_platform_type in ("android-regex", "ios-regex", "other-regex"):
         if regex_platform_type in params:
-            for regex in params[regex_platform_type]:
-                args.append(f"--{regex_platform_type}={regex}")
+            for expression in params[regex_platform_type]:
+                args.append(f"--{regex_platform_type}={expression}")
 
     for key_field in params["key-fields"]:
         args.append("--key-fields")

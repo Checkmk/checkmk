@@ -35,9 +35,9 @@ def parse_esx_vsphere_datastores(info):
             else:
                 key, value = line
 
-            if key == "accessible":
+            if key == "accessible" and value is not None:
                 value = value.lower() == "true"
-            elif key in ["capacity", "freeSpace", "uncommitted"]:
+            elif key in ["capacity", "freeSpace", "uncommitted"] and value is not None:
                 value = int(value)
             store[key] = value
     return stores

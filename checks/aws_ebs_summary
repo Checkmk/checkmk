@@ -21,7 +21,9 @@ AWSEBSStorageTypes = {
 def parse_aws_summary(info):
     parsed = {}
     for row in parse_aws(info):
-        inst = parsed.setdefault(row["VolumeId"], row)
+        if (vid := row["VolumeId"]) not in parsed:
+            parsed[vid] = row
+        inst = parsed[vid]
         type_ = row["VolumeType"]
         inst.setdefault("type_readable", AWSEBSStorageTypes.get(type_, "unknown[%s]" % type_))
     return parsed

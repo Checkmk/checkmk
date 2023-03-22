@@ -11,12 +11,13 @@ factory_settings["ucs_c_rack_server_led_default_levels"] = {
 }
 
 
-@get_parsed_item_data
 def check_ucs_c_rack_server_led(
-    _item: str,
-    params: Dict,
-    led_dict: Dict,
-) -> Iterable[Tuple[int, str]]:
+    item: str,
+    params: dict,
+    parsed: dict[str, dict],
+) -> Iterable[tuple[int, str]]:
+    if (led_dict := parsed.get(item)) is None:
+        return
     for k, v in sorted(led_dict.items()):
         if k == "Color":
             state = params.get(v, 3)

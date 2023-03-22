@@ -39,10 +39,10 @@ def parse_inotify(info) -> Section:
             configured[line[2]] = "file" if line[1] == "file" else "folder"
             continue
 
-        time, mode, filepath, *_unused = line
+        time_stamp, mode, filepath, *_unused = line
 
-        stats[filepath][mode] = int(time)
-        stats[os.path.dirname(filepath)][mode] = int(time)
+        stats[filepath][mode] = int(time_stamp)
+        stats[os.path.dirname(filepath)][mode] = int(time_stamp)
 
     return Section(warnings, configured, stats)
 

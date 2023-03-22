@@ -1540,17 +1540,6 @@ def load_checks(  # pylint: disable=too-many-branches
         for check_plugin_name in new_checks:
             contexts[check_plugin_name] = check_context
 
-        # The default_levels_variable of check_info also declares use of a global
-        # variable. Register it here for this context.
-        for check_plugin_name in new_checks:
-            default_levels_varname = check_info[check_plugin_name].get("default_levels_variable")
-
-            if default_levels_varname:
-                # Add the initial configuration to the check context to have a consistent state
-                check_context[default_levels_varname] = factory_settings.get(
-                    default_levels_varname, {}
-                )
-
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
     return _extract_agent_and_snmp_sections(

@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import os
 from collections.abc import Iterator
+from typing import Final
 
 import pytest
 
@@ -83,13 +85,20 @@ def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
 
 
 def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None:
-    site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
+    flatten = itertools.chain.from_iterable
+
+    service: Final = "Check_MK"
+    assert service in flatten(site.live.query("GET services\nColumns: description\n"))
+
+    site.send_service_check_result("notify-test", service, 2, "FAKE CRIT")
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
-        "] SERVICE NOTIFICATION: check-mk-notify;notify-test;PING;CRITICAL;check-mk-notify;FAKE CRIT"
+        f"] SERVICE NOTIFICATION: check-mk-notify;notify-test;{service};CRITICAL;check-mk-notify;FAKE CRIT"
     )
-    test_log.check_logged("] SERVICE NOTIFICATION: hh;notify-test;PING;CRITICAL;mail;FAKE CRIT")
     test_log.check_logged(
-        "] SERVICE NOTIFICATION RESULT: hh;notify-test;PING;OK;mail;Spooled mail to local mail transmission agent;"
+        f"] SERVICE NOTIFICATION: hh;notify-test;{service};CRITICAL;mail;FAKE CRIT"
+    )
+    test_log.check_logged(
+        f"] SERVICE NOTIFICATION RESULT: hh;notify-test;{service};OK;mail;Spooled mail to local mail transmission agent;"
     )

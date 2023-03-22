@@ -101,7 +101,9 @@ def check_ucd_diskio(
             continue
 
         if isinstance(value, float):
-            disk_data[key] = get_rate(get_value_store(), item, time.time(), value)
+            disk_data[key] = get_rate(
+                get_value_store(), f"ucd_disk_io_{key}.{item}", time.time(), value
+            )
 
     yield Result(state=State.OK, summary=f"[{disk['disk_index']}]")
 

@@ -30,7 +30,6 @@ SectionFortinetInterface = Mapping[str, Interface]
 def parse_fortinet_firewall_network_interfaces(
     string_table: List[StringTable],
 ) -> SectionFortinetInterface:
-
     if not string_table:
         return {}
 
@@ -80,9 +79,7 @@ register.snmp_section(
 
 
 def inventory_fortinet_firewall(section: SectionFortinetInterface) -> InventoryResult:
-
     for interface in section.values():
-
         yield TableRow(
             path=["networking", "addresses"],
             key_columns={

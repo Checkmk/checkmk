@@ -29,7 +29,6 @@ ThreeParHostsSection = Mapping[str, ThreeParHost]
 
 
 def parse_threepar_hosts(string_table: StringTable) -> ThreeParHostsSection:
-
     return {
         host.get("name"): ThreeParHost(
             name=host.get("name"),
@@ -58,7 +57,6 @@ def check_threepar_hosts(
     item: str,
     section: ThreeParHostsSection,
 ) -> CheckResult:
-
     if (host := section.get(item)) is None:
         return
 

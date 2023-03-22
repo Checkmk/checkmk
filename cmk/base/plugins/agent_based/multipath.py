@@ -147,7 +147,6 @@ register.agent_section(
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
 def discover_multipath(params: Mapping[str, Any], section: multipath.Section) -> DiscoveryResult:
-
     for uuid, group in section.items():
         # take current number of paths as target value
         yield Service(

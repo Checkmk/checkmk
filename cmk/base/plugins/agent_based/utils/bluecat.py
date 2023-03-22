@@ -96,7 +96,6 @@ def cluster_check_bluecat_operational_state(
     params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
-
     results: Dict[str, Sequence[Union[IgnoreResults, Metric, Result]]] = {}
     ok_node_results = None
     overall_state = State.OK

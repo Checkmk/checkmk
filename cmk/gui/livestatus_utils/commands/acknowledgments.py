@@ -150,7 +150,6 @@ def acknowledge_servicegroup_problem(  # type: ignore[no-untyped-def]
     for entry in group_entries:
         site_id = entry["site"]
         for host_name, service_description in entry["members"]:
-
             send_command(
                 connection,
                 "ACKNOWLEDGE_SVC_PROBLEM",

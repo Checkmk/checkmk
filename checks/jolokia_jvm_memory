@@ -26,7 +26,6 @@ MB = 1024 * 1024
 def parse_jolokia_jvm_memory(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
-
         type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
         parsed_data.update(data)

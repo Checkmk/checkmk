@@ -118,7 +118,6 @@ from .utils.temperature import check_temperature, TempParamType
 def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
     string_table: List[StringTable],
 ) -> Dict:
-
     map_status = {
         "0": (0, "expected"),
         "1": (3, "undefined"),

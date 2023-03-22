@@ -153,7 +153,6 @@ def create_mkp(
     version_packaged: str,
     site_paths: Callable[[PackagePart], Path],
 ) -> bytes:
-
     manifest = Manifest(
         title=manifest.title,
         name=manifest.name,
@@ -245,7 +244,6 @@ def _extract_tgz(mkp: bytes, content: Iterable[tuple[str, Path, Iterable[Path]]]
 
 
 def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable[Path]) -> None:
-
     _logger.debug("  Extracting '%s':", name)
     for fn in filenames:
         _logger.debug("    %s", fn)

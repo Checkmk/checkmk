@@ -178,7 +178,6 @@ def inventory_emcvnx_storage_pools_tiering(parsed):
 
 @get_parsed_item_data
 def check_emcvnx_storage_pools_tiering(item, params, data):
-
     for key in ("FAST Cache", "Relocation Status", "Relocation Rate"):
         if key in data:
             yield 0, "%s: %s" % (key.capitalize(), data[key])
@@ -336,7 +335,6 @@ def _emcvnx_get_text_perf(
 
 @get_parsed_item_data
 def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
-
     yield 0, "State: %s" % data.get("Deduplication State", "unknown")
     yield 0, "Status: %s" % data.get("Deduplication Status", "unknown").split("(")[0]
     yield 0, "Rate: %s" % data.get("Deduplication Rate", "unknown")

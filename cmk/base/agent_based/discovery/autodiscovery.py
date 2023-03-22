@@ -271,7 +271,6 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     """
     post_discovery_services = {}
     for check_source, discovered_services_with_nodes in services.items():
-
         if check_source == "new":
             if mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH):
                 new = {
@@ -655,7 +654,6 @@ def _get_node_services(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
-
     service_result = analyse_discovered_services(
         config_cache,
         host_name,

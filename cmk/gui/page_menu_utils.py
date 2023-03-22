@@ -223,7 +223,6 @@ def _get_context_page_menu_topics(
     for visual_type, visual in sorted(
         dropdown_visuals, key=lambda i: (i[1]["sort_index"], i[1]["title"])
     ):
-
         if visual.get("topic") == "bi" and not is_part_of_aggregation(
             singlecontext_request_vars.get("host"), singlecontext_request_vars.get("service")
         ):

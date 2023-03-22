@@ -186,7 +186,6 @@ def vs_aws_limits(
     unit: str = "",
     title_default: str = _("Limit from AWS API"),
 ) -> Alternative:
-
     if vs_limit_cls is None:
         vs_limit = Integer(
             title=resource,
@@ -1442,7 +1441,6 @@ rulespec_registry.register(
 
 
 def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
-
     elements_extr: list[ValueSpec] = [
         Float(title=_("Warning at"), unit=unit),
         Float(title=_("Critical at"), unit=unit),

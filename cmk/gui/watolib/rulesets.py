@@ -436,7 +436,6 @@ class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(
         self, folder: CREFolder, only_varname: RulesetName | None = None
     ) -> None:
-
         if may_use_redis():
             self._load_rulesets_via_redis(folder, only_varname)
             return

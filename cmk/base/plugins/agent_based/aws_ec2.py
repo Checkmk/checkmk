@@ -312,7 +312,6 @@ def discover_aws_ec2_cpu_credits(section: Section) -> DiscoveryResult:
 
 
 def check_aws_ec2_cpu_credits(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     yield from check_aws_metrics(
         [
             AWSMetric(

@@ -5,7 +5,6 @@
 
 
 def check_ldap_arguments(params):
-
     _name, basedn, settings = params
     args = []
 

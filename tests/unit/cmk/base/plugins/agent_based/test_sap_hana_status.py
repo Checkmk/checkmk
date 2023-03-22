@@ -121,7 +121,6 @@ def test_sap_hana_status_discovery() -> None:
     ],
 )
 def test_sap_hana_status_check(check_type: str, results: Result, section: ParsedSection) -> None:
-
     yielded_results = list(sap_hana_status.check_sap_hana_status(f"{check_type} {ITEM}", section))
     assert yielded_results == [results]
 

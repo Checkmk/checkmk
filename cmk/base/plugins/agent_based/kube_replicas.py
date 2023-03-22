@@ -159,7 +159,6 @@ def _check_kube_replicas(
     now: float,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     if section_kube_replicas is None:
         return
 

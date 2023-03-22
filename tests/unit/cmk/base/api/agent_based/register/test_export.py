@@ -79,7 +79,6 @@ def fixture_empty_registry(monkeypatch: MonkeyPatch) -> Iterator[None]:
 
 
 def test_agent_section_side_effects(valid_plugin_module_name, empty_registry):
-
     section = SectionName("agent_section")
     ruleset = RuleSetName("a_great_agent_section_host_label_rule")
 
@@ -99,7 +98,6 @@ def test_agent_section_side_effects(valid_plugin_module_name, empty_registry):
 
 
 def test_snmp_section_side_effects(valid_plugin_module_name, empty_registry):
-
     section = SectionName("snmp_section")
     ruleset = RuleSetName("a_great_snmp_host_label_rule")
 
@@ -121,7 +119,6 @@ def test_snmp_section_side_effects(valid_plugin_module_name, empty_registry):
 
 
 def test_check_plugin_side_effects(valid_plugin_module_name, empty_registry):
-
     plugin = CheckPluginName("check_plugin")
     ruleset = RuleSetName("a_discovery_rulset")
 
@@ -144,7 +141,6 @@ def test_check_plugin_side_effects(valid_plugin_module_name, empty_registry):
 
 
 def test_inventory_plugin_side_effects(valid_plugin_module_name, empty_registry):
-
     plugin = InventoryPluginName("inventory_plugin")
 
     assert not is_registered_inventory_plugin(plugin)

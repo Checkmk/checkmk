@@ -576,7 +576,6 @@ class PostgresWin(PostgresBase):
 
         cur_rows_only = False
         for cnt, database in enumerate(databases):
-
             query = "%s \\c %s \\\\ %s" % (query, database, sql_cmd_lastvacuum)
             if cnt == 0:
                 query = "%s \\pset tuples_only on" % query
@@ -731,7 +730,6 @@ class PostgresWin(PostgresBase):
 
         cur_rows_only = False
         for idx, database in enumerate(databases):
-
             query = "%s \\c %s \\\\ %s" % (query, database, bloat_query)
             if idx == 0:
                 query = "%s \\pset tuples_only on" % query
@@ -910,7 +908,6 @@ class PostgresLinux(PostgresBase):
 
         cur_rows_only = False
         for cnt, database in enumerate(databases):
-
             query = "%s\n\\c %s\n%s" % (query, database, sql_cmd_lastvacuum)
             if cnt == 0:
                 query = "%s\n\\pset tuples_only on" % query
@@ -1060,7 +1057,6 @@ class PostgresLinux(PostgresBase):
 
         cur_rows_only = False
         for idx, database in enumerate(databases):
-
             query = "%s\n\\c %s\n%s" % (query, database, bloat_query)
             if idx == 0:
                 query = "%s\n\\pset tuples_only on" % query

@@ -381,7 +381,6 @@ class SingleRequest(typing.Protocol):
 
 @pytest.fixture(scope="function")
 def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleRequest:
-
     """Do a single authenticated request, thereby persisting the session to disk."""
 
     def caller(*, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:

@@ -52,7 +52,6 @@ def discover_cadvisor_diskstat(section: Section) -> DiscoveryResult:
 
 
 def check_cadvisor_diskstat(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
     if (disk := section.get(item)) is None:
         return
 

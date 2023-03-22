@@ -5,7 +5,6 @@
 
 
 def parse_atto_fibrebridge_sas(info):
-
     phy_operstates = {
         -1: "unknown",
         1: "online",

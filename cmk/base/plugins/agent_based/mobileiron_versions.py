@@ -38,7 +38,6 @@ def _try_calculation_age(date_string: str) -> int:
 
 
 def _check_android_patch_level(params: Params, patch_level: str) -> CheckResult:
-
     level_days = int(datetime.timedelta(seconds=params["patchlevel_age"]).total_seconds())
     try:
         age = _try_calculation_age(patch_level)
@@ -99,7 +98,6 @@ def _check_os_version(section: Section, user_regex: str) -> Result:
 
 
 def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
-
     yield Result(
         state=State.OK,
         summary=f"Client version: {section.client_version}",

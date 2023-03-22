@@ -109,7 +109,6 @@ def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> Non
 
 
 def parse_arguments(argv):
-
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )

@@ -104,7 +104,10 @@ def http_proxy_config_from_user_setting(
     if (
         proxy_type == "global"
         and (
-            global_proxy := http_proxies_global_settings.get(str(value), {},).get(
+            global_proxy := http_proxies_global_settings.get(
+                str(value),
+                {},
+            ).get(
                 "proxy_url",
                 None,
             )

@@ -1000,7 +1000,7 @@ class ModeBIRules(ABCBIMode):
                     table.cell(_("Nodes"), str(bi_rule.num_nodes()), css=["number"])
                     table.cell(_("Used by"))
                     have_this = set()
-                    for (pack_id, aggr_id, bi_aggregation) in aggregations_that_use_rule.get(
+                    for pack_id, aggr_id, bi_aggregation in aggregations_that_use_rule.get(
                         rule_id, []
                     ):
                         if aggr_id not in have_this:

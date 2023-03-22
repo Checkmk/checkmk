@@ -47,7 +47,6 @@ def running_in_ide() -> bool:
 
 
 class ColorizingFormatter(logging.Formatter):
-
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"

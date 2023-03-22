@@ -309,7 +309,6 @@ empty_result: RESULT = (
 
 
 def test_apply_state_change() -> None:
-
     for table_source, table_target in _get_combinations():
         result: RESULT = {}, set(), set(), set()
         _apply_state_change(

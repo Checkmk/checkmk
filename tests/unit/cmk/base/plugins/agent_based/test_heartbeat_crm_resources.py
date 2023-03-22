@@ -300,7 +300,6 @@ def test_check_heartbeat_crm_resources_started(section_2: Section) -> None:
 
 
 def test_discover_heartbeat_crm_resources_pacemaker_v2(section_pacemaker_v2: Section) -> None:
-
     discovered_services = list(discover_heartbeat_crm_resources({}, section_pacemaker_v2))
     expected_services = [Service(item="rhevfence"), Service(item="QPID"), Service(item="BRIDGE")]
 

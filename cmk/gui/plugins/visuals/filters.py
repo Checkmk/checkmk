@@ -1411,7 +1411,6 @@ class TagFilter(Filter):
         query_filter: query_filters.TagsQuery,
         is_show_more: bool = False,
     ):
-
         self.query_filter = query_filter
         super().__init__(
             ident=self.query_filter.ident,
@@ -1646,7 +1645,6 @@ class FilterCustomAttribute(Filter):
         return "%s_value" % ident
 
     def display(self, value: FilterHTTPVariables) -> None:
-
         html.dropdown(
             self.name_varname(self.ident),
             self._options(self._custom_attribute_choices()),
@@ -2007,6 +2005,7 @@ class _BIFrozenAggregations(Filter):
 
 
 filter_registry.register(_BIFrozenAggregations())
+
 
 # how is either "regex" or "exact"
 class BITextFilter(Filter):

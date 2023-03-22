@@ -219,10 +219,12 @@ class FakeTaggingClient:
 
 
 @pytest.fixture()
-def get_cloudfront_sections() -> Callable[
-    [object | None, OverallTags, bool],
-    tuple[CloudFrontSummary, CloudFront],
-]:
+def get_cloudfront_sections() -> (
+    Callable[
+        [object | None, OverallTags, bool],
+        tuple[CloudFrontSummary, CloudFront],
+    ]
+):
     def _create_cloudfront_sections(
         names: object | None, tags: OverallTags, assign_to_domain_host: bool
     ) -> tuple[CloudFrontSummary, CloudFront]:

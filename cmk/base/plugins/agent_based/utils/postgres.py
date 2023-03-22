@@ -16,7 +16,6 @@ def parse_dbs(string_table: StringTable) -> Section:
     lines = iter(string_table)
 
     for name, *content in lines:
-
         if name.startswith("[[[") and name.endswith("]]]"):
             inst_name = "%s/" % name[3:-3].upper()
             continue

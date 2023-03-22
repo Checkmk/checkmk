@@ -153,7 +153,6 @@ def test_get_ouput_aggregator(output_value) -> None:  # type: ignore[no-untyped-
 def test_output_aggregator_single_file_servicename(  # type: ignore[no-untyped-def]
     lazyfile, group_name, expected
 ) -> None:
-
     actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
     assert expected == list(actual)[0]
 

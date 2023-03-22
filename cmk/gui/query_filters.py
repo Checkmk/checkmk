@@ -382,7 +382,6 @@ def version_in_range(
 
 class TimeQuery(NumberRangeQuery):
     def __init__(self, *, ident: str, column: str | None = None) -> None:
-
         super().__init__(ident=ident, column=column)
         self.request_vars.extend([var + "_range" for var in self.request_vars])
 
@@ -456,7 +455,6 @@ class TextQuery(Query):
         request_var: str | None = None,
         column: str | None = None,
     ):
-
         request_vars = [request_var or ident]
         if negateable:
             request_vars.append("neg_" + (request_var or ident))

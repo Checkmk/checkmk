@@ -143,7 +143,6 @@ def check_mssql_mirroring(
     params: Mapping[str, int],  # the int is actually a Checkmk state
     section: MirroringSection,
 ) -> CheckResult:
-
     mirroring_config = section.get(item)
     if not mirroring_config:
         return
@@ -183,7 +182,6 @@ def cluster_check_mssql_mirroring(
     params: Mapping[str, int],  # the int is actually a Checkmk state
     section: Mapping[str, Optional[MirroringSection]],
 ) -> CheckResult:
-
     node_results = {
         node_name: list(check_mssql_mirroring(item, params, node_section))
         for node_name, node_section in section.items()

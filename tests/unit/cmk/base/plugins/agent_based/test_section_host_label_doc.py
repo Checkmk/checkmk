@@ -68,7 +68,6 @@ def test_all_sections_have_host_labels_documented(
     for section in (
         s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"
     ):
-
         if str(section.name) in KNOWN_MISSING_DOCSTRING:
             assert not section.host_label_function.__doc__
             continue

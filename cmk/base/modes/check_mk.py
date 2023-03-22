@@ -403,7 +403,6 @@ def _get_check_plugin_title(
     check_plugin_name: str,
     all_man_pages: dict[str, str],
 ) -> str:
-
     man_filename = all_man_pages.get(check_plugin_name)
     if man_filename is None:
         return "(no man page present)"

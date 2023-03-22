@@ -54,7 +54,6 @@ class MockSMBConnection:
         is_direct_tcp: bool = False,
         disallowed_paths: list[str] | None = None,
     ) -> None:
-
         self.filesystem = filesystem
         self.shares = shares
         self.is_direct_tcp = is_direct_tcp
@@ -65,7 +64,6 @@ class MockSMBConnection:
         return True
 
     def listPath(self, shared_folder: str, path: str) -> list[SharedFile]:
-
         if path in self.disallowed_paths:
             raise Exception(
                 f"The agent tries to descend into {path} but is not allowed to! "
@@ -73,7 +71,6 @@ class MockSMBConnection:
             )
 
         if self.filesystem is None or shared_folder not in self.filesystem:
-
             return []
         result = self.filesystem[shared_folder].get(path)
         assert result is not None

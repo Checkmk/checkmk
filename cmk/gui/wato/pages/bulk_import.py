@@ -435,7 +435,6 @@ class ModeBulkImport(WatoMode):
         with table_element(
             sortable=False, searchable=False, omit_headers=not self._has_title_line
         ) as table:
-
             # Render attribute selection fields
             table.row()
             for col_num in range(num_columns):

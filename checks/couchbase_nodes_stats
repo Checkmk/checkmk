@@ -37,7 +37,6 @@ factory_settings["memory_default_levels"] = MEMORY_DEFAULT_LEVELS
 
 @get_parsed_item_data
 def check_couchbase_nodes_mem(_item, params, data):
-
     try:
         mem_total = data["mem_total"]
         mem_free = data["mem_free"]

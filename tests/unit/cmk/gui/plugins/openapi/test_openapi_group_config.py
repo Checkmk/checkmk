@@ -22,7 +22,6 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 def test_required_alias_field_create(
     base: str, group_type: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
-
     group = {"name": "RandleMcMurphy", "customer": "provider"}
 
     aut_user_auth_wsgi_app.call_method(
@@ -43,7 +42,6 @@ def test_openapi_groups(
     group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-
     aut_user_auth_wsgi_app.call_method(
         "post",
         base + f"/domain-types/{group_type}_group_config/collections/all",
@@ -119,7 +117,6 @@ def test_openapi_bulk_groups(
     group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-
     groups = [
         {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
         for _i in range(2)
@@ -223,7 +220,6 @@ def test_openapi_groups_with_customer(
     group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-
     name = _random_string(10)
     alias = _random_string(10)
 

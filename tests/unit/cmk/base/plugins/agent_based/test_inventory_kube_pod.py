@@ -157,7 +157,6 @@ def test_inventory_kube_pod(
     section_init_container_specs: ContainerSpecs,
     expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
-
     assert expected_check_result == list(
         inventory_kube_pod(
             section_info,
@@ -272,7 +271,6 @@ def test_container_to_table(
     container_statuses: PodContainers | None,
     expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
-
     assert expected_check_result == list(
         _containers_to_table(
             container_specs,

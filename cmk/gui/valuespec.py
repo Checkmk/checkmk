@@ -2704,7 +2704,6 @@ class DropdownChoice(ValueSpec[T | None]):
         validate: ValueSpecValidateFunc[T | None] | None = None,
         default: ValueSpecDefault[T] | None = None,  # CMK-12228
     ):
-
         super().__init__(
             title=title,
             help=help,
@@ -3938,7 +3937,6 @@ class DualListChoice(ListChoice):
             ("unselected", unselected, select_func),
             ("selected", selected, unselect_func),
         ]:
-
             onchange_func = select_func if self._instant_add else ""
             if self._enlarge_active:
                 onchange_func = "cmk.valuespecs.duallist_enlarge({}, {});".format(

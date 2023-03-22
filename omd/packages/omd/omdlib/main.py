@@ -1205,7 +1205,6 @@ def update_file(  # pylint: disable=too-many-branches
     # and the current permissions are not as the should be
     what = None
     if new_type != "link" and user_type == new_type and user_perm != new_perm:
-
         # Permissions have changed, but file type not
         if old_type == new_type and user_perm != old_perm and old_perm != new_perm:
             if user_confirms(
@@ -1813,7 +1812,6 @@ def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | Non
             encoding="utf-8",
             env=env,
         ) as proc:
-
             if proc.stdout is None:
                 raise Exception("stdout needs to be set")
 
@@ -2234,7 +2232,6 @@ def init_site(
 def finalize_site(
     version_info: VersionInfo, site: SiteContext, command_type: CommandType, apache_reload: bool
 ) -> None:
-
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
     # - We cannot use seteuid() here, since the id command call will then still
@@ -2299,7 +2296,6 @@ def main_rm(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     # omd rm is called as root but the init scripts need to be called as
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
@@ -2360,7 +2356,6 @@ def main_disable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     if site.is_disabled():
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
@@ -2378,7 +2373,6 @@ def main_enable(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     if not site.is_disabled():
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
@@ -2421,7 +2415,6 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     conflict_mode = _get_conflict_mode(options)
     action = "rename" if command_type is CommandType.move else "copy"
 
@@ -2530,7 +2523,6 @@ def main_diff(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     from_version = site.version
     if from_version is None:
         bail_out("Failed to determine site version")
@@ -2699,7 +2691,6 @@ def main_update(  # pylint: disable=too-many-branches
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     conflict_mode = _get_conflict_mode(options)
 
     if not site.is_stopped():
@@ -3011,7 +3002,6 @@ def main_umount(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     only_version = options.get("version")
 
     # if no site is selected, all sites are affected
@@ -3052,7 +3042,6 @@ def main_init_action(  # pylint: disable=too-many-branches
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-
     if site.is_site_context():
         exit_status = init_action(version_info, site, global_opts, command, args, options)
 
@@ -4424,7 +4413,6 @@ def _opt_arg(main_args: Arguments, opt: str) -> tuple[str, Arguments]:
 def _parse_command_options(  # pylint: disable=too-many-branches
     args: Arguments, options: list[Option]
 ) -> tuple[Arguments, CommandOptions]:
-
     # Give a short overview over the command specific options
     # when the user specifies --help:
     if len(args) and args[0] in ["-h", "--help"]:

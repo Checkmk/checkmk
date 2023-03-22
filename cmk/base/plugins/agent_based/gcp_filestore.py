@@ -56,7 +56,6 @@ def check(
     section_gcp_service_filestore: gcp.Section | None,
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
-
     if section_gcp_service_filestore is None or not gcp.item_in_section(
         item, ASSET_TYPE, section_gcp_assets
     ):

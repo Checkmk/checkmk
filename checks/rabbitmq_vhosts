@@ -92,7 +92,6 @@ def check_rabbitmq_vhosts(item, params, parsed):
         ("message_deliver", "Delivered messages", int, "msg_deliver"),
         ("message_deliver_rate", "Rate", float, "msg_deliver_rate"),
     ]:
-
         msg_value = parsed.get(msg_key)
         if msg_value is None:
             continue

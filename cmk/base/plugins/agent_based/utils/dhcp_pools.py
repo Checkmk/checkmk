@@ -18,7 +18,6 @@ def check_dhcp_pools_levels(
     size: float,
     params: Mapping[str, Any],
 ) -> CheckResult:
-
     for category, value in [("free", free), ("used", used), ("pending", pending)]:
         if value is None:
             continue

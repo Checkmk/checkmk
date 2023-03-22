@@ -1735,7 +1735,14 @@ def test_check_multiple_interfaces_duplicate_alias(
         )
     )
     ifaces = _create_interfaces_with_counters(4000000, alias=alias)
-    assert list(interfaces.check_multiple_interfaces(item, params, ifaces, timestamp=5,)) == [
+    assert list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            ifaces,
+            timestamp=5,
+        )
+    ) == [
         Result(
             state=State.OK,
             summary=f"[{alias}/{ifaces[int(index) - 1].attributes.descr}]",
@@ -1887,7 +1894,14 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     ifaces = _create_interfaces_with_counters(4000000)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
-    assert list(interfaces.check_multiple_interfaces("group", params, ifaces, timestamp=5,)) == [
+    assert list(
+        interfaces.check_multiple_interfaces(
+            "group",
+            params,
+            ifaces,
+            timestamp=5,
+        )
+    ) == [
         Result(state=State.OK, summary="Interface group"),
         Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
         Result(state=State.OK, summary="Members: [4 (down), 6 (up)]"),

@@ -110,7 +110,6 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
     # PDB is <SID>.<PDB>
     # ignore more perf-data for PDBs except CDBROOT!
     if "." in item and ".CDB$ROOT" not in item:
-
         # PDB does not support more performance data at the moment...
         infotexts.append("limited performance data for PDBSEED and non CDBROOT")
         yield Result(state=State.OK, summary=", ".join(infotexts))

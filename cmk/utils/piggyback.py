@@ -248,7 +248,6 @@ def _get_piggyback_processed_file_info(
     piggyback_file_path: Path,
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
-
     try:
         file_age = cmk.utils.cachefile_age(piggyback_file_path)
     except FileNotFoundError:

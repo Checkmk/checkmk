@@ -467,7 +467,6 @@ def test_check_group_timer() -> None:
 
 
 def test_check_group_order_matters() -> None:
-
     params = kube_pod_status.Params(
         groups=[
             ("no_levels", [".*"]),

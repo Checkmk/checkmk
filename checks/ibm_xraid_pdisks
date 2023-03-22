@@ -25,7 +25,6 @@ def inventory_ibm_xraid_pdisks(info):
 
 
 def check_ibm_xraid_pdisks(item, _no_params, info):
-
     data = parse_ibm_xraid_pdisks(info)
     for disk_path, disk_entry in data.items():
         if disk_path == item:

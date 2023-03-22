@@ -275,7 +275,6 @@ def test_openapi_list_rules(
     rule_client: RulesTestClient,
     new_rule: tuple[TestResponse, dict[str, typing.Any]],
 ) -> None:
-
     _, values = new_rule
     rule_set = values["ruleset"]
     resp = rule_client.list_rules(ruleset=rule_set)
@@ -350,7 +349,6 @@ def test_openapi_create_rule_order(
     rule_client: RulesTestClient,
     test_folders: tuple[str, str],
 ) -> None:
-
     folder_name_one, folder_name_two = test_folders
     rule1, _ = _create_rule(rule_client, f"/{folder_name_one}", comment="rule1")
     rule1_id = rule1.json["id"]

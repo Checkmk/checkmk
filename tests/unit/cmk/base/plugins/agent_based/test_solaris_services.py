@@ -34,7 +34,16 @@ def test_discovery_default_nothing(section: Section) -> None:
 
 
 def test_discovery_match_description(section: Section) -> None:
-    assert list(discover_solaris_services([{"description": ["~Jan_?"],}], section)) == [
+    assert list(
+        discover_solaris_services(
+            [
+                {
+                    "description": ["~Jan_?"],
+                }
+            ],
+            section,
+        )
+    ) == [
         Service(item="svc1:/cat1/name1:inst1"),
         Service(item="svc2:/cat2/name2:inst2"),
     ]

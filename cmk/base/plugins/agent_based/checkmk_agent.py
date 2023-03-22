@@ -56,7 +56,6 @@ def _check_cmk_agent_installation(
     agent_info: CheckmkSection,
     controller_info: Optional[ControllerSection],
 ) -> CheckResult:
-
     yield from _check_version(
         agent_info.get("version"),
         __version__,
@@ -299,7 +298,6 @@ def _check_cmk_agent_update(
     section_check_mk: CheckmkSection | None,
     section_cmk_update_agent_status: CMKAgentUpdateSection | None,
 ) -> CheckResult:
-
     if (
         section := (
             section_cmk_update_agent_status

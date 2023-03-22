@@ -82,7 +82,6 @@ class BISearcher(ABCBISearcher):
         hosts: list[BIHostData],
         pattern: str,
     ) -> tuple[list[BIHostData], dict]:
-
         if pattern == "(.*)":
             return hosts, self._host_match_groups(hosts)
 

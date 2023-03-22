@@ -117,7 +117,6 @@ def test_create_agent_section_plugin() -> None:
 
 
 def test_create_snmp_section_plugin() -> None:
-
     trees: list[SNMPTree] = [
         SNMPTree(
             base=".1.2.3",
@@ -155,7 +154,6 @@ def test_create_snmp_section_plugin() -> None:
 
 
 def test_create_snmp_section_plugin_single_tree() -> None:
-
     single_tree = SNMPTree(base=".1.2.3", oids=[OIDEnd(), "2.3"])
 
     plugin = section_plugins.create_snmp_section_plugin(

@@ -43,7 +43,6 @@ def discovery_prism_protection_domains(section: Section) -> DiscoveryResult:
 def check_prism_protection_domains(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-
     data = section.get(item)
     if not data:
         return

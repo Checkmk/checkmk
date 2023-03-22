@@ -291,7 +291,6 @@ class RuleMatcher:
     def event_rule_determine_match_groups(
         self, rule: Rule, event: Event, match_groups: MatchGroups
     ) -> MatchResult:
-
         match_group_functions = [
             self.event_rule_matches_syslog_application,
             self.event_rule_matches_message,

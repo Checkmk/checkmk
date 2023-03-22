@@ -21,7 +21,6 @@ def parse_liebert_without_unit(
     string_table: list[StringTable],
     type_func: Callable[[str], TParsed],
 ) -> dict[str, TParsed]:
-
     parsed = {}
     used_names = set()
 
@@ -54,7 +53,6 @@ def parse_liebert(
     string_table: list[StringTable],
     type_func: Callable[[str], TParsed],
 ) -> dict[str, tuple[TParsed, str]]:
-
     parsed = {}
     used_names = set()
 

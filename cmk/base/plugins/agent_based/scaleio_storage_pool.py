@@ -60,7 +60,6 @@ def _create_filesystem_storage_pool(
     free_capacity: str,
     failed_capacity: str,
 ) -> FilesystemStoragePool | StorageConversionError:
-
     if unit not in KNOWN_CONVERSION_VALUES_INTO_MB:
         return StorageConversionError(unit=unit)
 
@@ -78,7 +77,6 @@ def _create_filesystem_storage_pool(
 
 
 def parse_scaleio_storage_pool(string_table: StringTable) -> ScaleioStoragePoolSection:
-
     section: MutableMapping[str, StoragePool] = {}
     for pool_id, pool in parse_scaleio(string_table, "STORAGE_POOL").items():
         pool_capacity = pool["MAX_CAPACITY_IN_KB"]
@@ -171,7 +169,6 @@ def _check_scaleio_storage_pool_disks(
     disk_stats: DiskReadWrite | StorageConversionError,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     yield Result(state=State.OK, summary=f"Name: {pool_name}")
 
     if isinstance(disk_stats, StorageConversionError):

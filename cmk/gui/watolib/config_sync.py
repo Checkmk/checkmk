@@ -47,7 +47,6 @@ class ReplicationPath(
     )
 ):
     def __new__(cls, ty: str, ident: str, site_path: str, excludes: list[str]) -> "ReplicationPath":
-
         if site_path.startswith("/"):
             raise Exception("ReplicationPath.path must be a path relative to the site root")
         cleaned_path = site_path.rstrip("/")
@@ -490,7 +489,6 @@ def _extract(tar: tarfile.TarFile, base_dir: Path, components: list[ReplicationP
 
             # Extract without use of temporary files
             with tarfile.open(fileobj=subtarstream) as subtar:
-
                 # Remove old stuff
                 if os.path.exists(component_path):
                     if component.ident == "usersettings":
@@ -629,7 +627,6 @@ def _update_check_mk(target_dir, tar_file):
 
 
 def _update_contacts_dict(master: dict, site: dict) -> dict:
-
     site_contacts = {}
 
     for user_id, settings in master.items():

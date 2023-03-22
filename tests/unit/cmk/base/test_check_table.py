@@ -35,7 +35,6 @@ def _use_fix_register(fix_register):
 
 
 def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
-
     node = HostName("node")
     cluster = HostName("cluster")
 

@@ -15,7 +15,6 @@ def _service(plugin_name: str, item: str) -> AutocheckEntry:
 
 
 def test_discover_keep_vanished_and_remember() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -30,7 +29,6 @@ def test_discover_keep_vanished_and_remember() -> None:
 
 
 def test_discover_drop_vanished_but_remember() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -45,7 +43,6 @@ def test_discover_drop_vanished_but_remember() -> None:
 
 
 def test_discover_forget_everything_but_keep_it() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -60,7 +57,6 @@ def test_discover_forget_everything_but_keep_it() -> None:
 
 
 def test_discover_forget_everything_and_clear() -> None:  # a.k.a. "tabula rasa"
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -76,7 +72,6 @@ def test_discover_forget_everything_and_clear() -> None:  # a.k.a. "tabula rasa"
 
 
 def test_discover_run_plugin_names() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1"), _service("B", "1")],
         discovered_services=[_service("B", "2")],

@@ -27,7 +27,6 @@ def parse_hpux_if(
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     nics = []
     for line in string_table:
-
         if "***" in line:
             iface = interfaces.InterfaceWithCounters(
                 interfaces.Attributes(

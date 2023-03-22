@@ -122,7 +122,6 @@ def _do_create_snapshot(data: SnapshotData) -> None:
 
         # Initialize the snapshot tar file and populate with initial information
         with tarfile.open(filename_work, "w") as tar_in_progress:
-
             for key in ("comment", "created_by", "type"):
                 tarinfo = get_basic_tarinfo(key)
                 # key is basically Literal["comment", "created_by", "type"] but

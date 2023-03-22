@@ -83,7 +83,6 @@ def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type: ignor
     elif abs(uptime_struct["from_boot_time"] - uptime_struct["snaptime"]) < 600:
         uptime_struct["uptime_sec"] = uptime_struct["from_boot_time"]
     else:
-
         uptimes_summary = "Uptime command: %s; Kernel time since boot: %s; Snaptime: %s" % tuple(
             datetime.timedelta(seconds=x)
             for x in (

@@ -53,6 +53,5 @@ from tests.testlib import SpecialAgent
 def test_agent_vnx_quotas_arguments_password_store(
     params: Mapping[str, Any], expected_args: Sequence[Any]
 ) -> None:
-
     agent = SpecialAgent("agent_vnx_quotas")
     assert agent.argument_func(params, "testhost", "1.2.3.4") == expected_args

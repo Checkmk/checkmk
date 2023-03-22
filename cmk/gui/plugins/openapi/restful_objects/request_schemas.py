@@ -916,7 +916,6 @@ class Username(fields.String):
         )
 
     def _validate(self, value):
-
         super()._validate(value)
 
         try:

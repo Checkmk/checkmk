@@ -98,7 +98,6 @@ class HostsStorageFieldsGenerator:
         folder_host_service_group_rules: tuple[set[str], set[ContactgroupName], bool],
         folder_path: str,
     ) -> ContactGroupsField:
-
         contact_group_fields = ContactGroupsField(
             hosts=[], services=[], folder_hosts=[], folder_services=[]
         )

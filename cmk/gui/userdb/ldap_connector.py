@@ -169,7 +169,8 @@ def _get_ad_locator():
     class FasterDetectLocator(activedirectory.Locator):
         def _detect_site(self, domain):
             """Detect our site using the netlogon protocol.
-            This modified function only changes the number of parallel queried servers from 3 to 60"""
+            This modified function only changes the number of parallel queried servers from 3 to 60
+            """
             self.m_logger.debug("detecting site")
             query = "_ldap._tcp.%s" % domain.lower()
             answer = self._dns_query(query, "SRV")

@@ -24,7 +24,6 @@ factory_settings["gude_relayport_default_levels"] = {
 def parse_gude_relayport(info):
     parsed = {}
     for portname, portstate, active_power_str, current_str, volt_str, freq_str, appower_str in info:
-
         parsed.setdefault(
             portname,
             {

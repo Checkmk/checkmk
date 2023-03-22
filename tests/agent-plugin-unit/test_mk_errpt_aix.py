@@ -106,7 +106,6 @@ def test_mk_errpt_aix(  # type: ignore[no-untyped-def]
     env = _get_env(tmp_dir)
 
     for state, expected in zip(last_reported, expectations):
-
         prepare_state(tmp_dir, state_file_name, state)
 
         completed_process = subprocess.run(PLUGIN, env=env, stdout=subprocess.STDOUT, check=False)

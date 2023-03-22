@@ -136,7 +136,6 @@ def test_show_user_errors() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_HTMLWriter() -> None:
     with output_funnel.plugged():
-
         with output_funnel.plugged():
             html.open_div()
             text = output_funnel.drain()

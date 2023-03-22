@@ -189,7 +189,8 @@ class BackgroundProcessInterface:
 
     def send_exception(self, info: str) -> None:
         """Exceptions are written to stdout because of log output clarity
-        as well as into a distinct file, to separate this info from the rest of the context information"""
+        as well as into a distinct file, to separate this info from the rest of the context information
+        """
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
         encoded_info = "%s\n" % info
         sys.stdout.write(encoded_info)

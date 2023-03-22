@@ -164,7 +164,6 @@ def test_openapi_get_graph_metric_without_site(
         "GET services\nColumns: rrddata:load1:load1.average:1.0:2.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
-
         resp = api_client.get_graph(
             host_name="heute",
             service_description="CPU load",

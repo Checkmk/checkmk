@@ -336,7 +336,6 @@ def test_change_existing_event_state_by_id(
     object_base_url: str,
     change_state_or_update_and_acknowledge: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1"
@@ -357,7 +356,6 @@ def test_change_non_existing_event_state_by_id(
     object_base_url: str,
     change_state_or_update_and_acknowledge: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 7"
@@ -375,7 +373,6 @@ def test_change_existing_event_states_query_filter(
     mock_livestatus: MockLiveStatusConnection,
     change_multiple_event_states: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host"
@@ -400,7 +397,6 @@ def test_change_existing_event_states_params_filter(
     mock_livestatus: MockLiveStatusConnection,
     change_multiple_event_states: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_phase = open\nAnd: 2\nFilter: event_host = heute\nAnd: 2"
@@ -445,7 +441,6 @@ def test_update_and_acknowledge_by_id(
     object_base_url: str,
     change_state_or_update_and_acknowledge: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 1"
@@ -471,7 +466,6 @@ def test_update_and_acknowledge_withdrawal_by_id(
     object_base_url: str,
     change_state_or_update_and_acknowledge: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 4"
@@ -498,7 +492,6 @@ def test_update_and_acknowledge_non_existing_event_by_id(
     object_base_url: str,
     change_state_or_update_and_acknowledge: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_id = 7"
@@ -521,7 +514,6 @@ def test_update_and_acknowledge_query_filter(
     mock_livestatus: MockLiveStatusConnection,
     update_and_acknowledge_multiple_events: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_host = test_host\nFilter: event_phase = open\nAnd: 2"
@@ -547,7 +539,6 @@ def test_update_and_acknowledge_params_filter(
     mock_livestatus: MockLiveStatusConnection,
     update_and_acknowledge_multiple_events: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_state = 1\nFilter: event_application = App5\nAnd: 2\nFilter: event_phase = open\nAnd: 2\nFilter: event_host = heute\nAnd: 2"
@@ -577,7 +568,6 @@ def test_update_and_acknowledge_all_filter(
     mock_livestatus: MockLiveStatusConnection,
     update_and_acknowledge_multiple_events: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = open"
@@ -602,7 +592,6 @@ def test_update_and_acknowledge_withdrawal_params_filter(
     mock_livestatus: MockLiveStatusConnection,
     update_and_acknowledge_multiple_events: Callable,
 ) -> None:
-
     add_event_console_events_to_live_status_table(mock_livestatus)
     mock_livestatus.expect_query(
         "GET eventconsoleevents\nColumns: event_id event_state event_sl event_host event_rule_id event_application event_comment event_contact event_ipaddress event_facility event_priority event_last event_first event_count event_phase event_text\nFilter: event_phase = ack"
@@ -625,7 +614,6 @@ def test_update_and_acknowledge_withdrawal_params_filter(
 def test_update_and_acknowledge_no_filters(
     update_and_acknowledge_multiple_events: Callable,
 ) -> None:
-
     update_and_acknowledge_multiple_events(
         params=json.dumps(
             {

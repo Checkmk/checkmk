@@ -36,7 +36,6 @@ FjdaryeDeviceStatus = NewType("FjdaryeDeviceStatus", str)
 
 
 def parse_fjdarye_sum(string_table: List[StringTable]) -> Optional[FjdaryeDeviceStatus]:
-
     for row in string_table:
         for status in row:
             if len(status) == 1:

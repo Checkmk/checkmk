@@ -47,13 +47,17 @@ def test_check_apc_powerswitch_item_not_found() -> None:
 
 
 def test_check_apc_powerswitch() -> None:
-    assert list(check_apc_powerswitch(item="1", section=parse_apc_powerswitch(STRING_TABLE),)) == [
+    assert list(
+        check_apc_powerswitch(
+            item="1",
+            section=parse_apc_powerswitch(STRING_TABLE),
+        )
+    ) == [
         Result(state=State.OK, summary="Port Rubrik rbot2 1-4 has status on"),
     ]
 
 
 def test_check_apc_powerswitch_empty_string_state() -> None:
-
     assert list(
         check_apc_powerswitch(
             item="24",
@@ -63,7 +67,6 @@ def test_check_apc_powerswitch_empty_string_state() -> None:
 
 
 def test_check_apc_powerswitch_unknown_state() -> None:
-
     assert list(check_apc_powerswitch(item="30", section=parse_apc_powerswitch(STRING_TABLE))) == [
         Result(
             state=State.UNKNOWN,

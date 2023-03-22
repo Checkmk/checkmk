@@ -192,7 +192,6 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     check_plugin_name = CheckPluginName(maincheckify(check.name))
 
     for item, params, results_expected_raw in test_cases:
-
         print(f"Dataset item {item!r} in check {check.name!r}")
         immu.register(params, "params")
 
@@ -229,7 +228,6 @@ def run(check_info, dataset):
     immu = Immutables()
 
     with optional_freeze_time(dataset):
-
         parsed = run_test_on_parse(dataset, immu)
 
         # LOOP OVER ALL (SUB)CHECKS
@@ -246,7 +244,6 @@ def run(check_info, dataset):
             with current_host("non-existent-testhost"), mock_item_state(mock_is), MockHostExtraConf(
                 check, mock_hec
             ), MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
-
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu)

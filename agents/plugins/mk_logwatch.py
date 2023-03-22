@@ -742,7 +742,6 @@ def process_logfile(section, filestate, debug):  # pylint: disable=too-many-bran
 
             level = DEFAULT_LOG_LEVEL
             for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
-
                 matches = pattern.search(line[:-1])
                 if matches:
                     level = lev
@@ -1072,7 +1071,6 @@ def parse_sections(logfiles_config):
     non_matching_patterns = []
 
     for cfg in logfiles_config:
-
         # First read all the options like 'maxlines=100' or 'maxtime=10'
         opt = Options()
         for item in cfg.files:

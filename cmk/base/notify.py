@@ -342,7 +342,6 @@ def locally_deliver_raw_context(
     raw_context: EventContext, analyse: bool = False
 ) -> NotifyAnalysisInfo | None:
     try:
-
         logger.debug("Preparing rule based notifications")
         return notify_rulebased(raw_context, analyse=analyse)
 
@@ -1098,7 +1097,6 @@ def rbn_match_event_console(rule: EventRule, context: EventContext) -> str | Non
             return "Notification has not been created by the Event Console."
 
         if match_ec is not False:
-
             # Match Event Console rule ID
             if (
                 "match_rule_id" in match_ec

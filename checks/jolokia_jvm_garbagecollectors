@@ -47,7 +47,6 @@ def transform_units(params):
 
 @get_parsed_item_data
 def check_jolokia_jvm_garbagecollectors(item, params, data):
-
     now = time.time()
     try:
         count = data["CollectionCount"]

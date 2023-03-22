@@ -120,7 +120,6 @@ def cluster_check_tsm_stagingspools(
     params: Mapping[str, Any],
     section: Mapping[str, Optional[SECTION]],
 ) -> type_defs.CheckResult:
-
     datasets, nodeinfos = [], []
     for node, data in section.items():
         if data is not None and item in data:

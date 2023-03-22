@@ -343,7 +343,6 @@ def register_configvar(
     allow_reset=True,
     in_global_settings=True,
 ):
-
     if domain is None:
         domain = config_domain_registry["check_mk"]
 

@@ -23,7 +23,8 @@ class AutomationCommand(abc.ABC):
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
-        in this method. The request produced by this function is 1:1 handed over to the execute() method."""
+        in this method. The request produced by this function is 1:1 handed over to the execute() method.
+        """
         raise NotImplementedError()
 
     @abc.abstractmethod

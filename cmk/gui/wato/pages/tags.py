@@ -369,7 +369,6 @@ class ModeTags(ABCTagMode):
             searchable=False,
             sortable=False,
         ) as table:
-
             for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
@@ -423,7 +422,6 @@ class ModeTags(ABCTagMode):
             empty_text=_("You haven't defined any auxiliary tags."),
             searchable=False,
         ) as table:
-
             for aux_tag in self._effective_config.aux_tag_list.get_tags():
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])

@@ -197,7 +197,6 @@ def check_ups_battery_state(
     section_ups_on_battery: Optional[Battery],
     section_ups_seconds_on_battery: Optional[Battery],
 ) -> CheckResult:
-
     battery = _assemble_battery(
         section_ups_battery_warnings,
         section_ups_on_battery,

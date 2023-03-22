@@ -38,7 +38,6 @@ Section = Mapping[str, Disk]
 
 
 def parse_ucd_diskio(string_table: List[StringTable]) -> Section:
-
     section: MutableMapping[str, Disk] = {}
 
     if not string_table:

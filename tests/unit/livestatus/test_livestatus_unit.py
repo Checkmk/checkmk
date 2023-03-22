@@ -181,7 +181,6 @@ def test_create_socket(
     monkeypatch: MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-
     ssl_dir = tmp_path / "var/ssl"
     ssl_dir.mkdir(parents=True)
     with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:

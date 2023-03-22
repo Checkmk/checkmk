@@ -1245,7 +1245,16 @@ def test_genericdataset_cmciii_check(
     plugin: str, params: Mapping[str, object], items: Sequence[tuple[str, CheckResult]]
 ) -> None:
     for item, expected in items:
-        assert run_check("cmciii", plugin, item, _generictest_cmciii(), params,) == expected, (
+        assert (
+            run_check(
+                "cmciii",
+                plugin,
+                item,
+                _generictest_cmciii(),
+                params,
+            )
+            == expected
+        ), (
             "Item %s does not match" % item
         )
 

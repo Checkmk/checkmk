@@ -31,7 +31,6 @@ def simulate_backup_lock(site_id):
 
 @pytest.fixture(name="backup_path")
 def backup_path_fixture(tmp_path):
-
     backup_path = str(tmp_path / "backup")
 
     if not os.path.exists(backup_path):

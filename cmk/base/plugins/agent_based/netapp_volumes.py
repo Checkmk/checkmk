@@ -140,7 +140,6 @@ def check(
     item: str,
     section: Section,
 ) -> CheckResult:
-
     if (volume := section.get(item, None)) is None:
         return
     yield Result(

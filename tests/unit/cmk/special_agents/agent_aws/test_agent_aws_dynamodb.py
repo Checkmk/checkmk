@@ -89,7 +89,6 @@ def get_dynamodb_sections() -> DynamobSections:
     def _create_dynamodb_sections(
         names: object | None, tags: OverallTags
     ) -> dict[str, DynamoDBLimits | DynamoDBSummary | DynamoDBTable]:
-
         region = "region"
         config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("dynamodb_names", names)
@@ -177,7 +176,6 @@ def test_agent_aws_dynamodb_limits(
     tags: OverallTags,
     found_instances: Sequence[str],
 ) -> None:
-
     dynamodb_sections = get_dynamodb_sections(names, tags)
     dynamodb_limits = dynamodb_sections["dynamodb_limits"]
     dynamodb_summary = dynamodb_sections["dynamodb_summary"]
@@ -199,7 +197,6 @@ def test_agent_aws_dynamodb_limits(
 
 
 def _test_summary(dynamodb_summary, found_instances):
-
     dynamodb_summary_results = dynamodb_summary.run().results
 
     assert dynamodb_summary.cache_interval == 300
@@ -240,7 +237,6 @@ def test_agent_aws_dynamodb_summary_wo_limits(
 
 
 def _test_table(dynamodb_table, found_instances):
-
     dynamodb_table_results = dynamodb_table.run().results
 
     assert dynamodb_table.cache_interval == 300

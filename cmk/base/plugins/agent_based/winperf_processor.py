@@ -151,7 +151,6 @@ def check_winperf_processor_util(params: Mapping[str, Any], section: Section) ->
     value_store = get_value_store()
 
     for ticks in section.ticks:
-
         if ticks.name != "util":
             yield from _simple_ok_result(value_store, ticks, section.time)
             continue

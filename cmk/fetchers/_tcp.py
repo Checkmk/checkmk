@@ -198,7 +198,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 assert_never(never)
 
     def _wrap_tls(self, controller_uuid: UUID | None) -> ssl.SSLSocket:
-
         if controller_uuid is None:
             raise MKFetcherError("Agent controller not registered")
 

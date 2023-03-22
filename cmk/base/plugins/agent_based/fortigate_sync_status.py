@@ -25,7 +25,6 @@ FortigateClusterSection = Sequence[FortigateCluster]
 
 
 def parse_fortigate_sync_status(string_table: List[StringTable]) -> FortigateClusterSection:
-
     if not string_table:
         return []
 

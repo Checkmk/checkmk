@@ -332,7 +332,6 @@ def get_filesystem_levels(
     filesystem_size_gb: float,
     params: Mapping[str, Any],
 ) -> FilesystemLevels:
-
     filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
 
     filesystem_levels = _parse_filesystem_levels(params["levels"], filesystem_size)

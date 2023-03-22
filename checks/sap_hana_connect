@@ -12,7 +12,6 @@ sap_hana_connect_state_map = {
 
 
 def parse_sap_hana_connect(info):
-
     parsed = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
         inst = parsed.setdefault(
@@ -46,7 +45,6 @@ def parse_sap_hana_connect(info):
 
 @get_parsed_item_data
 def check_sap_hana_connect(item, params, parsed):
-
     state = parsed["cmk_state"]
     message = "%s\nODBC Driver Version: %s, Server Node: %s, Timestamp: %s" % (
         parsed["message"],

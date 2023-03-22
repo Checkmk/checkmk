@@ -33,7 +33,6 @@ def test_noop_unwrap_parameters() -> None:
 
 
 def test_active_check_result() -> None:
-
     assert ActiveCheckResult.from_subresults(
         ActiveCheckResult(0, "Ok", ("We're good",), ("metric1",)),
         ActiveCheckResult(2, "Critical", ("We're doomed",), ("metric2",)),

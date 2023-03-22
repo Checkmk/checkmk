@@ -786,7 +786,6 @@ class Endpoint:
             if self.permissions_required is not None and not self.permissions_required.validate(
                 list(self._used_permissions)
             ):
-
                 required_permissions = list(self._used_permissions)
                 declared_permissions = self.permissions_required
 

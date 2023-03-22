@@ -49,7 +49,6 @@ class ServiceFilters(NamedTuple):
 
 
 def _get_service_filter_lists(rediscovery_parameters: dict[str, Any]) -> _ServiceFilterLists:
-
     if "service_filters" not in rediscovery_parameters:
         # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
         # which were used for new AND vanished services:

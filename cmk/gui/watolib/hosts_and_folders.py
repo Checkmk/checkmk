@@ -518,7 +518,7 @@ class _RedisHelper:
 
         assert user.id is not None
         user_cgs = set(userdb.contactgroups_of_user(user.id))
-        for (folder_cgs, num_hosts) in pairwise(results[0]):
+        for folder_cgs, num_hosts in pairwise(results[0]):
             cgs = set(folder_cgs.split(","))
             if user_cgs.intersection(cgs):
                 total_hosts += int(num_hosts)
@@ -583,7 +583,6 @@ class _RedisHelper:
         self,
         folder: CREFolder,
     ) -> None:
-
         allowed_timestamps = self._get_allowed_folder_timestamps(folder)
         if not self._partial_data_update_possible(allowed_timestamps):
             # Something unexpected was modified in the meantime, rewrite cache
@@ -2039,7 +2038,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def add_hosts_to_lookup_cache(host2path_list):
         cache_path = Folder.host_lookup_cache_path()
         folder_lookup_cache = Folder.get_folder_lookup_cache()
-        for (hostname, folder_path) in host2path_list:
+        for hostname, folder_path in host2path_list:
             folder_lookup_cache[hostname] = folder_path
         Folder.save_host_lookup_cache(cache_path, folder_lookup_cache)
 

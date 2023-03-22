@@ -455,7 +455,6 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             css="activation",
             foldable=Foldable.FOLDABLE_STATELESS,
         ) as table:
-
             for site_id, site in sort_sites(activation_sites()):
                 table.row()
 

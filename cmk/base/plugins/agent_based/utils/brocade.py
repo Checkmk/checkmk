@@ -41,7 +41,6 @@ def brocade_fcport_getitem(
     is_isl: bool,
     settings: Mapping[str, bool],
 ) -> str:
-
     itemname = ("%0" + str(len(str(number_of_ports))) + "d") % (index - 1)
     if is_isl and settings["show_isl"]:
         itemname += " ISL"

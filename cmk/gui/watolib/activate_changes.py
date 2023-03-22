@@ -1103,7 +1103,6 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         for site_id, snapshot_settings in sorted(
             self._site_snapshot_settings.items(), key=lambda x: x[0]
         ):
-
             site_globals = get_site_globals(site_id, snapshot_settings.site_config)
 
             save_site_global_settings(site_globals, custom_site_path=snapshot_settings.work_dir)

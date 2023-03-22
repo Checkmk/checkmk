@@ -9,7 +9,6 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 
 
 def check_aws_wafv2_summary(item, params, parsed):
-
     web_acls_by_region: Dict[str, Dict] = {}
 
     for web_acl in parsed:

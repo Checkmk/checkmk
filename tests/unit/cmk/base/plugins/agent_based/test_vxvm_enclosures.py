@@ -95,7 +95,6 @@ def test_check_vxvm_enclosures(
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
-
     assert (
         list(
             check_vxvm_enclosures(

@@ -70,7 +70,6 @@ class TestDiscover(DiscoverTester):
 
 class TestDiscoverReplication(TestDiscover):
     def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
-
         cloud_sql_stringtable = generate_stringtable("checktest", 0.42, CLOUDSQL)
         cloud_sql_stringtable.extend(generate_stringtable("follower", 0.42, CLOUDSQL))
 

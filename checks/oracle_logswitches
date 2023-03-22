@@ -23,7 +23,6 @@ def inventory_oracle_logswitches(info):
 
 
 def check_oracle_logswitches(item, params, info):
-
     if isinstance(params, tuple):
         params = {
             "levels": (params[2], params[3]),

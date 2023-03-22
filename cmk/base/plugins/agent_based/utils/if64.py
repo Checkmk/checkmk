@@ -354,7 +354,6 @@ def parse_if64(
     for line in string_table:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
         if interfaces.saveint(line[0]) > 0:
-
             # ifHighSpeed can't represent interfaces with less than 10^6 bit bandwidth, ifSpeed is
             # capped at 4GBit.
             # combine the two to get the actual interface speed

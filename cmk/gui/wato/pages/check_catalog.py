@@ -529,7 +529,6 @@ class ModeCheckManPage(WatoMode):
         )
 
     def page(self) -> None:
-
         html.open_table(class_=["data", "headerleft"])
 
         html.open_tr()

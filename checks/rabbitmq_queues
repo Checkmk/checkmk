@@ -44,7 +44,6 @@ def parse_rabbitmq_queues(info):
 
             queue_name = queue.get("name")
             if queue_name is not None:
-
                 parsed.setdefault(
                     queue_name,
                     {
@@ -94,7 +93,6 @@ def check_rabbitmq_queues(item, params, parsed):
         ("messages_publish", "Messages published", "msg_publish_upper"),
         ("messages_publish_rate", "Rate", "msg_publish_rate"),
     ]:
-
         msg_value = parsed.get(msg_key)
         if msg_value is None:
             continue

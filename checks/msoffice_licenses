@@ -47,7 +47,6 @@ def check_msoffice_licenses(item, params, item_data):
     lcs_consumed = item_data["consumed"]
 
     if lcs_active:
-
         warn, crit = params["usage"]
         warn_abs, crit_abs = None, None
         warn_perc, crit_perc = None, None

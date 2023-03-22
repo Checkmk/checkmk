@@ -142,7 +142,6 @@ def test_exists(testcases: tuple[str, bool]) -> None:
 
 
 def test_all_of() -> None:
-
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
@@ -162,7 +161,6 @@ def test_all_of() -> None:
 
 
 def test_any_of() -> None:
-
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
@@ -182,7 +180,6 @@ def test_any_of() -> None:
 
 
 def test_any_of_all_of() -> None:
-
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
@@ -206,7 +203,6 @@ def test_any_of_all_of() -> None:
 
 
 def test_all_of_any_of() -> None:
-
     spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])

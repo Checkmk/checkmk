@@ -27,7 +27,6 @@ class Section(NamedTuple):
 
 
 def parse_inotify(info) -> Section:
-
     warnings: Counter[str] = Counter()
     configured: Dict[str, Literal["file", "folder"]] = {}
     stats: Dict[str, Dict[str, int]] = defaultdict(dict)

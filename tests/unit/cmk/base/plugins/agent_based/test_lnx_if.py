@@ -910,7 +910,14 @@ def test_lnx_if_regression(
 
     node_name = "node"
     for item, par, res in items_params_results:
-        assert list(lnx_if.cluster_check_lnx_if(item, par, {node_name: section}, {},))[:-1] == [
+        assert list(
+            lnx_if.cluster_check_lnx_if(
+                item,
+                par,
+                {node_name: section},
+                {},
+            )
+        )[:-1] == [
             Result(  # type: ignore[call-overload]
                 state=res[0].state,
                 summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
@@ -922,7 +929,6 @@ def test_lnx_if_regression(
 
 
 def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
-
     section = lnx_if.parse_lnx_if(
         [
             ["[start_iplink]"],

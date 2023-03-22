@@ -13,7 +13,6 @@ from .utils.cpu_utilization_os import SectionCpuUtilizationOs
 def parse_docker_container_cpu_cgroupv1(
     string_table: StringTable,
 ) -> Optional[SectionCpuUtilizationOs]:
-
     parsed = {}
     for line in string_table:
         key = line[0]

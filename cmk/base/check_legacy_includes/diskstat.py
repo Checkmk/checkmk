@@ -210,7 +210,6 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
 def diskstat_select_disk(  # pylint: disable=too-many-branches
     disks: Mapping[str, MutableMapping[str, Any]], item: str
 ) -> MutableMapping[str, Any] | None:
-
     # In summary mode we add up the throughput values, but
     # we average the other values for disks that have a throughput
     # > 0. Note: This is not very precise. Strictly spoken

@@ -113,7 +113,6 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
         and user.may("wato.download_agent_output")
         and not row["host_check_type"] == 2
     ):  # Not for shadow hosts
-
         # Not 100% acurate to use the tags here, but this is the best we can do
         # with the available information.
         # Render "download agent output" for non agent hosts, because there might

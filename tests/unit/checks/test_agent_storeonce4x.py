@@ -36,6 +36,5 @@ def test_agent_storeonce4x_arguments_password_store(
     params: Mapping[str, Any],
     expected_args: Sequence[Any],
 ) -> None:
-
     agent = SpecialAgent("agent_storeonce4x")
     assert agent.argument_func(params, "testhost", "1.2.3.4") == expected_args

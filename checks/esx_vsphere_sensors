@@ -19,7 +19,6 @@ def inventory_esx_vsphere_sensors(info):
 
 
 def check_esx_vsphere_sensors(_no_item, params, info):
-
     mulitline = ["All sensors are in normal state", "Sensors operating normal are:"]
     mod_msg = " (Alert state has been modified by Check_MK rule)"
 
@@ -34,7 +33,6 @@ def check_esx_vsphere_sensors(_no_item, params, info):
         health_label,
         health_summary,
     ) in info:
-
         sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
         txt = "%s: %s (%s)" % (name, health_label, health_summary)
 

@@ -182,7 +182,6 @@ def _create_check_function(name: str, check_info_element: CheckInfoElement) -> C
         subresults = _normalize_check_function_return_value(sig_function(**kwargs))
 
         for idx, subresult in enumerate(subresults):
-
             if isinstance(subresult, (Result, Metric)):
                 yield subresult
                 continue
@@ -262,7 +261,6 @@ def _create_new_result(
     legacy_text: str,
     legacy_metrics: Union[Tuple, List] = (),
 ) -> CheckResult:
-
     if legacy_state or legacy_text:  # skip "Null"-Result
         yield Result(state=State(legacy_state), summary=legacy_text.strip())
     yield from _create_new_metric(legacy_metrics)
@@ -329,7 +327,6 @@ def create_check_plugin_from_legacy(
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
-
     # We only intend to deal with checks from our repo.
     # We know what we can and have to deal with.
     if (

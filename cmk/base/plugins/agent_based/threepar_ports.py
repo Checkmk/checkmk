@@ -160,7 +160,6 @@ def check_3par_ports(
     params: Mapping[str, int],
     section: ThreeParPortsSection,
 ) -> CheckResult:
-
     if (port := section.get(item)) is None:
         return
 

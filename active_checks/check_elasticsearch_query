@@ -18,7 +18,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def main():
-
     args = parse_arguments()
 
     try:
@@ -32,7 +31,6 @@ def main():
 
 
 def handle_request(args):
-
     url = urllib.parse.urlunparse(
         (
             args.protocol,

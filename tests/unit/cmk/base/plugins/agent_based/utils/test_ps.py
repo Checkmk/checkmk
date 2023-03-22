@@ -241,7 +241,6 @@ def test_format_process_list(
 
 
 def test_unused_value_remover() -> None:
-
     value_store_test = {
         "test": {
             "unused": (23.0, 23.0),
@@ -262,7 +261,6 @@ def test_unused_value_remover() -> None:
 
 
 def test_memory_perc_check_noop_no_resident_size() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     assert not list(
         ps.memory_perc_check(
@@ -274,7 +272,6 @@ def test_memory_perc_check_noop_no_resident_size() -> None:
 
 
 def test_memory_perc_check_noop_no_rule() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     # add a fake process
     procs.resident_size = 42
@@ -283,7 +280,6 @@ def test_memory_perc_check_noop_no_rule() -> None:
 
 
 def test_memory_perc_check_missing_mem_total() -> None:
-
     missing_mem_result = [
         Result(
             state=State.UNKNOWN,
@@ -307,7 +303,6 @@ def test_memory_perc_check_missing_mem_total() -> None:
 
 
 def test_memory_perc_check_realnode() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
 
@@ -322,7 +317,6 @@ def test_memory_perc_check_realnode() -> None:
 
 
 def test_memory_perc_check_cluster() -> None:
-
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
     procs.running_on_nodes = {"A", "B"}

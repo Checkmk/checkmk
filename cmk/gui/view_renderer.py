@@ -195,7 +195,6 @@ class GUIViewRenderer(ABCViewRenderer):
             and html.do_actions()
             and transactions.transaction_valid()
         ):
-
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if request.has_var("_row_id") and html.do_actions():

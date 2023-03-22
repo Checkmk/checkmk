@@ -97,7 +97,6 @@ def check_redis_info(item, params, item_data):
         ("gcc_version", "GCC compiler version"),
         ("process_id", "PID"),
     ]:
-
         value = server_data.get(key)
         if value is not None:
             yield 0, "%s: %s" % (infotext, value)
@@ -183,7 +182,6 @@ def check_redis_info_persistence(item, params, item_data):
         ("rdb_last_bgsave_status", "rdb_last_bgsave", "Last RDB save operation: "),
         ("aof_last_bgrewrite_status", "aof_last_rewrite", "Last AOF rewrite operation: "),
     ]:
-
         value = persistence_data.get(status)
         if value is not None:
             state = 0
@@ -257,7 +255,6 @@ def check_redis_info_clients(item, params, item_data):
         ("client_biggest_input_buf", "input", "Biggest input buffer"),
         ("blocked_clients", "blocked", "Number of clients pending on a blocking call"),
     ]:
-
         clients_value = clients_data.get(data_key)
         if clients_value is None:
             continue

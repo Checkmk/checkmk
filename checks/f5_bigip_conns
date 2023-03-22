@@ -89,7 +89,6 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
         (total_native_compat_rate, conn_rate_params, "connections_rate", "Connections/s"),
         (stat_http_req_rate, params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),
     ]:
-
         # SSL may not be configured, eg. on test servers
         if val is None:
             yield 0, "%s: not configured" % title

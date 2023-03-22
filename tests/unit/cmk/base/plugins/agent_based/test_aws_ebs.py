@@ -173,7 +173,6 @@ def test_check_aws_ebs_burst_balance(
     string_table: StringTable,
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_ebs_burst_balance(
             item=item,

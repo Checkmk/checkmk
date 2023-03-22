@@ -543,7 +543,6 @@ class PageBackup:
     def _show_job_list(self) -> None:  # pylint: disable=too-many-branches
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
-
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
@@ -1482,7 +1481,6 @@ class Target:
 
     def show_backup_list(self) -> None:
         with table_element(sortable=False, searchable=False) as table:
-
             for backup_ident, info in sorted(self.backups().items()):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
@@ -1562,7 +1560,6 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
         )
 
     with table_element(sortable=False, searchable=False) as table:
-
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
             table.cell("#", css=["narrow nowrap"])

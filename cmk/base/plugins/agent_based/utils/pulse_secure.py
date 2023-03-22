@@ -14,7 +14,6 @@ DETECT_PULSE_SECURE = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12532")
 
 
 def parse_pulse_secure(info, *keys):
-
     parsed = {}
 
     for i, key in enumerate(keys):

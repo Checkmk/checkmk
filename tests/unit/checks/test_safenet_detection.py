@@ -32,7 +32,6 @@ from cmk.snmplib.utils import evaluate_snmp_detection
 def test_safenet_hsm_snmp_detection(  # type: ignore[no-untyped-def]
     fix_register, oid_data, detected
 ) -> None:
-
     for name in detected:
         section = fix_register.snmp_sections.get(SectionName(name))
 

@@ -239,7 +239,6 @@ def test_sap_hana_data_volume_check(
     params: Mapping[str, object],
     expected_results: Sequence[IgnoreResults | Metric | Result],
 ) -> None:
-
     yielded_results = list(
         sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION)
     )

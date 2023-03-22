@@ -21,7 +21,6 @@ factory_settings["azure_databases_default_levels"] = {
 
 @get_data_or_go_stale
 def check_azure_databases_storage(_item, params, resource):
-
     cmk_key = "storage_percent"
     levels = params.get("%s_levels" % cmk_key)
     mcheck = check_azure_metric(
@@ -46,7 +45,6 @@ check_info["azure_databases.storage"] = {
 
 @get_data_or_go_stale
 def check_azure_databases_deadlock(_item, params, resource):
-
     cmk_key = "deadlocks"
     levels = params.get("%s_levels" % cmk_key)
     mcheck = check_azure_metric(resource, "average_deadlock", cmk_key, "Deadlocks", levels=levels)
@@ -65,7 +63,6 @@ check_info["azure_databases.deadlock"] = {
 
 @get_data_or_go_stale
 def check_azure_databases_cpu(_item, params, resource):
-
     metrics = resource.metrics
 
     cpu_percent = metrics.get("average_cpu_percent")
@@ -88,7 +85,6 @@ check_info["azure_databases.cpu"] = {
 
 @get_data_or_go_stale
 def check_azure_databases_dtu(_item, params, resource):
-
     cmk_key = "dtu_percent"
     levels = params.get("%s_levels" % cmk_key)
     mcheck = check_azure_metric(
@@ -119,7 +115,6 @@ _AZURE_CONNECTIONS_METRICS = (
 
 @get_data_or_go_stale
 def check_azure_databases_connections(_item, params, resource):
-
     for key, cmk_key, displ, use_rate in _AZURE_CONNECTIONS_METRICS:
         levels = params.get("%s_levels" % cmk_key)
         mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels, use_rate=use_rate)

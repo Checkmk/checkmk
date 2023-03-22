@@ -719,7 +719,6 @@ def _call_single_containers_sections(client, config, container_id):
 
 
 def main():
-
     args = parse_arguments()
     config = get_config(args.config_file)
 

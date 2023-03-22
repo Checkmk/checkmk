@@ -48,7 +48,6 @@ def _delocalize_de_DE(instance, counter, value):
 
 
 def parse_msexch_database(info):
-
     if not (info and info[0]):
         return {}
 

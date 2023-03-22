@@ -18,7 +18,6 @@ def parse_solaris_routes(string_table: StringTable) -> Section:
 def _parse_solaris_route(line: Sequence[str]) -> Mapping[str, str]:
     route = {}
     if len(line) >= 5 and not line[0].startswith("---") and line[0] != "Destination":
-
         route["target"] = _parse_network(line[0])
         route["gateway"] = line[1]
         if len(line) > 5:

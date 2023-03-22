@@ -84,7 +84,6 @@ def inventory_aix_lvm(info):
 
 
 def check_aix_lvm(item, _no_params, info):
-
     # Get ready to find our item and settings.
     # target_activation = params
     target_vg, target_lv = item.split("/")
@@ -119,7 +118,6 @@ def check_aix_lvm(item, _no_params, info):
         # This means either a disk write failure causing a mirror to go stale
         # or some kind of split mirror backup.
         if mirror != "syncd":
-
             msgtxt.append("LV is not in sync state(!!)")
             state = max(state, 2)
 

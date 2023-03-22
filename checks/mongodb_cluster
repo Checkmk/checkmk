@@ -253,7 +253,6 @@ def _mongodb_cluster_collection_is_balanced(collection_dict):
     # loop through all shards and check if one shard is out of balance
     balanced = True
     for shard_name in sorted(collection_dict.get("shards", {})):
-
         # get shard information
         number_of_chunks_in_shard = (
             collection_dict.get("shards").get(shard_name).get("numberOfChunks", 0)

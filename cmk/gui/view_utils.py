@@ -62,7 +62,6 @@ _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
 def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
-
     shall_escape = _consolidate_escaping_options(row, shall_escape)
 
     if shall_escape and _render_url_icons(row):

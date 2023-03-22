@@ -81,7 +81,6 @@ def load_dashboard_with_cloning(
     name: DashboardName,
     edit: bool = True,
 ) -> DashboardConfig:
-
     all_dashboards = get_all_dashboards()
     board = visuals.get_permissioned_visual(
         name,

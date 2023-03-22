@@ -51,7 +51,6 @@ def parse_aws_elbv2_target_groups(info):
 
 
 def check_aws_elbv2_target_groups(item, params, target_groups):
-
     if len(target_groups) == 0:
         raise MKCounterWrapped("Currently no data from AWS")
 

@@ -34,10 +34,8 @@ def check_graylog_cluster_traffic(no_item, params, parsed):
         ("output", "Output"),
         ("decoded", "Decoded"),
     ]:
-
         traffic_value = parsed.get(key, []).get(parsed["to"])
         if traffic_value is not None:
-
             yield check_levels(
                 traffic_value,
                 "graylog_%s" % key,

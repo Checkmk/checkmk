@@ -60,7 +60,6 @@ register.agent_section(
 
 
 def inventory_allnet_ip_sensoric(section: Mapping[str, Mapping[str, str]]) -> InventoryResult:
-
     if model := section.get("system", {}).get("devicetype"):
         yield Attributes(
             path=["hardware", "system"],

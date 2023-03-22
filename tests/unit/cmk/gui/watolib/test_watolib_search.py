@@ -207,7 +207,6 @@ class TestIndexBuilder:
         monkeypatch: MonkeyPatch,
         index_builder: IndexBuilder,
     ) -> None:
-
         current_lang = "en"
 
         def localize_with_memory(lang):

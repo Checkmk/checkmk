@@ -130,7 +130,6 @@ def filter_event_table(
     phase: str | None = None,
     query: QueryExpression | None = None,
 ) -> Query:
-
     q = query_event_console().filter(query) if query else query_event_console()
 
     if event_id is not None:

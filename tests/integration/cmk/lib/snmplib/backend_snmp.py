@@ -149,7 +149,6 @@ def test_walk_auth(oid) -> None:  # type: ignore[no-untyped-def]
 def _create_results_snmpbackend_get(
     oid: str, configs: list[SNMPHostConfig]
 ) -> tuple[list[SNMPRawValue | None], list[SNMPRawValue | None]]:
-
     return (
         [_create_result_for_backend_get(InlineSNMPBackend, oid, c) for c in configs],
         [_create_result_for_backend_get(ClassicSNMPBackend, oid, c) for c in configs],

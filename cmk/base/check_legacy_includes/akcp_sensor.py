@@ -116,7 +116,6 @@ def check_akcp_sensor_temp(item, params, info):  # pylint: disable=too-many-bran
         degreeraw,
         online,
     ) in info:
-
         if description == item:
             # Online is set to "2" if sensor is offline
             if online != "1":

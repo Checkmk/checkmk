@@ -1158,7 +1158,6 @@ def test_check_ps_common_count(levels, reference) -> None:  # type: ignore[no-un
 
 
 def test_subset_patterns() -> None:
-
     section_ps = ps_section.parse_ps(
         splitter(
             """(user,0,0,0.5) main

@@ -114,10 +114,8 @@ def inventory_hyperv_vms(parsed):
 
 @get_parsed_item_data
 def check_hyperv_vms(_item, params, vm):
-
     # compare against discovered VM state
     if params.get("compare_discovery"):
-
         discovery_state = params.get("state")
 
         # this means that the check is executed as a manual check

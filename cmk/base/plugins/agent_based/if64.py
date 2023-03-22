@@ -86,7 +86,6 @@ def cluster_check_if64(
     section_if64: Mapping[str, Optional[interfaces.Section[interfaces.TInterfaceType]]],
     section_if64adm: Mapping[str, Optional[If64AdmSection]],
 ) -> type_defs.CheckResult:
-
     sections_w_admin_status: Dict[str, interfaces.Section[interfaces.TInterfaceType]] = {}
     for node_name, node_section_if64 in section_if64.items():
         if node_section_if64 is not None:

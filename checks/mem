@@ -281,7 +281,6 @@ def check_mem_windows(_no_item, params, section):
         ("RAM", "Mem", "memory", "mem_used"),
         ("Commit charge", "Page", "pagefile", "pagefile_used"),
     ]:
-
         total = section.get("%sTotal" % prefix)
         free = section.get("%sFree" % prefix)
         if None in (total, free):
@@ -403,7 +402,6 @@ def check_mem_vmalloc(_item, params, section):
         ("used", warn, crit, used_mb, False, "used"),
         ("chunk", warn_chunk, crit_chunk, chunk_mb, True, "largest chunk"),
     ]:
-
         # convert levels from percentage to MB values
         if isinstance(loop_warn, float):
             w_mb = total_mb * loop_warn / 100

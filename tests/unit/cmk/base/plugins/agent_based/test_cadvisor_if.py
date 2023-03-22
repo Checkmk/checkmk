@@ -39,7 +39,6 @@ def test_parse_cadvisor_if() -> None:
 
 
 def test_check_cadvisor_if(monkeypatch: MonkeyPatch) -> None:
-
     vs = {
         "in_bcast.0.Summary.Summary.None": (1000.0, 0),
         "in_disc.0.Summary.Summary.None": (1000.0, 0.0),

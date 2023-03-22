@@ -227,7 +227,6 @@ def _execute_ssh_command(
     host_address: str,
     opt_debug: bool,
 ) -> subprocess.CompletedProcess:
-
     cmd = "ssh -o ConnectTimeout={} {} {}@{} '{}'".format(
         opt_timeout,
         opt_any_hostkey,

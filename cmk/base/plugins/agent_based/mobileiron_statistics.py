@@ -26,7 +26,6 @@ from .utils.mobileiron import SourceHostSection
 def check_mobileiron_sourcehost(
     params: Mapping[str, Any], section: SourceHostSection
 ) -> CheckResult:
-
     yield Metric(
         name="mobileiron_devices_total",
         value=section.total_count,

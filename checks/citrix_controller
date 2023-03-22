@@ -177,7 +177,6 @@ def inventory_citrix_controller_licensing(info):
 
 
 def check_citrix_controller_licensing(_no_item, _no_params, info):
-
     statedict = {
         "licensingserverstate": (
             "Licensing Server State",

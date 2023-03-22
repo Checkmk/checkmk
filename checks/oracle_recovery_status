@@ -123,7 +123,6 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
             (database_role == "PRIMARY" and db_name == "_MGMTDB" and db_unique_name == "_mgmtdb")
             or not params.get("levels")
         ) or db_name[db_name.rfind(".") + 1 :] == "PDB$SEED":
-
             # We ignore the state of the check when no parameters are known
             # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
             # ignore PDB$SEED because this PDB is always in READ ONLY mode
@@ -170,7 +169,6 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
             )
 
             if params.get("backup_age"):
-
                 warn, crit = params["backup_age"]
                 infotext += " (warn/crit at %s/%s)" % (
                     get_age_human_readable(warn),
@@ -187,7 +185,6 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
             else:
                 perfdata.append(("backup_age", oldest_backup_age))
         else:
-
             # create a 'dummy' performance data with 0
             # => The age from plugin is only valid when a datafile is in backup mode!
             perfdata.append(("backup_age", 0))

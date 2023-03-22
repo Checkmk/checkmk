@@ -29,7 +29,6 @@ def inventory_fortigate_memory_base(parsed):
 
 
 def check_fortigate_memory_base(_item, params, parsed):
-
     if isinstance(params, tuple):
         levels = ("perc_used", params)
     else:

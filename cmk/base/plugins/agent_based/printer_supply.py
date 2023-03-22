@@ -72,7 +72,6 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
     for index, (name, unit_info, raw_max_capacity, raw_level, supply_class, color_id) in enumerate(
         string_table[1]
     ):
-
         try:
             max_capacity = int(raw_max_capacity)
             level = int(raw_level)

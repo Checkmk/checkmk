@@ -46,7 +46,6 @@ def parse_megaraid_ldisks(string_table: StringTable) -> megaraid.SectionLDisks:
             parsed[legacy_item] = parsed[item]
 
         elif item is not None and item in parsed:
-
             if line[0].startswith("State"):
                 parsed[item]["state"] = l.split(":")[1].strip()
             elif line[0].startswith("Default"):

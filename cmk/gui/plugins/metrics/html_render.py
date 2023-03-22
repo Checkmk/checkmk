@@ -410,7 +410,6 @@ def get_scalars(
         ("max", _("Maximum")),
         ("average", _("Average")),
     ]:
-
         consolidation_function = graph_artwork["definition"]["consolidation_function"]
         inactive = consolidation_function is not None and consolidation_function != scalar
 
@@ -715,7 +714,6 @@ def render_graphs_from_specification_html(
     *,
     render_async: bool = True,
 ) -> HTML:
-
     graph_recipes = resolve_graph_recipe_with_error_handling(graph_identification)
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception

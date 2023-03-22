@@ -20,7 +20,11 @@ STRING_TABLE_FILER_NETAPP_8_1_1 = [
 
 
 def test_discover() -> None:
-    assert list(discover(section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),)) == [
+    assert list(
+        discover(
+            section=parse_netapp_volumes(STRING_TABLE_FILER_NETAPP_8_1_1),
+        )
+    ) == [
         Service(item="vol0"),
         Service(item="lun_29Aug2012_162910_vol"),
         Service(item="a2_esx_zit_g7_00"),

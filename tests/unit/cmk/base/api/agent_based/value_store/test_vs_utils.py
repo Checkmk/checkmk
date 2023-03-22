@@ -108,7 +108,6 @@ class Test_StaticDiskSyncedMapping:
         )
 
     def test_mapping_features(self, mocker, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
-
         self._mock_load(mocker)
         sdsm = self._get_sdsm(tmp_path)
         assert sdsm.get(("check_no", None, "moo")) is None
@@ -125,7 +124,6 @@ class Test_StaticDiskSyncedMapping:
         assert len(sdsm) == 2
 
     def test_store(self, mocker, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
-
         self._mock_load(mocker)
         self._mock_store(mocker)
 

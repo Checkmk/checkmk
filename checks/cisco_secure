@@ -10,7 +10,6 @@ def _sanitize_mac(string):
 
 
 def parse_cisco_secure(info):
-
     parsed = []
     # l[1] = Name, l[2] = Portstate
     names = {l[0]: (l[1], l[2]) for l in info[0]}

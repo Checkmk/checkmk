@@ -877,7 +877,6 @@ class ModeFolder(WatoMode):
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
         with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
-
             # Compute colspan for bulk actions
             colspan = 6
             for attr in host_attribute_registry.attributes():
@@ -1097,7 +1096,6 @@ class ModeFolder(WatoMode):
 
     def _render_bulk_move_form(self) -> HTML:
         with output_funnel.plugged():
-
             form_name = "form_hosts"
             dropdown = WatoFolderChoices(html_attrs={"form": form_name})
             dropdown.render_input("_bulk_moveto", "")

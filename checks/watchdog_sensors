@@ -70,7 +70,6 @@ def _parse_line(line, temp_unit):
 
 
 def parse_watchdog_sensors(info):
-
     parsed = {}
 
     general, data = info
@@ -116,7 +115,6 @@ def inventory_watchdog_sensors(parsed):
 
 
 def check_watchdog_sensors(item, params, parsed):
-
     data = parsed.get("general", {}).get(item)
 
     if not data:
@@ -180,7 +178,6 @@ def inventory_watchdog_sensors_temp(parsed):
 
 
 def check_watchdog_sensors_temp(item, params, parsed):
-
     data = parsed.get("temp", {}).get(item)
 
     if not data:
@@ -226,7 +223,6 @@ def inventory_watchdog_sensors_humidity(parsed):
 
 
 def check_watchdog_sensors_humidity(item, params, parsed):
-
     data = parsed.get("humidity", {}).get(item)
 
     if not data:
@@ -275,7 +271,6 @@ def inventory_watchdog_sensors_dew(parsed):
 
 
 def check_watchdog_sensors_dew(item, params, parsed):
-
     data = parsed.get("dew", {}).get(item)
 
     if not data:

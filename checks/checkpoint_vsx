@@ -59,7 +59,6 @@ def parse_checkpoint_vsx(info):
         bytes_rejected,
         logged,
     ) in vsid_info:
-
         item = "%s %s" % (vs_name, vs_id)
         parsed.setdefault(
             item,
@@ -116,7 +115,6 @@ def check_checkpoint_vsx(item, _no_params, parsed):
         ("vs_type", "Type"),
         ("vs_ip", "Main IP"),
     ]:
-
         value = parsed.get(key)
         if value is None:
             continue
@@ -242,7 +240,6 @@ def check_checkpoint_vsx_packets(item, params, parsed):
         ("packets_rejected", "Total number of rejected packets"),
         ("logged", "Total number of logs sent"),
     ]:
-
         value = parsed.get(key)
         if value is None:
             continue
@@ -289,7 +286,6 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
         ("bytes_dropped"),
         ("bytes_rejected"),
     ]:
-
         value = parsed.get(key)
         if value is None:
             continue

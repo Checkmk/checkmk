@@ -31,7 +31,6 @@ carel_temp_defaultlevels = {
 
 
 def carel_sensors_parse(info):
-
     oid_parse = {
         "1.0": "Room",
         "2.0": "Outdoor",

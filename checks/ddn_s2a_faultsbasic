@@ -288,7 +288,6 @@ def inventory_ddn_s2a_faultsbasic_cachecoh(parsed):
 def check_ddn_s2a_faultsbasic_cachecoh(_no_item, _no_params, parsed):
     cache_coherency = parsed.get("cache_coherency")
     if cache_coherency:
-
         cache_coherency_states = {
             "established": 0,
             "not enabled": 1,

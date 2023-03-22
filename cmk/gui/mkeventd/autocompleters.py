@@ -11,7 +11,8 @@ from .helpers import service_levels
 
 def service_levels_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     choices: Choices = [(str(level), descr) for level, descr in service_levels()]
     empty_choices: Choices = [("", "")]
     return empty_choices + _filter_choices(value, choices)
@@ -19,7 +20,8 @@ def service_levels_autocompleter(value: str, params: dict) -> Choices:
 
 def syslog_facilities_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     choices: Choices = [(str(v), title) for v, title in syslog_facilities]
     empty_choices: Choices = [("", "")]
     return empty_choices + _filter_choices(value, choices)

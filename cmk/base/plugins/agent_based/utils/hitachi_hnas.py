@@ -27,7 +27,6 @@ STATUS_MAP = {
 
 
 def parse_physical_volumes(volume_data: Iterable) -> Tuple[Dict, Dict]:
-
     map_label = {}
     parsed_volumes = {}
 

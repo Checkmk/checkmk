@@ -57,7 +57,6 @@ def check_splunk_jobs(no_item, params, parsed):
         ("failed_jobs", data.failed, "Failed jobs"),
         ("zombie_jobs", data.zombies, "Zombie jobs"),
     ]:
-
         yield check_levels(value, key, params.get(key), human_readable_func=int, infoname=infotext)
 
     if data.output:

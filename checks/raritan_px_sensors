@@ -63,7 +63,6 @@ def parse_raritan_px_sensors(info):
         sensor_upper_crit_str,
         sensor_upper_warn_str,
     ) in info:
-
         sensor_name = (
             sensor_name.replace("Temperature", "")
             .replace("Humidity", "")

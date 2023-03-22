@@ -17,7 +17,6 @@ def inventory_vms_users(info):
 
 
 def check_vms_users(item, params, info):
-
     infos = []
     num_sessions = 0
     for line in info:

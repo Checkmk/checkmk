@@ -209,7 +209,6 @@ def check_cisco_vpn_tunnel(
     params: CheckParameters,
     section: Section,
 ) -> CheckResult:
-
     state_missing, aliases = _state_missing_and_aliases(
         item,
         params,

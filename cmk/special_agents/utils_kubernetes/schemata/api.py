@@ -1077,7 +1077,6 @@ class PersistentVolume(ClientModel):
 
 
 class ClusterDetails(BaseModel):
-
     api_health: APIHealth
     version: GitVersion
 

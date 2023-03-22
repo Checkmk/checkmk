@@ -10,7 +10,6 @@ from .utils.mobileiron import Section
 
 
 def check_mobileiron_compliance(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     count = section.policy_violation_count or 0
     yield from check_levels(
         label="Policy violation count",

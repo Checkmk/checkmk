@@ -142,7 +142,6 @@ _METRICS_TO_BE_AVERAGED = {
 
 
 def combine_disks(disks: Iterable[Disk]) -> Disk:
-
     # In summary mode we add up the throughput values, but
     # we average the other values for disks that have a throughput
     # > 0. Note: This is not very precise. Strictly spoken

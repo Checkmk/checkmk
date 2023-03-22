@@ -43,7 +43,6 @@ def parse_snmp_uptime(ticks):
 #  NOTE: This function has already been migrated to cmk.base.plugins.agent_based.snmp_uptime   #
 ################################################################################################
 def check_uptime_seconds(params, uptime_sec):
-
     if params is None:  # legacy: support older versions of parameters
         params = {}
 

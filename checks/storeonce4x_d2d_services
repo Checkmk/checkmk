@@ -10,11 +10,9 @@ def parse_storeonce4x_d2d_services(info):
 
 
 def check_storeonce4x_d2d_services(_item, _params, parsed):
-
     health_map = {"OK": 0, "WARNING": 1, "CRITICAL": 2}
 
     for service_name, service_data in parsed.items():
-
         healthLevelString = service_data["healthLevelString"]
         healthString = service_data["healthString"]
         subsystemState = service_data["subsystemState"]

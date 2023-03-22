@@ -190,7 +190,6 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type: ignore[no-unt
         porttype,
         ifspeed,
     ) in if_table:
-
         # Since FW v8.0.1b [rx/tx]words are no longer available
         # Use 64bit counters if available
         bbcredits = None

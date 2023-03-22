@@ -99,7 +99,6 @@ def generate_stringtable(
     service_desc: agent_gcp.Service,
     overriding_values: Mapping[str, float] | None = None,
 ) -> StringTable:
-
     if overriding_values is None:
         overriding_values = {}
 

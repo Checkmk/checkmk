@@ -59,10 +59,8 @@ def check_graylog_cluster_stats(no_item, params, parsed):
         ("extractor_count", "Number of extractors", "num_extractor"),
         ("user_count", "Number of user", "num_user"),
     ]:
-
         data = parsed.get(key)
         if data is not None:
-
             levels = params.get("%s_upper" % key, (None, None))
             levels_lower = params.get("%s_lower" % key, (None, None))
             yield check_levels(
@@ -108,7 +106,6 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
         ("cluster_name", "Name"),
         ("cluster_version", "Version"),
     ]:
-
         value = elastic_data.get(key)
         if value is not None:
             yield state, "%s: %s" % (infotext, value.title())
@@ -129,7 +126,6 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
             ("unassigned_shards", "Unassigned shards"),
             ("pending_tasks", "Pending tasks"),
         ]:
-
             health_value = health_data.get(health_section)
             if health_value is None:
                 continue
@@ -166,7 +162,6 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
             ("id_cache_size", "ID cache size", get_bytes_human_readable),
             ("field_data_size", "Field data size", get_bytes_human_readable),
         ]:
-
             indice_value = indice_data.get(section)
             if indice_value is None:
                 continue
@@ -236,7 +231,6 @@ def check_graylog_cluster_stats_mongodb(no_item, params, parsed):
             ("collections", "Number of collections", "num_collections", int),
             ("objects", "Number of objects", "num_objects", int),
         ]:
-
             db_value = db_data.get(key)
             if db_value is None:
                 continue

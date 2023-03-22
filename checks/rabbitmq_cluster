@@ -48,7 +48,6 @@ def parse_rabbitmq_cluster(info):
     parsed = {}
 
     for clusters in info:
-
         try:
             cluster = json.loads(clusters[0])
         except IndexError:
@@ -118,7 +117,6 @@ def check_rabbitmq_cluster(_no_item, params, parsed):
         ("rabbitmq_version"),
         ("erlang_version"),
     ]:
-
         info_value = info_data.get(info_key)
         yield 0, "%s: %s" % (info_key.replace("_", " ").capitalize(), info_value)
 
@@ -152,7 +150,6 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
         ("messages_deliver", "Messages delivered", int),
         ("messages_deliver_rate", "Rate", float),
     ]:
-
         value = msg_data.get(key)
         if value is None:
             continue
@@ -186,7 +183,6 @@ def check_rabbitmq_cluster_stats(_no_item, params, parsed):
         ("exchanges", "Exchanges", int),
         ("queues", "Queues", int),
     ]:
-
         value = stats_data.get(key)
         if value is None:
             continue

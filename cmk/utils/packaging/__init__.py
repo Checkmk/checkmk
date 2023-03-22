@@ -124,7 +124,6 @@ class PackageStore:
         self.enabled_packages: Final = enabled_dir
 
     def store(self, file_content: bytes, overwrite: bool = False) -> Manifest:
-
         package = extract_manifest(file_content)
 
         base_name = format_file_name(package.id)
@@ -532,7 +531,6 @@ class ClassifiedManifests(BaseModel):
 
     @property
     def enabled(self) -> list[Manifest]:
-
         return [*self.installed, *self.inactive]
 
 

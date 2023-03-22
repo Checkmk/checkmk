@@ -39,7 +39,6 @@ def inventory_netapp_cluster(info):
 
 
 def check_netapp_cluster(item, _no_params, info):
-
     (
         cfSettings,
         cfState,

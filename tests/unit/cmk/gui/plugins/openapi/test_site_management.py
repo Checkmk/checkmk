@@ -560,7 +560,6 @@ def test_put_user_sync_with_ldap_connections_400(
     collection_base: str,
     put_site: Callable,
 ) -> None:
-
     config = _default_config()
     site_id = "site_id_1"
     post_site(url=collection_base, params=json.dumps(config))
@@ -657,7 +656,6 @@ def test_put_configuration_connection_200(
     object_base: str,
     put_site: Callable,
 ) -> None:
-
     config = _default_config()
     site_id = "site_id_1"
     post_site(url=collection_base, params=json.dumps(config))
@@ -674,7 +672,6 @@ def test_put_configuration_connection_400(
     collection_base: str,
     put_site: Callable,
 ) -> None:
-
     config = _default_config()
     site_id = "site_id_1"
     post_site(url=collection_base, params=json.dumps(config))

@@ -177,7 +177,10 @@ def test_cluster_check_functions_match_manpages_cluster_sections(
         has_cluster_doc = bool(man_page.cluster)
         has_cluster_func = plugin.cluster_check_function is not None
         if has_cluster_doc is not has_cluster_func:
-            (missing_cluster_description, unexpected_cluster_description,)[
+            (
+                missing_cluster_description,
+                unexpected_cluster_description,
+            )[
                 has_cluster_doc
             ].add(str(plugin.name))
 

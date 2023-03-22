@@ -262,7 +262,6 @@ class IPLookupCacheSerializer:
 
 
 class IPLookupCache:
-
     PATH = Path(cmk.utils.paths.var_dir, "ipaddresses.cache")
 
     def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress]) -> None:
@@ -365,13 +364,11 @@ def update_dns_cache(
     simulation_mode: bool,
     override_dns: HostAddress | None,
 ) -> UpdateDNSCacheResult:
-
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()
 
     with ip_lookup_cache.persisting_disabled():
-
         console.verbose("Cleaning up existing DNS cache...\n")
         ip_lookup_cache.clear()
 

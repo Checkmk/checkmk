@@ -24,7 +24,6 @@ def discover_oracle_undostat(parsed):
 
 
 def check_oracle_undostat(item, params, parsed):
-
     data = parsed.get(item)
     if data is None:
         # In case of missing information we assume that the login into

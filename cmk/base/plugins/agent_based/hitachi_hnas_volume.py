@@ -101,7 +101,6 @@ def check_hitachi_hnas_volume(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-
     fslist_blocks = [
         (mount_point, size_mb, avail_mb, 0)
         for mount_point, (_, size_mb, avail_mb, _) in section.volumes.items()
@@ -184,7 +183,6 @@ def check_hitachi_hnas_virtual_volume(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-
     fslist_blocks = [
         (mount_point, size_mb, avail_mb, 0)
         for mount_point, (size_mb, avail_mb) in section.virtual_volumes.items()

@@ -68,7 +68,6 @@ def check_elphase(item, params, parsed):  # pylint: disable=too-many-branches
         ("differential_current_ac", "Differential current AC", "mA", Bounds.Upper, 0.001),
         ("differential_current_dc", "Differential current DC", "mA", Bounds.Upper, 0.001),
     ]:
-
         if what in parsed[item]:
             entry = parsed[item][what]
             if isinstance(entry, tuple):

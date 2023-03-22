@@ -282,7 +282,6 @@ def agent_mobileiron_main(args: Args) -> int:
             auth=(args.username, args.password),
             proxy=args.proxy,
         ) as mobileiron_api:
-
             all_devices = mobileiron_api.get_all_devices(
                 partitions=[] if args.partition is None else args.partition
             )

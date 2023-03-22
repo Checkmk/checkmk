@@ -249,7 +249,6 @@ def read_config():
 
 
 def main():
-
     # host = "localhost"
     # port = 4223
     # segment_display_uid = "abc"         # uid of the sensor to display on the 7-segment display

@@ -7,7 +7,6 @@ from tests.testlib import SpecialAgent
 
 
 def test_agent_graylog_arguments_password_store() -> None:
-
     agent = SpecialAgent("agent_graylog")
     params = {
         "user": "user",

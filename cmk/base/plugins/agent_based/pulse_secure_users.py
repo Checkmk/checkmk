@@ -64,7 +64,6 @@ def cluster_check_pulse_secure_users(
     params: Mapping[str, Any],
     section: Mapping[str, Optional[Section]],
 ) -> CheckOutput:
-
     n_users_total = 0
 
     for node_name, section_node in section.items():

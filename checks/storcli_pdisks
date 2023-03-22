@@ -9,7 +9,6 @@ factory_settings["storcli_pdisks_default_levels"] = megaraid.PDISKS_DEFAULTS
 
 
 def parse_storcli_pdisks(info):
-
     parsed = {}
 
     controller_num = 0

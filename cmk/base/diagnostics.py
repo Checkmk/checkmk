@@ -863,7 +863,6 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-
         command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
 
         for dump_args in (None, "config"):

@@ -34,7 +34,6 @@ def inventory_pfsense_counter(parsed):
 
 
 def check_pfsense_counter(_no_item, params, parsed):
-
     namestoinfo = {
         "matched": "Packets that matched a rule",
         "badoffset": "Packets with bad offset",

@@ -16,7 +16,6 @@ def _get_agent() -> SpecialAgent:
 
 
 def test_agent_elasticsearch_arguments_cert_check(agent: SpecialAgent) -> None:
-
     params: dict[str, str | Sequence[str] | bool] = {
         "hosts": "testhost",
         "protocol": "https",
@@ -33,7 +32,6 @@ def test_agent_elasticsearch_arguments_cert_check(agent: SpecialAgent) -> None:
 
 
 def test_agent_elasticsearch_arguments_password_store(agent: SpecialAgent) -> None:
-
     params = {
         "hosts": "testhost",
         "protocol": "https",

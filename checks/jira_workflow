@@ -16,7 +16,6 @@ def parse_jira_workflow(info):
         projects = json.loads(" ".join(line))
 
         for project in projects:
-
             workflows = projects.get(project)
             if workflows is None:
                 continue
@@ -47,7 +46,6 @@ def check_jira_workflow(item, params, item_data):
         return
 
     for _workflow, issue_count in item_data.items():
-
         issue_nr_levels = params.get("workflow_count_upper", (None, None))
         issue_nr_levels_lower = params.get("workflow_count_lower", (None, None))
         yield check_levels(

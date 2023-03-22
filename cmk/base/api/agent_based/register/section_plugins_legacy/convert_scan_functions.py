@@ -119,7 +119,6 @@ def _get_scan_function_ast(
 def _extract_scan_function_ast(
     tree: ast.Module, scan_function_name: str, plugin_name: str
 ) -> ScanFunction:
-
     if explicit_scan_function_definitions := [
         s for s in tree.body if isinstance(s, ast.FunctionDef) and s.name == scan_function_name
     ]:
@@ -334,7 +333,6 @@ def _ast_convert_call(call_ast: ast.Call) -> SNMPDetectSpecification:
 
 
 def _ast_convert_dispatcher(arg: ast.AST) -> SNMPDetectSpecification:
-
     if isinstance(arg, ast.UnaryOp):
         return _ast_convert_unary(arg)
 
@@ -383,7 +381,6 @@ def _compute_detect_spec(
     scan_function: Callable,
     fallback_files: List[str],
 ) -> SNMPDetectSpecification:
-
     scan_func_ast = _get_scan_function_ast(section_name, scan_function, fallback_files)
 
     expression_ast = _get_expression_from_function(section_name, scan_func_ast)
@@ -403,7 +400,6 @@ def create_detect_spec(
     snmp_scan_function: Callable,
     fallback_files: List[str],
 ) -> SNMPDetectSpecification:
-
     migrated = _lookup_migrated(snmp_scan_function)
     if migrated is not None:
         return migrated

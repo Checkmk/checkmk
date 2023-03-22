@@ -25,7 +25,6 @@ def test_discovery(section: eiq.Section) -> None:
 
 
 def test_check(section: eiq.Section, monkeypatch: pytest.MonkeyPatch) -> None:
-
     monkeypatch.setattr(
         eiq,
         "get_value_store",

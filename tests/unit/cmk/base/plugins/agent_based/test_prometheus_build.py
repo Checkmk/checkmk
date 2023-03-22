@@ -34,7 +34,13 @@ def test_check_prometheus_build() -> None:
 
 
 def test_check_prometheus_build_with_multiple_versions() -> None:
-    assert list(prometheus_build.check_prometheus_build({"version": ["2.0.0", "2.14.0"],})) == [
+    assert list(
+        prometheus_build.check_prometheus_build(
+            {
+                "version": ["2.0.0", "2.14.0"],
+            }
+        )
+    ) == [
         Result(
             state=State.OK,
             summary="Version: multiple instances",

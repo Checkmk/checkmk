@@ -50,7 +50,6 @@ def inventory_qlogic_fcport(info):
         _c3_out_octets,
         _c3_discards,
     ) in info:
-
         # There are devices out there which are totally missing the status related
         # SNMP tables. In this case we add all interfaces.
         if (admin_status == "" and oper_status == "") or (
@@ -91,7 +90,6 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
         c3_out_octets,
         c3_discards,
     ) in info:
-
         port_id = qlogic_fcport_generate_port_id(port_id)
         if port_id == item:
             status = 0

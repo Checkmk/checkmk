@@ -37,7 +37,6 @@ def _update_remaining_reads(parsed, value):
 
 
 def parse_azure_agent_info(info):
-
     parsed = {}
     for row in info:
         key = row[0]
@@ -145,7 +144,6 @@ def agent_issues(issues, params):
 
 
 def check_azure_agent_info(_no_item, params, parsed):
-
     for subresult in agent_bailouts(parsed.get("agent-bailout", [])):
         yield subresult
 

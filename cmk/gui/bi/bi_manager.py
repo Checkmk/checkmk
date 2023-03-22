@@ -43,7 +43,6 @@ def bi_livestatus_query(
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     fetch_full_data: bool = False,
 ) -> LivestatusResponse:
-
     with sites.output_format(output_format), sites.only_sites(only_sites), sites.prepend_site():
         try:
             auth_domain = "bi_fetch_full_data" if fetch_full_data else "bi"

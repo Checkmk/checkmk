@@ -110,7 +110,6 @@ check_info["esx_vsphere_hostsystem.maintenance"] = {
 
 
 def esx_vsphere_multipath_convert(data):
-
     raw_path_info = data.get("config.storageDevice.multipathInfo")
     if not raw_path_info:
         return {}

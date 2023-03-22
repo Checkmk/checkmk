@@ -530,7 +530,6 @@ def _count_chunks_per_shard(client, databases):
     chunks_list = chunks.find({}, set(["ns", "shard", "jumbo"]))
     database_set = set()
     for chunk in chunks_list:
-
         # get database, collection and shard names
         shard_name = chunk.get("shard", None)
         database_name, collection_name = _split_namespace(chunk.get("ns"))
@@ -755,7 +754,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 def parse_arguments(argv):
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""

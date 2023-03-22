@@ -478,7 +478,6 @@ class LayoutTiled(Layout):
             if group_cells:
                 this_group = group_value(row, group_cells)
                 if this_group != last_group:
-
                     # paint group header
                     if group_open:
                         html.close_td()
@@ -867,7 +866,6 @@ class LayoutMatrix(Layout):
         for groups, unique_row_ids, matrix_cells in create_matrices(
             rows, group_cells, cells, num_columns
         ):
-
             # Paint the matrix. Begin with the group headers
             html.open_table(class_="data matrix")
             odd = "odd"

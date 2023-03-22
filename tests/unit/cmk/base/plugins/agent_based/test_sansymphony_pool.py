@@ -26,7 +26,17 @@ def test_parse_sansymphony_pool_no_agent_output() -> None:
 
 
 def test_parse_sansymphony_pool() -> None:
-    assert parse_sansymphony_pool([["Disk_pool_1", "57", "Running", "ReadWrite", "Dynamic",]]) == {
+    assert parse_sansymphony_pool(
+        [
+            [
+                "Disk_pool_1",
+                "57",
+                "Running",
+                "ReadWrite",
+                "Dynamic",
+            ]
+        ]
+    ) == {
         "Disk_pool_1": SansymphonyPool(
             name="Disk_pool_1",
             usage_stats=SimpleUsage(percent_allocated=57.0),

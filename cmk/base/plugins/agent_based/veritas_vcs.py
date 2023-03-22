@@ -249,7 +249,6 @@ def cluster_check_veritas_vcs_subsection(
     params: Mapping[str, Any],
     subsections: Mapping[str, SubSection],
 ) -> type_defs.CheckResult:
-
     cluster_name = None
     node_results = []
     for node_name, node_subsec in subsections.items():

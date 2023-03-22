@@ -221,7 +221,6 @@ def test_compute_rates_single_disk() -> None:
 
 
 def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
-
     # fist call: initialize value store
     with pytest.raises(IgnoreResultsError):
         list(

@@ -68,7 +68,6 @@ def _register_pre_21_plugin_api() -> None:
 # are written to the web log.
 @cmk.gui.pages.register("noauth:run_cron")
 def page_run_cron() -> None:
-
     lock_file = _lock_file()
 
     # Prevent cron jobs from being run too often, also we need

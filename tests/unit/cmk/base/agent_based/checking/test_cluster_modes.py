@@ -132,7 +132,13 @@ def _simple_check_notice(section: Any) -> CheckResult:
 
 def test_notice_propagation_if_OK(vsm: ValueStoreManager) -> None:
     check_worst = _get_cluster_check_function(_simple_check_notice, mode="worst", vsm=vsm)
-    assert list(check_worst(section={"Nodett": [],})) == [
+    assert list(
+        check_worst(
+            section={
+                "Nodett": [],
+            }
+        )
+    ) == [
         Result(state=State.OK, summary="Worst: [Nodett]"),
         Result(state=State.OK, notice="[Nodett]: notice text moved to details"),
         Result(state=State.OK, notice="[Nodett]: yeah details"),
@@ -162,7 +168,14 @@ def test_cluster_check_worst_ignore_results(vsm: ValueStoreManager) -> None:
 def test_cluster_check_worst_others_are_notice_only(vsm: ValueStoreManager) -> None:
     check_worst = _get_cluster_check_function(_simple_check, mode="worst", vsm=vsm)
 
-    assert list(check_worst(section={"Nodett": [2], "Nomo": [1],},)) == [
+    assert list(
+        check_worst(
+            section={
+                "Nodett": [2],
+                "Nomo": [1],
+            },
+        )
+    ) == [
         Result(state=State.OK, summary="Worst: [Nodett]"),
         Result(state=State.CRIT, summary="Hi", details="[Nodett]: Hi"),
         Result(state=State.OK, summary="Additional results from: [Nomo]"),
@@ -171,7 +184,6 @@ def test_cluster_check_worst_others_are_notice_only(vsm: ValueStoreManager) -> N
 
 
 def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_worst = _get_cluster_check_function(_simple_check, mode="worst", vsm=vsm)
 
     assert list(
@@ -189,7 +201,6 @@ def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: ValueStoreManager) -
 
 
 def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_worst = _get_cluster_check_function(
         _simple_check, mode="worst", vsm=vsm, clusterization_parameters={"metrics_node": "Nodett"}
     )
@@ -209,7 +220,6 @@ def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager
 
 
 def test_cluster_check_worst_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(
         _simple_check, mode="worst", vsm=vsm, clusterization_parameters={"primary_node": "Nodebert"}
     )
@@ -241,7 +251,11 @@ def test_cluster_check_best_ignore_results(vsm: ValueStoreManager) -> None:
 def test_cluster_check_best_empty_results_are_ignored(vsm: ValueStoreManager) -> None:
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 
-    assert list(check_best(section={"Nodett": [2], "Nomo": [1], "NoResults": []},)) == [
+    assert list(
+        check_best(
+            section={"Nodett": [2], "Nomo": [1], "NoResults": []},
+        )
+    ) == [
         Result(state=State.OK, summary="Best: [Nomo]"),
         Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
         Result(state=State.OK, summary="Additional results from: [Nodett]"),
@@ -252,7 +266,14 @@ def test_cluster_check_best_empty_results_are_ignored(vsm: ValueStoreManager) ->
 def test_cluster_check_best_others_are_notice_only(vsm: ValueStoreManager) -> None:
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 
-    assert list(check_best(section={"Nodett": [2], "Nomo": [1],},)) == [
+    assert list(
+        check_best(
+            section={
+                "Nodett": [2],
+                "Nomo": [1],
+            },
+        )
+    ) == [
         Result(state=State.OK, summary="Best: [Nomo]"),
         Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
         Result(state=State.OK, summary="Additional results from: [Nodett]"),
@@ -261,7 +282,6 @@ def test_cluster_check_best_others_are_notice_only(vsm: ValueStoreManager) -> No
 
 
 def test_cluster_check_best_yield_best_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 
     assert list(
@@ -279,7 +299,6 @@ def test_cluster_check_best_yield_best_nodes_metrics(vsm: ValueStoreManager) -> 
 
 
 def test_cluster_check_best_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(
         _simple_check, mode="best", vsm=vsm, clusterization_parameters={"primary_node": "Nodebert"}
     )
@@ -311,13 +330,19 @@ def test_cluster_check_failover_ignore_results(vsm: ValueStoreManager) -> None:
 def test_cluster_check_failover_others_are_notice_only(vsm: ValueStoreManager) -> None:
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
 
-    assert list(check_failover(section={"Nodett": [2], "Nomo": [1],},))[3:] == [
+    assert list(
+        check_failover(
+            section={
+                "Nodett": [2],
+                "Nomo": [1],
+            },
+        )
+    )[3:] == [
         Result(state=State.OK, notice="[Nomo]: Hi(!)"),
     ]
 
 
 def test_cluster_check_failover_yield_worst_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
 
     assert list(
@@ -335,7 +360,6 @@ def test_cluster_check_failover_yield_worst_nodes_metrics(vsm: ValueStoreManager
 
 
 def test_cluster_check_failover_two_are_not_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
     section = {"Nodett": [0], "Nodebert": [0]}  # => everything ok, but to many results
 
@@ -343,7 +367,6 @@ def test_cluster_check_failover_two_are_not_ok(vsm: ValueStoreManager) -> None:
 
 
 def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(
         _simple_check,
         mode="failover",

@@ -264,7 +264,6 @@ def _host_log_list_page_menu(
 # Displays a table of logfiles
 def list_logs(site, host_name, logfile_names):
     with table_element(empty_text=_("No logs found for this host.")) as table:
-
         for file_name in logfile_names:
             table.row()
             file_display = form_file_to_ext(file_name)
@@ -372,7 +371,6 @@ def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
 def _show_file_page_menu(
     breadcrumb: Breadcrumb, site_id: SiteId, host_name: HostName, int_filename: str
 ) -> PageMenu:
-
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(

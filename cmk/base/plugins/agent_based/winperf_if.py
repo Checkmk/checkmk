@@ -127,7 +127,6 @@ def _filter_out_deprecated_plugin_lines(
     found_mk_dhcp_enabled = False
 
     for line in (lines := iter(string_table)):
-
         # from mk_dhcp_enabled.bat
         if line[0].startswith("[dhcp_start]"):
             found_mk_dhcp_enabled = True
@@ -435,7 +434,6 @@ def _merge_sections(
     section_teaming: Optional[SectionTeaming],
     section_extended: Optional[SectionExtended],
 ) -> Sequence[interfaces.InterfaceWithCounters]:
-
     section_teaming = section_teaming or {}
     additional_data = (
         _match_add_data_to_interfaces(

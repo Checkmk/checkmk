@@ -52,7 +52,6 @@ class ProfileSwitcher:
         )
 
     def _create_dump_script(self):
-
         if not self.script_file.exists():
             with self.script_file.open("w", encoding="utf-8") as f:
                 f.write(

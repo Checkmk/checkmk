@@ -33,7 +33,6 @@ class TestWalkCache:
         assert fetchoid == WalkCache._name2oid(WalkCache._oid2name(fetchoid))
 
     def test_cache_keeps_stored_data(self) -> None:
-
         fetchoid = ".1.2.3"
         path = f"OID{fetchoid}"
         cache = MockWalkCache({path: [("23", b"43")]})

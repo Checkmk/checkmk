@@ -82,7 +82,6 @@ def check_aws_limits(aws_service, params, parsed_region_data):
     max_state = 0
     perfdata = []
     for resource_key, resource_title, limit, amount, human_readable_func in parsed_region_data:
-
         try:
             p_limit, warn, crit = params[resource_key]
         except KeyError:
@@ -152,7 +151,6 @@ def check_aws_request_rate(request_rate):
 def check_aws_error_rate(
     error_rate, request_rate, metric_name_rate, metric_name_perc, levels, display_text
 ):
-
     yield (
         0,
         f"{display_text}: {aws_get_counts_rate_human_readable(error_rate)}",
@@ -176,7 +174,6 @@ def check_aws_error_rate(
 def check_aws_http_errors(
     params, parsed, http_err_codes, cloudwatch_metrics_format, key_all_requests="RequestCount"
 ):
-
     request_rate = parsed.get(key_all_requests)
     if request_rate is None:
         raise MKCounterWrapped("Currently no data from AWS")
@@ -198,11 +195,9 @@ def check_aws_http_errors(
 def check_aws_metrics(
     metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]]
 ) -> Iterable[ServiceCheckResult]:
-
     go_stale = True
 
     for metric_info in metric_infos:
-
         metric_val = metric_info["metric_val"]
         if metric_val is None:
             continue

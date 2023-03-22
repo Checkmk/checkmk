@@ -40,14 +40,12 @@ factory_settings["huawei_channel_default"] = {"levels": (80.0, 90.0)}
 
 
 def parse_huawei_wlc_aps(info):
-
     parsed = {}
 
     aps_info1, aps_info2 = info
 
     # Access-Points
     for idx, ap_info1 in enumerate(aps_info1):
-
         # aps_info1 has general information about Access-point
         # aps_info2 has band information about Access-point
         # Every second line of aps_info1 matches aps_info2
@@ -115,7 +113,6 @@ check_info["huawei_wlc_aps"] = {
 
 
 def discovery_huawei_wlc_aps_status(parsed):
-
     for name, value in parsed.items():
         if value["state_readable"] is not None:
             yield name, {}
@@ -123,7 +120,6 @@ def discovery_huawei_wlc_aps_status(parsed):
 
 @get_parsed_item_data
 def check_huawei_wlc_aps_status(item, params, data):
-
     # General AP Status
     yield data["cmk_status"], "%s" % data["state_readable"]
 
@@ -132,7 +128,6 @@ def check_huawei_wlc_aps_status(item, params, data):
 
     # Band-dependent metrics
     for metric, band in (("24ghz", "2,4GHz"), ("5ghz", "5GHz")):
-
         # Number of users online
         users_online = data[metric]["users_online"]
         yield check_levels(
@@ -170,7 +165,6 @@ check_info["huawei_wlc_aps.status"] = {
 
 
 def discovery_huawei_wlc_aps_cpu(parsed):
-
     for name, value in parsed.items():
         if value["cpu_percent"] is not None:
             yield name, {}
@@ -178,7 +172,6 @@ def discovery_huawei_wlc_aps_cpu(parsed):
 
 @get_parsed_item_data
 def check_huawei_wlc_aps_cpu(item, params, data):
-
     lev = params["levels"]
     val = data["cpu_percent"]
     yield check_levels(
@@ -196,7 +189,6 @@ check_info["huawei_wlc_aps.cpu"] = {
 
 
 def discovery_huawei_wlc_aps_mem(parsed):
-
     for name, value in parsed.items():
         if value["mem_used_percent"] is not None:
             yield name, {}
@@ -204,7 +196,6 @@ def discovery_huawei_wlc_aps_mem(parsed):
 
 @get_parsed_item_data
 def check_huawei_wlc_aps_mem(item, params, data):
-
     lev = params["levels"]
     val = data["mem_used_percent"]
     yield check_levels(
@@ -226,7 +217,6 @@ check_info["huawei_wlc_aps.mem"] = {
 
 
 def discovery_huawei_wlc_aps_temp(parsed):
-
     for name, value in parsed.items():
         yield name, {}
 

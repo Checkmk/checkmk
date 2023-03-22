@@ -973,7 +973,6 @@ class EventServer(ECServerThread):
         now = time.time()
         for rule in self._rules:
             if "expect" in rule:
-
                 if not self._rule_matcher.event_rule_matches_site(rule, event={}):
                     continue
 
@@ -3227,7 +3226,6 @@ def replication_pull(  # pylint: disable=too-many-branches
 
     if need_sync:
         with event_status.lock, lock_configuration:
-
             try:
                 new_state = get_state_from_master(config, slave_status)
                 replication_update_state(settings, config, event_status, event_server, new_state)

@@ -277,7 +277,6 @@ def diskstat_convert_info(
     # with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
     if section_multipath:
         for uuid, group in section_multipath.items():
-
             if (
                 group.device in converted_disks
                 or group.alias is not None
@@ -325,7 +324,6 @@ def _compute_rates_single_disk(
     value_store: MutableMapping[str, Any],
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
-
     raised_ignore_res_excpt = False
     disk_with_rates = {k: disk[k] for k in ("queue_length",) if k in disk}
 

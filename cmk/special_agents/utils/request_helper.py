@@ -46,7 +46,6 @@ class Requester(abc.ABC):
 
 
 class HTTPSConfigurableConnection(HTTPSConnection):
-
     IGNORE = "__ignore"
 
     def __init__(self, host: str, ca_file: str | None = None) -> None:

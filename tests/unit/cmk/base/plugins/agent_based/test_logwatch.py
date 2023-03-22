@@ -101,7 +101,10 @@ SECTION1 = logwatch.logwatch.Section(
 
 def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(logwatch.logwatch, "get_ec_rule_params", lambda: [])
-    assert sorted(logwatch.discover_logwatch_single([], SECTION1), key=lambda s: s.item or "",) == [
+    assert sorted(
+        logwatch.discover_logwatch_single([], SECTION1),
+        key=lambda s: s.item or "",
+    ) == [
         Service(item="empty.log"),
         Service(item="my_other_log"),
         Service(item="mylog"),
@@ -167,7 +170,10 @@ def test_logwatch_discover_single_restrict(monkeypatch: pytest.MonkeyPatch) -> N
         "get_ec_rule_params",
         lambda: [{"restrict_logfiles": [".*2"]}],
     )
-    assert sorted(logwatch.discover_logwatch_single([], SECTION2), key=lambda s: s.item or "",) == [
+    assert sorted(
+        logwatch.discover_logwatch_single([], SECTION2),
+        key=lambda s: s.item or "",
+    ) == [
         Service(item="log1"),
         Service(item="log5"),
     ]

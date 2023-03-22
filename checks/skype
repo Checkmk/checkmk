@@ -666,7 +666,6 @@ def check_skype_mobile(_no_item, params, parsed):
         ("iPhoneLync", "iPhone"),
         ("LyncForMac", "Mac"),
     ]:
-
         try:
             value = int(ucwa_table.get(instance, "UCWA - Active Session Count"))
         except KeyError:

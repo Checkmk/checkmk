@@ -57,7 +57,6 @@ def _cluster_check_diskstat_io(
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> type_defs.CheckResult:
-
     present_sections = [section for section in section.values() if section is not None]
     if item == "SUMMARY":
         disk = diskstat.summarize_disks(

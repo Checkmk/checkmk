@@ -70,7 +70,6 @@ def test_openapi_livestatus_hosts_empty_query(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-
     live = mock_livestatus
 
     base = "/NO_SITE/check_mk/api/1.0"

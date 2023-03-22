@@ -23,7 +23,6 @@ def _tp_values() -> list[tuple[str, LegacyCheckParameters]]:
 
 class TestTimespecificParameterSet:
     def test_from_parameters_ts_dict(self) -> None:
-
         tsp = TimespecificParameterSet.from_parameters(
             {
                 "tp_default_value": _default(),

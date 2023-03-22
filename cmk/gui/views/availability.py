@@ -432,7 +432,6 @@ def _render_avoptions_form(
 def _page_menu_entries_av_mode(
     what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec, time_range: AVTimeRange
 ) -> Iterator[PageMenuEntry]:
-
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
             title=_("Table"),
@@ -675,7 +674,6 @@ def render_availability_table(  # type: ignore[no-untyped-def]
         limit=None,
         omit_headers="omit_headers" in avoptions["labelling"],
     ) as table:
-
         show_urls, show_timeline = False, False
         for row in av_table["rows"]:
             table.row()
@@ -742,7 +740,6 @@ def render_timeline_bar(  # type: ignore[no-untyped-def]
     html.open_table(id_="timeline_%d" % timeline_nr, class_=["timeline", style])
     html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
-
         td_attrs = {
             "style": "width: %.3f%%" % width,
             "title": title,

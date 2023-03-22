@@ -239,7 +239,6 @@ def page_index() -> None:
     items = []
     for view_name, view_spec in get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
-
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 

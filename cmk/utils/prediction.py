@@ -478,7 +478,6 @@ def _get_levels_from_params(
     stdev: float | None,
     levels_factor: float,
 ) -> tuple[float, float]:
-
     levels_type, (warn, crit) = levels
 
     reference_deviation = _get_reference_deviation(

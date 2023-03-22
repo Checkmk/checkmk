@@ -180,7 +180,6 @@ def test_diagnostics_element_environment() -> None:
 def test_diagnostics_element_environment_content(
     monkeypatch: pytest.MonkeyPatch, tmp_path: PurePath
 ) -> None:
-
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
 
     with monkeypatch.context() as m:
@@ -212,7 +211,6 @@ def test_diagnostics_element_filesize() -> None:
 
 @pytest.mark.usefixtures("monkeypatch")
 def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
-
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
 
     test_dir = cmk.utils.paths.local_checks_dir
@@ -456,7 +454,6 @@ def test_diagnostics_element_checkmk_overview_error(
 def test_diagnostics_element_checkmk_overview_content(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
-
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -633,7 +630,6 @@ def test_diagnostics_element_performance_graphs_error(
     content,
     error,
 ):
-
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -686,7 +682,6 @@ def test_diagnostics_element_performance_graphs_content(
     text,
     content,
 ):
-
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))

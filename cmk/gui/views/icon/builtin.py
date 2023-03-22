@@ -202,7 +202,6 @@ class RescheduleIcon(Icon):
             row[what + "_active_checks_enabled"] == 1
             or row[what + "_check_command"].startswith("check_mk-")
         ) and user.may("action.reschedule"):
-
             servicedesc = ""
             wait_svc = ""
             icon = "reload"
@@ -1212,7 +1211,6 @@ class CrashdumpsIcon(Icon):
             and row["service_state"] == 3
             and "check failed - please submit a crash report!" in row["service_plugin_output"]
         ):
-
             if not user.may("general.see_crash_reports"):
                 return "crash", _(
                     "This check crashed. Please inform a Check_MK user that is allowed "

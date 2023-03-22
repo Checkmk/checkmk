@@ -169,7 +169,6 @@ def check_ups_modulys_battery_temp(
     params: TempParamType,
     section: UPSBatterySection,
 ) -> CheckResult:
-
     if section and section.temperature is not None:
         yield from check_temperature(
             reading=section.temperature,

@@ -13,6 +13,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 info = [["8001591181312", "3875508482048"]]
 check_name = "fast_lta_silent_cubes_capacity"
 
+
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
 def _get_plugin(fix_register):
@@ -40,7 +41,6 @@ def test_discovery_fast_lta_silent_cube_capacity(
 def test_check_fast_lta_silent_cube_capacity(
     check_fast_lta_silent_cubes_capacity: CheckFunction,
 ) -> None:
-
     actual_check_results = list(
         check_fast_lta_silent_cubes_capacity(None, FILESYSTEM_DEFAULT_PARAMS, info)
     )

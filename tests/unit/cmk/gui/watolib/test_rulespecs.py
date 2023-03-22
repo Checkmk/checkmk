@@ -1446,7 +1446,6 @@ def test_rulespec_get_all_groups() -> None:
 
 
 def test_rulespec_get_host_groups() -> None:
-
     expected_rulespec_host_groups = [
         "checkparams",
         "checkparams/discovery",

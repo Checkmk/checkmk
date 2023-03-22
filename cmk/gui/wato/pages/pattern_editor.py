@@ -263,7 +263,6 @@ class ModePatternEditor(WatoMode):
                         # Applies to the given host/service
                         matched = re.search(pattern, self._match_txt)
                         if matched:
-
                             # Prepare highlighted search txt
                             match_start = matched.start()
                             match_end = matched.end()

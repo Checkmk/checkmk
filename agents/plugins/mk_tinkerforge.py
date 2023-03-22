@@ -85,7 +85,6 @@ def install():
     check_digest(buf, download_digest)
 
     with ZipFile(buf) as z:
-
         extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
         z.extractall(dest, extract_files)
 
@@ -291,7 +290,6 @@ def read_config(env):
 
 
 def main():
-
     # host = "localhost"
     # port = 4223
     # segment_display_uid = "abc"         # uid of the sensor to display on the 7-segment display

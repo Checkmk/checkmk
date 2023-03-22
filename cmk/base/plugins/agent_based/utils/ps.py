@@ -160,7 +160,6 @@ def maxx(a, b):
 
 
 def replace_service_description(service_description, match_groups, pattern):
-
     # New in 1.2.2b4: All %1, %2, etc. to be replaced with first, second, ...
     # group. This allows a reordering of the matched groups
     # replace all %1:
@@ -198,7 +197,6 @@ def match_attribute(attribute, pattern):
 
 
 def process_attributes_match(process_info, userspec, cgroupspec):
-
     cgroup_pattern, invert = cgroupspec
     if process_info.cgroup and (match_attribute(process_info.cgroup, cgroup_pattern) is invert):
         return False
@@ -214,7 +212,6 @@ def process_matches(
     process_pattern: str | None,
     match_groups: Sequence[str | None] | None = None,
 ) -> bool | re.Match[str]:
-
     if not process_pattern:
         # Process name not relevant
         return True
@@ -403,7 +400,6 @@ class ProcessAggregator:
     def cpu_usage(  # type: ignore[no-untyped-def]
         self, value_store, process_info, process: _Process
     ):
-
         now = time.time()
 
         pcpu_text = process_info.cputime.split("/")[0]
@@ -462,14 +458,12 @@ def process_capture(
     cpu_cores: int,
     value_store: MutableMapping[str, Any],
 ) -> ProcessAggregator:
-
     ps_aggregator = ProcessAggregator(cpu_cores, params)
 
     userspec = params.get("user")
     cgroupspec = params.get("cgroup", (None, False))
 
     for node_name, process_info, command_line in process_lines:
-
         if not process_attributes_match(process_info, userspec, cgroupspec):
             continue
 
@@ -490,7 +484,6 @@ def process_capture(
             and process_info.virtual is not None
             and process_info.physical is not None
         ):
-
             process.append(("user", (process_info.user, "")))
             process.append(("virtual size", (process_info.virtual, "kB")))
             process.append(("resident size", (process_info.physical, "kB")))

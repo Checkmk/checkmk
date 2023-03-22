@@ -678,7 +678,6 @@ class RsaPublicKey:
         return self._key.public_numbers() == other._key.public_numbers()
 
     def verify(self, signature: Signature, message: bytes, digest_algorithm: HashAlgorithm) -> None:
-
         # Currently the discouraged PKCS1 v1.5 padding is assumed. This is the only padding scheme
         # cryptography.io supports for signing X.509 certificates at this time.
         # See https://github.com/pyca/cryptography/issues/2850.

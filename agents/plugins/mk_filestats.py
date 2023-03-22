@@ -539,9 +539,7 @@ def output_aggregator_extremes_only(group_name, files_iter):
 
 
 def output_aggregator_single_file(group_name, files_iter):
-
     for lazy_file in files_iter:
-
         count_format_specifiers = group_name.count("%s")
 
         if count_format_specifiers == 0:
@@ -631,12 +629,10 @@ def iter_config_section_dicts(cfg_file=None):
 
 
 def main():
-
     args = parse_arguments()
 
     sys.stdout.write("<<<filestats:sep(0)>>>\n")
     for config_section_name, config in iter_config_section_dicts(args["cfg_file"]):
-
         # 1 input
         files_iter = get_file_iterator(config)
 

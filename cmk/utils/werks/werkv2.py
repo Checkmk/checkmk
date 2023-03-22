@@ -54,7 +54,6 @@ class RawWerkV2(BaseModel, RawWerk):
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "RawWerkV2":
-
         return cls.parse_obj(data)
 
     def to_json_dict(self) -> dict[str, object]:

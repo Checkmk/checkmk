@@ -2144,7 +2144,6 @@ def piggyback_formatter_with_cluster_name(
     cluster_name: str,
     kube_object: PB_KUBE_OBJECT,
 ) -> str:
-
     match kube_object:
         case Cluster():
             return ""

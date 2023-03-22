@@ -23,7 +23,6 @@ register.agent_section(
 
 
 def inventory_docker_container_node_name(section: Section) -> InventoryResult:
-
     if (node := section.get("NodeName")) is not None:
         yield Attributes(
             path=["software", "applications", "docker", "container"],

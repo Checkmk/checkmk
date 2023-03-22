@@ -44,7 +44,6 @@ def check_jenkins_instance(_no_item, _no_params, parsed):
         ("quietingDown", False, "Quieting Down"),
         ("useSecurity", True, "Security used"),
     ]:
-
         state = 0
         parsed_data = parsed.get(key)
 

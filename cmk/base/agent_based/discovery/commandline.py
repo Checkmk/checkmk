@@ -187,7 +187,6 @@ def _commandline_discovery_on_host(
     only_host_labels: bool,
     on_error: OnError,
 ) -> None:
-
     section.section_step("Analyse discovered host labels")
 
     host_labels = _analyse_node_labels(

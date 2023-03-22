@@ -20,7 +20,6 @@ def parse_aws_wafv2_web_acl(info):
 
 
 def check_aws_wafv2_web_acl(item, params, parsed):
-
     if len(parsed) == 0:
         raise MKCounterWrapped("Currently no data from AWS")
 
@@ -38,7 +37,6 @@ def check_aws_wafv2_web_acl(item, params, parsed):
     )
 
     for metric_id, metric_val in zip(metric_ids, metric_vals):
-
         # split at uppercase letters
         metric_id_split = [s.lower() for s in re.split("([A-Z][^A-Z]*)", metric_id) if s]
 

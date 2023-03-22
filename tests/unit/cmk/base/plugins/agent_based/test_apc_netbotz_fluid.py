@@ -69,7 +69,6 @@ PARSED_SECTION = {
 def test_parse_apc_netbotz_fluid(
     string_table: StringTable, expected_result: FluidSensorSection
 ) -> None:
-
     assert parse_apc_netbotz_fluid(string_table) == expected_result
 
 
@@ -90,7 +89,6 @@ def test_parse_apc_netbotz_fluid(
 def test_discovery_apc_netbotz_fluid(
     section: FluidSensorSection, discovered: DiscoveryResult
 ) -> None:
-
     assert list(discover_apc_netbotz_fluid(section)) == discovered
 
 
@@ -141,5 +139,4 @@ def test_discovery_apc_netbotz_fluid(
 def test_check_apc_netbotz_fluid(
     item: str, section: FluidSensorSection, result: CheckResult
 ) -> None:
-
     assert list(check_apc_netbotz_fluid(item, section)) == result

@@ -575,7 +575,13 @@ def test_discovery(section: nav.Section) -> None:
 
 
 def test_check_broken_volume(section: nav.Section) -> None:
-    assert list(nav.check_netapp_api_volumes("euedcnas1710.v_1710_a2mac1", {}, section,)) == [
+    assert list(
+        nav.check_netapp_api_volumes(
+            "euedcnas1710.v_1710_a2mac1",
+            {},
+            section,
+        )
+    ) == [
         Result(state=State.WARN, summary="Volume is broken"),
     ]
 

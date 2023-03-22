@@ -86,7 +86,6 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
     dev_warn_lower,
     dev_crit_lower,
 ):
-
     # Default values if none of the branches will match.
     warn = crit = warn_lower = crit_lower = None
 
@@ -471,7 +470,6 @@ def check_temperature_list(sensorlist, params, unique_name):
     status = 0
     detailtext = ""
     for entry in sensorlist:
-
         if len(entry) == 2:
             sub_item, temp = entry
             kwargs = {}

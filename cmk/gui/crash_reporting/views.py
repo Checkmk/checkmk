@@ -96,7 +96,6 @@ class CrashReportsRowTable(RowTable):
     def get_crash_report_rows(
         self, only_sites: list[SiteId] | None, filter_headers: str
     ) -> list[dict[str, str]]:
-
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
         crash_infos = self._get_crash_report_info(only_sites, filter_headers)

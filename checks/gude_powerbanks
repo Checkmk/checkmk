@@ -44,7 +44,6 @@ def parse_gude_powerbanks(info):
         freq_str,
         appower_str,
     ) in info[1]:
-
         oid, idx = oid_idx.split(".")
         device_state = None
         if oid in ["19"]:

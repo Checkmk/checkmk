@@ -79,7 +79,6 @@ def test_discover_storcli_vdrives(
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-
     assert (
         list(discover_storcli_vdrives(parse_storcli_vdrives(section))) == expected_discovery_result
     )
@@ -145,7 +144,6 @@ def test_check_storcli_vdrives(
     item: str,
     expected_check_result: Sequence[Result],
 ) -> None:
-
     assert (
         list(
             check_storcli_vdrives(

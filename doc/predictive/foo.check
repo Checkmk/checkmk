@@ -7,6 +7,7 @@
 
 # pylint: disable=blacklisted-name
 
+
 # Inventory function without any specialities. Return
 # None as a default parameter (meaning: no levels).
 def inventory_foo(info):

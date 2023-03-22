@@ -36,7 +36,6 @@ class TestDiscoveryMode:
 
 
 def test_qualified_discovery() -> None:
-
     result = QualifiedDiscovery(
         preexisting=(1, 2),
         current=(2, 3),
@@ -56,7 +55,6 @@ def test_qualified_discovery() -> None:
 
 
 def test_qualified_discovery_keeps_old() -> None:
-
     # e.g.: same service, different parameters
     result = QualifiedDiscovery(
         preexisting=["this is old"],

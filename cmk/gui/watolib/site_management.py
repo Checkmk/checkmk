@@ -457,7 +457,6 @@ class ConfigurationConnection:
     def from_internal(
         cls, site_id: SiteId, internal_config: SiteConfiguration
     ) -> ConfigurationConnection:
-
         return cls(
             enable_replication=bool(internal_config["replication"]),
             url_of_remote_site=internal_config["multisiteurl"],

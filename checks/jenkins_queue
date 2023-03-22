@@ -127,7 +127,6 @@ def check_jenkins_queue(no_item, params, parsed):
         (blocked_tasks, "blocked_tasks", "Blocked"),
         (pending_tasks, "pending_tasks", "Pending"),
     ]:
-
         jenkins_value = "jenkins_%s" % value
 
         yield check_levels(

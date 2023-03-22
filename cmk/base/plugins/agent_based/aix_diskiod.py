@@ -29,7 +29,6 @@ from .utils import diskstat
 
 
 def parse_aix_diskiod(string_table: type_defs.StringTable) -> diskstat.Section | None:
-
     section = {}
 
     for device, _tm_act, _kbps, _tps, kb_read, kb_written in string_table:

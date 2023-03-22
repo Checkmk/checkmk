@@ -104,9 +104,12 @@ class Dashlet(abc.ABC, Generic[T]):
     @classmethod
     def vs_parameters(
         cls,
-    ) -> None | list[DictionaryEntry] | ValueSpec | tuple[
-        Callable[[T], None], Callable[[DashletId, T, T], T]
-    ]:
+    ) -> (
+        None
+        | list[DictionaryEntry]
+        | ValueSpec
+        | tuple[Callable[[T], None], Callable[[DashletId, T, T], T]]
+    ):
         """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
         # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)
         return None

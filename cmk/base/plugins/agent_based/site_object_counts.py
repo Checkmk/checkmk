@@ -51,7 +51,6 @@ def discover_site_object_counts(section: Section) -> type_defs.DiscoveryResult:
 
 
 def check_site_object_counts(section: Section) -> type_defs.CheckResult:
-
     global_counts: Dict[str, Dict[str, int]] = {}
     for site, site_data in section.items():
         site_info = []

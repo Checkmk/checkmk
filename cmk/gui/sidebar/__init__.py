@@ -489,7 +489,6 @@ class SidebarRenderer:
         may_configure = user.may("general.configure_sidebar")
 
         if show_more or may_configure:
-
             html.open_div(class_="snapin_buttons")
 
             if show_more:

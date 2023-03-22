@@ -54,7 +54,6 @@ def parse_graylog_streams(string_table: StringTable) -> Section:
     section: dict = {}
 
     for (word,) in string_table:
-
         streams = json.loads(word)
 
         stream_data = streams.get("streams")
@@ -62,7 +61,6 @@ def parse_graylog_streams(string_table: StringTable) -> Section:
             continue
 
         for stream in stream_data:
-
             stream_title = stream.get("title")
             if stream_title is None:
                 continue
@@ -97,7 +95,6 @@ def check_graylog_streams(params: Mapping, section: Section) -> CheckResult:
     )
 
     for stream, values in sorted(section.items()):
-
         if values["is_default"]:
             yield Result(state=State.OK, summary=f"Stream: {stream} (default)")
         elif values["disabled"]:

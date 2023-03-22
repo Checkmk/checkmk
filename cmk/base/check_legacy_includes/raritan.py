@@ -137,7 +137,6 @@ def parse_raritan_sensors(info):
         sensor_upper_crit_str,
         sensor_upper_warn_str,
     ) in info:
-
         sensor_type, sensor_type_readable = raritan_map_type.get(sensor_type, ("", "Other"))
 
         extra_name = ""

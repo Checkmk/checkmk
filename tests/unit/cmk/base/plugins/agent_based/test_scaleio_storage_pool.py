@@ -93,7 +93,6 @@ STRING_TABLE_WITH_UNKNOWN_UNIT: StringTable = [
 
 
 def test_parse_scaleio_id_and_name() -> None:
-
     scaleio_storage_pool = parse_scaleio_storage_pool(STRING_TABLE)["4e9a44c700000000"]
     assert scaleio_storage_pool.pool_id == "4e9a44c700000000"
     assert scaleio_storage_pool.name == "pool01"

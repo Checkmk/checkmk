@@ -44,7 +44,6 @@ def merge_sections(
     section_omd_status: Mapping[str, Mapping],
     section_omd_info: Mapping[str, Mapping[str, Mapping]],
 ) -> Dict[str, Dict]:
-
     merged_section: Dict[str, Dict] = {"check_mk": {}, "sites": {}, "versions": {}}
 
     # SECTION: livestatus_status
@@ -153,7 +152,6 @@ def merge_sections(
 
 
 def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
-
     for key, elem in merged_sections["sites"].items():
         yield TableRow(
             path=["software", "applications", "check_mk", "sites"],
@@ -183,7 +181,6 @@ def inventory_checkmk(
     section_omd_status: Optional[Dict[str, Dict]],
     section_omd_info: Optional[Dict[str, Dict[str, Dict]]],
 ) -> InventoryResult:
-
     merged_sections = merge_sections(
         section_livestatus_status or {},
         section_omd_status or {},

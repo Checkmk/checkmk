@@ -237,7 +237,6 @@ def test_agent_aws_s3(  # type: ignore[no-untyped-def]
     assert s3.name == "s3"
 
     if amount_buckets:
-
         assert len(s3_results) == 1
         s3_result = s3_results[0]
         assert s3_result.piggyback_hostname == ""

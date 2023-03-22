@@ -207,7 +207,6 @@ class LabelConditionSchema(base.BaseSchema):
 
 
 class TagConditionSchemaBase(base.BaseSchema):
-
     allowed_operators: tuple[str, str]
     operator_type: str
 

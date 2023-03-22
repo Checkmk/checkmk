@@ -185,7 +185,6 @@ def _process_job_stats(
     exit_code_to_state_map: Dict[int, State],
     now: float,
 ) -> type_defs.CheckResult:
-
     yield Result(
         state=exit_code_to_state_map.get(job["exit_code"], State.CRIT),
         summary=f"Latest exit code: {job['exit_code']}",
@@ -251,7 +250,6 @@ def check_job(
     params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
-
     job = section.get(item)
     if job is None:
         return

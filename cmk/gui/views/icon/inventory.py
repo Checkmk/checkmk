@@ -31,7 +31,6 @@ class InventoryIcon(Icon):
             what == "host"
             or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")
         ) and inventory.has_inventory(row["host_name"]):
-
             if not user.may("view.inv_host"):
                 return None
 

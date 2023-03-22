@@ -134,7 +134,6 @@ def _completion_link(activation_id: str) -> LinkType:
 def _activation_run_domain_object(
     activation_response: ActivationRestAPIResponseExtensions,
 ) -> DomainObject:
-
     return constructors.domain_object(
         domain_type="activation_run",
         identifier=activation_response.activation_id,

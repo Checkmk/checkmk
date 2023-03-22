@@ -26,7 +26,6 @@ class PreUpdateUIExtensions(PreUpdateAction):
         installer, package_map = get_installer_and_package_map()
         disabled_packages: set[PackageID] = set()
         for path, _gui_part, module_name, error in get_failed_plugins():
-
             package_id = package_map.get(path.resolve())
             # unpackaged files
             if package_id is None:

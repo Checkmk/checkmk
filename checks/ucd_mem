@@ -46,7 +46,6 @@ def inventory_ucd_mem(parsed):
 
 
 def check_ucd_mem(item, params, parsed):
-
     if not parsed:
         return
 

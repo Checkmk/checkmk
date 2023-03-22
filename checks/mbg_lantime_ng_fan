@@ -22,7 +22,6 @@ def parse_mbg_lantime_ng_fan(info):
     }
 
     for line in info:
-
         index, fan_status, fan_error = line
         if not index:
             continue

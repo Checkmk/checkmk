@@ -21,6 +21,7 @@ from .utils import domino, memory, ps
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.7 tm_grab
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.8 Router
 
+
 # Bring the SNMP data in the format expected by the common ps functions.
 # e.g.:
 # [PsInfo(), u'/sbin/init', u'splash']
@@ -57,7 +58,6 @@ def check_domino_tasks(
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
 ) -> CheckResult:
-
     if section_domino_tasks is None:
         # The driving force of this check is the section 'domino_tasks'. If
         # this data is not available, the check should go stale.
@@ -84,7 +84,6 @@ def cluster_check_domino_tasks(
     section_domino_tasks: Mapping[str, Optional[ps.Section]],
     section_mem: Mapping[str, Optional[memory.SectionMem]],
 ) -> CheckResult:
-
     iter_non_trivial_sections = (
         (node_name, node_section)
         for node_name, node_section in section_domino_tasks.items()

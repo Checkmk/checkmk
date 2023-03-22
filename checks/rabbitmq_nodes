@@ -57,7 +57,6 @@ def parse_rabbitmq_nodes(info):
 
             node_name = node.get("name")
             if node_name is not None:
-
                 fd_stats = {
                     "fd_used": node.get("fd_used"),
                     "fd_total": node.get("fd_total"),
@@ -142,7 +141,6 @@ def check_rabbitmq_nodes(item, params, parsed):
         ("disk_free_alarm", "Disk alarm in effect"),
         ("mem_alarm", "Memory alarm in effect"),
     ]:
-
         alarm_value = parsed.get(alarm_key)
         if alarm_value is None:
             continue
@@ -184,7 +182,6 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
     open_fd = fd_data.get("fd_open")
     if open_fd is not None:
-
         levels_upper = params.get("fd_open_upper", (None, None))
 
         yield check_levels(
@@ -197,7 +194,6 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
     open_fd_rate = fd_data.get("fd_open_rate")
     if open_fd_rate is not None:
-
         levels_upper = params.get("fd_open_rate_upper", (None, None))
         levels_lower = params.get("fd_open_rate_lower", (None, None))
 
@@ -315,7 +311,6 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
         ("gc_bytes_reclaimed_rate", "Rate", render.iobandwidth, "gc_bytes_rate"),
         ("run_queue", "Runtime run queue", int, "runtime_run_queue"),
     ]:
-
         value = gc_data.get(key)
         if value is None:
             continue

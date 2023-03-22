@@ -27,7 +27,6 @@ def parse_ucs_c_rack_server_led(string_table: type_defs.StringTable) -> Dict[str
     key_translation = {"operState": "Operational state"}
 
     for led_data in string_table:
-
         item = led_data[1].split(" ", 1)[1]
         item = (
             item.replace("sys", "")

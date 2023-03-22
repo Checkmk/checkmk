@@ -297,7 +297,6 @@ class Bookmarks(SidebarSnapin):
                 indent=False,
                 icon="foldable_sidebar",
             ):
-
                 for bookmark in bookmarks:
                     icon = bookmark["icon"]
                     if not icon:

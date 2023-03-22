@@ -490,7 +490,6 @@ def normalize_perf_data(  # type: ignore[no-untyped-def]
 
 
 def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExtended, int]:
-
     if metric_name in metric_info:
         mi = metric_info[metric_name]
     else:

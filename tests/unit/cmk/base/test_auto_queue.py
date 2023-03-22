@@ -15,7 +15,6 @@ from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
 
 
 def test_time_limit_filter_iterates() -> None:
-
     with TimeLimitFilter(limit=42, grace=0) as limiter:
         test_list = list(limiter(iter(range(3))))
     assert test_list == [0, 1, 2]

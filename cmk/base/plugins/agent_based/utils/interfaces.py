@@ -653,7 +653,6 @@ def bandwidth_levels(
 
     for direction_spec, (levels_type, levels_spec) in raw_levels:
         for direction in ["in", "out"] if direction_spec == "both" else [direction_spec]:
-
             if levels_type == "predictive":
                 merged_levels[direction] = PredictiveLevels(levels_spec)
 
@@ -784,7 +783,6 @@ def _check_single_matching_conditions(
     attributes: Attributes,
     matching_conditions: MatchingConditions,
 ) -> bool:
-
     match_index = matching_conditions.get("match_index")
     match_alias = matching_conditions.get("match_alias")
     match_desc = matching_conditions.get("match_desc")
@@ -821,7 +819,6 @@ def _check_group_matching_conditions(
     group_name: str,
     group_configuration: GroupConfiguration,
 ) -> bool:
-
     # group defined in agent output
     if "inclusion_condition" not in group_configuration:
         return group_name == attributes.group
@@ -1282,7 +1279,6 @@ def check_multiple_interfaces(
     timestamp: float | None = None,
     value_store: MutableMapping[str, Any] | None = None,
 ) -> type_defs.CheckResult:
-
     if timestamp is None:
         timestamp = time.time()
     if value_store is None:
@@ -1552,7 +1548,6 @@ def _interface_status(
     attributes: Attributes,
     use_discovered_states: bool,
 ) -> Iterable[Result]:
-
     if use_discovered_states:
         target_oper_states = params.get("state", params.get("discovered_oper_status"))
         target_admin_states = params.get("admin_state", params.get("discovered_admin_status"))
@@ -1660,7 +1655,10 @@ def _check_oper_and_admin_state_combined(
     assert not isinstance(state_mappings, Mapping)
     if (
         combined_mon_state := {
-            (oper_state, admin_state,): State(
+            (
+                oper_state,
+                admin_state,
+            ): State(
                 mon_state
             )  #
             for oper_state, admin_state, mon_state in state_mappings

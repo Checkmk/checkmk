@@ -92,7 +92,6 @@ def _parse_plugin_win(line: str, prefix: str) -> Optional[Plugin]:
 def _parse_checkmk_agent_plugins_core(
     string_table: StringTable, parser: Callable[[str, str], Optional[Plugin]]
 ) -> PluginSection:
-
     assert string_table[0][0].startswith("pluginsdir ")
     plugins_dir = string_table[0][0][len("pluginsdir ") :]
 

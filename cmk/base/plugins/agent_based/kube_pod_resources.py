@@ -219,7 +219,6 @@ def _check_kube_pod_resources(
     section_kube_pod_resources: Optional[PodResources],
     section_kube_allocatable_pods: Optional[AllocatablePods],
 ) -> CheckResult:
-
     assert section_kube_pod_resources is not None, "Missing Api data"
     yield from check_kube_pods(params, section_kube_pod_resources, now, value_store)
 

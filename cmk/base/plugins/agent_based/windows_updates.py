@@ -71,6 +71,7 @@ register.agent_section(
     parse_function=parse_windows_updates,
 )
 
+
 # NOTE: section can't be renamed to _section due to creative logic
 def discover(section: Section) -> DiscoveryResult:
     yield Service()

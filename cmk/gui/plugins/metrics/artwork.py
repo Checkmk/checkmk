@@ -744,7 +744,6 @@ def _get_min_max_from_curves(
     # Enlarge a given range if necessary.
     for curve in layouted_curves:
         for point in curve["points"]:
-
             # Line points
             if isinstance(point, (float, int)):
                 if max_value is None:

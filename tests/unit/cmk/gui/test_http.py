@@ -261,7 +261,6 @@ class ModelForTest(BaseModel):
 
 
 def test_get_model_mandatory(request_context: RequestContextFixture) -> None:
-
     request.set_var("my_model", '{"my_float": 23.42, "my_string": "yes"}')
 
     with pytest.raises(MKUserError):
@@ -273,7 +272,6 @@ def test_get_model_mandatory(request_context: RequestContextFixture) -> None:
 
 
 def test_get_model_mandatory_invalid(request_context: RequestContextFixture) -> None:
-
     request.set_var("my_model", '{"my_float": "mööp", "my_string": 17}')
 
     with pytest.raises(MKUserError):

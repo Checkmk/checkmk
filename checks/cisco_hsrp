@@ -67,7 +67,6 @@ def inventory_cisco_hsrp(info):
 
 
 def check_cisco_hsrp(item, params, info):
-
     _hsrp_grp_wanted, hsrp_state_wanted = params
 
     for line in info:

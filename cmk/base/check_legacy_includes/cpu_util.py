@@ -222,7 +222,6 @@ def _check_single_core_util(util, metric, levels, infoname):
 
 # ALREADY MIGRATED
 def _util_perfdata(core, total_perc, core_index, this_time, params):
-
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
         yield cpu_util_time(this_time, core, total_perc, threshold, warn, crit)

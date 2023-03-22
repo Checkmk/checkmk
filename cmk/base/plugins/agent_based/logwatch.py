@@ -256,7 +256,6 @@ def _match_group_patterns(
     inclusion: str,
     exclusion: str,
 ) -> bool:
-
     # NOTE: in the grouped sap and fileinfo checks, the *exclusion* pattern wins.
     inclusion_is_regex = inclusion.startswith("~")
     if inclusion_is_regex:
@@ -341,7 +340,6 @@ def truncate_by_line(file_path: pathlib.Path, offset: int) -> None:
 
 
 class LogwatchBlock:
-
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 

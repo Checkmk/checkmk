@@ -179,7 +179,6 @@ def get_status_result(
 def check_azure_virtual_machine_summary(
     params: Mapping[str, VMSummaryParams], section: Section
 ) -> CheckResult:
-
     resources = section.values()
     all_statuses = [dict(get_statuses(r)) for r in resources]
 

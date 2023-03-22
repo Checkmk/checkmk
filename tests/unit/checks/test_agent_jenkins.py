@@ -7,7 +7,6 @@ from tests.testlib import SpecialAgent
 
 
 def test_agent_jenkins_arguments_password_store() -> None:
-
     params = {
         "user": "username",
         "password": ("password", "passwd"),

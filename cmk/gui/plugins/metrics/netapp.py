@@ -27,7 +27,6 @@ def _fix_title(title):
 
 
 def register_netapp_api_vs_traffic_metrics():
-
     metric_info["read_data"] = {
         "title": _("Data read"),
         "unit": "bytes",
@@ -86,7 +85,6 @@ register_netapp_api_vs_traffic_metrics()
 
 
 def register_netapp_api_vs_traffic_graphs():
-
     graph_info["read_write_data"] = {
         "title": _("Traffic"),
         "metrics": [

@@ -65,7 +65,6 @@ def check(
     params: Mapping[str, Tuple[float, float]],
     section: _Section,
 ) -> CheckResult:
-
     if not (battery := section.get(item)):
         return
 

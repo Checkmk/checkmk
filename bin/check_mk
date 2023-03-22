@@ -46,6 +46,7 @@ cmk.base.utils.register_sigint_handler()
 
 help_function = modes.get("help").handler_function
 
+
 # We probably don't really need to register that here, do we?
 @crash_report_registry.register
 class CrashReport(ABCCrashReport):

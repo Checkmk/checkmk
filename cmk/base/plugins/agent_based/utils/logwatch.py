@@ -118,7 +118,6 @@ def reclassify(
     text: str,
     old_level: str,
 ) -> str:
-
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):

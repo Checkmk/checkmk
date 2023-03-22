@@ -75,7 +75,6 @@ def check_threepar_remotecopy(
     params: Mapping[str, State],
     section: ThreeparRemoteCopy,
 ) -> CheckResult:
-
     yield MODES[section.mode]
 
     yield Result(

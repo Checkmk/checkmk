@@ -15,7 +15,6 @@ KEY_PULSE_SECURE_CPU = "cpu_util"
 
 
 def check_pulse_secure_cpu(item, params, parsed):
-
     if not parsed:
         return None
 

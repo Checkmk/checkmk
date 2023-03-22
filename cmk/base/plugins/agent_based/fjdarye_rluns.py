@@ -74,7 +74,6 @@ def discover_fjdarye_rluns(section: Mapping[str, FjdaryeRlun]) -> DiscoveryResul
 
 
 def check_fjdarye_rluns(item: str, section: Mapping[str, FjdaryeRlun]) -> CheckResult:
-
     if (rlun := section.get(item)) is None:
         return
 

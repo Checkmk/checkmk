@@ -77,6 +77,7 @@ class PathConfig:
 
     def get_part(self, full_file_path: Path) -> PackagePart | None:
         """Determine the part for a given file (or return None if there is none)"""
+
         # deal with parts containing each other by checking more specific ones first!
         def _part_depth(part: PackagePart) -> int:
             return len(Path(self.get_path(part)).resolve().parts)

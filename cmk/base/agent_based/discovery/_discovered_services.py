@@ -35,7 +35,6 @@ def analyse_discovered_services(
     keep_vanished: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[AutocheckEntry]:
-
     return _analyse_discovered_services(
         existing_services=AutochecksStore(host_name).read(),
         discovered_services=_discover_services(
@@ -60,7 +59,6 @@ def _analyse_discovered_services(
     forget_existing: bool,
     keep_vanished: bool,
 ) -> QualifiedDiscovery[AutocheckEntry]:
-
     return QualifiedDiscovery(
         preexisting=_services_to_remember(
             choose_from=existing_services,

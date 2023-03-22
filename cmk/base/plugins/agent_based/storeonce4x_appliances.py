@@ -68,14 +68,12 @@ _LICENSE_MAP = {
 
 
 def parse_storeonce4x_appliances(string_table: StringTable) -> Section:
-
     parsed: dict[str, dict[str, Any]] = {}
 
     federation_json = json.loads(string_table[0][0])
     dashboard_json_list = [json.loads(json_obj[0]) for json_obj in string_table[1:]]
 
     for member in federation_json["members"]:
-
         hostname = member["hostname"]
 
         parsed[hostname] = {}

@@ -13,7 +13,6 @@ def parse_jolokia_info(info):
 
 @get_parsed_item_data
 def check_jolokia_info(item, _no_params, data):
-
     line = data[0]
     # Inform user of non-working agent plugin, eg. missing json library
     if item == "Error:":

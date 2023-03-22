@@ -81,14 +81,28 @@ def test_check_version_match() -> None:
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_version_mismatch(fail_state: State) -> None:
-    assert [*_check_version("1.2.3", "1.2.3", ("specific", {"literal": "1.2.2"}), fail_state,)] == [
+    assert [
+        *_check_version(
+            "1.2.3",
+            "1.2.3",
+            ("specific", {"literal": "1.2.2"}),
+            fail_state,
+        )
+    ] == [
         Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
     ]
 
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_version_site_mismatch(fail_state: State) -> None:
-    assert [*_check_version("1.2.3", "1.2.2", ("site", {}), fail_state,)] == [
+    assert [
+        *_check_version(
+            "1.2.3",
+            "1.2.2",
+            ("site", {}),
+            fail_state,
+        )
+    ] == [
         Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
     ]
 

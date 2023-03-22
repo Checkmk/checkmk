@@ -365,7 +365,6 @@ class Table:
                 num_rows_unlimited = self.limit_hint
 
             if limit and num_rows_unlimited > limit:
-
                 html.show_message(
                     _(
                         "This table is limited to show only %d of %d rows. "

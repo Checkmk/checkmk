@@ -64,7 +64,6 @@ def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
         parse_aws(string_table),
         extra_keys=["DBInstanceIdentifier", "AllocatedStorage", "Region"],
     ).values():
-
         try:
             metrics["AllocatedStorage"] *= 1.074e9
         except KeyError:

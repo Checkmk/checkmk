@@ -108,7 +108,6 @@ def test_check_vxvm_multipath(
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
-
     assert (
         list(
             check_vxvm_multipath(

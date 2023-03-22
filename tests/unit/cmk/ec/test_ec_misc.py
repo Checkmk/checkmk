@@ -47,7 +47,6 @@ from cmk.ec.export import match_ip_network
     ),
 )
 def test_match_ip_network_ipv4(pattern: str, ip: str, expected: bool) -> None:
-
     assert match_ip_network(pattern, ip) == expected
 
 
@@ -87,7 +86,6 @@ def test_match_ip_network_ipv4(pattern: str, ip: str, expected: bool) -> None:
     ),
 )
 def test_match_ip_network_ipv6(pattern: str, ip: str, expected: bool) -> None:
-
     assert match_ip_network(pattern, ip) == expected
 
 

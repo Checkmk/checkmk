@@ -37,7 +37,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 def test_apc_netbotz_drycontact_inventory(
     parsed: Mapping[str, object], expected: Sequence[object]
 ) -> None:
-
     check = Check("apc_netbotz_drycontact")
     assert list(check.run_discovery(parsed)) == expected
 
@@ -74,7 +73,6 @@ def test_apc_netbotz_drycontact_inventory(
     ],
 )
 def test_apc_netbotz_drycontact_parse(info: StringTable, expected: Mapping[str, object]) -> None:
-
     check = Check("apc_netbotz_drycontact")
     assert check.run_parse(info) == expected
 
@@ -126,6 +124,5 @@ def test_apc_netbotz_drycontact_check(
     data: Mapping[str, object],
     expected: tuple[int, str],
 ) -> None:
-
     check = Check("apc_netbotz_drycontact")
     assert check.run_check(item, params, data) == expected

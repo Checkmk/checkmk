@@ -219,7 +219,6 @@ class ModeUsers(WatoMode):
 
         if request.var("_sync"):
             try:
-
                 job = userdb.UserSyncBackgroundJob()
 
                 try:

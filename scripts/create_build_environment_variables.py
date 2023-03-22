@@ -43,7 +43,6 @@ def cmd_out(cmd, **args):
 
 
 def main():
-
     print("# generated using create_build_environment_variables.py, don't modify directly")
     print(
         "\n".join(

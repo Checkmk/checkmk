@@ -34,12 +34,10 @@ def _extract_controller(line: str) -> Optional[str]:
 
 
 def parse_storcli_cache_vault(string_table: StringTable) -> Section:
-
     raw_section: _RawSection = {}
     raw_roperties: _RawCacheVaultProperties = {}
 
     for (line,) in (l for l in string_table if l):
-
         if (item := _extract_controller(line)) is not None:
             raw_roperties = raw_section.setdefault(item, {})
             continue

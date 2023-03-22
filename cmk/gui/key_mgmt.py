@@ -199,7 +199,6 @@ class PageKeyManagement:
 
     def page(self) -> None:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
-
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])

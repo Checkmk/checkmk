@@ -544,7 +544,7 @@ def get_bi_pack(params: Mapping[str, Any]) -> Response:
 
     uri = constructors.object_href("bi_pack", bi_pack.id)
     domain_members = {}
-    for (name, entities) in [
+    for name, entities in [
         ("aggregation", bi_pack.get_aggregations()),
         ("rule", bi_pack.get_rules()),
     ]:

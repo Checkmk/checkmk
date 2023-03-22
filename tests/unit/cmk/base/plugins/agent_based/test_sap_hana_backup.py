@@ -73,7 +73,6 @@ def test_parse(
 
 
 def test_discovery_sap_hana_backup() -> None:
-
     section = {
         "SAP INSTANCE - Backup": sap_hana_backup.Backup(),
         "SAP INSTANCE - Log": sap_hana_backup.Backup(),
@@ -86,7 +85,6 @@ def test_discovery_sap_hana_backup() -> None:
 
 @freeze_time(NOW_SIMULATED)
 def test_check_sap_hana_backup_OK() -> None:
-
     params = {"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)}
     yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
 

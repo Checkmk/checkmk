@@ -458,7 +458,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     if actchecks:
         cfg.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
-
             has_perfdata = act_info.get("has_perfdata", False)
 
             # Make hostname available as global variable in argument functions
@@ -466,7 +465,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 for description, args in core_config.iter_active_check_services(
                     acttype, act_info, hostname, host_attrs, params, stored_passwords
                 ):
-
                     if not description:
                         config_warnings.warn(
                             f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
@@ -1265,7 +1263,10 @@ if '-d' in sys.argv:
     output.write("config.load_packed_config(LATEST_CONFIG)\n")
 
     # IP addresses
-    needed_ipaddresses, needed_ipv6addresses, = (
+    (
+        needed_ipaddresses,
+        needed_ipv6addresses,
+    ) = (
         {},
         {},
     )
@@ -1435,7 +1436,6 @@ def _get_needed_agent_based_modules(
     check_plugin_names: set[CheckPluginName],
     inventory_plugin_names: set[InventoryPluginName],
 ) -> list[str]:
-
     modules = {
         plugin.module
         for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]

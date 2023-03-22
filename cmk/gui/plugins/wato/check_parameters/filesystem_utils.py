@@ -145,7 +145,6 @@ def _tuple_convert(val: tuple[float, ...]) -> tuple[float, ...]:
 
 
 def _transform_filesystem_free(value):
-
     if isinstance(value, tuple):
         return _tuple_convert(value)
 
@@ -525,7 +524,6 @@ def vs_filesystem(
     ignored_keys: Sequence[str] | None = None,
     title: str | None = None,
 ) -> Dictionary:
-
     if extra_elements is None:
         extra_elements = []
 

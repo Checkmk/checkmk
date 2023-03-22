@@ -50,7 +50,6 @@ def inventory_oracle_jobs(info):
 
 
 def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
-
     # only extract the sid from item.
     sid = item[0 : item.index(".", 0)]
 
@@ -152,7 +151,6 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
             )
             or (lineformat == 1 and itemname == job_name and itemsid == sid)
         ):
-
             service_found = True
             param_consider_job_status = params["consider_job_status"]
 
@@ -231,7 +229,6 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
     if job_state == "RUNNING" and job_runtime == "" and job_last_state == "STOPPED":
         txt = "Job is running forever"
     else:
-
         if job_last_state == "":
             # no information from job log (outer join in SQL is empty)
             txt = " no log information found"

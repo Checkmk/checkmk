@@ -55,7 +55,6 @@ class FakeWAFV2Client:
 
 
 def create_sections(names, tags, is_regional):
-
     region = "region" if is_regional else "us-east-1"
     scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
@@ -136,7 +135,6 @@ wafv2_params = [
 
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
-
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
 
     region = "region"
@@ -157,7 +155,6 @@ def test_agent_aws_wafv2_regional_cloudfront() -> None:
 
 
 def _test_limits(wafv2_sections):
-
     wafv2_limits = wafv2_sections["wafv2_limits"]
     wafv2_limits_results = wafv2_limits.run().results
 
@@ -181,7 +178,6 @@ def test_agent_aws_wafv2_limits(  # type: ignore[no-untyped-def]
 
 
 def _test_summary(wafv2_summary, found_instances):
-
     wafv2_summary_results = wafv2_summary.run().results
 
     assert wafv2_summary.cache_interval == 300
@@ -216,7 +212,6 @@ def test_agent_aws_wafv2_summary_wo_limits(  # type: ignore[no-untyped-def]
 
 
 def _test_web_acl(wafv2_sections, found_instances):
-
     _wafv2_summary_results = wafv2_sections["wafv2_summary"].run().results
     wafv2_web_acl = wafv2_sections["wafv2_web_acl"]
     wafv2_web_acl_results = wafv2_web_acl.run().results

@@ -14,7 +14,6 @@ from cmk.checkers.discovery import AutochecksStore
 
 
 def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:
-
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, site, host_name)
@@ -91,7 +90,6 @@ register.check_plugin(
 
 
 def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> None:
-
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, site, host_name)

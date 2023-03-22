@@ -1285,7 +1285,6 @@ class EC2Limits(AWSSectionLimits):
         )
 
     def _add_security_group_limits(self, security_groups) -> None:  # type: ignore[no-untyped-def]
-
         self._add_limit(
             "",
             AWSLimit(
@@ -2695,7 +2694,6 @@ class ELBSummaryGeneric(AWSSection):
         distributor: ResultDistributor | None = None,
         resource: str = "",
     ) -> None:
-
         self._resource = resource
         if self._resource == "elb":
             self._describe_load_balancers_karg = "LoadBalancerNames"
@@ -3330,13 +3328,11 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         target_types: Sequence[str],
         metrics_to_get: Sequence[str],
     ) -> Metrics:
-
         metrics: Metrics = []
 
         for idx, (load_balancer_dns_name, load_balancer) in enumerate(
             colleague_contents.content.items()
         ):
-
             # these metrics only apply to application load balancers
             load_balancer_type = load_balancer.get("Type")
             if load_balancer_type != "application":
@@ -3345,7 +3341,6 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
             load_balancer_dim = _elbv2_load_balancer_arn_to_dim(load_balancer["LoadBalancerArn"])
 
             for target_group in load_balancer["TargetGroups"]:
-
                 # only add metrics if the target group is of the right type, for example, we do not
                 # want to discover the service aws_elbv2_target_groups_http for target groups of
                 # type 'lambda' or the service aws_elbv2_target_groups_lambda for target groups of
@@ -3632,7 +3627,6 @@ class RDSSummary(AWSSection):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-
         db_instances = []
 
         for instance in self._describe_db_instances():
@@ -4114,7 +4108,6 @@ class DynamoDBLimits(AWSSectionLimits):
         read_limit: int,
         write_limit: int,
     ) -> None:
-
         self._add_limit(
             piggyback_hostname,
             AWSLimit(
@@ -4138,13 +4131,11 @@ class DynamoDBLimits(AWSSectionLimits):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-
         tables, limits = raw_content.content
         account_read_usage = 0
         account_write_usage = 0
 
         for table in tables:
-
             key_usage = "ProvisionedThroughput"
             table_usage_read = table[key_usage]["ReadCapacityUnits"]
             table_usage_write = table[key_usage]["WriteCapacityUnits"]
@@ -4246,7 +4237,6 @@ class DynamoDBSummary(AWSSection):
     def _describe_tables(  # type: ignore[no-untyped-def]
         self, colleague_contents: AWSColleagueContents
     ):
-
         if self._names is None:
             if colleague_contents.content:
                 return colleague_contents.content
@@ -4304,11 +4294,9 @@ class DynamoDBTable(AWSSectionCloudwatch):
         return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
-
         metrics: Metrics = []
 
         for idx, (piggyback_hostname, table) in enumerate(colleague_contents.content.items()):
-
             for metric_name, stat, operation_dim, unit in [
                 ("ConsumedReadCapacityUnits", "Minimum", "", "Count"),
                 ("ConsumedReadCapacityUnits", "Maximum", "", "Count"),
@@ -4323,7 +4311,6 @@ class DynamoDBTable(AWSSectionCloudwatch):
                 ("SuccessfulRequestLatency", "Maximum", "PutItem", "Milliseconds"),
                 ("SuccessfulRequestLatency", "Average", "PutItem", "Milliseconds"),
             ]:
-
                 dimensions: list[Dimension] = [{"Name": "TableName", "Value": table["TableName"]}]
 
                 if operation_dim:
@@ -4356,7 +4343,6 @@ class DynamoDBTable(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-
         content_by_piggyback_hosts: dict[str, list[dict[str, object]]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
@@ -4442,7 +4428,6 @@ class WAFV2Limits(AWSSectionLimits):
             (self._client.list_ip_sets, "IPSets"),  # type: ignore[attr-defined]
             (self._client.list_regex_pattern_sets, "RegexPatternSets"),  # type: ignore[attr-defined]
         ]:
-
             resources[key] = _iterate_through_wafv2_list_operations(
                 list_operation, self._scope, key, self._get_response_content
             )
@@ -4530,7 +4515,6 @@ class WAFV2Summary(AWSSection):
         return AWSColleagueContents([], 0.0)
 
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
-
         (colleague_contents,) = args
         found_web_acls = []
 
@@ -4552,7 +4536,6 @@ class WAFV2Summary(AWSSection):
     def _describe_web_acls(
         self, colleague_contents: AWSColleagueContents
     ) -> Sequence[dict[str, object]]:
-
         if self._names is None:
             if colleague_contents.content:
                 return colleague_contents.content
@@ -4633,11 +4616,9 @@ class WAFV2WebACL(AWSSectionCloudwatch):
         return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
-
         metrics: Metrics = []
 
         for idx, (piggyback_hostname, web_acl) in enumerate(colleague_contents.content.items()):
-
             self._metric_dimensions[0]["Value"] = web_acl["Name"]
 
             for metric_name in ["AllowedRequests", "BlockedRequests"]:
@@ -5906,6 +5887,7 @@ class ECS(AWSSectionCloudwatch):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 # .
+
 
 # AWS has different nomenclature for ElastiCache resources in the UI and in
 # the API (cluster in the UI is a resource group in The API, node in the UI

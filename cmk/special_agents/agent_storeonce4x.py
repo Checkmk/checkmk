@@ -30,7 +30,6 @@ LOGGER = logging.getLogger("agent_storeonce4x")
 
 
 class StoreOnceOauth2Session(Requester):
-
     _token_dir = cmk.utils.paths.tmp_dir / "special_agents/agent_storeonce4x"
     _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"

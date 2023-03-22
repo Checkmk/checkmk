@@ -36,7 +36,6 @@ def discovery_prism_ha(section: Section) -> DiscoveryResult:
 
 
 def check_prism_ha(section: Section) -> CheckResult:
-
     if not section:
         return
 

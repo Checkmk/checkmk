@@ -1154,7 +1154,6 @@ def compute_availability(  # pylint: disable=too-many-branches
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in reclassified_rawdata.items():
         for service, service_entry in site_host_entry.items():
-
             if grouping == "host":
                 group_ids: AVGroupIds = [site_host]
             elif grouping in ["host_groups", "service_groups"]:
@@ -1167,7 +1166,6 @@ def compute_availability(  # pylint: disable=too-many-branches
             total_duration = 0
             considered_duration = 0
             for span in service_entry:
-
                 # Information about host/service groups are in the actual entries
                 if grouping in ["host_groups", "service_groups"] and what != "bi":
                     assert isinstance(group_ids, set)
@@ -2689,7 +2687,6 @@ def _compute_status_info(
     hosts: dict[BIHostSpec, AVBITimelineState],
     services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]],
 ) -> BIStatusInfo:
-
     status_info: BIStatusInfo = {}
 
     for site_host, state_output in hosts.items():

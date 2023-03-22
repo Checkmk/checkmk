@@ -159,7 +159,6 @@ def collect_attributes(
 
     tag_group: TagGroup
     for tag_group in tag_config.tag_groups:
-
         tag_name = _ensure(f"tag_{tag_group.id}")
         section = tag_group.topic or "No topic"
         mandatory = False

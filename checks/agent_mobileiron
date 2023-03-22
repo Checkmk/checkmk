@@ -9,7 +9,6 @@ from typing import Any, Mapping, Optional, Sequence, Tuple, Union
 def agent_mobileiron_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, Tuple[str, str, str]]]:
-
     args = [
         elem
         for chunk in (

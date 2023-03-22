@@ -64,7 +64,13 @@ def test_check_percent_levels(section: Section) -> None:
 
 
 def test_check_count_levels(section: Section) -> None:
-    assert list(check_multipath("3600601604d40310047cf93ce66f7e111", {"levels": 3}, section,)) == [
+    assert list(
+        check_multipath(
+            "3600601604d40310047cf93ce66f7e111",
+            {"levels": 3},
+            section,
+        )
+    ) == [
         Result(
             state=State.OK,
             summary="(ORA_ZAPPL2T_DATA_3): Paths active: 100.00%",

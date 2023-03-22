@@ -65,7 +65,6 @@ def parse_quanta(info: Sequence[Sequence[Sequence[str]]]) -> MutableMapping[str,
         dev_lower_warn,
         dev_lower_crit,
     ) in info[0]:
-
         try:
             value: float | None = float(dev_value)
         except ValueError:

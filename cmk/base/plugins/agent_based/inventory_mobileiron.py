@@ -10,7 +10,6 @@ from .utils.mobileiron import Section
 
 
 def inventory_mobileiron(section: Optional[Section]) -> InventoryResult:
-
     if section is None:
         return
 

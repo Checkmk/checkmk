@@ -14,7 +14,6 @@ factory_settings["aws_dynamodb_capacity_defaults"] = {
 
 
 def parse_aws_dynamodb_table(info):
-
     parsed = parse_aws(info)
 
     # the last entry contains the provisioned limits
@@ -64,7 +63,6 @@ def _capacity_params_to_levels(params):
 
 
 def _check_capacity_minmax_metrics(params, parsed, to_check):
-
     metric_ids = ["Minimum_Consumed%s" % to_check, "Maximum_Consumed%s" % to_check]
     info_names = ["Min. single-request consumption", "Max. single-request consumption"]
     params_keys = ["levels_minimum", "levels_maximum"]
@@ -85,7 +83,6 @@ def _check_capacity_minmax_metrics(params, parsed, to_check):
 
 
 def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
-
     metric_id_avg = "Sum_Consumed%s" % capacity_units_to_check
     metric_val_avg = parsed.get(metric_id_avg)
 
@@ -144,12 +141,10 @@ def inventory_aws_dynamodb_latency(parsed):
 
 
 def check_aws_dynamodb_latency(item, params, parsed):
-
     go_stale = True
 
     for operation in ["Query", "GetItem", "PutItem"]:
         for statistic in ["Average", "Maximum"]:
-
             metric_name = "aws_dynamodb_%s_%s_latency" % (operation.lower(), statistic.lower())
             metric_id = "%s_%s_SuccessfulRequestLatency" % (operation, statistic)
             metric_val = parsed.get(metric_id)

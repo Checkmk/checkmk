@@ -23,10 +23,8 @@ MRPESection = Mapping[str, PluginData]
 
 
 def parse_mrpe(string_table: StringTable) -> MRPESection:
-
     parsed = {}
     for line in string_table:
-
         cache_info = cache_helper.CacheInfo.from_raw(line[0], time.time())
         if cache_info:
             line = line[1:]

@@ -30,7 +30,6 @@ EventsInfoSection = EventsInfo | None
 
 
 def parse_graylog_events(string_table: StringTable) -> EventsInfoSection:
-
     try:
         events_data = json.loads(string_table[0][0]).get("events")
     except IndexError:

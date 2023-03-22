@@ -31,7 +31,6 @@ severity_to_states = {
 
 
 def parse_silverpeak(info):
-
     parsed = {}
 
     alarm_count, alarms = info
@@ -42,7 +41,6 @@ def parse_silverpeak(info):
         parsed.setdefault("alarm_count", int(alarm_count[0][0]))
 
     for line in alarms:
-
         sever = line[0]
         descr = line[1]
         source = line[2]
@@ -62,7 +60,6 @@ def parse_silverpeak(info):
 
 
 def check_silverpeak(_item, _params, parsed):
-
     alarm_cnt = parsed.get("alarm_count", 0)
     if alarm_cnt == 0:
         yield 0, "No active alarms."

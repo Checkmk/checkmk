@@ -76,7 +76,6 @@ def _ignore(varname: str) -> bool:
 
 def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
     for var, value in namespace_dict.items():
-
         if _ignore(var):
             continue
 

@@ -105,7 +105,6 @@ def check_oracle_instance(item, params, section):  # pylint: disable=too-many-br
 
     # ASM has no login and archivelog check
     if item_data.database_role != "ASM":
-
         # logins are only possible when the database is open
         if item_data.openmode == "OPEN":
             infotext += ", Logins %s" % (item_data.logins.lower())

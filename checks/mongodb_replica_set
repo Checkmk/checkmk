@@ -64,7 +64,6 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
     long_output = []
     # loop through members and calculate replication lag
     for member in secondaries:
-
         member_name = member.get("name", "unknown")
 
         if member.get("optime", {}).get("ts", {}).get("$timestamp", {}).get("t", None):

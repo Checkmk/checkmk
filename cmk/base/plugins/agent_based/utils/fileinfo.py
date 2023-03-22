@@ -267,7 +267,6 @@ def discovery_fileinfo_common(
     section: Fileinfo,
     check_type: CheckType,
 ) -> DiscoveryResult:
-
     reftime = section.reftime
     if reftime is None:
         return
@@ -304,7 +303,6 @@ def _fileinfo_check_function(
     check_definition: List[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
-
     for metric in check_definition:
         if metric.value is None:
             continue
@@ -411,7 +409,6 @@ def _update_minmax(
     new_value: int,
     current_minmax: Optional[Tuple[int, int]],
 ) -> Tuple[int, int]:
-
     if not current_minmax:
         return new_value, new_value
 
@@ -491,7 +488,6 @@ def _fileinfo_check_conjunctions(
     check_definition: List[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
-
     conjunctions = params.get("conjunctions", [])
     for conjunction_state, levels in conjunctions:
         levels = dict(levels)
@@ -521,7 +517,6 @@ def check_fileinfo_groups_data(
     section: Fileinfo,
     reftime: int,
 ) -> CheckResult:
-
     date_inclusion = None
     files_stat_failed = set()
     files_matching: Dict[str, Any] = {
@@ -555,7 +550,6 @@ def check_fileinfo_groups_data(
             continue
 
         for inclusion, exclusion in group_patterns:
-
             filename_matches, date_inclusion = _filename_matches(
                 file_stat.name, reftime, inclusion, exclusion
             )

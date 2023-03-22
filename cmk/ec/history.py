@@ -248,7 +248,6 @@ def _get_mongodb(  # pylint: disable=too-many-branches
     # and do filtering on this data, but this would be way too inefficient.
     mongo_query = {}
     for column_name, operator_name, _predicate, argument in filters:
-
         if operator_name == "=":
             mongo_filter: str | dict[str, str] = argument
         elif operator_name == ">":
@@ -396,7 +395,6 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
     # Log period has changed or we have not computed a filename yet ->
     # compute currently active period
     if active_history_period.value is None or timestamp > active_history_period.value:
-
         # Look if newer files exist
         timestamps = sorted(int(str(path.name)[:-4]) for path in log_dir.glob("*.log"))
         if len(timestamps) > 0:

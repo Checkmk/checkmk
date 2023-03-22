@@ -1694,7 +1694,6 @@ def test__perform_host_label_discovery_on_cluster(
 
 
 def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
-
     entries: Mapping[str, AutocheckEntry] = {
         discovery_status: AutocheckEntry(
             CheckPluginName(f"plugin_{discovery_status}"),

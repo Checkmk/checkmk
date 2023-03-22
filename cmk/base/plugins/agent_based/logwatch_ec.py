@@ -619,7 +619,6 @@ def logwatch_load_spooled_messages(  # type: ignore[no-untyped-def]
 
     total_size = 0
     for path in spool_files:
-
         # Delete unknown files
         if not path.name.startswith("spool."):
             path.unlink()

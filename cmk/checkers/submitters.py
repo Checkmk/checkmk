@@ -175,7 +175,6 @@ class NoOpSubmitter(Submitter):
 
 
 class PipeSubmitter(Submitter):
-
     # Filedescriptor to open nagios command pipe.
     _nagios_command_pipe: Literal[False] | IO[bytes] | None = None
 
@@ -206,7 +205,6 @@ class PipeSubmitter(Submitter):
             return
 
         for service, state, output, _cache_info in formatted_submittees:
-
             msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
                 time.time(),
                 self.host_name,
@@ -249,11 +247,9 @@ class _RandomNameSequence:
 
 
 class FileSubmitter(Submitter):
-
     _names = _RandomNameSequence()
 
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
-
         now = time.time()
 
         with self._open_checkresult_file() as fd:

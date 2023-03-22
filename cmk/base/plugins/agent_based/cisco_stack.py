@@ -25,7 +25,6 @@ Section = Mapping[str, Switch]
 
 
 def parse_cisco_stack(string_table: StringTable) -> Section:
-
     switch_state_names = {
         "1": "waiting",
         "2": "progressing",
@@ -83,7 +82,6 @@ def discovery_cisco_stack(section: Section) -> DiscoveryResult:
 
 
 def check_cisco_stack(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
-
     switch_state_descriptions = {
         "waiting": "Waiting for other switches to come online",
         "progressing": "Master election or mismatch checks in progress",

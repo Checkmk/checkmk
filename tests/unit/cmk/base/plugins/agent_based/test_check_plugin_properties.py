@@ -20,7 +20,6 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
 def _section_permutations(
     parsed_section_names: Sequence[ParsedSectionName],
 ) -> Generator[tuple[SectionPlugin, ...], None, None]:
-
     if not parsed_section_names:
         yield ()
         return

@@ -148,7 +148,6 @@ def parse_enviromux(string_table: StringTable) -> EnviromuxSection:
 
 
 def parse_enviromux_digital(string_table: StringTable) -> EnviromuxDigitalSection:
-
     return {
         f"{line[1]} {line[0]}": EnviromuxDigitalSensor(
             value=SENSOR_DIGITAL_VALUE_NAMES.get(line[2], "unknown"),
@@ -251,7 +250,6 @@ def check_enviromux_voltage(
     params: Mapping[str, Any],
     section: EnviromuxSection,
 ) -> CheckResult:
-
     if (sensor := section.get(item)) is None:
         return
 

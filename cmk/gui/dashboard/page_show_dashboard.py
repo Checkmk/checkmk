@@ -396,7 +396,6 @@ def _fallback_dashlet(
 def _get_mandatory_filters(
     board: DashboardConfig, unconfigured_single_infos: set[str]
 ) -> Iterable[str]:
-
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
         for info, _unused in visuals.visual_info_registry[info_key]().single_spec:
@@ -414,7 +413,6 @@ def _page_menu(
     unconfigured_single_infos: set[str],
     mode: str,
 ) -> PageMenu:
-
     html.close_ul()
     menu = PageMenu(
         dropdowns=[
@@ -495,7 +493,6 @@ def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type: ignore[no-u
 
 
 def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
-
     yield PageMenuTopic(
         title=_("Views"),
         entries=list(_dashboard_add_views_dashlet_entries(name)),
@@ -754,7 +751,6 @@ def _dashboard_add_view_dashlet_link(
 
 
 def _dashboard_add_views_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntry(
         title=_("New view"),
         icon_name="view",
@@ -793,7 +789,6 @@ def _dashboard_add_non_view_dashlet_link(
 
 
 def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntryCEEOnly(
         title="Single metric graph",
         icon_name={
@@ -829,7 +824,6 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
 
 
 def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Host state",
         icon_name="host_state",
@@ -862,7 +856,6 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
 
 
 def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Host inventory",
         icon_name="inventory",
@@ -871,7 +864,6 @@ def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[Pa
 
 
 def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Average scatterplot",
         icon_name="scatterplot",
@@ -898,7 +890,6 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[Page
 
 
 def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntryCEEOnly(
         title="Site overview",
         icon_name="site_overview",
@@ -976,7 +967,6 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
 
 
 def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Alerts",
         icon_name={
@@ -1006,7 +996,6 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
 
 
 def _dashboard_add_other_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntry(
         title="Custom URL",
         icon_name="dashlet_url",

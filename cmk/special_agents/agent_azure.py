@@ -772,7 +772,6 @@ class IssueCollecter:
 
 
 def create_metric_dict(metric, aggregation, interval_id, filter_):
-
     name = metric["name"]["value"]
     metric_dict = {
         "name": name,

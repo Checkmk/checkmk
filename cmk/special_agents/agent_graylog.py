@@ -106,7 +106,6 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 
             new_value = {}
             for metric in value["metrics"]:
-
                 metric_value = metric.get("metric", {}).get("value")
                 metric_name = metric.get("full_name")
                 if metric_value is None or metric_name is None:

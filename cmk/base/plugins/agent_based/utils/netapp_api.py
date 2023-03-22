@@ -176,7 +176,6 @@ def discover_summary(
 def get_single_check(
     device_type: Literal["fan", "power supply unit"]
 ) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
-
     error_key, number_key = _DEV_KEYS[device_type]
 
     def check_single(
@@ -204,7 +203,6 @@ def _pluralize(thing: str, count: int) -> str:
 def get_summary_check(
     device_type: Literal["fan", "power supply unit"]
 ) -> Callable[[str, SectionSingleInstance], type_defs.CheckResult]:
-
     error_key, _number_key = _DEV_KEYS[device_type]
 
     def check_summary(

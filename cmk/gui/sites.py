@@ -109,7 +109,8 @@ def all_groups(what: str) -> list[tuple[str, str]]:
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
-    the name is used as second element. The list is sorted by lower case alias in the first place."""
+    the name is used as second element. The list is sorted by lower case alias in the first place.
+    """
     query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
     groups = cast(list[tuple[str, str]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
@@ -212,7 +213,6 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
         "Columns: livestatus_version program_version program_start num_hosts num_services "
         "core_pid"
     ):
-
         try:
             site_id, v1, v2, ps, num_hosts, num_services, pid = response
         except ValueError:

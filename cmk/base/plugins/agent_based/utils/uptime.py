@@ -20,7 +20,6 @@ def discover(section: Section) -> DiscoveryResult:
 
 
 def check(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     if section.message:
         yield Result(state=State.UNKNOWN, summary=section.message)
 

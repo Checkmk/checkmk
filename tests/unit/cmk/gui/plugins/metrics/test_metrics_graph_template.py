@@ -95,7 +95,6 @@ def test_rpn_stack(expression: MetricExpression, result: StackElement) -> None:
 
 
 def test_create_graph_recipe_from_template() -> None:
-
     metrics.fixup_unit_info()
     graph_template = GraphTemplate(
         {

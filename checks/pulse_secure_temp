@@ -15,7 +15,6 @@ factory_settings["pulse_secure_temp_def_levels"] = {"levels": (70.0, 75.0)}
 # no get_parsed_item_data because the temperature can be exactly 0 for some devices, which would
 # result in "UNKN - Item not found in SNMP data", because parsed[item] evaluates to False
 def check_pulse_secure_temp(item, params, parsed):
-
     if not parsed:
         return None
 

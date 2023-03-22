@@ -9,7 +9,6 @@ from typing import Any, Mapping, Optional, Sequence
 def agent_smb_share_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[str]:
-
     default_ipaddress = ipaddress if ipaddress else ""
     args = [params.get("hostname", hostname), params.get("ip_address", default_ipaddress)]
 

@@ -90,7 +90,6 @@ def discover_ups_test(info):
 
 
 def check_ups_test(_no_item, params, info):
-
     uptime_info, bat_info = info
     if not uptime_info or not bat_info:
         return

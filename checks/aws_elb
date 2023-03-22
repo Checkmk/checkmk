@@ -191,7 +191,6 @@ check_info["aws_elb.http_backend"] = {
 
 
 def check_aws_elb_healthy_hosts(item, params, parsed):
-
     go_stale = True
 
     try:

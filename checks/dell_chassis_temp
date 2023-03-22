@@ -18,7 +18,6 @@ def inventory_dell_chassis_temp(info):
 
 
 def check_dell_chassis_temp(item, params, info):
-
     items = {
         "Front Panel": 0,
         "CMC Ambient": 1,

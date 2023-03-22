@@ -28,7 +28,6 @@ def inventory_datapower_mem(info):
 
 
 def check_datapower_mem(item, params, info):
-
     mem_total_bytes = int(info[0][0]) * 1024
     mem_used_bytes = int(info[0][1]) * 1024
 

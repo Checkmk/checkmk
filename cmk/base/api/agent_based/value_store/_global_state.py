@@ -44,7 +44,6 @@ def load_host_value_store(
     pushed_back_store = _active_host_value_store
 
     try:
-
         _active_host_value_store = ValueStoreManager(host_name)
         yield _active_host_value_store
 

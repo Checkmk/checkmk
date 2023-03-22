@@ -270,6 +270,7 @@ CEE_UNUSED_PACKAGES = [
     "pynacl",
     "pyprof2calltree",
     "pyrsistent",
+    "pysaml2",
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",
@@ -312,6 +313,7 @@ def test_dependencies_are_declared() -> None:
             "_typeshed",  # used by mypy within typing.TYPE_CHECKING
             "openapi_spec_validator",  # called "openapi-spec-validator" in the Pipfile
             "docstring_parser",  # TODO: Bug in the test code, it *is* used!
+            "saml2",
         }
     )
 

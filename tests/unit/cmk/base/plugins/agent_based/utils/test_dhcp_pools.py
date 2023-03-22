@@ -8,7 +8,6 @@ from cmk.base.plugins.agent_based.utils import dhcp_pools
 
 
 def test_check_dhcp_pools_levels() -> None:
-
     assert list(
         dhcp_pools.check_dhcp_pools_levels(
             free=23,

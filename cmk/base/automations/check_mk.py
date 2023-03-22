@@ -947,7 +947,6 @@ class AutomationAnalyseServices(Automation):
         )
 
         for service in services:
-
             if service.id() not in table:
                 continue  # this is a clustered service
 
@@ -1305,7 +1304,6 @@ class AutomationGetSectionInformation(Automation):
     needs_checks = True
 
     def execute(self, args: list[str]) -> GetSectionInformationResult:
-
         section_infos = {
             str(section.name): {
                 # for now, we need only these two.
@@ -1736,7 +1734,6 @@ class AutomationActiveCheck(Automation):
         stored_passwords = cmk.utils.password_store.load()
         with plugin_contexts.current_host(hostname):
             for params in dict(config_cache.active_checks(hostname)).get(plugin, []):
-
                 for description, command_args in core_config.iter_active_check_services(
                     plugin, act_info, hostname, host_attrs, params, stored_passwords
                 ):

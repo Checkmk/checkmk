@@ -327,7 +327,6 @@ def test__verify_version_support_abort_processing(
     kubernetes_version: api.KubernetesVersion | api.UnknownKubernetesVersion,
     message: str,
 ) -> None:
-
     with pytest.raises(UnsupportedEndpointData) as excinfo:
         _verify_version_support(kubernetes_version)
     assert str(excinfo.value) == message

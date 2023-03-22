@@ -85,7 +85,6 @@ def test_statgrab_cpu_check(
     mockstate: object,
     expected_result: CheckResult,
 ) -> None:
-
     check = Check("statgrab_cpu")
 
     # set up mocking of `get_item_state`
@@ -101,7 +100,6 @@ def test_statgrab_cpu_check(
     ],
 )
 def test_statgrab_cpu_check_error(info: StringTable, mockstate: object) -> None:
-
     check = Check("statgrab_cpu")
 
     with mock_item_state(mockstate):

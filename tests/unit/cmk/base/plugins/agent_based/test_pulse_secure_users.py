@@ -30,7 +30,12 @@ def test_parse_pulse_secure_users(
 
 
 def test_check_pulse_secure_users() -> None:
-    assert list(pulse_secure_users.check_pulse_secure_users({}, {"n_users": 172},)) == [
+    assert list(
+        pulse_secure_users.check_pulse_secure_users(
+            {},
+            {"n_users": 172},
+        )
+    ) == [
         Result(
             state=State.OK,
             summary="Pulse Secure users: 172",

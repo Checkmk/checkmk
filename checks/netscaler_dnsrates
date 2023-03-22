@@ -25,7 +25,6 @@ def check_netscaler_dnsrates(_no_item, params, info):
 
     now = time.time()
     for name, counter in [("query", queries), ("answer", answers)]:
-
         rate = get_rate(name, now, counter)
         warn, crit = params[name]
         infotext = "%s rate %.1f/sec" % (name, rate)

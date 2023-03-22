@@ -147,7 +147,6 @@ def get_elbv2_sections():
 def check_target_groups_results(
     piggyback_hostname, target_group_name, target_groups_results, expected_length
 ):
-
     for result in target_groups_results:
         entry_found = result.piggyback_hostname == piggyback_hostname
 
@@ -165,7 +164,6 @@ def check_target_group_errors_results(
     elbv2_application_target_groups_http_results,
     elbv2_application_target_groups_lambda_results,
 ):
-
     n_elbv2_application = 0
     n_tg_lambda = 0
     n_tg_instance_ip = 0

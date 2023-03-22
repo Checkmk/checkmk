@@ -453,7 +453,6 @@ async def renew_certificate(
     uuid: UUID4,
     cert_renewal_body: CertificateRenewalBody,
 ) -> RenewCertResponse:
-
     # Note: Technically, we could omit the {uuid} part of the endpoint url.
     # We explicitly require it for consistency with other endpoints.
     _validate_uuid_against_csr(uuid, cert_renewal_body.csr)

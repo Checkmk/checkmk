@@ -13,7 +13,6 @@ def check_ucs_c_rack_server_faultinst(
     _params: Dict,
     parsed: Dict[str, List[str]],
 ) -> Iterable[Tuple[int, str]]:
-
     if not parsed:
         yield 0, "No fault instances found"
         return

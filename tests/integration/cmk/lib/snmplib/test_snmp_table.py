@@ -141,7 +141,6 @@ def test_get_simple_snmp_table_bulkwalk(backend: SNMPBackend, bulk: bool) -> Non
 
 
 def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
-
     walk_cache: MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]] = {}
 
     _ = snmp_table.get_snmp_table(

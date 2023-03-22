@@ -247,7 +247,10 @@ def parse_data(
 def _main(args: Args) -> int:
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
-    ipmi_cmd, queries = {"freeipmi": _prepare_freeipmi_call, "ipmitool": _prepare_ipmitool_call,}[
+    ipmi_cmd, queries = {
+        "freeipmi": _prepare_freeipmi_call,
+        "ipmitool": _prepare_ipmitool_call,
+    }[
         args.ipmi_cmd
     ](args)
 

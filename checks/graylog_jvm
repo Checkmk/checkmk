@@ -22,7 +22,6 @@ def check_graylog_jvm(_no_item, params, parsed):
         ("used", "mem_heap"),
         ("committed", "mem_heap_committed"),
     ]:
-
         mem_data = parsed.get("jvm.memory.heap.%s" % key)
         if mem_data is None:
             continue

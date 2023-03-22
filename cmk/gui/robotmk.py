@@ -257,7 +257,6 @@ def _get_html_from_livestatus(
     host_name: HostName,
     service_description: str,
 ) -> LivestatusRow:
-
     report_column: Literal["robotmk_last_log", "robotmk_last_error_log"] = (
         "robotmk_last_log" if report_type == "robotmk" else "robotmk_last_error_log"
     )

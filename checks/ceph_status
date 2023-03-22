@@ -7,7 +7,6 @@ import json
 
 
 def parse_ceph_status(info):
-
     joined_lines = [" ".join(line) for line in info]
     parsed = json.loads("".join(joined_lines))
 

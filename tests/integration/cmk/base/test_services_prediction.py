@@ -117,7 +117,6 @@ custom_checks = [
     ],
 )
 def test_get_rrd_data(utcdate: str, timezone: str, period: str, result: tuple[int, int]) -> None:
-
     with on_time(utcdate, timezone):
         timestamp = time.time()
         _, from_time, until_time, _ = prediction._get_prediction_timegroup(
@@ -478,7 +477,6 @@ def _load_expected_result(path: Path) -> object:
 def test_calculate_data_for_prediction(
     utcdate: str, timezone: str, params: Mapping[str, str | int]
 ) -> None:
-
     index = params["period"]
     assert isinstance(index, str)
     period_info = prediction._PREDICTION_PERIODS[index]

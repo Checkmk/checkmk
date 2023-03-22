@@ -1213,7 +1213,6 @@ class ESXConnection:
         server_cookie = response.headers.get("set-cookie")
 
         if response.status_code != 200:
-
             raise SystemExit(
                 "Cannot login to vSphere Server (reason: [%s] %s). Please check the "
                 "credentials." % (response.status_code, response.reason)
@@ -1264,7 +1263,6 @@ def fetch_available_counters(  # type: ignore[no-untyped-def]
 
 
 def fetch_counters_syntax(connection, counter_ids):
-
     counters_list = ["<ns1:counterId>%s</ns1:counterId>" % id_ for id_ in counter_ids]
 
     response_text = connection.query_server("perfcountersyntax", counters="".join(counters_list))

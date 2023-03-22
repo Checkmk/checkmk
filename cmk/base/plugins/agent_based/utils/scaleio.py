@@ -100,7 +100,6 @@ def convert_throughput_into_bytes(unit: str, throughput: float) -> float:
 
 
 def parse_scaleio(string_table: StringTable, scaleio_section_name: str) -> ScaleioSection:
-
     section: MutableMapping[str, MutableMapping[str, Sequence[str]]] = {}
     sys_id = ""
 

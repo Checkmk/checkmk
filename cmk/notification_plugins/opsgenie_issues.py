@@ -46,7 +46,6 @@ class Connector:
         alias: str | None,
         owner: str | None,
     ) -> int:
-
         body = CreateAlertPayload(
             note=note_created,
             actions=actions_list,
@@ -77,7 +76,6 @@ class Connector:
         alias: str | None,
         alert_source: str | None,
     ) -> int:
-
         body = CloseAlertPayload(
             source=alert_source,
             user=owner,
@@ -98,7 +96,6 @@ class Connector:
     def handle_alert_ack(
         self, ack_author: str, ack_comment: str, alias: str | None, alert_source: str | None
     ) -> int:
-
         body = AcknowledgeAlertPayload(
             source=alert_source,
             user=ack_author,

@@ -86,7 +86,6 @@ def _check_netapp_api_vf_stats(
     now: float,
     value_store: MutableMapping[str, Any],
 ) -> type_defs.CheckResult:
-
     vf = (section_netapp_api_vf_stats or {}).get(item)
     if not vf:
         return

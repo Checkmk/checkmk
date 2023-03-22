@@ -36,7 +36,6 @@ def parse_azure_usagedetails(info):
 
 @get_data_or_go_stale
 def check_azure_usagedetails(_no_item, params, data):
-
     for currency, amount in list(data.get("costs", {}).items()):
         levels = params.get("levels")
         yield check_levels(amount, "service_costs_%s" % currency.lower(), levels, currency)

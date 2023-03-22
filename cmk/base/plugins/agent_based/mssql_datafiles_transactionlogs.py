@@ -184,7 +184,6 @@ def discover_mssql_common(
     params: List[Mapping[str, Any]],
     section: SectionDatafiles,
 ) -> DiscoveryResult:
-
     summarize = params[0].get("summarize_%s" % mode, False)
     for inst, database, file_name in section:
         yield Service(

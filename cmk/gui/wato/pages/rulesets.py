@@ -514,7 +514,6 @@ def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMe
         ("Ineffective rules", "disable", "rule_ineffective"),
         ("Deprecated rules", "warning", "ruleset_deprecated"),
     ]:
-
         uri_params: list[tuple[str, None | int | str]] = [
             ("mode", "rule_search"),
             ("search_p_%s" % search_term, DropdownChoice.option_id(True)),

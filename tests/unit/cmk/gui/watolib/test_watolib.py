@@ -44,7 +44,6 @@ def test_registered_config_domains() -> None:
 
 
 def test_registered_automation_commands() -> None:
-
     expected_automation_commands = [
         "activate-changes",
         "push-profiles",

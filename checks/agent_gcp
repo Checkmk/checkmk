@@ -14,7 +14,6 @@ def _has_piggyback_services(params):
 def agent_gcp_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
-
     today = datetime.date.today()
     args = [
         "--project",

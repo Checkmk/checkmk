@@ -2401,7 +2401,6 @@ def _search_text_matches(
     host: _hosts_and_folders.CREHost,
     search_text: str,
 ) -> bool:
-
     match_regex = re.compile(search_text, re.IGNORECASE)
     for pattern in [
         host.name(),

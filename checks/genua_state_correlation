@@ -46,7 +46,6 @@ def genua_state_str(st):
 
 
 def check_genua_state(item, _no_params, info):
-
     # remove empty elements due to two alternative enterprise ids in snmp_info
     info = [_f for _f in info if _f]
     if not info[0]:

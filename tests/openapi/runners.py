@@ -185,7 +185,10 @@ def run_crud_test(  # pylint: disable=too-many-branches
         )
         delete_response = delete_case.call_and_validate()
 
-        assert delete_response.status_code in (200, 204,), (
+        assert delete_response.status_code in (
+            200,
+            204,
+        ), (
             f'Failed to delete "{object_type}" object "{post_object_id}"!'
             f" Reason: {response_reason(delete_response)}"
         )
@@ -197,7 +200,11 @@ def run_crud_test(  # pylint: disable=too-many-branches
                 f" Reason: {response_reason(get_response)}"
             )
         if put_done:
-            assert put_response.status_code in (200, 204, 400,), (
+            assert put_response.status_code in (
+                200,
+                204,
+                400,
+            ), (
                 f'Failed to update "{object_type}" object "{post_object_id}"!'
                 f" Reason: {response_reason(put_response)}"
             )

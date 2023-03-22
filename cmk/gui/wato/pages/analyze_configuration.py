@@ -184,7 +184,6 @@ class ModeAnalyzeConfig(WatoMode):
                 sortable=False,
                 searchable=False,
             ) as table:
-
                 for test_id, test_results_by_site in sorted(
                     results_by_test.items(), key=lambda x: x[1]["test"]["title"]
                 ):

@@ -395,7 +395,6 @@ def _is_exe(fpath):
 
 
 def _which(program):
-
     fpath, _fname = os.path.split(program)
     if fpath:
         if _is_exe(program):

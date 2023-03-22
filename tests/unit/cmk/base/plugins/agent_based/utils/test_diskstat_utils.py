@@ -506,7 +506,6 @@ def test_load_levels_wato() -> None:
 def test_check_diskstat_dict(
     params: Mapping[str, object], disk: diskstat.Disk, exp_res: CheckResult
 ) -> None:
-
     value_store: dict[str, Any] = {}
 
     assert (

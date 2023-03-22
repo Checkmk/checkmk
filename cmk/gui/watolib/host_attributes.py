@@ -486,7 +486,6 @@ def declare_host_attribute(  # type: ignore[no-untyped-def]
     may_edit: Callable[[], bool] | None = None,
     from_config: bool = False,
 ):
-
     if not issubclass(a, ABCHostAttribute):
         raise MKGeneralException(
             _("Failed to load legacy host attribute from local plugins: %r") % a

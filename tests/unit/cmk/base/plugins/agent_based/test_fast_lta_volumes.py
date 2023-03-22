@@ -51,7 +51,6 @@ def test_parse_fast_lta_volumes(parse_fast_lta_volumes: SNMPParseFunction) -> No
 def test_discovery_fast_lta_volumes(
     discover_fast_lta_volumes: DiscoveryFunction,
 ) -> None:
-
     assert list(discover_fast_lta_volumes(parsed)) == [Service(item="Archiv_Test")]
 
 

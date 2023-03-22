@@ -63,7 +63,6 @@ def _check_liebert_temp_air(
     section_liebert_system: Optional[SystemSection],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     if section_liebert_temp_air is None or section_liebert_system is None:
         return
 

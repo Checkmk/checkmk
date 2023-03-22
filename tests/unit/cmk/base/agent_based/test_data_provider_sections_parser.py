@@ -53,7 +53,6 @@ class TestSectionsParser:
     def test_parsing_errors(
         monkeypatch: pytest.MonkeyPatch, sections_parser: SectionsParser
     ) -> None:
-
         monkeypatch.setattr(
             crash_reporting,
             "create_section_crash_dump",

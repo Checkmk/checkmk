@@ -15,7 +15,6 @@ factory_settings["jolokia_jvm_threading.pool"] = {
 def parse_jolokia_jvm_threading(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
-
         type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
 

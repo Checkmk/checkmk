@@ -752,7 +752,6 @@ class ModeDistributedMonitoring(WatoMode):
                 "you want to display its data."
             ),
         ) as table:
-
             for site_id, site in sites:
                 table.row()
 

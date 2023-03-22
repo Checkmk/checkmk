@@ -142,7 +142,6 @@ def _check_service_lists(
     discovery_mode: DiscoveryMode,
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> tuple[Sequence[ActiveCheckResult], bool]:
-
     subresults = []
     need_rediscovery = False
 
@@ -162,11 +161,10 @@ def _check_service_lists(
             service_filters.vanished,
         ),
     ]:
-
         affected_check_plugin_names: Counter[CheckPluginName] = Counter()
         unfiltered = False
 
-        for (discovered_service, _found_on_nodes) in t_services:
+        for discovered_service, _found_on_nodes in t_services:
             affected_check_plugin_names[discovered_service.check_plugin_name] += 1
 
             if not unfiltered and service_filter(
@@ -212,7 +210,7 @@ def _check_service_lists(
         else:
             subresults.append(ActiveCheckResult(0, "", [f"No {title} services found"]))
 
-    for (discovered_service, _found_on_nodes) in services_by_transition.get("ignored", []):
+    for discovered_service, _found_on_nodes in services_by_transition.get("ignored", []):
         subresults.append(
             ActiveCheckResult(
                 0,

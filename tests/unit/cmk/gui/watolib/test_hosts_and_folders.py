@@ -252,7 +252,6 @@ def test_mgmt_inherit_credentials_explicit_host(
     credentials: str | dict[str, str],
     folder_credentials: str | dict[str, str],
 ) -> None:
-
     folder = hosts_and_folders.Folder.root_folder()
     folder.set_attribute(host_attribute, folder_credentials)
 

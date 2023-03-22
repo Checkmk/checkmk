@@ -49,7 +49,6 @@ def get_kube_agent_sections(fix_register: FixRegister) -> Mapping[SectionName, A
 def get_kube_parse_functions(
     kube_agent_sections: Mapping[SectionName, AgentSectionPlugin],
 ) -> Mapping[SectionName, AgentParseFunction]:
-
     return {name: section.parse_function for name, section in kube_agent_sections.items()}
 
 

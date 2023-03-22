@@ -20,7 +20,6 @@ airlaser_default_levels = {
 
 
 def parse_cbl_airlaser(info):
-
     airlaser_status_names = {
         0: "undefined",
         1: "active",
@@ -97,7 +96,6 @@ def parse_cbl_airlaser(info):
 
 
 def check_cbl_airlaser_hw(item, params, info):  # pylint: disable=too-many-branches
-
     airlaser_info = parse_cbl_airlaser(info)
 
     state = 0

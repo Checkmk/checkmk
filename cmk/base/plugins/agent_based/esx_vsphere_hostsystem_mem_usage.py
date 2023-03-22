@@ -48,7 +48,6 @@ def check_esx_vsphere_hostsystem_mem_usage(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-
     if (
         "summary.quickStats.overallMemoryUsage" not in section
         or "hardware.memorySize" not in section
@@ -78,7 +77,6 @@ def cluster_check_esx_vsphere_hostsystem_mem_usage(
     params: Mapping[str, Any],
     section: Mapping[str, Optional[Section]],
 ) -> CheckResult:
-
     aggregated_section = None
     for node_section in section.values():
         if node_section and (memory := _parse_mem_values(node_section)):

@@ -250,7 +250,6 @@ def check_lantime_ng_refclock_gps(item, params, info):
         _,
         leapsecond_date,
     ) in info:
-
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
 
@@ -307,7 +306,6 @@ def inventory_lantime_ng_refclock(info):
 
 
 def check_lantime_ng_refclock(item, _no_params, info):
-
     for (
         index,
         clock_type,
@@ -321,7 +319,6 @@ def check_lantime_ng_refclock(item, _no_params, info):
         _,
         _,
     ) in info:
-
         if item == index:
             yield mbg_lantime_ng_generalstate(clock_type, usage, state, substate)
 

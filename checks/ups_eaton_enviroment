@@ -27,7 +27,6 @@ def check_ups_eaton_enviroment(item, params, info):
         ("remote_temp", "Remote-Temperature", "°C"),
         ("humidity", "Humidity", "%"),
     ]:
-
         warn, crit = params.get(sensor)
         perfdata.append((sensor, wert[i], warn, crit))
         text = "%s: %d%s (warn/crit at %d%s/%d%s)" % (

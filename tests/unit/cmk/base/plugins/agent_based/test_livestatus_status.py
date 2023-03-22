@@ -763,7 +763,6 @@ _RESULTS = [
 
 
 def test_check() -> None:
-
     yielded_results = list(
         livestatus_status._generate_livestatus_results(
             "heute",

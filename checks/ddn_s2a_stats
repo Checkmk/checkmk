@@ -35,7 +35,6 @@ def inventory_ddn_s2a_stats_readhits(parsed):
 
 
 def check_ddn_s2a_stats_readhits(item, params, parsed):
-
     if item == "Total":
         read_hits = float(parsed["All_ports_Read_Hits"])
     else:

@@ -89,7 +89,6 @@ def _entry(name: str, params: dict[str, str] | None = None) -> AutocheckEntry:
 
 
 def test_consolidate_autochecks_of_real_hosts() -> None:
-
     new_services_with_nodes = [
         AutocheckServiceWithNodes(  # found on node and new
             _entry("A"), [HostName("node"), HostName("othernode")]

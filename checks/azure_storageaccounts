@@ -78,7 +78,6 @@ check_info["azure_storageaccounts.flow"] = {
 
 @get_data_or_go_stale
 def check_azure_storageaccounts_performance(_item, params, resource):
-
     for key, cmk_key, displ in (
         ("average_SuccessServerLatency", "server_latency", "Success server latency"),
         ("average_SuccessE2ELatency", "e2e_latency", "End-to-end server latency"),

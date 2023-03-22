@@ -470,7 +470,6 @@ def check(sapnwrfc, cfg_entry):  # pylint: disable=too-many-branches
                 status_details = "%s: %s" % mon_msg(cfg_entry, node)
 
             elif node["MTCLASS"] == MTE_MSG_CONTAINER:
-
                 alerts = mon_alerts(cfg_entry, node)
                 logs = process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts)
                 if len(alerts) > 0:

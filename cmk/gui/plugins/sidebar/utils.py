@@ -432,7 +432,6 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
         indent=True,
         icon="foldable_sidebar",
     ):
-
         for item in topic.items:
             if show_item_icons:
                 html.open_li(class_=["sidebar"] + (["show_more_mode"] if item.is_show_more else []))

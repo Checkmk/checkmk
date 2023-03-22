@@ -17,7 +17,6 @@ _TEST_KEY = ("check", "item", "user-key")
 
 
 def test_load_host_value_store_loads_file(monkeypatch) -> None:  # type: ignore[no-untyped-def]
-
     service_id = ServiceID(CheckPluginName("test_service"), None)
 
     monkeypatch.setattr(

@@ -24,7 +24,6 @@ _Section = Mapping[str, Fan]
 
 
 def parse(string_table: StringTable) -> _Section | None:
-
     if not string_table:
         return None
 

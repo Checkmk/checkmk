@@ -43,7 +43,16 @@ METRICS = {
 
 
 def test_check_aws_ec2_network_io() -> None:
-    assert list(check_aws_ec2_network_io("Summary", {}, {"NetworkIn": 1, "NetworkOut": 2,},)) == [
+    assert list(
+        check_aws_ec2_network_io(
+            "Summary",
+            {},
+            {
+                "NetworkIn": 1,
+                "NetworkOut": 2,
+            },
+        )
+    ) == [
         Result(state=State.OK, summary="[0]"),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
@@ -111,12 +120,10 @@ def test_aws_ec2_discovery(
     section: Mapping[str, float],
     discovery_result: Sequence[Service],
 ) -> None:
-
     assert list(discover_aws_ec2(section)) == discovery_result
 
 
 def test_check_aws_ec2_state_ok() -> None:
-
     check_result = list(
         check_aws_ec2_status_check(
             section=METRICS,
@@ -129,7 +136,6 @@ def test_check_aws_ec2_state_ok() -> None:
 
 
 def test_check_aws_ec2_state_crit() -> None:
-
     check_result = list(
         check_aws_ec2_status_check(
             section={
@@ -174,7 +180,6 @@ def test_aws_ec2_cpu_util_discovery(
     section: Mapping[str, float],
     discovery_result: Sequence[Service],
 ) -> None:
-
     assert list(discover_aws_ec2_cpu_util(section)) == discovery_result
 
 
@@ -321,7 +326,6 @@ def test_check_aws_ec2_cpu_credits(
     section: Section,
     expected_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_ec2_cpu_credits(
             params={"balance_levels_lower": (10, 5)},

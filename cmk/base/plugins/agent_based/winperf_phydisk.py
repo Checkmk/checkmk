@@ -258,7 +258,6 @@ def _compute_rates_single_disk(
     value_store: MutableMapping[str, Any],
     value_store_suffix: str = "",
 ) -> diskstat.Disk:
-
     disk_with_rates = {}
     params: Final = _Params(
         value_store=value_store,

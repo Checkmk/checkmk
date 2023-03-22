@@ -9,7 +9,6 @@ factory_settings["huawei_mem_default"] = {"levels": (80.0, 90.0)}
 
 
 def parse_huawei_wlc_devs(info):
-
     parsed = {}
 
     # Devices
@@ -44,7 +43,6 @@ def discovery_huawei_wlc_devs_mem(parsed):
 
 @get_parsed_item_data
 def check_huawei_wlc_devs_mem(item, params, data):
-
     lev = params.get("levels")
     val = data.get("%s" % "mem_used_percent")
 
@@ -74,7 +72,6 @@ def discovery_huawei_wlc_devs_cpu(parsed):
 
 @get_parsed_item_data
 def check_huawei_wlc_devs_cpu(item, params, data):
-
     lev = params.get("levels")
     val = data.get("%s" % "cpu_percent")
 

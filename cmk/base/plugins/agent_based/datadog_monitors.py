@@ -47,7 +47,10 @@ def parse_datadog_monitors(string_table: StringTable) -> Section:
         monitor_dict["name"]: Monitor(
             state=monitor_dict["overall_state"],
             message=monitor_dict["message"],
-            thresholds=monitor_dict.get("options", {},).get(
+            thresholds=monitor_dict.get(
+                "options",
+                {},
+            ).get(
                 "thresholds",
                 {},
             ),

@@ -89,7 +89,6 @@ def cluster_check_mssql_databases(
     params: Mapping[str, Any],
     section: Mapping[str, Optional[SectionDatabases]],
 ) -> CheckResult:
-
     conflated_section: SectionDatabases = {}
     for node_data in section.values():
         conflated_section.update(node_data or {})

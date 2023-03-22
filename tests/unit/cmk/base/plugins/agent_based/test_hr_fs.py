@@ -81,7 +81,13 @@ def test_check_hr_fs(mocker: MockerFixture, section: Section) -> None:
             "/mnt/pool1.delta": (1676556884.145195, 3.41796875),
         },
     )
-    assert list(check_hr_fs("/mnt/pool1", FILESYSTEM_DEFAULT_PARAMS, section,)) == [
+    assert list(
+        check_hr_fs(
+            "/mnt/pool1",
+            FILESYSTEM_DEFAULT_PARAMS,
+            section,
+        )
+    ) == [
         Metric(
             "fs_used",
             3.41796875,

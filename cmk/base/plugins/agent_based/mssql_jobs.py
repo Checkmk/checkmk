@@ -135,7 +135,6 @@ def _format_to_datetime(raw_date: str, raw_time: str) -> str:
 
 
 def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
-
     section = {}
     for line in string_table:
         if len(line) == 1:
@@ -177,7 +176,6 @@ def discover_mssql_jobs(section: Mapping[str, JobSpec]) -> DiscoveryResult:
 def check_mssql_jobs(
     item: str, params: Mapping[str, Any], section: Mapping[str, JobSpec]
 ) -> CheckResult:
-
     if (job_specs := section.get(item)) is None:
         return State(params["status_missing_jobs"]), "Job not found"
 

@@ -83,7 +83,6 @@ register.snmp_section(
 
 
 def inventory_dell_hw_info(section: Section) -> InventoryResult:
-
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={

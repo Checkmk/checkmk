@@ -52,7 +52,6 @@ def agent_elasticsearch_main(args: Args) -> int:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
-
     parser = create_default_argument_parser(description=__doc__)
 
     parser.add_argument("-u", "--user", default=None, help="Username for elasticsearch login")

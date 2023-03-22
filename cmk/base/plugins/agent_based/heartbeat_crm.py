@@ -321,7 +321,6 @@ def discover_heartbeat_crm(
 
 
 def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
     if error is not None:

@@ -113,7 +113,6 @@ def check_perle_cm_modules(item, _no_params, info):
                 ("Fiber", fiber_lprf, fiber_link, fiber_speed, fiber_connector),
                 ("Copper", cooper_lprf, copper_link, copper_speed, copper_connector),
             ]:
-
                 yield 0, "{} Speed: {}".format(what, mappings["speed"][speed])  # type: ignore[index]
 
                 for what_state, what_key in [(lprf, "LPRF"), (link, "Link")]:

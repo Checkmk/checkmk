@@ -348,7 +348,13 @@ def test_check_veritas_vcs_system() -> None:
 
 
 def test_check_veritas_vcs_group() -> None:
-    assert list(veritas_vcs.check_veritas_vcs_group("nepharius", PARAMS, SECTION_HASHES,)) == [
+    assert list(
+        veritas_vcs.check_veritas_vcs_group(
+            "nepharius",
+            PARAMS,
+            SECTION_HASHES,
+        )
+    ) == [
         Result(
             state=State.WARN,
             summary="temporarily frozen",
@@ -365,7 +371,13 @@ def test_check_veritas_vcs_group() -> None:
 
 
 def test_check_veritas_vcs_resource() -> None:
-    assert list(veritas_vcs.check_veritas_vcs_resource("bob3-dg", PARAMS, SECTION,)) == [
+    assert list(
+        veritas_vcs.check_veritas_vcs_resource(
+            "bob3-dg",
+            PARAMS,
+            SECTION,
+        )
+    ) == [
         Result(
             state=State.WARN,
             summary="offline",

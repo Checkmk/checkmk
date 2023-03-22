@@ -40,7 +40,6 @@ def check(
     params: Mapping[str, tuple[float, float]],
     section: _Section,
 ) -> CheckResult:
-
     yield from check_levels(
         levels_upper=params.get("levels"),
         value=section.db_usage,

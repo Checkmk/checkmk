@@ -88,7 +88,6 @@ def _try_convert_to_epoch(release_date: str) -> Optional[str]:
 
 
 def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
-
     for name, sub_section in SECTION_TO_INVENTORY.items():
         data: Dict[str, Union[None, str, float]] = {}
         for section_key, (inv_key, transform) in sub_section["translation"].items():

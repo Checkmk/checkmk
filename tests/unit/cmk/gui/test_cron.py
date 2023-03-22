@@ -9,7 +9,6 @@ import cmk.gui.cron as cron
 
 
 def test_registered_jobs() -> None:
-
     expected = [
         "cmk.gui.inventory.execute_inventory_housekeeping_job",
         "cmk.gui.background_job.execute_housekeeping_job",

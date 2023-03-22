@@ -12,7 +12,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 def parse_3par(
     string_table: StringTable,
 ) -> Mapping[str, Any]:
-
     try:
         return json.loads(string_table[0][0])
     except IndexError:

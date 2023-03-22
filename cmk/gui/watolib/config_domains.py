@@ -72,7 +72,10 @@ class ConfigDomainCore(ABCConfigDomain):
         # Import cycle
         from cmk.gui.watolib.check_mk_automations import reload, restart
 
-        return {"restart": restart, "reload": reload,}[
+        return {
+            "restart": restart,
+            "reload": reload,
+        }[
             active_config.wato_activation_method
         ](self._parse_settings(settings).hosts_to_update).config_warnings
 

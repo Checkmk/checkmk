@@ -22,7 +22,6 @@ def _service(plugin: str, item: str | None) -> ConfiguredService:
 
 
 def test_service_sortable() -> None:
-
     assert sorted(
         [
             _service("B", "b"),

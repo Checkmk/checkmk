@@ -34,7 +34,6 @@ def inventory_veeam_tapejobs(parsed):
 
 @get_parsed_item_data
 def check_veeam_tapejobs(item, params, data):
-
     job_id = data["job_id"]
     last_result = data["last_result"]
     last_state = data["last_state"]

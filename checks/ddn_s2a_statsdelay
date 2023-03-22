@@ -34,7 +34,6 @@ def inventory_ddn_s2a_statsdelay(parsed):
 
 
 def check_ddn_s2a_statsdelay(item, params, parsed):
-
     # The API gives information about the delay statistics in a histogram,
     # binning read/write events by their delay. The individual bins are
     # counters. To get a picture of the current delay stats, we subtract

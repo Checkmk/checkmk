@@ -181,7 +181,6 @@ class CAdvisorExporter:
     def _retrieve_pods_memory_summary(
         self, memory_info: list[tuple[str, str]]
     ) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
-
         result: dict[str, dict[str, str | dict[str, str]]] = {}
         associations = {}
         for memory_stat, promql_query in memory_info:
@@ -273,7 +272,6 @@ class CAdvisorExporter:
         for pod_memory_info in self.api_client.query_promql(
             f'sum by (pod, namespace)(container_memory_usage_bytes{{pod!="", container=""{self._namespace_query_part()}}})'
         ):
-
             pod_name = self._pod_name(pod_memory_info.labels)
             for container_name in self.pod_containers[pod_name]:
                 extra_result[container_name] = {
@@ -291,7 +289,6 @@ class CAdvisorExporter:
     def _retrieve_formatted_cadvisor_info(
         self, entity_info: dict[str, str], group_element: str
     ) -> list[dict[str, dict[str, Any]]]:
-
         exclusion_element = (
             '{{container!="POD",container!=""{namespace_filter}}}'
             if group_element == "container"
@@ -309,7 +306,6 @@ class CAdvisorExporter:
     def _retrieve_cadvisor_info(
         self, entity_info: dict[str, str], group_element: str
     ) -> list[dict[str, dict[str, Any]]]:
-
         result = []
         group_element = "name" if group_element in ("name", "container") else "pod, namespace"
         for entity_name, entity_promql in entity_info.items():
@@ -788,7 +784,6 @@ class PromQLResponse:
 
     @staticmethod
     def _identify_metric_scrape_target(promql_metric_info: PromQLMetric) -> str:
-
         promql_metric_labels = promql_metric_info["labels"]
         scrape_target_name = "{}-{}".format(
             promql_metric_labels["job"],
@@ -804,7 +799,6 @@ class PromQLResponse:
     def _extract_metric_labels(
         metric_labels_dict: Mapping[str, str], promql_labels_subset: list[str]
     ) -> str:
-
         metric_labels_holder = ""
         for promql_label in promql_labels_subset:
             metric_labels_holder += metric_labels_dict[promql_label]
@@ -856,7 +850,6 @@ def parse_piggybacked_values(
     label_as_piggyback_host: str,
     values_as_int: bool = False,
 ) -> dict[str, dict[str, int | float]]:
-
     result: dict[str, dict[str, int | float]] = {}
     for promql_result in promql_results:
         piggyback_host = promql_result.label_value(label_as_piggyback_host)
@@ -957,7 +950,6 @@ class PromQLMultiResponse(PromQLResponse):
         promql_label_for_piggyback: str | None = None,
         number_convert: str = "float",
     ) -> dict[str, dict[str, int | float]]:
-
         result: dict[str, dict[str, int | float]] = {}
         for promql_metric in self.promql_metrics:
             if promql_label_for_piggyback is not None:
@@ -978,7 +970,6 @@ class PromQLMultiResponse(PromQLResponse):
         return result
 
     def get_value_only_dict(self, key_label: str) -> dict[str, float]:
-
         result = {}
         for promql_metric in self.promql_metrics:
             result[self._extract_metric_label(promql_metric, key_label)] = float(
@@ -1010,7 +1001,6 @@ class PromQLMultiResponse(PromQLResponse):
         return piggybacked_services
 
     def _process_multi_result(self) -> list[PromQLMetric]:
-
         result: list[PromQLMetric] = []
         if not self.response:
             return result
@@ -1022,7 +1012,6 @@ class PromQLMultiResponse(PromQLResponse):
         return result
 
     def _update_labels_overall_frequencies(self, metric_labels: dict[str, str]) -> None:
-
         for promql_specific_label, metric_specific_label in metric_labels.items():
             promql_specific_label_frequencies = self.labels_overall_frequencies.setdefault(
                 promql_specific_label, defaultdict(int)
@@ -1031,7 +1020,6 @@ class PromQLMultiResponse(PromQLResponse):
             promql_specific_label_frequencies["total_count"] += 1
 
     def _get_unique_least_promql_labels(self) -> list[str]:
-
         information_gains = self._determine_promql_labels_information_gains()
         promql_labels_by_relevance = PromQLMultiResponse._extract_promql_labels_by_relevance(
             information_gains
@@ -1065,7 +1053,6 @@ class PromQLMultiResponse(PromQLResponse):
 
     @staticmethod
     def _determine_single_entropy(p: float) -> float:
-
         if p > 1.0 or p <= 0.0:
             return 0
         return -p * math.log2(p)
@@ -1097,7 +1084,6 @@ class PromQLMultiResponse(PromQLResponse):
         return promql_labels_by_relevance
 
     def _verify_all_unique(self, promql_labels_subset: list[str]) -> bool:
-
         seen_labels_combination: list[str] = []
         for promql_metric in self.promql_metrics:
             metric_labels_dict = promql_metric["labels"]
@@ -1152,7 +1138,6 @@ class PrometheusServer:
         return result
 
     def health(self) -> dict[str, Any]:
-
         response = self.api_client.query_static_endpoint("/-/healthy")
         return {"status_code": response.status_code, "status_text": response.reason}
 
@@ -1324,7 +1309,6 @@ class PrometheusAPI:
         return response.json()
 
     def test(self, result: dict[str, Any]) -> dict[str, Any]:
-
         scrape_targets = {}
         scrape_target_names: defaultdict[str, int] = defaultdict(int)
         for scrape_target_info in result["data"]["activeTargets"]:
@@ -1356,11 +1340,9 @@ class Section:
     """
 
     def __init__(self) -> None:
-
         self._content: OrderedDict[str, dict[str, Any]] = OrderedDict()
 
     def insert(self, check_data: dict[str, Any]) -> None:
-
         for key, value in check_data.items():
             if key not in self._content:
                 self._content[key] = value
@@ -1371,7 +1353,6 @@ class Section:
                     raise ValueError("Key %s is already present and cannot be merged" % key)
 
     def output(self) -> str:
-
         return json.dumps(self._content)
 
 
@@ -1381,18 +1362,15 @@ class PiggybackHost:
     """
 
     def __init__(self) -> None:
-
         super().__init__()
         self._sections: OrderedDict[str, Section] = OrderedDict()
 
     def get(self, section_name: str) -> Section:
-
         if section_name not in self._sections:
             self._sections[section_name] = Section()
         return self._sections[section_name]
 
     def output(self) -> list[str]:
-
         data = []
         for name, section in self._sections.items():
             data.append("<<<%s:sep(0)>>>" % name)
@@ -1406,17 +1384,14 @@ class PiggybackGroup:
     """
 
     def __init__(self) -> None:
-
         self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
 
     def get(self, element_name: str) -> PiggybackHost:
-
         if element_name not in self._elements:
             self._elements[element_name] = PiggybackHost()
         return self._elements[element_name]
 
     def join(self, section_name: str, pairs: Mapping[str, dict[str, Any]]) -> "PiggybackGroup":
-
         for element_name, data in pairs.items():
             section = self.get(element_name).get(section_name)
             section.insert(data)
@@ -1470,20 +1445,17 @@ class ApiData:
         return "\n".join(e.output())
 
     def server_info_section(self) -> str:
-
         logging.info("Prometheus Server Info")
         g = PiggybackHost()
         g.get("prometheus_api_server").insert(self.prometheus_server.health())
         return "\n".join(g.output())
 
     def scrape_targets_section(self) -> str:
-
         e = PiggybackGroup()
         e.join("prometheus_scrape_target", self.prometheus_server.scrape_targets_health())
         return "\n".join(e.output())
 
     def cadvisor_section(self, cadvisor_options: dict[str, Any]) -> Iterator[str]:
-
         grouping_option = {"both": ["container", "pod"], "container": ["container"], "pod": ["pod"]}
 
         self.cadvisor_exporter.update_pod_containers()
@@ -1537,7 +1509,6 @@ class ApiData:
         retrieve_cadvisor_summary: Callable,
         summary_group_options: list[str],
     ) -> Iterator[str]:
-
         for group_option in summary_group_options:
             group = PiggybackGroup()
             promql_result = retrieve_cadvisor_summary(group_option)
@@ -1550,7 +1521,6 @@ class ApiData:
                 yield "\n".join(group.output(piggyback_prefix=piggyback_prefix))
 
     def kube_state_section(self, kube_state_options: dict[str, list[str]]) -> Iterator[str]:
-
         kube_state_summaries = {
             "cluster_resources": self.kube_state_exporter.cluster_resources_summary,
             "storage_classes": self.kube_state_exporter.storage_classes_summary,
@@ -1686,7 +1656,6 @@ def _extract_config_args(config: dict[str, Any]) -> dict[str, Any]:
     for exporter in config["exporter"]:
         exporter_name, exporter_info = exporter
         if exporter_name == "cadvisor":
-
             grouping_info = exporter_info["entity_level"]
             grouping_option = grouping_info[0]
             exporter_options[exporter_name] = {

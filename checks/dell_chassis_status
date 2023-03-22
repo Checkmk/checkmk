@@ -24,7 +24,6 @@ def inventory_dell_chassis_status(info):
 
 
 def check_dell_chassis_status(item, _no_params, info):
-
     whats = [
         "URL",
         "Locaction",

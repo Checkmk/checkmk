@@ -445,7 +445,6 @@ class Request(
         return mandatory_parameter(varname, self.get_binary_input(varname, deflt))
 
     def get_integer_input(self, varname: str, deflt: int | None = None) -> int | None:
-
         value = self.var(varname, "%d" % deflt if deflt is not None else None)
         if value is None:
             return None
@@ -459,7 +458,6 @@ class Request(
         return mandatory_parameter(varname, self.get_integer_input(varname, deflt))
 
     def get_float_input(self, varname: str, deflt: float | None = None) -> float | None:
-
         value = self.var(varname, "%s" % deflt if deflt is not None else None)
         if value is None:
             return None

@@ -275,7 +275,6 @@ class NetAppRootNode(NetAppNode):
 
 # NetApp Response Oject, holds the actual content in the NetAppNode member variable
 class NetAppResponse:
-
     # We have seen devices (NetApp Release 8.3.2P9) occasionally send
     # invalid XML characters, leading to an exception during parsing.
     # In that case replace them and try again.

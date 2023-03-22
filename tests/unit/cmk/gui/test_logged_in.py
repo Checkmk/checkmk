@@ -151,7 +151,13 @@ def test_unauthenticated_users_language(mocker: MockerFixture, user: LoggedInUse
 def test_unauthenticated_users_authorized_sites(
     monkeypatch: MonkeyPatch, user: LoggedInUser
 ) -> None:
-    assert user.authorized_sites(SiteConfigurations({SiteId("site1"): {},})) == {
+    assert user.authorized_sites(
+        SiteConfigurations(
+            {
+                SiteId("site1"): {},
+            }
+        )
+    ) == {
         "site1": {},
     }
 

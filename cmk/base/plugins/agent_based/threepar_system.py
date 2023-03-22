@@ -51,7 +51,6 @@ def discover_threepar_system(section: ThreeParSystem) -> DiscoveryResult:
 
 
 def check_threepar_system(item: str, section: ThreeParSystem) -> CheckResult:
-
     yield Result(
         state=State.OK,
         summary=f"Model: {section.model}, Version: {section.system_version}, Serial number: {section.serial_number}, Online nodes: {len(section.online_nodes)}/{len(section.cluster_nodes)}",

@@ -77,7 +77,6 @@ def _check_last_hop(
     last_hop: Hop,
     last_idx: int,
 ) -> CheckResult:
-
     yield from check_levels(
         last_hop.pl,
         levels_upper=params["pl"],

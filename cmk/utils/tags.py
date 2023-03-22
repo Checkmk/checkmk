@@ -513,7 +513,7 @@ class TagConfig:
                     have_none_tag = True
 
                 # Make sure tag ID is unique within this group
-                for (n, x) in enumerate(tag_group.tags):
+                for n, x in enumerate(tag_group.tags):
                     if n != nr and x.id == tag.id:
                         raise MKGeneralException(
                             _('Tags IDs must be unique. You\'ve used "%s" twice.') % tag.id

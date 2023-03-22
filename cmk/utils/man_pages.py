@@ -554,12 +554,10 @@ def load_man_page(name: str, man_page_dirs: Iterable[Path] | None = None) -> Man
 
 
 def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
-
     parsed: dict[str, list[str]] = defaultdict(list)
     current: list[str] = []
 
     for no, line in enumerate(content.splitlines(), start=1):
-
         if not line.strip() or line.startswith(" "):  # continuation line
             current.append(line.strip())
             continue

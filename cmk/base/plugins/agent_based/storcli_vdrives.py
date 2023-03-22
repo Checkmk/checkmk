@@ -27,7 +27,6 @@ StorcliVDrivesSection = Mapping[str, StorcliVDrive]
 
 
 def parse_storcli_vdrives(string_table: StringTable) -> StorcliVDrivesSection:
-
     section: MutableMapping[str, StorcliVDrive] = {}
 
     controller_num = 0

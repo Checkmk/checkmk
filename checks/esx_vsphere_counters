@@ -77,7 +77,6 @@ check_info["esx_vsphere_counters.uptime"] = {
 
 
 def _parse_esx_vsphere_counters_swap(parsed):
-
     swap_values = {}
 
     for agent_key, key in (("mem.swapin", "in"), ("mem.swapout", "out"), ("mem.swapused", "used")):

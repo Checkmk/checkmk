@@ -18,7 +18,6 @@ def parse_couchbase_buckets_operations(info):
 
 @get_parsed_item_data
 def check_couchbase_buckets_operations(_item, params, data):
-
     ops = data.get("ops")
     if ops is not None:
         yield check_levels(

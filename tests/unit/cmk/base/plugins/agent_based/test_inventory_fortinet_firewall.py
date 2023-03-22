@@ -17,7 +17,6 @@ from cmk.base.plugins.agent_based.inventory_fortinet_firewall import (
 
 
 def test_parse_inventory_fortinet_firewall() -> None:
-
     string_table = [
         [
             ["127.0.0.1", "20", "255.255.255.0"],
@@ -79,7 +78,6 @@ def test_parse_inventory_fortinet_firewall() -> None:
 
 
 def test_parse_inventory_fortinet_firewall_empty_string_table() -> None:
-
     string_table: list[StringTable] = []
 
     expected_parse_result: SectionFortinetInterface = {}

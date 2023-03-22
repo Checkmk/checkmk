@@ -127,7 +127,6 @@ class RowTableLivestatus(RowTable):
 def query_livestatus(
     query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
 ) -> list[LivestatusRow]:
-
     if all(
         (
             active_config.debug_livestatus_queries,

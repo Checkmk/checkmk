@@ -41,7 +41,6 @@ def check_poe_data(params, poe_data):
 
     # PoE on device is turned ON
     if poe_data.poe_status == PoeStatus.ON:
-
         # calculate percentage of power consumption
         poe_used_percentage = (
             ((float(poe_data.poe_used) / float(poe_data.poe_max)) * 100)

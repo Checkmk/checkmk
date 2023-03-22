@@ -38,7 +38,6 @@
 def parse_aix_hacmp_nodes(info):
     parsed = {}
     for line in info:
-
         if len(line) == 1:
             parsed[line[0]] = {}
 

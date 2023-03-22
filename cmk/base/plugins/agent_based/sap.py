@@ -259,7 +259,6 @@ def discover_sap_value_groups(
 
 
 def check_sap_value_groups(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
     try:
         patterns: GroupPatterns = params["_group_relevant_patterns"]
     except KeyError:

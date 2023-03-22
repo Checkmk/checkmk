@@ -817,7 +817,6 @@ class ManualCheckParameterRulespec(HostRulespec):
         match_type="all",
         factory_default=Rulespec.NO_FACTORY_DEFAULT,
     ):
-
         # Mandatory keys
         self._check_group_name = check_group_name
         if name is None:
@@ -910,7 +909,6 @@ def register_rule(
     deprecated=False,
     **kwargs,
 ):
-
     base_class = _rulespec_class_for(varname, valuespec is not None, itemtype is not None)
     class_kwargs = {
         "name": varname,
@@ -994,7 +992,6 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
         if isinstance(
             instance, (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)
         ):
-
             manual_instance: Any = instance.manual_check_parameter_rulespec_instance
             if manual_instance:
                 subgroup_key = "static/" + manual_instance.group().sub_group_name

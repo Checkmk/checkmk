@@ -52,7 +52,6 @@ MAP_VLANS = {
 
 
 def _bitmask(raw: str) -> Sequence[int]:
-
     """
     >>> _bitmask("F")
     [1, 5, 6]

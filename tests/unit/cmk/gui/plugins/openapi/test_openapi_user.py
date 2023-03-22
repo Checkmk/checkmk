@@ -40,7 +40,6 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 @managedtest
 def test_idle_timeout(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch) -> None:
-
     user_detail = {
         "username": "user",
         "fullname": "User Name",
@@ -86,7 +85,6 @@ def test_idle_timeout(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: Mon
 def test_openapi_customer(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     user_detail = {
         "username": "user",
         "fullname": "User Name",
@@ -142,7 +140,6 @@ def test_openapi_customer(
 def test_openapi_user_minimal_settings(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
-
     with freeze_time("2021-09-24 12:36:00"), run_as_superuser():
         user_object: UserObject = {
             UserId("user"): {
@@ -194,7 +191,6 @@ def test_openapi_user_minimal_password_settings(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: MonkeyPatch,
 ) -> None:
-
     user_detail = {
         "username": "user",
         "fullname": "User Name",
@@ -277,7 +273,6 @@ def test_openapi_user_config(
     with_automation_user: tuple[UserId, str],
     monkeypatch: MonkeyPatch,
 ) -> None:
-
     name = _random_string(10)
     alias = "KPECYCq79E"
 
@@ -351,7 +346,6 @@ def test_openapi_user_config(
 def test_openapi_user_internal_with_notifications(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
-
     name = UserId(_random_string(10))
 
     user_object: UserObject = {
@@ -421,7 +415,6 @@ def test_update_user_auth_options(
     test_data: Mapping[str, str],
     expected_serial_count: int,
 ) -> None:
-
     name = _random_string(10)
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -455,7 +448,6 @@ def test_update_user_auth_options(
 def test_openapi_user_edit_auth(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     name = "foo"
     alias = "Foo Bar"
 
@@ -1035,7 +1027,6 @@ def test_user_enforce_password_change_option(
 def test_response_schema_compatible_with_request_schema(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     user_detail = {
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
@@ -1141,7 +1132,6 @@ def _internal_attributes(user_attributes):
 def test_openapi_new_user_with_cloned_role(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     cloned_role: UserRole = clone_role(RoleID("admin"))
 
     user_detail = {
@@ -1216,7 +1206,6 @@ def test_openapi_custom_attributes_of_user(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: MonkeyPatch,
 ) -> None:
-
     attr: Mapping[str, str | bool] = {
         "name": "judas",
         "title": "judas",
@@ -1263,7 +1252,6 @@ def test_openapi_custom_attributes_of_user(
 def test_create_user_with_non_existing_custom_attribute(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     params = {
         "username": "cmkuser",
         "fullname": "Mathias Kettner",

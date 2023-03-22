@@ -23,9 +23,7 @@ register.agent_section(
 
 
 def inventory_docker_node_network(section: Section) -> InventoryResult:
-
     for network_id, network in section.items():
-
         network_name = network["Name"]
         network_path = ["software", "applications", "docker", "networks", network_name]
         container_path = network_path + ["containers"]

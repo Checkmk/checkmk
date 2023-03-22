@@ -102,7 +102,6 @@ def check_threepar_volumes(
     params: Mapping[str, Any],
     section: ThreeParVolumeSection,
 ) -> CheckResult:
-
     if (volume := section.get(item)) is None:
         return
 

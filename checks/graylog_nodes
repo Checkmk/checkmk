@@ -87,7 +87,6 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
                 ("lifecycle", "Lifecycle is", "lc_"),
                 ("is_processing", "Is processing", "ps_"),
             ]:
-
                 value = node_info.get(key)
                 if value is None:
                     continue
@@ -109,7 +108,6 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
 
                 value_input_message = inputstate.get("message_input")
                 if value_input_message is not None:
-
                     value_name = value_input_message.get("name")
                     if value_name is not None:
                         long_output_str += "Name: %s, " % value_name
@@ -139,7 +137,6 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
 
         max_state = 0
         if long_output:
-
             long_output_info = ""
             max_state = max(state for state, _infotext in long_output)
             if max_state:

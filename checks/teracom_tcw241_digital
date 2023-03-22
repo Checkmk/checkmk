@@ -30,7 +30,6 @@ def parse_tcw241_digital(info):
 
     info_dict = {}
     for index, (description, state) in enumerate(zip(descriptions, states)):
-
         # if state is '1', the sensor is 'open'
         sensor_state = "open" if state == "1" else "closed"
 

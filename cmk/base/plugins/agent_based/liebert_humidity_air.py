@@ -47,7 +47,6 @@ def discover_liebert_humidity_air(
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[SystemSection],
 ) -> DiscoveryResult:
-
     if section_liebert_humidity_air is None:
         return
 
@@ -62,7 +61,6 @@ def check_liebert_humidity_air(
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[SystemSection],
 ) -> CheckResult:
-
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return
 

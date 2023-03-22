@@ -18,7 +18,6 @@ def parse_jira_custom_svc(info):
         custom_svc = json.loads(" ".join(line))
 
         for service in custom_svc:
-
             svc_values = custom_svc.get(service)
             if svc_values is None:
                 continue
@@ -46,7 +45,6 @@ def check_jira_custom_svc(item, params, item_data):
         ("sum", "Result of summed up values", int),
         ("avg", "Average value", float),
     ]:
-
         svc_value = item_data.get(computation)
         if svc_value is None:
             continue

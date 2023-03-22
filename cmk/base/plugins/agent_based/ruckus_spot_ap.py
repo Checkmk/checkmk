@@ -30,7 +30,6 @@ _BANDS_MAP: Final = {
 
 
 def parse_ruckus_spot_ap(string_table: StringTable) -> Section:
-
     bands: dict[str, list[_Device]] = {}
     for band_info in json.loads(string_table[0][0]):
         band = _BANDS_MAP[str(band_info["band"])]

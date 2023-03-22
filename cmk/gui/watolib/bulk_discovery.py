@@ -193,7 +193,6 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         ignore_errors: IgnoreErrors,
         job_interface,
     ):
-
         try:
             response = discovery(
                 task.site_id,

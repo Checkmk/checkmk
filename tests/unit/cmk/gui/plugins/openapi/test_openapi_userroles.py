@@ -248,7 +248,6 @@ def test_edit_builtin_alias(object_base: str, edit_userrole: Callable) -> None:
 def test_permission_change_when_builtin_changes(
     get_userrole: Callable, clone_userrole: Callable, edit_userrole: Callable, object_base: str
 ) -> None:
-
     admin_permissions = get_userrole(url=object_base + "admin").json["extensions"]["permissions"]
     guest_permissions = get_userrole(url=object_base + "guest").json["extensions"]["permissions"]
     user_permissions = get_userrole(url=object_base + "user").json["extensions"]["permissions"]

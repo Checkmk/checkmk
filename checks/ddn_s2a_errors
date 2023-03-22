@@ -32,14 +32,12 @@ def inventory_ddn_s2a_errors(parsed):
         return (value + 1, value + 5)
 
     for nr, port_type in enumerate(parsed["port_type"]):
-
         # Note: The API command returning the port errors that we evaluate
         #       in this check differentiates between FC and IB ports, providing
         #       different values according to port type. As we have no example
         #       for the IB ports at this time, we only implement logic for what
         #       we can test.
         if port_type == "FC":
-
             yield "%d" % (nr + 1), {
                 "link_failure_errs": value_to_levels(parsed["link_failure_errs"][nr]),
                 "lost_sync_errs": value_to_levels(parsed["lost_sync_errs"][nr]),

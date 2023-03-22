@@ -22,11 +22,9 @@ _DEFAULT_TIMEOUT = 10
 
 
 def parse_response_data(contents: str) -> Mapping[str, Mapping[str, str]]:
-
     parsed: dict[str, dict[str, str]] = {}
     context = None
     for line in contents.splitlines():
-
         match = re.search("<(sensor[0-9]+|system)>", line)
         if match:
             context = match.group(1)
@@ -63,7 +61,6 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
 
 
 def _fetch_and_output_data(args: Args) -> int:
-
     url = f"http://{args.host}/xml/sensordata.xml"
     try:
         response = requests.get(

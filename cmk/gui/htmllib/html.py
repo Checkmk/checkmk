@@ -652,7 +652,6 @@ class HTMLGenerator(HTMLWriter):
         required: bool = False,
         title: str | None = None,
     ) -> None:
-
         # Model
         error = user_errors.get(varname)
         value = self.request.get_str_input(varname, default_value)
@@ -827,7 +826,6 @@ class HTMLGenerator(HTMLWriter):
         try_max_width: bool = False,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-
         value = self.request.get_str_input(varname, deflt)
         error = user_errors.get(varname)
 
@@ -1284,7 +1282,6 @@ class HTMLGenerator(HTMLWriter):
         popup_group: str | None = None,
         hover_switch_delay: int | None = None,
     ) -> HTML:
-
         onclick = "cmk.popup_menu.toggle_popup(event, this, {}, {}, {}, {}, {},  {});".format(
             json.dumps(ident),
             json.dumps(method.asdict()),

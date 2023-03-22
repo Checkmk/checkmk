@@ -496,7 +496,6 @@ def _parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, 
 
 
 class SingleSiteConnection(Helpers):
-
     # So we only collect in a specific thread, and not in all of them. We also use
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()

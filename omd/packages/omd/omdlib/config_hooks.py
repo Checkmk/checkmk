@@ -214,7 +214,6 @@ def hook_exists(site: "SiteContext", hook_name: str) -> bool:
 
 
 def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHookResult:
-
     if not site.hook_dir:
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")

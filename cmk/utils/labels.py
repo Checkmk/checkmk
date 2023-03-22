@@ -32,7 +32,6 @@ class _Label:
     __slots__ = "name", "value"
 
     def __init__(self, name: str, value: str) -> None:
-
         if not isinstance(name, str):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
         self.name: Final = str(name)

@@ -175,7 +175,6 @@ _HANDLERS: Final = (
 
 
 def inventory_lnx_distro(section: Section) -> InventoryResult:
-
     for file_name, handler in _HANDLERS:
         if file_name in section:
             yield Attributes(

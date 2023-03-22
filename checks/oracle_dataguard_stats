@@ -43,7 +43,6 @@ def _get_seconds(timestamp: str) -> Optional[int]:
 
 
 def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-many-branches
-
     try:
         dgdata = parsed[item]
     except KeyError:
@@ -62,7 +61,6 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 
         # Observer is only usable with enabled Fast Start Failover!
         if "fs_failover_status" in dgdata and dgdata["fs_failover_status"] != "DISABLED":
-
             if dgdata["fs_failover_observer_present"] != "YES":
                 yield 2, "Observer not connected"
             else:
@@ -85,7 +83,6 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 
     # switchover_status is important for non broker environemnts as well.
     if "switchover_status" in dgdata:
-
         if dgdata["database_role"] == "PRIMARY":
             if dgdata["switchover_status"] in (
                 "TO STANDBY",
@@ -105,7 +102,6 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
                     yield 0, "Switchoverstate ignored "
 
         elif dgdata["database_role"] == "PHYSICAL STANDBY":
-
             # don't show the ok state, due to distracting 'NOT ALLOWED' state!
             if dgdata["switchover_status"] in ("SYNCHRONIZED", "NOT ALLOWED", "SESSIONS ACTIVE"):
                 yield 0, "Switchover to primary possible"

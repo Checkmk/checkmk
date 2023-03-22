@@ -103,7 +103,6 @@ def parse_arguments(sys_args):
 
 
 def main(sys_args=None):
-
     host, tcp_port, service, job, street, street_nr, city, regex = parse_arguments(sys_args)
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -48,7 +48,6 @@ def test_check_disk() -> None:
 
 
 def _test_check_aix_diskiod(item, section_1, section_2, check_func):
-
     value_store: dict[str, Any] = {}
 
     # fist call: initialize value store

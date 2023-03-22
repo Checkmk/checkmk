@@ -97,7 +97,6 @@ def test_create_snmp_parse_function_handle_empty() -> None:
 
 
 def test_create_snmp_section_plugin_from_legacy() -> None:
-
     plugin = section_plugins_legacy.create_snmp_section_plugin_from_legacy(
         "norris",
         {

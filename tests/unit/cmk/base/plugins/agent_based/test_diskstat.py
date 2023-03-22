@@ -158,7 +158,6 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
         CheckPluginName("unittest_sd"),
         "unittest_sd_description",
     ):
-
         with pytest.raises(IgnoreResultsError):
             list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
         DATA[0][0] = "1617784512"
@@ -1337,7 +1336,14 @@ def test_check_diskstat_single_item() -> None:
                 None,
             )
         )
-    assert list(diskstat.check_diskstat("item", {}, {"item": DISK}, None,)) == [
+    assert list(
+        diskstat.check_diskstat(
+            "item",
+            {},
+            {"item": DISK},
+            None,
+        )
+    ) == [
         Result(state=State.OK, notice="Utilization: <0.01%"),
         Metric("disk_utilization", 3.933167173747347e-06),
         Result(state=State.OK, summary="Read: 17.7 B/s"),

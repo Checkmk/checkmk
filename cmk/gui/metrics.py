@@ -168,7 +168,6 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
         # Convert legacy tuple based perfometer
         perfometer_type, perfometer_args = perfometer[0], perfometer[1]
         if perfometer_type in ("dual", "stacked"):
-
             sub_performeters = perfometer_args[:]
             _convert_legacy_tuple_perfometers(sub_performeters)
 
@@ -197,7 +196,6 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
 def _lookup_required_expressions(
     perfometer: LegacyPerfometer | PerfometerSpec,
 ) -> list[PerfometerExpression]:
-
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
 
@@ -213,7 +211,6 @@ def _lookup_required_expressions(
 def _lookup_required_names(
     perfometer: LegacyPerfometer | PerfometerSpec,
 ) -> RequiredMetricNames | None:
-
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
 

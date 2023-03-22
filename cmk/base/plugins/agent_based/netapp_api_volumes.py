@@ -107,7 +107,6 @@ def _generate_volume_metrics(
     for protocol in params.get("perfdata", []):
         for mode in ["read", "write", "other"]:
             for field in ["data", "ops", "latency"]:
-
                 key = _create_key(protocol, mode, field)
                 value = volume.get(key)
                 if value is None:
@@ -200,7 +199,6 @@ def _combine_netapp_api_volumes(
 # specific error message for legacy checks with a UUID as item
 def check_netapp_api_volumes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if "patterns" in params:
-
         volumes_in_group = mountpoints_in_group(section, *params["patterns"])
         if not volumes_in_group:
             yield Result(

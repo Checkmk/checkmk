@@ -127,7 +127,6 @@ class ModeRoles(WatoMode):
 
     def page(self) -> None:
         with table_element("roles") as table:
-
             users = userdb.load_users()
             for nr, role in enumerate(
                 sorted(userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name))
@@ -375,7 +374,6 @@ class ModeRoleMatrix(WatoMode):
                 section.title,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
             ) as table:
-
                 permission_list = permission_registry.get_sorted_permissions(section)
 
                 if not permission_list:

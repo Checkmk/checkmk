@@ -203,7 +203,6 @@ def _vs_add_common_mail_elements(elements):
 
 
 def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
-
     return Transform(
         valuespec=CascadingDropdown(
             title=_("URL prefix for links to Checkmk"),

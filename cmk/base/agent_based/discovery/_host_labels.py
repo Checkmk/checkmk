@@ -69,7 +69,6 @@ def analyse_host_labels(
     ruleset_matcher: RulesetMatcher,
     save_labels: bool,
 ) -> QualifiedDiscovery[HostLabel]:
-
     host_labels = QualifiedDiscovery[HostLabel](
         preexisting=existing_host_labels,
         current=discovered_host_labels,
@@ -128,7 +127,6 @@ def discover_host_labels(
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Sequence[HostLabel]:
-
     # make names unique
     labels_by_name = {
         **_discover_host_labels_for_source_type(
@@ -175,7 +173,6 @@ def _discover_host_labels_for_source_type(
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Mapping[str, HostLabel]:
-
     host_labels = {}
     try:
         parsed_results = _all_parsing_results(host_key, providers)
@@ -185,7 +182,6 @@ def _discover_host_labels_for_source_type(
             % ", ".join(str(r.section_name) for r in parsed_results)
         )
         for section_name, section_data, _cache_info in parsed_results:
-
             kwargs = {"section": section_data}
 
             host_label_plugin = host_label_plugins[section_name]

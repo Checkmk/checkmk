@@ -150,7 +150,6 @@ class NodeExporter:
         }
 
     def _df_summary(self) -> dict[str, list[str]]:
-
         # value division by 1000 because of Prometheus format
         df_list = [
             ("available", "node_filesystem_avail_bytes/1000"),
@@ -160,7 +159,6 @@ class NodeExporter:
         return self._process_filesystem_info(self._retrieve_filesystem_info(df_list))
 
     def _df_inodes_summary(self) -> dict[str, list[str]]:
-
         # no value division for inodes as format already correct
         inodes_list = [
             ("available", "node_filesystem_files_free"),
@@ -204,7 +202,6 @@ class NodeExporter:
         return result
 
     def diskstat_summary(self) -> dict[str, SectionStr]:
-
         diskstat_list = [
             ("reads_completed", "node_disk_reads_completed_total"),
             ("reads_merged", "node_disk_reads_merged_total"),
@@ -232,7 +229,6 @@ class NodeExporter:
         diskstat_list: list[tuple[str, str]],
         diskstat_node_dict: dict[str, dict[str, dict[str, int | str]]],
     ) -> dict[str, SectionStr]:
-
         result: dict[str, SectionStr] = {}
         diskstat_entities_list = [diskstat_info[0] for diskstat_info in diskstat_list]
         for node_name, diskstat_info_dict in diskstat_node_dict.items():
@@ -332,7 +328,6 @@ class NodeExporter:
         ]
 
     def kernel_summary(self) -> dict[str, SectionStr]:
-
         kernel_list = [
             ("cpu", "sum by (mode, instance)(node_cpu_seconds_total*100)"),
             ("cpu", "node_cpu_seconds_total*100"),

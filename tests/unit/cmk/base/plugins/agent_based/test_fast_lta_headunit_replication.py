@@ -20,6 +20,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 check_name = "fast_lta_headunit_replication"
 
+
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")
 def _get_plugin(fix_register: FixRegister) -> CheckPlugin:

@@ -75,7 +75,6 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
         return
 
     for node in item_data:
-
         node_desc = node.get("description")
         if node_desc and node_desc is not None:
             yield Result(state=State.OK, summary=f"Description: {node_desc.title()}")
@@ -111,7 +110,6 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
             ("busyExecutors", "Number of busy executors"),
             ("idleExecutors", "Number of idle executors"),
         ]:
-
             exec_label_data = node.get("assignedLabels")
 
             if exec_label_data is None:

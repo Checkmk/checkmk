@@ -52,7 +52,6 @@ def parse_apc_netbotz_drycontact(info):
     }
 
     for idx, inst, loc, state in info:
-
         parsed[inst + " " + idx] = {
             "location": loc,
             "state": state_map.get(state, ("unknown[%s]" % state, 3)),

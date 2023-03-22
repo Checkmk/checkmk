@@ -77,7 +77,6 @@ def check(
     params: Mapping[str, int],
     section: SectionPaloAlto,
 ) -> CheckResult:
-
     yield Result(state=State.OK, summary=f"Firmware Version: {section.firmware_version}")
     yield Result(
         state=State(params[f"mode_{_uniform_format(section.ha_mode)}"]),

@@ -113,7 +113,6 @@ def _parse_suseconnect_pre_v15(info: StringTable) -> Section:
 
 
 def parse_suseconnect(string_table: StringTable) -> Section:
-
     try:
         first = string_table[0][0]
     except IndexError:

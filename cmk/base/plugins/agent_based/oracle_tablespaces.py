@@ -162,7 +162,6 @@ register.agent_section(
 
 
 def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> DiscoveryResult:
-
     for (sid, ts_name), tablespace in section["tablespaces"].items():
         if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
             yield Service(
@@ -304,7 +303,6 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             or (ts_type == "TEMPORARY" and params.get("temptablespace"))
             or (ts_type == "UNDO" and params.get("monitor_undo_tablespace"))
         ):
-
             yield from check_levels(
                 stats.free_space,
                 levels_lower=(warn, crit),

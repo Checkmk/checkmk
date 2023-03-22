@@ -29,7 +29,6 @@ ThreeParCapacitySection = Mapping[str, ThreeParCapacity]
 
 
 def parse_threepar_capacity(string_table: StringTable) -> ThreeParCapacitySection:
-
     return {
         raw_name.replace("Capacity", ""): ThreeParCapacity(
             name=raw_name.replace("Capacity", ""),
@@ -59,7 +58,6 @@ def check_threepar_capacity(
     params: Mapping[str, tuple[float, float]],
     section: ThreeParCapacitySection,
 ) -> CheckResult:
-
     if (disk := section.get(item)) is None:
         return
 

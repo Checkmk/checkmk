@@ -93,7 +93,6 @@ def test_cached_dns_lookup_is_config_cached_none(monkeypatch: MonkeyPatch) -> No
 
 
 def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> None:
-
     config_ipcache = _empty()
     persisted_cache = {(HostName("persisted_cached_host"), socket.AF_INET): "1.2.3.4"}
 
@@ -127,7 +126,6 @@ def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> N
 
 
 def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyPatch) -> None:
-
     config_ipcache = _empty()
     persisted_cache = {(HostName("persisted_cached_host"), socket.AF_INET): "1.2.3.4"}
 
@@ -161,7 +159,6 @@ def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyP
 
 
 def test_cached_dns_lookup_uncached(monkeypatch: MonkeyPatch) -> None:
-
     config_ipcache = _empty()
     persisted_cache = _empty()
 
@@ -193,7 +190,6 @@ def test_cached_dns_lookup_uncached(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_cached_dns_lookup_raises_once(monkeypatch: MonkeyPatch) -> None:
-
     config_ipcache = _empty()
     persisted_cache = _empty()
 
@@ -227,7 +223,6 @@ def test_cached_dns_lookup_raises_once(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
-
     config_ipcache = _empty()
     persisted_cache = {(HostName("test_host"), socket.AF_INET): "3.1.4.1"}
 

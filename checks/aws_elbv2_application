@@ -93,7 +93,6 @@ _aws_elbv2_application_connection_types = [
 
 
 def check_aws_elbv2_application_connections(item, params, parsed):
-
     metric_infos = []
 
     for cw_metric_name, (info_name, key) in zip(
@@ -223,7 +222,6 @@ _aws_elbv2_application_statistics_metrics = [
 
 
 def check_aws_elbv2_application_statistics(item, params, parsed):
-
     metric_infos = []
 
     for cw_metric_name, (info_name, metric_name) in zip(
@@ -235,7 +233,6 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
             ("Rule evaluations", "aws_rule_evaluations"),
         ],
     ):
-
         if "bytes" in metric_name:
             human_readable_func = aws_get_bytes_rate_human_readable
         else:

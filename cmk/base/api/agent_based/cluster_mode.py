@@ -113,7 +113,6 @@ def _cluster_check(
     unpreferred_node_state: State,
     **cluster_kwargs: Any,
 ) -> CheckResult:
-
     summarizer = Summarizer(
         node_results=executor(check_function, cluster_kwargs),
         label=label,
@@ -261,7 +260,6 @@ class NodeCheckExecutor:
         ignores = {}
 
         for node, kwargs in self._iter_node_kwargs(cluster_kwargs):
-
             elements = self._consume_checkresult(
                 node, check_function(**kwargs), self._value_store_manager
             )

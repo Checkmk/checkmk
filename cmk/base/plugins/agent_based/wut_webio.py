@@ -95,7 +95,6 @@ def _get_state_evaluation_from_state(state: str) -> Mapping[str, int]:
 
 
 def discover_wut_webio(section: Section) -> type_defs.DiscoveryResult:
-
     yield from [
         Service(item=item, parameters={STATES_DURING_DISC_KEY: input_.state})
         for item, input_ in section.items()

@@ -45,7 +45,6 @@ def test_uptime_discovery(section: uptime_utils.Section, do_discover: bool) -> N
 
 
 def test_uptime_check_basic() -> None:
-
     with on_time("2018-04-15 16:50", "CET"):
         assert list(uptime_utils.check({}, uptime_utils.Section(123, None))) == [
             Result(state=State.OK, summary="Up since Apr 15 2018 18:47:57"),
@@ -221,7 +220,6 @@ def test_uptime_check_zero() -> None:
     ],
 )
 def test_uptime_solaris_inputs(info: StringTable, reference: Sequence[Result]) -> None:
-
     section = uptime.parse_uptime(info)
     assert section is not None
 

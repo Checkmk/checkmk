@@ -109,7 +109,6 @@ def discovery_sap_hana_backup(section: Section) -> DiscoveryResult:
 
 
 def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
     data = section.get(item)
     if not data or data.is_empty():
         raise IgnoreResultsError("Login into database failed.")

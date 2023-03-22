@@ -67,7 +67,6 @@ def inventorize_interfaces(
     n_total: int,
     uptime_sec: Optional[float] = None,
 ) -> InventoryResult:
-
     now = time.time()
 
     usage_port_types = params.get(

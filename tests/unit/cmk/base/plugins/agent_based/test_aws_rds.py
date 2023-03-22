@@ -3060,7 +3060,13 @@ def test_parse_aws_rds() -> None:
 
 
 def test_check_aws_rds_network_io() -> None:
-    assert list(check_aws_rds_network_io("database-1 [eu-central-1]", {}, SECTION,)) == [
+    assert list(
+        check_aws_rds_network_io(
+            "database-1 [eu-central-1]",
+            {},
+            SECTION,
+        )
+    ) == [
         Result(state=State.OK, summary="[database-1]"),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
@@ -3090,7 +3096,6 @@ def test_aws_ec2_disk_io_discovery(
     section: Mapping[str, Mapping[str, float]],
     discovery_result: Sequence[Service],
 ) -> None:
-
     assert list(discover_aws_rds_disk_io(section)) == discovery_result
 
 
@@ -3539,7 +3544,6 @@ def test_check_aws_rds_bin_log_usage(
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_rds_bin_log_usage(
             item="disk",
@@ -3572,12 +3576,10 @@ def test_aws_rds_transaction_logs_usage_discovery(
     section: Mapping[str, Mapping[str, float]],
     discovery_result: Sequence[Service],
 ) -> None:
-
     assert list(discover_aws_rds_transaction_logs_usage(section)) == discovery_result
 
 
 def test_check_aws_rds_transaction_logs_usage_item_not_found() -> None:
-
     assert (
         list(
             check_aws_rds_transaction_logs_usage(
@@ -3591,7 +3593,6 @@ def test_check_aws_rds_transaction_logs_usage_item_not_found() -> None:
 
 
 def test_check_aws_rds_transaction_logs_usage_metric_not_found() -> None:
-
     with pytest.raises(KeyError):
         list(
             check_aws_rds_transaction_logs_usage(
@@ -3603,7 +3604,6 @@ def test_check_aws_rds_transaction_logs_usage_metric_not_found() -> None:
 
 
 def test_check_aws_rds_transaction_logs_usage_no_allocated_storage() -> None:
-
     check_result = list(
         check_aws_rds_transaction_logs_usage(
             item="disk",
@@ -3618,7 +3618,6 @@ def test_check_aws_rds_transaction_logs_usage_no_allocated_storage() -> None:
 
 
 def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> None:
-
     check_result = list(
         check_aws_rds_transaction_logs_usage(
             item="disk",
@@ -3691,7 +3690,6 @@ def test_check_aws_rds_transaction_logs_usage(
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_rds_transaction_logs_usage(
             item="disk",
@@ -3724,12 +3722,10 @@ def test_aws_rds_replication_slot_usage_discovery(
     section: Mapping[str, Mapping[str, float]],
     discovery_result: Sequence[Service],
 ) -> None:
-
     assert list(discover_aws_rds_replication_slot_usage(section)) == discovery_result
 
 
 def test_check_aws_rds_replication_slot_usage_item_not_found() -> None:
-
     assert (
         list(
             check_aws_rds_replication_slot_usage(
@@ -3743,7 +3739,6 @@ def test_check_aws_rds_replication_slot_usage_item_not_found() -> None:
 
 
 def test_check_aws_rds_replication_slot_usage_metric_not_found() -> None:
-
     with pytest.raises(KeyError):
         list(
             check_aws_rds_replication_slot_usage(
@@ -3755,7 +3750,6 @@ def test_check_aws_rds_replication_slot_usage_metric_not_found() -> None:
 
 
 def test_check_aws_rds_replication_slot_usage_no_allocated_storage() -> None:
-
     check_result = list(
         check_aws_rds_replication_slot_usage(
             item="disk",
@@ -3770,7 +3764,6 @@ def test_check_aws_rds_replication_slot_usage_no_allocated_storage() -> None:
 
 
 def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> None:
-
     check_result = list(
         check_aws_rds_replication_slot_usage(
             item="disk",
@@ -3826,7 +3819,6 @@ def test_check_aws_rds_replication_slot_usage(
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_rds_replication_slot_usage(
             item="disk",
@@ -3859,12 +3851,10 @@ def test_aws_rds_connections_discovery(
     section: Mapping[str, Mapping[str, float]],
     discovery_result: Sequence[Service],
 ) -> None:
-
     assert list(discover_aws_rds_connections(section)) == discovery_result
 
 
 def test_check_aws_rds_connections_item_not_found() -> None:
-
     assert (
         list(
             check_aws_rds_connections(
@@ -3914,7 +3904,6 @@ def test_check_aws_rds_connections(
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_rds_connections(
             item="disk",
@@ -3944,12 +3933,10 @@ def test_aws_rds_replica_lag_discovery(
     section: Mapping[str, Mapping[str, float]],
     discovery_result: Sequence[Service],
 ) -> None:
-
     assert list(discover_aws_rds_replica_lag(section)) == discovery_result
 
 
 def test_check_aws_rds_replica_lag_item_not_found() -> None:
-
     assert (
         list(
             check_aws_rds_replica_lag(
@@ -4019,7 +4006,6 @@ def test_check_aws_rds_replica_lag(
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_rds_replica_lag(
             item="disk",

@@ -141,7 +141,6 @@ def get_snmp_table(
     walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
     backend: SNMPBackend,
 ) -> Sequence[SNMPTable]:
-
     index_column = -1
     index_format: SpecialColumn | None = None
     columns: ResultColumnsUnsanitized = []

@@ -462,7 +462,12 @@ def test_interface_speed(fix_register: FixRegister) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("brocade_fcport")]
     parsed = get_parsed_snmp_section(SectionName("brocade_fcport"), DATA_0)
     assert parsed is not None
-    assert list(plugin.discovery_function(DISCOVERY_DEFAULT_PARAMETERS, parsed,)) == [
+    assert list(
+        plugin.discovery_function(
+            DISCOVERY_DEFAULT_PARAMETERS,
+            parsed,
+        )
+    ) == [
         Service(item="2 port2", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),
         Service(item="3 port3", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),
         Service(item="4 ISL port4", parameters={"phystate": [6], "opstate": [1], "admstate": [1]}),

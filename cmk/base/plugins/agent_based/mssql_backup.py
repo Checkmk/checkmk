@@ -83,7 +83,6 @@ def _get_word(line: Sequence[str], idx: int) -> str | None:
 
 
 def parse_mssql_backup(string_table: StringTable) -> Section:
-
     parsed: dict[str, list[Backup]] = {}
 
     line: Sequence[str | None]

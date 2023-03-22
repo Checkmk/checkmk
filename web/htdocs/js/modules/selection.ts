@@ -2,8 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import * as ajax from "ajax";
+import * as utils from "utils";
+import * as page_menu from "page_menu";
 
 interface SelectionProperties {
     page_id: null | string;
@@ -233,7 +234,11 @@ function toggle_row(e: Event, elem: HTMLElement) {
     return false;
 }
 
-function set_rowselection(action: string, rows: string[]) {
+function set_rowselection(
+    action: string,
+    rows: string[],
+    post_selection_functions: utils.FunctionSpec[] = []
+) {
     ajax.call_ajax("ajax_set_rowselection.py", {
         method: "POST",
         post_data:
@@ -245,6 +250,11 @@ function set_rowselection(action: string, rows: string[]) {
             action +
             "&rows=" +
             rows.join(","),
+        response_handler: function (_data, _response) {
+            post_selection_functions.forEach(f_spec =>
+                f_spec.function(...f_spec.arguments)
+            );
+        },
     });
 }
 
@@ -390,4 +400,23 @@ export function update_bulk_moveto(val: string) {
         for (let a = 0; a < fields[i].options.length; a++)
             if (fields[i].options[a].value == val)
                 fields[i].options[a].selected = true;
+}
+
+export function execute_bulk_action_for_single_host(
+    elem: HTMLElement,
+    action_fct: () => void,
+    action_args: any[]
+) {
+    const td =
+        elem.tagName === "TD"
+            ? elem
+            : (elem.closest("td")! as HTMLTableCellElement);
+    const checkbox: HTMLInputElement = find_checkbox(td)!;
+
+    const post_selection_fct: utils.FunctionSpec = {
+        function: action_fct,
+        arguments: action_args,
+    };
+    // Select only this element's row
+    set_rowselection("set", [checkbox.name], [post_selection_fct]);
 }

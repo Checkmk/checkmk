@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from time import time
+from faker import Faker
 
 from tests.testlib.playwright.helpers import PPage
 
 
 class TestHost:
-    def __init__(self, timestamp: float) -> None:
-        self.name = f"test_host_{timestamp}"
-        self.ip = "127.0.0.1"
+    def __init__(self) -> None:
+        self.name: str = f"test_host_{Faker().first_name()}"
+        self.ip: str = "127.0.0.1"
 
 
 class TestHosts:
@@ -19,7 +19,7 @@ class TestHosts:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!
         """
-        host = TestHost(round(time(), 2))
+        host = TestHost()
         self._create_host(logged_in_page, host)
 
         logged_in_page.goto_monitoring_all_hosts()
@@ -29,7 +29,7 @@ class TestHosts:
 
     def test_reschedule(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """reschedules a check"""
-        host = TestHost(round(time(), 2))
+        host = TestHost()
         self._create_host(logged_in_page, host)
 
         logged_in_page.goto_monitoring_all_hosts()
@@ -71,6 +71,13 @@ class TestHosts:
         logged_in_page.goto_setup_hosts()
 
         # click on "delete host" for the given hostname via xpath selector
+        logged_in_page.main_area.locator(
+            f"div#popup_trigger_host_action_menu_{host.name} >> a,popup_trigger"
+        ).click()
+        logged_in_page.main_area.locator(
+            f"div#popup_trigger_host_action_menu_{host.name} >> div#popup_menu"
+        ).wait_for()
+
         logged_in_page.main_area.locator(
             f"//*[contains(@href,'delete_host%3D{host.name}')]"
         ).click()

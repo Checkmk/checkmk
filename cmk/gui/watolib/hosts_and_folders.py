@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import abc
+import json
 import operator
 import os
 import pickle
@@ -65,12 +66,15 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.plugins.watolib.utils import generate_hosts_to_update_settings, SerializedSettings
 from cmk.gui.site_config import enabled_sites, is_wato_slave_site
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
+from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
@@ -3936,3 +3940,66 @@ def rebuild_folder_lookup_cache() -> None:
     cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
     cache_path.touch()
     Folder.build_host_lookup_cache(str(cache_path))
+
+
+def ajax_popup_host_action_menu() -> None:
+    hostname: HostName = HostName(request.get_ascii_input_mandatory("hostname"))
+    host = Host.host(hostname)
+    if host is None:
+        html.show_error(_('"%s" is not a valid host name') % hostname)
+        return
+
+    # Clone host
+    if request.get_str_input("show_clone_link"):
+        html.open_a(href=host.clone_url())
+        html.icon("insert")
+        html.write_text(_("Clone host"))
+        html.close_a()
+
+    form_name: str = "hosts"
+
+    # Detect network parents
+    if request.get_str_input("show_parentscan_link"):
+        html.open_a(
+            href="",
+            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.form_submit, %s);"
+            % json.dumps([form_name, "_parentscan"]),
+        )
+        html.icon("parentscan")
+        html.write_text(_("Detect network parents"))
+        html.close_a()
+
+    # Remove TLS registration
+    if request.get_str_input("show_remove_tls_link"):
+        remove_tls_options: dict[str, str | dict[str, str]] = confirmed_form_submit_options(
+            title=_('Remove TLS registration of host "%s"') % hostname,
+            message=remove_tls_registration_help(),
+            confirm_button=_("Remove"),
+            warning=True,
+        )
+        html.open_a(
+            href="",
+            onclick="cmk.selection.execute_bulk_action_for_single_host(this, cmk.page_menu.confirmed_form_submit, %s);"
+            % json.dumps(
+                [
+                    form_name,
+                    "_remove_tls_registration_from_selection",
+                    remove_tls_options,
+                ]
+            ),
+        )
+        html.icon("delete")
+        html.write_text(_("Remove TLS registration"))
+        html.close_a()
+
+    # Delete host
+    if request.get_str_input("show_delete_link"):
+        delete_url = make_confirm_delete_link(
+            url=make_action_link([("mode", "folder"), ("_delete_host", host.name())]),
+            title=_("Delete host"),
+            suffix=host.name(),
+        )
+        html.open_a(href=delete_url)
+        html.icon("delete")
+        html.write_text(_("Delete host"))
+        html.close_a()

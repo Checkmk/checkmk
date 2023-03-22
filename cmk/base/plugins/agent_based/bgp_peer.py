@@ -93,14 +93,19 @@ This is the data we can extract
 
 """
 
-from typing import List, Mapping, NamedTuple
+from typing import List, Mapping, NamedTuple, TypedDict
 
 from .agent_based_api.v1 import (
+    all_of,
+    exists,
+    Metric,
     OIDBytes,
     OIDEnd,
     register,
+    render,
     Result,
     Service,
+    ServiceLabel,
     SNMPTree,
     startswith,
     State,
@@ -117,13 +122,42 @@ class BGPData(NamedTuple):
     admin_state: str
     peer_state: str
     last_received_error: str
+    established_time: int
+    description: str
     bgp_version: int
 
 
 Section = Mapping[str, BGPData]
 
+AdminStateMapping = Mapping[str, int]
+PeerStateMapping = Mapping[str, int]
 
-def parse_arista_bgp(string_table: List[StringByteTable]) -> Section:
+
+class BGPPeerParams(TypedDict):
+    admin_state_mapping: AdminStateMapping
+    peer_state_mapping: PeerStateMapping
+
+
+DEFAULT_ADMIN_STATE_MAPPING: AdminStateMapping = {
+    "halted": 0,
+    "running": 0,
+}
+
+DEFAULT_PEER_STATE_MAPPING: PeerStateMapping = {
+    "idle": 0,
+    "active": 0,
+    "opensent": 0,
+    "openconfirm": 0,
+    "established": 0,
+}
+
+DEFAULT_BGP_PEER_PARAMS = BGPPeerParams(
+    admin_state_mapping=DEFAULT_ADMIN_STATE_MAPPING,
+    peer_state_mapping=DEFAULT_PEER_STATE_MAPPING,
+)
+
+
+def parse_bgp_peer(string_table: List[StringByteTable]) -> Section:
     def convert_address(value: str | list[int]) -> str:
         if not value:
             return "empty()"
@@ -155,6 +189,10 @@ def parse_arista_bgp(string_table: List[StringByteTable]) -> Section:
                 "6": "established",
             }.get(entry[5] if isinstance(entry[5], str) else "0", "unknown(%r)" % entry[5]),
             last_received_error=entry[6] if isinstance(entry[6], str) else "unknown(%r)" % entry[6],
+            established_time=int(entry[7]) if isinstance(entry[7], str) else 0,
+            description=(entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
+            if len(entry) > len(BGPData.__annotations__) - 1
+            else "n/a",
             bgp_version=4,
         )
 
@@ -177,7 +215,7 @@ def parse_arista_bgp(string_table: List[StringByteTable]) -> Section:
         )
 
     assert all(
-        len(entry) == len(BGPData.__annotations__) for entry in string_table[0]
+        len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]
     ), "Not all info elements have the size guessed from known names %d: %r" % (
         len(BGPData.__annotations__),
         [len(entry) for entry in string_table[0]],
@@ -185,31 +223,52 @@ def parse_arista_bgp(string_table: List[StringByteTable]) -> Section:
     return {remote_addr(str(entry[-1])): create_item_data(entry) for entry in string_table[0]}
 
 
-def discover_arista_bgp(section: Section) -> DiscoveryResult:
-    yield from (Service(item=item) for item in section)
+def discover_bgp_peer(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=item, labels=[ServiceLabel("cmk/bgp/description", peer.description)])
+        for item, peer in section.items()
+    )
 
 
-def check_arista_bgp(
+def check_bgp_peer(
     item: str,
+    params: BGPPeerParams,
     section: Section,
 ) -> CheckResult:
     if not (peer := section.get(item)):
         return
+    yield Result(state=State.OK, summary=f"Description: {peer.description!r}")
     yield Result(state=State.OK, summary=f"Local address: {peer.local_address!r}")
-    yield Result(state=State.OK, summary=f"Local identifier: {peer.local_identifier!r}")
-    yield Result(state=State.OK, summary=f"Remote AS number: {peer.remote_as_number}")
-    yield Result(state=State.OK, summary=f"Remote identifier: {peer.remote_identifier!r}")
-    yield Result(state=State.OK, summary=f"Admin state: {peer.admin_state!r}")
-    yield Result(state=State.OK, summary=f"Peer state: {peer.peer_state!r}")
-    yield Result(state=State.OK, summary=f"Last received error: {peer.last_received_error!r}")
-    yield Result(state=State.OK, summary=f"BGP version: {peer.bgp_version}")
-    yield Result(state=State.OK, summary=f"Remote address: {item!r}")
+    yield Result(
+        state=State(
+            params.get("admin_state_mapping", DEFAULT_ADMIN_STATE_MAPPING).get(peer.admin_state, 3)
+        ),
+        summary=f"Admin state: {peer.admin_state!r}",
+    )
+    yield Result(
+        state=State(
+            params.get("peer_state_mapping", DEFAULT_PEER_STATE_MAPPING).get(peer.peer_state, 3)
+        ),
+        summary=f"Peer state: {peer.peer_state!r}",
+    )
+    yield Result(
+        state=State.OK, summary=f"Established time: {render.timespan(peer.established_time)}"
+    )
+    yield Result(state=State.OK, notice=f"Local identifier: {peer.local_identifier!r}")
+    yield Result(state=State.OK, notice=f"Remote identifier: {peer.remote_identifier!r}")
+    yield Result(state=State.OK, notice=f"Remote AS number: {peer.remote_as_number}")
+    yield Result(state=State.OK, notice=f"Last received error: {peer.last_received_error!r}")
+    yield Result(state=State.OK, notice=f"BGP version: {peer.bgp_version}")
+    yield Result(state=State.OK, notice=f"Remote address: {item!r}")
+
+    yield Metric("uptime", peer.established_time)
 
 
 register.snmp_section(
     name="arista_bgp_peer",
-    parse_function=parse_arista_bgp,
-    parsed_section_name="arista_bgp",
+    parse_function=parse_bgp_peer,
+    parsed_section_name="bgp_peer",
+    supersedes=["arista_bgp"],
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.30065.4.1.1",  # ARISTA-BGP4V2-MIB::aristaBgp4V2Objects
@@ -221,16 +280,72 @@ register.snmp_section(
                 "2.1.12",  # AdminStatus
                 "2.1.13",  # State
                 "3.1.4",  # LastErrorReceivedTex
+                "4.1.1",  # FsmEstablishedTime
+                "2.1.14",  # Description
                 OIDEnd(),  # RemoteAddr
             ],
         )
     ],
-    detect=startswith(".1.3.6.1.2.1.1.1.0", "arista networks"),
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.30065"),
+)
+
+register.snmp_section(
+    name="cisco_bgp_peerv2",
+    parse_function=parse_bgp_peer,
+    parsed_section_name="bgp_peer",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.187.1.2.5.1",  # CISCO-BGP4-MIB::cbgpPeer2Entry
+            oids=[
+                OIDBytes("6"),  # cbgpPeer2LocalAddr
+                "9",  # cbgpPeer2LocalIdentifier
+                "11",  # cbgpPeer2RemoteAs
+                "12",  # cbgpPeer2RemoteIdentifier
+                "4",  # cbgpPeer2AdminStatus
+                "3",  # cbgpPeer2State
+                "28",  # cbgpPeer2LastErrorTxt
+                "19",  # cbgpPeer2FsmEstablishedTime
+                OIDEnd(),  # cbgpPeer2RemoteAddr
+            ],
+        )
+    ],
+    detect=all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2818"),
+        exists(".1.3.6.1.4.1.9.9.187.1.2.5.1.*"),
+    ),
+)
+register.snmp_section(
+    name="cisco_bgp_peerv3",
+    parse_function=parse_bgp_peer,
+    parsed_section_name="bgp_peer",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.9.9.187.1.2.9.1",  # CISCO-BGP4-MIB::cbgpPeer3Entry
+            oids=[
+                OIDBytes("8"),  # cbgpPeer3LocalAddr
+                "11",  # cbgpPeer3LocalIdentifier
+                "13",  # cbgpPeer3RemoteAs
+                "14",  # cbgpPeer3RemoteIdentifier
+                "6",  # cbgpPeer3AdminStatus
+                "5",  # cbgpPeer3State
+                "30",  # cbgpPeer3LastErrorTxt
+                "21",  # cbgpPeer3FsmEstablishedTime
+                "4",  # cbgpPeer3VrfName
+                OIDEnd(),  # cbgpPeer3RemoteAddr
+            ],
+        )
+    ],
+    detect=all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2818"),
+        exists(".1.3.6.1.4.1.9.9.187.1.2.9.1.*"),
+    ),
 )
 
 register.check_plugin(
-    name="arista_bgp",
+    name="bgp_peer",
     service_name="BGP Peer %s",
-    discovery_function=discover_arista_bgp,
-    check_function=check_arista_bgp,
+    discovery_function=discover_bgp_peer,
+    check_function=check_bgp_peer,
+    check_ruleset_name="bgp_peer",
+    check_default_parameters=DEFAULT_BGP_PEER_PARAMS,
 )

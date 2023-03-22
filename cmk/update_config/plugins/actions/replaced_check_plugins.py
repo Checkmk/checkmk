@@ -71,4 +71,5 @@ REPLACED_CHECK_PLUGINS = {
     CheckPluginName("jolokia_metrics_gc"): CheckPluginName("jolokia_jvm_garbagecollectors"),
     CheckPluginName("ups_power"): CheckPluginName("epower"),
     CheckPluginName("esx_vsphere_counters"): CheckPluginName("esx_vsphere_datastore_io"),
+    CheckPluginName("arista_bgp"): CheckPluginName("bgp_peer"),
 }

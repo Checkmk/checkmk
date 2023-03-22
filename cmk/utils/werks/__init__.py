@@ -48,11 +48,12 @@ def _compiled_werks_dir() -> Path:
     return Path(cmk.utils.paths.share_dir, "werks")
 
 
-def load() -> dict[int, Werk]:
+def load(base_dir: Path | None = None) -> dict[int, Werk]:
+    if base_dir is None:
+        base_dir = _compiled_werks_dir()
+
     werks: dict[int, Werk] = {}
-    for file_name in itertools.chain(
-        _compiled_werks_dir().glob("werks"), _compiled_werks_dir().glob("werks-*")
-    ):
+    for file_name in [(base_dir / "werks"), *base_dir.glob("werks-*")]:
         werks.update(load_precompiled_werks_file(file_name))
     return werks
 

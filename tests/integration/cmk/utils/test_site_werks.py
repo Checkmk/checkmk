@@ -3,35 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
+import pytest
+
 from tests.testlib.site import Site
 
 import cmk.utils.werks
-from cmk.utils.werks.werk import Edition
+from cmk.utils.werks.werk import Edition, Werk
 
 
-def test_load(site: Site) -> None:
-    werks = cmk.utils.werks.load()
+@pytest.fixture(name="werks")
+def fixture_werks(site: Site) -> dict[int, Werk]:
+    return cmk.utils.werks.load(Path(site.version.version_path(), "share/check_mk/werks"))
+
+
+def test_load(werks: dict[int, Werk]) -> None:
     assert len(werks) > 1000
 
 
-def test_make_sure_werks_can_be_loaded(site: Site) -> None:
-    # (this test once made sure, that all werk dictionaries have have a fixed
-    # list of fields, as we switched to pydantic models for writing and parsing
-    # werks, pydantic will already make sure that the fields exists)
-    cmk.utils.werks.load()
-
-
-def test_regular_werks(site: Site) -> None:
-    werks = cmk.utils.werks.load()
-
+def test_regular_werks(werks: dict[int, Werk]) -> None:
     regular_werks = [werk for werk in werks.values() if werk.edition == Edition.CRE]
-
     assert len(regular_werks) > 1000
 
 
-def test_enterprise_werks(site: Site) -> None:
-    werks = cmk.utils.werks.load()
-
+def test_enterprise_werks(site: Site, werks: dict[int, Werk]) -> None:
     enterprise_werks = [werk for werk in werks.values() if werk.edition == Edition.CEE]
 
     if site.version.is_raw_edition():
@@ -40,9 +36,7 @@ def test_enterprise_werks(site: Site) -> None:
         assert enterprise_werks
 
 
-def test_managed_werks(site: Site) -> None:
-    werks = cmk.utils.werks.load()
-
+def test_managed_werks(site: Site, werks: dict[int, Werk]) -> None:
     managed_werks = [werk for werk in werks.values() if werk.edition == Edition.CME]
 
     if site.version.is_managed_edition():
@@ -51,9 +45,7 @@ def test_managed_werks(site: Site) -> None:
         assert not managed_werks
 
 
-def test_cloud_werks(site: Site) -> None:
-    werks = cmk.utils.werks.load()
-
+def test_cloud_werks(site: Site, werks: dict[int, Werk]) -> None:
     cloud_werks = [werk for werk in werks.values() if werk.edition == Edition.CCE]
 
     if site.version.is_cloud_edition():

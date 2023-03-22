@@ -686,6 +686,10 @@ class Site:
         if not tool:
             return
 
+        if not os.path.exists("/opt/bin/valgrind"):
+            logger.warning("WARNING: /opt/bin/valgrind does not exist. Skip enabling it.")
+            return
+
         self.write_text_file(
             "etc/default/cmc",
             f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet --log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',

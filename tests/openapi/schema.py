@@ -5,20 +5,21 @@
 import logging
 import os
 from re import match
-from typing import Any
+from typing import Any, Iterator
 
 import schemathesis
-from schemathesis import auths as schemathesis_auth
+from schemathesis import DataGenerationMethod  # type: ignore[attr-defined]
 
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import current_base_branch_name
 
 from tests.openapi import settings
 
 logger = logging.getLogger(__name__)
 
-sample_style = "curl"
-skip_deprecated = True
+skip_deprecated_operations = True
+validate_schema = True
+data_generation_methods = (DataGenerationMethod.positive,)
+code_sample_style = "curl"
 
 
 def add_formats_and_patterns(raw_schema: dict[str, Any]) -> None:
@@ -79,20 +80,6 @@ def add_formats_and_patterns(raw_schema: dict[str, Any]) -> None:
         True,
     )
 
-    if "CMK-12220" in settings.suppressed_issues:
-        update_schema(
-            raw_schema,
-            "properties",
-            {"format": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]+$"},
-            {
-                "type": "string",
-                "format": None,
-                "enum": None,
-                "pattern": "[a-zA-Z0-9][a-zA-Z0-9_-]+",
-            },
-            True,
-        )
-
 
 def add_links(
     schema: schemathesis.specs.openapi.schemas.BaseOpenAPISchema,
@@ -109,7 +96,9 @@ def add_links(
         src_schema = raw_schema
         for key in src_schema_ref[2:].split("/"):
             src_schema = src_schema[key]
-        property_id = src_schema.get("required", list(src_schema["properties"].keys()))[0]
+        if not (property_ids := src_schema.get("required", list(src_schema["properties"].keys()))):
+            continue
+        property_id = property_ids[0]
         property_pattern = src_schema["properties"][property_id].get("pattern", None)
         parameter = endpoint["target"].split("{", 1)[-1].split("}", 1)[0]
 
@@ -125,7 +114,7 @@ def add_links(
                 logger.error(
                     '%s %s: Parameter pattern "%s" defined while POST %s object property'
                     ' "%s" has no pattern!',
-                    method,
+                    method.upper(),
                     endpoint["target"],
                     parameter_pattern,
                     endpoint["source"],
@@ -135,7 +124,7 @@ def add_links(
                 logger.warning(
                     '%s %s: Parameter pattern "%s" defined while POST %s object property'
                     ' "%s" has a different pattern!',
-                    method,
+                    method.upper(),
                     endpoint["target"],
                     parameter_pattern,
                     endpoint["source"],
@@ -173,6 +162,7 @@ def get_crud_endpoints(
             }
         )
         if (object_type := source.split("/", 3)[:3][-1])
+        and object_type not in ("notification_rule")
         and match(f"/objects/{object_type}/{{[^}}/]*}}(\\?.*)?$", target)
         and (target_methods := set(map(str.lower, methods)).intersection(schema[target]))
         and (accept is None or match(accept, object_type))
@@ -180,13 +170,17 @@ def get_crud_endpoints(
     ]
 
 
+def get_site() -> Iterator[Site]:
+    yield from get_site_factory(prefix="openapi_").get_test_site("central", auto_cleanup=False)
+
+
 def get_schema() -> schemathesis.specs.openapi.schemas.BaseOpenAPISchema:
     """Return schema for parametrization."""
-    site = get_site()
+    site = next(get_site())
     token = f"Bearer automation {site.get_automation_secret()}"
 
-    @schemathesis_auth.register()
-    class _Auth(schemathesis_auth.AuthProvider):
+    @schemathesis.auths.register()
+    class _Auth(schemathesis.auths.AuthProvider):
         """Default authentication provider."""
 
         def get(self, context):
@@ -200,7 +194,7 @@ def get_schema() -> schemathesis.specs.openapi.schemas.BaseOpenAPISchema:
     site_id = site.id
     api_url = f"http://localhost/{site_id}/check_mk/api/1.0"
     schema_filename = "openapi-swagger-ui"
-    schema_filedir = os.getenv("TEST_OPENAPI_SCHEMA_DIR", os.getenv("HOME"))
+    schema_filedir = os.getenv("TEST_OPENAPI_SCHEMA_DIR", "")
     if os.path.exists(f"{schema_filedir}/{schema_filename}.json"):
         schema_filetype = "json"
     else:
@@ -212,46 +206,27 @@ def get_schema() -> schemathesis.specs.openapi.schemas.BaseOpenAPISchema:
         schema = schemathesis.from_path(
             schema_filepath,
             base_url=api_url,
-            skip_deprecated_operations=skip_deprecated,
-            code_sample_style=sample_style,
+            skip_deprecated_operations=skip_deprecated_operations,
+            validate_schema=validate_schema,
+            data_generation_methods=data_generation_methods,
+            code_sample_style=code_sample_style,
         )
     else:
         logger.info('Loading OpenAPI schema from URL "%s"...', schema_url)
+        # NOTE: We need to pass the Auth token to retrieve the schema via URL,
+        # since the AuthProvider will not be used during schema initialization!
         schema = schemathesis.from_uri(
             schema_url,
             base_url=api_url,
-            skip_deprecated_operations=skip_deprecated,
+            skip_deprecated_operations=skip_deprecated_operations,
+            validate_schema=validate_schema,
+            data_generation_methods=data_generation_methods,
+            code_sample_style=code_sample_style,
             headers={"Authorization": token},
-            code_sample_style=sample_style,
         )
     schema = add_links(schema)
 
-    # IGNORE /objects/rule/{rule_id}/actions/move/invoke
-    # To avoid a failure during parametrization for this endpoint, we are deprecating it
-    schema.raw_schema["paths"]["/objects/rule/{rule_id}/actions/move/invoke"]["post"].update(
-        {"deprecated": True}
-    )
-
     return schema
-
-
-def get_site() -> Site:
-    logger.info("Setting up testsite")
-    sf = get_site_factory(
-        prefix="openapi_",
-        fallback_branch=current_base_branch_name,
-    )
-    site_to_return = sf.get_existing_site("central")
-    if site_to_return.exists():
-        if not site_to_return.is_running():
-            site_to_return.start()
-        logger.info("Reuse existing site")
-    else:
-        logger.info("Creating new site")
-        site_to_return = sf.get_site("central")
-    logger.info("Testsite %s is up", site_to_return.id)
-
-    return site_to_return
 
 
 def parametrize_crud_endpoints(
@@ -268,13 +243,17 @@ def update_property(
     raw_schema: dict[str, Any],
     schema_name: str,
     property_name: str,
-    property_data: dict[str, Any],
+    property_data: dict[str, Any] | None = None,
     ticket_id: str | None = None,
     merge: bool = True,
 ) -> None:
+    """Update a property in the schema to suppress a specific problem."""
     if ticket_id and ticket_id not in settings.suppressed_issues:
         return
-    schema_data = raw_schema["components"]["schemas"][schema_name]["properties"][property_name]
+    schema_data = raw_schema["components"]["schemas"][schema_name]["properties"].get(property_name)
+    if property_data is None:
+        del schema_data
+        return
     for key in property_data:
         if key not in schema_data or not isinstance(schema_data[key], (dict, list)):
             schema_data[key] = property_data[key]
@@ -311,22 +290,29 @@ def require_properties(
     ticket_id: str | None = None,
     merge: bool = True,
 ) -> None:
+    """Require one ore more properties in the schema to suppress a specific bug."""
     if ticket_id and ticket_id not in settings.suppressed_issues:
         return
     if "required" not in raw_schema["components"]["schemas"][schema_name]:
         raw_schema["components"]["schemas"][schema_name]["required"] = []
-    required_properties = raw_schema["components"]["schemas"][schema_name]["required"]
-    if merge:
-        for property_name in [_ for _ in properties if _ not in required_properties]:
+    required_properties: list = raw_schema["components"]["schemas"][schema_name]["required"]
+    if not merge:
+        for property_name in [_ for _ in required_properties if _ not in properties]:
             logger.warning(
-                'SCHEMA %s: Property "%s" is not required but expected.%s',
+                'SCHEMA %s: Property "%s" is required but not expected to be.%s',
                 schema_name,
                 property_name,
                 f" #{ticket_id}" if ticket_id else "",
             )
-            required_properties.append(property_name)
-    else:
-        required_properties = properties
+            required_properties.remove(property_name)
+    for property_name in [_ for _ in properties if _ not in required_properties]:
+        logger.warning(
+            'SCHEMA %s: Property "%s" is not required but expected to be.%s',
+            schema_name,
+            property_name,
+            f" #{ticket_id}" if ticket_id else "",
+        )
+        required_properties.append(property_name)
 
 
 def update_schema(

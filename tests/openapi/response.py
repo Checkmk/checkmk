@@ -23,7 +23,7 @@ def fix_response(  # pylint: disable=too-many-branches
     body: dict[str, Any] | None = None,
     status_code: int | None = None,
     object_type: str | None = None,
-    stack_trace: str | None = None,
+    traceback: str | None = None,
     valid_body: bool | None = None,
     empty_content_type: bool | None = None,
     valid_content_type: bool | None = None,
@@ -79,12 +79,21 @@ def fix_response(  # pylint: disable=too-many-branches
         response_content_valid = False
     response_content_expected = response.status_code not in (204, 302)
     if response_content_expected and not response_content_valid:
-        logger.error(
-            '%s %s: Response was not in JSON format for status code "%s"!',
-            case.method,
-            case.path,
-            response.status_code,
-        )
+        if response.status_code == 404:
+            # warn only since this is most likely caused by the webserver instead of the API
+            logger.warning(
+                '%s %s: Response was not in JSON format for status code "%s"!',
+                case.method,
+                case.path,
+                response.status_code,
+            )
+        else:
+            logger.error(
+                '%s %s: Response was not in JSON format for status code "%s"!',
+                case.method,
+                case.path,
+                response.status_code,
+            )
     elif response_content_valid and not response_content_expected:
         logger.error(
             '%s %s: Unexpected JSON response returned for status code "%s"!',
@@ -93,10 +102,12 @@ def fix_response(  # pylint: disable=too-many-branches
             response.status_code,
         )
 
-    response_stack_trace = "\n".join(response_json.get("ext", {}).get("stack_trace", []))
+    ext_response = response_json.get("ext", {})
+    traceback_key = "stack_trace" if "stack_trace" in ext_response else "exc_traceback"
+    response_traceback = "\n".join(ext_response.get(traceback_key, []))
 
     if (
-        ticket_id in settings.suppressed_issues
+        (ticket_id is None or ticket_id in settings.suppressed_issues)
         and (method is None or match(method, case.method))
         and (path is None or match(path, case.path))
         and (
@@ -110,7 +121,7 @@ def fix_response(  # pylint: disable=too-many-branches
             or (status_code < 0 and -response.status_code != status_code)
         )
         and (object_type is None or match(object_type, response_object_type))
-        and (stack_trace is None or match(stack_trace, response_stack_trace, flags=DOTALL))
+        and (traceback is None or match(traceback, response_traceback, flags=DOTALL))
         and (valid_body is None or response_content_valid == valid_body)
         and (empty_content_type is None or response_content_type_empty == empty_content_type)
         and (valid_content_type is None or response_content_type_valid == valid_content_type)

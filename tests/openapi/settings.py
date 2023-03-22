@@ -8,45 +8,44 @@ from os import environ, getenv
 import schemathesis
 from hypothesis import HealthCheck, Phase, settings, strategies, Verbosity
 
-known_issues = {
-    "CMK-11886",
-    "CMK-11900",
-    "CMK-11924",
-    "CMK-12044",
-    "CMK-12048",
-    "CMK-12116",
-    "CMK-12125",
-    "CMK-12140",
-    "CMK-12143",
-    "CMK-12144",
-    "CMK-12181",
-    "CMK-12182",
-    "CMK-12217",
-    "CMK-12220",
-    "CMK-12235",
-    "CMK-12241",
-    "CMK-12246",
-    "CMK-12261",
-    "CMK-12320",
-    "CMK-12321",
-    "CMK-12326",
-    "CMK-12327",
-    "CMK-12334",
-    "CMK-12335",
-    "CMK-12380",
-    "CMK-12421",
-    "CMK-12543",
-    "CMK-12544",
-    "CMK-TODO",
-    "CMK-RULE",
-    "UNDEFINED-HTTP500",
+allow_redirects = False
+
+# generic issues that affect testing as a whole and should always be suppressed
+suppressed_issues = {
+    "CMK-11886",  # no real fix possible
+    "UNDEFINED-HTTP400",  # see CMK-11924
+    "UNDEFINED-HTTP404",  # see CMK-11924
+    "UNDEFINED-HTTP500",  # ignore this; an ISE is always a problem anyway!
     "INVALID-JSON",
 }
-
 if "TEST_OPENAPI_SUPPRESS" in environ:
-    suppressed_issues = set(getenv("TEST_OPENAPI_SUPPRESS", "").upper().split(","))
+    suppressed_issues.update(set(getenv("TEST_OPENAPI_SUPPRESS", "").upper().split(",")))
 else:
-    suppressed_issues = known_issues
+    suppressed_issues.update(
+        {
+            "CMK-12182",  # mostly done, but fixing InputPassword was apparently overlooked
+            # "CMK-12421",  # NOTE: problem with redirects in Schemathesis, need to investigate!
+            "CMK-13216",
+            "CMK-14100",
+            "CMK-14101",
+            "CMK-14110",
+            "CMK-14256",
+            "CMK-14259",
+            "CMK-14261",
+            "CMK-14263",
+            "CMK-14273",
+            "CMK-14291",
+            "CMK-14314",  # follow-up of CMK-12235
+            "CMK-14366",  # follow-up of CMK-12261
+            # "CMK-14375",
+            # "CMK-14375.1",
+            # "CMK-14375.2",
+            "CMK-14381",
+            "CMK-14403",
+            "CMK-14416",
+            "CMK-TODO",
+        }
+    )
 for issue in set(getenv("TEST_OPENAPI_ALLOW", "").upper().split(",")):
     suppressed_issues.discard(issue)
 
@@ -68,7 +67,11 @@ default_settings = {
     "deadline": 5000,
     "derandomize": False,
     "max_examples": 100,
-    "phases": [Phase.explicit, Phase.generate],
+    "phases": [
+        Phase.explicit,
+        Phase.generate,
+        Phase.explain,
+    ],
     "stateful_step_count": 5,
     "suppress_health_check": [
         HealthCheck.filter_too_much,

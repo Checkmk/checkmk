@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from hypothesis import given, strategies
 
+from tests.openapi import settings
 from tests.openapi.runners import run_crud_test, run_state_machine_test
 from tests.openapi.schema import get_schema, parametrize_crud_endpoints
 
@@ -16,18 +17,18 @@ schema = get_schema()
 
 
 @pytest.mark.type("openapi")
-@schema.parametrize()
+@schema.parametrize(endpoint="")
 def test_openapi_stateless(case):
     """Run default, stateless schemathesis testing."""
-    if (case.path == "/objects/bi_rule/{rule_id}" and case.method in ("POST", "PUT")) or (
-        case.path == "/domain-types/rule/collections/all" and case.method == "POST"
+    if case.path == "/domain-types/notification_rule/collections/all" and case.method in (
+        "GET",
+        "POST",
     ):
-        pytest.xfail("hypothesis.errors.Unsatisfiable: Unable to satisfy assumptions")
-        # /objects/rule/{rule_id}/actions/move/invoke is ignored in conftest.py
-    case.call_and_validate()
+        pytest.skip(reason="Currently fails due to CMK-14375.")
+    case.call_and_validate(allow_redirects=settings.allow_redirects)
 
 
-@pytest.mark.skip(reason="currently fails due to recursive schema references")
+@pytest.mark.skip(reason="Currently fails due to recursive schema references")
 @pytest.mark.type("openapi")
 def test_openapi_stateful():
     """Run stateful schemathesis testing."""

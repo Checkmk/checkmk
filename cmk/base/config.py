@@ -18,7 +18,6 @@ import py_compile
 import socket
 import struct
 import sys
-import types
 from collections import Counter
 from collections.abc import (
     Callable,
@@ -455,11 +454,6 @@ def register(name: str, default_value: Any) -> None:
     setattr(default_config, name, default_value)
 
 
-def _add_check_variables_to_default_config() -> None:
-    """Add configuration variables registered by checks to config module"""
-    default_config.__dict__.update(_check_variable_defaults)
-
-
 # .
 #   .--Read Config---------------------------------------------------------.
 #   |        ____                _    ____             __ _                |
@@ -514,7 +508,6 @@ def load_packed_config(config_path: ConfigPath) -> None:
 
 
 def _initialize_config() -> None:
-    _add_check_variables_to_default_config()
     load_default_config()
 
 
@@ -1444,8 +1437,6 @@ factory_settings: dict[str, dict[str, Any]] = {}
 active_check_info: dict[str, dict[str, Any]] = {}
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
-# keeps the default values of all the check variables
-_check_variable_defaults: dict[str, Any] = {}
 _all_checks_loaded = False
 
 # workaround: set of check-groups that are to be treated as service-checks even if
@@ -1508,8 +1499,6 @@ def _initialize_data_structures() -> None:
     global _all_checks_loaded
     _all_checks_loaded = False
 
-    _check_variable_defaults.clear()
-
     _check_contexts.clear()
     check_info.clear()
     legacy_check_plugin_names.clear()
@@ -1534,8 +1523,6 @@ def load_checks(  # pylint: disable=too-many-branches
     get_check_api_context: GetCheckApiContext,
     filelist: list[str],
 ) -> list[str]:
-    cmk_global_vars = set(get_variable_names())
-
     loaded_files: set[str] = set()
 
     did_compile = False
@@ -1596,23 +1583,8 @@ def load_checks(  # pylint: disable=too-many-branches
                 )
                 new_check_vars[default_levels_varname] = check_context[default_levels_varname]
 
-        # Save check variables for e.g. after config loading that the config can
-        # be added to the check contexts
-        _set_check_variable_defaults(
-            variables=new_check_vars,
-            # Keep track of which variable needs to be set to which context
-            context_idents=list(new_checks) + list(new_active_checks),
-            # Do not allow checks to override Checkmk builtin global variables. Silently
-            # skip them here. The variables will only be locally available to the checks.
-            skip_names=cmk_global_vars,
-        )
-
     # add variables corresponding to check plugins that may have been migrated to new API
     migrated_vars = vars(cmk.utils.migrated_check_variables)
-    _set_check_variable_defaults(
-        migrated_vars,
-        ["__migrated_plugins_variables__"],
-    )
     _check_contexts.setdefault("__migrated_plugins_variables__", migrated_vars)
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
@@ -1732,27 +1704,6 @@ def _precompiled_plugin_path(path: str) -> str:
         "local" if is_local else "builtin",
         os.path.basename(path),
     )
-
-
-def _set_check_variable_defaults(
-    variables: dict[str, Any],
-    context_idents: list[str],
-    skip_names: set[str] | None = None,
-) -> None:
-    """Save check variables for e.g. after config loading that the config can
-    be added to the check contexts."""
-    for varname, value in variables.items():
-        if skip_names is not None and varname in skip_names:
-            continue
-
-        if varname.startswith("_"):
-            continue
-
-        # NOTE: Classes and builtin functions are callable, too!
-        if callable(value) or isinstance(value, types.ModuleType):
-            continue
-
-        _check_variable_defaults[varname] = copy.copy(value)
 
 
 def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:

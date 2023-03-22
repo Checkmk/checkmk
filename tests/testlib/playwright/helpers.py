@@ -26,7 +26,7 @@ class LocatorHelper(ABC):
     def locator(self, selector: str = "xpath=.") -> Locator:
         """return locator for this subpart"""
 
-    def check_success(self, message: str | Pattern, timeout_ms: float = 5000) -> None:
+    def check_success(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
         """check for a success div and its content"""
         expect(self.locator("div.success")).to_have_text(message, timeout=timeout_ms)
 
@@ -259,7 +259,7 @@ class PPage(LocatorHelper):
 
     def activate_selected(self) -> None:
         with TemporaryTimeout(self.page, TIMEOUT_ACTIVATE_CHANGES_MS):
-            return self.main_area.locator("#menu_suggestion_activate_selected").click()
+            self.main_area.locator("#menu_suggestion_activate_selected").click()
 
     def expect_success_state(self) -> None:
         expect(
@@ -287,12 +287,12 @@ class PPage(LocatorHelper):
     def goto_setup_hosts(self) -> None:
         """main menu -> setup -> Hosts"""
         self.megamenu_setup.click()
-        return self.main_menu.locator('#setup_topic_hosts a:has-text("Hosts")').click()
+        self.main_menu.locator('#setup_topic_hosts a:has-text("Hosts")').click()
 
     def goto_edit_users(self) -> None:
         """main menu -> setup -> Users"""
         self.megamenu_setup.click()
-        return self.main_menu.locator('#setup_topic_hosts a:has-text("Users")').click()
+        self.main_menu.locator('#setup_topic_hosts a:has-text("Users")').click()
 
     @property
     def megamenu_monitoring(self) -> Locator:

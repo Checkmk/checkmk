@@ -41,7 +41,6 @@ import cmk.utils.cleanup
 import cmk.utils.config_path
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
-import cmk.utils.migrated_check_variables
 import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
@@ -1417,11 +1416,6 @@ NEGATE = tuple_rulesets.NEGATE
 #           _initialize_data_structures()
 # TODO: Refactor this.
 
-# The checks are loaded into this dictionary. Each check
-_check_contexts: dict[str, Any] = {}
-# has a separate sub-dictionary, named by the check name.
-# It is populated with the includes and the check itself.
-
 # The following data structures will be filled by the checks
 # all known checks
 check_info: dict[str, CheckInfoElement] = {}
@@ -1488,7 +1482,6 @@ def load_all_agent_based_plugins(
 
 def _initialize_data_structures() -> None:
     """Initialize some data structures which are populated while loading the checks"""
-    _check_contexts.clear()
     check_info.clear()
     legacy_check_plugin_names.clear()
     precompile_params.clear()
@@ -1512,6 +1505,7 @@ def load_checks(  # pylint: disable=too-many-branches
     filelist: list[str],
 ) -> list[str]:
     loaded_files: set[str] = set()
+    contexts: dict[str, CheckContext] = {}
 
     did_compile = False
     for f in filelist:
@@ -1526,9 +1520,7 @@ def load_checks(  # pylint: disable=too-many-branches
             check_context = new_check_context(get_check_api_context)
 
             # Make a copy of known check plugin names
-            known_vars = set(check_context)
             known_checks = set(check_info)
-            known_active_checks = set(active_check_info)
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
@@ -1544,20 +1536,9 @@ def load_checks(  # pylint: disable=too-many-branches
             continue
 
         new_checks = set(check_info).difference(known_checks)
-        new_active_checks = set(active_check_info).difference(known_active_checks)
-
         # Now store the check context for all checks found in this file
         for check_plugin_name in new_checks:
-            _check_contexts[check_plugin_name] = check_context
-
-        for check_plugin_name in new_active_checks:
-            _check_contexts[check_plugin_name] = check_context
-
-        # Collect all variables that the check file did introduce compared to the
-        # default check context
-        new_check_vars = {}
-        for varname in set(check_context).difference(known_vars):
-            new_check_vars[varname] = check_context[varname]
+            contexts[check_plugin_name] = check_context
 
         # The default_levels_variable of check_info also declares use of a global
         # variable. Register it here for this context.
@@ -1569,17 +1550,12 @@ def load_checks(  # pylint: disable=too-many-branches
                 check_context[default_levels_varname] = factory_settings.get(
                     default_levels_varname, {}
                 )
-                new_check_vars[default_levels_varname] = check_context[default_levels_varname]
-
-    # add variables corresponding to check plugins that may have been migrated to new API
-    migrated_vars = vars(cmk.utils.migrated_check_variables)
-    _check_contexts.setdefault("__migrated_plugins_variables__", migrated_vars)
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
     return _extract_agent_and_snmp_sections(
         validate_creation_kwargs=did_compile
-    ) + _extract_check_plugins(validate_creation_kwargs=did_compile)
+    ) + _extract_check_plugins(validate_creation_kwargs=did_compile, contexts=contexts)
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
@@ -1683,11 +1659,6 @@ def _precompiled_plugin_path(path: str) -> str:
     )
 
 
-def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:
-    """Returns the context dictionary of the given check plugin"""
-    return _check_contexts[check_plugin_name]
-
-
 AUTO_MIGRATION_ERR_MSG = (
     "Failed to auto-migrate legacy plugin to %s: %s\n"
     "Please refer to Werk 10601 for more information.\n"
@@ -1742,8 +1713,7 @@ def _extract_agent_and_snmp_sections(
 
 
 def _extract_check_plugins(
-    *,
-    validate_creation_kwargs: bool,
+    *, validate_creation_kwargs: bool, contexts: dict[str, dict[str, object]]
 ) -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
@@ -1773,7 +1743,7 @@ def _extract_check_plugins(
                     check_plugin_name,
                     check_info_dict,
                     factory_settings,
-                    _check_contexts[check_plugin_name],
+                    contexts[check_plugin_name],
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )

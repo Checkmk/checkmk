@@ -5,7 +5,7 @@
 """Checkmk wide type definitions"""
 
 __all__ = [
-    "ABCName",
+    "PluginName",
     "ActiveCheckPluginName",
     "AgentRawData",
     "AgentTargetVersion",
@@ -173,10 +173,10 @@ from .notify import (
 )
 from .parent_scan import Gateways
 from .pluginname import (
-    ABCName,
     CheckPluginName,
     InventoryPluginName,
     ParsedSectionName,
+    PluginName,
     RuleSetName,
     SectionName,
     ServiceID,

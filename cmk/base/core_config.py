@@ -344,7 +344,7 @@ def _create_core_config(
 
 def _verify_non_deprecated_checkgroups() -> None:
     """Verify that the user has no deprecated check groups configured."""
-    # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an ABCName (good),
+    # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an PluginName (good),
     # but config.checkgroup_parameters contains strings (todo)
     check_ruleset_names_with_plugin = {
         str(plugin.check_ruleset_name)

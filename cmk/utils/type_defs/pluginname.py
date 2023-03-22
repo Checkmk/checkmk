@@ -12,7 +12,7 @@ from typing import Final, NamedTuple
 from ._misc import Item
 
 __all__ = [
-    "ABCName",
+    "PluginName",
     "ParsedSectionName",
     "SectionName",
     "RuleSetName",
@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 
-class ABCName(abc.ABC):
+class PluginName(abc.ABC):
     """Common class for all names.
 
     A plugin name must be a non-empty string consisting only of letters A-z, digits
@@ -58,7 +58,7 @@ class ABCName(abc.ABC):
     def __getnewargs__(self) -> tuple[str]:
         return (str(self),)
 
-    def __new__(cls, plugin_name: str) -> ABCName:
+    def __new__(cls, plugin_name: str) -> PluginName:
         cls._validate_args(plugin_name)
         return super().__new__(cls)
 
@@ -77,37 +77,37 @@ class ABCName(abc.ABC):
             raise TypeError(f"cannot compare {self!r} and {other!r}")
         return self._value == other._value
 
-    def __lt__(self, other: ABCName) -> bool:
+    def __lt__(self, other: PluginName) -> bool:
         if not isinstance(other, self.__class__):
             return NotImplemented
         return self._value < other._value
 
-    def __le__(self, other: ABCName) -> bool:
+    def __le__(self, other: PluginName) -> bool:
         return self < other or self == other
 
-    def __gt__(self, other: ABCName) -> bool:
+    def __gt__(self, other: PluginName) -> bool:
         return not self <= other
 
-    def __ge__(self, other: ABCName) -> bool:
+    def __ge__(self, other: PluginName) -> bool:
         return not self < other
 
     def __hash__(self) -> int:
         return self._hash
 
 
-class ParsedSectionName(ABCName):
+class ParsedSectionName(PluginName):
     @classmethod
     def _legacy_naming_exceptions(cls) -> set[str]:
         return set()
 
 
-class SectionName(ABCName):
+class SectionName(PluginName):
     @classmethod
     def _legacy_naming_exceptions(cls) -> set[str]:
         return set()
 
 
-class RuleSetName(ABCName):
+class RuleSetName(PluginName):
     @classmethod
     def _legacy_naming_exceptions(cls) -> set[str]:
         """
@@ -131,7 +131,7 @@ class RuleSetName(ABCName):
         }
 
 
-class CheckPluginName(ABCName):
+class CheckPluginName(PluginName):
     MANAGEMENT_PREFIX = "mgmt_"
 
     @classmethod
@@ -152,7 +152,7 @@ class CheckPluginName(ABCName):
         return self
 
 
-class InventoryPluginName(ABCName):
+class InventoryPluginName(PluginName):
     @classmethod
     def _legacy_naming_exceptions(cls) -> set[str]:
         return set()

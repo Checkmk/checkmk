@@ -185,7 +185,7 @@ repoze-profile = "==2.3"  # used for GUI/API profiling
 pyparsing = "==3.0.9"  # direct dependency
 ordered-set = "==4.1.0"  # needed by deepdiff
 deepdiff = "==6.3.0"  # used for recording setup audit log
-redis = "==4.4.0"  # needed by GUI (caching)
+redis = "==4.5.1"  # needed by GUI (caching)
 fido2 = "==0.9.3"  # used for GUI 2fa webauthn
 tenacity = "==8.2.2"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues

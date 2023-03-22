@@ -10,6 +10,7 @@ from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.store.host_storage import FolderAttributes
 from cmk.utils.tags import TagConfigSpec
+from cmk.utils.translations import TranslationOptionsSpec
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
     Contact,
@@ -58,7 +59,7 @@ piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
 piggyback_translation: list[RuleSpec[object]] = []
 # Ruleset for translating service descriptions
-service_description_translation: list[RuleSpec[object]] = []
+service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None
 agent_simulator = False

@@ -18,6 +18,15 @@ class TranslationOptions(TypedDict):
     regex: Iterable[tuple[str, str]]
 
 
+# Similar to TranslationOptions, but not the same. This aims to
+# cover exactly the structure that is configured with the valuespec.
+class TranslationOptionsSpec(TypedDict, total=False):
+    case: Literal["lower", "upper"] | None
+    drop_domain: bool
+    mapping: list[tuple[str, str]]
+    regex: list[tuple[str, str]]
+
+
 def translate_hostname(translation: TranslationOptions, hostname: str) -> str:
     return _translate(translation, hostname)
 

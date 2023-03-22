@@ -1442,14 +1442,18 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
         mapping=[],
         regex=[],
     )
+    rule: cmk.utils.translations.TranslationOptionsSpec
     for rule in rules[::-1]:
-        for k, v in rule.items():
-            # TODO: Fix this typing chaos below, the actual values are much more restricted than the code below thinks.
-            if isinstance(v, list):
-                translations.setdefault(k, set())  # type: ignore[misc]
-                translations[k] |= set(v)  # type: ignore[literal-required]
-            else:
-                translations[k] = v  # type: ignore[literal-required]
+        if "case" in rule:
+            translations["case"] = rule["case"]
+        if "drop_domain" in rule:
+            translations["drop_domain"] = rule["drop_domain"]
+        if "regex" in rule:
+            translations["regex"] = list(set(translations.get("regex", [])) | set(rule["regex"]))
+        if "mapping" in rule:
+            translations["mapping"] = list(
+                set(translations.get("mapping", [])) | set(rule["mapping"])
+            )
 
     return translations_cache.setdefault(hostname, translations)
 

@@ -2909,12 +2909,15 @@ def main_update(  # pylint: disable=too-many-branches
     stop_logging()
 
 
-def _update_cmk_core_config(site: SiteContext):  # type: ignore[no-untyped-def]
+def _update_cmk_core_config(site: SiteContext) -> None:
     if site.conf["CORE"] == "none":
         return  # No core config is needed in this case
 
     sys.stdout.write("Updating core configuration...\n")
-    subprocess.call(["cmk", "-U"], shell=False)
+    try:
+        subprocess.check_call(["cmk", "-U"], shell=False)
+    except subprocess.SubprocessError:
+        bail_out("Could not update core configuration. Aborting.")
 
 
 def initialize_livestatus_tcp_tls_after_update(site: SiteContext) -> None:
@@ -3248,13 +3251,13 @@ def main_su(
         bail_out("Cannot open a shell for user %s" % site.name)
 
 
-def _try_backup_site_to_tarfile(  # type: ignore[no-untyped-def]
+def _try_backup_site_to_tarfile(
     fh: io.BufferedWriter | BinaryIO,
     tar_mode: str,
     options: CommandOptions,
     site: SiteContext,
     global_opts: "GlobalOptions",
-):
+) -> None:
     if "no-compression" not in options:
         tar_mode += "gz"
 

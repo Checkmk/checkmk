@@ -62,10 +62,6 @@ from cmk.base.ip_lookup import AddressFamily
 
 ObjectSpec = dict[str, Any]
 
-CHECK_INFO_BY_MIGRATED_NAME = {
-    k: config.check_info[v] for k, v in config.legacy_check_plugin_names.items()
-}
-
 
 class NagiosCore(core_config.MonitoringCore):
     @classmethod
@@ -395,23 +391,11 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             continue
         used_descriptions[service.description] = service.id()
 
-        # TODO: CMK-1125
-        # For now, for every check plugin developed against the new check API
-        # we just assume that it may have metrics. The careful review of this
-        # mechanism is subject of issue CMK-1125
-        check_info_value = CHECK_INFO_BY_MIGRATED_NAME.get(
-            service.check_plugin_name, {"has_perfdata": True}
-        )
-        if check_info_value.get("has_perfdata", False):
-            template = config.passive_service_template_perf
-        else:
-            template = config.passive_service_template
-
         # Services Dependencies for autochecks
         cfg.write(get_dependencies(hostname, service.description))
 
         service_spec = {
-            "use": template,
+            "use": config.passive_service_template_perf,
             "host_name": hostname,
             "service_description": service.description,
             "check_command": "check_mk-%s" % service.check_plugin_name,

@@ -30,6 +30,7 @@ def test_registered_pages() -> None:
         "ajax_inv_render_tree",
         "ajax_nagvis_maps_snapin",
         "ajax_popup_action_menu",
+        "ajax_popup_host_action_menu",
         "ajax_popup_add_visual",
         "ajax_popup_icon_selector",
         "ajax_popup_move_to_folder",

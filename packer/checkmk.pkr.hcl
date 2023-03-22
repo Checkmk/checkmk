@@ -105,7 +105,7 @@ build {
   # wait a minute for backround update processes. Might help with flakyness
   provisioner "shell" {
     inline = [
-      "time 60",
+      "sleep 60",
     ]
   }
   # setup apt-get

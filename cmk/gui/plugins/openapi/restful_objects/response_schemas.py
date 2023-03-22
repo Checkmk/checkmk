@@ -673,8 +673,7 @@ class DiscoveryBackgroundJobStatusObject(DomainObject):
 
 class AuthOption(BaseSchema):
     auth_type = fields.String(
-        required=False,
-        example="password",
+        required=False, example="password", enum=["password", "automation", "saml2", "ldap"]
     )
     enforce_password_change = fields.Boolean(
         required=False,

@@ -11,6 +11,7 @@ from typing import Any, Literal, TypedDict
 from cmk.utils.crypto.password import Password
 from cmk.utils.type_defs import UserId
 
+import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
@@ -265,7 +266,7 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
 ) -> dict[str, Any]:
     api_attrs: dict[str, Any] = {}
     api_attrs.update(_idle_options_to_api_format(internal_attrs))
-    api_attrs.update(_auth_options_to_api_format(internal_attrs))
+    api_attrs["auth_option"] = _auth_options_to_api_format(internal_attrs)
     api_attrs.update(_notification_options_to_api_format(internal_attrs))
 
     iia = InternalInterfaceAttributes()
@@ -293,8 +294,6 @@ def _internal_to_api_format(  # pylint: disable=too-many-branches
 
     if "pager" in internal_attrs:
         api_attrs["pager_address"] = internal_attrs["pager"]
-
-    api_attrs.update(_auth_options_to_api_format(internal_attrs))
 
     api_attrs.update(
         {
@@ -330,20 +329,33 @@ def _idle_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict
     return {"idle_timeout": idle_details}
 
 
-def _auth_options_to_api_format(internal_attributes: UserSpec) -> dict[str, dict[str, str | bool]]:
-    # TODO: LDAP and SAML is completely missing here
-    result: dict[str, dict[str, str | bool]] = {"auth_option": {}}
-    if "automation_secret" in internal_attributes:
-        result["auth_option"] = {
-            "auth_type": "automation",
-        }
-    elif "password" in internal_attributes:
-        result["auth_option"] = {"auth_type": "password"}
-        if (
-            "enforce_pw_change" in internal_attributes
-            and (enforce_password_change := internal_attributes["enforce_pw_change"]) is not None
-        ):
-            result["auth_option"]["enforce_password_change"] = enforce_password_change
+class APIAuthOption(TypedDict, total=False):
+    # TODO: this should be adapted with the introduction of an enum
+    auth_type: Literal["automation", "password", "saml2", "ldap"]
+    enforce_password_change: bool
+
+
+def _auth_options_to_api_format(internal_attributes: UserSpec) -> APIAuthOption:
+    result: APIAuthOption = {}
+
+    # TODO: the default ConnectorType.HTPASSWD is currently a bug #CMK-12723 but not wrong
+    connector = internal_attributes.get("connector", userdb_utils.ConnectorType.HTPASSWD)
+    if connector == userdb_utils.ConnectorType.HTPASSWD:
+        if "automation_secret" in internal_attributes:
+            result["auth_type"] = "automation"
+        elif "password" in internal_attributes:
+            result["auth_type"] = "password"
+            if (
+                "enforce_pw_change" in internal_attributes
+                and (enforce_password_change := internal_attributes["enforce_pw_change"])
+                is not None
+            ):
+                result["enforce_password_change"] = enforce_password_change
+        return result
+
+    for connection in userdb_utils.load_connection_config():
+        if connection["id"] == connector:
+            result["auth_type"] = connection["type"]
 
     return result
 

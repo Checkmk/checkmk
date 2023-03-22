@@ -222,6 +222,7 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
             "customer",
             "contact_options",
             "auth_option",
+            "authorized_sites",
             "idle_timeout",
             "disable_notifications",
             "interface_options",
@@ -233,6 +234,13 @@ def _api_to_internal_format(internal_attrs, api_configurations, new_user=False):
         internal_attrs = update_customer_info(
             internal_attrs, api_configurations["customer"], remove_provider=True
         )
+
+    if (authorized_sites := api_configurations.get("authorized_sites")) is not None:
+        if authorized_sites and "all" not in authorized_sites:
+            internal_attrs["authorized_sites"] = authorized_sites
+        # Update with all
+        elif "all" in authorized_sites and "authorized_sites" in internal_attrs:
+            del internal_attrs["authorized_sites"]
 
     internal_attrs.update(
         _interface_options_to_internal_format(api_configurations.get("interface_options", {}))

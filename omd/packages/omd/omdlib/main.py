@@ -2911,6 +2911,15 @@ def main_update(  # pylint: disable=too-many-branches
 
     call_scripts(site, "post-update")
 
+    if from_edition != "cloud" and to_edition == "cloud":
+        sys.stdout.write(
+            f"{tty.bold}You are now starting your trial of Checkmk Cloud Edition. If you are "
+            f"intending to use Checkmk to monitor more than 750 services after 30 days, you must "
+            f"purchase a license. In case you already have a license, please enter your license "
+            f"credentials on the product's licensing page "
+            f"(Setup > Maintenance > Licensing > Edit settings).{tty.normal}\n"
+        )
+
     sys.stdout.write("Finished update.\n\n")
     stop_logging()
 

@@ -333,6 +333,15 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             if (site_id := CN_TEMPLATE.extract_site(cert.subject.rfc4514_string()))
         }
 
+    # this is only a non-member, because it used in update config to 2.2
+    @staticmethod
+    def is_valid_cert(raw_cert: str) -> bool:
+        try:
+            _ = load_pem_x509_certificate(raw_cert.encode())
+            return True
+        except ValueError:
+            return False
+
     def _get_system_wide_trusted_ca_certificates(self) -> tuple[list[str], list[str]]:
         trusted_cas: set[str] = set()
         errors: list[str] = []
@@ -348,7 +357,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
                 cert_file_path = entry.absolute()
                 try:
-                    trusted_cas.update(raw_certificates_from_file(cert_file_path))
+                    raw_certs = raw_certificates_from_file(cert_file_path)
                 except (OSError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -365,6 +374,16 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                             "See web.log for details."
                         )
                     continue
+
+                for raw_cert in raw_certs:
+                    if self.is_valid_cert(raw_cert):
+                        trusted_cas.add(raw_cert)
+                    else:
+                        logger.exception("Skipping invalid certificates in file %s", cert_file_path)
+                        errors.append(
+                            f"Failed to add invalid certificate in '{cert_file_path}' to trusted CA certificates. "
+                            "See web.log for details."
+                        )
 
             break
 

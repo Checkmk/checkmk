@@ -168,11 +168,7 @@ class Scenario:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 
     def apply(self, monkeypatch: MonkeyPatch) -> ConfigCache:
-        check_vars: dict = {}
         for key, value in self.config.items():
-            if key in config._check_variables:
-                check_vars.setdefault(key, value)
-                continue
             monkeypatch.setattr(config, key, value)
 
         self.config_cache = self._get_config_cache()

@@ -1444,11 +1444,6 @@ factory_settings: dict[str, dict[str, Any]] = {}
 active_check_info: dict[str, dict[str, Any]] = {}
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
 
-# Names of variables registered in the check files. This is used to
-# keep track of the variables needed by each file. Those variables are then
-# (if available) read from the config and applied to the checks module after
-# reading in the configuration of the user.
-_check_variables: dict[str, list[Any]] = {}
 # keeps the default values of all the check variables
 _check_variable_defaults: dict[str, Any] = {}
 _all_checks_loaded = False
@@ -1513,7 +1508,6 @@ def _initialize_data_structures() -> None:
     global _all_checks_loaded
     _all_checks_loaded = False
 
-    _check_variables.clear()
     _check_variable_defaults.clear()
 
     _check_contexts.clear()
@@ -1759,9 +1753,6 @@ def _set_check_variable_defaults(
             continue
 
         _check_variable_defaults[varname] = copy.copy(value)
-
-        # Keep track of which variable needs to be set to which context
-        _check_variables.setdefault(varname, []).extend(context_idents)
 
 
 def get_check_context(check_plugin_name: CheckPluginNameStr) -> CheckContext:

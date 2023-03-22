@@ -1429,8 +1429,6 @@ check_info: dict[str, CheckInfoElement] = {}
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
 # optional functions for parameter precompilation
 precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
-# dictionary-configured checks declare their default level variables here
-check_default_levels: dict[str, Any] = {}
 # factory settings for dictionary-configured checks
 factory_settings: dict[str, dict[str, Any]] = {}
 # definitions of active "legacy" checks
@@ -1494,7 +1492,6 @@ def _initialize_data_structures() -> None:
     check_info.clear()
     legacy_check_plugin_names.clear()
     precompile_params.clear()
-    check_default_levels.clear()
     factory_settings.clear()
     active_check_info.clear()
     special_agent_info.clear()
@@ -1591,7 +1588,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     context = {
         "check_info": check_info,
         "precompile_params": precompile_params,
-        "check_default_levels": check_default_levels,
         "factory_settings": factory_settings,
         "active_check_info": active_check_info,
         "special_agent_info": special_agent_info,

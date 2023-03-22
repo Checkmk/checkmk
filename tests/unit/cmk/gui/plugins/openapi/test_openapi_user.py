@@ -12,7 +12,9 @@ from typing import Any, ContextManager
 
 import pytest
 from freezegun import freeze_time
+from mock import MagicMock
 from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import RestApiClient
 
@@ -30,12 +32,15 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
+from cmk.gui.plugins.userdb.utils import ConnectorType
 from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
+
+MOCK_SAML_CONNECTOR_NAME = "saml_connector"
 
 
 @managedtest
@@ -1365,3 +1370,48 @@ def test_openapi_edit_non_existing_user_regression(api_client: RestApiClient) ->
     api_client.edit_user(
         "i_do_not_exists", fullname="I hopefully won't crash the site!", expect_ok=False
     ).assert_status_code(404)
+
+
+@pytest.fixture(name="mock_users_config")
+def fixture_mock_users_config(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.userdb.load_users",
+        return_value={
+            "saml.user@example.com": {
+                "alias": "Samler",
+                "force_authuser": False,
+                "roles": ["admin"],
+                "connector": MOCK_SAML_CONNECTOR_NAME,
+                "locked": False,
+                "nav_hide_icons_title": None,
+                "icons_per_item": None,
+                "show_mode": None,
+            },
+        },
+    )
+
+
+@pytest.fixture(name="mock_user_connections_config")
+def fixture_mock_user_connections_config(mocker: MockerFixture) -> MagicMock:
+    """Mock the user connections config
+
+    The type of a SAML user is determined by the users.mk file as well as the user_connections.mk
+    file.
+
+    """
+    return mocker.patch(
+        "cmk.gui.plugins.userdb.utils.load_connection_config",
+        # not reflective of actual SAML connector
+        return_value=[{"id": MOCK_SAML_CONNECTOR_NAME, "name": "bla", "type": "saml2"}],
+    )
+
+
+@pytest.mark.usefixtures("mock_users_config", "mock_user_connections_config")
+def test_openapi_auth_type_of_saml_user(api_client: RestApiClient) -> None:
+    """
+    Notes:
+         - A SAML user (currently) cannot be created via the REST API
+         - Assume that the user is already created
+    """
+    resp = api_client.show_user("saml.user@example.com")
+    assert resp.json["extensions"]["auth_option"] == {"auth_type": ConnectorType.SAML2}

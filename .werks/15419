@@ -6,7 +6,7 @@ Date: 1679057327
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p26
+Version: 2.1.0p25
 
 This Werk addresses a regression that appeared with Werk #14871, which introduced stricter access rights for the Windows agent's ProgramData directory.
 

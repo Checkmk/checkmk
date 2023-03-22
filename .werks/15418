@@ -6,7 +6,7 @@ Date: 1679043926
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0p26
+Version: 2.1.0p25
 
 By default, the agent bakery packages the .tar.gz packages in PAX (POSIX.1-2001) format.
 

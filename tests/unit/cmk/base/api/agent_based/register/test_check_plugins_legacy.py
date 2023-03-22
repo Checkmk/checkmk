@@ -13,7 +13,6 @@ from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
-import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.api.agent_based.register.utils_legacy import CheckInfoElement
 
@@ -44,13 +43,10 @@ def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
             "some string",
         ]
 
-    monkeypatch.setattr(
-        config, "_check_contexts", {"norris": {"params_string": {"levels": "default"}}}
-    )
     new_function = check_plugins_legacy._create_discovery_function(
         "norris",
         {"inventory_function": insane_discovery},
-        config.get_check_context,
+        {"params_string": {"levels": "default"}},
     )
 
     fixed_params = inspect.signature(new_function).parameters
@@ -211,7 +207,7 @@ def test_create_check_plugin_from_legacy_wo_params() -> None:
         "norris",
         MINIMAL_CHECK_INFO,
         {},  # factory_settings
-        lambda _x: {},  # get_check_context
+        {},  # get_check_context
     )
 
     assert plugin.name == CheckPluginName("norris")
@@ -235,7 +231,7 @@ def test_create_check_plugin_from_legacy_with_params() -> None:
         "norris",
         check_info_element,
         {"norris_default_levels": {"levels": (23, 42)}},
-        lambda _x: {"norris_default_levels": {"levels_lower": (1, 2)}},
+        {"norris_default_levels": {"levels_lower": (1, 2)}},
     )
 
     assert plugin.name == CheckPluginName("norris")

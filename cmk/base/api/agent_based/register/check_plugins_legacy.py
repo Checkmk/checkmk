@@ -30,8 +30,8 @@ from .utils_legacy import CheckInfoElement
 
 def _get_default_parameters(
     check_info_element: CheckInfoElement,
-    factory_settings: Dict[str, Dict[str, Any]],
-    check_context: Dict[str, Any],
+    factory_settings: dict[str, dict[str, object]],
+    check_context: dict[str, object],
 ) -> Optional[ParametersTypeAlias]:
     """compute default parameters"""
     params_variable_name = check_info_element.get("default_levels_variable")
@@ -57,7 +57,7 @@ def _get_default_parameters(
 def _create_discovery_function(
     check_name: str,
     check_info_element: CheckInfoElement,
-    get_check_context: Callable,
+    check_context: dict[str, object],
 ) -> Callable:
     """Create an API compliant discovery function"""
 
@@ -82,7 +82,7 @@ def _create_discovery_function(
                 if item is not None and not isinstance(item, str):
                     raise ValueError("item must be None or of type `str`")
 
-                parameters = _resolve_string_parameters(raw_params, check_name, get_check_context)
+                parameters = _resolve_string_parameters(raw_params, check_name, check_context)
                 service = Service(
                     item=None,  # will be replaced
                     parameters=wrap_parameters(parameters or {}),
@@ -102,13 +102,12 @@ def _create_discovery_function(
 def _resolve_string_parameters(
     params_unresolved: Any,
     check_name: str,
-    get_check_context: Callable,
+    context: dict[str, object],
 ) -> Any:
     if not isinstance(params_unresolved, str):
         return params_unresolved
 
     try:
-        context = get_check_context(check_name)
         # string may look like '{"foo": bar}', in the worst case.
         # This evaluation was needed in the past to resolve references to variables in context and
         # to evaluate data structure declarations containing references to variables.
@@ -300,16 +299,15 @@ def _create_signature_check_function(
 
 
 def _create_wrapped_parameters(
-    check_plugin_name: str,
     check_info_element: CheckInfoElement,
     factory_settings: Dict[str, Dict],
-    get_check_context: Callable,
+    check_context: dict[str, object],
 ) -> ParametersTypeAlias:
     """compute default parameters and wrap them in a dictionary"""
     default_parameters = _get_default_parameters(
         check_info_element,
         factory_settings,
-        get_check_context(check_plugin_name),
+        check_context,
     )
     if default_parameters is None:
         return {}
@@ -322,8 +320,8 @@ def _create_wrapped_parameters(
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
     check_info_element: CheckInfoElement,
-    factory_settings: Dict[str, Dict],
-    get_check_context: Callable,
+    factory_settings: dict[str, dict],
+    check_context: dict[str, object],
     *,
     validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
@@ -341,16 +339,15 @@ def create_check_plugin_from_legacy(
     new_check_name = maincheckify(check_plugin_name)
 
     check_default_parameters = _create_wrapped_parameters(
-        check_plugin_name,
         check_info_element,
         factory_settings,
-        get_check_context,
+        check_context,
     )
 
     discovery_function = _create_discovery_function(
         check_plugin_name,
         check_info_element,
-        get_check_context,
+        check_context,
     )
 
     check_function = _create_check_function(

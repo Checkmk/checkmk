@@ -1943,7 +1943,7 @@ def _extract_check_plugins(
                     check_plugin_name,
                     check_info_dict,
                     factory_settings,
-                    get_check_context,
+                    _check_contexts[check_plugin_name],
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )

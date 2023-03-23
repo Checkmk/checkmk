@@ -122,7 +122,7 @@ class TimeRangeActive(BaseSchema):
     time_ranges = fields.List(
         fields.Nested(TimeRange),
         example=[{"start": "13:00", "end": "19:00"}],
-        load_default=[{"start": "00:00", "end": "23:59"}],
+        load_default=[{"start": "00:00:00", "end": "23:59:00"}],
     )
 
 

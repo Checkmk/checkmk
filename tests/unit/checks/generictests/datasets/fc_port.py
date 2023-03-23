@@ -5056,7 +5056,7 @@ checks = {
             [
                 (
                     0,
-                    "16.0 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, online, ready, active, f-port",
+                    "16.0 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s",
                     [
                         ("in", 0.0, None, None, 0, 2000000000.0),
                         ("out", 0.0, None, None, 0, 2000000000.0),
@@ -5068,6 +5068,10 @@ checks = {
                         ("notxcredits", 0.0),
                     ],
                 ),
+                (0, "online", []),
+                (0, "ready", []),
+                (0, "active", []),
+                (0, "f-port", []),
             ],
         ),
     ],

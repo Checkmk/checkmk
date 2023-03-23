@@ -279,29 +279,18 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             text += "(!)"
             output.append(text)
 
-    def get_sym(state):
-        if state == 0:
-            return ""
-        return state_markers[state]
+    yield summarystate, ", ".join(output), perfdata
 
     statetxt, state = fc_port_admstates.get(int(admstate), ("unknown", 3))
-    sym = get_sym(state)
-    output.append(statetxt + sym)
-    summarystate = max(state, summarystate)
+    yield state, statetxt
 
     statetxt, state = fc_port_opstates.get(int(opstate), ("unknown", 3))
-    sym = get_sym(state)
-    output.append(statetxt + sym)
-    summarystate = max(state, summarystate)
+    yield state, statetxt
 
     statetxt, state = fc_port_phystates.get(int(phystate), ("unknown", 3))
-    sym = get_sym(state)
-    output.append(statetxt + sym)
-    summarystate = max(state, summarystate)
+    yield state, statetxt
 
-    output.append(porttype_list[int(porttype)])
-
-    return (summarystate, ", ".join(output), perfdata)
+    yield 0, porttype_list[int(porttype)]
 
 
 check_config_variables.append("fc_port_admstates")

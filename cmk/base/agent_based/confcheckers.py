@@ -258,6 +258,7 @@ class ConfiguredFetcher:
                     ),
                     selected_sections=self.selected_sections if nodes is None else NO_SELECTION,
                     on_scan_error=self.on_error if nodes is None else OnError.RAISE,
+                    simulation_mode=self.simulation_mode,
                     file_cache_options=self.file_cache_options,
                     file_cache_max_age=self.max_cachefile_age
                     or self.config_cache.max_cachefile_age(host_name),

@@ -316,6 +316,7 @@ def make_sources(
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: OnError = OnError.RAISE,
+    simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
@@ -326,7 +327,7 @@ def make_sources(
         return ()
 
     def max_age_snmp() -> MaxAge:
-        if config_cache.simulation_mode(host_name):
+        if simulation_mode:
             return MaxAge.unlimited()
         if force_snmp_cache_refresh:
             return MaxAge.zero()
@@ -335,7 +336,7 @@ def make_sources(
         return file_cache_max_age
 
     def max_age_agent() -> MaxAge:
-        if config_cache.simulation_mode(host_name):
+        if simulation_mode:
             return MaxAge.unlimited()
         if file_cache_options.use_outdated:
             return MaxAge.unlimited()
@@ -345,7 +346,7 @@ def make_sources(
         host_name,
         ipaddress,
         address_family,
-        simulation_mode=config_cache.simulation_mode(host_name),
+        simulation_mode=simulation_mode,
         config_cache=config_cache,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,

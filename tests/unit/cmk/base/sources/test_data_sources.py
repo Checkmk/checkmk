@@ -101,6 +101,7 @@ def test_host_config_creates_passing_source_sources(
             "127.0.0.1",
             AddressFamily.IPv4,
             config_cache=config_cache,
+            simulation_mode=True,
             file_cache_options=FileCacheOptions(),
             file_cache_max_age=MaxAge.zero(),
         )

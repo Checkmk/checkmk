@@ -17,28 +17,24 @@ LevelModes = str
 TwoLevelsType = Tuple[Optional[float], Optional[float]]
 FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
 LevelsType = Union[TwoLevelsType, FourLevelsType]
-TrendComputeDict = TypedDict(
-    "TrendComputeDict",
-    {
-        "period": int,
-        "trend_levels": TwoLevelsType,
-        "trend_levels_lower": TwoLevelsType,
-        "trend_timeleft": TwoLevelsType,
-    },
-    total=False,
-)
-TempParamDict = TypedDict(
-    "TempParamDict",
-    {
-        "input_unit": TempUnitType,
-        "output_unit": TempUnitType,
-        "levels": TwoLevelsType,
-        "levels_lower": TwoLevelsType,
-        "device_levels_handling": LevelModes,
-        "trend_compute": TrendComputeDict,
-    },
-    total=False,
-)
+
+
+class TrendComputeDict(TypedDict, total=False):
+    period: int
+    trend_levels: TwoLevelsType
+    trend_levels_lower: TwoLevelsType
+    trend_timeleft: TwoLevelsType
+
+
+class TempParamDict(TypedDict, total=False):
+    input_unit: TempUnitType
+    output_unit: TempUnitType
+    levels: TwoLevelsType
+    levels_lower: TwoLevelsType
+    device_levels_handling: LevelModes
+    trend_compute: TrendComputeDict
+
+
 TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
 
 

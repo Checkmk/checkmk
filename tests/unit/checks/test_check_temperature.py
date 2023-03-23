@@ -12,7 +12,8 @@ from typing import Any, NamedTuple
 import freezegun
 import pytest
 
-from tests.testlib import Check
+from cmk.base.check_legacy_includes.temperature import check_temperature, check_temperature_trend
+from cmk.base.plugins.agent_based.utils.temperature import TempParamDict
 
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
@@ -165,8 +166,6 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
     ],
 )
 def test_check_temperature(params, kwargs, expected) -> None:   # type: ignore[no-untyped-def]
-    check = Check('acme_temp')
-    check_temperature = check.context['check_temperature']
     result = check_temperature(*params, **kwargs)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
 
@@ -239,8 +238,6 @@ _WATO_DICT = {
     ]
 )
 def test_check_temperature_trend(test_case:Entry) -> None:
-    check = Check('acme_temp')
-    check_trend = check.context['check_temperature_trend']
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
@@ -251,7 +248,7 @@ def test_check_temperature_trend(test_case:Entry) -> None:
 
     with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
-            result = check_trend(test_case.reading + test_case.growth,
+            result = check_temperature_trend(test_case.reading + test_case.growth,
                                  test_case.wato_dict, 'c',
                                  100,  # crit, don't boil
                                  0,  # crit_lower, don't freeze over
@@ -272,8 +269,6 @@ def test_check_temperature_trend(test_case:Entry) -> None:
     ]
 )
 def test_check_temperature_called(test_case) -> None:   # type: ignore[no-untyped-def]
-    check = Check('acme_temp')
-    check_temperature = check.context['check_temperature']
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
     state = {
@@ -286,10 +281,10 @@ def test_check_temperature_called(test_case) -> None:   # type: ignore[no-untype
             # Assuming atmospheric pressure...
             result = check_temperature(
                 test_case.reading + test_case.growth,
-                {
-                    'device_level_handling': 'dev',
-                    'trend_compute': test_case.wato_dict,
-                },
+                TempParamDict(
+                    device_levels_handling='dev',
+                    trend_compute= test_case.wato_dict,
+                ),
                 'foo',
                 dev_unit='c',
                 dev_levels=(100, 100),  # don't boil

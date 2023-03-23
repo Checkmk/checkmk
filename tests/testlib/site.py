@@ -1090,6 +1090,15 @@ class Site:
         finally:
             self.ensure_running()
 
+    def is_global_flag_enabled(self, column: str) -> bool:
+        return self._get_global_flag(column) == 1
+
+    def is_global_flag_disabled(self, column: str) -> bool:
+        return self._get_global_flag(column) == 0
+
+    def _get_global_flag(self, column: str) -> Literal[1, 0]:
+        return self.live.query_value(f"GET status\nColumns: {column}\n") == 1
+
 
 class SiteFactory:
     def __init__(

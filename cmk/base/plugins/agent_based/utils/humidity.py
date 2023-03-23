@@ -14,7 +14,7 @@ CheckParams = Union[
 
 def check_humidity(humidity: float, params: CheckParams) -> type_defs.CheckResult:
     levels_upper, levels_lower = None, None
-    if isinstance(params, dict):
+    if isinstance(params, (dict, Mapping)):
         levels_upper = params.get("levels") or None
         levels_lower = params.get("levels_lower") or None
     elif isinstance(params, (list, tuple)):

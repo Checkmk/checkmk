@@ -90,7 +90,7 @@ class ModeIcons(WatoMode):
             raise MKUserError(
                 varprefix,
                 _(
-                    "Your icon conflicts with a Check_MK builtin icon. Please "
+                    "Your icon conflicts with a Checkmk builtin icon. Please "
                     "choose another name for your icon."
                 ),
             )

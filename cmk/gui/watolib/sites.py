@@ -183,8 +183,8 @@ class SiteManagement:
                 ),
             ],
             help=_(
-                "When connecting to Check_MK versions older than 1.6 you can only use plain text "
-                "transport. Starting with Check_MK 1.6 it is possible to use encrypted Livestatus "
+                "When connecting to Checkmk versions older than 1.6 you can only use plain text "
+                "transport. Starting with Checkmk 1.6 it is possible to use encrypted Livestatus "
                 "communication. Sites created with 1.6 will automatically use encrypted communication "
                 "by default. Sites created with previous versions need to be configured manually to "
                 'enable the encryption. Have a look at <a href="werk.py?werk=7017">werk #7017</a> '
@@ -666,7 +666,7 @@ class LivestatusViaTCP(Dictionary):
                     title=_("Encrypt communication"),
                     totext=_("Encrypt TCP Livestatus connections"),
                     help=_(
-                        "Since Check_MK 1.6 it is possible to encrypt the TCP Livestatus "
+                        "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus "
                         "connections using SSL. This is enabled by default for sites that "
                         "enable Livestatus via TCP with 1.6 or newer. Sites that already "
                         "have this option enabled keep the communication unencrypted for "

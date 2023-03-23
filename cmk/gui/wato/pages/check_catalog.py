@@ -68,7 +68,7 @@ class ModeCheckPlugins(WatoMode):
         html.help(
             _(
                 "This catalog of check plugins gives you a complete listing of all plugins "
-                "that are shipped with your Check_MK installation. It also allows you to "
+                "that are shipped with your Checkmk installation. It also allows you to "
                 "access the rule sets for configuring the parameters of the checks and to "
                 "manually create services in case you cannot or do not want to rely on the "
                 "automatic service discovery."

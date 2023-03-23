@@ -490,7 +490,7 @@ def _valuespec_active_checks_http() -> Migrate:
                         totext="",
                         title=_("Advanced: Disable SSL/TLS hostname extension support (SNI)"),
                         help=_(
-                            "In earlier versions of Check_MK users had to enable SNI explicitly."
+                            "In earlier versions of Checkmk users had to enable SNI explicitly."
                             " We now assume users allways want SNI support. If you don't, you"
                             " can disable it with this option."
                         ),

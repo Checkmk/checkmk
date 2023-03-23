@@ -296,7 +296,7 @@ class ConfigVariableLogLevels(ConfigVariable):
                 "cmk.web.bi.compilation",
                 _("BI compilation"),
                 _(
-                    "If this option is enabled, Check_MK BI will create a log with details "
+                    "If this option is enabled, Checkmk BI will create a log with details "
                     "about compiling BI aggregations. This includes statistics and "
                     "details for each executed compilation."
                 ),
@@ -685,7 +685,7 @@ class ConfigVariableStartURL(ConfigVariable):
         return TextInput(
             title=_("Start URL to display in main frame"),
             help=_(
-                "When you point your browser to the Check_MK GUI, usually the dashboard "
+                "When you point your browser to the Checkmk GUI, usually the dashboard "
                 "is shown in the main (right) frame. You can replace this with any other "
                 "URL you like here."
             ),
@@ -1805,7 +1805,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
         return Dictionary(
             title=_("Trusted certificate authorities for SSL"),
             help=_(
-                "Whenever a server component of Check_MK opens a SSL connection it uses the "
+                "Whenever a server component of Checkmk opens a SSL connection it uses the "
                 "certificate authorities configured here for verifying the SSL certificate of "
                 "the destination server. This is used for example when performing Setup "
                 "replication to slave sites or when special agents are communicating via HTTPS. "
@@ -1823,7 +1823,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                             "these CAs are stored and the commands to manage the CAs differ. "
                             "Please check out the documentation of your linux distribution "
                             "in case you want to customize trusted CAs system wide. You can "
-                            "choose here to trust the system wide CAs here. Check_MK will search "
+                            "choose here to trust the system wide CAs here. Checkmk will search "
                             "these directories for system wide CAs: %s"
                         )
                         % ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
@@ -2115,7 +2115,7 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
             title=_("Hide names of configuration variables"),
             label=_("hide variable names"),
             help=_(
-                "When enabled, internal configuration variable names of Check_MK are hidden "
+                "When enabled, internal configuration variable names of Checkmk are hidden "
                 "from the user (for example in the rule editor)"
             ),
         )
@@ -2159,7 +2159,7 @@ class ConfigVariableWATOUseGit(ConfigVariable):
                 "When enabled, all changes of configuration files are tracked with the "
                 "version control system GIT. You need to make sure that git is installed "
                 "on your monitoring server. The version history currently cannot be viewed "
-                "via the web GUI. Please use git command line tools within your Check_MK "
+                "via the web GUI. Please use git command line tools within your Checkmk "
                 "configuration directory. If you want easier tracking of configuration file changes "
                 "simply enable the global settings option <tt>Pretty print configuration files</tt>"
             ),
@@ -2517,7 +2517,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
 #   |             \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
 #   |                                      |_____|                         |
 #   +----------------------------------------------------------------------+
-#   |  Operation mode of Check_MK                                          |
+#   |  Operation mode of Checkmk                                          |
 #   '----------------------------------------------------------------------'
 
 
@@ -2546,9 +2546,9 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
             ListChoice(
                 title=_("Use new service descriptions"),
                 help=_(
-                    "In order to make Check_MK more consistent, "
+                    "In order to make Checkmk more consistent, "
                     "the descriptions of several services have been renamed in newer "
-                    "Check_MK versions. One example is the filesystem services that have "
+                    "Checkmk versions. One example is the filesystem services that have "
                     "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
                     "of existing services has many implications - including existing rules, performance "
                     "data and availability history - these renamings are disabled per default for "
@@ -2714,7 +2714,7 @@ class ConfigVariableSimulationMode(ConfigVariable):
             title=_("Simulation mode"),
             label=_("Run in simulation mode"),
             help=_(
-                "This boolean variable allows you to bring check_mk into a dry run mode. "
+                "This boolean variable allows you to bring Checkmk into a dry run mode. "
                 "No hosts will be contacted, no DNS lookups will take place and data is read "
                 "from cache files that have been created during normal operation or have "
                 "been copied here from another monitoring site."
@@ -2789,7 +2789,7 @@ class ConfigVariableDelayPrecompile(ConfigVariable):
             title=_("Delay precompiling of host checks"),
             label=_("delay precompiling"),
             help=_(
-                "If you enable this option, then Check_MK will not directly Python-bytecompile "
+                "If you enable this option, then Checkmk will not directly Python-bytecompile "
                 "all host checks when activating the configuration and restarting Nagios. "
                 "Instead it will delay this to the first "
                 "time the host is actually checked being by Nagios.<p>This reduces the time needed "
@@ -2815,7 +2815,7 @@ class ConfigVariableClusterMaxCachefileAge(ConfigVariable):
             title=_("Maximum cache file age for clusters"),
             label=_("seconds"),
             help=_(
-                "The number of seconds a cache file may be old if check_mk should "
+                "The number of seconds a cache file may be old if Checkmk should "
                 "use it instead of getting information from the target hosts while "
                 "checking a cluster. Per default this is enabled and set to 90 seconds. "
                 "If your check cycle is set to a larger value than one minute then "
@@ -2863,7 +2863,7 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
             label=_("Return process times within performance data"),
             help=_(
                 "Enabling this option results in additional performance data "
-                "for the Check_MK output, giving information regarding the process times. "
+                "for the Checkmk output, giving information regarding the process times. "
                 "It provides the following fields: user_time, system_time, children_user_time "
                 "and children_system_time"
             ),
@@ -2886,7 +2886,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
             title=_("Use DNS lookup cache"),
             label=_("Prevent DNS lookups by use of a cache file"),
             help=_(
-                "When this option is enabled (which is the default), then Check_MK tries to "
+                "When this option is enabled (which is the default), then Checkmk tries to "
                 "prevent IP address lookups during the configuration generation. This can speed "
                 "up this process greatly when you have a larger number of hosts. The cache is stored "
                 "in a simple file. Note: when the cache is enabled then changes of the IP address "
@@ -3085,7 +3085,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
             ),
             title=_("Enable regular service discovery checks (deprecated)"),
             help=_(
-                "If enabled, Check_MK will create one additional service per host "
+                "If enabled, Checkmk will create one additional service per host "
                 "that does a regular check, if the service discovery would find new services "
                 "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
                 "replaced by the rule set <a href='%s'>Periodic Service Discovery</a>, "
@@ -3262,11 +3262,11 @@ def _valuespec_extra_service_conf_check_interval():
         from_valuespec=lambda v: float(v) / 60.0,
         title=_("Normal check interval for service checks"),
         help=_(
-            "Check_MK usually uses an interval of one minute for the active Check_MK "
+            "Checkmk usually uses an interval of one minute for the active Checkmk "
             "check and for legacy checks. Here you can specify a larger interval. Please "
             "note, that this setting only applies to active checks (those with the "
             "reschedule button). If you want to change the check interval of "
-            "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
+            "the 'Check_MK' service only, specify <tt><b>Check_MK$</b></tt> in the list "
             "of services."
         ),
     )
@@ -3315,8 +3315,8 @@ def _valuespec_extra_service_conf_check_period():
         help=_(
             "If you specify a notification period for a service then active checks "
             "of that service will only be done in that period. Please note, that the "
-            "checks driven by Check_MK are passive checks and are not affected by this "
-            "rule. You can use the rule for the active Check_MK check, however."
+            "checks driven by Checkmk are passive checks and are not affected by this "
+            "rule. You can use the rule for the active Checkmk check, however."
         ),
     )
 
@@ -3335,7 +3335,7 @@ def _valuespec_check_periods():
     return TimeperiodSelection(
         title=_("Check period for passive Checkmk services"),
         help=_(
-            "If you specify a notification period for a Check_MK service then "
+            "If you specify a notification period for a 'Check_MK' service then "
             "results will be processed only within this period."
         ),
     )
@@ -4016,7 +4016,7 @@ def _vs_periodic_discovery() -> Dictionary:
     return Dictionary(
         title=_("Perform periodic service discovery check"),
         help=_(
-            "If enabled, Check_MK will create one additional service per host "
+            "If enabled, Checkmk will create one additional service per host "
             "that does a periodic check, if the service discovery would find new services "
             "that are currently not monitored."
         ),
@@ -4668,9 +4668,9 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                         (
                             "checkmk_service_crit",
                             Age(
-                                title=_("Duration of CRITICAL state of Check_MK service"),
+                                title=_("Duration of CRITICAL state of 'Check_MK' service"),
                                 help=_(
-                                    "Automatically remove hosts whose Check_MK service has been in the state "
+                                    "Automatically remove hosts whose 'Check_MK' service has been in the state "
                                     "CRITICAL for longer than the configured time period."
                                 ),
                                 display=("days", "hours", "minutes"),
@@ -4911,7 +4911,7 @@ def _valuespec_primary_address_family():
         ],
         title=_("Primary IP address family of dual-stack hosts"),
         help=_(
-            "When you configure dual-stack host (IPv4 + IPv6) monitoring in Check_MK, "
+            "When you configure dual-stack host (IPv4 + IPv6) monitoring in Checkmk, "
             "normally IPv4 is used as primary address family to communicate with this "
             "host. The other family, IPv6, is just being pinged. You can use this rule "
             "to invert this behaviour to use IPv6 as primary address family."
@@ -4932,7 +4932,7 @@ def _valuespec_snmp_communities():
     return SNMPCredentials(
         title=_("SNMP credentials of monitored hosts"),
         help=_(
-            'By default Check_MK uses the community "public" to contact hosts via SNMP v1/v2. This rule '
+            'By default Checkmk uses the community "public" to contact hosts via SNMP v1/v2. This rule '
             "can be used to customize the credentials to be used when contacting hosts via SNMP."
         ),
     )
@@ -4970,7 +4970,7 @@ def _valuespec_snmp_character_encodings():
     return DropdownChoice(
         title=_("Output text encoding settings for SNMP devices"),
         help=_(
-            "Some devices send texts in non-ASCII characters. Check_MK"
+            "Some devices send texts in non-ASCII characters. Checkmk"
             " always assumes UTF-8 encoding. You can declare other "
             " other encodings here"
         ),
@@ -5032,11 +5032,11 @@ def _valuespec_snmp_bulk_size():
         maxvalue=100,
         default_value=10,
         help=_(
-            "This variable allows you to configure the numbr of OIDs Check_MK should request "
+            "This variable allows you to configure the numbr of OIDs Checkmk should request "
             "at once. This rule only applies to SNMP hosts that are configured to be bulk "
             "walk hosts.You may want to use this rule to tune SNMP performance. Be aware: A "
             "higher value is not always better. It may decrease the transactions between "
-            "Check_MK and the target system, but may increase the OID overhead in case you "
+            "Checkmk and the target system, but may increase the OID overhead in case you "
             "only need a small amount of OIDs."
         ),
     )
@@ -5145,7 +5145,7 @@ rulespec_registry.register(
 
 def _help_non_inline_snmp_hosts():
     return _(
-        "Check_MK has an efficient SNMP implementation called Inline SNMP which reduces "
+        "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
         "the load produced by SNMP monitoring on the monitoring host significantly. This "
         "option is enabled by default for all SNMP hosts and it is a good idea to keep "
         "this default setting. However, there are SNMP devices which have problems with "
@@ -5297,7 +5297,7 @@ def _valuespec_tcp_connect_timeouts():
         unit="sec",
         title=_("Agent TCP connect timeout"),
         help=_(
-            "Timeout for TCP connect to the Check_MK agent in seconds. If the connection "
+            "Timeout for TCP connect to the Checkmk agent in seconds. If the connection "
             "to the agent cannot be established within this time, it is considered to be unreachable. "
             "Note: This does <b>not</b> limit the time the agent needs to "
             "generate its output. "
@@ -5451,11 +5451,11 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
     return Dictionary(
         title=_("Status of the Checkmk services"),
         help=_(
-            "This ruleset specifies the total status of the Check_MK services <i>Check_MK</i>, "
+            "This ruleset specifies the total status of the 'Check_MK' services <i>Check_MK</i>, "
             "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> in case of various "
             "error situations. One use case is the monitoring of hosts that are not always up. "
-            "You can have Check_MK an OK status here if the host is not reachable. Note: the "
-            "<i>Timeout</i> setting only works when using the Check_MK Micro Core."
+            "You can have Checkmk an OK status here if the host is not reachable. Note: the "
+            "<i>Timeout</i> setting only works when using the Checkmk Micro Core."
         ),
         elements=[
             (
@@ -5610,9 +5610,9 @@ def _valuespec_agent_config_only_from():
         title=_("Allowed agent access via IP address (Linux, Windows)"),
         help=_(
             "This rule allows you to restrict the access to the "
-            "Check_MK agent to certain IP addresses and networks. "
+            "Checkmk agent to certain IP addresses and networks. "
             "Usually you configure just the IP addresses of your "
-            "Check_MK servers here. You can enter either IP addresses "
+            "Checkmk servers here. You can enter either IP addresses "
             "in the form <tt>1.2.3.4</tt> or networks in the style "
             "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
             "or create no rule then <b>all</b> addresses are allowed to "
@@ -5628,7 +5628,7 @@ def _valuespec_agent_config_only_from():
             "ruleset. Even if you don't use the bakery, the configured IP address "
             "restrictions of a host will be verified against the allowed "
             "IP addresses reported by the agent. This is done during "
-            "monitoring by the Check_MK service."
+            "monitoring by the 'Check_MK' service."
         ),
     )
 
@@ -5816,7 +5816,7 @@ def _valuespec_snmpv3_contexts():
     return Tuple(
         title=_("SNMPv3 contexts to use in requests"),
         help=_(
-            "By default Check_MK does not use a specific context during SNMPv3 queries, "
+            "By default Checkmk does not use a specific context during SNMPv3 queries, "
             "but some devices are offering their information in different SNMPv3 contexts. "
             "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
             "contexts Checkmk should ask for when getting information via SNMPv3."

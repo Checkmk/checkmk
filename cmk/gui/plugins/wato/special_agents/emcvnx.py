@@ -24,7 +24,7 @@ def _valuespec_special_agents_emcvnx() -> Dictionary:
     return Dictionary(
         title=_("EMC VNX storage systems"),
         help=_(
-            "This rule selects the EMC VNX agent instead of the normal Check_MK Agent "
+            "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
             "and allows monitoring of EMC VNX storage systems by calling naviseccli "
             "commandline tool locally on the monitoring system. Make sure it is installed "
             "and working. You can configure your connection settings here."

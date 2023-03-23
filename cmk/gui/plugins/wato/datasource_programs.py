@@ -14,8 +14,8 @@ def _valuespec_datasource_programs():
     return TextInput(
         title=_("Individual program call instead of agent access"),
         help=_(
-            "For agent based checks Check_MK allows you to specify an alternative "
-            "program that should be called by Check_MK instead of connecting the agent "
+            "For agent based checks Checkmk allows you to specify an alternative "
+            "program that should be called by Checkmk instead of connecting the agent "
             "via TCP. That program must output the agent's data on standard output in "
             "the same format the agent would do. This is for example useful for monitoring "
             "via SSH."

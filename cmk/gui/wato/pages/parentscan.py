@@ -233,7 +233,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         gateway: ParentScanResult | None,
         folder: CREFolder,
     ) -> list[HostName]:
-        """Ensure there is a gateway host in the Check_MK configuration (or raise an exception)
+        """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
 
         If we have found a gateway, we need to know a matching host name from our configuration.
         If there is none, we can create one, if the users wants this. The automation for the parent
@@ -546,7 +546,7 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Number of PING probes") + ":")
         html.help(
             _(
-                "After a gateway has been found, Check_MK checks if it is reachable "
+                "After a gateway has been found, Checkmk checks if it is reachable "
                 "via PING. If not, it is skipped and the next gateway nearer to the "
                 "monitoring core is being tried. You can disable this check by setting "
                 "the number of PING probes to 0."

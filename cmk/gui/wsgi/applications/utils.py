@@ -129,7 +129,7 @@ def _ensure_general_access() -> None:
 
     reason = [
         _(
-            "You are not authorized to use the Check_MK GUI. Sorry. "
+            "You are not authorized to use the Checkmk GUI. Sorry. "
             "You are logged in as <b>%s</b>."
         )
         % user.id

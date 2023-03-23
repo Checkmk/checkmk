@@ -13,7 +13,7 @@ permission_registry.register(
         name="use",
         title=_l("Use WATO"),
         description=_l(
-            "This permissions allows users to use Setup - Check_MK's "
+            "This permissions allows users to use Setup - Checkmk's "
             "Web Administration Tool. Without this "
             "permission all references to Setup (buttons, links, "
             "snapins) will be invisible."
@@ -370,7 +370,7 @@ permission_registry.register(
         name="rulesets",
         title=_l("Rulesets"),
         description=_l(
-            "Access to the module for managing Check_MK rules. Please note that a user can only "
+            "Access to the module for managing Checkmk rules. Please note that a user can only "
             "manage rules in folders he has permissions to. "
         ),
         defaults=["admin", "user"],
@@ -519,7 +519,7 @@ permission_registry.register(
         name="download_agents",
         title=_l("Monitoring Agents"),
         description=_l(
-            "Download the default Check_MK monitoring agents for Linux, "
+            "Download the default Checkmk monitoring agents for Linux, "
             "Windows and other operating systems."
         ),
         defaults=["admin", "user"],
@@ -576,14 +576,14 @@ permission_registry.register(
         name="add_or_modify_executables",
         title=_l("Add or modify executables"),
         description=_l(
-            "There are different places in Check_MK where an admin can use the GUI to add "
-            "executable code to Check_MK. For example when configuring "
+            "There are different places in Checkmk where an admin can use the GUI to add "
+            "executable code to Checkmk. For example when configuring "
             "datasource programs, the user inserts a command line for gathering monitoring data. "
-            "This command line is then executed during monitoring by Check_MK. Another example is "
+            "This command line is then executed during monitoring by Checkmk. Another example is "
             "the upload of extension packages (MKPs). All these functions have in "
-            "common that the user provides data that is executed by Check_MK. "
+            "common that the user provides data that is executed by Checkmk. "
             'If you want to ensure that your Setup users cannot "inject" arbitrary executables '
-            "into your Check_MK installation, you only need to remove this permission for them. "
+            "into your Checkmk installation, you only need to remove this permission for them. "
             "This permission is needed in addition to the other component related permissions. "
             "For example you need the <tt>wato.rulesets</tt> permission together with this "
             "permission to be able to configure rulesets where bare command lines are "

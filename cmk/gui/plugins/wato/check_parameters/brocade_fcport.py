@@ -67,7 +67,7 @@ def _valuespec_brocade_fcport_inventory():
                     label=_("use port name"),
                     default_value=True,
                     help=_(
-                        "This option lets Check_MK use the port name as item instead of the "
+                        "This option lets Checkmk use the port name as item instead of the "
                         "port number. If no description is available then the port number is "
                         "used anyway."
                     ),
@@ -80,7 +80,7 @@ def _valuespec_brocade_fcport_inventory():
                     label=_("add ISL"),
                     default_value=True,
                     help=_(
-                        'This option lets Check_MK add the string "ISL" to the service '
+                        'This option lets Checkmk add the string "ISL" to the service '
                         "description for interswitch links."
                     ),
                 ),

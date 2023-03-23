@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage roles and permissions
 
-In order to make getting started easier - Check_MK Multisite comes with three
+In order to make getting started easier - Checkmk Multisite comes with three
 builtin-roles: admin, user and guest. These roles have predefined permissions.
 The builtin roles cannot be deleted. Users listed in admin_users in
 multisite.mk automatically get the role admin - even if no such user or contact

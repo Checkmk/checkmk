@@ -80,7 +80,7 @@ def _valuespec_special_agents_ruckus_spot():
         ],
         title=_("Ruckus Spot"),
         help=_(
-            "This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
+            "This rule selects the Agent Ruckus Spot agent instead of the normal Checkmk Agent "
             "which collects the data through the Ruckus Spot web interface"
         ),
         optional_keys=["cmk_agent"],

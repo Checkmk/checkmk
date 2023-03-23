@@ -163,7 +163,7 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 
 
 class CheckmkApp(AbstractWSGIApp):
-    """The Check_MK GUI WSGI entry point"""
+    """The Checkmk GUI WSGI entry point"""
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""

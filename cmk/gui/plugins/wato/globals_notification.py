@@ -108,7 +108,7 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
         return Integer(
             title=_("Store notifications for rule analysis"),
             help=_(
-                "If this option is set to a non-zero number, then Check_MK "
+                "If this option is set to a non-zero number, then Checkmk "
                 "keeps the last <i>X</i> notifications for later reference. "
                 "You can replay these notifications and analyse your set of "
                 "notifications rules. This only works with rulebased notifications. Note: "
@@ -135,7 +135,7 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
             title=_("Interval for checking for ripe bulk notifications"),
             help=_(
                 "If you are using rule based notifications with and <i>Bulk Notifications</i> "
-                "then Check_MK will check for ripe notification bulks to be sent out "
+                "then Checkmk will check for ripe notification bulks to be sent out "
                 "at latest every this interval."
             ),
             minvalue=1,
@@ -255,7 +255,7 @@ class ConfigVariableFailedNotificationHorizon(ConfigVariable):
             title=_("Failed notification horizon"),
             help=_(
                 "The tactical overview snapin is reporing about notifications that could not be sent "
-                'by Check_MK. Users with the permission "See failed Notifications (all)" get the number '
+                'by Checkmk. Users with the permission "See failed Notifications (all)" get the number '
                 "of failed notification within the configured horizon."
             ),
             default_value=60 * 60 * 24 * 7,

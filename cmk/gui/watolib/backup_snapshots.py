@@ -297,7 +297,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         if using_cmc and not snapshot_cmc:
             raise MKGeneralException(
                 _(
-                    "You are currently using the Check_MK Micro Core, but this snapshot does not use the "
+                    "You are currently using the Checkmk Micro Core, but this snapshot does not use the "
                     "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
@@ -305,7 +305,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         if not using_cmc and snapshot_cmc:
             raise MKGeneralException(
                 _(
-                    "You are currently not using the Check_MK Micro Core, but this snapshot uses the "
+                    "You are currently not using the Checkmk Micro Core, but this snapshot uses the "
                     "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )

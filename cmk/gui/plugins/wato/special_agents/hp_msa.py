@@ -35,7 +35,7 @@ def _valuespec_special_agents_hp_msa():
         optional_keys=False,
         title=_("HP MSA via Web Interface"),
         help=_(
-            "This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
+            "This rule selects the Agent HP MSA instead of the normal Checkmk Agent "
             "which collects the data through the HP MSA web interface"
         ),
     )

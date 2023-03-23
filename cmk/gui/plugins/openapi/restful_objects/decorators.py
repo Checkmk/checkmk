@@ -823,7 +823,7 @@ class Endpoint:
                 ext=EXT({"data_sent": str(response.data)}),
             )
 
-        if self.output_empty:
+        if response.status_code == 204:
             response.content_type = ""
 
         if response.status_code not in self._expected_status_codes:

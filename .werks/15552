@@ -1,0 +1,13 @@
+Title: host_tag_group: allow 401 for delete endpoint
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1679582221
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the REST API raised a 500 internal server error when
+the user was not allowed to delete the host tag group. This werk fixes this
+issue and the REST API will now report a 401 unauthorized error instead.

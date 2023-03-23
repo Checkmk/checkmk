@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import auto, Enum
+from typing import NamedTuple
 
 
 class LicenseState(Enum):
@@ -17,6 +18,10 @@ class LicenseState(Enum):
     FREE = auto()
     LICENSED = auto()
     UNLICENSED = auto()
+
+
+class LicenseStateError(Exception):
+    pass
 
 
 @dataclass
@@ -57,6 +62,11 @@ class NotificationHandler(abc.ABC):
 PendingChanges = Sequence[tuple]
 
 
+class RemainingTrialTime(NamedTuple):
+    days: int
+    perc: float
+
+
 class LicensingHandler(abc.ABC):
     @property
     @abc.abstractmethod
@@ -79,4 +89,8 @@ class LicensingHandler(abc.ABC):
     @property
     @abc.abstractmethod
     def notification_handler(self) -> NotificationHandler:
+        raise NotImplementedError()
+
+    @property
+    def remaining_trial_time(self) -> RemainingTrialTime:
         raise NotImplementedError()

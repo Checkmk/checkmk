@@ -8,9 +8,11 @@ from typing import Type
 from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import (
     LicenseState,
+    LicenseStateError,
     LicensingHandler,
     NotificationHandler,
     PendingChanges,
+    RemainingTrialTime,
     UserEffect,
 )
 from cmk.utils.version import Edition, edition
@@ -61,6 +63,15 @@ def get_license_state() -> LicenseState:
 
 def get_license_message() -> str:
     return _get_licensing_handler().message
+
+
+def get_remaining_trial_time() -> RemainingTrialTime:
+    handler: LicensingHandler = _get_licensing_handler()
+    if handler.state is LicenseState.TRIAL:
+        return handler.remaining_trial_time
+    raise LicenseStateError(
+        "Remaining trial time requested for non trial license state: %s" % str(handler.state)
+    )
 
 
 def get_licensing_user_effect_core(num_services: int, num_hosts_shadow: int) -> UserEffect:

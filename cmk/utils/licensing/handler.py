@@ -19,6 +19,10 @@ class LicenseState(Enum):
     UNLICENSED = auto()
 
 
+class LicenseStateError(Exception):
+    pass
+
+
 @dataclass
 class EmailNotification:
     period: timedelta
@@ -79,4 +83,8 @@ class LicensingHandler(abc.ABC):
     @property
     @abc.abstractmethod
     def notification_handler(self) -> NotificationHandler:
+        raise NotImplementedError()
+
+    @property
+    def remaining_trial_time(self) -> timedelta:
         raise NotImplementedError()

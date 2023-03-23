@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import timedelta
 from typing import Type
 
 from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import (
     LicenseState,
+    LicenseStateError,
     LicensingHandler,
     NotificationHandler,
     PendingChanges,
@@ -61,6 +63,15 @@ def get_license_state() -> LicenseState:
 
 def get_license_message() -> str:
     return _get_licensing_handler().message
+
+
+def get_remaining_trial_time() -> timedelta:
+    handler: LicensingHandler = _get_licensing_handler()
+    if handler.state is LicenseState.TRIAL:
+        return handler.remaining_trial_time
+    raise LicenseStateError(
+        "Remaining trial time requested for non trial license state: %s" % str(handler.state)
+    )
 
 
 def get_licensing_user_effect_core(num_services: int, num_hosts_shadow: int) -> UserEffect:

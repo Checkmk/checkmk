@@ -1797,7 +1797,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         if self._split_on_paste:
             help_texts.append(
                 _(
-                    "<br><br>You may paste a text from your clipboard which contains several "
+                    "You may paste a text from your clipboard which contains several "
                     'parts separated by "%s" characters into the last input field. The text will '
                     "then be split by these separators and the single parts are added into dedicated "
                     "input fields."

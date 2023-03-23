@@ -30,8 +30,6 @@ def get_test_id(unreachable_enabled):
 def unreachable_enabled_fixture(
     request: pytest.FixtureRequest,
     site: Site,
-    disable_checks: None,
-    disable_flap_detection: None,
 ) -> Iterator[bool]:
     unreachable_enabled = request.param
 
@@ -85,7 +83,11 @@ def unreachable_enabled_fixture(
 
 
 @pytest.fixture(name="initial_state", scope="function")
-def initial_state_fixture(site: Site) -> None:
+def initial_state_fixture(
+    site: Site,
+    disable_checks: None,
+    disable_flap_detection: None,
+) -> None:
     # Before each test: Set to initial state: Both UP
     site.send_host_check_result("notify-test-child", 0, "UP")
     site.send_host_check_result("notify-test-parent", 0, "UP")

@@ -68,7 +68,7 @@ def _parameter_valuespec_checkmk_agent():
                     valuespec=CascadingDropdown(
                         title=_("Check version of Checkmk agent"),
                         help=_(
-                            "Here you can make sure that all of your Check_MK agents are running"
+                            "Here you can make sure that all of your Checkmk agents are running"
                             " one specific version. Agents running "
                             " a different version return a non-OK state."
                         ),

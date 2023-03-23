@@ -72,7 +72,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
             title=_("Start during system boot"),
             help=_(
                 "Whether or not this site should be started during startup of "
-                "the Check_MK server."
+                "the Checkmk server."
             ),
         )
 
@@ -163,9 +163,9 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
             title=_("Event Console"),
             help=_(
                 "This option enables the Event Console - The event processing and "
-                "classification daemon of Check_MK. You can also configure whether "
+                "classification daemon of Checkmk. You can also configure whether "
                 "or not the Event Console shal listen for incoming SNMP traps or "
-                "syslog messages. Please note that only a single Check_MK site per "
+                "syslog messages. Please note that only a single Checkmk site per "
                 "Check_MK server can listen for such messages."
             ),
             label=_("Event Console enabled"),

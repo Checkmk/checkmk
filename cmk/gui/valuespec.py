@@ -6498,9 +6498,9 @@ class Password(TextInput):
         if self._is_stored_plain:
             html.span(
                 _(
-                    "<br>Please note that Check_MK needs this password in clear"
+                    "<br>Please note that Checkmk needs this password in clear"
                     "<br>text during normal operation and thus stores it unencrypted"
-                    "<br>on the Check_MK server."
+                    "<br>on the Checkmk server."
                 )
             )
 

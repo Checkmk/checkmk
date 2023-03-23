@@ -452,7 +452,7 @@ class ModeEditSite(WatoMode):
                 HTTPUrl(
                     title=_("URL of remote site"),
                     help=_(
-                        "URL of the remote Check_MK including <tt>/check_mk/</tt>. "
+                        "URL of the remote Checkmk including <tt>/check_mk/</tt>. "
                         "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
                         "appended, but it must always be an absolute URL. Please note, that "
                         "that URL will be fetched by the Apache server of the local "

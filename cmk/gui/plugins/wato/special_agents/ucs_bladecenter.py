@@ -18,7 +18,7 @@ def _valuespec_special_agents_ucs_bladecenter():
     return Dictionary(
         title=_("UCS Bladecenter"),
         help=_(
-            "This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
+            "This rule selects the UCS Bladecenter agent instead of the normal Checkmk Agent "
             "which collects the data through the UCS Bladecenter Web API"
         ),
         elements=[

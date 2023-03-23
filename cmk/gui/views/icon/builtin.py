@@ -211,7 +211,7 @@ class RescheduleIcon(Icon):
                 servicedesc = row["service_description"].replace("\\", "\\\\")
                 wait_svc = servicedesc
 
-                # Use Check_MK service for cmk based services
+                # Use 'Check_MK' service for cmk based services
                 if row[what + "_check_command"].startswith("check_mk-"):
                     servicedesc = "Check_MK"
                     icon = "reload_cmk"
@@ -1213,7 +1213,7 @@ class CrashdumpsIcon(Icon):
         ):
             if not user.may("general.see_crash_reports"):
                 return "crash", _(
-                    "This check crashed. Please inform a Check_MK user that is allowed "
+                    "This check crashed. Please inform a Checkmk user that is allowed "
                     "to view and submit crash reports to the development team."
                 )
 

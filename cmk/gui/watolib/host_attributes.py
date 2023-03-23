@@ -695,7 +695,7 @@ def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> lis
     This lead to issues with localized topics. We now have internal IDs for
     all the topics and try to convert the values here to the new format.
 
-    We translate the titles which have been distributed with Check_MK to their
+    We translate the titles which have been distributed with Checkmk to their
     internal topic ID. No action should be needed. Custom topics or topics of
     other languages are not translated. The attributes are put into the
     "Custom attributes" topic once. Users will have to re-configure the topic,

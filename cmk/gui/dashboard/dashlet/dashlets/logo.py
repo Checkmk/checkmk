@@ -15,7 +15,7 @@ class MKLogoDashletConfig(DashletConfig):
 
 
 class MKLogoDashlet(Dashlet[MKLogoDashletConfig]):
-    """Dashlet that displays the Check_MK logo"""
+    """Dashlet that displays the Checkmk logo"""
 
     @classmethod
     def type_name(cls):

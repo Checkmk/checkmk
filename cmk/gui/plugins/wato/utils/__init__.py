@@ -1287,7 +1287,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                 ContactGroupChoice(
                     title=_("Match contact groups"),
                     help=_(
-                        "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
+                        "The host/service must be in one of the selected contact groups. This only works with Checkmk Micro Core. "
                         "If you don't use the CMC that filter will not apply"
                     ),
                     allow_empty=False,

@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Default configuration settings for the Check_MK GUI"""
+"""Default configuration settings for the Checkmk GUI"""
 
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -389,8 +389,8 @@ class CREConfig:
             "Do not monitor this host": {
                 "de": "Diesen Host nicht überwachen",
             },
-            "Dual: Check_MK Agent + SNMP": {
-                "de": "Dual: Check_MK Agent + SNMP",
+            "Dual: Checkmk Agent + SNMP": {
+                "de": "Dual: Checkmk Agent + SNMP",
             },
             "Legacy SNMP device (using V1)": {
                 "de": "Alte SNMP-Geräte (mit Version 1)",
@@ -413,8 +413,8 @@ class CREConfig:
             "WAN (high latency)": {
                 "de": "WAN (hohe Latenz)",
             },
-            "monitor via Check_MK Agent": {
-                "de": "Überwachung via Check_MK Agent",
+            "monitor via Checkmk Agent": {
+                "de": "Überwachung via Checkmk Agent",
             },
             "monitor via SNMP": {
                 "de": "Überwachung via SNMP",

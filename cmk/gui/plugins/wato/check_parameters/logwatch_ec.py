@@ -237,7 +237,7 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
         title=_("Forwarding"),
         help=_(
             "Instead of using the regular logwatch check all lines received by logwatch can "
-            "be forwarded to a Check_MK event console daemon to be processed. The target event "
+            "be forwarded to a Checkmk event console daemon to be processed. The target event "
             "console can be configured for each host in a separate rule."
         ),
         elements=[

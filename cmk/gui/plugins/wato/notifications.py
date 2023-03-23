@@ -211,9 +211,9 @@ def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
                 "and service links within the notification is filled "
                 "automatically. If you specify an URL prefix here, then "
                 "several parts of the notification are armed with hyperlinks "
-                "to your Check_MK GUI. In both cases, the recipient of the "
+                "to your Checkmk GUI. In both cases, the recipient of the "
                 "notification can directly visit the host or service in "
-                "question in Check_MK. Specify an absolute URL including the "
+                "question in Checkmk. Specify an absolute URL including the "
                 "<tt>.../check_mk/</tt>."
             ),
             choices=[
@@ -1662,7 +1662,7 @@ class NotificationParameterPushover(NotificationParameter):
                         help=_(
                             "You need to provide a valid API key to be able to send push notifications "
                             'using Pushover. Register and login to <a href="https://www.pushover.net" '
-                            'target="_blank">Pushover</a>, thn create your Check_MK installation as '
+                            'target="_blank">Pushover</a>, thn create your Checkmk installation as '
                             "application and obtain your API key."
                         ),
                         size=40,
@@ -1690,9 +1690,9 @@ class NotificationParameterPushover(NotificationParameter):
                         title=_("URL prefix for links to Checkmk"),
                         help=_(
                             "If you specify an URL prefix here, then several parts of the "
-                            "email body are armed with hyperlinks to your Check_MK GUI, so "
+                            "email body are armed with hyperlinks to your Checkmk GUI, so "
                             "that the recipient of the email can directly visit the host or "
-                            "service in question in Check_MK. Specify an absolute URL including "
+                            "service in question in Checkmk. Specify an absolute URL including "
                             "the <tt>.../check_mk/</tt>"
                         ),
                         regex="^(http|https)://.*/check_mk/$",

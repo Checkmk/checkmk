@@ -19,7 +19,7 @@ def _valuespec_special_agents_storeonce():
         title=_("HPE StoreOnce"),
         help=_(
             "This rule set selects the special agent for HPE StoreOnce Applainces "
-            "instead of the normal Check_MK agent and allows monitoring via Web API. "
+            "instead of the normal Checkmk agent and allows monitoring via Web API. "
         ),
         optional_keys=["cert"],
         elements=[

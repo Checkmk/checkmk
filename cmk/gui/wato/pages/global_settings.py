@@ -119,7 +119,7 @@ class ABCGlobalSettingsMode(WatoMode):
             if active_config.debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "
-                    "your local Check_MK installation" % varname
+                    "your local Checkmk installation" % varname
                 )
             return False
 

@@ -115,7 +115,7 @@ class StartURLUserAttribute(UserAttribute):
                     TextInput(
                         title=_("Use this custom start URL"),
                         help=_(
-                            "When you point your browser to the Check_MK GUI, usually the dashboard "
+                            "When you point your browser to the Checkmk GUI, usually the dashboard "
                             "is shown in the main (right) frame. You can replace this with any other "
                             "URL you like here."
                         ),

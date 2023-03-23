@@ -20,7 +20,7 @@ def _valuespec_special_agents_ibmsvc() -> Dictionary:
     return Dictionary(
         title=_("IBM SVC / V7000 storage systems"),
         help=_(
-            "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Check_MK Agent "
+            "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Checkmk Agent "
             "and allows monitoring of IBM SVC / V7000 storage systems by calling "
             "ls* commands there over SSH. "
             "Make sure you have SSH key authentication enabled for your monitoring user. "

@@ -14,7 +14,7 @@ def _valuespec_active_checks_notify_count():
         title=_("Check notification number per contact"),
         help=_(
             "Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> "
-            "provided with Check_MK. This plugin counts the total number of notifications sent by the local "
+            "provided with Checkmk. This plugin counts the total number of notifications sent by the local "
             "monitoring core and creates graphs for each individual contact. You can configure thresholds "
             "on the number of notifications per contact in a defined time interval. "
             "This plugin queries livestatus to extract the notification related log entries from the "

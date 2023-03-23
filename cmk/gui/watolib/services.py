@@ -866,7 +866,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         print("Completed.")
 
     def _perform_service_scan(self, api_request: StartDiscoveryRequest) -> None:
-        """The try-inventory automation refreshes the Check_MK internal cache and makes the new
+        """The try-inventory automation refreshes the Checkmk internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
         sys.stdout.write(
             discovery_preview(

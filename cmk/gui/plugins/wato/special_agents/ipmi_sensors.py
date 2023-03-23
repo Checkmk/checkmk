@@ -189,7 +189,7 @@ def _valuespec_special_agents_ipmi_sensors() -> CascadingDropdown:
         ],
         title=_("IPMI Sensors via Freeipmi or IPMItool"),
         help=_(
-            "This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+            "This rule selects the Agent IPMI Sensors instead of the normal Checkmk Agent "
             "which collects the data through the FreeIPMI resp. IPMItool command"
         ),
     )

@@ -229,7 +229,7 @@ class ABCViewDashlet(IFrameDashlet[VT]):
 
 
 class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
-    """Dashlet that displays a Check_MK view"""
+    """Dashlet that displays a Checkmk view"""
 
     @classmethod
     def type_name(cls) -> str:
@@ -348,7 +348,7 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
 
 
 class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
-    """Dashlet that displays a Check_MK view without embedding it's definition into the dashboard"""
+    """Dashlet that displays a Checkmk view without embedding it's definition into the dashboard"""
 
     @classmethod
     def type_name(cls) -> str:

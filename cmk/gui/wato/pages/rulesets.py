@@ -360,7 +360,7 @@ class ModeRuleSearch(ABCRulesetMode):
         if self._page_type is PageType.DeprecatedRulesets:
             self._title = _("Search rules: Deprecated Rulesets")
             self._help = _(
-                "Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
+                "Here you can see a list of all deprecated rulesets (which are not used by Checkmk anymore). If "
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                 "refer to the release notes or context help of the rulesets for details."
             )

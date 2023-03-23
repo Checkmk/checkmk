@@ -26,7 +26,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
     return Dictionary(
         title=_("Check State of BI Aggregation"),
         help=_(
-            "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
+            "Connect to the local or a remote monitoring host, which uses Checkmk BI to aggregate "
             "several states to a single BI aggregation, which you want to show up as a single "
             "service."
         ),

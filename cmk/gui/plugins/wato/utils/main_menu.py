@@ -44,7 +44,7 @@ class WatoModule(MenuItem):
 
 
 def register_modules(*args):
-    """Register one or more top level modules to Check_MK Setup.
+    """Register one or more top level modules to Checkmk Setup.
     The registered modules are displayed in the navigation of Setup."""
     for wato_module in args:
         assert isinstance(wato_module, WatoModule)

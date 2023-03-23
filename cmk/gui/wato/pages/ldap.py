@@ -247,7 +247,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                     help=_(
                         "Connect to the LDAP server with a SSL encrypted connection. The "
                         '<a href="wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities">trusted '
-                        "certificates authorities</a> configured in Check_MK will be used to validate the "
+                        "certificates authorities</a> configured in Checkmk will be used to validate the "
                         "certificate provided by the LDAP server."
                     ),
                     value=True,
@@ -378,7 +378,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                                 TextInput(
                                     title=_("DNS domain name to discover LDAP servers of"),
                                     help=_(
-                                        "Configure the DNS domain name of your Active directory domain here, Check_MK "
+                                        "Configure the DNS domain name of your Active directory domain here, Checkmk "
                                         "will then query this domain for it's closest domain controller to communicate "
                                         "with."
                                     ),
@@ -603,7 +603,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "from the LDAP directory. This is done by plugins which can individually enabled "
                         "or disabled. When enabling a plugin, it is used upon the next synchonisation of "
                         "user accounts for gathering their attributes. The user options which get imported "
-                        "into Check_MK from LDAP will be locked in Setup."
+                        "into Checkmk from LDAP will be locked in Setup."
                     ),
                     elements=lambda: ldap_attribute_plugins_elements(self._connection),
                     default_keys=["email", "alias", "auth_expire"],

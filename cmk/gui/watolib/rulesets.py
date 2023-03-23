@@ -1363,7 +1363,7 @@ class Rule:
         """When a rule refers to a predefined condition return the ID
 
         The predefined conditions are a pure Setup feature. These are resolved when writing
-        the configuration down for Check_MK base. The configured condition ID is preserved
+        the configuration down for Checkmk base. The configured condition ID is preserved
         in the rule options for the moment.
         """
         # TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict

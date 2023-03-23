@@ -186,9 +186,9 @@ class ABCNotificationsMode(ABCEventsMode):
                 Alternative(
                     title=_("Event Console alerts"),
                     help=_(
-                        "The Event Console can have events create notifications in Check_MK. "
+                        "The Event Console can have events create notifications in Checkmk. "
                         "These notifications will be processed by the rule based notification "
-                        "system of Check_MK. This matching option helps you distinguishing "
+                        "system of Checkmk. This matching option helps you distinguishing "
                         "and also gives you access to special event fields."
                     ),
                     elements=[

@@ -232,7 +232,7 @@ class ConfigurationConnectionAttributes(BaseSchema):
     )
     url_of_remote_site = fields.String(
         required=False,
-        description="URL of the remote Check_MK including /check_mk/. This URL is in many cases the same as the URL-Prefix but with check_mk/ appended, but it must always be an absolute URL.",
+        description="URL of the remote Checkmk including /check_mk/. This URL is in many cases the same as the URL-Prefix but with check_mk/ appended, but it must always be an absolute URL.",
         example="http://remote_site_1/check_mk/",
     )
 

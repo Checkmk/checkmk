@@ -40,7 +40,7 @@ def _parameter_valuespec_graylog_sources():
                 Integer(
                     title=_("Message averaging"),
                     help=_(
-                        "By activating averaging, Check_MK will compute the average of "
+                        "By activating averaging, Checkmk will compute the average of "
                         "the message count over a given interval. If you define "
                         "alerting levels they will automatically be applied on the "
                         "averaged value. This helps to mask out short peaks."

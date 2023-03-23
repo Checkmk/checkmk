@@ -1500,6 +1500,7 @@ class AutomationDiagHost(Automation):
             ipaddress,
             ConfigCache.address_family(host_name),
             config_cache=config_cache,
+            simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):
@@ -1848,6 +1849,7 @@ class AutomationGetAgentOutput(Automation):
                     ipaddress,
                     ConfigCache.address_family(hostname),
                     config_cache=config.get_config_cache(),
+                    simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
                     file_cache_max_age=config.max_cachefile_age(),
                 ):

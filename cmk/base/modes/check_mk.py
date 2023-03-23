@@ -451,6 +451,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             ipaddress,
             ConfigCache.address_family(hostname),
             config_cache=config_cache,
+            simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):

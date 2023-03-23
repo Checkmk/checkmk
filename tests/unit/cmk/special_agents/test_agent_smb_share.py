@@ -619,7 +619,7 @@ def test_iter_shared_files(
 @pytest.mark.parametrize(
     "patterns, file_data, expected_file_data",
     [
-        (
+        pytest.param(
             [
                 "\\\\HOSTNAME\\SharedFolder1\\Subfolder1\\File1",
             ],
@@ -636,6 +636,26 @@ def test_iter_shared_files(
                     },
                 ),
             ],
+            id="find share files",
+        ),
+        pytest.param(
+            [
+                "\\\\HOSTNAME\\sharedfolder1\\Subfolder1\\File1",
+            ],
+            [
+                ("path1", "file1"),
+                ("path2", "file2"),
+            ],
+            [
+                (
+                    "\\\\HOSTNAME\\sharedfolder1\\Subfolder1\\File1",
+                    {
+                        ("path1", "file1"),
+                        ("path2", "file2"),
+                    },
+                ),
+            ],
+            id="ignore case in share name",
         ),
     ],
 )

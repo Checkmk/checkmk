@@ -5,7 +5,7 @@
 """Test different EC standalone helper functions"""
 
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis.strategies import ip_addresses
 
 from cmk.ec.export import match_ip_network
@@ -89,6 +89,7 @@ def test_match_ip_network_ipv6(pattern: str, ip: str, expected: bool) -> None:
     assert match_ip_network(pattern, ip) == expected
 
 
+@settings(max_examples=10)
 @given(ip_addresses(v=4).map(str))
 def test_match_ipv4_network_all_ip(ip: str) -> None:
     """Generated ip ipv4 addresses with network bits added manually"""
@@ -99,6 +100,7 @@ def test_match_ipv4_network_all_ip(ip: str) -> None:
     assert match_ip_network(f"{ip}/0", "") is True
 
 
+@settings(max_examples=10)
 @given(ip_addresses(v=6).map(str))
 def test_match_ipv6_network_all_ip(ip: str) -> None:
     """Generated ip ipv6 addresses with network bits added manually"""

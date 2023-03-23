@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Taken from connUnitPortState
@@ -148,8 +150,9 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     perfdata = []
     perfaverages = []
 
-    wirespeed = savefloat(portinfo[0][4]) * 1000.0  # speed in Bytes/sec, 0 if unknown
-    if wirespeed == 0:
+    try:
+        wirespeed = float(portinfo[0][4]) * 1000.0  # speed in Bytes/sec
+    except (ValueError, TypeError):
         # let user specify assumed speed via check parameter, default is 16.0 Gbit/sec
         gbit = params.get("assumed_speed", 16.0)
         wirespeed = gbit * 1000.0 * 1000.0 * 1000.0 / 8.0  # in Bytes/sec

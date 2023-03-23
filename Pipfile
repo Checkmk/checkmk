@@ -139,7 +139,7 @@ werkzeug = "==2.2.3"  # direct dependency and needed by flask
 jsonschema = "==4.17.3"  # needed by openapi-spec-validator
 flask = "==2.2.3"  # direct dependency
 pytz = "==2022.7.1"  # direct dependency
-openapi-spec-validator = "==0.5.6"  # direct dependency
+openapi-spec-validator = "==0.5.1"  # direct dependency
 psutil = "==5.9.4"  # needed for omdlib
 passlib = "==1.7.4"  # needed for omdlib
 defusedxml = "==0.7.1"  # needed by jira

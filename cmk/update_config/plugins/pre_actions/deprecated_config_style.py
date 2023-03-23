@@ -5,9 +5,17 @@
 
 from typing import Final
 
+from cmk.utils.redis import disable_redis
+
 import cmk.base.config as base_config
+from cmk.base.api.agent_based import register as agent_based_register
+from cmk.base.check_api import get_check_api_context
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.session import SuperUserContext
+from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
@@ -217,7 +225,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "dell_powerconnect_temp_default_values",
     "diskstat_default_levels",
     "diskstat_diskless_pattern",
-    "diskstat_inventory",
     "diskstat_inventory_mode",
     "docsis_channels_downstream",
     "docsis_channels_upstream_default_levels",
@@ -280,7 +287,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "filehandler_default_levels",
     "filer_disks_default_levels",
     "filesystem_default_levels",
-    "filesystem_groups",
     "filesystem_levels",
     "fireeye_lic",
     "fireeye_mailq",
@@ -383,7 +389,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "ibm_svc_cpu_default_levels",
     "ibm_svc_enclosurestats_temperature_default_levels",
     "ibm_svc_mdisk_default_levels",
-    "if_groups",
     "ifoperstatus_inventory_porttypes",
     "ifoperstatus_monitor_unused",
     "infoblox_temp_default_levels",
@@ -675,12 +680,22 @@ class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
     def __call__(self, conflict_mode: ConflictMode) -> None:
         if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD):
             return
+        base_config.load_all_agent_based_plugins(get_check_api_context)
         base_config.load(changed_vars_handler=self.fail_upon_deprecated_check_config)
 
     @staticmethod
     def fail_upon_deprecated_check_config(changed_variables: set[str]) -> None:
+        with disable_redis(), gui_context(), SuperUserContext():
+            set_global_vars()
+            all_rulesets = AllRulesets.load_all_rulesets()
+        unregistered_vars = (
+            changed_variables
+            - {str(n) for n in agent_based_register.iter_all_discovery_rulesets()}
+            - {str(n) for n in agent_based_register.iter_all_host_label_rulesets()}
+            - set(all_rulesets.get_rulesets())
+        )
         if not (
-            problematic_variables := _DEPRECATED_CHECK_VARIABLES.intersection(changed_variables)
+            problematic_variables := _DEPRECATED_CHECK_VARIABLES.intersection(unregistered_vars)
         ):
             return
         raise MKUserError(
@@ -694,6 +709,6 @@ pre_update_action_registry.register(
     PreUpdateDeprecatedConfigurationStyle(
         name="deprecated_configuration_style",
         title="Deprecated .mk configuration of plugins",
-        sort_index=10,
+        sort_index=1000,  # check the rulesets first!
     )
 )

@@ -37,7 +37,7 @@ def notify_error(error) {
         def isChangeValidation = currentBuild.fullProjectName.contains("change_validation");
         print("|| error-reporting: isChangeValidation=${isChangeValidation}");
 
-        def isTesting = currentBuild.fullProjectName.contains("/Testing");
+        def isTesting = currentBuild.fullProjectName.contains("Testing");
         print("|| error-reporting: isTesting=${isTesting}");
 
         def isTriggerJob = currentBuild.fullProjectName.contains("trigger");

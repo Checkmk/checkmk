@@ -1056,38 +1056,39 @@ class Site:
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:
         self.ensure_running()
-        site = remote_site or self
+        try:
+            site = remote_site or self
 
-        logger.debug("Getting old program start")
-        old_t = site.live.query_value("GET status\nColumns: program_start\n")
+            logger.debug("Getting old program start")
+            old_t = site.live.query_value("GET status\nColumns: program_start\n")
 
-        logger.debug("Read replication changes of site")
-        base_dir = site.path("var/check_mk/wato")
-        for path in glob.glob(base_dir + "/replication_*"):
-            logger.debug("Replication file: %r", path)
-            with suppress(FileNotFoundError):
-                logger.debug(site.read_file(base_dir + "/" + os.path.basename(path)))
+            logger.debug("Read replication changes of site")
+            base_dir = site.path("var/check_mk/wato")
+            for path in glob.glob(base_dir + "/replication_*"):
+                logger.debug("Replication file: %r", path)
+                with suppress(FileNotFoundError):
+                    logger.debug(site.read_file(base_dir + "/" + os.path.basename(path)))
 
-        # Ensure no previous activation is still running
-        for status_path in glob.glob(base_dir + "/replication_status_*"):
-            logger.debug("Replication status file: %r", status_path)
-            with suppress(FileNotFoundError):
-                changes = ast.literal_eval(
-                    site.read_file(base_dir + "/" + os.path.basename(status_path))
-                )
-                if changes.get("current_activation") is not None:
-                    raise RuntimeError(
-                        "A previous activation is still running. Does the wait work?"
+            # Ensure no previous activation is still running
+            for status_path in glob.glob(base_dir + "/replication_status_*"):
+                logger.debug("Replication status file: %r", status_path)
+                with suppress(FileNotFoundError):
+                    changes = ast.literal_eval(
+                        site.read_file(base_dir + "/" + os.path.basename(status_path))
                     )
+                    if changes.get("current_activation") is not None:
+                        raise RuntimeError(
+                            "A previous activation is still running. Does the wait work?"
+                        )
 
-        changed = self.openapi.activate_changes_and_wait_for_completion(
-            sites=[site.id], force_foreign_changes=allow_foreign_changes
-        )
-        if changed:
-            logger.info("Waiting for core reloads of: %s", site.id)
-            site.wait_for_core_reloaded(old_t)
-
-        self.ensure_running()
+            changed = self.openapi.activate_changes_and_wait_for_completion(
+                sites=[site.id], force_foreign_changes=allow_foreign_changes
+            )
+            if changed:
+                logger.info("Waiting for core reloads of: %s", site.id)
+                site.wait_for_core_reloaded(old_t)
+        finally:
+            self.ensure_running()
 
 
 class SiteFactory:

@@ -9,7 +9,6 @@ import pytest
 
 from cmk.base import item_state
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.ucd_diskio import (
     check_ucd_diskio,
@@ -57,25 +56,30 @@ def test_check_ucd_diskio_item_not_found(
     )
 
 
-def test_check_ucd_diskio_raise_get_rate_error(
+def test_check_ucd_diskio_first_run(
     string_table: list[StringTable],
 ) -> None:
-    with pytest.raises(GetRateError):
-        list(
-            check_ucd_diskio(
-                item="ram0",
-                params={},
-                section=parse_ucd_diskio(string_table),
-            )
+    check_result = list(
+        check_ucd_diskio(
+            item="ram0",
+            params={},
+            section=parse_ucd_diskio(string_table),
         )
+    )
+
+    assert check_result == [Result(state=State.OK, summary="[1]")]
 
 
-def test_check_ucd_diskio_static(
+def test_check_ucd_diskio_second_run(
     string_table: list[StringTable],
 ) -> None:
-    # Setting the previous states
-    for field in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:
-        item_state.set_item_state(f"ucd_disk_io_{field}.ram0", (0, 0))
+    check_result = list(
+        check_ucd_diskio(
+            item="ram0",
+            params={},
+            section=parse_ucd_diskio(string_table),
+        )
+    )
 
     check_result = list(
         check_ucd_diskio(

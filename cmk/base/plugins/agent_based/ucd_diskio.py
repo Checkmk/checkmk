@@ -5,6 +5,7 @@
 
 
 import time
+from contextlib import suppress
 from typing import Any, List, Mapping, MutableMapping, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -18,6 +19,7 @@ from cmk.base.plugins.agent_based.utils.ucd_hr_detection import UCD
 from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
+    GetRateError,
     register,
     Result,
     Service,
@@ -96,14 +98,17 @@ def check_ucd_diskio(
 
     disk_data: MutableMapping[str, float] = {}
 
+    time_for_rates = time.time()
+
     for key in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:
         if (value := disk.get(key)) is None:
             continue
 
         if isinstance(value, float):
-            disk_data[key] = get_rate(
-                get_value_store(), f"ucd_disk_io_{key}.{item}", time.time(), value
-            )
+            with suppress(GetRateError):
+                disk_data[key] = get_rate(
+                    get_value_store(), f"ucd_disk_io_{key}.{item}", time_for_rates, value
+                )
 
     yield Result(state=State.OK, summary=f"[{disk['disk_index']}]")
 

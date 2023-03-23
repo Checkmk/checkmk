@@ -289,8 +289,12 @@ export function toggle_all_rows(obj?: HTMLElement | HTMLElement[]) {
             some_failed = true;
     }
 
-    const entry = document.getElementById("menu_entry_checkbox_selection")!;
-    const img: HTMLImageElement = entry.getElementsByTagName("img")[0];
+    const entry = document.getElementById(
+        "menu_entry_checkbox_selection"
+    ) as HTMLDivElement;
+    const img: HTMLImageElement | null = entry
+        ? entry.getElementsByTagName("img")[0]
+        : null;
     // Toggle the state
     if (all_selected) {
         remove_selected_rows(checkboxes);

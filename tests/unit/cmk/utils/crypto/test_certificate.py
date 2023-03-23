@@ -269,3 +269,34 @@ def test_verify_is_signed_by() -> None:
     Certificate.load_pem(cert_pem).verify_is_signed_by(Certificate.load_pem(ca_pem))
     with pytest.raises(InvalidSignatureError):
         Certificate.load_pem(other_pem).verify_is_signed_by(Certificate.load_pem(ca_pem))
+
+
+def test_default_subject_alt_names(self_signed_cert: CertificateWithPrivateKey) -> None:
+    """check that the self-signed cert does not come with SANs"""
+    assert self_signed_cert.certificate.get_subject_alt_names() == []
+
+
+@pytest.mark.parametrize(
+    "sans,expected",
+    (
+        ([], []),
+        (["foo.bar", "bar.foo"], ["foo.bar", "bar.foo"]),
+    ),
+)
+def test_subject_alt_names(
+    self_signed_cert: CertificateWithPrivateKey, sans: list[str], expected: list[str]
+) -> None:
+    """test setting and retrieval of subject-alt-names (DNS)"""
+    assert (
+        Certificate._create(
+            public_key=self_signed_cert.private_key.public_key,
+            signing_key=self_signed_cert.private_key,
+            common_name="unittest",
+            organization="unit",
+            expiry=relativedelta(days=1),
+            start_date=datetime.now(),
+            organizational_unit_name="unit",
+            subject_alt_dns_names=sans,
+        ).get_subject_alt_names()
+        == expected
+    )

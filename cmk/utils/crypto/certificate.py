@@ -122,6 +122,7 @@ class CertificateWithPrivateKey(NamedTuple):
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
         start_date: datetime | None = None,  # defaults to now
+        subject_alt_dns_names: list[str] | None = None,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
@@ -134,6 +135,7 @@ class CertificateWithPrivateKey(NamedTuple):
             expiry,
             start_date=start_date or datetime.utcnow(),
             organizational_unit_name=organizational_unit_name,
+            subject_alt_dns_names=subject_alt_dns_names,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -288,6 +290,7 @@ class Certificate:
         expiry: relativedelta,
         start_date: datetime,
         organizational_unit_name: str | None = None,
+        subject_alt_dns_names: list[str] | None = None,
     ) -> Certificate:
         """
         Internal method currently only useful for `CertificateWithPrivateKey.generate_self_signed`
@@ -348,6 +351,12 @@ class Certificate:
             ),
             critical=True,
         )
+
+        if subject_alt_dns_names is not None:
+            builder = builder.add_extension(
+                x509.SubjectAlternativeName([x509.DNSName(san) for san in subject_alt_dns_names]),
+                critical=False,
+            )
 
         return Certificate(
             builder.sign(private_key=signing_key._key, algorithm=HashAlgorithm.Sha512.value)
@@ -532,9 +541,12 @@ class Certificate:
         return self._cert.fingerprint(algorithm.value)
 
     def get_subject_alt_names(self) -> list[str]:
-        return self._cert.extensions.get_extension_for_oid(
-            x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-        ).value.get_values_for_type(x509.DNSName)
+        try:
+            return self._cert.extensions.get_extension_for_oid(
+                x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+            ).value.get_values_for_type(x509.DNSName)
+        except x509.extensions.ExtensionNotFound:
+            return []
 
 
 class RsaPrivateKey:

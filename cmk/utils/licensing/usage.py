@@ -24,7 +24,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageReportVersion,
-    LicenseUsageReportVersionError,
     LicenseUsageSample,
     RawLicenseUsageExtensions,
     RawLicenseUsageSample,
@@ -336,7 +335,7 @@ class LocalLicenseUsageHistory:
             return cls([])
 
         if not isinstance(version := raw_report.get("VERSION"), str):
-            raise LicenseUsageReportVersionError()
+            raise TypeError()
 
         parser = LicenseUsageSample.get_parser(version)
         instance_id = load_instance_id()

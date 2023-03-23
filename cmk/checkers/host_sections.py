@@ -27,7 +27,9 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         piggybacked_raw_data: Mapping[HostName, Sequence[bytes]] | None = None,
     ) -> None:
         super().__init__()
-        self.sections: Final = sections if sections else {}
+        self.sections: Mapping[SectionName, Sequence[TRawDataSection]] = (
+            sections if sections else {}
+        )
         self.cache_info: Final = cache_info if cache_info else {}
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 

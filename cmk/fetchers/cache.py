@@ -13,19 +13,11 @@ from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-__all__ = [
-    "ABCRawDataSection",
-    "SectionStore",
-    "PersistedSections",
-    "TRawDataSection",
-]
+__all__ = ["SectionStore", "PersistedSections", "TRawDataSection"]
 
 _AgentRawDataSection = Sequence[str]
 
-# ABCRawDataSection is wrong from a typing point of view.
-# _AgentRawDataSection and SNMPRawDataSection are not correct either.
-ABCRawDataSection = _AgentRawDataSection | SNMPRawDataSection
-TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
+TRawDataSection = TypeVar("TRawDataSection", _AgentRawDataSection, SNMPRawDataSection)
 
 
 class PersistedSections(  # pylint: disable=too-many-ancestors
@@ -37,7 +29,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
     def __init__(
         self, store: MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]]
     ):
-        self._store = store
+        self._store: MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]] = store
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"

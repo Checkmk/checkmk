@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Final, NamedTuple
+from typing import Any, Callable, Final, Generic, NamedTuple
 
 import cmk.utils.piggyback
 from cmk.utils.log import console
@@ -14,9 +14,7 @@ from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
 
 from cmk.checkers import HostKey, PSectionPlugin, SourceInfo, SourceType
 from cmk.checkers.crash_reporting import create_section_crash_dump
-from cmk.checkers.host_sections import HostSections
-
-from cmk.base.api.agent_based.type_defs import AgentParseFunction, SNMPParseFunction
+from cmk.checkers.host_sections import HostSections, TRawDataSection
 
 _CacheInfo = tuple[int, int]
 
@@ -53,16 +51,16 @@ class ResolvedResult(NamedTuple):
     cache_info: _CacheInfo | None
 
 
-class SectionsParser:
+class SectionsParser(Generic[TRawDataSection]):
     """Call the sections parse function and return the parsing result."""
 
     def __init__(
         self,
-        host_sections: HostSections,
+        host_sections: HostSections[TRawDataSection],
         host_name: HostName,
     ) -> None:
         super().__init__()
-        self._host_sections = host_sections
+        self._host_sections: HostSections[TRawDataSection] = host_sections
         self.parsing_errors: list[str] = []
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
@@ -75,7 +73,7 @@ class SectionsParser:
         )
 
     def parse(
-        self, section_name: SectionName, parse_function: AgentParseFunction | SNMPParseFunction
+        self, section_name: SectionName, parse_function: Callable[[Sequence[TRawDataSection]], Any]
     ) -> _ParsingResult | None:
         if section_name in self._memoized_results:
             return self._memoized_results[section_name]
@@ -95,7 +93,7 @@ class SectionsParser:
             self._memoized_results[section_name] = None
 
     def _parse_raw_data(
-        self, section_name: SectionName, parse_function: AgentParseFunction | SNMPParseFunction
+        self, section_name: SectionName, parse_function: Callable[[Sequence[TRawDataSection]], Any]
     ) -> Any:  # yes *ANY*
         try:
             raw_data = self._host_sections.sections[section_name]

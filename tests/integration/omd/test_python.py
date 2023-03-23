@@ -234,6 +234,12 @@ def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand)
     assert_uninstall_and_purge_cache(pip_cmd, package_name, site)
 
 
+@pytest.mark.skip(
+    """
+    Test relies on deprectated top_level.txt mechanism and yields too many false positives.
+    TODO: We need a general rework of this test.
+    """
+)
 @pytest.mark.parametrize("import_name", _get_import_names_from_pipfile())
 def test_import_python_packages_which_are_defined_in_pipfile(
     site: Site,

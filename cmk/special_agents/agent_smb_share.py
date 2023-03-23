@@ -95,9 +95,10 @@ def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=
     if pattern[0] == "**" and recursive:
         child_dirs = get_child_dirs(conn, share_name, subdir)
         for child_dir in child_dirs:
-            yield from iter_shared_files(
-                conn, hostname, share_name, pattern[1:], subdir=child_dir, recursive=recursive
-            )
+            if len(pattern) > 1:
+                yield from iter_shared_files(
+                    conn, hostname, share_name, pattern[1:], subdir=child_dir, recursive=recursive
+                )
         return
 
     for shared_file in conn.listPath(share_name, subdir):

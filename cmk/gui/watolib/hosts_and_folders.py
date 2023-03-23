@@ -1075,20 +1075,12 @@ def may_use_redis() -> bool:
     # - Redis server is not running during cmk_update_config.py
     # - Bulk operations which would update redis several thousand times, instead of just once
     #     There is a special context manager which allows to disable redis handling in this case
-    return (
-        all(
-            (
-                redis_enabled(),
-                _REDIS_ENABLED_LOCALLY,
-            ),
-        )
-        and _redis_available()
-    )
+    return redis_enabled() and _REDIS_ENABLED_LOCALLY and _redis_available()
 
 
 @request_memoize()
 def _redis_available() -> bool:
-    return redis_server_reachable() and not os.path.exists(os.path.expanduser("~/use_classic"))
+    return redis_server_reachable()
 
 
 @contextmanager

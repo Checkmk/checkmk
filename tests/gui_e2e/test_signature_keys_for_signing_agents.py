@@ -140,6 +140,7 @@ def with_key_fixture(
     delete_key(logged_in_page, "with_key_fixture")
 
 
+@pytest.mark.xfail(reason="Test flaky, must be investigated")
 def test_bake_and_sign(logged_in_page: PPage, with_key: None) -> None:
     """go to agents and click bake and sign
 

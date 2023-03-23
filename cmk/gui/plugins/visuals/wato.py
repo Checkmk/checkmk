@@ -61,7 +61,7 @@ class FilterWatoFolder(Filter):
         return [entry for entry in self.selection if entry[0] in allowed_folders]
 
     def _fetch_folders(self) -> set[str]:
-        # Note: WATO Folders that the user has not permissions to must not be visible.
+        # Note: Setup Folders that the user has not permissions to must not be visible.
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
         result = sites.live().query(
@@ -108,7 +108,7 @@ class FilterWatoFolder(Filter):
             yield from self.folder_selection(subfolder, depth + 1)
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        # FIXME: There is a problem with caching data and changing titles of WATO files
+        # FIXME: There is a problem with caching data and changing titles of Setup files
         # Everything is changed correctly but the filter object is stored in the
         # global multisite_filters var and self.path_to_tree is not refreshed when
         # rendering this title. Thus the threads might have old information about the
@@ -179,7 +179,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
 filter_registry.register(
     FilterMultipleWatoFolder(
         ident="wato_folders",
-        title=_l("Multiple WATO Folders"),
+        title=_l("Multiple Setup Folders"),
         sort_index=20,
         info="host",
         htmlvars=["wato_folders"],

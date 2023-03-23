@@ -1171,7 +1171,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "Match this rule only during times where the selected time period from the monitoring "
                     "system is active. The Time Period definitions are taken from the monitoring core that "
                     "is running on the same host or OMD site as the event daemon. Please note, that this "
-                    "selection only offers time periods that are defined with WATO."
+                    "selection only offers time periods that are defined with Setup."
                 ),
             ),
         ),
@@ -1452,16 +1452,15 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 
 
 # .
-#   .--WATO Modes----------------------------------------------------------.
-#   |      __        ___  _____ ___    __  __           _                  |
-#   |      \ \      / / \|_   _/ _ \  |  \/  | ___   __| | ___  ___        |
-#   |       \ \ /\ / / _ \ | || | | | | |\/| |/ _ \ / _` |/ _ \/ __|       |
-#   |        \ V  V / ___ \| || |_| | | |  | | (_) | (_| |  __/\__ \       |
-#   |         \_/\_/_/   \_\_| \___/  |_|  |_|\___/ \__,_|\___||___/       |
-#   |                                                                      |
+#   .--Setup---------------------------------------------------------------.
+#   |                     ____       _                                     |
+#   |                    / ___|  ___| |_ _   _ _ __                        |
+#   |                    \___ \ / _ \ __| | | | '_ \                       |
+#   |                     ___) |  __/ |_| |_| | |_) |                      |
+#   |                    |____/ \___|\__|\__,_| .__/                       |
+#   |                                         |_|                          |
 #   +----------------------------------------------------------------------+
-#   | The actual configuration modes for all rules, one rule and the       |
-#   | activation of the changes.                                           |
+#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 
@@ -4613,7 +4612,7 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
             title=_("Pretty-Print rules in config file of Event Console"),
             label=_("enable pretty-printing of rules"),
             help=_(
-                "When the WATO module of the Event Console saves rules to the file "
+                "When the Setup module of the Event Console saves rules to the file "
                 "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
                 "representation of the rules-list into one single line by using the "
                 "native Python code generator. Enabling this option switches to <tt>pprint</tt>, "
@@ -4672,7 +4671,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
                 "This will send the notification to a Check_MK Event Console on a remote host "
                 "by using syslog. <b>Note</b>: this setting will only be applied if no Event "
                 "Console is running locally in this site! That way you can use the same global "
-                "settings on your central and decentralized system and makes distributed WATO "
+                "settings on your central and decentralized system and makes distributed Setup "
                 "easier. Please also make sure that <b>Send notifications to Event Console</b> "
                 "is enabled."
             ),

@@ -682,7 +682,7 @@ class LivestatusViaTCP(Dictionary):
 
 def _create_nagvis_backends(sites_config):
     cfg = [
-        "; MANAGED BY CHECK_MK WATO - Last Update: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
+        "; MANAGED BY CHECK_MK Setup - Last Update: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
     ]
     for site_id, site in sites_config.items():
         if site_id == omd_site():
@@ -737,7 +737,7 @@ def _update_distributed_wato_file(sites):
             )
 
     # Remove the distributed wato file
-    # a) If there is no distributed WATO setup
+    # a) If there is no distributed Setup setup
     # b) If the local site could not be gathered
     if not distributed:  # or not found_local:
         _delete_distributed_wato_file()
@@ -755,7 +755,7 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
 
 def site_globals_editable(site_id, site) -> bool:  # type: ignore[no-untyped-def]
     # Site is a remote site of another site. Allow to edit probably pushed site
-    # specific globals when remote WATO is enabled
+    # specific globals when remote Setup is enabled
     if is_wato_slave_site():
         return True
 

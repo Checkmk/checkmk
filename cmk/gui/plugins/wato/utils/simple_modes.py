@@ -96,15 +96,15 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     def mode_ident(self) -> str:
-        """A GUI wide unique identifier which is used to create the WATO mode identifiers"""
+        """A GUI wide unique identifier which is used to create the Setup mode identifiers"""
         return self.type_name()
 
     def list_mode_name(self) -> str:
-        """The mode name of the WATO list mode of this object type"""
+        """The mode name of the Setup list mode of this object type"""
         return "%ss" % self.mode_ident()
 
     def edit_mode_name(self) -> str:
-        """The mode name of the WATO edit mode of this object type"""
+        """The mode name of the Setup edit mode of this object type"""
         return "edit_%s" % self.mode_ident()
 
     def affected_sites(self, entry: _T) -> list[SiteId] | None:
@@ -123,7 +123,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
 
 
 class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
-    """Base for specific WATO modes of different types
+    """Base for specific Setup modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
     classes. It should not be used directly by specific mode classes.
@@ -146,7 +146,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         text: str,
         affected_sites: list[SiteId] | None,
     ) -> None:
-        """Add a WATO change entry for this object type modifications"""
+        """Add a Setup change entry for this object type modifications"""
         _changes.add_change(
             f"{action}-{self._mode_type.type_name()}",
             text,

@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The WATO folders network scan for new hosts"""
+"""The Setup folders network scan for new hosts"""
 
 import re
 import socket
@@ -141,7 +141,7 @@ def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts
 
 
 def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> None:
-    # Reload the folder, lock WATO before to protect against concurrency problems.
+    # Reload the folder, lock Setup before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.

@@ -955,7 +955,7 @@ class Endpoint:
 
             if self.tag_group == "Setup" and not active_config.wato_enabled:
                 raise RestAPIWatoDisabledException(
-                    title="Forbidden: WATO is disabled",
+                    title="Forbidden: Setup is disabled",
                     detail="This endpoint is currently disabled via the "
                     "'Disable remote configuration' option in 'Distributed Monitoring'. "
                     "You may be able to query the central site.",
@@ -1079,7 +1079,7 @@ class Endpoint:
             )
 
         if self.tag_group == "Setup":
-            responses["403"] = self._path_item(403, "Configuration via WATO is disabled.")
+            responses["403"] = self._path_item(403, "Configuration via Setup is disabled.")
         if self.tag_group == "Checkmk Internal" and 403 in self._expected_status_codes:
             responses["403"] = self._path_item(
                 403,

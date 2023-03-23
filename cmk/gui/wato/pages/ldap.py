@@ -603,7 +603,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "from the LDAP directory. This is done by plugins which can individually enabled "
                         "or disabled. When enabling a plugin, it is used upon the next synchonisation of "
                         "user accounts for gathering their attributes. The user options which get imported "
-                        "into Check_MK from LDAP will be locked in WATO."
+                        "into Check_MK from LDAP will be locked in Setup."
                     ),
                     elements=lambda: ldap_attribute_plugins_elements(self._connection),
                     default_keys=["email", "alias", "auth_expire"],
@@ -618,7 +618,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "used by sites which have the "
                         '<a href="wato.py?mode=sites">Automatic User '
                         "Synchronization</a> enabled.<br><br>"
-                        "Please note: Passwords of the users are never stored in WATO and therefor never cached!"
+                        "Please note: Passwords of the users are never stored in Setup and therefor never cached!"
                     ),
                     minvalue=60,
                     default_value=300,

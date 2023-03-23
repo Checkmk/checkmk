@@ -141,7 +141,7 @@ class RuleConditions:
     def to_config(self, use_host_folder: UseHostFolder) -> RuleConditionsSpec:
         """Create serializable data structure for the conditions
 
-        In the WATO folder hierarchy each folder may have a rules.mk which
+        In the Setup folder hierarchy each folder may have a rules.mk which
         contains the rules of that folder.
 
         It is an important feature that there is no path stored in the .mk
@@ -197,7 +197,7 @@ class RuleConditions:
             not isinstance(i, dict) or i["$regex"].endswith("$") for i in service_name_conditions
         )
 
-    # Compatibility code for pre 1.6 WATO code
+    # Compatibility code for pre 1.6 Setup code
     @property
     def tag_list(self) -> Container[TagID | None]:
         tag_list = []
@@ -211,12 +211,12 @@ class RuleConditions:
             tag_list.append(("!%s" % tag_id) if is_not else tag_id)
         return tag_list
 
-    # Compatibility code for pre 1.6 WATO code
+    # Compatibility code for pre 1.6 Setup code
     @property
     def host_list(self):
         return self._condition_list(self.host_name, is_service=False)
 
-    # Compatibility code for pre 1.6 WATO code
+    # Compatibility code for pre 1.6 Setup code
     @property
     def item_list(self):
         return self._condition_list(self.service_description, is_service=True)
@@ -1088,7 +1088,7 @@ class Rule:
 
     def to_config(self) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
-        # these rules should also affect non WATO hosts.
+        # these rules should also affect non Setup hosts.
         return self._to_config(
             use_host_folder=UseHostFolder.NONE if self.folder.is_root() else UseHostFolder.MACRO
         )
@@ -1362,7 +1362,7 @@ class Rule:
     def predefined_condition_id(self) -> str | None:
         """When a rule refers to a predefined condition return the ID
 
-        The predefined conditions are a pure WATO feature. These are resolved when writing
+        The predefined conditions are a pure Setup feature. These are resolved when writing
         the configuration down for Check_MK base. The configured condition ID is preserved
         in the rule options for the moment.
         """

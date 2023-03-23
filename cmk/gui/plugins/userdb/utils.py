@@ -63,7 +63,7 @@ def release_users_lock() -> None:
 
 def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
-    # for reading the value set by the WATO master site
+    # for reading the value set by the Setup master site
     default_cfg = user_sync_default_config(omd_site())
     return get_site_config(omd_site()).get("user_sync", default_cfg)
 
@@ -405,7 +405,7 @@ class UserConnector(abc.ABC):
         pass
 
     # List of user attributes locked for all users attached to this
-    # connection. Those locked attributes are read-only in WATO.
+    # connection. Those locked attributes are read-only in Setup.
     def locked_attributes(self) -> Sequence[str]:
         return []
 

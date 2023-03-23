@@ -1926,7 +1926,7 @@ def filters_of_visual(
 
     # add ubiquitary_filters that are possible for these infos
     for fn in get_ubiquitary_filters():
-        # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
+        # Disable 'wato_folder' filter, if Setup is disabled or there is a single host view
         filter_ = get_filter(fn)
 
         if fn == "wato_folder" and (not filter_.available() or "host" in visual["single_infos"]):
@@ -2523,7 +2523,7 @@ def _add_context_title(context: VisualContext, single_infos: Sequence[str], titl
         title += " " + ", ".join(extra_titles)
 
     for fn in get_ubiquitary_filters():
-        # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
+        # Disable 'wato_folder' filter, if Setup is disabled or there is a single host view
         if fn == "wato_folder" and (not active_config.wato_enabled or "host" in single_infos):
             continue
 

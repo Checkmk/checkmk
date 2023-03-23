@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for activating pending changes. Does also replication with
-remote sites in distributed WATO."""
+remote sites in distributed Setup."""
 
 import ast
 import json
@@ -229,7 +229,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         file_to_restore = self._get_last_wato_snapshot_file()
 
         if not file_to_restore:
-            raise MKUserError(None, _("There is no WATO snapshot to be restored."))
+            raise MKUserError(None, _("There is no Setup snapshot to be restored."))
 
         msg = _("Discarded pending changes (Restored %s)") % file_to_restore
 

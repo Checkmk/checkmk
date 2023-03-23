@@ -44,8 +44,8 @@ class WatoModule(MenuItem):
 
 
 def register_modules(*args):
-    """Register one or more top level modules to Check_MK WATO.
-    The registered modules are displayed in the navigation of WATO."""
+    """Register one or more top level modules to Check_MK Setup.
+    The registered modules are displayed in the navigation of Setup."""
     for wato_module in args:
         assert isinstance(wato_module, WatoModule)
 
@@ -83,7 +83,7 @@ def get_modules() -> list[ABCMainModule]:
 #   |                              |_|                                     |
 #   +----------------------------------------------------------------------+
 #   | Register the builtin topics. These are the ones that may be          |
-#   | referenced by different WATO plugins. Additional individual plugins  |
+#   | referenced by different Setup plugins. Additional individual plugins  |
 #   | are allowed to create their own topics.                              |
 #   '----------------------------------------------------------------------'
 # .

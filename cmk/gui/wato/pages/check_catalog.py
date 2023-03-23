@@ -5,7 +5,7 @@
 """Display information about the Checkmk check plugins
 
 The maxium depth of the catalog paths is 3. The top level is being rendered
-like the WATO main menu. The second and third level are being rendered like
+like the Setup main menu. The second and third level are being rendered like
 the global settings.
 """
 

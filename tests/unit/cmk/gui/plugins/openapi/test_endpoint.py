@@ -273,7 +273,7 @@ def test_wato_disabled_exception(auxtag_client: AuxTagTestClient, set_config: Se
             expect_ok=False,
         )
     resp.assert_status_code(403)
-    assert resp.json["title"] == "Forbidden: WATO is disabled"
+    assert resp.json["title"] == "Forbidden: Setup is disabled"
     assert (
         resp.json["detail"]
         == "This endpoint is currently disabled via the 'Disable remote configuration' option in 'Distributed Monitoring'. You may be able to query the central site."

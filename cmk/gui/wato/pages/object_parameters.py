@@ -198,7 +198,7 @@ class ModeObjectParameters(WatoMode):
 
             # Logwatch needs a special handling, since it is not configured
             # via checkgroup_parameters but via "logwatch_rules" in a special
-            # WATO module.
+            # Setup module.
             elif checkgroup == "logwatch":
                 rulespec = rulespec_registry["logwatch_rules"]
                 self._output_analysed_ruleset(

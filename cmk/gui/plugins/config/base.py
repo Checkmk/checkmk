@@ -290,7 +290,7 @@ class CREConfig:
     # the table.py module
     table_row_limit: int = 100
 
-    # Add an icon pointing to the WATO rule to each service
+    # Add an icon pointing to the Setup rule to each service
     multisite_draw_ruleicon: bool = True
 
     # Default downtime configuration
@@ -350,9 +350,9 @@ class CREConfig:
     #     \___/|___/\___|_|  |____/|____/
     #
 
-    # This option can not be configured through WATO anymore. Config has been
+    # This option can not be configured through Setup anymore. Config has been
     # moved to the sites configuration. This might have been configured in master/remote
-    # in previous versions and is set on remote sites during WATO synchronization.
+    # in previous versions and is set on remote sites during Setup synchronization.
     userdb_automatic_sync: str | None = "master"
 
     # Permission to login to the web gui of a site (can be changed in sites

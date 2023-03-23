@@ -223,7 +223,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_interface,
         response: AutomationDiscoveryResult,
     ) -> None:
-        # The following code updates the host config. The progress from loading the WATO folder
+        # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
         with store.lock_checkmk_configuration():
             Folder.invalidate_caches()

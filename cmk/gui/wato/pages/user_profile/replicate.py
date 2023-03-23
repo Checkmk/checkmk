@@ -32,7 +32,7 @@ class UserProfileReplicate(Page):
             raise MKAuthException(_("You are not allowed to edit your user profile."))
 
         if not active_config.wato_enabled:
-            raise MKAuthException(_("User profiles can not be edited (WATO is disabled)."))
+            raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
 
     def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
         menu = make_simple_form_page_menu(

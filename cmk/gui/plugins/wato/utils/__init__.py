@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Module to hold shared code for WATO internals and the WATO plugins"""
+"""Module to hold shared code for Setup internals and the Setup plugins"""
 
 # TODO: More feature related splitting up would be better
 
@@ -1774,7 +1774,7 @@ def some_host_hasnt_set(folder, attrname):
     return False
 
 
-# TODO: Kept for compatibility with pre-1.6 WATO plugins
+# TODO: Kept for compatibility with pre-1.6 Setup plugins
 def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
@@ -2301,7 +2301,7 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
                 title=_("Folder"),
                 help=_(
                     "This condition makes the rule match only hosts that are managed "
-                    "via WATO and that are contained in this folder - either directly "
+                    "via Setup and that are contained in this folder - either directly "
                     "or in one of its subfolders."
                 ),
             ),
@@ -2363,7 +2363,7 @@ def _single_folder_rule_match_condition() -> DictionaryEntry:
             title=_("Match folder"),
             help=_(
                 "This condition makes the rule match only hosts that are managed "
-                "via WATO and that are contained in this folder - either directly "
+                "via Setup and that are contained in this folder - either directly "
                 "or in one of its subfolders."
             ),
         ),

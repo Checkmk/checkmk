@@ -38,7 +38,7 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 # slave sites anymore with the master sites cookie since the serials differ. In
 # case the slave sites sync with LDAP on their own this issue will be repaired after
 # the next LDAP sync on the slave, but in case the slaves do not sync, this problem
-# will be repaired automagically once an admin performs the next WATO sync for
+# will be repaired automagically once an admin performs the next Setup sync for
 # another reason.
 # Now, to solve this issue, we issue a user profile sync in case the password has
 # been changed. We do this only when only the password has changed.

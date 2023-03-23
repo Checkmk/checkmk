@@ -52,14 +52,14 @@ def _has_distributed_wato_file() -> bool:
 
 
 def get_login_sites() -> list[SiteId]:
-    """Returns the WATO slave sites a user may login and the local site"""
+    """Returns the Setup slave sites a user may login and the local site"""
     return get_login_slave_sites() + [omd_site()]
 
 
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def get_login_slave_sites() -> list[SiteId]:
-    """Returns a list of site ids which are WATO slave sites and users can login"""
+    """Returns a list of site ids which are Setup slave sites and users can login"""
     login_sites = []
     for site_id, site_spec in wato_slave_sites().items():
         if site_spec.get("user_login", True) and not site_is_local(site_id):

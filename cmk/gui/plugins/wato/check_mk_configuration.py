@@ -838,8 +838,8 @@ class ConfigVariableDrawRuleIcon(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Show icon linking to WATO parameter editor for services"),
-            label=_("Show WATO icon"),
+            title=_("Show icon linking to Setup parameter editor for services"),
+            label=_("Show Setup icon"),
             help=_(
                 "When enabled a rule editor icon is displayed for each "
                 "service in the multisite views. It is only displayed if the user "
@@ -1806,7 +1806,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
             help=_(
                 "Whenever a server component of Check_MK opens a SSL connection it uses the "
                 "certificate authorities configured here for verifying the SSL certificate of "
-                "the destination server. This is used for example when performing WATO "
+                "the destination server. This is used for example when performing Setup "
                 "replication to slave sites or when special agents are communicating via HTTPS. "
                 "The CA certificates configured here will be written to the CA bundle %s."
             )
@@ -1912,15 +1912,15 @@ class RestAPIETagLocking(ConfigVariable):
 
 
 # .
-#   .--WATO----------------------------------------------------------------.
-#   |                     __        ___  _____ ___                         |
-#   |                     \ \      / / \|_   _/ _ \                        |
-#   |                      \ \ /\ / / _ \ | || | | |                       |
-#   |                       \ V  V / ___ \| || |_| |                       |
-#   |                        \_/\_/_/   \_\_| \___/                        |
-#   |                                                                      |
+#   .--Setup---------------------------------------------------------------.
+#   |                     ____       _                                     |
+#   |                    / ___|  ___| |_ _   _ _ __                        |
+#   |                    \___ \ / _ \ __| | | | '_ \                       |
+#   |                     ___) |  __/ |_| |_| | |_) |                      |
+#   |                    |____/ \___|\__|\__,_| .__/                       |
+#   |                                         |_|                          |
 #   +----------------------------------------------------------------------+
-#   | Global Configuration for WATO                                        |
+#   | Global Configuration for Setup                                       |
 #   '----------------------------------------------------------------------'
 
 
@@ -1940,7 +1940,7 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
             title=_("Number of configuration snapshots to keep"),
             help=_(
                 "Whenever you successfully activate changes a snapshot of the configuration "
-                "will be created. You can also create snapshots manually. WATO will delete old "
+                "will be created. You can also create snapshots manually. Setup will delete old "
                 "snapshots when the maximum number of snapshots is reached."
             ),
             minvalue=1,
@@ -2047,7 +2047,7 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
             title=_("Hide internal folder names in WATO"),
             label=_("hide folder names"),
             help=_(
-                "When enabled, then the internal names of WATO folder in the filesystem "
+                "When enabled, then the internal names of Setup folder in the filesystem "
                 "are not shown. They will automatically be derived from the name of the folder "
                 "when a new folder is being created. Disable this option if you want to see and "
                 "set the filenames manually."
@@ -2068,7 +2068,7 @@ class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Allow upload of insecure WATO snapshots"),
+            title=_("Allow upload of insecure Setup snapshots"),
             label=_("upload insecure snapshots"),
             help=_(
                 "When enabled, insecure snapshots are allowed. Please keep in mind that the upload "
@@ -2092,9 +2092,9 @@ class ConfigVariableWATOHideHosttags(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Hide hosttags in WATO folder view"),
+            title=_("Hide hosttags in Setup folder view"),
             label=_("hide hosttags"),
-            help=_("When enabled, hosttags are no longer shown within the WATO folder view"),
+            help=_("When enabled, hosttags are no longer shown within the Setup folder view"),
         )
 
 
@@ -2135,7 +2135,7 @@ class ConfigVariableHideHelpInLists(ConfigVariable):
         return Checkbox(
             title=_("Hide help text of rules in list views"),
             label=_("hide help text"),
-            help=_("When disabled, WATO shows the help texts of rules also in the list views."),
+            help=_("When disabled, Setup shows the help texts of rules also in the list views."),
         )
 
 
@@ -2183,7 +2183,7 @@ class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
             help=_(
                 "When enabled, most of the configuration files are pretty printed and easier to read. "
                 "On the downside, however, pretty printing bigger configurations can be quite slow - "
-                "so the overall WATO GUI performance will decrease."
+                "so the overall Setup GUI performance will decrease."
             ),
         )
 
@@ -3139,7 +3139,7 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
             ),
             help=_(
                 "When this option is enabled then after each change of the service "
-                "configuration of a host via WATO - may it be via manual changes or a bulk "
+                "configuration of a host via Setup - may it be via manual changes or a bulk "
                 "discovery - the service discovery check is automatically rescheduled in order "
                 "to reflect the new service state correctly immediately."
             ),
@@ -4290,7 +4290,7 @@ rulespec_registry.register(
 
 def _help_clustered_services():
     return _(
-        "When you define HA clusters in WATO then you also have to specify which services "
+        "When you define HA clusters in Setup then you also have to specify which services "
         "of a node should be assigned to the cluster and which services to the physical "
         "node. This is done by this ruleset. Please note that the rule will be applied to "
         "the <i>nodes</i>, not to the cluster.<br><br>Please make sure that you re-"

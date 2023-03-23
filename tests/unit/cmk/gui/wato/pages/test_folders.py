@@ -20,11 +20,11 @@ def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
         f"{ajax_page}?ident=test2&what=folder&_ajaxid=1611222306&back_url=wato.py", status=400
     )
     assert "Move this folder to" in resp.text, resp.text
-    assert "No WATO folder test2." in resp.text, resp.text
+    assert "No Setup folder test2." in resp.text, resp.text
 
     resp = app.get(f"{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=400)
     assert "Move this folder to" in resp.text, resp.text
-    assert "No WATO folder test2." in resp.text, resp.text
+    assert "No Setup folder test2." in resp.text, resp.text
 
     app.get(f"{ajax_page}/{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=404)
 

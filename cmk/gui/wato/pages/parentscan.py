@@ -169,7 +169,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         state, skipped_gateways, error = gateways[0][1:]
 
         if state in ["direct", "root", "gateway"]:
-            # The following code updates the host config. The progress from loading the WATO folder
+            # The following code updates the host config. The progress from loading the Setup folder
             # until it has been saved needs to be locked.
             with store.lock_checkmk_configuration():
                 self._configure_host_and_gateway(task, settings, gateway)

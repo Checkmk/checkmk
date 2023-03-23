@@ -106,7 +106,7 @@ class HtpasswdUserConnector(UserConnector):
         # Apache htpasswd. We only store passwords here. During
         # loading we created entries for all admin users we know. Other
         # users from htpasswd are lost. If you start managing users with
-        # WATO, you should continue to do so or stop doing to for ever...
+        # Setup, you should continue to do so or stop doing to for ever...
         # Locked accounts get a '!' before their password. This disable it.
         entries = {}
 

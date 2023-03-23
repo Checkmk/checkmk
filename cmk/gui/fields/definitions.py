@@ -112,7 +112,7 @@ FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-
 
 
 class FolderField(base.String):
-    """This field represents a WATO Folder.
+    """This field represents a Setup Folder.
 
     It will return a Folder instance, ready to use.
     """

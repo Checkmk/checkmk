@@ -2294,13 +2294,13 @@ class ModeBIRuleTree(ABCBIMode):
                 self.render_rule_tree(self._rule_id, self._rule_id)
 
 
-#   .--WATO Permissions----------------------------------------------------.
-#   |                     __        ___  _____ ___                         |
-#   |                     \ \      / / \|_   _/ _ \                        |
-#   |                      \ \ /\ / / _ \ | || | | |                       |
-#   |                       \ V  V / ___ \| || |_| |                       |
-#   |                        \_/\_/_/   \_\_| \___/                        |
-#   |                                                                      |
+#   .--Setup Permissions---------------------------------------------------.
+#   |                     ____       _                                     |
+#   |                    / ___|  ___| |_ _   _ _ __                        |
+#   |                    \___ \ / _ \ __| | | | '_ \                       |
+#   |                     ___) |  __/ |_| |_| | |_) |                      |
+#   |                    |____/ \___|\__|\__,_| .__/                       |
+#   |                                         |_|                          |
 #   |        ____                     _         _                          |
 #   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
 #   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
@@ -2308,6 +2308,8 @@ class ModeBIRuleTree(ABCBIMode):
 #   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 permission_registry.register(
     Permission(
@@ -2315,7 +2317,7 @@ permission_registry.register(
         name="bi_rules",
         title=_l("Business Intelligence Rules and Aggregations"),
         description=_l(
-            "Use the WATO BI module, create, modify and delete BI rules and "
+            "Use the Setup BI module, create, modify and delete BI rules and "
             "aggregations in packs that you are a contact of."
         ),
         defaults=["admin", "user"],

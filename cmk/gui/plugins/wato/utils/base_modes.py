@@ -86,7 +86,7 @@ class WatoMode(abc.ABC):
     def title(self) -> str:
         return _("(Untitled module)")
 
-    # Currently only needed for a special WATO module "user_notifications_p" that
+    # Currently only needed for a special Setup module "user_notifications_p" that
     # is not part of the Setup main menu but the user menu.
     def main_menu(self) -> MegaMenu:
         """Specify the top-level breadcrumb item of this mode"""
@@ -144,7 +144,7 @@ class WatoMode(abc.ABC):
         TODO: Once all non top level modes have a parent_mode() method, we
               know which modes are top level modes. Then we could move all
               attributes from the MainModules to the WatoModes and create
-              the WATO menu items directly out of the WatoModes.
+              the Setup menu items directly out of the WatoModes.
         """
         mode_name = self.name()
 
@@ -191,7 +191,7 @@ mode_registry = ModeRegistry()
 
 
 def mode_url(mode_name: str, **kwargs: str) -> str:
-    """Returns an URL pointing to the given WATO mode
+    """Returns an URL pointing to the given Setup mode
 
     To be able to link some modes, there are context information needed, which are need to be
     gathered from the current request variables.

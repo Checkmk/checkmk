@@ -8,18 +8,16 @@ import time
 from collections import defaultdict
 from typing import Counter, Literal, Mapping, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from .agent_based_api.v1 import (
     check_levels,
+    get_value_store,
+    register,
     render,
     Result,
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<inotify:sep(9)>>>
 # configured folder    /tmp/noti
@@ -70,10 +68,11 @@ def discover_inotify(section: Section) -> DiscoveryResult:
 def check_inotify(
     item: str, params: Mapping[str, list[tuple[str, float, float]]], section: Section
 ) -> CheckResult:
-    last_status = get_item_state("last_operations", default={})
+    value_store = get_value_store()
+    last_status = value_store.get("last_operations", {})
     now = time.time()
     yield from _check_inotify(item, params, section, last_status, now)
-    set_item_state("last_operations", last_status)
+    value_store["last_operations"] = last_status
 
 
 def _check_inotify(
@@ -113,10 +112,16 @@ def _check_inotify(
         yield Result(state=State.OK, summary="No data available yet")
 
 
-check_info["inotify"] = dict(  # pylint: disable=use-dict-literal
+register.agent_section(
+    name="inotify",
     parse_function=parse_inotify,
-    inventory_function=discover_inotify,
+)
+
+register.check_plugin(
+    name="inotify",
+    service_name="INotify %s",
+    discovery_function=discover_inotify,
     check_function=check_inotify,
-    service_description="INotify %s",
-    group="inotify",
+    check_ruleset_name="inotify",
+    check_default_parameters={},
 )

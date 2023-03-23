@@ -943,7 +943,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "innovaphone_priports_l1",
         "innovaphone_priports_l2",
         "innovaphone_temp",
-        "inotify",
         "intel_true_scale_chassis_temp",
         "intel_true_scale_fans",
         "intel_true_scale_psus",

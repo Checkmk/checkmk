@@ -7,11 +7,13 @@ from collections import Counter
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.inotify import _check_inotify as check_inotify
+from cmk.base.plugins.agent_based.inotify import discover_inotify, parse_inotify, Section
 
 pytestmark = pytest.mark.checks
+
+Params = dict[str, list[tuple[str, float, float]]]
 
 INFO = [
     ["warning:", "I assume a warning looks like this!"],
@@ -26,49 +28,34 @@ INFO = [
     ["1465470058", "delete", "/tmp/noti/test"],
 ]
 
-PARSED = (
-    # warnings
+_SECTION = Section(
     Counter({"I assume a warning looks like this!": 1}),
-    # configured:
     {
         "/tmp/noti/nodata": "file",
         "/tmp/noti/test": "file",
         "/tmp/noti": "folder",
     },
-    # stats
     {
         "/tmp/noti": {
             "modify": 1465470056,
             "open": 1465470056,
             "delete": 1465470058,
         },
-        "/tmp/noti/test": {"modify": 1465470056, "open": 1465470056, "delete": 1465470058},
+        "/tmp/noti/test": {
+            "modify": 1465470056,
+            "open": 1465470056,
+            "delete": 1465470058,
+        },
     },
 )
 
 
-def Section(*a, **kw):
-    return Check("inotify").context["Section"](*a, **kw)
-
-
-def parse_inotify(*a, **kw):
-    return Check("inotify").context["parse_inotify"](*a, **kw)
-
-
-def discover_inotify(*a, **kw):
-    return Check("inotify").context["discover_inotify"](*a, **kw)
-
-
-def check_inotify(*a, **kw):
-    return Check("inotify").context["_check_inotify"](*a, **kw)
-
-
 def test_inotify_parse() -> None:
-    assert Section(*PARSED) == parse_inotify(INFO)
+    assert _SECTION == parse_inotify(INFO)
 
 
 def test_discovery() -> None:
-    assert sorted(discover_inotify(Section(*PARSED))) == [
+    assert sorted(discover_inotify(_SECTION)) == [
         Service(item="File /tmp/noti/nodata"),
         Service(item="File /tmp/noti/test"),
         Service(item="Folder /tmp/noti"),
@@ -77,18 +64,17 @@ def test_discovery() -> None:
 
 def test_updated_data() -> None:
     item = "Folder /tmp/noti"
-    params = {
+    params: Params = {
         "age_last_operation": [
             ("modify", 90, 110),
             ("open", 80, 90),
             ("just_for_test_coverage", 1, 2),
         ]
     }
-    section = Section(*PARSED)
     last_status: dict = {}
     now = 1465470156
 
-    assert list(check_inotify(item, params, section, last_status, now)) == [
+    assert list(check_inotify(item, params, _SECTION, last_status, now)) == [
         Result(state=State.OK, summary="Time since last delete: 1 minute 38 seconds"),
         Result(
             state=State.WARN,
@@ -111,7 +97,7 @@ def test_updated_data() -> None:
 
 def test_not_configured() -> None:
     item = "File /tmp/noti/nodata"
-    params = {"age_last_operation": [("modify", 90, 110)]}
+    params: Params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {}, {})
     last_status: dict = {}
     now = 1465470156
@@ -122,7 +108,7 @@ def test_not_configured() -> None:
 
 def test_nodata() -> None:
     item = "File /tmp/noti/nodata"
-    params = {"age_last_operation": [("modify", 90, 110)]}
+    params: Params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {"/tmp/noti/nodata": "file"}, {})
     last_status: dict = {}
     now = 1465470156
@@ -136,7 +122,7 @@ def test_nodata() -> None:
 
 def test_old_status() -> None:
     item = "File /tmp/noti/nodata"
-    params = {"age_last_operation": [("modify", 90, 110)]}
+    params: Params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {"/tmp/noti/nodata": "file"}, {})
     last_status = {"modify": 1465470000}
     now = 1465470156

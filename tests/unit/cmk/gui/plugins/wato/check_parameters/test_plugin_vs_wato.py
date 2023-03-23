@@ -339,7 +339,6 @@ class ErrorReporter:
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # type # plugin # wato
-        ("check", "3par_remotecopy", "checkgroup_parameters:threepar_remotecopy"),
         ("check", "ad_replication", "checkgroup_parameters:ad_replication"),
         ("check", "apc_ats_output", "checkgroup_parameters:apc_ats_output"),
         ("check", "apc_humidity", "checkgroup_parameters:humidity"),

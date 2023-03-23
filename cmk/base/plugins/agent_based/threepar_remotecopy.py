@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Final, Literal
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -14,15 +15,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 from .agent_based_api.v1 import register, Result, Service, State
 from .utils.threepar import parse_3par
 
-THREEPAR_REMOTECOPY_DEFAULT_LEVELS = {
-    "1": State.OK,  # NORMAL
-    "2": State.WARN,  # STARTUP
-    "3": State.WARN,  # SHUTDOWN
-    "4": State.OK,  # ENABLE
-    "5": State.CRIT,  # DISABLE
-    "6": State.CRIT,  # INVALID
-    "7": State.WARN,  # NODEDUP
-    "8": State.OK,  # UPGRADE
+THREEPAR_REMOTECOPY_DEFAULT_LEVELS: Final[Mapping[str, Literal[0, 1, 2, 3]]] = {
+    "1": 0,  # NORMAL
+    "2": 1,  # STARTUP
+    "3": 1,  # SHUTDOWN
+    "4": 0,  # ENABLE
+    "5": 2,  # DISABLE
+    "6": 2,  # INVALID
+    "7": 1,  # NODEDUP
+    "8": 0,  # UPGRADE
 }
 
 MODES = {
@@ -72,13 +73,13 @@ def discover_threepar_remotecopy(section: ThreeparRemoteCopy) -> DiscoveryResult
 
 
 def check_threepar_remotecopy(
-    params: Mapping[str, State],
+    params: Mapping[str, Literal[0, 1, 2, 3]],
     section: ThreeparRemoteCopy,
 ) -> CheckResult:
     yield MODES[section.mode]
 
     yield Result(
-        state=params[section.status],
+        state=State(params[section.status]),
         summary=f"Status: {section.status_readable}",
     )
 

@@ -10,9 +10,9 @@ from collections.abc import Iterable, Mapping
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
 from cmk.checkers import HostKey, SourceType
+from cmk.checkers.sectionparser import _ParsingResult as ParsingResult
+from cmk.checkers.sectionparser import ParsedSectionsResolver, ResolvedResult
 
-from cmk.base.agent_based.data_provider import _ParsingResult as ParsingResult
-from cmk.base.agent_based.data_provider import ParsedSectionsResolver, ResolvedResult
 from cmk.base.agent_based.discovery._host_labels import _all_parsing_results as all_parsing_results
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.type_defs import SectionPlugin

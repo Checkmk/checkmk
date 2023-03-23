@@ -12,9 +12,9 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkers import HostKey, PHostLabelDiscoveryPlugin, SourceType
+from cmk.checkers.sectionparser import Provider, ResolvedResult
 
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import Provider, ResolvedResult
 
 from .utils import QualifiedDiscovery
 

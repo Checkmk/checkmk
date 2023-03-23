@@ -42,16 +42,16 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
-
-import cmk.base.config as config
-import cmk.base.core
-from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
-from cmk.base.agent_based.data_provider import (
+from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     store_piggybacked_sections,
 )
+
+import cmk.base.config as config
+import cmk.base.core
+from cmk.base.agent_based.confcheckers import ConfiguredSummarizer
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 

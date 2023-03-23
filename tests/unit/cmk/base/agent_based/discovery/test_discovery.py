@@ -36,6 +36,12 @@ from cmk.checkers import HostKey, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from cmk.checkers.host_sections import HostSections
+from cmk.checkers.sectionparser import (
+    ParsedSectionName,
+    ParsedSectionsResolver,
+    Provider,
+    SectionsParser,
+)
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -47,12 +53,6 @@ from cmk.base.agent_based.confcheckers import (
     DiscoveryPluginMapper,
     HostLabelPluginMapper,
     SectionPluginMapper,
-)
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionName,
-    ParsedSectionsResolver,
-    Provider,
-    SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.agent_based.discovery._discovery import _check_service_lists

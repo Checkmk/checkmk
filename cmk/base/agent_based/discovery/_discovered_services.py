@@ -15,10 +15,10 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, Se
 
 from cmk.checkers import HostKey, PDiscoveryPlugin, plugin_contexts, SourceType
 from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
+from cmk.checkers.sectionparser import Provider
+from cmk.checkers.sectionparserutils import get_section_kwargs
 
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import Provider
-from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.config import ConfigCache
 
 from .utils import QualifiedDiscovery

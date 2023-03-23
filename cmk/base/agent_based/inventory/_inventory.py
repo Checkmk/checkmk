@@ -53,15 +53,15 @@ from cmk.checkers import (
 )
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
-
-from cmk.base.agent_based.data_provider import (
+from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     ResolvedResult,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import check_parsing_errors, get_cache_info, get_section_kwargs
+from cmk.checkers.sectionparserutils import check_parsing_errors, get_cache_info, get_section_kwargs
+
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import ConfigCache
 

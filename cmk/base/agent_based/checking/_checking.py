@@ -54,24 +54,24 @@ from cmk.checkers import (
 )
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkers.submitters import Submittee, Submitter
-
-import cmk.base.core
-import cmk.base.utils
-from cmk.base.agent_based.data_provider import (
+from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     ResolvedResult,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.inventory import inventorize_status_data_of_real_host
-from cmk.base.agent_based.utils import (
+from cmk.checkers.sectionparserutils import (
     check_parsing_errors,
     get_cache_info,
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
+from cmk.checkers.submitters import Submittee, Submitter
+
+import cmk.base.core
+import cmk.base.utils
+from cmk.base.agent_based.inventory import inventorize_status_data_of_real_host
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult

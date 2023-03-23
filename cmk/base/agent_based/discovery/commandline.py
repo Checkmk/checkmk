@@ -27,15 +27,15 @@ from cmk.checkers import (
     PSectionPlugin,
 )
 from cmk.checkers.discovery import AutochecksStore
-
-import cmk.base.core
-from cmk.base.agent_based.data_provider import (
+from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import check_parsing_errors
+from cmk.checkers.sectionparserutils import check_parsing_errors
+
+import cmk.base.core
 from cmk.base.config import ConfigCache
 
 from ._discovered_services import analyse_discovered_services

@@ -32,13 +32,9 @@ from cmk.checkers import (
     SummarizerFunction,
 )
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.sectionparser import filter_out_errors, make_providers, store_piggybacked_sections
+from cmk.checkers.sectionparserutils import check_parsing_errors
 
-from cmk.base.agent_based.data_provider import (
-    filter_out_errors,
-    make_providers,
-    store_piggybacked_sections,
-)
-from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters

@@ -8,10 +8,9 @@ from typing import Final, NamedTuple
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, ServiceState
 
-from cmk.checkers import HostKey
-from cmk.checkers.checkresults import ActiveCheckResult
-
-from .data_provider import ParsedSectionContent, Provider
+from ._typedefs import HostKey
+from .checkresults import ActiveCheckResult
+from .sectionparser import ParsedSectionContent, Provider
 
 _SectionKwargs = Mapping[str, ParsedSectionContent | None]
 

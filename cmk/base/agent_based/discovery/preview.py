@@ -31,17 +31,17 @@ from cmk.checkers import (
 )
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ServiceCheckResult
-
-import cmk.base.agent_based.checking as checking
-import cmk.base.config as config
-import cmk.base.core
-from cmk.base.agent_based.data_provider import (
+from cmk.checkers.sectionparser import (
     filter_out_errors,
     make_providers,
     Provider,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import check_parsing_errors
+from cmk.checkers.sectionparserutils import check_parsing_errors
+
+import cmk.base.agent_based.checking as checking
+import cmk.base.config as config
+import cmk.base.core
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions

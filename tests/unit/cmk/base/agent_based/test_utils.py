@@ -15,15 +15,15 @@ from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 from cmk.checkers import HostKey, SourceType
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
-from cmk.checkers.type_defs import AgentRawDataSection
-
-import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.agent_based.data_provider import ParsedSectionsResolver, SectionsParser
-from cmk.base.agent_based.utils import (
+from cmk.checkers.sectionparser import ParsedSectionsResolver, SectionsParser
+from cmk.checkers.sectionparserutils import (
     check_parsing_errors,
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
+from cmk.checkers.type_defs import AgentRawDataSection
+
+import cmk.base.api.agent_based.register.section_plugins as section_plugins
 
 
 def _test_section(

@@ -12,10 +12,10 @@ from _pytest.monkeypatch import MonkeyPatch
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
 from cmk.checkers.host_sections import HostSections
+from cmk.checkers.sectionparser import ParsedSectionsResolver, SectionsParser
 from cmk.checkers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.agent_based.data_provider import ParsedSectionsResolver, SectionsParser
 
 
 def _test_section(

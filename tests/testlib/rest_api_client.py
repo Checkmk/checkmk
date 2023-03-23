@@ -733,12 +733,13 @@ class AuxTagTestClient(RestApiClient):
             assert tag_data.title == edit_response.title
         return resp
 
-    def delete(self, aux_tag_id: str) -> Response:
+    def delete(self, aux_tag_id: str, expect_ok: bool = True) -> Response:
         etag = self.get(aux_tag_id).headers["ETag"]
         return self.request(
             "post",
             url=f"/objects/{self.domain}/{aux_tag_id}/actions/delete/invoke",
             headers={"If-Match": etag, "Accept": "application/json"},
+            expect_ok=expect_ok,
         )
 
 
@@ -943,7 +944,7 @@ class HostTagGroupTestClient(RestApiClient):
         self,
         ident: str,
         title: str,
-        tags: list[dict[str, str]],
+        tags: list[dict[str, str | list[str]]],
         topic: str | None = None,
         help_text: str | None = None,
         expect_ok: bool = True,

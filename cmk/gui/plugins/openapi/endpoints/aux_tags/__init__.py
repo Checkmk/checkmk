@@ -18,7 +18,7 @@ tag for resolving conditions.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.tags import AuxTag, TagID
+from cmk.utils.tags import AuxTag, AuxTagInUseError, TagID
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -32,7 +32,7 @@ from cmk.gui.plugins.openapi.endpoints.aux_tags.schemas import (
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config, update_tag_config
 
 PERMISSIONS = permissions.Perm("wato.hosttags")
@@ -147,6 +147,7 @@ def put_aux_tag(params: Mapping[str, Any]) -> Response:
     path_params=[AuxTagID],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete_aux_tag(params: Mapping[str, Any]) -> Response:
     """Delete an Auxiliary Tag"""
@@ -154,7 +155,15 @@ def delete_aux_tag(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.hosttags")
 
     tag_config = load_tag_config()
-    tag_config.remove_aux_tag(TagID(params["aux_tag_id"]))
+    try:
+        tag_config.remove_aux_tag(TagID(params["aux_tag_id"]))
+    except AuxTagInUseError as exc:
+        return problem(
+            status=409,
+            title="Aux tag in use",
+            detail=str(exc),
+        )
+
     update_tag_config(tag_config)
     return Response(status=204)
 

@@ -1,0 +1,17 @@
+Title: aux_tags: Deleting an aux tag now respects dependencies
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1679583705
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue when deleting an aux tag that has a tag
+group dependency.  Previously, you could do this via the rest-api
+but now it is not allowed. The response now includes a 409 status
+code plus an appropriate message informing the client of the
+problem. Client side scripts should be adjusted accordingly.
+
+

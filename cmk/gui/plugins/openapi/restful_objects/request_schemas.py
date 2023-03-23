@@ -1538,6 +1538,7 @@ class HostTag(BaseSchema):
     aux_tags = fields.List(
         AuxTagIDField(
             required=False,
+            presence="should_exist",
         ),
         description="The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6, snmp, tcp, ping) and custom defined tags are allowed.",
         example=["ip-v4, ip-v6"],

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from tests.testlib.rest_api_client import AuxTagTestClient, Response
+from tests.testlib.rest_api_client import AuxTagTestClient, HostTagGroupTestClient, Response
 
 
 def test_create_auxtag_invalid_data(auxtag_client: AuxTagTestClient) -> None:
@@ -212,3 +212,44 @@ def test_edit_non_existing_aux_tag(auxtag_client: AuxTagTestClient) -> None:
         expect_ok=False,
         with_etag=False,
     ).assert_status_code(404)
+
+
+def test_delete_tag_that_belongs_to_a_tag_group(
+    auxtag_client: AuxTagTestClient, host_tag_group_client: HostTagGroupTestClient
+) -> None:
+    auxtag_client.create(
+        tag_data=auxtag_client.create_model(
+            aux_tag_id="aux_tag_id_1",
+            title="aux_tag_1",
+            topic="topic_1",
+            help="HELP",
+        )
+    )
+
+    host_tag_group_client.create(
+        ident="tag_group_id_1",
+        title="tag_group_1",
+        tags=[
+            {"ident": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
+        ],
+    )
+
+    host_tag_group_client.create(
+        ident="tag_group_id_2",
+        title="tag_group_2",
+        tags=[
+            {"ident": "tag_id", "title": "tag_title", "aux_tags": ["aux_tag_id_1"]},
+        ],
+    )
+
+    resp = auxtag_client.delete(
+        aux_tag_id="aux_tag_id_1",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(409)
+    assert resp.json["title"] == "Aux tag in use"
+    assert (
+        resp.json["detail"]
+        == 'You cannot delete this auxiliary tag. It is being used by the following tag groups: "tag_group_1, tag_group_2"'
+    )

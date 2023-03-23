@@ -68,6 +68,10 @@ def _validate_tag_id(tag_id: TagID) -> None:
         )
 
 
+class AuxTagInUseError(Exception):
+    ...
+
+
 class AuxTag:
     @classmethod
     def from_config(cls, tag_info: AuxTagSpec) -> AuxTag:
@@ -392,6 +396,20 @@ class TagConfig:
         self.aux_tag_list.update(aux_tag_id, aux_tag)
 
     def remove_aux_tag(self, tag_id: TagID) -> None:
+        tag_groups_using_aux_tag = []
+        for group in self.tag_groups:
+            for grouped_tag in group.tags:
+                if tag_id in grouped_tag.aux_tag_ids:
+                    tag_groups_using_aux_tag.append(group.title)
+
+        if tag_groups_using_aux_tag:
+            raise AuxTagInUseError(
+                _(
+                    "You cannot delete this auxiliary tag. "
+                    'It is being used by the following tag groups: "%s"'
+                )
+                % ", ".join(tag_groups_using_aux_tag),
+            )
         self.aux_tag_list.remove(tag_id)
 
     def get_aux_tags_by_topic(self) -> Sequence[tuple[str, Sequence[AuxTag]]]:

@@ -194,7 +194,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="delete",
     path_params=[HOST_TAG_GROUP_NAME],
-    additional_status_codes=[405],
+    additional_status_codes=[401, 405],
     query_params=[request_schemas.DeleteHostTagGroup],
     permissions_required=RW_PERMISSIONS,
     output_empty=True,

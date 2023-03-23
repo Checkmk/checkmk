@@ -5,7 +5,7 @@
 """Configuration variables for the notification via cmk --notify"""
 
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
-# remove from WATO.
+# remove from Setup.
 
 
 import cmk.utils.paths

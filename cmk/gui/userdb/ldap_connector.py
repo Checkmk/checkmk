@@ -1891,7 +1891,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
     @property
     def help(self):
         return _(
-            "Populates the alias attribute of the WATO user by synchronizing an attribute "
+            "Populates the alias attribute of the Setup user by synchronizing an attribute "
             "from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used."
         )
 
@@ -2087,7 +2087,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     def help(self):
         return _(
             "This plugin synchronizes a field of the users LDAP account to the pager attribute "
-            "of the WATO user accounts, which is then forwarded to the monitoring core and can be used"
+            "of the Setup user accounts, which is then forwarded to the monitoring core and can be used"
             "for notifications. By default the LDAP attribute <tt>mobile</tt> is used."
         )
 

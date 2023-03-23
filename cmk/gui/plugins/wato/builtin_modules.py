@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# List of modules for main menu and WATO snapin. These modules are
+# List of modules for main menu and Setup snapin. These modules are
 # defined in a plugin because they contain cmk.gui.i18n strings.
 # fields: mode, title, icon, permission, help
 
@@ -1197,7 +1197,7 @@ class MainModuleAgentsLinux(ABCMainModule):
         return False
 
 
-# Register the builtin agent download page on the top level of WATO only when the agent bakery
+# Register the builtin agent download page on the top level of Setup only when the agent bakery
 # does not exist (e.g. when using CRE)
 if cmk_version.is_raw_edition():
     main_module_registry.register(MainModuleAgentsWindows)

@@ -10,6 +10,6 @@ class ConfigHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
     Renders an input field for entering a host name while providing an auto completion dropdown field.
-    Fetching the choices from the current WATO config"""
+    Fetching the choices from the current Setup config"""
 
     ident = "config_hostname"

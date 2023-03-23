@@ -802,7 +802,7 @@ class ModeEditUser(WatoMode):
         if is_ntop_available():
             ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding WATO rule
+            # see corresponding Setup rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
                 # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
@@ -923,7 +923,7 @@ class ModeEditUser(WatoMode):
         if is_ntop_available():
             ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding WATO rule
+            # see corresponding Setup rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
                 forms.section(_("ntopng Username"))

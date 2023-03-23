@@ -166,7 +166,7 @@ class ModeAnalyzeConfig(WatoMode):
             html.show_message(
                 _(
                     "Analyze configuration can only be used with the local site and "
-                    "distributed WATO slave sites. You currently have no such site configured."
+                    "distributed Setup slave sites. You currently have no such site configured."
                 )
             )
             return

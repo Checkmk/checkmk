@@ -279,7 +279,7 @@ class _RedisHelper:
         if self._cache_integrity_ok():
             return
 
-        # Store the fully loaded WATO folders. Maybe some process needs them later on
+        # Store the fully loaded Setup folders. Maybe some process needs them later on
         latest_timestamp, wato_folders = self._get_latest_timestamp_and_folders()
         self._loaded_wato_folders = wato_folders
         self._folder_paths = tuple(f"{path}/" for path in self._loaded_wato_folders)
@@ -1114,7 +1114,7 @@ def _generate_domain_settings(
 
 
 class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
-    """This class represents a WATO folder that contains other folders and hosts."""
+    """This class represents a Setup folder that contains other folders and hosts."""
 
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
@@ -1144,7 +1144,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def folder(folder_path: PathWithoutSlash) -> CREFolder:
         if folder_path in Folder.all_folders():
             return Folder.all_folders()[folder_path]
-        raise MKGeneralException("No WATO folder %s." % folder_path)
+        raise MKGeneralException("No Setup folder %s." % folder_path)
 
     @staticmethod
     def create_missing_folders(folder_path):
@@ -1851,7 +1851,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if not is_wato_slave_site():
             return omd_site()
 
-        # Placeholder for "central site". This is only relevant when using WATO on a remote site
+        # Placeholder for "central site". This is only relevant when using Setup on a remote site
         # and a host / folder has no site set.
         return SiteId("")
 
@@ -2222,7 +2222,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # .-----------------------------------------------------------------------.
     # | MODIFICATIONS                                                         |
     # |                                                                       |
-    # | These methods are for being called by actual WATO modules when they   |
+    # | These methods are for being called by actual Setup modules when they   |
     # | want to modify folders and hosts. They all check permissions and      |
     # | locking. They may raise MKAuthException or MKUserError.               |
     # |                                                                       |
@@ -2237,11 +2237,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # | - locked()       -> .wato file in the folder must not be modified     |
     # | - locked_subfolders() -> No subfolders may be created/deleted         |
     # |                                                                       |
-    # | Sidebar: some sidebar snapins show the WATO folder tree. Everytime    |
+    # | Sidebar: some sidebar snapins show the Setup folder tree. Everytime    |
     # | the tree changes the sidebar needs to be reloaded. This is done here. |
     # |                                                                       |
     # | Validation: these methods do *not* validate the parameters for syntax.|
-    # | This is the task of the actual WATO modes or the API.                 |
+    # | This is the task of the actual Setup modes or the API.                 |
     # '-----------------------------------------------------------------------'
 
     def create_subfolder(self, name, title, attributes):
@@ -3016,7 +3016,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
 
 
 class CREHost(WithPermissions, WithAttributes):
-    """Class representing one host that is managed via WATO. Hosts are contained in Folders."""
+    """Class representing one host that is managed via Setup. Hosts are contained in Folders."""
 
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
@@ -3287,7 +3287,7 @@ class CREHost(WithPermissions, WithAttributes):
     # .--------------------------------------------------------------------.
     # | MODIFICATIONS                                                      |
     # |                                                                    |
-    # | These methods are for being called by actual WATO modules when they|
+    # | These methods are for being called by actual Setup modules when they|
     # | want to modify hosts. See details at the comment header in Folder. |
     # '--------------------------------------------------------------------'
 

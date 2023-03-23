@@ -175,7 +175,7 @@ class ModeAutomation(AjaxPage):
 
     def page(self) -> PageResult:  # pylint: disable=useless-return
         # To prevent mixups in written files we use the same lock here as for
-        # the normal WATO page processing. This might not be needed for some
+        # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
         lock_config = not (

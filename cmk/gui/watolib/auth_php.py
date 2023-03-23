@@ -52,7 +52,7 @@ def _auth_php():
 
 
 def _create_php_file(callee, users, role_permissions, groups):
-    # Do not change WATO internal objects
+    # Do not change Setup internal objects
     nagvis_users = copy.deepcopy(users)
 
     for user in nagvis_users.values():

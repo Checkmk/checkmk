@@ -2218,7 +2218,7 @@ def verify_remote_site_config(site_id: SiteId) -> None:
         raise MKGeneralException(
             _(
                 "Configuration error. You treat us as "
-                "a <b>remote</b>, but we have an own distributed WATO configuration!"
+                "a <b>remote</b>, but we have an own distributed Setup configuration!"
             )
         )
 
@@ -2440,7 +2440,7 @@ class AutomationGetConfigSyncState(AutomationCommand):
 
     The central site hands over the list of replication paths it will try to synchronize later.  The
     remote site computes the list of replication files and sends it back together with the current
-    configuration generation ID. The config generation ID is increased on every WATO modification
+    configuration generation ID. The config generation ID is increased on every Setup modification
     and ensures that nothing is changed between the two config sync steps.
     """
 

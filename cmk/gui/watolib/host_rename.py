@@ -59,7 +59,7 @@ def perform_rename_hosts(
             tuple consisting of folder, oldname, newname
 
         job_interface:
-            only relevant for WATO interaction, allows to update the interface with the current
+            only relevant for Setup interaction, allows to update the interface with the current
             update info
     """
 
@@ -71,10 +71,10 @@ def perform_rename_hosts(
     actions: list[str] = []
     all_hosts = list(Host.all().values())
 
-    # 1. Fix WATO configuration itself ----------------
+    # 1. Fix Setup configuration itself ----------------
     auth_problems = []
     successful_renamings = []
-    update_interface(_("Renaming WATO configuration..."))
+    update_interface(_("Renaming Setup configuration..."))
     for folder, oldname, newname in renamings:
         try:
             this_host_actions = []

@@ -472,7 +472,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disabl
 # the following API:
 #
 # taggroup_title(group_id)
-# Returns the title of a WATO tag group
+# Returns the title of a Setup tag group
 #
 # taggroup_choice(group_id, list_of_object_tags)
 # Returns either
@@ -494,7 +494,7 @@ def _export_hosttags_to_php(cfg):
     tag_config = cmk.utils.tags.TagConfig.from_config(cfg)
     tag_config += cmk.utils.tags.BuiltinTagConfig()
 
-    # Transform WATO internal data structures into easier usable ones
+    # Transform Setup internal data structures into easier usable ones
     hosttags_dict = {}
     for tag_group in tag_config.tag_groups:
         tags = {}

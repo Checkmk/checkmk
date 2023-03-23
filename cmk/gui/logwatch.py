@@ -716,7 +716,7 @@ def get_last_chunk(log_chunks):
 #   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Definition of various constants - also used by WATO                  |
+#   | Definition of various constants - also used by Setup                  |
 #   '----------------------------------------------------------------------'
 
 nagios_illegal_chars = "`;~!$%^&*|'\"<>?,()="

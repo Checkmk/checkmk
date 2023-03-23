@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """The bulk import for hosts can be used to import multiple new hosts into a
-single WATO folder. The hosts can either be provided by uploading a CSV file or
+single Setup folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
 
 import csv

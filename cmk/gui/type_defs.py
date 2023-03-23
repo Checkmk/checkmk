@@ -751,7 +751,7 @@ class Key(BaseModel):
     alias: str
     owner: UserId
     date: float
-    # Before 2.2 this field was only used for WATO backup keys. Now we add it to all key, because it
+    # Before 2.2 this field was only used for Setup backup keys. Now we add it to all key, because it
     # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False
     # to initialize it for all existing keys assuming it was already downloaded. It is still only
     # used in the context of the backup keys.

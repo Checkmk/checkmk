@@ -288,7 +288,7 @@ class Filter(abc.ABC):
 
     def available(self) -> bool:
         """Some filters can be unavailable due to the configuration
-        (e.g. the WATO Folder filter is only available if WATO is enabled."""
+        (e.g. the Setup Folder filter is only available if Setup is enabled."""
         return True
 
     def visible(self) -> bool:

@@ -1093,7 +1093,7 @@ class CommandScheduleDowntimes(Command):
         else:  # one of the default time buttons
             button_value = self.button_interval_value()
             if button_value is None:
-                # the remove button in the Show Downtimes WATO view returns None here
+                # the remove button in the Show Downtimes Setup view returns None here
                 # TODO: separate the remove mechanism from the create downtime procedure in the views call
                 return None
             varprefix = "_downrange__%s" % button_value

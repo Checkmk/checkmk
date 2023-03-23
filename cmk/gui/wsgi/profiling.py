@@ -98,7 +98,7 @@ def _profiling_enabled(environ: WSGIEnvironment) -> bool:
 
 
 def _load_profiling_setting() -> bool | Literal["enable_by_var"]:
-    """Load the profiling global setting from the WATO GUI config"""
+    """Load the profiling global setting from the Setup GUI config"""
     return load_single_global_wato_setting("profile", deflt=False)
 
 

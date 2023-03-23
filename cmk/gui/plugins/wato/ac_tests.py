@@ -1050,7 +1050,7 @@ class ACTestSizeOfExtensions(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>In distributed WATO setups it is possible to synchronize the "
+            "<p>In distributed Setup setups it is possible to synchronize the "
             "extensions (MKPs and files in <tt>~/local/</tt>) to the slave sites. "
             "These files are synchronized on every replication with a slave site and "
             "can possibly slow down the synchronization in case the files are large. "

@@ -279,7 +279,7 @@ def connection_set(options: list[str] | None = None, auth_option: str | None = N
             string which specify which connection authentication element to include
 
     Returns:
-        list of WATO connection elements
+        list of Setup connection elements
 
     """
     connection_options: list[Any] = []

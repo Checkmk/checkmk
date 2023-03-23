@@ -465,9 +465,9 @@ class ModeEditSite(WatoMode):
                 "disable_wato",
                 Checkbox(
                     title=_("Disable remote configuration"),
-                    label=_("Disable configuration via WATO on this site"),
+                    label=_("Disable configuration via Setup on this site"),
                     help=_(
-                        "It is a good idea to disable access to WATO completely on the remote site. "
+                        "It is a good idea to disable access to Setup completely on the remote site. "
                         "Otherwise a user who does not now about the replication could make local "
                         "changes that are overridden at the next configuration activation."
                     ),
@@ -595,7 +595,7 @@ class ModeDistributedMonitoring(WatoMode):
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
         # The last connection can always be deleted. In that case we
-        # fall back to non-distributed-WATO and the site attribute
+        # fall back to non-distributed-Setup and the site attribute
         # will be removed.
         test_sites = dict(configured_sites.items())
         del test_sites[delete_id]

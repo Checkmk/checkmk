@@ -600,7 +600,7 @@ class HTMLGenerator(HTMLWriter):
             disabled_arg = None
 
         # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
-        # when it has been set on a page via javascript before. Needed for WATO activate changes page.
+        # when it has been set on a page via javascript before. Needed for Setup activate changes page.
         self.input(
             name=varname,
             type_="button",
@@ -720,7 +720,7 @@ class HTMLGenerator(HTMLWriter):
     def status_label(
         self, content: HTMLContent, status: str, title: str, **attrs: HTMLTagAttributeValue
     ) -> None:
-        """Shows a colored badge with text (used on WATO activation page for the site status)"""
+        """Shows a colored badge with text (used on Setup activation page for the site status)"""
         self.status_label_button(content, status, title, onclick=None, **attrs)
 
     def status_label_button(

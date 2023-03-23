@@ -331,7 +331,7 @@ class ConfigurationConnectionAttributes(BaseSchema):
     )
     disable_remote_configuration = fields.Boolean(
         required=True,
-        description="It is a good idea to disable access to WATO completely on the remote site. Otherwise a user who does not now about the replication could make local changes that are overridden at the next configuration activation.",
+        description="It is a good idea to disable access to Setup completely on the remote site. Otherwise a user who does not now about the replication could make local changes that are overridden at the next configuration activation.",
         example=True,
     )
     ignore_tls_errors = fields.Boolean(

@@ -273,8 +273,8 @@ def compute_foldertree():
 
 
 # Note: the dictionary that represents the folder here is *not*
-# the datastructure from WATO but a result of compute_foldertree(). The reason:
-# We fetch the information via livestatus - not from WATO.
+# the datastructure from Setup but a result of compute_foldertree(). The reason:
+# We fetch the information via livestatus - not from Setup.
 def render_tree_folder(tree_id, folder, js_func) -> None:  # type:ignore[no-untyped-def]
     subfolders = folder.get(".folders", {}).values()
     is_leaf = len(subfolders) == 0
@@ -322,8 +322,8 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @classmethod
     def description(cls):
         return _(
-            "This snapin shows the folders defined in WATO. It can be used to "
-            "open views filtered by the WATO folder. It works standalone, without "
+            "This snapin shows the folders defined in Setup. It can be used to "
+            "open views filtered by the Setup folder. It works standalone, without "
             "interaction with any other snapin."
         )
 

@@ -227,8 +227,8 @@ sample_config_generator_registry = SampleConfigGeneratorRegistry()
 #   |                                                          |___/       |
 #   +----------------------------------------------------------------------+
 #   |  Code for loading and saving global configuration variables. This is |
-#   |  not only needed by the WATO for mode for editing these, but e.g.    |
-#   |  also in the code for distributed WATO (handling of site specific    |
+#   |  not only needed by the Setup for mode for editing these, but e.g.    |
+#   |  also in the code for distributed Setup (handling of site specific    |
 #   |  globals).
 #   '----------------------------------------------------------------------'
 

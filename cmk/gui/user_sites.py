@@ -64,10 +64,10 @@ def get_activation_site_choices() -> list[tuple[SiteId, str]]:
 
 
 def activation_sites() -> SiteConfigurations:
-    """Returns sites that are affected by WATO changes
+    """Returns sites that are affected by Setup changes
 
     These sites are shown on activation page and get change entries
-    added during WATO changes."""
+    added during Setup changes."""
     return SiteConfigurations(
         {
             site_id: site

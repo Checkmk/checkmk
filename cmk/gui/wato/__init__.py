@@ -5,7 +5,7 @@
 
 # WATO
 #
-# This file contain actual page handlers and WATO modes. It does HTML creation
+# This file contain actual page handlers and Setup modes. It does HTML creation
 # and implement AJAX handlers. It uses classes, functions and globals
 # from watolib.py.
 
@@ -17,20 +17,20 @@
 #   |              |_| \_\___|\__,_|\__,_| |_| |_| |_|\___|                |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | A few words about the implementation details of WATO.                |
+#   | A few words about the implementation details of Setup.                |
 #   `----------------------------------------------------------------------'
 
 # [1] Files and Folders
-# WATO organizes hosts in folders. A wato folder is represented by a
+# Setup organizes hosts in folders. A wato folder is represented by a
 # OS directory. If the folder contains host definitions, then in that
 # directory a file name "hosts{.mk|.cfg}" is kept.
-# The directory hierarchy of WATO is rooted at etc/check_mk/conf.d/wato.
-# All files in and below that directory are kept by WATO. WATO does not
+# The directory hierarchy of Setup is rooted at etc/check_mk/conf.d/wato.
+# All files in and below that directory are kept by Setup. Setup does not
 # touch any other files or directories in conf.d.
-# A *path* in WATO means a relative folder path to that directory. The
+# A *path* in Setup means a relative folder path to that directory. The
 # root folder has the empty path (""). Folders are separated by slashes.
 # Each directory contains a file ".wato" which keeps information needed
-# by WATO but not by Checkmk itself.
+# by Setup but not by Checkmk itself.
 
 # [3] Convention for variable names:
 # site_id     --> The id of a site, None for the local site in non-distributed setup
@@ -218,7 +218,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.watolib.translation import HostnameTranslation
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the WATO plugin context
+# calls in the Setup plugin context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
 subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
 subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
@@ -231,7 +231,7 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 import cmk.gui.watolib.config_domains
 
-# Make some functions of watolib available to WATO plugins without using the
+# Make some functions of watolib available to Setup plugins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
@@ -295,7 +295,7 @@ def register(
 #   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
 #   |                                 |___/                                |
 #   +----------------------------------------------------------------------+
-#   | Prepare plugin-datastructures and load WATO plugins                  |
+#   | Prepare plugin-datastructures and load Setup plugins                  |
 #   '----------------------------------------------------------------------'
 
 modes = {}
@@ -304,7 +304,7 @@ modes = {}
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
-    # Initialize watolib things which are needed before loading the WATO plugins.
+    # Initialize watolib things which are needed before loading the Setup plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
 
@@ -312,7 +312,7 @@ def load_plugins() -> None:
 
     if modes:
         raise MKGeneralException(
-            _("Deprecated WATO modes found: %r. They need to be refactored to new API.")
+            _("Deprecated Setup modes found: %r. They need to be refactored to new API.")
             % list(modes.keys())
         )
 

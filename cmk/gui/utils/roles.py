@@ -36,7 +36,7 @@ _default_admin_permissions: Final[frozenset[str]] = frozenset(
     {
         "general.use",  # use Multisite
         "wato.use",  # enter WATO
-        "wato.edit",  # make changes in WATO...
+        "wato.edit",  # make changes in Setup...
         "wato.users",  # ... with access to user management
     }
 )

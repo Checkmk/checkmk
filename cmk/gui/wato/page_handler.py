@@ -88,7 +88,7 @@ def page_handler() -> None:
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
 
-    # If we do an action, we acquire an exclusive lock on the complete WATO.
+    # If we do an action, we acquire an exclusive lock on the complete Setup.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration():
             _wato_page_handler(current_mode, mode_instance)

@@ -901,7 +901,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                     "The tag ID must contain only of letters, digits and "
                     "underscores.<br><br><b>Renaming tags ID:</b> if you want "
                     "to rename the ID of a tag, then please make sure that you do not "
-                    "change its title at the same time! Otherwise WATO will not "
+                    "change its title at the same time! Otherwise Setup will not "
                     "be able to detect the renaming and cannot exchange the tags "
                     "in all folders, hosts and rules accordingly."
                 ),

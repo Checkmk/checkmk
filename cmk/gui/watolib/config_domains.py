@@ -266,10 +266,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             },
         )
 
-        # We need to activate this immediately to make syncs to WATO slave sites
+        # We need to activate this immediately to make syncs to Setup slave sites
         # possible right after changing the option
         #
-        # Since this can be called from any WATO page it is not possible to report
+        # Since this can be called from any Setup page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
         if not site_specific and custom_site_path is None:
@@ -489,7 +489,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         return settings
 
-    # Convert the raw OMD configuration settings to the WATO config format.
+    # Convert the raw OMD configuration settings to the Setup config format.
     # The format that is understood by the valuespecs. Since some valuespecs
     # affect multiple OMD config settings, these need to be converted here.
     #
@@ -548,7 +548,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         return settings
 
-    # Bring the WATO internal representation int OMD configuration settings.
+    # Bring the Setup internal representation int OMD configuration settings.
     # Counterpart of the _from_omd_config() method.
     def _to_omd_config(self, settings):  # pylint: disable=too-many-branches
         # Convert to OMD key

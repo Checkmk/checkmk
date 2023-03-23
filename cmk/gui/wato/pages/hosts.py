@@ -281,7 +281,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             valuespec=ConfigHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
             orientation="horizontal",
             help=_(
-                "Enter the host names of the cluster nodes. These hosts must be present in WATO."
+                "Enter the host names of the cluster nodes. These hosts must be present in Setup."
             ),
         )
 

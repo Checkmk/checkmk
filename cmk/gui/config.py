@@ -190,7 +190,7 @@ def load_config() -> None:
             for key_id, raw_key in raw_config["agent_signature_keys"].items()
         }
 
-    # Make sure, builtin roles are present, even if not modified and saved with WATO.
+    # Make sure, builtin roles are present, even if not modified and saved with Setup.
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 

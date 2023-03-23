@@ -567,7 +567,7 @@ def get_limit() -> int | None:
 
 
 def _link_to_folder_by_path(path: str) -> str:
-    """Return an URL to a certain WATO folder when we just know its path"""
+    """Return an URL to a certain Setup folder when we just know its path"""
     return makeuri_contextless(
         request,
         [("mode", "folder"), ("folder", path)],

@@ -207,7 +207,7 @@ def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
 # This function is called very often during regular page loads so it has to be efficient
 # even when having a lot of users.
 #
-# When using the multisite authentication with just by WATO created users it would be
+# When using the multisite authentication with just by Setup created users it would be
 # easy, but we also need to deal with users which are only existant in the htpasswd
 # file and don't have a profile directory yet.
 def user_exists(username: UserId) -> bool:

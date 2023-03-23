@@ -13,9 +13,9 @@ permission_registry.register(
         name="use",
         title=_l("Use WATO"),
         description=_l(
-            "This permissions allows users to use WATO - Check_MK's "
+            "This permissions allows users to use Setup - Check_MK's "
             "Web Administration Tool. Without this "
-            "permission all references to WATO (buttons, links, "
+            "permission all references to Setup (buttons, links, "
             "snapins) will be invisible."
         ),
         defaults=["admin", "user"],
@@ -72,7 +72,7 @@ permission_registry.register(
         name="activateforeign",
         title=_l("Activate Foreign Changes"),
         description=_l(
-            "When several users work in parallel with WATO then "
+            "When several users work in parallel with Setup then "
             "several pending changes of different users might pile up "
             "before changes are activate. Only with this permission "
             "a user will be allowed to activate the current configuration "
@@ -90,7 +90,7 @@ permission_registry.register(
         description=_l(
             "Access to the historic audit log. "
             "The currently pending changes can be seen by all users "
-            "with access to WATO."
+            "with access to Setup."
         ),
         defaults=["admin"],
     )
@@ -103,7 +103,7 @@ permission_registry.register(
         title=_l("Clear audit Log"),
         description=_l(
             "Clear the entries of the audit log. To be able to clear the audit log "
-            'a user needs the generic WATO permission "Make changes, perform actions", '
+            'a user needs the generic Setup permission "Make changes, perform actions", '
             'the "View audit log" and this permission.'
         ),
         defaults=["admin"],
@@ -414,7 +414,7 @@ permission_registry.register(
         title=_l("Site remote automation"),
         description=_l(
             "This permission is needed for a remote administration of the site "
-            "as a distributed WATO slave."
+            "as a distributed Setup slave."
         ),
         defaults=["admin"],
     )
@@ -449,7 +449,7 @@ permission_registry.register(
         name="notifications",
         title=_l("Notification configuration"),
         description=_l(
-            "This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>."
+            "This permission is needed for the new rule based notification configuration via the Setup module <i>Notifications</i>."
         ),
         defaults=["admin"],
     )
@@ -542,8 +542,8 @@ permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
         name="set_read_only",
-        title=_l("Set WATO to read only mode for other users"),
-        description=_l("Prevent other users from making modifications to WATO."),
+        title=_l("Set Setup to read only mode for other users"),
+        description=_l("Prevent other users from making modifications to Setup."),
         defaults=["admin"],
     )
 )
@@ -582,7 +582,7 @@ permission_registry.register(
             "This command line is then executed during monitoring by Check_MK. Another example is "
             "the upload of extension packages (MKPs). All these functions have in "
             "common that the user provides data that is executed by Check_MK. "
-            'If you want to ensure that your WATO users cannot "inject" arbitrary executables '
+            'If you want to ensure that your Setup users cannot "inject" arbitrary executables '
             "into your Check_MK installation, you only need to remove this permission for them. "
             "This permission is needed in addition to the other component related permissions. "
             "For example you need the <tt>wato.rulesets</tt> permission together with this "

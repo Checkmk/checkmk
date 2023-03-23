@@ -128,7 +128,7 @@ def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=
 def get_all_shared_files(
     conn: SMBConnection, hostname: str, patterns: list[str], recursive: bool
 ) -> Generator[tuple[str, set[File]], None, None]:
-    share_names = [s.name for s in conn.listShares()]
+    share_names = [s.name.lower() for s in conn.listShares()]
     for pattern_string in patterns:
         pattern = pattern_string.strip("\\").split("\\")
         if len(pattern) < 3:
@@ -140,7 +140,7 @@ def get_all_shared_files(
             raise SMBShareAgentError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
 
         share_name = pattern[1]
-        if share_name not in share_names:
+        if share_name.lower() not in share_names:
             raise SMBShareAgentError(f"Share {share_name} doesn't exist on host {hostname}")
 
         yield pattern_string, set(

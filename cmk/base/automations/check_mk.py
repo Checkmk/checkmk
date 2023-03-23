@@ -1275,6 +1275,7 @@ class AutomationGetCheckInformation(Automation):
             )
             if plugin.check_ruleset_name:
                 plugin_info["check_ruleset_name"] = str(plugin.check_ruleset_name)
+                plugin_info["check_default_parameters"] = plugin.check_default_parameters
                 # TODO: kept for compatibility. See if we can drop this.
                 plugin_info["group"] = str(plugin.check_ruleset_name)
             if plugin.discovery_ruleset_name:

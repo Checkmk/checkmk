@@ -469,6 +469,7 @@ class ModeCheckManPage(WatoMode):
             self._ruleset: str | None = (
                 f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
             )
+            self._check_default_parameters: object = check_info.get("check_default_parameters")
 
         elif self._check_plugin_name in check_builtins:
             self._check_type = "check_mk"
@@ -570,6 +571,7 @@ class ModeCheckManPage(WatoMode):
 
         if self._ruleset:
             self._show_ruleset(self._ruleset)
+            self._show_defaults(self._ruleset, self._check_default_parameters)
 
         html.close_table()
 
@@ -578,7 +580,7 @@ class ModeCheckManPage(WatoMode):
         html_code = re.sub("\n\n+", "<p>", html_code)
         return html_code
 
-    def _show_ruleset(self, varname):
+    def _show_ruleset(self, varname: str) -> None:
         if varname not in rulespec_registry:
             return
 
@@ -592,9 +594,30 @@ class ModeCheckManPage(WatoMode):
         html.close_td()
         html.close_tr()
         html.open_tr()
-        html.th(_("Example for Parameters"))
+        html.th(_("Example for parameters"))
         html.open_td()
         vs = rulespec.valuespec
         vs.render_input("dummy", vs.default_value())
+        html.close_td()
+        html.close_tr()
+
+    def _show_defaults(self, varname: str, params: object) -> None:
+        if not params or varname not in rulespec_registry:
+            return
+
+        rulespec = rulespec_registry[varname]
+        try:
+            rulespec.valuespec.validate_datatype(params, "")
+            rulespec.valuespec.validate_value(params, "")
+            paramtext = rulespec.valuespec.value_to_html(params)
+        except Exception:
+            # This should not happen, we have tests for that.
+            # If it does happen, do not fail here.
+            return
+
+        html.open_tr()
+        html.th(_("Default parameters"))
+        html.open_td()
+        html.write_html(HTML(paramtext))
         html.close_td()
         html.close_tr()

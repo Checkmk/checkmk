@@ -20,8 +20,6 @@
 # A list of all task state can be found here:
 # http://msdn.microsoft.com/en-us/library/aa383604%28VS.85%29.aspx
 
-factory_settings["windows_tasks"] = {}
-
 
 def parse_windows_tasks(info):
     data = {}
@@ -191,6 +189,21 @@ def check_windows_tasks(item, params, parsed):
 
     if additional_infos:
         yield 0, ", ".join(additional_infos)
+
+
+factory_settings["windows_tasks"] = {
+    # This list is overruled by a ruleset, if configured.
+    # The defaults are brought back individually below.
+    # Put them here anyway to make them available in the checks man page.
+    "exit_code_to_state": [
+        {
+            "exit_code": key,
+            "monitoring_state": state,
+            "info_text": text,
+        }
+        for key, (state, text) in _MAP_EXIT_CODES.items()
+    ],
+}
 
 
 check_info["windows_tasks"] = {

@@ -256,4 +256,4 @@ class ConfigUpdater:
         base_config.load_all_agent_based_plugins(get_check_api_context)
         # Watch out: always load the plugins before loading the config.
         # The validation step will not be executed otherwise.
-        base_config.load(warn_about_deprecated_check_config=True)
+        base_config.load()

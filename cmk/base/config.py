@@ -147,7 +147,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias, SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.legacy_mk_file_check_configuration import warn_about_deprecated_check_configuration
 
 TagIDs = set[TagID]
 
@@ -521,13 +520,13 @@ def load(
     validate_hosts: bool = True,
     exclude_parents_mk: bool = False,
     *,
-    warn_about_deprecated_check_config: bool = False,
+    changed_vars_handler: Callable[[set[str]], None] | None = None,
 ) -> None:
     _initialize_config()
 
     changed_var_names = _load_config(with_conf_d, exclude_parents_mk)
-    if warn_about_deprecated_check_config:
-        warn_about_deprecated_check_configuration(changed_var_names)
+    if changed_vars_handler is not None:
+        changed_vars_handler(changed_var_names)
 
     _transform_mgmt_config_vars_from_140_to_150()
     _initialize_derived_config_variables()

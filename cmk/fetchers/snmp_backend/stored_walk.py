@@ -139,7 +139,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    # FIXME: This encoding ping-pong os horrible...
+                    # FIXME: This encoding ping-pong is horrible...
                     value = agent_simulator.process(
                         AgentRawData(
                             parts[1].encode(),

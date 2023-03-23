@@ -48,10 +48,28 @@ echo arg_test=%arg_test%
 :: https://github.com/rust-lang/cc-rs#external-configuration-via-environment-variables
 set CFLAGS=-DNDEBUG
 
-:: 1. Clippy
+:: Clean
+if "%arg_clean%" == "1" (
+    powershell Write-Host "Run Rust clean" -Foreground White
+    cargo clean
+)
+
+:: Check Format
+if "%arg_check_format%" == "1" (
+    powershell Write-Host "Run Rust check format" -Foreground White
+    cargo fmt -- --check
+)
+
+:: Format
+if "%arg_format%" == "1" (
+    powershell Write-Host "Run Rust format" -Foreground White
+    cargo fmt
+)
+
+:: Clippy
 if "%arg_clippy%" == "1" (
     powershell Write-Host "Run Rust clippy" -Foreground White
-    cargo clippy --release --target %target% 2>&1
+    cargo clippy --release --target %target% -- --deny warnings 
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed cargo clippy" -Foreground Red 
         exit /b 17
@@ -61,7 +79,7 @@ if "%arg_clippy%" == "1" (
     powershell Write-Host "Skip Rust clippy" -Foreground Yellow
 )
 
-:: 2. Build
+:: Build
 if "%arg_build%" == "1" (
     rem On windows we want to kill exe before starting rebuild. 
     rem Use case CI starts testing, for some reasoms process hangs up longer as expected thus 
@@ -80,9 +98,9 @@ if "%arg_build%" == "1" (
     powershell Write-Host "Skip Rust build" -Foreground Yellow
 )
 
-:: 3. Test
-:: Validate elevation, because full testing is possible only in elevated mode!
+:: Test
 if "%arg_test%" == "1" (
+rem Validate elevation, because full testing is possible only in elevated mode!
     net session > nul 2>&1 
     IF ERRORLEVEL 1 (
         echo You must be elevated. Exiting...
@@ -99,8 +117,7 @@ if "%arg_test%" == "1" (
     powershell Write-Host "Skip Rust test" -Foreground Yellow
 )
 
-
-:: 4. [optional] Signing
+:: [optional] Signing
 if not "%arg_sign%" == "" (
     powershell Write-Host "Signing Rust executables" -Foreground White
     @call ..\wnx\sign_windows_exe c:\common\store\%1 %arg_sign% %exe%
@@ -120,3 +137,13 @@ if "%arg_build%" == "1" (
 ) else (
     powershell Write-Host "Skip Rust upload" -Foreground Yellow
 )
+
+:: Documentation
+if "%arg_doc%" == "1" (
+    powershell Write-Host "Creating documentation" -Foreground White
+    cargo doc
+) else (
+    powershell Write-Host "Skip creating documentation" -Foreground Yellow
+)
+
+

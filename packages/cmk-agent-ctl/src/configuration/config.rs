@@ -484,7 +484,7 @@ impl Registry {
         let mut ext = tmp_path
             .extension()
             .map(|ext| ext.to_owned())
-            .unwrap_or(ffi::OsString::from(""));
+            .unwrap_or_else(|| ffi::OsString::from(""));
         ext.push(".tmp");
         tmp_path.set_extension(ext);
         tmp_path

@@ -815,6 +815,13 @@ run_plugins() {
 # END COMMON AGENT CODE
 #
 
+_mrpe_normalize_spaces() {
+    # watch out:
+    # * [:blank:] does not include \t on AIX
+    # * [:space:] does include \n on Linux
+    tr -s '\t' ' '
+}
+
 run_remote_plugins() {
     # caching currently not supported
     ${MK_RUN_SYNC_PARTS} || return
@@ -827,9 +834,9 @@ run_remote_plugins() {
     # The following suppression was added when we enabled the corresponding shellcheck.
     # It may well be that "read -r" would be more appropriate.
     # shellcheck disable=SC2162,SC2001
-    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" | tr '[:blank:]' ' ' |
+    grep -Ev '^[[:space:]]*($|#)' "${MK_CONFDIR}/mrpe.cfg" | _mrpe_normalize_spaces |
         while read descr rest; do
-            cmdline=$(echo "$rest" | sed -e 's/^([a-zA-Z:=[0-9]*]*) //g')
+            cmdline="${rest#\(*\) }"
             PLUGIN=${cmdline%% *}
             OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
             echo "(${PLUGIN##*/}) ${descr} $? ${OUTPUT}" | tr \\n \\1

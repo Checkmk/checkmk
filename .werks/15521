@@ -1,0 +1,13 @@
+Title: check_mk_agent for AIX: normalize tabs to spaces in mrpe.cfg
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679564643
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p26
+
+This is a follow-up fix for <a href="15426">Werk #15426</a>.
+It seems that not all AIX <tt>tr</tt> tools behave as expected.
+

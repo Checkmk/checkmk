@@ -123,7 +123,13 @@ class _Builder:
             # we didn't configure anything.  Let's report that.
             self._add(MissingSourceSource(self.host_name, self.ipaddress, "API/agent"))
 
-        if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
+        if not (
+            (
+                self.config_cache.is_snmp_host(self.host_name)
+                and not self.config_cache.is_tcp_host(self.host_name)
+            )
+            or "no-piggyback" in self.config_cache.tag_list(self.host_name)
+        ):
             self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
 
         self._initialize_snmp_based()

@@ -61,12 +61,12 @@ def make_scenario(hostname, tags):
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v2"},
-            [SNMPFetcher, PiggybackFetcher],
+            [SNMPFetcher],
         ),
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v1"},
-            [SNMPFetcher, PiggybackFetcher],
+            [SNMPFetcher],
         ),
         (
             "dual-host",

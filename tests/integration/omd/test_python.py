@@ -128,6 +128,7 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
         "more-itertools": "more_itertools",
         "ordered-set": "ordered_set",
         "openapi-spec-validator": "openapi_spec_validator",
+        "pysaml2": "saml2",
     }
 
     import_names = []

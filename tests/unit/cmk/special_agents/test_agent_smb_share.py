@@ -539,6 +539,25 @@ def test_parse_arguments() -> None:
             {
                 SHARED_FOLDER: {
                     "": [
+                        folder("Subfolder1"),
+                        file("file1"),
+                        file("file2"),
+                    ],
+                    "Subfolder1\\": [
+                        file("file3"),
+                    ],
+                }
+            },
+            [],
+            ["**"],
+            True,
+            set(),
+            id="match only directories and no files with **",
+        ),
+        pytest.param(
+            {
+                SHARED_FOLDER: {
+                    "": [
                         folder("sub1"),
                         file("root.txt"),
                     ],

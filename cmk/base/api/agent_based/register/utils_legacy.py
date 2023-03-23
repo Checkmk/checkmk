@@ -6,13 +6,15 @@
 from collections.abc import Callable, Iterable
 from typing import NotRequired, TypedDict
 
+from cmk.base.api.agent_based.checking_classes import Service
+
 _DiscoveredParameters = dict | tuple | str | None
 
 
 class CheckInfoElement(TypedDict):
     check_function: NotRequired[Callable]
     inventory_function: NotRequired[
-        Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]
+        Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]] | Iterable[Service]]
     ]
     parse_function: NotRequired[Callable[[list], object]]
     group: NotRequired[str]

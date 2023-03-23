@@ -9,6 +9,8 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+
 pytestmark = pytest.mark.checks
 
 INFO = [
@@ -67,9 +69,9 @@ def test_inotify_parse() -> None:
 
 def test_discovery() -> None:
     assert sorted(discover_inotify(Section(*PARSED))) == [
-        ("File /tmp/noti/nodata", {}),
-        ("File /tmp/noti/test", {}),
-        ("Folder /tmp/noti", {}),
+        Service(item="File /tmp/noti/nodata"),
+        Service(item="File /tmp/noti/test"),
+        Service(item="Folder /tmp/noti"),
     ]
 
 
@@ -87,20 +89,18 @@ def test_updated_data() -> None:
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (0, "Time since last delete: 1 minute 38 seconds", []),
-        (
-            1,
-            "Time since last modify: 1 minute 40 seconds (warn/crit at 1 minute 30 seconds/1 minute 50 seconds)",
-            [],
+        Result(state=State.OK, summary="Time since last delete: 1 minute 38 seconds"),
+        Result(
+            state=State.WARN,
+            summary="Time since last modify: 1 minute 40 seconds (warn/crit at 1 minute 30 seconds/1 minute 50 seconds)",
         ),
-        (
-            2,
-            "Time since last open: 1 minute 40 seconds (warn/crit at 1 minute 20 seconds/1 minute 30 seconds)",
-            [],
+        Result(
+            state=State.CRIT,
+            summary="Time since last open: 1 minute 40 seconds (warn/crit at 1 minute 20 seconds/1 minute 30 seconds)",
         ),
-        (3, "Time since last just_for_test_coverage: unknown"),
-        (1, "Incomplete data!"),
-        (1, "1 warning(s): I assume a warning looks like this!"),
+        Result(state=State.UNKNOWN, summary="Time since last just_for_test_coverage: unknown"),
+        Result(state=State.WARN, summary="Incomplete data!"),
+        Result(state=State.WARN, summary="1 warning(s): I assume a warning looks like this!"),
     ]
     assert last_status == {
         "delete": 1465470058,
@@ -128,8 +128,8 @@ def test_nodata() -> None:
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (3, "Time since last modify: unknown"),
-        (0, "No data available yet"),
+        Result(state=State.UNKNOWN, summary="Time since last modify: unknown"),
+        Result(state=State.OK, summary="No data available yet"),
     ]
     assert not last_status
 
@@ -142,10 +142,9 @@ def test_old_status() -> None:
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (
-            2,
-            "Time since last modify: 2 minutes 36 seconds (warn/crit at 1 minute 30 seconds/1 minute 50 seconds)",
-            [],
+        Result(
+            state=State.CRIT,
+            summary="Time since last modify: 2 minutes 36 seconds (warn/crit at 1 minute 30 seconds/1 minute 50 seconds)",
         ),
     ]
     assert last_status == {"modify": 1465470000}

@@ -4,8 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import time
 from collections import defaultdict
-from typing import Counter, Dict, Iterable, Literal, Mapping, NamedTuple
+from typing import Counter, Literal, Mapping, NamedTuple
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    render,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 # <<<inotify:sep(9)>>>
 # configured folder    /tmp/noti
@@ -26,12 +40,12 @@ class Section(NamedTuple):
     stats: Mapping[str, _Mode2Time]
 
 
-def parse_inotify(info) -> Section:
+def parse_inotify(string_table: StringTable) -> Section:
     warnings: Counter[str] = Counter()
-    configured: Dict[str, Literal["file", "folder"]] = {}
-    stats: Dict[str, Dict[str, int]] = defaultdict(dict)
+    configured: dict[str, Literal["file", "folder"]] = {}
+    stats: dict[str, dict[str, int]] = defaultdict(dict)
 
-    for line in info:
+    for line in string_table:
         if line[0].startswith("warning"):
             warnings[line[1]] += 1
             continue
@@ -47,18 +61,28 @@ def parse_inotify(info) -> Section:
     return Section(warnings, configured, stats)
 
 
-def discover_inotify(section: Section) -> Iterable[tuple[str, dict]]:
-    yield from ((f"{type_.title()} {path}", {}) for path, type_ in section.configured.items())
+def discover_inotify(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=f"{type_.title()} {path}") for path, type_ in section.configured.items()
+    )
 
 
-def check_inotify(item, params, section: Section):
+def check_inotify(
+    item: str, params: Mapping[str, list[tuple[str, float, float]]], section: Section
+) -> CheckResult:
     last_status = get_item_state("last_operations", default={})
     now = time.time()
     yield from _check_inotify(item, params, section, last_status, now)
     set_item_state("last_operations", last_status)
 
 
-def _check_inotify(item, params, section: Section, last_status, now):
+def _check_inotify(
+    item: str,
+    params: Mapping[str, list[tuple[str, float, float]]],
+    section: Section,
+    last_status: dict[str, int],
+    now: float,
+) -> CheckResult:
     type_, path = item.split(" ", 1)
     if section.configured.get(path) != type_.lower():
         return
@@ -68,29 +92,31 @@ def _check_inotify(item, params, section: Section, last_status, now):
     levels = {mode: (warn, crit) for mode, warn, crit in params.get("age_last_operation", [])}
 
     for mode, timestamp in sorted(last_status.items()):
-        yield check_levels(
+        yield from check_levels(
             now - timestamp,
-            None,
-            levels.get(mode),
-            human_readable_func=get_age_human_readable,
-            infoname=f"Time since last {mode}",
+            levels_upper=levels.get(mode),
+            render_func=render.timespan,
+            label=f"Time since last {mode}",
         )
 
     for mode in set(levels) - set(last_status):
-        yield 3, f"Time since last {mode}: unknown"
+        yield Result(state=State.UNKNOWN, summary=f"Time since last {mode}: unknown")
 
     if section.warnings:
-        yield 1, "Incomplete data!"
-        yield from ((1, f"{count} warning(s): {msg}") for msg, count in section.warnings.items())
+        yield Result(state=State.WARN, summary="Incomplete data!")
+        yield from (
+            Result(state=State.WARN, summary=f"{count} warning(s): {msg}")
+            for msg, count in section.warnings.items()
+        )
 
     if not last_status:
-        yield 0, "No data available yet"
+        yield Result(state=State.OK, summary="No data available yet")
 
 
-check_info["inotify"] = {
-    "parse_function": parse_inotify,
-    "inventory_function": discover_inotify,
-    "check_function": check_inotify,
-    "service_description": "INotify %s",
-    "group": "inotify",
-}
+check_info["inotify"] = dict(  # pylint: disable=use-dict-literal
+    parse_function=parse_inotify,
+    inventory_function=discover_inotify,
+    check_function=check_inotify,
+    service_description="INotify %s",
+    group="inotify",
+)

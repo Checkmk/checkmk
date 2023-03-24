@@ -6,6 +6,7 @@
 import json
 import time
 from collections.abc import Callable
+from html import unescape
 from typing import NamedTuple
 
 from cmk.utils.plugin_registry import Registry
@@ -170,7 +171,7 @@ class CSVRenderer:
         response.set_data("".join(resp))
 
     def _format_for_csv(self, raw_data: str | HTML) -> str:
-        return escaping.strip_tags(raw_data).replace("\n", "").replace('"', '""')
+        return escaping.strip_tags(unescape(str(raw_data))).replace("\n", "").replace('"', '""')
 
 
 def _export_csv_export(view: "View", rows: Rows) -> None:

@@ -549,7 +549,7 @@ class Cell:
                     content = img_filename
 
             if isinstance(txt, HTML):
-                content = escaping.strip_tags(str(txt))
+                content = escaping.strip_tags(unescape(str(txt)))
 
             elif not isinstance(txt, tuple):
                 content = escaping.strip_tags(unescape(txt))

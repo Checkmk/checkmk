@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib import Check
+from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 
 pytestmark = pytest.mark.checks
 
@@ -136,7 +136,4 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_services_split(oid_value: Sequence[int], expected: int) -> None:
-    check = Check("fc_port")
-    fc_parse_counter = check.context["fc_parse_counter"]
-    actual = fc_parse_counter(oid_value)
-    assert actual == expected
+    assert fc_parse_counter(oid_value) == expected

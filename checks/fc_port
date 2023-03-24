@@ -73,13 +73,6 @@ fc_port_no_inventory_opstates = []
 fc_port_no_inventory_phystates = []
 fc_port_inventory_use_portname = False  # use connUnitPortName as service description
 
-factory_settings["fc_port_default_levels"] = {
-    "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
-    "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
-    "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
-    "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
-}
-
 
 # Helper function for computing item from port number
 def fc_port_getitem(num_ports, index, portname):
@@ -306,11 +299,6 @@ check_config_variables.append("fc_port_no_inventory_phystates")
 check_config_variables.append("fc_port_inventory_use_portname")
 
 check_info["fc_port"] = {
-    "check_function": check_fc_port,
-    "inventory_function": inventory_fc_port,
-    "service_description": "FC Interface %s",
-    "group": "fc_port",
-    "default_levels_variable": "fc_port_default_levels",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
         ".1.3.6.1.4.1.1588.2.1.1"
     )
@@ -367,4 +355,16 @@ check_info["fc_port"] = {
             # Count of disparity errors received at this port.
         ],
     ),
+    "check_function": check_fc_port,
+    "inventory_function": inventory_fc_port,
+    "service_description": "FC Interface %s",
+    "group": "fc_port",
+    "default_levels_variable": "fc_port_default_levels",
+}
+
+factory_settings["fc_port_default_levels"] = {
+    "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors
+    "rxencoutframes": (3.0, 20.0),  # allowed percentage of Enc-OUT Frames
+    "notxcredits": (3.0, 20.0),  # allowed percentage of No Tx Credits
+    "c3discards": (3.0, 20.0),  # allowed percentage of C3 discards
 }

@@ -4,20 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from tests.testlib import Check
+from cmk.base.check_legacy_includes.netapp_api import get_and_try_cast_to_int
 
 
-def _get_and_try_cast_to_int(key, container, default_value=None):
-    return Check("netapp_api_fcp").context["_get_and_try_cast_to_int"](
-        key, container, default_value
-    )
+def test_get_and_try_cast_to_int_ok() -> None:
+    assert get_and_try_cast_to_int("ok", {"ok": "1"}) == 1
 
 
-def test_get_and_try_cast_to_int() -> None:
-    container = {"ok": "1", "broken": "1,2,3,4,5"}
+def test_get_and_try_cast_to_int_default() -> None:
+    assert get_and_try_cast_to_int("key_not_available", {}, 2) == 2
 
-    assert _get_and_try_cast_to_int("ok", container) == 1
-    assert _get_and_try_cast_to_int("key_not_available", container, 2) == 2
+
+def test_get_and_try_cast_to_int_broken() -> None:
     with pytest.raises(RuntimeError) as e:
-        _get_and_try_cast_to_int("broken", container)
+        get_and_try_cast_to_int("broken", {"broken": "1,2,3,4,5"})
     assert "NetApp Firmware" in str(e.value)

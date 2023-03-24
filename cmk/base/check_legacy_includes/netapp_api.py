@@ -6,6 +6,24 @@
 from cmk.base.plugins.agent_based.utils import netapp_api
 
 
+def get_and_try_cast_to_int(key: str, container: dict, default_value: int | None = None) -> int:
+    try:
+        to_be_casted = (
+            container.get(key, default_value) if default_value is not None else container[key]
+        )
+        return int(to_be_casted)
+    except ValueError as e:
+        # Some NetApp firmware versions return corrupt data.
+        # Known reported tickets (among others):
+        # SUP-9508, SUP-5407, SUP-6805
+        raise RuntimeError(
+            "Unable to cast the data to integer. "
+            "The reason therfore may be an issue in the used NetApp Firmware. "
+            "Consider upgrading and/or getting in touch with NetApp."
+            "Received data was: %s" % to_be_casted
+        ) from e
+
+
 # Transforms all lines into a dictionary.
 # The first key is the dictionary key, unless modified by the custom_keys
 def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func=None):

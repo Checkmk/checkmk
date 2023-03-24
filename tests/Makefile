@@ -198,12 +198,12 @@ test-docker:
 
 test-format-python: test-format-python-isort test-format-python-black
 
-test-format-python-isort: ../pyproject.toml
+test-format-python-isort: ../pyproject.toml sync-legacy-checks
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(PIPENV) run isort --settings-path ../pyproject.toml --check-only --diff \
 	exit $${PIPESTATUS[1]}
 
-test-format-python-black: ../pyproject.toml
+test-format-python-black: ../pyproject.toml sync-legacy-checks
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(BLACK) --check --diff ;\
 	exit $${PIPESTATUS[1]}
@@ -304,7 +304,7 @@ test-code-quality-docker:
 test-mypy: prepare-protobuf-files sync-legacy-checks
 	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
 
-test-mypy-raw:
+test-mypy-raw: sync-legacy-checks
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-mypy-docker:

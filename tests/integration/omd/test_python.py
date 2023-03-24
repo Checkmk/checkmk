@@ -5,7 +5,6 @@
 
 # flake8: noqa
 
-import importlib
 import json
 import os
 import re
@@ -57,13 +56,13 @@ def _local_package_installation_path(site: Site) -> Path:
 
 
 def assert_local_package_install_path(
-    package_name: str, local_package_installation_path: Path
+    site: Site, package_name: str, local_package_installation_path: Path
 ) -> None:
-    module = importlib.import_module(package_name)
-    assert module.__file__
+    module_file = import_module_and_get_file_path(site, package_name)
+    assert module_file
 
     # We only want to install into local as mkp will search there
-    assert local_package_installation_path in Path(module.__file__).parents
+    assert local_package_installation_path in Path(module_file).parents
 
 
 def assert_install_package(cmd: list[str], package_name: str, site: Site) -> None:
@@ -200,7 +199,7 @@ def test_03_pip_interpreter_version(site: Site, pip_cmd: PipCommand) -> None:
     assert version.startswith("pip 22.3.1")
 
 
-def test_04_pip_user_can_install_non_wheel_packages(site):
+def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
     # ibm_db must be compiled from source, so choosing this also ensures that the Python headers
     # can be found by pip
     package_name = "ibm_db"
@@ -209,7 +208,7 @@ def test_04_pip_user_can_install_non_wheel_packages(site):
     pip_cmd = PipCommand(["pip3"], False)
 
     assert_install_package(pip_cmd.command + ["install", package_name], package_name, site)
-    assert_local_package_install_path(package_name, _local_package_installation_path(site))
+    assert_local_package_install_path(site, package_name, _local_package_installation_path(site))
     assert_uninstall_and_purge_cache(pip_cmd, package_name, site)
 
 
@@ -228,7 +227,7 @@ def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand)
         command = pip_cmd.command + ["install", package_name]
 
     assert_install_package(command, package_name, site)
-    assert_local_package_install_path(package_name, _local_package_installation_path(site))
+    assert_local_package_install_path(site, package_name, _local_package_installation_path(site))
     assert_uninstall_and_purge_cache(pip_cmd, package_name, site)
 
 
@@ -243,11 +242,18 @@ def test_import_python_packages_which_are_defined_in_pipfile(
     site: Site,
     import_name: ImportName,
 ) -> None:
-    module = importlib.import_module(import_name)
-
+    module_file = import_module_and_get_file_path(site, import_name)
     # Skip namespace modules, they don't have __file__
-    if module.__file__:
-        assert module.__file__.startswith(site.root)
+    if module_file:
+        assert module_file.startswith(site.root)
+
+
+def import_module_and_get_file_path(site: Site, import_name: str) -> str:
+    p = site.execute(
+        ["python3", "-c", f"import {import_name} as m; print(m.__file__ or '')"],
+        stdout=subprocess.PIPE,
+    )
+    return p.communicate()[0].rstrip()
 
 
 def test_python_preferred_encoding() -> None:

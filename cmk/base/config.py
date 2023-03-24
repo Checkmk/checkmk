@@ -4731,6 +4731,7 @@ _BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES = {
     "logging": _Matchtype.DICT,
     "lnx_remote_alert_handlers": _Matchtype.ALL,
     "mk_logwatch": _Matchtype.ALL,
+    "mk_filestats": _Matchtype.DICT,
     "mk_oracle": _Matchtype.DICT,
     "mrpe": _Matchtype.LIST,
     "bakery_packages": _Matchtype.DICT,

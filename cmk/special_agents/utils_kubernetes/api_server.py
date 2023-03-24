@@ -11,6 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
+import urllib3
 from kubernetes import client  # type: ignore[import]
 from pydantic import parse_obj_as
 
@@ -145,7 +146,10 @@ class CoreAPI(RawAPI):
         return self._request("GET", "/version").response
 
     def query_kubelet_metrics(self, node_name: str) -> str:
-        return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
+        try:
+            return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
+        except (urllib3.exceptions.HTTPError, client.ApiException):
+            return ""
 
     def query_raw_nodes(self) -> JSONNodeList:
         return json.loads(self._request("GET", "/api/v1/nodes").response)

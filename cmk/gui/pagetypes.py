@@ -1089,9 +1089,7 @@ class ListPage(Page, Generic[_Self]):
                     html.icon_button(instance.page_url(), _("View"), self._type.type_name())
 
                 # Clone / Customize
-                html.icon_button(
-                    instance.clone_url(), _("Create a customized copy of this"), "clone"
-                )
+                html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
 
                 # Delete
                 if instance.may_delete():

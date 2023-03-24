@@ -882,7 +882,7 @@ def page_list(  # pylint: disable=too-many-branches
                 table.cell(_("Actions"), css=["buttons visuals"])
 
                 # Clone / Customize
-                buttontext = _("Create a customized copy of this")
+                buttontext = _("Create a private copy of this")
                 backurl = urlencode(makeuri(request, []))
                 clone_url = makeuri_contextless(
                     request,

@@ -1110,7 +1110,11 @@ def group_parsed_pvcs_by_namespace(
         namespace_pvcs: dict[str, section.PersistentVolumeClaim] = namespace_sorted_pvcs.setdefault(
             pvc.metadata.namespace, {}
         )
-        namespace_pvcs[pvc.metadata.name] = section.PersistentVolumeClaim.parse_obj(pvc.dict())
+        namespace_pvcs[pvc.metadata.name] = section.PersistentVolumeClaim(
+            metadata=section.PersistentVolumeClaimMetaData.parse_obj(pvc.metadata),
+            status=section.PersistentVolumeClaimStatus.parse_obj(pvc.status),
+            volume_name=pvc.spec.volume_name,
+        )
     return namespace_sorted_pvcs
 
 

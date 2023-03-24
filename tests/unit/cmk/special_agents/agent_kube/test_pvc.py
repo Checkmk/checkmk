@@ -4,28 +4,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from pydantic_factories import ModelFactory
 
+from tests.unit.cmk.special_agents.agent_kube import factory
+
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes.schemata import section
+from cmk.special_agents.utils_kubernetes.schemata import api, section
+
+
+class SectionPVCMetadataFactory(ModelFactory):
+    __model__ = section.PersistentVolumeClaimMetaData
+
+
+class SectionPersistentVolumeClaimFactory(ModelFactory):
+    __model__ = section.PersistentVolumeClaim
+
+
+class SectionPersistentVolumeFactory(ModelFactory):
+    __model__ = section.PersistentVolume
 
 
 class AttachedVolumeFactory(ModelFactory):
     __model__ = section.AttachedVolume
 
 
-class PVCMetadataFactory(ModelFactory):
-    __model__ = section.PersistentVolumeClaimMetaData
-
-
-class PersistentVolumeClaimFactory(ModelFactory):
-    __model__ = section.PersistentVolumeClaim
-
-
-class PersistentVolumeFactory(ModelFactory):
-    __model__ = section.PersistentVolume
-
-
 def test_group_serialized_volumes_by_namespace():
-    namespace_name = "ns1"
+    namespace_name = api.NamespaceName("ns1")
     volumes = AttachedVolumeFactory.batch(size=3, namespace=namespace_name)
     namespaced_grouped_volumes = agent.group_serialized_volumes_by_namespace(iter(volumes))
 
@@ -35,12 +37,16 @@ def test_group_serialized_volumes_by_namespace():
 
 
 def test_group_parsed_pvcs_by_namespace():
-    namespace_name = "ns1"
-    pvc = PersistentVolumeClaimFactory.build(
-        metadata=PVCMetadataFactory.build(namespace=namespace_name)
+    namespace_name = api.NamespaceName("ns1")
+    api_pvc = factory.PersistentVolumeClaimFactory.build(
+        metadata=factory.MetaDataFactory.build(namespace=namespace_name, factory_use_construct=True)
     )
-    grouped_pvc = agent.group_parsed_pvcs_by_namespace([pvc])
-    assert grouped_pvc == {namespace_name: {pvc.metadata.name: pvc}}
+    grouped_pvc = agent.group_parsed_pvcs_by_namespace([api_pvc])
+    assert len(grouped_pvc) == 1
+    assert (namespace_group := grouped_pvc.get(namespace_name)) is not None
+    assert len(namespace_group) == 1
+    assert (pvc := namespace_group.get(api_pvc.metadata.name)) is not None
+    assert pvc.volume_name == api_pvc.spec.volume_name
 
 
 def test_create_pvc_sections():
@@ -52,11 +58,11 @@ def test_create_pvc_sections():
     attached_pvc_name = "pvc1"
     attached_pv_name = "pv1"
 
-    api_pvc = PersistentVolumeClaimFactory.build(
-        metadata=PVCMetadataFactory.build(name=attached_pvc_name),
+    api_pvc = SectionPersistentVolumeClaimFactory.build(
+        metadata=SectionPVCMetadataFactory.build(name=attached_pvc_name),
         volume_name=attached_pv_name,
     )
-    api_pv = PersistentVolumeFactory.build(name=attached_pv_name)
+    api_pv = SectionPersistentVolumeFactory.build(name=attached_pv_name)
     volume = AttachedVolumeFactory.build()
 
     sections = list(

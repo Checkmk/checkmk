@@ -5,7 +5,6 @@
 """SNMP caching"""
 
 import os
-from collections.abc import Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.paths
@@ -18,8 +17,6 @@ from .type_defs import OID, SNMPDecodedString
 _g_single_oid_hostname: HostName | None = None
 _g_single_oid_ipaddress: HostAddress | None = None
 _g_single_oid_cache: dict[OID, SNMPDecodedString | None] | None = None
-# TODO: Move to StoredWalkSNMPBackend?
-_g_walk_cache: dict[HostName, Sequence[str]] = {}
 
 
 def initialize_single_oid_cache(
@@ -66,12 +63,7 @@ def single_oid_cache() -> dict[OID, SNMPDecodedString | None]:
     return _g_single_oid_cache
 
 
-def host_cache() -> dict[HostName, Sequence[str]]:
-    return _g_walk_cache
-
-
 def cleanup_host_caches() -> None:
-    host_cache().clear()
     _clear_other_hosts_oid_cache(None)
 
 

@@ -5,7 +5,6 @@
 
 
 import time
-from contextlib import suppress
 from typing import Any, List, Mapping, MutableMapping, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -20,6 +19,7 @@ from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
     GetRateError,
+    IgnoreResults,
     register,
     Result,
     Service,
@@ -94,29 +94,45 @@ def check_ucd_diskio(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
+    yield from _check_ucd_diskio(
+        item=item,
+        params=params,
+        section=section,
+        this_time=time.time(),
+        value_store=get_value_store(),
+    )
+
+
+def _check_ucd_diskio(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    value_store: MutableMapping,
+    this_time: float,
+) -> CheckResult:
     if (disk := section.get(item)) is None:
         return
 
     disk_data: MutableMapping[str, float] = {}
-
-    time_for_rates = time.time()
 
     for key in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:
         if (value := disk.get(key)) is None:
             continue
 
         if isinstance(value, float):
-            with suppress(GetRateError):
+            try:
                 disk_data[key] = get_rate(
-                    get_value_store(), f"ucd_disk_io_{key}.{item}", time_for_rates, value
+                    value_store, f"ucd_disk_io_{key}.{item}", this_time, value
                 )
+            except GetRateError:
+                yield IgnoreResults()
 
     yield Result(state=State.OK, summary=f"[{disk['disk_index']}]")
 
     yield from check_diskstat_dict(
         params=params,
         disk=disk_data,
-        value_store=get_value_store(),
+        value_store=value_store,
         this_time=time.time(),
     )
 

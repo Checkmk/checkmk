@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Abstract classes and types."""
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.utils.agent_simulator as agent_simulator
@@ -84,7 +85,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         return rowinfo
 
     @staticmethod
-    def read_walk_from_path(path: Path) -> list[str]:
+    def read_walk_from_path(path: Path) -> Sequence[str]:
         console.vverbose(f"  Opening {path}\n")
         lines = []
         with path.open() as f:
@@ -97,7 +98,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
                     lines[-1] += line
         return lines
 
-    def read_walk_data(self) -> list[str]:
+    def read_walk_data(self) -> Sequence[str]:
         path = Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
         try:
             return self.read_walk_from_path(path)
@@ -123,7 +124,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     @staticmethod
     def _collect_until(
-        oid: OID, oid_prefix: OID, lines: list[str], index: int, direction: int
+        oid: OID, oid_prefix: OID, lines: Sequence[str], index: int, direction: int
     ) -> SNMPRowInfo:
         rows = []
         # Handle case, where we run after the end of the lines list

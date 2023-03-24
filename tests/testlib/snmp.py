@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from collections.abc import Sequence
 from typing import Any
 
 from cmk.utils.type_defs import SectionName
@@ -43,7 +44,7 @@ class _StringSNMPBackend(StoredWalkSNMPBackend):
             logging.getLogger("tbd"),
         )
 
-    def read_walk_data(self) -> list[str]:
+    def read_walk_data(self) -> Sequence[str]:
         return self.lines
 
 

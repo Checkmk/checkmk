@@ -133,7 +133,7 @@ def page_graph():
     now = time.time()
     if from_time <= now <= until_time:
         timeseries = prediction.get_rrd_data(
-            host_name, service, dsname, "MAX", from_time, until_time
+            livestatus.LocalConnection(), host_name, service, dsname, "MAX", from_time, until_time
         )
         rrd_data = timeseries.values
 

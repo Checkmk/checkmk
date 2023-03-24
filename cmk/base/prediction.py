@@ -11,6 +11,8 @@ import time
 from collections.abc import Callable
 from typing import Final, NamedTuple
 
+import livestatus
+
 import cmk.utils.debug
 import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException
@@ -276,7 +278,7 @@ def get_levels(
         time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 
         rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(
-            hostname, service_description, dsname, cf
+            livestatus.LocalConnection(), hostname, service_description, dsname, cf
         )
 
         data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)

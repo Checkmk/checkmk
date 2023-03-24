@@ -281,6 +281,7 @@ def livestatus_lql(
 
 
 def get_rrd_data(
+    connection: livestatus.SingleSiteConnection,
     hostname: HostName,
     service_description: ServiceName,
     varname: MetricName,
@@ -321,9 +322,6 @@ def get_rrd_data(
     lql = livestatus_lql([hostname], [column], service_description) + "OutputFormat: python\n"
 
     try:
-        connection = livestatus.SingleSiteConnection(
-            "unix:%s" % cmk.utils.paths.livestatus_unix_socket
-        )
         response = connection.query_value(lql)
     except livestatus.MKLivestatusNotFoundError as e:
         if cmk.utils.debug.enabled():
@@ -337,6 +335,7 @@ def get_rrd_data(
 
 
 def rrd_datacolum(
+    connection: livestatus.SingleSiteConnection,
     hostname: HostName,
     service_description: ServiceName,
     varname: MetricName,
@@ -345,7 +344,9 @@ def rrd_datacolum(
     "Partial helper function to get rrd data"
 
     def time_boundaries(fromtime: Timestamp, untiltime: Timestamp) -> TimeSeries:
-        return get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime)
+        return get_rrd_data(
+            connection, hostname, service_description, varname, cf, fromtime, untiltime
+        )
 
     return time_boundaries
 

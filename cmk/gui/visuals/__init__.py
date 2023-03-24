@@ -589,6 +589,9 @@ def _get_packaged_visuals(
     local_visuals: CustomUserVisuals[T] = {}
     local_path = _get_local_path(visual_type)
     for dirpath in local_path.iterdir():
+        if dirpath.is_dir():
+            continue
+
         try:
             for name, raw_visual in store.try_load_file_from_pickle_cache(
                 dirpath, default={}
@@ -651,6 +654,9 @@ def declare_custom_permissions(what: VisualTypeName) -> None:
 def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
     for dirpath in _get_local_path(what).iterdir():
         try:
+            if dirpath.is_dir():
+                continue
+
             for name, visual in store.try_load_file_from_pickle_cache(dirpath, default={}).items():
                 visual["packaged"] = True
                 declare_packaged_visual_permission(what, name, visual)
@@ -1103,7 +1109,11 @@ def _all_local_visuals_files(what: VisualTypeName) -> set[Path]:
     # dashboard dir is singular in local web and gui folder
     dir_name = "dashboard" if what == "dashboards" else what
     with suppress(FileNotFoundError):
-        return {Path(dir_name) / f.relative_to(local_path) for f in local_path.iterdir()}
+        return {
+            Path(dir_name) / f.relative_to(local_path)
+            for f in local_path.iterdir()
+            if not f.is_dir()
+        }
     return set()
 
 

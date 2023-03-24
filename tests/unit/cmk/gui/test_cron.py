@@ -19,6 +19,7 @@ def test_registered_jobs() -> None:
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job",
         "cmk.gui.plugins.wato.remote_audit_logs.execute_get_remote_audit_logs",
         "cmk.gui.watolib.automatic_host_removal.execute_host_removal_background_job",
+        "cmk.gui.node_visualization.cleanup_topology_layouts",
     ]
 
     if not cmk_version.is_raw_edition():

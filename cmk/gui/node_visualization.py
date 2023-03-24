@@ -6,6 +6,7 @@
 import abc
 import itertools
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.store import locked
 from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.bi as bi
@@ -27,6 +29,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.config import active_config
+from cmk.gui.cron import register_job
 from cmk.gui.dashboard import get_topology_context_and_filters
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -39,6 +42,7 @@ from cmk.gui.nodevis_lib import (
     MKGrowthExceeded,
     MKGrowthInterruption,
     topology_configs_dir,
+    topology_dir,
     topology_settings_lookup,
     TopologyConfiguration,
     TopologyFilterConfiguration,
@@ -1213,7 +1217,6 @@ class ParentChildNetworkTopology(Topology):
 
 topology_registry.register(ParentChildNetworkTopology)
 
-
 multisite_builtin_views.update(
     {
         "topology_filters": {
@@ -1382,3 +1385,47 @@ multisite_builtin_views.update(
         },
     }
 )
+
+
+def cleanup_topology_layouts() -> None:
+    """Topology layouts are currently restricted to a maximum number of 10000"""
+    last_run = topology_dir / ".last_run"
+    if not last_run.exists():
+        last_run.touch(exist_ok=True)
+
+    # Run once per day
+    if last_run.stat().st_mtime > time.time() - 86400:
+        return
+
+    # Do simply maximum size check
+    maximum_files = 10000
+    num_files = len(os.listdir(topology_configs_dir))
+    if num_files < maximum_files:
+        return
+
+    with locked(topology_settings_lookup):
+        topology_settings: dict[str, str] = store.try_load_file_from_pickle_cache(
+            topology_settings_lookup, default={}
+        )
+        reverse_lookup: dict[str, str] = {y: x for x, y in topology_settings.items()}
+        paths = sorted(
+            os.listdir(topology_configs_dir),
+            key=lambda x: os.path.getmtime(os.path.join(topology_configs_dir, x)),
+            reverse=True,
+        )
+
+        # Remove keys with non-existent files
+        for unknown_file in set(reverse_lookup.keys()) - set(paths):
+            topology_settings.pop(reverse_lookup[unknown_file], None)
+
+        # Remove files exceeding limit
+        for file_to_remove in paths[maximum_files:]:
+            path_to_remove = topology_configs_dir / file_to_remove
+            path_to_remove.unlink(missing_ok=True)
+            topology_settings.pop(reverse_lookup.get(file_to_remove, ""), None)
+
+        store.save_object_to_file(topology_settings_lookup, topology_settings)
+    last_run.touch(exist_ok=True)
+
+
+register_job(cleanup_topology_layouts)

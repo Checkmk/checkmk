@@ -1493,8 +1493,6 @@ precompile_params: dict[str, Callable[[str, str, dict[str, Any]], Any]] = {}
 check_default_levels: dict[str, Any] = {}
 # factory settings for dictionary-configured checks
 factory_settings: dict[str, dict[str, Any]] = {}
-# variables (names) in checks/* needed for check itself
-check_config_variables: list[Any] = []
 # definitions of active "legacy" checks
 active_check_info: dict[str, dict[str, Any]] = {}
 special_agent_info: dict[str, SpecialAgentInfoFunction] = {}
@@ -1577,7 +1575,6 @@ def _initialize_data_structures() -> None:
     precompile_params.clear()
     check_default_levels.clear()
     factory_settings.clear()
-    del check_config_variables[:]
     active_check_info.clear()
     special_agent_info.clear()
 
@@ -1707,7 +1704,6 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
         "precompile_params": precompile_params,
         "check_default_levels": check_default_levels,
         "factory_settings": factory_settings,
-        "check_config_variables": check_config_variables,
         "active_check_info": active_check_info,
         "special_agent_info": special_agent_info,
     }

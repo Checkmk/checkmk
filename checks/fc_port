@@ -280,15 +280,6 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     yield 0, porttype_list[int(porttype)]
 
 
-check_config_variables.append("fc_port_admstates")
-check_config_variables.append("fc_port_opstates")
-check_config_variables.append("fc_port_phystates")
-check_config_variables.append("fc_port_no_inventory_types")
-check_config_variables.append("fc_port_no_inventory_admstates")
-check_config_variables.append("fc_port_no_inventory_opstates")
-check_config_variables.append("fc_port_no_inventory_phystates")
-check_config_variables.append("fc_port_inventory_use_portname")
-
 check_info["fc_port"] = {
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
         ".1.3.6.1.4.1.1588.2.1.1"

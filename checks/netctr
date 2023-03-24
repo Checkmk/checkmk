@@ -100,8 +100,6 @@ def check_netctr_combined(nic, params, info):
     return (3, "NIC is not present")
 
 
-check_config_variables.append("netctr_counters")
-
 check_info["netctr.combined"] = {
     "check_function": check_netctr_combined,
     "inventory_function": inventory_netctr_combined,

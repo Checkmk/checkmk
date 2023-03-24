@@ -26,7 +26,6 @@ cmctc_pcm_m_sensor_types = {
     79: "kW",
     80: "kW",
 }
-check_config_variables.append("cmctc_pcm_m_sensor_types")
 
 
 def inventory_cmctc_psm_m(info):

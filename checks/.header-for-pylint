@@ -15,7 +15,6 @@ from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildc
 
 check_info: dict[str, CheckInfoElement] = {}
 factory_settings: dict[str, dict | tuple] = {}
-check_config_variables = []
 active_check_info = {}
 special_agent_info = {}
 

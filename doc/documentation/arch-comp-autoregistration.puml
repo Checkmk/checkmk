@@ -1,0 +1,48 @@
+@startuml autoregistration
+
+participant Agent as agent
+participant "agent-receiver" as agent_receiver
+participant "RestAPI" as rest_api
+database "Filesystem" as fs
+participant "Remote site" as remote
+participant "Central site" as central
+
+== Synchronous ==
+
+agent -> agent_receiver: /register_new (Credentials, uuid, csr, agent_labels)
+agent_receiver -> rest_api: /version (Credentials)
+rest_api -> agent_receiver: Version
+agent_receiver -> agent_receiver: Edition supports register_new?
+agent_receiver -> agent_receiver: Root Certificate
+agent_receiver -> rest_api: /agent_controller_certificates_settings (Credentials)
+rest_api -> agent_receiver: Agent controller certificate settings
+agent_receiver -> agent_receiver: Sign CSR (Agent controller certificate settings)
+agent_receiver -> agent_receiver: Signed Certificate
+agent_receiver -> fs: Write R4R file:\nUsername, uuid, agent_labels, signed certificate
+agent_receiver -> agent: Root Certificate
+agent -> agent: enter periodic query phase
+
+== Periodic automation on Central site ==
+
+remote <- central: request R4Rs
+fs -> remote: read R4Rs
+remote -> central: send R4Rs
+central -> central: compute host name\ncheck permissions
+central -> central: create host
+remote <- central: push new config
+remote <- central: send classified R4Rs (declined, discoverable)
+fs <- remote: update R4Rs
+
+== Periodic automation on Remote site ==
+
+remote -> remote: bulk discovery of discoverable host
+remote -> remote: activate changes
+fs <- remote: update R4Rs
+
+== Periodic query from the agent ==
+agent -> agent_receiver: /register_new_ongoing (Credentials, uuid)
+agent_receiver <- fs: read R4Rs
+agent <- agent_receiver: Registration in progress\n/ Registration declined: reason\n/ Success: Signed certificate, connection mode
+agent -> agent: update operational state: open port / push data
+
+@enduml

@@ -42,6 +42,7 @@ Components
    arch-comp-crontab.rst
    arch-comp-backup.rst
    arch-comp-agent-receiver.rst
+   arch-comp-autoregistration.rst
 
    arch-comp-agent-abstract.rst
    arch-comp-agent-linux.rst

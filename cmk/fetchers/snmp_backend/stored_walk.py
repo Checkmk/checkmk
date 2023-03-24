@@ -13,7 +13,6 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.type_defs import AgentRawData, SectionName
 
-import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
@@ -49,13 +48,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
             oid_prefix = oid
             dot_star = False
 
-        host_cache = snmp_cache.host_cache()
-        try:
-            lines = host_cache[self.config.hostname]
-        except KeyError:
-            console.vverbose(f"  Loading {oid}")
-            lines = self.read_walk_data()
-            host_cache[self.config.hostname] = lines
+        console.vverbose(f"  Loading {oid}")
+        lines = self.read_walk_data()
 
         begin = 0
         end = len(lines)

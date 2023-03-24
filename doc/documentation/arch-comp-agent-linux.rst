@@ -74,6 +74,6 @@ They can be configured in the Bakery ("Installation paths for agent files (Linux
 
 Risks and technical debts
 =========================
-This component is by default run as root the monitored system.
+This component is by default run as root on the monitored system.
 
 When the agent is run as non root the directories might not be usable as intended.

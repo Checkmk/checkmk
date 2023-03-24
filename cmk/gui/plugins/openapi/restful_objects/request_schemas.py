@@ -523,7 +523,7 @@ class UpdateFolder(BaseSchema):
             "Replace all attributes with the ones given in this field. Already set"
             "attributes, not given here, will be removed."
         ),
-        example={"networking": "wan"},
+        example={"tag_networking": "wan"},
         required=False,
     )
     update_attributes = gui_fields.host_attributes_field(

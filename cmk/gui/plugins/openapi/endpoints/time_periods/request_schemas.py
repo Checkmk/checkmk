@@ -101,13 +101,13 @@ class TimeRange(BaseSchema):
     start = fields.String(
         required=True,
         format="time",
-        example="14:00",
+        example="14:00:00",
         description="The start time of the period's time range",
     )
     end = fields.String(
         required=True,
         format="time",
-        example="16:00",
+        example="16:00:00",
         description="The end time of the period's time range",
     )
 
@@ -121,7 +121,7 @@ class TimeRangeActive(BaseSchema):
     )
     time_ranges = fields.List(
         fields.Nested(TimeRange),
-        example=[{"start": "13:00", "end": "19:00"}],
+        example=[{"start": "13:00:00", "end": "19:00:00"}],
         load_default=[{"start": "00:00:00", "end": "23:59:00"}],
     )
 
@@ -157,14 +157,14 @@ class CreateTimePeriod(BaseSchema):
     )
     active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),
-        example=[{"day": "monday", "time_ranges": [{"start": "12:00", "end": "14:00"}]}],
+        example=[{"day": "monday", "time_ranges": [{"start": "12:00:00", "end": "14:00:00"}]}],
         description="The list of active time ranges.",
         required=True,
     )
     exceptions = fields.List(
         fields.Nested(TimePeriodException),
         required=False,
-        example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
+        example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}]}],
         description="A list of additional time ranges to be added.",
     )
     exclude = fields.List(  # type: ignore[assignment]
@@ -192,7 +192,7 @@ class UpdateTimePeriod(BaseSchema):
         example=[
             {
                 "day": "monday",
-                "time_ranges": [{"start": "12:00", "end": "14:00"}],
+                "time_ranges": [{"start": "12:00:00", "end": "14:00:00"}],
             }
         ],
         description="The list of active time ranges which replaces the existing list of time ranges",
@@ -201,6 +201,6 @@ class UpdateTimePeriod(BaseSchema):
     exceptions = fields.List(
         fields.Nested(TimePeriodException),
         required=False,
-        example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00", "end": "18:00"}]}],
+        example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}]}],
         description="A list of additional time ranges to be added.",
     )

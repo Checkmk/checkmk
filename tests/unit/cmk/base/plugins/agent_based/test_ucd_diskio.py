@@ -4,14 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import freezegun
+from typing import MutableMapping
+
 import pytest
 
-from cmk.base import item_state
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.ucd_diskio import (
-    check_ucd_diskio,
+    _check_ucd_diskio,
     discover_ucd_diskio,
     parse_ucd_diskio,
 )
@@ -46,50 +52,46 @@ def test_check_ucd_diskio_item_not_found(
 ) -> None:
     assert (
         list(
-            check_ucd_diskio(
+            _check_ucd_diskio(
                 item="not_found",
                 params={},
                 section=parse_ucd_diskio(string_table),
+                value_store={},
+                this_time=0.0,
             )
         )
         == []
     )
 
 
-def test_check_ucd_diskio_first_run(
+def test_check_ucd_diskio(
     string_table: list[StringTable],
 ) -> None:
-    check_result = list(
-        check_ucd_diskio(
+    value_store: MutableMapping = {}
+
+    first_check_result = list(
+        _check_ucd_diskio(
             item="ram0",
             params={},
             section=parse_ucd_diskio(string_table),
+            value_store=value_store,
+            this_time=0.0,
         )
     )
 
-    assert check_result == [Result(state=State.OK, summary="[1]")]
-
-
-def test_check_ucd_diskio_second_run(
-    string_table: list[StringTable],
-) -> None:
-    check_result = list(
-        check_ucd_diskio(
+    second_check_result = list(
+        _check_ucd_diskio(
             item="ram0",
             params={},
             section=parse_ucd_diskio(string_table),
+            value_store=value_store,
+            this_time=60.0,
         )
     )
 
-    check_result = list(
-        check_ucd_diskio(
-            item="ram0",
-            params={},
-            section=parse_ucd_diskio(string_table),
-        )
-    )
+    assert any(isinstance(r, IgnoreResults) for r in first_check_result)
 
-    assert check_result == [
+    assert second_check_result == [
         Result(state=State.OK, summary="[1]"),
         Result(state=State.OK, summary="Read: 0.00 B/s"),
         Metric("disk_read_throughput", 0.0),
@@ -105,27 +107,31 @@ def test_check_ucd_diskio_second_run(
 def test_check_ucd_diskio_dynamic(
     string_table: list[StringTable],
 ) -> None:
-    # Setting the previous states
-    for field in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:
-        item_state.set_item_state(f"ucd_disk_io_{field}.ram1", (0, 60.0))
+    value_store: MutableMapping = {
+        "ucd_disk_io_read_ios.ram1": (0, 60.0),
+        "ucd_disk_io_write_ios.ram1": (0, 60.0),
+        "ucd_disk_io_read_throughput.ram1": (0, 60.0),
+        "ucd_disk_io_write_throughput.ram1": (0, 60.0),
+    }
 
-    with freezegun.freeze_time("1970-01-01 00:01:00"):
-        check_result = list(
-            check_ucd_diskio(
-                item="ram1",
-                params={},
-                section=parse_ucd_diskio(string_table),
-            )
+    check_result = list(
+        _check_ucd_diskio(
+            item="ram1",
+            params={},
+            section=parse_ucd_diskio(string_table),
+            value_store=value_store,
+            this_time=60.0,
         )
+    )
 
-        assert check_result == [
-            Result(state=State.OK, summary="[2]"),
-            Result(state=State.OK, summary="Read: 0.00 B/s"),
-            Metric("disk_read_throughput", 0.0),
-            Result(state=State.OK, summary="Write: 1.00 B/s"),
-            Metric("disk_write_throughput", 1.0),
-            Result(state=State.OK, notice="Read operations: 2.00/s"),
-            Metric("disk_read_ios", 2.0),
-            Result(state=State.OK, notice="Write operations: 3.00/s"),
-            Metric("disk_write_ios", 3.0),
-        ]
+    assert check_result == [
+        Result(state=State.OK, summary="[2]"),
+        Result(state=State.OK, summary="Read: 0.00 B/s"),
+        Metric("disk_read_throughput", 0.0),
+        Result(state=State.OK, summary="Write: 1.00 B/s"),
+        Metric("disk_write_throughput", 1.0),
+        Result(state=State.OK, notice="Read operations: 2.00/s"),
+        Metric("disk_read_ios", 2.0),
+        Result(state=State.OK, notice="Write operations: 3.00/s"),
+        Metric("disk_write_ios", 3.0),
+    ]

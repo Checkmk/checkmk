@@ -17,38 +17,23 @@ from cmk.gui.visuals import view_title
 
 def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Breadcrumb:
     breadcrumb = make_host_breadcrumb(host_name)
-
-    title, url = _get_title_and_url(host_name, service_name)
-
-    # Add service home page
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=title,
-            url=url,
-        ),
-    )
-
+    breadcrumb.append(_service_breadcrumb(host_name, service_name))
     return breadcrumb
 
 
-def _get_title_and_url(
-    host_name: HostName,
-    service_name: ServiceName,
-) -> tuple[str, str | None]:
+def _service_breadcrumb(host_name: HostName, service_name: ServiceName) -> BreadcrumbItem:
     permitted_views = get_permitted_views()
-    service_view_spec = permitted_views.get("service")
+    if service_view_spec := permitted_views.get("service"):
+        return BreadcrumbItem(
+            title=view_title(service_view_spec, context={}),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "service"), ("host", host_name), ("service", service_name)],
+                filename="view.py",
+            ),
+        )
     # In case of no permission for the service view, use breadcrumb without URL
-    if (service_view_spec := permitted_views.get("service")) is None:
-        return "Service", None
-
-    return (
-        view_title(service_view_spec, context={}),
-        makeuri_contextless(
-            request,
-            [("view_name", "service"), ("host", host_name), ("service", service_name)],
-            filename="view.py",
-        ),
-    )
+    return BreadcrumbItem(title="Service", url=None)
 
 
 def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:

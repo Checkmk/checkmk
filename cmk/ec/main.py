@@ -2948,10 +2948,10 @@ class EventStatus:
         # The match_groups of the canceling match only contain the *_ok match groups
         # Since the rewrite definitions are based on the positive match, we need to
         # create some missing keys. O.o
-        match_groups["match_groups_message"] = match_groups["match_groups_message_ok"]
-        match_groups["match_groups_syslog_application"] = match_groups[
-            "match_groups_syslog_application_ok"
-        ]
+        match_groups["match_groups_message"] = match_groups.get("match_groups_message_ok", ())
+        match_groups["match_groups_syslog_application"] = match_groups.get(
+            "match_groups_syslog_application_ok", ()
+        )
 
         # Note: before we compare host and application we need to
         # apply the rewrite rules to the event. Because if in the previous

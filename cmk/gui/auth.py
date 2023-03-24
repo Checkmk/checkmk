@@ -15,6 +15,7 @@ from typing import Literal
 
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
@@ -22,7 +23,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
+from cmk.gui.log import AuthenticationFailureEvent, logger
 from cmk.gui.type_defs import AuthType
 from cmk.gui.userdb.session import auth_cookie_name, generate_auth_hash
 from cmk.gui.utils.urls import requested_file_name
@@ -57,13 +58,25 @@ def check_auth() -> tuple[UserId, AuthType]:
     ]
 
     selected: tuple[UserId, AuthType] | None = None
+    user_id = None
     for auth_method, auth_type in auth_methods:
         # NOTE: It's important for these methods to always raise an exception whenever something
         # strange is happening. This will abort the whole process, regardless of which auth method
         # succeeded or not.
-        if user_id := auth_method():
-            # The last auth_method is the most specific one, use that.
-            selected = (user_id, auth_type)
+        try:
+            if user_id := auth_method():
+                # The last auth_method is the most specific one, use that.
+                selected = (user_id, auth_type)
+        except Exception as e:
+            log_security_event(
+                AuthenticationFailureEvent(
+                    user_error=str(e),
+                    auth_method=auth_type,
+                    username=user_id,
+                    remote_ip=request.remote_ip,
+                )
+            )
+            raise
 
     if not selected:
         raise MKAuthException("Couldn't log in.")

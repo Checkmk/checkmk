@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 from collections.abc import Container, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, NewType, TypedDict, Union
+from typing import Any, Literal, NewType, TypeAlias, TypedDict, Union
 
 __all__ = [
     "ServiceName",
@@ -94,6 +94,11 @@ MetricTuple = tuple[
     float | None,
     float | None,
 ]
+
+JsonSerializable: TypeAlias = (
+    dict[str, "JsonSerializable"] | list["JsonSerializable"] | str | int | float | bool | None
+)
+
 
 ClusterMode = Literal["native", "failover", "worst", "best"]
 

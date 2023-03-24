@@ -3,14 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import logging
+import queue
 from pathlib import Path
+from typing import Iterator
 
 from pytest import CaptureFixture
 
 from tests.testlib import on_time
 
 import cmk.utils.log as log
+import cmk.utils.log.security_event as se
 
 
 def test_get_logger() -> None:
@@ -90,3 +94,34 @@ def test_set_verbosity() -> None:
 
     # Reset verbosity for next test run.
     log.logger.setLevel(log.verbosity_to_log_level(0))
+
+
+@contextlib.contextmanager
+def queue_log_sink(logger: logging.Logger) -> Iterator[queue.Queue[logging.LogRecord]]:
+    old_level = logger.level
+
+    logger.setLevel(logging.INFO)
+    q: queue.Queue[logging.LogRecord] = queue.Queue()
+    queue_handler = logging.handlers.QueueHandler(q)
+    logger.addHandler(queue_handler)
+    yield q
+
+    logger.setLevel(old_level)
+    logger.removeHandler(queue_handler)
+
+
+def test_security_event(tmp_path: Path) -> None:
+    event = se.SecurityEvent(
+        "test security event",
+        {"a": ["serialize", "me"], "b": {"b.1": 42.23}},
+        se.SecurityEvent.Domain.auth,
+    )
+
+    with queue_log_sink(se._root_logger()) as log_queue:
+        se.log_security_event(event)
+        entry = log_queue.get_nowait()
+        assert entry.name == "cmk_security.auth"
+        assert (
+            entry.getMessage() == '{"summary": "test security event", '
+            '"details": {"a": ["serialize", "me"], "b": {"b.1": 42.23}}}'
+        )

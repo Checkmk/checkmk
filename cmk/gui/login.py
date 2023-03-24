@@ -14,6 +14,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
 
@@ -28,6 +29,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.log import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
@@ -135,6 +137,8 @@ class LoginPage(Page):
             return
 
         try:
+            username: UserId | None = None  # make sure it's defined in the except block
+
             if not active_config.user_login and not is_site_login():
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
@@ -145,10 +149,9 @@ class LoginPage(Page):
             if request.request_method != "POST" and not active_config.enable_login_via_get:
                 raise MKUserError(None, _("Method not allowed"))
 
-            username_var = request.get_str_input("_username", "")
-            assert username_var is not None
-            username = UserId(username_var.rstrip())
-            if not username:
+            username = UserId(request.get_str_input_mandatory("_username", "").rstrip())
+            if username == UserId(""):
+                # the variable is there, but it's empty
                 raise MKUserError("_username", _("Missing username"))
 
             password = request.get_validated_type_input_mandatory(Password, "_password")
@@ -182,10 +185,13 @@ class LoginPage(Page):
                         "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                     )
 
-                # Never use inplace redirect handling anymore as used in the past. This results
-                # in some unexpected situations. We simpy use 302 redirects now. So we have a
-                # clear situation.
-                # userdb.need_to_change_pw returns either False or the reason description why the
+                log_security_event(
+                    AuthenticationSuccessEvent(
+                        auth_method="login_form", username=username, remote_ip=request.remote_ip
+                    )
+                )
+
+                # userdb.need_to_change_pw returns either None or the reason description why the
                 # password needs to be changed
                 if change_reason := userdb.need_to_change_pw(username, now):
                     raise HTTPRedirect(
@@ -196,7 +202,16 @@ class LoginPage(Page):
 
             userdb.on_failed_login(username, now)
             raise MKUserError(None, _("Invalid login"))
+
         except MKUserError as e:
+            log_security_event(
+                AuthenticationFailureEvent(
+                    user_error=e.message,
+                    auth_method="login_form",
+                    username=username,
+                    remote_ip=request.remote_ip,
+                )
+            )
             user_errors.add(e)
 
     def _show_login_page(self) -> None:

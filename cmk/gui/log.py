@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from dataclasses import dataclass
 
 import cmk.utils.log
 import cmk.utils.paths
+from cmk.utils.log.security_event import SecurityEvent
 
 logger = logging.getLogger("cmk.web")
 
@@ -30,3 +32,34 @@ def _augmented_log_levels(log_levels: dict[str, int]) -> dict[str, int]:
     all_levels = {} if root_level is None else {"": root_level, "cmk": root_level}
     all_levels.update(log_levels)
     return all_levels
+
+
+@dataclass
+class AuthenticationFailureEvent(SecurityEvent):
+    """Indicates a failed authentication attempt"""
+
+    def __init__(
+        self, *, user_error: str, auth_method: str, username: str | None, remote_ip: str | None
+    ) -> None:
+        super().__init__(
+            "authentication failed",
+            {
+                "user_error": user_error,  # Note: may be localized
+                "method": auth_method,
+                "user": username,
+                "remote_ip": remote_ip,
+            },
+            SecurityEvent.Domain.auth,
+        )
+
+
+@dataclass
+class AuthenticationSuccessEvent(SecurityEvent):
+    """Indicates a successful authentication"""
+
+    def __init__(self, *, auth_method: str, username: str, remote_ip: str | None) -> None:
+        super().__init__(
+            "authentication succeeded",
+            {"method": auth_method, "user": username, "remote_ip": remote_ip},
+            SecurityEvent.Domain.auth,
+        )

@@ -15,6 +15,7 @@ from flask import Flask
 from flask.sessions import SessionInterface, SessionMixin
 
 from cmk.utils.exceptions import MKException
+from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -22,6 +23,7 @@ import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb
 from cmk.gui.auth import check_auth, parse_and_check_cookie
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.log import AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
@@ -223,6 +225,17 @@ class FileBasedSession(SessionInterface):
         # No cookie present. We create a new session and the cookie will be sent to the user
         # through `save_session` below.
         if not (cookie_value := request.cookies.get(self.get_cookie_name(app), type=str)):
+            # Our REST API doesn't hand out session tokens, so every request is a new session.
+            # Filter those for now to avoid spamming the log.
+            if auth_type != "bearer":
+                log_security_event(
+                    AuthenticationSuccessEvent(
+                        auth_method=auth_type,
+                        username=str(user_name),
+                        remote_ip=request.remote_addr,
+                    )
+                )
+
             # We didn't receive a cookie, so this is the first time we use this session.
             return self.session_class.create_session(user_name, auth_type)
 

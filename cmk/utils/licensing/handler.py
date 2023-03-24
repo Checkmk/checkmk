@@ -69,7 +69,7 @@ class LicensingHandler(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def effect_core(self, num_services: int) -> UserEffect:
+    def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
         raise NotImplementedError()
 
     @abc.abstractmethod

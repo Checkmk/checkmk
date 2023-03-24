@@ -62,8 +62,8 @@ def get_license_message() -> str:
     return _get_licensing_handler().message
 
 
-def get_licensing_user_effect_by_num_services(num_services: int) -> UserEffect:
-    return _get_licensing_handler().effect_core(num_services)
+def get_licensing_user_effect_core(num_services: int, num_hosts_shadow: int) -> UserEffect:
+    return _get_licensing_handler().effect_core(num_services, num_hosts_shadow)
 
 
 def get_licensing_user_effect(changes: PendingChanges | None = None) -> UserEffect:

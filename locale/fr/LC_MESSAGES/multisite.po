@@ -701,6 +701,27 @@ msgstr ""
 msgid "&lt;None&gt;"
 msgstr "&lt;None&gt ;"
 
+#, fuzzy
+msgid ""
+"'Activate Changes' is blocked. The verification of your license was not "
+"successful."
+msgstr "Inscription réussie"
+
+msgid "'Activate Changes' is blocked. Your Checkmk license has been suspended."
+msgstr ""
+
+#, python-format
+msgid ""
+"'Activate Changes' is blocked. Your Checkmk license is expired by more than "
+"60 days since %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"'Activate Changes' is blocked. Your are using %s, which is not included in "
+"the applied license (licensed edition: %s)."
+msgstr ""
+
 msgid "'Cleared' state"
 msgstr "État \"effacé\"."
 
@@ -2158,7 +2179,7 @@ msgstr ""
 "destinataires ne peuvent pas voir quels autres destinataires ont été "
 "notifiés."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "A service level is a number that describes the business impact of a host or "
 "service. This level can be used in rules for notifications, as a filter in "
@@ -2166,7 +2187,7 @@ msgid ""
 "level is assumed to be more business critical. This ruleset allows to assign "
 "service levels to hosts and/or services. Note: if you assign a service level "
 "to a host with the ruleset <i>Service Level of hosts</i>, then this level is "
-"inherited to all services that do <b>not</b> have explicitely assigned a "
+"inherited to all services that do <b>not</b> have explicitly assigned a "
 "service with the ruleset <i>Service Level of services</i>. Assigning no "
 "service level is equal to defining a level of 0.<br><br>The list of "
 "available service levels is configured via a <a href='%s'>global option.</a>"
@@ -9454,8 +9475,16 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk avec les données de performance de temps"
 
+#, fuzzy, python-format
+msgid "Checkmk: License expires in %d days"
+msgstr "L'essai expire dans %s jours"
+
 msgid "Checkmk: Message"
 msgstr "Checkmk : Message"
+
+#, fuzzy, python-format
+msgid "Checkmk: Trial expires in %d days"
+msgstr "L'essai expire dans %s jours"
 
 msgid "Checkpoint Firewall Connections"
 msgstr "Connexions du pare-feu Checkpoint"
@@ -11779,7 +11808,8 @@ msgstr ""
 msgid "Count"
 msgstr "Comte"
 
-msgid "Count (number of recent occurrances)"
+#, fuzzy
+msgid "Count (number of recent occurrences)"
 msgstr "Compter (nombre d'occurrences récentes)"
 
 msgid "Count Groups"
@@ -13454,6 +13484,27 @@ msgstr "VMs désallouées"
 
 msgid "Deallocating VMs"
 msgstr "Désallocation des VMs"
+
+#, python-format
+msgid ""
+"Dear Checkmk user,<br><br>The license for your Checkmk site %s will expire "
+"in %d days. After expiration you will not be able to make any configuration "
+"changes.<br><br>If you haven't extended your license yet, please contact the "
+"Checkmk sales team at %s to ensure that your license is extended in time."
+"<br><br>If you purchased your license through a Checkmk partner or reseller, "
+"you can find their name on the licensing page (%s).<br><br>Sincerely, your "
+"Checkmk Server"
+msgstr ""
+
+#, python-format
+msgid ""
+"Dear Checkmk user,<br><br>Your Checkmk trial of site %s expires in %d days."
+"<br><br>If you want to continue using Checkmk as today, you will need to %s. "
+"In case you already have a license, please enter your license credentials on "
+"the product's licensing page (%s).<br><br>Otherwise, you will have to reduce "
+"the number of services from the current %d services to fit within the free "
+"license service limit of %d.<br><br>Sincerely, your Checkmk Server"
+msgstr ""
 
 msgid "Debug"
 msgstr "Déboguer"
@@ -23989,9 +24040,10 @@ msgstr ""
 "les sons. Dans les vues livrées avec Multisite, toutes les vues de problèmes "
 "ont des sons activés."
 
+#, fuzzy
 msgid ""
 "If that user does not have the permission <i>See all events</i> then this "
-"permission controls wether he/she can see events that are not related to a "
+"permission controls whether he/she can see events that are not related to a "
 "host in the monitoring and that do not have been assigned specific contact "
 "groups to via the event rule."
 msgstr ""
@@ -24063,8 +24115,9 @@ msgstr ""
 "d'un système à l'autre.\" (https://www.kernel.org/doc/Documentation/"
 "filesystems/proc.txt)"
 
+#, fuzzy
 msgid ""
-"If the priority of the event lies withing this range and either no text to "
+"If the priority of the event lies within this range and either no text to "
 "cancel is specified or that text also matched, then events created with this "
 "rule will automatically be cancelled (if host, application, facility and "
 "match groups match)."
@@ -24090,9 +24143,10 @@ msgstr ""
 "cette façon, vous pouvez détecter un problème de rotation du fichier journal "
 "ou autre."
 
+#, fuzzy
 msgid ""
 "If there already exists an open event because of absent messages according "
-"to this rule, you can optionally merge the new incident with the exising "
+"to this rule, you can optionally merge the new incident with the existing "
 "event or create a new event for each interval with absent messages."
 msgstr ""
 "S'il existe déjà un événement ouvert en raison de messages absents selon "
@@ -24676,9 +24730,10 @@ msgstr ""
 "d'événements. Veuillez noter que cela peut entraîner un grand nombre "
 "d'entrées de journal. "
 
+#, fuzzy
 msgid ""
 "If you enable this option then the slave will automatically fallback from "
-"takeover mode to slavemode if the master is rechable again within the "
+"takeover mode to slavemode if the master is reachable again within the "
 "selected number of seconds since the previous unreachability (not since the "
 "takeover)"
 msgstr ""
@@ -28554,14 +28609,6 @@ msgid "License verification"
 msgstr "Vérification du certificat SSL"
 
 #, fuzzy
-msgid "License verification mode"
-msgstr "Vérification du certificat SSL"
-
-#, fuzzy
-msgid "License verification state"
-msgstr "Vérification du certificat SSL"
-
-#, fuzzy
 msgid "Licensed"
 msgstr "Licences"
 
@@ -31756,10 +31803,6 @@ msgstr "Mode trouvé lors de l'inventaire"
 
 msgid "Mode of the Check"
 msgstr "Mode de contrôle"
-
-#, fuzzy, python-format
-msgid "Mode: %s"
-msgstr "Dossier : %s"
 
 msgid "Model and revsion"
 msgstr "Modèle et révsion"
@@ -39635,7 +39678,8 @@ msgstr "Expression régulière"
 msgid "Regular expression for logfile filtering"
 msgstr "Expressions régulières pour la classification des messages"
 
-msgid "Regular expression for matching the syslog tag (case insenstive)"
+#, fuzzy
+msgid "Regular expression for matching the syslog tag (case insensitive)"
 msgstr ""
 "Expression régulière pour faire correspondre le tag syslog (sans distinction "
 "de casse)"
@@ -40462,21 +40506,18 @@ msgstr "Réinitialisation du paquet de règles à la version MKP"
 msgid "Reset sorting"
 msgstr "Réinitialisation du tri"
 
+#, fuzzy, python-format
+msgid "Reset the rules of rule pack %s to the ones provided via MKP"
+msgstr ""
+"Réinitialisation des règles du pack de règles %s à celles fournies via MKP"
+
 msgid "Reset to default"
 msgstr "Réinitialisation aux valeurs par défaut"
-
-msgid "Resetted all rule hit counters to zero"
-msgstr "Remise à zéro de tous les compteurs d'occurrences de règles"
 
 #, python-format
 msgid "Resetted configuration variable %s to its default."
 msgstr ""
 "Réinitialisation de la variable de configuration %s à sa valeur par défaut."
-
-#, python-format
-msgid "Resetted the rules of rule pack %s to the ones provided via MKP"
-msgstr ""
-"Réinitialisation des règles du pack de règles %s à celles fournies via MKP"
 
 #, fuzzy
 msgid "Resetting"
@@ -40718,10 +40759,6 @@ msgstr "Résultat du dernier processus %s"
 
 msgid "Result of last synchronization process"
 msgstr "Résultat du dernier processus de synchronisation"
-
-#, fuzzy, python-format
-msgid "Result: %s"
-msgstr "Résultats"
 
 msgid "Resulting notifications"
 msgstr "Notifications résultantes"
@@ -42246,9 +42283,10 @@ msgstr "Sélectionnez le type de dispositif"
 msgid "Select file"
 msgstr "Sélectionnez le fichier"
 
+#, fuzzy
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
-"the number of messages from the first occurrance and reset this counter as "
+"the number of messages from the first occurrence and reset this counter as "
 "soon as the interval is elapsed or the maximum count has reached. The token "
 "bucket algorithm does not work with intervals but simply decreases the "
 "current count by one for each partial time interval. Please refer to the "
@@ -44748,18 +44786,6 @@ msgstr "Sophos Utilisation du disque"
 msgid "Sophos Memory utilization"
 msgstr "Sophos Utilisation de la mémoire"
 
-#, fuzzy, python-format
-msgid ""
-"Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
-"installation can handle %d services after the 30-day trial period, not %d. "
-"Please adjust your configuration accordingly and try again."
-msgstr ""
-"Désolé, mais votre essai illimité de 30 jours de Checkmk est terminé. "
-"L'édition gratuite de Checkmk ne permet pas les configurations distribuées "
-"après la période d'essai de 30 jours. Si vous souhaitez tester des "
-"configurations distribuées, veuillez <a href=\"https://checkmk.com/contact."
-"php ?\" target=\"_blank\">nous contacter</a>."
-
 #, fuzzy
 msgid ""
 "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
@@ -46978,6 +47004,10 @@ msgstr "Les provocations réussies"
 
 msgid "Success"
 msgstr "Succès"
+
+#, fuzzy
+msgid "Successful"
+msgstr "succès"
 
 msgid "Successfully changed password."
 msgstr "Le mot de passe a été changé avec succès."
@@ -49444,10 +49474,6 @@ msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr ""
 "l'état actuel de la surveillance (y compris les acquittements et les temps "
 "d'arrêt)"
-
-#, python-format
-msgid "The currently applied license is expired since: %s (> 60 days)."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "The custom logo %s has been deleted."
@@ -52130,6 +52156,16 @@ msgid "The total size of all indexes for the collection"
 msgstr "La taille totale de tous les index de la collection."
 
 #, python-format
+msgid ""
+"The trial period of Checkmk has expired on %s.<br><br>If you want to "
+"continue using Checkmk as today, you must %s. In case you already have a "
+"license, please enter your license credentials on the product's licensing "
+"page (%s).<br><br>Otherwise, you will need to reduce the number of services "
+"to fit within the free license service limit of %d. You have exceeded this "
+"limit with %d."
+msgstr ""
+
+#, python-format
 msgid "The tuple must contain two elements, but you have %d"
 msgstr "Le tuple doit contenir deux éléments, mais vous avez %d"
 
@@ -52337,6 +52373,13 @@ msgstr "Le nom de la chambre forte"
 #, fuzzy
 msgid "The verification cannot be started due to missing CA certificate"
 msgstr "Ce paquet ne peut pas être installé : %s"
+
+#, python-format
+msgid ""
+"The verification of your license was not successful: %s, Checkmk is now "
+"unlicensed.<br> To continue using Checkmk, please contact your Checkmk "
+"support."
+msgstr ""
 
 #, python-format
 msgid "The version of this site is not a %s"
@@ -53011,8 +53054,9 @@ msgstr "Cet alias est déjà utilisé dans le rôle %s."
 msgid "This alias is already used in timeperiod %s."
 msgstr "Cet alias est déjà utilisé dans la période %s."
 
+#, fuzzy
 msgid ""
-"This allows you to disable the replication without loosing your settings. If "
+"This allows you to disable the replication without losing your settings. If "
 "you check this box, then no replication will be done and the Event Console "
 "will act as its own master."
 msgstr ""
@@ -54143,8 +54187,9 @@ msgstr "Cette option a été modifiée dans les paramètres globaux."
 msgid "This option has been modified."
 msgstr "Cette option a été modifiée."
 
+#, fuzzy
 msgid ""
-"This option helps you to protect the Event Console from resoure problems "
+"This option helps you to protect the Event Console from resource problems "
 "which may occur in case of too many current events at the same time."
 msgstr ""
 "Cette option vous aide à protéger la console d'événements des problèmes de "
@@ -56813,7 +56858,8 @@ msgstr "Heure d'entrée dans le fichier journal"
 msgid "Time of first occurrence of this serial"
 msgstr "Heure de la première apparition de cette série"
 
-msgid "Time of last occurrance"
+#, fuzzy
+msgid "Time of last occurrence"
 msgstr "Heure de la dernière apparition"
 
 msgid "Time offset"
@@ -57029,10 +57075,6 @@ msgstr "Time warp - montrer l'agrégat BI pendant cette période de temps"
 #, fuzzy
 msgid "Time zone"
 msgstr "Horizon temporel"
-
-#, fuzzy, python-format
-msgid "Time: %s"
-msgstr "Times"
 
 msgid "Timed out Active Directory Requests"
 msgstr "Requêtes Active Directory expirées"
@@ -57269,8 +57311,9 @@ msgid ""
 "update interval is set to {bound} (You entered {actual})"
 msgstr ""
 
+#, fuzzy
 msgid ""
-"To protect you against a continously growing list of current events created "
+"To protect you against a continuously growing list of current events created "
 "by different hosts or rules, you can configure this overall limit of current "
 "events. All currently current events are counted and once the limit is "
 "reached, no further events will be currented which means that new incoming "
@@ -61144,6 +61187,22 @@ msgid "Verification failed: %s"
 msgstr "Notification de l'utilisateur"
 
 #, fuzzy
+msgid "Verification mode"
+msgstr "Notification de l'utilisateur"
+
+#, fuzzy
+msgid "Verification result"
+msgstr "Inscription réussie"
+
+#, fuzzy
+msgid "Verification state"
+msgstr "Notification de l'utilisateur"
+
+#, fuzzy
+msgid "Verification time"
+msgstr "Notification de l'utilisateur"
+
+#, fuzzy
 msgid "Verified verification response"
 msgstr "Règles de notification globale"
 
@@ -62695,10 +62754,11 @@ msgstr ""
 "Graphite (Carbon) externe de votre choix. Les graphiques Graphite seront "
 "nommés avec le schéma <i>HOST / SERVICE / VARIABLE</i>."
 
+#, fuzzy
 msgid ""
 "When this option is enabled then messages that do not match a rule will be "
 "archived into the event history anyway (Messages that do match a rule will "
-"be archived always, as long as they are not explicitely dropped are being "
+"be archived always, as long as they are not explicitly dropped are being "
 "aggregated by counting.)"
 msgstr ""
 "Lorsque cette option est activée, les messages qui ne correspondent pas à "
@@ -63809,9 +63869,9 @@ msgstr ""
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "Vous essayez de modifier une règle qui n'existe plus."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"You are using the replacment reference <tt>\\%d</tt>, but your match text "
+"You are using the replacement reference <tt>\\%d</tt>, but your match text "
 "has only %d subgroups."
 msgstr ""
 "Vous utilisez la référence de remplacement <tt>\\%d</tt>, mais votre texte "
@@ -65141,8 +65201,9 @@ msgstr ""
 "configuration de surveillance distribuée, le site de mise à jour peut être "
 "différent."
 
+#, fuzzy
 msgid ""
-"You matching text has too many regular expresssion subgroups. Only nine are "
+"You matching text has too many regular expression subgroups. Only nine are "
 "allowed."
 msgstr ""
 "Le texte correspondant a trop de sous-groupes d'expressions régulières. "
@@ -65420,13 +65481,46 @@ msgstr "Votre %s a été sauvegardé."
 
 #, python-format
 msgid ""
-"Your Checkmk trial will expire in %d days. After that monitoring of up to "
-"services is supported, currently %d services are being monitored. Adjust "
-"your configuration or see here how to proceed: %s"
+"Your Checkmk license expires in %d days. After expiration you will not be "
+"able to make any configuration changes.<br><br>Please contact the Checkmk "
+"sales team at %s to ensure that your license is extended in time.<br><br>If "
+"you purchased your license through a Checkmk partner or reseller, you can "
+"find their name on the licensing page (%s)."
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk license expires in %d days. After expiration you will not be "
+"able to make any configuration changes.<br><br>Please contact your Checkmk "
+"administrator to ensure that your license is extended in time."
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk license has been suspended.<br><br>Please contact the Checkmk "
+"sales team at %s.<br><br>If you purchased your license through a Checkmk "
+"partner or reseller, you can find their name on the licensing page (%s)."
+msgstr ""
+
+#, python-format
+msgid ""
+"Your Checkmk trial expires in %d days.<br><br>If you want to continue using "
+"Checkmk as today, you will need to %s. In case you already have a license, "
+"please enter your license credentials in the product's licensing page (%s)."
+"<br><br>Otherwise, you will have to reduce the number of services from the "
+"current %d services to fit within the free license service limit of %d."
 msgstr ""
 
 msgid "Your WebAuthn credential is already in use"
 msgstr "Votre identifiant WebAuthn est déjà utilisé."
+
+#, python-format
+msgid ""
+"Your are using %s, which is not included in the applied license (licensed "
+"edition: %s).<br><br>If you want to continue using Checkmk, you must "
+"purchase a license supporting %s. Please contact the Checkmk sales team at "
+"%s."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -65510,12 +65604,12 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr "Votre entrée ne correspond pas au format requis."
 
-#, fuzzy, python-format
-msgid "Your license expires in %i days."
-msgstr "L'essai expire dans %s jours"
-
 #, python-format
-msgid "Your license is expired since %s. See here how to proceed: %s"
+msgid ""
+"Your license has expired since %s.<br><br>Please contact the Checkmk sales "
+"team at %s to ensure that your license will be extended.<br><br>If you "
+"purchased your license through a Checkmk partner or reseller, you can find "
+"their name on the licensing page (%s)."
 msgstr ""
 
 #, fuzzy
@@ -67249,6 +67343,10 @@ msgid_plural "rules"
 msgstr[0] "Ajouter une règle"
 msgstr[1] "Ajouter une règle"
 
+#, fuzzy
+msgid "rule pack was not exported"
+msgstr "Suppression du rule_pack %s de l'exportation MKP"
+
 msgid "run as background job"
 msgstr "exécuter en tâche de fond"
 
@@ -67680,6 +67778,51 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
+#, fuzzy
+#~| msgid "SSL certificate verification"
+#~ msgid "License verification mode"
+#~ msgstr "Vérification du certificat SSL"
+
+#, fuzzy
+#~| msgid "SSL certificate verification"
+#~ msgid "License verification state"
+#~ msgstr "Vérification du certificat SSL"
+
+#, fuzzy, python-format
+#~| msgid "Folder: %s"
+#~ msgid "Mode: %s"
+#~ msgstr "Dossier : %s"
+
+#~ msgid "Resetted all rule hit counters to zero"
+#~ msgstr "Remise à zéro de tous les compteurs d'occurrences de règles"
+
+#, fuzzy, python-format
+#~| msgid "Results"
+#~ msgid "Result: %s"
+#~ msgstr "Résultats"
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
+#~| "Free Edition does not allow distributed setups after the 30-day trial "
+#~| "period. In case you want to test distributed setups, please <a href="
+#~| "\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>."
+#~ msgid ""
+#~ "Sorry, but your unlimited 30-day trial of Checkmk has ended. Your Checkmk "
+#~ "installation can handle %d services after the 30-day trial period, not "
+#~ "%d. Please adjust your configuration accordingly and try again."
+#~ msgstr ""
+#~ "Désolé, mais votre essai illimité de 30 jours de Checkmk est terminé. "
+#~ "L'édition gratuite de Checkmk ne permet pas les configurations "
+#~ "distribuées après la période d'essai de 30 jours. Si vous souhaitez "
+#~ "tester des configurations distribuées, veuillez <a href=\"https://checkmk."
+#~ "com/contact.php ?\" target=\"_blank\">nous contacter</a>."
+
+#, fuzzy, python-format
+#~| msgid "Times"
+#~ msgid "Time: %s"
+#~ msgstr "Times"
+
 #~ msgid "CMA"
 #~ msgstr "CMA"
 
@@ -68003,16 +68146,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~| msgid "Failed"
 #~ msgid "failed"
 #~ msgstr "Échoué"
-
-#, fuzzy
-#~| msgid "success"
-#~ msgid "successful"
-#~ msgstr "succès"
-
-#, fuzzy
-#~| msgid "Registration successful"
-#~ msgid "Verification successful"
-#~ msgstr "Inscription réussie"
 
 #, fuzzy
 #~| msgid "Amazon Web Services (AWS)"

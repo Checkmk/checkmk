@@ -5,8 +5,8 @@ PATCH_VERSION = "2.7.6"
 def patch():
     http_archive(
         name = "patch",
-        urls = ["https://ftp.gnu.org/gnu/patch/patch-" + PATCH_VERSION + ".tar.gz"],
-        sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+        urls = ["https://ftp.gnu.org/gnu/patch/patch-" + PATCH_VERSION + ".tar.gz", "https://fossies.org/linux/misc/patch-" + PATCH_VERSION + ".tar.xz"],
+        sha256 = sha256,
         patches = [
                    '//packages/patch/patches:ed-style-01-missing-input-files.patch.dif',
                    '//packages/patch/patches:ed-style-02-fix-arbitrary-command-execution.patch.dif',

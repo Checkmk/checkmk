@@ -7,22 +7,19 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.testlib import Check
-
 from cmk.base.api.agent_based.type_defs import StringTable
-
-from .checktestlib import assertCheckResultsEqual, CheckResult
+from cmk.base.check_legacy_includes.nullmailer_mailq import (
+    check_nullmailer_mailq,
+    check_single_queue,
+    NULLMAILER_MAILQ_DEFAULT_LEVELS,
+    parse_nullmailer_mailq,
+    Queue,
+)
 
 pytestmark = pytest.mark.checks
 
 
-def _get_from_context(name, context={}):  # pylint: disable=dangerous-default-value
-    if not context:
-        context.update(Check("nullmailer_mailq").context)
-    return context[name]
-
-
-RawQueue = tuple[float, float, str]
+RawQueue = tuple[int, int, str]
 
 
 @pytest.mark.parametrize(
@@ -36,10 +33,8 @@ RawQueue = tuple[float, float, str]
         ),
     ],
 )
-def test_parse_function(info: StringTable, expected_parsed: Sequence[object]) -> None:
-    parse_nullmailer_mailq = _get_from_context("parse_nullmailer_mailq")
-    queue = _get_from_context("Queue")
-    assert parse_nullmailer_mailq(info) == [queue(*p) for p in expected_parsed]
+def test_parse_function(info: StringTable, expected_parsed: Sequence[RawQueue]) -> None:
+    assert parse_nullmailer_mailq(info) == [Queue(*p) for p in expected_parsed]
 
 
 @pytest.mark.parametrize(
@@ -50,7 +45,7 @@ def test_parse_function(info: StringTable, expected_parsed: Sequence[object]) ->
             (10, 20),
             [
                 (0, "Deferred: 0 mails", [("length", 0, 10, 20)]),
-                (0, "Size: 25 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25, None, None)]),
             ],
         ),
         (
@@ -62,7 +57,7 @@ def test_parse_function(info: StringTable, expected_parsed: Sequence[object]) ->
                     "Deferred: 12 mails (warn/crit at 10 mails/20 mails)",
                     [("length", 12, 10, 20)],
                 ),
-                (0, "Size: 25 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25, None, None)]),
             ],
         ),
         # Other queues have no metrics:
@@ -70,23 +65,18 @@ def test_parse_function(info: StringTable, expected_parsed: Sequence[object]) ->
             (1024, 123, "Other queue"),
             (10, 20),
             [
-                (2, "Other queue: 123 mails (warn/crit at 10 mails/20 mails)"),
-                (0, "Size: 1.00 KiB"),
+                (2, "Other queue: 123 mails (warn/crit at 10 mails/20 mails)", []),
+                (0, "Size: 1.00 KiB", []),
             ],
         ),
     ],
 )
 def test_check_single_queue(
     raw_queue: RawQueue,
-    levels_length: tuple[float, float],
+    levels_length: tuple[int, int],
     expected_result: Sequence[tuple[float, str]],
 ) -> None:
-    check_single_queue = _get_from_context("_check_single_queue")
-    queue = _get_from_context("Queue")
-    assertCheckResultsEqual(
-        CheckResult(check_single_queue(queue(*raw_queue), levels_length)),
-        CheckResult(expected_result),
-    )
+    assert list(check_single_queue(Queue(*raw_queue), levels_length)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -96,7 +86,7 @@ def test_check_single_queue(
             [(25, 0, "deferred"), (25, 0, "failed")],
             [
                 (0, "Deferred: 0 mails", [("length", 0, 10, 20)]),
-                (0, "Size: 25 B", [("size", 25)]),
+                (0, "Size: 25 B", [("size", 25, None, None)]),
                 (0, "Failed: 0 mails", []),
                 (0, "Size: 25 B", []),
             ],
@@ -104,17 +94,16 @@ def test_check_single_queue(
     ],
 )
 def test_check_nullmailer_mailq(
-    raw_queues: Sequence[RawQueue], expected_result: Sequence[object]
+    raw_queues: Sequence[RawQueue], expected_result: Sequence[RawQueue]
 ) -> None:
     dummy_item = ""
-    params = _get_from_context("nullmailer_mailq_default_levels")
-    check_nullmailer_mailq = _get_from_context("check_nullmailer_mailq")
-    queue = _get_from_context("Queue")
-    assertCheckResultsEqual(
-        CheckResult(
+    assert (
+        list(
             check_nullmailer_mailq(
-                dummy_item, params, [queue(*raw_queue) for raw_queue in raw_queues]
+                dummy_item,
+                NULLMAILER_MAILQ_DEFAULT_LEVELS,
+                [Queue(*raw_queue) for raw_queue in raw_queues],
             )
-        ),
-        CheckResult(expected_result),
+        )
+        == expected_result
     )

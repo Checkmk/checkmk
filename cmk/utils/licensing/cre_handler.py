@@ -26,7 +26,7 @@ class CRELicensingHandler(LicensingHandler):
     def message(self) -> str:
         return ""
 
-    def effect_core(self, num_services: int) -> UserEffect:
+    def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
         return UserEffect(header=None, email=None, block=None)
 
     def effect(self, changes: PendingChanges | None = None) -> UserEffect:

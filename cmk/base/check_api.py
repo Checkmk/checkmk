@@ -56,6 +56,19 @@ from cmk.base.api.agent_based.checking_classes import (  # noqa: F401 # pylint: 
 )
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
+from cmk.base.api.agent_based.utils import (  # noqa: F401 # pylint: disable=unused-import
+    all_of,
+    any_of,
+    contains,
+    endswith,
+    equals,
+    exists,
+    matches,
+    not_contains,
+    not_equals,
+    not_exists,
+    startswith,
+)
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]

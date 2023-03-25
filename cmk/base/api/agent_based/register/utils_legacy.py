@@ -8,10 +8,13 @@ from typing import NotRequired, TypedDict
 
 from cmk.base.api.agent_based.checking_classes import Service
 
+from ..section_classes import SNMPDetectSpecification
+
 _DiscoveredParameters = dict | tuple | str | None
 
 
 class CheckInfoElement(TypedDict):
+    detect: NotRequired[SNMPDetectSpecification]
     check_function: NotRequired[Callable]
     inventory_function: NotRequired[
         Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]] | Iterable[Service]]

@@ -37,6 +37,24 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
 )
 
 
+def test_detect_spec_consistency_in_legacy_checks(
+    fix_plugin_legacy: FixPluginLegacy,
+) -> None:
+    """Make sure that a new-style detect spec is consistent to the scan function, if present"""
+    for name, check_info_element in fix_plugin_legacy.check_info.items():
+        if "detect" in check_info_element:
+            # as long as scan function exist, 'detect' is only *additionally* allowed
+            assert "snmp_scan_function" in check_info_element
+
+        if (scan_function := check_info_element.get("snmp_scan_function")) is None:
+            continue
+
+        if "detect" not in check_info_element:
+            continue
+
+        assert check_info_element["detect"] == create_detect_spec(name, scan_function, [])
+
+
 @pytest.mark.parametrize(
     "name, oids_data, expected_result",
     [

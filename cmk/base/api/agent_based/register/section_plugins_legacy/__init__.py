@@ -243,10 +243,14 @@ def create_snmp_section_plugin_from_legacy(
         handle_empty_info=bool(check_info_element.get("handle_empty_info")),
     )
 
-    detect_spec = create_detect_spec(
-        check_plugin_name,
-        snmp_scan_function,
-        scan_function_fallback_files or [],
+    detect_spec = (
+        check_info_element["detect"]
+        if "detect" in check_info_element
+        else create_detect_spec(
+            check_plugin_name,
+            snmp_scan_function,
+            scan_function_fallback_files or [],
+        )
     )
 
     return create_snmp_section_plugin(

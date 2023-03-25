@@ -7,16 +7,10 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-
-def _scan_apc_rackpdu_power(_oid):
-    raise NotImplementedError("Section migrated to new check API")
-
-
 check_info["apc_rackpdu_power"] = {
+    # section already migrated
     "inventory_function": discover(),
     "check_function": check_elphase,
     "service_description": "PDU %s",
-    "snmp_info": [(".1", ["1"])],  # not used but entry 'snmp_info' must be present
-    "snmp_scan_function": _scan_apc_rackpdu_power,
     "group": "el_inphase",
 }

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import os
 import re
 import subprocess
@@ -15,7 +16,6 @@ from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
-from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import DiscoveryResult, HostName
 
 from cmk.automations import results
@@ -360,15 +360,13 @@ def test_automation_analyse_service_no_check(  # type: ignore[no-untyped-def]
 
 
 # old alias, drop after 2.2 release
-def test_automation_try_inventory_not_existing_host(  # type: ignore[no-untyped-def]
-    test_cfg, site: Site
-) -> None:
+def test_automation_try_inventory_not_existing_host(site: Site) -> None:
     _execute_automation(
         site,
         "try-inventory",
-        args=["xxx-not-existing-host"],
+        args=["xxx-not-existing-host."],
         expect_stderr_pattern=(
-            r"Failed to lookup IPv4 address of xxx-not-existing-host "
+            r"Failed to lookup IPv4 address of xxx-not-existing-host. "
             r"via DNS: (\[Errno -2\] Name or service not known"
             r"|\[Errno -3\] Temporary failure in name resolution"
             r"|\[Errno -5\] No address associated with hostname)\n"
@@ -379,15 +377,13 @@ def test_automation_try_inventory_not_existing_host(  # type: ignore[no-untyped-
     )
 
 
-def test_automation_discovery_preview_not_existing_host(  # type: ignore[no-untyped-def]
-    test_cfg, site: Site
-) -> None:
+def test_automation_discovery_preview_not_existing_host(site: Site) -> None:
     _execute_automation(
         site,
         "service-discovery-preview",
-        args=["xxx-not-existing-host"],
+        args=["xxx-not-existing-host."],
         expect_stderr_pattern=(
-            r"Failed to lookup IPv4 address of xxx-not-existing-host "
+            r"Failed to lookup IPv4 address of xxx-not-existing-host. "
             r"via DNS: (\[Errno -2\] Name or service not known"
             r"|\[Errno -3\] Temporary failure in name resolution"
             r"|\[Errno -5\] No address associated with hostname)\n"
@@ -475,7 +471,7 @@ def test_automation_set_autochecks(test_cfg, site: Site) -> None:  # type: ignor
 
 
 def test_automation_update_dns_cache(
-    test_cfg: TagConfig, site: Site, rest_api_client: RestApiClient
+    test_cfg: None, site: Site, rest_api_client: RestApiClient
 ) -> None:
     cache_path = "var/check_mk/ipaddresses.cache"
 
@@ -483,7 +479,7 @@ def test_automation_update_dns_cache(
         site.delete_file(cache_path)
 
     try:
-        rest_api_client.create_host(host_name="update-dns-cache-host")
+        rest_api_client.create_host(host_name="update-dns-cache-host.")
         rest_api_client.create_host(host_name="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
@@ -492,22 +488,22 @@ def test_automation_update_dns_cache(
         assert isinstance(result, results.UpdateDNSCacheResult)
 
         assert result.n_updated > 0
-        assert result.failed_hosts == ["update-dns-cache-host"]
+        assert result.failed_hosts == ["update-dns-cache-host."]
 
         assert site.file_exists(cache_path)
 
-        cache = eval(site.read_file(cache_path))  # pylint: disable=eval-used
+        cache = ast.literal_eval(site.read_file(cache_path))
         assert isinstance(cache, dict)
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache
     finally:
         rest_api_client.delete_host("localhost")
-        rest_api_client.delete_host("update-dns-cache-host")
+        rest_api_client.delete_host("update-dns-cache-host.")
         rest_api_client.call_activate_changes_and_wait_for_completion()
 
 
 # TODO: Test with the different cores
-def test_automation_reload(test_cfg, site: Site) -> None:  # type: ignore[no-untyped-def]
+def test_automation_reload(test_cfg: None, site: Site) -> None:
     result = _execute_automation(site, "reload")
     assert isinstance(result, results.ReloadResult)
     assert not result.config_warnings
@@ -593,13 +589,11 @@ def test_automation_get_agent_output(test_cfg, site: Site) -> None:  # type: ign
     assert result.success is True
 
 
-def test_automation_get_agent_output_unknown_host(  # type: ignore[no-untyped-def]
-    test_cfg, site: Site
-) -> None:
+def test_automation_get_agent_output_unknown_host(site: Site) -> None:
     result = _execute_automation(
         site,
         "get-agent-output",
-        args=["xxxhost", "agent"],
+        args=["xxxhost.", "agent"],
     )
     assert isinstance(result, results.GetAgentOutputResult)
 
@@ -609,13 +603,11 @@ def test_automation_get_agent_output_unknown_host(  # type: ignore[no-untyped-de
 
 
 # TODO: active-check: Add test for real custom_checks check
-def test_automation_active_check_unknown(  # type: ignore[no-untyped-def]
-    test_cfg, site: Site
-) -> None:
+def test_automation_active_check_unknown(site: Site) -> None:
     result = _execute_automation(
         site,
         "active-check",
-        args=["xxxhost", "xxxplugin", "xxxitem"],
+        args=["xxxhost.", "xxxplugin", "xxxitem"],
     )
     assert isinstance(result, results.ActiveCheckResult)
     assert result.state is None
@@ -636,13 +628,11 @@ def test_automation_active_check_icmp_all_ipv4(  # type: ignore[no-untyped-def]
         assert result.output.startswith("OK - 127.0.0.1: rta")
 
 
-def test_automation_active_check_unknown_custom(  # type: ignore[no-untyped-def]
-    test_cfg, site: Site
-) -> None:
+def test_automation_active_check_unknown_custom(site: Site) -> None:
     result = _execute_automation(
         site,
         "active-check",
-        args=["xxxhost", "custom", "xxxitem"],
+        args=["xxxhost.", "custom", "xxxitem"],
     )
     assert isinstance(result, results.ActiveCheckResult)
     assert result.state is None

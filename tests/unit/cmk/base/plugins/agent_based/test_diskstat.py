@@ -33,6 +33,7 @@ def test_parse_diskstat_minimum() -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
     # SUP-5924
     DATA = [
@@ -1273,6 +1274,7 @@ EXP_METRICS = {
 }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_same_time_same_values() -> None:
     # same timestamp twice --> IgnoreResultsError twice
     with pytest.raises(IgnoreResultsError):
@@ -1287,6 +1289,7 @@ def test_compute_rates_single_disk_same_time_same_values() -> None:
         )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_diff_time_same_values() -> None:
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
@@ -1307,6 +1310,7 @@ def test_compute_rates_single_disk_diff_time_same_values() -> None:
     }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_diff_time_diff_values() -> None:
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
@@ -1326,6 +1330,7 @@ def test_compute_rates_single_disk_diff_time_diff_values() -> None:
             assert v > 0
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1370,6 +1375,7 @@ def test_check_diskstat_single_item() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1452,6 +1458,7 @@ def test_check_diskstat_summary() -> None:
             assert res_sum.value >= res_single.value
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1510,6 +1517,7 @@ def test_cluster_check_diskstat_single_item() -> None:
     assert results_cluster == results_non_cluster
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1574,6 +1582,7 @@ def test_cluster_check_diskstat_summary() -> None:
     assert results_cluster == results_non_cluster
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_latency_calculation() -> None:
     with pytest.raises(IgnoreResultsError):
         list(

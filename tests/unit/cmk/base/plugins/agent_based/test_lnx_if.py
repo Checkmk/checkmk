@@ -226,6 +226,7 @@ PARAMS = {
 }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
@@ -258,6 +259,7 @@ def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result_lnx_if == result_interfaces
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []

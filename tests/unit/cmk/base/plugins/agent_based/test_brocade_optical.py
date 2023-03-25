@@ -95,6 +95,7 @@ def test_discover_brocade_optical(
     ) == (expect_service and services or [])
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [
@@ -181,6 +182,7 @@ def test_check_brocade_optical(
 
 # Disable auto-formatting here as it takes ages
 # fmt: off
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
     (
         [

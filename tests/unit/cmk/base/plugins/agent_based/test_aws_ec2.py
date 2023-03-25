@@ -42,6 +42,7 @@ METRICS = {
 }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_ec2_network_io() -> None:
     assert list(
         check_aws_ec2_network_io(
@@ -85,6 +86,7 @@ def test_aws_ec2_disk_io_discovery(
     assert list(discover_aws_ec2_disk_io(section)) == discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_ec2_disk_io() -> None:
     check_result = list(check_aws_ec2_disk_io(item="Summary", params={}, section=METRICS))
 
@@ -183,6 +185,7 @@ def test_aws_ec2_cpu_util_discovery(
     assert list(discover_aws_ec2_cpu_util(section)) == discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, expected_check_result",
     [

@@ -72,6 +72,7 @@ def test_discovery_prism_host_stats(
     assert list(discovery_prism_cluster_cpu(section)) == expected_discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["params", "section", "expected_check_result"],
     [

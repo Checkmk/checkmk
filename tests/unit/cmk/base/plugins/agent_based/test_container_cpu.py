@@ -175,6 +175,7 @@ LXC_CONTAINER_CPU_CGROUPV2_10 = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.usefixtures("num_cpu")
 @pytest.mark.usefixtures("mocker")
 @pytest.mark.parametrize(

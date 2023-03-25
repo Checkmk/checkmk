@@ -44,6 +44,7 @@ def _mocked_container_info_from_state(  # type: ignore[no-untyped-def]
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -116,6 +117,7 @@ def test_check_kube_pod_status_no_issues_in_containers(  # type: ignore[no-untyp
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -182,6 +184,7 @@ def test_check_kube_pod_status_failing_container(  # type: ignore[no-untyped-def
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -301,6 +304,7 @@ def test_check_alert_if_pending_too_long() -> None:
         assert summary_result.summary.endswith(expected_message)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_init_containers, section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -466,6 +470,7 @@ def test_check_group_timer() -> None:
             assert expected_notice == notice[0].details
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_group_order_matters() -> None:
     params = kube_pod_status.Params(
         groups=[

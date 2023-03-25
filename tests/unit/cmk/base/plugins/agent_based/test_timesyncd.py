@@ -106,6 +106,7 @@ def test_discover_timesyncd(
     assert list(timesyncd.discover_timesyncd(section, section_ntpmessage)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, string_table_ntpmessage, params, result",
     [
@@ -212,6 +213,7 @@ def test_check_timesyncd_freeze(
         assert list(timesyncd.check_timesyncd(params, section, section_ntpmessage)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, string_table_ntpmessage, params, result",
     [

@@ -148,6 +148,7 @@ def test_check_humidity(check_humidity: CheckFunction) -> None:
     }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_temp(check_temp: CheckFunction) -> None:
     section = etherbox.etherbox_convert(
         [

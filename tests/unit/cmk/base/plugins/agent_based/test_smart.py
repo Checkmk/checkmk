@@ -599,6 +599,7 @@ def test_check_smart_stats(
     assert list(smart.check_smart_stats(item, params, section)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_smart_command_timeout_rate() -> None:
     section_timeout = {"/dev/sda": {"Command_Timeout": 0}}
     now_simulated = 581792400, "UTC"

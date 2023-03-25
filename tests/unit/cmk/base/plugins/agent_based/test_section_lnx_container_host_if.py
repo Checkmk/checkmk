@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 from cmk.base.plugins.agent_based.lnx_if import check_lnx_if, discover_lnx_if
@@ -88,6 +89,7 @@ def test_discover_lnx_if_default_discovery() -> None:
     assert discovered_services[0].item == "2"
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_lnx_if() -> None:
     check_results = list(
         check_lnx_if(item="2", params={}, section_lnx_if=([INTERFACE], {}), section_bonding=None)

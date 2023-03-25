@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
+import pytest
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.gcp_assets import parse_assets
 from cmk.base.plugins.agent_based.gcp_gce import (
@@ -39,6 +41,7 @@ NETWORK_SECTION = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_network_check() -> None:
     section = gcp.parse_piggyback(NETWORK_SECTION)
     params = CHECK_DEFAULT_PARAMETERS

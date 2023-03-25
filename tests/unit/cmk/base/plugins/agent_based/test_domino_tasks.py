@@ -49,6 +49,7 @@ SECTION_DOMINO_TASKS_DATA = (
 )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, expected_result",
     [

@@ -66,6 +66,7 @@ def test_inventory_scaleio_volume(
     assert list(discover_scaleio_volume(parsed_section)) == discovered_services
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_scaleio_volume() -> None:
     check_result = list(check_scaleio_volume(item=ITEM, params={}, section=SECTION))
     assert check_result[0] == Result(state=State.OK, summary="Name: CF1SIOVCD001, Size: 2.0 TB")

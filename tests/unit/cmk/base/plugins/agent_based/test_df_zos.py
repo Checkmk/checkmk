@@ -35,6 +35,7 @@ def test_discovery(section: df_zos.Section) -> None:
     assert sorted(df_zos.discover_df_zos([{"groups": []}], section)) == [Service(item="/ALF0")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_no_item(section: df_zos.Section) -> None:
     assert not list(df_zos.check_df_zos("knut", {}, section))
 

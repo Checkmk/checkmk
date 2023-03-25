@@ -243,6 +243,7 @@ def test_discover_fjdarye_ca_ports(
     assert list(discover_fjdarye_ca_ports(section=section, params=params)) == discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, section, check_result_showing_mode",
     [

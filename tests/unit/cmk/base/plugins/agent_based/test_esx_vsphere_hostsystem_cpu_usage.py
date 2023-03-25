@@ -94,6 +94,7 @@ def test_discover_esx_vsphere_hostsystem_cpu_usage(
     assert list(discover_esx_vsphere_hostsystem_cpu_usage(section, None)) == discovered_service
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, check_results",
     [
@@ -152,6 +153,7 @@ def test_check_esx_vsphere_hostsystem_cpu(
     assert list(check_esx_vsphere_hostsystem_cpu_usage(params, section, None)) == check_results
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, check_results",
     [

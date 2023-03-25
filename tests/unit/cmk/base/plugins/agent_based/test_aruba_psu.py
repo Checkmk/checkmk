@@ -91,6 +91,7 @@ def test_check_aruba_psu_status(
     assert list(aruba_psu.check_aruba_psu_status(item, section)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, item, result",
     [

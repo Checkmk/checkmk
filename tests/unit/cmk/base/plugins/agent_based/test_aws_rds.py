@@ -3059,6 +3059,7 @@ def test_parse_aws_rds() -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_rds_network_io() -> None:
     assert list(
         check_aws_rds_network_io(
@@ -3099,6 +3100,7 @@ def test_aws_ec2_disk_io_discovery(
     assert list(discover_aws_rds_disk_io(section)) == discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_rds_disk_io() -> None:
     check_result = list(
         check_aws_rds_disk_io(
@@ -3157,6 +3159,7 @@ def test_aws_rds_discovery(
     assert list(discover_aws_rds(section)) == discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, expected_check_result",
     [

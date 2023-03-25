@@ -939,6 +939,7 @@ check_results = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "inv_item, reference",
     list(zip(PS_DISCOVERED_ITEMS, check_results)),
@@ -1062,6 +1063,7 @@ cpu_util_data = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("data", cpu_util_data, ids=[a.name for a in cpu_util_data])
 def test_check_ps_common_cpu(data) -> None:  # type: ignore[no-untyped-def]
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
@@ -1113,6 +1115,7 @@ def test_check_ps_common_cpu(data) -> None:  # type: ignore[no-untyped-def]
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "levels, reference",
     [
@@ -1157,6 +1160,7 @@ def test_check_ps_common_count(levels, reference) -> None:  # type: ignore[no-un
     assert output == reference
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_subset_patterns() -> None:
     section_ps = ps_section.parse_ps(
         splitter(
@@ -1231,6 +1235,7 @@ def test_subset_patterns() -> None:
         assert output[0] == Result(state=State.OK, summary="Processes: %s" % count)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("cpu_cores", [2, 4, 5])
 def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type: ignore[no-untyped-def]
     """Test CPU utilization per single process.
@@ -1318,6 +1323,7 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type: ignore[no-u
     assert output == reference
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_parse_ps_windows(mocker: MockerFixture):  # type: ignore[no-untyped-def]
     section_ps = ps_section.parse_ps(
         splitter(
@@ -1425,6 +1431,7 @@ def test_discover_empty_command_line() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_empty_command_line() -> None:
     assert list(
         ps_check.check_ps(

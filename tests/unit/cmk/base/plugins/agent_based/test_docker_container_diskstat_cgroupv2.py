@@ -101,6 +101,7 @@ def _split(string: str) -> StringTable:
     return [line.split(" ") for line in string.split("\n")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_docker_container_diskstat_cgroupv2() -> None:
     with pytest.raises(IgnoreResultsError):
         # no rate metrics yet

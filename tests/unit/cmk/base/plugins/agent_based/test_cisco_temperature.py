@@ -213,6 +213,7 @@ def test_discovery_temp(section_temp: ct.Section) -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_temp(section_temp: ct.Section) -> None:
     assert list(
         ct.check_cisco_temperature(

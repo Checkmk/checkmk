@@ -184,6 +184,7 @@ def test_discover_kube_replicas() -> None:
     assert list(discover_kube_replicas(None, None, None)) == []
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_kube_replicas() -> None:
     assert list(
         check_kube_replicas(

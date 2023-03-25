@@ -491,6 +491,7 @@ def test_discovery_prism_container(
     assert list(discovery_prism_container(section)) == expected_discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "params", "section", "expected_check_result"],
     [

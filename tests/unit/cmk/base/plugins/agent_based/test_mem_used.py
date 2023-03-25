@@ -283,6 +283,7 @@ def test_check_memory_fails(
         list(check_mem_used(params, meminfo))
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params,meminfo,expected",
     [

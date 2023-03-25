@@ -38,6 +38,7 @@ def test_discovery_fast_lta_silent_cube_capacity(
     assert list(discover_fast_lta_silent_cubes_capacity(info)) == [Service(item="Total")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_fast_lta_silent_cube_capacity(
     check_fast_lta_silent_cubes_capacity: CheckFunction,
 ) -> None:

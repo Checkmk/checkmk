@@ -27,6 +27,7 @@ def test_discovery(section: FSBlocks) -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_no_item(section: FSBlocks) -> None:
     assert not list(dfn.check_df_netscaler("knut", {}, section))
 

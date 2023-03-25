@@ -89,6 +89,7 @@ def test_discover_oracle_performance(
     assert sorted(opc.discover_oracle_performance({}, section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, item, expected_result",
     [
@@ -163,6 +164,7 @@ def test_check_oracle_performance(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [
@@ -210,6 +212,7 @@ def test_inventory_oracle_performance(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -283,6 +286,7 @@ def test_check_oracle_performance_memory(  # type: ignore[no-untyped-def]
     assert list(opc.check_oracle_performance_memory(item, params, section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -329,6 +333,7 @@ def test_check_oracle_performance_iostat_ios(  # type: ignore[no-untyped-def]
     assert list(opc.check_oracle_performance_iostat_ios(item, params, section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [

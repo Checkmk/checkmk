@@ -230,6 +230,7 @@ def test_discover_ups_modulys_battery_temp_no_services_discovered() -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_ups_modulys_battery_temp_ok_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
@@ -253,6 +254,7 @@ def test_check_ups_modulys_battery_temp_ok_state() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_ups_modulys_battery_temp_warn_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(
@@ -276,6 +278,7 @@ def test_check_ups_modulys_battery_temp_warn_state() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_ups_modulys_battery_temp_crit_state() -> None:
     assert list(
         check_ups_modulys_battery_temp(

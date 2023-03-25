@@ -295,6 +295,7 @@ def test_discover_nvidia_smi_temperature(
     assert list(nvidia_smi.discover_nvidia_smi_temperature(section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [

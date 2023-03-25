@@ -117,6 +117,7 @@ def test_aws_ebs_discovery(
     assert list(discover_aws_ebs_burst_balance(parse_aws_ebs(string_table))) == discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_ebs_raise_get_rate_error() -> None:
     with pytest.raises(GetRateError):
         list(
@@ -128,6 +129,7 @@ def test_check_aws_ebs_raise_get_rate_error() -> None:
         )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_ebs() -> None:
     for metric in [
         "aws_ebs_disk_io_read_ios",

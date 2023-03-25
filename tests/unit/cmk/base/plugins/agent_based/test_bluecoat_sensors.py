@@ -192,6 +192,7 @@ def test_discover_bluecoat_sensors_temp() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     [
         "item",

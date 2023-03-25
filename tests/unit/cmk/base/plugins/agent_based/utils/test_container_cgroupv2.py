@@ -53,6 +53,7 @@ def test_parse_cpu_cgroupv2() -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_cpu_cgroupv2() -> None:
     with pytest.raises(GetRateError):
         # no rate metrics yet

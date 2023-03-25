@@ -276,6 +276,7 @@ def test_check_cisco_vpn_tunnel(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_cisco_vpn_tunnel_counter_init() -> None:
     with pytest.raises(IgnoreResultsError):
         list(

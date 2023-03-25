@@ -134,6 +134,7 @@ RESULT_CHECK = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, discovered, results", list(zip(AGENT_INFO, RESULT_DISCOVERY, RESULT_CHECK))
 )
@@ -214,6 +215,7 @@ def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
     assert list(lnx_thermal.discover_lnx_thermal(section)) == []
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "line, item, result",
     [

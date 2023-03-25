@@ -19,6 +19,7 @@ SECTION_5171 = Section5171(util=12, cores=[("2", 10), ("3", 0)])
 SECTION_5142 = 12
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, result",
     [
@@ -60,6 +61,7 @@ def test_check_ciena_cpu_util_5171(params: Mapping[str, object], result: CheckRe
     assert list(check_ciena_cpu_util_5171(params, SECTION_5171)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, result",
     [

@@ -47,6 +47,7 @@ def test_discover_cadvisor_diskstat(
     assert list(discover_cadvisor_diskstat(section)) == discovered_services
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_cadvisor_diskstat() -> None:
     check_result = list(check_cadvisor_diskstat(item="Summary", params={}, section=SECTION))
     assert len(check_result) == 10  # A Result and Metric for every field in the section

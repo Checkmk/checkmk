@@ -289,6 +289,7 @@ def test_discovery_ibm_svc_systemstats_cpu(
     assert result == expected_discovery
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, expected_result",
     [

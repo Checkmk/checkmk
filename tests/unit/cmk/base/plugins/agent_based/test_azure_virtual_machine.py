@@ -507,6 +507,7 @@ def test_discover_azure_vm_network_io(
     assert list(discover_azure_vm_network_io(section)) == expected_discovery
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params,section,expected_result",
     [

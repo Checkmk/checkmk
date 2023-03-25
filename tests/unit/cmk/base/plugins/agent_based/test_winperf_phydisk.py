@@ -186,6 +186,7 @@ def test_parse_winperf_phydisk_real_life() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk() -> None:
     # without frequency
     # first call should result in IgnoreResults, second call should yield rates
@@ -253,6 +254,7 @@ def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
 DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item",
     ["item", "SUMMARY"],
@@ -272,6 +274,7 @@ def test_check_winperf_phydisk(item: str) -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item",
     ["item", "SUMMARY"],

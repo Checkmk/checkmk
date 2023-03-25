@@ -59,6 +59,7 @@ def test_discover_sensor_temperature(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, expected_results",
     [

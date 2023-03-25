@@ -137,6 +137,7 @@ def test_discover_fritz_wan_if(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     [
         "section",

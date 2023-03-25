@@ -1661,6 +1661,7 @@ def test_check_single_interface_packet_levels() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces(
     item: str,
@@ -1688,6 +1689,7 @@ def test_check_multiple_interfaces(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_duplicate_descr(
     item: str,
@@ -1717,6 +1719,7 @@ def test_check_multiple_interfaces_duplicate_descr(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_duplicate_alias(
     item: str,
@@ -1751,6 +1754,7 @@ def test_check_multiple_interfaces_duplicate_alias(
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_simple() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -1804,6 +1808,7 @@ def test_check_multiple_interfaces_group_simple() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_exclude() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -1861,6 +1866,7 @@ def test_check_multiple_interfaces_group_exclude() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_by_agent() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -1944,6 +1950,7 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_w_node(
     item: str,
@@ -1969,6 +1976,7 @@ def test_check_multiple_interfaces_w_node(
     ) == _add_node_name_to_results(result, node_name)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_same_item_twice_cluster(
     item: str,
@@ -2001,6 +2009,7 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
     ) == _add_node_name_to_results(result, node_name_1)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_multiple_nodes() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -2074,6 +2083,7 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -2123,6 +2133,7 @@ def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
     assert result_cluster_check == result_check_multiple_interfaces
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check_ignore_discovered_params() -> None:
     assert list(
         interfaces.cluster_check(

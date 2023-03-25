@@ -473,6 +473,7 @@ def test_discovery_mqtt_messages(discovery_scenario: DiscoveryScenario) -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "check_scenario",
     [
@@ -623,6 +624,7 @@ def test_discovery_mqtt_clients(discovery_scenario: DiscoveryScenario) -> None:
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "check_scenario",
     [

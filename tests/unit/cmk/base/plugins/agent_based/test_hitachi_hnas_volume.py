@@ -153,6 +153,7 @@ def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, exp
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [

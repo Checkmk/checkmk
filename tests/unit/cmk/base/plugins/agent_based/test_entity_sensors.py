@@ -139,6 +139,7 @@ def test_discover_entity_sensors_power_presence(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [

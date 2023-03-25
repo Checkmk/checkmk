@@ -51,6 +51,7 @@ def test_discover(section: Section) -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["item", "params", "expected_result"],
     [

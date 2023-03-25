@@ -94,6 +94,7 @@ def make_section(
     }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "state, expected",
     [(1, State.OK), (2, State.OK), (3, State.WARN), (4, State.CRIT), (5, State.CRIT)],
@@ -105,6 +106,7 @@ def test_result_state(state: int, expected: State) -> None:
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_temperature_metric() -> None:
     temperature = 42.0
     section = make_section(temperature=temperature)
@@ -115,6 +117,7 @@ def test_temperature_metric() -> None:
     assert result.name == "temp"
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "role, expected",
     [("hotspare", State.OK), ("ssd_cache", State.OK), ("none", State.WARN), ("data", State.WARN)],
@@ -126,6 +129,7 @@ def test_check_role_is_ok_even_if_not_initialized(role: str, expected: State) ->
     assert State.worst(*(r.state for r in result if isinstance(r, Result))) == expected
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_disk_health_status(fix_register: FixRegister) -> None:
     parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_0)
     assert parsed is not None
@@ -138,6 +142,7 @@ def test_disk_health_status(fix_register: FixRegister) -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_disk_health_status_missing(fix_register: FixRegister) -> None:
     parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_1)
     assert parsed is not None
@@ -150,6 +155,7 @@ def test_disk_health_status_missing(fix_register: FixRegister) -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_hotspare(fix_register: FixRegister) -> None:
     parsed = get_parsed_snmp_section(SectionName("synology_disks"), DATA_2)
     assert parsed is not None

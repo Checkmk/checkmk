@@ -104,6 +104,7 @@ def test_discovery_prism_host_stats(
     assert list(discovery_prism_host_stats_mem(section)) == expected_discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["section", "expected_check_result"],
     [
@@ -135,6 +136,7 @@ def test_check_prism_host_stats(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     ["params", "section", "expected_check_result"],
     [

@@ -233,6 +233,7 @@ def test_cmciii_lcp_discovery(plugin: str, expected: DiscoveryResult) -> None:
     assert run_discovery("cmciii", plugin, _lcp_sensor(), params={}) == expected
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "item, expected",
@@ -994,6 +995,7 @@ def test_genericdataset_cmciii_discovery(
     assert run_discovery("cmciii", plugin, _generictest_cmciii(), params) == expected
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "plugin, params, items",

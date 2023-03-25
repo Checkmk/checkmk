@@ -45,6 +45,7 @@ def test_discover_aruba_chassis_temp(
     assert list(aruba_chassis.discover_aruba_chassis_temp(section)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, item, result",
     [

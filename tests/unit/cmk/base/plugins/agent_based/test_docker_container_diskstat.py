@@ -238,6 +238,7 @@ def test_parser() -> None:
     assert parser.names.names == {"b": "2"}
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_name, plugin_name, string_table_0, string_table_10, read_bytes, write_bytes, read_ops, write_ops",
     [

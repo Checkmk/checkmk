@@ -5,6 +5,8 @@
 
 from collections import OrderedDict
 
+import pytest
+
 from cmk.base.plugins.agent_based import esx_vsphere_counters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils import interfaces
@@ -442,6 +444,7 @@ def test_discovery_counters_diskio() -> None:
     ) == [Service(item="SUMMARY")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_counters_diskio() -> None:
     assert list(
         esx_vsphere_counters.check_esx_vsphere_counters_diskio(

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Type
 
 from cmk.utils.licensing.cre_handler import CRELicensingHandler
 from cmk.utils.licensing.handler import (
@@ -17,17 +18,17 @@ from cmk.utils.version import Edition, edition
 
 class LicensingHandlerRegistry:
     def __init__(self) -> None:
-        self._entries: dict[Edition, LicensingHandler] = {}
+        self._entries: dict[Edition, Type[LicensingHandler]] = {}
 
     def register(
         self,
         *,
         cmk_edition: Edition,
-        licensing_handler: LicensingHandler,
+        licensing_handler: Type[LicensingHandler],
     ) -> None:
         self._entries[cmk_edition] = licensing_handler
 
-    def __getitem__(self, key: Edition) -> LicensingHandler:
+    def __getitem__(self, key: Edition) -> Type[LicensingHandler]:
         return self._entries.__getitem__(key)
 
 
@@ -35,7 +36,7 @@ licensing_handler_registry = LicensingHandlerRegistry()
 
 
 def _get_licensing_handler() -> LicensingHandler:
-    return licensing_handler_registry[edition()]
+    return licensing_handler_registry[edition()]()
 
 
 def is_free() -> bool:
@@ -78,5 +79,5 @@ def register_cre_licensing_handler():
     # There is no license management planned for the CRE -> Always licensed
     licensing_handler_registry.register(
         cmk_edition=Edition.CRE,
-        licensing_handler=CRELicensingHandler(),
+        licensing_handler=CRELicensingHandler,
     )

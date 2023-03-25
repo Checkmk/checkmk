@@ -21,6 +21,7 @@ from cmk.base.api.agent_based.utils import (
     exists,
     not_equals,
     not_exists,
+    not_matches,
     startswith,
 )
 from cmk.base.plugins.agent_based.utils import (  # pylint: disable=cmk-module-layer-violation
@@ -34,6 +35,10 @@ from .detect_specs import PRECONVERTED_DETECT_SPECS
 
 ScanFunction = Union[ast.FunctionDef, ast.Lambda]
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
+
+
+_NEVER_DETECT = not_matches(".1.3.6.1.2.1.1.1.0", ".*")
+
 
 MIGRATED_SCAN_FUNCTIONS: Dict[str, SNMPDetectSpecification] = {
     # Some of these don't exist in the checks anymore. Leave them here in case some users' MKPs
@@ -386,7 +391,7 @@ def _compute_detect_spec(
     expression_ast = _get_expression_from_function(section_name, scan_func_ast)
 
     if _is_false(expression_ast):
-        return SNMPDetectSpecification()
+        return _NEVER_DETECT
 
     try:
         return _ast_convert_dispatcher(expression_ast)

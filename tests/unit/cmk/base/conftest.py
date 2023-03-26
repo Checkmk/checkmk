@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import typing
+from collections import abc
+from unittest import mock
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -24,3 +28,17 @@ def clear_config_caches(monkeypatch):
 
     _config_cache.clear()
     _runtime_cache.clear()
+
+
+class _MockVSManager(typing.NamedTuple):
+    active_service_interface: abc.Mapping[str, object]
+
+
+@pytest.fixture()
+def initialised_item_state():
+    mock_vs = _MockVSManager({})
+    with mock.patch(
+        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+        mock_vs,
+    ):
+        yield
